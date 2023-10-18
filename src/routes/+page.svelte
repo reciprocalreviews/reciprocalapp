@@ -5,15 +5,16 @@
 	across different communities in academia. Visit <a href="https://github.com/reciprocalreviews"
 		>GitHub</a
 	>
-	to learn more and contribute or subscribe to our newsletter:
+	to learn more and contribute or subscribe to our twice monthly
+	<a href="https://reciprocalreviews.substack.com/" target="_blank">newsletter</a>:
 </p>
 
 <iframe
-	title="Newsletter subscription"
 	src="https://reciprocalreviews.substack.com/embed"
+	title="Newsletter subscription"
 	width="480"
-	height="320"
-	style="border:1px solid #EEE; background:white;"
+	height="150"
+	style="border:none; background:white;"
 	frameborder="0"
 	scrolling="no"
 />
