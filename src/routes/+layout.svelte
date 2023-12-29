@@ -4,10 +4,12 @@
 	import Header from '$lib/components/Header.svelte';
 	import { Auth, AuthSymbol, DatabaseSymbol } from '$lib/Context';
 	import MockDatabase from '$lib/data/MockDatabase';
-	import { setContext } from 'svelte';
+	import { onMount, setContext } from 'svelte';
 
 	/** Always go home in production, pre-release */
-	if (!dev) goto('/');
+	onMount(() => {
+		if (!dev) goto('/');
+	});
 
 	/** Set a database connection context for all to use. */
 	setContext(DatabaseSymbol, new MockDatabase());
@@ -16,5 +18,7 @@
 	setContext(AuthSymbol, Auth);
 </script>
 
-<Header />
+{#if dev}
+	<Header />
+{/if}
 <slot />

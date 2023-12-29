@@ -45,11 +45,11 @@
 	<p>
 		We're a volunteer community of academics striving for more equitable and sustainable academic
 		peer review. This site will eventually be a platform for tracking reviewer availabilty and
-		contributions in a way that ensures sufficient reviewing labor for submissions. Visit <a
-			href="https://github.com/reciprocalreviews">GitHub</a
+		contributions in a way that ensures sufficient reviewing labor for submissions. Visit <Link
+			to="https://github.com/reciprocalreviews">GitHub</Link
 		>
 		to learn more and contribute or subscribe to our twice monthly
-		<a href="https://reciprocalreviews.substack.com/" target="_blank">newsletter</a>:
+		<Link to="https://reciprocalreviews.substack.com/">newsletter</Link>:
 	</p>
 
 	<iframe
