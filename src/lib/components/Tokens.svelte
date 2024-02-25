@@ -3,15 +3,14 @@
 </script>
 
 <span class="token"
-	>{amount} token{#if amount !== 1}s{/if}</span
+	>★ {amount} token{#if amount !== 1}s{/if}</span
 >
 
 <style>
 	.token {
 		font-weight: bold;
-		border-bottom: var(--border-color) solid 1px;
+		padding: calc(var(--spacing) / 2);
 		border-radius: var(--roundedness);
-		padding-left: 0.1em;
-		padding-right: 0.1em;
+		background: var(--alternating-color);
 	}
 </style>

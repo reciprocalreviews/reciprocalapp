@@ -12,6 +12,7 @@
 	import Slider from './Slider.svelte';
 	import Tokens from './Tokens.svelte';
 	import TransactionPreview from './TransactionPreview.svelte';
+	import Tag from './Tag.svelte';
 
 	export let scholar: Scholar;
 
@@ -99,11 +100,27 @@
 {#await db.getScholarTransactions(scholar.id)}
 	<Loading />
 {:then transactions}
-	{#each transactions as transaction}
-		<TransactionPreview id={transaction} />
-	{:else}
-		No transactions
-	{/each}
+	<p>
+		You have a total of <Tokens
+			amount={transactions.reduce((total, trans) => (total += trans.amount), 0)}
+		/>.
+	</p>
+
+	<table>
+		<thead>
+			<tr><th>Purpose</th><th>Amount</th><th>Notes</th></tr>
+		</thead>
+		<tbody>
+			{#each transactions as transaction}
+				<tr
+					><td><Tag>{transaction.purpose}</Tag></td><td><Tokens amount={transaction.amount} /></td
+					><td>{transaction.description}</td></tr
+				>
+			{:else}
+				No transactions
+			{/each}
+		</tbody>
+	</table>
 {:catch}
 	<Feedback>Couldn't get transactions.</Feedback>
 {/await}
