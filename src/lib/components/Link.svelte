@@ -2,12 +2,11 @@
 	import { page } from '$app/stores';
 
 	export let to: string;
-	export let external = false;
 
 	$: inactive = $page.url.pathname === to;
 </script>
 
-<a href={inactive ? null : to} target={external ? '_blank' : null} class:inactive
+<a href={inactive ? null : to} target={to.startsWith('http') ? '_blank' : null} class:inactive
 	><slot />{#if to.startsWith('http')}<sub>🔗</sub>{/if}</a
 >
 
