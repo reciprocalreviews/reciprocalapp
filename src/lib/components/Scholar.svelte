@@ -60,9 +60,11 @@
 
 <p>Currently volunteering for:</p>
 
-{#each scholar.sources as sourceID}
-	<p><SourceLink id={sourceID} /></p>
-{/each}
+<ul>
+	{#each scholar.sources as sourceID}
+		<li><SourceLink id={sourceID} /></li>
+	{/each}
+</ul>
 
 {#await db.getEditedSources(scholar.id)}
 	<Loading />
@@ -70,9 +72,11 @@
 	{#if sources.length > 0}
 		<h2>Editing</h2>
 		<p>Currently editor for:</p>
-		{#each sources as source}
-			<p><SourceLink id={source.id} /></p>
-		{/each}
+		<ul>
+			{#each sources as source}
+				<li><SourceLink id={source.id} /></li>
+			{/each}
+		</ul>
 	{/if}
 {:catch}
 	<Feedback>Couldn't get editor roles.</Feedback>
