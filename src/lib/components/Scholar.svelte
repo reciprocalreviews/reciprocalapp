@@ -11,13 +11,17 @@
 	import Checkbox from './Checkbox.svelte';
 	import Slider from './Slider.svelte';
 	import Tokens from './Tokens.svelte';
-	import TransactionPreview from './TransactionPreview.svelte';
 	import Tag from './Tag.svelte';
+	import { writable, type Writable } from 'svelte/store';
+	import type Transaction from '$lib/types/Transaction';
+	import Status from './Status.svelte';
 
 	export let scholar: Scholar;
 
 	const db = getDB();
 	const auth = getAuth();
+
+	const scholarTransactions: Writable<Transaction[] | undefined> = writable(undefined);
 
 	$: minimum = scholar.minimum;
 
@@ -32,6 +36,10 @@
 		const newScholar = await db.getScholar(scholar.id);
 		if (newScholar) scholar = newScholar;
 	}
+
+	$: db.getScholarTransactions(scholar.id).then((transactions) =>
+		scholarTransactions.set(transactions)
+	);
 </script>
 
 <h1>{scholar.name}</h1>
@@ -40,31 +48,6 @@
 {#if $auth && $auth.getScholarID() === scholar.id}<Button action={() => $auth?.logout()}
 		>Logout</Button
 	>{/if}
-
-<h2>Availability</h2>
-{#if $auth !== null && $auth.getScholarID() === scholar.id}
-	<p>
-		<Checkbox on={scholar.reviewing} change={(on) => setReviewing(on)}
-			>I am available to review</Checkbox
-		>
-	</p>
-	{#if scholar.reviewing}
-		<p>
-			List me as available to review when I have fewer than <Slider
-				min={0}
-				max={50}
-				bind:value={minimum}
-				step={1}
-				change={handleChange}
-			/>
-			<Tokens amount={scholar.minimum} />.
-		</p>
-	{/if}
-{:else if scholar.reviewing}
-	<p>Currently accepting review invitations.</p>
-{:else}
-	<p>Not currently accepting reviews.</p>
-{/if}
 
 <h2>Expertise</h2>
 <Expertise phrases={scholar.expertise} />
@@ -95,32 +78,57 @@
 	<Feedback>Couldn't get editor roles.</Feedback>
 {/await}
 
-<h2>Transactions</h2>
-
-{#await db.getScholarTransactions(scholar.id)}
+{#if $scholarTransactions === undefined}
 	<Loading />
-{:then transactions}
+{:else}
+	{@const netTokens = $scholarTransactions.reduce((total, trans) => (total += trans.amount), 0)}
+
+	<h2>Availability</h2>
+
 	<p>
-		You have a total of <Tokens
-			amount={transactions.reduce((total, trans) => (total += trans.amount), 0)}
-		/>.
+		<Status>
+			{#if scholar.reviewing && netTokens <= scholar.minimum}
+				Seeking reviews.
+			{:else}
+				Not seeking reviews at this time.
+			{/if}
+		</Status>
 	</p>
 
-	<table>
-		<thead>
-			<tr><th>Purpose</th><th>Amount</th><th>Notes</th></tr>
-		</thead>
-		<tbody>
-			{#each transactions as transaction}
-				<tr
-					><td><Tag>{transaction.purpose}</Tag></td><td><Tokens amount={transaction.amount} /></td
-					><td>{transaction.description}</td></tr
-				>
-			{:else}
-				No transactions
-			{/each}
-		</tbody>
-	</table>
-{:catch}
-	<Feedback>Couldn't get transactions.</Feedback>
-{/await}
+	{#if $auth !== null && $auth.getScholarID() === scholar.id}
+		<p>
+			<Checkbox on={scholar.reviewing} change={(on) => setReviewing(on)}
+				>When checked, your profile will indicate you are available to review.</Checkbox
+			>
+		</p>
+		{#if scholar.reviewing}
+			<p>Only indicate I am available when I have fewer than...</p>
+			<p>
+				<Slider min={0} max={50} bind:value={minimum} step={1} change={handleChange} />
+				<Tokens amount={scholar.minimum} />
+			</p>
+		{/if}
+
+		<h2>Transactions</h2>
+
+		<p>
+			You have a total of <Tokens amount={netTokens} />.
+		</p>
+
+		<table>
+			<thead>
+				<tr><th>Purpose</th><th>Amount</th><th>Notes</th></tr>
+			</thead>
+			<tbody>
+				{#each $scholarTransactions.sort((a, b) => b.creationtime - a.creationtime) as transaction}
+					<tr
+						><td><Tag>{transaction.purpose}</Tag></td><td><Tokens amount={transaction.amount} /></td
+						><td>{transaction.description}</td></tr
+					>
+				{:else}
+					No transactions
+				{/each}
+			</tbody>
+		</table>
+	{/if}
+{/if}

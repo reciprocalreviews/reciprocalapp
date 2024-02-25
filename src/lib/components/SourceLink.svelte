@@ -10,4 +10,7 @@
 {#await db.getSource(id)}
 	...
 {:then source}
-	<Link to="/source/{source.id}">{source.name}</Link>{:catch}?{/await}
+	<Link to="/source/{source.id}">{source.name}</Link>
+{:catch}
+	?
+{/await}
