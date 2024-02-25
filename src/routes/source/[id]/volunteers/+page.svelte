@@ -1,15 +1,18 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { getDB } from '$lib/Context';
-	import Expertise from '$lib/components/Expertise.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import SourceLink from '$lib/components/SourceLink.svelte';
 	import Table from '$lib/components/Table.svelte';
+	import Tag from '$lib/components/Tag.svelte';
+	import Tags from '$lib/components/Tags.svelte';
+	import Status from '$lib/components/Status.svelte';
 
 	const db = getDB();
-	let volunteersPromise = db.getSourceVolunteers($page.params.id);
+	$: sourceID = $page.params.id;
+	$: volunteersPromise = db.getSourceVolunteers(sourceID);
 </script>
 
 {#await volunteersPromise}
@@ -28,11 +31,17 @@
 			<tr>
 				<td><ScholarLink id={volunteer.scholar} /></td>
 				<td
-					>{#if volunteer.balance < volunteer.scholar.minimum}Seeking <strong
-							>{volunteer.scholar.minimum - volunteer.balance}</strong
-						> reviews{:else}Not seeking reviews{/if}</td
+					><Status good={volunteer.balance < volunteer.scholar.minimum}
+						>{#if volunteer.balance < volunteer.scholar.minimum}Seeking reviews{:else}Not seeking
+							reviews{/if}</Status
+					></td
 				>
-				<td><Expertise phrases={volunteer.scholar.expertise} /></td>
+				<td
+					><Tags
+						>{#each volunteer.scholar.sources[sourceID] as expertise}<Tag>{expertise}</Tag
+							>{/each}</Tags
+					></td
+				>
 			</tr>
 		{/each}
 	</Table>

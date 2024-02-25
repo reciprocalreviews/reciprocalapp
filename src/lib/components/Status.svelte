@@ -1,10 +1,20 @@
-<div class="status"><slot /></div>
+<script lang="ts">
+	export let good = true;
+</script>
+
+<div class="status" class:good><slot /></div>
 
 <style>
 	.status {
 		display: inline-block;
-		background: var(--salient-color);
+		background: var(--error-color);
 		color: var(--background-color);
-		padding: var(--spacing);
+		padding: calc(var(--spacing) / 2);
+		font-size: var(--small-font-size);
+		white-space: nowrap;
+	}
+
+	.good {
+		background: var(--salient-color);
 	}
 </style>

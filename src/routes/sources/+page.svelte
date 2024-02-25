@@ -24,7 +24,8 @@
 				edit: 0.1
 			},
 			editors: [$auth.getScholarID()],
-			creationtime: Date.now()
+			creationtime: Date.now(),
+			expertise: []
 		});
 		goto(`/source/${source.id}`);
 	}

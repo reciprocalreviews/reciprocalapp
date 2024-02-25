@@ -1,4 +1,5 @@
 import type Cost from './Cost';
+import type Expertise from './Expertise';
 import type { ScholarID } from './Scholar';
 
 type SourceID = string;
@@ -18,6 +19,8 @@ type Source = {
 	cost: Cost;
 	/** A set of scholar IDs that have editing permissions for this source */
 	editors: ScholarID[];
+	/** A set of expertise phrases defined by editors. Should never be deleted, only added to. */
+	expertise: Expertise[];
 	/** A Unix timestamp indicating the time at which the venue was created. Supports auditing.*/
 	creationtime: number;
 };

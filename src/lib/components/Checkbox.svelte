@@ -25,4 +25,8 @@
 	input {
 		accent-color: var(--salient-color);
 	}
+
+	input:focus {
+		outline: solid 3px var(--focus-color);
+	}
 </style>

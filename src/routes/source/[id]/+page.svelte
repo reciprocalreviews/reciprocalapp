@@ -13,14 +13,21 @@
 	import { ORCIDRegex, type ScholarID } from '$lib/types/Scholar';
 	import Form from '$lib/components/Form.svelte';
 	import type { SourceID } from '$lib/types/Source';
-	import type Scholar from '$lib/types/Scholar';
 	import EditorsOnly from '$lib/components/EditorsOnly.svelte';
+	import Tag from '$lib/components/Tag.svelte';
+	import Tags from '$lib/components/Tags.svelte';
+	import Checkbox from '$lib/components/Checkbox.svelte';
+	import type Expertise from '$lib/types/Expertise';
+	import type Scholar from '$lib/types/Scholar';
+	import Table from '$lib/components/Table.svelte';
+	import Status from '$lib/components/Status.svelte';
 
 	const db = getDB();
 	const auth = getAuth();
 
 	/** The promise we're currently waiting for */
-	let sourcePromise = db.getSource($page.params.id);
+	$: sourceID = $page.params.id;
+	$: sourcePromise = db.getSource($page.params.id);
 	let scholarPromise = $auth ? db.getScholar($auth.getScholarID()) : null;
 
 	/** State for name edits */
@@ -93,10 +100,40 @@
 	}
 
 	function toggleSourceVolunteer(scholar: Scholar, id: SourceID) {
-		scholar.sources = scholar.sources.includes(id)
-			? scholar.sources.filter((s) => s !== id)
-			: Array.from(new Set([...scholar.sources, id]));
+		const newSources = { ...scholar.sources };
+
+		// Remove the key
+		if (id in newSources) delete newSources[id];
+		// Add the source with an empty expertise list.
+		else newSources[id] = [];
+
+		scholar.sources = newSources;
 		scholarPromise = db.updateScholar(scholar);
+	}
+
+	function toggleSourceExpertise(scholar: Scholar, expertise: Expertise, yes: boolean) {
+		const currentExpertise = scholar.sources[sourceID] ?? [];
+		const newExpertise = yes
+			? Array.from(new Set([...currentExpertise, expertise.phrase]))
+			: currentExpertise.filter((exp) => exp !== expertise.phrase);
+		scholar.sources[sourceID] = newExpertise;
+		scholarPromise = db.updateScholar(scholar);
+	}
+
+	let newExpertise: string = '';
+	function addExpertise(source: Source, phrase: string) {
+		source.expertise = [...source.expertise, { phrase, deprecated: false, kind: 'topic' }];
+		sourcePromise = db.updateSource(source);
+		newExpertise = '';
+	}
+
+	function toggleExpertiseKind(source: Source, expertise: Expertise) {
+		source.expertise = source.expertise.map((exp) =>
+			exp.phrase === expertise.phrase
+				? { ...expertise, kind: expertise.kind === 'method' ? 'topic' : 'method' }
+				: exp
+		);
+		sourcePromise = db.updateSource(source);
 	}
 </script>
 
@@ -238,6 +275,11 @@
 	</ul>
 
 	<h2>Volunteer</h2>
+
+	<p>
+		See <Link to="/source/{$page.params.id}/volunteers">all volunteers</Link> for this source.
+	</p>
+
 	{#if $auth && !source.archived}
 		{#await scholarPromise}
 			<Loading />
@@ -250,18 +292,65 @@
 			{#if scholar}
 				<p>
 					<Button action={() => toggleSourceVolunteer(scholar, source.id)}
-						>{#if scholar.sources.includes(source.id)}Un-volunteer{:else}Volunteer{/if}</Button
+						>{#if source.id in scholar.sources}Un-volunteer{:else}Volunteer{/if}</Button
 					>
 				</p>
+
+				<!-- Show expertise toggles -->
+				{#if source.id in scholar.sources}
+					<p>What <strong>methods</strong> expertise do you have?</p>
+
+					<p>
+						{#each source.expertise.filter((exp) => !exp.deprecated && exp.kind === 'method') as expertise}
+							<Checkbox
+								on={scholar.sources[source.id].includes(expertise.phrase)}
+								change={(on) => toggleSourceExpertise(scholar, expertise, on)}
+								>{expertise.phrase}</Checkbox
+							>
+						{/each}
+					</p>
+
+					<p>What <strong>topical</strong> expertise do you have?</p>
+
+					<p>
+						{#each source.expertise.filter((exp) => !exp.deprecated && exp.kind === 'topic') as expertise}
+							<Checkbox
+								on={scholar.sources[source.id].includes(expertise.phrase)}
+								change={(on) => toggleSourceExpertise(scholar, expertise, on)}
+								>{expertise.phrase}</Checkbox
+							>
+						{/each}
+					</p>
+
+					<p>Write the editor if you have expertise not listed here.</p>
+				{/if}
 			{/if}
 		{:catch}
 			<Feedback>Couldn't check volunteering status.</Feedback>
 		{/await}
 	{:else}
 		<p>You need to log in to volunteer.</p>
-	{/if}
 
-	<p>See <Link to="/source/{$page.params.id}/volunteers">all volunteers</Link> for this source.</p>
+		<p>These are the <strong>methods</strong> expertise this journal currently seeks.</p>
+
+		<p>
+			<Tags>
+				{#each source.expertise.filter((exp) => exp.kind === 'method') as expertise}{#if !expertise.deprecated}<Tag
+							>{expertise.phrase}</Tag
+						>{/if}{/each}
+			</Tags>
+		</p>
+
+		<p>These are the <strong>topical</strong> expertise this journal currently seeks.</p>
+
+		<p>
+			<Tags>
+				{#each source.expertise.filter((exp) => exp.kind === 'topic') as expertise}{#if !expertise.deprecated}<Tag
+							>{expertise.phrase}</Tag
+						>{/if}{/each}
+			</Tags>
+		</p>
+	{/if}
 
 	<EditorsOnly {editor}>
 		<h2>Submissions</h2>
@@ -269,6 +358,46 @@
 		<p>
 			See the list of <Link to="/source/{$page.params.id}/submissions">submissions in review</Link>.
 		</p>
+
+		<h2>Expertise</h2>
+
+		<p>
+			Define expertise phrases that reviewers can indicate to help identify reviewers. We recommend
+			curating this as a community, to accurately reflect how reviewers wish to represent their
+			expertise.
+		</p>
+
+		<p>
+			<TextField placeholder="description" bind:text={newExpertise} />
+			<Button action={() => addExpertise(source, newExpertise)} active={newExpertise.length > 0}
+				>+ expertise</Button
+			>
+		</p>
+
+		<Table>
+			{#each source.expertise as expertise}
+				<tr>
+					<td>
+						<Tag>{expertise.phrase}</Tag>
+					</td>
+					<td>
+						<Checkbox on={expertise.deprecated} change={() => {}}>deprecated</Checkbox>
+					</td>
+					<td>
+						<div
+							role="button"
+							tabindex="0"
+							style:cursor="pointer"
+							style:user-select="none"
+							on:click={() => toggleExpertiseKind(source, expertise)}
+							on:keydown={() => toggleExpertiseKind(source, expertise)}
+						>
+							<Status good={expertise.kind === 'topic'}>{expertise.kind}</Status>
+						</div>
+					</td>
+				</tr>
+			{/each}
+		</Table>
 
 		<h2>Archive</h2>
 		<p>

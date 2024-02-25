@@ -1,12 +1,7 @@
 import type { ScholarID } from '$lib/types/Scholar';
 import type Database from './Database';
 
-export default async function createScholar(
-	db: Database,
-	orcid: ScholarID,
-	name: string,
-	expertise: string[]
-) {
+export default async function createScholar(db: Database, orcid: ScholarID, name: string) {
 	let scholar = await db.getScholar(orcid);
 	// Already have an account? Do nothing.
 	if (scholar !== null) return;
@@ -26,10 +21,9 @@ export default async function createScholar(
 	scholar = await db.createScholar({
 		id: orcid,
 		name,
-		expertise,
 		reviewing: true,
 		minimum: 8,
-		sources: [],
+		sources: {},
 		creationtime: Date.now(),
 		transactions: [welcome.id]
 	});

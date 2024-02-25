@@ -10,6 +10,7 @@
 		border-collapse: collapse;
 		margin-block-start: var(--spacing);
 		margin-block-end: var(--spacing);
+		table-layout: fixed;
 	}
 
 	table :global(td) {

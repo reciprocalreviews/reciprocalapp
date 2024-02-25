@@ -15,9 +15,8 @@
 	.editors {
 		padding: var(--spacing);
 		border-radius: var(--roundedness);
-		border: 1px dotted var(--salient-color);
+		border: 3px solid var(--error-color);
 		margin-top: 1em;
 		margin-bottom: 1em;
-		background: var(--alternating-color);
 	}
 </style>

@@ -20,7 +20,7 @@
 
 		// Is there a scholar in the database for this ORCID ID?
 		// If not, create one and give them some welcome tokens.
-		await createScholar(db, id, 'Anonymous', []);
+		await createScholar(db, id, 'Anonymous');
 
 		// Authenticate.
 		Auth.set(new MockAuthentication(id));

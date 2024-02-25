@@ -83,7 +83,7 @@ export default class MockDatabase extends Database {
 
 	async getSourceVolunteers(sourceID: string): Promise<{ scholar: Scholar; balance: number }[]> {
 		// Get the volunteers
-		const volunteers = this.scholars.filter((scholar) => scholar.sources.includes(sourceID));
+		const volunteers = this.scholars.filter((scholar) => sourceID in scholar.sources);
 		// Get their balances.
 		const balances = await Promise.all(
 			volunteers.map((volunteer) => this.getScholarBalance(volunteer.id))
@@ -139,7 +139,13 @@ const defaultSources: Source[] = [
 			edit: 0.1
 		},
 		editors: ['0000-0001-7461-4783'],
-		creationtime: 123123
+		creationtime: 123123,
+		expertise: [
+			{ phrase: 'qualitative', kind: 'method', deprecated: false },
+			{ phrase: 'quantitative', kind: 'method', deprecated: false },
+			{ phrase: 'assessment', kind: 'topic', deprecated: false },
+			{ phrase: 'programming', kind: 'topic', deprecated: false }
+		]
 	},
 	{
 		id: 'BCDEBCDEBCDEBCDEBCDE',
@@ -154,7 +160,8 @@ const defaultSources: Source[] = [
 			edit: 0
 		},
 		editors: ['0000-0001-7461-5000'],
-		creationtime: 123123
+		creationtime: 123123,
+		expertise: []
 	},
 	{
 		id: 'CDEFCDEFCDEFCDEFCDEF',
@@ -169,7 +176,8 @@ const defaultSources: Source[] = [
 			edit: 0
 		},
 		editors: ['0000-0001-7461-6000'],
-		creationtime: 123123
+		creationtime: 123123,
+		expertise: []
 	},
 	{
 		id: 'DEFGDEFGDEFGDEFGDEFG',
@@ -184,7 +192,8 @@ const defaultSources: Source[] = [
 			edit: 0
 		},
 		editors: ['0000-0001-7461-2032'],
-		creationtime: 123123
+		creationtime: 123123,
+		expertise: []
 	}
 ];
 
@@ -263,40 +272,36 @@ const defaultScholars: Scholar[] = [
 	{
 		id: '0000-0001-7461-4783',
 		name: 'Amy J. Ko',
-		expertise: ['assessment', 'learning technology', 'equity and justice'],
 		reviewing: true,
 		minimum: 5,
-		sources: ['ABCDABCDABCDABCDABCD'],
+		sources: { ABCDABCDABCDABCDABCD: ['assessment', 'qualitative', 'quantitative'] },
 		transactions: [],
 		creationtime: 123
 	},
 	{
 		id: '0000-0001-2000-3000',
 		name: 'Damon Johnson',
-		expertise: ['diversity', 'K-12', 'auto-grading'],
 		reviewing: true,
 		minimum: 5,
-		sources: ['ABCDABCDABCDABCDABCD'],
+		sources: { ABCDABCDABCDABCDABCD: ['diversity', 'K-12', 'auto-grading'] },
 		transactions: [],
 		creationtime: 123
 	},
 	{
 		id: '0000-0001-2000-4000',
 		name: 'Ben Tomlinson',
-		expertise: ['intro programming', 'qualitative', 'policy'],
 		reviewing: true,
 		minimum: 3,
-		sources: ['ABCDABCDABCDABCDABCD'],
+		sources: { ABCDABCDABCDABCDABCD: [] },
 		transactions: [],
 		creationtime: 123
 	},
 	{
 		id: '0000-0001-2000-5000',
 		name: 'Jessica Dory',
-		expertise: ['programming languages', 'quantitative', 'assessment'],
 		reviewing: true,
 		minimum: 3,
-		sources: ['ABCDABCDABCDABCDABCD'],
+		sources: { ABCDABCDABCDABCDABCD: ['programming languages', 'quantitative', 'assessment'] },
 		transactions: [],
 		creationtime: 123
 	}

@@ -2,7 +2,7 @@
 	import { getDB, getAuth } from '$lib/Context';
 	import type Scholar from '$lib/types/Scholar';
 	import Button from './Button.svelte';
-	import Expertise from './Expertise.svelte';
+	import Tags from './Tags.svelte';
 	import Feedback from './Feedback.svelte';
 	import Link from './Link.svelte';
 	import Loading from './Loading.svelte';
@@ -49,9 +49,6 @@
 		>Logout</Button
 	>{/if}
 
-<h2>Expertise</h2>
-<Expertise phrases={scholar.expertise} />
-
 {#if $auth}
 	<Note>Edit your expertise on <Link to="https://orcid.org/{scholar.id}">ORCID.org</Link>.</Note>
 {/if}
@@ -60,11 +57,13 @@
 
 <p>Currently volunteering for:</p>
 
-<ul>
-	{#each scholar.sources as sourceID}
-		<li><SourceLink id={sourceID} /></li>
-	{/each}
-</ul>
+{#each Object.entries(scholar.sources) as [sourceID, expertise]}
+	<p>
+		<SourceLink id={sourceID} /><br /><Tags>
+			{#each expertise as exp}<Tag>{exp}</Tag>{/each}
+		</Tags>
+	</p>
+{/each}
 
 {#await db.getEditedSources(scholar.id)}
 	<Loading />
@@ -72,11 +71,11 @@
 	{#if sources.length > 0}
 		<h2>Editing</h2>
 		<p>Currently editor for:</p>
-		<ul>
+		<p>
 			{#each sources as source}
-				<li><SourceLink id={source.id} /></li>
+				<SourceLink id={source.id} />
 			{/each}
-		</ul>
+		</p>
 	{/if}
 {:catch}
 	<Feedback>Couldn't get editor roles.</Feedback>
