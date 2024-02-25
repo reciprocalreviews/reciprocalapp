@@ -21,5 +21,6 @@
 		gap: var(--spacing);
 		margin-block-start: var(--spacing);
 		margin-block-end: var(--spacing);
+		align-items: baseline;
 	}
 </style>
