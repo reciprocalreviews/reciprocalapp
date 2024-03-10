@@ -90,10 +90,10 @@
 
 	<p>
 		<Status>
-			{#if scholar.reviewing && netTokens <= scholar.minimum}
-				Seeking reviews.
+			I am {#if scholar.reviewing && netTokens < scholar.minimum}
+				available to review.
 			{:else}
-				Not seeking reviews at this time.
+				not available to review.
 			{/if}
 		</Status>
 	</p>
@@ -101,11 +101,12 @@
 	{#if $auth !== null && $auth.getScholarID() === scholar.id}
 		<p>
 			<Checkbox on={scholar.reviewing} change={(on) => setReviewing(on)}
-				>When checked, your profile will indicate you are available to review.</Checkbox
-			>
+				>When checked, your profile will indicate you are available to review if you have fewer than
+				your desired minumum number of tokens.
+			</Checkbox>
 		</p>
 		{#if scholar.reviewing}
-			<p>Only indicate I am available when I have fewer than...</p>
+			<p>Indicate I am available when I have fewer than...</p>
 			<p>
 				<Slider min={0} max={50} bind:value={minimum} step={1} change={handleChange} />
 				<Tokens amount={scholar.minimum} />
