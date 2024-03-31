@@ -23,7 +23,8 @@ export default async function closeSubmission(
 				amount: submission.compensation.review,
 				purpose: 'review',
 				description: 'Thank you for your review!',
-				creationtime: Date.now()
+				creationtime: Date.now(),
+				approvaltime: Date.now()
 			});
 		})
 	);
@@ -37,7 +38,8 @@ export default async function closeSubmission(
 		amount: submission.compensation.meta,
 		purpose: 'meta',
 		description: 'Thank you for your meta-review!',
-		creationtime: Date.now()
+		creationtime: Date.now(),
+		approvaltime: Date.now()
 	});
 
 	// Compensate the editor
@@ -49,7 +51,8 @@ export default async function closeSubmission(
 		amount: submission.compensation.edit,
 		purpose: 'edit',
 		description: 'Thank you for your meta-review!',
-		creationtime: Date.now()
+		creationtime: Date.now(),
+		approvaltime: Date.now()
 	});
 
 	// Revise the submission.

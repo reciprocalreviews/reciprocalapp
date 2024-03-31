@@ -125,8 +125,11 @@
 			</thead>
 			<tbody>
 				{#each $scholarTransactions.sort((a, b) => b.creationtime - a.creationtime) as transaction}
-					<tr
-						><td><Tag>{transaction.purpose}</Tag></td><td><Tokens amount={transaction.amount} /></td
+					<tr>
+						<td
+							>{#if transaction.approvaltime}approved{:else}pending{/if}</td
+						>
+						<td><Tag>{transaction.purpose}</Tag></td><td><Tokens amount={transaction.amount} /></td
 						><td>{transaction.description}</td></tr
 					>
 				{:else}

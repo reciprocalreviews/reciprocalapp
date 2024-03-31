@@ -22,6 +22,8 @@ type Transaction = {
 	description: string;
 	/** A Unix timestamp indicating when the transaction was created. Enables auditing. */
 	creationtime: number;
+	/** A Unix timestamp indicating when the transaction was approved by the person whose balance it affected */
+	approvaltime: number | null;
 };
 
 export type { Transaction as default };

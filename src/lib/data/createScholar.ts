@@ -15,7 +15,8 @@ export default async function createScholar(db: Database, orcid: ScholarID, name
 		amount: 4,
 		purpose: 'gift',
 		description: 'Welcome!',
-		creationtime: Date.now()
+		creationtime: Date.now(),
+		approvaltime: Date.now()
 	});
 
 	scholar = await db.createScholar({

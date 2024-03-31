@@ -30,7 +30,8 @@ export default async function createSubmission(
 			amount: -charge.payment,
 			purpose: 'submission',
 			description: 'Thank you for your submission!',
-			creationtime: Date.now()
+			creationtime: Date.now(),
+			approvaltime: null
 		};
 	});
 

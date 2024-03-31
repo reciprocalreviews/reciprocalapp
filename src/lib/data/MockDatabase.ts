@@ -316,7 +316,8 @@ const defaultTransactions: Transaction[] = [
 		amount: 3,
 		purpose: 'gift',
 		description: 'Testing with a high balance',
-		creationtime: Date.now()
+		creationtime: Date.now(),
+		approvaltime: null
 	},
 	{
 		id: '1',
@@ -326,6 +327,7 @@ const defaultTransactions: Transaction[] = [
 		amount: 4,
 		purpose: 'submission',
 		description: 'Thanks for your submission',
-		creationtime: Date.now()
+		creationtime: Date.now(),
+		approvaltime: Date.now()
 	}
 ];
