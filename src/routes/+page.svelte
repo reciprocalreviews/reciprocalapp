@@ -6,27 +6,27 @@
 
 <h1>Reciprocal Reviews</h1>
 {#if dev}
-	<Lead>Sustain academic peer review by organizing availability and incentivizing reviewing.</Lead>
+	<Lead>Find reliable, available peer reviewers more quickly, sustaining peer review.</Lead>
 	<p>
-		Academia incentivizes writing over reading, but depends on everyone to read their fair share.
-		This means that there are never enough reviewers, reviews are late and often of low quality, and
-		everyone is unhappy.
+		Academia incentivizes writing over reading, but peer review depends on everyone reading their
+		fair share. This means that there are never enough reviewers, reviews are late and often of low
+		quality, and everyone is unhappy.
 	</p>
 
 	<p>
-		<strong>Reciprocal Reviews</strong> is a community-run platform that addresses this asymmetry with
-		two features:
+		<strong>Reciprocal Reviews</strong> breaks this cycle with two features:
 	</p>
 
 	<ul>
 		<li>
-			<strong>Reviewers volunteer and post their capacity</strong>. This helps scholars track their
-			volunteer efforts and helps editors find reviewers who are available.
+			<strong>Reviewers volunteer for specific venues, posting their capacity to review</strong>.
+			This helps scholars track their volunteer efforts and helps editors find reviewers who are
+			available.
 		</li>
 		<li>
 			<strong>Editors set a cost for submission, priced in <em>review tokens</em></strong>.
 			Co-authors split the cost by writing reviews and pay at the time of submission. Editors
-			compensate reviewers and editors for reviews of sufficient quality.
+			compensate reviewers and editors for reviews of sufficient quality with review tokens.
 		</li>
 	</ul>
 
