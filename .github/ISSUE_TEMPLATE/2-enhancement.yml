@@ -1,6 +1,5 @@
 name: Feature Request
 description: Suggest an idea for an enhancement or new feature.
-title: ''
 labels: ['enhancement', 'triage']
 projects: ['reciprocalreviews/1']
 assignees:
