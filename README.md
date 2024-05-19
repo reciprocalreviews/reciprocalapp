@@ -1,3 +1,7 @@
 # Welcome!
 
-This is the repository for the [reciprocal.reviews](https://reciprocal.reviews) web application, which is intended to help make peer review more sustainable. We'll grow this repository as we have more to share.
+This is the repository for the [reciprocal.reviews](https://reciprocal.reviews) web application, which is intended to help make peer review more sustainable.
+
+- If you're interested in contributing, see [our contributor guidelines](CONTRIBUTING.md) to get started.
+- If you want to see our progress toward beta, see our [Beta project](https://github.com/orgs/reciprocalreviews/projects/1).
+- If you have questions about this project, write [Amy](mailto:ajko@uw.edu).
