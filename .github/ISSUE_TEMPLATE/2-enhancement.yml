@@ -15,7 +15,6 @@ body:
       label: The problem
       description: What problem are you trying to solve and why is it hard to do in the current system?
       placeholder: The problem
-      value: ''
     validations:
       required: true
   - type: textarea
@@ -24,6 +23,5 @@ body:
       label: Your idea
       description: What could we change that would make this easier?
       placeholder: The idea
-      value: ''
     validations:
       required: true
