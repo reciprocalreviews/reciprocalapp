@@ -1,0 +1,30 @@
+name: Feature Request
+description: Suggest an idea for an enhancement or new feature.
+title: ''
+labels: ['enhancement', 'triage']
+projects: ['reciprocalreviews/1']
+assignees:
+  - amyjko
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to share your idea!
+  - type: textarea
+    id: the-problem
+    attributes:
+      label: The problem
+      description: What problem are you trying to solve and why is it hard to do in the current system?
+      placeholder: The problem
+      value: ''
+    validations:
+      required: true
+  - type: textarea
+    id: the-idea
+    attributes:
+      label: Your idea
+      description: What could we change that would make this easier?
+      placeholder: The idea
+      value: ''
+    validations:
+      required: true
