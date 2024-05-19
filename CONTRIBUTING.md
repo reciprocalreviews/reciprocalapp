@@ -17,4 +17,4 @@ Finally, if you have questions about anything, join our [Discord](https://discor
 At the moment, we are happy to accept the following types of contributions:
 
 - [Bug reports and enhancment ideas](https://github.com/reciprocalreviews/reciprocalapp/issues). Before you submit, make sure there isn't an existing issue for what you want to report.
-- Pull requests. Find an unassigned issue, comment on it to see if it's appropriate to work on, and a maintainer will reply and potentially assign you. If they do, fork, work on the issue, and submit a pull request for review and possible merging.
+- [Pull requests](https://github.com/reciprocalreviews/reciprocalapp/pulls). Find an unassigned issue, comment on it to see if it's appropriate to work on, and a maintainer will reply and potentially assign you. If they do, fork, work on the issue, and submit a pull request for review and possible merging.
