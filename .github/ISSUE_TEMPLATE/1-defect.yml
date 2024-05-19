@@ -16,7 +16,6 @@ body:
       label: What happened?
       description: Describe the steps you took in detail, what unexpected thing happened, and what you expected to happen.
       placeholder: Steps to reproduce the bug
-      value: ''
     validations:
       required: true
   - type: dropdown
