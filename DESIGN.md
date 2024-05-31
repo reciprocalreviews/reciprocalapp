@@ -16,7 +16,7 @@ There are four key types of data in RR:
 
 - **Scholars**, which correspond to individual scholars, identified by [ORCIDs](https://orcid.org/). Scholars can volunteer for **Sources** and can spend and earn **Tokens** for that volunteer work, as well as receive **Token** gifts. Scholars can also have "editor" status on zero or more **Sources**. Scholars can also have "minter" status, which gives them the ability to create new tokens in a source's currency. An individual scholar cannot be both an editor and a minter, as this would allow editors to enrich themselves without oversight.
 
-- **Tokens**, which are a per-source currency representing one unit of peer review labor. Tokens are typically spent to compensate others for their reviewing labor. Tokens are typically earned for reviewing labor. There may be many other creative uses for tokens (e.g., gifts, incentives, etc.). Tokens are minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few tokens would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many tokens means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review.
+- **Tokens**, which are a per-source currency representing one unit of peer review labor. Tokens are typically spent to compensate others for their reviewing labor. Tokens are typically earned for reviewing labor. There may be many other creative uses for tokens (e.g., gifts, incentives, etc.). Tokens generally should be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few tokens would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many tokens means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review. Tokens are possessed by individual scholars or in a source's "reserve," and transactions can change who posses them.
 
 - **Sources**, which are named and curated collections of publications (e.g. journals, conferences) that have their own token costs and rewards for reviewing labor.
 
@@ -51,7 +51,9 @@ The value proposition we want to communicate to authors are:
 
 **PURPOSE**. An ORCID OAuth login page.
 
-**FUNCTIONALITY**. Submitting the form should begin the OAuth login process, a series of redirects. Upon success, it should forward to the **Scholar** page, showing the user their dashboard.
+**FUNCTIONALITY**
+
+- [ ] Submitting the login form should begin the OAuth login process, a series of redirects. Upon success, it should forward to the **Scholar** page, showing the user their dashboard.
 
 ### Scholar `/scholar/[id]`
 
@@ -59,13 +61,14 @@ The value proposition we want to communicate to authors are:
 
 **FUNCTIONALITY**. It should include:
 
-- Links to the scholar's ORCID profile
-- Read-only data pulled from the ORCID profile
-- Logout functionality
-- Links to **Sources** the scholar has volunteered to review for
-- Links to **Sources** the scholar is serving as editor of.
-- The ability to specify whether the scholar is available to review based on how many tokens they possess
-- A history of **Token** transactions
+- [ ] Links to the scholar's ORCID profile
+- [ ] Read-only data pulled from the ORCID profile
+- [ ] Logout functionality
+- [ ] Links to **Sources** the scholar has volunteered to review for
+- [ ] Links to **Sources** the scholar is serving as editor of.
+- [ ] The ability to specify whether the scholar is available to review based on how many tokens they possess
+- [ ] A history of **Token** transactions
+- [ ] Scholar-only functionality for gifting tokens to someone else
 
 ### `/sources`
 
@@ -80,9 +83,12 @@ The value proposition we want to communicate to authors are:
 **FUNCTIONALITY**. The source page should allow for:
 
 - [ ] Display name, description, and URL to the source's website.
+- [ ] Scholar-only functionality to volunteer to review for the source. When they first volunteer, a number of tokens specified by for source should be minted and given to the scholar, welcoming them to the community.
 - [ ] Editor-only functionality to modify the source name, description
+- [ ] Editor-only functionality to modify the newcomer gift in tokens
 - [ ] Editor-only functionality to modify submission costs in tokens, reviewing compensation in tokens.
 - [ ] Minter-only functionality to create new tokens within the source's currency, to address token scarcity in the community.
+- [ ] Editor-only functionality to view the total number of tokens in the source and who posses them, to gauge the health of the community.
 
 The editor functionality should be as streamlined as possible for data entry, as well as prioritize error prevention.
 
