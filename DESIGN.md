@@ -87,8 +87,11 @@ The value proposition we want to communicate to authors are:
 - [ ] Editor-only functionality to modify the source name, description
 - [ ] Editor-only functionality to modify the newcomer gift in tokens
 - [ ] Editor-only functionality to modify submission costs in tokens, reviewing compensation in tokens.
-- [ ] Minter-only functionality to create new tokens within the source's currency, to address token scarcity in the community.
 - [ ] Editor-only functionality to view the total number of tokens in the source and who posses them, to gauge the health of the community.
+- [ ] Minter-only functionality to create new tokens within the source's currency, to address token scarcity in the community. This functionality should provide guidance on best practices, including warnings about what happens if they create too many tokens. For example, there should be a certain number of tokens per scholar in the community at a minimum, but not so many that publishing requires no labor.
+- [ ] Editor-only functionality to convert a specific set of tokens to another source. (One time exchange).
+- [ ] Minter-only functionality to specify a conversion rate between one source and another, which enables scholars to independently convert their tokens from one currency to another (official exchange).
+- [ ] Minter-only functionality to unify two currencies, removing the need to convert between a currency. Must be approved by the minters of both sources.
 
 The editor functionality should be as streamlined as possible for data entry, as well as prioritize error prevention.
 
