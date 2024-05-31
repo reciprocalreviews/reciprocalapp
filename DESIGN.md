@@ -12,15 +12,17 @@ We're designing and building RR in order to test this hypothesis, with the hopes
 
 ## Data
 
-There are four key types of data in RR:
+There are several key types of data in RR:
 
-- **Scholars**, which correspond to individual scholars, identified by [ORCIDs](https://orcid.org/). Scholars can volunteer for **Sources** and can spend and earn **Tokens** for that volunteer work, as well as receive **Token** gifts. Scholars can also have "editor" status on zero or more **Sources**. Scholars can also have "minter" status, which gives them the ability to create new tokens in a source's currency. An individual scholar cannot be both an editor and a minter, as this would allow editors to enrich themselves without oversight.
+- [ ] **Scholars**, which correspond to individual scholars, identified by [ORCIDs](https://orcid.org/). Scholars can volunteer for **Sources** and can spend and earn **Tokens** for that volunteer work, as well as receive **Token** gifts. Scholars can also have "editor" status on zero or more **Sources**. Scholars can also have "minter" status, which gives them the ability to create new tokens in a source's currency. An individual scholar cannot be both an editor and a minter, as this would allow editors to enrich themselves without oversight.
 
-- **Tokens**, which are a per-source currency representing one unit of peer review labor. Tokens are typically spent to compensate others for their reviewing labor. Tokens are typically earned for reviewing labor. There may be many other creative uses for tokens (e.g., gifts, incentives, etc.). Tokens generally should be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few tokens would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many tokens means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review. Tokens are possessed by individual scholars or in a source's "reserve," and transactions can change who posses them.
+- [ ] **Currencies**, which represent a particular named type of token, associated with one or more sources.
 
-- **Sources**, which are named and curated collections of publications (e.g. journals, conferences) that have their own token costs and rewards for reviewing labor.
+- [ ] **Tokens**, which are in a **Currency** representing one unit of peer review labor. Tokens are typically spent to compensate others for their reviewing labor. Tokens are typically earned for reviewing labor. There may be many other creative uses for tokens (e.g., gifts, incentives, etc.). Tokens generally should be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few tokens would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many tokens means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review. Tokens are possessed by individual scholars or in a source's "reserve," and transactions can change who posses them.
 
-- **Submissions**, which represent a publication undergoing peer review. Depending on the source, scholars may be able to volunteer to review, simplifying editor's ability to find eligible reviewers.
+- [ ] **Sources**, which are named and curated collections of publications (e.g. journals, conferences) that have their own token costs and rewards for reviewing labor.
+
+- [ ] **Submissions**, which represent a publication undergoing peer review. Depending on the source, scholars may be able to volunteer to review, simplifying editor's ability to find eligible reviewers.
 
 ## Routes
 
@@ -119,15 +121,16 @@ The editor functionality should be as streamlined as possible for data entry, as
 
 **PURPOSE**. The submissions page helps scholars see all active submissions in review, and if an editor, manage them.
 
-**FUNCTIONALITY**. The submissions page various based on privleges:
+**FUNCTIONALITY**
 
-- If the source is private, then non-editors receive a private message, with a submission count.
-- If the source is public, then everyone can see submissions active submissions by their title and expertise required and volunteer to review for them
-- When an editor of the source is viewing it, they can also manage submissions, adding new submission records.
-- When an editor is viewing, to "resolve" a specific submission, generating transactions to compensate scholars for their reviewing labor
-- Editor-only functionality to submit individual or bulk **Submissions** to the system to allow for volunteering
-- Editor-only functionality to submit bulk transactions for submissions and reviewing labor
-- Filter submissions by whether they are active, by author, reviewer, etc.
+- [ ] View the total number of active submissions in the system.
+- [ ] (_scholar_): If configured to be public, view specific active submissions and the topic and method expertise required (but not submission titles), sorted by submissions most in need of reviews
+- [ ] (_scholar)_: If configured to be public, bid on active submissions based on expertise required
+- [ ] When an editor of the source is viewing it, they can also manage submissions, adding new submission records.
+- [ ] When an editor is viewing, to "resolve" a specific submission, generating transactions to compensate scholars for their reviewing labor
+- [ ] Editor-only functionality to submit individual or bulk **Submissions** to the system to allow for volunteering
+- [ ] Editor-only functionality to submit bulk transactions for submissions and reviewing labor
+- [ ] Filter submissions by whether they are active, by author, reviewer, etc.
 
 ### `/submission`
 
