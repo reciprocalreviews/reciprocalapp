@@ -146,3 +146,4 @@ The value proposition we want to communicate to authors are:
 
 - [ ] When an email is sent to the source-specific address and proposed transaction meta-data is found create a proposed transaction corresponding to the transaction meta-data provided
 - [ ] Send minters period reminders of unapproved transactions, based on the frequency set in the Transactions page
+- [ ] When a proposed transaction is declined, an email is sent to the person who proposed it with an explanation for why.
