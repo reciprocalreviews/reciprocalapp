@@ -78,14 +78,23 @@ The value proposition we want to communicate to authors are:
 
 **FUNCTIONALITY**
 
-- [ ] View all sources
-- [ ] (_scholar_). Propose a new source for the platform for review by the platform maintainers.
+- [ ] View all sources, including active and proposed ones.
+- [ ] (_scholar_). Propose a new source for the platform for review by the platform maintainers. Source proposals should gather the name of the source, the email addresses of the person or people leading editing of it, and the estimated size of the number of scholars in the community. Sources with similar names are retrieved and shown to prevent duplicate source creation. When the proposal is submitted, the email addresses listed, and RR administrators are notified. A source is created, but not active until approved.
+- [ ] (\_admin). Approve a source for use, indicating who should take the editor and minter roles for the platform, and creating tokens for all scholars in favor of the petition.
 
 ### Source `/source/[id]`
 
 **PURPOSE**. The source page represents a source and its active **Submissions**.
 
-**FUNCTIONALITY**. The source page should allow for:
+**FUNCTIONALITY**
+
+When a source is proposed:
+
+- [ ] View the editors listed
+- [ ] View the estimated size of the community
+- [ ] (_scholars_) Vote to support adopting RR for the source.
+
+When a source is approved:
 
 - [ ] Display name, description, and URL to the source's website.
 - [ ] View the cost and compensation of the source.
@@ -144,6 +153,13 @@ The value proposition we want to communicate to authors are:
 
 **FUNCTIONALITY**
 
+For transactions:
+
 - [ ] When an email is sent to the source-specific address and proposed transaction meta-data is found create a proposed transaction corresponding to the transaction meta-data provided
 - [ ] Send minters period reminders of unapproved transactions, based on the frequency set in the Transactions page
 - [ ] When a proposed transaction is declined, an email is sent to the person who proposed it with an explanation for why.
+
+For sources:
+
+- [ ] Sources are checked daily for a certain proportion of support, and editors are notified when the petition exceeds that threshold.
+- [ ] When sources become approved, send emails to the editor and all people who upvoted the source, notifying them of their new tokens and the live process.
