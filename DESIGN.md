@@ -104,18 +104,17 @@ The value proposition we want to communicate to authors are:
 - [ ] (_editor_): Specify a conversion rate between one source and another, which enables scholars to independently convert their tokens from one currency to another (official exchange).
 - [ ] (_minter_): Unify two currencies, removing the need to convert between a currency. Must be approved by the minters of both sources.
 
-The editor functionality should be as streamlined as possible for data entry, as well as prioritize error prevention.
-
-### `/source/[id]/transactions`
+### Transaction s`/source/[id]/transactions`
 
 **PURPOSE**. This page is for managing all transactions in a source.
 
 **FUNCTIONALITY**. The transactions page for a source should allow for:
 
-- [ ] (_Editors_, _minters_): View all transactions
-- [ ] (_Editors_, _minters_): Search for transactions involving particular people or containing particular text
-- [ ] (_Editors_, _minters_): Approve pending transactions that do not involve the scholar approving
-- [ ] (_Editors_, _minters_): Cancel approved transactions that do not involve the scholar canceling
+- [ ] (_editors_, _minters_): View all transactions
+- [ ] (_editors_, _minters_): Search for transactions involving particular people or containing particular text
+- [ ] (_minters_): Approve pending transactions that do not involve the scholar approving
+- [ ] (_editors_, _minters_): Cancel approved transactions that do not involve the scholar canceling
+- [ ] (_minters_): Change the frequency of email reminders about unapproved transactions to never, daily, or weekly
 
 ### `/source/[id]/submissions`
 
@@ -126,14 +125,24 @@ The editor functionality should be as streamlined as possible for data entry, as
 - [ ] View the total number of active submissions in the system.
 - [ ] (_scholar_): If configured to be public, view specific active submissions and the topic and method expertise required (but not submission titles), sorted by submissions most in need of reviews
 - [ ] (_scholar)_: If configured to be public, bid on active submissions based on expertise required
-- [ ] When an editor of the source is viewing it, they can also manage submissions, adding new submission records.
+- [ ] (_editor_): Add new submission.
+- [ ] (_editor_): View email addresses to cc to review activity emails and transaction templates for each transaction type
 - [ ] When an editor is viewing, to "resolve" a specific submission, generating transactions to compensate scholars for their reviewing labor
 - [ ] Editor-only functionality to submit individual or bulk **Submissions** to the system to allow for volunteering
 - [ ] Editor-only functionality to submit bulk transactions for submissions and reviewing labor
 - [ ] Filter submissions by whether they are active, by author, reviewer, etc.
 
-### `/submission`
+### Submission `/source/[id]/submission`
 
 **PURPOSE**. The submission page allows editors to see information about the submission in isolation from the larger table of submissions.
 
 **FUNCTIONALITY**. This page will not have any major functionality, unless future versions of RR also support reviewing activity itself. In those future versions, this would be the route where scholars access the submission draft and submit reviews and meta reviews, and discuss the submission to come to a recommendation.
+
+### Notifications
+
+**PURPOSE**. This captures email interactions on other platforms.
+
+**FUNCTIONALITY**
+
+- [ ] When an email is sent to the source-specific address and proposed transaction meta-data is found create a proposed transaction corresponding to the transaction meta-data provided
+- [ ] Send minters period reminders of unapproved transactions, based on the frequency set in the Transactions page
