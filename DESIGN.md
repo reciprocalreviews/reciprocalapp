@@ -1,165 +1,192 @@
-# Design
-
 This document is a design specification for the Reciprocol Reviews (RR) platform. We intend it to specify the conceptual interaction design that people will experience when using the platform and rationale for those choices, as well as aspects of the design that are unresolved. It's primary purpose is to provide contributors with a high level checklist for implementation, but also a long term archive for _why_ it is designed the way it is. This document will _not_ specify low-level design details, like user interface mockups or visual design it; it will stay at the high level interaction flow and user-facing features, describing key pages, functionality, and features.
 
 Since RR is a web application, the document is organized by **data**, detailing key data concepts and their relationships; **routes**, corresponding to areas of the web application and detailing their functionality; and **notifications**, which are types of emails that can be sent by the platform in response to user actions or other events. All other backend details for enabling this user experience should be covered in the [ARCHITECTURE](ARCHITECTURE.md) doc.
 
-## Goal
+# Goal
 
 The overarching and foundational design goals of RR are to 1) ensure that there is sufficient reviewing labor for all publications submitted for peer review in academia, and 2) enhance the ability of editors to find qualified reviewers and secure high quality, on-time reviews. The key design hypothesis is that if we create a **currency** to represent labor, and compensate people with it for their labor, and charge it when they create labor, there will be 1) a better (but likely imperfect) availability of peer review labor, 2) a better ability to incentivize reviewing availability and excellence by withholding tokens from reviewers who do not meet community standards of critique, and 3) partially mitigate publish-or-perish obession with quantity of publications by placing a labor cost on peer review.
 
 We're designing and building RR in order to test this hypothesis, with the hopes that it is supported, and academia adopts it as a way to sustain peer review long term.
 
-## Data
+# Legend
+
+We use a few stylistic conventions in this document that have particular meaning:
+
+- - [ ] GitHub tasks are used to indicate a design requirement, and whether that requirement is met in the implementation of the platform. Tasks can be followed by a GitHub issue number, corresponding to the issue in this repository representing the work on the feature.
+- - [ ] _`role`_ indicates that a particular functionality is only available to scholars with a particular role for a `Source`.
+- ` `` ` Backticks are used to represent specific routes in the application or specific concepts in the application. They don't necessarily represent identifiers in code, but rather specific concepts in the application design.
+
+# Data
 
 There are several key types of data in RR:
 
-- [ ] **Scholars**, which correspond to individual scholars, identified by [ORCIDs](https://orcid.org/). Scholars can volunteer for **Sources** and can spend and earn **Tokens** for that volunteer work, as well as receive **Token** gifts. Scholars can also have "editor" status on zero or more **Sources**. Scholars can also have "minter" status, which gives them the ability to create new tokens in a source's currency. An individual scholar cannot be both an editor and a minter, as this would allow editors to enrich themselves without oversight.
+- [ ] `Scholars` are individuals in a research community who are identified by an [ORCID](https://orcid.org/). Scholars can volunteer to review for a `Source` and can spend and earn `Token`s for that volunteer work, as well as receive `Token`s as gifts, and spend `Token`s to submit manuscripts for peer review. Scholars can also have _`editor`_ status on a `Source`, which gives them the ability to manage the `transaction`s and `submission`s in a source. Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Source`'s `Currency`. An individual scholar cannot be both an _`editor`_ and a `_minter`, as this would allow editors to enrich themselves without oversight.
 
-- [ ] **Currencies**, which represent a particular named type of token, associated with one or more sources.
+- [ ] A `Currency` represents a particular named type of `Token`, associated with one or more `Source`s. We allow for many forms of `Currency`, as opposed to one universal one, as different communties may want to place different costs and compensation on different activities, and those amounts will come to have meaning within each of those communities that do not necessarily transfer directly to other communties without some specific exchange agreement.
 
-- [ ] **Tokens**, which are in a **Currency** representing one unit of peer review labor. Tokens are typically spent to compensate others for their reviewing labor. Tokens are typically earned for reviewing labor. There may be many other creative uses for tokens (e.g., gifts, incentives, etc.). Tokens generally should be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few tokens would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many tokens means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review. Tokens are possessed by individual scholars or in a source's "reserve," and transactions can change who posses them.
+- [ ] A `Token` represents an indivisible unit of peer reviewe labor in a particular `Currency`. `Token`s are typically spent to compensate others for their reviewing labor. Tokens are typically earned for reviewing labor. There may be many other creative uses for them (e.g., gifts, incentives, etc.). `Token`s should generally be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few `Token`s would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many `Token`s means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review. `Token`s are possessed by individual scholars or in a `Source`'s reserve (meaning they are posessed by no one) and `Transaction`s can change who posses them.
 
-- [ ] **Sources**, which are named and curated collections of publications (e.g. journals, conferences) that have their own token costs and rewards for reviewing labor.
+- [ ] A `Source` is a named and curated collection of manuscripts undergoing peer review (e.g. a journal or conference). They each have their own costs and rewards for reviewing labor. `Source`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
 
-- [ ] **Submissions**, which represent a publication undergoing peer review. Depending on the source, scholars may be able to volunteer to review, simplifying editor's ability to find eligible reviewers.
+- [ ] A `Submission` represents a manuscript undergoing peer review. Depending on the source, scholars may be able to volunteer to review, simplifying editor's ability to find eligible reviewers. Submissions can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
 
-## Routes
+# Routes
 
-The RR web application includes serveral web application routes to represent each of the data types above, and functionality for each.
+The RR web application includes serveral web application screens, each corresponding to one of the kinds of data above, and providing access to functionality to manipulate each. We'll list URL routes routes for each to clarify the browsing experience.
 
-### Landing `/`
+## Landing `/`
 
-**PURPOSE**. The goal of the landing page is to 1) explain the value proposition of RR to editors, reviewers, and authors and 2) help newcomers orient to the application's key interaction points (how to log in to see their balance and how to find sources of interest for which to volunteer).
+The goal of the landing page is to 1) explain the value proposition of RR to editors, reviewers, and authors and 2) help newcomers orient to the application's key interaction points.
 
-The value propositions we want to communicate to editors are:
+- [ ] The page should communicate value propositions to editors:
+  - Increased quality and timeliness of reviews
+  - Reduced difficulty identifying qualified and available reviewers
+  - Reduced submission spam (where spam includes obviously out of scope submissions, some types of fraudulent submissions created by generative AI)
+- [ ] The page should communicate value propositions to authors:
+  - Faster review turnaround
+  - Fairer distribution of peer review labor
+- [ ] The page should links to other parts of the site, including all routes below, plus a link to the authenticated scholar's page, if authenticated, to view their dashboard.
 
-- [ ] Increased quality and timeliness of reviews
-- [ ] Reduced difficulty identifying qualified and available reviewers
-- [ ] Reduced submission spam (where spam includes obviously out of scope submissions, some types of fraudulent submissions created by generative AI)
+## About `/about`
 
-The value proposition we want to communicate to authors are:
+The purpose of the about page is to give context about the project. It should:
 
-- [ ] Faster review turnaround
-- [ ] Fairer distribution of peer review labor
+- [ ] Explain who is creating RR
+- [ ] Why RR exists
+- [ ] How others can get involved in maintaining and evolving it
+- [ ] How RR is governed and funded.
 
-**FUNCTIONALITY**. The core functionality of the page is links to other parts of the site, including all routes below, plus a link to the authenticated scholar's page, if authenticated.
+It has no functionalty.
 
-### About `/about`
+## Login `/login`
 
-**PURPOSE**. The goal of the about page is to explain who is creating RR, why, how others can get involved in maintaining and evolving it, and how RR is governed and funded. It is primarily content.
+The purpose of the login page is to authenticate a person into the application using ORCID OAuth.
 
-### Login `/login`
+It should:
 
-**PURPOSE**. An ORCID OAuth login page.
+- [ ] Allow a visitor to initiate and complete an ORCID OAuth authentication, landing them at their `/scholar/[id]` dashboard.
 
-**FUNCTIONALITY**
+## Scholar `/scholar/[id]`
 
-- [ ] Submitting the login form should begin the OAuth login process, a series of redirects. Upon success, it should forward to the **Scholar** page, showing the user their dashboard.
+The purpose of the scholar page is to provide a landing page and dashboard for a specific individual scholar, helping them see information about their labor and helping others understand their expertise.
 
-### Scholar `/scholar/[id]`
+It should:
 
-**PURPOSE**. The goal of the scholar page is to provide a landing page and dashboard for a specific individual scholar.
+- [ ] Link to the scholar's ORCID profile, to help visitors get more information about them.
+- [ ] Display read-only data pulled from the ORCID profile, to reduce the need to navigate to their ORCID profile.
+- [ ] Show links to `Source`s the scholar has volunteered to review for
+- [ ] Show links to `Source`s the scholar is serving as _`editor`_ of.
 
-**FUNCTIONALITY**. It should include:
+If scholar ID corresponds to the authenaticed user, it should also allow the scholar to:
 
-- [ ] Links to the scholar's ORCID profile
-- [ ] Read-only data pulled from the ORCID profile
-- [ ] Logout functionality
-- [ ] Links to **Sources** the scholar has volunteered to review for
-- [ ] Links to **Sources** the scholar is serving as editor of.
-- [ ] The ability to specify whether the scholar is available to review based on how many tokens they possess
-- [ ] A history of **Token** transactions
-- [ ] Scholar-only functionality for gifting tokens to someone else
+- [ ] _`scholar`_: Logout
 
-### Source List `/sources`
+- [ ] _`scholar`_: Indicate whether they are available to review, not available to review, or whether that should be based on a minimum number of `Token`s they would like to possess
+- [ ] _`scholar`_: View a history of `Transaction`s that given or take `Token`s from the scholar
+- [ ] _`scholar`_: Gift tokens to someone else using the scholar's ORCID, creating a transaction that transfers the tokens to the corresponding scholar
 
-**PURPOSE**. This page shows all sources managed on RR.
+## Source List `/sources`
 
-**FUNCTIONALITY**
+The purpose of the source list page is to show all sources managed on RR, or proposed to be managed on RR.
 
-- [ ] View all sources, including active and proposed ones.
-- [ ] (_scholar_). Propose a new source for the platform for review by the platform maintainers. Source proposals should gather the name of the source, the email addresses of the person or people leading editing of it, and the estimated size of the number of scholars in the community. Sources with similar names are retrieved and shown to prevent duplicate source creation. When the proposal is submitted, the email addresses listed, and RR administrators are notified. A source is created, but not active until approved.
-- [ ] (\_admin). Approve a source for use, indicating who should take the editor and minter roles for the platform, and creating tokens for all scholars in favor of the petition.
+It should:
 
-### Source `/source/[id]`
+- [ ] Show all `Source`s, including active and proposed ones.
 
-**PURPOSE**. The source page represents a source and its active **Submissions**.
+- [ ] _`scholar`_: Propose a new `Source` for the platform for review by the platform maintainers. `Source` proposals should gather the name of the source, the email addresses of the person or people leading editing of it, and the estimated size of the number of scholars in the community. `Source`s with similar names are retrieved and shown to prevent duplicate source creation. When the proposal is submitted, an email notification is sent to the email addresses listed and RR administrators. A `Source` is created, but not active until approved.
 
-**FUNCTIONALITY**
+- [ ] _`admin`_: Approve a `Source` for use, indicating who should take the _editor_ and _minter_ roles for the platform, and creating tokens for all scholars in favor of the petition.
 
-When a source is proposed:
+## Source `/source/[id]`
 
-- [ ] View the editors listed
+The purpose of a `Source` page is to provide information about its compensation, costs, and people in charge.
+
+The page should:
+
+- [ ] Show the name, description, and URL to the source's website.
+
+When a source is in a **proposed** state:
+
+- [ ] View the _`editors`_ and _`minters`_ of the source
 - [ ] View the estimated size of the community
-- [ ] (_scholars_) Vote to support adopting RR for the source.
+- [ ] _`scholar`_: Vote to support adopting RR for the source.
 
-When a source is approved:
+When a source is **approved** state:
 
-- [ ] Display name, description, and URL to the source's website.
 - [ ] View the cost and compensation of the source.
-- [ ] (_scholar_): Volunteer to review for the source. When they first volunteer, a number of tokens specified by for source should be minted and given to the scholar, welcoming them to the community.
-- [ ] (_editor_): Modify the source name, description
-- [ ] (_editor_): Modify the newcomer gift in tokens
-- [ ] (_editor_): Modify submission costs in tokens, reviewing compensation in tokens. Submission cost must equal to total compensation for a submission.
-- [ ] Editor-only functionality to view the total number of tokens in the source and who posses them, to gauge the health of the community.
+- [ ] _`scholar`_: Volunteer to review for the source. When they first volunteer, a number of tokens specified by for source should be minted and given to the scholar, welcoming them to the community.
+- [ ] _`editor`_: Modify the source name, description
+- [ ] _`editor`_: Modify the newcomer gift in tokens
+- [ ] _`editor`_: Modify submission costs in tokens, reviewing compensation in tokens. Submission cost must equal to total compensation for a submission.
+- [ ] _`editor`_: View the total number of tokens in the source and who posses them, to gauge the health of the community.
+- [ ] _`editor`_: Change the _editor_(s) of the source, ensuring there is always one
+- [ ] _`editor`_: Change the _minter_(s) of the source, ensuring there is always one
+- [ ] _`editor`_: Set the state to inactive
+- [ ] _`editor`_: Set the source to be public or private, indicating whether submissions can be bid on by `scholars`.
 
-### Currency `/source/[id]/currency`
+When a source is in an _inactive_ state:
 
-**PURPOSE**. This page allows changes to the source's currency.
+- [ ] Communicate that it is inactive.
 
-- [ ] (_minter_): Create new tokens within the source's currency, to address token scarcity in the community. This functionality should provide guidance on best practices, including warnings about what happens if they create too many tokens. For example, there should be a certain number of tokens per scholar in the community at a minimum, but not so many that publishing requires no labor.
-- [ ] (_editor_): Convert a specific token to another source's currency. (One time exchange).
-- [ ] (_editor_): Specify a conversion rate between one source and another, which enables scholars to independently convert their tokens from one currency to another (official exchange).
-- [ ] (_minter_): Unify two currencies, removing the need to convert between a currency. Must be approved by the minters of both sources.
+## Currency `/source/[id]/currency`
 
-### Transaction s`/source/[id]/transactions`
+The purpose of this page is to manage the source's `Currency`.
 
-**PURPOSE**. This page is for managing all transactions in a source.
+- [ ] _`scholar`_: Show any existing exchange rates approved by the platform.
+- [ ] _`editor`_: Convert a specific token to another source's currency. This enables a one-time exchange, such as when an editor might approve someone using currency from another `Source` to submit to their source.
+- [ ] _`editor`_: Specify a conversion rate between one source and another, which enables scholars to independently convert their tokens from one currency to another. This enables an official one way exchange rate, reducing barriers to cross-source transactions.
+- [ ] _`editor`_: Unify two currencies, removing the need to convert between a currency. Must be approved by the `editors` of both sources. This prevent editors from unilaterally creating changes.
+- [ ] _`minter`_: Create new tokens within the source's currency, to address token scarcity in the community. This functionality should provide guidance on best practices, including warnings about what happens if they create too many tokens. For example, there should be a certain number of tokens per scholar in the community at a minimum, but not so many that publishing requires no labor.
+
+## Transactions `/source/[id]/transactions`
+
+The purpose of this page is to allow for management of all `Transaction`s associated with a `Source`.
 
 **FUNCTIONALITY**. The transactions page for a source should allow for:
 
-- [ ] (_editors_, _minters_): View all transactions
-- [ ] (_editors_, _minters_): Search for transactions involving particular people or containing particular text
-- [ ] (_minters_): Approve pending transactions that do not involve the scholar approving
-- [ ] (_editors_, _minters_): Cancel approved transactions that do not involve the scholar canceling
-- [ ] (_minters_): Change the frequency of email reminders about unapproved transactions to never, daily, or weekly
+- [ ] _`editor`_, _`minter`_: View all transactions
+- [ ] _`editor`_, _`minter`_: Search for transactions involving particular people or containing particular text
+- [ ] _`minter`_: Approve pending transactions that do not involve the scholar approving
+- [ ] _`editors`_, _`minters`_: Cancel approved transactions that do not involve the scholar canceling
+- [ ] _`minters`_: Change the frequency of email reminders about unapproved transactions to never, daily, or weekly
 
-### `/source/[id]/submissions`
+## `/source/[id]/submissions`
 
-**PURPOSE**. The submissions page helps scholars see all active submissions in review, and if an editor, manage them.
+The purpose of the submissions page is to help scholars see all active submissions in review, and if an editor, manage them.
 
-**FUNCTIONALITY**
+It should should:
 
-- [ ] View the total number of active submissions in the system.
-- [ ] (_scholar_): If configured to be public, view specific active submissions and the topic and method expertise required (but not submission titles), sorted by submissions most in need of reviews
-- [ ] (_scholar)_: If configured to be public, bid on active submissions based on expertise required
-- [ ] (_editor_): Add new submission.
-- [ ] (_editor_): View email addresses to cc to review activity emails and transaction templates for each transaction type
-- [ ] When an editor is viewing, to "resolve" a specific submission, generating transactions to compensate scholars for their reviewing labor
-- [ ] Editor-only functionality to submit individual or bulk **Submissions** to the system to allow for volunteering
-- [ ] Editor-only functionality to submit bulk transactions for submissions and reviewing labor
-- [ ] Filter submissions by whether they are active, by author, reviewer, etc.
+- [ ] Show the total number of active submissions in the system.
+- [ ] _`editor`_: Filter submissions by whether they are active, by author, reviewer, etc.
+- [ ] _`editor`_: Manually add a new submission, including all of the transactions, the manuscript ID specific to the source, the scholar authors of the submission, and how much each author is contributing. (This is to overcome integration failures, or submisions managed outside of normal reviewing platform flows.)
+- [ ] `_editor_`: Submit bulk `Submission`s to the system, allowing more than one at a time
+- [ ] _`editor`_: Resolve a specific submission, generating transactions to compensate scholars for their reviewing labor
+- [ ] _`editor`_: Resolve bulk submissions, generating transactions for multiple existing submissions
+- [ ] _`editor`_: View RR email addresses to include on review activity emails on other platforms
+- [ ] _`editor`_: View transaction templates for each transaction type ot include in email text on other platform's email templates
 
-### Submission `/source/[id]/submission`
+If the `Source` is set to be public:
 
-**PURPOSE**. The submission page allows editors to see information about the submission in isolation from the larger table of submissions.
+- [ ] _`scholar`_: View specific active submissions and the topic and method expertise required (but not submission titles), sorted by submissions most in need of reviews
+- [ ] _`scholar`_: Bid on active submissions based on expertise required
 
-**FUNCTIONALITY**. This page will not have any major functionality, unless future versions of RR also support reviewing activity itself. In those future versions, this would be the route where scholars access the submission draft and submit reviews and meta reviews, and discuss the submission to come to a recommendation.
+## Submission `/source/[id]/submission`
 
-### Notifications
+The purpose of a submission page is to allow editors and scholars to see information about the submission. This page will not have any major functionality, unless future versions of RR also support reviewing activity itself. In those future versions, this would be the route where scholars access the submission draft and submit reviews and meta reviews, and discuss the submission to come to a recommendation.
 
-**PURPOSE**. This captures email interactions on other platforms.
+# Notifications
 
-**FUNCTIONALITY**
+RR will have dedicated email adresses for each source that, if sent to, will generate events and data that is user facing.
 
-For transactions:
+- [ ] When an email is sent to the `Source`-specific address and proposed `Transaction` meta-data is found, create proposed `Transaction`s corresponding to the transaction meta-data provided. Types of transactions and corresponding metadata include:
+  - [ ] _Submission_ (manuscript ID, ORCID for each author, and amount each author should be deducted).
+  - [ ] _Review_ (manuscript ID, ORCID for the reviewer)
+  - [ ] _Meta-review_ (manuscript ID, ORCID for meta-reviewer)
+- [ ] When a `Transaction` specified in an email could not be processed — because it lacked metadata, lacked metadata that could be matched to a source, manuscript, or scholar, or violated a sources requirements — the editor of the source is notified of the error so they can manually correct it, and potentially any configuration issues with the integration.
+- [ ] When a proposed `Transaction` is declined, an email is sent to the person who proposed it with an explanation for why.
+- [ ] When `Source`s become **approved**, send emails to the editor and all people who upvoted the source, notifying them of their new tokens and the live process.
 
-- [ ] When an email is sent to the source-specific address and proposed transaction meta-data is found create a proposed transaction corresponding to the transaction meta-data provided
-- [ ] Send minters period reminders of unapproved transactions, based on the frequency set in the Transactions page
-- [ ] When a proposed transaction is declined, an email is sent to the person who proposed it with an explanation for why.
+RR will also send periodic reminders based on time-based events:
 
-For sources:
-
-- [ ] Sources are checked daily for a certain proportion of support, and editors are notified when the petition exceeds that threshold.
-- [ ] When sources become approved, send emails to the editor and all people who upvoted the source, notifying them of their new tokens and the live process.
+- [ ] Send `minters` periodic reminders of unapproved transactions, based on the frequency set in the `Transactions` page
+- [ ] `Source`s are checked daily for a certain proportion of support, and editors are notified when the petition exceeds that threshold.
