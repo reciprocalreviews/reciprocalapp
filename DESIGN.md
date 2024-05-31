@@ -32,16 +32,16 @@ The RR web application includes serveral web application routes to represent eac
 
 The value propositions we want to communicate to editors are:
 
-- Increased quality and timeliness of reviews
-- Reduced difficulty identifying qualified and available reviewers
-- Reduced submission spam (where spam includes obviously out of scope submissions, some types of fraudulent submissions created by generative AI)
+- [ ] Increased quality and timeliness of reviews
+- [ ] Reduced difficulty identifying qualified and available reviewers
+- [ ] Reduced submission spam (where spam includes obviously out of scope submissions, some types of fraudulent submissions created by generative AI)
 
 The value proposition we want to communicate to authors are:
 
-- Faster review turnaround
-- Fairer distribution of peer review labor
+- [ ] Faster review turnaround
+- [ ] Fairer distribution of peer review labor
 
-**FUNCTIONALITY**. The core functionality of the page is links to other parts of the site.
+**FUNCTIONALITY**. The core functionality of the page is links to other parts of the site, including all routes below, plus a link to the authenticated scholar's page, if authenticated.
 
 ### About `/about`
 
