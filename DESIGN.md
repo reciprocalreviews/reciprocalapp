@@ -90,7 +90,7 @@ The value proposition we want to communicate to authors are:
 - [ ] (_scholar_): Volunteer to review for the source. When they first volunteer, a number of tokens specified by for source should be minted and given to the scholar, welcoming them to the community.
 - [ ] (_editor_): Modify the source name, description
 - [ ] (_editor_): Modify the newcomer gift in tokens
-- [ ] (_editor_): Modify submission costs in tokens, reviewing compensation in tokens.
+- [ ] (_editor_): Modify submission costs in tokens, reviewing compensation in tokens. Submission cost must equal to total compensation for a submission.
 - [ ] Editor-only functionality to view the total number of tokens in the source and who posses them, to gauge the health of the community.
 
 ### Currency `/source/[id]/currency`
