@@ -1,20 +1,20 @@
 # Design
 
-This document is a design specification for the Reciprocol Reviews (RR) platform. We intend itto specify the conceptual interaction design that people will experience when using the platform and rationale for those choices, as well as aspects of the design that are unresolved. It's primary purpose is to provide contributors with a high level guide for implementation, but also a long term archive for _why_ it is implemented the way it is. This document will _not_ specify low-level design details, like user interface mockups or visual design it; it will stay at the high level interaction flow, describing key pages and functionality.
+This document is a design specification for the Reciprocol Reviews (RR) platform. We intend it to specify the conceptual interaction design that people will experience when using the platform and rationale for those choices, as well as aspects of the design that are unresolved. It's primary purpose is to provide contributors with a high level checklist for implementation, but also a long term archive for _why_ it is designed the way it is. This document will _not_ specify low-level design details, like user interface mockups or visual design it; it will stay at the high level interaction flow and user-facing features, describing key pages, functionality, and features.
 
-Since RR is a web application, the document is organized by **data**, detailing key data concepts and their relationships; **routes**, corresponding to areas of the web application and detailing their functionality; and **notifications**, which are types of emails that can be sent by the platform in response to user actions or other events.
+Since RR is a web application, the document is organized by **data**, detailing key data concepts and their relationships; **routes**, corresponding to areas of the web application and detailing their functionality; and **notifications**, which are types of emails that can be sent by the platform in response to user actions or other events. All other backend details for enabling this user experience should be covered in the [ARCHITECTURE](ARCHITECTURE.md) doc.
 
 ## Goal
 
-The overarching and foundational design goal of RR is to ensure that there is sufficient reviewing labor for all publications submitted for peer review in academia. The key design hypothesis is that if we create a currency to represent labor, and compensate people with it for their labor, and charge it when they create labor, there will be 1) a better (but likely imperfect) availability of peer review labor, 2) the ability to incentivize reviewing excellence by withholding tokens from reviewers who do not meet community standards of critique, and 3) partially mitigate publish-or-perish obession with quantity of publications.
+The overarching and foundational design goals of RR are to 1) ensure that there is sufficient reviewing labor for all publications submitted for peer review in academia, and 2) enhance the ability of editors to find qualified reviewers and secure high quality, on-time reviews. The key design hypothesis is that if we create a **currency** to represent labor, and compensate people with it for their labor, and charge it when they create labor, there will be 1) a better (but likely imperfect) availability of peer review labor, 2) a better ability to incentivize reviewing availability and excellence by withholding tokens from reviewers who do not meet community standards of critique, and 3) partially mitigate publish-or-perish obession with quantity of publications by placing a labor cost on peer review.
 
-We're designing and building RR in order to test this hypothesis, with the hopes that it is supported, and academia adopts it as a way to sustain peer review, promo
+We're designing and building RR in order to test this hypothesis, with the hopes that it is supported, and academia adopts it as a way to sustain peer review long term.
 
 ## Data
 
 There are four key types of data in RR:
 
-- **Scholars**, which correspond to individual scholars and ORCIDs. Scholars can volunteer for **Sources** and can spend and earn **Tokens** for that volunteer work, as well as receive **Token** gifts. Scholars can also have "editor" status on zero or more **Sources**.
+- **Scholars**, which correspond to individual scholars, identified by [ORCIDs](https://orcid.org/). Scholars can volunteer for **Sources** and can spend and earn **Tokens** for that volunteer work, as well as receive **Token** gifts. Scholars can also have "editor" status on zero or more **Sources**.
 
 - **Tokens**, which are a currency representing one unit of peer review labor. Tokens are typically spent to compensate others for their reviewing labor. Tokens are typically earned for reviewing labor. There may be many other creative uses for tokens (e.g., gifts, incentives, etc.).
 
@@ -24,11 +24,22 @@ There are four key types of data in RR:
 
 ## Routes
 
-The RR web application includes serveral routes to represent each of the data types above, and functionality for each.
+The RR web application includes serveral web application routes to represent each of the data types above, and functionality for each.
 
 ### Landing `/`
 
-**PURPOSE**. The goal of the landing page is to explain the value proposition of RR to editors, reviewers, and authors and help newcomers find how to log in
+**PURPOSE**. The goal of the landing page is to 1) explain the value proposition of RR to editors, reviewers, and authors and 2) help newcomers orient to the application's key interaction points (how to log in to see their balance and how to find sources of interest for which to volunteer).
+
+The value propositions we want to communicate to editors are:
+
+- Increased quality and timeliness of reviews
+- Reduced difficulty identifying qualified and available reviewers
+- Reduced submission spam (where spam includes obviously out of scope submissions, some types of fraudulent submissions created by generative AI)
+
+The value proposition we want to communicate to authors are:
+
+- Faster review turnaround
+- Fairer distribution of peer review labor
 
 **FUNCTIONALITY**. The core functionality of the page is links to other parts of the site.
 
