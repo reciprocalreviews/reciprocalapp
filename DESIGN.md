@@ -70,30 +70,50 @@ The value proposition we want to communicate to authors are:
 - [ ] A history of **Token** transactions
 - [ ] Scholar-only functionality for gifting tokens to someone else
 
-### `/sources`
+### Source List `/sources`
 
 **PURPOSE**. This page shows all sources managed on RR.
 
-**FUNCTIONALITY**. In addition to displaying all sources, it allows scholars to propose new sources for the platform.
+**FUNCTIONALITY**
 
-### `/source/[id]`
+- [ ] View all sources
+- [ ] (_scholar_). Propose a new source for the platform for review by the platform maintainers.
+
+### Source `/source/[id]`
 
 **PURPOSE**. The source page represents a source and its active **Submissions**.
 
 **FUNCTIONALITY**. The source page should allow for:
 
 - [ ] Display name, description, and URL to the source's website.
-- [ ] Scholar-only functionality to volunteer to review for the source. When they first volunteer, a number of tokens specified by for source should be minted and given to the scholar, welcoming them to the community.
-- [ ] Editor-only functionality to modify the source name, description
-- [ ] Editor-only functionality to modify the newcomer gift in tokens
-- [ ] Editor-only functionality to modify submission costs in tokens, reviewing compensation in tokens.
+- [ ] View the cost and compensation of the source.
+- [ ] (_scholar_): Volunteer to review for the source. When they first volunteer, a number of tokens specified by for source should be minted and given to the scholar, welcoming them to the community.
+- [ ] (_editor_): Modify the source name, description
+- [ ] (_editor_): Modify the newcomer gift in tokens
+- [ ] (_editor_): Modify submission costs in tokens, reviewing compensation in tokens.
 - [ ] Editor-only functionality to view the total number of tokens in the source and who posses them, to gauge the health of the community.
-- [ ] Minter-only functionality to create new tokens within the source's currency, to address token scarcity in the community. This functionality should provide guidance on best practices, including warnings about what happens if they create too many tokens. For example, there should be a certain number of tokens per scholar in the community at a minimum, but not so many that publishing requires no labor.
-- [ ] Editor-only functionality to convert a specific set of tokens to another source. (One time exchange).
-- [ ] Minter-only functionality to specify a conversion rate between one source and another, which enables scholars to independently convert their tokens from one currency to another (official exchange).
-- [ ] Minter-only functionality to unify two currencies, removing the need to convert between a currency. Must be approved by the minters of both sources.
+
+### Currency `/source/[id]/currency`
+
+**PURPOSE**. This page allows changes to the source's currency.
+
+- [ ] (_minter_): Create new tokens within the source's currency, to address token scarcity in the community. This functionality should provide guidance on best practices, including warnings about what happens if they create too many tokens. For example, there should be a certain number of tokens per scholar in the community at a minimum, but not so many that publishing requires no labor.
+- [ ] (_editor_): Convert a specific token to another source's currency. (One time exchange).
+- [ ] (_editor_): Specify a conversion rate between one source and another, which enables scholars to independently convert their tokens from one currency to another (official exchange).
+- [ ] (_minter_): Unify two currencies, removing the need to convert between a currency. Must be approved by the minters of both sources.
 
 The editor functionality should be as streamlined as possible for data entry, as well as prioritize error prevention.
+
+### `/source/[id]/transactions`
+
+**PURPOSE**. This page is for managing all transactions in a source.
+
+**FUNCTIONALITY**. The transactions page for a source should allow for:
+
+- [ ] (_Editors_, _minters_): View all transactions
+- [ ] (_Editors_, _minters_): Search for transactions involving particular people or containing particular text
+- [ ] (_Editors_, _minters_): Approve pending transactions that do not involve the scholar approving
+- [ ] (_Editors_, _minters_): Cancel approved transactions that do not involve the scholar canceling
 
 ### `/source/[id]/submissions`
 
