@@ -31,7 +31,7 @@ We use a few stylistic conventions in this document that have particular meaning
 
 There are several key types of data in RR:
 
-- [ ] `Scholars` are individuals in a research community who are identified by an [ORCID](https://orcid.org/). Scholars can volunteer to review for a `Source` and can spend and earn `Token`s for that volunteer work, as well as receive `Token`s as gifts, and spend `Token`s to submit manuscripts for peer review. Scholars can also have _`editor`_ status on a `Source`, which gives them the ability to manage the `transaction`s and `submission`s in a source. Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Source`'s `Currency`. An individual scholar cannot be both an _`editor`_ and a `_minter`, as this would allow editors to enrich themselves without oversight.
+- [ ] `Scholars` are individuals in a research community who are identified by an [ORCID](https://orcid.org/). Scholars can volunteer to review for a `Source` and can spend and earn `Token`s for that volunteer work, as well as receive `Token`s as gifts, and spend `Token`s to submit manuscripts for peer review. Scholars can also have _`editor`_ status on a `Source`, which gives them the ability to manage the `transaction`s and `submission`s in a source. Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Source`'s `Currency`. An individual scholar cannot be both an _`editor`_ and a `_minter`, as this would allow editors to enrich themselves without oversight. Scholars can specify an email address for communication.
 
 - [ ] A `Source` is a named and curated collection of manuscripts undergoing peer review (e.g. a journal or conference). They each have their own costs and rewards for reviewing labor. `Source`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
 
@@ -96,6 +96,7 @@ If scholar ID corresponds to the authenaticed user, it should also allow the sch
 - [ ] _`scholar`_: Logout
 - [ ] _`scholar`_: Indicate whether they are available to review, not available to review, or whether that should be based on a minimum number of `Token`s they would like to possess
 - [ ] _`scholar`_: Write a qualitative statement of availability
+- [ ] _`scholar`_:Allow editing of the scholar's preferred email address.
 
 > [!IMPORTANT]
 > The functionality below is specific to compensation
@@ -190,7 +191,7 @@ It should should:
 - [ ] Show the total number of active submissions in the system.
 - [ ] _`editor`_: Filter submissions by whether they are active, by author, reviewer, etc.
 - [ ] _`editor`_: Manually add a new submission, including all of the transactions, the manuscript ID specific to the source, the scholar authors of the submission, and how much each author is contributing. (This is to overcome integration failures, or submisions managed outside of normal reviewing platform flows.)
-- [ ] `_editor_`: Submit bulk `Submission`s to the system, allowing more than one at a time
+- [ ] _`editor`_: Submit bulk `Submission`s to the system, allowing more than one at a time
 - [ ] _`editor`_: Resolve a specific submission, generating transactions to compensate scholars for their reviewing labor
 - [ ] _`editor`_: Resolve bulk submissions, generating transactions for multiple existing submissions
 - [ ] _`editor`_: View RR email addresses to include on review activity emails on other platforms
