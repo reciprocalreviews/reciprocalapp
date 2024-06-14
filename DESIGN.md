@@ -4,7 +4,18 @@ Since RR is a web application, the document is organized by **data**, detailing 
 
 # Goal
 
-The overarching and foundational design goals of RR are to 1) ensure that there is sufficient reviewing labor for all publications submitted for peer review in academia, and 2) enhance the ability of editors to find qualified reviewers and secure high quality, on-time reviews. The key design hypothesis is that if we create a **currency** to represent labor, and compensate people with it for their labor, and charge it when they create labor, there will be 1) a better (but likely imperfect) availability of peer review labor, 2) a better ability to incentivize reviewing availability and excellence by withholding tokens from reviewers who do not meet community standards of critique, and 3) partially mitigate publish-or-perish obession with quantity of publications by placing a labor cost on peer review.
+The overarching and foundational goal of RR is to 1) ensure that there is sufficient reviewing labor for all publications submitted for peer review in academia, and 2) enhance the ability of editors to find qualified reviewers and secure high quality, on-time reviews. 
+
+There are two types of functionality that we hope will achieve this goal:
+
+1. Streamlining volunteering for reviewing for publication sources, and making visible reviewer availability to editors
+2. Enabling the creation of **currency** to represent labor, and compensate people with it for their labor, and charge it when they create labor
+
+Our design hypothesis is that these two core functionalities will result in several value propositions:
+
+1. A better (but likely imperfect) availability of peer review labor
+2. A better ability to incentivize reviewing availability and excellence by withholding tokens from reviewers who do not meet community standards of critique, and
+3. A partial mitigation publish-or-perish obession with quantity of publications by placing a labor cost on peer review.
 
 We're designing and building RR in order to test this hypothesis, with the hopes that it is supported, and academia adopts it as a way to sustain peer review long term.
 
@@ -22,11 +33,14 @@ There are several key types of data in RR:
 
 - [ ] `Scholars` are individuals in a research community who are identified by an [ORCID](https://orcid.org/). Scholars can volunteer to review for a `Source` and can spend and earn `Token`s for that volunteer work, as well as receive `Token`s as gifts, and spend `Token`s to submit manuscripts for peer review. Scholars can also have _`editor`_ status on a `Source`, which gives them the ability to manage the `transaction`s and `submission`s in a source. Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Source`'s `Currency`. An individual scholar cannot be both an _`editor`_ and a `_minter`, as this would allow editors to enrich themselves without oversight.
 
+- [ ] A `Source` is a named and curated collection of manuscripts undergoing peer review (e.g. a journal or conference). They each have their own costs and rewards for reviewing labor. `Source`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
+
+> [!IMPORTANT]
+> The data below is specific to compensation
+
 - [ ] A `Currency` represents a particular named type of `Token`, associated with one or more `Source`s. We allow for many forms of `Currency`, as opposed to one universal one, as different communties may want to place different costs and compensation on different activities, and those amounts will come to have meaning within each of those communities that do not necessarily transfer directly to other communties without some specific exchange agreement.
 
 - [ ] A `Token` represents an indivisible unit of peer reviewe labor in a particular `Currency`. `Token`s are typically spent to compensate others for their reviewing labor. Tokens are typically earned for reviewing labor. There may be many other creative uses for them (e.g., gifts, incentives, etc.). `Token`s should generally be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few `Token`s would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many `Token`s means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review. `Token`s are possessed by individual scholars or in a `Source`'s reserve (meaning they are posessed by no one) and `Transaction`s can change who posses them.
-
-- [ ] A `Source` is a named and curated collection of manuscripts undergoing peer review (e.g. a journal or conference). They each have their own costs and rewards for reviewing labor. `Source`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
 
 - [ ] A `Submission` represents a manuscript undergoing peer review. Depending on the source, scholars may be able to volunteer to review, simplifying editor's ability to find eligible reviewers. Submissions can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
 
@@ -80,8 +94,12 @@ It should:
 If scholar ID corresponds to the authenaticed user, it should also allow the scholar to:
 
 - [ ] _`scholar`_: Logout
-
 - [ ] _`scholar`_: Indicate whether they are available to review, not available to review, or whether that should be based on a minimum number of `Token`s they would like to possess
+- [ ] _`scholar`_: Write a qualitative statement of availability
+
+> [!IMPORTANT]
+> The functionality below is specific to compensation
+
 - [ ] _`scholar`_: View a history of `Transaction`s that given or take `Token`s from the scholar
 - [ ] _`scholar`_: Gift tokens to someone else using the scholar's ORCID, creating a transaction that transfers the tokens to the corresponding scholar
 
@@ -116,19 +134,26 @@ When a source is **approved** state:
 - [ ] View the cost and compensation of the source.
 - [ ] _`scholar`_: Volunteer to review for the source. When they first volunteer, a number of tokens specified by for source should be minted and given to the scholar, welcoming them to the community.
 - [ ] _`editor`_: Modify the source name, description
+- [ ] _`editor`_: Change the _editor_(s) of the source, ensuring there is always one
+- [ ] _`editor`_: Set the state to inactive
+
+> [!IMPORTANT]
+> The functionality below is specific to compensation
+
 - [ ] _`editor`_: Modify the newcomer gift in tokens
 - [ ] _`editor`_: Modify submission costs in tokens, reviewing compensation in tokens. Submission cost must equal to total compensation for a submission.
 - [ ] _`editor`_: View the total number of tokens in the source and who posses them, to gauge the health of the community.
-- [ ] _`editor`_: Change the _editor_(s) of the source, ensuring there is always one
 - [ ] _`editor`_: Change the _minter_(s) of the source, ensuring there is always one
-- [ ] _`editor`_: Set the state to inactive
-- [ ] _`editor`_: Set the source to be public or private, indicating whether submissions can be bid on by `scholars`.
+- [ ] _`editor`_: Set the source to be public or private, determining whether submissions can be bid on by `scholars`.
 
 When a source is in an _inactive_ state:
 
 - [ ] Communicate that it is inactive.
 
 ## Currency `/source/[id]/currency`
+
+> [!IMPORTANT]
+> All functionality below is specific to compensation
 
 The purpose of this page is to manage the source's `Currency`.
 
@@ -139,6 +164,9 @@ The purpose of this page is to manage the source's `Currency`.
 - [ ] _`minter`_: Create new tokens within the source's currency, to address token scarcity in the community. This functionality should provide guidance on best practices, including warnings about what happens if they create too many tokens. For example, there should be a certain number of tokens per scholar in the community at a minimum, but not so many that publishing requires no labor.
 
 ## Transactions `/source/[id]/transactions`
+
+> [!IMPORTANT]
+> All functionality below is specific to compensation
 
 The purpose of this page is to allow for management of all `Transaction`s associated with a `Source`.
 
@@ -151,6 +179,9 @@ The purpose of this page is to allow for management of all `Transaction`s associ
 - [ ] _`minters`_: Change the frequency of email reminders about unapproved transactions to never, daily, or weekly
 
 ## `/source/[id]/submissions`
+
+> [!IMPORTANT]
+> All functionality below is specific to compensation
 
 The purpose of the submissions page is to help scholars see all active submissions in review, and if an editor, manage them.
 
@@ -172,9 +203,22 @@ If the `Source` is set to be public:
 
 ## Submission `/source/[id]/submission`
 
+> [!IMPORTANT]
+> All functionality below is specific to compensation
+
 The purpose of a submission page is to allow editors and scholars to see information about the submission. This page will not have any major functionality, unless future versions of RR also support reviewing activity itself. In those future versions, this would be the route where scholars access the submission draft and submit reviews and meta reviews, and discuss the submission to come to a recommendation.
 
 # Notifications
+
+RR will also send periodic reminders based on time-based events:
+
+- [ ] `Source`s are checked daily for a certain proportion of support, and editors are notified when the petition exceeds that threshold.
+- [ ] send `scholar`s periodic reminders to update their availability
+
+> [!IMPORTANT]
+> Emails below are specific to compensation
+
+- [ ] Send `minters` periodic reminders of unapproved transactions, based on the frequency set in the `Transactions` page
 
 RR will have dedicated email adresses for each source that, if sent to, will generate events and data that is user facing.
 
@@ -186,7 +230,3 @@ RR will have dedicated email adresses for each source that, if sent to, will gen
 - [ ] When a proposed `Transaction` is declined, an email is sent to the person who proposed it with an explanation for why.
 - [ ] When `Source`s become **approved**, send emails to the editor and all people who upvoted the source, notifying them of their new tokens and the live process.
 
-RR will also send periodic reminders based on time-based events:
-
-- [ ] Send `minters` periodic reminders of unapproved transactions, based on the frequency set in the `Transactions` page
-- [ ] `Source`s are checked daily for a certain proportion of support, and editors are notified when the petition exceeds that threshold.
