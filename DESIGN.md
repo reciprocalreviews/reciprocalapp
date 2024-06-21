@@ -4,17 +4,17 @@ Since RR is a web application, the document is organized by **data**, detailing 
 
 # Goal
 
-The overarching and foundational goal of RR is to 1) ensure that there is sufficient reviewing labor for all publications submitted for peer review in academia, and 2) enhance the ability of editors to find qualified reviewers and secure high quality, on-time reviews. 
+The overarching and foundational goal of RR is to 1) ensure that there is sufficient reviewing labor for all publications submitted for peer review in academia, and 2) enhance the ability of editors to find qualified reviewers and secure high quality, on-time reviews.
 
 There are two types of functionality that we hope will achieve this goal:
 
 1. Streamlining volunteering for reviewing for publication sources, and making visible reviewer availability to editors
-2. Enabling the creation of **currency** to represent labor, and compensate people with it for their labor, and charge it when they create labor
+2. Enabling the creation of **currency** to represent labor, and compensate people with it for their reviewing labor, and charge it when they create reviewing labor
 
 Our design hypothesis is that these two core functionalities will result in several value propositions:
 
-1. A better (but likely imperfect) availability of peer review labor
-2. A better ability to incentivize reviewing availability and excellence by withholding tokens from reviewers who do not meet community standards of critique, and
+1. Easier discovery of reviewers and their availability
+2. Improved reviewing availability and review quality by withholding tokens necessary for publishing when reviews do not meet community standards of critique, and
 3. A partial mitigation publish-or-perish obession with quantity of publications by placing a labor cost on peer review.
 
 We're designing and building RR in order to test this hypothesis, with the hopes that it is supported, and academia adopts it as a way to sustain peer review long term.
@@ -23,26 +23,203 @@ We're designing and building RR in order to test this hypothesis, with the hopes
 
 We use a few stylistic conventions in this document that have particular meaning:
 
-- - [ ] GitHub tasks are used to indicate a design requirement, and whether that requirement is met in the implementation of the platform. Tasks can be followed by a GitHub issue number, corresponding to the issue in this repository representing the work on the feature.
-- - [ ] _`role`_ indicates that a particular functionality is only available to scholars with a particular role for a `Source`.
+- `- [ ]` GitHub tasks are used to indicate a design requirement, and whether that requirement is met in the implementation of the platform. Tasks can be followed by a GitHub issue number, corresponding to the issue in this repository representing the work on the feature.
+- `- [ ] role` indicates that a particular functionality is only available to scholars with a particular role for a `Source`.
 - ` `` ` Backticks are used to represent specific routes in the application or specific concepts in the application. They don't necessarily represent identifiers in code, but rather specific concepts in the application design.
 
 # Data
 
-There are several key types of data in RR:
+There are several key types of data in RR.
 
-- [ ] `Scholars` are individuals in a research community who are identified by an [ORCID](https://orcid.org/). Scholars can volunteer to review for a `Source` and can spend and earn `Token`s for that volunteer work, as well as receive `Token`s as gifts, and spend `Token`s to submit manuscripts for peer review. Scholars can also have _`editor`_ status on a `Source`, which gives them the ability to manage the `transaction`s and `submission`s in a source. Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Source`'s `Currency`. An individual scholar cannot be both an _`editor`_ and a `_minter`, as this would allow editors to enrich themselves without oversight. Scholars can specify an email address for communication.
+## Scholars
 
-- [ ] A `Source` is a named and curated collection of manuscripts undergoing peer review (e.g. a journal or conference). They each have their own costs and rewards for reviewing labor. `Source`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
+`Scholars` are individuals in a research community who are identified by an [ORCID](https://orcid.org/).
+
+- [ ] Scholars can volunteer to review for a `Source`
+- [ ] Scholars can spend and earn `Token`s for that volunteer work, as well as receive `Token`s as gifts, and spend `Token`s to submit manuscripts for peer review.
+- [ ] Scholars can also have _`editor`_ status on a `Source`, which gives them the ability to manage the `transaction`s and `submission`s in a source.
+- [ ] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Source`'s `Currency`.
+- [ ] An individual scholar cannot be both an _`editor`_ and a _`minter`_, as this would allow editors to enrich themselves without oversight. Scholars can specify an email address for communication.
+- [ ] Anyone can view a `Scholar`'s record, but only `Scholars` can create, update, or delete their record.
+
+Here is a SQL schema sketch, for clarity:
+
+```sql
+create table scholars (
+  -- The internal unique ID for scholars, corresponding to an auth record
+  id uuid not null references auth(id) primary key on delete cascade,
+  -- The scholar's ORCID, a 16-digit number with dashes conforming to the ISO International Standard Name Identifier (ISNI) format, e.g. 0000-0001-2345-6789. References the foreign key on a hypothetical 'auth' table storing authentication details.
+  orcid text not null,
+  -- The scholar's optional preferred email address for review requests
+  email text default null,
+  -- Whether the scholar is available to review
+  available boolean not null default true,
+  -- The scholar's explanation of their availabilty
+  status text not null default '':text
+);
+```
+
+## Sources
+
+A `Source` is a named and curated collection of manuscripts undergoing peer review (e.g. a journal or conference).
+
+- [ ] A `Source` has a cost and reward for reviewing labor.
+- [ ] `Source`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
+- [ ] `Source`s can be proposed, but aren't created until approved.
+
+Here is a SQL sketch, for clarity of both a record of sources, and scholar volunteers for the sources:
+
+```sql
+create table sources (
+  -- The unique ID of the source
+  id uuid not null default uuid_generate_v1() primary key,
+  -- The title of the source
+  title text not null default '':text,
+  -- The description of the source
+  description text not null default '':text,
+  -- A link to the source's official web page
+  url text not null default '':text,
+  -- The id of the currency the source is using
+  currency uuid not null references currency(id),
+  -- Whether the the source permits public bidding on submissions
+  bidding boolean not null default true,
+  -- One or more scholars who serve as editors of the source
+  editors text[] not null default '{}'::text[] check (cardinality(editors) > 0),
+  -- One or more scholars who serve as minters for the source
+  minters text[] not null default '{}'::text[] check (cardinality(minters) > 0)
+);
+
+create table volunteers (
+  -- The id of the scholar who volunteered
+  scholarid uuid not null references scholars(id) on delete cascade,
+  -- The id of the
+  sourceid uuid not null references sources(id) on delete cascade
+);
+
+-- A table of proposed sources
+create table proposed (
+  -- The unique ID of the source
+  id uuid not null default uuid_generate_v1() primary key,
+  -- The title of the source
+  title text not null default '':text,
+  -- The email addresses of editors responsible for the source
+  emails text not null default '':text,
+  -- The estimated size of the research community,
+  size integer not null
+)
+
+```
+
+## Currencies
 
 > [!IMPORTANT]
 > The data below is specific to compensation
 
-- [ ] A `Currency` represents a particular named type of `Token`, associated with one or more `Source`s. We allow for many forms of `Currency`, as opposed to one universal one, as different communties may want to place different costs and compensation on different activities, and those amounts will come to have meaning within each of those communities that do not necessarily transfer directly to other communties without some specific exchange agreement.
+A `Currency` represents a particular named type of `Token`, associated with one or more `Source`s. We allow for many forms of `Currency`, as opposed to one universal one, as different communties may want to place different costs and compensation on different activities, and those amounts will come to have meaning within each of those communities that do not necessarily transfer directly to other communties without some specific exchange agreement.
 
-- [ ] A `Token` represents an indivisible unit of peer reviewe labor in a particular `Currency`. `Token`s are typically spent to compensate others for their reviewing labor. Tokens are typically earned for reviewing labor. There may be many other creative uses for them (e.g., gifts, incentives, etc.). `Token`s should generally be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few `Token`s would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many `Token`s means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review. `Token`s are possessed by individual scholars or in a `Source`'s reserve (meaning they are posessed by no one) and `Transaction`s can change who posses them.
+Here is a SQL sketch, for clarity:
 
-- [ ] A `Submission` represents a manuscript undergoing peer review. Depending on the source, scholars may be able to volunteer to review, simplifying editor's ability to find eligible reviewers. Submissions can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
+```sql
+create table currencies (
+  -- The unique id of the currency
+  id uuid not null default uuid_generate_v1() primary key,
+  -- The name of the currency
+  name text not null default '':text
+);
+```
+
+## Tokens
+
+> [!IMPORTANT]
+> The data below is specific to compensation
+
+A `Token` represents an indivisible unit of peer review labor in a particular `Currency`.
+
+- [ ] `Token`s are typically spent to compensate others for their reviewing labor.
+- [ ] Tokens are typically earned for reviewing labor.
+- [ ] There may be many other creative uses for them (e.g., gifts, incentives, etc.).
+- [ ] `Token`s should generally be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few `Token`s would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many `Token`s means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review.
+- [ ] `Token`s are possessed by individual scholar or in a `Source`'s reserve (meaning they are posessed by no one) and `Transaction`s can change who posses them. They cannot be possessed by neither a scholar or a source.
+
+Here is a SQL sketch, for clarity:
+
+```sql
+create table tokens (
+  -- The unique ID of the token
+  id uuid not null default uuid_generate_v1() primary key,
+  -- The currency that the token is in
+  currency uuid not null references currencies(id),
+  -- The scholar that currently possess the token, or null, representing no one
+  scholar uuid references scholars(id),
+  -- The source that currently posses the token, or null
+  source uuid reference sources(id)
+);
+```
+
+## Transactions
+
+> [!IMPORTANT]
+> The data below is specific to compensation
+
+A `Transaction` represents an exchange of tokens for some purpose, such as submitting something for review, compensation for a review, or a gift.
+
+- [ ] `Transaction`s cannot be deleted; they are a permanent record
+- [ ] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but audible.
+
+Here is a SQL schema sketch, for clarity:
+
+```sql
+create table transactions (
+  -- The unique ID of the transaction
+  id uuid not null default uuid_generate_v1() primary key,
+  -- The scholar who gave the tokens
+  from_scholar uuid references scholars(id),
+  -- The source who gave the tokens
+  from_source uuid references sources(id),
+  -- Require that there is a from
+  constraint check_from check (num_nonnulls(from_scholar, from_source) = 1)
+  -- The optional scholar who received the tokens,
+  to_scholar uuid references scholars(id),
+  -- The optional source that received the tokens,
+  to_source uuid references sources(id),
+  -- Require that there is a too
+  constraint check_to check (num_nonnulls(to_scholar, to_source) = 1)
+  -- The number of tokens transacted
+  amount integer not null,
+  -- The currency the amount is in
+  currency uuid not null referencs currencies(id),
+  -- The purpose of the transaction
+  purpose text not null
+);
+```
+
+## Submissions
+
+> [!IMPORTANT]
+> The data below is specific to compensation
+
+A `Submission` represents a manuscript undergoing peer review.
+
+- [ ] Depending on the source, scholars may be able to bid on submissions, simplifying an editor's ability to find qualified reviewers.
+- [ ] `Submission`s can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
+- [ ] `Submission`s can be added manually by \_`editor`\_s, or RR can be cc'ed on submission notification emails to be added automatically
+
+Here is a SQL schema sketch, for clarity:
+
+```sql
+create table submissions (
+  -- The unique ID of the submission
+  id uuid not null default uuid_generate_v1() primary key,
+  -- The source to which the submission corresponds
+  source uuid not null references sources(id),
+  -- The external identifier of the submission, such as a submission number or manuscript number
+  externalid text not null,
+  -- An optional title for public bidding,
+  title text default null,
+  -- An optional description of expertise required for public bidding,
+  expertise text default null
+);
+```
 
 # Routes
 
@@ -86,23 +263,23 @@ The purpose of the scholar page is to provide a landing page and dashboard for a
 
 It should:
 
-- [ ] Link to the scholar's ORCID profile, to help visitors get more information about them.
+- [ ] Link to the scholar's ORCID profile (`scholars.orcid`), to help visitors get more information about them.
 - [ ] Display read-only data pulled from the ORCID profile, to reduce the need to navigate to their ORCID profile.
 - [ ] Show links to `Source`s the scholar has volunteered to review for
 - [ ] Show links to `Source`s the scholar is serving as _`editor`_ of.
 
-If scholar ID corresponds to the authenaticed user, it should also allow the scholar to:
+If scholar ID corresponds to the authenticated user, it should also allow the scholar to:
 
 - [ ] _`scholar`_: Logout
-- [ ] _`scholar`_: Indicate whether they are available to review, not available to review, or whether that should be based on a minimum number of `Token`s they would like to possess
-- [ ] _`scholar`_: Write a qualitative statement of availability
-- [ ] _`scholar`_:Allow editing of the scholar's preferred email address.
+- [ ] _`scholar`_: Indicate whether they are available to review (`scholar.available`)
+- [ ] _`scholar`_: Explain their reviewing availability (`scholar.status`)
+- [ ] _`scholar`_: Allow editing of the scholar's preferred email address. (`scholar.email`)
 
 > [!IMPORTANT]
 > The functionality below is specific to compensation
 
-- [ ] _`scholar`_: View a history of `Transaction`s that given or take `Token`s from the scholar
-- [ ] _`scholar`_: Gift tokens to someone else using the scholar's ORCID, creating a transaction that transfers the tokens to the corresponding scholar
+- [ ] _`scholar`_: View a history of `Transaction`s associated with the scholar
+- [ ] _`scholar`_: Gift tokens to someone else using the scholar's ORCID or email, creating two transactions that deduct from the scholar and deposit to the other scholar
 
 ## Source List `/sources`
 
@@ -135,7 +312,7 @@ When a source is **approved** state:
 - [ ] View the cost and compensation of the source.
 - [ ] _`scholar`_: Volunteer to review for the source. When they first volunteer, a number of tokens specified by for source should be minted and given to the scholar, welcoming them to the community.
 - [ ] _`editor`_: Modify the source name, description
-- [ ] _`editor`_: Change the _editor_(s) of the source, ensuring there is always one
+- [ ] _`editor`_: Change the _`editor`p_(s) of the source, ensuring there is always one
 - [ ] _`editor`_: Set the state to inactive
 
 > [!IMPORTANT]
@@ -144,8 +321,8 @@ When a source is **approved** state:
 - [ ] _`editor`_: Modify the newcomer gift in tokens
 - [ ] _`editor`_: Modify submission costs in tokens, reviewing compensation in tokens. Submission cost must equal to total compensation for a submission.
 - [ ] _`editor`_: View the total number of tokens in the source and who posses them, to gauge the health of the community.
-- [ ] _`editor`_: Change the _minter_(s) of the source, ensuring there is always one
-- [ ] _`editor`_: Set the source to be public or private, determining whether submissions can be bid on by `scholars`.
+- [ ] _`editor`_: Change the _`minter`_(s) of the source, ensuring there is always one
+- [ ] _`editor`_: Enable or disable (`sources.bidding`), determining whether submissions can be bid on by `scholars`.
 
 When a source is in an _inactive_ state:
 
@@ -230,4 +407,3 @@ RR will have dedicated email adresses for each source that, if sent to, will gen
 - [ ] When a `Transaction` specified in an email could not be processed — because it lacked metadata, lacked metadata that could be matched to a source, manuscript, or scholar, or violated a sources requirements — the editor of the source is notified of the error so they can manually correct it, and potentially any configuration issues with the integration.
 - [ ] When a proposed `Transaction` is declined, an email is sent to the person who proposed it with an explanation for why.
 - [ ] When `Source`s become **approved**, send emails to the editor and all people who upvoted the source, notifying them of their new tokens and the live process.
-
