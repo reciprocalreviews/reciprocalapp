@@ -19,6 +19,51 @@ Our design hypothesis is that these two core functionalities will result in seve
 
 We're designing and building RR in order to test this hypothesis, with the hopes that it is supported, and academia adopts it as a way to sustain peer review long term.
 
+# User Stories
+
+There are several specific use cases that we want RR to support. Here we capture those through _user stories_, as well as _scenarios_, both to help the reader understand the user experience we aspire to build and the motivations we are trying to serve. But these also serve as a resource to help verify that our data schema below actually enables those experiences.
+
+## An annual conference solicits volunteer reviewers
+
+_As Sam, program co-chair of ACM SIGCSE TS, I want to be able to quickly solicit a large number of volunteer reviewers for this year's review cycle, so that I can ensure every paper submitted gets three reviews._
+
+- Sam logs in to RR and proposes a SIGCSE TS 2025 venue instance
+- The RR admins approve it
+- Sam configures the profile for the venue, defining six volunteer roles for three tracks and two different review phases, and defining ranked preferences of `preferred`, `if necessary`, and `no`.
+- Sam gets the URL of the volunteer page and sends an email through various social media platforms, inviting people to review
+- One reviewer receives the link and already has an RR account, and just indicates `preferred` for the experience report track, up to 4 papers total.
+- Another reviewer recieves the link and doesn't have an RR account, but logs in with their ORCID, and then indicates `if necessary` on research, up to 5 papers.
+- Another reviewer receives the link and doesn't have either an RR account or an ORCID, and decides not to volunteer because of the hassile of making both accounts.
+- After the community finishes volunteering, Sam exports a CSV of all of the volunteers, sort it by tracks and venues, and uses the reviewer expertise and preferences to manually decide which tracks to assign individuals to. He then imports subsets of the spreadsheet into EasyChair to create the reviewer set for each track. He then sends a message to everyone asking them to check their assignment and notify him if they are no longer able to complete their commitment.
+
+## An annual conference invites program committee members
+
+_As Dana, program chair of ACM PLDI, I want to send out invites to a curated set of expert reviewers to join the program committee and senior program committee, and quickly get information about who agrees, so that I can form the final program committee in preparation for reviewing season._
+
+- Dana logs into RR and proposes a PLDI 2025 venue instance.
+- The RR admins approve it
+- Dana adds a description to the venue and defines the two roles, programm committee member and senior program committee member, defining both as `invite only` roles, with `yes` and `no` commitments.
+- Dana populates the set of invitees into the venue for each role by submitting a list of email addresses
+- Data sends invitation emails to everyone in each role in her mail client.
+- Some program committee members receive the invite, log in with their ORCID, see the role to which they have been invited, and indicate yes or no.
+- Other committee members receive the invite, don't have an ORCID, and decide to ignore the invite rather than create one.
+- After community invites settle, Dana takes exports the set of reviewers, filters out the list of declines, and imports them into HotCRP as the program committee and senior program committee, and proceeds with the review process.
+- Program committee members return occasionally to RR to remind them of where they've volunteered for reviews.
+
+## A journal wants to create a pool of reviewers
+
+_As Amy, EiC of ACM TOCE, I want to curate a set of reviewers who are eager to review journal submissions and access information about their expertise, so that Associate Editors can select people to invite for review._
+
+- Amy logs into RR and proposes a TOCE venue instance.
+- The RR admins approve it
+- Amy adds a description of the venue and sees the default reviewer role with `yes` and `no` commitments, and finds them suitable.
+- Amy sets the compensation levels to 10 tokens for a review, 10 for an AE recommendation, and 1 for an EiC decision.
+- Amy updates the ACM TOCE website to point to the reviewer volunteer link
+- Amy sends an email to `sigcse-members` to solicit volunteers and points to the link
+- Community members either receive the email, or see the volunteer link on the website, and log in with their ORCID to voluneer
+- Associate Editors, when trying to find reviewers, scan the list of volunteers, filtering by expertise keywords, paying attention to reviewers paper limits and other commitments, and ultimately send invites to possible matches. The website updates to show that the reviewer has a TOCE assignment.
+- After a decision is made, an email is sent, which triggers proposed transactions, and emails notifying reviewers of their compensation.
+
 # Legend
 
 We use a few stylistic conventions in this document that have particular meaning:
