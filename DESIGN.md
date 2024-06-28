@@ -31,10 +31,9 @@ _As Sam, program co-chair of ACM SIGCSE TS, I want to be able to quickly solicit
 - The RR admins approve it
 - Sam configures the profile for the venue, defining six volunteer roles for three tracks and two different review phases, and defining ranked preferences of `preferred`, `if necessary`, and `no`.
 - Sam gets the URL of the volunteer page and sends an email through various social media platforms, inviting people to review
-- One reviewer receives the link and already has an RR account, and just indicates `preferred` for the experience report track, up to 4 papers total.
-- Another reviewer recieves the link and doesn't have an RR account, but logs in with their ORCID, and then indicates `if necessary` on research, up to 5 papers.
-- Another reviewer receives the link and doesn't have either an RR account or an ORCID, and decides not to volunteer because of the hassile of making both accounts.
-- After the community finishes volunteering, Sam exports a CSV of all of the volunteers, sort it by tracks and venues, and uses the reviewer expertise and preferences to manually decide which tracks to assign individuals to. He then imports subsets of the spreadsheet into EasyChair to create the reviewer set for each track. He then sends a message to everyone asking them to check their assignment and notify him if they are no longer able to complete their commitment.
+- One reviewer receives the link and already has an ORCID account, and just indicates `preferred` for the experience report track, up to 4 papers total.
+- Another reviewer recieves the link and doesn't have an ORCID account, but creates one, and then logs in to indicate `if necessary` on research, up to 5 papers.
+- After volunteering stabilizes, Sam exports a CSV of all of the volunteers, sort it by track roles, and uses the reviewer expertise and preferences to manually decide which tracks to assign individuals to. He then imports subsets of the spreadsheet into EasyChair to create the reviewer set for each track. He then sends a message to everyone asking them to check their assignment and notify him if they are no longer able to complete their commitment.
 
 ## An annual conference invites program committee members
 
@@ -50,19 +49,21 @@ _As Dana, program chair of ACM PLDI, I want to send out invites to a curated set
 - After community invites settle, Dana takes exports the set of reviewers, filters out the list of declines, and imports them into HotCRP as the program committee and senior program committee, and proceeds with the review process.
 - Program committee members return occasionally to RR to remind them of where they've volunteered for reviews.
 
-## A journal wants to create a pool of reviewers
+## A journal wants to create a pool of reviewers and use tokens to incentivize reviewing
 
 _As Amy, EiC of ACM TOCE, I want to curate a set of reviewers who are eager to review journal submissions and access information about their expertise, so that Associate Editors can select people to invite for review._
 
 - Amy logs into RR and proposes a TOCE venue instance.
 - The RR admins approve it
 - Amy adds a description of the venue and sees the default reviewer role with `yes` and `no` commitments, and finds them suitable.
-- Amy sets the compensation levels to 10 tokens for a review, 10 for an AE recommendation, and 1 for an EiC decision.
-- Amy updates the ACM TOCE website to point to the reviewer volunteer link
+- Amy sets the compensation levels to 10 tokens for a review, 10 for an AE recommendation, and 1 for an EiC decision, as well as costs of 40 tokens per submission.
+- Amy updates the ACM TOCE website to point to the reviewer volunteer link and to the compensation costs.
 - Amy sends an email to `sigcse-members` to solicit volunteers and points to the link
 - Community members either receive the email, or see the volunteer link on the website, and log in with their ORCID to voluneer
-- Associate Editors, when trying to find reviewers, scan the list of volunteers, filtering by expertise keywords, paying attention to reviewers paper limits and other commitments, and ultimately send invites to possible matches. The website updates to show that the reviewer has a TOCE assignment.
-- After a decision is made, an email is sent, which triggers proposed transactions, and emails notifying reviewers of their compensation.
+- A community member submits a paper, indicating whose accounts to deduct the 40 tokens from.
+- Amy confirms that the paper should not be desk rejected and then approves the transactions and the submission for review, and assigns an Associate Editor.
+- The Associate Editor, when trying to find reviewers, scan the list of volunteers, filtering by expertise keywords, paying attention to reviewers paper limits and other commitments, and ultimately send invites to possible matches. The invites trigger updates to the reviewing status of the reviewer in RR, showing that the reviewer has a TOCE assignment.
+- After a decision on the submission is made, an email is sent, which triggers proposed transactions, and emails notifying reviewers of their compensation.
 
 # Legend
 
