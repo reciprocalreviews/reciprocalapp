@@ -147,6 +147,8 @@ create table roles (
   name text not null '':text,
   -- The rich text description of the role,
   description text not null '':text,
+  -- Whether the role is invite only
+  invited boolean not null
 )
 
 create table commmitments (
@@ -169,8 +171,10 @@ create table volunteers (
   role uuid not null references roles(id) on delete cascade,
   -- The commitment they made
   committment uuid not null references commitment(id) on delete cascade,
-  -- Relevant expertise keywords for the role
+  -- Relevant expertise keywords provided by the scholar for the role
   expertise text not null,
+  -- Whether the volunteer has agreed
+  agreed boolean not null,
   -- How many papers they wish to review at any given time, or in this batch, null if not specified
   count integer
 );
@@ -389,7 +393,12 @@ When a venue is in a **proposed** state:
 When a venue is **approved** state:
 
 - [ ] View the cost and compensation of the venue.
-- [ ] _`scholar`_: Volunteer to review for the venue. When they first volunteer, a number of tokens specified by for venue should be minted and given to the scholar, welcoming them to the community.
+- [ ] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue should be minted and given to the scholar, welcoming them to the community.
+- [ ] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
+- [ ] _`scholar`_: Change expertise keywords for a role for the venue
+- [ ] _`scholar`_: Change commitment for a role for the venue
+- [ ] _`scholar`_: Change paper count for a role for the venue
+
 - [ ] _`editor`_: Modify the venue name, description
 - [ ] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one
 - [ ] _`editor`_: Set the state to inactive
@@ -400,6 +409,7 @@ When a venue is **approved** state:
 - [ ] _`editor`_: Edit the descriptions of roles.
 - [ ] _`editor`_: Delete a commitment, confirming they understand that all volunteers will be removed from the commitment.
 - [ ] _`editor`_: Delete a role, confirming they understand that all volunteers will be removed from the role.
+- [ ] _`editor`_: Invite one or more `Scholar`s by ORCID or email to a particular role.
 
 > [!IMPORTANT]
 > The functionality below is specific to compensation
