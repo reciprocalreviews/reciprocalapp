@@ -112,6 +112,9 @@ A `Venue` is a named and curated collection of manuscripts undergoing peer revie
 - [ ] A `Venue` has a cost and reward for reviewing labor.
 - [ ] `Venue`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
 - [ ] `Venue`s can be proposed, but aren't created until approved.
+- [ ] `Venue`s can have one or more volunteer roles
+- [ ] `Venue`s can have one or more commitments to a role, but are usually `yes` and `no`
+- [ ] When a `Scholar` volunteers for a `Venue`, they do so for a particular role, with a particular commitment, and optionally with a number of papers they are committing to review.
 
 Here is a SQL sketch, for clarity of both a record of venues, and scholar volunteers for the venues:
 
@@ -135,11 +138,37 @@ create table venues (
   minters text[] not null default '{}'::text[] check (cardinality(minters) > 0)
 );
 
+create table roles (
+  -- The unique id of the role
+  id uuid not null default uuid_generate_v1() primary key,
+  -- The ID of the venue
+  venueid uuid not null references venues(id) on delete cascade,
+  -- The name of the role
+  name text not null '':text
+)
+
+create table commmitments (
+  -- The unique id of the commitment
+  id uuid not null default uuid_generate_v1() primary key,
+  -- The ID of the venue
+  venueid uuid not null references venues(id) on delete cascade,
+  -- The label for the commitment
+  label text not null '':text
+)
+
 create table volunteers (
+  -- When this record was last updated
+  when timestamp with time zone not null default now(),
   -- The id of the scholar who volunteered
   scholarid uuid not null references scholars(id) on delete cascade,
-  -- The id of the
-  venueid uuid not null references venues(id) on delete cascade
+  -- The id of the venue they volunteered for
+  venueid uuid not null references venues(id) on delete cascade,
+  -- The role they volunteered for
+  role uuid not null references roles(id) on delete cascade,
+  -- The commitment they made
+  committment uuid not null references commitment(id) on delete cascade,
+  -- How many papers they wish to review at any given time, or in this batch, null if not specified
+  count integer
 );
 
 -- A table of proposed venues
