@@ -144,7 +144,9 @@ create table roles (
   -- The ID of the venue
   venueid uuid not null references venues(id) on delete cascade,
   -- The name of the role
-  name text not null '':text
+  name text not null '':text,
+  -- The rich text description of the role,
+  description text not null '':text,
 )
 
 create table commmitments (
@@ -167,6 +169,8 @@ create table volunteers (
   role uuid not null references roles(id) on delete cascade,
   -- The commitment they made
   committment uuid not null references commitment(id) on delete cascade,
+  -- Relevant expertise keywords for the role
+  expertise text not null,
   -- How many papers they wish to review at any given time, or in this batch, null if not specified
   count integer
 );
@@ -387,8 +391,15 @@ When a venue is **approved** state:
 - [ ] View the cost and compensation of the venue.
 - [ ] _`scholar`_: Volunteer to review for the venue. When they first volunteer, a number of tokens specified by for venue should be minted and given to the scholar, welcoming them to the community.
 - [ ] _`editor`_: Modify the venue name, description
-- [ ] _`editor`_: Change the _`editor`p_(s) of the venue, ensuring there is always one
+- [ ] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one
 - [ ] _`editor`_: Set the state to inactive
+
+- [ ] _`editor`_: Export the list of reviewers as a CSV file for use on other plaforms, including ORCID, name, email, expertise, role, commitment, and paper count.
+- [ ] _`editor`_: Create roles for the venue.
+- [ ] _`editor`_: Create commitments for the venue.
+- [ ] _`editor`_: Edit the descriptions of roles.
+- [ ] _`editor`_: Delete a commitment, confirming they understand that all volunteers will be removed from the commitment.
+- [ ] _`editor`_: Delete a role, confirming they understand that all volunteers will be removed from the role.
 
 > [!IMPORTANT]
 > The functionality below is specific to compensation
