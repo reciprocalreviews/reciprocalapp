@@ -1,4 +1,4 @@
-This document is a design specification for the Reciprocol Reviews (RR) platform. We intend it to specify the conceptual interaction design that people will experience when using the platform and rationale for those choices, as well as aspects of the design that are unresolved. It's primary purpose is to provide contributors with a high level checklist for implementation, but also a long term archive for _why_ it is designed the way it is. This document will _not_ specify low-level design details, like user interface mockups or visual design it; it will stay at the high level interaction flow and user-facing features, describing key pages, functionality, and features.
+This document is a design specification for the Reciprocol Reviews (RR) platform. We intend it to specify the conceptual interaction design that people will experience when using the platform and rationale for those choices, as well as aspects of the design that are unresolved. It's primary purpose is to provide contributors with a high level checklist for implementation, but also a long term archive for _why_ it is designed the way it is. This document will _not_ specify low-level design details, like user interface mockups or visual design it; it will stay at the high level interaction flow and user-facing features, describing key pages, functionality, data, and features.
 
 Since RR is a web application, the document is organized by **data**, detailing key data concepts and their relationships; **routes**, corresponding to areas of the web application and detailing their functionality; and **notifications**, which are types of emails that can be sent by the platform in response to user actions or other events. All other backend details for enabling this user experience should be covered in the [ARCHITECTURE](ARCHITECTURE.md) doc.
 
@@ -8,13 +8,13 @@ The overarching and foundational goal of RR is to 1) ensure that there is suffic
 
 There are two types of functionality that we hope will achieve this goal:
 
-1. Streamlining volunteering for reviewing for publication venues, and making visible reviewer availability to editors
-2. Enabling the creation of **currency** to represent labor, and compensate people with it for their reviewing labor, and charge it when they create reviewing labor
+1. Streamlining reviewing volunteering for publication venues, and making reviewer availability visible to editors and program committee members
+2. Creating a **currency** to represent reviewing labor, compensating people with it when they reivew, and charging it when they create reviewing labor by submitting research papers for review.
 
 Our design hypothesis is that these two core functionalities will result in several value propositions:
 
-1. Easier discovery of reviewers and their availability
-2. Improved reviewing availability and review quality by withholding tokens necessary for publishing when reviews do not meet community standards of critique, and
+1. Easier discovery of reviewers and their availability for editors
+2. Improved reviewer availability by requiring reviewing of sufficient quality to publish, and
 3. A partial mitigation publish-or-perish obession with quantity of publications by placing a labor cost on peer review.
 
 We're designing and building RR in order to test this hypothesis, with the hopes that it is supported, and academia adopts it as a way to sustain peer review long term.
@@ -33,7 +33,7 @@ _As Sam, program co-chair of ACM SIGCSE TS, I want to be able to quickly solicit
 - Sam gets the URL of the volunteer page and sends an email through various social media platforms, inviting people to review
 - One reviewer receives the link and already has an ORCID account, and just indicates `preferred` for the experience report track, up to 4 papers total.
 - Another reviewer recieves the link and doesn't have an ORCID account, but creates one, and then logs in to indicate `if necessary` on research, up to 5 papers.
-- After volunteering stabilizes, Sam exports a CSV of all of the volunteers, sort it by track roles, and uses the reviewer expertise and preferences to manually decide which tracks to assign individuals to. He then imports subsets of the spreadsheet into EasyChair to create the reviewer set for each track. He then sends a message to everyone asking them to check their assignment and notify him if they are no longer able to complete their commitment.
+- After volunteering stabilizes, Sam exports a CSV of all of the volunteers, sorts it by track roles, and uses the reviewer expertise and preferences to manually decide which tracks to assign individuals to. He then imports subsets of the spreadsheet into EasyChair to create the reviewer set for each track. He then sends a message to everyone asking them to check their assignment and notify him if they are no longer able to complete their volunteer commitment.
 
 ## An annual conference invites program committee members
 
@@ -43,22 +43,33 @@ _As Dana, program chair of ACM PLDI, I want to send out invites to a curated set
 - The RR admins approve it
 - Dana adds a description to the venue and defines the two roles, programm committee member and senior program committee member, defining both as `invite only` roles, with `yes` and `no` commitments.
 - Dana populates the set of invitees into the venue for each role by submitting a list of email addresses
-- Data sends invitation emails to everyone in each role in her mail client.
+- Dana sends invitation emails to everyone in each role in her mail client.
 - Some program committee members receive the invite, log in with their ORCID, see the role to which they have been invited, and indicate yes or no.
 - Other committee members receive the invite, don't have an ORCID, and decide to ignore the invite rather than create one.
-- After community invites settle, Dana takes exports the set of reviewers, filters out the list of declines, and imports them into HotCRP as the program committee and senior program committee, and proceeds with the review process.
+- After community invites settle, Dana exports the set of reviewers, filters out the list of declines, and imports them into HotCRP as the program committee and senior program committee, and proceeds with the review process.
 - Program committee members return occasionally to RR to remind them of where they've volunteered for reviews.
+
+## A journal wants to create a pool of reviewers, but not require reviewing to submit
+
+_As Derek, EiC of IEEE TSE, I want to curate a set of reviewers who are eager to review journal submissions and access information about their expertise, so that Associate Editors can select people to invite for review._
+
+- Derek logs into RR and proposes a TSE venue instance.
+- The RR admins approve it
+- Derek adds a description of the venue and sees the default reviewer role with `yes` and `no` commitments, and finds them suitable.
+- Amy updates the TSE website to point to the reviewer volunteer link and adjusts the email templates to include RR's email receiver.
+- Community member is looking for reviewing practice and finds the volunteer link, and agrees to volunteer for up to 1 paper at a time.
+- The Associate Editor, when trying to find reviewers, scans the list of volunteers, and finds the volunteer, and invites them through the journal's review platform. This adds the publication record to the reviewer's list.
+- After a decision on the submission is made, an email is sent, triggering an update to the status of the submission in RR, and freeing the reviewer to review again.
 
 ## A journal wants to create a pool of reviewers and use tokens to incentivize reviewing
 
-_As Amy, EiC of ACM TOCE, I want to curate a set of reviewers who are eager to review journal submissions and access information about their expertise, so that Associate Editors can select people to invite for review._
+_As Amy, EiC of ACM TOCE, I want to incentivize reviewers to volunteer by requiring reviewing prior to submitting papers for review, and streamline Associate Editors ability to identify people to review based on their expertise and need for tokens._
 
 - Amy logs into RR and proposes a TOCE venue instance.
 - The RR admins approve it
 - Amy adds a description of the venue and sees the default reviewer role with `yes` and `no` commitments, and finds them suitable.
 - Amy sets the compensation levels to 10 tokens for a review, 10 for an AE recommendation, and 1 for an EiC decision, as well as costs of 40 tokens per submission.
-- Amy updates the ACM TOCE website to point to the reviewer volunteer link and to the compensation costs.
-- Amy sends an email to `sigcse-members` to solicit volunteers and points to the link
+- Amy updates the ACM TOCE website to point to the reviewer volunteer link and to the compensation costs. She also sends an email to `sigcse-members` to solicit volunteers and points to the link
 - Community members either receive the email, or see the volunteer link on the website, and log in with their ORCID to voluneer
 - A community member submits a paper, indicating whose accounts to deduct the 40 tokens from.
 - Amy confirms that the paper should not be desk rejected and then approves the transactions and the submission for review, and assigns an Associate Editor.
@@ -112,11 +123,11 @@ A `Venue` is a named and curated collection of manuscripts undergoing peer revie
 - [ ] A `Venue` has a cost and reward for reviewing labor.
 - [ ] `Venue`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
 - [ ] `Venue`s can be proposed, but aren't created until approved.
-- [ ] `Venue`s can have one or more volunteer roles
-- [ ] `Venue`s can have one or more commitments to a role, but are usually `yes` and `no`
-- [ ] When a `Scholar` volunteers for a `Venue`, they do so for a particular role, with a particular commitment, and optionally with a number of papers they are committing to review.
+- [ ] `Venue`s can have one or more volunteer roles, which are helpful for distinguishing between different types of volunteering for a venue (e.g., reviewer, reviewer for track A, meta-reviewer for track B)
+- [ ] `Venue`s can have one or more commitments to a role, usually `yes` and `no`, but custom committments can support things like `maybe`, `if necessary`, and other social signals.
+- [ ] When a `Scholar` volunteers for a `Venue`, they do so for a particular role, with a particular commitment, and optionally with a number of papers they are committing to review. Volunteering for a venue can also include a statement of expertise relevant to the role.
 
-Here is a SQL sketch, for clarity of both a record of venues, and scholar volunteers for the venues:
+Here is a SQL sketch of all of the tables involved in this.
 
 ```sql
 create table venues (
@@ -198,7 +209,7 @@ create table proposed (
 > [!IMPORTANT]
 > The data below is specific to compensation
 
-A `Currency` represents a particular named type of `Token`, associated with one or more `Venue`s. We allow for many forms of `Currency`, as opposed to one universal one, as different communties may want to place different costs and compensation on different activities, and those amounts will come to have meaning within each of those communities that do not necessarily transfer directly to other communties without some specific exchange agreement.
+A `Currency` represents a particular named type of peer review labor `Token`, associated with one or more `Venue`s. We allow for many forms of `Currency`, as opposed to one universal one, as different communties may want to place different costs and compensation on different activities, and those amounts will come to have meaning within each of those communities that do not necessarily transfer directly to other communties without some specific exchange agreement.
 
 Here is a SQL sketch, for clarity:
 
@@ -219,8 +230,7 @@ create table currencies (
 A `Token` represents an indivisible unit of peer review labor in a particular `Currency`.
 
 - [ ] `Token`s are typically spent to compensate others for their reviewing labor.
-- [ ] Tokens are typically earned for reviewing labor.
-- [ ] There may be many other creative uses for them (e.g., gifts, incentives, etc.).
+- [ ] `Token`s are typically earned for reviewing labor, but there may be many other creative uses for them (e.g., gifts, incentives, etc.).
 - [ ] `Token`s should generally be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few `Token`s would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many `Token`s means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review.
 - [ ] `Token`s are possessed by individual scholar or in a `Venue`'s reserve (meaning they are posessed by no one) and `Transaction`s can change who posses them. They cannot be possessed by neither a scholar or a venue.
 
@@ -235,7 +245,10 @@ create table tokens (
   -- The scholar that currently possess the token, or null, representing no one
   scholar uuid references scholars(id),
   -- The venue that currently posses the token, or null
-  venue uuid reference venues(id)
+  venue uuid reference venues(id),
+  -- Require that there is one owner
+  constraint check_owner check (num_nonnulls(scholar, venue) = 1)
+
 );
 ```
 
@@ -247,7 +260,7 @@ create table tokens (
 A `Transaction` represents an exchange of tokens for some purpose, such as submitting something for review, compensation for a review, or a gift.
 
 - [ ] `Transaction`s cannot be deleted; they are a permanent record
-- [ ] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but audible.
+- [ ] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable.
 
 Here is a SQL schema sketch, for clarity:
 
@@ -267,10 +280,10 @@ create table transactions (
   to_venue uuid references venues(id),
   -- Require that there is a too
   constraint check_to check (num_nonnulls(to_scholar, to_venue) = 1)
-  -- The number of tokens transacted
-  amount integer not null,
+  -- An array of token ids moved in the transaction
+  tokens uuid[] not null default '{}',
   -- The currency the amount is in
-  currency uuid not null referencs currencies(id),
+  currency uuid not null references currencies(id),
   -- The purpose of the transaction
   purpose text not null
 );
@@ -283,13 +296,15 @@ create table transactions (
 
 A `Submission` represents a manuscript undergoing peer review.
 
-- [ ] Depending on the venue, scholars may be able to bid on submissions, simplifying an editor's ability to find qualified reviewers.
+- [ ] Depending on the venue, `Scholar`s may be able to bid on submissions, simplifying an editor's ability to find qualified reviewers.
 - [ ] `Submission`s can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
 - [ ] `Submission`s can be added manually by \_`editor`\_s, or RR can be cc'ed on submission notification emails to be added automatically
+- [ ] Submissions are created manually or through email integrations with review systems, which provide submission metadata
 
 Here is a SQL schema sketch, for clarity:
 
 ```sql
+-- Individual submissions under review
 create table submissions (
   -- The unique ID of the submission
   id uuid not null default uuid_generate_v1() primary key,
@@ -299,8 +314,22 @@ create table submissions (
   externalid text not null,
   -- An optional title for public bidding,
   title text default null,
-  -- An optional description of expertise required for public bidding,
+  -- An optional description of expertise required for public bidding
   expertise text default null
+);
+
+-- Individuals who could be assigned to review a particular paper
+create table assignments (
+  -- The unique ID of the bid
+  id uuid not null default uuid_generate_v1() primary key,
+  -- The submission bid on
+  submissionid uuid not null references submissions(id),
+  -- The scholar who bid
+  scholarid uuid not null references scholars(id),
+  -- The role for which the bid occurred
+  roleid uuid not null references roles(id),
+  -- False if assigned, true if a bid by the reviewer.
+  bid boolean not null default false
 );
 ```
 
