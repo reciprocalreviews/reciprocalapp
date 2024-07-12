@@ -31,8 +31,8 @@ _As Sam, program co-chair of ACM SIGCSE TS, I want to be able to quickly solicit
 - The RR admins approve it
 - Sam configures the profile for the venue, defining six volunteer roles for three tracks and two different review phases, and defining ranked preferences of `preferred`, `if necessary`, and `no`.
 - Sam gets the URL of the volunteer page and sends an email through various social media platforms, inviting people to review
-- One reviewer receives the link and already has an ORCID account, and just indicates `preferred` for the experience report track, up to 4 papers total.
-- Another reviewer recieves the link and doesn't have an ORCID account, but creates one, and then logs in to indicate `if necessary` on research, up to 5 papers.
+- One reviewer receives the link, has an account, just indicates `preferred` for the experience report track, up to 4 papers total.
+- Another reviewer recieves the link, doesn't have an account, creates one, and then indicates `if necessary` on research, up to 5 papers.
 - After volunteering stabilizes, Sam exports a CSV of all of the volunteers, sorts it by track roles, and uses the reviewer expertise and preferences to manually decide which tracks to assign individuals to. He then imports subsets of the spreadsheet into EasyChair to create the reviewer set for each track. He then sends a message to everyone asking them to check their assignment and notify him if they are no longer able to complete their volunteer commitment.
 
 ## An annual conference invites program committee members
@@ -44,8 +44,7 @@ _As Dana, program chair of ACM PLDI, I want to send out invites to a curated set
 - Dana adds a description to the venue and defines the two roles, programm committee member and senior program committee member, defining both as `invite only` roles, with `yes` and `no` commitments.
 - Dana populates the set of invitees into the venue for each role by submitting a list of email addresses
 - Dana sends invitation emails to everyone in each role in her mail client.
-- Some program committee members receive the invite, log in with their ORCID, see the role to which they have been invited, and indicate yes or no.
-- Other committee members receive the invite, don't have an ORCID, and decide to ignore the invite rather than create one.
+- Some program committee members receive the invite, create an account if necessary, see the role to which they have been invited, and indicate yes or no.
 - After community invites settle, Dana exports the set of reviewers, filters out the list of declines, and imports them into HotCRP as the program committee and senior program committee, and proceeds with the review process.
 - Program committee members return occasionally to RR to remind them of where they've volunteered for reviews.
 
@@ -68,9 +67,9 @@ _As Amy, EiC of ACM TOCE, I want to incentivize reviewers to volunteer by requir
 - Amy logs into RR and proposes a TOCE venue instance.
 - The RR admins approve it
 - Amy adds a description of the venue and sees the default reviewer role with `yes` and `no` commitments, and finds them suitable.
-- Amy sets the compensation levels to 10 tokens for a review, 10 for an AE recommendation, and 1 for an EiC decision, as well as costs of 40 tokens per submission.
+- Amy sets the compensation levels to 10 tokens for a review, 10 for an AE recommendation, and 1 for an EiC decision, as well as costs of 40 tokens per submission. She also sets the welcome token rate to 30, enabling newcomers to submit if they review just once.
 - Amy updates the ACM TOCE website to point to the reviewer volunteer link and to the compensation costs. She also sends an email to `sigcse-members` to solicit volunteers and points to the link
-- Community members either receive the email, or see the volunteer link on the website, and log in with their ORCID to voluneer
+- Community members either receive the email, or see the volunteer link on the website, and log in to voluneer. Those are first time volunteers receive their newly minted welcome tokens.
 - A community member submits a paper, indicating whose accounts to deduct the 40 tokens from.
 - Amy confirms that the paper should not be desk rejected and then approves the transactions and the submission for review, and assigns an Associate Editor.
 - The Associate Editor, when trying to find reviewers, scan the list of volunteers, filtering by expertise keywords, paying attention to reviewers paper limits and other commitments, and ultimately send invites to possible matches. The invites trigger updates to the reviewing status of the reviewer in RR, showing that the reviewer has a TOCE assignment.
@@ -141,12 +140,12 @@ create table venues (
   url text not null default '':text,
   -- The id of the currency the venue is using
   currency uuid not null references currency(id),
+  -- The optional amount of newly minted tokens granted to new volunteers
+  welcome_amount integer,
   -- Whether the the venue permits public bidding on submissions
   bidding boolean not null default true,
   -- One or more scholars who serve as editors of the venue
-  editors text[] not null default '{}'::text[] check (cardinality(editors) > 0),
-  -- One or more scholars who serve as minters for the venue
-  minters text[] not null default '{}'::text[] check (cardinality(minters) > 0)
+  editors text[] not null default '{}'::text[] check (cardinality(editors) > 0)
 );
 
 create table roles (
@@ -168,7 +167,9 @@ create table commmitments (
   -- The ID of the venue
   venueid uuid not null references venues(id) on delete cascade,
   -- The label for the commitment
-  label text not null '':text
+  label text not null '':text,
+  -- The token compensation for a commitment, in the venue's currency
+  amount integer not null
 )
 
 create table volunteers (
@@ -218,8 +219,31 @@ create table currencies (
   -- The unique id of the currency
   id uuid not null default uuid_generate_v1() primary key,
   -- The name of the currency
-  name text not null default '':text
+  name text not null default '':text,
+  -- The minters of the currency, corresponding to scholar is in the scholars table
+  minters text[] not null default '{}'::text[] check (cardinality(minters) > 0)
 );
+
+-- Three types of exchanges to propose
+create type exchange_proposal as enum ('create', 'modify', 'merge');
+
+-- Agreements between owners of currencies
+create table exchanges (
+  -- The unique id of the currency
+  id uuid not null default uuid_generate_v1() primary key,
+  -- The first party of the exchange
+  currency_one uuid not null references currencies(id),
+  -- The second party of the exchange
+  currency_two uuid not null references currencies(id),
+  -- The multiplier to convert from currency_one to currency_two
+  ratio decimal	not null,
+  -- List of minters who have approved
+  approvers uuid[] not null default '{}'::text[],
+  -- Whether the minters have approved. Only set when all current active minters have approved.
+  approved boolean not null default false,
+  -- If a proposal, what kind
+  type exchange_proposal
+)
 ```
 
 ## Tokens
@@ -421,8 +445,8 @@ When a venue is in a **proposed** state:
 
 When a venue is **approved** state:
 
-- [ ] View the cost and compensation of the venue.
-- [ ] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue should be minted and given to the scholar, welcoming them to the community.
+- [ ] View the cost, welcome amount, commitments, and compensation of the venue.
+- [ ] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue `welcome_amount` should be minted and given to the scholar, welcoming them to the community.
 - [ ] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
 - [ ] _`scholar`_: Change expertise keywords for a role for the venue
 - [ ] _`scholar`_: Change commitment for a role for the venue
@@ -461,10 +485,17 @@ When a venue is in an _inactive_ state:
 The purpose of this page is to manage the venue's `Currency`.
 
 - [ ] _`scholar`_: Show any existing exchange rates approved by the platform.
+- [ ] _`scholar`_: View the exchange rates the currency is involved in
 - [ ] _`editor`_: Convert a specific token to another venue's currency. This enables a one-time exchange, such as when an editor might approve someone using currency from another `Venue` to submit to their venue.
 - [ ] _`editor`_: Specify a conversion rate between one venue and another, which enables scholars to independently convert their tokens from one currency to another. This enables an official one way exchange rate, reducing barriers to cross-venue transactions.
 - [ ] _`editor`_: Unify two currencies, removing the need to convert between a currency. Must be approved by the `editors` of both venues. This prevent editors from unilaterally creating changes.
 - [ ] _`minter`_: Create new tokens within the venue's currency, to address token scarcity in the community. This functionality should provide guidance on best practices, including warnings about what happens if they create too many tokens. For example, there should be a certain number of tokens per scholar in the community at a minimum, but not so many that publishing requires no labor.
+- [ ] _`minter`_: Propose a new exchange rate for other minters involved in two currencies to approve. Everyone must approve for it to be official. Inactive until all minters involved in both currencies approve.
+- [ ] _`minter`_: Approve a proposed exchange rate.
+- [ ] _`minter`_: Propose a modification to an exchange rate
+- [ ] _`minter`_: Approve a modified exchange rate. Once all have approved, the old exchange between the two is deleted and the new approved one is created.
+- [ ] _`minter`_: Propose a merger of currencies
+- [ ] _`minter`_: Approve a merger of currencies. Once all have approved, all tokens in the secondary currency are deleted, and replaced with new tokens in the first currency using the current exchange rate, and the exchange is deleted.
 
 ## Transactions `/venue/[id]/transactions`
 
