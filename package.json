@@ -13,6 +13,9 @@
 		"test:integration": "playwright test",
 		"test:unit": "vitest"
 	},
+	"engines": {
+		"node": ">=20"
+	},
 	"devDependencies": {
 		"@playwright/test": "^1.45.3",
 		"@sveltejs/adapter-auto": "^3.2.2",

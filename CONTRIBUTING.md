@@ -23,6 +23,7 @@ At the moment, we are happy to accept the following types of contributions:
 
 We are currently using:
 
+- TypeScript 5
 - Svelte 5 and SvelteKit for front end
 - Vite for local development
 - Vercel for hosting and deployment
@@ -52,3 +53,8 @@ The key tools for local development are:
 - Supabase: run `npm run db` to start the Supabase database locally. This will require installation of a Docker client.
 - vitest: run `npm run test:unit` to run unit tests during development.
 - Playright: run `npm run test:integration` to run integration tests on demand.
+
+## Tests
+
+- vitest unit tests can live anywhere in `/src` and must end with `test.ts`
+- Playwright integration tests live in `/tests`.
