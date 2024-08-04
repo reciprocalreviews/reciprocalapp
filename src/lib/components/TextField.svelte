@@ -19,7 +19,7 @@
 		bind:value={text}
 		cols={size}
 		rows={text.split('\n').length}
-	/>
+	></textarea>
 {:else}
 	<input
 		class:padded

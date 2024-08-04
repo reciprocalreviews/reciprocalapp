@@ -64,5 +64,5 @@
 		style="border:none; background:white;"
 		frameborder="0"
 		scrolling="no"
-	/>
+	></iframe>
 {/if}

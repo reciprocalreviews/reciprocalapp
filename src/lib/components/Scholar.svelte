@@ -133,7 +133,7 @@
 						><td>{transaction.description}</td></tr
 					>
 				{:else}
-					No transactions
+					<tr><td>No transactions</td></tr>
 				{/each}
 			</tbody>
 		</table>
