@@ -393,7 +393,7 @@ It should:
 
 - [ ] Allow a visitor to initiate and complete an ORCID OAuth authentication, landing them at their `/scholar/[id]` dashboard.
 
-## Scholar `/scholar/[id]`
+## Scholar `/scholar/[scholarid]`
 
 The purpose of the scholar page is to provide a landing page and dashboard for a specific individual scholar, helping them see information about their labor and helping others understand their expertise.
 
@@ -477,7 +477,7 @@ When a venue is in an _inactive_ state:
 
 - [ ] Communicate that it is inactive.
 
-## Currency `/venue/[id]/currency`
+## Currency `/venue/[venueid]/currency`
 
 > [!IMPORTANT]
 > All functionality below is specific to compensation
@@ -497,7 +497,7 @@ The purpose of this page is to manage the venue's `Currency`.
 - [ ] _`minter`_: Propose a merger of currencies
 - [ ] _`minter`_: Approve a merger of currencies. Once all have approved, all tokens in the secondary currency are deleted, and replaced with new tokens in the first currency using the current exchange rate, and the exchange is deleted.
 
-## Transactions `/venue/[id]/transactions`
+## Transactions `/venue/[venueid]/transactions`
 
 > [!IMPORTANT]
 > All functionality below is specific to compensation
@@ -535,7 +535,7 @@ If the `Venue` is set to be public:
 - [ ] _`scholar`_: View specific active submissions and the topic and method expertise required (but not submission titles), sorted by submissions most in need of reviews
 - [ ] _`scholar`_: Bid on active submissions based on expertise required
 
-## Submission `/venue/[id]/submission`
+## Submission `/venue/[venueid]/submission/[submissionid]`
 
 > [!IMPORTANT]
 > All functionality below is specific to compensation
