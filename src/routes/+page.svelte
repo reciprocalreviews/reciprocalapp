@@ -4,6 +4,10 @@
 	import Link from '$lib/components/Link.svelte';
 </script>
 
+<svelte:head>
+	<title>Reciprocal Reviews</title>
+</svelte:head>
+
 <h1>Reciprocal Reviews</h1>
 {#if dev}
 	<Lead>Find reliable, available peer reviewers more quickly, sustaining peer review.</Lead>
