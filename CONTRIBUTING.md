@@ -19,12 +19,36 @@ At the moment, we are happy to accept the following types of contributions:
 - [Bug reports and enhancment ideas](https://github.com/reciprocalreviews/reciprocalapp/issues). Before you submit, make sure there isn't an existing issue for what you want to report.
 - [Pull requests](https://github.com/reciprocalreviews/reciprocalapp/pulls). Find an unassigned issue, comment on it to see if it's appropriate to work on, and a maintainer will reply and potentially assign you. If they do, fork, work on the issue, and submit a pull request for review and possible merging.
 
+## Stack
+
+We are currently using:
+
+- Svelte 5 and SvelteKit for front end
+- Vite for local development
+- Vercel for hosting and deployment
+- Supabase for data hosting and authentication
+- vitest for unit tests
+- Playwright for integration tests.
+
 ## Branching strategy
 
-We use a Git Flow continuous integration workflow. That means:
+On the team, we use a Git Flow continuous integration workflow. That means:
 
 - The currently released production code lives in `main`
 - `dev` is the staging branch, automatically released to our public staging server, which lives at [test.reciprocal.reviews](https://test.reciprocal.reviews).
 - Feature branches should be created from `dev` and follow this format `issue-description`, where `issue` is a corresponding issue number.
 
 Feature branches should be merged into `dev`, which trigger a release to a staging server on Vercel. And a production release involves merging `dev` into `main`.
+
+Pull requests should fork, branch from `dev`, and target `dev`. One of the maintainers will review, and if accepted, merge to `dev`.
+
+Unit and integration tests will run on merge to `dev` via GitHub actions.
+
+## Local development
+
+The key tools for local development are:
+
+- Vite: run `npm run dev` to launch the Vite local development server, and test at the localhost address provided.
+- Supabase: run `npm run db` to start the Supabase database locally. This will require installation of a Docker client.
+- vitest: run `npm run test:unit` to run unit tests during development.
+- Playright: run `npm run test:integration` to run integration tests on demand.
