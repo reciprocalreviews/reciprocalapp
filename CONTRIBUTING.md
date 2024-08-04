@@ -18,3 +18,13 @@ At the moment, we are happy to accept the following types of contributions:
 
 - [Bug reports and enhancment ideas](https://github.com/reciprocalreviews/reciprocalapp/issues). Before you submit, make sure there isn't an existing issue for what you want to report.
 - [Pull requests](https://github.com/reciprocalreviews/reciprocalapp/pulls). Find an unassigned issue, comment on it to see if it's appropriate to work on, and a maintainer will reply and potentially assign you. If they do, fork, work on the issue, and submit a pull request for review and possible merging.
+
+## Branching strategy
+
+We use a Git Flow continuous integration workflow. That means:
+
+- The currently released production code lives in `main`
+- `dev` is the staging branch, automatically released to our staging server.
+- Feature branches should be created from `dev` and follow this format `issue-description`, where `issue` is a corresponding issue number.
+
+Feature branches should be merged into `dev`, which trigger a release to a staging server on Vercel. And a production release involves merging `dev` into `main`.
