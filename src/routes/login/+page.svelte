@@ -10,8 +10,8 @@
 
 	const db = getDB();
 
-	let orcid = '';
-	let password = '';
+	let orcid = $state('');
+	let password = $state('');
 
 	async function login(id: string, pass: string) {
 		if (!(validORCID(orcid) && validPassword(password))) return;
@@ -41,7 +41,12 @@
 
 <p>Login with your <Link to="https://orcid.org/">ORCID</Link> account.</p>
 
-<form on:submit|preventDefault={() => login(orcid, password)}>
+<form
+	onsubmit={(event) => {
+		login(orcid, password);
+		event.preventDefault();
+	}}
+>
 	<TextField size={19} bind:text={orcid} placeholder="ORCID" valid={validORCID} />
 	<TextField
 		size={20}
