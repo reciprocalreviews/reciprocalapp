@@ -24,7 +24,7 @@ At the moment, we are happy to accept the following types of contributions:
 We use a Git Flow continuous integration workflow. That means:
 
 - The currently released production code lives in `main`
-- `dev` is the staging branch, automatically released to our staging server.
+- `dev` is the staging branch, automatically released to our public staging server, which lives at [test.reciprocal.reviews](https://test.reciprocal.reviews).
 - Feature branches should be created from `dev` and follow this format `issue-description`, where `issue` is a corresponding issue number.
 
 Feature branches should be merged into `dev`, which trigger a release to a staging server on Vercel. And a production release involves merging `dev` into `main`.
