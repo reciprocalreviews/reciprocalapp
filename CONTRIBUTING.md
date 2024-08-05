@@ -56,6 +56,8 @@ The key tools for local development are:
 - Playright: run `npm run test:integration` to run integration tests on demand.
 - Supabase CLI: [install](https://supabase.com/docs/guides/cli/getting-started), and then `supabase login`, and then `supabase start` to load the local database with Docker. Don't forget to `supabase stop` when you're done to release Docker resources.
 
+You will need a `.env.local` file that points to some details from our Supabase project, per [this guide](https://supabase.com/docs/guides/auth/server-side/sveltekit).
+
 ## Tests
 
 - vitest unit tests can live anywhere in `/src` and must end with `test.ts`

@@ -3,6 +3,8 @@
 	export let placeholder: string;
 	export let size: number = 10;
 	export let padded = true;
+	export let active = true;
+	export let name: string | undefined = undefined;
 	export let valid: undefined | ((text: string) => boolean) = undefined;
 	export let type: 'text' | 'box' | 'password' = 'text';
 
@@ -10,7 +12,15 @@
 </script>
 
 {#if type === 'text'}
-	<input class:padded {size} class:invalid={!isValid} bind:value={text} {placeholder} />
+	<input
+		{name}
+		disabled={!active}
+		class:padded
+		{size}
+		class:invalid={!isValid}
+		bind:value={text}
+		{placeholder}
+	/>
 {:else if type === 'box'}
 	<textarea
 		class:padded

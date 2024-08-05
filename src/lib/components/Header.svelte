@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Link from './Link.svelte';
-	import { getAuth } from '$lib/Context';
 	import Button from './Button.svelte';
+	import { getAuth } from '../../routes/+layout.svelte';
 
 	const routes = [
 		{ path: '/', label: 'Home' },
@@ -9,15 +9,15 @@
 		{ path: '/about', label: 'About' }
 	];
 
-	const auth = getAuth();
+	let auth = getAuth();
 </script>
 
 <div class="header">
 	{#each routes as route}<div class="link"><Link to={route.path}>{route.label}</Link></div>{/each}
 	<div class="authenticated">
-		{#if $auth}
-			<div class="link"><Link to="/scholar/{$auth.getScholarID()}">Profile</Link></div>
-			<div class="link"><Button action={() => $auth?.logout()}>Logout</Button></div>
+		{#if auth.authenticated()}
+			<!-- <div class="link"><Link to="/scholar/{$auth.getScholarID()}">Profile</Link></div> -->
+			<div class="link"><Button action={() => auth.signOut()}>Logout</Button></div>
 		{:else}
 			<div class="link"><Link to="/login">Login</Link></div>
 		{/if}

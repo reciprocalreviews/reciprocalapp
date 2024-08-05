@@ -11,6 +11,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Custom favicon.
 - Set up GitHub actions for unit and integration tests.
 - Configured Supabase, including continuous integration on `dev` and `main` branches to `reciprocal-staging` and `reciprocal-production`, respectively.
+- Added basic OTP authentication for dev purposes.
 
 ### Updated
 

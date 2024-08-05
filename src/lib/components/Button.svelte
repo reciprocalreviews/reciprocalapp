@@ -1,10 +1,12 @@
 <script lang="ts">
-	export let submit = false;
 	export let active = true;
+	export let formaction: string | undefined = undefined;
 	export let action: () => void;
+	export let name: string | undefined = undefined;
+	export let type: 'submit' | undefined = undefined;
 </script>
 
-<button class:inactive={!active} type={submit ? 'submit' : null} on:click={active ? action : null}
+<button {name} {formaction} {type} class:inactive={!active} on:click={active ? action : null}
 	><slot /></button
 >
 
