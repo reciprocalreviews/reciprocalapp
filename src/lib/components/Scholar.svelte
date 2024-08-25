@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getDB, getAuth } from '$lib/Context';
+	import { getDB } from '$lib/Context';
 	import type Scholar from '$lib/types/Scholar';
 	import Button from './Button.svelte';
 	import Tags from './Tags.svelte';
@@ -12,18 +12,18 @@
 	import Slider from './Slider.svelte';
 	import Tokens from './Tokens.svelte';
 	import Tag from './Tag.svelte';
-	import { writable, type Writable } from 'svelte/store';
 	import type Transaction from '$lib/types/Transaction';
 	import Status from './Status.svelte';
+	import { getAuth } from '../../routes/Auth.svelte';
 
-	export let scholar: Scholar;
+	let { scholar }: { scholar: Scholar } = $props();
 
 	const db = getDB();
 	const auth = getAuth();
 
-	const scholarTransactions: Writable<Transaction[] | undefined> = writable(undefined);
+	let scholarTransactions: Transaction[] | undefined = $state(undefined);
 
-	$: minimum = scholar.minimum;
+	let minimum = $state(scholar.minimum);
 
 	async function setReviewing(on: boolean) {
 		db.updateScholar({ ...scholar, reviewing: on });
@@ -37,19 +37,19 @@
 		if (newScholar) scholar = newScholar;
 	}
 
-	$: db.getScholarTransactions(scholar.id).then((transactions) =>
-		scholarTransactions.set(transactions)
-	);
+	$effect(() => {
+		db.getScholarTransactions(scholar.id).then((transactions) => {
+			scholarTransactions = transactions;
+		});
+	});
 </script>
 
 <h1>{scholar.name}</h1>
 <Note>Joined {new Date(scholar.creationtime).toDateString()}</Note>
 <p><Link to="https://orcid.org/{scholar.id}">ORCID Profile</Link></p>
-{#if $auth && $auth.getScholarID() === scholar.id}<Button action={() => $auth?.logout()}
-		>Logout</Button
-	>{/if}
+{#if auth.getUserID() === scholar.id}<Button action={() => auth.signOut()}>Logout</Button>{/if}
 
-{#if $auth}
+{#if auth.isAuthenticated()}
 	<Note>Edit your expertise on <Link to="https://orcid.org/{scholar.id}">ORCID.org</Link>.</Note>
 {/if}
 
@@ -81,10 +81,10 @@
 	<Feedback>Couldn't get editor roles.</Feedback>
 {/await}
 
-{#if $scholarTransactions === undefined}
+{#if scholarTransactions === undefined}
 	<Loading />
 {:else}
-	{@const netTokens = $scholarTransactions.reduce((total, trans) => (total += trans.amount), 0)}
+	{@const netTokens = scholarTransactions.reduce((total, trans) => (total += trans.amount), 0)}
 
 	<h2>Availability</h2>
 
@@ -98,7 +98,7 @@
 		</Status>
 	</p>
 
-	{#if $auth !== null && $auth.getScholarID() === scholar.id}
+	{#if auth.getUserID() === scholar.id}
 		<p>
 			<Checkbox on={scholar.reviewing} change={(on) => setReviewing(on)}
 				>When checked, your profile will indicate you are available to review if you have fewer than
@@ -124,7 +124,7 @@
 				<tr><th>Purpose</th><th>Amount</th><th>Notes</th></tr>
 			</thead>
 			<tbody>
-				{#each $scholarTransactions.sort((a, b) => b.creationtime - a.creationtime) as transaction}
+				{#each scholarTransactions.sort((a, b) => b.creationtime - a.creationtime) as transaction}
 					<tr>
 						<td
 							>{#if transaction.approvaltime}approved{:else}pending{/if}</td

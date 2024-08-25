@@ -5,7 +5,7 @@
 	import Link from '$lib/components/Link.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
-	import { getAuth, getDB } from '$lib/Context';
+	import { getDB } from '$lib/Context';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Slider from '$lib/components/Slider.svelte';
@@ -21,31 +21,37 @@
 	import type Scholar from '$lib/types/Scholar';
 	import Table from '$lib/components/Table.svelte';
 	import Status from '$lib/components/Status.svelte';
+	import { getAuth } from '../../Auth.svelte';
 
 	const db = getDB();
 	const auth = getAuth();
+	let uid = $derived(auth.getUserID());
 
 	/** The promise we're currently waiting for */
-	$: sourceID = $page.params.id;
-	$: sourcePromise = db.getSource($page.params.id);
-	let scholarPromise = $auth ? db.getScholar($auth.getScholarID()) : null;
+	let sourceID = $derived($page.params.id);
+	let sourcePromise = $state(db.getSource($page.params.id));
+	let scholarPromise: Promise<Scholar | null> | null = $state(null);
+
+	$effect(() => {
+		if (uid) scholarPromise = db.getScholar(uid);
+	});
 
 	/** State for name edits */
-	let editingNames = false;
-	let name: string;
-	let short: string;
-	let link: string;
+	let editingNames = $state(false);
+	let name: string = $state('');
+	let short: string = $state('');
+	let link: string = $state('');
 
 	/** State for pricing edits */
-	let editingTokens = false;
-	let submitCost: number;
-	let reviewPay: number;
-	let metaPay: number;
-	let editPay: number;
-	let newEditor: string;
+	let editingTokens = $state(false);
+	let submitCost: number = $state(0);
+	let reviewPay: number = $state(0);
+	let metaPay: number = $state(0);
+	let editPay: number = $state(0);
+	let newEditor: string = $state('');
 
 	/** Whether we're confirming desire to archive */
-	let archiving = false;
+	let archiving = $state(false);
 
 	function editNames(source: Source) {
 		if (editingNames) {
@@ -120,7 +126,7 @@
 		scholarPromise = db.updateScholar(scholar);
 	}
 
-	let newExpertise: string = '';
+	let newExpertise: string = $state('');
 	function addExpertise(source: Source, phrase: string) {
 		source.expertise = [...source.expertise, { phrase, deprecated: false, kind: 'topic' }];
 		sourcePromise = db.updateSource(source);
@@ -137,11 +143,13 @@
 	}
 </script>
 
+<!-- svelte-ignore state_referenced_locally -->
+<!-- svelte-ignore state_referenced_locally -->
 {#await sourcePromise}
 	<h1>Source</h1>
 	<Loading />
 {:then source}
-	{@const editor = $auth !== null && source.editors.includes($auth.getScholarID())}
+	{@const editor = uid !== null && source.editors.includes(uid)}
 
 	{#if editingNames}
 		<h1>
@@ -173,7 +181,7 @@
 			>
 		</p>
 
-		{#if $auth && editor && !source.archived}
+		{#if auth.isAuthenticated() && editor && !source.archived}
 			<p>You're one of this source's editors.</p>
 			<ul>
 				<li>Edit this source's name, URL, editors, costs, and compensation.</li>
@@ -280,7 +288,7 @@
 		See <Link to="/source/{$page.params.id}/volunteers">all volunteers</Link> for this source.
 	</p>
 
-	{#if $auth && !source.archived}
+	{#if uid && !source.archived}
 		{#await scholarPromise}
 			<Loading />
 		{:then scholar}
@@ -389,8 +397,8 @@
 							tabindex="0"
 							style:cursor="pointer"
 							style:user-select="none"
-							on:click={() => toggleExpertiseKind(source, expertise)}
-							on:keydown={() => toggleExpertiseKind(source, expertise)}
+							onclick={() => toggleExpertiseKind(source, expertise)}
+							onkeydown={() => toggleExpertiseKind(source, expertise)}
 						>
 							<Status good={expertise.kind === 'topic'}>{expertise.kind}</Status>
 						</div>

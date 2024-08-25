@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { getAuth, getDB } from '$lib/Context';
+	import { getDB } from '$lib/Context';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -13,20 +13,21 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import createSubmission from '$lib/data/createSubmission';
 	import { ORCIDRegex } from '$lib/types/Scholar';
-	import type Submission from '$lib/types/Submission';
+	import { getAuth } from '../../../Auth.svelte';
 
 	const db = getDB();
 	const auth = getAuth();
+	const uid = $derived(auth.getUserID());
 
 	/** The promise we're currently waiting for */
 	let sourcePromise = db.getSource($page.params.id);
-	let submissionsPromise = db.getActiveSubmissions($page.params.id);
+	let submissionsPromise = $state(db.getActiveSubmissions($page.params.id));
 
 	/** The title of the submission we're adding */
-	let title = '';
-	let externalID = '';
-	let metaID = '';
-	let charges = '';
+	let title = $state('');
+	let externalID = $state('');
+	let metaID = $state('');
+	let charges = $state('');
 
 	function validTitle(title: string) {
 		return title.length > 0;
@@ -79,13 +80,13 @@
 
 	async function charge(cost: number) {
 		if (!validSubmission(title, externalID, metaID, charges, cost)) return;
-		if ($auth === null) return;
+		if (uid === null) return;
 
 		// Create the submission.
 		await createSubmission(
 			db,
 			$page.params.id,
-			$auth?.getScholarID(),
+			uid,
 			title,
 			externalID,
 			metaID,
@@ -100,7 +101,7 @@
 {#await sourcePromise}
 	<Loading />
 {:then source}
-	{@const editor = $auth && source.editors.includes($auth.getScholarID())}
+	{@const editor = uid ? source.editors.includes(uid) : null}
 	{#if editor}
 		<h2>New</h2>
 

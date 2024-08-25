@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Link from './Link.svelte';
 	import Button from './Button.svelte';
-	import { getAuth } from '../../routes/+layout.svelte';
+	import { getAuth } from '../../routes/Auth.svelte';
 
 	const routes = [
 		{ path: '/', label: 'Home' },
@@ -15,7 +15,7 @@
 <div class="header">
 	{#each routes as route}<div class="link"><Link to={route.path}>{route.label}</Link></div>{/each}
 	<div class="authenticated">
-		{#if auth.authenticated()}
+		{#if auth.isAuthenticated()}
 			<!-- <div class="link"><Link to="/scholar/{$auth.getScholarID()}">Profile</Link></div> -->
 			<div class="link"><Button action={() => auth.signOut()}>Logout</Button></div>
 		{:else}

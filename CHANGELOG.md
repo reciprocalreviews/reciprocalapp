@@ -11,7 +11,8 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ### Maintenance
 
-- Updated Svelte and Supabase minor revisions.
+- Updated Svelte and Supabase minor revisions
+- Migrated auth state to Svelte state class.
 
 ## 0.0.1 2024-08-04
 

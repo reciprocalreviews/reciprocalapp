@@ -8,10 +8,11 @@
 	import SourceLink from '$lib/components/SourceLink.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import TransactionPreview from '$lib/components/TransactionPreview.svelte';
-	import { getAuth, getDB } from '$lib/Context';
+	import { getDB } from '$lib/Context';
 	import closeSubmission from '$lib/data/archiveSubmission';
 	import { ORCIDRegex } from '$lib/types/Scholar';
 	import type Submission from '$lib/types/Submission';
+	import { getAuth } from '../../Auth.svelte';
 
 	const db = getDB();
 	const auth = getAuth();
@@ -35,7 +36,7 @@
 	}
 </script>
 
-{#if $auth === null}
+{#if !auth.isAuthenticated()}
 	<h1>Submission</h1>
 	<Feedback error>Log in to view submissions.</Feedback>
 {:else}
@@ -43,7 +44,7 @@
 		<h1>Submission</h1>
 		<Loading />
 	{:then submission}
-		{@const editor = $auth !== null && submission.editorID === $auth.getScholarID()}
+		{@const editor = submission.editorID === auth.getUserID()}
 		{#if editor}
 			<h1>{submission.title}</h1>
 			<p><SourceLink id={submission.sourceID} /></p>

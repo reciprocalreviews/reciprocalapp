@@ -4,13 +4,15 @@
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Link from '$lib/components/Link.svelte';
 	import Loading from '$lib/components/Loading.svelte';
-	import { getAuth, getDB } from '$lib/Context';
+	import { getDB } from '$lib/Context';
+	import { getAuth } from '../Auth.svelte';
 
 	const db = getDB();
 	const auth = getAuth();
 
 	async function create() {
-		if ($auth === null) return;
+		const uid = auth.getUserID();
+		if (uid === null) return;
 		const source = await db.createSource({
 			id: crypto.randomUUID(),
 			name: '',
@@ -23,7 +25,7 @@
 				meta: 1,
 				edit: 0.1
 			},
-			editors: [$auth.getScholarID()],
+			editors: [uid],
 			creationtime: Date.now(),
 			expertise: []
 		});
@@ -38,7 +40,7 @@
 	it's policies or volunteer to review for it, or if you're an editor, create a new source.
 </p>
 
-{#if $auth}<Button action={create}>+ create a new source</Button>{/if}
+{#if auth.isAuthenticated()}<Button action={create}>+ create a new source</Button>{/if}
 
 {#await db.getSources()}
 	<Loading />
