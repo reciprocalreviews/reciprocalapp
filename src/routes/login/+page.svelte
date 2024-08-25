@@ -8,6 +8,7 @@
 	import Note from '$lib/components/Note.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
+	import { goto } from '$app/navigation';
 
 	let email = $state('');
 
@@ -20,6 +21,13 @@
 	let error = $state<undefined | string>(undefined);
 	let submitted = $state(false);
 	let password = $state('');
+
+	// When the user is authenticated, redirect to their home page.
+	$effect(() => {
+		if (auth.isAuthenticated()) {
+			goto(`/scholar/${auth.getUserID()}`);
+		}
+	});
 </script>
 
 <h1>Login</h1>
