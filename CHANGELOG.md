@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Added
 
 - Supabase scripts for documentation.
+- Basic email one-time password authenatication.
 
 ### Maintenance
 

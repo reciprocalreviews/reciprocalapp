@@ -17,5 +17,6 @@
 
 	.error {
 		background: var(--error-color);
+		font-weight: normal;
 	}
 </style>

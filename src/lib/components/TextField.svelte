@@ -25,6 +25,7 @@
 	<textarea
 		class:padded
 		class:invalid={!isValid}
+		disabled={!active}
 		{placeholder}
 		bind:value={text}
 		cols={size}
@@ -66,6 +67,11 @@
 	input.padded,
 	textarea.padded {
 		padding: calc(var(--spacing) / 2);
+	}
+
+	input[disabled],
+	textarea[disabled] {
+		border-color: var(--inactive-color);
 	}
 
 	input.invalid,

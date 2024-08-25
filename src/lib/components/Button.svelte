@@ -6,7 +6,7 @@
 	export let type: 'submit' | undefined = undefined;
 </script>
 
-<button {name} {formaction} {type} class:inactive={!active} on:click={active ? action : null}
+<button {name} {formaction} {type} disabled={!active} on:click={active ? action : null}
 	><slot /></button
 >
 
@@ -23,8 +23,8 @@
 		white-space: nowrap;
 	}
 
-	button.inactive {
-		background: var(--border-color);
+	button[disabled] {
+		background: var(--inactive-color);
 		cursor: auto;
 	}
 
