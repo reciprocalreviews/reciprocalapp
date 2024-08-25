@@ -7,6 +7,7 @@
 	import { getAuth } from '../Auth.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import Form from '$lib/components/Form.svelte';
 
 	let email = $state('');
 
@@ -33,7 +34,7 @@
 		password.</Feedback
 	>
 
-	<p>
+	<Form inline>
 		<TextField active={!submitted} name="email" size={19} bind:text={email} placeholder="email" />
 		<Button
 			action={async () => {
@@ -48,11 +49,11 @@
 			}}
 			active={!submitted}>Login</Button
 		>
-	</p>
+	</Form>
 
 	{#if submitted}
-		<p><Status>Check your email for a sign in link.</Status></p>
-		<p>
+		<Feedback>Check your email for a sign in link.</Feedback>
+		<Form inline>
 			<TextField name="password" size={19} bind:text={password} placeholder="one-time password" />
 			<Button
 				action={async () => {
@@ -67,7 +68,7 @@
 				}}
 				active={password.length > 0}>Login</Button
 			>
-		</p>
+		</Form>
 	{/if}
 
 	<Note>

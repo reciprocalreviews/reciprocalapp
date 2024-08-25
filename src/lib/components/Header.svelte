@@ -2,6 +2,7 @@
 	import Link from './Link.svelte';
 	import Button from './Button.svelte';
 	import { getAuth } from '../../routes/Auth.svelte';
+	import { goto } from '$app/navigation';
 
 	const routes = [
 		{ path: '/', label: 'Home' },
@@ -16,8 +17,15 @@
 	{#each routes as route}<div class="link"><Link to={route.path}>{route.label}</Link></div>{/each}
 	<div class="authenticated">
 		{#if auth.isAuthenticated()}
-			<!-- <div class="link"><Link to="/scholar/{$auth.getScholarID()}">Profile</Link></div> -->
-			<div class="link"><Button action={() => auth.signOut()}>Logout</Button></div>
+			<div class="link"><Link to="/scholar/{auth.getUserID()}">Profile</Link></div>
+			<div class="link">
+				<Button
+					action={() => {
+						auth.signOut();
+						goto('/login');
+					}}>Logout</Button
+				>
+			</div>
 		{:else}
 			<div class="link"><Link to="/login">Login</Link></div>
 		{/if}
