@@ -9,6 +9,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 - Supabase scripts for documentation.
 
+### Maintenance
+
+- Updated Svelte and Supabase minor revisions.
+
 ## 0.0.1 2024-08-04
 
 ### Added
