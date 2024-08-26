@@ -18,7 +18,7 @@
 		"types": "supabase gen types typescript --local > src/data/database.ts"
 	},
 	"engines": {
-		"node": ">=20"
+		"node": "20"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.45.3",
