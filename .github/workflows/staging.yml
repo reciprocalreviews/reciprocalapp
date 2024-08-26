@@ -1,4 +1,4 @@
-name: Deploy Supbase Migrations to Staging
+name: Deploy Supabase Migrations to Staging
 
 on:
   push:
