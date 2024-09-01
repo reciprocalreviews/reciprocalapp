@@ -1,6 +1,6 @@
 {
 	"name": "reciprocalapp",
-	"version": "0.0.1",
+	"version": "0.0.3",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
@@ -33,7 +33,7 @@
 		"prettier": "^3.3.3",
 		"prettier-plugin-svelte": "^3.2.6",
 		"supabase": "^1.190.0",
-		"svelte": "^5.0.0-next.238",
+		"svelte": "^5.0.0-next.242",
 		"svelte-check": "^3.8.6",
 		"tslib": "^2.6.3",
 		"typescript": "^5.5.4",
@@ -42,7 +42,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@supabase/ssr": "^0.5.0",
-		"@supabase/supabase-js": "^2.45.2"
+		"@supabase/ssr": "^0.5.1",
+		"@supabase/supabase-js": "^2.45.3"
 	}
 }
