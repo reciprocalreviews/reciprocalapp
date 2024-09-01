@@ -1,20 +1,15 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import Scholar from '$lib/components/Scholar.svelte';
-	import { getDB } from '$lib/Context';
+	import Scholar from './Scholar.svelte';
 
-	const db = getDB();
+	export let data;
+
+	$: scholar = data.scholar;
 </script>
 
-<!-- If this is the logged in scholar, show their info -->
-{#await db.getScholar($page.params.id) then scholar}
-	{#if scholar !== null}
-		<Scholar {scholar} />
-	{:else}
-		<Feedback error>There's no account associated with this ORCID here.</Feedback>
-	{/if}
-{:catch}
-	<h1>Scholar {$page.params.id}</h1>
-	<Feedback>We couldn't load this scholar.</Feedback>
-{/await}
+{#if scholar}
+	<Scholar {scholar} />
+{:else}
+	<h1>Oops.</h1>
+	<Feedback error>Unable to find scholar.</Feedback>
+{/if}

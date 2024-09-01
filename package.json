@@ -14,7 +14,7 @@
 		"test:unit": "vitest",
 		"start": "supabase start",
 		"stop": "supabase stop",
-		"reset": "supabase reset",
+		"reset": "supabase db reset && npm run types",
 		"types": "supabase gen types typescript --local > src/data/database.ts"
 	},
 	"engines": {

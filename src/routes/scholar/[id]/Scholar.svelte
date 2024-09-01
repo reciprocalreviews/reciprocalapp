@@ -1,29 +1,27 @@
 <script lang="ts">
 	import { getDB } from '$lib/Context';
-	import type Scholar from '$lib/types/Scholar';
-	import Button from './Button.svelte';
-	import Tags from './Tags.svelte';
-	import Feedback from './Feedback.svelte';
-	import Link from './Link.svelte';
-	import Loading from './Loading.svelte';
-	import Note from './Note.svelte';
-	import SourceLink from './SourceLink.svelte';
-	import Checkbox from './Checkbox.svelte';
-	import Slider from './Slider.svelte';
-	import Tokens from './Tokens.svelte';
-	import Tag from './Tag.svelte';
+	import Feedback from '$lib/components/Feedback.svelte';
+	import Link from '$lib/components/Link.svelte';
+	import Loading from '$lib/components/Loading.svelte';
+	import Note from '$lib/components/Note.svelte';
+	import SourceLink from '$lib/components/SourceLink.svelte';
+	import Checkbox from '$lib/components/Checkbox.svelte';
+	import Tokens from '$lib/components/Tokens.svelte';
+	import Tag from '$lib/components/Tag.svelte';
 	import type Transaction from '$lib/types/Transaction';
-	import Status from './Status.svelte';
-	import { getAuth } from '../../routes/Auth.svelte';
+	import { getAuth } from '../../Auth.svelte';
+	import type { Scholar } from '../../../data/types';
+	import Todo from '$lib/components/Todo.svelte';
+	import Name from './Name.svelte';
 
 	let { scholar }: { scholar: Scholar } = $props();
 
 	const db = getDB();
 	const auth = getAuth();
 
-	let scholarTransactions: Transaction[] | undefined = $state(undefined);
+	let editable = $state(auth.getUserID() === scholar.id);
 
-	let minimum = $state(scholar.minimum);
+	let scholarTransactions: Transaction[] | undefined = $state(undefined);
 
 	async function setReviewing(on: boolean) {
 		db.updateScholar({ ...scholar, reviewing: on });
@@ -44,10 +42,7 @@
 	});
 </script>
 
-<h1>{scholar.name}</h1>
-<Note>Joined {new Date(scholar.creationtime).toDateString()}</Note>
-<p><Link to="https://orcid.org/{scholar.id}">ORCID Profile</Link></p>
-{#if auth.getUserID() === scholar.id}<Button action={() => auth.signOut()}>Logout</Button>{/if}
+<Name {editable} {scholar} />
 
 {#if auth.isAuthenticated()}
 	<Note>Edit your expertise on <Link to="https://orcid.org/{scholar.id}">ORCID.org</Link>.</Note>
@@ -55,6 +50,8 @@
 
 <h2>Reviewing</h2>
 
+<Todo>Venue volunteer list</Todo>
+<!-- 
 <p>Currently volunteering for:</p>
 
 {#each Object.entries(scholar.sources) as [sourceID, expertise]}
@@ -63,7 +60,7 @@
 			{#each expertise as exp}<Tag>{exp}</Tag>{/each}
 		</Tags>
 	</p>
-{/each}
+{/each} -->
 
 {#await db.getEditedSources(scholar.id)}
 	<Loading />
@@ -88,32 +85,33 @@
 
 	<h2>Availability</h2>
 
-	<p>
+	<!-- <p>
 		<Status>
-			I am {#if scholar.reviewing && netTokens < scholar.minimum}
+			I am {#if scholar.available && netTokens < scholar.minimum}
 				available to review.
 			{:else}
 				not available to review.
 			{/if}
 		</Status>
-	</p>
+	</p> -->
 
 	{#if auth.getUserID() === scholar.id}
 		<p>
-			<Checkbox on={scholar.reviewing} change={(on) => setReviewing(on)}
-				>When checked, your profile will indicate you are available to review if you have fewer than
-				your desired minumum number of tokens.
+			<Checkbox on={scholar.available} change={(on) => setReviewing(on)}
+				>When checked, your profile will indicate you are available to review.
 			</Checkbox>
 		</p>
-		{#if scholar.reviewing}
+		<!-- {#if scholar.available}
 			<p>Indicate I am available when I have fewer than...</p>
 			<p>
 				<Slider min={0} max={50} bind:value={minimum} step={1} change={handleChange} />
 				<Tokens amount={scholar.minimum} />
 			</p>
-		{/if}
+		{/if} -->
 
 		<h2>Transactions</h2>
+
+		<Todo>Transaction list</Todo>
 
 		<p>
 			You have a total of <Tokens amount={netTokens} />.

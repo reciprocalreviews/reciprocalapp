@@ -406,7 +406,7 @@ It should:
 
 If scholar ID corresponds to the authenticated user, it should also allow the scholar to:
 
-- [ ] _`scholar`_: Logout
+- [x] _`scholar`_: Logout
 - [ ] _`scholar`_: Indicate whether they are available to review (`scholar.available`)
 - [ ] _`scholar`_: Explain their reviewing availability (`scholar.status`)
 - [ ] _`scholar`_: Allow editing of the scholar's preferred email address. (`scholar.email`)

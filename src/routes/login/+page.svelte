@@ -1,8 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/Button.svelte';
 	import TextField from '$lib/components/TextField.svelte';
-	import { ORCIDRegex } from '$lib/types/Scholar';
-	import Status from '$lib/components/Status.svelte';
 	import Link from '$lib/components/Link.svelte';
 	import { getAuth } from '../Auth.svelte';
 	import Note from '$lib/components/Note.svelte';
@@ -80,8 +78,7 @@
 	{/if}
 
 	<Note>
-		Why ORCID? It's the de facto way to manage scholar identity. It's designed for this explicit
-		purpose and there's no reason to require another login.
+		<Link to="https://orcid.org/">ORCID</Link> is the de facto way to manage scholar identity.
 	</Note>
 {/if}
 

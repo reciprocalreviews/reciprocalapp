@@ -10,7 +10,7 @@
 	href={inactive ? null : to}
 	target={to.startsWith('http') ? '_blank' : null}
 	aria-current={inactive ? 'page' : null}
-	><slot />{#if to.startsWith('http')}<sub>🔗</sub>{/if}</a
+	><slot />{#if to.startsWith('http')}<sub>⏵</sub>{/if}</a
 >
 
 <style>
