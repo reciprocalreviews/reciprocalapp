@@ -38,8 +38,13 @@
 
 	<p>
 		See the <Link to="/sources">journals and conferences</Link> using the platform and reach out to their
-		editors for their experiences. Or, <Link to="login">Log in</Link> to propose a journal or conference
+		editors for their experiences. Or, <Link to="login">log in</Link> to propose a journal or conference
 		for adoption.
+	</p>
+
+	<p>
+		<em>Don't want to set a cost yet?</em> Use Reciprocal Reviews to track volunteer reviewers in your
+		community.
 	</p>
 {:else}
 	<p>
@@ -53,7 +58,7 @@
 	</p>
 {/if}
 
-<hr />
+<h2>Updates</h2>
 
 <p>Follow along on our newsletter.</p>
 
