@@ -6,7 +6,10 @@
 	$: inactive = $page.url.pathname === to;
 </script>
 
-<a href={inactive ? null : to} target={to.startsWith('http') ? '_blank' : null} class:inactive
+<a
+	href={inactive ? null : to}
+	target={to.startsWith('http') ? '_blank' : null}
+	aria-current={inactive ? 'page' : null}
 	><slot />{#if to.startsWith('http')}<sub>🔗</sub>{/if}</a
 >
 
@@ -17,7 +20,7 @@
 		text-decoration: none;
 	}
 
-	a:hover:not(.inactive) {
+	a:hover:not([aria-current]) {
 		text-decoration: underline;
 		text-decoration-thickness: 4px;
 	}
@@ -27,7 +30,7 @@
 		border-radius: var(--roundedness);
 	}
 
-	.inactive {
+	a[aria-current] {
 		color: var(--text-color);
 	}
 </style>
