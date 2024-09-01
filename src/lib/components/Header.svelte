@@ -13,7 +13,7 @@
 	let auth = getAuth();
 </script>
 
-<div class="header">
+<header>
 	{#each routes as route}<div class="link"><Link to={route.path}>{route.label}</Link></div>{/each}
 	<div class="authenticated">
 		{#if auth.isAuthenticated()}
@@ -30,10 +30,10 @@
 			<div class="link"><Link to="/login">Login</Link></div>
 		{/if}
 	</div>
-</div>
+</header>
 
 <style>
-	.header {
+	header {
 		display: flex;
 		flex-direction: row;
 		flex-wrap: wrap;

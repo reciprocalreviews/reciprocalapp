@@ -2,7 +2,7 @@
 	import { dev } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
-	import { AuthSymbol, DatabaseSymbol } from '$lib/Context';
+	import { DatabaseSymbol } from '$lib/Context';
 	import MockDatabase from '$lib/data/MockDatabase';
 	import { onMount, setContext, type Snippet } from 'svelte';
 	import { invalidate } from '$app/navigation';
@@ -39,4 +39,6 @@
 {#if dev}
 	<Header />
 {/if}
-{@render children()}
+<main>
+	{@render children()}
+</main>
