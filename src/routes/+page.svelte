@@ -2,6 +2,7 @@
 	import { dev } from '$app/environment';
 	import Lead from '$lib/components/Lead.svelte';
 	import Link from '$lib/components/Link.svelte';
+	import Tag from '$lib/components/Tag.svelte';
 </script>
 
 <svelte:head>
@@ -10,40 +11,35 @@
 
 <h1>Reciprocal Reviews</h1>
 {#if dev}
-	<Lead>Find reliable, available peer reviewers more quickly, sustaining peer review.</Lead>
+	<Lead>Incentivize on-time, quality peer reviews.</Lead>
 	<p>
-		Academia incentivizes writing over reading, but peer review depends on everyone reading their
-		fair share. This means that there are never enough reviewers, reviews are late and often of low
-		quality, and everyone is unhappy.
+		Academia incentivizes publishing over reviewing. That means too many submissions and not enough
+		reviews, or reviews that are late and low quality.
 	</p>
 
 	<p>
-		<strong>Reciprocal Reviews</strong> breaks this cycle with two features:
+		<strong>Reciprocal Reviews</strong> breaks this cycle:
 	</p>
 
-	<ul>
+	<ol>
 		<li>
-			<strong>Reviewers volunteer for specific venues, posting their capacity to review</strong>.
-			This helps scholars track their volunteer efforts and helps editors find reviewers who are
-			available.
+			<strong>Editors set an cost for submission</strong>, priced in <Tag>review tokens</Tag>.
 		</li>
 		<li>
-			<strong>Editors set a cost for submission, priced in <em>review tokens</em></strong>.
-			Co-authors split the cost by writing reviews and pay at the time of submission. Editors
-			compensate reviewers and editors for reviews of sufficient quality with review tokens.
+			<strong>Authors earn tokens</strong> by volunteering for venues, sharing expertise and availabilty,
+			and submitting on-time, quality reviews.
 		</li>
-	</ul>
+		<li>
+			<strong>Authors spend tokens</strong> to submit manuscripts for review, splitting the cost with
+			co-authors. Or, they can gift tokens to colleagues in or donate their tokens to the community pool
+			for strategic investiments in equity and emerging areas.
+		</li>
+	</ol>
 
 	<p>
-		Editors can more easily find available reviewers, editors can hold reviewers accountable to
-		qualitity and timeline, and to make it all work, we'll all submit fewer, more polished
-		publications.
-	</p>
-
-	<p>
-		If you're an journal editor or conference program chair and want to learn more, see the <Link
-			to="/sources">journals and conferences</Link
-		> using the platform, and reach out to their editors for their experiences. Or, log in and get started.
+		See the <Link to="/sources">journals and conferences</Link> using the platform and reach out to their
+		editors for their experiences. Or, <Link to="login">Log in</Link> to propose a journal or conference
+		for adoption.
 	</p>
 {:else}
 	<p>
@@ -55,14 +51,18 @@
 		to learn more and contribute or subscribe to our twice monthly
 		<Link to="https://reciprocalreviews.substack.com/">newsletter</Link>:
 	</p>
-
-	<iframe
-		src="https://reciprocalreviews.substack.com/embed"
-		title="Newsletter subscription"
-		width="480"
-		height="150"
-		style="border:none; background:white;"
-		frameborder="0"
-		scrolling="no"
-	></iframe>
 {/if}
+
+<hr />
+
+<p>Follow along on our newsletter.</p>
+
+<iframe
+	src="https://reciprocalreviews.substack.com/embed"
+	title="Newsletter subscription"
+	width="480"
+	height="150"
+	style="border:none; background:white;"
+	frameborder="0"
+	scrolling="no"
+></iframe>
