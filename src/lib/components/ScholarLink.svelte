@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { getDB } from '$lib/Context';
-	import type Scholar from '$lib/types/Scholar';
-	import type { ScholarID } from '$lib/types/Scholar';
+	import { type Scholar } from '../../data/types';
 	import Link from './Link.svelte';
 
-	export let id: ScholarID | Scholar;
+	export let id: string | Scholar;
 
 	const db = getDB();
 </script>

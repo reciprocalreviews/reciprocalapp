@@ -10,7 +10,7 @@
 	import TransactionPreview from '$lib/components/TransactionPreview.svelte';
 	import { getDB } from '$lib/Context';
 	import closeSubmission from '$lib/data/archiveSubmission';
-	import { ORCIDRegex } from '$lib/types/Scholar';
+	import { ORCIDRegex } from '../../../data/ORCID';
 	import type Submission from '$lib/types/Submission';
 	import { getAuth } from '../../Auth.svelte';
 

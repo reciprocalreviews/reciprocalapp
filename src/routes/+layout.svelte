@@ -2,8 +2,6 @@
 	import { dev } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
-	import { DatabaseSymbol } from '$lib/Context';
-	import MockDatabase from '$lib/data/MockDatabase';
 	import { onMount, setContext, type Snippet } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import type { Session, SupabaseClient } from '@supabase/supabase-js';
@@ -31,9 +29,6 @@
 
 		return () => response.subscription.unsubscribe();
 	});
-
-	/** Set a database connection context for all to use. */
-	setContext(DatabaseSymbol, new MockDatabase());
 </script>
 
 {#if dev}

@@ -24,13 +24,7 @@
 	let scholarTransactions: Transaction[] | undefined = $state(undefined);
 
 	async function setReviewing(on: boolean) {
-		db.updateScholar({ ...scholar, reviewing: on });
-		const newScholar = await db.getScholar(scholar.id);
-		if (newScholar) scholar = newScholar;
-	}
-
-	async function handleChange(value: number) {
-		db.updateScholar({ ...scholar, minimum: value });
+		db.updateScholar({ ...scholar, available: on });
 		const newScholar = await db.getScholar(scholar.id);
 		if (newScholar) scholar = newScholar;
 	}
@@ -61,7 +55,7 @@
 		</Tags>
 	</p>
 {/each} -->
-
+<!-- 
 {#await db.getEditedSources(scholar.id)}
 	<Loading />
 {:then sources}
@@ -76,7 +70,7 @@
 	{/if}
 {:catch}
 	<Feedback>Couldn't get editor roles.</Feedback>
-{/await}
+{/await} -->
 
 {#if scholarTransactions === undefined}
 	<Loading />

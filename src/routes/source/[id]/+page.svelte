@@ -10,7 +10,7 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import type Source from '$lib/types/Source';
-	import { ORCIDRegex, type ScholarID } from '$lib/types/Scholar';
+	import { ORCIDRegex } from '../../../data/ORCID';
 	import Form from '$lib/components/Form.svelte';
 	import type { SourceID } from '$lib/types/Source';
 	import EditorsOnly from '$lib/components/EditorsOnly.svelte';
@@ -18,10 +18,11 @@
 	import Tags from '$lib/components/Tags.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import type Expertise from '$lib/types/Expertise';
-	import type Scholar from '$lib/types/Scholar';
 	import Table from '$lib/components/Table.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import { getAuth } from '../../Auth.svelte';
+	import type { Scholar } from '../../../data/types';
+	import Todo from '$lib/components/Todo.svelte';
 
 	const db = getDB();
 	const auth = getAuth();
@@ -94,37 +95,37 @@
 		sourcePromise = db.updateSource(source);
 	}
 
-	function addEditor(source: Source, editor: ScholarID) {
+	function addEditor(source: Source, editor: string) {
 		source.editors = Array.from(new Set([...source.editors, editor]));
 		newEditor = '';
 		sourcePromise = db.updateSource(source);
 	}
 
-	function removeEditor(source: Source, editor: ScholarID) {
+	function removeEditor(source: Source, editor: string) {
 		source.editors = source.editors.filter((ed) => ed !== editor);
 		sourcePromise = db.updateSource(source);
 	}
 
-	function toggleSourceVolunteer(scholar: Scholar, id: SourceID) {
-		const newSources = { ...scholar.sources };
+	// function toggleSourceVolunteer(scholar: Scholar, id: SourceID) {
+	// 	const newSources = { ...scholar.sources };
 
-		// Remove the key
-		if (id in newSources) delete newSources[id];
-		// Add the source with an empty expertise list.
-		else newSources[id] = [];
+	// 	// Remove the key
+	// 	if (id in newSources) delete newSources[id];
+	// 	// Add the source with an empty expertise list.
+	// 	else newSources[id] = [];
 
-		scholar.sources = newSources;
-		scholarPromise = db.updateScholar(scholar);
-	}
+	// 	scholar.sources = newSources;
+	// 	scholarPromise = db.updateScholar(scholar);
+	// }
 
-	function toggleSourceExpertise(scholar: Scholar, expertise: Expertise, yes: boolean) {
-		const currentExpertise = scholar.sources[sourceID] ?? [];
-		const newExpertise = yes
-			? Array.from(new Set([...currentExpertise, expertise.phrase]))
-			: currentExpertise.filter((exp) => exp !== expertise.phrase);
-		scholar.sources[sourceID] = newExpertise;
-		scholarPromise = db.updateScholar(scholar);
-	}
+	// function toggleSourceExpertise(scholar: Scholar, expertise: Expertise, yes: boolean) {
+	// 	const currentExpertise = scholar.sources[sourceID] ?? [];
+	// 	const newExpertise = yes
+	// 		? Array.from(new Set([...currentExpertise, expertise.phrase]))
+	// 		: currentExpertise.filter((exp) => exp !== expertise.phrase);
+	// 	scholar.sources[sourceID] = newExpertise;
+	// 	scholarPromise = db.updateScholar(scholar);
+	// }
 
 	let newExpertise: string = $state('');
 	function addExpertise(source: Source, phrase: string) {
@@ -288,7 +289,9 @@
 		See <Link to="/source/{$page.params.id}/volunteers">all volunteers</Link> for this source.
 	</p>
 
-	{#if uid && !source.archived}
+	<Todo>Volunteering interface</Todo>
+
+	<!-- {#if uid && !source.archived}
 		{#await scholarPromise}
 			<Loading />
 		{:then scholar}
@@ -304,7 +307,6 @@
 					>
 				</p>
 
-				<!-- Show expertise toggles -->
 				{#if source.id in scholar.sources}
 					<p>What <strong>methods</strong> expertise do you have?</p>
 
@@ -358,7 +360,7 @@
 						>{/if}{/each}
 			</Tags>
 		</p>
-	{/if}
+	{/if} -->
 
 	<EditorsOnly {editor}>
 		<h2>Submissions</h2>

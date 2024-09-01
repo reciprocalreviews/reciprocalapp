@@ -1,6 +1,6 @@
 import type { SourceID } from '$lib/types/Source';
 import type Cost from './Cost';
-import type { ScholarID } from './Scholar';
+import type { ScholarID } from '../../data/types';
 import type { TransactionID } from './Transaction';
 
 type SubmissionID = string;

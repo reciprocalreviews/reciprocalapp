@@ -9,6 +9,7 @@
 	import Tag from '$lib/components/Tag.svelte';
 	import Tags from '$lib/components/Tags.svelte';
 	import Status from '$lib/components/Status.svelte';
+	import Todo from '$lib/components/Todo.svelte';
 
 	const db = getDB();
 	$: sourceID = $page.params.id;
@@ -26,7 +27,9 @@
 		sorted by the number of reviews they are seeking.
 	</p>
 
-	<Table>
+	<Todo>List of scholars.</Todo>
+
+	<!-- <Table>
 		{#each volunteers.sort((a, b) => a.balance - b.balance) as volunteer}
 			<tr>
 				<td><ScholarLink id={volunteer.scholar} /></td>
@@ -44,7 +47,7 @@
 				>
 			</tr>
 		{/each}
-	</Table>
+	</Table> -->
 {:catch}
 	<h1>Unknown Source</h1>
 	<Feedback>We couldn't load this source's volunteers.</Feedback>

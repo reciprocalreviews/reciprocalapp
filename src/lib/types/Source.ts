@@ -1,6 +1,6 @@
 import type Cost from './Cost';
 import type Expertise from './Expertise';
-import type { ScholarID } from './Scholar';
+import { type ScholarID } from '../../data/types';
 
 type SourceID = string;
 

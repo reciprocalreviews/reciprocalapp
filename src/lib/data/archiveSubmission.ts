@@ -1,4 +1,4 @@
-import type { ScholarID } from '$lib/types/Scholar';
+import { type ScholarID } from '../../data/types';
 import type Submission from '$lib/types/Submission';
 import type { SubmissionID } from '$lib/types/Submission';
 import type Database from './Database';

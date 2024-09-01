@@ -12,7 +12,7 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import createSubmission from '$lib/data/createSubmission';
-	import { ORCIDRegex } from '$lib/types/Scholar';
+	import { ORCIDRegex } from '../../../../data/ORCID';
 	import { getAuth } from '../../../Auth.svelte';
 
 	const db = getDB();

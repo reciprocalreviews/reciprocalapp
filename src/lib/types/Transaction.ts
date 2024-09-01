@@ -1,4 +1,4 @@
-import type { ScholarID } from './Scholar';
+import { type ScholarID } from '../../data/types';
 
 export type TransactionID = string;
 export type Purpose = 'submission' | 'review' | 'meta' | 'edit' | 'gift';
