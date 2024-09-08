@@ -55,7 +55,7 @@
 	form {
 		display: flex;
 		flex-direction: row;
-		align-items: baseline;
+		align-items: center;
 		gap: var(--spacing);
 	}
 </style>

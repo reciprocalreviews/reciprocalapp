@@ -95,6 +95,16 @@ export default class SupabaseDB extends Database {
 		}
 	}
 
+	async updateScholarAvailability(id: ScholarID, available: boolean): Promise<string | undefined> {
+		const { error } = await this.client.from('scholars').update({ available }).eq('id', id);
+		if (error) return 'Unable to update availability';
+		else {
+			const state = this.scholars.get(id);
+			if (state) state.setAvailable(available);
+			return undefined;
+		}
+	}
+
 	getScholarBalance(scholarID: ScholarID): Promise<number> {
 		throw new Error('Method not implemented.');
 	}

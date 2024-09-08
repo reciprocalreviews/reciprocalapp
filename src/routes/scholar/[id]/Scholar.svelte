@@ -11,6 +11,7 @@
 	import Todo from '$lib/components/Todo.svelte';
 	import Name from './Name.svelte';
 	import type Scholar from '$lib/data/Scholar.svelte';
+	import Status from '$lib/components/Status.svelte';
 
 	let { scholar }: { scholar: Scholar } = $props();
 
@@ -21,12 +22,6 @@
 	let editable = $derived(auth.getUserID() === scholar.getID());
 
 	let scholarTransactions: Transaction[] | undefined = $state(undefined);
-
-	async function setReviewing(on: boolean) {
-		db.updateScholar({ ...scholar.get(), available: on });
-		const newScholar = await db.getScholar(scholar.getID());
-		if (newScholar) scholar = newScholar;
-	}
 
 	// $effect(() => {
 	// 	db.getScholarTransactions(scholar.getID()).then((transactions) => {
@@ -44,6 +39,18 @@
 {/if}
 
 <h2>Reviewing</h2>
+
+<Status good={scholar.isAvailable()}>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status>
+
+<p>
+	{#if editable}
+		<Checkbox
+			on={scholar.isAvailable()}
+			change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
+			>When checked, your profile will indicate you are available to review.
+		</Checkbox>
+	{/if}
+</p>
 
 <Todo>Venue volunteer list</Todo>
 <!-- 
@@ -90,12 +97,7 @@
 		</Status>
 	</p> -->
 
-	{#if auth.getUserID() === scholar.getID()}
-		<p>
-			<Checkbox on={scholar.isAvailable()} change={(on) => setReviewing(on)}
-				>When checked, your profile will indicate you are available to review.
-			</Checkbox>
-		</p>
+	{#if editable}
 		<!-- {#if scholar.available}
 			<p>Indicate I am available when I have fewer than...</p>
 			<p>

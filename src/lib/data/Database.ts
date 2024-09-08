@@ -65,8 +65,14 @@ export default abstract class Database {
 	/** Update the given scholar */
 	abstract updateScholar(scholar: ScholarRow): Promise<ScholarRow>;
 
-	/** Update scholar's anme */
+	/** Update scholar's name */
 	abstract updateScholarName(id: ScholarID, name: string): Promise<string | undefined>;
+
+	/** Update scholar's availabilty */
+	abstract updateScholarAvailability(
+		id: ScholarID,
+		available: boolean
+	): Promise<string | undefined>;
 
 	/** Get the balance of the scholar */
 	abstract getScholarBalance(scholarID: ScholarID): Promise<number>;

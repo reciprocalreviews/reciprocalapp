@@ -6,6 +6,7 @@
 <label
 	><input
 		type="checkbox"
+		aria-checked={on}
 		checked={on}
 		on:click={() => {
 			on = !on;
@@ -24,6 +25,8 @@
 
 	input {
 		accent-color: var(--salient-color);
+		width: 20px;
+		height: 20px;
 	}
 
 	input:focus {

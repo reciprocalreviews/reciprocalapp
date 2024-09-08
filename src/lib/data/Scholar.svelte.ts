@@ -31,6 +31,10 @@ export default class Scholar {
 		return this.data.available;
 	}
 
+	setAvailable(available: boolean) {
+		this.data = { ...this.data, available };
+	}
+
 	set(state: ScholarRow) {
 		this.data = state;
 	}

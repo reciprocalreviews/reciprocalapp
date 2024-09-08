@@ -65,11 +65,15 @@
 		border: none;
 		border-bottom: 4px solid var(--salient-color);
 		padding: 0;
+		padding-block: 0;
+		padding-inline: 0;
 		font-family: inherit;
+		line-height: inherit;
 		font-size: inherit;
 		font-weight: inherit;
 		font-style: inherit;
 		background: var(--background-color);
+		overflow: visible !important;
 	}
 
 	textarea {
@@ -77,6 +81,7 @@
 		padding: 0;
 		border-left: 4px solid var(--salient-color);
 		font-family: inherit;
+		line-height: inherit;
 		font-size: inherit;
 		font-weight: inherit;
 		font-style: inherit;
