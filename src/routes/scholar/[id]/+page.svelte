@@ -1,15 +1,20 @@
 <script lang="ts">
 	import Feedback from '$lib/components/Feedback.svelte';
-	import Scholar from './Scholar.svelte';
+	import { getDB } from '$lib/data/Database';
+	import type { ScholarRow } from '../../../data/types';
+	import { default as ScholarView } from './Scholar.svelte';
 
-	export let data;
+	let { data }: { data: { scholar: ScholarRow | null } } = $props();
 
-	$: scholar = data.scholar;
+	let db = getDB();
+
+	/** Register a scholar state. */
+	let state = data.scholar ? db.registerScholar(data.scholar) : null;
 </script>
 
-{#if scholar}
-	<Scholar {scholar} />
+{#if state}
+	<ScholarView scholar={state} />
 {:else}
 	<h1>Oops.</h1>
-	<Feedback error>Unable to find scholar.</Feedback>
+	<Feedback error>Unknown scholar.</Feedback>
 {/if}

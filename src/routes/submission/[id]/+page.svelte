@@ -8,7 +8,7 @@
 	import SourceLink from '$lib/components/SourceLink.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import TransactionPreview from '$lib/components/TransactionPreview.svelte';
-	import { getDB } from '$lib/Context';
+	import { getDB } from '$lib/data/Database';
 	import closeSubmission from '$lib/data/archiveSubmission';
 	import { ORCIDRegex } from '../../../data/ORCID';
 	import type Submission from '$lib/types/Submission';

@@ -4,7 +4,7 @@
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Link from '$lib/components/Link.svelte';
 	import Loading from '$lib/components/Loading.svelte';
-	import { getDB } from '$lib/Context';
+	import { getDB } from '$lib/data/Database';
 	import { getAuth } from '../Auth.svelte';
 
 	const db = getDB();

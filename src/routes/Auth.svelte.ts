@@ -4,7 +4,7 @@ import { getContext, setContext } from 'svelte';
 
 /** Represents the current authenatication state from Supabase. */
 export default class SupabaseAuth extends Authentication<User, AuthError> {
-	private user = $state<User | null>(null);
+	user = $state<User | null>(null);
 	private client: SupabaseClient;
 
 	constructor(supabase: SupabaseClient) {
@@ -48,6 +48,6 @@ export function createAuthContext(supabase: SupabaseClient) {
 	setContext(AuthSymbol, new SupabaseAuth(supabase));
 }
 
-export function getAuth(): Authentication<User, AuthError> {
+export function getAuth(): SupabaseAuth {
 	return getContext<SupabaseAuth>(AuthSymbol);
 }

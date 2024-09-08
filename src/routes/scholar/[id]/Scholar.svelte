@@ -1,45 +1,46 @@
 <script lang="ts">
-	import { getDB } from '$lib/Context';
-	import Feedback from '$lib/components/Feedback.svelte';
+	import { getDB } from '$lib/data/Database';
 	import Link from '$lib/components/Link.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import Note from '$lib/components/Note.svelte';
-	import SourceLink from '$lib/components/SourceLink.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import type Transaction from '$lib/types/Transaction';
 	import { getAuth } from '../../Auth.svelte';
-	import type { Scholar } from '../../../data/types';
 	import Todo from '$lib/components/Todo.svelte';
 	import Name from './Name.svelte';
+	import type Scholar from '$lib/data/Scholar.svelte';
 
 	let { scholar }: { scholar: Scholar } = $props();
 
 	const db = getDB();
 	const auth = getAuth();
 
-	let editable = $state(auth.getUserID() === scholar.id);
+	// Editable if the user is the scholar being viewed.
+	let editable = $derived(auth.getUserID() === scholar.getID());
 
 	let scholarTransactions: Transaction[] | undefined = $state(undefined);
 
 	async function setReviewing(on: boolean) {
-		db.updateScholar({ ...scholar, available: on });
-		const newScholar = await db.getScholar(scholar.id);
+		db.updateScholar({ ...scholar.get(), available: on });
+		const newScholar = await db.getScholar(scholar.getID());
 		if (newScholar) scholar = newScholar;
 	}
 
-	$effect(() => {
-		db.getScholarTransactions(scholar.id).then((transactions) => {
-			scholarTransactions = transactions;
-		});
-	});
+	// $effect(() => {
+	// 	db.getScholarTransactions(scholar.getID()).then((transactions) => {
+	// 		scholarTransactions = transactions;
+	// 	});
+	// });
 </script>
 
 <Name {editable} {scholar} />
 
 {#if auth.isAuthenticated()}
-	<Note>Edit your expertise on <Link to="https://orcid.org/{scholar.id}">ORCID.org</Link>.</Note>
+	<Note
+		>Edit your expertise on <Link to="https://orcid.org/{scholar.getID()}">ORCID.org</Link>.</Note
+	>
 {/if}
 
 <h2>Reviewing</h2>
@@ -75,7 +76,7 @@
 {#if scholarTransactions === undefined}
 	<Loading />
 {:else}
-	{@const netTokens = scholarTransactions.reduce((total, trans) => (total += trans.amount), 0)}
+	<!-- {@const netTokens = scholarTransactions.reduce((total, trans) => (total += trans.amount), 0)} -->
 
 	<h2>Availability</h2>
 
@@ -89,9 +90,9 @@
 		</Status>
 	</p> -->
 
-	{#if auth.getUserID() === scholar.id}
+	{#if auth.getUserID() === scholar.getID()}
 		<p>
-			<Checkbox on={scholar.available} change={(on) => setReviewing(on)}
+			<Checkbox on={scholar.isAvailable()} change={(on) => setReviewing(on)}
 				>When checked, your profile will indicate you are available to review.
 			</Checkbox>
 		</p>
@@ -107,11 +108,11 @@
 
 		<Todo>Transaction list</Todo>
 
-		<p>
+		<!-- <p>
 			You have a total of <Tokens amount={netTokens} />.
-		</p>
+		</p> -->
 
-		<table>
+		<!-- <table>
 			<thead>
 				<tr><th>Purpose</th><th>Amount</th><th>Notes</th></tr>
 			</thead>
@@ -128,6 +129,6 @@
 					<tr><td>No transactions</td></tr>
 				{/each}
 			</tbody>
-		</table>
+		</table> -->
 	{/if}
 {/if}

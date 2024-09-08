@@ -1,51 +1,70 @@
 <script lang="ts">
-	export let text: string;
-	export let placeholder: string;
-	export let size: number = 10;
-	export let padded = true;
-	export let active = true;
-	export let name: string | undefined = undefined;
-	export let valid: undefined | ((text: string) => boolean) = undefined;
-	export let type: 'text' | 'box' | 'password' = 'text';
+	type Props = {
+		text: string;
+		placeholder: string;
+		size?: number | undefined;
+		padded?: boolean;
+		active?: boolean;
+		name?: string | undefined;
+		valid?: undefined | ((text: string) => boolean);
+		inline?: boolean;
+		password?: boolean;
+		view?: HTMLInputElement | HTMLTextAreaElement | undefined;
+	};
 
-	$: isValid = valid ? valid(text) : true;
+	let {
+		text = $bindable(''),
+		placeholder,
+		size = undefined,
+		padded = true,
+		active = true,
+		name = undefined,
+		valid = undefined,
+		inline = true,
+		password = false,
+		view = $bindable(undefined)
+	}: Props = $props();
+
+	let isValid = $derived(valid ? valid(text) : true);
 </script>
 
-{#if type === 'text'}
+{#if inline}
 	<input
+		bind:value={text}
+		bind:this={view}
 		{name}
 		disabled={!active}
 		class:padded
 		{size}
+		style:width={size === undefined
+			? (text.length === 0 ? placeholder.length : text.length) + 0.5 + 'ch'
+			: undefined}
 		class:invalid={!isValid}
-		bind:value={text}
 		{placeholder}
+		type={password ? 'password' : 'text'}
 	/>
-{:else if type === 'box'}
+{:else}
 	<textarea
 		class:padded
 		class:invalid={!isValid}
 		disabled={!active}
 		{placeholder}
 		bind:value={text}
-		cols={size}
+		bind:this={view}
+		cols={size ??
+			Math.max(
+				placeholder.length,
+				text.split('\n').reduce((max, line) => Math.max(max, line.length), 0)
+			)}
 		rows={text.split('\n').length}
 	></textarea>
-{:else}
-	<input
-		class:padded
-		{size}
-		class:invalid={!isValid}
-		bind:value={text}
-		type="password"
-		{placeholder}
-	/>
 {/if}
 
 <style>
 	input {
 		border: none;
 		border-bottom: 4px solid var(--salient-color);
+		padding: 0;
 		font-family: inherit;
 		font-size: inherit;
 		font-weight: inherit;
@@ -55,8 +74,8 @@
 
 	textarea {
 		border: none;
+		padding: 0;
 		border-left: 4px solid var(--salient-color);
-		border-right: 4px solid var(--salient-color);
 		font-family: inherit;
 		font-size: inherit;
 		font-weight: inherit;

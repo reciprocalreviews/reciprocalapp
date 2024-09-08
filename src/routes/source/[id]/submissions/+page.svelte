@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { getDB } from '$lib/Context';
+	import { getDB } from '$lib/data/Database';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -121,7 +121,7 @@
 				/>
 				<Note>The ID from the system where the submission is stored, for reference.</Note>
 				<TextField
-					type="box"
+					inline={false}
 					size={40}
 					placeholder="Charges, e.g., '0000-0001-1234-5678 3'"
 					bind:text={charges}

@@ -5,7 +5,7 @@
 	import Link from '$lib/components/Link.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
-	import { getDB } from '$lib/Context';
+	import { getDB } from '$lib/data/Database';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Slider from '$lib/components/Slider.svelte';
@@ -21,8 +21,9 @@
 	import Table from '$lib/components/Table.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import { getAuth } from '../../Auth.svelte';
-	import type { Scholar } from '../../../data/types';
+	import type { ScholarRow } from '../../../data/types';
 	import Todo from '$lib/components/Todo.svelte';
+	import type Scholar from '$lib/data/Scholar.svelte';
 
 	const db = getDB();
 	const auth = getAuth();

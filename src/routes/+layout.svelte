@@ -6,6 +6,8 @@
 	import { invalidate } from '$app/navigation';
 	import type { Session, SupabaseClient } from '@supabase/supabase-js';
 	import { createAuthContext, getAuth } from './Auth.svelte';
+	import { setDB } from '$lib/data/Database';
+	import SupabaseDB from '$lib/data/SupabaseDatabase.svelte';
 
 	let {
 		data,
@@ -29,6 +31,9 @@
 
 		return () => response.subscription.unsubscribe();
 	});
+
+	// Set client side database cache.
+	setDB(new SupabaseDB(data.supabase));
 </script>
 
 {#if dev}

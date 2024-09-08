@@ -1,13 +1,19 @@
 <script lang="ts">
 	export let active = true;
 	export let formaction: string | undefined = undefined;
-	export let action: () => void;
+	export let action: (event: Event) => void;
 	export let name: string | undefined = undefined;
 	export let type: 'submit' | undefined = undefined;
+	export let view: HTMLButtonElement | undefined = undefined;
 </script>
 
-<button {name} {formaction} {type} disabled={!active} on:click={active ? action : null}
-	><slot /></button
+<button
+	bind:this={view}
+	{name}
+	{formaction}
+	{type}
+	disabled={!active}
+	on:click={(event) => (active ? action(event) : null)}><slot /></button
 >
 
 <style>

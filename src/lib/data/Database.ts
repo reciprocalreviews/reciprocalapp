@@ -1,9 +1,21 @@
-import { type ScholarID, type Scholar } from '../../data/types';
+import { type ScholarID, type ScholarRow } from '../../data/types';
 import type { SourceID } from '$lib/types/Source';
 import type Source from '$lib/types/Source';
 import type Submission from '$lib/types/Submission';
 import type Transaction from '$lib/types/Transaction';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
+import { getContext, setContext } from 'svelte';
+import type Scholar from './Scholar.svelte';
+
+export const DatabaseSymbol = Symbol('database');
+
+export function getDB() {
+	return getContext<Database>(DatabaseSymbol);
+}
+
+export function setDB(db: Database) {
+	setContext(DatabaseSymbol, db);
+}
 
 /** This abstract class defines an interface for database access. It's useful for defining mocks as well as enables us to change databases if necessary. */
 export default abstract class Database {
@@ -40,16 +52,21 @@ export default abstract class Database {
 	/** Given a source ID, eventually return all scholars who have volunteered to review */
 	abstract getSourceVolunteers(
 		sourceID: SourceID
-	): Promise<{ scholar: Scholar; balance: number }[]>;
+	): Promise<{ scholar: ScholarRow; balance: number }[]>;
+
+	abstract registerScholar(scholar: ScholarRow): Scholar;
 
 	/** Create the given scholar. If they already exist, throw an error. */
-	abstract createScholar(scholar: Scholar): Promise<Scholar>;
+	abstract createScholar(scholar: ScholarRow): Promise<ScholarRow>;
 
 	/** Given a scholar ID, get information about the scholar, except the scholar's transactions */
 	abstract getScholar(scholarID: ScholarID): Promise<Scholar | null>;
 
 	/** Update the given scholar */
-	abstract updateScholar(scholar: Scholar): Promise<Scholar>;
+	abstract updateScholar(scholar: ScholarRow): Promise<ScholarRow>;
+
+	/** Update scholar's anme */
+	abstract updateScholarName(id: ScholarID, name: string): Promise<string | undefined>;
 
 	/** Get the balance of the scholar */
 	abstract getScholarBalance(scholarID: ScholarID): Promise<number>;
