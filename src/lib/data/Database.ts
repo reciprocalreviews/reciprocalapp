@@ -74,6 +74,9 @@ export default abstract class Database {
 		available: boolean
 	): Promise<string | undefined>;
 
+	/** Update scholar's reviewing status. */
+	abstract updateScholarStatus(id: ScholarID, status: string): Promise<string | undefined>;
+
 	/** Get the balance of the scholar */
 	abstract getScholarBalance(scholarID: ScholarID): Promise<number>;
 

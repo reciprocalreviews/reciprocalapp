@@ -35,6 +35,14 @@ export default class Scholar {
 		this.data = { ...this.data, available };
 	}
 
+	getStatus() {
+		return this.data.status;
+	}
+
+	setStatus(status: string) {
+		this.data = { ...this.data, status };
+	}
+
 	set(state: ScholarRow) {
 		this.data = state;
 	}

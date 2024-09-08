@@ -26,6 +26,7 @@
 	}: Props = $props();
 
 	let isValid = $derived(valid ? valid(text) : true);
+	let height = $derived(text ? (view?.scrollHeight ?? 0) : 0);
 </script>
 
 {#if inline}
@@ -51,11 +52,9 @@
 		{placeholder}
 		bind:value={text}
 		bind:this={view}
-		cols={size ??
-			Math.max(
-				placeholder.length,
-				text.split('\n').reduce((max, line) => Math.max(max, line.length), 0)
-			)}
+		cols={size}
+		style:width={size ? undefined : '100%'}
+		style:height={size ? undefined : height + 'px'}
 		rows={text.split('\n').length}
 	></textarea>
 {/if}
@@ -79,13 +78,16 @@
 	textarea {
 		border: none;
 		padding: 0;
+		padding-left: var(--spacing);
 		border-left: 4px solid var(--salient-color);
+		margin-left: calc(-1 * (var(--spacing) + 4px));
 		font-family: inherit;
 		line-height: inherit;
 		font-size: inherit;
 		font-weight: inherit;
 		font-style: inherit;
 		background: var(--background-color);
+		resize: none;
 	}
 
 	input.padded,

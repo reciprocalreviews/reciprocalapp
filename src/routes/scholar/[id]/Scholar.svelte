@@ -12,6 +12,7 @@
 	import Name from './Name.svelte';
 	import type Scholar from '$lib/data/Scholar.svelte';
 	import Status from '$lib/components/Status.svelte';
+	import EditableText from '$lib/components/EditableText.svelte';
 
 	let { scholar }: { scholar: Scholar } = $props();
 
@@ -40,8 +41,6 @@
 
 <h2>Reviewing</h2>
 
-<Status good={scholar.isAvailable()}>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status>
-
 <p>
 	{#if editable}
 		<Checkbox
@@ -49,6 +48,22 @@
 			change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
 			>When checked, your profile will indicate you are available to review.
 		</Checkbox>
+	{/if}
+</p>
+
+<Status good={scholar.isAvailable()}>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status>
+
+<p>
+	{#if editable}
+		<EditableText
+			inline={false}
+			text={scholar.getStatus()}
+			placeholder="Explain your current reviewing status to others."
+			empty="No status"
+			edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
+		/>
+	{:else}
+		{scholar.getStatus()}
 	{/if}
 </p>
 

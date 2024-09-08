@@ -8,10 +8,11 @@
 		text: string;
 		placeholder: string;
 		empty: string;
+		inline?: boolean;
 		edit: (text: string) => Promise<string | undefined>;
 	};
 
-	let { text, placeholder, empty, edit }: Props = $props();
+	let { text, placeholder, empty, edit, inline = true }: Props = $props();
 
 	// Whether the text is being edited.
 	let editing = $state<boolean | undefined>(false);
@@ -39,9 +40,9 @@
 	}
 </script>
 
-<form>
+<form class:inline>
 	{#if editing}
-		<TextField bind:text {placeholder} padded={false} bind:view={field} />
+		<TextField {inline} bind:text {placeholder} padded={false} bind:view={field} />
 	{:else if text === ''}{empty}{:else}{text}{/if}
 	<Button
 		bind:view={button}
@@ -55,7 +56,11 @@
 	form {
 		display: flex;
 		flex-direction: row;
-		align-items: center;
+		align-items: baseline;
 		gap: var(--spacing);
+	}
+
+	form.inline {
+		align-items: center;
 	}
 </style>
