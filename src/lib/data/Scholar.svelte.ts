@@ -43,6 +43,14 @@ export default class Scholar {
 		this.data = { ...this.data, status };
 	}
 
+	getEmail() {
+		return this.data.email;
+	}
+
+	setEmail(email: string) {
+		this.data = { ...this.data, email };
+	}
+
 	set(state: ScholarRow) {
 		this.data = state;
 	}

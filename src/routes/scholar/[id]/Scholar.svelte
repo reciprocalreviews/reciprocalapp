@@ -4,8 +4,6 @@
 	import Loading from '$lib/components/Loading.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
-	import Tokens from '$lib/components/Tokens.svelte';
-	import Tag from '$lib/components/Tag.svelte';
 	import type Transaction from '$lib/types/Transaction';
 	import { getAuth } from '../../Auth.svelte';
 	import Todo from '$lib/components/Todo.svelte';
@@ -32,6 +30,15 @@
 </script>
 
 <Name {editable} {scholar} />
+
+{#if editable}<EditableText
+		text={scholar.getEmail() ?? ''}
+		placeholder="email"
+		empty="no email"
+		note="Your email will be public and only used to send notifications."
+		valid={(text) => /.+@.+\..+/.test(text)}
+		edit={(text) => db.updateScholarEmail(scholar.getID(), text)}
+	/>{:else}{scholar.getEmail()}{/if}
 
 {#if auth.isAuthenticated()}
 	<Note
