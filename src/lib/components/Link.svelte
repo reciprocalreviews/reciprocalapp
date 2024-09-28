@@ -22,11 +22,11 @@
 
 	a:hover:not([aria-current]) {
 		text-decoration: underline;
-		text-decoration-thickness: 4px;
+		text-decoration-thickness: var(--thick-border);
 	}
 
 	a:focus {
-		outline: var(--focus-color) solid 4px;
+		outline: var(--focus-color) solid var(--thick-border);
 		border-radius: var(--roundedness);
 	}
 
