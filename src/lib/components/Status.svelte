@@ -12,6 +12,7 @@
 		padding: calc(var(--spacing) / 2);
 		font-size: var(--small-font-size);
 		white-space: nowrap;
+		align-self: flex-start;
 	}
 
 	.good {
