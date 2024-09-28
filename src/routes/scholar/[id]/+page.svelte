@@ -3,6 +3,7 @@
 	import { getDB } from '$lib/data/Database';
 	import type { ScholarRow } from '../../../data/types';
 	import { default as ScholarView } from './Scholar.svelte';
+	import Page from '$lib/components/Page.svelte';
 
 	let { data }: { data: { scholar: ScholarRow | null } } = $props();
 
@@ -13,7 +14,9 @@
 </script>
 
 {#if state}
-	<ScholarView scholar={state} />
+	<Page title={`Scholar - ${state.getName() ?? 'anonymous'}`}>
+		<ScholarView scholar={state} />
+	</Page>
 {:else}
 	<h1>Oops.</h1>
 	<Feedback error>Unknown scholar.</Feedback>

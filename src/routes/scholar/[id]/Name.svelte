@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Link from '$lib/components/Link.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import { getDB } from '$lib/data/Database';
@@ -24,5 +23,4 @@
 			edit={update}
 		/>{:else}{scholar.getName() ?? anonymous}{/if}
 </h1>
-<Note>Joined {new Date(scholar.getJoined()).toLocaleDateString()}</Note>
-<p><Link to="https://orcid.org/{scholar.getORCID()}">ORCID Profile</Link></p>
+Joined {new Date(scholar.getJoined()).toLocaleDateString()}

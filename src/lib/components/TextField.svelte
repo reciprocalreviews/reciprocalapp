@@ -62,7 +62,7 @@
 <style>
 	input {
 		border: none;
-		border-bottom: 4px solid var(--salient-color);
+		border-bottom: 4px solid var(--text-color);
 		padding: 0;
 		padding-block: 0;
 		padding-inline: 0;
@@ -79,8 +79,8 @@
 		border: none;
 		padding: 0;
 		padding-left: var(--spacing);
-		border-left: 4px solid var(--salient-color);
-		margin-left: calc(-1 * (var(--spacing) + 4px));
+		border-left: 4px solid var(--text-color);
+		margin-left: calc(-1 * (var(--spacing)));
 		font-family: inherit;
 		line-height: inherit;
 		font-size: inherit;
@@ -88,6 +88,8 @@
 		font-style: inherit;
 		background: var(--background-color);
 		resize: none;
+		min-width: 1em;
+		min-height: 1em;
 	}
 
 	input.padded,

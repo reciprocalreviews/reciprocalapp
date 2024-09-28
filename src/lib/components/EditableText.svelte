@@ -61,26 +61,36 @@
 	}
 </script>
 
-<form class:inline>
-	{#if editing}
-		<TextField {inline} {valid} bind:text {placeholder} padded={false} bind:view={field} />
-	{:else if text === ''}{empty}{:else}{text}{/if}
-	<Button
-		bind:view={button}
-		type="submit"
-		action={(event) => (editing ? saveEdit(event) : startEditing(event))}
-		>{#if editing}{invalid ? '𐄂' : '✓'}{:else if editing === undefined}<Dots />{:else}✎{/if}</Button
-	>
-</form>
-{#if note}
-	<Note>{note}</Note>
-{/if}
+<div class="editable">
+	<form class:inline>
+		{#if editing}
+			<TextField {inline} {valid} bind:text {placeholder} padded={false} bind:view={field} />
+		{:else if text === ''}{empty}{:else}{text}{/if}
+		<Button
+			bind:view={button}
+			type="submit"
+			action={(event) => (editing ? saveEdit(event) : startEditing(event))}
+			>{#if editing}{invalid ? '𐄂' : '✓'}{:else if editing === undefined}<Dots
+				/>{:else}✎{/if}</Button
+		>
+	</form>
+	{#if note}
+		<Note>{note}</Note>
+	{/if}
+</div>
 
 <style>
+	.editable {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing);
+	}
+
 	form {
 		display: flex;
 		flex-direction: row;
 		align-items: baseline;
+		justify-content: space-between;
 		gap: var(--spacing);
 	}
 

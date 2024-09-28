@@ -11,6 +11,8 @@
 	import type Scholar from '$lib/data/Scholar.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import Cards from '$lib/components/Cards.svelte';
 
 	let { scholar }: { scholar: Scholar } = $props();
 
@@ -30,52 +32,61 @@
 </script>
 
 <Name {editable} {scholar} />
+<Cards>
+	<Card header="identification">
+		<h3>ORCID</h3>
+		<p>
+			{#if editable}
+				Update your <Link to="https://orcid.org/{scholar.getORCID()}">ORCID Profile</Link> offsite.
+			{:else}
+				See this scholar's <Link to="https://orcid.org/{scholar.getORCID()}">ORCID Profile</Link>.
+			{/if}
+		</p>
 
-{#if editable}<EditableText
-		text={scholar.getEmail() ?? ''}
-		placeholder="email"
-		empty="no email"
-		note="Your email will be public and only used to send notifications."
-		valid={(text) => /.+@.+\..+/.test(text)}
-		edit={(text) => db.updateScholarEmail(scholar.getID(), text)}
-	/>{:else}{scholar.getEmail()}{/if}
+		<h3>email</h3>
+		{#if editable}<EditableText
+				text={scholar.getEmail() ?? ''}
+				placeholder="email"
+				empty="no email"
+				note="Your email will be public and only used to send notifications."
+				valid={(text) => /.+@.+\..+/.test(text)}
+				edit={(text) => db.updateScholarEmail(scholar.getID(), text)}
+			/>{:else}{scholar.getEmail()}{/if}
+	</Card>
 
-{#if auth.isAuthenticated()}
-	<Note
-		>Edit your expertise on <Link to="https://orcid.org/{scholar.getID()}">ORCID.org</Link>.</Note
-	>
-{/if}
+	<Card header="availability">
+		<p>
+			{#if editable}
+				<Checkbox
+					on={scholar.isAvailable()}
+					change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
+					>When checked, your profile will indicate you are available to review.
+				</Checkbox>
+			{/if}
+		</p>
 
-<h2>Reviewing</h2>
+		<Status good={scholar.isAvailable()}
+			>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status
+		>
 
-<p>
-	{#if editable}
-		<Checkbox
-			on={scholar.isAvailable()}
-			change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
-			>When checked, your profile will indicate you are available to review.
-		</Checkbox>
-	{/if}
-</p>
+		<h3>status</h3>
+		{#if editable}
+			<EditableText
+				inline={false}
+				text={scholar.getStatus()}
+				placeholder="Explain your current reviewing status to others."
+				empty="No status"
+				edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
+				note="Your status is public and will be shown on your profile."
+			/>
+		{:else}
+			{scholar.getStatus()}
+		{/if}
+	</Card>
 
-<Status good={scholar.isAvailable()}>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status>
-
-<p>
-	{#if editable}
-		<EditableText
-			inline={false}
-			text={scholar.getStatus()}
-			placeholder="Explain your current reviewing status to others."
-			empty="No status"
-			edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
-		/>
-	{:else}
-		{scholar.getStatus()}
-	{/if}
-</p>
-
-<Todo>Venue volunteer list</Todo>
-<!-- 
+	<Card header="volunteering">
+		<Todo>Venue volunteer list</Todo>
+		<!-- 
 <p>Currently volunteering for:</p>
 
 {#each Object.entries(scholar.sources) as [sourceID, expertise]}
@@ -85,7 +96,7 @@
 		</Tags>
 	</p>
 {/each} -->
-<!-- 
+		<!-- 
 {#await db.getEditedSources(scholar.id)}
 	<Loading />
 {:then sources}
@@ -101,15 +112,17 @@
 {:catch}
 	<Feedback>Couldn't get editor roles.</Feedback>
 {/await} -->
+	</Card>
 
-{#if scholarTransactions === undefined}
-	<Loading />
-{:else}
-	<!-- {@const netTokens = scholarTransactions.reduce((total, trans) => (total += trans.amount), 0)} -->
+	<Card header="transactions">
+		{#if scholarTransactions === undefined}
+			<Loading />
+		{:else}
+			<!-- {@const netTokens = scholarTransactions.reduce((total, trans) => (total += trans.amount), 0)} -->
 
-	<h2>Availability</h2>
+			<h2>availability</h2>
 
-	<!-- <p>
+			<!-- <p>
 		<Status>
 			I am {#if scholar.available && netTokens < scholar.minimum}
 				available to review.
@@ -119,8 +132,8 @@
 		</Status>
 	</p> -->
 
-	{#if editable}
-		<!-- {#if scholar.available}
+			{#if editable}
+				<!-- {#if scholar.available}
 			<p>Indicate I am available when I have fewer than...</p>
 			<p>
 				<Slider min={0} max={50} bind:value={minimum} step={1} change={handleChange} />
@@ -128,15 +141,15 @@
 			</p>
 		{/if} -->
 
-		<h2>Transactions</h2>
+				<h2>transactions</h2>
 
-		<Todo>Transaction list</Todo>
+				<Todo>Transaction list</Todo>
 
-		<!-- <p>
+				<!-- <p>
 			You have a total of <Tokens amount={netTokens} />.
 		</p> -->
 
-		<!-- <table>
+				<!-- <table>
 			<thead>
 				<tr><th>Purpose</th><th>Amount</th><th>Notes</th></tr>
 			</thead>
@@ -154,5 +167,7 @@
 				{/each}
 			</tbody>
 		</table> -->
-	{/if}
-{/if}
+			{/if}
+		{/if}
+	</Card>
+</Cards>

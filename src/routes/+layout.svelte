@@ -42,3 +42,9 @@
 <main>
 	{@render children()}
 </main>
+
+<style>
+	main {
+		margin-block-start: var(--spacing);
+	}
+</style>

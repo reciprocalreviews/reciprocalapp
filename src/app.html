@@ -3,12 +3,12 @@
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
-		<!-- <link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
-			href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,600;1,300;1,600&display=swap"
+			href="https://fonts.googleapis.com/css2?family=Quicksand:ital,wght@0,500;1,500&display=swap"
 			rel="stylesheet"
-		/> -->
+		/>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		%sveltekit.head%
 
@@ -140,19 +140,22 @@
 
 			:root {
 				--font-face: 'Josefin Sans', sans-serif;
-				--header-font-size: 32pt;
+				--header-font-size: 48pt;
+				--subheader-font-size: 24pt;
+				--subsubheader-font-size: 16pt;
 				--paragraph-font-size: 18pt;
 				--small-font-size: 16pt;
 				--background-color: white;
 				--text-color: black;
 				--salient-color: #007284;
-				--focus-color: #30c4db;
+				--focus-color: var(--salient-color);
 				--error-color: #840054;
-				--border-color: #555555;
+				--border-color: #bbbbbb;
+				--border-width: 1px;
 				--alternating-color: #eeeeee;
 				--inactive-color: #cccccc;
-				--spacing: 0.5em;
-				--roundedness: 3px;
+				--spacing: 0.75rem;
+				--roundedness: 0.25em;
 			}
 
 			body {
@@ -160,25 +163,38 @@
 				color: var(--text-color);
 				font-size: var(--paragraph-font-size);
 				font-family: var(--font-face);
-				padding: 3em;
-				max-width: 40em;
+				padding: var(--spacing);
 				line-height: 1.4;
+			}
+
+			h1,
+			h2,
+			h3 {
+				font-family: 'Quicksand', sans-serif;
+				font-weight: 500;
 			}
 
 			h1 {
 				font-size: var(--header-font-size);
-				font-weight: 600;
-				margin-top: 2em;
-				margin-bottom: 0.5em;
+				color: var(--text-color);
+				margin: 0;
 				display: flex;
 				flex-direction: row;
 				gap: var(--spacing);
 			}
 
 			h2 {
-				font-size: calc(var(--header-font-size) - 6pt);
-				margin-top: 1em;
-				margin-bottom: 0.5em;
+				font-size: var(--subheader-font-size);
+				border-bottom: var(--border-color) solid var(--border-width);
+			}
+
+			h2:first-of-type {
+				margin-block-start: 0;
+			}
+
+			h3 {
+				font-size: var(--subsubheader-font-size);
+				margin-block-end: 0;
 			}
 
 			p,
@@ -192,7 +208,7 @@
 			}
 
 			p {
-				margin-block-start: 1em;
+				margin: 0;
 				margin-block-end: 1em;
 			}
 
@@ -212,6 +228,12 @@
 			td {
 				padding: 0em;
 				padding-bottom: var(--spacing);
+			}
+
+			form {
+				border: var(--border-color) solid var(--border-width);
+				border-radius: var(--roundedness);
+				padding: var(--spacing);
 			}
 		</style>
 	</head>

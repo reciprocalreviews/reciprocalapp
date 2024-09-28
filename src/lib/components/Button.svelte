@@ -23,7 +23,7 @@
 		border: var(--border-color);
 		border-radius: var(--roundedness);
 		padding: var(--spacing);
-		background: var(--salient-color);
+		background: var(--text-color);
 		color: var(--background-color);
 		cursor: pointer;
 		white-space: nowrap;

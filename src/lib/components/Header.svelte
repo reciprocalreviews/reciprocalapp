@@ -40,6 +40,8 @@
 		gap: calc(2 * var(--spacing));
 		row-gap: var(--spacing);
 		align-items: center;
+		padding-bottom: var(--spacing);
+		border-block-end: var(--border-color) solid var(--border-width);
 	}
 
 	.link {
