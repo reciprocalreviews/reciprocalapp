@@ -365,14 +365,14 @@ The RR web application includes serveral web application screens, each correspon
 
 The goal of the landing page is to 1) explain the value proposition of RR to editors, reviewers, and authors and 2) help newcomers orient to the application's key interaction points.
 
-- [ ] The page should communicate value propositions to editors:
+- [x] The page should communicate value propositions to editors:
   - Increased quality and timeliness of reviews
   - Reduced difficulty identifying qualified and available reviewers
   - Reduced submission spam (where spam includes obviously out of scope submissions, some types of fraudulent submissions created by generative AI)
-- [ ] The page should communicate value propositions to authors:
+- [x] The page should communicate value propositions to authors:
   - Faster review turnaround
   - Fairer distribution of peer review labor
-- [ ] The page should links to other parts of the site, including all routes below, plus a link to the authenticated scholar's page, if authenticated, to view their dashboard.
+- [x] The page should links to other parts of the site, including all routes below, plus a link to the authenticated scholar's page, if authenticated, to view their dashboard.
 
 ## About `/about`
 
@@ -399,7 +399,7 @@ The purpose of the scholar page is to provide a landing page and dashboard for a
 
 It should:
 
-- [ ] Link to the scholar's ORCID profile (`scholars.orcid`), to help visitors get more information about them.
+- [x] Link to the scholar's ORCID profile (`scholars.orcid`), to help visitors get more information about them.
 - [ ] Display read-only data pulled from the ORCID profile, to reduce the need to navigate to their ORCID profile.
 - [ ] Show links to `Venue`s the scholar has volunteered to review for
 - [ ] Show links to `Venue`s the scholar is serving as _`editor`_ of.
@@ -407,9 +407,9 @@ It should:
 If scholar ID corresponds to the authenticated user, it should also allow the scholar to:
 
 - [x] _`scholar`_: Logout
-- [ ] _`scholar`_: Indicate whether they are available to review (`scholar.available`)
-- [ ] _`scholar`_: Explain their reviewing availability (`scholar.status`)
-- [ ] _`scholar`_: Allow editing of the scholar's preferred email address. (`scholar.email`)
+- [x] _`scholar`_: Indicate whether they are available to review (`scholar.available`)
+- [x] _`scholar`_: Explain their reviewing availability (`scholar.status`)
+- [x] _`scholar`_: Allow editing of the scholar's preferred email address. (`scholar.email`)
 
 > [!IMPORTANT]
 > The functionality below is specific to compensation

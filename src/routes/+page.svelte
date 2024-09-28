@@ -39,6 +39,11 @@
 		</ol>
 
 		<p>
+			Authors get better, faster reviews and a fairer distribution of peer review labor; editors do
+			less nagging.
+		</p>
+
+		<p>
 			See the <Link to="/sources">journals and conferences</Link> using the platform and reach out to
 			their editors for their experiences. Or, <Link to="login">log in</Link> to propose a journal or
 			conference for adoption.
