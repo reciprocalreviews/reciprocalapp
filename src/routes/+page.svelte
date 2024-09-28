@@ -13,7 +13,7 @@
 <Page title="Reciprocal Reviews">
 	<h1>Reciprocal Reviews</h1>
 	{#if dev}
-		<Lead>Incentivize on-time, quality peer reviews.</Lead>
+		<Lead>Make peer review count.</Lead>
 		<p>
 			Academia incentivizes publishing over peer review. That means too many submissions and not
 			enough reviews, or reviews that are late and low quality.
@@ -25,7 +25,7 @@
 
 		<ol>
 			<li>
-				<strong>Editors set an cost for submission</strong>, priced in <Tag>review tokens</Tag>.
+				<strong>Editors set a cost</strong> for submissions, priced in <Tag>review tokens</Tag>.
 			</li>
 			<li>
 				<strong>Authors earn tokens</strong> by volunteering for venues, sharing expertise and availability,
@@ -33,8 +33,8 @@
 			</li>
 			<li>
 				<strong>Authors spend tokens</strong> to submit manuscripts for review, splitting the cost with
-				co-authors. Or, they can gift tokens to colleagues in or donate their tokens to the community
-				pool for strategic investiments in equity and emerging areas.
+				co-authors. Or, they can gift tokens to individuals or community pools for strategic investments
+				in equity and emerging topics.
 			</li>
 		</ol>
 
@@ -50,8 +50,8 @@
 		</p>
 
 		<p>
-			<em>Don't want to set a cost yet?</em> Use Reciprocal Reviews to track volunteer reviewers in your
-			community.
+			<strong>Don't want to set a cost?</strong> Use Reciprocal Reviews to track volunteer reviewers
+			in your community, tracking volunteers for streamlined editing.
 		</p>
 	{:else}
 		<p>
