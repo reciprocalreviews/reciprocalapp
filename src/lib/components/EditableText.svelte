@@ -74,9 +74,11 @@
 				/>{:else}✎{/if}</Button
 		>
 	</form>
-	{#if note}
-		<Note>{note}</Note>
-	{/if}
+	<div class="note">
+		{#if note}
+			<Note>{note}</Note>
+		{/if}
+	</div>
 </div>
 
 <style>
@@ -96,5 +98,9 @@
 
 	form.inline {
 		align-items: center;
+	}
+
+	.note {
+		margin-inline-start: var(--spacing);
 	}
 </style>
