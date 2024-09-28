@@ -47,6 +47,8 @@
 		{#if editable}<EditableText
 				text={scholar.getEmail() ?? ''}
 				placeholder="email"
+				change="Change email"
+				save="Save email"
 				empty="no email"
 				note="Your email will be public and only used to send notifications."
 				valid={(text) => /.+@.+\..+/.test(text)}
@@ -74,6 +76,8 @@
 			<EditableText
 				inline={false}
 				text={scholar.getStatus()}
+				change="Edit status"
+				save="Save status"
 				placeholder="Explain your current reviewing status to others."
 				empty="No status"
 				edit={(text) => db.updateScholarStatus(scholar.getID(), text)}

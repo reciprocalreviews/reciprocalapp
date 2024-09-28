@@ -42,7 +42,9 @@
 		see it's policies or volunteer to review for it, or if you're an editor, create a new source.
 	</p>
 
-	{#if auth.isAuthenticated()}<Button action={create}>+ create a new source</Button>{/if}
+	{#if auth.isAuthenticated()}<Button tip="Create new venue" action={create}
+			>+ create a new source</Button
+		>{/if}
 
 	{#await db.getSources()}
 		<Loading />

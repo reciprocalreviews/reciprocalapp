@@ -2,12 +2,14 @@
 	import { dev } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
-	import { onMount, setContext, type Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import type { Session, SupabaseClient } from '@supabase/supabase-js';
 	import { createAuthContext, getAuth } from './Auth.svelte';
-	import { setDB } from '$lib/data/Database';
+	import { Errors, setDB, type ErrorID } from '$lib/data/Database';
 	import SupabaseDB from '$lib/data/SupabaseDatabase.svelte';
+	import { getErrors, removeError } from './errors.svelte';
+	import Button from '$lib/components/Button.svelte';
 
 	let {
 		data,
@@ -16,6 +18,8 @@
 
 	createAuthContext(data.supabase);
 	const auth = getAuth();
+
+	let errors = $derived(getErrors());
 
 	/** Always go home in production, pre-release */
 	onMount(() => {
@@ -36,15 +40,48 @@
 	setDB(new SupabaseDB(data.supabase));
 </script>
 
+{#snippet ErrorBox(id: ErrorID, index: number)}
+	<div class="error">
+		<span>{Errors[id]}</span>
+		<Button action={() => removeError(index)} tip="Dismiss notification">𐄂</Button>
+	</div>
+{/snippet}
+
 {#if dev}
 	<Header />
 {/if}
 <main>
+	<section class="notifications" aria-live="assertive">
+		{#each getErrors() as error, index}{@render ErrorBox(error, index)}{/each}
+	</section>
 	{@render children()}
 </main>
 
 <style>
 	main {
 		margin-block-start: var(--spacing);
+	}
+
+	.notifications {
+		position: fixed;
+		top: var(--spacing);
+		left: var(--spacing);
+		right: var(--spacing);
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing);
+	}
+
+	.error {
+		display: flex;
+		flex-direction: row;
+		align-items: baseline;
+		justify-content: space-between;
+		color: var(--background-color);
+		padding: var(--spacing);
+		border: var(--border-width) solid var(--border-color);
+		border-radius: var(--roundedness);
+		background: var(--error-color);
+		box-shadow: var(--spacing) var(--spacing) var(--spacing) var(--border-color);
 	}
 </style>

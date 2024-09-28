@@ -62,7 +62,7 @@
 <style>
 	input {
 		border: none;
-		border-bottom: var(--thick-border) solid var(--text-color);
+		border-bottom: var(--thick-border-width) solid var(--text-color);
 		padding: 0;
 		padding-block: 0;
 		padding-inline: 0;
@@ -79,7 +79,7 @@
 		border: none;
 		padding: 0;
 		padding-left: var(--spacing);
-		border-left: var(--thick-border) solid var(--text-color);
+		border-left: var(--thick-border-width) solid var(--text-color);
 		margin-left: calc(-1 * (var(--spacing)));
 		font-family: inherit;
 		line-height: inherit;

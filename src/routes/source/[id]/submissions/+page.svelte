@@ -165,6 +165,7 @@
 					<Feedback error>This is not a valid ORCID.</Feedback>
 				{/if}
 				<Button
+					tip="Create a new submission"
 					active={validSubmission(title, externalID, metaID, charges, source.cost.submit)}
 					action={() => charge(source.cost.submit)}>Create submission and charge authors</Button
 				>

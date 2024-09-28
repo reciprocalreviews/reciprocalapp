@@ -178,7 +178,7 @@
 	</p>
 	<EditorsOnly {editor}>
 		<p>
-			<Button action={() => editNames(source)}
+			<Button tip="Edit names" action={() => editNames(source)}
 				>{#if editingNames}Done{:else}Edit names and URL{/if}</Button
 			>
 		</p>
@@ -211,6 +211,7 @@
 		<p>
 			<ScholarLink id={editorID} />{#if editor}
 				&nbsp;<Button
+					tip="Remove editor"
 					active={source.editors.length > 1}
 					action={() => removeEditor(source, editorID)}>remove</Button
 				>{/if}
@@ -224,8 +225,10 @@
 				size={19}
 				placeholder="ORCID"
 				valid={(text) => ORCIDRegex.test(text)}
-			/><Button active={ORCIDRegex.test(newEditor)} action={() => addEditor(source, newEditor)}
-				>Add Editor</Button
+			/><Button
+				tip="Add editor"
+				active={ORCIDRegex.test(newEditor)}
+				action={() => addEditor(source, newEditor)}>Add Editor</Button
 			></Form
 		>
 	</EditorsOnly>
@@ -233,7 +236,7 @@
 	<h2>Costs</h2>
 	{#if editor}
 		<p>
-			<Button action={() => editTokens(source)}
+			<Button tip="Editing cost" action={() => editTokens(source)}
 				>{#if editingTokens}Done{:else}Edit{/if}</Button
 			>
 		</p>
@@ -380,8 +383,10 @@
 
 		<p>
 			<TextField placeholder="description" bind:text={newExpertise} />
-			<Button action={() => addExpertise(source, newExpertise)} active={newExpertise.length > 0}
-				>+ expertise</Button
+			<Button
+				tip="Add expertise"
+				action={() => addExpertise(source, newExpertise)}
+				active={newExpertise.length > 0}>+ expertise</Button
 			>
 		</p>
 
@@ -392,7 +397,12 @@
 						<Tag>{expertise.phrase}</Tag>
 					</td>
 					<td>
-						<Checkbox on={expertise.deprecated} change={() => {}}>deprecated</Checkbox>
+						<Checkbox
+							on={expertise.deprecated}
+							change={async () => {
+								return undefined;
+							}}>deprecated</Checkbox
+						>
 					</td>
 					<td>
 						<div
@@ -416,13 +426,13 @@
 			transactions, and volunteers from being added. The history of transactions will be preserved.
 		</p>
 		<p>
-			<Button action={() => (archiving = !archiving)}
+			<Button tip="Archive venue" action={() => (archiving = !archiving)}
 				>{#if archiving}Cancel{:else}Archive...{/if}</Button
 			>
 		</p>
 		{#if archiving}
 			<Feedback error>Are you sure you want to archive this source?</Feedback>
-			<p><Button action={() => archive(source)}>Archive</Button></p>
+			<p><Button tip="Confirm archive venue" action={() => archive(source)}>Archive</Button></p>
 		{/if}
 	</EditorsOnly>
 {:catch}

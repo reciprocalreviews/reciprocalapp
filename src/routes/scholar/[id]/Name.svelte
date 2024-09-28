@@ -19,6 +19,8 @@
 	{#if editable}<EditableText
 			text={scholar.getName() ?? ''}
 			placeholder="name"
+			change="Change name"
+			save="Save name"
 			empty={anonymous}
 			edit={update}
 		/>{:else}{scholar.getName() ?? anonymous}{/if}

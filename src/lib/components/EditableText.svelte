@@ -4,14 +4,18 @@
 	import TextField from './TextField.svelte';
 	import Dots from './Dots.svelte';
 	import Note from './Note.svelte';
+	import { addError } from '../../routes/errors.svelte';
+	import { type ErrorID } from '$lib/data/Database';
 
 	type Props = {
 		text: string;
 		placeholder: string;
 		empty: string;
+		change: string;
+		save: string;
 		inline?: boolean;
 		valid?: undefined | ((text: string) => boolean);
-		edit: (text: string) => Promise<string | undefined>;
+		edit: (text: string) => Promise<ErrorID | undefined>;
 		note?: string;
 	};
 
@@ -19,6 +23,8 @@
 		text,
 		placeholder,
 		empty,
+		save,
+		change,
 		edit,
 		valid = undefined,
 		inline = true,
@@ -29,7 +35,7 @@
 
 	// Whether the text is being edited.
 	let editing = $state<boolean | undefined>(false);
-	let error = $state<string | undefined>(undefined);
+	let error = $state<ErrorID | undefined>(undefined);
 	let field = $state<HTMLInputElement | HTMLTextAreaElement | undefined>(undefined);
 	let button = $state<HTMLButtonElement | undefined>(undefined);
 
@@ -47,6 +53,7 @@
 		error = await edit(text);
 		if (error) {
 			editing = true;
+			addError(error);
 		} else {
 			editing = false;
 			if (button) button.focus();
@@ -68,6 +75,7 @@
 		{:else if text === ''}{empty}{:else}{text}{/if}
 		<Button
 			bind:view={button}
+			tip={editing ? save : change}
 			type="submit"
 			action={(event) => (editing ? saveEdit(event) : startEditing(event))}
 			>{#if editing}{invalid ? '𐄂' : '✓'}{:else if editing === undefined}<Dots

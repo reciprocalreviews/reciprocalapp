@@ -20,6 +20,7 @@
 			<div class="link"><Link to="/scholar/{auth.getUserID()}">Profile</Link></div>
 			<div class="link">
 				<Button
+					tip="Sign out"
 					action={() => {
 						auth.signOut();
 						goto('/login');

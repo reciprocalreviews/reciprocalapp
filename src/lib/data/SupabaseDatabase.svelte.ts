@@ -5,7 +5,7 @@ import type { Charge, TransactionID } from '$lib/types/Transaction';
 import type Transaction from '$lib/types/Transaction';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ScholarID, ScholarRow } from '../../data/types';
-import Database from './Database';
+import Database, { type ErrorID } from './Database';
 import Scholar from './Scholar.svelte';
 
 export default class SupabaseDB extends Database {
@@ -85,9 +85,9 @@ export default class SupabaseDB extends Database {
 		throw new Error('Method not implemented.');
 	}
 
-	async updateScholarName(id: ScholarID, name: string): Promise<string | undefined> {
+	async updateScholarName(id: ScholarID, name: string): Promise<ErrorID | undefined> {
 		const { error } = await this.client.from('scholars').update({ name }).eq('id', id);
-		if (error) return 'Unable to update name';
+		if (error) return 'UpdateScholarName';
 		else {
 			const state = this.scholars.get(id);
 			if (state) state.setName(name);
@@ -95,9 +95,9 @@ export default class SupabaseDB extends Database {
 		}
 	}
 
-	async updateScholarAvailability(id: ScholarID, available: boolean): Promise<string | undefined> {
+	async updateScholarAvailability(id: ScholarID, available: boolean): Promise<ErrorID | undefined> {
 		const { error } = await this.client.from('scholars').update({ available }).eq('id', id);
-		if (error) return 'Unable to update availability';
+		if (error) return 'UpdateScholarAvailability';
 		else {
 			const state = this.scholars.get(id);
 			if (state) state.setAvailable(available);
@@ -105,9 +105,9 @@ export default class SupabaseDB extends Database {
 		}
 	}
 
-	async updateScholarStatus(id: ScholarID, status: string): Promise<string | undefined> {
+	async updateScholarStatus(id: ScholarID, status: string): Promise<ErrorID | undefined> {
 		const { error } = await this.client.from('scholars').update({ status }).eq('id', id);
-		if (error) return 'Unable to update status';
+		if (error) return 'UpdateScholarStatus';
 		else {
 			const state = this.scholars.get(id);
 			if (state) state.setStatus(status);
@@ -115,9 +115,9 @@ export default class SupabaseDB extends Database {
 		}
 	}
 
-	async updateScholarEmail(id: ScholarID, email: string): Promise<string | undefined> {
+	async updateScholarEmail(id: ScholarID, email: string): Promise<ErrorID | undefined> {
 		const { error } = await this.client.from('scholars').update({ email }).eq('id', id);
-		if (error) return 'Unable to update email';
+		if (error) return 'UpdateScholarName';
 		else {
 			const state = this.scholars.get(id);
 			if (state) state.setEmail(email);

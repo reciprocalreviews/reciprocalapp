@@ -1,6 +1,9 @@
 <script lang="ts">
+	import type { ErrorID } from '$lib/data/Database';
+	import { addError } from '../../routes/errors.svelte';
+
 	export let on: boolean;
-	export let change: undefined | ((on: boolean) => void);
+	export let change: undefined | ((on: boolean) => Promise<ErrorID | undefined>);
 </script>
 
 <label
@@ -8,9 +11,12 @@
 		type="checkbox"
 		aria-checked={on}
 		checked={on}
-		on:click={() => {
+		on:click={async () => {
 			on = !on;
-			if (change) change(on);
+			if (change) {
+				const error = await change(on);
+				if (error) addError(error);
+			}
 		}}
 	/><slot /></label
 >

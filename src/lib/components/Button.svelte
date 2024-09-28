@@ -1,10 +1,25 @@
 <script lang="ts">
-	export let active = true;
-	export let formaction: string | undefined = undefined;
-	export let action: (event: Event) => void;
-	export let name: string | undefined = undefined;
-	export let type: 'submit' | undefined = undefined;
-	export let view: HTMLButtonElement | undefined = undefined;
+	import type { Snippet } from 'svelte';
+
+	let {
+		action,
+		tip,
+		children,
+		active = true,
+		formaction = undefined,
+		name = undefined,
+		type = undefined,
+		view = $bindable(undefined)
+	}: {
+		children: Snippet;
+		action: (event: Event) => void;
+		tip: string;
+		active?: boolean;
+		formaction?: string | undefined;
+		name?: string | undefined;
+		type?: 'submit' | undefined;
+		view?: HTMLButtonElement | undefined;
+	} = $props();
 </script>
 
 <button
@@ -12,8 +27,10 @@
 	{name}
 	{formaction}
 	{type}
+	title={tip}
+	aria-label={tip}
 	disabled={!active}
-	on:click={(event) => (active ? action(event) : null)}><slot /></button
+	onclick={(event) => (active ? action(event) : null)}>{@render children()}</button
 >
 
 <style>
@@ -35,8 +52,8 @@
 	}
 
 	button:focus {
-		outline: none;
-		background: var(--focus-color);
+		outline-color: var(--focus-color);
+		outline-width: var(--thick-border-width);
 	}
 
 	button:not(.inactive):hover {

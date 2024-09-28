@@ -83,8 +83,10 @@
 							<ScholarLink id={reviewer} />
 						{/each}
 					{/if}
-					<Button action={() => done(submission)} active={validReviewers(reviewers)}
-						>Compensate</Button
+					<Button
+						tip="Compensate"
+						action={() => done(submission)}
+						active={validReviewers(reviewers)}>Compensate</Button
 					>
 				</Form>
 			{/if}

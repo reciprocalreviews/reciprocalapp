@@ -43,6 +43,7 @@
 	<Form inline>
 		<TextField active={!submitted} name="email" size={19} bind:text={email} placeholder="email" />
 		<Button
+			tip="Send one-time password"
 			action={async () => {
 				const authError = await auth.signIn(email, undefined);
 				if (authError) {
@@ -62,6 +63,7 @@
 		<Form inline>
 			<TextField name="password" size={19} bind:text={password} placeholder="one-time password" />
 			<Button
+				tip="Sign in"
 				action={async () => {
 					const authError = await auth.signIn(email, password);
 					if (authError) {

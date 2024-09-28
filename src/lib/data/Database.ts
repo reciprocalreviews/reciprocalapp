@@ -17,6 +17,16 @@ export function setDB(db: Database) {
 	setContext(DatabaseSymbol, db);
 }
 
+/** The strings for the email errors */
+export const Errors = {
+	UpdateScholarStatus: 'Unable to update your status',
+	UpdateScholarName: 'Unable to update your name',
+	UpdateScholarEmail: 'Unable to update your email',
+	UpdateScholarAvailability: 'Unable to update your availability'
+};
+
+export type ErrorID = keyof typeof Errors;
+
 /** This abstract class defines an interface for database access. It's useful for defining mocks as well as enables us to change databases if necessary. */
 export default abstract class Database {
 	/** Insert a new submission in the database */
@@ -66,19 +76,19 @@ export default abstract class Database {
 	abstract updateScholar(scholar: ScholarRow): Promise<ScholarRow>;
 
 	/** Update scholar's name */
-	abstract updateScholarName(id: ScholarID, name: string): Promise<string | undefined>;
+	abstract updateScholarName(id: ScholarID, name: string): Promise<ErrorID | undefined>;
 
 	/** Update scholar's availabilty */
 	abstract updateScholarAvailability(
 		id: ScholarID,
 		available: boolean
-	): Promise<string | undefined>;
+	): Promise<ErrorID | undefined>;
 
 	/** Update scholar's reviewing status. */
-	abstract updateScholarStatus(id: ScholarID, status: string): Promise<string | undefined>;
+	abstract updateScholarStatus(id: ScholarID, status: string): Promise<ErrorID | undefined>;
 
 	/** Update scholar's reviewing status. */
-	abstract updateScholarEmail(id: ScholarID, email: string): Promise<string | undefined>;
+	abstract updateScholarEmail(id: ScholarID, email: string): Promise<ErrorID | undefined>;
 
 	/** Get the balance of the scholar */
 	abstract getScholarBalance(scholarID: ScholarID): Promise<number>;
