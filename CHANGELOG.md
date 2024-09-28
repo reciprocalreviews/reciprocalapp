@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Maintenance
 
 - Updated Svelte and Supabase minor versions.
+- Updated GitHub checkout action dependencies.
 
 ## 0.0.3 2024-09-01
 
