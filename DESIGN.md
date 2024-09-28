@@ -477,7 +477,7 @@ When a venue is in an _inactive_ state:
 
 - [ ] Communicate that it is inactive.
 
-## Currency `/venue/[venueid]/currency`
+## Currency `/currency/[currencyid]`
 
 > [!IMPORTANT]
 > All functionality below is specific to compensation
