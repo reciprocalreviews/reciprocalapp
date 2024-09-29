@@ -219,31 +219,33 @@ create table currencies (
   -- The unique id of the currency
   id uuid not null default uuid_generate_v1() primary key,
   -- The name of the currency
-  name text not null default '':text,
-  -- The minters of the currency, corresponding to scholar is in the scholars table
-  minters text[] not null default '{}'::text[] check (cardinality(minters) > 0)
+  name text not null default ''::text,
+  -- The minters of the currency, corresponding to scholar is in the scholars table. Must be at least one minter.
+  minters uuid[] not null default '{}'::uuid[] check (cardinality(minters) > 0)
 );
 
 -- Three types of exchanges to propose
-create type exchange_proposal as enum ('create', 'modify', 'merge');
+create type exchange_proposal_kind as enum ('create', 'modify', 'merge');
 
 -- Agreements between owners of currencies
 create table exchanges (
   -- The unique id of the currency
   id uuid not null default uuid_generate_v1() primary key,
-  -- The first party of the exchange
-  currency_one uuid not null references currencies(id),
-  -- The second party of the exchange
-  currency_two uuid not null references currencies(id),
-  -- The multiplier to convert from currency_one to currency_two
+  -- The time the exchange was created
+  proposed timestamp with time zone not null default now(),
+  -- Whether the minters have approved. Only set when all current active minters have approved.
+  approved timestamp with time zone default null,
+  -- The first currency of the exchange
+  currency_from uuid not null references currencies(id),
+  -- The second currenty of the exchange
+  currency_to uuid not null references currencies(id),
+  -- The multiplier to convert from currency_from to currency_to
   ratio decimal	not null,
   -- List of minters who have approved
-  approvers uuid[] not null default '{}'::text[],
-  -- Whether the minters have approved. Only set when all current active minters have approved.
-  approved boolean not null default false,
+  approvers uuid[] not null default '{}'::uuid[],
   -- If a proposal, what kind
-  type exchange_proposal
-)
+  kind exchange_proposal_kind
+);
 ```
 
 ## Tokens

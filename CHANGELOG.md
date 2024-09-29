@@ -9,6 +9,8 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 - Visual design polish on components.
 - Added accessible notifications section.
+- Create currencies and exchanges.
+- Create currency route.
 
 ### Maintenance
 
