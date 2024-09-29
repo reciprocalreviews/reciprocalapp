@@ -36,8 +36,12 @@ export default class SupabaseAuth extends Authentication<User, AuthError> {
 			});
 			return error;
 		} else {
-			const { error } = await this.client.auth.verifyOtp({ email, token: password, type: 'email' });
-			return error;
+			const { data, error } = await this.client.auth.verifyOtp({
+				email,
+				token: password,
+				type: 'email'
+			});
+			return error ? error : (data.user?.id ?? null);
 		}
 	}
 }

@@ -65,13 +65,14 @@
 			<Button
 				tip="Sign in"
 				action={async () => {
-					const authError = await auth.signIn(email, password);
-					if (authError) {
-						console.error(authError);
-						error = 'Unable to sign in.';
-					} else {
+					const response = await auth.signIn(email, password);
+					if (typeof response === 'string') {
 						error = undefined;
 						submitted = false;
+						goto(`/scholar/${response}`);
+					} else {
+						console.error(response);
+						error = 'Unable to sign in.';
 					}
 				}}
 				active={password.length > 0}>Login</Button
