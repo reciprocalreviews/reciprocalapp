@@ -129,79 +129,112 @@ A `Venue` is a named and curated collection of manuscripts undergoing peer revie
 Here is a SQL sketch of all of the tables involved in this.
 
 ```sql
+
+-- only platform admins can create venues
+-- anyone can view venues
+-- only platform admins and editors can update venues
+-- only platform admins and editors can delete venues
 create table venues (
   -- The unique ID of the venue
   id uuid not null default uuid_generate_v1() primary key,
   -- The title of the venue
-  title text not null default '':text,
+  title text not null default ''::text,
   -- The description of the venue
-  description text not null default '':text,
+  description text not null default ''::text,
   -- A link to the venue's official web page
-  url text not null default '':text,
-  -- The id of the currency the venue is using
-  currency uuid not null references currency(id),
+  url text not null default ''::text,
+  -- The id of the currency the venue is currently using
+  currency uuid not null references currencies(id),
   -- The optional amount of newly minted tokens granted to new volunteers
   welcome_amount integer,
   -- Whether the the venue permits public bidding on submissions
   bidding boolean not null default true,
   -- One or more scholars who serve as editors of the venue
-  editors text[] not null default '{}'::text[] check (cardinality(editors) > 0)
+  editors uuid[] not null default '{}'::uuid[] check (cardinality(editors) > 0)
 );
 
+-- only editors can create venue roles
+-- anyone can view venue roles
+-- only editors can update venue roles
+-- only editors can delete venue roles
 create table roles (
   -- The unique id of the role
   id uuid not null default uuid_generate_v1() primary key,
   -- The ID of the venue
   venueid uuid not null references venues(id) on delete cascade,
   -- The name of the role
-  name text not null '':text,
+  name text not null default ''::text,
   -- The rich text description of the role,
-  description text not null '':text,
+  description text not null default ''::text,
   -- Whether the role is invite only
   invited boolean not null
-)
+);
 
-create table commmitments (
+-- Only editors can create commitments
+-- Only editors can update commitments
+-- Anyone can view commitments
+-- Only editors can delete commitments
+create table commitments (
   -- The unique id of the commitment
   id uuid not null default uuid_generate_v1() primary key,
   -- The ID of the venue
   venueid uuid not null references venues(id) on delete cascade,
   -- The label for the commitment
-  label text not null '':text,
+  label text not null,
   -- The token compensation for a commitment, in the venue's currency
   amount integer not null
-)
-
-create table volunteers (
-  -- When this record was last updated
-  when timestamp with time zone not null default now(),
-  -- The id of the scholar who volunteered
-  scholarid uuid not null references scholars(id) on delete cascade,
-  -- The id of the venue they volunteered for
-  venueid uuid not null references venues(id) on delete cascade,
-  -- The role they volunteered for
-  role uuid not null references roles(id) on delete cascade,
-  -- The commitment they made
-  committment uuid not null references commitment(id) on delete cascade,
-  -- Relevant expertise keywords provided by the scholar for the role
-  expertise text not null,
-  -- Whether the volunteer has agreed
-  agreed boolean not null,
-  -- How many papers they wish to review at any given time, or in this batch, null if not specified
-  count integer
 );
 
--- A table of proposed venues
-create table proposed (
+-- editors can invite and volunteers if not invite only
+-- anyone can view volunteers
+-- only volunteers can update
+-- editors and volunteers can delete
+create table volunteers (
+  -- The id of the scholar who volunteered
+  scholarid uuid not null references scholars(id) on delete cascade,
+  -- The role they volunteered for
+  roleid uuid not null references roles(id) on delete cascade,
+  -- The id of the venue volunteered for
+  venueid uuid not null references venues(id) on delete cascade,
+  -- The commitment they made
+  committment uuid not null references commitments(id) on delete cascade,
+  -- When this record was last updated
+  created timestamp with time zone not null default now(),
+  -- Relevant expertise provided by the scholar for the role
+  expertise text not null,
+  -- Optionally, how many submissions they wish to review in the role
+  count integer default null
+);
+
+-- anyone can propose venues
+-- anyone can view proposals
+-- admins can update proposals
+-- admins can delete proposals
+create table proposals (
   -- The unique ID of the venue
   id uuid not null default uuid_generate_v1() primary key,
   -- The title of the venue
-  title text not null default '':text,
+  title text not null default ''::text,
   -- The email addresses of editors responsible for the venue
-  emails text not null default '':text,
+  emails text not null default ''::text,
   -- The estimated size of the research community,
-  size integer not null
-)
+  census integer not null
+);
+
+-- anyone can support proposals
+-- anyone can view supporters
+-- supporters can update support
+-- supports can stop supporting
+create table supporters (
+    -- The unique ID of the support
+    id uuid not null default uuid_generate_v1() primary key,
+    -- The scholar supporting the proposal
+    scholarid uuid not null references scholars(id) on delete cascade,
+    -- The message the scholar supported
+    message text not null default ''::text,
+    -- The proposal being supported
+    proposalid uuid not null references proposals(id) on delete cascade
+);
 
 ```
 

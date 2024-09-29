@@ -52,7 +52,7 @@ create unique index to_index on exchanges(currency_to);
 alter table public.exchanges
   enable row level security;
 
--- Create a generic function that checks if someone can edit or a delete a how
+-- Check if the given scholar is a minter of the given currency
 create function isMinter("_scholarid" uuid, "_currencyid" uuid) 
 returns boolean 
 language sql
