@@ -247,7 +247,7 @@
 
 			p {
 				margin: 0;
-				margin-block-end: 1em;
+				margin-block-end: var(--spacing);
 			}
 
 			p:last-of-type {
@@ -281,6 +281,20 @@
 				border: var(--border-color) solid var(--border-width);
 				border-radius: var(--roundedness);
 				padding: var(--spacing);
+				display: flex;
+				flex-direction: column;
+				gap: calc(var(--spacing) * 3);
+			}
+
+			label {
+				display: flex;
+				flex-direction: column;
+				gap: 0;
+			}
+
+			.label {
+				font-style: italic;
+				font-size: var(--small-font-size);
 			}
 		</style>
 	</head>

@@ -111,9 +111,16 @@
 
 		<p>
 			<Form>
-				<TextField size={40} placeholder="Submission Title" bind:text={title} valid={validTitle} />
+				<TextField
+					label="title"
+					size={40}
+					placeholder="Submission Title"
+					bind:text={title}
+					valid={validTitle}
+				/>
 				<Note>For display on this site.</Note>
 				<TextField
+					label="id"
 					size={40}
 					placeholder="Manuscript ID"
 					bind:text={externalID}
@@ -121,6 +128,7 @@
 				/>
 				<Note>The ID from the system where the submission is stored, for reference.</Note>
 				<TextField
+					label="id"
 					inline={false}
 					size={40}
 					placeholder="Charges, e.g., '0000-0001-1234-5678 3'"
@@ -152,6 +160,7 @@
 					space, then a token count. Tokens should sum to the number required for submission.</Note
 				>
 				<TextField
+					label="Metareviewer"
 					size={40}
 					placeholder="Metareviewer ORCID"
 					bind:text={metaID}

@@ -41,7 +41,14 @@
 	>
 
 	<Form inline>
-		<TextField active={!submitted} name="email" size={19} bind:text={email} placeholder="email" />
+		<TextField
+			label="email"
+			placeholder="email"
+			active={!submitted}
+			name="email"
+			size={19}
+			bind:text={email}
+		/>
 		<Button
 			tip="Send one-time password"
 			action={async () => {
@@ -61,7 +68,13 @@
 	{#if submitted}
 		<Feedback>Check your email for a sign in link.</Feedback>
 		<Form inline>
-			<TextField name="password" size={19} bind:text={password} placeholder="one-time password" />
+			<TextField
+				label="password"
+				placeholder="6 digits"
+				name="password"
+				size={19}
+				bind:text={password}
+			/>
 			<Button
 				tip="Sign in"
 				action={async () => {

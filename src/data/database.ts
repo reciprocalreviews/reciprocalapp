@@ -34,8 +34,157 @@ export type Database = {
   }
   public: {
     Tables: {
+      commitments: {
+        Row: {
+          amount: number
+          id: string
+          label: string
+          venueid: string
+        }
+        Insert: {
+          amount: number
+          id?: string
+          label: string
+          venueid: string
+        }
+        Update: {
+          amount?: number
+          id?: string
+          label?: string
+          venueid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commitments_venueid_fkey"
+            columns: ["venueid"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      currencies: {
+        Row: {
+          id: string
+          minters: string[]
+          name: string
+        }
+        Insert: {
+          id?: string
+          minters?: string[]
+          name?: string
+        }
+        Update: {
+          id?: string
+          minters?: string[]
+          name?: string
+        }
+        Relationships: []
+      }
+      exchanges: {
+        Row: {
+          approved: string | null
+          approvers: string[]
+          currency_from: string
+          currency_to: string
+          id: string
+          kind: Database["public"]["Enums"]["exchange_proposal_kind"] | null
+          proposed: string
+          ratio: number
+        }
+        Insert: {
+          approved?: string | null
+          approvers?: string[]
+          currency_from: string
+          currency_to: string
+          id?: string
+          kind?: Database["public"]["Enums"]["exchange_proposal_kind"] | null
+          proposed?: string
+          ratio: number
+        }
+        Update: {
+          approved?: string | null
+          approvers?: string[]
+          currency_from?: string
+          currency_to?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["exchange_proposal_kind"] | null
+          proposed?: string
+          ratio?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchanges_currency_from_fkey"
+            columns: ["currency_from"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchanges_currency_to_fkey"
+            columns: ["currency_to"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposals: {
+        Row: {
+          census: number
+          emails: string
+          id: string
+          title: string
+        }
+        Insert: {
+          census: number
+          emails?: string
+          id?: string
+          title?: string
+        }
+        Update: {
+          census?: number
+          emails?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      roles: {
+        Row: {
+          description: string
+          id: string
+          invited: boolean
+          name: string
+          venueid: string
+        }
+        Insert: {
+          description?: string
+          id?: string
+          invited: boolean
+          name?: string
+          venueid: string
+        }
+        Update: {
+          description?: string
+          id?: string
+          invited?: boolean
+          name?: string
+          venueid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roles_venueid_fkey"
+            columns: ["venueid"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scholars: {
         Row: {
+          administrator: boolean
           available: boolean
           email: string | null
           id: string
@@ -45,6 +194,7 @@ export type Database = {
           when: string
         }
         Insert: {
+          administrator?: boolean
           available?: boolean
           email?: string | null
           id: string
@@ -54,6 +204,7 @@ export type Database = {
           when?: string
         }
         Update: {
+          administrator?: boolean
           available?: boolean
           email?: string | null
           id?: string
@@ -72,15 +223,167 @@ export type Database = {
           },
         ]
       }
+      supporters: {
+        Row: {
+          id: string
+          message: string
+          proposalid: string
+          scholarid: string
+        }
+        Insert: {
+          id?: string
+          message?: string
+          proposalid: string
+          scholarid: string
+        }
+        Update: {
+          id?: string
+          message?: string
+          proposalid?: string
+          scholarid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supporters_proposalid_fkey"
+            columns: ["proposalid"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supporters_scholarid_fkey"
+            columns: ["scholarid"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venues: {
+        Row: {
+          bidding: boolean
+          currency: string
+          description: string
+          editors: string[]
+          id: string
+          title: string
+          url: string
+          welcome_amount: number | null
+        }
+        Insert: {
+          bidding?: boolean
+          currency: string
+          description?: string
+          editors?: string[]
+          id?: string
+          title?: string
+          url?: string
+          welcome_amount?: number | null
+        }
+        Update: {
+          bidding?: boolean
+          currency?: string
+          description?: string
+          editors?: string[]
+          id?: string
+          title?: string
+          url?: string
+          welcome_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venues_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      volunteers: {
+        Row: {
+          committment: string
+          count: number | null
+          created: string
+          expertise: string
+          roleid: string
+          scholarid: string
+          venueid: string
+        }
+        Insert: {
+          committment: string
+          count?: number | null
+          created?: string
+          expertise: string
+          roleid: string
+          scholarid: string
+          venueid: string
+        }
+        Update: {
+          committment?: string
+          count?: number | null
+          created?: string
+          expertise?: string
+          roleid?: string
+          scholarid?: string
+          venueid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteers_committment_fkey"
+            columns: ["committment"]
+            isOneToOne: false
+            referencedRelation: "commitments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volunteers_roleid_fkey"
+            columns: ["roleid"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volunteers_scholarid_fkey"
+            columns: ["scholarid"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volunteers_venueid_fkey"
+            columns: ["venueid"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      isadmin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      iseditor: {
+        Args: {
+          _venueid: string
+        }
+        Returns: boolean
+      }
+      isminter: {
+        Args: {
+          _scholarid: string
+          _currencyid: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      exchange_proposal_kind: "create" | "modify" | "merge"
     }
     CompositeTypes: {
       [_ in never]: never

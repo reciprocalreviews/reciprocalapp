@@ -1,4 +1,4 @@
-import type { ErrorID } from '$lib/data/Database';
+import { Errors, type ErrorID } from '$lib/data/Database';
 
 // A global list of errors to display to the user, global to the application.
 let errors = $state<ErrorID[]>([]);
@@ -13,4 +13,8 @@ export function removeError(index: number) {
 
 export function getErrors(): ErrorID[] {
 	return errors;
+}
+
+export function isError(error: string): error is ErrorID {
+	return error in Errors;
 }

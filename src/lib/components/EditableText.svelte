@@ -9,6 +9,7 @@
 
 	type Props = {
 		text: string;
+		label: string;
 		placeholder: string;
 		empty: string;
 		change: string;
@@ -21,6 +22,7 @@
 
 	let {
 		text,
+		label,
 		placeholder,
 		empty,
 		save,
@@ -70,9 +72,16 @@
 
 <div class="editable">
 	<form class:inline>
-		{#if editing}
-			<TextField {inline} {valid} bind:text {placeholder} padded={false} bind:view={field} />
-		{:else if text === ''}{empty}{:else}{text}{/if}
+		<TextField
+			{label}
+			{inline}
+			{valid}
+			bind:text
+			{placeholder}
+			padded={false}
+			active={editing}
+			bind:view={field}
+		/>
 		<Button
 			bind:view={button}
 			tip={editing ? save : change}
@@ -99,7 +108,7 @@
 	form {
 		display: flex;
 		flex-direction: row;
-		align-items: baseline;
+		align-items: flex-start;
 		justify-content: space-between;
 		gap: var(--spacing);
 	}

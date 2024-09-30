@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { tick } from 'svelte';
+
 	type Props = {
 		text: string;
+		label: string;
 		placeholder: string;
 		size?: number | undefined;
 		padded?: boolean;
@@ -15,8 +18,8 @@
 	let {
 		text = $bindable(''),
 		placeholder,
+		label,
 		size = undefined,
-		padded = true,
 		active = true,
 		name = undefined,
 		valid = undefined,
@@ -26,38 +29,52 @@
 	}: Props = $props();
 
 	let isValid = $derived(valid ? valid(text) : true);
-	let height = $derived(text ? (view?.scrollHeight ?? 0) : 0);
+	let measure = $state<HTMLSpanElement | undefined>(undefined);
+	let width = $state(0);
+	let height = $state(0);
+
+	$effect(() => {
+		width = measure?.clientWidth ?? 0;
+		height = measure?.clientHeight ?? 0;
+		if (text)
+			tick().then(() => {
+				width = measure?.clientWidth ?? 0;
+				height = measure?.clientHeight ?? 0;
+			});
+	});
 </script>
 
-{#if inline}
-	<input
-		bind:value={text}
-		bind:this={view}
-		{name}
-		disabled={!active}
-		class:padded
-		{size}
-		style:width={size === undefined
-			? (text.length === 0 ? placeholder.length : text.length) + 0.5 + 'ch'
-			: undefined}
-		class:invalid={!isValid}
-		{placeholder}
-		type={password ? 'password' : 'text'}
-	/>
-{:else}
-	<textarea
-		class:padded
-		class:invalid={!isValid}
-		disabled={!active}
-		{placeholder}
-		bind:value={text}
-		bind:this={view}
-		cols={size}
-		style:width={size ? undefined : '100%'}
-		style:height={size ? undefined : height + 'px'}
-		rows={text.split('\n').length}
-	></textarea>
-{/if}
+<label>
+	<span class="label">{label}</span>
+	{#if inline}
+		<input
+			bind:value={text}
+			bind:this={view}
+			{name}
+			disabled={!active}
+			{size}
+			style:width={size === undefined ? (width === 0 ? 'auto' : width + 'px') : undefined}
+			class:invalid={!isValid}
+			{placeholder}
+			type={password ? 'password' : 'text'}
+		/>
+	{:else}
+		<textarea
+			class:invalid={!isValid}
+			disabled={!active}
+			{placeholder}
+			bind:value={text}
+			bind:this={view}
+			cols={size}
+			style:width={size ? undefined : 'auth'}
+			style:height={size ? undefined : height + 'px'}
+			rows={text.split('\n').length}
+		></textarea>
+	{/if}
+	<span class="ruler" bind:this={measure}
+		>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0')}</span
+	>
+</label>
 
 <style>
 	input {
@@ -80,7 +97,6 @@
 		padding: 0;
 		padding-left: var(--spacing);
 		border-left: var(--thick-border-width) solid var(--text-color);
-		margin-left: calc(-1 * (var(--spacing)));
 		font-family: inherit;
 		line-height: inherit;
 		font-size: inherit;
@@ -92,9 +108,14 @@
 		min-height: 1em;
 	}
 
-	input.padded,
-	textarea.padded {
-		padding: calc(var(--spacing) / 2);
+	.ruler {
+		display: inline-block;
+		width: fit-content;
+		position: absolute;
+		white-space: pre;
+		top: 0;
+		left: 0;
+		visibility: hidden;
 	}
 
 	input[disabled],
@@ -119,5 +140,10 @@
 
 	textarea:not(.invalid):focus {
 		border-color: var(--focus-color);
+	}
+
+	label {
+		width: 100%;
+		position: relative;
 	}
 </style>

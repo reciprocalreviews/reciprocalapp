@@ -4,7 +4,7 @@ import type Submission from '$lib/types/Submission';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
 import type Transaction from '$lib/types/Transaction';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { ScholarID, ScholarRow } from '../../data/types';
+import type { ProposalID, ScholarID, ScholarRow } from '../../data/types';
 import Database, { type ErrorID } from './Database';
 import Scholar from './Scholar.svelte';
 
@@ -136,5 +136,39 @@ export default class SupabaseDB extends Database {
 	}
 	getScholarTransactions(id: ScholarID): Promise<Transaction[]> {
 		throw new Error('Method not implemented.');
+	}
+
+	async proposeVenue(
+		scholarid: ScholarID,
+		title: string,
+		emails: string[],
+		census: number,
+		message: string
+	): Promise<ErrorID | ProposalID> {
+		// Make a proposal
+		const { data, error } = await this.client
+			.from('proposals')
+			.insert({ title, emails: emails.join(','), census })
+			.select()
+			.single();
+
+		if (error || data === null) {
+			console.error(error);
+			return 'CreateProposal';
+		}
+
+		const proposalid = data.id;
+
+		// Make the first supporter
+		const { error: error2 } = await this.client
+			.from('supporters')
+			.insert({ proposalid, scholarid, message });
+
+		if (error2) {
+			console.error(error);
+			return 'CreateSupporter';
+		}
+
+		return proposalid;
 	}
 }

@@ -18,6 +18,7 @@
 <h1>
 	{#if editable}<EditableText
 			text={scholar.getName() ?? ''}
+			label="name"
 			placeholder="name"
 			change="Change name"
 			save="Save name"

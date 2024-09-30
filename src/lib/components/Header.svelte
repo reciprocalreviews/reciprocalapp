@@ -6,7 +6,7 @@
 
 	const routes = [
 		{ path: '/', label: 'Home' },
-		{ path: '/sources', label: 'Sources' },
+		{ path: '/venues', label: 'Venues' },
 		{ path: '/about', label: 'About' }
 	];
 

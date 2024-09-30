@@ -14,7 +14,6 @@
 	.page {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing);
-		padding: var(--spacing);
+		gap: calc(2 * var(--spacing));
 	}
 </style>

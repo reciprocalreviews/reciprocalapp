@@ -155,8 +155,15 @@
 
 	{#if editingNames}
 		<h1>
-			<TextField padded={false} bind:text={name} size={name.length} placeholder="name" />
+			<TextField
+				label="name"
+				padded={false}
+				bind:text={name}
+				size={name.length}
+				placeholder="name"
+			/>
 			<br /><TextField
+				label="short name"
 				padded={false}
 				bind:text={short}
 				size={short.length + 2}
@@ -171,6 +178,7 @@
 	{/if}
 	<p>
 		{#if editingNames}<TextField
+				label="site"
 				bind:text={link}
 				size={link.length}
 				placeholder="URL"
@@ -221,6 +229,7 @@
 	<EditorsOnly {editor}>
 		<Form inline
 			><TextField
+				label="ORCID"
 				bind:text={newEditor}
 				size={19}
 				placeholder="ORCID"
@@ -382,7 +391,7 @@
 		</p>
 
 		<p>
-			<TextField placeholder="description" bind:text={newExpertise} />
+			<TextField label="expertise" placeholder="description" bind:text={newExpertise} />
 			<Button
 				tip="Add expertise"
 				action={() => addExpertise(source, newExpertise)}

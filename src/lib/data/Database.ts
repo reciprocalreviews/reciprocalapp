@@ -1,4 +1,4 @@
-import { type ScholarID, type ScholarRow } from '../../data/types';
+import { type ProposalID, type ScholarID, type ScholarRow } from '../../data/types';
 import type { SourceID } from '$lib/types/Source';
 import type Source from '$lib/types/Source';
 import type Submission from '$lib/types/Submission';
@@ -22,7 +22,9 @@ export const Errors = {
 	UpdateScholarStatus: 'Unable to update your status',
 	UpdateScholarName: 'Unable to update your name',
 	UpdateScholarEmail: 'Unable to update your email',
-	UpdateScholarAvailability: 'Unable to update your availability'
+	UpdateScholarAvailability: 'Unable to update your availability',
+	CreateProposal: 'Unable to create a venue proposal',
+	CreateSupporter: 'Unable to create a supporter'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -101,4 +103,13 @@ export default abstract class Database {
 
 	/** Get all of this scholar's transactions */
 	abstract getScholarTransactions(id: ScholarID): Promise<Transaction[]>;
+
+	/** Propose a venue */
+	abstract proposeVenue(
+		scholar: ScholarID,
+		venue: string,
+		editors: string[],
+		size: number,
+		message: string
+	): Promise<ProposalID | ErrorID>;
 }

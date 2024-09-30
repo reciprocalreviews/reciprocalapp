@@ -34,7 +34,6 @@
 <Name {editable} {scholar} />
 <Cards>
 	<Card header="identification">
-		<h3>ORCID</h3>
 		<p>
 			{#if editable}
 				Update your <Link to="https://orcid.org/{scholar.getORCID()}">ORCID Profile</Link> offsite.
@@ -43,9 +42,9 @@
 			{/if}
 		</p>
 
-		<h3>email</h3>
 		{#if editable}<EditableText
 				text={scholar.getEmail() ?? ''}
+				label="email"
 				placeholder="email"
 				change="Change email"
 				save="Save email"
@@ -57,28 +56,25 @@
 	</Card>
 
 	<Card header="availability">
-		<p>
-			{#if editable}
-				<Checkbox
-					on={scholar.isAvailable()}
-					change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
-					>When checked, your profile will indicate you are available to review.
-				</Checkbox>
-			{/if}
-		</p>
-
 		<Status good={scholar.isAvailable()}
 			>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status
 		>
+		{#if editable}
+			<Checkbox
+				on={scholar.isAvailable()}
+				change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
+				>When checked, your profile will indicate you are available to review.</Checkbox
+			>
+		{/if}
 
-		<h3>status</h3>
 		{#if editable}
 			<EditableText
 				inline={false}
 				text={scholar.getStatus()}
+				label="status"
+				placeholder="Explain your current reviewing status to others."
 				change="Edit status"
 				save="Save status"
-				placeholder="Explain your current reviewing status to others."
 				empty="No status"
 				edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
 				note="Your status is public and will be shown on your profile."

@@ -73,10 +73,11 @@
 				</p>
 				<Form>
 					<TextField
+						label="ORCIDs"
+						placeholder="Reviewer ORCIDs separated by commas"
 						bind:text={reviewers}
 						size={50}
 						valid={(text) => validReviewers(text)}
-						placeholder="Reviewer ORCIDs separated by commas"
 					/>
 					{#if validReviewers(reviewers)}
 						{#each toReviewers(reviewers) as reviewer}
