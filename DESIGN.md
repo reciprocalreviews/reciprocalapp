@@ -119,12 +119,12 @@ create table scholars (
 
 A `Venue` is a named and curated collection of manuscripts undergoing peer review (e.g. a journal or conference).
 
-- [ ] A `Venue` has a cost and reward for reviewing labor.
-- [ ] `Venue`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
-- [ ] `Venue`s can be proposed, but aren't created until approved.
-- [ ] `Venue`s can have one or more volunteer roles, which are helpful for distinguishing between different types of volunteering for a venue (e.g., reviewer, reviewer for track A, meta-reviewer for track B)
-- [ ] `Venue`s can have one or more commitments to a role, usually `yes` and `no`, but custom committments can support things like `maybe`, `if necessary`, and other social signals.
-- [ ] When a `Scholar` volunteers for a `Venue`, they do so for a particular role, with a particular commitment, and optionally with a number of papers they are committing to review. Volunteering for a venue can also include a statement of expertise relevant to the role.
+- [x] A `Venue` has a cost and reward for reviewing labor.
+- [x] `Venue`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
+- [x] `Venue`s can be proposed, but aren't created until approved.
+- [x] `Venue`s can have one or more volunteer roles, which are helpful for distinguishing between different types of volunteering for a venue (e.g., reviewer, reviewer for track A, meta-reviewer for track B)
+- [x] `Venue`s can have one or more commitments to a role, usually `yes` and `no`, but custom committments can support things like `maybe`, `if necessary`, and other social signals.
+- [x] When a `Scholar` volunteers for a `Venue`, they do so for a particular role, with a particular commitment, and optionally with a number of papers they are committing to review. Volunteering for a venue can also include a statement of expertise relevant to the role.
 
 Here is a SQL sketch of all of the tables involved in this.
 
@@ -414,7 +414,7 @@ The goal of the landing page is to 1) explain the value proposition of RR to edi
 The purpose of the about page is to give context about the project. It should:
 
 - [ ] Explain who is creating RR
-- [ ] Why RR exists
+- [x] Why RR exists
 - [ ] How others can get involved in maintaining and evolving it
 - [ ] How RR is governed and funded.
 
@@ -463,6 +463,19 @@ It should:
 - [ ] _`scholar`_: Propose a new `Venue` for the platform for review by the platform maintainers. `Venue` proposals should gather the name of the venue, the email addresses of the person or people leading editing of it, and the estimated size of the number of scholars in the community. `Venue`s with similar names are retrieved and shown to prevent duplicate venue creation. When the proposal is submitted, an email notification is sent to the email addresses listed and RR administrators. A `Venue` is created, but not active until approved.
 
 - [ ] _`admin`_: Approve a `Venue` for use, indicating who should take the _editor_ and _minter_ roles for the platform, and creating tokens for all scholars in favor of the petition.
+
+## Proposals `/venues/proposal`
+
+The purpose of this page is to allow for the proposal of new pages.
+
+- [x] _`scholar`_: Submit a new venue proposal
+
+## Proposal `/venues/proposal/[proposalid]`
+
+The purpose of this page is to allow people to support proposals and check their status.
+
+- [ ] View the details about the proposed venue.
+- [ ] _`scholar`_ : Support a proposal.
 
 ## Venue `/venue/[id]`
 
