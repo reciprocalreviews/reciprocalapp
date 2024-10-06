@@ -1,4 +1,9 @@
-import { type ProposalID, type ScholarID, type ScholarRow } from '../../data/types';
+import {
+	type CurrencyID,
+	type ProposalID,
+	type ScholarID,
+	type ScholarRow
+} from '../../data/types';
 import type { SourceID } from '$lib/types/Source';
 import type Source from '$lib/types/Source';
 import type Submission from '$lib/types/Submission';
@@ -24,7 +29,9 @@ export const Errors = {
 	UpdateScholarEmail: 'Unable to update your email',
 	UpdateScholarAvailability: 'Unable to update your availability',
 	CreateProposal: 'Unable to create a venue proposal',
-	CreateSupporter: 'Unable to create a supporter'
+	CreateSupporter: 'Unable to create a supporter',
+	UpdateCurrencyName: 'Unable to update the currency name',
+	UpdateCurrencyDescription: 'Unable to update the currency description'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -112,4 +119,10 @@ export default abstract class Database {
 		size: number,
 		message: string
 	): Promise<ProposalID | ErrorID>;
+
+	abstract updateCurrencyName(id: CurrencyID, name: string): Promise<ErrorID | undefined>;
+	abstract updateCurrencyDescription(
+		id: CurrencyID,
+		description: string
+	): Promise<ErrorID | undefined>;
 }

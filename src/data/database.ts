@@ -65,16 +65,19 @@ export type Database = {
       }
       currencies: {
         Row: {
+          description: string
           id: string
           minters: string[]
           name: string
         }
         Insert: {
+          description?: string
           id?: string
           minters?: string[]
           name?: string
         }
         Update: {
+          description?: string
           id?: string
           minters?: string[]
           name?: string

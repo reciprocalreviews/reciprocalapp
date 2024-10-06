@@ -3,6 +3,8 @@ create table currencies (
   id uuid not null default uuid_generate_v1() primary key,
   -- The name of the currency
   name text not null default ''::text,
+  -- The description of the currency
+  description text not null default ''::text,
   -- The minters of the currency, corresponding to scholar is in the scholars table. Must be at least one minter.
   minters uuid[] not null default '{}'::uuid[] check (cardinality(minters) > 0)
 );

@@ -5,3 +5,5 @@ export type ScholarRow = Tables['scholars']['Row'];
 export type ScholarID = ScholarRow['id'];
 export type ProposalRow = Tables['proposals']['Row'];
 export type ProposalID = ProposalRow['id'];
+export type CurrencyRow = Tables['currencies']['Row'];
+export type CurrencyID = CurrencyRow['id'];

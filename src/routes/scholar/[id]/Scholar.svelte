@@ -2,7 +2,6 @@
 	import { getDB } from '$lib/data/Database';
 	import Link from '$lib/components/Link.svelte';
 	import Loading from '$lib/components/Loading.svelte';
-	import Note from '$lib/components/Note.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import type Transaction from '$lib/types/Transaction';
 	import { getAuth } from '../../Auth.svelte';
@@ -31,6 +30,7 @@
 	// });
 </script>
 
+<h1>Scholar</h1>
 <Name {editable} {scholar} />
 <Cards>
 	<Card header="identification">
