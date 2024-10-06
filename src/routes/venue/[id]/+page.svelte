@@ -12,16 +12,13 @@
 	import type Source from '$lib/types/Source';
 	import { ORCIDRegex } from '../../../data/ORCID';
 	import Form from '$lib/components/Form.svelte';
-	import type { SourceID } from '$lib/types/Source';
 	import EditorsOnly from '$lib/components/EditorsOnly.svelte';
 	import Tag from '$lib/components/Tag.svelte';
-	import Tags from '$lib/components/Tags.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import type Expertise from '$lib/types/Expertise';
 	import Table from '$lib/components/Table.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import { getAuth } from '../../Auth.svelte';
-	import type { ScholarRow } from '../../../data/types';
 	import Todo from '$lib/components/Todo.svelte';
 	import type Scholar from '$lib/data/Scholar.svelte';
 
