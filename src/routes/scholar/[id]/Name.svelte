@@ -14,7 +14,7 @@
 	}
 </script>
 
-<h2>
+<h1>
 	{#if editable}<EditableText
 			text={scholar.getName() ?? ''}
 			placeholder="name"
@@ -23,5 +23,5 @@
 			empty={anonymous}
 			edit={update}
 		/>{:else}{scholar.getName() ?? anonymous}{/if}
-</h2>
+</h1>
 Joined {new Date(scholar.getJoined()).toLocaleDateString()}

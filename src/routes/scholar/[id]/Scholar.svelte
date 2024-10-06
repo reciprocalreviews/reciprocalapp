@@ -30,7 +30,6 @@
 	// });
 </script>
 
-<h1>Scholar</h1>
 <Name {editable} {scholar} />
 <Cards>
 	<Card header="identification">

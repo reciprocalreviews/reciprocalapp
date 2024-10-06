@@ -21,8 +21,7 @@
 	<h1>Oops.</h1>
 	<Feedback error>Unknown currency.</Feedback>
 {:else}
-	<h1>Currency</h1>
-	<h2>
+	<h1>
 		{#if editable}<EditableText
 				text={currency.name}
 				placeholder="name"
@@ -31,7 +30,7 @@
 				empty="Unnamed currency"
 				edit={async (text) => await db.updateCurrencyName(currency.id, text)}
 			/>{:else}{currency.name}{/if}
-	</h2>
+	</h1>
 
 	{#if editable}
 		<EditableText
