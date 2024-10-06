@@ -52,8 +52,7 @@
 	}
 
 	button:focus {
-		outline-color: var(--focus-color);
-		outline-width: var(--thick-border-width);
+		outline: var(--focus-color) solid var(--thick-border-width);
 	}
 
 	button:not(.inactive):hover {
