@@ -3,7 +3,7 @@
 
 	type Props = {
 		text: string;
-		label: string;
+		label?: string | undefined;
 		placeholder: string;
 		size?: number | undefined;
 		padded?: boolean;
@@ -45,7 +45,9 @@
 </script>
 
 <label>
-	<span class="label">{label}</span>
+	{#if label}
+		<span class="label">{label}</span>
+	{/if}
 	{#if inline}
 		<input
 			bind:value={text}

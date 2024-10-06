@@ -9,7 +9,7 @@
 
 	type Props = {
 		text: string;
-		label: string;
+		label?: string | undefined;
 		placeholder: string;
 		empty: string;
 		change: string;
@@ -91,11 +91,11 @@
 				/>{:else}✎{/if}</Button
 		>
 	</form>
-	<div class="note">
-		{#if note}
+	{#if note}
+		<div class="note">
 			<Note>{note}</Note>
-		{/if}
-	</div>
+		</div>
+	{/if}
 </div>
 
 <style>
