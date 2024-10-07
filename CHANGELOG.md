@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Added
 
 - Currency name and description display and editing.
+- Show proposed venues on the venues page.
 
 ## 0.0.4 2024-09-28
 

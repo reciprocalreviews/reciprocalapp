@@ -3,6 +3,12 @@
 	import { getDB } from '$lib/data/Database';
 	import { getAuth } from '../Auth.svelte';
 	import Page from '$lib/components/Page.svelte';
+	import type { ProposalRow } from '../../data/types';
+	import Feedback from '$lib/components/Feedback.svelte';
+
+	let { data }: { data: { proposals: ProposalRow[] | null } } = $props();
+
+	let proposals = $derived(data.proposals);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -17,6 +23,21 @@
 	</p>
 
 	{#if auth.isAuthenticated()}<Link to="/venues/proposal">Propose a new venue</Link>{/if}
+
+	<h2>Proposed venues</h2>
+	{#if proposals}
+		<ul>
+			{#each proposals.toSorted((a, b) => a.title.localeCompare(b.title)) as proposal}
+				<li>
+					<Link to="/venue/{proposal.id}"
+						>{#if proposal.title.length === 0}<em>Unnamed</em>{:else}{proposal.title}{/if}</Link
+					>
+				</li>
+			{/each}
+		</ul>
+	{:else}
+		<Feedback error>We couldn't load the proposed venues.</Feedback>
+	{/if}
 
 	<!-- {#await db.getSources()}
 		<Loading />
