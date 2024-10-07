@@ -6,9 +6,9 @@
 
 <svelte:window {title} />
 
-<div class="page">
+<section class="page">
 	{@render children()}
-</div>
+</section>
 
 <style>
 	.page {

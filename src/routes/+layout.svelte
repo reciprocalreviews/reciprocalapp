@@ -54,9 +54,7 @@
 	<section class="notifications" aria-live="assertive">
 		{#each getErrors() as error, index}{@render ErrorBox(error, index)}{/each}
 	</section>
-	<section class="page">
-		{@render children()}
-	</section>
+	{@render children()}
 </main>
 
 <style>
@@ -85,11 +83,5 @@
 		border-radius: var(--roundedness);
 		background: var(--error-color);
 		box-shadow: var(--spacing) var(--spacing) var(--spacing) var(--border-color);
-	}
-
-	.page {
-		display: flex;
-		flex-direction: column;
-		gap: calc(2 * var(--spacing));
 	}
 </style>
