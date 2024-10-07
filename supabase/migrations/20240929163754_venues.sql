@@ -170,7 +170,7 @@ create table proposals (
   -- The title of the venue
   title text not null default ''::text,
   -- The email addresses of editors responsible for the venue
-  emails text not null default ''::text,
+  editors text[] not null default '{}'::text[],
   -- The estimated size of the research community,
   census integer not null
 );

@@ -135,19 +135,19 @@ export type Database = {
       proposals: {
         Row: {
           census: number
-          emails: string
+          editors: string[]
           id: string
           title: string
         }
         Insert: {
           census: number
-          emails?: string
+          editors?: string[]
           id?: string
           title?: string
         }
         Update: {
           census?: number
-          emails?: string
+          editors?: string[]
           id?: string
           title?: string
         }
@@ -246,13 +246,6 @@ export type Database = {
           scholarid?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "supporters_proposalid_fkey"
-            columns: ["proposalid"]
-            isOneToOne: false
-            referencedRelation: "proposals"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "supporters_scholarid_fkey"
             columns: ["scholarid"]

@@ -141,14 +141,14 @@ export default class SupabaseDB extends Database {
 	async proposeVenue(
 		scholarid: ScholarID,
 		title: string,
-		emails: string[],
+		editors: string[],
 		census: number,
 		message: string
 	): Promise<ErrorID | ProposalID> {
 		// Make a proposal
 		const { data, error } = await this.client
 			.from('proposals')
-			.insert({ title, emails: emails.join(','), census })
+			.insert({ title, editors, census })
 			.select()
 			.single();
 

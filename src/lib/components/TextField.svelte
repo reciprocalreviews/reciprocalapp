@@ -78,7 +78,7 @@
 		></textarea>
 	{/if}
 	<span class="ruler" bind:this={measure}
-		>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n\n')}</span
+		>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n')}</span
 	>
 </label>
 

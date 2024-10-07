@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 - Currency name and description display and editing.
 - Show proposed venues on the venues page.
+- Render proposed venue content.
 
 ## 0.0.4 2024-09-28
 
