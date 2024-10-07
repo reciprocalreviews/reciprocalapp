@@ -120,6 +120,13 @@ export default abstract class Database {
 		message: string
 	): Promise<ProposalID | ErrorID>;
 
+	/** Add support for a proposal */
+	abstract addSupporter(
+		scholar: ScholarID,
+		proposal: ProposalID,
+		message: string
+	): Promise<ErrorID | undefined>;
+
 	abstract updateCurrencyName(id: CurrencyID, name: string): Promise<ErrorID | undefined>;
 	abstract updateCurrencyDescription(
 		id: CurrencyID,

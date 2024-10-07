@@ -202,7 +202,9 @@ create table supporters (
     -- The message the scholar supported
     message text not null default ''::text,
     -- The proposal being supported
-    proposalid uuid not null references proposals(id) on delete cascade
+    proposalid uuid not null references proposals(id) on delete cascade,
+    -- When this record was last updated
+    created timestamp with time zone not null default now()
 );
 
 alter table public.supporters

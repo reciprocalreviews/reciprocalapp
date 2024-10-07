@@ -159,17 +159,27 @@ export default class SupabaseDB extends Database {
 
 		const proposalid = data.id;
 
+		const supportError = await this.addSupporter(scholarid, proposalid, message);
+
+		if (supportError) return supportError;
+
+		return proposalid;
+	}
+
+	async addSupporter(
+		scholarid: ScholarID,
+		proposalid: ProposalID,
+		message: string
+	): Promise<ErrorID | undefined> {
 		// Make the first supporter
-		const { error: error2 } = await this.client
+		const { error } = await this.client
 			.from('supporters')
 			.insert({ proposalid, scholarid, message });
 
-		if (error2) {
+		if (error) {
 			console.error(error);
 			return 'CreateSupporter';
 		}
-
-		return proposalid;
 	}
 
 	async updateCurrencyName(id: CurrencyID, name: string): Promise<ErrorID | undefined> {

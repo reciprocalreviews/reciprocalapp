@@ -9,7 +9,7 @@ export async function load({ parent, params }) {
 		.single();
 	const { data: supporters, error: supportersError } = await supabase
 		.from('supporters')
-		.select('scholarid (id, name), message')
+		.select('scholarid (id, name), message, created')
 		.eq('proposalid', params.id);
 	return {
 		proposal: proposal && proposalError === null ? proposal : null,

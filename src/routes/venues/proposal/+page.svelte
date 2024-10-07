@@ -21,15 +21,18 @@
 	function validName(text: string) {
 		return text.length > 0;
 	}
+
 	function validEmails(text: string) {
 		return editors
 			.split(',')
 			.map((editor) => editor.trim())
 			.every((editor) => /.+@.+\..+/.test(editor));
 	}
+
 	function validSize(text: string) {
 		return parseInt(text) > 0;
 	}
+
 	function validMessage(text: string) {
 		return text.length > 0;
 	}
