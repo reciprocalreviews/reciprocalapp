@@ -29,7 +29,7 @@
 		<ul>
 			{#each proposals.toSorted((a, b) => a.title.localeCompare(b.title)) as proposal}
 				<li>
-					<Link to="/venue/{proposal.id}"
+					<Link to="/venues/proposal/{proposal.id}"
 						>{#if proposal.title.length === 0}<em>Unnamed</em>{:else}{proposal.title}{/if}</Link
 					>
 				</li>
