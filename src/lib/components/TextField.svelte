@@ -13,6 +13,7 @@
 		inline?: boolean;
 		password?: boolean;
 		view?: HTMLInputElement | HTMLTextAreaElement | undefined;
+		done?: ((() => void) | undefined) | undefined;
 	};
 
 	let {
@@ -25,7 +26,8 @@
 		valid = undefined,
 		inline = true,
 		password = false,
-		view = $bindable(undefined)
+		view = $bindable(undefined),
+		done = undefined
 	}: Props = $props();
 
 	let isValid = $derived(valid ? valid(text) : true);
@@ -59,6 +61,7 @@
 			class:invalid={!isValid}
 			{placeholder}
 			type={password ? 'password' : 'text'}
+			onkeydown={(event) => (event.key === 'Enter' && event.metaKey && done ? done() : undefined)}
 		/>
 	{:else}
 		<textarea
@@ -71,10 +74,11 @@
 			style:width={size ? undefined : 'auth'}
 			style:height={size ? undefined : height + 'px'}
 			rows={text.split('\n').length}
+			onkeydown={(event) => (event.key === 'Enter' && event.metaKey && done ? done() : undefined)}
 		></textarea>
 	{/if}
 	<span class="ruler" bind:this={measure}
-		>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0')}</span
+		>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n\n')}</span
 	>
 </label>
 

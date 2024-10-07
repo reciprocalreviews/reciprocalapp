@@ -50,8 +50,20 @@
 			return;
 		}
 
-		editing = undefined;
 		event.preventDefault();
+
+		await saveAndFocus();
+	}
+
+	async function startEditing(event: Event) {
+		editing = true;
+		await tick();
+		if (field) field.focus();
+		event.preventDefault();
+	}
+
+	async function saveAndFocus() {
+		editing = undefined;
 		error = await edit(text);
 		if (error) {
 			editing = true;
@@ -61,17 +73,10 @@
 			if (button) button.focus();
 		}
 	}
-
-	async function startEditing(event: Event) {
-		editing = true;
-		await tick();
-		if (field) field.focus();
-		event.preventDefault();
-	}
 </script>
 
 <div class="editable">
-	<form class:inline>
+	<div class="box" class:inline class:editing>
 		<TextField
 			{label}
 			{inline}
@@ -81,6 +86,7 @@
 			padded={false}
 			active={editing}
 			bind:view={field}
+			done={() => (editing ? saveAndFocus() : undefined)}
 		/>
 		<Button
 			bind:view={button}
@@ -90,7 +96,7 @@
 			>{#if editing}{invalid ? '𐄂' : '✓'}{:else if editing === undefined}<Dots
 				/>{:else}✎{/if}</Button
 		>
-	</form>
+	</div>
 	{#if note}
 		<div class="note">
 			<Note>{note}</Note>
@@ -105,15 +111,14 @@
 		gap: var(--spacing);
 	}
 
-	form {
+	.box {
 		display: flex;
 		flex-direction: row;
-		align-items: flex-start;
 		justify-content: space-between;
 		gap: var(--spacing);
 	}
 
-	form.inline {
+	.box.inline {
 		align-items: center;
 	}
 
