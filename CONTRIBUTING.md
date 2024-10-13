@@ -51,7 +51,7 @@ The key tools for local development are:
 
 - Vite: run `npm run dev` to launch the Vite local development server, and test at the localhost address provided.
 - Svelte check: run `npm run check`, which will report TypeScript and Svelte errors.
-- Supabase: run `npm run db` to start the Supabase database locally. This will require installation of a Docker client.
+- Supabase: install Supabase and run `supabase start` to start the Supabase database locally. This will require installation of a Docker client.
 - vitest: run `npm run test:unit` to run unit tests during development.
 - Playright: run `npm run test:integration` to run integration tests on demand.
 - Supabase CLI: [install](https://supabase.com/docs/guides/cli/getting-started), and then `supabase login`, and then `supabase start` to load the local database with Docker. Don't forget to `supabase stop` when you're done to release Docker resources.
