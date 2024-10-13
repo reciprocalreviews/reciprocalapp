@@ -43,7 +43,7 @@
 	<Form inline>
 		<TextField
 			label="email"
-			placeholder="email"
+			placeholder=""
 			active={!submitted}
 			name="email"
 			size={19}

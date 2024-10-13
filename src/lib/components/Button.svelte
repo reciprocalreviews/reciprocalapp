@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { ConfirmLabel, DeleteLabel } from './Labels';
 
 	let {
 		action,
@@ -9,7 +10,8 @@
 		formaction = undefined,
 		name = undefined,
 		type = undefined,
-		view = $bindable(undefined)
+		view = $bindable(undefined),
+		warn = false
 	}: {
 		children: Snippet;
 		action: (event: Event) => void;
@@ -19,19 +21,34 @@
 		name?: string | undefined;
 		type?: 'submit' | undefined;
 		view?: HTMLButtonElement | undefined;
+		warn?: boolean;
 	} = $props();
+
+	let confirming = $state(false);
 </script>
 
-<button
-	bind:this={view}
-	{name}
-	{formaction}
-	{type}
-	title={tip}
-	aria-label={tip}
-	disabled={!active}
-	onclick={(event) => (active ? action(event) : null)}>{@render children()}</button
->
+{#if !warn || !confirming}
+	<button
+		bind:this={view}
+		{name}
+		{formaction}
+		{type}
+		title={tip}
+		aria-label={tip}
+		disabled={!active}
+		class:warn
+		onclick={(event) => {
+			if (active)
+				if (warn) confirming = true;
+				else action(event);
+		}}>{@render children()}</button
+	>
+{:else}
+	<div class="row">
+		<button onclick={() => (confirming = false)}>{DeleteLabel}</button>
+		<button class:warn onclick={(event) => action(event)}>{@render children()}</button>
+	</div>
+{/if}
 
 <style>
 	button {
@@ -46,6 +63,10 @@
 		white-space: nowrap;
 	}
 
+	.row button:last-child {
+		flex-grow: 1;
+	}
+
 	button[disabled] {
 		background: var(--inactive-color);
 		cursor: auto;
@@ -57,5 +78,17 @@
 
 	button:not(.inactive):hover {
 		transform: scale(1.05);
+	}
+
+	button.warn {
+		background-color: var(--error-color);
+		color: var(--background-color);
+	}
+
+	.row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: var(--spacing);
 	}
 </style>

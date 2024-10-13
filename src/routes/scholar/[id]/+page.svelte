@@ -1,11 +1,10 @@
 <script lang="ts">
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { getDB } from '$lib/data/Database';
-	import type { ScholarRow } from '../../../data/types';
 	import { default as ScholarView } from './Scholar.svelte';
 	import Page from '$lib/components/Page.svelte';
 
-	let { data }: { data: { scholar: ScholarRow | null } } = $props();
+	let { data } = $props();
 
 	let db = getDB();
 

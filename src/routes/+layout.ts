@@ -1,6 +1,7 @@
 import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr';
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import type { LayoutLoad } from './$types';
+import type { ScholarRow } from '$data/types';
 
 export const load: LayoutLoad = async ({ data, depends, fetch }) => {
 	/**
@@ -39,5 +40,19 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
 		data: { user }
 	} = await supabase.auth.getUser();
 
-	return { session, supabase, user };
+	let scholar;
+
+	// If there's a user, return scholar
+	if (user) {
+		const { data, error } = await supabase
+			.from('scholars')
+			.select('id, orcid, name, email, steward')
+			.eq('id', user.id)
+			.single();
+		if (data && error === null) {
+			scholar = data;
+		}
+	} else scholar = null;
+
+	return { session, supabase, user, scholar };
 };

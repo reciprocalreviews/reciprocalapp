@@ -166,6 +166,12 @@ export default class SupabaseDB extends Database {
 		return proposalid;
 	}
 
+	async deleteProposal(proposal: ProposalID): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('proposals').delete().eq('id', proposal);
+		if (error) return 'DeleteProposal';
+		else return;
+	}
+
 	async addSupporter(
 		scholarid: ScholarID,
 		proposalid: ProposalID,

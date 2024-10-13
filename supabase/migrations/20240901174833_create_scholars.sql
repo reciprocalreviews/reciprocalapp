@@ -9,11 +9,21 @@ create table public.scholars (
   email text default null,
   -- Whether the scholar is available to review
   available boolean not null default true,
+  -- Whether the scholar is a steward
+  steward boolean not null default false,
   -- The scholar's explanation of their availabilty
   status text not null default ''::text,
   -- When the scholar joined
   "when" timestamp with time zone not null default now()
 );
+
+-- Check if the given scholar is a steward
+create function isSteward() 
+returns boolean 
+language sql
+as $$
+    select (exists (select id from scholars where id = auth.uid() and steward));
+$$;
 
 alter table public.scholars
   enable row level security;
@@ -24,8 +34,8 @@ create policy "Scholar can insert themselves" on public.scholars
 create policy "Scholar metadata is public" on public.scholars
   for select to anon, authenticated using (true);
 
-create policy "Scholars can edit themselves" on public.scholars
-  for update to anon, authenticated using (id = auth.uid());
+create policy "Scholars can be edited by stewards and selves" on public.scholars
+  for update to anon, authenticated using (id = auth.uid() or isSteward());
 
 create policy "Scholars can remove themselves" on public.scholars
   for delete to anon, authenticated using (id = auth.uid());

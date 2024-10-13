@@ -1,14 +1,3 @@
--- Add a status on scholars that gives them admin privileges on the platform, including permission to create new venues.
-alter table public.scholars add column administrator boolean not null default false;
-
--- Check if the given scholar is an administrator
-create function isAdmin() 
-returns boolean 
-language sql
-as $$
-    select (exists (select id from scholars where id = auth.uid() and administrator));
-$$;
-
 create table venues (
   -- The unique ID of the venue
   id uuid not null default uuid_generate_v1() primary key,
@@ -31,17 +20,17 @@ create table venues (
 alter table public.venues
   enable row level security;
 
-create policy "only administrators can create venues" on public.venues
-  for insert to anon, authenticated with check (isAdmin());
+create policy "only stewards can create venues" on public.venues
+  for insert to anon, authenticated with check (isSteward());
 
 create policy "anyone can view venues" on public.venues
   for select to anon, authenticated using (true);
 
-create policy "admins and editors can update venues" on public.venues
-  for update to anon, authenticated using (isAdmin() or auth.uid() = any(editors));
+create policy "stewards and editors can update venues" on public.venues
+  for update to anon, authenticated using (isSteward() or auth.uid() = any(editors));
 
-create policy "admins and editors can delete venues" on public.venues
-  for delete to anon, authenticated using (isAdmin() or auth.uid() = any(editors));
+create policy "stewards and editors can delete venues" on public.venues
+  for delete to anon, authenticated using (isSteward() or auth.uid() = any(editors));
 
 -- only editors can create venue roles
 -- anyone can view roles
@@ -62,7 +51,7 @@ create table roles (
 
 create unique index roles_venue_index on roles(venueid);
 
--- Check if the given scholar is an administrator
+-- Check if the given scholar is an stewards
 create function isEditor("_venueid" uuid) 
 returns boolean 
 language sql
@@ -162,8 +151,8 @@ create policy "editors and volunteers can delete" on public.volunteers
 
 -- anyone can propose venues
 -- anyone can view proposals
--- admins can update proposals
--- admins can delete proposals
+-- stewards can update proposals
+-- stewards can delete proposals
 create table proposals (
   -- The unique ID of the venue
   id uuid not null default uuid_generate_v1() primary key,
@@ -185,10 +174,10 @@ create policy "anyone can view proposals" on public.proposals
   for select to anon, authenticated using (true);
 
 create policy "admins can update proposals" on public.proposals
-  for update to anon, authenticated using (isAdmin());
+  for update to anon, authenticated using (isSteward());
 
 create policy "admins can delete proposals" on public.proposals
-  for delete to anon, authenticated using (isAdmin());
+  for delete to anon, authenticated using (isSteward());
 
 -- anyone can support proposals
 -- anyone can view supporters

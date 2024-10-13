@@ -7,12 +7,13 @@
 	import { getAuth } from '../../../Auth.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { addError, isError } from '../../../errors.svelte';
-	import { invalidate, invalidateAll } from '$app/navigation';
+	import { addError, hasError, isError } from '../../../errors.svelte';
+	import { goto, invalidate, invalidateAll } from '$app/navigation';
 	import { getDB } from '$lib/data/Database';
 	import Date from '$lib/components/Date.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
+	import Note from '$lib/components/Note.svelte';
 
 	let { data } = $props();
 
@@ -122,6 +123,7 @@
 										action={() => {
 											db.deleteSupport(supporter.id);
 											invalidateAll();
+											goto('/venues');
 										}}>{DeleteLabel}</Button
 									>
 								{/if}
@@ -144,6 +146,21 @@
 					</div>
 				{/each}
 			</Card>
+			{#if data.scholar?.steward}
+				<Card header="Admin">
+					<Button
+						tip="Delete this proposal"
+						warn
+						action={async () => {
+							if (!hasError(await db.deleteProposal(proposal.id))) {
+								invalidateAll();
+								goto('/venues');
+							}
+						}}>Delete proposal…</Button
+					>
+					<Note>This cannot be undone.</Note>
+				</Card>
+			{/if}
 		</Cards>
 	</Page>
 {:else}

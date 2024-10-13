@@ -34,7 +34,8 @@ export const Errors = {
 	UpdateCurrencyName: 'Unable to update the currency name',
 	UpdateCurrencyDescription: 'Unable to update the currency description',
 	EditSupport: 'Unable to edit your support',
-	RemoveSupport: 'Unable to remove your support'
+	RemoveSupport: 'Unable to remove your support',
+	DeleteProposal: 'Unable to delete the proposal'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -122,6 +123,9 @@ export default abstract class Database {
 		size: number,
 		message: string
 	): Promise<ProposalID | ErrorID>;
+
+	/** Delete a proposal venue */
+	abstract deleteProposal(proposal: ProposalID): Promise<ErrorID | undefined>;
 
 	/** Add support for a proposal */
 	abstract addSupporter(

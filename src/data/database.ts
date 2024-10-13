@@ -187,33 +187,33 @@ export type Database = {
       }
       scholars: {
         Row: {
-          administrator: boolean
           available: boolean
           email: string | null
           id: string
           name: string | null
           orcid: string | null
           status: string
+          steward: boolean
           when: string
         }
         Insert: {
-          administrator?: boolean
           available?: boolean
           email?: string | null
           id: string
           name?: string | null
           orcid?: string | null
           status?: string
+          steward?: boolean
           when?: string
         }
         Update: {
-          administrator?: boolean
           available?: boolean
           email?: string | null
           id?: string
           name?: string | null
           orcid?: string | null
           status?: string
+          steward?: boolean
           when?: string
         }
         Relationships: [
@@ -370,10 +370,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      isadmin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
       iseditor: {
         Args: {
           _venueid: string
@@ -385,6 +381,10 @@ export type Database = {
           _scholarid: string
           _currencyid: string
         }
+        Returns: boolean
+      }
+      issteward: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
     }

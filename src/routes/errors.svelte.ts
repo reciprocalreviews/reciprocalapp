@@ -7,6 +7,13 @@ export function addError(error: ErrorID) {
 	errors = [...errors, error];
 }
 
+export function hasError(error: ErrorID | undefined): boolean {
+	if (error) {
+		addError(error);
+		return true;
+	} else return false;
+}
+
 export function removeError(index: number) {
 	errors = [...errors.slice(0, index), ...errors.slice(index + 1)];
 }
