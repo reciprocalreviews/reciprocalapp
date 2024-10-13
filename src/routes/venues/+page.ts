@@ -1,10 +1,13 @@
-/** @type {import('./$types').PageLoad} */
-export async function load({ parent, params }) {
+import type { PageLoad } from './$types';
+
+export const load: PageLoad = async ({ parent }) => {
 	const { supabase } = await parent();
 
-	const { data, error } = await supabase.from('proposals').select();
+	const { data: proposals } = await supabase.from('proposals').select().is('venue', null);
+	const { data: venues } = await supabase.from('venues').select();
 
 	return {
-		proposals: data && error === null ? data : null
+		proposals,
+		venues
 	};
-}
+};

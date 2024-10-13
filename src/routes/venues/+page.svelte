@@ -1,16 +1,14 @@
 <script lang="ts">
 	import Link from '$lib/components/Link.svelte';
-	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../Auth.svelte';
 	import Page from '$lib/components/Page.svelte';
-	import type { ProposalRow } from '../../data/types';
 	import Feedback from '$lib/components/Feedback.svelte';
 
-	let { data }: { data: { proposals: ProposalRow[] | null } } = $props();
+	let { data } = $props();
 
 	let proposals = $derived(data.proposals);
+	let venues = $derived(data.venues);
 
-	const db = getDB();
 	const auth = getAuth();
 </script>
 
@@ -40,22 +38,26 @@
 			>
 		{/if}
 	{:else}
-		<Feedback error>We couldn't load the proposed venues.</Feedback>
+		<Feedback error>We couldn't load the venue proposals.</Feedback>
 	{/if}
 
-	<!-- {#await db.getSources()}
-		<Loading />
-	{:then sources}
-		<ul>
-			{#each sources.toSorted((a, b) => a.name.localeCompare(b.name)) as source}
-				<li>
-					<Link to="/source/{source.id}"
-						>{#if source.name.length === 0}<em>Unnamed</em>{:else}{source.name}{/if}</Link
-					>
-				</li>
-			{/each}
-		</ul>
-	{:catch}
-		<Feedback>We couldn't load the sources.</Feedback>
-	{/await} -->
+	<h2>Active venues</h2>
+
+	{#if venues}
+		{#if venues.length > 0}
+			<ul>
+				{#each venues.toSorted((a, b) => a.title.localeCompare(b.name)) as venue}
+					<li>
+						<Link to="/venue/{venue.id}"
+							>{#if venue.title.length === 0}<em>Unnamed</em>{:else}{venue.title}{/if}</Link
+						>
+					</li>
+				{/each}
+			</ul>
+		{:else}
+			<Feedback>There are no active venues.</Feedback>
+		{/if}
+	{:else}
+		<Feedback error>We couldn't load the venues.</Feedback>
+	{/if}
 </Page>
