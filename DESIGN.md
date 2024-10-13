@@ -28,7 +28,7 @@ There are several specific use cases that we want RR to support. Here we capture
 _As Sam, program co-chair of ACM SIGCSE TS, I want to be able to quickly solicit a large number of volunteer reviewers for this year's review cycle, so that I can ensure every paper submitted gets three reviews._
 
 - Sam logs in to RR and proposes a SIGCSE TS 2025 venue instance
-- The RR admins approve it
+- The RR stewards approve it
 - Sam configures the profile for the venue, defining six volunteer roles for three tracks and two different review phases, and defining ranked preferences of `preferred`, `if necessary`, and `no`.
 - Sam gets the URL of the volunteer page and sends an email through various social media platforms, inviting people to review
 - One reviewer receives the link, has an account, just indicates `preferred` for the experience report track, up to 4 papers total.
@@ -40,7 +40,7 @@ _As Sam, program co-chair of ACM SIGCSE TS, I want to be able to quickly solicit
 _As Dana, program chair of ACM PLDI, I want to send out invites to a curated set of expert reviewers to join the program committee and senior program committee, and quickly get information about who agrees, so that I can form the final program committee in preparation for reviewing season._
 
 - Dana logs into RR and proposes a PLDI 2025 venue instance.
-- The RR admins approve it
+- The RR stewards approve it
 - Dana adds a description to the venue and defines the two roles, programm committee member and senior program committee member, defining both as `invite only` roles, with `yes` and `no` commitments.
 - Dana populates the set of invitees into the venue for each role by submitting a list of email addresses
 - Dana sends invitation emails to everyone in each role in her mail client.
@@ -53,7 +53,7 @@ _As Dana, program chair of ACM PLDI, I want to send out invites to a curated set
 _As Derek, EiC of IEEE TSE, I want to curate a set of reviewers who are eager to review journal submissions and access information about their expertise, so that Associate Editors can select people to invite for review._
 
 - Derek logs into RR and proposes a TSE venue instance.
-- The RR admins approve it
+- The RR stewards approve it
 - Derek adds a description of the venue and sees the default reviewer role with `yes` and `no` commitments, and finds them suitable.
 - Amy updates the TSE website to point to the reviewer volunteer link and adjusts the email templates to include RR's email receiver.
 - Community member is looking for reviewing practice and finds the volunteer link, and agrees to volunteer for up to 1 paper at a time.
@@ -65,7 +65,7 @@ _As Derek, EiC of IEEE TSE, I want to curate a set of reviewers who are eager to
 _As Amy, EiC of ACM TOCE, I want to incentivize reviewers to volunteer by requiring reviewing prior to submitting papers for review, and streamline Associate Editors ability to identify people to review based on their expertise and need for tokens._
 
 - Amy logs into RR and proposes a TOCE venue instance.
-- The RR admins approve it
+- The RR stewards approve it
 - Amy adds a description of the venue and sees the default reviewer role with `yes` and `no` commitments, and finds them suitable.
 - Amy sets the compensation levels to 10 tokens for a review, 10 for an AE recommendation, and 1 for an EiC decision, as well as costs of 40 tokens per submission. She also sets the welcome token rate to 30, enabling newcomers to submit if they review just once.
 - Amy updates the ACM TOCE website to point to the reviewer volunteer link and to the compensation costs. She also sends an email to `sigcse-members` to solicit volunteers and points to the link
@@ -111,7 +111,9 @@ create table scholars (
   -- Whether the scholar is available to review
   available boolean not null default true,
   -- The scholar's explanation of their availabilty
-  status text not null default '':text
+  status text not null default '':text,
+  -- The scholar's steward status
+  steward boolean not null default false
 );
 ```
 
@@ -130,10 +132,10 @@ Here is a SQL sketch of all of the tables involved in this.
 
 ```sql
 
--- only platform admins can create venues
+-- only platform stewards can create venues
 -- anyone can view venues
--- only platform admins and editors can update venues
--- only platform admins and editors can delete venues
+-- only platform stewards and editors can update venues
+-- only platform stewards and editors can delete venues
 create table venues (
   -- The unique ID of the venue
   id uuid not null default uuid_generate_v1() primary key,
@@ -208,8 +210,8 @@ create table volunteers (
 
 -- anyone can propose venues
 -- anyone can view proposals
--- admins can update proposals
--- admins can delete proposals
+-- stewards can update proposals
+-- stewards can delete proposals
 create table proposals (
   -- The unique ID of the venue
   id uuid not null default uuid_generate_v1() primary key,
@@ -460,9 +462,9 @@ It should:
 
 - [ ] Show all `Venue`s, including active and proposed ones.
 
-- [ ] _`scholar`_: Propose a new `Venue` for the platform for review by the platform maintainers. `Venue` proposals should gather the name of the venue, the email addresses of the person or people leading editing of it, and the estimated size of the number of scholars in the community. `Venue`s with similar names are retrieved and shown to prevent duplicate venue creation. When the proposal is submitted, an email notification is sent to the email addresses listed and RR administrators. A `Venue` is created, but not active until approved.
+- [ ] _`scholar`_: Propose a new `Venue` for the platform for review by the platform maintainers. `Venue` proposals should gather the name of the venue, the email addresses of the person or people leading editing of it, and the estimated size of the number of scholars in the community. `Venue`s with similar names are retrieved and shown to prevent duplicate venue creation. When the proposal is submitted, an email notification is sent to the email addresses listed and RR stewards. A `Venue` is created, but not active until approved.
 
-- [ ] _`admin`_: Approve a `Venue` for use, indicating who should take the _editor_ and _minter_ roles for the platform, and creating tokens for all scholars in favor of the petition.
+- [ ] _`steward`_: Approve a `Venue` for use, indicating who should take the _editor_ and _minter_ roles for the platform, and creating tokens for all scholars in favor of the petition.
 
 ## Proposals `/venues/proposal`
 
@@ -477,10 +479,10 @@ The purpose of this page is to allow people to support proposals and check their
 - [x] View the details about the proposed venue.
 - [x] _`scholar`_ : Support a proposal.
 
-- [x] _`admin`_: Edit a proposal's venue name
-- [x] _`admin`_: Edit a proposal's venue census
-- [ ] _`admin`_: Edit a proposal's venue editors
-- [x] _`admin`_: Delete a proposal
+- [x] _`steward`_: Edit a proposal's venue name
+- [x] _`steward`_: Edit a proposal's venue census
+- [ ] _`steward`_: Edit a proposal's venue editors
+- [x] _`steward`_: Delete a proposal
 
 ## Venue `/venue/[id]`
 
