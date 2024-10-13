@@ -481,8 +481,9 @@ The purpose of this page is to allow people to support proposals and check their
 
 - [x] _`steward`_: Edit a proposal's venue name
 - [x] _`steward`_: Edit a proposal's venue census
-- [ ] _`steward`_: Edit a proposal's venue editors
+- [x] _`steward`_: Edit a proposal's venue editors
 - [x] _`steward`_: Delete a proposal
+- [ ] _`steward`_: Approve a proposal
 
 ## Venue `/venue/[id]`
 

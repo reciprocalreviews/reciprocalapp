@@ -6,12 +6,14 @@
 	import Status from '$lib/components/Status.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import validEmails from '$lib/components/validEmails';
-	import { getDB } from '$lib/data/Database';
+	import validURL from '$lib/components/validURL';
+	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../../Auth.svelte';
 	import { addError, isError } from '../../errors.svelte';
 
 	let venue = $state('');
 	let editors = $state('');
+	let url = $state('');
 	let size = $state('');
 	let message = $state('');
 	let proposing = $state(false);
@@ -47,6 +49,7 @@
 		const proposal = await db.proposeVenue(
 			uid,
 			venue,
+			url,
 			editors.split(',').map((editor) => editor.trim()),
 			parseInt(size),
 			message
@@ -78,9 +81,16 @@
 			<TextField
 				bind:text={editors}
 				label="editors"
-				placeholder="email, email, email"
+				placeholder="email1@email.com, email2@email.com"
 				active={!proposing}
 				valid={validEmails}
+			/>
+			<TextField
+				bind:text={url}
+				label="official venue URL"
+				placeholder="https://..."
+				active={!proposing}
+				valid={validURL}
 			/>
 			<TextField
 				bind:text={size}

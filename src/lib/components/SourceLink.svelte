@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getDB } from '$lib/data/Database';
+	import { getDB } from '$lib/data/CRUD';
 	import Link from './Link.svelte';
 
 	export let id: string;

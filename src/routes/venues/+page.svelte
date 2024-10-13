@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Link from '$lib/components/Link.svelte';
-	import { getDB } from '$lib/data/Database';
+	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../Auth.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import type { ProposalRow } from '../../data/types';

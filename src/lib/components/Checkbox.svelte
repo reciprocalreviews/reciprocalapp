@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ErrorID } from '$lib/data/Database';
+	import type { ErrorID } from '$lib/data/CRUD';
 	import type { Snippet } from 'svelte';
 	import { addError, handle } from '../../routes/errors.svelte';
 

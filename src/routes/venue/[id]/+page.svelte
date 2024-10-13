@@ -5,7 +5,7 @@
 	import Link from '$lib/components/Link.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
-	import { getDB } from '$lib/data/Database';
+	import { getDB } from '$lib/data/CRUD';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Slider from '$lib/components/Slider.svelte';

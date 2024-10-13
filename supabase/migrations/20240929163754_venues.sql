@@ -158,10 +158,14 @@ create table proposals (
   id uuid not null default uuid_generate_v1() primary key,
   -- The title of the venue
   title text not null default ''::text,
+  -- A link to the venue's official web page
+  url text not null default ''::text,  
   -- The email addresses of editors responsible for the venue
   editors text[] not null default '{}'::text[],
   -- The estimated size of the research community,
-  census integer not null
+  census integer not null,
+  -- If set, corresponds to the venue created upon approval.
+  venue uuid references venues(id) default null
 );
 
 alter table public.proposals

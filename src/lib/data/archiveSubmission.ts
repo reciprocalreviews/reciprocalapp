@@ -1,11 +1,11 @@
 import { type ScholarID } from '../../data/types';
 import type Submission from '$lib/types/Submission';
 import type { SubmissionID } from '$lib/types/Submission';
-import type Database from './Database';
+import type CRUD from './CRUD';
 
 /** Mark a submission as archived and create compensation transactions for reviewers, meta-reviewers, and editors. */
 export default async function closeSubmission(
-	db: Database,
+	db: CRUD,
 	submissionID: SubmissionID,
 	reviewers: ScholarID[]
 ): Promise<Submission> {

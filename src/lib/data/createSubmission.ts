@@ -2,11 +2,11 @@ import type { ScholarID } from '../../data/types';
 import type { SourceID } from '$lib/types/Source';
 import type Submission from '$lib/types/Submission';
 import type Transaction from '$lib/types/Transaction';
-import type Database from './Database';
+import type CRUD from './CRUD';
 
 /** Create a submission and associated transactions */
 export default async function createSubmission(
-	db: Database,
+	db: CRUD,
 	sourceID: SourceID,
 	editorID: ScholarID,
 	metaID: ScholarID,

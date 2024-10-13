@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getDB } from '$lib/data/Database';
+	import { getDB } from '$lib/data/CRUD';
 	import type Scholar from '$lib/data/Scholar.svelte';
 	import Link from './Link.svelte';
 

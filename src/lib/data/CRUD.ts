@@ -16,10 +16,10 @@ import type Scholar from './Scholar.svelte';
 export const DatabaseSymbol = Symbol('database');
 
 export function getDB() {
-	return getContext<Database>(DatabaseSymbol);
+	return getContext<CRUD>(DatabaseSymbol);
 }
 
-export function setDB(db: Database) {
+export function setDB(db: CRUD) {
 	setContext(DatabaseSymbol, db);
 }
 
@@ -33,18 +33,27 @@ export const Errors = {
 	EditProposalTitle: 'Unable to edit the proposal title',
 	EditProposalCensus: 'Unable to edit the proposal census',
 	EditProposalEditors: 'Unable to edit the proposal editors',
+	EditProposalURL: 'Unable to edit the proposal URL',
 	CreateSupporter: 'Unable to create a supporter',
 	UpdateCurrencyName: 'Unable to update the currency name',
 	UpdateCurrencyDescription: 'Unable to update the currency description',
 	EditSupport: 'Unable to edit your support',
 	RemoveSupport: 'Unable to remove your support',
-	DeleteProposal: 'Unable to delete the proposal'
+	DeleteProposal: 'Unable to delete the proposal',
+	ApproveProposalNotFound: "Unable to approve the proposal: couldn't find proposal.",
+	ApproveProposalNoScholars:
+		"Unable to approve the proposal: couldn't find any of the specified editors with accounts. As them to create accounts with the specified email addresses and then approve.",
+	ApproveProposalNoVenue: "Unable to approve the proposal: couldn't create the venue.",
+	ApproveProposalCannotUpdateVenue:
+		"Unable to approve the proposal: couldn't update the venue with the proposal.",
+	ApproveProposalNoCurrency:
+		"Unable to approve the proposal: couldn't create a currency for the venue."
 };
 
 export type ErrorID = keyof typeof Errors;
 
 /** This abstract class defines an interface for database access. It's useful for defining mocks as well as enables us to change databases if necessary. */
-export default abstract class Database {
+export default abstract class CRUD {
 	/** Insert a new submission in the database */
 	abstract createSubmission(submission: Submission): Promise<Submission>;
 
@@ -122,6 +131,7 @@ export default abstract class Database {
 	abstract proposeVenue(
 		scholar: ScholarID,
 		venue: string,
+		url: string,
 		editors: string[],
 		size: number,
 		message: string
@@ -130,9 +140,13 @@ export default abstract class Database {
 	abstract editProposalTitle(venue: ProposalID, title: string): Promise<ErrorID | undefined>;
 	abstract editProposalCensus(venue: ProposalID, census: number): Promise<ErrorID | undefined>;
 	abstract editProposalEditors(venue: ProposalID, editors: string[]): Promise<ErrorID | undefined>;
+	abstract editProposalURL(venue: ProposalID, url: string): Promise<ErrorID | undefined>;
 
 	/** Delete a proposal venue */
 	abstract deleteProposal(proposal: ProposalID): Promise<ErrorID | undefined>;
+
+	/** Approval a venue proposal */
+	abstract approveProposal(proposal: ProposalID): Promise<ErrorID | undefined>;
 
 	/** Add support for a proposal */
 	abstract addSupporter(

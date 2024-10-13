@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { getDB } from '$lib/data/Database';
+	import { getDB } from '$lib/data/CRUD';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';

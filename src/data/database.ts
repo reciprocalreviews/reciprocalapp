@@ -138,20 +138,34 @@ export type Database = {
           editors: string[]
           id: string
           title: string
+          url: string
+          venue: string | null
         }
         Insert: {
           census: number
           editors?: string[]
           id?: string
           title?: string
+          url?: string
+          venue?: string | null
         }
         Update: {
           census?: number
           editors?: string[]
           id?: string
           title?: string
+          url?: string
+          venue?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "proposals_venue_fkey"
+            columns: ["venue"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       roles: {
         Row: {

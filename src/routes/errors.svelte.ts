@@ -1,5 +1,5 @@
 import { invalidateAll } from '$app/navigation';
-import { Errors, type ErrorID } from '$lib/data/Database';
+import { Errors, type ErrorID } from '$lib/data/CRUD';
 
 // A global list of errors to display to the user, global to the application.
 let errors = $state<ErrorID[]>([]);

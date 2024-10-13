@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { getDB } from '$lib/data/Database';
+	import { getDB } from '$lib/data/CRUD';
 	import { default as ScholarView } from './Scholar.svelte';
 	import Page from '$lib/components/Page.svelte';
 

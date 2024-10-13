@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getDB } from '$lib/data/Database';
+	import { getDB } from '$lib/data/CRUD';
 	import Link from '$lib/components/Link.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';

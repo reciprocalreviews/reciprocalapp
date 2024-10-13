@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getDB } from '$lib/data/Database';
+	import { getDB } from '$lib/data/CRUD';
 	import type { TransactionID } from '$lib/types/Transaction';
 	import Feedback from './Feedback.svelte';
 	import Transaction from './Transaction.svelte';

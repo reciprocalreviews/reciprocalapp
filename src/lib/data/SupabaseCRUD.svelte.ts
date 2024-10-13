@@ -4,13 +4,21 @@ import type Submission from '$lib/types/Submission';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
 import type Transaction from '$lib/types/Transaction';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { CurrencyID, ProposalID, ScholarID, ScholarRow, SupporterID } from '../../data/types';
-import Database, { type ErrorID } from './Database';
+import type {
+	CurrencyID,
+	ProposalID,
+	ProposalRow,
+	ScholarID,
+	ScholarRow,
+	SupporterID
+} from '../../data/types';
+import CRUD, { type ErrorID } from './CRUD';
 import Scholar from './Scholar.svelte';
+import type { Database } from '$data/database';
 
-export default class SupabaseDB extends Database {
+export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
-	private readonly client: SupabaseClient;
+	private readonly client: SupabaseClient<Database>;
 
 	/** A set of reactive scholar record states, indexed by ID */
 	private readonly scholars: Map<ScholarID, Scholar> = new Map();
@@ -141,14 +149,15 @@ export default class SupabaseDB extends Database {
 	async proposeVenue(
 		scholarid: ScholarID,
 		title: string,
+		url: string,
 		editors: string[],
 		census: number,
 		message: string
-	): Promise<ErrorID | ProposalID> {
+	) {
 		// Make a proposal
 		const { data, error } = await this.client
 			.from('proposals')
-			.insert({ title, editors, census })
+			.insert({ title, url, editors, census })
 			.select()
 			.single();
 
@@ -166,28 +175,97 @@ export default class SupabaseDB extends Database {
 		return proposalid;
 	}
 
-	async editProposalTitle(venue: ProposalID, title: string): Promise<ErrorID | undefined> {
+	async editProposalTitle(venue: ProposalID, title: string) {
 		const { error } = await this.client.from('proposals').update({ title }).eq('id', venue);
 		if (error) return 'EditProposalTitle';
 		else return;
 	}
 
-	async editProposalCensus(venue: ProposalID, census: number): Promise<ErrorID | undefined> {
+	async editProposalCensus(venue: ProposalID, census: number) {
 		const { error } = await this.client.from('proposals').update({ census }).eq('id', venue);
 		if (error) return 'EditProposalCensus';
 		else return;
 	}
 
-	async editProposalEditors(venue: ProposalID, editors: string[]): Promise<ErrorID | undefined> {
+	async editProposalEditors(venue: ProposalID, editors: string[]) {
 		const { error } = await this.client.from('proposals').update({ editors }).eq('id', venue);
 		if (error) return 'EditProposalEditors';
 		else return;
 	}
 
-	async deleteProposal(proposal: ProposalID): Promise<ErrorID | undefined> {
+	async editProposalURL(venue: ProposalID, url: string) {
+		const { error } = await this.client.from('proposals').update({ url }).eq('id', venue);
+		if (error) return 'EditProposalURL';
+		else return;
+	}
+
+	async deleteProposal(proposal: ProposalID) {
 		const { error } = await this.client.from('proposals').delete().eq('id', proposal);
 		if (error) return 'DeleteProposal';
 		else return;
+	}
+
+	async approveProposal(proposal: ProposalID) {
+		// Get the latest proposal data
+		const { data, error: proposalError } = await this.client
+			.from('proposals')
+			.select()
+			.eq('id', proposal)
+			.single();
+
+		// Supabase isn't getting the type correctly from the query above :(
+		const proposalData = data as ProposalRow;
+
+		// Couldn't get proposal data? Return an error.
+		if (proposalData === null) return 'ApproveProposalNotFound';
+
+		// Find the scholars with the corresponding emails.
+		const { data: scholarsData } = await this.client
+			.from('scholars')
+			.select()
+			.in('email', proposalData.editors);
+
+		if (scholarsData === null) return 'ApproveProposalNoScholars';
+
+		// Build the editor scholar ID list from the editors found.
+		let editors: string[] = scholarsData.map((scholar) => scholar.id);
+
+		// Didn't find a editor?
+		if (editors.length === 0) return 'ApproveProposalNoScholars';
+
+		// Create a currency for the venue
+		const { data: currencyData } = await this.client
+			.from('currencies')
+			.insert({ name: proposalData.title, minters: editors })
+			.select()
+			.single();
+
+		if (currencyData === null) return 'ApproveProposalNoCurrency';
+
+		// Create default commitments for the venue
+
+		// Create the venue with the proposal's title, URL, and scholars.
+		const { data: venueData, error: venueError } = await this.client
+			.from('venues')
+			.insert({
+				title: proposalData.title,
+				url: proposalData.url,
+				editors,
+				welcome_amount: 40,
+				currency: currencyData.id
+			})
+			.select()
+			.single();
+
+		if (venueData === null) return 'ApproveProposalNoVenue';
+
+		const venue = venueData.id;
+
+		// Update the proposal to link to the venue.
+		const { error } = await this.client.from('proposals').update({ venue }).eq('id', proposal);
+		if (error) return 'ApproveProposalCannotUpdateVenue';
+
+		return;
 	}
 
 	async addSupporter(
@@ -206,28 +284,25 @@ export default class SupabaseDB extends Database {
 		}
 	}
 
-	async editSupport(support: SupporterID, message: string): Promise<ErrorID | undefined> {
+	async editSupport(support: SupporterID, message: string) {
 		const { error } = await this.client.from('supporters').update({ message }).eq('id', support);
 		if (error) return 'EditSupport';
 		else return;
 	}
 
-	async deleteSupport(support: SupporterID): Promise<ErrorID | undefined> {
+	async deleteSupport(support: SupporterID) {
 		const { error } = await this.client.from('supporters').delete().eq('id', support);
 		if (error) return 'RemoveSupport';
 		else return;
 	}
 
-	async updateCurrencyName(id: CurrencyID, name: string): Promise<ErrorID | undefined> {
+	async updateCurrencyName(id: CurrencyID, name: string) {
 		const { error } = await this.client.from('currencies').update({ name }).eq('id', id);
 		if (error) return 'UpdateCurrencyName';
 		else return;
 	}
 
-	async updateCurrencyDescription(
-		id: CurrencyID,
-		description: string
-	): Promise<ErrorID | undefined> {
+	async updateCurrencyDescription(id: CurrencyID, description: string) {
 		const { error } = await this.client.from('currencies').update({ description }).eq('id', id);
 		if (error) return 'UpdateCurrencyDescription';
 	}

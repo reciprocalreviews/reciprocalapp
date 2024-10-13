@@ -5,7 +5,7 @@
 	import Dots from './Dots.svelte';
 	import Note from './Note.svelte';
 	import { addError, handle } from '../../routes/errors.svelte';
-	import { type ErrorID } from '$lib/data/Database';
+	import { type ErrorID } from '$lib/data/CRUD';
 	import { ConfirmLabel, DeleteLabel, EditLabel } from './Labels';
 
 	type Props = {

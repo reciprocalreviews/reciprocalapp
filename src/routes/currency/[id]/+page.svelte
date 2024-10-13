@@ -1,7 +1,7 @@
 <script lang="ts">
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { getDB } from '$lib/data/Database';
+	import { getDB } from '$lib/data/CRUD';
 	import type { CurrencyRow } from '../../../data/types';
 	import { getAuth } from '../../Auth.svelte';
 	import Page from '$lib/components/Page.svelte';

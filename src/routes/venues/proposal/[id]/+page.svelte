@@ -9,12 +9,13 @@
 	import Button from '$lib/components/Button.svelte';
 	import { addError, handle, isError } from '../../../errors.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { getDB } from '$lib/data/Database';
+	import { getDB } from '$lib/data/CRUD';
 	import Date from '$lib/components/Date.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
 	import validEmails from '$lib/components/validEmails';
+	import validURL from '$lib/components/validURL';
 
 	let { data } = $props();
 
@@ -25,6 +26,9 @@
 	let message = $state('');
 
 	let proposal = $derived(data.proposal);
+	let approved = $derived(proposal.venue !== null);
+	let steward = $derived(data.scholar?.steward === true);
+
 	// Overriding type due to Supabase bug on inferring types for joins: https://github.com/supabase/postgrest-js/pull/558
 	let supporters = $derived(
 		data.supporters as
@@ -58,37 +62,61 @@
 </script>
 
 {#if proposal && supporters}
-	<Page title={proposal.title} subtitle="Proposal">
-		<p>
-			A community member has proposed this venue adopt Reciprocal Reviews. See below for information
-			about the proposal.
-		</p>
+	<Page title={proposal.title} subtitle={approved ? 'Approved' : 'Proposal'}>
+		{#if approved}
+			<p>This proposal was approved. See the <Link to="/venue/{proposal.venue}">venue</Link>.</p>
+		{:else}
+			<p>
+				A community member has proposed this venue adopt Reciprocal Reviews. See below for
+				information about the proposal.
+			</p>
+		{/if}
 		<Cards>
-			<Card header="Editors">
-				<p>
-					These are the editors the proposers indicated oversee the venue. If they aren't correct,
-					you may contact a <Link to="/about">steward</Link> to correct it.
-				</p>
-				<ul>
-					{#each proposal.editors as editor}
-						<li><Link to={`mailto:${editor}`}>{editor}</Link></li>
-					{/each}
-				</ul>
-			</Card>
-			<Card header="Census">
-				<p>
-					The reported estimated number of scholars in this community is <strong
-						>{proposal.census}</strong
-					>. We won't reach out to the editors above until there are at least 20% of the community
-					supporting this proposal.
-				</p>
+			{#if !approved}
+				<Card header="URL">
+					<p>
+						This is the official URL of the venue. If it's incorrect, you may contact a <Link
+							to="/about">steward</Link
+						> to correct it.
+					</p>
+					{#if steward}
+						<EditableText
+							text={proposal.url}
+							placeholder="https://"
+							change="Edit the URL"
+							save="Save the URL."
+							valid={validURL}
+							edit={(text) => db.editProposalURL(proposal.id, text)}
+						/>
+					{:else}
+						<Link to={proposal.url}>{proposal.url}</Link>
+					{/if}
+				</Card>
+				<Card header="Editors">
+					<p>
+						These are the editors the proposers indicated oversee the venue. If they aren't correct,
+						you may contact a <Link to="/about">steward</Link> to correct it.
+					</p>
+					<ul>
+						{#each proposal.editors as editor}
+							<li><Link to={`mailto:${editor}`}>{editor}</Link></li>
+						{/each}
+					</ul>
+				</Card>
+				<Card header="Census">
+					<p>
+						The reported estimated number of scholars in this community is <strong
+							>{proposal.census}</strong
+						>. We won't reach out to the editors above until there are at least 20% of the community
+						supporting this proposal.
+					</p>
 
-				<p>If this estimate is off, contact a <Link to="/about">steward</Link> to correct it.</p>
-			</Card>
+					<p>If this estimate is off, contact a <Link to="/about">steward</Link> to correct it.</p>
+				</Card>
+			{/if}
 			<Card header="Support">
-				<!-- Don't allow  -->
 				{#if uid !== null}
-					{#if !supporters.some((supporter) => supporter.scholarid.id === uid)}
+					{#if !approved && !supporters.some((supporter) => supporter.scholarid.id === uid)}
 						<form>
 							<TextField
 								bind:text={message}
@@ -101,7 +129,7 @@
 								>Add support</Button
 							>
 						</form>
-					{:else}
+					{:else if !approved}
 						<Feedback>You've expressed support. You can edit or delete your support below.</Feedback
 						>
 					{/if}
@@ -118,7 +146,7 @@
 								><Link to={`/scholar/${scholar.id}`}>{scholar.name}</Link><Date
 									time={supporter.created}
 								/>
-								{#if editable}
+								{#if !approved && editable}
 									<Button
 										tip="Delete support"
 										action={() => {
@@ -130,7 +158,7 @@
 								{/if}
 							</span>
 						</p>
-						{#if editable}
+						{#if !approved && editable}
 							<EditableText
 								text={supporter.message}
 								placeholder="Reasons for support."
@@ -147,7 +175,7 @@
 					</div>
 				{/each}
 			</Card>
-			{#if data.scholar?.steward}
+			{#if steward && !approved}
 				<Card header="Admin">
 					<EditableText
 						label="title"
@@ -189,6 +217,18 @@
 						}}>Delete proposal…</Button
 					>
 					<Note>This cannot be undone.</Note>
+
+					<Button
+						tip="Approve this proposal"
+						warn
+						action={async () => {
+							if (await handle(db.approveProposal(proposal.id))) goto('/venues');
+						}}>Approve proposal…</Button
+					>
+					<Note
+						>After approving a proposal, <strong>{proposal.editors.join(',')}</strong>
+						above will become the editors of the venue.</Note
+					>
 				</Card>
 			{/if}
 		</Cards>

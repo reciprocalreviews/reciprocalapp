@@ -46,7 +46,13 @@
 {:else}
 	<div class="row">
 		<button onclick={() => (confirming = false)}>{DeleteLabel}</button>
-		<button class:warn onclick={(event) => action(event)}>{@render children()}</button>
+		<button
+			class:warn
+			onclick={async (event) => {
+				await action(event);
+				confirming = false;
+			}}>{@render children()}</button
+		>
 	</div>
 {/if}
 

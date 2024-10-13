@@ -6,8 +6,8 @@
 	import { invalidate } from '$app/navigation';
 	import type { Session, SupabaseClient } from '@supabase/supabase-js';
 	import { createAuthContext, getAuth } from './Auth.svelte';
-	import { Errors, setDB, type ErrorID } from '$lib/data/Database';
-	import SupabaseDB from '$lib/data/SupabaseDatabase.svelte';
+	import { Errors, setDB, type ErrorID } from '$lib/data/CRUD';
+	import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
 	import { getErrors, removeError } from './errors.svelte';
 	import Button from '$lib/components/Button.svelte';
 
@@ -37,7 +37,7 @@
 	});
 
 	// Set client side database cache.
-	setDB(new SupabaseDB(data.supabase));
+	setDB(new SupabaseCRUD(data.supabase));
 </script>
 
 {#snippet ErrorBox(id: ErrorID, index: number)}

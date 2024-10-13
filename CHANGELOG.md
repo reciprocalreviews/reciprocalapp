@@ -9,7 +9,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 - Subtitles for pages, with more consistent display.
 - Edit and delete support for a venue proposal.
-- Stewards can edit and delete a venue proposal.
+- Stewards can edit, delete, and approve a venue proposal.
 
 ### Fixed
 
