@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ErrorID } from '$lib/data/Database';
 	import type { Snippet } from 'svelte';
-	import { addError } from '../../routes/errors.svelte';
+	import { addError, handle } from '../../routes/errors.svelte';
 
 	let {
 		on,
@@ -22,8 +22,7 @@
 		onclick={async () => {
 			on = !on;
 			if (change) {
-				const error = await change(on);
-				if (error) addError(error);
+				await handle(change(on));
 			}
 		}}
 	/>{@render children()}</label

@@ -4,7 +4,7 @@
 	import TextField from './TextField.svelte';
 	import Dots from './Dots.svelte';
 	import Note from './Note.svelte';
-	import { addError } from '../../routes/errors.svelte';
+	import { addError, handle } from '../../routes/errors.svelte';
 	import { type ErrorID } from '$lib/data/Database';
 	import { ConfirmLabel, DeleteLabel, EditLabel } from './Labels';
 
@@ -16,7 +16,7 @@
 		save: string;
 		inline?: boolean;
 		valid?: undefined | ((text: string) => boolean);
-		edit: (text: string) => Promise<ErrorID | undefined | boolean>;
+		edit: (text: string) => Promise<ErrorID | undefined>;
 		note?: string;
 	};
 
@@ -63,13 +63,11 @@
 
 	async function saveAndFocus() {
 		editing = undefined;
-		error = await edit(text);
-		if (typeof error === 'string') {
-			editing = true;
-			addError(error);
-		} else {
+		if (await handle(edit(text))) {
 			editing = false;
 			if (button) button.focus();
+		} else {
+			editing = true;
 		}
 	}
 </script>

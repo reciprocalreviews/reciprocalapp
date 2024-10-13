@@ -156,7 +156,7 @@
 						change="Edit the venue title"
 						save="Save your edits"
 						valid={(text) => text.length > 0}
-						edit={(text) => handle(db.editProposalTitle(proposal.id, text))}
+						edit={(text) => db.editProposalTitle(proposal.id, text)}
 					/>
 					<EditableText
 						label="editors"
@@ -166,11 +166,9 @@
 						save="Save the editors"
 						valid={validEmails}
 						edit={(text) =>
-							handle(
-								db.editProposalEditors(
-									proposal.id,
-									text.split(',').map((editor) => editor.trim())
-								)
+							db.editProposalEditors(
+								proposal.id,
+								text.split(',').map((editor) => editor.trim())
 							)}
 					/>
 					<EditableText
@@ -180,7 +178,7 @@
 						change="Edit the venue's census"
 						save="Save your edits"
 						valid={(text) => !isNaN(parseInt(text))}
-						edit={(text) => handle(db.editProposalCensus(proposal.id, parseInt(text)))}
+						edit={(text) => db.editProposalCensus(proposal.id, parseInt(text))}
 					/>
 
 					<Button

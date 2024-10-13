@@ -11,6 +11,7 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
+	import { handle } from '../../errors.svelte';
 
 	let { scholar }: { scholar: Scholar } = $props();
 
