@@ -35,6 +35,8 @@
 	let width = $state(0);
 	let height = $state(0);
 
+	let labelView = $state<HTMLLabelElement | undefined>(undefined);
+
 	$effect(() => {
 		width = measure?.clientWidth ?? 0;
 		height = inline ? (measure?.clientHeight ?? 0) : (view?.scrollHeight ?? 0);
@@ -44,9 +46,16 @@
 				height = inline ? (measure?.clientHeight ?? 0) : (view?.scrollHeight ?? 0);
 			});
 	});
+
+	function edit() {
+		if (done) {
+			done();
+			if (labelView) labelView.scrollLeft = 0;
+		}
+	}
 </script>
 
-<label>
+<label bind:this={labelView}>
 	{#if label}
 		<span class="label">{label}</span>
 	{/if}
@@ -61,7 +70,7 @@
 			class:invalid={!isValid}
 			{placeholder}
 			type={password ? 'password' : 'text'}
-			onkeydown={(event) => (event.key === 'Enter' && done ? done() : undefined)}
+			onkeydown={(event) => (event.key === 'Enter' && done ? edit() : undefined)}
 		/>
 	{:else}
 		<textarea
@@ -73,7 +82,7 @@
 			cols={size}
 			style:width={size ? undefined : 'auth'}
 			style:height={size ? undefined : height + 'px'}
-			onkeydown={(event) => (event.key === 'Enter' && event.metaKey && done ? done() : undefined)}
+			onkeydown={(event) => (event.key === 'Enter' && event.metaKey && done ? edit() : undefined)}
 		></textarea>
 	{/if}
 	<span class="ruler" bind:this={measure}
@@ -151,5 +160,6 @@
 	label {
 		width: 100%;
 		position: relative;
+		overflow: hidden;
 	}
 </style>

@@ -166,6 +166,24 @@ export default class SupabaseDB extends Database {
 		return proposalid;
 	}
 
+	async editProposalTitle(venue: ProposalID, title: string): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('proposals').update({ title }).eq('id', venue);
+		if (error) return 'EditProposalTitle';
+		else return;
+	}
+
+	async editProposalCensus(venue: ProposalID, census: number): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('proposals').update({ census }).eq('id', venue);
+		if (error) return 'EditProposalCensus';
+		else return;
+	}
+
+	async editProposalEditors(venue: ProposalID, editors: string[]): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('proposals').update({ editors }).eq('id', venue);
+		if (error) return 'EditProposalEditors';
+		else return;
+	}
+
 	async deleteProposal(proposal: ProposalID): Promise<ErrorID | undefined> {
 		const { error } = await this.client.from('proposals').delete().eq('id', proposal);
 		if (error) return 'DeleteProposal';

@@ -1,3 +1,4 @@
+import { invalidateAll } from '$app/navigation';
 import { Errors, type ErrorID } from '$lib/data/Database';
 
 // A global list of errors to display to the user, global to the application.
@@ -7,11 +8,15 @@ export function addError(error: ErrorID) {
 	errors = [...errors, error];
 }
 
-export function hasError(error: ErrorID | undefined): boolean {
-	if (error) {
-		addError(error);
+export async function handle(action: Promise<ErrorID | undefined>): Promise<boolean> {
+	const errorID = await action;
+	if (errorID) {
+		addError(errorID);
 		return true;
-	} else return false;
+	} else {
+		invalidateAll();
+		return false;
+	}
 }
 
 export function removeError(index: number) {

@@ -477,8 +477,9 @@ The purpose of this page is to allow people to support proposals and check their
 - [x] View the details about the proposed venue.
 - [x] _`scholar`_ : Support a proposal.
 
-- [ ] _`admin`_: Edit a proposal's venue name
-- [ ] _`admin`_: Delete a proposal's venue census
+- [x] _`admin`_: Edit a proposal's venue name
+- [x] _`admin`_: Edit a proposal's venue census
+- [ ] _`admin`_: Edit a proposal's venue editors
 - [x] _`admin`_: Delete a proposal
 
 ## Venue `/venue/[id]`

@@ -7,13 +7,14 @@
 	import { getAuth } from '../../../Auth.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { addError, hasError, isError } from '../../../errors.svelte';
-	import { goto, invalidate, invalidateAll } from '$app/navigation';
+	import { addError, handle, isError } from '../../../errors.svelte';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { getDB } from '$lib/data/Database';
 	import Date from '$lib/components/Date.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
+	import validEmails from '$lib/components/validEmails';
 
 	let { data } = $props();
 
@@ -148,14 +149,45 @@
 			</Card>
 			{#if data.scholar?.steward}
 				<Card header="Admin">
+					<EditableText
+						label="title"
+						text={proposal.title}
+						placeholder="Venue title"
+						change="Edit the venue title"
+						save="Save your edits"
+						valid={(text) => text.length > 0}
+						edit={(text) => handle(db.editProposalTitle(proposal.id, text))}
+					/>
+					<EditableText
+						label="editors"
+						text={proposal.editors.join(', ')}
+						placeholder="Venue editors"
+						change="Edit the venue editors"
+						save="Save the editors"
+						valid={validEmails}
+						edit={(text) =>
+							handle(
+								db.editProposalEditors(
+									proposal.id,
+									text.split(',').map((editor) => editor.trim())
+								)
+							)}
+					/>
+					<EditableText
+						label="census"
+						text={proposal.census}
+						placeholder="Venue census"
+						change="Edit the venue's census"
+						save="Save your edits"
+						valid={(text) => !isNaN(parseInt(text))}
+						edit={(text) => handle(db.editProposalCensus(proposal.id, parseInt(text)))}
+					/>
+
 					<Button
 						tip="Delete this proposal"
 						warn
 						action={async () => {
-							if (!hasError(await db.deleteProposal(proposal.id))) {
-								invalidateAll();
-								goto('/venues');
-							}
+							if (await handle(db.deleteProposal(proposal.id))) goto('/venues');
 						}}>Delete proposal…</Button
 					>
 					<Note>This cannot be undone.</Note>

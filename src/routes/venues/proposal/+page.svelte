@@ -5,6 +5,7 @@
 	import Page from '$lib/components/Page.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import TextField from '$lib/components/TextField.svelte';
+	import validEmails from '$lib/components/validEmails';
 	import { getDB } from '$lib/data/Database';
 	import { getAuth } from '../../Auth.svelte';
 	import { addError, isError } from '../../errors.svelte';
@@ -20,13 +21,6 @@
 
 	function validName(text: string) {
 		return text.length > 0;
-	}
-
-	function validEmails(text: string) {
-		return editors
-			.split(',')
-			.map((editor) => editor.trim())
-			.every((editor) => /.+@.+\..+/.test(editor));
 	}
 
 	function validSize(text: string) {

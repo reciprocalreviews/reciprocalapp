@@ -30,6 +30,9 @@ export const Errors = {
 	UpdateScholarEmail: 'Unable to update your email',
 	UpdateScholarAvailability: 'Unable to update your availability',
 	CreateProposal: 'Unable to create a venue proposal',
+	EditProposalTitle: 'Unable to edit the proposal title',
+	EditProposalCensus: 'Unable to edit the proposal census',
+	EditProposalEditors: 'Unable to edit the proposal editors',
 	CreateSupporter: 'Unable to create a supporter',
 	UpdateCurrencyName: 'Unable to update the currency name',
 	UpdateCurrencyDescription: 'Unable to update the currency description',
@@ -123,6 +126,10 @@ export default abstract class Database {
 		size: number,
 		message: string
 	): Promise<ProposalID | ErrorID>;
+
+	abstract editProposalTitle(venue: ProposalID, title: string): Promise<ErrorID | undefined>;
+	abstract editProposalCensus(venue: ProposalID, census: number): Promise<ErrorID | undefined>;
+	abstract editProposalEditors(venue: ProposalID, editors: string[]): Promise<ErrorID | undefined>;
 
 	/** Delete a proposal venue */
 	abstract deleteProposal(proposal: ProposalID): Promise<ErrorID | undefined>;

@@ -16,7 +16,7 @@
 		save: string;
 		inline?: boolean;
 		valid?: undefined | ((text: string) => boolean);
-		edit: (text: string) => Promise<ErrorID | undefined>;
+		edit: (text: string) => Promise<ErrorID | undefined | boolean>;
 		note?: string;
 	};
 
@@ -36,7 +36,7 @@
 
 	// Whether the text is being edited.
 	let editing = $state<boolean | undefined>(false);
-	let error = $state<ErrorID | undefined>(undefined);
+	let error = $state<ErrorID | undefined | boolean>(undefined);
 	let field = $state<HTMLInputElement | HTMLTextAreaElement | undefined>(undefined);
 	let button = $state<HTMLButtonElement | undefined>(undefined);
 
@@ -64,7 +64,7 @@
 	async function saveAndFocus() {
 		editing = undefined;
 		error = await edit(text);
-		if (error) {
+		if (typeof error === 'string') {
 			editing = true;
 			addError(error);
 		} else {
