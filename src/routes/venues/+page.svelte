@@ -25,16 +25,22 @@
 	{#if auth.isAuthenticated()}<Link to="/venues/proposal">Propose a new venue</Link>{/if}
 
 	<h2>Proposed venues</h2>
-	{#if proposals}
-		<ul>
-			{#each proposals.toSorted((a, b) => a.title.localeCompare(b.title)) as proposal}
-				<li>
-					<Link to="/venues/proposal/{proposal.id}"
-						>{#if proposal.title.length === 0}<em>Unnamed</em>{:else}{proposal.title}{/if}</Link
-					>
-				</li>
-			{/each}
-		</ul>
+	{#if proposals !== null}
+		{#if proposals.length > 0}
+			<ul>
+				{#each proposals.toSorted((a, b) => a.title.localeCompare(b.title)) as proposal}
+					<li>
+						<Link to="/venues/proposal/{proposal.id}"
+							>{#if proposal.title.length === 0}<em>Unnamed</em>{:else}{proposal.title}{/if}</Link
+						>
+					</li>
+				{/each}
+			</ul>
+		{:else}
+			<Feedback
+				>No venues have been proposed yet. {#if !auth.isAuthenticated()}Log in to propose one.{/if}</Feedback
+			>
+		{/if}
 	{:else}
 		<Feedback error>We couldn't load the proposed venues.</Feedback>
 	{/if}
