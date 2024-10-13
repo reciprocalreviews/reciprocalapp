@@ -13,7 +13,7 @@
 	.card {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing);
+		gap: calc(2 * var(--spacing));
 		padding: var(--spacing);
 		border-radius: var(--roundedness);
 		border: var(--border-color) solid var(--border-width);

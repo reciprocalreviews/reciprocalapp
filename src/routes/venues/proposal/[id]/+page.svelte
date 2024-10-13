@@ -80,29 +80,48 @@
 				<p>If this estimate is off, contact a <Link to="/about">steward</Link> to correct it.</p>
 			</Card>
 			<Card header="Support">
-				{#if uid !== null && !supporters.some((supporter) => supporter.scholarid.id === uid)}
-					<form>
-						<TextField
-							bind:text={message}
-							label="Why should the editors adopt Reciprocal Reviews?"
-							inline
-							placeholder="why"
-							valid={(text) => text.length > 0}
-						/>
-						<Button tip="Submit support" action={support} active={message.length > 0}
-							>Add support</Button
+				<!-- Don't allow  -->
+				{#if uid !== null}
+					{#if !supporters.some((supporter) => supporter.scholarid.id === uid)}
+						<form>
+							<TextField
+								bind:text={message}
+								label="Why should the editors adopt Reciprocal Reviews?"
+								inline
+								placeholder="why"
+								valid={(text) => text.length > 0}
+							/>
+							<Button tip="Submit support" action={support} active={message.length > 0}
+								>Add support</Button
+							>
+						</form>
+					{:else}
+						<Feedback
+							>You've already expressed support. You can edit or delete your support below.</Feedback
 						>
-					</form>
+					{/if}
+				{:else}
+					<Feedback>Log in to express support.</Feedback>
 				{/if}
 
 				{#each supporters.sort((a, b) => b.created.localeCompare(a.created)) as supporter}
-					<p class="support">
-						<span class="meta"
-							><Link to={`/scholar/${supporter.scholarid.id}`}>{supporter.scholarid.name}</Link
-							><Date time={supporter.created} /></span
-						>
-						{supporter.message}
-					</p>
+					<div class="support">
+						<p class="support">
+							<span class="meta"
+								><Link to={`/scholar/${supporter.scholarid.id}`}>{supporter.scholarid.name}</Link
+								><Date time={supporter.created} /></span
+							>
+						</p>
+						<p>
+							{supporter.message}
+						</p>
+						{#if supporter.scholarid.id === uid}
+							<span class="meta">
+								<Button tip="Edit support" action={() => {}}>Edit</Button>
+								<Button tip="Delete support" action={() => {}}>Delete</Button>
+							</span>
+						{/if}
+					</div>
 				{/each}
 			</Card>
 		</Cards>

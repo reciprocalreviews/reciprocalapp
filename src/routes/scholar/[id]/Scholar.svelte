@@ -6,7 +6,6 @@
 	import type Transaction from '$lib/types/Transaction';
 	import { getAuth } from '../../Auth.svelte';
 	import Todo from '$lib/components/Todo.svelte';
-	import Name from './Name.svelte';
 	import type Scholar from '$lib/data/Scholar.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
@@ -28,18 +27,26 @@
 	// 		scholarTransactions = transactions;
 	// 	});
 	// });
+
+	async function update(text: string) {
+		return await db.updateScholarName(scholar.getID(), text);
+	}
 </script>
 
-<Name {editable} {scholar} />
 <Cards>
 	<Card header="identification">
-		<p>
-			{#if editable}
-				Update your <Link to="https://orcid.org/{scholar.getORCID()}">ORCID Profile</Link> offsite.
-			{:else}
-				See this scholar's <Link to="https://orcid.org/{scholar.getORCID()}">ORCID Profile</Link>.
-			{/if}
-		</p>
+		Joined {new Date(scholar.getJoined()).toLocaleDateString()}
+		{#if editable}
+			<EditableText
+				text={scholar.getName() ?? ''}
+				placeholder="name"
+				label="name"
+				change="Change name"
+				save="Save name"
+				empty="Anonymous"
+				edit={(text) => db.updateScholarName(scholar.getID(), text)}
+			/>
+		{/if}
 
 		{#if editable}<EditableText
 				text={scholar.getEmail() ?? ''}
@@ -52,6 +59,14 @@
 				valid={(text) => /.+@.+\..+/.test(text)}
 				edit={(text) => db.updateScholarEmail(scholar.getID(), text)}
 			/>{:else}{scholar.getEmail()}{/if}
+
+		<p>
+			{#if editable}
+				Update your <Link to="https://orcid.org/{scholar.getORCID()}">ORCID Profile</Link> offsite.
+			{:else}
+				See this scholar's <Link to="https://orcid.org/{scholar.getORCID()}">ORCID Profile</Link>.
+			{/if}
+		</p>
 	</Card>
 
 	<Card header="availability">

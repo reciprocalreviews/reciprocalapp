@@ -14,7 +14,7 @@
 </script>
 
 {#if state}
-	<Page title={`Scholar - ${state.getName() ?? 'anonymous'}`}>
+	<Page title={state.getName() ?? 'anonymous'} subtitle="Scholar">
 		<ScholarView scholar={state} />
 	</Page>
 {:else}

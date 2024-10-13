@@ -6,6 +6,7 @@
 	import Note from './Note.svelte';
 	import { addError } from '../../routes/errors.svelte';
 	import { type ErrorID } from '$lib/data/Database';
+	import { ConfirmLabel, DeleteLabel, EditLabel } from './Labels';
 
 	type Props = {
 		text: string;
@@ -93,14 +94,12 @@
 			tip={editing ? save : change}
 			type="submit"
 			action={(event) => (editing ? saveEdit(event) : startEditing(event))}
-			>{#if editing}{invalid ? '𐄂' : '✓'}{:else if editing === undefined}<Dots
-				/>{:else}✎{/if}</Button
+			>{#if editing}{invalid ? DeleteLabel : ConfirmLabel}{:else if editing === undefined}<Dots
+				/>{:else}{EditLabel}{/if}</Button
 		>
 	</div>
 	{#if note}
-		<div class="note">
-			<Note>{note}</Note>
-		</div>
+		<Note>{note}</Note>
 	{/if}
 </div>
 
@@ -120,9 +119,5 @@
 
 	.box.inline {
 		align-items: center;
-	}
-
-	.note {
-		margin-inline-start: var(--spacing);
 	}
 </style>
