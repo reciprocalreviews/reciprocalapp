@@ -1,5 +1,6 @@
-/** @type {import('./$types').PageLoad} */
-export async function load({ parent, params }) {
+import type { PageLoad } from './$types.js';
+
+export const load: PageLoad = async ({ parent, params }) => {
 	const { supabase } = await parent();
 
 	const { data: proposal, error: proposalError } = await supabase
@@ -9,10 +10,11 @@ export async function load({ parent, params }) {
 		.single();
 	const { data: supporters, error: supportersError } = await supabase
 		.from('supporters')
-		.select('scholarid (id, name), message, created')
+		.select('id, scholarid(id, name), message, created')
 		.eq('proposalid', params.id);
+
 	return {
 		proposal: proposal && proposalError === null ? proposal : null,
 		supporters: supporters && supportersError === null ? supporters : null
 	};
-}
+};

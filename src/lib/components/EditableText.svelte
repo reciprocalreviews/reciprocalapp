@@ -12,7 +12,6 @@
 		text: string;
 		label?: string | undefined;
 		placeholder: string;
-		empty: string;
 		change: string;
 		save: string;
 		inline?: boolean;
@@ -25,7 +24,6 @@
 		text,
 		label,
 		placeholder,
-		empty,
 		save,
 		change,
 		edit,

@@ -1,6 +1,6 @@
 create table public.scholars (
   -- The unique auth ID for scholars, corresponding to an auth record on the auth table in Supabase.
-  id uuid not null primary key references auth.users  on delete cascade,
+  id uuid not null primary key references auth.users on delete cascade,
   -- The scholar's ORCID, a 16-digit number with dashes conforming to the ISO International Standard Name Identifier (ISNI) format, e.g. 0000-0001-2345-6789. 
   orcid text default null,
   -- The scholar's public name

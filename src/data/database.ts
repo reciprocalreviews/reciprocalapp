@@ -228,24 +228,34 @@ export type Database = {
       }
       supporters: {
         Row: {
+          created: string
           id: string
           message: string
           proposalid: string
           scholarid: string
         }
         Insert: {
+          created?: string
           id?: string
           message?: string
           proposalid: string
           scholarid: string
         }
         Update: {
+          created?: string
           id?: string
           message?: string
           proposalid?: string
           scholarid?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "supporters_proposalid_fkey"
+            columns: ["proposalid"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "supporters_scholarid_fkey"
             columns: ["scholarid"]

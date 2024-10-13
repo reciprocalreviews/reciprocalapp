@@ -4,7 +4,7 @@ import type Submission from '$lib/types/Submission';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
 import type Transaction from '$lib/types/Transaction';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { CurrencyID, ProposalID, ScholarID, ScholarRow } from '../../data/types';
+import type { CurrencyID, ProposalID, ScholarID, ScholarRow, SupporterID } from '../../data/types';
 import Database, { type ErrorID } from './Database';
 import Scholar from './Scholar.svelte';
 
@@ -180,6 +180,18 @@ export default class SupabaseDB extends Database {
 			console.error(error);
 			return 'CreateSupporter';
 		}
+	}
+
+	async editSupport(support: SupporterID, message: string): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('supporters').update({ message }).eq('id', support);
+		if (error) return 'EditSupport';
+		else return;
+	}
+
+	async deleteSupport(support: SupporterID): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('supporters').delete().eq('id', support);
+		if (error) return 'RemoveSupport';
+		else return;
 	}
 
 	async updateCurrencyName(id: CurrencyID, name: string): Promise<ErrorID | undefined> {

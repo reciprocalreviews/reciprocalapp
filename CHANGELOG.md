@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Added
 
 - Subtitles for pages, with more consistent display.
+- Edit and delete support for a venue proposal.
 
 ### Fixed
 

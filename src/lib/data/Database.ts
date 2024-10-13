@@ -2,7 +2,8 @@ import {
 	type CurrencyID,
 	type ProposalID,
 	type ScholarID,
-	type ScholarRow
+	type ScholarRow,
+	type SupporterID
 } from '../../data/types';
 import type { SourceID } from '$lib/types/Source';
 import type Source from '$lib/types/Source';
@@ -31,7 +32,9 @@ export const Errors = {
 	CreateProposal: 'Unable to create a venue proposal',
 	CreateSupporter: 'Unable to create a supporter',
 	UpdateCurrencyName: 'Unable to update the currency name',
-	UpdateCurrencyDescription: 'Unable to update the currency description'
+	UpdateCurrencyDescription: 'Unable to update the currency description',
+	EditSupport: 'Unable to edit your support',
+	RemoveSupport: 'Unable to remove your support'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -126,6 +129,9 @@ export default abstract class Database {
 		proposal: ProposalID,
 		message: string
 	): Promise<ErrorID | undefined>;
+
+	abstract editSupport(support: SupporterID, message: string): Promise<ErrorID | undefined>;
+	abstract deleteSupport(support: SupporterID): Promise<ErrorID | undefined>;
 
 	abstract updateCurrencyName(id: CurrencyID, name: string): Promise<ErrorID | undefined>;
 	abstract updateCurrencyDescription(

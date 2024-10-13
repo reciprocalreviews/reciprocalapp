@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { ProposalRow, ScholarRow, SupporterRow } from '$data/types';
 	import Page from '$lib/components/Page.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Cards from '$lib/components/Cards.svelte';
@@ -9,21 +8,13 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { addError, isError } from '../../../errors.svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidate, invalidateAll } from '$app/navigation';
 	import { getDB } from '$lib/data/Database';
 	import Date from '$lib/components/Date.svelte';
+	import EditableText from '$lib/components/EditableText.svelte';
+	import { DeleteLabel } from '$lib/components/Labels';
 
-	let {
-		data
-	}: {
-		data: {
-			proposal: ProposalRow | null;
-			supporters:
-				| { scholarid: { id: string; name: string[] }; message: string; created: string }[]
-				| null;
-		};
-		scholars: ScholarRow[] | null;
-	} = $props();
+	let { data } = $props();
 
 	const db = getDB();
 	const auth = getAuth();
@@ -32,7 +23,20 @@
 	let message = $state('');
 
 	let proposal = $derived(data.proposal);
-	let supporters = $derived(data.supporters);
+	// Overriding type due to Supabase bug on inferring types for joins: https://github.com/supabase/postgrest-js/pull/558
+	let supporters = $derived(
+		data.supporters as
+			| {
+					id: any;
+					scholarid: {
+						id: any;
+						name: any;
+					};
+					message: any;
+					created: any;
+			  }[]
+			| null
+	);
 
 	let submitting = $state(false);
 	async function support() {
@@ -86,9 +90,9 @@
 						<form>
 							<TextField
 								bind:text={message}
-								label="Why should the editors adopt Reciprocal Reviews?"
+								label="support"
 								inline
-								placeholder="why"
+								placeholder="Why should the editors adopt Reciprocal Reviews?"
 								valid={(text) => text.length > 0}
 							/>
 							<Button tip="Submit support" action={support} active={message.length > 0}
@@ -96,8 +100,7 @@
 							>
 						</form>
 					{:else}
-						<Feedback
-							>You've already expressed support. You can edit or delete your support below.</Feedback
+						<Feedback>You've expressed support. You can edit or delete your support below.</Feedback
 						>
 					{/if}
 				{:else}
@@ -105,21 +108,38 @@
 				{/if}
 
 				{#each supporters.sort((a, b) => b.created.localeCompare(a.created)) as supporter}
+					{@const scholar = supporter.scholarid}
+					{@const editable = scholar.id === uid}
 					<div class="support">
 						<p class="support">
 							<span class="meta"
-								><Link to={`/scholar/${supporter.scholarid.id}`}>{supporter.scholarid.name}</Link
-								><Date time={supporter.created} /></span
-							>
-						</p>
-						<p>
-							{supporter.message}
-						</p>
-						{#if supporter.scholarid.id === uid}
-							<span class="meta">
-								<Button tip="Edit support" action={() => {}}>Edit</Button>
-								<Button tip="Delete support" action={() => {}}>Delete</Button>
+								><Link to={`/scholar/${scholar.id}`}>{scholar.name}</Link><Date
+									time={supporter.created}
+								/>
+								{#if editable}
+									<Button
+										tip="Delete support"
+										action={() => {
+											db.deleteSupport(supporter.id);
+											invalidateAll();
+										}}>{DeleteLabel}</Button
+									>
+								{/if}
 							</span>
+						</p>
+						{#if editable}
+							<EditableText
+								text={supporter.message}
+								placeholder="Reasons for support."
+								change="Edit your support"
+								save="Save your edits."
+								valid={(text) => text.length > 0}
+								edit={(text) => db.editSupport(supporter.id, text)}
+							/>
+						{:else}
+							<p>
+								{supporter.message}
+							</p>
 						{/if}
 					</div>
 				{/each}
@@ -135,9 +155,10 @@
 	.meta {
 		display: flex;
 		flex-direction: row;
-		align-items: baseline;
+		align-items: center;
 		gap: var(--spacing);
 	}
+
 	.support {
 		display: flex;
 		flex-direction: column;
