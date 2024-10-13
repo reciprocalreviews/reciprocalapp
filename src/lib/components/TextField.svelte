@@ -61,7 +61,7 @@
 			class:invalid={!isValid}
 			{placeholder}
 			type={password ? 'password' : 'text'}
-			onkeydown={(event) => (event.key === 'Enter' && event.metaKey && done ? done() : undefined)}
+			onkeydown={(event) => (event.key === 'Enter' && done ? done() : undefined)}
 		/>
 	{:else}
 		<textarea
