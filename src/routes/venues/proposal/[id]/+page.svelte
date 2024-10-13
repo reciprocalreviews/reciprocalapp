@@ -52,8 +52,7 @@
 </script>
 
 {#if proposal && supporters}
-	<Page title={`Proposal - ${proposal.title}`}>
-		<h1>{proposal.title}</h1>
+	<Page title={proposal.title} subtitle="Proposal">
 		<p>
 			A community member has proposed this venue adopt Reciprocal Reviews. See below for information
 			about the proposal.

@@ -14,9 +14,7 @@
 	const auth = getAuth();
 </script>
 
-<Page title="Venues">
-	<h1>Venues</h1>
-
+<Page title="Venues" subtitle={undefined}>
 	<p>
 		These are journals and conferences using Reciprocal Reviews to track and incentivize peer
 		review. Choose one to see it's policies or volunteer to review for it, or propose a new one.

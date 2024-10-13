@@ -68,8 +68,6 @@
 </script>
 
 <Page title="Propose a venue">
-	<h1>Propose a venue</h1>
-
 	<p>
 		Venues are currently reviewed and approved by the <Link to="/about#managers">stewards</Link>, to
 		ensure that only official editors and steering committees are creating venues.

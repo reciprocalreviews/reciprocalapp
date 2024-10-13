@@ -10,10 +10,8 @@
 	<title>Reciprocal Reviews</title>
 </svelte:head>
 
-<Page title="Reciprocal Reviews">
-	<h1>Reciprocal Reviews</h1>
+<Page title="Reciprocal Reviews" subtitle="Make peer review count.">
 	{#if dev}
-		<Lead>Make peer review count.</Lead>
 		<p>
 			Academia incentivizes publishing over peer review. That means too many submissions and not
 			enough reviews, or reviews that are late and low quality.
