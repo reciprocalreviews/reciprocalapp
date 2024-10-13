@@ -12,10 +12,10 @@ export async function handle(action: Promise<ErrorID | undefined>): Promise<bool
 	const errorID = await action;
 	if (errorID) {
 		addError(errorID);
-		return true;
+		return false;
 	} else {
 		invalidateAll();
-		return false;
+		return true;
 	}
 }
 
