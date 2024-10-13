@@ -10,7 +10,8 @@ import type {
 	ProposalRow,
 	ScholarID,
 	ScholarRow,
-	SupporterID
+	SupporterID,
+	VenueID
 } from '../../data/types';
 import CRUD, { type ErrorID } from './CRUD';
 import Scholar from './Scholar.svelte';
@@ -305,5 +306,50 @@ export default class SupabaseCRUD extends CRUD {
 	async updateCurrencyDescription(id: CurrencyID, description: string) {
 		const { error } = await this.client.from('currencies').update({ description }).eq('id', id);
 		if (error) return 'UpdateCurrencyDescription';
+	}
+
+	async editVenueDescription(id: VenueID, description: string) {
+		const { error } = await this.client.from('venues').update({ description }).eq('id', id);
+		if (error) return 'EditVenueDescription';
+		else return;
+	}
+
+	async editVenueEditors(id: VenueID, editors: string[]) {
+		const { error } = await this.client
+			.from('venues')
+			.update({ editors: Array.from(new Set(editors)) })
+			.eq('id', id);
+		if (error) return 'EditVenueEditors';
+		else return;
+	}
+
+	async addVenueEditor(id: VenueID, emailOrORCID: string) {
+		const { data: venue } = await this.client.from('venues').select().eq('id', id).single();
+
+		if (venue === null) return 'EditVenueAddEditorVenueNotFound';
+
+		const { data: scholar } = await this.client
+			.from('scholars')
+			.select('id')
+			.or(`orcid.eq.${emailOrORCID},email.eq.${emailOrORCID}`)
+			.single();
+
+		if (scholar === null) return 'EditVenueAddEditorScholarNotFound';
+
+		if (venue.editors.includes(scholar.id)) return 'EditVenueAddEditorAlreadyEditor';
+
+		return this.editVenueEditors(id, Array.from(new Set([...venue.editors, scholar.id])));
+	}
+
+	async editVenueTitle(id: VenueID, title: string) {
+		const { error } = await this.client.from('venues').update({ title }).eq('id', id);
+		if (error) return 'EditVenueTitle';
+		else return;
+	}
+
+	async editVenueURL(id: VenueID, url: string) {
+		const { error } = await this.client.from('venues').update({ url }).eq('id', id);
+		if (error) return 'EditVenueTitle';
+		else return;
 	}
 }

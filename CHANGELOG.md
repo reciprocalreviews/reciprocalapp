@@ -11,6 +11,8 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Edit and delete support for a venue proposal.
 - Stewards can edit, delete, and approve a venue proposal.
 - List active venues.
+- Display venue title, description, and link.
+- Edit venue editors, title, and URL.
 
 ### Fixed
 

@@ -3,7 +3,8 @@ import {
 	type ProposalID,
 	type ScholarID,
 	type ScholarRow,
-	type SupporterID
+	type SupporterID,
+	type VenueID
 } from '../../data/types';
 import type { SourceID } from '$lib/types/Source';
 import type Source from '$lib/types/Source';
@@ -47,7 +48,14 @@ export const Errors = {
 	ApproveProposalCannotUpdateVenue:
 		"Unable to approve the proposal: couldn't update the venue with the proposal.",
 	ApproveProposalNoCurrency:
-		"Unable to approve the proposal: couldn't create a currency for the venue."
+		"Unable to approve the proposal: couldn't create a currency for the venue.",
+	EditVenueDescription: 'Unable to edit the venue description',
+	EditVenueEditors: 'Unable to edit the venue editors',
+	EditVenueAddEditorVenueNotFound: 'Unable to find venue',
+	EditVenueAddEditorScholarNotFound: 'Unable to find scholar by this email or ORCID',
+	EditVenueAddEditorAlreadyEditor: 'Scholar is already an editor',
+	EditVenueTitle: 'Unable to edit the venue title',
+	EditVenueURL: 'Unable to edit the venue URL'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -163,4 +171,10 @@ export default abstract class CRUD {
 		id: CurrencyID,
 		description: string
 	): Promise<ErrorID | undefined>;
+
+	abstract editVenueDescription(id: VenueID, description: string): Promise<ErrorID | undefined>;
+	abstract editVenueEditors(id: VenueID, editors: string[]): Promise<ErrorID | undefined>;
+	abstract addVenueEditor(id: VenueID, emailOrORCID: string): Promise<ErrorID | undefined>;
+	abstract editVenueTitle(id: VenueID, title: string): Promise<ErrorID | undefined>;
+	abstract editVenueURL(id: VenueID, url: string): Promise<ErrorID | undefined>;
 }

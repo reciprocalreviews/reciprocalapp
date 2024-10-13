@@ -16,6 +16,7 @@
 	import Note from '$lib/components/Note.svelte';
 	import validEmails from '$lib/components/validEmails';
 	import validURL from '$lib/components/validURL';
+	import validName from '$lib/components/validName';
 
 	let { data } = $props();
 
@@ -26,7 +27,7 @@
 	let message = $state('');
 
 	let proposal = $derived(data.proposal);
-	let approved = $derived(proposal.venue !== null);
+	let approved = $derived(proposal && proposal.venue !== null);
 	let steward = $derived(data.scholar?.steward === true);
 
 	// Overriding type due to Supabase bug on inferring types for joins: https://github.com/supabase/postgrest-js/pull/558
@@ -81,10 +82,9 @@
 					</p>
 					{#if steward}
 						<EditableText
+							label="URL"
 							text={proposal.url}
 							placeholder="https://"
-							change="Edit the URL"
-							save="Save the URL."
 							valid={validURL}
 							edit={(text) => db.editProposalURL(proposal.id, text)}
 						/>
@@ -123,7 +123,7 @@
 								label="support"
 								inline
 								placeholder="Why should the editors adopt Reciprocal Reviews?"
-								valid={(text) => text.length > 0}
+								valid={validName}
 							/>
 							<Button tip="Submit support" action={support} active={message.length > 0}
 								>Add support</Button
@@ -162,9 +162,7 @@
 							<EditableText
 								text={supporter.message}
 								placeholder="Reasons for support."
-								change="Edit your support"
-								save="Save your edits."
-								valid={(text) => text.length > 0}
+								valid={validName}
 								edit={(text) => db.editSupport(supporter.id, text)}
 							/>
 						{:else}
@@ -181,17 +179,13 @@
 						label="title"
 						text={proposal.title}
 						placeholder="Venue title"
-						change="Edit the venue title"
-						save="Save your edits"
-						valid={(text) => text.length > 0}
+						valid={validName}
 						edit={(text) => db.editProposalTitle(proposal.id, text)}
 					/>
 					<EditableText
 						label="editors"
 						text={proposal.editors.join(', ')}
 						placeholder="Venue editors"
-						change="Edit the venue editors"
-						save="Save the editors"
 						valid={validEmails}
 						edit={(text) =>
 							db.editProposalEditors(
@@ -201,10 +195,8 @@
 					/>
 					<EditableText
 						label="census"
-						text={proposal.census}
+						text={'' + proposal.census}
 						placeholder="Venue census"
-						change="Edit the venue's census"
-						save="Save your edits"
 						valid={(text) => !isNaN(parseInt(text))}
 						edit={(text) => db.editProposalCensus(proposal.id, parseInt(text))}
 					/>

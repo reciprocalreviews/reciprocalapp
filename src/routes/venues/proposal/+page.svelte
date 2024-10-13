@@ -6,6 +6,7 @@
 	import Status from '$lib/components/Status.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import validEmails from '$lib/components/validEmails';
+	import validName from '$lib/components/validName';
 	import validURL from '$lib/components/validURL';
 	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../../Auth.svelte';
@@ -20,10 +21,6 @@
 
 	const db = getDB();
 	const auth = getAuth();
-
-	function validName(text: string) {
-		return text.length > 0;
-	}
 
 	function validSize(text: string) {
 		return parseInt(text) > 0;
@@ -61,6 +58,7 @@
 		} else {
 			goto(`/venues/proposal/${proposal}`);
 		}
+		return;
 	}
 </script>
 

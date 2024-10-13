@@ -14,6 +14,7 @@
 	import createSubmission from '$lib/data/createSubmission';
 	import { ORCIDRegex } from '../../../../data/ORCID';
 	import { getAuth } from '../../../Auth.svelte';
+	import validName from '$lib/components/validName';
 
 	const db = getDB();
 	const auth = getAuth();
@@ -28,10 +29,6 @@
 	let externalID = $state('');
 	let metaID = $state('');
 	let charges = $state('');
-
-	function validTitle(title: string) {
-		return title.length > 0;
-	}
 
 	function validExternalID(id: string) {
 		return id.length > 0;
@@ -71,7 +68,7 @@
 		cost: number
 	) {
 		return (
-			validTitle(title) &&
+			validName(title) &&
 			validExternalID(externalID) &&
 			validMeta(metaID) &&
 			validCharges(charges, cost)
@@ -116,7 +113,7 @@
 					size={40}
 					placeholder="Submission Title"
 					bind:text={title}
-					valid={validTitle}
+					valid={validName}
 				/>
 				<Note>For display on this site.</Note>
 				<TextField

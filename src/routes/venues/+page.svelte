@@ -46,7 +46,7 @@
 	{#if venues}
 		{#if venues.length > 0}
 			<ul>
-				{#each venues.toSorted((a, b) => a.title.localeCompare(b.name)) as venue}
+				{#each venues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue}
 					<li>
 						<Link to="/venue/{venue.id}"
 							>{#if venue.title.length === 0}<em>Unnamed</em>{:else}{venue.title}{/if}</Link

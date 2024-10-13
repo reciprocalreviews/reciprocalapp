@@ -9,37 +9,25 @@
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Slider from '$lib/components/Slider.svelte';
-	import type Source from '$lib/types/Source';
 	import { ORCIDRegex } from '../../../data/ORCID';
-	import Form from '$lib/components/Form.svelte';
-	import EditorsOnly from '$lib/components/EditorsOnly.svelte';
-	import Tag from '$lib/components/Tag.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import type Expertise from '$lib/types/Expertise';
-	import Table from '$lib/components/Table.svelte';
-	import Status from '$lib/components/Status.svelte';
 	import { getAuth } from '../../Auth.svelte';
-	import Todo from '$lib/components/Todo.svelte';
-	import type Scholar from '$lib/data/Scholar.svelte';
+	import Page from '$lib/components/Page.svelte';
+	import EditableText from '$lib/components/EditableText.svelte';
+	import Cards from '$lib/components/Cards.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import Note from '$lib/components/Note.svelte';
+	import { DeleteLabel } from '$lib/components/Labels';
+	import validName from '$lib/components/validName';
+	import validURL from '$lib/components/validURL';
+	import validEmail from '$lib/components/validEmail';
+	import { handle } from '../../errors.svelte';
+
+	let { data } = $props();
+	const { venue, scholar } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
-	let uid = $derived(auth.getUserID());
-
-	/** The promise we're currently waiting for */
-	let sourceID = $derived($page.params.id);
-	let sourcePromise = $state(db.getSource($page.params.id));
-	let scholarPromise: Promise<Scholar | null> | null = $state(null);
-
-	$effect(() => {
-		if (uid) scholarPromise = db.getScholar(uid);
-	});
-
-	/** State for name edits */
-	let editingNames = $state(false);
-	let name: string = $state('');
-	let short: string = $state('');
-	let link: string = $state('');
+	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
 
 	/** State for pricing edits */
 	let editingTokens = $state(false);
@@ -49,60 +37,33 @@
 	let editPay: number = $state(0);
 	let newEditor: string = $state('');
 
-	/** Whether we're confirming desire to archive */
-	let archiving = $state(false);
+	// /** Whether we're confirming desire to archive */
+	// let archiving = $state(false);
 
-	function editNames(source: Source) {
-		if (editingNames) {
-			editingNames = false;
-			source.name = name;
-			source.short = short;
-			source.link = link;
-			sourcePromise = db.updateSource(source);
-		} else {
-			// Editing? Initialize all of the widgets with the current values.
-			editingNames = true;
-			name = source.name;
-			short = source.short;
-			link = source.link;
-		}
-	}
+	// function editTokens(source: Source) {
+	// 	if (editingTokens) {
+	// 		editingTokens = false;
+	// 		source.cost = {
+	// 			submit: submitCost,
+	// 			review: reviewPay,
+	// 			meta: metaPay,
+	// 			edit: editPay
+	// 		};
+	// 		sourcePromise = db.updateSource(source);
+	// 	} else {
+	// 		// Editing? Initialize all of the widgets with the current values.
+	// 		editingTokens = true;
+	// 		submitCost = source.cost.submit;
+	// 		reviewPay = source.cost.review;
+	// 		metaPay = source.cost.meta;
+	// 		editPay = source.cost.edit;
+	// 	}
+	// }
 
-	function editTokens(source: Source) {
-		if (editingTokens) {
-			editingTokens = false;
-			source.cost = {
-				submit: submitCost,
-				review: reviewPay,
-				meta: metaPay,
-				edit: editPay
-			};
-			sourcePromise = db.updateSource(source);
-		} else {
-			// Editing? Initialize all of the widgets with the current values.
-			editingTokens = true;
-			submitCost = source.cost.submit;
-			reviewPay = source.cost.review;
-			metaPay = source.cost.meta;
-			editPay = source.cost.edit;
-		}
-	}
-
-	function archive(source: Source) {
-		source.archived = true;
-		sourcePromise = db.updateSource(source);
-	}
-
-	function addEditor(source: Source, editor: string) {
-		source.editors = Array.from(new Set([...source.editors, editor]));
-		newEditor = '';
-		sourcePromise = db.updateSource(source);
-	}
-
-	function removeEditor(source: Source, editor: string) {
-		source.editors = source.editors.filter((ed) => ed !== editor);
-		sourcePromise = db.updateSource(source);
-	}
+	// function archive(source: Source) {
+	// 	source.archived = true;
+	// 	sourcePromise = db.updateSource(source);
+	// }
 
 	// function toggleSourceVolunteer(scholar: Scholar, id: SourceID) {
 	// 	const newSources = { ...scholar.sources };
@@ -125,183 +86,165 @@
 	// 	scholarPromise = db.updateScholar(scholar);
 	// }
 
-	let newExpertise: string = $state('');
-	function addExpertise(source: Source, phrase: string) {
-		source.expertise = [...source.expertise, { phrase, deprecated: false, kind: 'topic' }];
-		sourcePromise = db.updateSource(source);
-		newExpertise = '';
-	}
+	// let newExpertise: string = $state('');
+	// function addExpertise(source: Source, phrase: string) {
+	// 	source.expertise = [...source.expertise, { phrase, deprecated: false, kind: 'topic' }];
+	// 	sourcePromise = db.updateSource(source);
+	// 	newExpertise = '';
+	// }
 
-	function toggleExpertiseKind(source: Source, expertise: Expertise) {
-		source.expertise = source.expertise.map((exp) =>
-			exp.phrase === expertise.phrase
-				? { ...expertise, kind: expertise.kind === 'method' ? 'topic' : 'method' }
-				: exp
-		);
-		sourcePromise = db.updateSource(source);
-	}
+	// function toggleExpertiseKind(source: Source, expertise: Expertise) {
+	// 	source.expertise = source.expertise.map((exp) =>
+	// 		exp.phrase === expertise.phrase
+	// 			? { ...expertise, kind: expertise.kind === 'method' ? 'topic' : 'method' }
+	// 			: exp
+	// 	);
+	// 	sourcePromise = db.updateSource(source);
+	// }
 </script>
 
-<!-- svelte-ignore state_referenced_locally -->
-<!-- svelte-ignore state_referenced_locally -->
-{#await sourcePromise}
-	<h1>Source</h1>
-	<Loading />
-{:then source}
-	{@const editor = uid !== null && source.editors.includes(uid)}
+{#if venue === null}
+	<Page title="Unknown venue">
+		<p>Unable to find this venue.</p>
+	</Page>
+{:else}
+	<Page title={venue.title} subtitle="venue">
+		<!-- Show the description -->
+		{#if editor}
+			<EditableText
+				text={venue.description}
+				placeholder="Venue description."
+				inline={false}
+				edit={(text) => db.editVenueDescription(venue.id, text)}
+			/>{:else}<p>
+				{#if venue.description.length === 0}<em>No description.</em>{:else}{venue.description}{/if}
+			</p>{/if}
+		<!-- Show the venue URL -->
+		<Link to={venue.url}>{venue.url}</Link>
+		<!-- Show metadata -->
+		<Cards>
+			<Card header="Editors">
+				<ul>
+					{#each venue.editors as editorID}
+						<li>
+							<ScholarLink id={editorID} />{#if editor && venue.editors.length > 1}
+								&nbsp;<Button
+									tip="Remove editor"
+									active={venue.editors.length > 1}
+									action={() =>
+										handle(
+											db.editVenueEditors(
+												venue.id,
+												venue.editors.filter((ed) => ed !== editorID)
+											)
+										)}>{DeleteLabel}</Button
+								>{/if}
+						</li>
+					{/each}
+				</ul>
 
-	{#if editingNames}
-		<h1>
-			<TextField
-				label="name"
-				padded={false}
-				bind:text={name}
-				size={name.length}
-				placeholder="name"
-			/>
-			<br /><TextField
-				label="short name"
-				padded={false}
-				bind:text={short}
-				size={short.length + 2}
-				placeholder="short name"
-			/>
-		</h1>
-	{:else}
-		<h1>
-			{#if source.name.length === 0}<em>Unnamed</em>{:else}{source.name}{/if}
-			{#if source.short.length > 0}({source.short}){/if}
-		</h1>
-	{/if}
+				{#if editor}
+					<form>
+						<TextField
+							bind:text={newEditor}
+							size={19}
+							placeholder="ORCID or email"
+							valid={(text) => validEmail(text) || ORCIDRegex.test(text)}
+						/><Button
+							tip="Add editor"
+							active={validEmail(newEditor) || ORCIDRegex.test(newEditor)}
+							action={async () => {
+								if (await handle(db.addVenueEditor(venue.id, newEditor))) newEditor = '';
+							}}>Add editor</Button
+						>
+					</form>
+				{/if}
+				<Note>
+					Editors can edit venue information, add and remove other editors, create and archive
+					submissions, and gift review tokens. They are typically Editors-in-Chief of a journal or
+					Program Chairs of a conference.
+				</Note>
+			</Card>
+			{#if editor}
+				<Card header="Metadata" group="editors">
+					<EditableText
+						text={venue.title}
+						label="title"
+						placeholder=""
+						valid={validName}
+						edit={(text) => db.editVenueTitle(venue.id, text)}
+					/>
+					<EditableText
+						text={venue.url}
+						label="URL"
+						placeholder="https://..."
+						valid={validURL}
+						edit={(text) => db.editVenueURL(venue.id, text)}
+					/>
+				</Card>
+			{/if}
+		</Cards>
+	</Page>
+{/if}
+
+<!-- <h2>Costs</h2>
+{#if editor}
 	<p>
-		{#if editingNames}<TextField
-				label="site"
-				bind:text={link}
-				size={link.length}
-				placeholder="URL"
-			/>{:else}<Link to={source.link}>Official site</Link>{/if}
-	</p>
-	<EditorsOnly {editor}>
-		<p>
-			<Button tip="Edit names" action={() => editNames(source)}
-				>{#if editingNames}Done{:else}Edit names and URL{/if}</Button
-			>
-		</p>
-
-		{#if auth.isAuthenticated() && editor && !source.archived}
-			<p>You're one of this source's editors.</p>
-			<ul>
-				<li>Edit this source's name, URL, editors, costs, and compensation.</li>
-				<li>Send this page to your community to volunteer to review.</li>
-				<li>
-					Archive this publication if you no longer want to use <em>Reciprocal Reviews</em> to manage
-					reviewing.
-				</li>
-			</ul>
-		{/if}
-	</EditorsOnly>
-	{#if source.archived}
-		<Feedback error>This source is archived. Volunteers are no longer accepted.</Feedback>
-	{/if}
-
-	<h2>Editors</h2>
-
-	<p>
-		Editors can edit source information, add and remove other editors, create and archive
-		submissions, and gift review tokens. They are typically Editors-in-Chief of a journal (or their
-		assistant), or Program Chairs of an archival conference.
-	</p>
-
-	{#each source.editors as editorID}
-		<p>
-			<ScholarLink id={editorID} />{#if editor}
-				&nbsp;<Button
-					tip="Remove editor"
-					active={source.editors.length > 1}
-					action={() => removeEditor(source, editorID)}>remove</Button
-				>{/if}
-		</p>
-	{/each}
-
-	<EditorsOnly {editor}>
-		<Form inline
-			><TextField
-				label="ORCID"
-				bind:text={newEditor}
-				size={19}
-				placeholder="ORCID"
-				valid={(text) => ORCIDRegex.test(text)}
-			/><Button
-				tip="Add editor"
-				active={ORCIDRegex.test(newEditor)}
-				action={() => addEditor(source, newEditor)}>Add Editor</Button
-			></Form
+		<Button tip="Editing cost" action={() => editTokens(source)}
+			>{#if editingTokens}Done{:else}Edit{/if}</Button
 		>
-	</EditorsOnly>
-
-	<h2>Costs</h2>
-	{#if editor}
-		<p>
-			<Button tip="Editing cost" action={() => editTokens(source)}
-				>{#if editingTokens}Done{:else}Edit{/if}</Button
-			>
-		</p>
-	{/if}
-
-	{#if source.cost.submit > 0}
-		<p>
-			Submissions cost {#if editingTokens}<Slider
-					min={0}
-					max={5}
-					bind:value={submitCost}
-					step={1}
-				/>
-			{/if}<Tokens amount={editingTokens ? submitCost : source.cost.submit} />. If you and your
-			co-authors are short, volunteer below, or bid on a specific submission.
-		</p>
-	{:else}
-		<p>Submissions are free.</p>
-	{/if}
-
-	<ul>
-		<li>
-			<strong>Reviewers</strong> are paid {#if editingTokens}<Slider
-					min={0}
-					max={3}
-					bind:value={reviewPay}
-					step={0.1}
-				/>
-			{/if}<Tokens amount={editingTokens ? reviewPay : source.cost.review} /> for each review.
-		</li>
-		<li>
-			<strong>Metareviewers</strong> are paid {#if editingTokens}<Slider
-					min={0}
-					max={3}
-					bind:value={metaPay}
-					step={0.1}
-				/>
-			{/if}<Tokens amount={editingTokens ? metaPay : source.cost.meta} /> for each submission.
-		</li>
-		<li>
-			<strong>Editors</strong> are paid {#if editingTokens}<Slider
-					min={0}
-					max={3}
-					bind:value={editPay}
-					step={0.1}
-				/>
-			{/if}<Tokens amount={editingTokens ? editPay : source.cost.edit} /> for each submission.
-		</li>
-	</ul>
-
-	<h2>Volunteer</h2>
-
-	<p>
-		See <Link to="/source/{$page.params.id}/volunteers">all volunteers</Link> for this source.
 	</p>
+{/if}
 
-	<Todo>Volunteering interface</Todo>
+{#if source.cost.submit > 0}
+	<p>
+		Submissions cost {#if editingTokens}<Slider min={0} max={5} bind:value={submitCost} step={1} />
+		{/if}<Tokens amount={editingTokens ? submitCost : source.cost.submit} />. If you and your
+		co-authors are short, volunteer below, or bid on a specific submission.
+	</p>
+{:else}
+	<p>Submissions are free.</p>
+{/if}
 
-	<!-- {#if uid && !source.archived}
+<ul>
+	<li>
+		<strong>Reviewers</strong> are paid {#if editingTokens}<Slider
+				min={0}
+				max={3}
+				bind:value={reviewPay}
+				step={0.1}
+			/>
+		{/if}<Tokens amount={editingTokens ? reviewPay : source.cost.review} /> for each review.
+	</li>
+	<li>
+		<strong>Metareviewers</strong> are paid {#if editingTokens}<Slider
+				min={0}
+				max={3}
+				bind:value={metaPay}
+				step={0.1}
+			/>
+		{/if}<Tokens amount={editingTokens ? metaPay : source.cost.meta} /> for each submission.
+	</li>
+	<li>
+		<strong>Editors</strong> are paid {#if editingTokens}<Slider
+				min={0}
+				max={3}
+				bind:value={editPay}
+				step={0.1}
+			/>
+		{/if}<Tokens amount={editingTokens ? editPay : source.cost.edit} /> for each submission.
+	</li>
+</ul>
+
+<h2>Volunteer</h2>
+
+<p>
+	See <Link to="/source/{$page.params.id}/volunteers">all volunteers</Link> for this source.
+</p> -->
+
+<!-- <Todo>Volunteering interface</Todo> -->
+
+<!-- {#if uid && !source.archived}
 		{#await scholarPromise}
 			<Loading />
 		{:then scholar}
@@ -372,76 +315,72 @@
 		</p>
 	{/if} -->
 
-	<EditorsOnly {editor}>
-		<h2>Submissions</h2>
+<!-- <EditorsOnly {editor}>
+	<h2>Submissions</h2>
 
-		<p>
-			See the list of <Link to="/source/{$page.params.id}/submissions">submissions in review</Link>.
-		</p>
+	<p>
+		See the list of <Link to="/source/{$page.params.id}/submissions">submissions in review</Link>.
+	</p>
 
-		<h2>Expertise</h2>
+	<h2>Expertise</h2>
 
-		<p>
-			Define expertise phrases that reviewers can indicate to help identify reviewers. We recommend
-			curating this as a community, to accurately reflect how reviewers wish to represent their
-			expertise.
-		</p>
+	<p>
+		Define expertise phrases that reviewers can indicate to help identify reviewers. We recommend
+		curating this as a community, to accurately reflect how reviewers wish to represent their
+		expertise.
+	</p>
 
-		<p>
-			<TextField label="expertise" placeholder="description" bind:text={newExpertise} />
-			<Button
-				tip="Add expertise"
-				action={() => addExpertise(source, newExpertise)}
-				active={newExpertise.length > 0}>+ expertise</Button
-			>
-		</p>
+	<p>
+		<TextField label="expertise" placeholder="description" bind:text={newExpertise} />
+		<Button
+			tip="Add expertise"
+			action={() => addExpertise(source, newExpertise)}
+			active={newExpertise.length > 0}>+ expertise</Button
+		>
+	</p>
 
-		<Table>
-			{#each source.expertise as expertise}
-				<tr>
-					<td>
-						<Tag>{expertise.phrase}</Tag>
-					</td>
-					<td>
-						<Checkbox
-							on={expertise.deprecated}
-							change={async () => {
-								return undefined;
-							}}>deprecated</Checkbox
-						>
-					</td>
-					<td>
-						<div
-							role="button"
-							tabindex="0"
-							style:cursor="pointer"
-							style:user-select="none"
-							onclick={() => toggleExpertiseKind(source, expertise)}
-							onkeydown={() => toggleExpertiseKind(source, expertise)}
-						>
-							<Status good={expertise.kind === 'topic'}>{expertise.kind}</Status>
-						</div>
-					</td>
-				</tr>
-			{/each}
-		</Table>
+	<Table>
+		{#each source.expertise as expertise}
+			<tr>
+				<td>
+					<Tag>{expertise.phrase}</Tag>
+				</td>
+				<td>
+					<Checkbox
+						on={expertise.deprecated}
+						change={async () => {
+							return undefined;
+						}}>deprecated</Checkbox
+					>
+				</td>
+				<td>
+					<div
+						role="button"
+						tabindex="0"
+						style:cursor="pointer"
+						style:user-select="none"
+						onclick={() => toggleExpertiseKind(source, expertise)}
+						onkeydown={() => toggleExpertiseKind(source, expertise)}
+					>
+						<Status good={expertise.kind === 'topic'}>{expertise.kind}</Status>
+					</div>
+				</td>
+			</tr>
+		{/each}
+	</Table>
 
-		<h2>Archive</h2>
-		<p>
-			Archiving this source will remove it from the list of sources and prevent future submissions,
-			transactions, and volunteers from being added. The history of transactions will be preserved.
-		</p>
-		<p>
-			<Button tip="Archive venue" action={() => (archiving = !archiving)}
-				>{#if archiving}Cancel{:else}Archive...{/if}</Button
-			>
-		</p>
-		{#if archiving}
-			<Feedback error>Are you sure you want to archive this source?</Feedback>
-			<p><Button tip="Confirm archive venue" action={() => archive(source)}>Archive</Button></p>
-		{/if}
-	</EditorsOnly>
-{:catch}
-	<h1>Unknown Source</h1>
-	<Feedback>We couldn't load this source.</Feedback>
-{/await}
+	<h2>Archive</h2>
+	<p>
+		Archiving this source will remove it from the list of sources and prevent future submissions,
+		transactions, and volunteers from being added. The history of transactions will be preserved.
+	</p>
+	<p>
+		<Button tip="Archive venue" action={() => (archiving = !archiving)}
+			>{#if archiving}Cancel{:else}Archive...{/if}</Button
+		>
+	</p>
+	{#if archiving}
+		<Feedback error>Are you sure you want to archive this source?</Feedback>
+		<p><Button tip="Confirm archive venue" action={() => archive(source)}>Archive</Button></p>
+	{/if}
+</EditorsOnly> -->

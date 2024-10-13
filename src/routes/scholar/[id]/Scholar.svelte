@@ -42,8 +42,6 @@
 				text={scholar.getName() ?? ''}
 				placeholder="name"
 				label="name"
-				change="Change name"
-				save="Save name"
 				edit={(text) => db.updateScholarName(scholar.getID(), text)}
 			/>
 		{/if}
@@ -52,8 +50,6 @@
 				text={scholar.getEmail() ?? ''}
 				label="email"
 				placeholder="email"
-				change="Change email"
-				save="Save email"
 				note="Your email will be public and only used to send notifications."
 				valid={(text) => /.+@.+\..+/.test(text)}
 				edit={(text) => db.updateScholarEmail(scholar.getID(), text)}
@@ -86,8 +82,6 @@
 				text={scholar.getStatus()}
 				label="status"
 				placeholder="Explain your current reviewing status to others."
-				change="Edit status"
-				save="Save status"
 				edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
 				note="Your status is public and will be shown on your profile."
 			/>

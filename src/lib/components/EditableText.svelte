@@ -12,8 +12,6 @@
 		text: string;
 		label?: string | undefined;
 		placeholder: string;
-		change: string;
-		save: string;
 		inline?: boolean;
 		valid?: undefined | ((text: string) => boolean);
 		edit: (text: string) => Promise<ErrorID | undefined>;
@@ -24,8 +22,6 @@
 		text,
 		label,
 		placeholder,
-		save,
-		change,
 		edit,
 		valid = undefined,
 		inline = true,
@@ -36,29 +32,28 @@
 
 	// Whether the text is being edited.
 	let editing = $state<boolean | undefined>(false);
-	let error = $state<ErrorID | undefined | boolean>(undefined);
 	let field = $state<HTMLInputElement | HTMLTextAreaElement | undefined>(undefined);
 	let button = $state<HTMLButtonElement | undefined>(undefined);
 
 	let invalid = $derived(valid !== undefined && !valid(text));
 
-	async function saveEdit(event: Event) {
+	async function saveEdit(event?: Event) {
 		if (invalid) {
 			editing = false;
 			text = original;
 			return;
 		}
 
-		event.preventDefault();
+		event?.preventDefault();
 
 		await saveAndFocus();
 	}
 
-	async function startEditing(event: Event) {
+	async function startEditing(event?: Event) {
 		editing = true;
 		await tick();
 		if (field) field.focus();
-		event.preventDefault();
+		event?.preventDefault();
 	}
 
 	async function saveAndFocus() {
@@ -87,7 +82,7 @@
 		/>
 		<Button
 			bind:view={button}
-			tip={editing ? save : change}
+			tip={editing ? 'Save ' + (label ?? placeholder) : 'Edit ' + (label ?? placeholder)}
 			type="submit"
 			action={(event) => (editing ? saveEdit(event) : startEditing(event))}
 			>{#if editing}{invalid ? DeleteLabel : ConfirmLabel}{:else if editing === undefined}<Dots
@@ -114,6 +109,6 @@
 	}
 
 	.box.inline {
-		align-items: center;
+		align-items: end;
 	}
 </style>

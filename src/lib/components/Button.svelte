@@ -14,7 +14,7 @@
 		warn = false
 	}: {
 		children: Snippet;
-		action: (event: Event) => void;
+		action: ((event?: Event) => void) | ((event?: Event) => Promise<void>);
 		tip: string;
 		active?: boolean;
 		formaction?: string | undefined;

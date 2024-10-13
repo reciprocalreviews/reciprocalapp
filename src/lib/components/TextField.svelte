@@ -47,10 +47,11 @@
 			});
 	});
 
-	function edit() {
+	function edit(event: Event) {
 		if (done) {
 			done();
 			if (labelView) labelView.scrollLeft = 0;
+			event.stopPropagation();
 		}
 	}
 </script>
@@ -70,7 +71,7 @@
 			class:invalid={!isValid}
 			{placeholder}
 			type={password ? 'password' : 'text'}
-			onkeydown={(event) => (event.key === 'Enter' && done ? edit() : undefined)}
+			onkeydown={(event) => (event.key === 'Enter' && done ? edit(event) : undefined)}
 		/>
 	{:else}
 		<textarea
@@ -82,7 +83,8 @@
 			cols={size}
 			style:width={size ? undefined : 'auth'}
 			style:height={size ? undefined : height + 'px'}
-			onkeydown={(event) => (event.key === 'Enter' && event.metaKey && done ? edit() : undefined)}
+			onkeydown={(event) =>
+				event.key === 'Enter' && event.metaKey && done ? edit(event) : undefined}
 		></textarea>
 	{/if}
 	<span class="ruler" bind:this={measure}

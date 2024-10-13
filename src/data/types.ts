@@ -9,3 +9,5 @@ export type SupporterRow = Tables['supporters']['Row'];
 export type SupporterID = SupporterRow['id'];
 export type CurrencyRow = Tables['currencies']['Row'];
 export type CurrencyID = CurrencyRow['id'];
+export type VenueRow = Tables['venues']['Row'];
+export type VenueID = VenueRow['id'];

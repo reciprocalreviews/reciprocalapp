@@ -27,8 +27,6 @@
 			{#if editable}<EditableText
 					text={currency.name}
 					placeholder="name"
-					change="Change currency name"
-					save="Save currency name"
 					edit={async (text) => await db.updateCurrencyName(currency.id, text)}
 				/>{:else}{currency.name}{/if}
 		</h1>
@@ -39,8 +37,6 @@
 				text={currency.description}
 				label="status"
 				placeholder="Explain the currency to others."
-				change="Edit description"
-				save="Save description"
 				edit={(text) => db.updateCurrencyDescription(currency.id, text)}
 				note="Currency descriptions are public."
 			/>
