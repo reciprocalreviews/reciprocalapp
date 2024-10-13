@@ -18,7 +18,7 @@
 		border-radius: var(--roundedness);
 		border: var(--border-color) solid var(--border-width);
 		flex: 1;
-		min-width: 20em;
+		min-width: 10em;
 		max-width: 40em;
 	}
 </style>
