@@ -37,11 +37,11 @@
 
 	$effect(() => {
 		width = measure?.clientWidth ?? 0;
-		height = measure?.clientHeight ?? 0;
+		height = inline ? (measure?.clientHeight ?? 0) : (view?.scrollHeight ?? 0);
 		if (text)
 			tick().then(() => {
 				width = measure?.clientWidth ?? 0;
-				height = measure?.clientHeight ?? 0;
+				height = inline ? (measure?.clientHeight ?? 0) : (view?.scrollHeight ?? 0);
 			});
 	});
 </script>
@@ -73,7 +73,6 @@
 			cols={size}
 			style:width={size ? undefined : 'auth'}
 			style:height={size ? undefined : height + 'px'}
-			rows={text.split('\n').length}
 			onkeydown={(event) => (event.key === 'Enter' && event.metaKey && done ? done() : undefined)}
 		></textarea>
 	{/if}
@@ -112,6 +111,7 @@
 		resize: none;
 		min-width: 1em;
 		min-height: 1em;
+		overflow: hidden;
 	}
 
 	.ruler {
