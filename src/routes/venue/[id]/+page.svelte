@@ -213,10 +213,10 @@
 					</div>
 				</Card>
 			{/if}
-			<Card header="Roles" full>
+			<Card header="Volunteering" full>
 				<p>
-					These are the roles that volunteers can commit to. Create roles such as "reviewer",
-					"program commitee", "associate editor" to represent the different kinds of contributions
+					These are the roles that volunteers can commit to. Create roles such as <em>reviewer</em>,
+					<em>program commitee</em>, <em>associate editor</em> to represent the different kinds of contributions
 					volunteers can make to this venue.
 				</p>
 
