@@ -66,7 +66,7 @@
 	</Form>
 
 	{#if submitted}
-		<Feedback>Check your email for a sign in link.</Feedback>
+		<Feedback>Check your email for a sign in code.</Feedback>
 		<Form inline>
 			<TextField
 				label="password"
