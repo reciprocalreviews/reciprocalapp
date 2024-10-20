@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](http://semver.org/) format.
 
+## 0.0.7 2024-10-20
+
+### Maintenance
+
+- Upgraded to Svelte 5.0.
+
 ## 0.0.6 2024-10-13
 
 ### Added

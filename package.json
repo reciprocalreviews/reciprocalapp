@@ -23,8 +23,8 @@
 	"devDependencies": {
 		"@playwright/test": "^1.45.3",
 		"@sveltejs/adapter-auto": "^3.2.5",
-		"@sveltejs/kit": "^2.6.1",
-		"@sveltejs/vite-plugin-svelte": "^4.0.0-next.6",
+		"@sveltejs/kit": "^2.7",
+		"@sveltejs/vite-plugin-svelte": "^4.0",
 		"@typescript-eslint/eslint-plugin": "^8.0.0",
 		"@typescript-eslint/parser": "^8.0.0",
 		"eslint": "^9.8.0",
@@ -32,17 +32,17 @@
 		"eslint-plugin-svelte": "^2.43.0",
 		"prettier": "^3.3.3",
 		"prettier-plugin-svelte": "^3.2.6",
-		"supabase": "^1.190.0",
-		"svelte": "^5.0.0-next.260",
-		"svelte-check": "^4.0.4",
-		"tslib": "^2.6.3",
-		"typescript": "^5.6.2",
-		"vite": "^5.4.2",
-		"vitest": "^2.0.5"
+		"supabase": "^1",
+		"svelte": "^5.0",
+		"svelte-check": "^4.0",
+		"tslib": "^2.6",
+		"typescript": "^5.6",
+		"vite": "^5.4",
+		"vitest": "^2.1"
 	},
 	"type": "module",
 	"dependencies": {
-		"@supabase/ssr": "^0.5.1",
-		"@supabase/supabase-js": "^2.45.3"
+		"@supabase/ssr": "^0.5",
+		"@supabase/supabase-js": "^2"
 	}
 }
