@@ -3,12 +3,12 @@
 	import Tag from './Tag.svelte';
 
 	let {
-		header,
+		header = undefined,
 		group,
 		full = false,
 		children
 	}: {
-		header: string;
+		header?: string | undefined;
 		group?: 'editors' | 'stewards';
 		full?: boolean;
 		children: Snippet;
@@ -16,10 +16,12 @@
 </script>
 
 <div class="card" class:full>
-	<h2>
-		{header}
-		{#if group}<Tag>{group}</Tag>{/if}
-	</h2>
+	{#if header}
+		<h2>
+			{header}
+			{#if group}<Tag>{group}</Tag>{/if}
+		</h2>
+	{/if}
 	{@render children()}
 </div>
 
