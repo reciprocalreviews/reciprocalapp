@@ -73,9 +73,9 @@
 					value={role.amount}
 					step={1}
 					label="compensation"
-					unit="tokens/submission"
 					change={(value) => handle(db.editRoleAmount(role.id, value))}
-				/>
+					><Tokens amount={role.amount}></Tokens>/submission</Slider
+				>
 				<Button
 					warn="Delete this role and all volunteers?"
 					tip="Delete this role"

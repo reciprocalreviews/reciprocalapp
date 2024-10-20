@@ -1,12 +1,14 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	interface Props {
 		min: number;
 		max: number;
 		value: number;
 		step: number;
 		label?: string | undefined;
-		unit?: string | undefined;
 		change?: undefined | ((value: number) => void);
+		children?: Snippet;
 	}
 
 	let {
@@ -15,8 +17,8 @@
 		value = $bindable(),
 		step,
 		label = undefined,
-		unit = undefined,
-		change = undefined
+		change = undefined,
+		children
 	}: Props = $props();
 
 	let view: HTMLInputElement | undefined = $state();
@@ -33,10 +35,7 @@
 	{/if}
 	<div class="slider">
 		<input bind:this={view} type="range" {min} {max} {value} {step} oninput={handleInput} />
-		<span class="value"
-			>{value}{#if unit}
-				&nbsp;{unit}{/if}</span
-		>
+		<span class="value">{@render children?.()}</span>
 	</div>
 </label>
 
@@ -56,7 +55,7 @@
 	}
 
 	input:focus {
-		outline-color: var(--focus-color);
+		outline: var(--focus-color) solid var(--thick-border-width);
 	}
 
 	label {
