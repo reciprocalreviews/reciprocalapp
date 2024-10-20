@@ -438,11 +438,3 @@
 		<p><Button tip="Confirm archive venue" action={() => archive(source)}>Archive</Button></p>
 	{/if}
 </EditorsOnly> -->
-
-<style>
-	.role {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing);
-	}
-</style>

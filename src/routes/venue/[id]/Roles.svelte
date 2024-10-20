@@ -75,3 +75,11 @@
 		<Feedback>This venue has no volunteer roles.</Feedback>
 	{/each}
 {/if}
+
+<style>
+	.role {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing);
+	}
+</style>
