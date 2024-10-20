@@ -13,6 +13,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 - A few typography improvements.
 - Deactivated hover feedback on inactive buttons.
+- Fixed rendering for missing name in venue proposal.
 
 ### Maintenance
 
