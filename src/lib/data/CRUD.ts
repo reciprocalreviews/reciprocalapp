@@ -56,7 +56,8 @@ export const Errors = {
 	EditVenueAddEditorAlreadyEditor: 'Scholar is already an editor',
 	EditVenueTitle: 'Unable to edit the venue title',
 	EditVenueURL: 'Unable to edit the venue URL',
-	EditVenueWelcomeAmount: 'Unable to edit the welcome amount'
+	EditVenueWelcomeAmount: 'Unable to edit the welcome amount',
+	EditVenueBidding: 'Unable to toggle bidding'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -179,4 +180,5 @@ export default abstract class CRUD {
 	abstract editVenueTitle(id: VenueID, title: string): Promise<ErrorID | undefined>;
 	abstract editVenueURL(id: VenueID, url: string): Promise<ErrorID | undefined>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<ErrorID | undefined>;
+	abstract editVenueBidding(id: VenueID, bidding: boolean): Promise<ErrorID | undefined>;
 }

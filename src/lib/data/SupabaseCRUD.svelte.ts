@@ -361,4 +361,10 @@ export default class SupabaseCRUD extends CRUD {
 		if (error) return 'EditVenueWelcomeAmount';
 		else return;
 	}
+
+	async editVenueBidding(id: VenueID, bidding: boolean) {
+		const { error } = await this.client.from('venues').update({ bidding }).eq('id', id);
+		if (error) return 'EditVenueBidding';
+		else return;
+	}
 }

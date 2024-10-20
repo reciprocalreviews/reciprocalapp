@@ -19,6 +19,7 @@
 	import { DeleteLabel } from '$lib/components/Labels';
 	import { validIdentifier, validURL, validEmail, validInteger } from '$lib/validation';
 	import { handle } from '../../errors.svelte';
+	import Checkbox from '$lib/components/Checkbox.svelte';
 
 	let { data } = $props();
 	const { venue, currency, scholar } = $derived(data);
@@ -199,6 +200,15 @@
 						valid={validInteger}
 						edit={(text) => db.editVenueWelcomeAmount(venue.id, parseInt(text))}
 					/>
+					<div>
+						<Checkbox on={venue.bidding} change={(on) => db.editVenueBidding(venue.id, on)}
+							>Allow bidding
+						</Checkbox>
+						<Note
+							>{#if venue.bidding}Authenticated volunteers can see submissions and bid on them.{:else}Reviews
+								are invitation only. Submissions are hidden and cannot be bid on.{/if}</Note
+						>
+					</div>
 				</Card>
 			{/if}
 		</Cards>

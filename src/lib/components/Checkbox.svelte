@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ErrorID } from '$lib/data/CRUD';
 	import type { Snippet } from 'svelte';
-	import { addError, handle } from '../../routes/errors.svelte';
+	import { handle } from '../../routes/errors.svelte';
 
 	let {
 		on,
@@ -41,5 +41,7 @@
 
 	label {
 		flex-direction: row;
+		gap: var(--spacing);
+		align-items: baseline;
 	}
 </style>
