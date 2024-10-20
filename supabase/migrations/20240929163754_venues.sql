@@ -46,7 +46,9 @@ create table roles (
   -- The rich text description of the role
   description text not null default ''::text,
   -- Whether the role is invite only
-  invited boolean not null
+  invited boolean not null,
+  -- The token compensation for a commitment, in the venue's currency
+  amount integer not null
 );
 
 create unique index roles_venue_index on roles(venueid);
@@ -84,9 +86,7 @@ create table commitments (
   -- The ID of the venue
   venueid uuid not null references venues(id) on delete cascade,
   -- The label for the commitment
-  label text not null,
-  -- The token compensation for a commitment, in the venue's currency
-  amount integer not null
+  label text not null
 );
 
 create unique index commitments_venue_index on commitments(venueid);
