@@ -202,7 +202,7 @@
 
 					<Button
 						tip="Delete this proposal"
-						warn
+						warn="Delete this proposal forever?"
 						action={async () => {
 							if (await handle(db.deleteProposal(proposal.id))) goto('/venues');
 						}}>Delete proposal…</Button
@@ -211,7 +211,7 @@
 
 					<Button
 						tip="Approve this proposal"
-						warn
+						warn="Approve and create this venue?"
 						action={async () => {
 							if (await handle(db.approveProposal(proposal.id))) goto('/venues');
 						}}>Approve proposal…</Button

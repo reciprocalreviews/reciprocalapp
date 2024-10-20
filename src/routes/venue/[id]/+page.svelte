@@ -33,7 +33,6 @@
 	let metaPay: number = $state(0);
 	let editPay: number = $state(0);
 	let newEditor: string = $state('');
-	let newRole: string = $state('');
 
 	// /** Whether we're confirming desire to archive */
 	// let archiving = $state(false);
@@ -218,24 +217,7 @@
 				</p>
 
 				<h3>Roles</h3>
-				{#if editor}
-					<form>
-						<TextField
-							bind:text={newRole}
-							size={19}
-							placeholder="name"
-							valid={(text) => validIdentifier(text)}
-						/><Button
-							tip="Create a new role"
-							action={() => handle(db.createRole(venue.id, newRole))}>Create role</Button
-						>
-					</form>
-				{/if}
-				{#if roles}
-					<Roles {venue} {roles} editor={editor ?? false} />
-				{:else}
-					<Feedback error>Couldn't load venue's roles.</Feedback>
-				{/if}
+				<Roles {venue} {roles} editor={editor ?? false} />
 			</Card>
 		</Cards>
 	</Page>

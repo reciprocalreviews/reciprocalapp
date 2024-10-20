@@ -11,7 +11,7 @@
 		name = undefined,
 		type = undefined,
 		view = $bindable(undefined),
-		warn = false
+		warn = undefined
 	}: {
 		children: Snippet;
 		action: ((event?: Event) => void) | ((event?: Event) => Promise<void>);
@@ -21,7 +21,7 @@
 		name?: string | undefined;
 		type?: 'submit' | undefined;
 		view?: HTMLButtonElement | undefined;
-		warn?: boolean;
+		warn?: string | undefined;
 	} = $props();
 
 	let confirming = $state(false);
@@ -36,7 +36,7 @@
 		title={tip}
 		aria-label={tip}
 		disabled={!active}
-		class:warn
+		class:warn={warn !== undefined}
 		onclick={(event) => {
 			if (active)
 				if (warn) confirming = true;
@@ -47,11 +47,12 @@
 	<div class="row">
 		<button onclick={() => (confirming = false)}>{DeleteLabel}</button>
 		<button
-			class:warn
+			class:warn={warn !== undefined}
 			onclick={async (event) => {
 				await action(event);
 				confirming = false;
-			}}>{@render children()}</button
+			}}
+			>{#if confirming}{warn}{:else}{@render children()}{/if}</button
 		>
 	</div>
 {/if}
@@ -78,7 +79,7 @@
 		cursor: auto;
 	}
 
-	button[disabled]:hover {
+	button:not([disabled]):hover {
 		transform: scale(1.05);
 	}
 

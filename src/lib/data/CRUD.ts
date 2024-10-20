@@ -63,7 +63,8 @@ export const Errors = {
 	UpdateRoleName: 'Unable to update role name',
 	UpdateRoleDescription: 'Unable to update role description',
 	UpdateRoleInvited: 'Unable to update invited status of role',
-	UpdateRoleAmount: 'Unable to update role compensation'
+	UpdateRoleAmount: 'Unable to update role compensation',
+	DeleteRole: 'Unable to delete role'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -193,4 +194,5 @@ export default abstract class CRUD {
 	abstract editRoleDescription(id: RoleID, description: string): Promise<ErrorID | undefined>;
 	abstract editRoleInvited(id: RoleID, on: boolean): Promise<ErrorID | undefined>;
 	abstract editRoleAmount(id: RoleID, amount: number): Promise<ErrorID | undefined>;
+	abstract deleteRole(id: RoleID): Promise<ErrorID | undefined>;
 }

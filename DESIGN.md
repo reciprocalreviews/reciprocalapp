@@ -460,11 +460,11 @@ The purpose of the venue list page is to show all venues managed on RR, or propo
 
 It should:
 
-- [ ] Show all `Venue`s, including active and proposed ones.
+- [x] Show all `Venue`s, including active and proposed ones.
 
-- [ ] _`scholar`_: Propose a new `Venue` for the platform for review by the platform maintainers. `Venue` proposals should gather the name of the venue, the email addresses of the person or people leading editing of it, and the estimated size of the number of scholars in the community. `Venue`s with similar names are retrieved and shown to prevent duplicate venue creation. When the proposal is submitted, an email notification is sent to the email addresses listed and RR stewards. A `Venue` is created, but not active until approved.
+- [x] _`scholar`_: Propose a new `Venue` for the platform for review by the platform maintainers. `Venue` proposals should gather the name of the venue, the email addresses of the person or people leading editing of it, and the estimated size of the number of scholars in the community. `Venue`s with similar names are retrieved and shown to prevent duplicate venue creation. When the proposal is submitted, an email notification is sent to the email addresses listed and RR stewards. A `Venue` is created, but not active until approved.
 
-- [ ] _`steward`_: Approve a `Venue` for use, indicating who should take the _editor_ and _minter_ roles for the platform, and creating tokens for all scholars in favor of the petition.
+- [x] _`steward`_: Approve a `Venue` for use, indicating who should take the _editor_ and _minter_ roles for the platform, and creating tokens for all scholars in favor of the petition.
 
 ## Proposals `/venues/proposal`
 
@@ -483,7 +483,7 @@ The purpose of this page is to allow people to support proposals and check their
 - [x] _`steward`_: Edit a proposal's venue census
 - [x] _`steward`_: Edit a proposal's venue editors
 - [x] _`steward`_: Delete a proposal
-- [ ] _`steward`_: Approve a proposal
+- [x] _`steward`_: Approve a proposal
 
 ## Venue `/venue/[id]`
 
@@ -491,7 +491,7 @@ The purpose of a `Venue` page is to provide information about its compensation, 
 
 The page should:
 
-- [ ] Show the name, description, and URL to the venue's website.
+- [x] Show the name, description, and URL to the venue's website.
 
 When a venue is in a **proposed** state:
 
@@ -508,16 +508,16 @@ When a venue is **approved** state:
 - [ ] _`scholar`_: Change commitment for a role for the venue
 - [ ] _`scholar`_: Change paper count for a role for the venue
 
-- [ ] _`editor`_: Modify the venue name, description
+- [x] _`editor`_: Modify the venue name, description
 - [ ] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one
 - [ ] _`editor`_: Set the state to inactive
 
 - [ ] _`editor`_: Export the list of reviewers as a CSV file for use on other plaforms, including ORCID, name, email, expertise, role, commitment, and paper count.
-- [ ] _`editor`_: Create roles for the venue.
+- [x] _`editor`_: Create roles for the venue.
 - [ ] _`editor`_: Create commitments for the venue.
-- [ ] _`editor`_: Edit the descriptions of roles.
+- [x] _`editor`_: Edit the descriptions of roles.
 - [ ] _`editor`_: Delete a commitment, confirming they understand that all volunteers will be removed from the commitment.
-- [ ] _`editor`_: Delete a role, confirming they understand that all volunteers will be removed from the role.
+- [x] _`editor`_: Delete a role, confirming they understand that all volunteers will be removed from the role.
 - [ ] _`editor`_: Invite one or more `Scholar`s by ORCID or email to a particular role.
 
 > [!IMPORTANT]

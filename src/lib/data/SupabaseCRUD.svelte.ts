@@ -400,4 +400,10 @@ export default class SupabaseCRUD extends CRUD {
 		if (error) return 'UpdateRoleAmount';
 		else return;
 	}
+
+	async deleteRole(id: RoleID) {
+		const { error } = await this.client.from('roles').delete().eq('id', id);
+		if (error) return 'DeleteRole';
+		else return;
+	}
 }

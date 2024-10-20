@@ -1,13 +1,25 @@
 <script lang="ts">
-	export let min: number;
-	export let max: number;
-	export let value: number;
-	export let step: number;
-	export let label: string | undefined = undefined;
-	export let unit: string | undefined = undefined;
-	export let change: undefined | ((value: number) => void) = undefined;
+	interface Props {
+		min: number;
+		max: number;
+		value: number;
+		step: number;
+		label?: string | undefined;
+		unit?: string | undefined;
+		change?: undefined | ((value: number) => void);
+	}
 
-	let view: HTMLInputElement;
+	let {
+		min,
+		max,
+		value = $bindable(),
+		step,
+		label = undefined,
+		unit = undefined,
+		change = undefined
+	}: Props = $props();
+
+	let view: HTMLInputElement | undefined = $state();
 
 	function handleInput() {
 		if (view) value = parseFloat(view.value);
@@ -20,7 +32,7 @@
 		<span class="label">{label}</span>
 	{/if}
 	<div class="slider">
-		<input bind:this={view} type="range" {min} {max} {value} {step} on:input={handleInput} />
+		<input bind:this={view} type="range" {min} {max} {value} {step} oninput={handleInput} />
 		<span class="value"
 			>{value}{#if unit}
 				&nbsp;{unit}{/if}</span
