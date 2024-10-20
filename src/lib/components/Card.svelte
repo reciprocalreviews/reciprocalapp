@@ -33,12 +33,10 @@
 		border: var(--border-color) solid var(--border-width);
 		flex: 1;
 		min-width: 10em;
-		max-width: 40em;
 	}
 
 	.full {
-		min-width: 100%;
-		max-width: 100%;
+		min-width: calc(100% - var(--spacing) * 3);
 	}
 
 	h2 {
