@@ -78,12 +78,12 @@
 		cursor: auto;
 	}
 
-	button:focus {
-		outline: var(--focus-color) solid var(--thick-border-width);
+	button[disabled]:hover {
+		transform: scale(1.05);
 	}
 
-	button:not(.inactive):hover {
-		transform: scale(1.05);
+	button:focus {
+		outline: var(--focus-color) solid var(--thick-border-width);
 	}
 
 	button.warn {
