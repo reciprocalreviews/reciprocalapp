@@ -11,3 +11,5 @@ export type CurrencyRow = Tables['currencies']['Row'];
 export type CurrencyID = CurrencyRow['id'];
 export type VenueRow = Tables['venues']['Row'];
 export type VenueID = VenueRow['id'];
+export type RoleRow = Tables['roles']['Row'];
+export type RoleID = RoleRow['id'];

@@ -7,9 +7,17 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: currency } = venue
 		? await supabase.from('currencies').select().eq('id', venue.currency).single()
 		: { data: null };
+	const { data: roles } = venue
+		? await supabase.from('roles').select().eq('venueid', venue.id)
+		: { data: null };
+	const { data: commitments } = venue
+		? await supabase.from('commitments').select().eq('venueid', venue.id)
+		: { data: null };
 
 	return {
 		venue,
-		currency
+		currency,
+		roles,
+		commitments
 	};
 };

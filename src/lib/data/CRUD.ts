@@ -1,6 +1,7 @@
 import {
 	type CurrencyID,
 	type ProposalID,
+	type RoleID,
 	type ScholarID,
 	type ScholarRow,
 	type SupporterID,
@@ -57,7 +58,12 @@ export const Errors = {
 	EditVenueTitle: 'Unable to edit the venue title',
 	EditVenueURL: 'Unable to edit the venue URL',
 	EditVenueWelcomeAmount: 'Unable to edit the welcome amount',
-	EditVenueBidding: 'Unable to toggle bidding'
+	EditVenueBidding: 'Unable to toggle bidding',
+	CreateRole: 'Unable to create new role.',
+	UpdateRoleName: 'Unable to update role name',
+	UpdateRoleDescription: 'Unable to update role description',
+	UpdateRoleInvited: 'Unable to update invited status of role',
+	UpdateRoleAmount: 'Unable to update role compensation'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -181,4 +187,10 @@ export default abstract class CRUD {
 	abstract editVenueURL(id: VenueID, url: string): Promise<ErrorID | undefined>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<ErrorID | undefined>;
 	abstract editVenueBidding(id: VenueID, bidding: boolean): Promise<ErrorID | undefined>;
+
+	abstract createRole(id: VenueID, name: string): Promise<ErrorID | undefined>;
+	abstract editRoleName(id: RoleID, name: string): Promise<ErrorID | undefined>;
+	abstract editRoleDescription(id: RoleID, description: string): Promise<ErrorID | undefined>;
+	abstract editRoleInvited(id: RoleID, on: boolean): Promise<ErrorID | undefined>;
+	abstract editRoleAmount(id: RoleID, amount: number): Promise<ErrorID | undefined>;
 }

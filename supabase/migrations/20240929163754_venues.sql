@@ -51,7 +51,7 @@ create table roles (
   amount integer not null
 );
 
-create unique index roles_venue_index on roles(venueid);
+create index roles_venue_index on roles(venueid);
 
 -- Check if the given scholar is an stewards
 create function isEditor("_venueid" uuid) 
@@ -89,7 +89,7 @@ create table commitments (
   label text not null
 );
 
-create unique index commitments_venue_index on commitments(venueid);
+create index commitments_venue_index on commitments(venueid);
 
 alter table public.commitments
   enable row level security;
@@ -127,9 +127,9 @@ create table volunteers (
   count integer default null
 );
 
-create unique index venue_volunteer_index on volunteers(venueid);
-create unique index scholar_volunteer_index on volunteers(scholarid);
-create unique index role_volunteer_index on volunteers(roleid);
+create index venue_volunteer_index on volunteers(venueid);
+create index scholar_volunteer_index on volunteers(scholarid);
+create index role_volunteer_index on volunteers(roleid);
 
 alter table public.volunteers
   enable row level security;

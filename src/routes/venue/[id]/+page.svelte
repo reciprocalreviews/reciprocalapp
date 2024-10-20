@@ -16,13 +16,14 @@
 	import Cards from '$lib/components/Cards.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Note from '$lib/components/Note.svelte';
-	import { DeleteLabel } from '$lib/components/Labels';
+	import { CreateLabel, DeleteLabel } from '$lib/components/Labels';
 	import { validIdentifier, validURL, validEmail, validInteger } from '$lib/validation';
 	import { handle } from '../../errors.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
+	import Tag from '$lib/components/Tag.svelte';
 
 	let { data } = $props();
-	const { venue, currency, scholar } = $derived(data);
+	const { venue, currency, scholar, roles, commitments } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -35,6 +36,7 @@
 	let metaPay: number = $state(0);
 	let editPay: number = $state(0);
 	let newEditor: string = $state('');
+	let newRole: string = $state('');
 
 	// /** Whether we're confirming desire to archive */
 	// let archiving = $state(false);
@@ -211,6 +213,80 @@
 					</div>
 				</Card>
 			{/if}
+			<Card header="Roles" full>
+				<p>
+					These are the roles that volunteers can commit to. Create roles such as "reviewer",
+					"program commitee", "associate editor" to represent the different kinds of contributions
+					volunteers can make to this venue.
+				</p>
+
+				<h3>Roles</h3>
+				{#if editor}
+					<form>
+						<TextField
+							bind:text={newRole}
+							size={19}
+							placeholder="name"
+							valid={(text) => validIdentifier(text)}
+						/><Button
+							tip="Create a new role"
+							action={() => handle(db.createRole(venue.id, newRole))}>Create role</Button
+						>
+					</form>
+				{/if}
+				{#if roles}
+					{#if editor}
+						{#each roles as role (role.id)}
+							<EditableText
+								text={role.name}
+								label="name"
+								placeholder=""
+								valid={validIdentifier}
+								edit={(text) => db.editRoleName(role.id, text)}
+							/>
+							<EditableText
+								text={role.description}
+								label="description"
+								placeholder=""
+								edit={(text) => db.editRoleDescription(role.id, text)}
+							/>
+							<Checkbox on={role.invited} change={(on) => db.editRoleInvited(role.id, on)}
+								>Invited <Note
+									>{#if role.invited}Scholars can volunteer for this without permission{:else}Scholars
+										must be invited to this role.{/if}</Note
+								>
+							</Checkbox>
+							<Slider
+								min={1}
+								max={venue.welcome_amount}
+								value={role.amount}
+								step={1}
+								label="compensation"
+								unit="tokens/submission"
+								change={(value) => handle(db.editRoleAmount(role.id, value))}
+							/>
+						{:else}
+							<Feedback>No roles yet. Add one.</Feedback>
+						{/each}
+					{:else}
+						{#each roles as role (role.id)}
+							<div class="role">
+								<div class="tags">
+									<Tag>{role.name}</Tag>
+									<Tokens amount={role.amount}></Tokens>/submission
+								</div>
+								{#if role.description.length > 0}
+									<Note>{role.description}</Note>
+								{/if}
+							</div>
+						{:else}
+							<Feedback>This venue has no volunteer roles.</Feedback>
+						{/each}
+					{/if}
+				{:else}
+					<Feedback error>Couldn't load venue's roles.</Feedback>
+				{/if}
+			</Card>
 		</Cards>
 	</Page>
 {/if}
@@ -412,3 +488,11 @@
 		<p><Button tip="Confirm archive venue" action={() => archive(source)}>Archive</Button></p>
 	{/if}
 </EditorsOnly> -->
+
+<style>
+	.role {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing);
+	}
+</style>

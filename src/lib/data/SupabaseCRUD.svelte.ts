@@ -8,6 +8,7 @@ import type {
 	CurrencyID,
 	ProposalID,
 	ProposalRow,
+	RoleID,
 	ScholarID,
 	ScholarRow,
 	SupporterID,
@@ -365,6 +366,38 @@ export default class SupabaseCRUD extends CRUD {
 	async editVenueBidding(id: VenueID, bidding: boolean) {
 		const { error } = await this.client.from('venues').update({ bidding }).eq('id', id);
 		if (error) return 'EditVenueBidding';
+		else return;
+	}
+
+	async createRole(id: VenueID, name: string) {
+		const { error } = await this.client
+			.from('roles')
+			.insert({ venueid: id, amount: 10, invited: true, name });
+		if (error) return 'CreateRole';
+		else return;
+	}
+
+	async editRoleName(id: RoleID, name: string) {
+		const { error } = await this.client.from('roles').update({ name }).eq('id', id);
+		if (error) return 'UpdateRoleName';
+		else return;
+	}
+
+	async editRoleDescription(id: RoleID, description: string) {
+		const { error } = await this.client.from('roles').update({ description }).eq('id', id);
+		if (error) return 'UpdateRoleDescription';
+		else return;
+	}
+
+	async editRoleInvited(id: RoleID, on: boolean) {
+		const { error } = await this.client.from('roles').update({ invited: on }).eq('id', id);
+		if (error) return 'UpdateRoleInvited';
+		else return;
+	}
+
+	async editRoleAmount(id: RoleID, amount: number) {
+		const { error } = await this.client.from('roles').update({ amount }).eq('id', id);
+		if (error) return 'UpdateRoleAmount';
 		else return;
 	}
 }

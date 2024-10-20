@@ -84,6 +84,7 @@
 			bind:view={button}
 			tip={editing ? 'Save ' + (label ?? placeholder) : 'Edit ' + (label ?? placeholder)}
 			type="submit"
+			active={valid && editing ? valid(text) : undefined}
 			action={(event) => (editing ? saveEdit(event) : startEditing(event))}
 			>{#if editing}{invalid ? DeleteLabel : ConfirmLabel}{:else if editing === undefined}<Dots
 				/>{:else}{EditLabel}{/if}</Button

@@ -5,11 +5,17 @@
 	let {
 		header,
 		group,
+		full = false,
 		children
-	}: { header: string; group?: 'editors' | 'stewards'; children: Snippet } = $props();
+	}: {
+		header: string;
+		group?: 'editors' | 'stewards';
+		full?: boolean;
+		children: Snippet;
+	} = $props();
 </script>
 
-<div class="card">
+<div class="card" class:full>
 	<h2>
 		{header}
 		{#if group}<Tag>{group}</Tag>{/if}
@@ -28,6 +34,11 @@
 		flex: 1;
 		min-width: 10em;
 		max-width: 40em;
+	}
+
+	.full {
+		min-width: 100%;
+		max-width: 100%;
 	}
 
 	h2 {
