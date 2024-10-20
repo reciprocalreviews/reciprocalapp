@@ -36,19 +36,16 @@ export type Database = {
     Tables: {
       commitments: {
         Row: {
-          amount: number
           id: string
           label: string
           venueid: string
         }
         Insert: {
-          amount: number
           id?: string
           label: string
           venueid: string
         }
         Update: {
-          amount?: number
           id?: string
           label?: string
           venueid?: string
@@ -169,6 +166,7 @@ export type Database = {
       }
       roles: {
         Row: {
+          amount: number
           description: string
           id: string
           invited: boolean
@@ -176,6 +174,7 @@ export type Database = {
           venueid: string
         }
         Insert: {
+          amount: number
           description?: string
           id?: string
           invited: boolean
@@ -183,6 +182,7 @@ export type Database = {
           venueid: string
         }
         Update: {
+          amount?: number
           description?: string
           id?: string
           invited?: boolean

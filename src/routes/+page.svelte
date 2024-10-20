@@ -4,6 +4,7 @@
 	import Link from '$lib/components/Link.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import Page from '$lib/components/Page.svelte';
+	import Tokens from '$lib/components/Tokens.svelte';
 </script>
 
 <svelte:head>
@@ -23,7 +24,8 @@
 
 		<ol>
 			<li>
-				<strong>Editors set a cost</strong> for submissions, priced in <Tag>review tokens</Tag>.
+				<strong>Editors set a cost</strong> for submissions, priced in <em>review tokens</em>, e.g.
+				<Tokens amount={10}></Tokens>.
 			</li>
 			<li>
 				<strong>Authors earn tokens</strong> by volunteering for venues, sharing expertise and availability,
