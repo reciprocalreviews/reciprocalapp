@@ -34,8 +34,9 @@
 			| {
 					id: any;
 					scholarid: {
-						id: any;
-						name: any;
+						id: string;
+						name: string | null;
+						email: string;
 					};
 					message: any;
 					created: any;
@@ -141,9 +142,9 @@
 					<div class="support">
 						<p class="support">
 							<span class="meta"
-								><Link to={`/scholar/${scholar.id}`}>{scholar.name}</Link><Date
-									time={supporter.created}
-								/>
+								><Link to={`/scholar/${scholar.id}`}
+									>{scholar.name ? scholar.name : scholar.email}</Link
+								><Date time={supporter.created} />
 								{#if !approved && editable}
 									<Button
 										tip="Delete support"
@@ -232,7 +233,7 @@
 	.meta {
 		display: flex;
 		flex-direction: row;
-		align-items: center;
+		align-items: baseline;
 		gap: var(--spacing);
 	}
 
