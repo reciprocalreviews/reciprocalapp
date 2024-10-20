@@ -7,7 +7,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ### Added
 
-- Venue page: currency link, welcome amount, bidding toggle, role creation and editing.
+- Venue page: currency link, welcome amount, bidding toggle, role creation, editing, and deletion.
 
 ### Fixed
 
