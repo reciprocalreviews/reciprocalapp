@@ -23,7 +23,7 @@
 	import { handle } from '../../errors.svelte';
 
 	let { data } = $props();
-	const { venue, scholar } = $derived(data);
+	const { venue, currency, scholar } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -183,6 +183,15 @@
 					/>
 				</Card>
 			{/if}
+			<Card header="Currency">
+				{#if currency}
+					<p>
+						This venue uses the <Link to="/currency/{venue.currency}">{currency.name}</Link> currency.
+					</p>
+				{:else}
+					<Feedback error>Unable to load this venue's currency.</Feedback>
+				{/if}
+			</Card>
 		</Cards>
 	</Page>
 {/if}
