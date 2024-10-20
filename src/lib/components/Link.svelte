@@ -28,6 +28,7 @@
 	a:focus {
 		outline: var(--focus-color) solid var(--thick-border-width);
 		border-radius: var(--roundedness);
+		outline-offset: var(--border-width);
 	}
 
 	a[aria-current] {

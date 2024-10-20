@@ -62,18 +62,18 @@
 			<Link to="https://reciprocalreviews.substack.com/">newsletter</Link>:
 		</p>
 	{/if}
+
+	<h2>Updates</h2>
+
+	<p>Follow along on our newsletter.</p>
+
+	<iframe
+		src="https://reciprocalreviews.substack.com/embed"
+		title="Newsletter subscription"
+		width="480"
+		height="150"
+		style="border:none; background:white;"
+		frameborder="0"
+		scrolling="no"
+	></iframe>
 </Page>
-
-<h2>Updates</h2>
-
-<p>Follow along on our newsletter.</p>
-
-<iframe
-	src="https://reciprocalreviews.substack.com/embed"
-	title="Newsletter subscription"
-	width="480"
-	height="150"
-	style="border:none; background:white;"
-	frameborder="0"
-	scrolling="no"
-></iframe>

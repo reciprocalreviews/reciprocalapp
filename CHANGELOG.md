@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.0.7 2024-10-20
 
+### Fixed
+
+- A few typography improvements.
+
 ### Maintenance
 
 - Upgraded to Svelte 5.0.
