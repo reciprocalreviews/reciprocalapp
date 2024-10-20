@@ -352,4 +352,13 @@ export default class SupabaseCRUD extends CRUD {
 		if (error) return 'EditVenueTitle';
 		else return;
 	}
+
+	async editVenueWelcomeAmount(id: VenueID, amount: number) {
+		const { error } = await this.client
+			.from('venues')
+			.update({ welcome_amount: amount })
+			.eq('id', id);
+		if (error) return 'EditVenueWelcomeAmount';
+		else return;
+	}
 }

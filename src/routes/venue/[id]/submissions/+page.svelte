@@ -14,7 +14,7 @@
 	import createSubmission from '$lib/data/createSubmission';
 	import { ORCIDRegex } from '../../../../data/ORCID';
 	import { getAuth } from '../../../Auth.svelte';
-	import validName from '$lib/components/validName';
+	import { validIdentifier } from '$lib/validation';
 
 	const db = getDB();
 	const auth = getAuth();
@@ -68,7 +68,7 @@
 		cost: number
 	) {
 		return (
-			validName(title) &&
+			validIdentifier(title) &&
 			validExternalID(externalID) &&
 			validMeta(metaID) &&
 			validCharges(charges, cost)
@@ -113,7 +113,7 @@
 					size={40}
 					placeholder="Submission Title"
 					bind:text={title}
-					valid={validName}
+					valid={validIdentifier}
 				/>
 				<Note>For display on this site.</Note>
 				<TextField

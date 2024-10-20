@@ -14,9 +14,7 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
-	import validEmails from '$lib/components/validEmails';
-	import validURL from '$lib/components/validURL';
-	import validName from '$lib/components/validName';
+	import { validEmails, validURL, validIdentifier } from '$lib/validation';
 
 	let { data } = $props();
 
@@ -123,7 +121,7 @@
 								label="support"
 								inline
 								placeholder="Why should the editors adopt Reciprocal Reviews?"
-								valid={validName}
+								valid={validIdentifier}
 							/>
 							<Button tip="Submit support" action={support} active={message.length > 0}
 								>Add support</Button
@@ -162,7 +160,7 @@
 							<EditableText
 								text={supporter.message}
 								placeholder="Reasons for support."
-								valid={validName}
+								valid={validIdentifier}
 								edit={(text) => db.editSupport(supporter.id, text)}
 							/>
 						{:else}
@@ -179,7 +177,7 @@
 						label="title"
 						text={proposal.title}
 						placeholder="Venue title"
-						valid={validName}
+						valid={validIdentifier}
 						edit={(text) => db.editProposalTitle(proposal.id, text)}
 					/>
 					<EditableText

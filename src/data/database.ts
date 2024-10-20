@@ -288,7 +288,7 @@ export type Database = {
           id: string
           title: string
           url: string
-          welcome_amount: number | null
+          welcome_amount: number
         }
         Insert: {
           bidding?: boolean
@@ -298,7 +298,7 @@ export type Database = {
           id?: string
           title?: string
           url?: string
-          welcome_amount?: number | null
+          welcome_amount: number
         }
         Update: {
           bidding?: boolean
@@ -308,7 +308,7 @@ export type Database = {
           id?: string
           title?: string
           url?: string
-          welcome_amount?: number | null
+          welcome_amount?: number
         }
         Relationships: [
           {

@@ -17,9 +17,7 @@
 	import Card from '$lib/components/Card.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
-	import validName from '$lib/components/validName';
-	import validURL from '$lib/components/validURL';
-	import validEmail from '$lib/components/validEmail';
+	import { validIdentifier, validURL, validEmail, validInteger } from '$lib/validation';
 	import { handle } from '../../errors.svelte';
 
 	let { data } = $props();
@@ -165,13 +163,26 @@
 					Program Chairs of a conference.
 				</Note>
 			</Card>
+			<Card header="Currency">
+				{#if currency}
+					<p>
+						This venue uses the <Link to="/currency/{venue.currency}">{currency.name}</Link> currency.
+					</p>
+				{:else}
+					<Feedback error>Unable to load this venue's currency.</Feedback>
+				{/if}
+
+				<p>
+					Newcomers receive <Tokens amount={venue.welcome_amount}></Tokens> when they volunteer to review.
+				</p>
+			</Card>
 			{#if editor}
-				<Card header="Metadata" group="editors">
+				<Card header="Settings" group="editors">
 					<EditableText
 						text={venue.title}
 						label="title"
 						placeholder=""
-						valid={validName}
+						valid={validIdentifier}
 						edit={(text) => db.editVenueTitle(venue.id, text)}
 					/>
 					<EditableText
@@ -181,17 +192,15 @@
 						valid={validURL}
 						edit={(text) => db.editVenueURL(venue.id, text)}
 					/>
+					<EditableText
+						text={venue.welcome_amount.toString()}
+						label="Welcome tokens"
+						placeholder="e.g., 30"
+						valid={validInteger}
+						edit={(text) => db.editVenueWelcomeAmount(venue.id, parseInt(text))}
+					/>
 				</Card>
 			{/if}
-			<Card header="Currency">
-				{#if currency}
-					<p>
-						This venue uses the <Link to="/currency/{venue.currency}">{currency.name}</Link> currency.
-					</p>
-				{:else}
-					<Feedback error>Unable to load this venue's currency.</Feedback>
-				{/if}
-			</Card>
 		</Cards>
 	</Page>
 {/if}

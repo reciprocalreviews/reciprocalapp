@@ -55,7 +55,8 @@ export const Errors = {
 	EditVenueAddEditorScholarNotFound: 'Unable to find scholar by this email or ORCID',
 	EditVenueAddEditorAlreadyEditor: 'Scholar is already an editor',
 	EditVenueTitle: 'Unable to edit the venue title',
-	EditVenueURL: 'Unable to edit the venue URL'
+	EditVenueURL: 'Unable to edit the venue URL',
+	EditVenueWelcomeAmount: 'Unable to edit the welcome amount'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -177,4 +178,5 @@ export default abstract class CRUD {
 	abstract addVenueEditor(id: VenueID, emailOrORCID: string): Promise<ErrorID | undefined>;
 	abstract editVenueTitle(id: VenueID, title: string): Promise<ErrorID | undefined>;
 	abstract editVenueURL(id: VenueID, url: string): Promise<ErrorID | undefined>;
+	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<ErrorID | undefined>;
 }
