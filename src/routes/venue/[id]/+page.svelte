@@ -105,6 +105,8 @@
 				{/if}
 			</Card>
 			<Card header="Volunteer" full>
+				<p>See <Link to="/venue/{venue.id}/volunteers">all volunteers</Link> for this venue.</p>
+
 				{#if roles}
 					{#each roles as role (role.id)}
 						{@const commitment = commitments?.find((c) => c.roleid === role.id)}

@@ -10,6 +10,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Added ability to volunteer for a role and set expertise.
 - Added ability to stop volunteering for a role.
 - Added list of volunteer roles to profile.
+- Added list of venue volunteers.
 
 ### Fixed
 

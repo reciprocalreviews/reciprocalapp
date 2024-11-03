@@ -2,15 +2,28 @@
 	import { getDB } from '$lib/data/CRUD';
 	import Link from './Link.svelte';
 
-	export let id: string;
+	interface Props {
+		id: string;
+		name?: string;
+	}
+
+	let { id, name }: Props = $props();
 
 	const db = getDB();
 </script>
 
-{#await db.getSource(id)}
-	...
-{:then source}
-	<Link to="/source/{source.id}">{source.name}</Link>
-{:catch}
-	?
-{/await}
+{#snippet link(id: string, name: string)}
+	<Link to="/source/{id}">{name}</Link>
+{/snippet}
+
+{#if name === undefined}
+	{#await db.getSource(id)}
+		...
+	{:then source}
+		{@render link(id, source.name)}
+	{:catch}
+		?
+	{/await}
+{:else}
+	{@render link(id, name)}
+{/if}

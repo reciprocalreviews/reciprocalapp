@@ -46,9 +46,7 @@ export default class SupabaseCRUD extends CRUD {
 	createSource(source: Source): Promise<Source> {
 		throw new Error('Method not implemented.');
 	}
-	getSource(sourceID: string): Promise<Source> {
-		throw new Error('Method not implemented.');
-	}
+	getSource(sourceID: string): Promise<Source> {}
 	getSources(): Promise<Source[]> {
 		throw new Error('Method not implemented.');
 	}
