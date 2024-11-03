@@ -13,11 +13,13 @@
 			?.map((c) => {
 				return {
 					name: c.roles?.name,
-					venue: venues?.find((v) => v.id === c.roles?.venueid)?.title
+					venue: venues?.find((v) => v.id === c.roles?.venueid)?.title,
+					venueid: c.roles?.venueid
 				};
 			})
 			.filter(
-				(v): v is { name: string; venue: string } => v.name !== undefined && v.venue !== undefined
+				(v): v is { name: string; venue: string; venueid: string } =>
+					v.name !== undefined && v.venue !== undefined && v.venueid !== undefined
 			) ?? []
 	);
 

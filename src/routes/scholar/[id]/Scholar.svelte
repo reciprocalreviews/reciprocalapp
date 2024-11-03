@@ -13,11 +13,13 @@
 	import Cards from '$lib/components/Cards.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Tag from '$lib/components/Tag.svelte';
+	import SourceLink from '$lib/components/SourceLink.svelte';
 
 	let {
 		scholar,
 		commitments
-	}: { scholar: Scholar; commitments: { name: string; venue: string }[] } = $props();
+	}: { scholar: Scholar; commitments: { name: string; venue: string; venueid: string }[] } =
+		$props();
 
 	const db = getDB();
 	const auth = getAuth();
@@ -89,7 +91,10 @@
 			{#if commitments.length > 0}
 				<ul>
 					{#each commitments as commitment}
-						<li>{commitment.venue} <Tag>{commitment.name}</Tag></li>
+						<li>
+							<SourceLink id={commitment.venueid} name={commitment.venue} />
+							<Tag>{commitment.name}</Tag>
+						</li>
 					{/each}
 				</ul>
 			{:else}
