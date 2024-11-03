@@ -79,7 +79,7 @@
 				<Button
 					warn="Delete this role and all volunteers?"
 					tip="Delete this role"
-					action={() => handle(db.deleteRole(role.id))}>{DeleteLabel} …</Button
+					action={() => handle(db.deleteRole(role.id))}>Delete {DeleteLabel} …</Button
 				>
 			</Card>
 		{:else}

@@ -254,6 +254,7 @@ export default class SupabaseCRUD extends CRUD {
 				url: proposalData.url,
 				editors,
 				welcome_amount: 40,
+				submission_cost: 40,
 				currency: currencyData.id
 			})
 			.select()
@@ -360,6 +361,15 @@ export default class SupabaseCRUD extends CRUD {
 			.update({ welcome_amount: amount })
 			.eq('id', id);
 		if (error) return 'EditVenueWelcomeAmount';
+		else return;
+	}
+
+	async editVenueSubmissionCost(id: VenueID, amount: number) {
+		const { error } = await this.client
+			.from('venues')
+			.update({ submission_cost: amount })
+			.eq('id', id);
+		if (error) return 'EditVenueSubmissionCost';
 		else return;
 	}
 

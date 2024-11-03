@@ -58,6 +58,7 @@ export const Errors = {
 	EditVenueTitle: 'Unable to edit the venue title',
 	EditVenueURL: 'Unable to edit the venue URL',
 	EditVenueWelcomeAmount: 'Unable to edit the welcome amount',
+	EditVenueSubmissionCost: 'Unable to edit the submission cost',
 	EditVenueBidding: 'Unable to toggle bidding',
 	CreateRole: 'Unable to create new role.',
 	UpdateRoleName: 'Unable to update role name',
@@ -187,6 +188,7 @@ export default abstract class CRUD {
 	abstract editVenueTitle(id: VenueID, title: string): Promise<ErrorID | undefined>;
 	abstract editVenueURL(id: VenueID, url: string): Promise<ErrorID | undefined>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<ErrorID | undefined>;
+	abstract editVenueSubmissionCost(id: VenueID, amount: number): Promise<ErrorID | undefined>;
 	abstract editVenueBidding(id: VenueID, bidding: boolean): Promise<ErrorID | undefined>;
 
 	abstract createRole(id: VenueID, name: string): Promise<ErrorID | undefined>;

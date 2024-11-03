@@ -174,6 +174,10 @@
 				<p>
 					Newcomers receive <Tokens amount={venue.welcome_amount}></Tokens> when they volunteer to review.
 				</p>
+
+				<p>
+					New submissions cost <Tokens amount={venue.submission_cost}></Tokens>.
+				</p>
 			</Card>
 			{#if editor}
 				<Card header="Settings" group="editors">
@@ -194,9 +198,16 @@
 					<EditableText
 						text={venue.welcome_amount.toString()}
 						label="Welcome tokens"
-						placeholder="e.g., 30"
+						placeholder="e.g., 40"
 						valid={validInteger}
 						edit={(text) => db.editVenueWelcomeAmount(venue.id, parseInt(text))}
+					/>
+					<EditableText
+						text={venue.submission_cost.toString()}
+						label="Submission cost"
+						placeholder="e.g., 40"
+						valid={validInteger}
+						edit={(text) => db.editVenueSubmissionCost(venue.id, parseInt(text))}
 					/>
 					<div>
 						<Checkbox on={venue.bidding} change={(on) => db.editVenueBidding(venue.id, on)}

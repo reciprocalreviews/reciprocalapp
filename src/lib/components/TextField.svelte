@@ -138,6 +138,7 @@
 	input[disabled],
 	textarea[disabled] {
 		border-color: var(--inactive-color);
+		border-bottom: var(--thick-border-width) dotted var(--inactive-color);
 	}
 
 	input.invalid,
