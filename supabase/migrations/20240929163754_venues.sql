@@ -78,58 +78,29 @@ create policy "only editors can update roles" on public.roles
 create policy "only editors can delete roles" on public.roles
   for delete to anon, authenticated using (isEditor(venueid));
 
--- only editors can create commitments
--- only editors can update commitments
--- anyone can view commitments
--- only editors can delete commitments
-create table commitments (
-  -- The unique id of the commitment
-  id uuid not null default uuid_generate_v1() primary key,
-  -- The ID of the venue
-  venueid uuid not null references venues(id) on delete cascade,
-  -- The label for the commitment
-  label text not null
-);
-
-create index commitments_venue_index on commitments(venueid);
-
-alter table public.commitments
-  enable row level security;
-
-create policy "only editors can create commitments" on public.commitments
-  for insert to anon, authenticated with check (isEditor(venueid));
-
-create policy "anyone can view commitments" on public.commitments
-  for select to anon, authenticated using (true);
-
-create policy "only editors can update commitments" on public.commitments
-  for update to anon, authenticated using (isEditor(venueid));
-
-create policy "only editors can delete commitments" on public.commitments
-  for delete to anon, authenticated using (isEditor(venueid));
-
 -- editors can invite and volunteers if not invite only
 -- anyone can view volunteers
 -- only volunteers can update
 -- editors and volunteers can delete
 create table volunteers (
+  -- The unique id of the role
+  id uuid not null default uuid_generate_v1() primary key,
   -- The id of the scholar who volunteered
   scholarid uuid not null references scholars(id) on delete cascade,
   -- The role they volunteered for
   roleid uuid not null references roles(id) on delete cascade,
-  -- The id of the venue volunteered for
-  venueid uuid not null references venues(id) on delete cascade,
-  -- The commitment they made
-  committment uuid not null references commitments(id) on delete cascade,
   -- When this record was last updated
   created timestamp with time zone not null default now(),
   -- Relevant expertise provided by the scholar for the role
   expertise text not null,
   -- Optionally, how many submissions they wish to review in the role
-  count integer default null
+  count integer default null,
+  -- Whether this volunteering committment is active. 
+  -- Helps distinguish between first time volunteer and returning, so that newcomer tokens are only granted once.
+  -- Also indicates whether invite only roles have been accepted.
+  active boolean default true
 );
 
-create index venue_volunteer_index on volunteers(venueid);
 create index scholar_volunteer_index on volunteers(scholarid);
 create index role_volunteer_index on volunteers(roleid);
 
@@ -138,7 +109,7 @@ alter table public.volunteers
 
 create policy "editors can invite and volunteers if not invite only" on public.volunteers
   for insert to anon, authenticated with check (
-    isEditor(venueid) or 
+    isEditor((select venueid from roles where id = roleid)) or 
     (auth.uid() = scholarid and (select invited from roles where id = roleid))
     );
 
@@ -149,7 +120,7 @@ create policy "volunteers can update" on public.volunteers
   for update to anon, authenticated using (auth.uid() = scholarid);
 
 create policy "editors and volunteers can delete" on public.volunteers
-  for delete to anon, authenticated using (isEditor(venueid) or auth.uid() = scholarid);
+  for delete to anon, authenticated using (isEditor((select venueid from roles where id = roleid)) or auth.uid() = scholarid);
 
 -- anyone can propose venues
 -- anyone can view proposals

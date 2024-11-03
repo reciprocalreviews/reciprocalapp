@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.0.8 2024-11-03
 
+### Added
+
+- Added ability to volunteer for a role.
+
 ### Fixed
 
 - Fixed venues link on home page.

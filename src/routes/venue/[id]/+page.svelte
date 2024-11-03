@@ -24,81 +24,9 @@
 	const { venue, currency, scholar, roles, commitments } = $derived(data);
 
 	const db = getDB();
-	const auth = getAuth();
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
 
-	/** State for pricing edits */
-	let editingTokens = $state(false);
-	let submitCost: number = $state(0);
-	let reviewPay: number = $state(0);
-	let metaPay: number = $state(0);
-	let editPay: number = $state(0);
 	let newEditor: string = $state('');
-
-	// /** Whether we're confirming desire to archive */
-	// let archiving = $state(false);
-
-	// function editTokens(source: Source) {
-	// 	if (editingTokens) {
-	// 		editingTokens = false;
-	// 		source.cost = {
-	// 			submit: submitCost,
-	// 			review: reviewPay,
-	// 			meta: metaPay,
-	// 			edit: editPay
-	// 		};
-	// 		sourcePromise = db.updateSource(source);
-	// 	} else {
-	// 		// Editing? Initialize all of the widgets with the current values.
-	// 		editingTokens = true;
-	// 		submitCost = source.cost.submit;
-	// 		reviewPay = source.cost.review;
-	// 		metaPay = source.cost.meta;
-	// 		editPay = source.cost.edit;
-	// 	}
-	// }
-
-	// function archive(source: Source) {
-	// 	source.archived = true;
-	// 	sourcePromise = db.updateSource(source);
-	// }
-
-	// function toggleSourceVolunteer(scholar: Scholar, id: SourceID) {
-	// 	const newSources = { ...scholar.sources };
-
-	// 	// Remove the key
-	// 	if (id in newSources) delete newSources[id];
-	// 	// Add the source with an empty expertise list.
-	// 	else newSources[id] = [];
-
-	// 	scholar.sources = newSources;
-	// 	scholarPromise = db.updateScholar(scholar);
-	// }
-
-	// function toggleSourceExpertise(scholar: Scholar, expertise: Expertise, yes: boolean) {
-	// 	const currentExpertise = scholar.sources[sourceID] ?? [];
-	// 	const newExpertise = yes
-	// 		? Array.from(new Set([...currentExpertise, expertise.phrase]))
-	// 		: currentExpertise.filter((exp) => exp !== expertise.phrase);
-	// 	scholar.sources[sourceID] = newExpertise;
-	// 	scholarPromise = db.updateScholar(scholar);
-	// }
-
-	// let newExpertise: string = $state('');
-	// function addExpertise(source: Source, phrase: string) {
-	// 	source.expertise = [...source.expertise, { phrase, deprecated: false, kind: 'topic' }];
-	// 	sourcePromise = db.updateSource(source);
-	// 	newExpertise = '';
-	// }
-
-	// function toggleExpertiseKind(source: Source, expertise: Expertise) {
-	// 	source.expertise = source.expertise.map((exp) =>
-	// 		exp.phrase === expertise.phrase
-	// 			? { ...expertise, kind: expertise.kind === 'method' ? 'topic' : 'method' }
-	// 			: exp
-	// 	);
-	// 	sourcePromise = db.updateSource(source);
-	// }
 </script>
 
 {#if venue === null}
@@ -179,15 +107,53 @@
 			<Card header="Volunteer" full>
 				{#if roles}
 					{#each roles as role (role.id)}
-						<div class="role">
-							<div class="tags">
-								<Tag>{role.name}</Tag>
-								<Tokens amount={role.amount}></Tokens>/submission
+						{@const commitment = commitments?.find((c) => c.roleid === role.id)}
+						<Card>
+							<div class="role">
+								<div class="tags">
+									<Tag>{role.name}</Tag>
+									{#if role.invited}<Tag>invite only</Tag>{/if}
+									<Tokens amount={role.amount}></Tokens>/submission
+									{#if scholar && !role.invited && commitment === undefined}
+										<Button
+											tip="Volunteer for this role"
+											action={() => handle(db.createVolunteer(scholar.id, role.id))}
+											>Volunteer …</Button
+										>
+									{/if}
+								</div>
+								<Note
+									>{#if role.description.length > 0}{role.description}{:else}<em>No description.</em
+										>{/if}</Note
+								>
+
+								{#if commitment}
+									<hr />
+									{#if role.invited}{:else if commitment.active}
+										<p>
+											Thanks for volunteering for this role! <Button
+												tip="Stop volunteering"
+												action={() => handle(db.updateVolunteerActive(commitment.id, false))}
+												>Stop...</Button
+											>
+										</p>
+										<EditableText
+											text={commitment.expertise}
+											label="what is your expertise?"
+											placeholder="topic, area, method, theory, etc."
+											edit={(text) => db.updateVolunteerExpertise(commitment.id, text)}
+										/>
+									{:else}
+										<p>
+											You stopped volunteering for this role. <Button
+												tip="Resume volunteering"
+												action={() => handle(db.updateVolunteerActive(commitment.id, true))}
+												>Resume...</Button
+											>
+										</p>{/if}
+								{/if}
 							</div>
-							{#if role.description.length > 0}
-								<Note>{role.description}</Note>
-							{/if}
-						</div>
+						</Card>
 					{:else}
 						<Feedback>This venue has no volunteer roles.</Feedback>
 					{/each}
@@ -245,6 +211,8 @@
 						contributions volunteers can make to this venue.
 					</p>
 
+					<h3>Editors</h3>
+
 					<h3>Roles</h3>
 					<Roles {venue} {roles} />
 				</Card>
@@ -252,147 +220,6 @@
 		</Cards>
 	</Page>
 {/if}
-
-<!-- {#if uid && !source.archived}
-		{#await scholarPromise}
-			<Loading />
-		{:then scholar}
-			<p>
-				When you volunteer to review for a source, your name will be public on the volunteer page of
-				willing reviewers, along with the number of reviews you are seeking. If you stop reviewing,
-				you will no longer be listed.
-			</p>
-			{#if scholar}
-				<p>
-					<Button action={() => toggleSourceVolunteer(scholar, source.id)}
-						>{#if source.id in scholar.sources}Un-volunteer{:else}Volunteer{/if}</Button
-					>
-				</p>
-
-				{#if source.id in scholar.sources}
-					<p>What <strong>methods</strong> expertise do you have?</p>
-
-					<p>
-						{#each source.expertise.filter((exp) => !exp.deprecated && exp.kind === 'method') as expertise}
-							<Checkbox
-								on={scholar.sources[source.id].includes(expertise.phrase)}
-								change={(on) => toggleSourceExpertise(scholar, expertise, on)}
-								>{expertise.phrase}</Checkbox
-							>
-						{/each}
-					</p>
-
-					<p>What <strong>topical</strong> expertise do you have?</p>
-
-					<p>
-						{#each source.expertise.filter((exp) => !exp.deprecated && exp.kind === 'topic') as expertise}
-							<Checkbox
-								on={scholar.sources[source.id].includes(expertise.phrase)}
-								change={(on) => toggleSourceExpertise(scholar, expertise, on)}
-								>{expertise.phrase}</Checkbox
-							>
-						{/each}
-					</p>
-
-					<p>Write the editor if you have expertise not listed here.</p>
-				{/if}
-			{/if}
-		{:catch}
-			<Feedback>Couldn't check volunteering status.</Feedback>
-		{/await}
-	{:else}
-		<p>You need to log in to volunteer.</p>
-
-		<p>These are the <strong>methods</strong> expertise this journal currently seeks.</p>
-
-		<p>
-			<Tags>
-				{#each source.expertise.filter((exp) => exp.kind === 'method') as expertise}{#if !expertise.deprecated}<Tag
-							>{expertise.phrase}</Tag
-						>{/if}{/each}
-			</Tags>
-		</p>
-
-		<p>These are the <strong>topical</strong> expertise this journal currently seeks.</p>
-
-		<p>
-			<Tags>
-				{#each source.expertise.filter((exp) => exp.kind === 'topic') as expertise}{#if !expertise.deprecated}<Tag
-							>{expertise.phrase}</Tag
-						>{/if}{/each}
-			</Tags>
-		</p>
-	{/if} -->
-
-<!-- <EditorsOnly {editor}>
-	<h2>Submissions</h2>
-
-	<p>
-		See the list of <Link to="/source/{$page.params.id}/submissions">submissions in review</Link>.
-	</p>
-
-	<h2>Expertise</h2>
-
-	<p>
-		Define expertise phrases that reviewers can indicate to help identify reviewers. We recommend
-		curating this as a community, to accurately reflect how reviewers wish to represent their
-		expertise.
-	</p>
-
-	<p>
-		<TextField label="expertise" placeholder="description" bind:text={newExpertise} />
-		<Button
-			tip="Add expertise"
-			action={() => addExpertise(source, newExpertise)}
-			active={newExpertise.length > 0}>+ expertise</Button
-		>
-	</p>
-
-	<Table>
-		{#each source.expertise as expertise}
-			<tr>
-				<td>
-					<Tag>{expertise.phrase}</Tag>
-				</td>
-				<td>
-					<Checkbox
-						on={expertise.deprecated}
-						change={async () => {
-							return undefined;
-						}}>deprecated</Checkbox
-					>
-				</td>
-				<td>
-					<div
-						role="button"
-						tabindex="0"
-						style:cursor="pointer"
-						style:user-select="none"
-						onclick={() => toggleExpertiseKind(source, expertise)}
-						onkeydown={() => toggleExpertiseKind(source, expertise)}
-					>
-						<Status good={expertise.kind === 'topic'}>{expertise.kind}</Status>
-					</div>
-				</td>
-			</tr>
-		{/each}
-	</Table>
-
-	<h2>Archive</h2>
-	<p>
-		Archiving this source will remove it from the list of sources and prevent future submissions,
-		transactions, and volunteers from being added. The history of transactions will be preserved.
-	</p>
-	<p>
-		<Button tip="Archive venue" action={() => (archiving = !archiving)}
-			>{#if archiving}Cancel{:else}Archive...{/if}</Button
-		>
-	</p>
-	{#if archiving}
-		<Feedback error>Are you sure you want to archive this source?</Feedback>
-		<p><Button tip="Confirm archive venue" action={() => archive(source)}>Archive</Button></p>
-	{/if}
-</EditorsOnly> -->
 
 <style>
 	.role {

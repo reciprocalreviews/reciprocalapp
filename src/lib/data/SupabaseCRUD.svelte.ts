@@ -12,7 +12,8 @@ import type {
 	ScholarID,
 	ScholarRow,
 	SupporterID,
-	VenueID
+	VenueID,
+	VolunteerID
 } from '../../data/types';
 import CRUD, { type ErrorID } from './CRUD';
 import Scholar from './Scholar.svelte';
@@ -414,6 +415,50 @@ export default class SupabaseCRUD extends CRUD {
 	async deleteRole(id: RoleID) {
 		const { error } = await this.client.from('roles').delete().eq('id', id);
 		if (error) return 'DeleteRole';
+		else return;
+	}
+
+	async createVolunteer(scholarid: ScholarID, roleid: RoleID) {
+		// First, get all of the volunteer records for this scholar.
+		const { data: volunteer } = await this.client
+			.from('volunteers')
+			.select()
+			.eq('scholarid', scholarid);
+		// Couldn't get the volunteer records? Bail.
+		if (volunteer === null) return 'CreateVolunteer';
+
+		// Already volunteered for this role? Bail.
+		if (volunteer.some((v) => v.roleid === roleid)) return 'AlreadyVolunteered';
+
+		// Create the volunteer record.
+		const { error } = await this.client
+			.from('volunteers')
+			.insert({ scholarid, roleid, active: true, expertise: '', count: 1 });
+		if (error) return 'CreateVolunteer';
+
+		// If this is their first volunteer role for the venue, grant the number of welcome tokens for the venue.
+		if (volunteer.length === 0) {
+			// Get the role and the venue.
+			const { data: role } = await this.client.from('roles').select().eq('id', roleid).single();
+			if (role === null) return 'CreateVolunteer';
+			const venueid = role.venueid;
+			const { data: venue } = await this.client.from('venues').select().eq('id', venueid).single();
+			if (venue === null) return 'CreateVolunteer';
+			const welcome = venue.welcome_amount;
+
+			// TODO Finish after tokens and transactions table are created.
+		}
+	}
+
+	async updateVolunteerActive(id: VolunteerID, active: boolean): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('volunteers').update({ active }).eq('id', id);
+		if (error) return 'UpdateVolunteerActive';
+		else return;
+	}
+
+	async updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('volunteers').update({ expertise }).eq('id', id);
+		if (error) return 'UpdateVolunteerExpertise';
 		else return;
 	}
 }

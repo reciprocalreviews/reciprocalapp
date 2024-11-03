@@ -36,7 +36,9 @@
 	/><Button
 		tip="Create a new role"
 		active={validIdentifier(newRole)}
-		action={() => handle(db.createRole(venue.id, newRole))}>Create role</Button
+		action={async () => {
+			if (await handle(db.createRole(venue.id, newRole))) newRole = '';
+		}}>Create role</Button
 	>
 </form>
 {#if roles}

@@ -34,32 +34,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      commitments: {
-        Row: {
-          id: string
-          label: string
-          venueid: string
-        }
-        Insert: {
-          id?: string
-          label: string
-          venueid: string
-        }
-        Update: {
-          id?: string
-          label?: string
-          venueid?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "commitments_venueid_fkey"
-            columns: ["venueid"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       currencies: {
         Row: {
           description: string
@@ -317,40 +291,33 @@ export type Database = {
       }
       volunteers: {
         Row: {
-          committment: string
+          active: boolean | null
           count: number | null
           created: string
           expertise: string
+          id: string
           roleid: string
           scholarid: string
-          venueid: string
         }
         Insert: {
-          committment: string
+          active?: boolean | null
           count?: number | null
           created?: string
           expertise: string
+          id?: string
           roleid: string
           scholarid: string
-          venueid: string
         }
         Update: {
-          committment?: string
+          active?: boolean | null
           count?: number | null
           created?: string
           expertise?: string
+          id?: string
           roleid?: string
           scholarid?: string
-          venueid?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "volunteers_committment_fkey"
-            columns: ["committment"]
-            isOneToOne: false
-            referencedRelation: "commitments"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "volunteers_roleid_fkey"
             columns: ["roleid"]
@@ -363,13 +330,6 @@ export type Database = {
             columns: ["scholarid"]
             isOneToOne: false
             referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "volunteers_venueid_fkey"
-            columns: ["venueid"]
-            isOneToOne: false
-            referencedRelation: "venues"
             referencedColumns: ["id"]
           },
         ]

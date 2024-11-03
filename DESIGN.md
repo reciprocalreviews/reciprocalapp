@@ -41,7 +41,7 @@ _As Dana, program chair of ACM PLDI, I want to send out invites to a curated set
 
 - Dana logs into RR and proposes a PLDI 2025 venue instance.
 - The RR stewards approve it
-- Dana adds a description to the venue and defines the two roles, programm committee member and senior program committee member, defining both as `invite only` roles, with `yes` and `no` commitments.
+- Dana adds a description to the venue and defines the two roles, programm committee member and senior program committee member, defining both as `invite only` roles.
 - Dana populates the set of invitees into the venue for each role by submitting a list of email addresses
 - Dana sends invitation emails to everyone in each role in her mail client.
 - Some program committee members receive the invite, create an account if necessary, see the role to which they have been invited, and indicate yes or no.
@@ -54,7 +54,7 @@ _As Derek, EiC of IEEE TSE, I want to curate a set of reviewers who are eager to
 
 - Derek logs into RR and proposes a TSE venue instance.
 - The RR stewards approve it
-- Derek adds a description of the venue and sees the default reviewer role with `yes` and `no` commitments, and finds them suitable.
+- Derek adds a description of the venue and sees the default reviewer role.
 - Amy updates the TSE website to point to the reviewer volunteer link and adjusts the email templates to include RR's email receiver.
 - Community member is looking for reviewing practice and finds the volunteer link, and agrees to volunteer for up to 1 paper at a time.
 - The Associate Editor, when trying to find reviewers, scans the list of volunteers, and finds the volunteer, and invites them through the journal's review platform. This adds the publication record to the reviewer's list.
@@ -66,7 +66,7 @@ _As Amy, EiC of ACM TOCE, I want to incentivize reviewers to volunteer by requir
 
 - Amy logs into RR and proposes a TOCE venue instance.
 - The RR stewards approve it
-- Amy adds a description of the venue and sees the default reviewer role with `yes` and `no` commitments, and finds them suitable.
+- Amy adds a description of the venue and sees the default reviewer role and finds it suitable.
 - Amy sets the compensation levels to 10 tokens for a review, 10 for an AE recommendation, and 1 for an EiC decision, as well as costs of 40 tokens per submission. She also sets the welcome token rate to 30, enabling newcomers to submit if they review just once.
 - Amy updates the ACM TOCE website to point to the reviewer volunteer link and to the compensation costs. She also sends an email to `sigcse-members` to solicit volunteers and points to the link
 - Community members either receive the email, or see the volunteer link on the website, and log in to voluneer. Those are first time volunteers receive their newly minted welcome tokens.
@@ -125,7 +125,6 @@ A `Venue` is a named and curated collection of manuscripts undergoing peer revie
 - [x] `Venue`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
 - [x] `Venue`s can be proposed, but aren't created until approved.
 - [x] `Venue`s can have one or more volunteer roles, which are helpful for distinguishing between different types of volunteering for a venue (e.g., reviewer, reviewer for track A, meta-reviewer for track B)
-- [x] `Venue`s can have one or more commitments to a role, usually `yes` and `no`, but custom committments can support things like `maybe`, `if necessary`, and other social signals.
 - [x] When a `Scholar` volunteers for a `Venue`, they do so for a particular role, with a particular commitment, and optionally with a number of papers they are committing to review. Volunteering for a venue can also include a statement of expertise relevant to the role.
 
 Here is a SQL sketch of all of the tables involved in this.
@@ -172,21 +171,6 @@ create table roles (
   invited boolean not null
 );
 
--- Only editors can create commitments
--- Only editors can update commitments
--- Anyone can view commitments
--- Only editors can delete commitments
-create table commitments (
-  -- The unique id of the commitment
-  id uuid not null default uuid_generate_v1() primary key,
-  -- The ID of the venue
-  venueid uuid not null references venues(id) on delete cascade,
-  -- The label for the commitment
-  label text not null,
-  -- The token compensation for a commitment, in the venue's currency
-  amount integer not null
-);
-
 -- editors can invite and volunteers if not invite only
 -- anyone can view volunteers
 -- only volunteers can update
@@ -198,8 +182,6 @@ create table volunteers (
   roleid uuid not null references roles(id) on delete cascade,
   -- The id of the venue volunteered for
   venueid uuid not null references venues(id) on delete cascade,
-  -- The commitment they made
-  committment uuid not null references commitments(id) on delete cascade,
   -- When this record was last updated
   created timestamp with time zone not null default now(),
   -- Relevant expertise provided by the scholar for the role
@@ -415,9 +397,9 @@ The goal of the landing page is to 1) explain the value proposition of RR to edi
 
 The purpose of the about page is to give context about the project. It should:
 
-- [ ] Explain who is creating RR
+- [x] Explain who is creating RR
 - [x] Why RR exists
-- [ ] How others can get involved in maintaining and evolving it
+- [x] How others can get involved in maintaining and evolving it
 - [ ] How RR is governed and funded.
 
 It has no functionalty.
@@ -501,7 +483,7 @@ When a venue is in a **proposed** state:
 
 When a venue is **approved** state:
 
-- [ ] View the cost, welcome amount, commitments, and compensation of the venue.
+- [x] View the cost, welcome amount, roles, and compensation of the venue.
 - [ ] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue `welcome_amount` should be minted and given to the scholar, welcoming them to the community.
 - [ ] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
 - [ ] _`scholar`_: Change expertise keywords for a role for the venue
@@ -509,7 +491,7 @@ When a venue is **approved** state:
 - [ ] _`scholar`_: Change paper count for a role for the venue
 
 - [x] _`editor`_: Modify the venue name, description
-- [ ] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one
+- [x] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one
 - [ ] _`editor`_: Set the state to inactive
 
 - [ ] _`editor`_: Export the list of reviewers as a CSV file for use on other plaforms, including ORCID, name, email, expertise, role, commitment, and paper count.

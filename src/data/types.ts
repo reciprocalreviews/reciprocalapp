@@ -13,3 +13,4 @@ export type VenueRow = Tables['venues']['Row'];
 export type VenueID = VenueRow['id'];
 export type RoleRow = Tables['roles']['Row'];
 export type RoleID = RoleRow['id'];
+export type VolunteerID = Tables['volunteers']['Row']['id'];

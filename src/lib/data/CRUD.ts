@@ -5,7 +5,8 @@ import {
 	type ScholarID,
 	type ScholarRow,
 	type SupporterID,
-	type VenueID
+	type VenueID,
+	type VolunteerID
 } from '../../data/types';
 import type { SourceID } from '$lib/types/Source';
 import type Source from '$lib/types/Source';
@@ -65,7 +66,11 @@ export const Errors = {
 	UpdateRoleDescription: 'Unable to update role description',
 	UpdateRoleInvited: 'Unable to update invited status of role',
 	UpdateRoleAmount: 'Unable to update role compensation',
-	DeleteRole: 'Unable to delete role'
+	DeleteRole: 'Unable to delete role',
+	CreateVolunteer: 'Unable to add volunteer commitment',
+	AlreadyVolunteered: 'Already created a volunteer commitment for this role.',
+	UpdateVolunteerActive: 'Unable to update volunteer commitment',
+	UpdateVolunteerExpertise: 'Unable to update your expertise'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -197,4 +202,11 @@ export default abstract class CRUD {
 	abstract editRoleInvited(id: RoleID, on: boolean): Promise<ErrorID | undefined>;
 	abstract editRoleAmount(id: RoleID, amount: number): Promise<ErrorID | undefined>;
 	abstract deleteRole(id: RoleID): Promise<ErrorID | undefined>;
+
+	abstract createVolunteer(scholarid: ScholarID, roleid: RoleID): Promise<ErrorID | undefined>;
+	abstract updateVolunteerActive(id: VolunteerID, active: boolean): Promise<ErrorID | undefined>;
+	abstract updateVolunteerExpertise(
+		id: VolunteerID,
+		expertise: string
+	): Promise<ErrorID | undefined>;
 }
