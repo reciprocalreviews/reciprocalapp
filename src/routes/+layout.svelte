@@ -63,6 +63,7 @@
 	}
 
 	.notifications {
+		z-index: 2;
 		position: fixed;
 		top: var(--spacing);
 		left: var(--spacing);

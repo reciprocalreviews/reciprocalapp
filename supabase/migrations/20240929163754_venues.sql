@@ -78,6 +78,8 @@ create policy "only editors can update roles" on public.roles
 create policy "only editors can delete roles" on public.roles
   for delete to anon, authenticated using (isEditor(venueid));
 
+create type invited as enum ('invited', 'accepted', 'declined');
+
 -- editors can invite and volunteers if not invite only
 -- anyone can view volunteers
 -- only volunteers can update
@@ -96,7 +98,9 @@ create table volunteers (
   -- Whether this volunteering committment is active. 
   -- Helps distinguish between first time volunteer and returning, so that newcomer tokens are only granted once.
   -- Also indicates whether invite only roles have been accepted.
-  active boolean not null default true
+  active boolean not null default true,
+  -- Whether this role as been accepted by the scholar
+  accepted invited not null default 'accepted'
 );
 
 create index scholar_volunteer_index on volunteers(scholarid);

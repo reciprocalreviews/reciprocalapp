@@ -291,6 +291,7 @@ export type Database = {
       }
       volunteers: {
         Row: {
+          accepted: Database["public"]["Enums"]["invited"]
           active: boolean
           created: string
           expertise: string
@@ -299,6 +300,7 @@ export type Database = {
           scholarid: string
         }
         Insert: {
+          accepted?: Database["public"]["Enums"]["invited"]
           active?: boolean
           created?: string
           expertise: string
@@ -307,6 +309,7 @@ export type Database = {
           scholarid: string
         }
         Update: {
+          accepted?: Database["public"]["Enums"]["invited"]
           active?: boolean
           created?: string
           expertise?: string
@@ -356,6 +359,7 @@ export type Database = {
     }
     Enums: {
       exchange_proposal_kind: "create" | "modify" | "merge"
+      invited: "invited" | "accepted" | "declined"
     }
     CompositeTypes: {
       [_ in never]: never

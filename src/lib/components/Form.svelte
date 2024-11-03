@@ -10,8 +10,6 @@
 		flex-direction: column;
 		align-items: left;
 		gap: var(--spacing);
-		margin-block-start: 1em;
-		margin-block-end: 1em;
 		align-items: flex-start;
 	}
 

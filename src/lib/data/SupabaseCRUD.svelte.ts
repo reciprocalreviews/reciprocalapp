@@ -13,7 +13,8 @@ import type {
 	ScholarRow,
 	SupporterID,
 	VenueID,
-	VolunteerID
+	VolunteerID,
+	Response
 } from '../../data/types';
 import CRUD, { type ErrorID } from './CRUD';
 import Scholar from './Scholar.svelte';
@@ -46,7 +47,9 @@ export default class SupabaseCRUD extends CRUD {
 	createSource(source: Source): Promise<Source> {
 		throw new Error('Method not implemented.');
 	}
-	getSource(sourceID: string): Promise<Source> {}
+	getSource(sourceID: string): Promise<Source> {
+		throw new Error('Method not implemented.');
+	}
 	getSources(): Promise<Source[]> {
 		throw new Error('Method not implemented.');
 	}
@@ -416,7 +419,12 @@ export default class SupabaseCRUD extends CRUD {
 		else return;
 	}
 
-	async createVolunteer(scholarid: ScholarID, roleid: RoleID) {
+	async createVolunteer(
+		scholarid: ScholarID,
+		roleid: RoleID,
+		accepted: boolean,
+		compensate: boolean
+	) {
 		// First, get all of the volunteer records for this scholar.
 		const { data: volunteer } = await this.client
 			.from('volunteers')
@@ -429,13 +437,20 @@ export default class SupabaseCRUD extends CRUD {
 		if (volunteer.some((v) => v.roleid === roleid)) return 'AlreadyVolunteered';
 
 		// Create the volunteer record.
-		const { error } = await this.client
-			.from('volunteers')
-			.insert({ scholarid, roleid, active: true, expertise: '', count: 1 });
-		if (error) return 'CreateVolunteer';
+		const { error } = await this.client.from('volunteers').insert({
+			scholarid,
+			roleid,
+			active: accepted,
+			accepted: accepted ? 'accepted' : 'invited',
+			expertise: ''
+		});
+		if (error) {
+			console.error(error);
+			return 'CreateVolunteer';
+		}
 
 		// If this is their first volunteer role for the venue, grant the number of welcome tokens for the venue.
-		if (volunteer.length === 0) {
+		if (volunteer.length === 0 && compensate) {
 			// Get the role and the venue.
 			const { data: role } = await this.client.from('roles').select().eq('id', roleid).single();
 			if (role === null) return 'CreateVolunteer';
@@ -458,5 +473,26 @@ export default class SupabaseCRUD extends CRUD {
 		const { error } = await this.client.from('volunteers').update({ expertise }).eq('id', id);
 		if (error) return 'UpdateVolunteerExpertise';
 		else return;
+	}
+
+	async inviteToRole(role: RoleID, emails: string[]) {
+		const { data: scholars } = await this.client.from('scholars').select().in('email', emails);
+		if (scholars === null) return 'InviteToRole';
+
+		for (const scholar of scholars) {
+			const error = await this.createVolunteer(scholar.id, role, false, false);
+			if (error) return error;
+		}
+	}
+
+	async acceptRoleInvite(id: VolunteerID, response: Response) {
+		const { error } = await this.client
+			.from('volunteers')
+			.update({ active: true, accepted: response })
+			.eq('id', id);
+		if (error) {
+			console.log(error);
+			return 'AcceptRoleInvite';
+		}
 	}
 }

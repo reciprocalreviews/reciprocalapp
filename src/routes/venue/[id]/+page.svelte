@@ -110,7 +110,7 @@
 				{#if roles}
 					{#each roles as role (role.id)}
 						{@const commitment = commitments?.find((c) => c.roleid === role.id)}
-						<Card>
+						<Card header={role.name}>
 							<div class="role">
 								<div class="tags">
 									<Tag>{role.name}</Tag>
@@ -119,7 +119,7 @@
 									{#if scholar && !role.invited && commitment === undefined}
 										<Button
 											tip="Volunteer for this role"
-											action={() => handle(db.createVolunteer(scholar.id, role.id))}
+											action={() => handle(db.createVolunteer(scholar.id, role.id, true, true))}
 											>Volunteer …</Button
 										>
 									{/if}
@@ -131,28 +131,52 @@
 
 								{#if commitment}
 									<hr />
-									{#if role.invited}{:else if commitment.active}
+									{#if role.invited && commitment.accepted === 'invited'}
 										<p>
-											Thanks for volunteering for this role! <Button
-												tip="Stop volunteering"
-												action={() => handle(db.updateVolunteerActive(commitment.id, false))}
-												>Stop...</Button
+											The editor has invited you to take this role. <Button
+												tip="accept this invitation"
+												action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
+												>Accept</Button
+											><Button
+												tip="decline this invitation"
+												action={() => handle(db.acceptRoleInvite(commitment.id, 'declined'))}
+												>Decline</Button
 											>
 										</p>
-										<EditableText
-											text={commitment.expertise}
-											label="what is your expertise (separated by commas)?"
-											placeholder="topic, area, method, theory, etc."
-											edit={(text) => db.updateVolunteerExpertise(commitment.id, text)}
-										/>
-									{:else}
+									{/if}
+									{#if commitment.accepted === 'accepted'}
+										{#if commitment.active}
+											<p>
+												Thanks for volunteering for this role! <Button
+													tip="Stop volunteering"
+													action={() => handle(db.updateVolunteerActive(commitment.id, false))}
+													>Stop...</Button
+												>
+											</p>
+											<EditableText
+												text={commitment.expertise}
+												label="what is your expertise (separated by commas)?"
+												placeholder="topic, area, method, theory, etc."
+												edit={(text) => db.updateVolunteerExpertise(commitment.id, text)}
+											/>
+										{:else}
+											<p>
+												You stopped volunteering for this role. <Button
+													tip="Resume volunteering"
+													action={() => handle(db.updateVolunteerActive(commitment.id, true))}
+													>Resume...</Button
+												>
+											</p>{/if}
+									{:else if commitment.accepted === 'declined'}
 										<p>
-											You stopped volunteering for this role. <Button
-												tip="Resume volunteering"
-												action={() => handle(db.updateVolunteerActive(commitment.id, true))}
-												>Resume...</Button
+											You declined this role. Would you like to accept it?
+											<Button
+												tip="accept this invitation"
+												action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
+												>Accept</Button
 											>
-										</p>{/if}
+										</p>
+									{/if}
 								{/if}
 							</div>
 						</Card>

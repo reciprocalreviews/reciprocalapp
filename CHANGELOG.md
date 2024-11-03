@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 - Added ability to volunteer for a role and set expertise.
 - Added ability to stop volunteering for a role.
+- Added ability to invite scholars to roles and for scholars to accept and decline roles.
 - Added list of volunteer roles to profile.
 - Added list of venue volunteers.
 

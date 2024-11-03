@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RoleRow, VenueRow } from '$data/types';
+	import type { RoleID, RoleRow, VenueRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
@@ -10,9 +10,10 @@
 	import Slider from '$lib/components/Slider.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import { validIdentifier } from '$lib/validation';
+	import { validEmail, validIdentifier } from '$lib/validation';
 	import { handle } from '../../errors.svelte';
 	import TextField from '$lib/components/TextField.svelte';
+	import Form from '$lib/components/Form.svelte';
 
 	let {
 		venue,
@@ -25,6 +26,9 @@
 	const db = getDB();
 
 	let newRole: string = $state('');
+	let invites = $state<Record<RoleID, string>>(
+		Object.fromEntries((roles ?? []).map((role) => [role.id, '']))
+	);
 </script>
 
 <form>
@@ -43,7 +47,7 @@
 </form>
 {#if roles}
 	{#each roles as role (role.id)}
-		<Card>
+		<Card header={role.name}>
 			<EditableText
 				text={role.name}
 				label="name"
@@ -63,6 +67,33 @@
 						be invited to this role.{/if}</Note
 				>
 			</Checkbox>
+			{#if role.invited}
+				<Form inline>
+					<p>Add one or more people to invite to this role, separated by commands.</p>
+					<TextField
+						label="email"
+						placeholder=""
+						name="email"
+						size={20}
+						valid={validEmail}
+						bind:text={invites[role.id]}
+					/>
+					<Button
+						tip="Invite people to this role"
+						action={async () => {
+							if (
+								await handle(
+									db.inviteToRole(
+										role.id,
+										invites[role.id].split(',').map((s) => s.trim())
+									)
+								)
+							)
+								invites[role.id] = '';
+						}}>Invite</Button
+					>
+				</Form>
+			{/if}
 			<Slider
 				min={1}
 				max={venue.welcome_amount}
