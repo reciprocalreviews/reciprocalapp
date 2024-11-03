@@ -11,8 +11,13 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
+	import Feedback from '$lib/components/Feedback.svelte';
+	import Tag from '$lib/components/Tag.svelte';
 
-	let { scholar }: { scholar: Scholar } = $props();
+	let {
+		scholar,
+		commitments
+	}: { scholar: Scholar; commitments: { name: string; venue: string }[] } = $props();
 
 	const db = getDB();
 	const auth = getAuth();
@@ -21,16 +26,6 @@
 	let editable = $derived(auth.getUserID() === scholar.getID());
 
 	let scholarTransactions: Transaction[] | undefined = $state(undefined);
-
-	// $effect(() => {
-	// 	db.getScholarTransactions(scholar.getID()).then((transactions) => {
-	// 		scholarTransactions = transactions;
-	// 	});
-	// });
-
-	async function update(text: string) {
-		return await db.updateScholarName(scholar.getID(), text);
-	}
 </script>
 
 <Cards>
@@ -90,17 +85,19 @@
 	</Card>
 
 	<Card header="volunteering">
-		<Todo>Venue volunteer list</Todo>
-		<!-- 
-<p>Currently volunteering for:</p>
-
-{#each Object.entries(scholar.sources) as [sourceID, expertise]}
-	<p>
-		<SourceLink id={sourceID} /><br /><Tags>
-			{#each expertise as exp}<Tag>{exp}</Tag>{/each}
-		</Tags>
-	</p>
-{/each} -->
+		{#if commitments}
+			{#if commitments.length > 0}
+				<ul>
+					{#each commitments as commitment}
+						<li>{commitment.venue} <Tag>{commitment.name}</Tag></li>
+					{/each}
+				</ul>
+			{:else}
+				<Feedback>No volunteer commitments.</Feedback>
+			{/if}
+		{:else}
+			<Feedback>Unable to load volunteer commitments.</Feedback>
+		{/if}
 		<!-- 
 {#await db.getEditedSources(scholar.id)}
 	<Loading />
