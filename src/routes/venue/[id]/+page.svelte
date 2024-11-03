@@ -18,6 +18,7 @@
 	import { handle } from '../../errors.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Roles from './Roles.svelte';
+	import Tag from '$lib/components/Tag.svelte';
 
 	let { data } = $props();
 	const { venue, currency, scholar, roles, commitments } = $derived(data);
@@ -116,8 +117,21 @@
 			/>{:else}<p>
 				{#if venue.description.length === 0}<em>No description.</em>{:else}{venue.description}{/if}
 			</p>{/if}
+
+		<!-- Key details about costs. -->
+		<p>
+			{#if currency}
+				This venue uses the <Link to="/currency/{venue.currency}">{currency.name}</Link> currency.
+			{:else}
+				<Feedback error>Unable to load this venue's currency.</Feedback>
+			{/if}
+			New volunteers receive <Tokens amount={venue.welcome_amount}></Tokens> when they volunteer to review.
+			New submissions cost <Tokens amount={venue.submission_cost}></Tokens>.
+		</p>
+
 		<!-- Show the venue URL -->
 		<Link to={venue.url}>{venue.url}</Link>
+
 		<!-- Show metadata -->
 		<Cards>
 			<Card header="Editors">
@@ -155,29 +169,31 @@
 							}}>Add editor</Button
 						>
 					</form>
+					<Note>
+						Editors can edit venue information, add and remove other editors, create and archive
+						submissions, and gift review tokens. They are typically Editors-in-Chief of a journal or
+						Program Chairs of a conference.
+					</Note>
 				{/if}
-				<Note>
-					Editors can edit venue information, add and remove other editors, create and archive
-					submissions, and gift review tokens. They are typically Editors-in-Chief of a journal or
-					Program Chairs of a conference.
-				</Note>
 			</Card>
-			<Card header="Currency">
-				{#if currency}
-					<p>
-						This venue uses the <Link to="/currency/{venue.currency}">{currency.name}</Link> currency.
-					</p>
+			<Card header="Volunteer" full>
+				{#if roles}
+					{#each roles as role (role.id)}
+						<div class="role">
+							<div class="tags">
+								<Tag>{role.name}</Tag>
+								<Tokens amount={role.amount}></Tokens>/submission
+							</div>
+							{#if role.description.length > 0}
+								<Note>{role.description}</Note>
+							{/if}
+						</div>
+					{:else}
+						<Feedback>This venue has no volunteer roles.</Feedback>
+					{/each}
 				{:else}
-					<Feedback error>Unable to load this venue's currency.</Feedback>
+					<Feedback error>Couldn't load venue's roles.</Feedback>
 				{/if}
-
-				<p>
-					Newcomers receive <Tokens amount={venue.welcome_amount}></Tokens> when they volunteer to review.
-				</p>
-
-				<p>
-					New submissions cost <Tokens amount={venue.submission_cost}></Tokens>.
-				</p>
 			</Card>
 			{#if editor}
 				<Card header="Settings" group="editors">
@@ -220,76 +236,22 @@
 					</div>
 				</Card>
 			{/if}
-			<Card header="Volunteering" full>
-				<p>
-					These are the roles that volunteers can commit to. Create roles such as <em>reviewer</em>,
-					<em>program commitee</em>, <em>associate editor</em> to represent the different kinds of contributions
-					volunteers can make to this venue.
-				</p>
+			{#if editor}
+				<Card header="Roles" full group="editors">
+					<p>
+						These are the roles that volunteers can commit to. Create roles such as <em>reviewer</em
+						>,
+						<em>program commitee</em>, <em>associate editor</em> to represent the different kinds of
+						contributions volunteers can make to this venue.
+					</p>
 
-				<h3>Roles</h3>
-				<Roles {venue} {roles} editor={editor ?? false} />
-			</Card>
+					<h3>Roles</h3>
+					<Roles {venue} {roles} />
+				</Card>
+			{/if}
 		</Cards>
 	</Page>
 {/if}
-
-<!-- <h2>Costs</h2>
-{#if editor}
-	<p>
-		<Button tip="Editing cost" action={() => editTokens(source)}
-			>{#if editingTokens}Done{:else}Edit{/if}</Button
-		>
-	</p>
-{/if}
-
-{#if source.cost.submit > 0}
-	<p>
-		Submissions cost {#if editingTokens}<Slider min={0} max={5} bind:value={submitCost} step={1} />
-		{/if}<Tokens amount={editingTokens ? submitCost : source.cost.submit} />. If you and your
-		co-authors are short, volunteer below, or bid on a specific submission.
-	</p>
-{:else}
-	<p>Submissions are free.</p>
-{/if}
-
-<ul>
-	<li>
-		<strong>Reviewers</strong> are paid {#if editingTokens}<Slider
-				min={0}
-				max={3}
-				bind:value={reviewPay}
-				step={0.1}
-			/>
-		{/if}<Tokens amount={editingTokens ? reviewPay : source.cost.review} /> for each review.
-	</li>
-	<li>
-		<strong>Metareviewers</strong> are paid {#if editingTokens}<Slider
-				min={0}
-				max={3}
-				bind:value={metaPay}
-				step={0.1}
-			/>
-		{/if}<Tokens amount={editingTokens ? metaPay : source.cost.meta} /> for each submission.
-	</li>
-	<li>
-		<strong>Editors</strong> are paid {#if editingTokens}<Slider
-				min={0}
-				max={3}
-				bind:value={editPay}
-				step={0.1}
-			/>
-		{/if}<Tokens amount={editingTokens ? editPay : source.cost.edit} /> for each submission.
-	</li>
-</ul>
-
-<h2>Volunteer</h2>
-
-<p>
-	See <Link to="/source/{$page.params.id}/volunteers">all volunteers</Link> for this source.
-</p> -->
-
-<!-- <Todo>Volunteering interface</Todo> -->
 
 <!-- {#if uid && !source.archived}
 		{#await scholarPromise}
@@ -431,3 +393,11 @@
 		<p><Button tip="Confirm archive venue" action={() => archive(source)}>Archive</Button></p>
 	{/if}
 </EditorsOnly> -->
+
+<style>
+	.role {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing);
+	}
+</style>

@@ -138,7 +138,13 @@
 	input[disabled],
 	textarea[disabled] {
 		border-color: var(--inactive-color);
-		border-bottom: var(--thick-border-width) dotted var(--inactive-color);
+	}
+
+	input[disabled] {
+		border-bottom-style: dotted;
+	}
+	textarea[disabled] {
+		border-left-style: dotted;
 	}
 
 	input.invalid,
