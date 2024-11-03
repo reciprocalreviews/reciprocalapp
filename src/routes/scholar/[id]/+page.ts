@@ -19,9 +19,16 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: venues } =
 		venueids.length > 0 ? await supabase.from('venues').select().in('id', venueids) : { data: [] };
 
+	// Get the scholar's editing
+	const { data: editing } = await supabase
+		.from('venues')
+		.select('id, title')
+		.contains('editors', [params.id]);
+
 	return {
 		scholar,
 		commitments,
-		venues
+		venues,
+		editing
 	};
 };

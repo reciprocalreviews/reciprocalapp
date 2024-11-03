@@ -6,7 +6,7 @@
 
 	let { data } = $props();
 
-	let { commitments, venues } = $derived(data);
+	let { commitments, venues, editing } = $derived(data);
 
 	let volunteering = $derived(
 		commitments
@@ -31,7 +31,7 @@
 
 {#if state}
 	<Page title={state.getName() ?? 'anonymous'} subtitle="Scholar">
-		<ScholarView scholar={state} commitments={volunteering} />
+		<ScholarView scholar={state} commitments={volunteering} {editing} />
 	</Page>
 {:else}
 	<h1>Oops.</h1>

@@ -17,9 +17,13 @@
 
 	let {
 		scholar,
-		commitments
-	}: { scholar: Scholar; commitments: { name: string; venue: string; venueid: string }[] } =
-		$props();
+		commitments,
+		editing
+	}: {
+		scholar: Scholar;
+		commitments: { name: string; venue: string; venueid: string }[];
+		editing: { id: string; title: string }[] | null;
+	} = $props();
 
 	const db = getDB();
 	const auth = getAuth();
@@ -96,6 +100,14 @@
 							<Tag>{commitment.name}</Tag>
 						</li>
 					{/each}
+					{#if editing && editing.length > 0}
+						{#each editing as editing}
+							<li>
+								<SourceLink id={editing.id} name={editing.title} />
+								<Tag>Editor</Tag>
+							</li>
+						{/each}
+					{/if}
 				</ul>
 			{:else}
 				<Feedback>No volunteer commitments.</Feedback>
@@ -103,22 +115,6 @@
 		{:else}
 			<Feedback>Unable to load volunteer commitments.</Feedback>
 		{/if}
-		<!-- 
-{#await db.getEditedSources(scholar.id)}
-	<Loading />
-{:then sources}
-	{#if sources.length > 0}
-		<h2>Editing</h2>
-		<p>Currently editor for:</p>
-		<p>
-			{#each sources as source}
-				<SourceLink id={source.id} />
-			{/each}
-		</p>
-	{/if}
-{:catch}
-	<Feedback>Couldn't get editor roles.</Feedback>
-{/await} -->
 	</Card>
 
 	<Card header="transactions">
