@@ -141,7 +141,7 @@
 										</p>
 										<EditableText
 											text={commitment.expertise}
-											label="what is your expertise?"
+											label="what is your expertise (separated by commas)?"
 											placeholder="topic, area, method, theory, etc."
 											edit={(text) => db.updateVolunteerExpertise(commitment.id, text)}
 										/>

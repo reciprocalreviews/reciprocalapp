@@ -6,6 +6,7 @@
 	import Table from '$lib/components/Table.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Tag from '$lib/components/Tag.svelte';
+	import Tags from '$lib/components/Tags.svelte';
 
 	let { data } = $props();
 	const { venue, commitments } = $derived(data);
@@ -28,10 +29,21 @@
 			/>.
 		</p>
 		<Table>
+			<tr>
+				<th>Role</th>
+				<th>Name</th>
+				<th>Expertise</th>
+			</tr>
 			{#each commitments.toSorted((a, b) => a.roles?.name.localeCompare(b.roles?.name ?? '') ?? 0) as volunteer}
 				<tr>
 					<td><Tag>{volunteer.roles?.name}</Tag></td>
 					<td><ScholarLink id={volunteer.scholarid} /></td>
+					<td
+						><Tags
+							>{#each volunteer.expertise.split(',') as expertise}<Tag>{expertise}</Tag
+								>{/each}</Tags
+						></td
+					>
 				</tr>
 			{/each}
 		</Table>

@@ -13,7 +13,7 @@
 </script>
 
 {#snippet link(id: string, name: string)}
-	<Link to="/source/{id}">{name}</Link>
+	<Link to="/venue/{id}">{name}</Link>
 {/snippet}
 
 {#if name === undefined}
