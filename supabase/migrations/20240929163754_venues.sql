@@ -93,12 +93,10 @@ create table volunteers (
   created timestamp with time zone not null default now(),
   -- Relevant expertise provided by the scholar for the role
   expertise text not null,
-  -- Optionally, how many submissions they wish to review in the role
-  count integer default null,
   -- Whether this volunteering committment is active. 
   -- Helps distinguish between first time volunteer and returning, so that newcomer tokens are only granted once.
   -- Also indicates whether invite only roles have been accepted.
-  active boolean default true
+  active boolean not null default true
 );
 
 create index scholar_volunteer_index on volunteers(scholarid);

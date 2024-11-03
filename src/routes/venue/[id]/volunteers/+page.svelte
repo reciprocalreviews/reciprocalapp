@@ -7,6 +7,7 @@
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import Tags from '$lib/components/Tags.svelte';
+	import Status from '$lib/components/Status.svelte';
 
 	let { data } = $props();
 	const { venue, commitments } = $derived(data);
@@ -31,12 +32,18 @@
 		<Table>
 			<tr>
 				<th>Role</th>
+				<th>Active</th>
 				<th>Name</th>
 				<th>Expertise</th>
 			</tr>
 			{#each commitments.toSorted((a, b) => a.roles?.name.localeCompare(b.roles?.name ?? '') ?? 0) as volunteer}
 				<tr>
 					<td><Tag>{volunteer.roles?.name}</Tag></td>
+					<td
+						><Status good={volunteer.active}
+							>{#if volunteer.active}active{:else}inactive{/if}</Status
+						></td
+					>
 					<td><ScholarLink id={volunteer.scholarid} /></td>
 					<td
 						><Tags

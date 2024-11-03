@@ -291,8 +291,7 @@ export type Database = {
       }
       volunteers: {
         Row: {
-          active: boolean | null
-          count: number | null
+          active: boolean
           created: string
           expertise: string
           id: string
@@ -300,8 +299,7 @@ export type Database = {
           scholarid: string
         }
         Insert: {
-          active?: boolean | null
-          count?: number | null
+          active?: boolean
           created?: string
           expertise: string
           id?: string
@@ -309,8 +307,7 @@ export type Database = {
           scholarid: string
         }
         Update: {
-          active?: boolean | null
-          count?: number | null
+          active?: boolean
           created?: string
           expertise?: string
           id?: string
