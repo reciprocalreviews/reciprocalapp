@@ -4,11 +4,13 @@
 
 	let {
 		header = undefined,
+		subheader = undefined,
 		group,
 		full = false,
 		children
 	}: {
 		header?: string | undefined;
+		subheader?: string | undefined;
 		group?: 'editors' | 'stewards';
 		full?: boolean;
 		children: Snippet;
@@ -21,6 +23,12 @@
 			{header}
 			{#if group}<Tag>{group}</Tag>{/if}
 		</h2>
+	{/if}
+	{#if subheader}
+		<h3>
+			{subheader}
+			{#if group}<Tag>{group}</Tag>{/if}
+		</h3>
 	{/if}
 	{@render children()}
 </div>

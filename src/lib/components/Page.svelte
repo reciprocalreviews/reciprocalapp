@@ -26,7 +26,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: calc(2 * var(--spacing));
-		max-width: 35em;
+		max-width: 40em;
 		margin: auto;
 	}
 </style>

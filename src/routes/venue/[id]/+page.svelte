@@ -110,7 +110,7 @@
 				{#if roles}
 					{#each roles as role (role.id)}
 						{@const commitment = commitments?.find((c) => c.roleid === role.id)}
-						<Card header={role.name}>
+						<Card subheader={role.name}>
 							<div class="role">
 								<div class="tags">
 									<Tag>{role.name}</Tag>
