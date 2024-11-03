@@ -44,7 +44,7 @@
 		</p>
 
 		<p>
-			See the <Link to="/sources">journals and conferences</Link> using the platform and reach out to
+			See the <Link to="/venues">journals and conferences</Link> using the platform and reach out to
 			their editors for their experiences. Or, <Link to="login">log in</Link> to propose a journal or
 			conference for adoption.
 		</p>
