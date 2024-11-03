@@ -71,7 +71,7 @@
 			<Checkbox
 				on={scholar.isAvailable()}
 				change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
-				>When checked, your profile will indicate you are available to review.</Checkbox
+				>I am available to review.</Checkbox
 			>
 		{/if}
 
