@@ -272,10 +272,10 @@ create table exchanges (
 
 A `Token` represents an indivisible unit of peer review labor in a particular `Currency`.
 
-- [ ] `Token`s are typically spent to compensate others for their reviewing labor.
-- [ ] `Token`s are typically earned for reviewing labor, but there may be many other creative uses for them (e.g., gifts, incentives, etc.).
-- [ ] `Token`s should generally be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few `Token`s would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many `Token`s means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review.
-- [ ] `Token`s are possessed by individual scholar or in a `Venue`'s reserve (meaning they are posessed by no one) and `Transaction`s can change who posses them. They cannot be possessed by neither a scholar or a venue.
+- [x] `Token`s are typically spent to compensate others for their reviewing labor.
+- [x] `Token`s are typically earned for reviewing labor, but there may be many other creative uses for them (e.g., gifts, incentives, etc.).
+- [x] `Token`s should generally be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few `Token`s would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many `Token`s means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review.
+- [x] `Token`s are possessed by individual scholar or in a `Venue`'s reserve (meaning they are posessed by no one) and `Transaction`s can change who posses them. They cannot be possessed by neither a scholar or a venue.
 
 Here is a SQL sketch, for clarity:
 
@@ -288,7 +288,7 @@ create table tokens (
   -- The scholar that currently possess the token, or null, representing no one
   scholar uuid references scholars(id),
   -- The venue that currently posses the token, or null
-  venue uuid reference venues(id),
+  venue uuid references venues(id),
   -- Require that there is one owner
   constraint check_owner check (num_nonnulls(scholar, venue) = 1)
 
@@ -315,14 +315,14 @@ create table transactions (
   from_scholar uuid references scholars(id),
   -- The venue who gave the tokens
   from_venue uuid references venues(id),
-  -- Require that there is a from
-  constraint check_from check (num_nonnulls(from_scholar, from_venue) = 1)
-  -- The optional scholar who received the tokens,
+  -- Require that there is either a scholar or venue source but not both
+  constraint check_from check (num_nonnulls(from_scholar, from_venue) = 1),
+  -- The scholar who received the tokens,
   to_scholar uuid references scholars(id),
-  -- The optional venue that received the tokens,
+  -- The venue that received the tokens,
   to_venue uuid references venues(id),
-  -- Require that there is a too
-  constraint check_to check (num_nonnulls(to_scholar, to_venue) = 1)
+  -- Require that there is either a scholar or venue destination but not both
+  constraint check_to check (num_nonnulls(to_scholar, to_venue) = 1),
   -- An array of token ids moved in the transaction
   tokens uuid[] not null default '{}',
   -- The currency the amount is in

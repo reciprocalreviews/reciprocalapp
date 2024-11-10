@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.0.9 2024-11-10
 
+### Added
+
+- Defined tokens and transactions table and draft security rules.
+
 ### Maintenance
 
 - Upgraded Svelte, SvelteKit, Supabase dependencies.
