@@ -302,8 +302,8 @@ create table tokens (
 
 A `Transaction` represents an exchange of tokens for some purpose, such as submitting something for review, compensation for a review, or a gift.
 
-- [ ] `Transaction`s cannot be deleted; they are a permanent record
-- [ ] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable.
+- [x] `Transaction`s cannot be deleted; they are a permanent record
+- [x] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable.
 
 Here is a SQL schema sketch, for clarity:
 

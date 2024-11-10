@@ -68,8 +68,14 @@ create policy "only owners can transfer their tokens" on public.transactions
     (from_venue is not null and (auth.uid() = any((select editors from venues where id = from_venue)::uuid[])))
 );
 
-create policy "transactions are public" on public.transactions
-  for select to anon, authenticated using (true);
+create policy "transactions are only visible to minters and those involved" on public.transactions
+  for select to anon, authenticated using (
+    (auth.uid() = from_scholar) or 
+    (auth.uid() = to_scholar) or 
+    (auth.uid() = any((select minters from currencies where id = currency)::uuid[])) or
+    (from_venue is not null and auth.uid() = any((select editors from venues where id = from_venue)::uuid[])) or
+    (to_venue is not null and auth.uid() = any((select editors from venues where id = to_venue)::uuid[]))
+);
 
 create policy "transactions are read only" on public.transactions
   for update to anon, authenticated using (false);
