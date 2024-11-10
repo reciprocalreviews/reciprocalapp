@@ -5,7 +5,7 @@
 	import Form from '$lib/components/Form.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import SourceLink from '$lib/components/SourceLink.svelte';
+	import SourceLink from '$lib/components/VenueLink.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import TransactionPreview from '$lib/components/TransactionPreview.svelte';
 	import { getDB } from '$lib/data/CRUD';

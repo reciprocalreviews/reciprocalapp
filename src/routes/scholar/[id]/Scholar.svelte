@@ -13,7 +13,7 @@
 	import Cards from '$lib/components/Cards.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Tag from '$lib/components/Tag.svelte';
-	import SourceLink from '$lib/components/SourceLink.svelte';
+	import SourceLink from '$lib/components/VenueLink.svelte';
 
 	let {
 		scholar,

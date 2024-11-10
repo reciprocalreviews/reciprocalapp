@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import Page from '$lib/components/Page.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import SourceLink from '$lib/components/SourceLink.svelte';
+	import SourceLink from '$lib/components/VenueLink.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Tag from '$lib/components/Tag.svelte';

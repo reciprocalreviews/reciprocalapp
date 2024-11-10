@@ -6,7 +6,7 @@
 	import Page from '$lib/components/Page.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Card from '$lib/components/Card.svelte';
-	import SourceLink from '$lib/components/SourceLink.svelte';
+	import SourceLink from '$lib/components/VenueLink.svelte';
 	import type { PageData } from './$types';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 

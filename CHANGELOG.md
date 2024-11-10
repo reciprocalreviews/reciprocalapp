@@ -13,6 +13,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ### Maintenance
 
+- Renamed SourceLink to VenueLink for consistency.
 - Upgraded Svelte, SvelteKit, Supabase dependencies.
 
 ## 0.0.8 2024-11-03
