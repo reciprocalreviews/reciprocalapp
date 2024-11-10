@@ -91,12 +91,12 @@ There are several key types of data in RR.
 
 `Scholars` are individuals in a research community who are identified by an [ORCID](https://orcid.org/).
 
-- [ ] Scholars can volunteer to review for a `Venue`
+- [x] Scholars can volunteer to review for a `Venue`
 - [ ] Scholars can spend and earn `Token`s for that volunteer work, as well as receive `Token`s as gifts, and spend `Token`s to submit manuscripts for peer review.
-- [ ] Scholars can also have _`editor`_ status on a `Venue`, which gives them the ability to manage the `transaction`s and `submission`s in a `Venue`.
+- [x] Scholars can also have _`editor`_ status on a `Venue`, which gives them the ability to manage the `transaction`s and `submission`s in a `Venue`.
 - [ ] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
 - [ ] An individual scholar cannot be both an _`editor`_ and a _`minter`_, as this would allow editors to enrich themselves without oversight. Scholars can specify an email address for communication.
-- [ ] Anyone can view a `Scholar`'s record, but only `Scholars` can create, update, or delete their record.
+- [x] Anyone can view a `Scholar`'s record, but only `Scholars` can create, update, or delete their record.
 
 Here is a SQL schema sketch, for clarity:
 
@@ -420,8 +420,8 @@ It should:
 
 - [x] Link to the scholar's ORCID profile (`scholars.orcid`), to help visitors get more information about them.
 - [ ] Display read-only data pulled from the ORCID profile, to reduce the need to navigate to their ORCID profile.
-- [ ] Show links to `Venue`s the scholar has volunteered to review for
-- [ ] Show links to `Venue`s the scholar is serving as _`editor`_ of.
+- [x] Show links to `Venue`s the scholar has volunteered to review for
+- [x] Show links to `Venue`s the scholar is serving as _`editor`_ of.
 
 If scholar ID corresponds to the authenticated user, it should also allow the scholar to:
 
@@ -443,9 +443,7 @@ The purpose of the venue list page is to show all venues managed on RR, or propo
 It should:
 
 - [x] Show all `Venue`s, including active and proposed ones.
-
 - [x] _`scholar`_: Propose a new `Venue` for the platform for review by the platform maintainers. `Venue` proposals should gather the name of the venue, the email addresses of the person or people leading editing of it, and the estimated size of the number of scholars in the community. `Venue`s with similar names are retrieved and shown to prevent duplicate venue creation. When the proposal is submitted, an email notification is sent to the email addresses listed and RR stewards. A `Venue` is created, but not active until approved.
-
 - [x] _`steward`_: Approve a `Venue` for use, indicating who should take the _editor_ and _minter_ roles for the platform, and creating tokens for all scholars in favor of the petition.
 
 ## Proposals `/venues/proposal`
@@ -477,18 +475,19 @@ The page should:
 
 When a venue is in a **proposed** state:
 
-- [ ] View the _`editors`_ and _`minters`_ of the venue
-- [ ] View the estimated size of the community
+- [x] View the _`editors`_ of the venue
+- [x] View the estimated size of the community
 - [ ] _`scholar`_: Vote to support adopting RR for the venue.
 
 When a venue is **approved** state:
 
 - [x] View the cost, welcome amount, roles, and compensation of the venue.
-- [ ] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue `welcome_amount` should be minted and given to the scholar, welcoming them to the community.
-- [ ] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
-- [ ] _`scholar`_: Change expertise keywords for a role for the venue
-- [ ] _`scholar`_: Change commitment for a role for the venue
-- [ ] _`scholar`_: Change paper count for a role for the venue
+- [ ] View the _`minters`_ of the venue
+- [x] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue `welcome_amount` should be minted and given to the scholar, welcoming them to the community.
+- [x] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
+- [x] _`scholar`_: Change expertise keywords for a role for the venue
+- [x] _`scholar`_: Change commitment for a role for the venue
+- [x] _`scholar`_: Change paper count for a role for the venue
 
 - [x] _`editor`_: Modify the venue name, description
 - [x] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one
@@ -496,17 +495,16 @@ When a venue is **approved** state:
 
 - [ ] _`editor`_: Export the list of reviewers as a CSV file for use on other plaforms, including ORCID, name, email, expertise, role, commitment, and paper count.
 - [x] _`editor`_: Create roles for the venue.
-- [ ] _`editor`_: Create commitments for the venue.
 - [x] _`editor`_: Edit the descriptions of roles.
-- [ ] _`editor`_: Delete a commitment, confirming they understand that all volunteers will be removed from the commitment.
 - [x] _`editor`_: Delete a role, confirming they understand that all volunteers will be removed from the role.
-- [ ] _`editor`_: Invite one or more `Scholar`s by ORCID or email to a particular role.
+- [ ] _`editor`_: Invite one or more `Scholar`s by ORCID to a particular role.
+- [x] _`editor`_: Invite one or more `Scholar`s by email to a particular role.
 
 > [!IMPORTANT]
 > The functionality below is specific to compensation
 
-- [ ] _`editor`_: Modify the newcomer gift in tokens
-- [ ] _`editor`_: Modify submission costs in tokens, reviewing compensation in tokens. Submission cost must equal to total compensation for a submission.
+- [x] _`editor`_: Modify the newcomer gift in tokens
+- [x] _`editor`_: Modify submission costs in tokens, reviewing compensation in tokens. Submission cost must equal to total compensation for a submission.
 - [ ] _`editor`_: View the total number of tokens in the venue and who posses them, to gauge the health of the community.
 - [ ] _`editor`_: Change the _`minter`_(s) of the venue, ensuring there is always one
 - [ ] _`editor`_: Enable or disable (`venues.bidding`), determining whether submissions can be bid on by `scholars`.
