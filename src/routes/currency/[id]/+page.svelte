@@ -8,6 +8,7 @@
 	import Card from '$lib/components/Card.svelte';
 	import SourceLink from '$lib/components/SourceLink.svelte';
 	import type { PageData } from './$types';
+	import ScholarLink from '$lib/components/ScholarLink.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -38,6 +39,14 @@
 			<p>{currency.description}</p>
 		{/if}
 		<Cards>
+			<Card header="Minters">
+				<p>These scholars are the minters for this currency. They can see all transactions.</p>
+				<ul>
+					{#each currency.minters as minter}
+						<li><ScholarLink id={minter}></ScholarLink></li>
+					{/each}
+				</ul></Card
+			>
 			<Card header="Venues">
 				{#if venues}
 					<p>These are the venues that use this currency:</p>

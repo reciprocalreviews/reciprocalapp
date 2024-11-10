@@ -1,5 +1,6 @@
-/** @type {import('./$types').PageLoad} */
-export async function load({ parent, params }) {
+import type { PageLoad } from './$types';
+
+export const load: PageLoad = async ({ parent, params }) => {
 	const { supabase } = await parent();
 
 	const { data: currency, error: currencyError } = await supabase
@@ -16,7 +17,7 @@ export async function load({ parent, params }) {
 	if (venuesError) console.log(venuesError.message);
 
 	return {
-		currency,
-		venues
+		currency: currency,
+		venues: venues
 	};
-}
+};

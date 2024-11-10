@@ -520,6 +520,8 @@ When a venue is in an _inactive_ state:
 
 The purpose of this page is to manage the venue's `Currency`.
 
+- [x] Show the minters
+- [x] Show the venues using the currency
 - [ ] _`scholar`_: Show any existing exchange rates approved by the platform.
 - [ ] _`scholar`_: View the exchange rates the currency is involved in
 - [ ] _`editor`_: Convert a specific token to another venue's currency. This enables a one-time exchange, such as when an editor might approve someone using currency from another `Venue` to submit to their venue.
