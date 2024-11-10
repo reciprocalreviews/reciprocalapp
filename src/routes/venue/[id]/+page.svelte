@@ -7,7 +7,6 @@
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { ORCIDRegex } from '../../../data/ORCID';
-	import { getAuth } from '../../Auth.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Cards from '$lib/components/Cards.svelte';
@@ -19,8 +18,9 @@
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Roles from './Roles.svelte';
 	import Tag from '$lib/components/Tag.svelte';
+	import type { PageData } from './$types';
 
-	let { data } = $props();
+	let { data }: { data: PageData } = $props();
 	const { venue, currency, scholar, roles, commitments } = $derived(data);
 
 	const db = getDB();

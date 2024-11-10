@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Added
 
 - Defined tokens and transactions table and draft security rules.
+- List venues using a currency
 
 ### Maintenance
 

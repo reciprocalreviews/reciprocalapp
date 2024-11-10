@@ -2,13 +2,16 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import type { CurrencyRow } from '../../../data/types';
 	import { getAuth } from '../../Auth.svelte';
 	import Page from '$lib/components/Page.svelte';
+	import Cards from '$lib/components/Cards.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import SourceLink from '$lib/components/SourceLink.svelte';
+	import type { PageData } from './$types';
 
-	let { data }: { data: { currency: CurrencyRow | null } } = $props();
+	let { data }: { data: PageData } = $props();
 
-	let currency = $derived(data.currency);
+	let { currency, venues } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -18,19 +21,10 @@
 	let editable = $derived(currency !== null && uid !== null && currency.minters.includes(uid));
 </script>
 
-<Page title="Currency">
+<Page title={currency ? currency.name : 'Oops'} subtitle="currency">
 	{#if currency === null}
-		<h1>Oops.</h1>
 		<Feedback error>Unknown currency.</Feedback>
 	{:else}
-		<h1>
-			{#if editable}<EditableText
-					text={currency.name}
-					placeholder="name"
-					edit={async (text) => await db.updateCurrencyName(currency.id, text)}
-				/>{:else}{currency.name}{/if}
-		</h1>
-
 		{#if editable}
 			<EditableText
 				inline={false}
@@ -43,5 +37,29 @@
 		{:else}
 			<p>{currency.description}</p>
 		{/if}
+		<Cards>
+			<Card header="Venues">
+				{#if venues}
+					<p>These are the venues that use this currency:</p>
+					<ul>
+						{#each venues as venue}
+							<li><SourceLink id={venue.id} name={venue.title}></SourceLink></li>
+						{/each}
+					</ul>
+				{:else}
+					<Feedback error>Unable to load venues.</Feedback>
+				{/if}
+			</Card>
+			{#if editable}
+				<Card header="Settings">
+					{#if editable}<EditableText
+							text={currency.name}
+							label="name"
+							placeholder="name"
+							edit={async (text) => await db.updateCurrencyName(currency.id, text)}
+						/>{:else}{currency.name}{/if}
+				</Card>
+			{/if}
+		</Cards>
 	{/if}
 </Page>
