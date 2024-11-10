@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](http://semver.org/) format.
 
+## 0.0.9 2024-11-10
+
+### Maintenance
+
+- Upgraded Svelte, SvelteKit, Supabase dependencies.
+
 ## 0.0.8 2024-11-03
 
 ### Added
