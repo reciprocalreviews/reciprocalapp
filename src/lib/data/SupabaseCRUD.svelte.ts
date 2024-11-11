@@ -338,7 +338,7 @@ export default class SupabaseCRUD extends CRUD {
 			.or(`orcid.eq.${emailOrORCID},email.eq.${emailOrORCID}`)
 			.single();
 
-		if (scholar === null) return 'EditVenueAddEditorScholarNotFound';
+		if (scholar === null) return 'ScholarNotFound';
 
 		if (venue.editors.includes(scholar.id)) return 'EditVenueAddEditorAlreadyEditor';
 
@@ -494,5 +494,31 @@ export default class SupabaseCRUD extends CRUD {
 			console.log(error);
 			return 'AcceptRoleInvite';
 		}
+	}
+
+	async editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('currencies').update({ minters }).eq('id', id);
+		if (error) {
+			console.error(error);
+			return 'EditCurrencyMinters';
+		}
+	}
+
+	async addCurrencyMinter(
+		id: CurrencyID,
+		minters: string[],
+		emailOrORCID: string
+	): Promise<ErrorID | undefined> {
+		const { data: scholar } = await this.client
+			.from('scholars')
+			.select('id')
+			.or(`orcid.eq.${emailOrORCID},email.eq.${emailOrORCID}`)
+			.single();
+
+		if (scholar === null) return 'ScholarNotFound';
+
+		if (minters.includes(scholar.id)) return 'AlreadyMinter';
+
+		return this.editCurrencyMinters(id, Array.from(new Set([...minters, scholar.id])));
 	}
 }

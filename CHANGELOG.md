@@ -10,6 +10,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Defined tokens and transactions table and draft security rules.
 - List venues using a currency.
 - List minters on a currency.
+- Add and remove minters from currency.
 
 ### Maintenance
 

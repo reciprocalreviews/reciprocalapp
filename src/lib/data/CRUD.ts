@@ -55,7 +55,7 @@ export const Errors = {
 	EditVenueDescription: 'Unable to edit the venue description',
 	EditVenueEditors: 'Unable to edit the venue editors',
 	EditVenueAddEditorVenueNotFound: 'Unable to find venue',
-	EditVenueAddEditorScholarNotFound: 'Unable to find scholar by this email or ORCID',
+	ScholarNotFound: 'Unable to find scholar by this email or ORCID',
 	EditVenueAddEditorAlreadyEditor: 'Scholar is already an editor',
 	EditVenueTitle: 'Unable to edit the venue title',
 	EditVenueURL: 'Unable to edit the venue URL',
@@ -73,7 +73,10 @@ export const Errors = {
 	UpdateVolunteerActive: 'Unable to update volunteer commitment',
 	UpdateVolunteerExpertise: 'Unable to update your expertise',
 	InviteToRole: 'Unable to invite to role',
-	AcceptRoleInvite: 'Unable to accept role invite'
+	AcceptRoleInvite: 'Unable to accept role invite',
+	EditCurrencyMinters: 'Unable to edit minters',
+	AddCurrencyMinter: 'Unable to add minter',
+	AlreadyMinter: 'This scholar is already a minter'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -219,4 +222,11 @@ export default abstract class CRUD {
 	): Promise<ErrorID | undefined>;
 	abstract inviteToRole(role: RoleID, emails: string[]): Promise<ErrorID | undefined>;
 	abstract acceptRoleInvite(id: VolunteerID, response: Response): Promise<ErrorID | undefined>;
+
+	abstract editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<ErrorID | undefined>;
+	abstract addCurrencyMinter(
+		id: CurrencyID,
+		minters: string[],
+		emailOrORCID: string
+	): Promise<ErrorID | undefined>;
 }

@@ -9,6 +9,13 @@
 	import SourceLink from '$lib/components/VenueLink.svelte';
 	import type { PageData } from './$types';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
+	import { handle } from '../../errors.svelte';
+	import { DeleteLabel } from '$lib/components/Labels';
+	import Button from '$lib/components/Button.svelte';
+	import TextField from '$lib/components/TextField.svelte';
+	import { validEmail } from '$lib/validation';
+	import { ORCIDRegex } from '$data/ORCID';
+	import Note from '$lib/components/Note.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -16,6 +23,11 @@
 
 	const db = getDB();
 	const auth = getAuth();
+
+	let user = $derived(auth.getUserID());
+	let isMinter = $derived(currency && user && currency.minters.includes(user));
+
+	let newMinter = $state('');
 
 	// Editable if the user is the scholar being viewed.
 	let uid = $derived(auth.getUserID());
@@ -43,10 +55,45 @@
 				<p>These scholars are the minters for this currency. They can see all transactions.</p>
 				<ul>
 					{#each currency.minters as minter}
-						<li><ScholarLink id={minter}></ScholarLink></li>
+						<li>
+							<ScholarLink id={minter}></ScholarLink>
+							{#if isMinter && currency.minters.length > 1}&nbsp;<Button
+									tip="Remove yourself as minter"
+									active={currency.minters.length > 1}
+									action={() =>
+										handle(
+											db.editCurrencyMinters(
+												currency.id,
+												currency.minters.filter((m) => m !== minter)
+											)
+										)}>{DeleteLabel}</Button
+								>{/if}
+						</li>
 					{/each}
-				</ul></Card
-			>
+				</ul>
+
+				{#if isMinter}
+					<form>
+						<TextField
+							bind:text={newMinter}
+							size={19}
+							placeholder="ORCID or email"
+							valid={(text) => validEmail(text) || ORCIDRegex.test(text)}
+						/><Button
+							tip="Add minter"
+							active={validEmail(newMinter) || ORCIDRegex.test(newMinter)}
+							action={async () => {
+								if (await handle(db.addCurrencyMinter(currency.id, currency.minters, newMinter)))
+									newMinter = '';
+							}}>Add minter</Button
+						>
+					</form>
+					<Note>
+						Minters can see, approve, and cancel transactions, and most importantly, mint new tokens
+						in this currency. They can also propose and improve currency exchanges and mergers.
+					</Note>
+				{/if}
+			</Card>
 			<Card header="Venues">
 				{#if venues}
 					<p>These are the venues that use this currency:</p>
