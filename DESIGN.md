@@ -92,7 +92,9 @@ There are several key types of data in RR.
 `Scholars` are individuals in a research community who are identified by an [ORCID](https://orcid.org/).
 
 - [x] Scholars can volunteer to review for a `Venue`
-- [ ] Scholars can spend and earn `Token`s for that volunteer work, as well as receive `Token`s as gifts, and spend `Token`s to submit manuscripts for peer review.
+- [ ] Scholars can spend and earn `Token`s for that volunteer work
+- [ ] Scholars can receive `Token`s as gifts
+- [ ] Scholars can spend `Token`s to submit manuscripts for peer review.
 - [x] Scholars can also have _`editor`_ status on a `Venue`, which gives them the ability to manage the `transaction`s and `submission`s in a `Venue`.
 - [x] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
 - [ ] An individual scholar cannot be both an _`editor`_ and a _`minter`_, as this would allow editors to enrich themselves without oversight. Scholars can specify an email address for communication.
@@ -433,7 +435,7 @@ If scholar ID corresponds to the authenticated user, it should also allow the sc
 > [!IMPORTANT]
 > The functionality below is specific to compensation
 
-- [ ] _`scholar`_: View a history of `Transaction`s associated with the scholar
+- [x] _`scholar`_: View a history of `Transaction`s associated with the scholar
 - [ ] _`scholar`_: Gift tokens to someone else using the scholar's ORCID or email, creating two transactions that deduct from the scholar and deposit to the other scholar
 
 ## Venue List `/venues`
@@ -483,7 +485,7 @@ When a venue is **approved** state:
 
 - [x] View the cost, welcome amount, roles, and compensation of the venue.
 - [x] View the _`minters`_ of the venue
-- [ ] View the number of tokens owned by the venue
+- [x] View the number of tokens owned by the venue
 - [x] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue `welcome_amount` should be minted and given to the scholar, welcoming them to the community.
 - [x] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
 - [x] _`scholar`_: Change expertise keywords for a role for the venue
@@ -591,7 +593,7 @@ The purpose of a submission page is to allow editors and scholars to see informa
 RR will also send periodic reminders based on time-based events:
 
 - [ ] `Venue`s are checked daily for a certain proportion of support, and editors are notified when the petition exceeds that threshold.
-- [ ] send `scholar`s periodic reminders to update their availability
+- [ ] Send `scholar`s periodic reminders to update their availability
 
 > [!IMPORTANT]
 > Emails below are specific to compensation

@@ -16,3 +16,4 @@ export type RoleID = RoleRow['id'];
 export type VolunteerRow = Tables['volunteers']['Row'];
 export type VolunteerID = VolunteerRow['id'];
 export type Response = Database['public']['Enums']['invited'];
+export type TransactionRow = Tables['transactions']['Row'];

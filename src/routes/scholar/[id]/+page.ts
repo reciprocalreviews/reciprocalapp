@@ -25,10 +25,26 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.select('id, title')
 		.contains('editors', [params.id]);
 
+	// Get the scholar's current tokens.
+	const { count: tokens, error: tokensError } = await supabase
+		.from('tokens')
+		.select('*', { count: 'exact' })
+		.eq('scholar', params.id);
+	if (tokensError) console.log(tokensError);
+
+	// Get the scholar's most recent transactions.
+	const { count: transactions, error: transactionsError } = await supabase
+		.from('transactions')
+		.select('*', { count: 'exact' })
+		.or(`from_scholar.eq.${params.id},to_scholar.eq.${params.id}`);
+	if (transactionsError) console.log(transactionsError);
+
 	return {
 		scholar,
 		commitments,
 		venues,
-		editing
+		editing,
+		tokens: tokens,
+		transactions: transactions
 	};
 };

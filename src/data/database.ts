@@ -290,6 +290,7 @@ export type Database = {
       }
       transactions: {
         Row: {
+          created: string
           currency: string
           from_scholar: string | null
           from_venue: string | null
@@ -300,6 +301,7 @@ export type Database = {
           tokens: string[]
         }
         Insert: {
+          created?: string
           currency: string
           from_scholar?: string | null
           from_venue?: string | null
@@ -310,6 +312,7 @@ export type Database = {
           tokens?: string[]
         }
         Update: {
+          created?: string
           currency?: string
           from_scholar?: string | null
           from_venue?: string | null

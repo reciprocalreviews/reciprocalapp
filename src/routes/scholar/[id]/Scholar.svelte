@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { getDB } from '$lib/data/CRUD';
 	import Link from '$lib/components/Link.svelte';
-	import Loading from '$lib/components/Loading.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
-	import type Transaction from '$lib/types/Transaction';
 	import { getAuth } from '../../Auth.svelte';
-	import Todo from '$lib/components/Todo.svelte';
 	import type Scholar from '$lib/data/Scholar.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
@@ -14,15 +11,22 @@
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import SourceLink from '$lib/components/VenueLink.svelte';
+	import { type TransactionRow } from '$data/types';
+	import Tokens from '$lib/components/Tokens.svelte';
+	import Transactions from '$lib/components/Transactions.svelte';
 
 	let {
 		scholar,
 		commitments,
-		editing
+		editing,
+		tokens,
+		transactions
 	}: {
 		scholar: Scholar;
 		commitments: { name: string; venue: string; venueid: string }[];
 		editing: { id: string; title: string }[] | null;
+		tokens: number | null;
+		transactions: number | null;
 	} = $props();
 
 	const db = getDB();
@@ -30,8 +34,6 @@
 
 	// Editable if the user is the scholar being viewed.
 	let editable = $derived(auth.getUserID() === scholar.getID());
-
-	let scholarTransactions: Transaction[] | undefined = $state(undefined);
 </script>
 
 <Cards>
@@ -118,59 +120,15 @@
 	</Card>
 
 	<Card header="transactions">
-		{#if scholarTransactions === undefined}
-			<Loading />
-		{:else}
-			<!-- {@const netTokens = scholarTransactions.reduce((total, trans) => (total += trans.amount), 0)} -->
+		<p>
+			{#if editable}You have{:else}This scholar has{/if}
+			{#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an unknown number of{/if} tokens.
+		</p>
 
-			<h2>availability</h2>
-
-			<!-- <p>
-		<Status>
-			I am {#if scholar.available && netTokens < scholar.minimum}
-				available to review.
-			{:else}
-				not available to review.
-			{/if}
-		</Status>
-	</p> -->
-
-			{#if editable}
-				<!-- {#if scholar.available}
-			<p>Indicate I am available when I have fewer than...</p>
-			<p>
-				<Slider min={0} max={50} bind:value={minimum} step={1} change={handleChange} />
-				<Tokens amount={scholar.minimum} />
-			</p>
-		{/if} -->
-
-				<h2>transactions</h2>
-
-				<Todo>Transaction list</Todo>
-
-				<!-- <p>
-			You have a total of <Tokens amount={netTokens} />.
-		</p> -->
-
-				<!-- <table>
-			<thead>
-				<tr><th>Purpose</th><th>Amount</th><th>Notes</th></tr>
-			</thead>
-			<tbody>
-				{#each scholarTransactions.sort((a, b) => b.creationtime - a.creationtime) as transaction}
-					<tr>
-						<td
-							>{#if transaction.approvaltime}approved{:else}pending{/if}</td
-						>
-						<td><Tag>{transaction.purpose}</Tag></td><td><Tokens amount={transaction.amount} /></td
-						><td>{transaction.description}</td></tr
-					>
-				{:else}
-					<tr><td>No transactions</td></tr>
-				{/each}
-			</tbody>
-		</table> -->
-			{/if}
-		{/if}
+		<p>
+			See <Link to="/scholar/{scholar.getID()}/transactions"
+				>{#if transactions === null}your transactions{:else}your {transactions} transactions{/if}</Link
+			>.
+		</p>
 	</Card>
 </Cards>

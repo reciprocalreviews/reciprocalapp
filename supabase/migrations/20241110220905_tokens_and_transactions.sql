@@ -38,6 +38,8 @@ create policy "tokens cannot be deleted" on public.tokens
 create table transactions (
   -- The unique ID of the transaction
   id uuid not null default uuid_generate_v1() primary key,
+  -- When the transaction was proposed
+  created timestamptz not null default now(),
   -- The scholar who gave the tokens
   from_scholar uuid references scholars(id),
   -- The venue who gave the tokens

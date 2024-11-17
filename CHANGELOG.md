@@ -9,6 +9,8 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 - Added number of tokens minted for a currency to the currency page.
 - Show number of tokens possed by a venue.
+- Show scholar's token count
+- Show scholar's recent transactions
 
 ### Maintenance
 
