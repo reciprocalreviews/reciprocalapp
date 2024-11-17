@@ -1,17 +1,9 @@
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase, user } = await parent();
+	const { supabase, user, venue } = await parent();
 
 	const venueid = params.id;
-
-	// Get the matching venue.
-	const { data: venue, error: venueError } = await supabase
-		.from('venues')
-		.select()
-		.eq('id', venueid)
-		.single();
-	if (venueError) console.log(venueError);
 
 	// Get the matching venu's currency.
 	const { data: currency, error: currencyError } = venue
@@ -37,17 +29,25 @@ export const load: PageLoad = async ({ parent, params }) => {
 	if (commitmentsError) console.log(commitmentsError);
 
 	// See how many tokens the venue posseses.
-	const { data: tokens, error: tokensError } = await supabase
+	const { count: tokens, error: tokensError } = await supabase
 		.from('tokens')
-		.select()
+		.select('*', { count: 'exact' })
 		.eq('venue', venueid);
 	if (tokensError) console.log(tokensError);
+
+	// See how many transactions the venue is part of.
+	const { count: transactions, error: transactionsError } = await supabase
+		.from('transactions')
+		.select('*', { count: 'exact' })
+		.or(`from_venue.eq.${venueid},to_venue.eq.${venueid}`);
+	if (transactionsError) console.log(transactionsError);
 
 	return {
 		venue,
 		currency,
 		roles,
 		commitments,
-		tokens: tokens?.length ?? null
+		tokens: tokens,
+		transactions: transactions
 	};
 };

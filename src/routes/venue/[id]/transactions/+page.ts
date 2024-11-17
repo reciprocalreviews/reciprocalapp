@@ -7,8 +7,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: transactions, error: transactionsError } = await supabase
 		.from('transactions')
 		.select()
-		.or(`from_scholar.eq.${params.id},to_scholar.eq.${params.id}`)
-		.order('created', { ascending: false });
+		.or(`from_venue.eq.${params.id},to_venue.eq.${params.id}`);
 	if (transactionsError) console.log(transactionsError);
 
 	return {

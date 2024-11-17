@@ -21,7 +21,7 @@
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
-	const { venue, currency, scholar, roles, commitments, tokens } = $derived(data);
+	const { venue, currency, scholar, roles, commitments, tokens, transactions } = $derived(data);
 
 	const db = getDB();
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
@@ -46,6 +46,9 @@
 				{#if venue.description.length === 0}<em>No description.</em>{:else}{venue.description}{/if}
 			</p>{/if}
 
+		<!-- Show the venue URL -->
+		<Link to={venue.url}>{venue.url}</Link>
+
 		<!-- Key details about costs. -->
 		<p>
 			{#if currency}
@@ -54,12 +57,16 @@
 				<Feedback error>Unable to load this venue's currency.</Feedback>
 			{/if}
 			New volunteers receive <Tokens amount={venue.welcome_amount}></Tokens> when they volunteer to review.
-			New submissions cost <Tokens amount={venue.submission_cost}></Tokens>. This venue currently
-			has {#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an unknown number of{/if} tokens.
+			New submissions cost <Tokens amount={venue.submission_cost}></Tokens>.
 		</p>
 
-		<!-- Show the venue URL -->
-		<Link to={venue.url}>{venue.url}</Link>
+		<p>
+			This venue currently has {#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an
+				unknown number of{/if} tokens and is involved in {#if transactions !== null}<strong
+					>{transactions}</strong
+				>{:else}an unknown number of{/if} transactions.
+			<Link to="/venue/{venue.id}/transactions">See all transactions</Link>.
+		</p>
 
 		<!-- Show metadata -->
 		<Cards>
