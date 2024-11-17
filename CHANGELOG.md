@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.0.10 2024-11-17
 
+###
+
+- Added number of tokens minted for a currency to the currency page.
+
 ### Maintenance
 
 - Updated Svelte and Supabase point releases.

@@ -16,10 +16,11 @@
 	import { validEmail } from '$lib/validation';
 	import { ORCIDRegex } from '$data/ORCID';
 	import Note from '$lib/components/Note.svelte';
+	import Tokens from '$lib/components/Tokens.svelte';
 
 	let { data }: { data: PageData } = $props();
 
-	let { currency, venues } = $derived(data);
+	let { currency, venues, count } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -49,6 +50,9 @@
 			/>
 		{:else}
 			<p>{currency.description}</p>
+		{/if}
+		{#if count !== null}
+			<p>There are <Tokens amount={count}></Tokens> tokens minted in this currency.</p>
 		{/if}
 		<Cards>
 			<Card header="Minters">
@@ -107,7 +111,7 @@
 				{/if}
 			</Card>
 			{#if editable}
-				<Card header="Settings">
+				<Card header="Settings" group="minters">
 					{#if editable}<EditableText
 							text={currency.name}
 							label="name"

@@ -11,7 +11,7 @@
 	}: {
 		header?: string | undefined;
 		subheader?: string | undefined;
-		group?: 'editors' | 'stewards';
+		group?: 'editors' | 'minters' | 'stewards';
 		full?: boolean;
 		children: Snippet;
 	} = $props();

@@ -245,6 +245,118 @@ export type Database = {
           },
         ]
       }
+      tokens: {
+        Row: {
+          currency: string
+          id: string
+          scholar: string | null
+          venue: string | null
+        }
+        Insert: {
+          currency: string
+          id?: string
+          scholar?: string | null
+          venue?: string | null
+        }
+        Update: {
+          currency?: string
+          id?: string
+          scholar?: string | null
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tokens_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tokens_scholar_fkey"
+            columns: ["scholar"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tokens_venue_fkey"
+            columns: ["venue"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          currency: string
+          from_scholar: string | null
+          from_venue: string | null
+          id: string
+          purpose: string
+          to_scholar: string | null
+          to_venue: string | null
+          tokens: string[]
+        }
+        Insert: {
+          currency: string
+          from_scholar?: string | null
+          from_venue?: string | null
+          id?: string
+          purpose: string
+          to_scholar?: string | null
+          to_venue?: string | null
+          tokens?: string[]
+        }
+        Update: {
+          currency?: string
+          from_scholar?: string | null
+          from_venue?: string | null
+          id?: string
+          purpose?: string
+          to_scholar?: string | null
+          to_venue?: string | null
+          tokens?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_from_scholar_fkey"
+            columns: ["from_scholar"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_from_venue_fkey"
+            columns: ["from_venue"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_to_scholar_fkey"
+            columns: ["to_scholar"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_to_venue_fkey"
+            columns: ["to_venue"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venues: {
         Row: {
           bidding: boolean
