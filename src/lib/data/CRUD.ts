@@ -76,7 +76,8 @@ export const Errors = {
 	AcceptRoleInvite: 'Unable to accept role invite',
 	EditCurrencyMinters: 'Unable to edit minters',
 	AddCurrencyMinter: 'Unable to add minter',
-	AlreadyMinter: 'This scholar is already a minter'
+	AlreadyMinter: 'This scholar is already a minter',
+	MintTokens: 'Unable to mint tokens'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -229,4 +230,6 @@ export default abstract class CRUD {
 		minters: string[],
 		emailOrORCID: string
 	): Promise<ErrorID | undefined>;
+
+	abstract mintTokens(id: CurrencyID, amount: number, to: VenueID): Promise<ErrorID | undefined>;
 }

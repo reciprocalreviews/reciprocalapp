@@ -4,12 +4,12 @@
 	import { handle } from '../../routes/errors.svelte';
 
 	let {
-		on,
-		change,
+		on = $bindable(),
+		change = undefined,
 		children
 	}: {
 		on: boolean;
-		change: undefined | ((on: boolean) => Promise<ErrorID | undefined>);
+		change?: undefined | ((on: boolean) => Promise<ErrorID | undefined>);
 		children: Snippet;
 	} = $props();
 </script>
@@ -33,15 +33,16 @@
 		accent-color: var(--salient-color);
 		width: 20px;
 		height: 20px;
+		border-radius: var(--roundedness);
 	}
 
 	input:focus {
-		outline: solid 3px var(--focus-color);
+		outline: solid var(--thick-border-width) var(--focus-color);
 	}
 
 	label {
 		flex-direction: row;
 		gap: var(--spacing);
-		align-items: baseline;
+		align-items: bottom;
 	}
 </style>

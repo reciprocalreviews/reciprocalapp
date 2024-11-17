@@ -15,11 +15,18 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.eq('currency', params.id);
 	if (tokensError) console.log(tokensError.message);
 
-	// How many tokens?
-	const count = tokens?.length ?? null;
+	const scholarCount = tokens
+		? new Set(tokens.filter((token) => token.scholar !== null).map((token) => token.scholar)).size
+		: null;
+
+	const venueCount = tokens
+		? new Set(tokens.filter((token) => token.venue !== null).map((token) => token.venue)).size
+		: null;
 
 	return {
 		venues: venues,
-		count: count
+		count: tokens?.length ?? null,
+		scholarCount,
+		venueCount
 	};
 };

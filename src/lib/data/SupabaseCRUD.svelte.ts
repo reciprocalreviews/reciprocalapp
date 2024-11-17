@@ -521,4 +521,18 @@ export default class SupabaseCRUD extends CRUD {
 
 		return this.editCurrencyMinters(id, Array.from(new Set([...minters, scholar.id])));
 	}
+
+	async mintTokens(id: CurrencyID, amount: number, to: VenueID) {
+		const rows = Array(amount)
+			.fill(0)
+			.map(() => {
+				return { currency: id, venue: to, scholar: null };
+			});
+
+		const { error } = await this.client.from('tokens').insert(rows);
+		if (error) {
+			console.error(error);
+			return 'MintTokens';
+		}
+	}
 }

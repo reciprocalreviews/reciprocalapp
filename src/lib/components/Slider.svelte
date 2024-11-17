@@ -52,10 +52,12 @@
 		font-size: inherit;
 		color: inherit;
 		accent-color: var(--salient-color);
+		width: 100%;
 	}
 
 	input:focus {
 		outline: var(--focus-color) solid var(--thick-border-width);
+		border-radius: var(--roundedness);
 	}
 
 	label {
