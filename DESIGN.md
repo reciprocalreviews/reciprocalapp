@@ -94,7 +94,7 @@ There are several key types of data in RR.
 - [x] Scholars can volunteer to review for a `Venue`
 - [ ] Scholars can spend and earn `Token`s for that volunteer work, as well as receive `Token`s as gifts, and spend `Token`s to submit manuscripts for peer review.
 - [x] Scholars can also have _`editor`_ status on a `Venue`, which gives them the ability to manage the `transaction`s and `submission`s in a `Venue`.
-- [ ] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
+- [x] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
 - [ ] An individual scholar cannot be both an _`editor`_ and a _`minter`_, as this would allow editors to enrich themselves without oversight. Scholars can specify an email address for communication.
 - [x] Anyone can view a `Scholar`'s record, but only `Scholars` can create, update, or delete their record.
 
@@ -477,12 +477,13 @@ When a venue is in a **proposed** state:
 
 - [x] View the _`editors`_ of the venue
 - [x] View the estimated size of the community
-- [ ] _`scholar`_: Vote to support adopting RR for the venue.
+- [x] _`scholar`_: Vote to support adopting RR for the venue.
 
 When a venue is **approved** state:
 
 - [x] View the cost, welcome amount, roles, and compensation of the venue.
-- [ ] View the _`minters`_ of the venue
+- [x] View the _`minters`_ of the venue
+- [ ] View the number of tokens owned by the venue
 - [x] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue `welcome_amount` should be minted and given to the scholar, welcoming them to the community.
 - [x] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
 - [x] _`scholar`_: Change expertise keywords for a role for the venue
@@ -505,9 +506,9 @@ When a venue is **approved** state:
 
 - [x] _`editor`_: Modify the newcomer gift in tokens
 - [x] _`editor`_: Modify submission costs in tokens, reviewing compensation in tokens. Submission cost must equal to total compensation for a submission.
-- [ ] _`editor`_: View the total number of tokens in the venue and who posses them, to gauge the health of the community.
-- [ ] _`editor`_: Change the _`minter`_(s) of the venue, ensuring there is always one
-- [ ] _`editor`_: Enable or disable (`venues.bidding`), determining whether submissions can be bid on by `scholars`.
+- [x] _`editor`_: View the total number of tokens in the venue and who posses them, to gauge the health of the community.
+- [x] _`editor`_: Change the _`minter`_(s) of the venue, ensuring there is always one
+- [x] _`editor`_: Enable or disable (`venues.bidding`), determining whether submissions can be bid on by `scholars`.
 
 When a venue is in an _inactive_ state:
 
@@ -520,14 +521,19 @@ When a venue is in an _inactive_ state:
 
 The purpose of this page is to manage the venue's `Currency`.
 
+Basic functionality includes:
+
 - [x] Show the minters
 - [x] Show the venues using the currency
+- [ ] _`minter`_: Create new tokens within the venue's currency, to address token scarcity in the community. This functionality should provide guidance on best practices, including warnings about what happens if they create too many tokens. For example, there should be a certain number of tokens per scholar in the community at a minimum, but not so many that publishing requires no labor.
+
+There are also several functions related to currency exchange and merger:
+
 - [ ] _`scholar`_: Show any existing exchange rates approved by the platform.
 - [ ] _`scholar`_: View the exchange rates the currency is involved in
 - [ ] _`editor`_: Convert a specific token to another venue's currency. This enables a one-time exchange, such as when an editor might approve someone using currency from another `Venue` to submit to their venue.
 - [ ] _`editor`_: Specify a conversion rate between one venue and another, which enables scholars to independently convert their tokens from one currency to another. This enables an official one way exchange rate, reducing barriers to cross-venue transactions.
 - [ ] _`editor`_: Unify two currencies, removing the need to convert between a currency. Must be approved by the `editors` of both venues. This prevent editors from unilaterally creating changes.
-- [ ] _`minter`_: Create new tokens within the venue's currency, to address token scarcity in the community. This functionality should provide guidance on best practices, including warnings about what happens if they create too many tokens. For example, there should be a certain number of tokens per scholar in the community at a minimum, but not so many that publishing requires no labor.
 - [ ] _`minter`_: Propose a new exchange rate for other minters involved in two currencies to approve. Everyone must approve for it to be official. Inactive until all minters involved in both currencies approve.
 - [ ] _`minter`_: Approve a proposed exchange rate.
 - [ ] _`minter`_: Propose a modification to an exchange rate
