@@ -12,6 +12,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Show scholar's token count
 - Show scholar's transactions
 - Show venue's transactions
+- Show currency's transactions
 
 ### Maintenance
 

@@ -17,6 +17,7 @@
 	import { ORCIDRegex } from '$data/ORCID';
 	import Note from '$lib/components/Note.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
+	import Link from '$lib/components/Link.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -35,7 +36,7 @@
 	let editable = $derived(currency !== null && uid !== null && currency.minters.includes(uid));
 </script>
 
-<Page title={currency ? currency.name : 'Oops'} subtitle="currency">
+<Page title={currency ? currency.name : 'Oops'} subtitle="Currency">
 	{#if currency === null}
 		<Feedback error>Unknown currency.</Feedback>
 	{:else}
@@ -52,7 +53,11 @@
 			<p>{currency.description}</p>
 		{/if}
 		{#if count !== null}
-			<p>There are <Tokens amount={count}></Tokens> tokens minted in this currency.</p>
+			<p>
+				There are <Tokens amount={count}></Tokens> tokens minted in this currency. <Link
+					to="/currency/{currency.id}/transactions">See all transactions</Link
+				>.
+			</p>
 		{/if}
 		<Cards>
 			<Card header="Minters">

@@ -552,7 +552,7 @@ The purpose of this page is to allow for management of all `Transaction`s associ
 
 **FUNCTIONALITY**. The transactions page for a venue should allow for:
 
-- [ ] _`editor`_, _`minter`_: View all transactions
+- [x] _`editor`_, _`minter`_: View all transactions
 - [ ] _`editor`_, _`minter`_: Search for transactions involving particular people or containing particular text
 - [ ] _`minter`_: Approve pending transactions that do not involve the scholar approving
 - [ ] _`editors`_, _`minters`_: Cancel approved transactions that do not involve the scholar canceling

@@ -1,18 +1,15 @@
 <script lang="ts">
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { getDB } from '$lib/data/CRUD';
 	import Page from '$lib/components/Page.svelte';
 	import Transactions from '$lib/components/Transactions.svelte';
 
 	let { data } = $props();
 	let { scholar, transactions } = $derived(data);
-
-	let db = getDB();
 </script>
 
 {#if scholar && transactions}
 	<Page title={scholar.name ?? scholar.email ?? 'anonymous'} subtitle="Transactions">
-		<p>{transactions.length} transactions.</p>
+		<p>These are all {transactions.length} transactions for this scholar.</p>
 		<Transactions {transactions} />
 	</Page>
 {:else if scholar === null}
