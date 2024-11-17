@@ -21,7 +21,7 @@
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
-	const { venue, currency, scholar, roles, commitments } = $derived(data);
+	const { venue, currency, scholar, roles, commitments, tokens } = $derived(data);
 
 	const db = getDB();
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
@@ -54,7 +54,8 @@
 				<Feedback error>Unable to load this venue's currency.</Feedback>
 			{/if}
 			New volunteers receive <Tokens amount={venue.welcome_amount}></Tokens> when they volunteer to review.
-			New submissions cost <Tokens amount={venue.submission_cost}></Tokens>.
+			New submissions cost <Tokens amount={venue.submission_cost}></Tokens>. This venue currently
+			has {#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an unknown number of{/if} tokens.
 		</p>
 
 		<!-- Show the venue URL -->
