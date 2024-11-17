@@ -33,12 +33,13 @@ create policy "only token owners can update a token" on public.tokens
 create policy "tokens cannot be deleted" on public.tokens
   for delete to anon, authenticated using (false);
 
+create type transaction_status as enum ('proposed', 'approved', 'canceled');
 
 -- A table of transactions, recording a history of token transfers
 create table transactions (
   -- The unique ID of the transaction
   id uuid not null default uuid_generate_v1() primary key,
-  -- When the transaction was proposed
+  -- When the transaction was created
   created timestamptz not null default now(),
   -- The scholar who gave the tokens
   from_scholar uuid references scholars(id),
@@ -53,21 +54,30 @@ create table transactions (
   -- Require that there is either a scholar or venue destination but not both
   constraint check_to check (num_nonnulls(to_scholar, to_venue) = 1),
   -- An array of token ids moved in the transaction
-  tokens uuid[] not null default '{}'::uuid[],
+  tokens uuid[] default null,
   -- The currency the amount is in
   currency uuid not null references currencies(id),
-  -- The purpose of the transaction
-  purpose text not null
+  -- The purpose of the transaction, containing any information necessary for approval of the transaction by the from source
+  -- Can also be used to specify the reason for cancelation.
+  purpose text not null,
+  -- The status of the transaction
+  status transaction_status not null  
 );
 
 -- Enable RLS for tokens
 alter table public.transactions
   enable row level security;
 
-create policy "only owners can transfer their tokens" on public.transactions
+create policy "only owners can transfer their tokens if approved" on public.transactions
   for insert to anon, authenticated with check (
-    (from_scholar is not null and auth.uid() = from_scholar) or 
-    (from_venue is not null and (auth.uid() = any((select editors from venues where id = from_venue)::uuid[])))
+    status = 'proposed' or
+    (
+      status = 'approved' and
+      (
+        (from_scholar is not null and auth.uid() = from_scholar) or 
+        (from_venue is not null and (auth.uid() = any((select editors from venues where id = from_venue)::uuid[])))
+      )
+    )
 );
 
 create policy "transactions are only visible to minters and those involved" on public.transactions
@@ -79,8 +89,12 @@ create policy "transactions are only visible to minters and those involved" on p
     (to_venue is not null and auth.uid() = any((select editors from venues where id = to_venue)::uuid[]))
 );
 
-create policy "transactions are read only" on public.transactions
-  for update to anon, authenticated using (false);
+create policy "only the giver and minters can update transactions" on public.transactions
+  for update to anon, authenticated using (
+    (auth.uid() = from_scholar) or 
+    (auth.uid() = any((select minters from currencies where id = currency)::uuid[])) or
+    (from_venue is not null and auth.uid() = any((select editors from venues where id = from_venue)::uuid[]))
+  );
 
 create policy "transactions cannot be deleted" on public.transactions
   for delete to anon, authenticated using (false);

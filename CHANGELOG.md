@@ -5,14 +5,15 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.0.10 2024-11-17
 
-###
+### Added
 
 - Added number of tokens minted for a currency to the currency page.
 - Show number of tokens possed by a venue.
-- Show scholar's token count
-- Show scholar's transactions
-- Show venue's transactions
-- Show currency's transactions
+- Show scholar's token count.
+- Show scholar's transactions.
+- Show venue's transactions.
+- Show currency's transactions.
+- Added approval status to transactions and updated security rules accordingly.
 
 ### Maintenance
 
