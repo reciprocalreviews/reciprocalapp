@@ -108,12 +108,12 @@
 					<Link to="/currency/{currency.id}/transactions">See all transactions</Link> in this currency.
 				</p>
 				{#if isMinter && venues}
-					<h3>Mint new tokens</h3>
-					<Feedback
-						>Be very careful when creating tokens. Too many tokens per scholar will diminish the
-						incentive to earn them.</Feedback
-					>
 					<form>
+						<h3>Mint tokens</h3>
+						<Feedback
+							>Be careful creating new tokens. Too many tokens per scholar will diminish the
+							incentive to earn them.</Feedback
+						>
 						<label>
 							Which venue should own the new tokens?
 							<select bind:value={newTokenOwner}>
