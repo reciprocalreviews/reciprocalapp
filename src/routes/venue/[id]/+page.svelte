@@ -19,6 +19,7 @@
 	import Roles from './Roles.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import type { PageData } from './$types';
+	import Slider from '$lib/components/Slider.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const { venue, currency, scholar, roles, commitments, tokens, transactions } = $derived(data);
@@ -27,6 +28,9 @@
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
 
 	let newEditor: string = $state('');
+	let giftRecipient = $state('');
+	let giftAmount = $state(1);
+	let giftConsent = $state(false);
 </script>
 
 {#if venue === null}
@@ -58,14 +62,6 @@
 			{/if}
 			New volunteers receive <Tokens amount={venue.welcome_amount}></Tokens> when they volunteer to review.
 			New submissions cost <Tokens amount={venue.submission_cost}></Tokens>.
-		</p>
-
-		<p>
-			This venue currently has {#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an
-				unknown number of{/if} tokens and is involved in {#if transactions !== null}<strong
-					>{transactions}</strong
-				>{:else}an unknown number of{/if} transactions.
-			<Link to="/venue/{venue.id}/transactions">See all transactions</Link>.
 		</p>
 
 		<!-- Show metadata -->
@@ -196,6 +192,61 @@
 				{/if}
 			</Card>
 			{#if editor}
+				<Card header="Tokens" group="editors">
+					<p>
+						This venue currently has {#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an
+							unknown number of{/if} tokens and is involved in {#if transactions !== null}<strong
+								>{transactions}</strong
+							>{:else}an unknown number of{/if} transactions.
+						<Link to="/venue/{venue.id}/transactions">See all transactions</Link>.
+					</p>
+
+					<form>
+						<h3>Gift tokens</h3>
+						<TextField
+							bind:text={giftRecipient}
+							label="Recipient"
+							size={20}
+							placeholder="ORCID or email"
+							valid={(text) => validEmail(text) || ORCIDRegex.test(text)}
+						/>
+						<Slider
+							min={1}
+							max={tokens ?? 20}
+							bind:value={giftAmount}
+							step={1}
+							label="# of tokens to give">{giftAmount}</Slider
+						>
+						<Checkbox bind:on={giftConsent}
+							>I understand that these tokens can't be transferred back without the recipient's
+							consent.</Checkbox
+						>
+						<Button
+							tip="Transfer tokens"
+							active={scholar !== null &&
+								giftConsent &&
+								(validEmail(giftRecipient) || ORCIDRegex.test(giftRecipient))}
+							action={async () => {
+								if (
+									scholar &&
+									(await handle(
+										db.transferVenueTokens(
+											scholar?.id,
+											venue.id,
+											giftRecipient,
+											giftAmount,
+											'Venue gift to scholar.'
+										)
+									))
+								) {
+									giftAmount = 1;
+									giftConsent = false;
+									giftRecipient = '';
+								}
+							}}>Gift tokens</Button
+						>
+					</form>
+				</Card>
 				<Card header="Settings" group="editors">
 					<EditableText
 						text={venue.title}

@@ -14,7 +14,9 @@ import type {
 	SupporterID,
 	VenueID,
 	VolunteerID,
-	Response
+	Response,
+	TokenID,
+	TransactionStatus
 } from '../../data/types';
 import CRUD, { type ErrorID } from './CRUD';
 import Scholar from './Scholar.svelte';
@@ -80,6 +82,16 @@ export default class SupabaseCRUD extends CRUD {
 		throw new Error('Method not implemented.');
 	}
 
+	async findScholar(emailOrORCID: string) {
+		const { data: scholar } = await this.client
+			.from('scholars')
+			.select('id')
+			.or(`orcid.eq.${emailOrORCID},email.eq.${emailOrORCID}`)
+			.single();
+
+		return scholar;
+	}
+
 	async getScholar(scholarID: ScholarID): Promise<Scholar | null> {
 		const scholar = this.scholars.get(scholarID);
 		if (scholar) return scholar;
@@ -138,9 +150,6 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	getScholarBalance(scholarID: ScholarID): Promise<number> {
-		throw new Error('Method not implemented.');
-	}
-	createTransaction(transaction: Transaction): Promise<Transaction> {
 		throw new Error('Method not implemented.');
 	}
 	getTransaction(id: TransactionID): Promise<Transaction | null> {
@@ -332,12 +341,7 @@ export default class SupabaseCRUD extends CRUD {
 
 		if (venue === null) return 'EditVenueAddEditorVenueNotFound';
 
-		const { data: scholar } = await this.client
-			.from('scholars')
-			.select('id')
-			.or(`orcid.eq.${emailOrORCID},email.eq.${emailOrORCID}`)
-			.single();
-
+		const scholar = await this.findScholar(emailOrORCID);
 		if (scholar === null) return 'ScholarNotFound';
 
 		if (venue.editors.includes(scholar.id)) return 'EditVenueAddEditorAlreadyEditor';
@@ -509,12 +513,7 @@ export default class SupabaseCRUD extends CRUD {
 		minters: string[],
 		emailOrORCID: string
 	): Promise<ErrorID | undefined> {
-		const { data: scholar } = await this.client
-			.from('scholars')
-			.select('id')
-			.or(`orcid.eq.${emailOrORCID},email.eq.${emailOrORCID}`)
-			.single();
-
+		const scholar = await this.findScholar(emailOrORCID);
 		if (scholar === null) return 'ScholarNotFound';
 
 		if (minters.includes(scholar.id)) return 'AlreadyMinter';
@@ -534,5 +533,82 @@ export default class SupabaseCRUD extends CRUD {
 			console.error(error);
 			return 'MintTokens';
 		}
+	}
+
+	async transferVenueTokens(
+		creator: ScholarID,
+		from: VenueID,
+		emailOrORCID: string,
+		amount: number,
+		purpose: string
+	) {
+		// Find the recipient with the corresponding email or ORCID.
+		const scholar = await this.findScholar(emailOrORCID);
+		if (scholar === null) return 'ScholarNotFound';
+
+		// Find tokens owned by the venue
+		const { data: tokens, error: tokensError } = await this.client
+			.from('tokens')
+			.select()
+			.eq('venue', from);
+		if (tokensError) return 'TransferVenueTokens';
+
+		// If there aren't enough tokens, bail.
+		if (tokens.length < amount) return 'TransferVenueTokens';
+
+		// Get the list of token IDs to transfer
+		const tokenIDs = tokens.slice(0, amount).map((token) => token.id);
+
+		// Transfer each token
+		for (const tokenID of tokenIDs) {
+			const { error } = await this.client
+				.from('tokens')
+				.update({ venue: null, scholar: scholar.id })
+				.eq('id', tokenID);
+			if (error) return 'TransferVenueTokens';
+		}
+
+		// Record an approved transaction to log the gift.
+		const error = await this.createTransaction(
+			creator,
+			null,
+			from,
+			scholar.id,
+			null,
+			tokenIDs,
+			tokens[0].currency,
+			purpose,
+			'approved'
+		);
+		if (error) return 'TransferVenueTokens';
+	}
+
+	async createTransaction(
+		creator: ScholarID,
+		fromScholar: ScholarID | null,
+		fromVenue: VenueID | null,
+		toScholar: ScholarID | null,
+		toVenue: VenueID | null,
+		tokens: TokenID[],
+		currency: CurrencyID,
+		purpose: string,
+		status: TransactionStatus
+	) {
+		if (fromScholar === null && fromVenue === null) return 'CreateTransaction';
+		if (toScholar === null && toVenue === null) return 'CreateTransaction';
+
+		const { error } = await this.client.from('transactions').insert({
+			creator,
+			from_scholar: fromScholar,
+			from_venue: fromVenue,
+			to_scholar: toScholar,
+			to_venue: toVenue,
+			tokens,
+			currency,
+			purpose,
+			status
+		});
+
+		return error ? 'CreateTransaction' : undefined;
 	}
 }

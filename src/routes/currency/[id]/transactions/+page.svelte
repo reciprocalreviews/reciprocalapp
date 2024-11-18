@@ -4,13 +4,13 @@
 	import Transactions from '$lib/components/Transactions.svelte';
 
 	let { data } = $props();
-	let { currency, transactions } = $derived(data);
+	let { currency, transactions, venues } = $derived(data);
 </script>
 
-{#if currency && transactions}
+{#if currency && transactions && venues}
 	<Page title={currency.name} subtitle="Transactions">
 		<p>These are all {transactions.length} transactions for this currency.</p>
-		<Transactions {transactions} />
+		<Transactions {transactions} {venues} />
 	</Page>
 {:else if currency === null}
 	<h1>Oops.</h1>

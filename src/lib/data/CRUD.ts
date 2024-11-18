@@ -7,7 +7,9 @@ import {
 	type SupporterID,
 	type VenueID,
 	type VolunteerID,
-	type Response
+	type Response,
+	type TokenID,
+	type TransactionStatus
 } from '../../data/types';
 import type { SourceID } from '$lib/types/Source';
 import type Source from '$lib/types/Source';
@@ -77,7 +79,9 @@ export const Errors = {
 	EditCurrencyMinters: 'Unable to edit minters',
 	AddCurrencyMinter: 'Unable to add minter',
 	AlreadyMinter: 'This scholar is already a minter',
-	MintTokens: 'Unable to mint tokens'
+	MintTokens: 'Unable to mint tokens',
+	TransferVenueTokens: 'Unable to transfer tokens',
+	CreateTransaction: 'Unable to create transaction'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -147,9 +151,6 @@ export default abstract class CRUD {
 
 	/** Get the balance of the scholar */
 	abstract getScholarBalance(scholarID: ScholarID): Promise<number>;
-
-	/** Insert a new transaction in the database */
-	abstract createTransaction(transaction: Transaction): Promise<Transaction>;
 
 	/** Get the transaction with the given id */
 	abstract getTransaction(id: TransactionID): Promise<Transaction | null>;
@@ -232,4 +233,25 @@ export default abstract class CRUD {
 	): Promise<ErrorID | undefined>;
 
 	abstract mintTokens(id: CurrencyID, amount: number, to: VenueID): Promise<ErrorID | undefined>;
+
+	abstract transferVenueTokens(
+		scholar: ScholarID,
+		from: VenueID,
+		to: string,
+		amount: number,
+		purpose: string
+	): Promise<ErrorID | undefined>;
+
+	/** Insert a new transaction in the database */
+	abstract createTransaction(
+		creator: ScholarID,
+		fromScholar: ScholarID | null,
+		fromVenue: VenueID | null,
+		toScholar: ScholarID | null,
+		toVenue: VenueID | null,
+		tokens: TokenID[],
+		currency: CurrencyID,
+		purpose: string,
+		status: TransactionStatus
+	): Promise<ErrorID | undefined>;
 }

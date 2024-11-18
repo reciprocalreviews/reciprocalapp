@@ -12,6 +12,8 @@
 		font-size: var(--small-font-size);
 		padding: calc(var(--spacing) / 2);
 		border-radius: var(--roundedness);
-		background: var(--alternating-color);
+		background: var(--salient-color);
+		color: var(--background-color);
+		white-space: nowrap;
 	}
 </style>

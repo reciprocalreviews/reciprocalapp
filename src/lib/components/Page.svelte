@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import Lead from './Lead.svelte';
+	import Header from './Header.svelte';
 
 	let {
 		title,
@@ -9,7 +10,9 @@
 	}: { title: string; subtitle?: string | undefined; children: Snippet } = $props();
 </script>
 
-<svelte:window {title} />
+<svelte:head>
+	<title>{title}</title>
+</svelte:head>
 
 <section class="page">
 	<div>

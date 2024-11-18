@@ -291,38 +291,51 @@ export type Database = {
       transactions: {
         Row: {
           created: string
+          creator: string
           currency: string
           from_scholar: string | null
           from_venue: string | null
           id: string
           purpose: string
+          status: Database["public"]["Enums"]["transaction_status"]
           to_scholar: string | null
           to_venue: string | null
-          tokens: string[]
+          tokens: string[] | null
         }
         Insert: {
           created?: string
+          creator: string
           currency: string
           from_scholar?: string | null
           from_venue?: string | null
           id?: string
           purpose: string
+          status: Database["public"]["Enums"]["transaction_status"]
           to_scholar?: string | null
           to_venue?: string | null
-          tokens?: string[]
+          tokens?: string[] | null
         }
         Update: {
           created?: string
+          creator?: string
           currency?: string
           from_scholar?: string | null
           from_venue?: string | null
           id?: string
           purpose?: string
+          status?: Database["public"]["Enums"]["transaction_status"]
           to_scholar?: string | null
           to_venue?: string | null
-          tokens?: string[]
+          tokens?: string[] | null
         }
         Relationships: [
+          {
+            foreignKeyName: "transactions_creator_fkey"
+            columns: ["creator"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "transactions_currency_fkey"
             columns: ["currency"]
@@ -475,6 +488,7 @@ export type Database = {
     Enums: {
       exchange_proposal_kind: "create" | "modify" | "merge"
       invited: "invited" | "accepted" | "declined"
+      transaction_status: "proposed" | "approved" | "canceled"
     }
     CompositeTypes: {
       [_ in never]: never

@@ -15,6 +15,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Show currency's transactions.
 - Added approval status to transactions and updated security rules accordingly.
 - Minters mint tokens.
+- Venues can gift tokens to scholars.
 
 ### Maintenance
 

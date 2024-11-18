@@ -41,9 +41,11 @@ create table transactions (
   id uuid not null default uuid_generate_v1() primary key,
   -- When the transaction was created
   created timestamptz not null default now(),
-  -- The scholar who gave the tokens
+  -- The scholar who created the transaction
+  creator uuid not null references scholars(id),
+  -- The scholar is giving the tokens
   from_scholar uuid references scholars(id),
-  -- The venue who gave the tokens
+  -- The venue gaving the tokens
   from_venue uuid references venues(id),
   -- Require that there is either a scholar or venue source but not both
   constraint check_from check (num_nonnulls(from_scholar, from_venue) = 1),

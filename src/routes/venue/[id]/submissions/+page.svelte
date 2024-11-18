@@ -11,7 +11,6 @@
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
-	import createSubmission from '$lib/data/createSubmission';
 	import { ORCIDRegex } from '../../../../data/ORCID';
 	import { getAuth } from '../../../Auth.svelte';
 	import { validIdentifier } from '$lib/validation';
@@ -80,15 +79,15 @@
 		if (uid === null) return;
 
 		// Create the submission.
-		await createSubmission(
-			db,
-			$page.params.id,
-			uid,
-			title,
-			externalID,
-			metaID,
-			chargeTextToCharges(charges)
-		);
+		// await createSubmission(
+		// 	db,
+		// 	$page.params.id,
+		// 	uid,
+		// 	title,
+		// 	externalID,
+		// 	metaID,
+		// 	chargeTextToCharges(charges)
+		// );
 		// Update the submissions
 		submissionsPromise = db.getActiveSubmissions($page.params.id);
 	}

@@ -93,7 +93,7 @@ There are several key types of data in RR.
 
 - [x] Scholars can volunteer to review for a `Venue`
 - [ ] Scholars can spend and earn `Token`s for that volunteer work
-- [ ] Scholars can receive `Token`s as gifts
+- [x] Scholars can receive `Token`s as gifts
 - [ ] Scholars can spend `Token`s to submit manuscripts for peer review.
 - [x] Scholars can also have _`editor`_ status on a `Venue`, which gives them the ability to manage the `transaction`s and `submission`s in a `Venue`.
 - [x] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
@@ -502,6 +502,7 @@ When a venue is **approved** state:
 - [x] _`editor`_: Delete a role, confirming they understand that all volunteers will be removed from the role.
 - [ ] _`editor`_: Invite one or more `Scholar`s by ORCID to a particular role.
 - [x] _`editor`_: Invite one or more `Scholar`s by email to a particular role.
+- [x] _`editor`_: Gift tokens from the venue to a scholar
 
 > [!IMPORTANT]
 > The functionality below is specific to compensation

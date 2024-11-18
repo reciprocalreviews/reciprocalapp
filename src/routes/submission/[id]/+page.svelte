@@ -9,7 +9,6 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import TransactionPreview from '$lib/components/TransactionPreview.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import closeSubmission from '$lib/data/archiveSubmission';
 	import { ORCIDRegex } from '../../../data/ORCID';
 	import type Submission from '$lib/types/Submission';
 	import { getAuth } from '../../Auth.svelte';
@@ -31,7 +30,7 @@
 	}
 
 	async function done(submission: Submission) {
-		await closeSubmission(db, submission.id, toReviewers(reviewers));
+		// await closeSubmission(db, submission.id, toReviewers(reviewers));
 		submissionPromise = db.getSubmission($page.params.id);
 	}
 </script>
@@ -47,7 +46,7 @@
 		{@const editor = submission.editorID === auth.getUserID()}
 		{#if editor}
 			<h1>{submission.title}</h1>
-			<p><SourceLink id={submission.sourceID} /></p>
+			<p><SourceLink id={submission.sourceID} name="" /></p>
 			<h2>Editor</h2>
 			<p><ScholarLink id={submission.editorID} /></p>
 
