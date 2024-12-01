@@ -535,26 +535,41 @@ export default class SupabaseCRUD extends CRUD {
 		}
 	}
 
-	async transferVenueTokens(
+	async resolveEntityID(
+		kind: 'venueid' | 'scholarid' | 'emailorcid',
+		id: VenueID | ScholarID | string
+	): Promise<VenueID | ScholarID | null> {
+		if (kind === 'venueid' || kind === 'scholarid') return id;
+		const scholar = await this.findScholar(id);
+		if (scholar === null) return null;
+		return scholar.id;
+	}
+
+	async transferTokens(
 		creator: ScholarID,
-		from: VenueID,
-		emailOrORCID: string,
+		from: VenueID | ScholarID | string,
+		fromKind: 'venueid' | 'scholarid' | 'emailorcid',
+		to: VenueID | ScholarID,
+		toKind: 'venueid' | 'scholarid' | 'emailorcid',
 		amount: number,
 		purpose: string
 	) {
-		// Find the recipient with the corresponding email or ORCID.
-		const scholar = await this.findScholar(emailOrORCID);
-		if (scholar === null) return 'ScholarNotFound';
+		// Find the approriate ID for the from and to entities.
+		let fromEntity = await this.resolveEntityID(fromKind, from);
+		let toEntity = await this.resolveEntityID(toKind, to);
 
-		// Find tokens owned by the venue
+		if (fromEntity === null) return 'ScholarNotFound';
+		if (toEntity === null) return 'ScholarNotFound';
+
+		// Find tokens owned by the from entity
 		const { data: tokens, error: tokensError } = await this.client
 			.from('tokens')
 			.select()
-			.eq('venue', from);
-		if (tokensError) return 'TransferVenueTokens';
+			.eq(fromKind === 'venueid' ? 'venue' : 'scholar', fromEntity);
+		if (tokensError) return 'TransferScholarTokens';
 
 		// If there aren't enough tokens, bail.
-		if (tokens.length < amount) return 'TransferVenueTokens';
+		if (tokens.length < amount) return 'TransferTokensInsufficient';
 
 		// Get the list of token IDs to transfer
 		const tokenIDs = tokens.slice(0, amount).map((token) => token.id);
@@ -563,7 +578,10 @@ export default class SupabaseCRUD extends CRUD {
 		for (const tokenID of tokenIDs) {
 			const { error } = await this.client
 				.from('tokens')
-				.update({ venue: null, scholar: scholar.id })
+				.update({
+					venue: toKind === 'venueid' ? toEntity : null,
+					scholar: toKind === 'venueid' ? null : toEntity
+				})
 				.eq('id', tokenID);
 			if (error) return 'TransferVenueTokens';
 		}
@@ -571,16 +589,16 @@ export default class SupabaseCRUD extends CRUD {
 		// Record an approved transaction to log the gift.
 		const error = await this.createTransaction(
 			creator,
-			null,
-			from,
-			scholar.id,
-			null,
+			fromKind === 'venueid' ? null : fromEntity,
+			fromKind === 'venueid' ? fromEntity : null,
+			toKind === 'venueid' ? null : toEntity,
+			toKind === 'venueid' ? toEntity : null,
 			tokenIDs,
 			tokens[0].currency,
 			purpose,
 			'approved'
 		);
-		if (error) return 'TransferVenueTokens';
+		if (error) return 'CreateTransaction';
 	}
 
 	async createTransaction(

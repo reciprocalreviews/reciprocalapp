@@ -28,7 +28,9 @@ create policy "tokens are public" on public.tokens
   for select to anon, authenticated using (true);
 
 create policy "only token owners can update a token" on public.tokens
-  for update to anon, authenticated using ((venue is not null and isEditor(venue)) or (scholar is not null and auth.uid() = scholar));
+  for update to anon, authenticated 
+    using ((venue is not null and isEditor(venue)) or (scholar is not null and auth.uid() = scholar))
+    with check (true);
 
 create policy "tokens cannot be deleted" on public.tokens
   for delete to anon, authenticated using (false);

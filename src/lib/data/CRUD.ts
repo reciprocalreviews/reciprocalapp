@@ -81,6 +81,8 @@ export const Errors = {
 	AlreadyMinter: 'This scholar is already a minter',
 	MintTokens: 'Unable to mint tokens',
 	TransferVenueTokens: 'Unable to transfer tokens',
+	TransferScholarTokens: 'Unable to find scholar tokens to transfer',
+	TransferTokensInsufficient: 'Insufficient number tokens to transfer',
 	CreateTransaction: 'Unable to create transaction'
 };
 
@@ -234,10 +236,12 @@ export default abstract class CRUD {
 
 	abstract mintTokens(id: CurrencyID, amount: number, to: VenueID): Promise<ErrorID | undefined>;
 
-	abstract transferVenueTokens(
+	abstract transferTokens(
 		scholar: ScholarID,
 		from: VenueID,
+		fromKind: 'venueid' | 'scholarid' | 'emailorcid',
 		to: string,
+		toKind: 'venueid' | 'scholarid' | 'emailorcid',
 		amount: number,
 		purpose: string
 	): Promise<ErrorID | undefined>;

@@ -436,7 +436,7 @@ If scholar ID corresponds to the authenticated user, it should also allow the sc
 > The functionality below is specific to compensation
 
 - [x] _`scholar`_: View a history of `Transaction`s associated with the scholar
-- [ ] _`scholar`_: Gift tokens to someone else using the scholar's ORCID or email, creating two transactions that deduct from the scholar and deposit to the other scholar
+- [x] _`scholar`_: Gift tokens to someone else using the scholar's ORCID or email
 
 ## Venue List `/venues`
 

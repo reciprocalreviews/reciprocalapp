@@ -52,7 +52,7 @@
 {/if}
 <main>
 	<section class="notifications" aria-live="assertive">
-		{#each getErrors() as error, index}{@render ErrorBox(error, index)}{/each}
+		{#each errors as error, index}{@render ErrorBox(error, index)}{/each}
 	</section>
 	{@render children()}
 </main>

@@ -11,9 +11,9 @@
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import SourceLink from '$lib/components/VenueLink.svelte';
-	import { type TransactionRow } from '$data/types';
 	import Tokens from '$lib/components/Tokens.svelte';
-	import Transactions from '$lib/components/Transactions.svelte';
+	import Gift from '$lib/components/Gift.svelte';
+	import { onMount } from 'svelte';
 
 	let {
 		scholar,
@@ -130,5 +130,23 @@
 				>{#if transactions === null}your transactions{:else}your {transactions} transactions{/if}</Link
 			>.
 		</p>
+		{#if tokens !== null}
+			<Gift
+				max={tokens}
+				purpose="Gift to peer"
+				transfer={(giftRecipient: string, giftAmount: number, purpose: string) =>
+					scholar
+						? db.transferTokens(
+								scholar.getID(),
+								scholar.getID(),
+								'scholarid',
+								giftRecipient,
+								'emailorcid',
+								giftAmount,
+								purpose
+							)
+						: undefined}
+			/>
+		{/if}
 	</Card>
 </Cards>

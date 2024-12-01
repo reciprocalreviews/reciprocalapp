@@ -3,7 +3,11 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](http://semver.org/) format.
 
-## 0.0.11 2024-12-1
+## 0.1.0 2024-12-1
+
+### Added
+
+- Allow scholars to gift tokens.
 
 ### Maintenance
 
