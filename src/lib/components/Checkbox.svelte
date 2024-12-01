@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ErrorID } from '$lib/data/CRUD';
 	import type { Snippet } from 'svelte';
-	import { handle } from '../../routes/errors.svelte';
+	import { handle } from '../../routes/feedback.svelte';
 
 	let {
 		on = $bindable(),

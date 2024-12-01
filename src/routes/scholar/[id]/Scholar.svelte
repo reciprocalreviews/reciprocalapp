@@ -134,6 +134,7 @@
 			<Gift
 				max={tokens}
 				purpose="Gift to peer"
+				success="This venue's tokens were successfully gifted."
 				transfer={(giftRecipient: string, giftAmount: number, purpose: string) =>
 					scholar
 						? db.transferTokens(

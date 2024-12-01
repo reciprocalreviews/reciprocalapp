@@ -11,7 +11,7 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { validEmail, validIdentifier } from '$lib/validation';
-	import { handle } from '../../errors.svelte';
+	import { handle } from '../../feedback.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Form from '$lib/components/Form.svelte';
 

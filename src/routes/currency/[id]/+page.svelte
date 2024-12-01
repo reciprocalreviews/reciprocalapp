@@ -9,7 +9,7 @@
 	import SourceLink from '$lib/components/VenueLink.svelte';
 	import type { PageData } from './$types';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import { handle } from '../../errors.svelte';
+	import { handle } from '../../feedback.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
 	import Button from '$lib/components/Button.svelte';
 	import TextField from '$lib/components/TextField.svelte';

@@ -2,7 +2,7 @@
 	import { ORCIDRegex } from '$data/ORCID';
 	import { type ErrorID } from '$lib/data/CRUD';
 	import { validEmail } from '$lib/validation';
-	import { handle } from '../../routes/errors.svelte';
+	import { handle } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
 	import Checkbox from './Checkbox.svelte';
 	import Slider from './Slider.svelte';
@@ -11,10 +11,12 @@
 	let {
 		max,
 		purpose,
-		transfer
+		transfer,
+		success
 	}: {
 		max: number | null;
 		purpose: string;
+		success: string;
 		transfer: (
 			receipient: string,
 			amount: number,
@@ -49,7 +51,7 @@
 		active={giftConsent && (validEmail(giftRecipient) || ORCIDRegex.test(giftRecipient))}
 		action={async () => {
 			const result = transfer(giftRecipient, giftAmount, giftPurpose);
-			if (result && (await handle(result))) {
+			if (result && (await handle(result, success))) {
 				giftAmount = 1;
 				giftConsent = false;
 				giftRecipient = '';

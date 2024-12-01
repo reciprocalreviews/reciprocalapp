@@ -8,7 +8,7 @@
 	import { validEmails, validIdentifier, validURL } from '$lib/validation';
 	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../../Auth.svelte';
-	import { addError, isError } from '../../errors.svelte';
+	import { addError, isError } from '../../feedback.svelte';
 
 	let venue = $state('');
 	let editors = $state('');

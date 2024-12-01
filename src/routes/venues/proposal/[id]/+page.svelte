@@ -7,7 +7,7 @@
 	import { getAuth } from '../../../Auth.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { addError, handle, isError } from '../../../errors.svelte';
+	import { addError, handle, isError } from '../../../feedback.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { getDB } from '$lib/data/CRUD';
 	import Date from '$lib/components/Date.svelte';

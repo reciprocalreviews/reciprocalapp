@@ -6,9 +6,9 @@
 	import { invalidate } from '$app/navigation';
 	import type { Session, SupabaseClient } from '@supabase/supabase-js';
 	import { createAuthContext, getAuth } from './Auth.svelte';
-	import { Errors, setDB, type ErrorID } from '$lib/data/CRUD';
+	import { Errors, setDB } from '$lib/data/CRUD';
 	import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
-	import { getErrors, removeError } from './errors.svelte';
+	import { getFeedback, removeError, type Level, isError } from './feedback.svelte';
 	import Button from '$lib/components/Button.svelte';
 
 	let {
@@ -19,7 +19,7 @@
 	createAuthContext(data.supabase);
 	const auth = getAuth();
 
-	let errors = $derived(getErrors());
+	let feedback = $derived(getFeedback());
 
 	/** Always go home in production, pre-release */
 	onMount(() => {
@@ -40,9 +40,9 @@
 	setDB(new SupabaseCRUD(data.supabase));
 </script>
 
-{#snippet ErrorBox(id: ErrorID, index: number)}
-	<div class="error">
-		<span>{Errors[id]}</span>
+{#snippet MessageBox(message: string, level: Level, index: number)}
+	<div class="feedback {level}">
+		<span>{message}</span>
 		<Button action={() => removeError(index)} tip="Dismiss notification">𐄂</Button>
 	</div>
 {/snippet}
@@ -52,7 +52,13 @@
 {/if}
 <main>
 	<section class="notifications" aria-live="assertive">
-		{#each errors as error, index}{@render ErrorBox(error, index)}{/each}
+		{#each feedback as feedback, index}{@render MessageBox(
+				feedback.level === 'error' && isError(feedback.message)
+					? Errors[feedback.message]
+					: feedback.message,
+				feedback.level,
+				index
+			)}{/each}
 	</section>
 	{@render children()}
 </main>
@@ -73,7 +79,7 @@
 		gap: var(--spacing);
 	}
 
-	.error {
+	.feedback {
 		display: flex;
 		flex-direction: row;
 		align-items: baseline;
@@ -84,5 +90,13 @@
 		border-radius: var(--roundedness);
 		background: var(--error-color);
 		box-shadow: var(--spacing) var(--spacing) var(--spacing) var(--border-color);
+	}
+
+	.success {
+		background: var(--salient-color);
+	}
+
+	.warning {
+		background: var(--focus-color);
 	}
 </style>

@@ -14,7 +14,7 @@
 	import Note from '$lib/components/Note.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
 	import { validIdentifier, validURL, validEmail, validInteger } from '$lib/validation';
-	import { handle } from '../../errors.svelte';
+	import { handle } from '../../feedback.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Roles from './Roles.svelte';
 	import Tag from '$lib/components/Tag.svelte';
@@ -202,6 +202,7 @@
 						<Gift
 							max={tokens}
 							purpose="Venue gift to scholar"
+							success="Your tokens were successfully gifted."
 							transfer={(giftRecipient: string, giftAmount: number, purpose: string) =>
 								scholar
 									? db.transferTokens(
