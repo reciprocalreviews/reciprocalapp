@@ -112,7 +112,7 @@ alter table public.volunteers
 create policy "editors can invite and volunteers if not invite only" on public.volunteers
   for insert to anon, authenticated with check (
     isEditor((select venueid from roles where id = roleid)) or 
-    (auth.uid() = scholarid and (select invited from roles where id = roleid))
+    (auth.uid() = scholarid and not (select invited from roles where id = roleid))
     );
 
 create policy "anyone can view volunteers" on public.volunteers

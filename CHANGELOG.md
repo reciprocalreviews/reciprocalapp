@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.0 2024-12-1
 
+### Fixed
+
+- Fixed RLS policy for volunteer insertion.
+
 ### Added
 
 - Allow scholars to gift tokens.
