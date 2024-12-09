@@ -15,11 +15,11 @@
 	let {
 		transactions,
 		venues,
-		currency
+		currency = undefined
 	}: {
 		transactions: TransactionRow[];
 		venues: { id: VenueID; title: string }[];
-		currency: CurrencyRow | undefined;
+		currency?: CurrencyRow | undefined;
 	} = $props();
 
 	// Get the current user
