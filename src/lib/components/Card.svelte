@@ -1,36 +1,51 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import Tag from './Tag.svelte';
+	import Button from './Button.svelte';
 
 	let {
-		header = undefined,
-		subheader = undefined,
+		header,
+		detail,
+		subheader = false,
 		group,
 		full = false,
-		children
+		expand = false
 	}: {
-		header?: string | undefined;
-		subheader?: string | undefined;
+		header: Snippet;
+		detail: Snippet;
+		subheader?: boolean;
 		group?: 'editors' | 'minters' | 'stewards';
 		full?: boolean;
-		children: Snippet;
+		expand?: boolean;
 	} = $props();
+
+	let expanded = $state(expand);
 </script>
 
-<div class="card" class:full>
-	{#if header}
+{#snippet content()}
+	{@render header()}
+	{#if group}<Tag>{group} only</Tag>{/if}
+	<Button
+		tip={expanded ? 'Collapse this card' : 'Expand this card'}
+		action={() => (expanded = !expanded)}
+		end
+		>{#if expanded}⏷{:else}⏵{/if}</Button
+	>
+{/snippet}
+
+<div class="card" class:full={expanded && full} class:expanded>
+	{#if !subheader}
 		<h2>
-			{header}
-			{#if group}<Tag>{group}</Tag>{/if}
+			{@render content()}
 		</h2>
-	{/if}
-	{#if subheader}
+	{:else}
 		<h3>
-			{subheader}
-			{#if group}<Tag>{group}</Tag>{/if}
+			{@render content()}
 		</h3>
 	{/if}
-	{@render children()}
+	{#if expanded}
+		{@render detail()}
+	{/if}
 </div>
 
 <style>
@@ -42,16 +57,24 @@
 		border-radius: var(--roundedness);
 		border: var(--border-color) solid var(--border-width);
 		flex: 1;
-		min-width: 10em;
+		min-width: 20em;
 	}
 
 	.full {
 		min-width: calc(100% - var(--spacing) * 3);
 	}
 
-	h2 {
+	h2,
+	h3 {
 		display: flex;
 		align-items: center;
 		gap: var(--spacing);
+		align-items: baseline;
+	}
+
+	:not(.expanded) h2,
+	:not(.expanded) h3 {
+		border-bottom: none;
+		margin-bottom: 0;
 	}
 </style>

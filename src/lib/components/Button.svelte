@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { ConfirmLabel, DeleteLabel } from './Labels';
+	import { DeleteLabel } from './Labels';
 
 	let {
 		action,
@@ -11,7 +11,8 @@
 		name = undefined,
 		type = undefined,
 		view = $bindable(undefined),
-		warn = undefined
+		warn = undefined,
+		end = false
 	}: {
 		children: Snippet;
 		action: ((event?: Event) => void) | ((event?: Event) => Promise<void>);
@@ -22,6 +23,7 @@
 		type?: 'submit' | undefined;
 		view?: HTMLButtonElement | undefined;
 		warn?: string | undefined;
+		end?: boolean | undefined;
 	} = $props();
 
 	let confirming = $state(false);
@@ -37,6 +39,7 @@
 		aria-label={tip}
 		disabled={!active}
 		class:warn={warn !== undefined}
+		class:end
 		onclick={(event) => {
 			if (active)
 				if (warn) confirming = true;
@@ -97,5 +100,9 @@
 		flex-direction: row;
 		align-items: center;
 		gap: var(--spacing);
+	}
+
+	.end {
+		margin-inline-start: auto;
 	}
 </style>

@@ -9,6 +9,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 - When scholars volunteer for a venue for the first time, create a proposed transaction request for minter to approve, and allow minters to approve it, generating tokens and transferring them to the scholar.
 
+### Fixed
+
+- Redesigned cards to be collapsible, to simplify initial view, make data salient, and convey purpose.
+
 ## 0.1.0 2024-12-01
 
 ### Fixed
