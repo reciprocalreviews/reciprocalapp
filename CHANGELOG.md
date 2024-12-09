@@ -3,7 +3,13 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](http://semver.org/) format.
 
-## 0.1.0 2024-12-1
+## 0.1.1 2024-12-08
+
+### Added
+
+- When scholars volunteer for a venue for the first time, create a proposed transaction request for minter to approve, and allow minters to approve it, generating tokens and transferring them to the scholar.
+
+## 0.1.0 2024-12-01
 
 ### Fixed
 

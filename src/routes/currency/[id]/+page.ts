@@ -3,6 +3,11 @@ import type { PageLoad } from './$types';
 export const load: PageLoad = async ({ parent, params }) => {
 	const { supabase } = await parent();
 
+	const { data: currency, error: currencyError } = await supabase
+		.from('currencies')
+		.select()
+		.eq('id', params.id);
+
 	const { data: venues, error: venuesError } = await supabase
 		.from('venues')
 		.select()
@@ -24,6 +29,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		: null;
 
 	return {
+		currency,
 		venues: venues,
 		count: tokens?.length ?? null,
 		scholarCount,

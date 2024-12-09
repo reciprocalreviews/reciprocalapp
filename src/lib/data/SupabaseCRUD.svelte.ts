@@ -18,7 +18,7 @@ import type {
 	TokenID,
 	TransactionStatus
 } from '../../data/types';
-import CRUD, { type ErrorID } from './CRUD';
+import CRUD, { NullUUID, type ErrorID } from './CRUD';
 import Scholar from './Scholar.svelte';
 import type { Database } from '$data/database';
 
@@ -437,7 +437,7 @@ export default class SupabaseCRUD extends CRUD {
 		// Couldn't get the volunteer records? Bail.
 		if (volunteer === null) return 'CreateVolunteer';
 
-		// Already volunteered for this role? Bail.
+		// Already volunteered for this venue? Bail.
 		if (volunteer.some((v) => v.roleid === roleid)) return 'AlreadyVolunteered';
 
 		// Create the volunteer record.
@@ -464,6 +464,20 @@ export default class SupabaseCRUD extends CRUD {
 			const welcome = venue.welcome_amount;
 
 			// TODO Finish after tokens and transactions table are created.
+			// Record an approved transaction to log the gift.
+			const error = await this.createTransaction(
+				scholarid,
+				null,
+				venueid,
+				scholarid,
+				null,
+				// Create a list of null UUIDs to represent that they don't exist yet.
+				new Array(welcome).fill(NullUUID),
+				venue.currency,
+				'Welcome tokens for volunteering for the venue. Aproved by minter.',
+				'proposed'
+			);
+			if (error) return 'CreateTransaction';
 		}
 	}
 
@@ -628,5 +642,54 @@ export default class SupabaseCRUD extends CRUD {
 		});
 
 		return error ? 'CreateTransaction' : undefined;
+	}
+
+	async approveTransaction(minter: ScholarID, id: TransactionID) {
+		// First, get the transaction.
+		const { data: transaction, error: transactionError } = await this.client
+			.from('transactions')
+			.select()
+			.eq('id', id)
+			.single();
+		if (transactionError) return 'UnknownTransaction';
+
+		// Verify that the transaction is pending. If it's not, bail.
+		if (transaction.status !== 'proposed') return 'AlreadyApproved';
+
+		// Verify that the transaction is from a venue
+		if (transaction.from_venue === null) return 'MissingApprovalVenue';
+		if (transaction.to_scholar === null) return 'MissingRecipient';
+
+		// See if we need to create any tokens by looking for null UUIDs in the token list.
+		const tokensToCreate = transaction.tokens.filter((id) => id === NullUUID);
+
+		// If there are tokens to mint, mint them.
+		if (tokensToCreate.length > 0) {
+			const mintingError = await this.mintTokens(
+				transaction.currency,
+				tokensToCreate.length,
+				transaction.from_venue
+			);
+			if (mintingError) return mintingError;
+		}
+
+		// Transfer the requested number of tokens to the destination.
+		const transferError = await this.transferTokens(
+			minter,
+			transaction.from_venue,
+			'venueid',
+			transaction.to_scholar,
+			'scholarid',
+			transaction.tokens.length,
+			transaction.purpose
+		);
+		if (transferError) return transferError;
+
+		// Delete the old transaction
+		const { error: updateError } = await this.client
+			.from('transactions')
+			.delete()
+			.eq('id', transaction.id);
+		if (updateError) return 'UndeletedTransaction';
 	}
 }

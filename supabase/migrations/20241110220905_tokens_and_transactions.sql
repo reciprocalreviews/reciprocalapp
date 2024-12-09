@@ -58,7 +58,7 @@ create table transactions (
   -- Require that there is either a scholar or venue destination but not both
   constraint check_to check (num_nonnulls(to_scholar, to_venue) = 1),
   -- An array of token ids moved in the transaction
-  tokens uuid[] default null,
+  tokens uuid[] not null,
   -- The currency the amount is in
   currency uuid not null references currencies(id),
   -- The purpose of the transaction, containing any information necessary for approval of the transaction by the from source
@@ -101,4 +101,4 @@ create policy "only the giver and minters can update transactions" on public.tra
   );
 
 create policy "transactions cannot be deleted" on public.transactions
-  for delete to anon, authenticated using (false);
+  for delete to anon, authenticated using (auth.uid() = any((select minters from currencies where id = currency)::uuid[]));

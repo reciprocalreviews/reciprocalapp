@@ -120,8 +120,11 @@
 									{#if scholar && !role.invited && commitment === undefined}
 										<Button
 											tip="Volunteer for this role"
-											action={() => handle(db.createVolunteer(scholar.id, role.id, true, true))}
-											>Volunteer …</Button
+											action={() =>
+												handle(
+													db.createVolunteer(scholar.id, role.id, true, true),
+													'Thank you for volunteering! The minter will approve your welcome tokens soon.'
+												)}>Volunteer …</Button
 										>
 									{/if}
 								</div>

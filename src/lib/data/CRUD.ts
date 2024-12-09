@@ -20,6 +20,7 @@ import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
 
 export const DatabaseSymbol = Symbol('database');
+export const NullUUID = '00000000-0000-0000-0000-000000000000';
 
 export function getDB() {
 	return getContext<CRUD>(DatabaseSymbol);
@@ -83,7 +84,12 @@ export const Errors = {
 	TransferVenueTokens: 'Unable to transfer tokens',
 	TransferScholarTokens: 'Unable to find scholar tokens to transfer',
 	TransferTokensInsufficient: 'Insufficient number tokens to transfer',
-	CreateTransaction: 'Unable to create transaction'
+	CreateTransaction: 'Unable to create transaction',
+	UnknownTransaction: 'Unable to find this transaction',
+	AlreadyApproved: 'This transaction is already approved',
+	MissingApprovalVenue: 'The proposed transaction has no venue to transfer from.',
+	MissingRecipient: 'The proposed transaction has no scholar recipient.',
+	UndeletedTransaction: "The proposed transaction couldn't be deleted."
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -258,4 +264,10 @@ export default abstract class CRUD {
 		purpose: string,
 		status: TransactionStatus
 	): Promise<ErrorID | undefined>;
+
+	/**
+	 * Given a transaction ID that is pending, creators or transfers tokens based on the transaction.
+	 * Will only work for a currency's minter because of security rules.
+	 * */
+	abstract approveTransaction(minter: ScholarID, id: TransactionID): Promise<ErrorID | undefined>;
 }

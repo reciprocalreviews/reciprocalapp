@@ -10,7 +10,7 @@
 {#if currency && transactions && venues}
 	<Page title={currency.name} subtitle="Transactions">
 		<p>These are all {transactions.length} transactions for this currency.</p>
-		<Transactions {transactions} {venues} />
+		<Transactions {transactions} {venues} {currency} />
 	</Page>
 {:else if currency === null}
 	<h1>Oops.</h1>

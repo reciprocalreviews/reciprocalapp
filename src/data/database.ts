@@ -300,7 +300,7 @@ export type Database = {
           status: Database["public"]["Enums"]["transaction_status"]
           to_scholar: string | null
           to_venue: string | null
-          tokens: string[] | null
+          tokens: string[]
         }
         Insert: {
           created?: string
@@ -313,7 +313,7 @@ export type Database = {
           status: Database["public"]["Enums"]["transaction_status"]
           to_scholar?: string | null
           to_venue?: string | null
-          tokens?: string[] | null
+          tokens: string[]
         }
         Update: {
           created?: string
@@ -326,7 +326,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["transaction_status"]
           to_scholar?: string | null
           to_venue?: string | null
-          tokens?: string[] | null
+          tokens?: string[]
         }
         Relationships: [
           {
