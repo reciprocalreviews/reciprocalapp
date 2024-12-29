@@ -2,6 +2,7 @@
 	import { dev } from '$app/environment';
 	import Callout from '$lib/components/Callout.svelte';
 	import Link from '$lib/components/Link.svelte';
+	import Note from '$lib/components/Note.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 </script>
@@ -43,11 +44,11 @@
 			less nagging.
 		</p>
 
-		<p>
+		<Note>
 			See the <Link to="/venues">journals and conferences</Link> using the platform and reach out to
 			their editors for their experiences. Or, <Link to="login">log in</Link> to propose a journal or
-			conference for adoption.
-		</p>
+			conference adopt <em>Reciprocal Reviews</em>.
+		</Note>
 
 		<Callout>
 			<strong>Don't want to set a cost?</strong> Use Reciprocal Reviews to track volunteer reviewers
