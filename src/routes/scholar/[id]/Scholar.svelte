@@ -13,8 +13,6 @@
 	import SourceLink from '$lib/components/VenueLink.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import Gift from '$lib/components/Gift.svelte';
-	import Bubble from '$lib/components/Bubble.svelte';
-	import Note from '$lib/components/Note.svelte';
 	import Page from '$lib/components/Page.svelte';
 
 	let {
@@ -39,11 +37,10 @@
 </script>
 
 <Page title={scholar.getName() ?? 'anonymous'}>
-	{#snippet subtitle()}
-		Scholar | <Link to="https://orcid.org/{scholar.getORCID()}">ORCID</Link> | <Link
+	{#snippet subtitle()}Scholar{/snippet}
+	{#snippet details()}<Link to="https://orcid.org/{scholar.getORCID()}">ORCID</Link><Link
 			to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link
-		>
-	{/snippet}
+		>{/snippet}
 
 	<h2>Status</h2>
 	<Status good={scholar.isAvailable()}>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status

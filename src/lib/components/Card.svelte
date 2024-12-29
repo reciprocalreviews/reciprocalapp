@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import Tag from './Tag.svelte';
-	import Button from './Button.svelte';
 	import Bubble from './Bubble.svelte';
 	import Note from './Note.svelte';
 

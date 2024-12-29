@@ -20,7 +20,6 @@
 	import Link from '$lib/components/Link.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
-	import Bubble from '$lib/components/Bubble.svelte';
 
 	let { data }: { data: PageData } = $props();
 

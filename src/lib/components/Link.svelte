@@ -18,6 +18,7 @@
 		color: var(--salient-color);
 		font-weight: 600;
 		text-decoration: none;
+		font-size: inherit;
 	}
 
 	a:hover:not([aria-current]) {

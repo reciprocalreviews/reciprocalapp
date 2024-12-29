@@ -17,10 +17,8 @@
 	import { handle } from '../../feedback.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Roles from './Roles.svelte';
-	import Tag from '$lib/components/Tag.svelte';
 	import type { PageData } from './$types';
 	import Gift from '$lib/components/Gift.svelte';
-	import Count from '$lib/components/Bubble.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const { venue, currency, scholar, roles, commitments, tokens, transactions } = $derived(data);
@@ -38,6 +36,7 @@
 {:else}
 	<Page title={venue.title}>
 		{#snippet subtitle()}Venue{/snippet}
+		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 		<!-- Show the description -->
 		{#if editor}
 			<EditableText
@@ -48,9 +47,6 @@
 			/>{:else}<p>
 				{#if venue.description.length === 0}<em>No description.</em>{:else}{venue.description}{/if}
 			</p>{/if}
-
-		<!-- Show the venue URL -->
-		<Link to={venue.url}>{venue.url}</Link>
 
 		<!-- Key details about costs. -->
 		<p>
