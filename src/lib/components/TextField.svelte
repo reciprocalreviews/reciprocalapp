@@ -42,8 +42,6 @@
 		if (view && !inline) view.style.height = '0';
 		width = measure?.clientWidth ?? 0;
 		height = inline ? (measure?.clientHeight ?? 0) : (view?.scrollHeight ?? 0);
-
-		if (view) console.log(view.clientHeight, view.scrollHeight, view?.offsetHeight);
 	}
 
 	$effect(() => {
