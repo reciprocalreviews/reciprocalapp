@@ -108,6 +108,7 @@
 		justify-content: space-between;
 		gap: var(--spacing);
 		align-items: baseline;
+		flex: 1;
 	}
 
 	.box.inline {
