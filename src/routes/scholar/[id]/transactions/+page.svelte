@@ -8,7 +8,8 @@
 </script>
 
 {#if scholar && transactions && venues}
-	<Page title={scholar.name ?? scholar.email ?? 'anonymous'} subtitle="Transactions">
+	<Page title={scholar.name ?? scholar.email ?? 'anonymous'}>
+		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all {transactions.length} transactions for this scholar.</p>
 		<Transactions {transactions} {venues} />
 	</Page>

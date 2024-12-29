@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.2 2024-12-29
 
+### Added
+
+- Improved styling of expandable cards.
+
 ### Maintenance
 
 - Updated all minor versions of dependencies, including Svelte, SvelteKit, and Vite.

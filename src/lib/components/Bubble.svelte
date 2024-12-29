@@ -17,6 +17,8 @@
 		min-width: 1em;
 		min-height: 1em;
 		text-align: center;
+		line-height: 1;
 		font-size: var(--small-font-size);
+		align-self: start;
 	}
 </style>

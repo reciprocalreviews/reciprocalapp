@@ -8,7 +8,8 @@
 </script>
 
 {#if venue && transactions && venues}
-	<Page title={venue.title} subtitle="Transactions">
+	<Page title={venue.title}>
+		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all {transactions.length} transactions for this venue.</p>
 		<Transactions {transactions} {venues} />
 	</Page>

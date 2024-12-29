@@ -8,7 +8,8 @@
 </script>
 
 {#if currency && transactions && venues}
-	<Page title={currency.name} subtitle="Transactions">
+	<Page title={currency.name}>
+		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all {transactions.length} transactions for this currency.</p>
 		<Transactions {transactions} {venues} {currency} />
 	</Page>

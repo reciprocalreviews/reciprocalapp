@@ -22,7 +22,8 @@
 		<Feedback>Unable to load volunteers for this venue.</Feedback>
 	</Page>
 {:else}
-	<Page title={venue.title} subtitle="Volunteers">
+	<Page title={venue.title}>
+		{#snippet subtitle()}Volunteers{/snippet}
 		<p>
 			These are scholars that have volunteered to review for <SourceLink
 				id={$page.params.id}

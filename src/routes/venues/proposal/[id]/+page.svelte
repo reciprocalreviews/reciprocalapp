@@ -63,7 +63,14 @@
 </script>
 
 {#if proposal && supporters}
-	<Page title={proposal.title} subtitle={approved ? 'Approved' : 'Proposal'}>
+	<Page title={proposal.title}>
+		{#snippet subtitle()}
+			{#if approved}
+				Approved
+			{:else}
+				Proposal
+			{/if}
+		{/snippet}
 		{#if approved}
 			<p>This proposal was approved. See the <Link to="/venue/{proposal.venue}">venue</Link>.</p>
 		{:else}
@@ -92,63 +99,60 @@
 		{/if}
 		<Cards>
 			{#if steward && !approved}
-				<Card group="stewards">
-					{#snippet header()}<Count icon="⛭"></Count> settings{/snippet}
-					{#snippet detail()}
-						<EditableText
-							label="title"
-							text={proposal.title}
-							placeholder="Venue title"
-							valid={validIdentifier}
-							edit={(text) => db.editProposalTitle(proposal.id, text)}
-						/>
-						<EditableText
-							label="editors"
-							text={proposal.editors.join(', ')}
-							placeholder="Venue editors"
-							valid={validEmails}
-							edit={(text) =>
-								db.editProposalEditors(
-									proposal.id,
-									text.split(',').map((editor) => editor.trim())
-								)}
-						/>
-						<EditableText
-							label="census"
-							text={'' + proposal.census}
-							placeholder="Venue census"
-							valid={(text) => !isNaN(parseInt(text))}
-							edit={(text) => db.editProposalCensus(proposal.id, parseInt(text))}
-						/>
-						<EditableText
-							label="URL"
-							text={proposal.url}
-							placeholder="https://"
-							valid={validURL}
-							edit={(text) => db.editProposalURL(proposal.id, text)}
-						/>
+				<Card group="stewards" icon="⛭" header="settings" description="title, editors, url, etc.">
+					<EditableText
+						label="title"
+						text={proposal.title}
+						placeholder="Venue title"
+						valid={validIdentifier}
+						edit={(text) => db.editProposalTitle(proposal.id, text)}
+					/>
+					<EditableText
+						label="editors"
+						text={proposal.editors.join(', ')}
+						placeholder="Venue editors"
+						valid={validEmails}
+						edit={(text) =>
+							db.editProposalEditors(
+								proposal.id,
+								text.split(',').map((editor) => editor.trim())
+							)}
+					/>
+					<EditableText
+						label="census"
+						text={'' + proposal.census}
+						placeholder="Venue census"
+						valid={(text) => !isNaN(parseInt(text))}
+						edit={(text) => db.editProposalCensus(proposal.id, parseInt(text))}
+					/>
+					<EditableText
+						label="URL"
+						text={proposal.url}
+						placeholder="https://"
+						valid={validURL}
+						edit={(text) => db.editProposalURL(proposal.id, text)}
+					/>
 
-						<Button
-							tip="Delete this proposal"
-							warn="Delete this proposal forever?"
-							action={async () => {
-								if (await handle(db.deleteProposal(proposal.id))) goto('/venues');
-							}}>Delete proposal…</Button
-						>
-						<Note>This cannot be undone.</Note>
+					<Button
+						tip="Delete this proposal"
+						warn="Delete this proposal forever?"
+						action={async () => {
+							if (await handle(db.deleteProposal(proposal.id))) goto('/venues');
+						}}>Delete proposal…</Button
+					>
+					<Note>This cannot be undone.</Note>
 
-						<Button
-							tip="Approve this proposal"
-							warn="Approve and create this venue?"
-							action={async () => {
-								if (await handle(db.approveProposal(proposal.id))) goto('/venues');
-							}}>Approve proposal…</Button
-						>
-						<Note
-							>After approving a proposal, <strong>{proposal.editors.join(',')}</strong>
-							above will become the editors of the venue.</Note
-						>
-					{/snippet}
+					<Button
+						tip="Approve this proposal"
+						warn="Approve and create this venue?"
+						action={async () => {
+							if (await handle(db.approveProposal(proposal.id))) goto('/venues');
+						}}>Approve proposal…</Button
+					>
+					<Note
+						>After approving a proposal, <strong>{proposal.editors.join(',')}</strong>
+						above will become the editors of the venue.</Note
+					>
 				</Card>
 			{/if}
 		</Cards>

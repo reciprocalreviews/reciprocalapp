@@ -2,19 +2,25 @@
 	import type { Snippet } from 'svelte';
 	import Tag from './Tag.svelte';
 	import Button from './Button.svelte';
+	import Bubble from './Bubble.svelte';
+	import Note from './Note.svelte';
 
 	let {
-		header,
-		detail,
+		children,
 		subheader = false,
 		group,
+		icon,
+		header,
+		description,
 		full = false,
 		expand = false
 	}: {
-		header: Snippet;
-		detail: Snippet;
+		children: Snippet;
+		icon: string | number;
+		header: string;
+		description: string;
 		subheader?: boolean;
-		group?: 'editors' | 'minters' | 'stewards';
+		group?: 'editors' | 'minters' | 'stewards' | 'invite only';
 		full?: boolean;
 		expand?: boolean;
 	} = $props();
@@ -22,29 +28,32 @@
 	let expanded = $state(expand);
 </script>
 
-{#snippet content()}
-	{@render header()}
-	{#if group}<Tag>{group} only</Tag>{/if}
-	<Button
-		tip={expanded ? 'Collapse this card' : 'Expand this card'}
-		action={() => (expanded = !expanded)}
-		end
-		>{#if expanded}⏷{:else}⏵{/if}</Button
-	>
+{#snippet top()}
+	{header}
+	{#if group}<Tag>{group}</Tag>{/if}
 {/snippet}
 
 <div class="card" class:full={expanded && full} class:expanded>
-	{#if !subheader}
-		<h2>
-			{@render content()}
-		</h2>
-	{:else}
-		<h3>
-			{@render content()}
-		</h3>
-	{/if}
+	<div
+		class="header"
+		role="button"
+		onclick={() => (expanded = !expanded)}
+		onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (expanded = !expanded)}
+		tabindex="0"
+		title={expanded ? 'Collapse this card' : 'Expand this card'}
+	>
+		<Bubble {icon}></Bubble>
+		<div class="text">
+			{#if subheader}
+				<h3>{@render top()}</h3>
+			{:else}
+				<h2>{@render top()}</h2>
+			{/if}
+			<Note>{description}</Note>
+		</div>
+	</div>
 	{#if expanded}
-		{@render detail()}
+		{@render children()}
 	{/if}
 </div>
 
@@ -70,6 +79,23 @@
 		align-items: center;
 		gap: var(--spacing);
 		align-items: baseline;
+	}
+
+	.header {
+		display: flex;
+		flex-direction: row;
+		gap: var(--spacing);
+		flex-wrap: nowrap;
+		cursor: pointer;
+	}
+
+	.header:hover {
+		background: var(--alternating-color);
+	}
+
+	.header:focus {
+		outline: solid var(--thick-border-width) var(--focus-color);
+		border-radius: var(--roundedness);
 	}
 
 	:not(.expanded) h2,

@@ -39,7 +39,8 @@
 	let newTokenCreating = $state(false);
 </script>
 
-<Page title={currency ? currency.name : 'Oops'} subtitle="Currency">
+<Page title={currency ? currency.name : 'Oops'}>
+	{#snippet subtitle()}Currency{/snippet}
 	{#if currency === null}
 		<Feedback error>Unknown currency.</Feedback>
 	{:else}
@@ -55,148 +56,130 @@
 			<p>{currency.description}</p>
 		{/if}
 		<Cards>
-			<Card>
-				{#snippet header()}<Bubble icon={currency.minters.length}></Bubble> minters <Note
-						>Scholars with the power to mint.</Note
-					>{/snippet}
-				{#snippet detail()}
-					<p>These scholars are the minters for this currency. They can see all transactions.</p>
+			<Card
+				icon={currency.minters.length}
+				header="minters"
+				description="Scholars with the power to mint."
+			>
+				<p>These scholars are the minters for this currency. They can see all transactions.</p>
+				<ul>
+					{#each currency.minters as minter}
+						<li>
+							<ScholarLink id={minter}></ScholarLink>
+							{#if isMinter && currency.minters.length > 1}&nbsp;<Button
+									tip="Remove yourself as minter"
+									active={currency.minters.length > 1}
+									action={() =>
+										handle(
+											db.editCurrencyMinters(
+												currency.id,
+												currency.minters.filter((m) => m !== minter)
+											)
+										)}>{DeleteLabel}</Button
+								>{/if}
+						</li>
+					{/each}
+				</ul>
+
+				{#if isMinter}
+					<form>
+						<TextField
+							bind:text={newMinter}
+							size={19}
+							placeholder="ORCID or email"
+							valid={(text) => validEmail(text) || ORCIDRegex.test(text)}
+						/><Button
+							tip="Add minter"
+							active={validEmail(newMinter) || ORCIDRegex.test(newMinter)}
+							action={async () => {
+								if (await handle(db.addCurrencyMinter(currency.id, currency.minters, newMinter))) {
+									newMinter = '';
+								}
+							}}>Add minter</Button
+						>
+					</form>
+					<Note>
+						Minters can see, approve, and cancel transactions, and most importantly, mint new tokens
+						in this currency. They can also propose and improve currency exchanges and mergers.
+					</Note>
+				{/if}
+			</Card>
+			<Card icon={count ?? 0} header="tokens" description="And many transactions...">
+				<p>
+					There are {#if count !== null}<Tokens amount={count}></Tokens>{:else}an unknown number of{/if}
+					tokens minted in this currency, owned by <strong>{scholarCount}</strong> scholars and
+					<strong>{venueCount}</strong> distinct venues.
+				</p>
+				<p>
+					<Link to="/currency/{currency.id}/transactions">See all transactions</Link> in this currency.
+				</p>
+				{#if isMinter && venues}
+					<form>
+						<h3>Mint tokens</h3>
+						<Feedback
+							>Be careful creating new tokens. Too many tokens per scholar will diminish the
+							incentive to earn them.</Feedback
+						>
+						<label>
+							Which venue should own the new tokens?
+							<select bind:value={newTokenOwner}>
+								{#each venues as venue}<option value={venue.id}>{venue.title}</option
+									>{/each}</select
+							>
+						</label>
+						<Slider
+							min={1}
+							max={20}
+							value={newTokenCount}
+							step={1}
+							label="Number of new tokens"
+							change={(val) => (newTokenCount = val)}>{newTokenCount}</Slider
+						>
+						<Checkbox bind:on={newTokenConsent}>
+							I understand that creating excess tokens will erode this currencies value.</Checkbox
+						>
+
+						<Button
+							tip="Mint tokens"
+							active={!newTokenCreating &&
+								newTokenConsent &&
+								newTokenCount > 0 &&
+								newTokenOwner !== undefined}
+							action={async () => {
+								newTokenCreating = true;
+								if (
+									newTokenOwner !== undefined &&
+									(await handle(db.mintTokens(currency.id, newTokenCount, newTokenOwner)))
+								) {
+									newTokenCount = 0;
+									newTokenCreating = false;
+									newTokenConsent = false;
+								}
+							}}>Mint tokens</Button
+						>
+					</form>
+				{/if}
+			</Card>
+			<Card expand icon={venues?.length ?? 0} header="venues" description="using this currency">
+				{#if venues}
+					<p>These are the venues that use this currency:</p>
 					<ul>
-						{#each currency.minters as minter}
-							<li>
-								<ScholarLink id={minter}></ScholarLink>
-								{#if isMinter && currency.minters.length > 1}&nbsp;<Button
-										tip="Remove yourself as minter"
-										active={currency.minters.length > 1}
-										action={() =>
-											handle(
-												db.editCurrencyMinters(
-													currency.id,
-													currency.minters.filter((m) => m !== minter)
-												)
-											)}>{DeleteLabel}</Button
-									>{/if}
-							</li>
+						{#each venues as venue}
+							<li><SourceLink id={venue.id} name={venue.title}></SourceLink></li>
 						{/each}
 					</ul>
-
-					{#if isMinter}
-						<form>
-							<TextField
-								bind:text={newMinter}
-								size={19}
-								placeholder="ORCID or email"
-								valid={(text) => validEmail(text) || ORCIDRegex.test(text)}
-							/><Button
-								tip="Add minter"
-								active={validEmail(newMinter) || ORCIDRegex.test(newMinter)}
-								action={async () => {
-									if (
-										await handle(db.addCurrencyMinter(currency.id, currency.minters, newMinter))
-									) {
-										newMinter = '';
-									}
-								}}>Add minter</Button
-							>
-						</form>
-						<Note>
-							Minters can see, approve, and cancel transactions, and most importantly, mint new
-							tokens in this currency. They can also propose and improve currency exchanges and
-							mergers.
-						</Note>
-					{/if}
-				{/snippet}
-			</Card>
-			<Card>
-				{#snippet header()}<Bubble icon={count ?? 0}></Bubble> tokens <Note
-						>And many transactions...</Note
-					>{/snippet}
-				{#snippet detail()}
-					<p>
-						There are {#if count !== null}<Tokens amount={count}></Tokens>{:else}an unknown number
-							of{/if}
-						tokens minted in this currency, owned by <strong>{scholarCount}</strong> scholars and
-						<strong>{venueCount}</strong> distinct venues.
-					</p>
-					<p>
-						<Link to="/currency/{currency.id}/transactions">See all transactions</Link> in this currency.
-					</p>
-					{#if isMinter && venues}
-						<form>
-							<h3>Mint tokens</h3>
-							<Feedback
-								>Be careful creating new tokens. Too many tokens per scholar will diminish the
-								incentive to earn them.</Feedback
-							>
-							<label>
-								Which venue should own the new tokens?
-								<select bind:value={newTokenOwner}>
-									{#each venues as venue}<option value={venue.id}>{venue.title}</option
-										>{/each}</select
-								>
-							</label>
-							<Slider
-								min={1}
-								max={20}
-								value={newTokenCount}
-								step={1}
-								label="Number of new tokens"
-								change={(val) => (newTokenCount = val)}>{newTokenCount}</Slider
-							>
-							<Checkbox bind:on={newTokenConsent}>
-								I understand that creating excess tokens will erode this currencies value.</Checkbox
-							>
-
-							<Button
-								tip="Mint tokens"
-								active={!newTokenCreating &&
-									newTokenConsent &&
-									newTokenCount > 0 &&
-									newTokenOwner !== undefined}
-								action={async () => {
-									newTokenCreating = true;
-									if (
-										newTokenOwner !== undefined &&
-										(await handle(db.mintTokens(currency.id, newTokenCount, newTokenOwner)))
-									) {
-										newTokenCount = 0;
-										newTokenCreating = false;
-										newTokenConsent = false;
-									}
-								}}>Mint tokens</Button
-							>
-						</form>
-					{/if}
-				{/snippet}
-			</Card>
-			<Card expand>
-				{#snippet header()}<Bubble icon={venues?.length ?? 0}></Bubble> venues <Note
-						>using this currency</Note
-					>{/snippet}
-				{#snippet detail()}
-					{#if venues}
-						<p>These are the venues that use this currency:</p>
-						<ul>
-							{#each venues as venue}
-								<li><SourceLink id={venue.id} name={venue.title}></SourceLink></li>
-							{/each}
-						</ul>
-					{:else}
-						<Feedback error>Unable to load venues.</Feedback>
-					{/if}
-				{/snippet}
+				{:else}
+					<Feedback error>Unable to load venues.</Feedback>
+				{/if}
 			</Card>
 			{#if isMinter}
-				<Card group="minters">
-					{#snippet header()}<Bubble icon="⛭"></Bubble> settings{/snippet}
-					{#snippet detail()}
-						<EditableText
-							text={currency.name}
-							label="name"
-							placeholder="name"
-							edit={async (text) => await db.updateCurrencyName(currency.id, text)}
-						/>
-					{/snippet}
+				<Card group="minters" icon="⛭" header="settings" description="update the name, etc.">
+					<EditableText
+						text={currency.name}
+						label="name"
+						placeholder="name"
+						edit={async (text) => await db.updateCurrencyName(currency.id, text)}
+					/>
 				</Card>
 			{/if}
 		</Cards>

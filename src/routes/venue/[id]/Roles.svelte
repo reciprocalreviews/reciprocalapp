@@ -47,70 +47,67 @@
 </form>
 {#if roles}
 	{#each roles as role (role.id)}
-		<Card subheader>
-			{#snippet header()}{role.name}{/snippet}
-			{#snippet detail()}
-				<EditableText
-					text={role.name}
-					label="name"
-					placeholder=""
-					valid={validIdentifier}
-					edit={(text) => db.editRoleName(role.id, text)}
-				/>
-				<EditableText
-					text={role.description}
-					label="description"
-					placeholder=""
-					edit={(text) => db.editRoleDescription(role.id, text)}
-				/>
-				<Checkbox on={role.invited} change={(on) => db.editRoleInvited(role.id, on)}
-					>Invited <Note
-						>{#if role.invited}Scholars can volunteer for this without permission{:else}Scholars
-							must be invited to this role.{/if}</Note
-					>
-				</Checkbox>
-				{#if role.invited}
-					<Form inline>
-						<p>Add one or more people to invite to this role, separated by commands.</p>
-						<TextField
-							label="email"
-							placeholder=""
-							name="email"
-							size={20}
-							valid={validEmail}
-							bind:text={invites[role.id]}
-						/>
-						<Button
-							tip="Invite people to this role"
-							action={async () => {
-								if (
-									await handle(
-										db.inviteToRole(
-											role.id,
-											invites[role.id].split(',').map((s) => s.trim())
-										)
+		<Card subheader icon="👤" header={role.name} description={role.description}>
+			<EditableText
+				text={role.name}
+				label="name"
+				placeholder=""
+				valid={validIdentifier}
+				edit={(text) => db.editRoleName(role.id, text)}
+			/>
+			<EditableText
+				text={role.description}
+				label="description"
+				placeholder=""
+				edit={(text) => db.editRoleDescription(role.id, text)}
+			/>
+			<Checkbox on={role.invited} change={(on) => db.editRoleInvited(role.id, on)}
+				>Invited <Note
+					>{#if role.invited}Scholars can volunteer for this without permission{:else}Scholars must
+						be invited to this role.{/if}</Note
+				>
+			</Checkbox>
+			{#if role.invited}
+				<Form inline>
+					<p>Add one or more people to invite to this role, separated by commands.</p>
+					<TextField
+						label="email"
+						placeholder=""
+						name="email"
+						size={20}
+						valid={validEmail}
+						bind:text={invites[role.id]}
+					/>
+					<Button
+						tip="Invite people to this role"
+						action={async () => {
+							if (
+								await handle(
+									db.inviteToRole(
+										role.id,
+										invites[role.id].split(',').map((s) => s.trim())
 									)
 								)
-									invites[role.id] = '';
-							}}>Invite</Button
-						>
-					</Form>
-				{/if}
-				<Slider
-					min={1}
-					max={venue.welcome_amount}
-					value={role.amount}
-					step={1}
-					label="compensation"
-					change={(value) => handle(db.editRoleAmount(role.id, value))}
-					><Tokens amount={role.amount}></Tokens>/submission</Slider
-				>
-				<Button
-					warn="Delete this role and all volunteers?"
-					tip="Delete this role"
-					action={() => handle(db.deleteRole(role.id))}>Delete {DeleteLabel} …</Button
-				>
-			{/snippet}
+							)
+								invites[role.id] = '';
+						}}>Invite</Button
+					>
+				</Form>
+			{/if}
+			<Slider
+				min={1}
+				max={venue.welcome_amount}
+				value={role.amount}
+				step={1}
+				label="compensation"
+				change={(value) => handle(db.editRoleAmount(role.id, value))}
+				><Tokens amount={role.amount}></Tokens>/submission</Slider
+			>
+			<Button
+				warn="Delete this role and all volunteers?"
+				tip="Delete this role"
+				action={() => handle(db.deleteRole(role.id))}>Delete {DeleteLabel} …</Button
+			>
 		</Card>
 	{:else}
 		<Feedback>No roles yet. Add one.</Feedback>

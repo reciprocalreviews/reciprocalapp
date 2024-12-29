@@ -15,6 +15,7 @@
 	import Gift from '$lib/components/Gift.svelte';
 	import Bubble from '$lib/components/Bubble.svelte';
 	import Note from '$lib/components/Note.svelte';
+	import Page from '$lib/components/Page.svelte';
 
 	let {
 		scholar,
@@ -37,24 +38,44 @@
 	let editable = $derived(auth.getUserID() === scholar.getID());
 </script>
 
-<p>
-	Joined {new Date(scholar.getJoined()).toLocaleDateString()}
-</p>
+<Page title={scholar.getName() ?? 'anonymous'}>
+	{#snippet subtitle()}
+		Scholar | <Link to="https://orcid.org/{scholar.getORCID()}">ORCID</Link> | <Link
+			to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link
+		>
+	{/snippet}
 
-<Status good={scholar.isAvailable()}>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status>
+	<h2>Status</h2>
+	<Status good={scholar.isAvailable()}>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status
+	>
 
-<p>{scholar.getStatus()}</p>
+	{#if editable}
+		<Checkbox
+			on={scholar.isAvailable()}
+			change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
+			>I am available to review.</Checkbox
+		>
+	{/if}
 
-<ul>
-	<li><Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link></li>
-	<li><Link to="https://orcid.org/{scholar.getORCID()}">ORCID Profile</Link></li>
-</ul>
+	{#if editable}
+		<EditableText
+			inline={false}
+			text={scholar.getStatus()}
+			label="status"
+			placeholder="Explain your current reviewing status to others."
+			edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
+			note="Your status is public and will be shown here."
+		/>
+	{:else}
+		<p>{scholar.getStatus()}</p>
+	{/if}
 
-<Cards>
-	<Card>
-		{#snippet header()}<Bubble icon={commitments.length + (editing?.length ?? 0)}></Bubble> commitments
-			<Note>Venues volunteered for.</Note>{/snippet}
-		{#snippet detail()}
+	<Cards>
+		<Card
+			icon={commitments.length + (editing?.length ?? 0)}
+			header="commitments"
+			description="venues volunteered for"
+		>
 			{#if commitments}
 				{#if commitments.length > 0}
 					<ul>
@@ -79,14 +100,9 @@
 			{:else}
 				<Feedback>Unable to load volunteer commitments.</Feedback>
 			{/if}
-		{/snippet}
-	</Card>
+		</Card>
 
-	<Card>
-		{#snippet header()}<Bubble icon={tokens ?? 0}></Bubble> tokens <Note
-				>Spendable on peer review and gifts.</Note
-			>{/snippet}
-		{#snippet detail()}
+		<Card icon={tokens ?? 0} header="tokens" description="spendable on peer review and gifts">
 			<p>
 				{#if editable}You have{:else}This scholar has{/if}
 				{#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an unknown number of{/if} tokens.
@@ -116,32 +132,14 @@
 							: undefined}
 				/>
 			{/if}
-		{/snippet}
-	</Card>
-	{#if editable}
-		<Card>
-			{#snippet header()}<Bubble icon="⛭"></Bubble> settings <Note
-					>Name, availability, status, email, etc.</Note
-				>{/snippet}
-			{#snippet detail()}
+		</Card>
+		{#if editable}
+			<Card icon="⛭" header="settings" description="name, availability, status, email, etc.">
 				<EditableText
 					text={scholar.getName() ?? ''}
 					placeholder="name"
 					label="name"
 					edit={(text) => db.updateScholarName(scholar.getID(), text)}
-				/>
-				<Checkbox
-					on={scholar.isAvailable()}
-					change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
-					>I am available to review.</Checkbox
-				>
-				<EditableText
-					inline={false}
-					text={scholar.getStatus()}
-					label="status"
-					placeholder="Explain your current reviewing status to others."
-					edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
-					note="Your status is public and will be shown on your profile."
 				/>
 				<EditableText
 					text={scholar.getEmail() ?? ''}
@@ -155,7 +153,7 @@
 				<p>
 					Update your <Link to="https://orcid.org/{scholar.getORCID()}">ORCID Profile</Link> offsite.
 				</p>
-			{/snippet}
-		</Card>
-	{/if}
-</Cards>
+			</Card>
+		{/if}
+	</Cards>
+</Page>

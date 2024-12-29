@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { dev } from '$app/environment';
-	import Lead from '$lib/components/Lead.svelte';
 	import Link from '$lib/components/Link.svelte';
-	import Tag from '$lib/components/Tag.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 </script>
@@ -11,7 +9,8 @@
 	<title>Reciprocal Reviews</title>
 </svelte:head>
 
-<Page title="Reciprocal Reviews" subtitle="Make peer review count.">
+<Page title="Reciprocal Reviews">
+	{#snippet subtitle()}Make peer review count.{/snippet}
 	{#if dev}
 		<p>
 			Academia incentivizes publishing over peer review. That means too many submissions and not

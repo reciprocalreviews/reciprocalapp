@@ -68,6 +68,15 @@
 </script>
 
 <div class="editable">
+	<Button
+		bind:view={button}
+		tip={editing ? 'Save ' + (label ?? placeholder) : 'Edit ' + (label ?? placeholder)}
+		type="submit"
+		active={valid && editing ? valid(text) : undefined}
+		action={(event) => (editing ? saveEdit(event) : startEditing(event))}
+		>{#if editing}{invalid ? DeleteLabel : ConfirmLabel}{:else if editing === undefined}<Dots
+			/>{:else}{EditLabel}{/if}</Button
+	>
 	<div class="box" class:inline class:editing>
 		<TextField
 			{label}
@@ -80,31 +89,22 @@
 			bind:view={field}
 			done={() => (editing ? saveAndFocus() : undefined)}
 		/>
-		<Button
-			bind:view={button}
-			tip={editing ? 'Save ' + (label ?? placeholder) : 'Edit ' + (label ?? placeholder)}
-			type="submit"
-			active={valid && editing ? valid(text) : undefined}
-			action={(event) => (editing ? saveEdit(event) : startEditing(event))}
-			>{#if editing}{invalid ? DeleteLabel : ConfirmLabel}{:else if editing === undefined}<Dots
-				/>{:else}{EditLabel}{/if}</Button
-		>
+		{#if note}
+			<Note>{note}</Note>
+		{/if}
 	</div>
-	{#if note}
-		<Note>{note}</Note>
-	{/if}
 </div>
 
 <style>
 	.editable {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		gap: var(--spacing);
 	}
 
 	.box {
 		display: flex;
-		flex-direction: row;
+		flex-direction: column;
 		justify-content: space-between;
 		gap: var(--spacing);
 		align-items: baseline;
