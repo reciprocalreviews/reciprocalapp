@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { dev } from '$app/environment';
+	import Callout from '$lib/components/Callout.svelte';
 	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
@@ -48,10 +49,10 @@
 			conference for adoption.
 		</p>
 
-		<p>
+		<Callout>
 			<strong>Don't want to set a cost?</strong> Use Reciprocal Reviews to track volunteer reviewers
-			in your community, tracking volunteers for streamlined editing.
-		</p>
+			and expertise in your community, streamlining reviewing and program committee invitations.
+		</Callout>
 	{:else}
 		<p>
 			We're a volunteer community of academics striving for more equitable and sustainable academic
