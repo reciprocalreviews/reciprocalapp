@@ -4,7 +4,7 @@
 	import TextField from './TextField.svelte';
 	import Dots from './Dots.svelte';
 	import Note from './Note.svelte';
-	import { addError, handle } from '../../routes/feedback.svelte';
+	import { handle } from '../../routes/feedback.svelte';
 	import { type ErrorID } from '$lib/data/CRUD';
 	import { ConfirmLabel, DeleteLabel, EditLabel } from './Labels';
 
@@ -67,7 +67,7 @@
 	}
 </script>
 
-<div class="editable">
+<div class="editable" class:inline>
 	<Button
 		bind:view={button}
 		tip={editing ? 'Save ' + (label ?? placeholder) : 'Edit ' + (label ?? placeholder)}
@@ -100,6 +100,11 @@
 		display: flex;
 		flex-direction: row;
 		gap: var(--spacing);
+		align-items: baseline;
+	}
+
+	.editable.inline {
+		align-items: center;
 	}
 
 	.box {
