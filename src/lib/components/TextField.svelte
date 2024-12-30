@@ -38,15 +38,21 @@
 	let labelView = $state<HTMLLabelElement | undefined>(undefined);
 
 	function resize() {
-		// Reset the textarea height before measuring scroll height.
-		if (view && !inline) view.style.height = '0';
+		if (view === undefined) return;
 		width = measure?.clientWidth ?? 0;
-		height = inline ? (measure?.clientHeight ?? 0) : (view?.scrollHeight ?? 0);
+
+		if (inline) height = measure?.clientHeight ?? 0;
+		// Reset the textarea height before measuring scroll height.
+		else {
+			view.style.height = '0';
+			height = inline ? (measure?.clientHeight ?? 0) : (view?.scrollHeight ?? 0);
+			view.style.height = height + 'px';
+		}
 	}
 
 	$effect(() => {
 		text;
-		resize();
+		tick().then(() => resize());
 	});
 
 	function edit(event: Event) {
