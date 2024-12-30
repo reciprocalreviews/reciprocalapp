@@ -32,7 +32,7 @@
 	{#if group}<Tag>{group}</Tag>{/if}
 {/snippet}
 
-<div class="card" class:full={expanded && full} class:expanded>
+<div class="card" class:full class:expanded>
 	<div
 		class="header"
 		role="button"

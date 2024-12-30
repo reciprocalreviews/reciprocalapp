@@ -107,101 +107,96 @@
 					</Note>
 				{/if}
 			</Card>
-			<Card
-				full
-				icon={commitments?.length ?? 0}
-				header="volunteers"
-				description="Spend and receive tokens for reviewing"
-			>
-				<p>See <Link to="/venue/{venue.id}/volunteers">all volunteers</Link> for this venue.</p>
+		</Cards>
 
-				{#if roles}
-					{#each roles as role (role.id)}
-						{@const commitment = commitments?.find((c) => c.roleid === role.id)}
-						<Card
-							subheader
-							icon={role.amount}
-							header={role.name}
-							description="role"
-							group="invite only"
-						>
-							<div class="role">
-								<div class="tags">
-									{#if scholar && !role.invited && commitment === undefined}
-										<Button
-											tip="Volunteer for this role"
-											action={() =>
-												handle(
-													db.createVolunteer(scholar.id, role.id, true, true),
-													'Thank you for volunteering! The minter will approve your welcome tokens soon.'
-												)}>Volunteer …</Button
-										>
-									{/if}
-								</div>
-								<Note
-									>{#if role.description.length > 0}{role.description}{:else}<em>No description.</em
-										>{/if}</Note
-								>
+		<h2>Volunteer</h2>
+		<p>See <Link to="/venue/{venue.id}/volunteers">all volunteers</Link> for this venue.</p>
 
-								{#if commitment}
-									<hr />
-									{#if role.invited && commitment.accepted === 'invited'}
-										<p>
-											The editor has invited you to take this role. <Button
-												tip="accept this invitation"
-												action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
-												>Accept</Button
-											><Button
-												tip="decline this invitation"
-												action={() => handle(db.acceptRoleInvite(commitment.id, 'declined'))}
-												>Decline</Button
-											>
-										</p>
-									{/if}
-									{#if commitment.accepted === 'accepted'}
-										{#if commitment.active}
-											<p>
-												Thanks for volunteering for this role! <Button
-													tip="Stop volunteering"
-													action={() => handle(db.updateVolunteerActive(commitment.id, false))}
-													>Stop...</Button
-												>
-											</p>
-											<EditableText
-												text={commitment.expertise}
-												label="what is your expertise (separated by commas)?"
-												placeholder="topic, area, method, theory, etc."
-												edit={(text) => db.updateVolunteerExpertise(commitment.id, text)}
-											/>
-										{:else}
-											<p>
-												You stopped volunteering for this role. <Button
-													tip="Resume volunteering"
-													action={() => handle(db.updateVolunteerActive(commitment.id, true))}
-													>Resume...</Button
-												>
-											</p>{/if}
-									{:else if commitment.accepted === 'declined'}
-										<p>
-											You declined this role. Would you like to accept it?
-											<Button
-												tip="accept this invitation"
-												action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
-												>Accept</Button
-											>
-										</p>
-									{/if}
+		<Cards>
+			{#if roles}
+				{#each roles as role (role.id)}
+					{@const commitment = commitments?.find((c) => c.roleid === role.id)}
+					<Card full icon={role.amount} header={role.name} description="role" group="invite only">
+						<div class="role">
+							<div class="tags">
+								{#if scholar && !role.invited && commitment === undefined}
+									<Button
+										tip="Volunteer for this role"
+										action={() =>
+											handle(
+												db.createVolunteer(scholar.id, role.id, true, true),
+												'Thank you for volunteering! The minter will approve your welcome tokens soon.'
+											)}>Volunteer …</Button
+									>
 								{/if}
 							</div>
-						</Card>
-					{:else}
-						<Feedback>This venue has no volunteer roles.</Feedback>
-					{/each}
+							<Note
+								>{#if role.description.length > 0}{role.description}{:else}<em>No description.</em
+									>{/if}</Note
+							>
+
+							{#if commitment}
+								<hr />
+								{#if role.invited && commitment.accepted === 'invited'}
+									<p>
+										The editor has invited you to take this role. <Button
+											tip="accept this invitation"
+											action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
+											>Accept</Button
+										><Button
+											tip="decline this invitation"
+											action={() => handle(db.acceptRoleInvite(commitment.id, 'declined'))}
+											>Decline</Button
+										>
+									</p>
+								{/if}
+								{#if commitment.accepted === 'accepted'}
+									{#if commitment.active}
+										<p>
+											Thanks for volunteering for this role! <Button
+												tip="Stop volunteering"
+												action={() => handle(db.updateVolunteerActive(commitment.id, false))}
+												>Stop...</Button
+											>
+										</p>
+										<EditableText
+											text={commitment.expertise}
+											label="what is your expertise (separated by commas)?"
+											placeholder="topic, area, method, theory, etc."
+											edit={(text) => db.updateVolunteerExpertise(commitment.id, text)}
+										/>
+									{:else}
+										<p>
+											You stopped volunteering for this role. <Button
+												tip="Resume volunteering"
+												action={() => handle(db.updateVolunteerActive(commitment.id, true))}
+												>Resume...</Button
+											>
+										</p>{/if}
+								{:else if commitment.accepted === 'declined'}
+									<p>
+										You declined this role. Would you like to accept it?
+										<Button
+											tip="accept this invitation"
+											action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
+											>Accept</Button
+										>
+									</p>
+								{/if}
+							{/if}
+						</div>
+					</Card>
 				{:else}
-					<Feedback error>Couldn't load venue's roles.</Feedback>
-				{/if}
-			</Card>
-			{#if editor}
+					<Feedback>This venue has no volunteer roles.</Feedback>
+				{/each}
+			{:else}
+				<Feedback error>Couldn't load venue's roles.</Feedback>
+			{/if}
+		</Cards>
+
+		{#if editor}
+			<h2>Editor's corner</h2>
+			<Cards>
 				<Card group="editors" icon={tokens ?? 0} header="tokens" description="balance and gifts">
 					<p>
 						This venue currently has {#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an
@@ -287,8 +282,8 @@
 						>
 					</div>
 				</Card>
-			{/if}
-		</Cards>
+			</Cards>
+		{/if}
 	</Page>
 {/if}
 
