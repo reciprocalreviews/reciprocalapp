@@ -9,5 +9,6 @@
 			calc(var(--spacing));
 		border-radius: 0.5em;
 		font-size: var(--small-font-size);
+		white-space: nowrap;
 	}
 </style>

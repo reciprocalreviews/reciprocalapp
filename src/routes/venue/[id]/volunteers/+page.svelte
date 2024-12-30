@@ -38,6 +38,7 @@
 				<th>Expertise</th>
 			</tr>
 			{#each commitments.toSorted((a, b) => a.roles?.name.localeCompare(b.roles?.name ?? '') ?? 0) as volunteer}
+				{@const expertise = volunteer.expertise.split(',').filter((s) => s.trim() !== '')}
 				<tr>
 					<td><Tag>{volunteer.roles?.name}</Tag></td>
 					<td
@@ -48,8 +49,7 @@
 					<td><ScholarLink id={volunteer.scholarid} /></td>
 					<td
 						><Tags
-							>{#each volunteer.expertise.split(',') as expertise}<Tag>{expertise}</Tag
-								>{/each}</Tags
+							>{#each expertise as topic}<Tag>{topic}</Tag>{:else}<em>—</em>{/each}</Tags
 						></td
 					>
 				</tr>
