@@ -71,7 +71,7 @@
 		<Card
 			icon={commitments.length + (editing?.length ?? 0)}
 			header="commitments"
-			description="venues volunteered for"
+			note="Venues volunteered for"
 		>
 			{#if commitments}
 				{#if commitments.length > 0}
@@ -99,7 +99,7 @@
 			{/if}
 		</Card>
 
-		<Card icon={tokens ?? 0} header="tokens" description="spendable on peer review and gifts">
+		<Card icon={tokens ?? 0} header="tokens" note="Spendable on peer review and gifts">
 			<p>
 				{#if editable}You have{:else}This scholar has{/if}
 				{#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an unknown number of{/if} tokens.
@@ -131,7 +131,7 @@
 			{/if}
 		</Card>
 		{#if editable}
-			<Card icon="⛭" header="settings" description="name, availability, status, email, etc.">
+			<Card icon="⛭" header="settings" note="Name, availability, status, email, etc.">
 				<EditableText
 					text={scholar.getName() ?? ''}
 					placeholder="name"

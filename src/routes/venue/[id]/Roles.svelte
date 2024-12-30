@@ -47,7 +47,7 @@
 </form>
 {#if roles}
 	{#each roles as role (role.id)}
-		<Card subheader icon="👤" header={role.name} description={role.description}>
+		<Card subheader icon="👤" header={role.name} note={role.description}>
 			<EditableText
 				text={role.name}
 				label="name"

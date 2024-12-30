@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Circle from '$lib/components/Circle.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Transactions from '$lib/components/Transactions.svelte';
@@ -10,7 +11,7 @@
 {#if venue && transactions && venues}
 	<Page title={venue.title}>
 		{#snippet subtitle()}Transactions{/snippet}
-		<p>These are all {transactions.length} transactions for this venue.</p>
+		<p>These are all <Circle icon={transactions.length}></Circle> transactions for this venue.</p>
 		<Transactions {transactions} {venues} />
 	</Page>
 {:else if venue === null}

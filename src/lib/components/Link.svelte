@@ -1,16 +1,22 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
+	import type { Snippet } from 'svelte';
 
-	export let to: string;
+	let {
+		to,
+		small = false,
+		children
+	}: { to: string; small?: boolean; children: Snippet } = $props();
 
-	$: inactive = $page.url.pathname === to;
+	let inactive = $derived(page.url.pathname === to);
 </script>
 
 <a
+	class:small
 	href={inactive ? null : to}
 	target={to.startsWith('http') ? '_blank' : null}
 	aria-current={inactive ? 'page' : null}
-	><slot />{#if to.startsWith('http')}<sub>⏵</sub>{/if}</a
+	>{@render children()}{#if to.startsWith('http')}<sub>⏵</sub>{/if}</a
 >
 
 <style>
@@ -19,6 +25,10 @@
 		font-weight: 600;
 		text-decoration: none;
 		font-size: inherit;
+	}
+
+	a.small {
+		font-size: var(--small-font-size);
 	}
 
 	a:hover:not([aria-current]) {

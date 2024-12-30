@@ -61,11 +61,7 @@
 
 		<!-- Show metadata -->
 		<Cards>
-			<Card
-				icon={venue.editors.length}
-				header="editors"
-				description="Give and take tokens for reviewing"
-			>
+			<Card icon={venue.editors.length} header="editors" note="Give and take tokens for reviewing">
 				<ul>
 					{#each venue.editors as editorID}
 						<li>
@@ -116,7 +112,13 @@
 			{#if roles}
 				{#each roles as role (role.id)}
 					{@const commitment = commitments?.find((c) => c.roleid === role.id)}
-					<Card full icon={role.amount} header={role.name} description="role" group="invite only">
+					<Card
+						full
+						icon={role.amount}
+						header={role.name}
+						note={role.description}
+						group="invite only"
+					>
 						<div class="role">
 							<div class="tags">
 								{#if scholar && !role.invited && commitment === undefined}
@@ -197,7 +199,7 @@
 		{#if editor}
 			<h2>Editor's corner</h2>
 			<Cards>
-				<Card group="editors" icon={tokens ?? 0} header="tokens" description="balance and gifts">
+				<Card group="editors" icon={tokens ?? 0} header="tokens" note="balance and gifts">
 					<p>
 						This venue currently has {#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an
 							unknown number of{/if} tokens and is involved in {#if transactions !== null}<strong
@@ -226,13 +228,7 @@
 						/>
 					{/if}
 				</Card>
-				<Card
-					full
-					group="editors"
-					icon={roles?.length ?? 0}
-					header="roles"
-					description="the venue's jobs"
-				>
+				<Card full group="editors" icon={roles?.length ?? 0} header="roles" note="The venue's jobs">
 					<p>
 						These are the roles that volunteers can commit to. Create roles such as <em>reviewer</em
 						>,
@@ -243,7 +239,7 @@
 					<h3>Roles</h3>
 					<Roles {venue} {roles} />
 				</Card>
-				<Card group="editors" icon="⛭" header="settings" description="title, url, costs, etc.">
+				<Card group="editors" icon="⛭" header="settings" note="Update title, url, costs, etc.">
 					<EditableText
 						text={venue.title}
 						label="title"

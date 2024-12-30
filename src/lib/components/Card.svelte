@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import Tag from './Tag.svelte';
-	import Bubble from './Bubble.svelte';
+	import Circle from './Circle.svelte';
 	import Note from './Note.svelte';
 
 	let {
@@ -10,14 +10,14 @@
 		group,
 		icon,
 		header,
-		description,
+		note,
 		full = false,
 		expand = false
 	}: {
 		children: Snippet;
 		icon: string | number;
 		header: string;
-		description: string;
+		note: string;
 		subheader?: boolean;
 		group?: 'editors' | 'minters' | 'stewards' | 'invite only';
 		full?: boolean;
@@ -29,7 +29,7 @@
 
 {#snippet top()}
 	{header}
-	{#if group}<Tag>{group}</Tag>{/if}
+	{#if group}<div class="group"><Tag>{group}</Tag></div>{/if}
 {/snippet}
 
 <div class="card" class:full class:expanded>
@@ -41,14 +41,14 @@
 		tabindex="0"
 		title={expanded ? 'Collapse this card' : 'Expand this card'}
 	>
-		<Bubble {icon}></Bubble>
+		<Circle {icon}></Circle>
 		<div class="text">
 			{#if subheader}
 				<h3>{@render top()}</h3>
 			{:else}
 				<h2>{@render top()}</h2>
 			{/if}
-			<Note>{description}</Note>
+			<Note>{note}</Note>
 		</div>
 	</div>
 	{#if expanded}
@@ -77,7 +77,8 @@
 		display: flex;
 		align-items: center;
 		gap: var(--spacing);
-		align-items: baseline;
+		align-items: start;
+		flex: 1;
 	}
 
 	.header {
@@ -101,5 +102,19 @@
 	:not(.expanded) h3 {
 		border-bottom: none;
 		margin-bottom: 0;
+	}
+
+	.text {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+	}
+
+	.group {
+		display: flex;
+		flex-direction: row;
+		gap: var(--spacing);
+		align-items: start;
+		margin-inline-start: auto;
 	}
 </style>

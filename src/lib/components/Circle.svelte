@@ -10,6 +10,7 @@
 
 <style>
 	.count {
+		display: inline-block;
 		border-radius: 3em;
 		padding: var(--spacing);
 		background: var(--salient-color);

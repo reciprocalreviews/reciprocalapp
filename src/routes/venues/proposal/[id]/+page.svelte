@@ -15,7 +15,6 @@
 	import { DeleteLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
 	import { validEmails, validURL, validIdentifier } from '$lib/validation';
-	import Count from '$lib/components/Bubble.svelte';
 
 	let { data } = $props();
 
@@ -99,7 +98,7 @@
 		{/if}
 		<Cards>
 			{#if steward && !approved}
-				<Card group="stewards" icon="⛭" header="settings" description="title, editors, url, etc.">
+				<Card group="stewards" icon="⛭" header="settings" note="Title, editors, url, etc.">
 					<EditableText
 						label="title"
 						text={proposal.title}

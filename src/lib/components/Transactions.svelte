@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import type { CurrencyRow, TransactionRow, VenueID } from '$data/types';
 	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../../routes/Auth.svelte';
 	import { handle } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
 	import Feedback from './Feedback.svelte';
+	import Note from './Note.svelte';
 	import ScholarLink from './ScholarLink.svelte';
 	import Status from './Status.svelte';
 	import Table from './Table.svelte';
@@ -59,7 +59,7 @@
 					name={venues.find((v) => v.id === transaction.to_venue)?.title ?? 'unknkown venue'}
 				></VenueLink>{/if}</td
 		>
-		<td>{transaction.purpose}</td>
+		<td><Note>{transaction.purpose}</Note></td>
 		<td>
 			{#if transaction.status === 'proposed' && editable && userid}<Button
 					tip="Approve this proposed transaction"
@@ -86,3 +86,10 @@
 		{/each}
 	</Table>
 {/if}
+
+<style>
+	th,
+	td {
+		font-size: var(--small-font-size);
+	}
+</style>

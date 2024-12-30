@@ -66,7 +66,7 @@
 		font-size: var(--small-font-size);
 		border: var(--border-color);
 		border-radius: var(--roundedness);
-		padding: var(--spacing);
+		padding: calc(var(--spacing) / 2);
 		background: var(--text-color);
 		color: var(--background-color);
 		cursor: pointer;

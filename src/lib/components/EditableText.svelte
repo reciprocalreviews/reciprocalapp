@@ -114,6 +114,8 @@
 		gap: var(--spacing);
 		align-items: baseline;
 		flex: 1;
+		/* To align with the button*/
+		padding-block-start: calc(var(--spacing) / 2);
 	}
 
 	.box.inline {

@@ -55,11 +55,7 @@
 			<p>{currency.description}</p>
 		{/if}
 		<Cards>
-			<Card
-				icon={currency.minters.length}
-				header="minters"
-				description="Scholars with the power to mint."
-			>
+			<Card icon={currency.minters.length} header="minters" note="Scholars with the power to mint.">
 				<p>These scholars are the minters for this currency. They can see all transactions.</p>
 				<ul>
 					{#each currency.minters as minter}
@@ -103,7 +99,7 @@
 					</Note>
 				{/if}
 			</Card>
-			<Card icon={count ?? 0} header="tokens" description="And many transactions...">
+			<Card icon={count ?? 0} header="tokens" note="And many transactions...">
 				<p>
 					There are {#if count !== null}<Tokens amount={count}></Tokens>{:else}an unknown number of{/if}
 					tokens minted in this currency, owned by <strong>{scholarCount}</strong> scholars and
@@ -159,7 +155,7 @@
 					</form>
 				{/if}
 			</Card>
-			<Card expand icon={venues?.length ?? 0} header="venues" description="using this currency">
+			<Card icon={venues?.length ?? 0} header="venues" note="Venues using this currency">
 				{#if venues}
 					<p>These are the venues that use this currency:</p>
 					<ul>
@@ -172,7 +168,7 @@
 				{/if}
 			</Card>
 			{#if isMinter}
-				<Card group="minters" icon="⛭" header="settings" description="update the name, etc.">
+				<Card group="minters" icon="⛭" header="settings" note="Update the name, etc.">
 					<EditableText
 						text={currency.name}
 						label="name"
