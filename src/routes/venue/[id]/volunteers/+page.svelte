@@ -1,54 +1,59 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { getDB } from '$lib/data/CRUD';
+	import Page from '$lib/components/Page.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import Loading from '$lib/components/Loading.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import SourceLink from '$lib/components/SourceLink.svelte';
+	import SourceLink from '$lib/components/VenueLink.svelte';
 	import Table from '$lib/components/Table.svelte';
+	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import Tags from '$lib/components/Tags.svelte';
 	import Status from '$lib/components/Status.svelte';
-	import Todo from '$lib/components/Todo.svelte';
 
-	const db = getDB();
-	$: sourceID = $page.params.id;
-	$: volunteersPromise = db.getSourceVolunteers(sourceID);
+	let { data } = $props();
+	const { venue, commitments } = $derived(data);
 </script>
 
-{#await volunteersPromise}
-	<h1>Volunteers</h1>
-	<Loading />
-{:then volunteers}
-	<h1>Volunteers</h1>
-
-	<p>
-		These are scholars that have volunteered to review for <SourceLink id={$page.params.id} />,
-		sorted by the number of reviews they are seeking.
-	</p>
-
-	<Todo>List of scholars.</Todo>
-
-	<!-- <Table>
-		{#each volunteers.sort((a, b) => a.balance - b.balance) as volunteer}
+{#if venue === null}
+	<Page title="Unknown venue">
+		<Feedback>Unable to find this venue.</Feedback>
+	</Page>
+{:else if commitments === null}
+	<Page title="Volunteers unavailable">
+		<Feedback>Unable to load volunteers for this venue.</Feedback>
+	</Page>
+{:else}
+	<Page title={venue.title}>
+		{#snippet subtitle()}Volunteers{/snippet}
+		<p>
+			These are scholars that have volunteered to review for <SourceLink
+				id={$page.params.id}
+				name={venue.title}
+			/>.
+		</p>
+		<Table>
 			<tr>
-				<td><ScholarLink id={volunteer.scholar} /></td>
-				<td
-					><Status good={volunteer.balance < volunteer.scholar.minimum}
-						>{#if volunteer.balance < volunteer.scholar.minimum}Seeking reviews{:else}Not seeking
-							reviews{/if}</Status
-					></td
-				>
-				<td
-					><Tags
-						>{#each volunteer.scholar.sources[sourceID] as expertise}<Tag>{expertise}</Tag
-							>{/each}</Tags
-					></td
-				>
+				<th>Role</th>
+				<th>Active</th>
+				<th>Name</th>
+				<th>Expertise</th>
 			</tr>
-		{/each}
-	</Table> -->
-{:catch}
-	<h1>Unknown Source</h1>
-	<Feedback>We couldn't load this source's volunteers.</Feedback>
-{/await}
+			{#each commitments.toSorted((a, b) => a.roles?.name.localeCompare(b.roles?.name ?? '') ?? 0) as volunteer}
+				{@const expertise = volunteer.expertise.split(',').filter((s) => s.trim() !== '')}
+				<tr>
+					<td><Tag>{volunteer.roles?.name}</Tag></td>
+					<td
+						><Status good={volunteer.active}
+							>{#if volunteer.active}active{:else}inactive{/if}</Status
+						></td
+					>
+					<td><ScholarLink id={volunteer.scholarid} /></td>
+					<td
+						><Tags
+							>{#each expertise as topic}<Tag>{topic}</Tag>{:else}<em>—</em>{/each}</Tags
+						></td
+					>
+				</tr>
+			{/each}
+		</Table>
+	</Page>
+{/if}

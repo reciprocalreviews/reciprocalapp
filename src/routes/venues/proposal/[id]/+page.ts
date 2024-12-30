@@ -10,7 +10,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.single();
 	const { data: supporters, error: supportersError } = await supabase
 		.from('supporters')
-		.select('id, scholarid(id, name), message, created')
+		.select('id, scholarid(id, name, email), message, created')
 		.eq('proposalid', params.id);
 
 	return {

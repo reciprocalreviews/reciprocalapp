@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { ConfirmLabel, DeleteLabel } from './Labels';
+	import { DeleteLabel } from './Labels';
 
 	let {
 		action,
@@ -11,7 +11,8 @@
 		name = undefined,
 		type = undefined,
 		view = $bindable(undefined),
-		warn = false
+		warn = undefined,
+		end = false
 	}: {
 		children: Snippet;
 		action: ((event?: Event) => void) | ((event?: Event) => Promise<void>);
@@ -21,7 +22,8 @@
 		name?: string | undefined;
 		type?: 'submit' | undefined;
 		view?: HTMLButtonElement | undefined;
-		warn?: boolean;
+		warn?: string | undefined;
+		end?: boolean | undefined;
 	} = $props();
 
 	let confirming = $state(false);
@@ -36,7 +38,8 @@
 		title={tip}
 		aria-label={tip}
 		disabled={!active}
-		class:warn
+		class:warn={warn !== undefined}
+		class:end
 		onclick={(event) => {
 			if (active)
 				if (warn) confirming = true;
@@ -47,11 +50,12 @@
 	<div class="row">
 		<button onclick={() => (confirming = false)}>{DeleteLabel}</button>
 		<button
-			class:warn
+			class:warn={warn !== undefined}
 			onclick={async (event) => {
 				await action(event);
 				confirming = false;
-			}}>{@render children()}</button
+			}}
+			>{#if confirming}{warn}{:else}{@render children()}{/if}</button
 		>
 	</div>
 {/if}
@@ -62,11 +66,12 @@
 		font-size: var(--small-font-size);
 		border: var(--border-color);
 		border-radius: var(--roundedness);
-		padding: var(--spacing);
+		padding: calc(var(--spacing) / 2);
 		background: var(--text-color);
 		color: var(--background-color);
 		cursor: pointer;
 		white-space: nowrap;
+		align-self: start;
 	}
 
 	.row button:last-child {
@@ -78,12 +83,12 @@
 		cursor: auto;
 	}
 
-	button:focus {
-		outline: var(--focus-color) solid var(--thick-border-width);
+	button:not([disabled]):hover {
+		transform: scale(1.05);
 	}
 
-	button:not(.inactive):hover {
-		transform: scale(1.05);
+	button:focus {
+		outline: var(--focus-color) solid var(--thick-border-width);
 	}
 
 	button.warn {
@@ -96,5 +101,9 @@
 		flex-direction: row;
 		align-items: center;
 		gap: var(--spacing);
+	}
+
+	.end {
+		margin-inline-start: auto;
 	}
 </style>

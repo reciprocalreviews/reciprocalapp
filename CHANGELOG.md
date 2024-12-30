@@ -3,6 +3,108 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](http://semver.org/) format.
 
+## 0.1.2 2024-12-29
+
+### Added
+
+- Improved styling of expandable cards.
+
+### Maintenance
+
+- Updated all minor versions of dependencies, including Svelte, SvelteKit, and Vite.
+
+## 0.1.1 2024-12-08
+
+### Added
+
+- When scholars volunteer for a venue for the first time, create a proposed transaction request for minter to approve, and allow minters to approve it, generating tokens and transferring them to the scholar.
+
+### Fixed
+
+- Redesigned cards to be collapsible, to simplify initial view, make data salient, and convey purpose.
+
+## 0.1.0 2024-12-01
+
+### Fixed
+
+- Fixed RLS policy for volunteer insertion.
+
+### Added
+
+- Allow scholars to gift tokens.
+- Added pattern for explicit success feedback.
+
+### Maintenance
+
+- Updated all minor releases of dependencies.
+- Updated to vite 6.
+
+## 0.0.10 2024-11-17
+
+### Added
+
+- Added number of tokens minted for a currency to the currency page.
+- Show number of tokens possed by a venue.
+- Show scholar's token count.
+- Show scholar's transactions.
+- Show venue's transactions.
+- Show currency's transactions.
+- Added approval status to transactions and updated security rules accordingly.
+- Minters mint tokens.
+- Venues can gift tokens to scholars.
+
+### Maintenance
+
+- Updated Svelte and Supabase point releases.
+
+## 0.0.9 2024-11-10
+
+### Added
+
+- Defined tokens and transactions table and draft security rules.
+- List venues using a currency.
+- List minters on a currency.
+- Add and remove minters from currency.
+
+### Maintenance
+
+- Renamed SourceLink to VenueLink for consistency.
+- Upgraded Svelte, SvelteKit, Supabase dependencies.
+
+## 0.0.8 2024-11-03
+
+### Added
+
+- Added ability to volunteer for a role and set expertise.
+- Added ability to stop volunteering for a role.
+- Added ability to invite scholars to roles and for scholars to accept and decline roles.
+- Added list of volunteer roles to profile.
+- Added list of venue volunteers.
+
+### Fixed
+
+- Fixed venues link on home page.
+
+### Maintenance
+
+- Upgraded Svelte, eslint, and dependencies.
+
+## 0.0.7 2024-10-20
+
+### Added
+
+- Venue page: currency link, welcome amount, bidding toggle, role creation, editing, and deletion.
+
+### Fixed
+
+- A few typography improvements.
+- Deactivated hover feedback on inactive buttons.
+- Fixed rendering for missing name in venue proposal.
+
+### Maintenance
+
+- Upgraded to Svelte 5.0.
+
 ## 0.0.6 2024-10-13
 
 ### Added

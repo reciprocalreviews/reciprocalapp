@@ -10,11 +10,13 @@
 		border-collapse: collapse;
 		margin-block-start: var(--spacing);
 		margin-block-end: var(--spacing);
-		table-layout: fixed;
+		table-layout: auto;
 	}
 
 	table :global(td) {
-		padding: var(--spacing);
+		padding-top: var(--spacing);
+		padding-bottom: var(--spacing);
+		padding-right: var(--spacing);
 		vertical-align: baseline;
 	}
 

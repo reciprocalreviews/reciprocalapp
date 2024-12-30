@@ -7,16 +7,14 @@
 	import { getAuth } from '../../../Auth.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { addError, handle, isError } from '../../../errors.svelte';
+	import { addError, handle, isError } from '../../../feedback.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { getDB } from '$lib/data/CRUD';
 	import Date from '$lib/components/Date.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
-	import validEmails from '$lib/components/validEmails';
-	import validURL from '$lib/components/validURL';
-	import validName from '$lib/components/validName';
+	import { validEmails, validURL, validIdentifier } from '$lib/validation';
 
 	let { data } = $props();
 
@@ -36,8 +34,9 @@
 			| {
 					id: any;
 					scholarid: {
-						id: any;
-						name: any;
+						id: string;
+						name: string | null;
+						email: string;
 					};
 					message: any;
 					created: any;
@@ -63,123 +62,48 @@
 </script>
 
 {#if proposal && supporters}
-	<Page title={proposal.title} subtitle={approved ? 'Approved' : 'Proposal'}>
+	<Page title={proposal.title}>
+		{#snippet subtitle()}
+			{#if approved}
+				Approved
+			{:else}
+				Proposal
+			{/if}
+		{/snippet}
 		{#if approved}
 			<p>This proposal was approved. See the <Link to="/venue/{proposal.venue}">venue</Link>.</p>
 		{:else}
 			<p>
-				A community member has proposed this venue adopt Reciprocal Reviews. See below for
-				information about the proposal.
+				A community member has proposed <Link to={proposal.url}>{proposal.title}</Link> adopt Reciprocal
+				Reviews. See below for information about the proposal.
 			</p>
+
+			<p>
+				The reported estimated number of scholars in this community is <strong
+					>{proposal.census}</strong
+				>. We won't reach out to the editors above until there are at least 20% of the community
+				supporting this proposal. If this estimate is off, contact a <Link to="/about">steward</Link
+				> to correct it.
+			</p>
+
+			<p>
+				These are the editors the proposers indicated oversee the venue. If they aren't correct, you
+				may contact a <Link to="/about">steward</Link> to correct it.
+			</p>
+			<ul>
+				{#each proposal.editors as editor}
+					<li><Link to={`mailto:${editor}`}>{editor}</Link></li>
+				{/each}
+			</ul>
 		{/if}
 		<Cards>
-			{#if !approved}
-				<Card header="URL">
-					<p>
-						This is the official URL of the venue. If it's incorrect, you may contact a <Link
-							to="/about">steward</Link
-						> to correct it.
-					</p>
-					{#if steward}
-						<EditableText
-							label="URL"
-							text={proposal.url}
-							placeholder="https://"
-							valid={validURL}
-							edit={(text) => db.editProposalURL(proposal.id, text)}
-						/>
-					{:else}
-						<Link to={proposal.url}>{proposal.url}</Link>
-					{/if}
-				</Card>
-				<Card header="Editors">
-					<p>
-						These are the editors the proposers indicated oversee the venue. If they aren't correct,
-						you may contact a <Link to="/about">steward</Link> to correct it.
-					</p>
-					<ul>
-						{#each proposal.editors as editor}
-							<li><Link to={`mailto:${editor}`}>{editor}</Link></li>
-						{/each}
-					</ul>
-				</Card>
-				<Card header="Census">
-					<p>
-						The reported estimated number of scholars in this community is <strong
-							>{proposal.census}</strong
-						>. We won't reach out to the editors above until there are at least 20% of the community
-						supporting this proposal.
-					</p>
-
-					<p>If this estimate is off, contact a <Link to="/about">steward</Link> to correct it.</p>
-				</Card>
-			{/if}
-			<Card header="Support">
-				{#if uid !== null}
-					{#if !approved && !supporters.some((supporter) => supporter.scholarid.id === uid)}
-						<form>
-							<TextField
-								bind:text={message}
-								label="support"
-								inline
-								placeholder="Why should the editors adopt Reciprocal Reviews?"
-								valid={validName}
-							/>
-							<Button tip="Submit support" action={support} active={message.length > 0}
-								>Add support</Button
-							>
-						</form>
-					{:else if !approved}
-						<Feedback>You've expressed support. You can edit or delete your support below.</Feedback
-						>
-					{/if}
-				{:else}
-					<Feedback>Log in to express support.</Feedback>
-				{/if}
-
-				{#each supporters.sort((a, b) => b.created.localeCompare(a.created)) as supporter}
-					{@const scholar = supporter.scholarid}
-					{@const editable = scholar.id === uid}
-					<div class="support">
-						<p class="support">
-							<span class="meta"
-								><Link to={`/scholar/${scholar.id}`}>{scholar.name}</Link><Date
-									time={supporter.created}
-								/>
-								{#if !approved && editable}
-									<Button
-										tip="Delete support"
-										action={() => {
-											db.deleteSupport(supporter.id);
-											invalidateAll();
-											goto('/venues');
-										}}>{DeleteLabel}</Button
-									>
-								{/if}
-							</span>
-						</p>
-						{#if !approved && editable}
-							<EditableText
-								text={supporter.message}
-								placeholder="Reasons for support."
-								valid={validName}
-								edit={(text) => db.editSupport(supporter.id, text)}
-							/>
-						{:else}
-							<p>
-								{supporter.message}
-							</p>
-						{/if}
-					</div>
-				{/each}
-			</Card>
 			{#if steward && !approved}
-				<Card header="Admin">
+				<Card group="stewards" icon="⛭" header="settings" note="Title, editors, url, etc.">
 					<EditableText
 						label="title"
 						text={proposal.title}
 						placeholder="Venue title"
-						valid={validName}
+						valid={validIdentifier}
 						edit={(text) => db.editProposalTitle(proposal.id, text)}
 					/>
 					<EditableText
@@ -200,10 +124,17 @@
 						valid={(text) => !isNaN(parseInt(text))}
 						edit={(text) => db.editProposalCensus(proposal.id, parseInt(text))}
 					/>
+					<EditableText
+						label="URL"
+						text={proposal.url}
+						placeholder="https://"
+						valid={validURL}
+						edit={(text) => db.editProposalURL(proposal.id, text)}
+					/>
 
 					<Button
 						tip="Delete this proposal"
-						warn
+						warn="Delete this proposal forever?"
 						action={async () => {
 							if (await handle(db.deleteProposal(proposal.id))) goto('/venues');
 						}}>Delete proposal…</Button
@@ -212,7 +143,7 @@
 
 					<Button
 						tip="Approve this proposal"
-						warn
+						warn="Approve and create this venue?"
 						action={async () => {
 							if (await handle(db.approveProposal(proposal.id))) goto('/venues');
 						}}>Approve proposal…</Button
@@ -224,6 +155,62 @@
 				</Card>
 			{/if}
 		</Cards>
+
+		{#if uid !== null}
+			{#if !approved && !supporters.some((supporter) => supporter.scholarid.id === uid)}
+				<form>
+					<TextField
+						bind:text={message}
+						label="support"
+						inline
+						placeholder="Why should the editors adopt Reciprocal Reviews?"
+						valid={validIdentifier}
+					/>
+					<Button tip="Submit support" action={support} active={message.length > 0}
+						>Add support</Button
+					>
+				</form>
+			{:else if !approved}
+				<Feedback>You've expressed support. You can edit or delete your support below.</Feedback>
+			{/if}
+		{:else}
+			<Feedback>Log in to express support.</Feedback>
+		{/if}
+
+		{#each supporters.sort((a, b) => b.created.localeCompare(a.created)) as supporter}
+			{@const scholar = supporter.scholarid}
+			{@const editable = scholar.id === uid}
+			<div class="support">
+				<p class="support">
+					<span class="meta"
+						><Link to={`/scholar/${scholar.id}`}>{scholar.name ? scholar.name : scholar.email}</Link
+						><Date time={supporter.created} />
+						{#if !approved && editable}
+							<Button
+								tip="Delete support"
+								action={() => {
+									db.deleteSupport(supporter.id);
+									invalidateAll();
+									goto('/venues');
+								}}>{DeleteLabel}</Button
+							>
+						{/if}
+					</span>
+				</p>
+				{#if !approved && editable}
+					<EditableText
+						text={supporter.message}
+						placeholder="Reasons for support."
+						valid={validIdentifier}
+						edit={(text) => db.editSupport(supporter.id, text)}
+					/>
+				{:else}
+					<p>
+						{supporter.message}
+					</p>
+				{/if}
+			</div>
+		{/each}
 	</Page>
 {:else}
 	<h1>Oops.</h1>
@@ -234,7 +221,7 @@
 	.meta {
 		display: flex;
 		flex-direction: row;
-		align-items: center;
+		align-items: baseline;
 		gap: var(--spacing);
 	}
 

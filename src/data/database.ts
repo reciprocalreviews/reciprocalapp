@@ -34,35 +34,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      commitments: {
-        Row: {
-          amount: number
-          id: string
-          label: string
-          venueid: string
-        }
-        Insert: {
-          amount: number
-          id?: string
-          label: string
-          venueid: string
-        }
-        Update: {
-          amount?: number
-          id?: string
-          label?: string
-          venueid?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "commitments_venueid_fkey"
-            columns: ["venueid"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       currencies: {
         Row: {
           description: string
@@ -169,6 +140,7 @@ export type Database = {
       }
       roles: {
         Row: {
+          amount: number
           description: string
           id: string
           invited: boolean
@@ -176,6 +148,7 @@ export type Database = {
           venueid: string
         }
         Insert: {
+          amount: number
           description?: string
           id?: string
           invited: boolean
@@ -183,6 +156,7 @@ export type Database = {
           venueid: string
         }
         Update: {
+          amount?: number
           description?: string
           id?: string
           invited?: boolean
@@ -230,15 +204,7 @@ export type Database = {
           steward?: boolean
           when?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "scholars_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       supporters: {
         Row: {
@@ -279,6 +245,134 @@ export type Database = {
           },
         ]
       }
+      tokens: {
+        Row: {
+          currency: string
+          id: string
+          scholar: string | null
+          venue: string | null
+        }
+        Insert: {
+          currency: string
+          id?: string
+          scholar?: string | null
+          venue?: string | null
+        }
+        Update: {
+          currency?: string
+          id?: string
+          scholar?: string | null
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tokens_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tokens_scholar_fkey"
+            columns: ["scholar"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tokens_venue_fkey"
+            columns: ["venue"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          created: string
+          creator: string
+          currency: string
+          from_scholar: string | null
+          from_venue: string | null
+          id: string
+          purpose: string
+          status: Database["public"]["Enums"]["transaction_status"]
+          to_scholar: string | null
+          to_venue: string | null
+          tokens: string[]
+        }
+        Insert: {
+          created?: string
+          creator: string
+          currency: string
+          from_scholar?: string | null
+          from_venue?: string | null
+          id?: string
+          purpose: string
+          status: Database["public"]["Enums"]["transaction_status"]
+          to_scholar?: string | null
+          to_venue?: string | null
+          tokens: string[]
+        }
+        Update: {
+          created?: string
+          creator?: string
+          currency?: string
+          from_scholar?: string | null
+          from_venue?: string | null
+          id?: string
+          purpose?: string
+          status?: Database["public"]["Enums"]["transaction_status"]
+          to_scholar?: string | null
+          to_venue?: string | null
+          tokens?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_creator_fkey"
+            columns: ["creator"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_from_scholar_fkey"
+            columns: ["from_scholar"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_from_venue_fkey"
+            columns: ["from_venue"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_to_scholar_fkey"
+            columns: ["to_scholar"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_to_venue_fkey"
+            columns: ["to_venue"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venues: {
         Row: {
           bidding: boolean
@@ -286,9 +380,10 @@ export type Database = {
           description: string
           editors: string[]
           id: string
+          submission_cost: number
           title: string
           url: string
-          welcome_amount: number | null
+          welcome_amount: number
         }
         Insert: {
           bidding?: boolean
@@ -296,9 +391,10 @@ export type Database = {
           description?: string
           editors?: string[]
           id?: string
+          submission_cost?: number
           title?: string
           url?: string
-          welcome_amount?: number | null
+          welcome_amount: number
         }
         Update: {
           bidding?: boolean
@@ -306,9 +402,10 @@ export type Database = {
           description?: string
           editors?: string[]
           id?: string
+          submission_cost?: number
           title?: string
           url?: string
-          welcome_amount?: number | null
+          welcome_amount?: number
         }
         Relationships: [
           {
@@ -322,40 +419,33 @@ export type Database = {
       }
       volunteers: {
         Row: {
-          committment: string
-          count: number | null
+          accepted: Database["public"]["Enums"]["invited"]
+          active: boolean
           created: string
           expertise: string
+          id: string
           roleid: string
           scholarid: string
-          venueid: string
         }
         Insert: {
-          committment: string
-          count?: number | null
+          accepted?: Database["public"]["Enums"]["invited"]
+          active?: boolean
           created?: string
           expertise: string
+          id?: string
           roleid: string
           scholarid: string
-          venueid: string
         }
         Update: {
-          committment?: string
-          count?: number | null
+          accepted?: Database["public"]["Enums"]["invited"]
+          active?: boolean
           created?: string
           expertise?: string
+          id?: string
           roleid?: string
           scholarid?: string
-          venueid?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "volunteers_committment_fkey"
-            columns: ["committment"]
-            isOneToOne: false
-            referencedRelation: "commitments"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "volunteers_roleid_fkey"
             columns: ["roleid"]
@@ -368,13 +458,6 @@ export type Database = {
             columns: ["scholarid"]
             isOneToOne: false
             referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "volunteers_venueid_fkey"
-            columns: ["venueid"]
-            isOneToOne: false
-            referencedRelation: "venues"
             referencedColumns: ["id"]
           },
         ]
@@ -404,6 +487,8 @@ export type Database = {
     }
     Enums: {
       exchange_proposal_kind: "create" | "modify" | "merge"
+      invited: "invited" | "accepted" | "declined"
+      transaction_status: "proposed" | "approved" | "canceled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -491,5 +576,20 @@ export type Enums<
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 

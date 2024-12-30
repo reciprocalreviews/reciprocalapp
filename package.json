@@ -1,6 +1,6 @@
 {
 	"name": "reciprocalapp",
-	"version": "0.0.3",
+	"version": "0.1.0",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
@@ -21,28 +21,28 @@
 		"node": "20"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.45.3",
-		"@sveltejs/adapter-auto": "^3.2.5",
-		"@sveltejs/kit": "^2.6.1",
-		"@sveltejs/vite-plugin-svelte": "^4.0.0-next.6",
-		"@typescript-eslint/eslint-plugin": "^8.0.0",
-		"@typescript-eslint/parser": "^8.0.0",
-		"eslint": "^9.8.0",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-svelte": "^2.43.0",
-		"prettier": "^3.3.3",
-		"prettier-plugin-svelte": "^3.2.6",
-		"supabase": "^1.190.0",
-		"svelte": "^5.0.0-next.260",
-		"svelte-check": "^4.0.4",
-		"tslib": "^2.6.3",
-		"typescript": "^5.6.2",
-		"vite": "^5.4.2",
-		"vitest": "^2.0.5"
+		"@playwright/test": "^1",
+		"@sveltejs/adapter-auto": "^3",
+		"@sveltejs/kit": "^2.8",
+		"@sveltejs/vite-plugin-svelte": "^5",
+		"@typescript-eslint/eslint-plugin": "^8",
+		"@typescript-eslint/parser": "^8",
+		"eslint": "^9",
+		"eslint-config-prettier": "^9",
+		"eslint-plugin-svelte": "^2",
+		"prettier": "^3",
+		"prettier-plugin-svelte": "^3",
+		"supabase": "^2",
+		"svelte": "^5",
+		"svelte-check": "^4",
+		"tslib": "^2",
+		"typescript": "^5",
+		"vite": "^6",
+		"vitest": "^2"
 	},
 	"type": "module",
 	"dependencies": {
-		"@supabase/ssr": "^0.5.1",
-		"@supabase/supabase-js": "^2.45.3"
+		"@supabase/ssr": "^0.5",
+		"@supabase/supabase-js": "^2"
 	}
 }

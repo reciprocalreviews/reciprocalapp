@@ -5,12 +5,10 @@
 	import Page from '$lib/components/Page.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import TextField from '$lib/components/TextField.svelte';
-	import validEmails from '$lib/components/validEmails';
-	import validName from '$lib/components/validName';
-	import validURL from '$lib/components/validURL';
+	import { validEmails, validIdentifier, validURL } from '$lib/validation';
 	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../../Auth.svelte';
-	import { addError, isError } from '../../errors.svelte';
+	import { addError, isError } from '../../feedback.svelte';
 
 	let venue = $state('');
 	let editors = $state('');
@@ -33,7 +31,7 @@
 	async function propose() {
 		const uid = auth.getUserID();
 		if (
-			!validName(venue) ||
+			!validIdentifier(venue) ||
 			!validEmails(editors) ||
 			!validSize(size) ||
 			!validMessage(message) ||
@@ -75,7 +73,7 @@
 
 	{#if auth.getUserID()}
 		<form>
-			<TextField bind:text={venue} label="venue" placeholder="name" valid={validName} />
+			<TextField bind:text={venue} label="venue" placeholder="name" valid={validIdentifier} />
 			<TextField
 				bind:text={editors}
 				label="editors"
@@ -109,7 +107,7 @@
 				tip="Propose venue"
 				action={propose}
 				active={!proposing &&
-					validName(venue) &&
+					validIdentifier(venue) &&
 					validEmails(editors) &&
 					validSize(size) &&
 					validMessage(message)}>Propose venue</Button

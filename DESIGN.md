@@ -41,7 +41,7 @@ _As Dana, program chair of ACM PLDI, I want to send out invites to a curated set
 
 - Dana logs into RR and proposes a PLDI 2025 venue instance.
 - The RR stewards approve it
-- Dana adds a description to the venue and defines the two roles, programm committee member and senior program committee member, defining both as `invite only` roles, with `yes` and `no` commitments.
+- Dana adds a description to the venue and defines the two roles, programm committee member and senior program committee member, defining both as `invite only` roles.
 - Dana populates the set of invitees into the venue for each role by submitting a list of email addresses
 - Dana sends invitation emails to everyone in each role in her mail client.
 - Some program committee members receive the invite, create an account if necessary, see the role to which they have been invited, and indicate yes or no.
@@ -54,7 +54,7 @@ _As Derek, EiC of IEEE TSE, I want to curate a set of reviewers who are eager to
 
 - Derek logs into RR and proposes a TSE venue instance.
 - The RR stewards approve it
-- Derek adds a description of the venue and sees the default reviewer role with `yes` and `no` commitments, and finds them suitable.
+- Derek adds a description of the venue and sees the default reviewer role.
 - Amy updates the TSE website to point to the reviewer volunteer link and adjusts the email templates to include RR's email receiver.
 - Community member is looking for reviewing practice and finds the volunteer link, and agrees to volunteer for up to 1 paper at a time.
 - The Associate Editor, when trying to find reviewers, scans the list of volunteers, and finds the volunteer, and invites them through the journal's review platform. This adds the publication record to the reviewer's list.
@@ -66,7 +66,7 @@ _As Amy, EiC of ACM TOCE, I want to incentivize reviewers to volunteer by requir
 
 - Amy logs into RR and proposes a TOCE venue instance.
 - The RR stewards approve it
-- Amy adds a description of the venue and sees the default reviewer role with `yes` and `no` commitments, and finds them suitable.
+- Amy adds a description of the venue and sees the default reviewer role and finds it suitable.
 - Amy sets the compensation levels to 10 tokens for a review, 10 for an AE recommendation, and 1 for an EiC decision, as well as costs of 40 tokens per submission. She also sets the welcome token rate to 30, enabling newcomers to submit if they review just once.
 - Amy updates the ACM TOCE website to point to the reviewer volunteer link and to the compensation costs. She also sends an email to `sigcse-members` to solicit volunteers and points to the link
 - Community members either receive the email, or see the volunteer link on the website, and log in to voluneer. Those are first time volunteers receive their newly minted welcome tokens.
@@ -91,12 +91,14 @@ There are several key types of data in RR.
 
 `Scholars` are individuals in a research community who are identified by an [ORCID](https://orcid.org/).
 
-- [ ] Scholars can volunteer to review for a `Venue`
-- [ ] Scholars can spend and earn `Token`s for that volunteer work, as well as receive `Token`s as gifts, and spend `Token`s to submit manuscripts for peer review.
-- [ ] Scholars can also have _`editor`_ status on a `Venue`, which gives them the ability to manage the `transaction`s and `submission`s in a `Venue`.
-- [ ] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
+- [x] Scholars can volunteer to review for a `Venue`
+- [ ] Scholars can spend and earn `Token`s for that volunteer work
+- [x] Scholars can receive `Token`s as gifts
+- [ ] Scholars can spend `Token`s to submit manuscripts for peer review.
+- [x] Scholars can also have _`editor`_ status on a `Venue`, which gives them the ability to manage the `transaction`s and `submission`s in a `Venue`.
+- [x] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
 - [ ] An individual scholar cannot be both an _`editor`_ and a _`minter`_, as this would allow editors to enrich themselves without oversight. Scholars can specify an email address for communication.
-- [ ] Anyone can view a `Scholar`'s record, but only `Scholars` can create, update, or delete their record.
+- [x] Anyone can view a `Scholar`'s record, but only `Scholars` can create, update, or delete their record.
 
 Here is a SQL schema sketch, for clarity:
 
@@ -125,7 +127,6 @@ A `Venue` is a named and curated collection of manuscripts undergoing peer revie
 - [x] `Venue`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
 - [x] `Venue`s can be proposed, but aren't created until approved.
 - [x] `Venue`s can have one or more volunteer roles, which are helpful for distinguishing between different types of volunteering for a venue (e.g., reviewer, reviewer for track A, meta-reviewer for track B)
-- [x] `Venue`s can have one or more commitments to a role, usually `yes` and `no`, but custom committments can support things like `maybe`, `if necessary`, and other social signals.
 - [x] When a `Scholar` volunteers for a `Venue`, they do so for a particular role, with a particular commitment, and optionally with a number of papers they are committing to review. Volunteering for a venue can also include a statement of expertise relevant to the role.
 
 Here is a SQL sketch of all of the tables involved in this.
@@ -148,7 +149,7 @@ create table venues (
   -- The id of the currency the venue is currently using
   currency uuid not null references currencies(id),
   -- The optional amount of newly minted tokens granted to new volunteers
-  welcome_amount integer,
+  welcome_amount integer not null,
   -- Whether the the venue permits public bidding on submissions
   bidding boolean not null default true,
   -- One or more scholars who serve as editors of the venue
@@ -172,21 +173,6 @@ create table roles (
   invited boolean not null
 );
 
--- Only editors can create commitments
--- Only editors can update commitments
--- Anyone can view commitments
--- Only editors can delete commitments
-create table commitments (
-  -- The unique id of the commitment
-  id uuid not null default uuid_generate_v1() primary key,
-  -- The ID of the venue
-  venueid uuid not null references venues(id) on delete cascade,
-  -- The label for the commitment
-  label text not null,
-  -- The token compensation for a commitment, in the venue's currency
-  amount integer not null
-);
-
 -- editors can invite and volunteers if not invite only
 -- anyone can view volunteers
 -- only volunteers can update
@@ -198,8 +184,6 @@ create table volunteers (
   roleid uuid not null references roles(id) on delete cascade,
   -- The id of the venue volunteered for
   venueid uuid not null references venues(id) on delete cascade,
-  -- The commitment they made
-  committment uuid not null references commitments(id) on delete cascade,
   -- When this record was last updated
   created timestamp with time zone not null default now(),
   -- Relevant expertise provided by the scholar for the role
@@ -290,10 +274,10 @@ create table exchanges (
 
 A `Token` represents an indivisible unit of peer review labor in a particular `Currency`.
 
-- [ ] `Token`s are typically spent to compensate others for their reviewing labor.
-- [ ] `Token`s are typically earned for reviewing labor, but there may be many other creative uses for them (e.g., gifts, incentives, etc.).
-- [ ] `Token`s should generally be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few `Token`s would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many `Token`s means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review.
-- [ ] `Token`s are possessed by individual scholar or in a `Venue`'s reserve (meaning they are posessed by no one) and `Transaction`s can change who posses them. They cannot be possessed by neither a scholar or a venue.
+- [x] `Token`s are typically spent to compensate others for their reviewing labor.
+- [x] `Token`s are typically earned for reviewing labor, but there may be many other creative uses for them (e.g., gifts, incentives, etc.).
+- [x] `Token`s should generally be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few `Token`s would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many `Token`s means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review.
+- [x] `Token`s are possessed by individual scholar or in a `Venue`'s reserve (meaning they are posessed by no one) and `Transaction`s can change who posses them. They cannot be possessed by neither a scholar or a venue.
 
 Here is a SQL sketch, for clarity:
 
@@ -306,7 +290,7 @@ create table tokens (
   -- The scholar that currently possess the token, or null, representing no one
   scholar uuid references scholars(id),
   -- The venue that currently posses the token, or null
-  venue uuid reference venues(id),
+  venue uuid references venues(id),
   -- Require that there is one owner
   constraint check_owner check (num_nonnulls(scholar, venue) = 1)
 
@@ -320,8 +304,8 @@ create table tokens (
 
 A `Transaction` represents an exchange of tokens for some purpose, such as submitting something for review, compensation for a review, or a gift.
 
-- [ ] `Transaction`s cannot be deleted; they are a permanent record
-- [ ] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable.
+- [x] `Transaction`s cannot be deleted; they are a permanent record
+- [x] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable.
 
 Here is a SQL schema sketch, for clarity:
 
@@ -333,14 +317,14 @@ create table transactions (
   from_scholar uuid references scholars(id),
   -- The venue who gave the tokens
   from_venue uuid references venues(id),
-  -- Require that there is a from
-  constraint check_from check (num_nonnulls(from_scholar, from_venue) = 1)
-  -- The optional scholar who received the tokens,
+  -- Require that there is either a scholar or venue source but not both
+  constraint check_from check (num_nonnulls(from_scholar, from_venue) = 1),
+  -- The scholar who received the tokens,
   to_scholar uuid references scholars(id),
-  -- The optional venue that received the tokens,
+  -- The venue that received the tokens,
   to_venue uuid references venues(id),
-  -- Require that there is a too
-  constraint check_to check (num_nonnulls(to_scholar, to_venue) = 1)
+  -- Require that there is either a scholar or venue destination but not both
+  constraint check_to check (num_nonnulls(to_scholar, to_venue) = 1),
   -- An array of token ids moved in the transaction
   tokens uuid[] not null default '{}',
   -- The currency the amount is in
@@ -415,9 +399,9 @@ The goal of the landing page is to 1) explain the value proposition of RR to edi
 
 The purpose of the about page is to give context about the project. It should:
 
-- [ ] Explain who is creating RR
+- [x] Explain who is creating RR
 - [x] Why RR exists
-- [ ] How others can get involved in maintaining and evolving it
+- [x] How others can get involved in maintaining and evolving it
 - [ ] How RR is governed and funded.
 
 It has no functionalty.
@@ -438,8 +422,8 @@ It should:
 
 - [x] Link to the scholar's ORCID profile (`scholars.orcid`), to help visitors get more information about them.
 - [ ] Display read-only data pulled from the ORCID profile, to reduce the need to navigate to their ORCID profile.
-- [ ] Show links to `Venue`s the scholar has volunteered to review for
-- [ ] Show links to `Venue`s the scholar is serving as _`editor`_ of.
+- [x] Show links to `Venue`s the scholar has volunteered to review for
+- [x] Show links to `Venue`s the scholar is serving as _`editor`_ of.
 
 If scholar ID corresponds to the authenticated user, it should also allow the scholar to:
 
@@ -451,8 +435,8 @@ If scholar ID corresponds to the authenticated user, it should also allow the sc
 > [!IMPORTANT]
 > The functionality below is specific to compensation
 
-- [ ] _`scholar`_: View a history of `Transaction`s associated with the scholar
-- [ ] _`scholar`_: Gift tokens to someone else using the scholar's ORCID or email, creating two transactions that deduct from the scholar and deposit to the other scholar
+- [x] _`scholar`_: View a history of `Transaction`s associated with the scholar
+- [x] _`scholar`_: Gift tokens to someone else using the scholar's ORCID or email
 
 ## Venue List `/venues`
 
@@ -460,11 +444,9 @@ The purpose of the venue list page is to show all venues managed on RR, or propo
 
 It should:
 
-- [ ] Show all `Venue`s, including active and proposed ones.
-
-- [ ] _`scholar`_: Propose a new `Venue` for the platform for review by the platform maintainers. `Venue` proposals should gather the name of the venue, the email addresses of the person or people leading editing of it, and the estimated size of the number of scholars in the community. `Venue`s with similar names are retrieved and shown to prevent duplicate venue creation. When the proposal is submitted, an email notification is sent to the email addresses listed and RR stewards. A `Venue` is created, but not active until approved.
-
-- [ ] _`steward`_: Approve a `Venue` for use, indicating who should take the _editor_ and _minter_ roles for the platform, and creating tokens for all scholars in favor of the petition.
+- [x] Show all `Venue`s, including active and proposed ones.
+- [x] _`scholar`_: Propose a new `Venue` for the platform for review by the platform maintainers. `Venue` proposals should gather the name of the venue, the email addresses of the person or people leading editing of it, and the estimated size of the number of scholars in the community. `Venue`s with similar names are retrieved and shown to prevent duplicate venue creation. When the proposal is submitted, an email notification is sent to the email addresses listed and RR stewards. A `Venue` is created, but not active until approved.
+- [x] _`steward`_: Approve a `Venue` for use, indicating who should take the _editor_ and _minter_ roles for the platform, and creating tokens for all scholars in favor of the petition.
 
 ## Proposals `/venues/proposal`
 
@@ -483,7 +465,7 @@ The purpose of this page is to allow people to support proposals and check their
 - [x] _`steward`_: Edit a proposal's venue census
 - [x] _`steward`_: Edit a proposal's venue editors
 - [x] _`steward`_: Delete a proposal
-- [ ] _`steward`_: Approve a proposal
+- [x] _`steward`_: Approve a proposal
 
 ## Venue `/venue/[id]`
 
@@ -491,43 +473,45 @@ The purpose of a `Venue` page is to provide information about its compensation, 
 
 The page should:
 
-- [ ] Show the name, description, and URL to the venue's website.
+- [x] Show the name, description, and URL to the venue's website.
 
 When a venue is in a **proposed** state:
 
-- [ ] View the _`editors`_ and _`minters`_ of the venue
-- [ ] View the estimated size of the community
-- [ ] _`scholar`_: Vote to support adopting RR for the venue.
+- [x] View the _`editors`_ of the venue
+- [x] View the estimated size of the community
+- [x] _`scholar`_: Vote to support adopting RR for the venue.
 
 When a venue is **approved** state:
 
-- [ ] View the cost, welcome amount, commitments, and compensation of the venue.
-- [ ] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue `welcome_amount` should be minted and given to the scholar, welcoming them to the community.
-- [ ] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
-- [ ] _`scholar`_: Change expertise keywords for a role for the venue
-- [ ] _`scholar`_: Change commitment for a role for the venue
-- [ ] _`scholar`_: Change paper count for a role for the venue
+- [x] View the cost, welcome amount, roles, and compensation of the venue.
+- [x] View the _`minters`_ of the venue
+- [x] View the number of tokens owned by the venue
+- [x] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue `welcome_amount` should be minted and given to the scholar, welcoming them to the community.
+- [x] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
+- [x] _`scholar`_: Change expertise keywords for a role for the venue
+- [x] _`scholar`_: Change commitment for a role for the venue
+- [x] _`scholar`_: Change paper count for a role for the venue
 
-- [ ] _`editor`_: Modify the venue name, description
-- [ ] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one
+- [x] _`editor`_: Modify the venue name, description
+- [x] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one
 - [ ] _`editor`_: Set the state to inactive
 
 - [ ] _`editor`_: Export the list of reviewers as a CSV file for use on other plaforms, including ORCID, name, email, expertise, role, commitment, and paper count.
-- [ ] _`editor`_: Create roles for the venue.
-- [ ] _`editor`_: Create commitments for the venue.
-- [ ] _`editor`_: Edit the descriptions of roles.
-- [ ] _`editor`_: Delete a commitment, confirming they understand that all volunteers will be removed from the commitment.
-- [ ] _`editor`_: Delete a role, confirming they understand that all volunteers will be removed from the role.
-- [ ] _`editor`_: Invite one or more `Scholar`s by ORCID or email to a particular role.
+- [x] _`editor`_: Create roles for the venue.
+- [x] _`editor`_: Edit the descriptions of roles.
+- [x] _`editor`_: Delete a role, confirming they understand that all volunteers will be removed from the role.
+- [ ] _`editor`_: Invite one or more `Scholar`s by ORCID to a particular role.
+- [x] _`editor`_: Invite one or more `Scholar`s by email to a particular role.
+- [x] _`editor`_: Gift tokens from the venue to a scholar
 
 > [!IMPORTANT]
 > The functionality below is specific to compensation
 
-- [ ] _`editor`_: Modify the newcomer gift in tokens
-- [ ] _`editor`_: Modify submission costs in tokens, reviewing compensation in tokens. Submission cost must equal to total compensation for a submission.
-- [ ] _`editor`_: View the total number of tokens in the venue and who posses them, to gauge the health of the community.
-- [ ] _`editor`_: Change the _`minter`_(s) of the venue, ensuring there is always one
-- [ ] _`editor`_: Enable or disable (`venues.bidding`), determining whether submissions can be bid on by `scholars`.
+- [x] _`editor`_: Modify the newcomer gift in tokens
+- [x] _`editor`_: Modify submission costs in tokens, reviewing compensation in tokens. Submission cost must equal to total compensation for a submission.
+- [x] _`editor`_: View the total number of tokens in the venue and who posses them, to gauge the health of the community.
+- [x] _`editor`_: Change the _`minter`_(s) of the venue, ensuring there is always one
+- [x] _`editor`_: Enable or disable (`venues.bidding`), determining whether submissions can be bid on by `scholars`.
 
 When a venue is in an _inactive_ state:
 
@@ -540,12 +524,19 @@ When a venue is in an _inactive_ state:
 
 The purpose of this page is to manage the venue's `Currency`.
 
+Basic functionality includes:
+
+- [x] Show the minters
+- [x] Show the venues using the currency
+- [x] _`minter`_: Create new tokens within the venue's currency, to address token scarcity in the community. This functionality should provide guidance on best practices, including warnings about what happens if they create too many tokens. For example, there should be a certain number of tokens per scholar in the community at a minimum, but not so many that publishing requires no labor.
+
+There are also several functions related to currency exchange and merger:
+
 - [ ] _`scholar`_: Show any existing exchange rates approved by the platform.
 - [ ] _`scholar`_: View the exchange rates the currency is involved in
 - [ ] _`editor`_: Convert a specific token to another venue's currency. This enables a one-time exchange, such as when an editor might approve someone using currency from another `Venue` to submit to their venue.
 - [ ] _`editor`_: Specify a conversion rate between one venue and another, which enables scholars to independently convert their tokens from one currency to another. This enables an official one way exchange rate, reducing barriers to cross-venue transactions.
 - [ ] _`editor`_: Unify two currencies, removing the need to convert between a currency. Must be approved by the `editors` of both venues. This prevent editors from unilaterally creating changes.
-- [ ] _`minter`_: Create new tokens within the venue's currency, to address token scarcity in the community. This functionality should provide guidance on best practices, including warnings about what happens if they create too many tokens. For example, there should be a certain number of tokens per scholar in the community at a minimum, but not so many that publishing requires no labor.
 - [ ] _`minter`_: Propose a new exchange rate for other minters involved in two currencies to approve. Everyone must approve for it to be official. Inactive until all minters involved in both currencies approve.
 - [ ] _`minter`_: Approve a proposed exchange rate.
 - [ ] _`minter`_: Propose a modification to an exchange rate
@@ -562,7 +553,7 @@ The purpose of this page is to allow for management of all `Transaction`s associ
 
 **FUNCTIONALITY**. The transactions page for a venue should allow for:
 
-- [ ] _`editor`_, _`minter`_: View all transactions
+- [x] _`editor`_, _`minter`_: View all transactions
 - [ ] _`editor`_, _`minter`_: Search for transactions involving particular people or containing particular text
 - [ ] _`minter`_: Approve pending transactions that do not involve the scholar approving
 - [ ] _`editors`_, _`minters`_: Cancel approved transactions that do not involve the scholar canceling
@@ -603,7 +594,7 @@ The purpose of a submission page is to allow editors and scholars to see informa
 RR will also send periodic reminders based on time-based events:
 
 - [ ] `Venue`s are checked daily for a certain proportion of support, and editors are notified when the petition exceeds that threshold.
-- [ ] send `scholar`s periodic reminders to update their availability
+- [ ] Send `scholar`s periodic reminders to update their availability
 
 > [!IMPORTANT]
 > Emails below are specific to compensation

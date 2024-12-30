@@ -1,10 +1,15 @@
 import {
 	type CurrencyID,
 	type ProposalID,
+	type RoleID,
 	type ScholarID,
 	type ScholarRow,
 	type SupporterID,
-	type VenueID
+	type VenueID,
+	type VolunteerID,
+	type Response,
+	type TokenID,
+	type TransactionStatus
 } from '../../data/types';
 import type { SourceID } from '$lib/types/Source';
 import type Source from '$lib/types/Source';
@@ -15,6 +20,7 @@ import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
 
 export const DatabaseSymbol = Symbol('database');
+export const NullUUID = '00000000-0000-0000-0000-000000000000';
 
 export function getDB() {
 	return getContext<CRUD>(DatabaseSymbol);
@@ -52,10 +58,38 @@ export const Errors = {
 	EditVenueDescription: 'Unable to edit the venue description',
 	EditVenueEditors: 'Unable to edit the venue editors',
 	EditVenueAddEditorVenueNotFound: 'Unable to find venue',
-	EditVenueAddEditorScholarNotFound: 'Unable to find scholar by this email or ORCID',
+	ScholarNotFound: 'Unable to find scholar by this email or ORCID',
 	EditVenueAddEditorAlreadyEditor: 'Scholar is already an editor',
 	EditVenueTitle: 'Unable to edit the venue title',
-	EditVenueURL: 'Unable to edit the venue URL'
+	EditVenueURL: 'Unable to edit the venue URL',
+	EditVenueWelcomeAmount: 'Unable to edit the welcome amount',
+	EditVenueSubmissionCost: 'Unable to edit the submission cost',
+	EditVenueBidding: 'Unable to toggle bidding',
+	CreateRole: 'Unable to create new role.',
+	UpdateRoleName: 'Unable to update role name',
+	UpdateRoleDescription: 'Unable to update role description',
+	UpdateRoleInvited: 'Unable to update invited status of role',
+	UpdateRoleAmount: 'Unable to update role compensation',
+	DeleteRole: 'Unable to delete role',
+	CreateVolunteer: 'Unable to add volunteer commitment',
+	AlreadyVolunteered: 'Already created a volunteer commitment for this role.',
+	UpdateVolunteerActive: 'Unable to update volunteer commitment',
+	UpdateVolunteerExpertise: 'Unable to update your expertise',
+	InviteToRole: 'Unable to invite to role',
+	AcceptRoleInvite: 'Unable to accept role invite',
+	EditCurrencyMinters: 'Unable to edit minters',
+	AddCurrencyMinter: 'Unable to add minter',
+	AlreadyMinter: 'This scholar is already a minter',
+	MintTokens: 'Unable to mint tokens',
+	TransferVenueTokens: 'Unable to transfer tokens',
+	TransferScholarTokens: 'Unable to find scholar tokens to transfer',
+	TransferTokensInsufficient: 'Insufficient number tokens to transfer',
+	CreateTransaction: 'Unable to create transaction',
+	UnknownTransaction: 'Unable to find this transaction',
+	AlreadyApproved: 'This transaction is already approved',
+	MissingApprovalVenue: 'The proposed transaction has no venue to transfer from.',
+	MissingRecipient: 'The proposed transaction has no scholar recipient.',
+	UndeletedTransaction: "The proposed transaction couldn't be deleted."
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -126,9 +160,6 @@ export default abstract class CRUD {
 	/** Get the balance of the scholar */
 	abstract getScholarBalance(scholarID: ScholarID): Promise<number>;
 
-	/** Insert a new transaction in the database */
-	abstract createTransaction(transaction: Transaction): Promise<Transaction>;
-
 	/** Get the transaction with the given id */
 	abstract getTransaction(id: TransactionID): Promise<Transaction | null>;
 
@@ -177,4 +208,66 @@ export default abstract class CRUD {
 	abstract addVenueEditor(id: VenueID, emailOrORCID: string): Promise<ErrorID | undefined>;
 	abstract editVenueTitle(id: VenueID, title: string): Promise<ErrorID | undefined>;
 	abstract editVenueURL(id: VenueID, url: string): Promise<ErrorID | undefined>;
+	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<ErrorID | undefined>;
+	abstract editVenueSubmissionCost(id: VenueID, amount: number): Promise<ErrorID | undefined>;
+	abstract editVenueBidding(id: VenueID, bidding: boolean): Promise<ErrorID | undefined>;
+
+	abstract createRole(id: VenueID, name: string): Promise<ErrorID | undefined>;
+	abstract editRoleName(id: RoleID, name: string): Promise<ErrorID | undefined>;
+	abstract editRoleDescription(id: RoleID, description: string): Promise<ErrorID | undefined>;
+	abstract editRoleInvited(id: RoleID, on: boolean): Promise<ErrorID | undefined>;
+	abstract editRoleAmount(id: RoleID, amount: number): Promise<ErrorID | undefined>;
+	abstract deleteRole(id: RoleID): Promise<ErrorID | undefined>;
+
+	abstract createVolunteer(
+		scholarid: ScholarID,
+		roleid: RoleID,
+		accepted: boolean,
+		compensate: boolean
+	): Promise<ErrorID | undefined>;
+	abstract updateVolunteerActive(id: VolunteerID, active: boolean): Promise<ErrorID | undefined>;
+	abstract updateVolunteerExpertise(
+		id: VolunteerID,
+		expertise: string
+	): Promise<ErrorID | undefined>;
+	abstract inviteToRole(role: RoleID, emails: string[]): Promise<ErrorID | undefined>;
+	abstract acceptRoleInvite(id: VolunteerID, response: Response): Promise<ErrorID | undefined>;
+
+	abstract editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<ErrorID | undefined>;
+	abstract addCurrencyMinter(
+		id: CurrencyID,
+		minters: string[],
+		emailOrORCID: string
+	): Promise<ErrorID | undefined>;
+
+	abstract mintTokens(id: CurrencyID, amount: number, to: VenueID): Promise<ErrorID | undefined>;
+
+	abstract transferTokens(
+		scholar: ScholarID,
+		from: VenueID,
+		fromKind: 'venueid' | 'scholarid' | 'emailorcid',
+		to: string,
+		toKind: 'venueid' | 'scholarid' | 'emailorcid',
+		amount: number,
+		purpose: string
+	): Promise<ErrorID | undefined>;
+
+	/** Insert a new transaction in the database */
+	abstract createTransaction(
+		creator: ScholarID,
+		fromScholar: ScholarID | null,
+		fromVenue: VenueID | null,
+		toScholar: ScholarID | null,
+		toVenue: VenueID | null,
+		tokens: TokenID[],
+		currency: CurrencyID,
+		purpose: string,
+		status: TransactionStatus
+	): Promise<ErrorID | undefined>;
+
+	/**
+	 * Given a transaction ID that is pending, creators or transfers tokens based on the transaction.
+	 * Will only work for a currency's minter because of security rules.
+	 * */
+	abstract approveTransaction(minter: ScholarID, id: TransactionID): Promise<ErrorID | undefined>;
 }

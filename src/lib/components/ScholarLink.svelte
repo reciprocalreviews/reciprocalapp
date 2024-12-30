@@ -13,7 +13,7 @@
 		...
 	{:then scholar}
 		{#if scholar}
-			<Link to="/scholar/{scholar.getID()}">{scholar.getName()}</Link>
+			<Link to="/scholar/{scholar.getID()}">{scholar.getName() ?? scholar.getEmail()}</Link>
 		{:else}
 			<em>ORCID {id}</em>
 		{/if}

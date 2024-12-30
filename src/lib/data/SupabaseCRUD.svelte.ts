@@ -8,12 +8,17 @@ import type {
 	CurrencyID,
 	ProposalID,
 	ProposalRow,
+	RoleID,
 	ScholarID,
 	ScholarRow,
 	SupporterID,
-	VenueID
+	VenueID,
+	VolunteerID,
+	Response,
+	TokenID,
+	TransactionStatus
 } from '../../data/types';
-import CRUD, { type ErrorID } from './CRUD';
+import CRUD, { NullUUID, type ErrorID } from './CRUD';
 import Scholar from './Scholar.svelte';
 import type { Database } from '$data/database';
 
@@ -77,6 +82,16 @@ export default class SupabaseCRUD extends CRUD {
 		throw new Error('Method not implemented.');
 	}
 
+	async findScholar(emailOrORCID: string) {
+		const { data: scholar } = await this.client
+			.from('scholars')
+			.select('id')
+			.or(`orcid.eq.${emailOrORCID},email.eq.${emailOrORCID}`)
+			.single();
+
+		return scholar;
+	}
+
 	async getScholar(scholarID: ScholarID): Promise<Scholar | null> {
 		const scholar = this.scholars.get(scholarID);
 		if (scholar) return scholar;
@@ -135,9 +150,6 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	getScholarBalance(scholarID: ScholarID): Promise<number> {
-		throw new Error('Method not implemented.');
-	}
-	createTransaction(transaction: Transaction): Promise<Transaction> {
 		throw new Error('Method not implemented.');
 	}
 	getTransaction(id: TransactionID): Promise<Transaction | null> {
@@ -253,6 +265,7 @@ export default class SupabaseCRUD extends CRUD {
 				url: proposalData.url,
 				editors,
 				welcome_amount: 40,
+				submission_cost: 40,
 				currency: currencyData.id
 			})
 			.select()
@@ -328,13 +341,8 @@ export default class SupabaseCRUD extends CRUD {
 
 		if (venue === null) return 'EditVenueAddEditorVenueNotFound';
 
-		const { data: scholar } = await this.client
-			.from('scholars')
-			.select('id')
-			.or(`orcid.eq.${emailOrORCID},email.eq.${emailOrORCID}`)
-			.single();
-
-		if (scholar === null) return 'EditVenueAddEditorScholarNotFound';
+		const scholar = await this.findScholar(emailOrORCID);
+		if (scholar === null) return 'ScholarNotFound';
 
 		if (venue.editors.includes(scholar.id)) return 'EditVenueAddEditorAlreadyEditor';
 
@@ -351,5 +359,337 @@ export default class SupabaseCRUD extends CRUD {
 		const { error } = await this.client.from('venues').update({ url }).eq('id', id);
 		if (error) return 'EditVenueTitle';
 		else return;
+	}
+
+	async editVenueWelcomeAmount(id: VenueID, amount: number) {
+		const { error } = await this.client
+			.from('venues')
+			.update({ welcome_amount: amount })
+			.eq('id', id);
+		if (error) return 'EditVenueWelcomeAmount';
+		else return;
+	}
+
+	async editVenueSubmissionCost(id: VenueID, amount: number) {
+		const { error } = await this.client
+			.from('venues')
+			.update({ submission_cost: amount })
+			.eq('id', id);
+		if (error) return 'EditVenueSubmissionCost';
+		else return;
+	}
+
+	async editVenueBidding(id: VenueID, bidding: boolean) {
+		const { error } = await this.client.from('venues').update({ bidding }).eq('id', id);
+		if (error) return 'EditVenueBidding';
+		else return;
+	}
+
+	async createRole(id: VenueID, name: string) {
+		const { error } = await this.client
+			.from('roles')
+			.insert({ venueid: id, amount: 10, invited: true, name });
+		if (error) return 'CreateRole';
+		else return;
+	}
+
+	async editRoleName(id: RoleID, name: string) {
+		const { error } = await this.client.from('roles').update({ name }).eq('id', id);
+		if (error) return 'UpdateRoleName';
+		else return;
+	}
+
+	async editRoleDescription(id: RoleID, description: string) {
+		const { error } = await this.client.from('roles').update({ description }).eq('id', id);
+		if (error) return 'UpdateRoleDescription';
+		else return;
+	}
+
+	async editRoleInvited(id: RoleID, on: boolean) {
+		const { error } = await this.client.from('roles').update({ invited: on }).eq('id', id);
+		if (error) return 'UpdateRoleInvited';
+		else return;
+	}
+
+	async editRoleAmount(id: RoleID, amount: number) {
+		const { error } = await this.client.from('roles').update({ amount }).eq('id', id);
+		if (error) return 'UpdateRoleAmount';
+		else return;
+	}
+
+	async deleteRole(id: RoleID) {
+		const { error } = await this.client.from('roles').delete().eq('id', id);
+		if (error) return 'DeleteRole';
+		else return;
+	}
+
+	async createVolunteer(
+		scholarid: ScholarID,
+		roleid: RoleID,
+		accepted: boolean,
+		compensate: boolean
+	) {
+		// First, get all of the volunteer records for this scholar.
+		const { data: volunteer } = await this.client
+			.from('volunteers')
+			.select()
+			.eq('scholarid', scholarid);
+		// Couldn't get the volunteer records? Bail.
+		if (volunteer === null) return 'CreateVolunteer';
+
+		// Already volunteered for this venue? Bail.
+		if (volunteer.some((v) => v.roleid === roleid)) return 'AlreadyVolunteered';
+
+		// Create the volunteer record.
+		const { error } = await this.client.from('volunteers').insert({
+			scholarid,
+			roleid,
+			active: accepted,
+			accepted: accepted ? 'accepted' : 'invited',
+			expertise: ''
+		});
+		if (error) {
+			console.error(error);
+			return 'CreateVolunteer';
+		}
+
+		// If this is their first volunteer role for the venue, grant the number of welcome tokens for the venue.
+		if (volunteer.length === 0 && compensate) {
+			// Get the role and the venue.
+			const { data: role } = await this.client.from('roles').select().eq('id', roleid).single();
+			if (role === null) return 'CreateVolunteer';
+			const venueid = role.venueid;
+			const { data: venue } = await this.client.from('venues').select().eq('id', venueid).single();
+			if (venue === null) return 'CreateVolunteer';
+			const welcome = venue.welcome_amount;
+
+			// TODO Finish after tokens and transactions table are created.
+			// Record an approved transaction to log the gift.
+			const error = await this.createTransaction(
+				scholarid,
+				null,
+				venueid,
+				scholarid,
+				null,
+				// Create a list of null UUIDs to represent that they don't exist yet.
+				new Array(welcome).fill(NullUUID),
+				venue.currency,
+				'Welcome tokens for volunteering for the venue. Aproved by minter.',
+				'proposed'
+			);
+			if (error) return 'CreateTransaction';
+		}
+	}
+
+	async updateVolunteerActive(id: VolunteerID, active: boolean): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('volunteers').update({ active }).eq('id', id);
+		if (error) return 'UpdateVolunteerActive';
+		else return;
+	}
+
+	async updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('volunteers').update({ expertise }).eq('id', id);
+		if (error) return 'UpdateVolunteerExpertise';
+		else return;
+	}
+
+	async inviteToRole(role: RoleID, emails: string[]) {
+		const { data: scholars } = await this.client.from('scholars').select().in('email', emails);
+		if (scholars === null) return 'InviteToRole';
+
+		for (const scholar of scholars) {
+			const error = await this.createVolunteer(scholar.id, role, false, false);
+			if (error) return error;
+		}
+	}
+
+	async acceptRoleInvite(id: VolunteerID, response: Response) {
+		const { error } = await this.client
+			.from('volunteers')
+			.update({ active: true, accepted: response })
+			.eq('id', id);
+		if (error) {
+			console.log(error);
+			return 'AcceptRoleInvite';
+		}
+	}
+
+	async editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('currencies').update({ minters }).eq('id', id);
+		if (error) {
+			console.error(error);
+			return 'EditCurrencyMinters';
+		}
+	}
+
+	async addCurrencyMinter(
+		id: CurrencyID,
+		minters: string[],
+		emailOrORCID: string
+	): Promise<ErrorID | undefined> {
+		const scholar = await this.findScholar(emailOrORCID);
+		if (scholar === null) return 'ScholarNotFound';
+
+		if (minters.includes(scholar.id)) return 'AlreadyMinter';
+
+		return this.editCurrencyMinters(id, Array.from(new Set([...minters, scholar.id])));
+	}
+
+	async mintTokens(id: CurrencyID, amount: number, to: VenueID) {
+		const rows = Array(amount)
+			.fill(0)
+			.map(() => {
+				return { currency: id, venue: to, scholar: null };
+			});
+
+		const { error } = await this.client.from('tokens').insert(rows);
+		if (error) {
+			console.error(error);
+			return 'MintTokens';
+		}
+	}
+
+	async resolveEntityID(
+		kind: 'venueid' | 'scholarid' | 'emailorcid',
+		id: VenueID | ScholarID | string
+	): Promise<VenueID | ScholarID | null> {
+		if (kind === 'venueid' || kind === 'scholarid') return id;
+		const scholar = await this.findScholar(id);
+		if (scholar === null) return null;
+		return scholar.id;
+	}
+
+	async transferTokens(
+		creator: ScholarID,
+		from: VenueID | ScholarID | string,
+		fromKind: 'venueid' | 'scholarid' | 'emailorcid',
+		to: VenueID | ScholarID,
+		toKind: 'venueid' | 'scholarid' | 'emailorcid',
+		amount: number,
+		purpose: string
+	) {
+		// Find the approriate ID for the from and to entities.
+		let fromEntity = await this.resolveEntityID(fromKind, from);
+		let toEntity = await this.resolveEntityID(toKind, to);
+
+		if (fromEntity === null) return 'ScholarNotFound';
+		if (toEntity === null) return 'ScholarNotFound';
+
+		// Find tokens owned by the from entity
+		const { data: tokens, error: tokensError } = await this.client
+			.from('tokens')
+			.select()
+			.eq(fromKind === 'venueid' ? 'venue' : 'scholar', fromEntity);
+		if (tokensError) return 'TransferScholarTokens';
+
+		// If there aren't enough tokens, bail.
+		if (tokens.length < amount) return 'TransferTokensInsufficient';
+
+		// Get the list of token IDs to transfer
+		const tokenIDs = tokens.slice(0, amount).map((token) => token.id);
+
+		// Transfer each token
+		for (const tokenID of tokenIDs) {
+			const { error } = await this.client
+				.from('tokens')
+				.update({
+					venue: toKind === 'venueid' ? toEntity : null,
+					scholar: toKind === 'venueid' ? null : toEntity
+				})
+				.eq('id', tokenID);
+			if (error) return 'TransferVenueTokens';
+		}
+
+		// Record an approved transaction to log the gift.
+		const error = await this.createTransaction(
+			creator,
+			fromKind === 'venueid' ? null : fromEntity,
+			fromKind === 'venueid' ? fromEntity : null,
+			toKind === 'venueid' ? null : toEntity,
+			toKind === 'venueid' ? toEntity : null,
+			tokenIDs,
+			tokens[0].currency,
+			purpose,
+			'approved'
+		);
+		if (error) return 'CreateTransaction';
+	}
+
+	async createTransaction(
+		creator: ScholarID,
+		fromScholar: ScholarID | null,
+		fromVenue: VenueID | null,
+		toScholar: ScholarID | null,
+		toVenue: VenueID | null,
+		tokens: TokenID[],
+		currency: CurrencyID,
+		purpose: string,
+		status: TransactionStatus
+	) {
+		if (fromScholar === null && fromVenue === null) return 'CreateTransaction';
+		if (toScholar === null && toVenue === null) return 'CreateTransaction';
+
+		const { error } = await this.client.from('transactions').insert({
+			creator,
+			from_scholar: fromScholar,
+			from_venue: fromVenue,
+			to_scholar: toScholar,
+			to_venue: toVenue,
+			tokens,
+			currency,
+			purpose,
+			status
+		});
+
+		return error ? 'CreateTransaction' : undefined;
+	}
+
+	async approveTransaction(minter: ScholarID, id: TransactionID) {
+		// First, get the transaction.
+		const { data: transaction, error: transactionError } = await this.client
+			.from('transactions')
+			.select()
+			.eq('id', id)
+			.single();
+		if (transactionError) return 'UnknownTransaction';
+
+		// Verify that the transaction is pending. If it's not, bail.
+		if (transaction.status !== 'proposed') return 'AlreadyApproved';
+
+		// Verify that the transaction is from a venue
+		if (transaction.from_venue === null) return 'MissingApprovalVenue';
+		if (transaction.to_scholar === null) return 'MissingRecipient';
+
+		// See if we need to create any tokens by looking for null UUIDs in the token list.
+		const tokensToCreate = transaction.tokens.filter((id) => id === NullUUID);
+
+		// If there are tokens to mint, mint them.
+		if (tokensToCreate.length > 0) {
+			const mintingError = await this.mintTokens(
+				transaction.currency,
+				tokensToCreate.length,
+				transaction.from_venue
+			);
+			if (mintingError) return mintingError;
+		}
+
+		// Transfer the requested number of tokens to the destination.
+		const transferError = await this.transferTokens(
+			minter,
+			transaction.from_venue,
+			'venueid',
+			transaction.to_scholar,
+			'scholarid',
+			transaction.tokens.length,
+			transaction.purpose
+		);
+		if (transferError) return transferError;
+
+		// Delete the old transaction
+		const { error: updateError } = await this.client
+			.from('transactions')
+			.delete()
+			.eq('id', transaction.id);
+		if (updateError) return 'UndeletedTransaction';
 	}
 }

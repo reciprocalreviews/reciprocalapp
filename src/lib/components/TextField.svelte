@@ -37,14 +37,22 @@
 
 	let labelView = $state<HTMLLabelElement | undefined>(undefined);
 
-	$effect(() => {
+	function resize() {
+		if (view === undefined) return;
 		width = measure?.clientWidth ?? 0;
-		height = inline ? (measure?.clientHeight ?? 0) : (view?.scrollHeight ?? 0);
-		if (text)
-			tick().then(() => {
-				width = measure?.clientWidth ?? 0;
-				height = inline ? (measure?.clientHeight ?? 0) : (view?.scrollHeight ?? 0);
-			});
+
+		if (inline) height = measure?.clientHeight ?? 0;
+		// Reset the textarea height before measuring scroll height.
+		else {
+			view.style.height = '0';
+			height = inline ? (measure?.clientHeight ?? 0) : (view?.scrollHeight ?? 0);
+			view.style.height = height + 'px';
+		}
+	}
+
+	$effect(() => {
+		text;
+		tick().then(() => resize());
 	});
 
 	function edit(event: Event) {
@@ -138,6 +146,13 @@
 	input[disabled],
 	textarea[disabled] {
 		border-color: var(--inactive-color);
+	}
+
+	input[disabled] {
+		border-bottom-style: dotted;
+	}
+	textarea[disabled] {
+		border-left-style: dotted;
 	}
 
 	input.invalid,

@@ -1,11 +1,27 @@
 <script lang="ts">
-	export let min: number;
-	export let max: number;
-	export let value: number;
-	export let step: number;
-	export let change: undefined | ((value: number) => void) = undefined;
+	import type { Snippet } from 'svelte';
 
-	let view: HTMLInputElement;
+	interface Props {
+		min: number;
+		max: number;
+		value: number;
+		step: number;
+		label?: string | undefined;
+		change?: undefined | ((value: number) => void);
+		children?: Snippet;
+	}
+
+	let {
+		min,
+		max,
+		value = $bindable(),
+		step,
+		label = undefined,
+		change = undefined,
+		children
+	}: Props = $props();
+
+	let view: HTMLInputElement | undefined = $state();
 
 	function handleInput() {
 		if (view) value = parseFloat(view.value);
@@ -13,17 +29,40 @@
 	}
 </script>
 
-<input bind:this={view} type="range" {min} {max} {value} {step} on:input={handleInput} />
+<label>
+	{#if label}
+		<span class="label">{label}</span>
+	{/if}
+	<div class="slider">
+		<input bind:this={view} type="range" {min} {max} {value} {step} oninput={handleInput} />
+		<span class="value">{@render children?.()}</span>
+	</div>
+</label>
 
 <style>
+	.slider {
+		display: flex;
+		flex-direction: row;
+		gap: var(--spacing);
+		align-items: baseline;
+	}
+
 	input {
 		display: inline-block;
 		font-size: inherit;
 		color: inherit;
 		accent-color: var(--salient-color);
+		width: 100%;
 	}
 
 	input:focus {
-		outline-color: var(--focus-color);
+		outline: var(--focus-color) solid var(--thick-border-width);
+		border-radius: var(--roundedness);
+	}
+
+	label {
+		width: 100%;
+		position: relative;
+		overflow: hidden;
 	}
 </style>

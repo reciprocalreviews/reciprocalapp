@@ -1,0 +1,117 @@
+<script lang="ts">
+	import type { RoleID, RoleRow, VenueRow } from '$data/types';
+	import Button from '$lib/components/Button.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import Checkbox from '$lib/components/Checkbox.svelte';
+	import EditableText from '$lib/components/EditableText.svelte';
+	import Feedback from '$lib/components/Feedback.svelte';
+	import { DeleteLabel } from '$lib/components/Labels';
+	import Note from '$lib/components/Note.svelte';
+	import Slider from '$lib/components/Slider.svelte';
+	import Tokens from '$lib/components/Tokens.svelte';
+	import { getDB } from '$lib/data/CRUD';
+	import { validEmail, validIdentifier } from '$lib/validation';
+	import { handle } from '../../feedback.svelte';
+	import TextField from '$lib/components/TextField.svelte';
+	import Form from '$lib/components/Form.svelte';
+
+	let {
+		venue,
+		roles
+	}: {
+		venue: VenueRow;
+		roles: RoleRow[] | null;
+	} = $props();
+
+	const db = getDB();
+
+	let newRole: string = $state('');
+	let invites = $state<Record<RoleID, string>>(
+		Object.fromEntries((roles ?? []).map((role) => [role.id, '']))
+	);
+</script>
+
+<form>
+	<TextField
+		bind:text={newRole}
+		size={19}
+		placeholder="name"
+		valid={(text) => validIdentifier(text)}
+	/><Button
+		tip="Create a new role"
+		active={validIdentifier(newRole)}
+		action={async () => {
+			if (await handle(db.createRole(venue.id, newRole))) newRole = '';
+		}}>Create role</Button
+	>
+</form>
+{#if roles}
+	{#each roles as role (role.id)}
+		<Card subheader icon="👤" header={role.name} note={role.description}>
+			<EditableText
+				text={role.name}
+				label="name"
+				placeholder=""
+				valid={validIdentifier}
+				edit={(text) => db.editRoleName(role.id, text)}
+			/>
+			<EditableText
+				text={role.description}
+				label="description"
+				placeholder=""
+				edit={(text) => db.editRoleDescription(role.id, text)}
+			/>
+			<Checkbox on={role.invited} change={(on) => db.editRoleInvited(role.id, on)}
+				>Invited <Note
+					>{#if role.invited}Scholars can volunteer for this without permission{:else}Scholars must
+						be invited to this role.{/if}</Note
+				>
+			</Checkbox>
+			{#if role.invited}
+				<Form inline>
+					<p>Add one or more people to invite to this role, separated by commands.</p>
+					<TextField
+						label="email"
+						placeholder=""
+						name="email"
+						size={20}
+						valid={validEmail}
+						bind:text={invites[role.id]}
+					/>
+					<Button
+						tip="Invite people to this role"
+						action={async () => {
+							if (
+								await handle(
+									db.inviteToRole(
+										role.id,
+										invites[role.id].split(',').map((s) => s.trim())
+									)
+								)
+							)
+								invites[role.id] = '';
+						}}>Invite</Button
+					>
+				</Form>
+			{/if}
+			<Slider
+				min={1}
+				max={venue.welcome_amount}
+				value={role.amount}
+				step={1}
+				label="compensation"
+				change={(value) => handle(db.editRoleAmount(role.id, value))}
+				><Tokens amount={role.amount}></Tokens>/submission</Slider
+			>
+			<Button
+				warn="Delete this role and all volunteers?"
+				tip="Delete this role"
+				action={() => handle(db.deleteRole(role.id))}>Delete {DeleteLabel} …</Button
+			>
+		</Card>
+	{:else}
+		<Feedback>No roles yet. Add one.</Feedback>
+	{/each}
+{:else}
+	<Feedback error>Couldn't load venue's roles.</Feedback>
+{/if}

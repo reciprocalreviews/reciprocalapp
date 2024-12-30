@@ -1,106 +1,32 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Link from '$lib/components/Link.svelte';
-	import Loading from '$lib/components/Loading.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import TextField from '$lib/components/TextField.svelte';
-	import Slider from '$lib/components/Slider.svelte';
 	import { ORCIDRegex } from '../../../data/ORCID';
-	import { getAuth } from '../../Auth.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
-	import validName from '$lib/components/validName';
-	import validURL from '$lib/components/validURL';
-	import validEmail from '$lib/components/validEmail';
-	import { handle } from '../../errors.svelte';
+	import { validIdentifier, validURL, validEmail, validInteger } from '$lib/validation';
+	import { handle } from '../../feedback.svelte';
+	import Checkbox from '$lib/components/Checkbox.svelte';
+	import Roles from './Roles.svelte';
+	import type { PageData } from './$types';
+	import Gift from '$lib/components/Gift.svelte';
 
-	let { data } = $props();
-	const { venue, scholar } = $derived(data);
+	let { data }: { data: PageData } = $props();
+	const { venue, currency, scholar, roles, commitments, tokens, transactions } = $derived(data);
 
 	const db = getDB();
-	const auth = getAuth();
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
 
-	/** State for pricing edits */
-	let editingTokens = $state(false);
-	let submitCost: number = $state(0);
-	let reviewPay: number = $state(0);
-	let metaPay: number = $state(0);
-	let editPay: number = $state(0);
 	let newEditor: string = $state('');
-
-	// /** Whether we're confirming desire to archive */
-	// let archiving = $state(false);
-
-	// function editTokens(source: Source) {
-	// 	if (editingTokens) {
-	// 		editingTokens = false;
-	// 		source.cost = {
-	// 			submit: submitCost,
-	// 			review: reviewPay,
-	// 			meta: metaPay,
-	// 			edit: editPay
-	// 		};
-	// 		sourcePromise = db.updateSource(source);
-	// 	} else {
-	// 		// Editing? Initialize all of the widgets with the current values.
-	// 		editingTokens = true;
-	// 		submitCost = source.cost.submit;
-	// 		reviewPay = source.cost.review;
-	// 		metaPay = source.cost.meta;
-	// 		editPay = source.cost.edit;
-	// 	}
-	// }
-
-	// function archive(source: Source) {
-	// 	source.archived = true;
-	// 	sourcePromise = db.updateSource(source);
-	// }
-
-	// function toggleSourceVolunteer(scholar: Scholar, id: SourceID) {
-	// 	const newSources = { ...scholar.sources };
-
-	// 	// Remove the key
-	// 	if (id in newSources) delete newSources[id];
-	// 	// Add the source with an empty expertise list.
-	// 	else newSources[id] = [];
-
-	// 	scholar.sources = newSources;
-	// 	scholarPromise = db.updateScholar(scholar);
-	// }
-
-	// function toggleSourceExpertise(scholar: Scholar, expertise: Expertise, yes: boolean) {
-	// 	const currentExpertise = scholar.sources[sourceID] ?? [];
-	// 	const newExpertise = yes
-	// 		? Array.from(new Set([...currentExpertise, expertise.phrase]))
-	// 		: currentExpertise.filter((exp) => exp !== expertise.phrase);
-	// 	scholar.sources[sourceID] = newExpertise;
-	// 	scholarPromise = db.updateScholar(scholar);
-	// }
-
-	// let newExpertise: string = $state('');
-	// function addExpertise(source: Source, phrase: string) {
-	// 	source.expertise = [...source.expertise, { phrase, deprecated: false, kind: 'topic' }];
-	// 	sourcePromise = db.updateSource(source);
-	// 	newExpertise = '';
-	// }
-
-	// function toggleExpertiseKind(source: Source, expertise: Expertise) {
-	// 	source.expertise = source.expertise.map((exp) =>
-	// 		exp.phrase === expertise.phrase
-	// 			? { ...expertise, kind: expertise.kind === 'method' ? 'topic' : 'method' }
-	// 			: exp
-	// 	);
-	// 	sourcePromise = db.updateSource(source);
-	// }
 </script>
 
 {#if venue === null}
@@ -108,7 +34,9 @@
 		<p>Unable to find this venue.</p>
 	</Page>
 {:else}
-	<Page title={venue.title} subtitle="venue">
+	<Page title={venue.title}>
+		{#snippet subtitle()}Venue{/snippet}
+		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 		<!-- Show the description -->
 		{#if editor}
 			<EditableText
@@ -119,11 +47,21 @@
 			/>{:else}<p>
 				{#if venue.description.length === 0}<em>No description.</em>{:else}{venue.description}{/if}
 			</p>{/if}
-		<!-- Show the venue URL -->
-		<Link to={venue.url}>{venue.url}</Link>
+
+		<!-- Key details about costs. -->
+		<p>
+			{#if currency}
+				This venue uses the <Link to="/currency/{venue.currency}">{currency.name}</Link> currency.
+			{:else}
+				<Feedback error>Unable to load this venue's currency.</Feedback>
+			{/if}
+			New volunteers receive <Tokens amount={venue.welcome_amount}></Tokens> when they volunteer to review.
+			New submissions cost <Tokens amount={venue.submission_cost}></Tokens>.
+		</p>
+
 		<!-- Show metadata -->
 		<Cards>
-			<Card header="Editors">
+			<Card icon={venue.editors.length} header="editors" note="Give and take tokens for reviewing">
 				<ul>
 					{#each venue.editors as editorID}
 						<li>
@@ -158,20 +96,155 @@
 							}}>Add editor</Button
 						>
 					</form>
+					<Note>
+						Editors can edit venue information, add and remove other editors, create and archive
+						submissions, and gift review tokens. They are typically Editors-in-Chief of a journal or
+						Program Chairs of a conference.
+					</Note>
 				{/if}
-				<Note>
-					Editors can edit venue information, add and remove other editors, create and archive
-					submissions, and gift review tokens. They are typically Editors-in-Chief of a journal or
-					Program Chairs of a conference.
-				</Note>
 			</Card>
-			{#if editor}
-				<Card header="Metadata" group="editors">
+		</Cards>
+
+		<h2>Volunteer</h2>
+		<p>See <Link to="/venue/{venue.id}/volunteers">all volunteers</Link> for this venue.</p>
+
+		<Cards>
+			{#if roles}
+				{#each roles as role (role.id)}
+					{@const commitment = commitments?.find((c) => c.roleid === role.id)}
+					<Card
+						full
+						icon={role.amount}
+						header={role.name}
+						note={role.description}
+						group="invite only"
+					>
+						<div class="role">
+							<div class="tags">
+								{#if scholar && !role.invited && commitment === undefined}
+									<Button
+										tip="Volunteer for this role"
+										action={() =>
+											handle(
+												db.createVolunteer(scholar.id, role.id, true, true),
+												'Thank you for volunteering! The minter will approve your welcome tokens soon.'
+											)}>Volunteer …</Button
+									>
+								{/if}
+							</div>
+							<Note
+								>{#if role.description.length > 0}{role.description}{:else}<em>No description.</em
+									>{/if}</Note
+							>
+
+							{#if commitment}
+								<hr />
+								{#if role.invited && commitment.accepted === 'invited'}
+									<p>
+										The editor has invited you to take this role. <Button
+											tip="accept this invitation"
+											action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
+											>Accept</Button
+										><Button
+											tip="decline this invitation"
+											action={() => handle(db.acceptRoleInvite(commitment.id, 'declined'))}
+											>Decline</Button
+										>
+									</p>
+								{/if}
+								{#if commitment.accepted === 'accepted'}
+									{#if commitment.active}
+										<p>
+											Thanks for volunteering for this role! <Button
+												tip="Stop volunteering"
+												action={() => handle(db.updateVolunteerActive(commitment.id, false))}
+												>Stop...</Button
+											>
+										</p>
+										<EditableText
+											text={commitment.expertise}
+											label="what is your expertise (separated by commas)?"
+											placeholder="topic, area, method, theory, etc."
+											edit={(text) => db.updateVolunteerExpertise(commitment.id, text)}
+										/>
+									{:else}
+										<p>
+											You stopped volunteering for this role. <Button
+												tip="Resume volunteering"
+												action={() => handle(db.updateVolunteerActive(commitment.id, true))}
+												>Resume...</Button
+											>
+										</p>{/if}
+								{:else if commitment.accepted === 'declined'}
+									<p>
+										You declined this role. Would you like to accept it?
+										<Button
+											tip="accept this invitation"
+											action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
+											>Accept</Button
+										>
+									</p>
+								{/if}
+							{/if}
+						</div>
+					</Card>
+				{:else}
+					<Feedback>This venue has no volunteer roles.</Feedback>
+				{/each}
+			{:else}
+				<Feedback error>Couldn't load venue's roles.</Feedback>
+			{/if}
+		</Cards>
+
+		{#if editor}
+			<h2>Editor's corner</h2>
+			<Cards>
+				<Card group="editors" icon={tokens ?? 0} header="tokens" note="balance and gifts">
+					<p>
+						This venue currently has {#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an
+							unknown number of{/if} tokens and is involved in {#if transactions !== null}<strong
+								>{transactions}</strong
+							>{:else}an unknown number of{/if} transactions.
+						<Link to="/venue/{venue.id}/transactions">See all transactions</Link>.
+					</p>
+
+					{#if scholar}
+						<Gift
+							max={tokens}
+							purpose="Venue gift to scholar"
+							success="Your tokens were successfully gifted."
+							transfer={(giftRecipient: string, giftAmount: number, purpose: string) =>
+								scholar
+									? db.transferTokens(
+											scholar.id,
+											venue.id,
+											'venueid',
+											giftRecipient,
+											'emailorcid',
+											giftAmount,
+											purpose
+										)
+									: undefined}
+						/>
+					{/if}
+				</Card>
+				<Card full group="editors" icon={roles?.length ?? 0} header="roles" note="The venue's jobs">
+					<p>
+						These are the roles that volunteers can commit to. Create roles such as <em>reviewer</em
+						>,
+						<em>program commitee</em>, <em>associate editor</em> to represent the different kinds of
+						contributions volunteers can make to this venue.
+					</p>
+
+					<h3>Roles</h3>
+					<Roles {venue} {roles} />
+				</Card>
+				<Card group="editors" icon="⛭" header="settings" note="Update title, url, costs, etc.">
 					<EditableText
 						text={venue.title}
 						label="title"
 						placeholder=""
-						valid={validName}
+						valid={validIdentifier}
 						edit={(text) => db.editVenueTitle(venue.id, text)}
 					/>
 					<EditableText
@@ -181,206 +254,39 @@
 						valid={validURL}
 						edit={(text) => db.editVenueURL(venue.id, text)}
 					/>
+					<EditableText
+						text={venue.welcome_amount.toString()}
+						label="Welcome tokens"
+						placeholder="e.g., 40"
+						valid={validInteger}
+						edit={(text) => db.editVenueWelcomeAmount(venue.id, parseInt(text))}
+					/>
+					<EditableText
+						text={venue.submission_cost.toString()}
+						label="Submission cost"
+						placeholder="e.g., 40"
+						valid={validInteger}
+						edit={(text) => db.editVenueSubmissionCost(venue.id, parseInt(text))}
+					/>
+					<div>
+						<Checkbox on={venue.bidding} change={(on) => db.editVenueBidding(venue.id, on)}
+							>Allow bidding
+						</Checkbox>
+						<Note
+							>{#if venue.bidding}Authenticated volunteers can see submissions and bid on them.{:else}Reviews
+								are invitation only. Submissions are hidden and cannot be bid on.{/if}</Note
+						>
+					</div>
 				</Card>
-			{/if}
-		</Cards>
+			</Cards>
+		{/if}
 	</Page>
 {/if}
 
-<!-- <h2>Costs</h2>
-{#if editor}
-	<p>
-		<Button tip="Editing cost" action={() => editTokens(source)}
-			>{#if editingTokens}Done{:else}Edit{/if}</Button
-		>
-	</p>
-{/if}
-
-{#if source.cost.submit > 0}
-	<p>
-		Submissions cost {#if editingTokens}<Slider min={0} max={5} bind:value={submitCost} step={1} />
-		{/if}<Tokens amount={editingTokens ? submitCost : source.cost.submit} />. If you and your
-		co-authors are short, volunteer below, or bid on a specific submission.
-	</p>
-{:else}
-	<p>Submissions are free.</p>
-{/if}
-
-<ul>
-	<li>
-		<strong>Reviewers</strong> are paid {#if editingTokens}<Slider
-				min={0}
-				max={3}
-				bind:value={reviewPay}
-				step={0.1}
-			/>
-		{/if}<Tokens amount={editingTokens ? reviewPay : source.cost.review} /> for each review.
-	</li>
-	<li>
-		<strong>Metareviewers</strong> are paid {#if editingTokens}<Slider
-				min={0}
-				max={3}
-				bind:value={metaPay}
-				step={0.1}
-			/>
-		{/if}<Tokens amount={editingTokens ? metaPay : source.cost.meta} /> for each submission.
-	</li>
-	<li>
-		<strong>Editors</strong> are paid {#if editingTokens}<Slider
-				min={0}
-				max={3}
-				bind:value={editPay}
-				step={0.1}
-			/>
-		{/if}<Tokens amount={editingTokens ? editPay : source.cost.edit} /> for each submission.
-	</li>
-</ul>
-
-<h2>Volunteer</h2>
-
-<p>
-	See <Link to="/source/{$page.params.id}/volunteers">all volunteers</Link> for this source.
-</p> -->
-
-<!-- <Todo>Volunteering interface</Todo> -->
-
-<!-- {#if uid && !source.archived}
-		{#await scholarPromise}
-			<Loading />
-		{:then scholar}
-			<p>
-				When you volunteer to review for a source, your name will be public on the volunteer page of
-				willing reviewers, along with the number of reviews you are seeking. If you stop reviewing,
-				you will no longer be listed.
-			</p>
-			{#if scholar}
-				<p>
-					<Button action={() => toggleSourceVolunteer(scholar, source.id)}
-						>{#if source.id in scholar.sources}Un-volunteer{:else}Volunteer{/if}</Button
-					>
-				</p>
-
-				{#if source.id in scholar.sources}
-					<p>What <strong>methods</strong> expertise do you have?</p>
-
-					<p>
-						{#each source.expertise.filter((exp) => !exp.deprecated && exp.kind === 'method') as expertise}
-							<Checkbox
-								on={scholar.sources[source.id].includes(expertise.phrase)}
-								change={(on) => toggleSourceExpertise(scholar, expertise, on)}
-								>{expertise.phrase}</Checkbox
-							>
-						{/each}
-					</p>
-
-					<p>What <strong>topical</strong> expertise do you have?</p>
-
-					<p>
-						{#each source.expertise.filter((exp) => !exp.deprecated && exp.kind === 'topic') as expertise}
-							<Checkbox
-								on={scholar.sources[source.id].includes(expertise.phrase)}
-								change={(on) => toggleSourceExpertise(scholar, expertise, on)}
-								>{expertise.phrase}</Checkbox
-							>
-						{/each}
-					</p>
-
-					<p>Write the editor if you have expertise not listed here.</p>
-				{/if}
-			{/if}
-		{:catch}
-			<Feedback>Couldn't check volunteering status.</Feedback>
-		{/await}
-	{:else}
-		<p>You need to log in to volunteer.</p>
-
-		<p>These are the <strong>methods</strong> expertise this journal currently seeks.</p>
-
-		<p>
-			<Tags>
-				{#each source.expertise.filter((exp) => exp.kind === 'method') as expertise}{#if !expertise.deprecated}<Tag
-							>{expertise.phrase}</Tag
-						>{/if}{/each}
-			</Tags>
-		</p>
-
-		<p>These are the <strong>topical</strong> expertise this journal currently seeks.</p>
-
-		<p>
-			<Tags>
-				{#each source.expertise.filter((exp) => exp.kind === 'topic') as expertise}{#if !expertise.deprecated}<Tag
-							>{expertise.phrase}</Tag
-						>{/if}{/each}
-			</Tags>
-		</p>
-	{/if} -->
-
-<!-- <EditorsOnly {editor}>
-	<h2>Submissions</h2>
-
-	<p>
-		See the list of <Link to="/source/{$page.params.id}/submissions">submissions in review</Link>.
-	</p>
-
-	<h2>Expertise</h2>
-
-	<p>
-		Define expertise phrases that reviewers can indicate to help identify reviewers. We recommend
-		curating this as a community, to accurately reflect how reviewers wish to represent their
-		expertise.
-	</p>
-
-	<p>
-		<TextField label="expertise" placeholder="description" bind:text={newExpertise} />
-		<Button
-			tip="Add expertise"
-			action={() => addExpertise(source, newExpertise)}
-			active={newExpertise.length > 0}>+ expertise</Button
-		>
-	</p>
-
-	<Table>
-		{#each source.expertise as expertise}
-			<tr>
-				<td>
-					<Tag>{expertise.phrase}</Tag>
-				</td>
-				<td>
-					<Checkbox
-						on={expertise.deprecated}
-						change={async () => {
-							return undefined;
-						}}>deprecated</Checkbox
-					>
-				</td>
-				<td>
-					<div
-						role="button"
-						tabindex="0"
-						style:cursor="pointer"
-						style:user-select="none"
-						onclick={() => toggleExpertiseKind(source, expertise)}
-						onkeydown={() => toggleExpertiseKind(source, expertise)}
-					>
-						<Status good={expertise.kind === 'topic'}>{expertise.kind}</Status>
-					</div>
-				</td>
-			</tr>
-		{/each}
-	</Table>
-
-	<h2>Archive</h2>
-	<p>
-		Archiving this source will remove it from the list of sources and prevent future submissions,
-		transactions, and volunteers from being added. The history of transactions will be preserved.
-	</p>
-	<p>
-		<Button tip="Archive venue" action={() => (archiving = !archiving)}
-			>{#if archiving}Cancel{:else}Archive...{/if}</Button
-		>
-	</p>
-	{#if archiving}
-		<Feedback error>Are you sure you want to archive this source?</Feedback>
-		<p><Button tip="Confirm archive venue" action={() => archive(source)}>Archive</Button></p>
-	{/if}
-</EditorsOnly> -->
+<style>
+	.role {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing);
+	}
+</style>

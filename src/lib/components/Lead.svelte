@@ -2,7 +2,7 @@
 
 <style>
 	.lead {
-		font-size: calc(var(--paragraph-font-size) + 4pt);
+		font-size: calc(var(--paragraph-font-size) + 6pt);
 		font-weight: 300;
 		font-style: italic;
 	}

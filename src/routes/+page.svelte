@@ -1,16 +1,18 @@
 <script lang="ts">
 	import { dev } from '$app/environment';
-	import Lead from '$lib/components/Lead.svelte';
+	import Callout from '$lib/components/Callout.svelte';
 	import Link from '$lib/components/Link.svelte';
-	import Tag from '$lib/components/Tag.svelte';
+	import Note from '$lib/components/Note.svelte';
 	import Page from '$lib/components/Page.svelte';
+	import Tokens from '$lib/components/Tokens.svelte';
 </script>
 
 <svelte:head>
 	<title>Reciprocal Reviews</title>
 </svelte:head>
 
-<Page title="Reciprocal Reviews" subtitle="Make peer review count.">
+<Page title="Reciprocal Reviews">
+	{#snippet subtitle()}Make peer review count.{/snippet}
 	{#if dev}
 		<p>
 			Academia incentivizes publishing over peer review. That means too many submissions and not
@@ -23,7 +25,8 @@
 
 		<ol>
 			<li>
-				<strong>Editors set a cost</strong> for submissions, priced in <Tag>review tokens</Tag>.
+				<strong>Editors set a cost</strong> for submissions, priced in <em>review tokens</em>, e.g.
+				<Tokens amount={10}></Tokens>.
 			</li>
 			<li>
 				<strong>Authors earn tokens</strong> by volunteering for venues, sharing expertise and availability,
@@ -41,16 +44,16 @@
 			less nagging.
 		</p>
 
-		<p>
-			See the <Link to="/sources">journals and conferences</Link> using the platform and reach out to
+		<Note>
+			See the <Link to="/venues">journals and conferences</Link> using the platform and reach out to
 			their editors for their experiences. Or, <Link to="login">log in</Link> to propose a journal or
-			conference for adoption.
-		</p>
+			conference adopt <em>Reciprocal Reviews</em>.
+		</Note>
 
-		<p>
+		<Callout>
 			<strong>Don't want to set a cost?</strong> Use Reciprocal Reviews to track volunteer reviewers
-			in your community, tracking volunteers for streamlined editing.
-		</p>
+			and expertise in your community, streamlining reviewing and program committee invitations.
+		</Callout>
 	{:else}
 		<p>
 			We're a volunteer community of academics striving for more equitable and sustainable academic
@@ -62,18 +65,18 @@
 			<Link to="https://reciprocalreviews.substack.com/">newsletter</Link>:
 		</p>
 	{/if}
+
+	<h2>Updates</h2>
+
+	<p>Follow along on our newsletter.</p>
+
+	<iframe
+		src="https://reciprocalreviews.substack.com/embed"
+		title="Newsletter subscription"
+		width="480"
+		height="150"
+		style="border:none; background:white;"
+		frameborder="0"
+		scrolling="no"
+	></iframe>
 </Page>
-
-<h2>Updates</h2>
-
-<p>Follow along on our newsletter.</p>
-
-<iframe
-	src="https://reciprocalreviews.substack.com/embed"
-	title="Newsletter subscription"
-	width="480"
-	height="150"
-	style="border:none; background:white;"
-	frameborder="0"
-	scrolling="no"
-></iframe>

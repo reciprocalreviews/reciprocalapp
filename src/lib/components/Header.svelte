@@ -3,6 +3,7 @@
 	import Button from './Button.svelte';
 	import { getAuth } from '../../routes/Auth.svelte';
 	import { goto } from '$app/navigation';
+	import Feedback from './Feedback.svelte';
 
 	const routes = [
 		{ path: '/', label: 'Home' },
@@ -17,7 +18,12 @@
 	{#each routes as route}<div class="link"><Link to={route.path}>{route.label}</Link></div>{/each}
 	<div class="authenticated">
 		{#if auth.isAuthenticated()}
-			<div class="link"><Link to="/scholar/{auth.getUserID()}">Profile</Link></div>
+			<div class="link">
+				<Link small to="https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose"
+					>Feedback</Link
+				>
+			</div>
+			<div class="link"><Link small to="/scholar/{auth.getUserID()}">Profile</Link></div>
 			<div class="link">
 				<Button
 					tip="Sign out"
@@ -54,7 +60,7 @@
 		flex-direction: row;
 		flex-wrap: wrap;
 		gap: calc(2 * var(--spacing));
-		margin-left: auto;
+		margin-inline-start: auto;
 		align-items: center;
 	}
 </style>
