@@ -61,7 +61,12 @@
 
 		<!-- Show metadata -->
 		<Cards>
-			<Card icon={venue.editors.length} header="editors" note="Give and take tokens for reviewing">
+			<Card
+				expand
+				icon={venue.editors.length}
+				header="editors"
+				note="Give and take tokens for reviewing"
+			>
 				<ul>
 					{#each venue.editors as editorID}
 						<li>

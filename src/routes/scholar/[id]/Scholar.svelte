@@ -38,9 +38,9 @@
 
 <Page title={scholar.getName() ?? 'anonymous'}>
 	{#snippet subtitle()}Scholar{/snippet}
-	{#snippet details()}<Link to="https://orcid.org/{scholar.getORCID()}">ORCID</Link><Link
-			to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link
-		>{/snippet}
+	{#snippet details()}{#if scholar.getORCID()}<Link to="https://orcid.org/{scholar.getORCID()}"
+				>ORCID</Link
+			>{/if}<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>{/snippet}
 
 	<h2>Status</h2>
 	<Status good={scholar.isAvailable()}>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status
