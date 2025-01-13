@@ -343,8 +343,8 @@ A `Submission` represents a manuscript undergoing peer review.
 
 - [ ] Depending on the venue, `Scholar`s may be able to bid on submissions, simplifying an editor's ability to find qualified reviewers.
 - [ ] `Submission`s can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
-- [ ] `Submission`s can be added manually by \_`editor`\_s, or RR can be cc'ed on submission notification emails to be added automatically
-- [ ] Submissions are created manually or through email integrations with review systems, which provide submission metadata
+- [ ] `Submission`s can be added manually by \_`editor`\_s.
+- [ ] Submissions can be proposed through email integrations with review systems, which provide submission metadata, but must then be approved by editors.
 
 Here is a SQL schema sketch, for clarity:
 
