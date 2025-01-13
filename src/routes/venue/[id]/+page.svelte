@@ -21,7 +21,8 @@
 	import Gift from '$lib/components/Gift.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { venue, currency, scholar, roles, commitments, tokens, transactions } = $derived(data);
+	const { venue, currency, scholar, roles, commitments, tokens, transactions, submissions } =
+		$derived(data);
 
 	const db = getDB();
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
@@ -62,7 +63,7 @@
 		<!-- Show metadata -->
 		<Cards>
 			<Card
-				expand
+				expand={!editor}
 				icon={venue.editors.length}
 				header="editors"
 				note="Give and take tokens for reviewing"
@@ -107,6 +108,9 @@
 						Program Chairs of a conference.
 					</Note>
 				{/if}
+			</Card>
+			<Card expand icon={submissions ?? '?'} header="submissions" note="Papers in review">
+				<p>See <Link to="/venue/{venue.id}/submissions">all submissions</Link> to this venue.</p>
 			</Card>
 		</Cards>
 
