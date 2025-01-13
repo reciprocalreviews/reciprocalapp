@@ -19,3 +19,5 @@ export type Response = Database['public']['Enums']['invited'];
 export type TransactionRow = Tables['transactions']['Row'];
 export type TokenID = Tables['tokens']['Row']['id'];
 export type TransactionStatus = Database['public']['Enums']['transaction_status'];
+export type SubmissionRow = Tables['submissions']['Row'];
+export type AssignmentRow = Tables['assignments']['Row'];

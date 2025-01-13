@@ -14,7 +14,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { validEmail } from '$lib/validation';
-	import { ORCIDRegex } from '$data/ORCID';
+	import { ORCIDRegex } from '$lib/data/ORCID';
 	import Note from '$lib/components/Note.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import Link from '$lib/components/Link.svelte';

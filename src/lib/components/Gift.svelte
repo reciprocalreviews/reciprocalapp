@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ORCIDRegex } from '$data/ORCID';
+	import { ORCIDRegex } from '$lib/data/ORCID';
 	import { type ErrorID } from '$lib/data/CRUD';
 	import { validEmail } from '$lib/validation';
 	import { handle } from '../../routes/feedback.svelte';

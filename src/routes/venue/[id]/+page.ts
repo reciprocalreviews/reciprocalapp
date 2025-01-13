@@ -36,14 +36,14 @@ export const load: PageLoad = async ({ parent, params }) => {
 	if (tokensError) console.error(tokensError);
 
 	// See how many transactions the venue is part of.
-	const { count: transactions, error: transactionsError } = await supabase
+	const { count: transactionCount, error: transactionsError } = await supabase
 		.from('transactions')
 		.select('*', { count: 'exact' })
 		.or(`from_venue.eq.${venueid},to_venue.eq.${venueid}`);
 	if (transactionsError) console.error(transactionsError);
 
 	// See how many submissions are in the venue, for display.
-	const { count: submissions, error: submissionsError } = await supabase
+	const { count: submissionCount, error: submissionsError } = await supabase
 		.from('submissions')
 		.select('*', { count: 'exact' })
 		.eq('venue', venueid);
@@ -55,7 +55,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		roles,
 		commitments,
 		tokens: tokens,
-		transactions: transactions,
-		submissions: submissions
+		transactionCount,
+		submissionCount
 	};
 };

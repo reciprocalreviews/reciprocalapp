@@ -9,7 +9,7 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import TransactionPreview from '$lib/components/TransactionPreview.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import { ORCIDRegex } from '../../../data/ORCID';
+	import { ORCIDRegex } from '../../../lib/data/ORCID';
 	import type Submission from '$lib/types/Submission';
 	import { getAuth } from '../../Auth.svelte';
 

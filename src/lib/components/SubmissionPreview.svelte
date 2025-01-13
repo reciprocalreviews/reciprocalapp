@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type Submission from '$lib/types/Submission';
+	import { type SubmissionRow } from '$data/types';
 	import Link from './Link.svelte';
 
-	export let submission: Submission;
+	export let submission: SubmissionRow;
 </script>
 
 <div class="submission">
-	<Link to="/submission/{submission.id}">{submission.title}</Link>
+	<Link to="/venue/{submission.venue}/submission/{submission.id}">{submission.title}</Link>
 </div>
 
 <style>

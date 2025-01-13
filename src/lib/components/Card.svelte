@@ -87,6 +87,7 @@
 		gap: var(--spacing);
 		flex-wrap: nowrap;
 		cursor: pointer;
+		border-bottom: solid transparent var(--thick-border-width);
 	}
 
 	.header:hover {
@@ -94,7 +95,8 @@
 	}
 
 	.header:focus {
-		outline: solid var(--thick-border-width) var(--focus-color);
+		outline: none;
+		border-bottom: solid var(--thick-border-width) var(--focus-color);
 		border-radius: var(--roundedness);
 	}
 

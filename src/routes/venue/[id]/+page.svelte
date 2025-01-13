@@ -6,7 +6,7 @@
 	import { getDB } from '$lib/data/CRUD';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import TextField from '$lib/components/TextField.svelte';
-	import { ORCIDRegex } from '../../../data/ORCID';
+	import { ORCIDRegex } from '../../../lib/data/ORCID';
 	import Page from '$lib/components/Page.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Cards from '$lib/components/Cards.svelte';
@@ -21,8 +21,16 @@
 	import Gift from '$lib/components/Gift.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { venue, currency, scholar, roles, commitments, tokens, transactions, submissions } =
-		$derived(data);
+	const {
+		venue,
+		currency,
+		scholar,
+		roles,
+		commitments,
+		tokens,
+		transactionCount,
+		submissionCount
+	} = $derived(data);
 
 	const db = getDB();
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
@@ -109,7 +117,7 @@
 					</Note>
 				{/if}
 			</Card>
-			<Card expand icon={submissions ?? '?'} header="submissions" note="Papers in review">
+			<Card expand icon={submissionCount ?? '?'} header="submissions" note="Papers in review">
 				<p>See <Link to="/venue/{venue.id}/submissions">all submissions</Link> to this venue.</p>
 			</Card>
 		</Cards>
@@ -211,8 +219,8 @@
 				<Card group="editors" icon={tokens ?? 0} header="tokens" note="balance and gifts">
 					<p>
 						This venue currently has {#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an
-							unknown number of{/if} tokens and is involved in {#if transactions !== null}<strong
-								>{transactions}</strong
+							unknown number of{/if} tokens and is involved in {#if transactionCount !== null}<strong
+								>{transactionCount}</strong
 							>{:else}an unknown number of{/if} transactions.
 						<Link to="/venue/{venue.id}/transactions">See all transactions</Link>.
 					</p>

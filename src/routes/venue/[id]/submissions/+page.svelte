@@ -1,27 +1,32 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import { getDB } from '$lib/data/CRUD';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
-	import Loading from '$lib/components/Loading.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import SubmissionPreview from '$lib/components/SubmissionPreview.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
-	import { ORCIDRegex } from '../../../../data/ORCID';
+	import { ORCIDRegex } from '$lib/data/ORCID';
 	import { getAuth } from '../../../Auth.svelte';
 	import { validIdentifier } from '$lib/validation';
+	import { type PageData } from './$types';
+	import Page from '$lib/components/Page.svelte';
+	import Link from '$lib/components/Link.svelte';
+	import Cards from '$lib/components/Cards.svelte';
+	import Card from '$lib/components/Card.svelte';
+
+	let { data }: { data: PageData } = $props();
+	const { venue, submissions } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
 	const uid = $derived(auth.getUserID());
+	const editor = $derived(uid !== null && venue !== null && venue.editors.includes(uid));
 
-	/** The promise we're currently waiting for */
-	let sourcePromise = db.getSource($page.params.id);
-	let submissionsPromise = $state(db.getActiveSubmissions($page.params.id));
+	const submissionCost = $derived(venue?.submission_cost ?? null);
 
 	/** The title of the submission we're adding */
 	let title = $state('');
@@ -73,136 +78,118 @@
 			validCharges(charges, cost)
 		);
 	}
-
-	async function charge(cost: number) {
-		if (!validSubmission(title, externalID, metaID, charges, cost)) return;
-		if (uid === null) return;
-
-		// Create the submission.
-		// await createSubmission(
-		// 	db,
-		// 	$page.params.id,
-		// 	uid,
-		// 	title,
-		// 	externalID,
-		// 	metaID,
-		// 	chargeTextToCharges(charges)
-		// );
-		// Update the submissions
-		submissionsPromise = db.getActiveSubmissions($page.params.id);
-	}
 </script>
 
-<h1>Submissions</h1>
-{#await sourcePromise}
-	<Loading />
-{:then source}
-	{@const editor = uid ? source.editors.includes(uid) : null}
-	{#if editor}
-		<h2>New</h2>
+{#if venue}
+	<Page title={venue.title}>
+		{#snippet subtitle()}Submissions{/snippet}
+		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 
-		<p>
-			When you create a new submission, authors will be charged the number of tokens you specify.
-		</p>
+		<Cards>
+			<Card icon="+" header="New submission" note="Create a new submission" group="editors">
+				{#if editor && submissionCost !== null}
+					<p>
+						When you create a new submission, authors will be charged the number of tokens you
+						specify.
+					</p>
 
-		<p>
-			<Form>
-				<TextField
-					label="title"
-					size={40}
-					placeholder="Submission Title"
-					bind:text={title}
-					valid={validIdentifier}
-				/>
-				<Note>For display on this site.</Note>
-				<TextField
-					label="id"
-					size={40}
-					placeholder="Manuscript ID"
-					bind:text={externalID}
-					valid={validExternalID}
-				/>
-				<Note>The ID from the system where the submission is stored, for reference.</Note>
-				<TextField
-					label="id"
-					inline={false}
-					size={40}
-					placeholder="Charges, e.g., '0000-0001-1234-5678 3'"
-					bind:text={charges}
-					valid={(text) => validCharges(text, source.cost.submit)}
-				/>
-				{#if charges.length > 0}
-					{#if !validChargeFormat(charges)}
-						<Feedback error>Each line must be an ORCID, then a space, then a number.</Feedback>
-					{:else if !validCharge(charges, source.cost.submit)}
-						<Feedback error
-							>The charges do not sum to <Tokens amount={source.cost.submit} />.</Feedback
-						>
-					{:else if charges.length > 0}
-						{#await db.verifyCharges(chargeTextToCharges(charges)) then result}
-							{#if result !== true}
-								<Feedback error
-									>The scholars specified don't have enough tokens to submit. {#each result.filter((result) => result.payment < 0) as deficit}<ScholarLink
-											id={deficit.scholar}
-										/> is short <Tokens amount={Math.abs(deficit.payment)} />{/each}</Feedback
-								>
+					<p>
+						<Form>
+							<TextField
+								label="title"
+								size={40}
+								placeholder="Submission Title"
+								bind:text={title}
+								valid={validIdentifier}
+							/>
+							<Note>For display on this site.</Note>
+							<TextField
+								label="id"
+								size={40}
+								placeholder="Manuscript ID"
+								bind:text={externalID}
+								valid={validExternalID}
+							/>
+							<Note>The ID from the system where the submission is stored, for reference.</Note>
+							<TextField
+								label="id"
+								inline={false}
+								size={40}
+								placeholder="Charges, e.g., '0000-0001-1234-5678 3'"
+								bind:text={charges}
+								valid={(text) => validCharges(text, submissionCost)}
+							/>
+							{#if charges.length > 0}
+								{#if !validChargeFormat(charges)}
+									<Feedback error>Each line must be an ORCID, then a space, then a number.</Feedback
+									>
+								{:else if !validCharge(charges, submissionCost)}
+									<Feedback error
+										>The charges do not sum to <Tokens amount={submissionCost} />.</Feedback
+									>
+								{:else if charges.length > 0}
+									{#await db.verifyCharges(chargeTextToCharges(charges)) then result}
+										{#if result !== true}
+											<Feedback error
+												>The scholars specified don't have enough tokens to submit. {#each result.filter((result) => result.payment < 0) as deficit}<ScholarLink
+														id={deficit.scholar}
+													/> is short <Tokens amount={Math.abs(deficit.payment)} />{/each}</Feedback
+											>
+										{/if}
+									{/await}
+								{/if}
 							{/if}
-						{/await}
-					{/if}
-				{/if}
 
-				<Note
-					>Who to charge and how many review tokens to charge. Each line should be an ORCID, then a
-					space, then a token count. Tokens should sum to the number required for submission.</Note
-				>
-				<TextField
-					label="Metareviewer"
-					size={40}
-					placeholder="Metareviewer ORCID"
-					bind:text={metaID}
-					valid={validMeta}
-				/>
-				<Note
-					><strong>Optional</strong>. The ORCID of the scholar serving as the meta-reviewer for this
-					submission, if there is one.</Note
-				>
-				{#if metaID.length > 0 && !validMeta(metaID)}
-					<Feedback error>This is not a valid ORCID.</Feedback>
-				{/if}
-				<Button
-					tip="Create a new submission"
-					active={validSubmission(title, externalID, metaID, charges, source.cost.submit)}
-					action={() => charge(source.cost.submit)}>Create submission and charge authors</Button
-				>
-			</Form>
-		</p>
-
-		<h2>In Review</h2>
-		<p>
-			These are submissions actively being reviewed. When a submissions is done being reviewed, go
-			to it's page to mark it complete to compensate everyone.
-		</p>
-		{#await submissionsPromise}
-			<Loading />
-		{:then submissions}
-			<Table>
-				{#each submissions as submission}
-					<tr>
-						<td><SubmissionPreview {submission} /></td><td>{submission.externalID}</td>
-					</tr>
+							<Note
+								>Who to charge and how many review tokens to charge. Each line should be an ORCID,
+								then a space, then a token count. Tokens should sum to the number required for
+								submission.</Note
+							>
+							<TextField
+								label="Metareviewer"
+								size={40}
+								placeholder="Metareviewer ORCID"
+								bind:text={metaID}
+								valid={validMeta}
+							/>
+							<Note
+								><strong>Optional</strong>. The ORCID of the scholar serving as the meta-reviewer
+								for this submission, if there is one.</Note
+							>
+							{#if metaID.length > 0 && !validMeta(metaID)}
+								<Feedback error>This is not a valid ORCID.</Feedback>
+							{/if}
+							<Button
+								tip="Create a new submission"
+								active={validSubmission(title, externalID, metaID, charges, submissionCost)}
+								action={() => {}}>Create submission and charge authors</Button
+							>
+						</Form>
+					</p>
 				{:else}
-					<Feedback>No active submissions.</Feedback>
-				{/each}
-			</Table>
-		{:catch}
-			<Feedback error>We couldn't load this source's submissions.</Feedback>
-		{/await}
-	{:else}
-		<Feedback error>
-			Submissions are only visible to <strong>editors</strong>.
-		</Feedback>
-	{/if}
-{:catch}
-	<h1>Unknown Source</h1>
-	<Feedback>We couldn't load this source.</Feedback>
-{/await}
+					<Feedback error>
+						Submissions are only visible to <strong>editors</strong>.
+					</Feedback>
+				{/if}
+			</Card>
+		</Cards>
+
+		{#if submissions}
+			{#if submissions.length === 0}
+				<Feedback>No active submissions.</Feedback>
+			{:else}
+				<Table>
+					{#each submissions as submission}
+						<tr>
+							<td><SubmissionPreview {submission} /></td><td>{submission.externalid}</td>
+						</tr>
+					{:else}
+						<Feedback>No active submissions.</Feedback>
+					{/each}
+				</Table>
+			{/if}
+		{:else}
+			<Feedback error>Unable to load submissions.</Feedback>
+		{/if}
+	</Page>
+{/if}
