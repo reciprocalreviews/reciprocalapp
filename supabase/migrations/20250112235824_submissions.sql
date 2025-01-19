@@ -2,6 +2,8 @@
 create table submissions (
   -- The unique ID of the submission
   id uuid not null default uuid_generate_v1() primary key,
+  -- An optional link to a previous submission
+  previous uuid references submissions(id),
   -- The venue to which the submission corresponds
   venue uuid not null references venues(id),
   -- The external unique identifier of the submission, such as a submission number or manuscript number
