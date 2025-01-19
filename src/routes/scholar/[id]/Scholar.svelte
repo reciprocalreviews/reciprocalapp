@@ -14,6 +14,7 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import Gift from '$lib/components/Gift.svelte';
 	import Page from '$lib/components/Page.svelte';
+	import Row from '$lib/components/Row.svelte';
 
 	let {
 		scholar,
@@ -42,23 +43,10 @@
 				>ORCID</Link
 			>{/if}<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>{/snippet}
 
-	<h2>Status</h2>
-	<Status good={scholar.isAvailable()}>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status
-	>
-
-	{#if editable}
-		<Checkbox
-			on={scholar.isAvailable()}
-			change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
-			>I am available to review.</Checkbox
-		>
-	{/if}
-
 	{#if editable}
 		<EditableText
 			inline={false}
 			text={scholar.getStatus()}
-			label="status"
 			placeholder="Explain your current reviewing status to others."
 			edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
 			note="Your status is public and will be shown here."
@@ -66,6 +54,19 @@
 	{:else}
 		<p>{scholar.getStatus()}</p>
 	{/if}
+
+	<Row>
+		{#if editable}
+			<Checkbox
+				on={scholar.isAvailable()}
+				change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
+				>I am available to review.</Checkbox
+			>
+		{/if}
+		<Status good={scholar.isAvailable()}
+			>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status
+		>
+	</Row>
 
 	<Cards>
 		<Card

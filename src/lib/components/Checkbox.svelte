@@ -43,7 +43,6 @@
 	label {
 		flex-direction: row;
 		gap: var(--spacing);
-		align-items: bottom;
-		align-self: start;
+		align-items: center;
 	}
 </style>
