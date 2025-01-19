@@ -22,7 +22,7 @@
 <style>
 	a {
 		color: var(--salient-color);
-		font-weight: 600;
+		font-weight: 500;
 		text-decoration: none;
 		font-size: inherit;
 	}

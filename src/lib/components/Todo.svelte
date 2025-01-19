@@ -5,7 +5,7 @@
 		margin-top: 0;
 		background: var(--salient-color);
 		color: var(--background-color);
-		font-weight: 600;
+		font-weight: 500;
 		font-size: var(--small-font-size);
 		padding: var(--spacing);
 		border-radius: var(--roundedness);

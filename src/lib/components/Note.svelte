@@ -4,10 +4,10 @@
 	let { children }: { children: Snippet } = $props();
 </script>
 
-<p>{@render children()}</p>
+<div>{@render children()}</div>
 
 <style>
-	p {
+	div {
 		font-size: var(--small-font-size);
 		font-style: italic;
 	}

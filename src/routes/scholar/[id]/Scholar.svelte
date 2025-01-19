@@ -143,6 +143,7 @@
 					text={scholar.getEmail() ?? ''}
 					label="email"
 					placeholder="email"
+					inline={false}
 					note="Your email will be public and only used to send notifications."
 					valid={(text) => /.+@.+\..+/.test(text)}
 					edit={(text) => db.updateScholarEmail(scholar.getID(), text)}
