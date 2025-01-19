@@ -3,7 +3,7 @@
 </script>
 
 <div class="tip">
-	<div class="bulb">💡</div>
+	<div class="bulb">?</div>
 	<div class="content">{@render children()}</div>
 </div>
 

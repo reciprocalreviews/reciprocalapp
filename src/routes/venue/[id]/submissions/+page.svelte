@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Feedback from '$lib/components/Feedback.svelte';
-	import SubmissionPreview from '$lib/components/SubmissionPreview.svelte';
+	import SubmissionPreview from '$lib/components/SubmissionLink.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import { getAuth } from '../../../Auth.svelte';
 	import { type PageData } from './$types';
@@ -32,7 +32,6 @@
 					header="New submission"
 					note="Manually create a new submission"
 					group="editors"
-					expand
 				>
 					<NewSubmission venue={venue.id} {submissionCost}></NewSubmission>
 				</Card>
@@ -44,9 +43,16 @@
 				<Feedback>No active submissions.</Feedback>
 			{:else}
 				<Table>
+					{#snippet header()}
+						<th>Submission</th>
+						<th>Expertise</th>
+						<th>External ID</th>
+					{/snippet}
 					{#each submissions as submission}
 						<tr>
-							<td><SubmissionPreview {submission} /></td><td>{submission.externalid}</td>
+							<td><SubmissionPreview {submission} /></td>
+							<td>{submission.expertise}</td>
+							<td>{submission.externalid}</td>
 						</tr>
 					{:else}
 						<Feedback>No active submissions.</Feedback>

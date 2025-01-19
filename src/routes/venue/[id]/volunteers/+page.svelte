@@ -31,12 +31,12 @@
 			/>.
 		</p>
 		<Table>
-			<tr>
+			{#snippet header()}
 				<th>Role</th>
 				<th>Active</th>
 				<th>Name</th>
 				<th>Expertise</th>
-			</tr>
+			{/snippet}
 			{#each commitments.toSorted((a, b) => a.roles?.name.localeCompare(b.roles?.name ?? '') ?? 0) as volunteer}
 				{@const expertise = volunteer.expertise.split(',').filter((s) => s.trim() !== '')}
 				<tr>

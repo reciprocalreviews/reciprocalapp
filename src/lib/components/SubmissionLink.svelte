@@ -6,6 +6,7 @@
 </script>
 
 <div class="submission">
+	<span class="icon">💡</span>
 	<Link to="/venue/{submission.venue}/submission/{submission.id}">{submission.title}</Link>
 </div>
 
@@ -13,6 +14,7 @@
 	.submission {
 		display: flex;
 		flex-direction: row;
+		flex-wrap: nowrap;
 		gap: var(--spacing);
 	}
 </style>
