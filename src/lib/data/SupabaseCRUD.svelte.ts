@@ -1,7 +1,4 @@
-import type Source from '$lib/types/Source';
-import type Submission from '$lib/types/Submission';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
-import type Transaction from '$lib/types/Transaction';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
 	CurrencyID,
@@ -31,13 +28,6 @@ export default class SupabaseCRUD extends CRUD {
 	constructor(client: SupabaseClient) {
 		super();
 		this.client = client;
-	}
-
-	getSubmission(submissionID: string): Promise<Submission> {
-		throw new Error('Method not implemented.');
-	}
-	updateSubmission(submission: Submission): Promise<Submission> {
-		throw new Error('Method not implemented.');
 	}
 
 	async updateSubmissionExpertise(
@@ -171,19 +161,6 @@ export default class SupabaseCRUD extends CRUD {
 		}
 	}
 
-	createSource(source: Source): Promise<Source> {
-		throw new Error('Method not implemented.');
-	}
-	getSource(sourceID: string): Promise<Source> {
-		throw new Error('Method not implemented.');
-	}
-	getSources(): Promise<Source[]> {
-		throw new Error('Method not implemented.');
-	}
-	getEditedSources(editor: ScholarID): Promise<Source[]> {
-		throw new Error('Method not implemented.');
-	}
-
 	/** Register a reactive scholar state. */
 	registerScholar(row: ScholarRow) {
 		let scholar = this.scholars.get(row.id);
@@ -192,10 +169,6 @@ export default class SupabaseCRUD extends CRUD {
 			this.scholars.set(row.id, scholar);
 		}
 		return scholar;
-	}
-
-	createScholar(scholar: ScholarRow): Promise<ScholarRow> {
-		throw new Error('Method not implemented.');
 	}
 
 	async findScholar(emailOrORCID: string) {
@@ -219,10 +192,6 @@ export default class SupabaseCRUD extends CRUD {
 			.single();
 		if (error) return null;
 		return this.registerScholar(data);
-	}
-
-	updateScholar(scholar: ScholarRow): Promise<ScholarRow> {
-		throw new Error('Method not implemented.');
 	}
 
 	async updateScholarName(id: ScholarID, name: string): Promise<ErrorID | undefined> {
@@ -263,16 +232,6 @@ export default class SupabaseCRUD extends CRUD {
 			if (state) state.setEmail(email);
 			return undefined;
 		}
-	}
-
-	getScholarBalance(scholarID: ScholarID): Promise<number> {
-		throw new Error('Method not implemented.');
-	}
-	getTransaction(id: TransactionID): Promise<Transaction | null> {
-		throw new Error('Method not implemented.');
-	}
-	getScholarTransactions(id: ScholarID): Promise<Transaction[]> {
-		throw new Error('Method not implemented.');
 	}
 
 	async proposeVenue(
