@@ -60,7 +60,7 @@
 	}
 </script>
 
-<Page title="Propose a venue">
+<Page title="Propose a venue" breadcrumbs={[['/venues', 'Venues']]}>
 	<p>
 		Venues are currently reviewed and approved by the <Link to="/about#managers">stewards</Link>, to
 		ensure that only official editors and steering committees are creating venues.

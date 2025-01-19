@@ -38,7 +38,7 @@
 	let editable = $derived(auth.getUserID() === scholar.getID());
 </script>
 
-<Page title={scholar.getName() ?? 'anonymous'}>
+<Page title={scholar.getName() ?? 'anonymous'} breadcrumbs={[]}>
 	{#snippet subtitle()}Scholar{/snippet}
 	{#snippet details()}
 		<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>

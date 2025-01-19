@@ -8,7 +8,7 @@
 </script>
 
 {#if venue === null}
-	<Page title="Unknown venue">
+	<Page title="Unknown venue" breadcrumbs={[[`/venues`, 'Venue']]}>
 		<p>Unable to find this venue.</p>
 	</Page>
 {:else}

@@ -8,7 +8,12 @@
 </script>
 
 {#if scholar && transactions && venues}
-	<Page title={scholar.name ?? scholar.email ?? 'anonymous'}>
+	<Page
+		title={scholar.name ?? scholar.email ?? 'anonymous'}
+		breadcrumbs={[
+			[`/${scholar.id}`, scholar.name ?? scholar.orcid ?? scholar.email ?? 'anonymous']
+		]}
+	>
 		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all {transactions.length} transactions for this scholar.</p>
 		<Transactions {transactions} {venues} />

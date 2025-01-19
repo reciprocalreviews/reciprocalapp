@@ -8,7 +8,8 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Added
 
 - Implemented manual submission creation form.
-- Styled submission list.U
+- Styled submission list.
+- Added breadcrumbs on all pages to streamline navigation.
 
 ### Maintenance
 

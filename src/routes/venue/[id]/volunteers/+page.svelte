@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Page from '$lib/components/Page.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import SourceLink from '$lib/components/VenueLink.svelte';
@@ -14,19 +14,19 @@
 </script>
 
 {#if venue === null}
-	<Page title="Unknown venue">
+	<Page title="Unknown venue" breadcrumbs={[]}>
 		<Feedback>Unable to find this venue.</Feedback>
 	</Page>
 {:else if commitments === null}
-	<Page title="Volunteers unavailable">
+	<Page title="Volunteers unavailable" breadcrumbs={[[`/${venue.id}`, venue.title]]}>
 		<Feedback>Unable to load volunteers for this venue.</Feedback>
 	</Page>
 {:else}
-	<Page title={venue.title}>
+	<Page title={venue.title} breadcrumbs={[[`/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}Volunteers{/snippet}
 		<p>
 			These are scholars that have volunteered to review for <SourceLink
-				id={$page.params.id}
+				id={page.params.id}
 				name={venue.title}
 			/>.
 		</p>

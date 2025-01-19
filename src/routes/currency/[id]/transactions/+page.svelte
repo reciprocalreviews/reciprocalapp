@@ -8,7 +8,7 @@
 </script>
 
 {#if currency && transactions && venues}
-	<Page title={currency.name}>
+	<Page title={currency.name} breadcrumbs={[[`/currency/${currency.id}`, currency.name]]}>
 		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all {transactions.length} transactions for this currency.</p>
 		<Transactions {transactions} {venues} {currency} />

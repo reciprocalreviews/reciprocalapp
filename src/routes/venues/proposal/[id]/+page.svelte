@@ -62,7 +62,7 @@
 </script>
 
 {#if proposal && supporters}
-	<Page title={proposal.title}>
+	<Page title={proposal.title} breadcrumbs={[['/venues', 'Venues']]}>
 		{#snippet subtitle()}
 			{#if approved}
 				Approved

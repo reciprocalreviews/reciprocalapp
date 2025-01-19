@@ -39,11 +39,11 @@
 </script>
 
 {#if venue === null}
-	<Page title="Unknown venue">
+	<Page title="Unknown venue" breadcrumbs={[]}>
 		<p>Unable to find this venue.</p>
 	</Page>
 {:else}
-	<Page title={venue.title}>
+	<Page title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
 		{#snippet subtitle()}Venue{/snippet}
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 		<!-- Show the description -->

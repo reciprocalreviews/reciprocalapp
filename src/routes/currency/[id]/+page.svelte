@@ -38,7 +38,7 @@
 	let newTokenCreating = $state(false);
 </script>
 
-<Page title={currency ? currency.name : 'Oops'}>
+<Page title={currency ? currency.name : 'Oops'} breadcrumbs={[]}>
 	{#snippet subtitle()}Currency{/snippet}
 	{#if currency === null}
 		<Feedback error>Unknown currency.</Feedback>

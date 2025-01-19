@@ -21,8 +21,13 @@
 </script>
 
 {#if venue}
-	<Page title={venue.title}>
-		{#snippet subtitle()}Submissions{/snippet}
+	<Page
+		title="Submissions"
+		breadcrumbs={[
+			['/venues', 'Venues'],
+			[`/venue/${venue.id}`, venue.title]
+		]}
+	>
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 
 		<Cards>

@@ -11,7 +11,7 @@
 	<title>Reciprocal Reviews</title>
 </svelte:head>
 
-<Page title="Reciprocal Reviews">
+<Page title="Reciprocal Reviews" breadcrumbs={[]}>
 	{#snippet subtitle()}Make peer review count.{/snippet}
 	{#if dev}
 		<p>
