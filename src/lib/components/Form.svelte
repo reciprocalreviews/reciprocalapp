@@ -9,7 +9,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: left;
-		gap: var(--spacing);
+		gap: calc(2 * var(--spacing));
 		align-items: flex-start;
 	}
 

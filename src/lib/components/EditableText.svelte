@@ -34,7 +34,7 @@
 	let field = $state<HTMLInputElement | HTMLTextAreaElement | undefined>(undefined);
 	let button = $state<HTMLButtonElement | undefined>(undefined);
 
-	let invalid = $derived(valid !== undefined && !valid(text));
+	let invalid = $derived(valid === undefined || valid(text) !== undefined);
 
 	async function saveEdit(event?: Event) {
 		if (invalid) {
@@ -113,9 +113,5 @@
 		flex: 1;
 		/* To align with the button*/
 		padding-block-start: calc(var(--spacing) / 2);
-	}
-
-	.box.inline {
-		align-items: end;
 	}
 </style>

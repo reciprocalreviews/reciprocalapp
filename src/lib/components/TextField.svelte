@@ -5,7 +5,7 @@
 	type Props = {
 		text: string;
 		label?: string | undefined;
-		placeholder: string;
+		placeholder?: string;
 		size?: number | undefined;
 		padded?: boolean;
 		active?: boolean;
@@ -21,7 +21,7 @@
 
 	let {
 		text = $bindable(''),
-		placeholder,
+		placeholder = '',
 		note,
 		label,
 		size = undefined,
@@ -122,6 +122,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing);
+		width: 100%;
 	}
 	input {
 		border: none;
@@ -136,6 +137,7 @@
 		font-style: inherit;
 		background: var(--background-color);
 		overflow: visible !important;
+		min-width: 2em;
 	}
 
 	textarea {
@@ -197,13 +199,12 @@
 	}
 
 	label {
-		width: 100%;
 		position: relative;
 		overflow: hidden;
 		font-style: normal;
 	}
 
 	.label {
-		font-style: normal;
+		font-style: italic;
 	}
 </style>

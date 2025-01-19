@@ -40,9 +40,12 @@
 
 <Page title={scholar.getName() ?? 'anonymous'}>
 	{#snippet subtitle()}Scholar{/snippet}
-	{#snippet details()}{#if scholar.getORCID()}<Link to="https://orcid.org/{scholar.getORCID()}"
-				>ORCID</Link
-			>{/if}<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>{/snippet}
+	{#snippet details()}
+		<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>
+		{#if scholar.getORCID()}
+			<Link to="https://orcid.org/{scholar.getORCID()}">{scholar.getORCID()}</Link>
+		{/if}
+	{/snippet}
 
 	{#if editable}
 		<EditableText
@@ -149,10 +152,6 @@
 					valid={(text) => (validEmail(text) ? undefined : 'Must be a valid email')}
 					edit={(text) => db.updateScholarEmail(scholar.getID(), text)}
 				/>
-
-				<p>
-					Update your <Link to="https://orcid.org/{scholar.getORCID()}">ORCID Profile</Link> offsite.
-				</p>
 			</Card>
 		{/if}
 	</Cards>

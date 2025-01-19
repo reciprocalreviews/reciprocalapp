@@ -11,7 +11,6 @@ import {
 	type TokenID,
 	type TransactionStatus
 } from '../../data/types';
-import type { SourceID } from '$lib/types/Source';
 import type Source from '$lib/types/Source';
 import type Submission from '$lib/types/Submission';
 import type Transaction from '$lib/types/Transaction';
@@ -106,7 +105,7 @@ export default abstract class CRUD {
 	abstract updateSubmission(submission: Submission): Promise<Submission>;
 
 	/** Check whether the given scholars have enough tokens for the given payments. True if so, and a list of remaining balances by scholar if not. */
-	abstract verifyCharges(charges: Charge[]): Promise<true | Charge[]>;
+	abstract verifyCharges(charges: Charge[]): Promise<true | Charge[] | undefined>;
 
 	/** Create a new source in the database with the given scholar ID as an editor */
 	abstract createSource(source: Source): Promise<Source>;
@@ -119,17 +118,6 @@ export default abstract class CRUD {
 
 	/** Get all sources a scholar edits */
 	abstract getEditedSources(editor: ScholarID): Promise<Source[]>;
-
-	/** Update the given source */
-	abstract updateSource(source: Source): Promise<Source>;
-
-	/** Given a source ID, eventually return all active submissions submitted to that source */
-	abstract getActiveSubmissions(sourceID: SourceID): Promise<Submission[]>;
-
-	/** Given a source ID, eventually return all scholars who have volunteered to review */
-	abstract getSourceVolunteers(
-		sourceID: SourceID
-	): Promise<{ scholar: ScholarRow; balance: number }[]>;
 
 	abstract registerScholar(scholar: ScholarRow): Scholar;
 
