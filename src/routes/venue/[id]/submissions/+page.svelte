@@ -40,7 +40,7 @@
 
 		{#if submissions}
 			{#if submissions.length === 0}
-				<Feedback>No active submissions.</Feedback>
+				<Feedback>No submissions, or none visible to you.</Feedback>
 			{:else}
 				<Table>
 					{#snippet header()}
