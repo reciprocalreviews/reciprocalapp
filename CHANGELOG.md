@@ -5,6 +5,11 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.4 2025-01-19
 
+### Added
+
+- Implemented manual submission creation form.
+- Styled submission list.U
+
 ### Maintenance
 
 - Updated all minor versions of vite, Typescript, Svelte, Supabase.
