@@ -1,13 +1,8 @@
-import type Source from '$lib/types/Source';
-import type { SourceID } from '$lib/types/Source';
-import type Submission from '$lib/types/Submission';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
-import type Transaction from '$lib/types/Transaction';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
 	CurrencyID,
 	ProposalID,
-	ProposalRow,
 	RoleID,
 	ScholarID,
 	ScholarRow,
@@ -21,6 +16,7 @@ import type {
 import CRUD, { NullUUID, type ErrorID } from './CRUD';
 import Scholar from './Scholar.svelte';
 import type { Database } from '$data/database';
+import type { SubmissionID } from '$lib/types/Submission';
 
 export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
@@ -34,38 +30,135 @@ export default class SupabaseCRUD extends CRUD {
 		this.client = client;
 	}
 
-	createSubmission(submission: Submission): Promise<Submission> {
-		throw new Error('Method not implemented.');
+	async updateSubmissionExpertise(
+		submissionID: SubmissionID,
+		expertise: string | null
+	): Promise<ErrorID | undefined> {
+		const { error } = await this.client
+			.from('submissions')
+			.update({ expertise })
+			.eq('id', submissionID);
+		if (error) return 'UpdateSubmissionExpertise';
+		else return;
 	}
-	getSubmission(submissionID: string): Promise<Submission> {
-		throw new Error('Method not implemented.');
+
+	async convertORCIDsToScholars(orcids: string[]) {
+		// First, find the scholars with the specified ORCIDs.
+		const { data: scholars, error: scholarError } = await this.client
+			.from('scholars')
+			.select('orcid, id')
+			.in('orcid', orcids);
+		if (scholars === null) {
+			console.error(scholarError);
+			return undefined;
+		}
+		return scholars;
 	}
-	updateSubmission(submission: Submission): Promise<Submission> {
-		throw new Error('Method not implemented.');
+
+	async verifyCharges(charges: Charge[]): Promise<true | Charge[] | undefined> {
+		// First, find the scholars with the specified ORCIDs.
+		const scholars = await this.convertORCIDsToScholars(charges.map((charge) => charge.scholar));
+
+		// Find the scholars that weren't found.
+		if (scholars === undefined) return undefined;
+		if (scholars.length < charges.length)
+			return charges.map((charge) => ({
+				scholar: charge.scholar,
+				payment: scholars.some((s) => s.orcid === charge.scholar) ? charge.payment : undefined
+			}));
+
+		const scholarIDs = scholars.map((scholar) => scholar.id);
+
+		// Find all of the tokens owned by the set
+		const { data: tokens, error: tokenError } = await this.client
+			.from('tokens')
+			.select('scholar')
+			.in('scholar', scholarIDs);
+		if (tokenError) {
+			console.error(tokenError);
+			return undefined;
+		}
+
+		// Sum the tokens possessed by each scholar
+		const balances = new Map<string, number>();
+		for (const token of tokens) {
+			if (token.scholar === null) continue;
+			const balance = balances.get(token.scholar) ?? 0;
+			balances.set(token.scholar, balance + 1);
+		}
+
+		// Compute the deficits
+		const deficits = charges.map((charge) => {
+			const scholarID = scholars.find((scholar) => scholar.orcid === charge.scholar)?.id;
+			const balance = scholarID !== undefined ? balances.get(scholarID) : undefined;
+			return {
+				scholar: charge.scholar,
+				payment:
+					balance === undefined || charge.payment === undefined
+						? undefined
+						: balance - charge.payment
+			};
+		});
+
+		if (deficits.some((deficit) => deficit.payment === undefined || deficit.payment < 0))
+			return deficits;
+
+		// Otherwise, all is good.
+		return true;
 	}
-	verifyCharges(charges: Charge[]): Promise<true | Charge[]> {
-		throw new Error('Method not implemented.');
-	}
-	createSource(source: Source): Promise<Source> {
-		throw new Error('Method not implemented.');
-	}
-	getSource(sourceID: string): Promise<Source> {
-		throw new Error('Method not implemented.');
-	}
-	getSources(): Promise<Source[]> {
-		throw new Error('Method not implemented.');
-	}
-	getEditedSources(editor: ScholarID): Promise<Source[]> {
-		throw new Error('Method not implemented.');
-	}
-	updateSource(source: Source): Promise<Source> {
-		throw new Error('Method not implemented.');
-	}
-	getActiveSubmissions(sourceID: SourceID): Promise<Submission[]> {
-		throw new Error('Method not implemented.');
-	}
-	getSourceVolunteers(sourceID: SourceID): Promise<{ scholar: ScholarRow; balance: number }[]> {
-		throw new Error('Method not implemented.');
+
+	async createSubmission(
+		editor: ScholarID,
+		title: string,
+		expertise: string,
+		venue: VenueID,
+		externalID: string,
+		previousID: string | null,
+		charges: Charge[],
+		message: string
+	): Promise<undefined | ErrorID> {
+		// Verify that the charges are valid.
+		const chargeError = await this.verifyCharges(charges);
+		if (chargeError !== true) return 'InvalidCharges';
+
+		// First, find the scholars with the specified ORCIDs.
+		const scholars = await this.convertORCIDsToScholars(charges.map((charge) => charge.scholar));
+
+		if (scholars === undefined) return 'NewSubmission';
+
+		const authors = charges
+			.map((charge) => scholars.find((s) => s.orcid === charge.scholar)?.id)
+			.filter((a) => a !== undefined);
+
+		if (authors.length < charges.length) return 'NewSubmission';
+
+		// Create the submission
+		const { error } = await this.client.from('submissions').insert({
+			title,
+			expertise,
+			venue,
+			externalid: externalID,
+			previousid: previousID,
+			authors,
+			payments: charges.map((charge) => charge.payment ?? 0)
+		});
+		if (error) {
+			console.error(error);
+			return 'NewSubmission';
+		}
+
+		// Create the proposed transactions
+		for (const charge of charges) {
+			await this.transferTokens(
+				editor,
+				charge.scholar,
+				'emailorcid',
+				venue,
+				'venueid',
+				charge.payment ?? 0,
+				message
+			);
+		}
 	}
 
 	/** Register a reactive scholar state. */
@@ -76,10 +169,6 @@ export default class SupabaseCRUD extends CRUD {
 			this.scholars.set(row.id, scholar);
 		}
 		return scholar;
-	}
-
-	createScholar(scholar: ScholarRow): Promise<ScholarRow> {
-		throw new Error('Method not implemented.');
 	}
 
 	async findScholar(emailOrORCID: string) {
@@ -103,10 +192,6 @@ export default class SupabaseCRUD extends CRUD {
 			.single();
 		if (error) return null;
 		return this.registerScholar(data);
-	}
-
-	updateScholar(scholar: ScholarRow): Promise<ScholarRow> {
-		throw new Error('Method not implemented.');
 	}
 
 	async updateScholarName(id: ScholarID, name: string): Promise<ErrorID | undefined> {
@@ -147,16 +232,6 @@ export default class SupabaseCRUD extends CRUD {
 			if (state) state.setEmail(email);
 			return undefined;
 		}
-	}
-
-	getScholarBalance(scholarID: ScholarID): Promise<number> {
-		throw new Error('Method not implemented.');
-	}
-	getTransaction(id: TransactionID): Promise<Transaction | null> {
-		throw new Error('Method not implemented.');
-	}
-	getScholarTransactions(id: ScholarID): Promise<Transaction[]> {
-		throw new Error('Method not implemented.');
 	}
 
 	async proposeVenue(
@@ -220,14 +295,11 @@ export default class SupabaseCRUD extends CRUD {
 
 	async approveProposal(proposal: ProposalID) {
 		// Get the latest proposal data
-		const { data, error: proposalError } = await this.client
+		const { data: proposalData } = await this.client
 			.from('proposals')
 			.select()
 			.eq('id', proposal)
 			.single();
-
-		// Supabase isn't getting the type correctly from the query above :(
-		const proposalData = data as ProposalRow;
 
 		// Couldn't get proposal data? Return an error.
 		if (proposalData === null) return 'ApproveProposalNotFound';
@@ -270,8 +342,7 @@ export default class SupabaseCRUD extends CRUD {
 			})
 			.select()
 			.single();
-
-		if (venueData === null) return 'ApproveProposalNoVenue';
+		if (venueData === null || venueError !== null) return 'ApproveProposalNoVenue';
 
 		const venue = venueData.id;
 

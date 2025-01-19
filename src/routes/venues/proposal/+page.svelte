@@ -5,7 +5,7 @@
 	import Page from '$lib/components/Page.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import TextField from '$lib/components/TextField.svelte';
-	import { validEmails, validIdentifier, validURL } from '$lib/validation';
+	import { validEmails, isntEmpty, validURLError } from '$lib/validation';
 	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../../Auth.svelte';
 	import { addError, isError } from '../../feedback.svelte';
@@ -31,7 +31,7 @@
 	async function propose() {
 		const uid = auth.getUserID();
 		if (
-			!validIdentifier(venue) ||
+			!isntEmpty(venue) ||
 			!validEmails(editors) ||
 			!validSize(size) ||
 			!validMessage(message) ||
@@ -60,7 +60,7 @@
 	}
 </script>
 
-<Page title="Propose a venue">
+<Page title="Propose a venue" breadcrumbs={[['/venues', 'Venues']]}>
 	<p>
 		Venues are currently reviewed and approved by the <Link to="/about#managers">stewards</Link>, to
 		ensure that only official editors and steering committees are creating venues.
@@ -73,27 +73,33 @@
 
 	{#if auth.getUserID()}
 		<form>
-			<TextField bind:text={venue} label="venue" placeholder="name" valid={validIdentifier} />
+			<TextField
+				bind:text={venue}
+				label="venue"
+				placeholder="name"
+				valid={(text) => (text.length > 0 ? undefined : 'Must include a venue name')}
+			/>
 			<TextField
 				bind:text={editors}
 				label="editors"
 				placeholder="email1@email.com, email2@email.com"
 				active={!proposing}
-				valid={validEmails}
+				valid={(text) =>
+					validEmails(text) ? undefined : 'Must be a list of comma-separated email addresses.'}
 			/>
 			<TextField
 				bind:text={url}
 				label="official venue URL"
 				placeholder="https://..."
 				active={!proposing}
-				valid={validURL}
+				valid={validURLError}
 			/>
 			<TextField
 				bind:text={size}
 				label="community size"
 				placeholder="number"
 				active={!proposing}
-				valid={validSize}
+				valid={(text) => (validSize(text) ? undefined : 'Must be a positive whole number')}
 			/>
 			<TextField
 				bind:text={message}
@@ -101,13 +107,13 @@
 				inline={false}
 				placeholder="why"
 				active={!proposing}
-				valid={validMessage}
+				valid={(text) => (validMessage(text) ? undefined : 'Must include a rationale')}
 			/>
 			<Button
 				tip="Propose venue"
 				action={propose}
 				active={!proposing &&
-					validIdentifier(venue) &&
+					isntEmpty(venue) &&
 					validEmails(editors) &&
 					validSize(size) &&
 					validMessage(message)}>Propose venue</Button

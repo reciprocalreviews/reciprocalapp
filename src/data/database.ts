@@ -34,6 +34,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignments: {
+        Row: {
+          bid: boolean
+          id: string
+          role: string
+          scholar: string
+          submission: string
+          venue: string
+        }
+        Insert: {
+          bid?: boolean
+          id?: string
+          role: string
+          scholar: string
+          submission: string
+          venue: string
+        }
+        Update: {
+          bid?: boolean
+          id?: string
+          role?: string
+          scholar?: string
+          submission?: string
+          venue?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_role_fkey"
+            columns: ["role"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_scholar_fkey"
+            columns: ["scholar"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_submission_fkey"
+            columns: ["submission"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_venue_fkey"
+            columns: ["venue"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       currencies: {
         Row: {
           description: string
@@ -205,6 +261,54 @@ export type Database = {
           when?: string
         }
         Relationships: []
+      }
+      submissions: {
+        Row: {
+          authors: string[]
+          expertise: string | null
+          externalid: string
+          id: string
+          payments: number[]
+          previousid: string | null
+          title: string
+          venue: string
+        }
+        Insert: {
+          authors?: string[]
+          expertise?: string | null
+          externalid: string
+          id?: string
+          payments?: number[]
+          previousid?: string | null
+          title?: string
+          venue: string
+        }
+        Update: {
+          authors?: string[]
+          expertise?: string | null
+          externalid?: string
+          id?: string
+          payments?: number[]
+          previousid?: string | null
+          title?: string
+          venue?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_previousid_fkey"
+            columns: ["previousid"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_venue_fkey"
+            columns: ["venue"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       supporters: {
         Row: {

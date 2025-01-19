@@ -9,7 +9,7 @@ export function validEmails(text: string) {
 		.every((email) => /.+@.+\..+/.test(email));
 }
 
-export function validIdentifier(text: string) {
+export function isntEmpty(text: string) {
 	return text.length > 0;
 }
 
@@ -17,6 +17,10 @@ export function validURL(text: string) {
 	return /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.test(
 		text
 	);
+}
+
+export function validURLError(text: string): string | undefined {
+	return validURL(text) ? undefined : 'Must be a valid URL';
 }
 
 export function validInteger(text: string) {

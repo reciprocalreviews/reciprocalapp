@@ -94,7 +94,7 @@ There are several key types of data in RR.
 - [x] Scholars can volunteer to review for a `Venue`
 - [ ] Scholars can spend and earn `Token`s for that volunteer work
 - [x] Scholars can receive `Token`s as gifts
-- [ ] Scholars can spend `Token`s to submit manuscripts for peer review.
+- [x] Scholars can spend `Token`s to submit manuscripts for peer review.
 - [x] Scholars can also have _`editor`_ status on a `Venue`, which gives them the ability to manage the `transaction`s and `submission`s in a `Venue`.
 - [x] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
 - [ ] An individual scholar cannot be both an _`editor`_ and a _`minter`_, as this would allow editors to enrich themselves without oversight. Scholars can specify an email address for communication.
@@ -342,9 +342,9 @@ create table transactions (
 A `Submission` represents a manuscript undergoing peer review.
 
 - [ ] Depending on the venue, `Scholar`s may be able to bid on submissions, simplifying an editor's ability to find qualified reviewers.
-- [ ] `Submission`s can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
-- [ ] `Submission`s can be added manually by \_`editor`\_s, or RR can be cc'ed on submission notification emails to be added automatically
-- [ ] Submissions are created manually or through email integrations with review systems, which provide submission metadata
+- [x] `Submission`s can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
+- [x] `Submission`s can be added manually by \_`editor`\_s.
+- [ ] Submissions can be proposed through email integrations with review systems, which provide submission metadata, but must then be approved by editors.
 
 Here is a SQL schema sketch, for clarity:
 

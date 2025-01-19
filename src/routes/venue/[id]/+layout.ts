@@ -1,7 +1,7 @@
 import type { LayoutLoad } from './$types.js';
 
 export const load: LayoutLoad = async ({ parent, params }) => {
-	const { supabase, user } = await parent();
+	const { supabase } = await parent();
 
 	const venueid = params.id;
 

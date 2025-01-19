@@ -11,13 +11,10 @@ import {
 	type TokenID,
 	type TransactionStatus
 } from '../../data/types';
-import type { SourceID } from '$lib/types/Source';
-import type Source from '$lib/types/Source';
-import type Submission from '$lib/types/Submission';
-import type Transaction from '$lib/types/Transaction';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
 import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
+import type { SubmissionID } from '$lib/types/Submission';
 
 export const DatabaseSymbol = Symbol('database');
 export const NullUUID = '00000000-0000-0000-0000-000000000000';
@@ -89,7 +86,10 @@ export const Errors = {
 	AlreadyApproved: 'This transaction is already approved',
 	MissingApprovalVenue: 'The proposed transaction has no venue to transfer from.',
 	MissingRecipient: 'The proposed transaction has no scholar recipient.',
-	UndeletedTransaction: "The proposed transaction couldn't be deleted."
+	UndeletedTransaction: "The proposed transaction couldn't be deleted.",
+	InvalidCharges: "The proposed transaction's charges are invalid.",
+	NewSubmission: 'Unable to create a new submission',
+	UpdateSubmissionExpertise: 'Unable to update the submission expertise'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -97,50 +97,30 @@ export type ErrorID = keyof typeof Errors;
 /** This abstract class defines an interface for database access. It's useful for defining mocks as well as enables us to change databases if necessary. */
 export default abstract class CRUD {
 	/** Insert a new submission in the database */
-	abstract createSubmission(submission: Submission): Promise<Submission>;
-
-	/** Given a submission ID, eventually return the submission data. */
-	abstract getSubmission(submissionID: string): Promise<Submission>;
+	abstract createSubmission(
+		editor: ScholarID,
+		title: string,
+		expertise: string,
+		venue: VenueID,
+		externalID: string,
+		previousID: string | null,
+		charges: Charge[],
+		message: string
+	): Promise<undefined | ErrorID>;
 
 	/** Given a submission ID, update it's data. */
-	abstract updateSubmission(submission: Submission): Promise<Submission>;
+	abstract updateSubmissionExpertise(
+		submissionID: SubmissionID,
+		expertise: string | null
+	): Promise<ErrorID | undefined>;
 
 	/** Check whether the given scholars have enough tokens for the given payments. True if so, and a list of remaining balances by scholar if not. */
-	abstract verifyCharges(charges: Charge[]): Promise<true | Charge[]>;
-
-	/** Create a new source in the database with the given scholar ID as an editor */
-	abstract createSource(source: Source): Promise<Source>;
-
-	/** Given a source ID, eventually return the source data. */
-	abstract getSource(sourceID: string): Promise<Source>;
-
-	/** Get all sources in the database */
-	abstract getSources(): Promise<Source[]>;
-
-	/** Get all sources a scholar edits */
-	abstract getEditedSources(editor: ScholarID): Promise<Source[]>;
-
-	/** Update the given source */
-	abstract updateSource(source: Source): Promise<Source>;
-
-	/** Given a source ID, eventually return all active submissions submitted to that source */
-	abstract getActiveSubmissions(sourceID: SourceID): Promise<Submission[]>;
-
-	/** Given a source ID, eventually return all scholars who have volunteered to review */
-	abstract getSourceVolunteers(
-		sourceID: SourceID
-	): Promise<{ scholar: ScholarRow; balance: number }[]>;
+	abstract verifyCharges(charges: Charge[]): Promise<true | Charge[] | undefined>;
 
 	abstract registerScholar(scholar: ScholarRow): Scholar;
 
-	/** Create the given scholar. If they already exist, throw an error. */
-	abstract createScholar(scholar: ScholarRow): Promise<ScholarRow>;
-
 	/** Given a scholar ID, get information about the scholar, except the scholar's transactions */
 	abstract getScholar(scholarID: ScholarID): Promise<Scholar | null>;
-
-	/** Update the given scholar */
-	abstract updateScholar(scholar: ScholarRow): Promise<ScholarRow>;
 
 	/** Update scholar's name */
 	abstract updateScholarName(id: ScholarID, name: string): Promise<ErrorID | undefined>;
@@ -156,15 +136,6 @@ export default abstract class CRUD {
 
 	/** Update scholar's reviewing status. */
 	abstract updateScholarEmail(id: ScholarID, email: string): Promise<ErrorID | undefined>;
-
-	/** Get the balance of the scholar */
-	abstract getScholarBalance(scholarID: ScholarID): Promise<number>;
-
-	/** Get the transaction with the given id */
-	abstract getTransaction(id: TransactionID): Promise<Transaction | null>;
-
-	/** Get all of this scholar's transactions */
-	abstract getScholarTransactions(id: ScholarID): Promise<Transaction[]>;
 
 	/** Propose a venue */
 	abstract proposeVenue(

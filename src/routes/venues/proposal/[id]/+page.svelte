@@ -14,7 +14,7 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
-	import { validEmails, validURL, validIdentifier } from '$lib/validation';
+	import { validEmails, validURLError } from '$lib/validation';
 
 	let { data } = $props();
 
@@ -62,7 +62,7 @@
 </script>
 
 {#if proposal && supporters}
-	<Page title={proposal.title}>
+	<Page title={proposal.title} breadcrumbs={[['/venues', 'Venues']]}>
 		{#snippet subtitle()}
 			{#if approved}
 				Approved
@@ -103,14 +103,15 @@
 						label="title"
 						text={proposal.title}
 						placeholder="Venue title"
-						valid={validIdentifier}
+						valid={(text) => (text.length > 0 ? undefined : 'Include a title')}
 						edit={(text) => db.editProposalTitle(proposal.id, text)}
 					/>
 					<EditableText
 						label="editors"
 						text={proposal.editors.join(', ')}
 						placeholder="Venue editors"
-						valid={validEmails}
+						valid={(text) =>
+							validEmails(text) ? undefined : 'Must be a list of comma separated email addresses.'}
 						edit={(text) =>
 							db.editProposalEditors(
 								proposal.id,
@@ -121,14 +122,14 @@
 						label="census"
 						text={'' + proposal.census}
 						placeholder="Venue census"
-						valid={(text) => !isNaN(parseInt(text))}
+						valid={(text) => (!isNaN(parseInt(text)) ? undefined : 'Must be a whole number')}
 						edit={(text) => db.editProposalCensus(proposal.id, parseInt(text))}
 					/>
 					<EditableText
 						label="URL"
 						text={proposal.url}
 						placeholder="https://"
-						valid={validURL}
+						valid={validURLError}
 						edit={(text) => db.editProposalURL(proposal.id, text)}
 					/>
 
@@ -164,9 +165,10 @@
 						label="support"
 						inline
 						placeholder="Why should the editors adopt Reciprocal Reviews?"
-						valid={validIdentifier}
+						active={!submitting}
+						valid={(text) => (text.length > 0 ? undefined : 'Must include a rationale')}
 					/>
-					<Button tip="Submit support" action={support} active={message.length > 0}
+					<Button tip="Submit support" action={support} active={message.length > 0 && !submitting}
 						>Add support</Button
 					>
 				</form>
@@ -201,7 +203,7 @@
 					<EditableText
 						text={supporter.message}
 						placeholder="Reasons for support."
-						valid={validIdentifier}
+						valid={(text) => (text.length > 0 ? undefined : 'Include a message')}
 						edit={(text) => db.editSupport(supporter.id, text)}
 					/>
 				{:else}

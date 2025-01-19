@@ -15,7 +15,8 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: currency, error: currencyError } = await supabase
 		.from('currencies')
 		.select()
-		.eq('id', params.id);
+		.eq('id', params.id)
+		.single();
 	if (currencyError) console.log(currencyError);
 
 	const { data: venues, error: venueError } =
@@ -25,6 +26,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	if (venueError) console.log(venueError);
 
 	return {
+		currency,
 		transactions,
 		venues
 	};

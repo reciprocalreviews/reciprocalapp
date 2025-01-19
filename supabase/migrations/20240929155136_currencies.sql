@@ -59,7 +59,7 @@ create function isMinter("_scholarid" uuid, "_currencyid" uuid)
 returns boolean 
 language sql
 as $$
-    select (exists (select id from currencies where id = _currencyid and auth.uid() = any(minters)));
+    select (exists (select id from currencies where id = _currencyid and _scholarid = any(minters)));
 $$;
 
 create policy "only minters can create exchanges" on public.exchanges

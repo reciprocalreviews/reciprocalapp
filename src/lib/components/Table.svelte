@@ -1,6 +1,17 @@
+<script lang="ts">
+	import type { Snippet } from 'svelte';
+
+	let { header, children }: { header: Snippet; children: Snippet } = $props();
+</script>
+
 <table>
+	<thead>
+		<tr>
+			{@render header()}
+		</tr>
+	</thead>
 	<tbody>
-		<slot />
+		{@render children()}
 	</tbody>
 </table>
 
@@ -11,6 +22,10 @@
 		margin-block-start: var(--spacing);
 		margin-block-end: var(--spacing);
 		table-layout: auto;
+	}
+
+	thead tr {
+		border-bottom: var(--border-color) solid var(--border-width);
 	}
 
 	table :global(td) {

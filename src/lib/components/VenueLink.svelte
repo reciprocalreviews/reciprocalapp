@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { getDB } from '$lib/data/CRUD';
 	import Link from './Link.svelte';
 
 	interface Props {
@@ -8,8 +7,6 @@
 	}
 
 	let { id, name }: Props = $props();
-
-	const db = getDB();
 </script>
 
 <Link to="/venue/{id}">{name}</Link>

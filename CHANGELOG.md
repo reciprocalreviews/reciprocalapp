@@ -3,6 +3,29 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](http://semver.org/) format.
 
+## 0.1.4 2025-01-19
+
+### Added
+
+- Implemented manual submission creation form.
+- Styled submission list.
+- Added breadcrumbs on all pages to streamline navigation.
+- Defined a page to display a submission to authors or editors.
+
+### Maintenance
+
+- Updated all minor versions of vite, Typescript, Svelte, Supabase.
+
+## 0.1.3 2025-01-12
+
+### Added
+
+- Initial progress on `submissions` schema.
+
+### Maintenance
+
+- Updated all minor versions of vite, Typescript, Svelte, Supabase.
+
 ## 0.1.2 2024-12-29
 
 ### Added

@@ -1,14 +1,18 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	let { children }: { children: Snippet } = $props();
+	let { children, error }: { children: Snippet; error?: boolean } = $props();
 </script>
 
-<p>{@render children()}</p>
+<div class:error>{@render children()}</div>
 
 <style>
-	p {
+	div {
 		font-size: var(--small-font-size);
 		font-style: italic;
+	}
+
+	.error {
+		color: var(--error-color);
 	}
 </style>

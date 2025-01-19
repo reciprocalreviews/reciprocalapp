@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ORCIDRegex } from '$data/ORCID';
+	import { ORCIDRegex } from '$lib/data/ORCID';
 	import { type ErrorID } from '$lib/data/CRUD';
 	import { validEmail } from '$lib/validation';
 	import { handle } from '../../routes/feedback.svelte';
@@ -37,7 +37,8 @@
 		label="Recipient"
 		size={20}
 		placeholder="ORCID or email"
-		valid={(text) => validEmail(text) || ORCIDRegex.test(text)}
+		valid={(text) =>
+			validEmail(text) || ORCIDRegex.test(text) ? undefined : 'Must be an email or ORCID'}
 	/>
 	<Slider min={1} max={max ?? 20} bind:value={giftAmount} step={1} label="# of tokens to give"
 		>{giftAmount}</Slider

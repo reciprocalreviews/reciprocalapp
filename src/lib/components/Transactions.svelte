@@ -73,14 +73,14 @@
 	<Feedback>No transactions yet.</Feedback>
 {:else}
 	<Table>
-		<tr>
+		{#snippet header()}
 			<th>Status</th>
 			<th>Tokens</th>
 			<th>From</th>
 			<th>To</th>
 			<th>Purpose</th>
 			<th></th>
-		</tr>
+		{/snippet}
 		{#each transactions.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()) as transaction}
 			{@render row(transaction)}
 		{/each}

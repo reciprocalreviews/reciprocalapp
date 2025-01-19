@@ -1,11 +1,12 @@
 <script lang="ts">
-	import type Submission from '$lib/types/Submission';
+	import { type SubmissionRow } from '$data/types';
 	import Link from './Link.svelte';
 
-	export let submission: Submission;
+	export let submission: SubmissionRow;
 </script>
 
 <div class="submission">
+	<span class="icon">💡</span>
 	<Link to="/submission/{submission.id}">{submission.title}</Link>
 </div>
 
@@ -13,6 +14,7 @@
 	.submission {
 		display: flex;
 		flex-direction: row;
+		flex-wrap: nowrap;
 		gap: var(--spacing);
 	}
 </style>

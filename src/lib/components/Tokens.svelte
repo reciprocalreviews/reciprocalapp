@@ -8,7 +8,7 @@
 
 <style>
 	.token {
-		font-weight: bold;
+		font-weight: 500;
 		font-size: var(--small-font-size);
 		padding: calc(var(--spacing) / 2);
 		border-radius: var(--roundedness);

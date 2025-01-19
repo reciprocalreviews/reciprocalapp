@@ -57,10 +57,10 @@ create index roles_venue_index on roles(venueid);
 
 -- Check if the given scholar is an stewards
 create function isEditor("_venueid" uuid) 
-returns boolean 
+returns boolean
 language sql
 as $$
-    select (exists (select id from venues where auth.uid() = any(editors)));
+    select (auth.uid() = any((select editors from venues where id = _venueid)::uuid[]));
 $$;
 
 alter table public.roles

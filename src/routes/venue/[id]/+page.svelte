@@ -6,14 +6,14 @@
 	import { getDB } from '$lib/data/CRUD';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import TextField from '$lib/components/TextField.svelte';
-	import { ORCIDRegex } from '../../../data/ORCID';
+	import { ORCIDRegex } from '../../../lib/data/ORCID';
 	import Page from '$lib/components/Page.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
-	import { validIdentifier, validURL, validEmail, validInteger } from '$lib/validation';
+	import { validEmail, validInteger, validURLError } from '$lib/validation';
 	import { handle } from '../../feedback.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Roles from './Roles.svelte';
@@ -21,7 +21,16 @@
 	import Gift from '$lib/components/Gift.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { venue, currency, scholar, roles, commitments, tokens, transactions } = $derived(data);
+	const {
+		venue,
+		currency,
+		scholar,
+		roles,
+		commitments,
+		tokens,
+		transactionCount,
+		submissionCount
+	} = $derived(data);
 
 	const db = getDB();
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
@@ -30,11 +39,11 @@
 </script>
 
 {#if venue === null}
-	<Page title="Unknown venue">
+	<Page title="Unknown venue" breadcrumbs={[]}>
 		<p>Unable to find this venue.</p>
 	</Page>
 {:else}
-	<Page title={venue.title}>
+	<Page title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
 		{#snippet subtitle()}Venue{/snippet}
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 		<!-- Show the description -->
@@ -61,7 +70,12 @@
 
 		<!-- Show metadata -->
 		<Cards>
-			<Card icon={venue.editors.length} header="editors" note="Give and take tokens for reviewing">
+			<Card
+				expand={!editor}
+				icon={venue.editors.length}
+				header="editors"
+				note="Give and take tokens for reviewing"
+			>
 				<ul>
 					{#each venue.editors as editorID}
 						<li>
@@ -87,7 +101,10 @@
 							bind:text={newEditor}
 							size={19}
 							placeholder="ORCID or email"
-							valid={(text) => validEmail(text) || ORCIDRegex.test(text)}
+							valid={(text) =>
+								validEmail(text) || ORCIDRegex.test(text)
+									? undefined
+									: 'Must be a valid email or ORCID'}
 						/><Button
 							tip="Add editor"
 							active={validEmail(newEditor) || ORCIDRegex.test(newEditor)}
@@ -102,6 +119,9 @@
 						Program Chairs of a conference.
 					</Note>
 				{/if}
+			</Card>
+			<Card expand icon={submissionCount ?? '?'} header="submissions" note="Papers in review">
+				<p>See <Link to="/venue/{venue.id}/submissions">all submissions</Link> to this venue.</p>
 			</Card>
 		</Cards>
 
@@ -202,8 +222,8 @@
 				<Card group="editors" icon={tokens ?? 0} header="tokens" note="balance and gifts">
 					<p>
 						This venue currently has {#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an
-							unknown number of{/if} tokens and is involved in {#if transactions !== null}<strong
-								>{transactions}</strong
+							unknown number of{/if} tokens and is involved in {#if transactionCount !== null}<strong
+								>{transactionCount}</strong
 							>{:else}an unknown number of{/if} transactions.
 						<Link to="/venue/{venue.id}/transactions">See all transactions</Link>.
 					</p>
@@ -244,28 +264,28 @@
 						text={venue.title}
 						label="title"
 						placeholder=""
-						valid={validIdentifier}
+						valid={(text) => (text.length > 0 ? undefined : 'Must include a title')}
 						edit={(text) => db.editVenueTitle(venue.id, text)}
 					/>
 					<EditableText
 						text={venue.url}
 						label="URL"
 						placeholder="https://..."
-						valid={validURL}
+						valid={validURLError}
 						edit={(text) => db.editVenueURL(venue.id, text)}
 					/>
 					<EditableText
 						text={venue.welcome_amount.toString()}
 						label="Welcome tokens"
 						placeholder="e.g., 40"
-						valid={validInteger}
+						valid={(text) => (validInteger(text) ? undefined : 'Must be a whole number')}
 						edit={(text) => db.editVenueWelcomeAmount(venue.id, parseInt(text))}
 					/>
 					<EditableText
 						text={venue.submission_cost.toString()}
 						label="Submission cost"
 						placeholder="e.g., 40"
-						valid={validInteger}
+						valid={(text) => (validInteger(text) ? undefined : 'Must be a whole number')}
 						edit={(text) => db.editVenueSubmissionCost(venue.id, parseInt(text))}
 					/>
 					<div>

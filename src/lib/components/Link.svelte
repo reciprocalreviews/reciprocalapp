@@ -22,7 +22,7 @@
 <style>
 	a {
 		color: var(--salient-color);
-		font-weight: 600;
+		font-weight: 400;
 		text-decoration: none;
 		font-size: inherit;
 	}
@@ -37,9 +37,8 @@
 	}
 
 	a:focus {
-		outline: var(--focus-color) solid var(--thick-border-width);
-		border-radius: var(--roundedness);
-		outline-offset: var(--border-width);
+		outline: none;
+		color: var(--focus-color);
 	}
 
 	a[aria-current] {

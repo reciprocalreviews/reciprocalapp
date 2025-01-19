@@ -3,7 +3,7 @@ import { type ScholarID } from '../../data/types';
 export type TransactionID = string;
 export type Purpose = 'submission' | 'review' | 'meta' | 'edit' | 'gift';
 
-export type Charge = { scholar: string; payment: number };
+export type Charge = { scholar: string; payment: number | undefined };
 
 type Transaction = {
 	/** A UUID representing a transaction in history. */

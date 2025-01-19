@@ -10,7 +10,7 @@
 	import Slider from '$lib/components/Slider.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import { validEmail, validIdentifier } from '$lib/validation';
+	import { validEmail, isntEmpty } from '$lib/validation';
 	import { handle } from '../../feedback.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -36,10 +36,10 @@
 		bind:text={newRole}
 		size={19}
 		placeholder="name"
-		valid={(text) => validIdentifier(text)}
+		valid={(text) => (isntEmpty(text) ? undefined : 'Must include a name')}
 	/><Button
 		tip="Create a new role"
-		active={validIdentifier(newRole)}
+		active={isntEmpty(newRole)}
 		action={async () => {
 			if (await handle(db.createRole(venue.id, newRole))) newRole = '';
 		}}>Create role</Button
@@ -52,7 +52,7 @@
 				text={role.name}
 				label="name"
 				placeholder=""
-				valid={validIdentifier}
+				valid={(text) => (isntEmpty(text) ? undefined : 'Must include a name')}
 				edit={(text) => db.editRoleName(role.id, text)}
 			/>
 			<EditableText
@@ -75,7 +75,7 @@
 						placeholder=""
 						name="email"
 						size={20}
-						valid={validEmail}
+						valid={(text) => (validEmail(text) ? undefined : 'Must be a valid email')}
 						bind:text={invites[role.id]}
 					/>
 					<Button

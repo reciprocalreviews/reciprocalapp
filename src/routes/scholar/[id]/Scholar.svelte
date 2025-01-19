@@ -14,6 +14,8 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import Gift from '$lib/components/Gift.svelte';
 	import Page from '$lib/components/Page.svelte';
+	import Row from '$lib/components/Row.svelte';
+	import { validEmail } from '$lib/validation';
 
 	let {
 		scholar,
@@ -36,29 +38,19 @@
 	let editable = $derived(auth.getUserID() === scholar.getID());
 </script>
 
-<Page title={scholar.getName() ?? 'anonymous'}>
+<Page title={scholar.getName() ?? 'anonymous'} breadcrumbs={[]}>
 	{#snippet subtitle()}Scholar{/snippet}
-	{#snippet details()}<Link to="https://orcid.org/{scholar.getORCID()}">ORCID</Link><Link
-			to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link
-		>{/snippet}
-
-	<h2>Status</h2>
-	<Status good={scholar.isAvailable()}>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status
-	>
-
-	{#if editable}
-		<Checkbox
-			on={scholar.isAvailable()}
-			change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
-			>I am available to review.</Checkbox
-		>
-	{/if}
+	{#snippet details()}
+		<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>
+		{#if scholar.getORCID()}
+			<Link to="https://orcid.org/{scholar.getORCID()}">{scholar.getORCID()}</Link>
+		{/if}
+	{/snippet}
 
 	{#if editable}
 		<EditableText
 			inline={false}
 			text={scholar.getStatus()}
-			label="status"
 			placeholder="Explain your current reviewing status to others."
 			edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
 			note="Your status is public and will be shown here."
@@ -66,6 +58,19 @@
 	{:else}
 		<p>{scholar.getStatus()}</p>
 	{/if}
+
+	<Row>
+		{#if editable}
+			<Checkbox
+				on={scholar.isAvailable()}
+				change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
+				>I am available to review.</Checkbox
+			>
+		{/if}
+		<Status good={scholar.isAvailable()}
+			>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status
+		>
+	</Row>
 
 	<Cards>
 		<Card
@@ -142,14 +147,11 @@
 					text={scholar.getEmail() ?? ''}
 					label="email"
 					placeholder="email"
+					inline={false}
 					note="Your email will be public and only used to send notifications."
-					valid={(text) => /.+@.+\..+/.test(text)}
+					valid={(text) => (validEmail(text) ? undefined : 'Must be a valid email')}
 					edit={(text) => db.updateScholarEmail(scholar.getID(), text)}
 				/>
-
-				<p>
-					Update your <Link to="https://orcid.org/{scholar.getORCID()}">ORCID Profile</Link> offsite.
-				</p>
 			</Card>
 		{/if}
 	</Cards>
