@@ -13,7 +13,7 @@
 	import Card from '$lib/components/Card.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
-	import { validIdentifier, validURL, validEmail, validInteger } from '$lib/validation';
+	import { validEmail, validInteger, validURLError } from '$lib/validation';
 	import { handle } from '../../feedback.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Roles from './Roles.svelte';
@@ -101,7 +101,10 @@
 							bind:text={newEditor}
 							size={19}
 							placeholder="ORCID or email"
-							valid={(text) => validEmail(text) || ORCIDRegex.test(text)}
+							valid={(text) =>
+								validEmail(text) || ORCIDRegex.test(text)
+									? undefined
+									: 'Must be a valid email or ORCID'}
 						/><Button
 							tip="Add editor"
 							active={validEmail(newEditor) || ORCIDRegex.test(newEditor)}
@@ -261,28 +264,28 @@
 						text={venue.title}
 						label="title"
 						placeholder=""
-						valid={validIdentifier}
+						valid={(text) => (text.length > 0 ? undefined : 'Must include a title')}
 						edit={(text) => db.editVenueTitle(venue.id, text)}
 					/>
 					<EditableText
 						text={venue.url}
 						label="URL"
 						placeholder="https://..."
-						valid={validURL}
+						valid={validURLError}
 						edit={(text) => db.editVenueURL(venue.id, text)}
 					/>
 					<EditableText
 						text={venue.welcome_amount.toString()}
 						label="Welcome tokens"
 						placeholder="e.g., 40"
-						valid={validInteger}
+						valid={(text) => (validInteger(text) ? undefined : 'Must be a whole number')}
 						edit={(text) => db.editVenueWelcomeAmount(venue.id, parseInt(text))}
 					/>
 					<EditableText
 						text={venue.submission_cost.toString()}
 						label="Submission cost"
 						placeholder="e.g., 40"
-						valid={validInteger}
+						valid={(text) => (validInteger(text) ? undefined : 'Must be a whole number')}
 						edit={(text) => db.editVenueSubmissionCost(venue.id, parseInt(text))}
 					/>
 					<div>

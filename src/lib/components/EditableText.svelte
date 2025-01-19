@@ -3,7 +3,6 @@
 	import Button from './Button.svelte';
 	import TextField from './TextField.svelte';
 	import Dots from './Dots.svelte';
-	import Note from './Note.svelte';
 	import { handle } from '../../routes/feedback.svelte';
 	import { type ErrorID } from '$lib/data/CRUD';
 	import { ConfirmLabel, DeleteLabel, EditLabel } from './Labels';
@@ -13,7 +12,7 @@
 		label?: string | undefined;
 		placeholder: string;
 		inline?: boolean;
-		valid?: undefined | ((text: string) => boolean);
+		valid?: undefined | ((text: string) => string | undefined);
 		edit: (text: string) => Promise<ErrorID | undefined>;
 		note?: string;
 	};
@@ -72,7 +71,7 @@
 		bind:view={button}
 		tip={editing ? 'Save ' + (label ?? placeholder) : 'Edit ' + (label ?? placeholder)}
 		type="submit"
-		active={valid && editing ? valid(text) : undefined}
+		active={valid !== undefined && editing ? valid(text) === undefined : undefined}
 		action={(event) => (editing ? saveEdit(event) : startEditing(event))}
 		>{#if editing}{invalid ? DeleteLabel : ConfirmLabel}{:else if editing === undefined}<Dots
 			/>{:else}{EditLabel}{/if}</Button
@@ -80,6 +79,7 @@
 	<div class="box" class:inline class:editing>
 		<TextField
 			{label}
+			{note}
 			{inline}
 			{valid}
 			bind:text
@@ -89,9 +89,6 @@
 			bind:view={field}
 			done={() => (editing ? saveAndFocus() : undefined)}
 		/>
-		{#if note}
-			<Note>{note}</Note>
-		{/if}
 	</div>
 </div>
 

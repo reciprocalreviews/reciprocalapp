@@ -10,7 +10,7 @@
 		formaction = undefined,
 		name = undefined,
 		type = undefined,
-		view = $bindable(undefined),
+		view: _ = $bindable(undefined),
 		warn = undefined,
 		end = false
 	}: {
@@ -31,7 +31,7 @@
 
 {#if !warn || !confirming}
 	<button
-		bind:this={view}
+		bind:this={_}
 		{name}
 		{formaction}
 		{type}

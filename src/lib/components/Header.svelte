@@ -3,7 +3,6 @@
 	import Button from './Button.svelte';
 	import { getAuth } from '../../routes/Auth.svelte';
 	import { goto } from '$app/navigation';
-	import Feedback from './Feedback.svelte';
 
 	const routes = [
 		{ path: '/', label: 'Home' },

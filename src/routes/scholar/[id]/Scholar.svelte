@@ -15,6 +15,7 @@
 	import Gift from '$lib/components/Gift.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Row from '$lib/components/Row.svelte';
+	import { validEmail } from '$lib/validation';
 
 	let {
 		scholar,
@@ -145,7 +146,7 @@
 					placeholder="email"
 					inline={false}
 					note="Your email will be public and only used to send notifications."
-					valid={(text) => /.+@.+\..+/.test(text)}
+					valid={(text) => (validEmail(text) ? undefined : 'Must be a valid email')}
 					edit={(text) => db.updateScholarEmail(scholar.getID(), text)}
 				/>
 

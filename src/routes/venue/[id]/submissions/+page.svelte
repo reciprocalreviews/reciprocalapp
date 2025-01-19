@@ -11,7 +11,7 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { ORCIDRegex } from '$lib/data/ORCID';
 	import { getAuth } from '../../../Auth.svelte';
-	import { validIdentifier } from '$lib/validation';
+	import { isntEmpty } from '$lib/validation';
 	import { type PageData } from './$types';
 	import Page from '$lib/components/Page.svelte';
 	import Link from '$lib/components/Link.svelte';
@@ -72,7 +72,7 @@
 		cost: number
 	) {
 		return (
-			validIdentifier(title) &&
+			isntEmpty(title) &&
 			validExternalID(externalID) &&
 			validMeta(metaID) &&
 			validCharges(charges, cost)
@@ -100,24 +100,27 @@
 								size={40}
 								placeholder="Submission Title"
 								bind:text={title}
-								valid={validIdentifier}
+								valid={(text) => (isntEmpty(text) ? undefined : 'Title must be non-empty.')}
+								note="For display on this site."
 							/>
-							<Note>For display on this site.</Note>
 							<TextField
 								label="id"
 								size={40}
 								placeholder="Manuscript ID"
 								bind:text={externalID}
-								valid={validExternalID}
+								valid={(text) => (validExternalID(text) ? undefined : 'ID must be non-empty.')}
+								note="The ID from the system where the submission is stored, for reference."
 							/>
-							<Note>The ID from the system where the submission is stored, for reference.</Note>
 							<TextField
 								label="id"
 								inline={false}
 								size={40}
 								placeholder="Charges, e.g., '0000-0001-1234-5678 3'"
 								bind:text={charges}
-								valid={(text) => validCharges(text, submissionCost)}
+								valid={(text) =>
+									validCharges(text, submissionCost)
+										? undefined
+										: 'Charges must sum to the submission cost.'}
 							/>
 							{#if charges.length > 0}
 								{#if !validChargeFormat(charges)}
@@ -150,7 +153,7 @@
 								size={40}
 								placeholder="Metareviewer ORCID"
 								bind:text={metaID}
-								valid={validMeta}
+								valid={(text) => (validMeta(text) ? undefined : 'Invalid ORCID.')}
 							/>
 							<Note
 								><strong>Optional</strong>. The ORCID of the scholar serving as the meta-reviewer

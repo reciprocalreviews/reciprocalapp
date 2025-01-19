@@ -76,7 +76,8 @@
 						placeholder="Reviewer ORCIDs separated by commas"
 						bind:text={reviewers}
 						size={50}
-						valid={(text) => validReviewers(text)}
+						valid={(text) =>
+							validReviewers(text) ? undefined : 'Must be a list of ORCIDs separated by commas.'}
 					/>
 					{#if validReviewers(reviewers)}
 						{#each toReviewers(reviewers) as reviewer}

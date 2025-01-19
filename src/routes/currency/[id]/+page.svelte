@@ -82,7 +82,10 @@
 							bind:text={newMinter}
 							size={19}
 							placeholder="ORCID or email"
-							valid={(text) => validEmail(text) || ORCIDRegex.test(text)}
+							valid={(text) =>
+								validEmail(text) || ORCIDRegex.test(text)
+									? undefined
+									: 'Must be a valid email or ORCID'}
 						/><Button
 							tip="Add minter"
 							active={validEmail(newMinter) || ORCIDRegex.test(newMinter)}

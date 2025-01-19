@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte';
+	import Note from './Note.svelte';
 
 	type Props = {
 		text: string;
@@ -9,16 +10,19 @@
 		padded?: boolean;
 		active?: boolean;
 		name?: string | undefined;
-		valid?: undefined | ((text: string) => boolean);
+		/** Given a string, return a message describing invalidity, or nothing */
+		valid?: undefined | ((text: string) => string | undefined);
 		inline?: boolean;
 		password?: boolean;
 		view?: HTMLInputElement | HTMLTextAreaElement | undefined;
 		done?: ((() => void) | undefined) | undefined;
+		note?: string | undefined;
 	};
 
 	let {
 		text = $bindable(''),
 		placeholder,
+		note,
 		label,
 		size = undefined,
 		active = true,
@@ -30,10 +34,14 @@
 		done = undefined
 	}: Props = $props();
 
-	let isValid = $derived(valid ? valid(text) : true);
+	let error = $derived(valid ? valid(text) : undefined);
+	let isValid = $derived(error === undefined);
 	let measure = $state<HTMLSpanElement | undefined>(undefined);
 	let width = $state(0);
 	let height = $state(0);
+
+	/** We keep track of the first focus to avoid showing validation errors until interaction. */
+	let wasFocused = $state(false);
 
 	let labelView = $state<HTMLLabelElement | undefined>(undefined);
 
@@ -64,43 +72,57 @@
 	}
 </script>
 
-<label bind:this={labelView}>
-	{#if label}
-		<span class="label">{label}</span>
+<div class="field">
+	<label bind:this={labelView}>
+		{#if label}
+			<span class="label">{label}</span>
+		{/if}
+		{#if inline}
+			<input
+				bind:value={text}
+				bind:this={view}
+				{name}
+				disabled={!active}
+				{size}
+				onfocus={() => (wasFocused = true)}
+				style:width={size === undefined ? (width === 0 ? 'auto' : width + 'px') : undefined}
+				class:invalid={!isValid}
+				{placeholder}
+				type={password ? 'password' : 'text'}
+				onkeydown={(event) => (event.key === 'Enter' && done ? edit(event) : undefined)}
+			/>
+		{:else}
+			<textarea
+				class:invalid={!isValid}
+				disabled={!active}
+				{placeholder}
+				onfocus={() => (wasFocused = true)}
+				bind:value={text}
+				bind:this={view}
+				cols={size}
+				style:width={size ? undefined : 'auth'}
+				style:height={size ? undefined : height + 'px'}
+				onkeydown={(event) =>
+					event.key === 'Enter' && event.metaKey && done ? edit(event) : undefined}
+			></textarea>
+		{/if}
+		<span class="ruler" bind:this={measure}
+			>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n')}</span
+		>
+	</label>
+	{#if note || (error !== undefined && wasFocused)}
+		<Note error={error !== undefined && wasFocused}
+			>{#if error && wasFocused}{error}{:else}{note}{/if}</Note
+		>
 	{/if}
-	{#if inline}
-		<input
-			bind:value={text}
-			bind:this={view}
-			{name}
-			disabled={!active}
-			{size}
-			style:width={size === undefined ? (width === 0 ? 'auto' : width + 'px') : undefined}
-			class:invalid={!isValid}
-			{placeholder}
-			type={password ? 'password' : 'text'}
-			onkeydown={(event) => (event.key === 'Enter' && done ? edit(event) : undefined)}
-		/>
-	{:else}
-		<textarea
-			class:invalid={!isValid}
-			disabled={!active}
-			{placeholder}
-			bind:value={text}
-			bind:this={view}
-			cols={size}
-			style:width={size ? undefined : 'auth'}
-			style:height={size ? undefined : height + 'px'}
-			onkeydown={(event) =>
-				event.key === 'Enter' && event.metaKey && done ? edit(event) : undefined}
-		></textarea>
-	{/if}
-	<span class="ruler" bind:this={measure}
-		>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n')}</span
-	>
-</label>
+</div>
 
 <style>
+	.field {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing);
+	}
 	input {
 		border: none;
 		border-bottom: var(--thick-border-width) solid var(--text-color);
@@ -178,5 +200,10 @@
 		width: 100%;
 		position: relative;
 		overflow: hidden;
+		font-style: normal;
+	}
+
+	.label {
+		font-style: normal;
 	}
 </style>

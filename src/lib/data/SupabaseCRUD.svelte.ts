@@ -7,7 +7,6 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
 	CurrencyID,
 	ProposalID,
-	ProposalRow,
 	RoleID,
 	ScholarID,
 	ScholarRow,
@@ -220,14 +219,11 @@ export default class SupabaseCRUD extends CRUD {
 
 	async approveProposal(proposal: ProposalID) {
 		// Get the latest proposal data
-		const { data, error: proposalError } = await this.client
+		const { data: proposalData } = await this.client
 			.from('proposals')
 			.select()
 			.eq('id', proposal)
 			.single();
-
-		// Supabase isn't getting the type correctly from the query above :(
-		const proposalData = data as ProposalRow;
 
 		// Couldn't get proposal data? Return an error.
 		if (proposalData === null) return 'ApproveProposalNotFound';
@@ -270,8 +266,7 @@ export default class SupabaseCRUD extends CRUD {
 			})
 			.select()
 			.single();
-
-		if (venueData === null) return 'ApproveProposalNoVenue';
+		if (venueData === null || venueError !== null) return 'ApproveProposalNoVenue';
 
 		const venue = venueData.id;
 

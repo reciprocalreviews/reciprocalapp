@@ -14,6 +14,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 				.select('*, scholars (name), roles (name, venueid)')
 				.eq('roles.venueid', venueid)
 		: { data: null };
+	if (error) console.error('Failed to load commitments:', error);
 
 	return {
 		venue,
