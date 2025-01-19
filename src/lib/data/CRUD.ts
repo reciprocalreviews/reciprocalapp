@@ -88,7 +88,9 @@ export const Errors = {
 	AlreadyApproved: 'This transaction is already approved',
 	MissingApprovalVenue: 'The proposed transaction has no venue to transfer from.',
 	MissingRecipient: 'The proposed transaction has no scholar recipient.',
-	UndeletedTransaction: "The proposed transaction couldn't be deleted."
+	UndeletedTransaction: "The proposed transaction couldn't be deleted.",
+	InvalidCharges: "The proposed transaction's charges are invalid.",
+	NewSubmission: 'Unable to create a new submission'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -96,7 +98,16 @@ export type ErrorID = keyof typeof Errors;
 /** This abstract class defines an interface for database access. It's useful for defining mocks as well as enables us to change databases if necessary. */
 export default abstract class CRUD {
 	/** Insert a new submission in the database */
-	abstract createSubmission(submission: Submission): Promise<Submission>;
+	abstract createSubmission(
+		editor: ScholarID,
+		title: string,
+		expertise: string,
+		venue: VenueID,
+		externalID: string,
+		previousID: string | null,
+		charges: Charge[],
+		message: string
+	): Promise<undefined | ErrorID>;
 
 	/** Given a submission ID, eventually return the submission data. */
 	abstract getSubmission(submissionID: string): Promise<Submission>;

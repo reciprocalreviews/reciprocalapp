@@ -32,9 +32,6 @@ export default class SupabaseCRUD extends CRUD {
 		this.client = client;
 	}
 
-	createSubmission(submission: Submission): Promise<Submission> {
-		throw new Error('Method not implemented.');
-	}
 	getSubmission(submissionID: string): Promise<Submission> {
 		throw new Error('Method not implemented.');
 	}
@@ -42,33 +39,38 @@ export default class SupabaseCRUD extends CRUD {
 		throw new Error('Method not implemented.');
 	}
 
-	async verifyCharges(charges: Charge[]): Promise<true | Charge[] | undefined> {
+	async convertORCIDsToScholars(orcids: string[]) {
 		// First, find the scholars with the specified ORCIDs.
 		const { data: scholars, error: scholarError } = await this.client
 			.from('scholars')
 			.select('orcid, id')
-			.in(
-				'orcid',
-				charges.map((charge) => charge.scholar)
-			);
+			.in('orcid', orcids);
 		if (scholars === null) {
 			console.error(scholarError);
 			return undefined;
 		}
+		return scholars;
+	}
+
+	async verifyCharges(charges: Charge[]): Promise<true | Charge[] | undefined> {
+		// First, find the scholars with the specified ORCIDs.
+		const scholars = await this.convertORCIDsToScholars(charges.map((charge) => charge.scholar));
 
 		// Find the scholars that weren't found.
-		const missingScholars = charges
-			.filter((charge) => !scholars.some((scholar) => scholar.orcid === charge.scholar))
-			.map((charge) => charge.scholar);
-		if (missingScholars.length > 0)
-			return missingScholars.map((scholar) => ({ scholar, payment: undefined }));
+		if (scholars === undefined) return undefined;
+		if (scholars.length < charges.length)
+			return charges.map((charge) => ({
+				scholar: charge.scholar,
+				payment: scholars.some((s) => s.orcid === charge.scholar) ? charge.payment : undefined
+			}));
+
+		const scholarIDs = scholars.map((scholar) => scholar.id);
 
 		// Find all of the tokens owned by the set
-		const scholarsIDs = scholars.map((scholar) => scholar.id);
 		const { data: tokens, error: tokenError } = await this.client
 			.from('tokens')
 			.select('scholar')
-			.in('scholar', scholarsIDs);
+			.in('scholar', scholarIDs);
 		if (tokenError) {
 			console.error(tokenError);
 			return undefined;
@@ -100,6 +102,60 @@ export default class SupabaseCRUD extends CRUD {
 
 		// Otherwise, all is good.
 		return true;
+	}
+
+	async createSubmission(
+		editor: ScholarID,
+		title: string,
+		expertise: string,
+		venue: VenueID,
+		externalID: string,
+		previousID: string | null,
+		charges: Charge[],
+		message: string
+	): Promise<undefined | ErrorID> {
+		// Verify that the charges are valid.
+		const chargeError = await this.verifyCharges(charges);
+		if (chargeError !== true) return 'InvalidCharges';
+
+		// First, find the scholars with the specified ORCIDs.
+		const scholars = await this.convertORCIDsToScholars(charges.map((charge) => charge.scholar));
+
+		if (scholars === undefined) return 'NewSubmission';
+
+		const authors = charges
+			.map((charge) => scholars.find((s) => s.orcid === charge.scholar)?.id)
+			.filter((a) => a !== undefined);
+
+		if (authors.length < charges.length) return 'NewSubmission';
+
+		// Create the submission
+		const { error } = await this.client.from('submissions').insert({
+			title,
+			expertise,
+			venue,
+			externalid: externalID,
+			previousid: previousID,
+			authors,
+			payments: charges.map((charge) => charge.payment ?? 0)
+		});
+		if (error) {
+			console.error(error);
+			return 'NewSubmission';
+		}
+
+		// Create the proposed transactions
+		for (const charge of charges) {
+			await this.transferTokens(
+				editor,
+				charge.scholar,
+				'emailorcid',
+				venue,
+				'venueid',
+				charge.payment ?? 0,
+				message
+			);
+		}
 	}
 
 	createSource(source: Source): Promise<Source> {

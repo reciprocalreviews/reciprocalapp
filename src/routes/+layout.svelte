@@ -52,12 +52,10 @@
 {/if}
 <main>
 	<section class="notifications" aria-live="assertive">
-		{#each feedback as feedback, index}
+		{#each feedback as item, index}
 			{@render MessageBox(
-				feedback.level === 'error' && isError(feedback.message)
-					? Errors[feedback.message]
-					: feedback.message,
-				feedback.level,
+				item.level === 'error' && isError(item.message) ? Errors[item.message] : item.message,
+				item.level,
 				index
 			)}
 		{/each}

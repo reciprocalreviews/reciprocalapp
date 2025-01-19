@@ -41,6 +41,7 @@ export type Database = {
           role: string
           scholar: string
           submission: string
+          venue: string
         }
         Insert: {
           bid?: boolean
@@ -48,6 +49,7 @@ export type Database = {
           role: string
           scholar: string
           submission: string
+          venue: string
         }
         Update: {
           bid?: boolean
@@ -55,6 +57,7 @@ export type Database = {
           role?: string
           scholar?: string
           submission?: string
+          venue?: string
         }
         Relationships: [
           {
@@ -76,6 +79,13 @@ export type Database = {
             columns: ["submission"]
             isOneToOne: false
             referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_venue_fkey"
+            columns: ["venue"]
+            isOneToOne: false
+            referencedRelation: "venues"
             referencedColumns: ["id"]
           },
         ]
@@ -255,32 +265,42 @@ export type Database = {
       submissions: {
         Row: {
           authors: string[]
-          contributions: number[]
           expertise: string | null
           externalid: string
           id: string
+          payments: number[]
+          previousid: string | null
           title: string
           venue: string
         }
         Insert: {
           authors?: string[]
-          contributions?: number[]
           expertise?: string | null
           externalid: string
           id?: string
+          payments?: number[]
+          previousid?: string | null
           title?: string
           venue: string
         }
         Update: {
           authors?: string[]
-          contributions?: number[]
           expertise?: string | null
           externalid?: string
           id?: string
+          payments?: number[]
+          previousid?: string | null
           title?: string
           venue?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "submissions_previousid_fkey"
+            columns: ["previousid"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "submissions_venue_fkey"
             columns: ["venue"]

@@ -34,7 +34,7 @@
 					group="editors"
 					expand
 				>
-					<NewSubmission {submissionCost}></NewSubmission>
+					<NewSubmission venue={venue.id} {submissionCost}></NewSubmission>
 				</Card>
 			{/if}
 		</Cards>

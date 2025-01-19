@@ -1,14 +1,20 @@
 <script lang="ts">
+	import type { VenueID } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import TextField from '$lib/components/TextField.svelte';
+	import Tip from '$lib/components/Tip.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { ORCIDRegex } from '$lib/data/ORCID';
 	import { isntEmpty } from '$lib/validation';
+	import { getAuth } from '../../../Auth.svelte';
+	import { handle } from '../../../feedback.svelte';
 
-	let { submissionCost }: { submissionCost: number } = $props();
+	let { venue, submissionCost }: { venue: VenueID; submissionCost: number } = $props();
 
 	const db = getDB();
+	const auth = getAuth();
+	const user = $derived(auth.getUserID());
 
 	/** The title of the submission we're adding */
 	let title = $state('');
@@ -87,8 +93,11 @@
 	}
 </script>
 
+<p>When you create a new submission, authors will be charged the number of tokens you specify.</p>
+
+<Tip>Set up email integrations to automate submission creation.</Tip>
+
 <Form>
-	<p>When you create a new submission, authors will be charged the number of tokens you specify.</p>
 	<TextField
 		label="submission title"
 		size={40}
@@ -154,6 +163,20 @@
 	<Button
 		tip="Create a new submission"
 		active={affordable === true && validSubmission(title, externalID, charges, submissionCost)}
-		action={() => {}}>Create submission and charge authors</Button
+		action={() =>
+			user
+				? handle(
+						db.createSubmission(
+							user,
+							title,
+							expertise,
+							venue,
+							externalID,
+							previousID,
+							chargeTextToCharges(charges),
+							'Manual submission creation by editor'
+						)
+					)
+				: undefined}>Create submission and charge authors</Button
 	>
 </Form>
