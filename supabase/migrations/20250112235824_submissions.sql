@@ -21,6 +21,7 @@ create table submissions (
 -- Make it fast to retrieve the submissions of a scholar or venue.
 create index submissions_scholar_index on submissions(authors);
 create index submissions_venue_index on submissions(venue);
+create index submissions_externalid_index on submissions(externalid);
 
 -- Individuals who could be assigned to review a particular paper
 create table assignments (

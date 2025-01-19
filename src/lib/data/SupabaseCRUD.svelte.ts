@@ -19,6 +19,7 @@ import type {
 import CRUD, { NullUUID, type ErrorID } from './CRUD';
 import Scholar from './Scholar.svelte';
 import type { Database } from '$data/database';
+import type { SubmissionID } from '$lib/types/Submission';
 
 export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
@@ -37,6 +38,18 @@ export default class SupabaseCRUD extends CRUD {
 	}
 	updateSubmission(submission: Submission): Promise<Submission> {
 		throw new Error('Method not implemented.');
+	}
+
+	async updateSubmissionExpertise(
+		submissionID: SubmissionID,
+		expertise: string | null
+	): Promise<ErrorID | undefined> {
+		const { error } = await this.client
+			.from('submissions')
+			.update({ expertise })
+			.eq('id', submissionID);
+		if (error) return 'UpdateSubmissionExpertise';
+		else return;
 	}
 
 	async convertORCIDsToScholars(orcids: string[]) {

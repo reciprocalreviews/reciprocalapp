@@ -7,7 +7,7 @@
 
 <div class="submission">
 	<span class="icon">💡</span>
-	<Link to="/venue/{submission.venue}/submission/{submission.id}">{submission.title}</Link>
+	<Link to="/submission/{submission.id}">{submission.title}</Link>
 </div>
 
 <style>

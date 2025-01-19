@@ -10,6 +10,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Implemented manual submission creation form.
 - Styled submission list.
 - Added breadcrumbs on all pages to streamline navigation.
+- Defined a page to display a submission to authors or editors.
 
 ### Maintenance
 

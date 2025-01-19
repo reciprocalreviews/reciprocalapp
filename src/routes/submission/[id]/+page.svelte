@@ -1,101 +1,81 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import Loading from '$lib/components/Loading.svelte';
+	import { type PageData } from './$types';
+	import Page from '$lib/components/Page.svelte';
+	import VenueLink from '$lib/components/VenueLink.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import SourceLink from '$lib/components/VenueLink.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import TransactionPreview from '$lib/components/TransactionPreview.svelte';
+	import Tokens from '$lib/components/Tokens.svelte';
+	import Row from '$lib/components/Row.svelte';
+	import EditableText from '$lib/components/EditableText.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import { ORCIDRegex } from '../../../lib/data/ORCID';
-	import type Submission from '$lib/types/Submission';
 	import { getAuth } from '../../Auth.svelte';
+
+	let { data }: { data: PageData } = $props();
+	const { submission, venue, authors } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
+	const user = $derived(auth.getUserID());
 
-	let submissionPromise = db.getSubmission($page.params.id);
+	let isEditor = $derived(venue !== null && user !== null && venue.editors.includes(user));
 
-	/** The list of reviewers to compensate */
-	let reviewers = '';
-
-	function validReviewers(text: string) {
-		return toReviewers(text).every((reviewer) => ORCIDRegex.test(reviewer));
-	}
-
-	function toReviewers(text: string) {
-		return text.split(',').map((reviewer) => reviewer.trim());
-	}
-
-	async function done(submission: Submission) {
-		// await closeSubmission(db, submission.id, toReviewers(reviewers));
-		submissionPromise = db.getSubmission($page.params.id);
-	}
+	let isAuthor = $derived(
+		submission !== null && user !== null && submission.authors.includes(user)
+	);
 </script>
 
-{#if !auth.isAuthenticated()}
-	<h1>Submission</h1>
-	<Feedback error>Log in to view submissions.</Feedback>
+{#if submission === null}
+	<Page title="Submission" breadcrumbs={[]}>
+		<Feedback error>This submission does not exist.</Feedback>
+	</Page>
+{:else if !isEditor && !isAuthor}
+	<Page title="Submission" breadcrumbs={[]}>
+		<Feedback error>You are not authorized to view this submission.</Feedback>
+	</Page>
 {:else}
-	{#await submissionPromise}
-		<h1>Submission</h1>
-		<Loading />
-	{:then submission}
-		{@const editor = submission.editorID === auth.getUserID()}
-		{#if editor}
-			<h1>{submission.title}</h1>
-			<p><SourceLink id={submission.sourceID} name="" /></p>
-			<h2>Editor</h2>
-			<p><ScholarLink id={submission.editorID} /></p>
+	<Page
+		title={submission.title}
+		breadcrumbs={[[`/venue/${submission.venue}/submissions`, 'Submissions']]}
+	>
+		{#snippet subtitle()}Submission{/snippet}
+		{#snippet details()}
+			{#if submission.previousid}{submission.previousid} →
+			{/if}{submission.externalid}
+		{/snippet}
 
-			<h2>Meta-Reviewer</h2>
-			<p><ScholarLink id={submission.metaID} /></p>
+		<h2>Authors</h2>
 
-			<h2>Charges</h2>
-			{#each submission.charges as transactionID}
-				<TransactionPreview id={transactionID} />
-			{/each}
-
-			<h2>Payments</h2>
-			{#if submission.payment}
-				<Feedback>This submission is archived.</Feedback>
-				{#each submission.payment as transactionID}
-					<TransactionPreview id={transactionID} />
-				{/each}
-			{:else}
-				<p>
-					Is review complete for this submission? Enter the reviewers who should receive
-					compensation, then they, the meta-reviewer, and editor above will be compensated, and this
-					submission will be archived.
-				</p>
-				<Form>
-					<TextField
-						label="ORCIDs"
-						placeholder="Reviewer ORCIDs separated by commas"
-						bind:text={reviewers}
-						size={50}
-						valid={(text) =>
-							validReviewers(text) ? undefined : 'Must be a list of ORCIDs separated by commas.'}
-					/>
-					{#if validReviewers(reviewers)}
-						{#each toReviewers(reviewers) as reviewer}
-							<ScholarLink id={reviewer} />
-						{/each}
+		{#if authors}
+			{#each submission.authors as author}
+				{@const authorIndex = authors.findIndex((a) => a.id === author)}
+				{@const payment = authorIndex !== undefined ? submission.payments[authorIndex] : undefined}
+				<Row>
+					{#if authorIndex === undefined}
+						<Feedback error>Unable to find authors.</Feedback>
+					{:else}
+						<ScholarLink id={author}></ScholarLink>
+						{#if payment !== undefined}
+							paid <Tokens amount={payment} />{/if}
 					{/if}
-					<Button
-						tip="Compensate"
-						action={() => done(submission)}
-						active={validReviewers(reviewers)}>Compensate</Button
-					>
-				</Form>
-			{/if}
-		{:else}
-			<Feedback error>Submissions can only be viewed editors.</Feedback>
+				</Row>
+			{/each}
+		{:else}{/if}
+
+		<h2>Venue</h2>
+		{#if venue}
+			<VenueLink id={venue.id} name={venue.title} />
 		{/if}
-	{:catch}
-		<h1>Unknown submission</h1>
-		<Feedback>We couldn't load this source.</Feedback>
-	{/await}
+
+		<h2>Expertise</h2>
+		{#if isAuthor}
+			<EditableText
+				text={submission.expertise ?? ''}
+				placeholder="Expertise"
+				edit={(text) =>
+					db.updateSubmissionExpertise(submission.id, text.trim().length === 0 ? null : text)}
+			/>
+		{:else if submission.expertise}{submission.expertise}{:else}<Feedback
+				>No expertise provided</Feedback
+			>{/if}
+	</Page>
 {/if}

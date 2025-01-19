@@ -17,6 +17,7 @@ import type Transaction from '$lib/types/Transaction';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
 import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
+import type { SubmissionID } from '$lib/types/Submission';
 
 export const DatabaseSymbol = Symbol('database');
 export const NullUUID = '00000000-0000-0000-0000-000000000000';
@@ -90,7 +91,8 @@ export const Errors = {
 	MissingRecipient: 'The proposed transaction has no scholar recipient.',
 	UndeletedTransaction: "The proposed transaction couldn't be deleted.",
 	InvalidCharges: "The proposed transaction's charges are invalid.",
-	NewSubmission: 'Unable to create a new submission'
+	NewSubmission: 'Unable to create a new submission',
+	UpdateSubmissionExpertise: 'Unable to update the submission expertise'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -114,6 +116,12 @@ export default abstract class CRUD {
 
 	/** Given a submission ID, update it's data. */
 	abstract updateSubmission(submission: Submission): Promise<Submission>;
+
+	/** Given a submission ID, update it's data. */
+	abstract updateSubmissionExpertise(
+		submissionID: SubmissionID,
+		expertise: string | null
+	): Promise<ErrorID | undefined>;
 
 	/** Check whether the given scholars have enough tokens for the given payments. True if so, and a list of remaining balances by scholar if not. */
 	abstract verifyCharges(charges: Charge[]): Promise<true | Charge[] | undefined>;
