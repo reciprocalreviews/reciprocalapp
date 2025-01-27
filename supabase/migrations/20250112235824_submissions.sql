@@ -11,7 +11,7 @@ create table submissions (
   -- The scholars associated with the submission
   authors uuid[] not null default '{}'::uuid[] check (cardinality(authors) > 0),
   -- The token amounts proposed for the submission, corresponding to the authors
-  payments integer[] not null default '{}'::integer[] check (cardinality(contributions) = cardinality(authors)),
+  payments integer[] not null default '{}'::integer[] check (cardinality(payments) = cardinality(authors)),
   -- An optional title for public bidding
   title text not null default ''::text,
   -- An optional description of expertise required for public bidding
