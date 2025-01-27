@@ -6,8 +6,8 @@ create table submissions (
   venue uuid not null references venues(id),
   -- The external unique identifier of the submission, such as a submission number or manuscript number
   externalid text not null,
-  -- An optional link to a previous submission
-  previousid text references submissions(id),
+  -- An optional link to a previous submission id
+  previousid text default null,
   -- The scholars associated with the submission
   authors uuid[] not null default '{}'::uuid[] check (cardinality(authors) > 0),
   -- The token amounts proposed for the submission, corresponding to the authors
