@@ -36,6 +36,13 @@
 	<Page
 		title={submission.title}
 		breadcrumbs={[[`/venue/${submission.venue}/submissions`, 'Submissions']]}
+		edit={isAuthor || isEditor
+			? {
+					placeholder: 'Title',
+					valid: (text) => (text.trim().length === 0 ? 'Title cannot be empty.' : undefined),
+					update: (text) => db.updateSubmissionTitle(submission.id, text)
+				}
+			: undefined}
 	>
 		{#snippet subtitle()}Submission{/snippet}
 		{#snippet details()}

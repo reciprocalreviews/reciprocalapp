@@ -42,6 +42,18 @@ export default class SupabaseCRUD extends CRUD {
 		else return;
 	}
 
+	async updateSubmissionTitle(
+		submissionID: SubmissionID,
+		title: string
+	): Promise<ErrorID | undefined> {
+		const { error } = await this.client
+			.from('submissions')
+			.update({ title })
+			.eq('id', submissionID);
+		if (error) return 'UpdateSubmissionTitle';
+		else return;
+	}
+
 	async convertORCIDsToScholars(orcids: string[]) {
 		// First, find the scholars with the specified ORCIDs.
 		const { data: scholars, error: scholarError } = await this.client

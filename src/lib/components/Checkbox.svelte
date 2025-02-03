@@ -44,5 +44,6 @@
 		flex-direction: row;
 		gap: var(--spacing);
 		align-items: center;
+		font-size: var(--small-font-size);
 	}
 </style>

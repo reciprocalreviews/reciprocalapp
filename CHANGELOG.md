@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.5 2025-02-02
 
+### Added
+
+- Edit submission title.
+
 ### Fixed
 
 - Resolved several defects with the new submission form.

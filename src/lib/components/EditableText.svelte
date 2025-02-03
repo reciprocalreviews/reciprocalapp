@@ -101,7 +101,7 @@
 	}
 
 	.editable.inline {
-		align-items: center;
+		align-items: baseline;
 	}
 
 	.box {

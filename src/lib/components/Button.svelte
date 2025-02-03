@@ -71,7 +71,6 @@
 		color: var(--background-color);
 		cursor: pointer;
 		white-space: nowrap;
-		align-self: start;
 	}
 
 	.row button:last-child {

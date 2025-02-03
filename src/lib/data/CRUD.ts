@@ -89,7 +89,8 @@ export const Errors = {
 	UndeletedTransaction: "The proposed transaction couldn't be deleted.",
 	InvalidCharges: "The proposed transaction's charges are invalid.",
 	NewSubmission: 'Unable to create a new submission',
-	UpdateSubmissionExpertise: 'Unable to update the submission expertise'
+	UpdateSubmissionExpertise: 'Unable to update the submission expertise',
+	UpdateSubmissionTitle: "Unable to update the submission's title"
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -112,6 +113,11 @@ export default abstract class CRUD {
 	abstract updateSubmissionExpertise(
 		submissionID: SubmissionID,
 		expertise: string | null
+	): Promise<ErrorID | undefined>;
+
+	abstract updateSubmissionTitle(
+		submissionID: SubmissionID,
+		title: string | null
 	): Promise<ErrorID | undefined>;
 
 	/** Check whether the given scholars have enough tokens for the given payments. True if so, and a list of remaining balances by scholar if not. */
