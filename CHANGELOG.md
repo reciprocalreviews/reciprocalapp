@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 - Edit submission title.
 - Edit titles in place.
+- Added link to previous manuscript submission.
 
 ### Fixed
 
