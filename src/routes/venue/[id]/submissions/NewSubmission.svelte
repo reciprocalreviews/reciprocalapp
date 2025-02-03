@@ -147,7 +147,7 @@
 								? `The charges do not sum to the submission cost of ${submissionCost}`
 								: affordable === undefined
 									? "When you're done, check balances below."
-									: undefined}
+									: affordable}
 		note={affordable === true
 			? 'These authors can afford this charge.'
 			: `By line, authors and how many tokens to charge each of them. Tokens must sum to ${submissionCost}.`}
@@ -156,7 +156,7 @@
 		tip="Check if authors have enough tokens"
 		active={validChargeFormat(charges) &&
 			validCharge(charges, submissionCost) &&
-			affordable === undefined}
+			affordable !== true}
 		action={checkAffordability}>Check author balances</Button
 	>
 

@@ -90,7 +90,7 @@ export default class SupabaseCRUD extends CRUD {
 		// Compute the deficits
 		const deficits = charges.map((charge) => {
 			const scholarID = scholars.find((scholar) => scholar.orcid === charge.scholar)?.id;
-			const balance = scholarID !== undefined ? balances.get(scholarID) : undefined;
+			const balance = scholarID !== undefined ? (balances.get(scholarID) ?? 0) : 0;
 			return {
 				scholar: charge.scholar,
 				payment:
