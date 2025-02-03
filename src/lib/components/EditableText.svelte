@@ -97,7 +97,7 @@
 		display: flex;
 		flex-direction: row;
 		gap: var(--spacing);
-		align-items: baseline;
+		align-items: middle;
 	}
 
 	.editable.inline {
