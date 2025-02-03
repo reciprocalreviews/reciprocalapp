@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Added
 
 - Edit submission title.
+- Edit titles in place.
 
 ### Fixed
 
