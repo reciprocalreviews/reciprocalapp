@@ -77,18 +77,20 @@
 			/>{:else}{EditLabel}{/if}</Button
 	>
 	<div class="box" class:inline class:editing>
-		<TextField
-			{label}
-			{note}
-			{inline}
-			{valid}
-			bind:text
-			{placeholder}
-			padded={false}
-			active={editing}
-			bind:view={field}
-			done={() => (editing ? saveAndFocus() : undefined)}
-		/>
+		{#if editing}
+			<TextField
+				{label}
+				{note}
+				{inline}
+				{valid}
+				bind:text
+				{placeholder}
+				padded={false}
+				active={editing}
+				bind:view={field}
+				done={() => (editing ? saveAndFocus() : undefined)}
+			/>
+		{:else if text.length === 0}<em>{placeholder}</em>{:else}{text}{/if}
 	</div>
 </div>
 
@@ -97,11 +99,11 @@
 		display: flex;
 		flex-direction: row;
 		gap: var(--spacing);
-		align-items: middle;
+		align-items: center;
 	}
 
 	.editable.inline {
-		align-items: baseline;
+		align-items: center;
 	}
 
 	.box {
