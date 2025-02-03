@@ -546,7 +546,6 @@ export default class SupabaseCRUD extends CRUD {
 			if (venue === null) return 'CreateVolunteer';
 			const welcome = venue.welcome_amount;
 
-			// TODO Finish after tokens and transactions table are created.
 			// Record an approved transaction to log the gift.
 			const error = await this.createTransaction(
 				scholarid,
