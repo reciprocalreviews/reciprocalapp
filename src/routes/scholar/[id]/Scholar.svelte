@@ -38,7 +38,17 @@
 	let editable = $derived(auth.getUserID() === scholar.getID());
 </script>
 
-<Page title={scholar.getName() ?? 'anonymous'} breadcrumbs={[]}>
+<Page
+	title={scholar.getName() ?? 'anonymous'}
+	breadcrumbs={[]}
+	edit={editable
+		? {
+				placeholder: 'Name',
+				valid: (name: string) => (name.trim().length === 0 ? 'Name cannot be empty' : undefined),
+				update: (text) => db.updateScholarName(scholar.getID(), text)
+			}
+		: undefined}
+>
 	{#snippet subtitle()}Scholar{/snippet}
 	{#snippet details()}
 		<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>
@@ -136,13 +146,7 @@
 			{/if}
 		</Card>
 		{#if editable}
-			<Card icon="⛭" header="settings" note="Name, availability, status, email, etc.">
-				<EditableText
-					text={scholar.getName() ?? ''}
-					placeholder="name"
-					label="name"
-					edit={(text) => db.updateScholarName(scholar.getID(), text)}
-				/>
+			<Card icon="⛭" header="settings" note="Email, etc.">
 				<EditableText
 					text={scholar.getEmail() ?? ''}
 					label="email"
