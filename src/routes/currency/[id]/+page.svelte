@@ -180,7 +180,7 @@
 					<Feedback error>Unable to load venues.</Feedback>
 				{/if}
 			</Card>
-			{#if isMinter}
+			<!-- {#if isMinter}
 				<Card group="minters" icon="⛭" header="settings" note="Update the name, etc.">
 					<EditableText
 						text={currency.name}
@@ -189,7 +189,7 @@
 						edit={async (text) => await db.updateCurrencyName(currency.id, text)}
 					/>
 				</Card>
-			{/if}
+			{/if} -->
 		</Cards>
 	{/if}
 </Page>
