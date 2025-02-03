@@ -163,20 +163,30 @@
 	<Button
 		tip="Create a new submission"
 		active={affordable === true && validSubmission(title, externalID, charges, submissionCost)}
-		action={() =>
-			user
-				? handle(
-						db.createSubmission(
-							user,
-							title,
-							expertise,
-							venue,
-							externalID,
-							previousID,
-							chargeTextToCharges(charges),
-							'Manual submission creation by editor'
-						)
+		action={() => {
+			if (user) {
+				const result = handle(
+					db.createSubmission(
+						user,
+						title,
+						expertise,
+						venue,
+						externalID,
+						previousID,
+						chargeTextToCharges(charges),
+						'Manual submission creation by editor'
 					)
-				: undefined}>Create submission and charge authors</Button
+				);
+
+				title = '';
+				expertise = '';
+				externalID = '';
+				previousID = '';
+				charges = '';
+				affordable = undefined;
+
+				return result;
+			}
+		}}>Create submission and charge authors</Button
 	>
 </Form>
