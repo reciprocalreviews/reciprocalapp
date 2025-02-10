@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.6 2025-02-09
 
+### Added
+
+- Added basic bidding interface.
+
 ### Maintenance
 
 - Updated all minor versions of vite, Typescript, Svelte, Supabase.

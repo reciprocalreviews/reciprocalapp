@@ -162,10 +162,6 @@
 									>
 								{/if}
 							</div>
-							<Note
-								>{#if role.description.length > 0}{role.description}{:else}<em>No description.</em
-									>{/if}</Note
-							>
 
 							{#if commitment}
 								<hr />
@@ -175,7 +171,8 @@
 											tip="accept this invitation"
 											action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
 											>Accept</Button
-										><Button
+										>
+										<Button
 											tip="decline this invitation"
 											action={() => handle(db.acceptRoleInvite(commitment.id, 'declined'))}
 											>Decline</Button

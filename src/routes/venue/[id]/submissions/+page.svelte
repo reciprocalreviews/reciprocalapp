@@ -9,14 +9,22 @@
 	import Cards from '$lib/components/Cards.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import NewSubmission from './NewSubmission.svelte';
+	import { getDB } from '$lib/data/CRUD';
+	import Button from '$lib/components/Button.svelte';
+	import ScholarLink from '$lib/components/ScholarLink.svelte';
+	import { handle } from '../../../feedback.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { venue, submissions } = $derived(data);
+	const { venue, submissions, volunteering, roles, assignments } = $derived(data);
 
+	const db = getDB();
 	const auth = getAuth();
+
 	const uid = $derived(auth.getUserID());
 	const editor = $derived(uid !== null && venue !== null && venue.editors.includes(uid));
 
+	// Show the bidding interface if there's a venue, its biddable
+	const bidding = $derived(venue !== null && venue.bidding);
 	const submissionCost = $derived(venue?.submission_cost ?? null);
 </script>
 
@@ -52,12 +60,72 @@
 						<th>Submission</th>
 						<th>Expertise</th>
 						<th>External ID</th>
+						<!-- If bidding is enabled, add column for each of the scholar's volunteer roles -->
+						{#if (editor || bidding) && volunteering && roles && assignments}
+							{#if editor}
+								{#each roles as role}
+									<th>{role.name}</th>
+								{/each}
+							{:else}
+								{#each volunteering as commitment}
+									<th>{roles?.find((role) => role.id === commitment.roleid)?.name ?? '—'}</th>
+								{/each}
+							{/if}
+						{/if}
 					{/snippet}
 					{#each submissions as submission}
 						<tr>
 							<td><SubmissionPreview {submission} /></td>
 							<td>{submission.expertise}</td>
 							<td>{submission.externalid}</td>
+							<!-- If we have all the information, show a checkbox for each role they've volunteered for,
+							 	allowing them to bid, unbid, or otherwise modify the current state of their responsibilities. -->
+							{#if (editor || bidding) && volunteering && roles && assignments && uid}
+								{#each roles as role}
+									{@const submissionAssignments = assignments.filter(
+										(ass) => ass.submission === submission.id && ass.role === role.id
+									)}
+									<td>
+										<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
+										{#if editor}
+											{#each submissionAssignments as assignment}
+												<ScholarLink id={assignment.scholar} />
+												{#if assignment.bid}
+													<Button
+														tip="Accept this bid, assigning this scholar to this role for this submission."
+														action={() => handle(db.approveAssignment(assignment.id))}
+														>Assign</Button
+													>
+												{/if}
+											{:else}
+												&mdash;
+											{/each}
+										{:else}
+											<!-- Active assignment? -->
+											{#each submissionAssignments as assignment}
+												<!-- If it's a bid, show a button for unbidding. If not, just say its assigned. -->
+												{#if assignment.bid}
+													<Button
+														tip="Remove interest in serving as {role?.description ??
+															'in this role'}"
+														action={() => handle(db.deleteAssignment(assignment.id))}>Unbid</Button
+													>
+												{:else}
+													Assigned
+												{/if}
+											{:else}
+												<!-- No assignments? Allow bidding -->
+												<Button
+													tip="Express interest in serving as {role?.description ?? 'in this role'}"
+													action={() =>
+														handle(db.createAssignment(submission.id, uid, role.id, true))}
+													>Bid</Button
+												>
+											{/each}
+										{/if}
+									</td>
+								{/each}
+							{/if}
 						</tr>
 					{:else}
 						<Feedback>No active submissions.</Feedback>

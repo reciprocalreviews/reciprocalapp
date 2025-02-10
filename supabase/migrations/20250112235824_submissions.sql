@@ -72,17 +72,30 @@ create policy "editors can delete submissions" on public.submissions
 alter table public.assignments
   enable row level security;
 
+-- Editors or scholars who are active volunteers for the inserted role can create bidding assignments
 create policy "editors can create assignments" on public.assignments
-  for insert to anon, authenticated with check (isEditor(venue));
+  for insert to anon, authenticated with check (
+    isEditor(venue) or 
+    (
+      bid and 
+      exists (
+        select from volunteers where 
+          volunteers.roleid = role and 
+          volunteers.scholarid = auth.uid() and 
+          volunteers.active and 
+          volunteers.accepted="accepted"
+      )
+    )
+  );
 
 create policy "editors can see assignments" on public.assignments
-  for select to anon, authenticated using (isEditor(venue));
+  for select to anon, authenticated using (isEditor(venue) or scholar = auth.uid());
 
 create policy "editors can update assignments" on public.assignments
   for update to anon, authenticated 
-    using (isEditor(venue))
+    using (isEditor(venue) or scholar = auth.uid())
     with check (true);
 
 create policy "editors can delete assignments" on public.assignments
   for delete to anon, authenticated 
-  using (isEditor(venue));
+  using (isEditor(venue) or scholar = auth.uid());

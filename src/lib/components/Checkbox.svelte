@@ -6,11 +6,15 @@
 	let {
 		on = $bindable(),
 		change = undefined,
+		active = true,
 		children
 	}: {
+		/** Whether the box is selected */
 		on: boolean;
+		/** Whether the checkbox is enabled */
+		active?: boolean;
 		change?: undefined | ((on: boolean) => Promise<ErrorID | undefined>);
-		children: Snippet;
+		children?: Snippet;
 	} = $props();
 </script>
 
@@ -18,6 +22,8 @@
 	><input
 		type="checkbox"
 		aria-checked={on}
+		aria-disabled={!active}
+		disabled={!active}
 		checked={on}
 		onclick={async () => {
 			on = !on;
@@ -25,7 +31,7 @@
 				await handle(change(on));
 			}
 		}}
-	/>{@render children()}</label
+	/>{@render children?.()}</label
 >
 
 <style>

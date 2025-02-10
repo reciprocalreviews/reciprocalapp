@@ -9,7 +9,8 @@ import {
 	type VolunteerID,
 	type Response,
 	type TokenID,
-	type TransactionStatus
+	type TransactionStatus,
+	type AssignmentID
 } from '../../data/types';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
 import { getContext, setContext } from 'svelte';
@@ -90,7 +91,10 @@ export const Errors = {
 	InvalidCharges: "The proposed transaction's charges are invalid.",
 	NewSubmission: 'Unable to create a new submission',
 	UpdateSubmissionExpertise: 'Unable to update the submission expertise',
-	UpdateSubmissionTitle: "Unable to update the submission's title"
+	UpdateSubmissionTitle: "Unable to update the submission's title",
+	ApproveAssignment: 'Unable to approve the assignment',
+	CreateAssignment: 'Unable to create this assignment',
+	DeleteAssignment: 'Unable to delete this assignment'
 };
 
 export type ErrorID = keyof typeof Errors;
@@ -247,4 +251,17 @@ export default abstract class CRUD {
 	 * Will only work for a currency's minter because of security rules.
 	 * */
 	abstract approveTransaction(minter: ScholarID, id: TransactionID): Promise<ErrorID | undefined>;
+
+	/** Update an assignment for a submission */
+	abstract approveAssignment(assignment: AssignmentID): Promise<ErrorID | undefined>;
+
+	/** Create a new assignment record */
+	abstract createAssignment(
+		submission: SubmissionID,
+		scholar: ScholarID,
+		role: RoleID,
+		bid: boolean
+	): Promise<ErrorID | undefined>;
+
+	abstract deleteAssignment(assignment: AssignmentID): Promise<ErrorID | undefined>;
 }

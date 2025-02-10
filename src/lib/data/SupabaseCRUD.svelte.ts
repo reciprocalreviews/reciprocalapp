@@ -11,7 +11,8 @@ import type {
 	VolunteerID,
 	Response,
 	TokenID,
-	TransactionStatus
+	TransactionStatus,
+	AssignmentID
 } from '../../data/types';
 import CRUD, { NullUUID, type ErrorID } from './CRUD';
 import Scholar from './Scholar.svelte';
@@ -145,15 +146,17 @@ export default class SupabaseCRUD extends CRUD {
 		if (authors.length < charges.length) return 'NewSubmission';
 
 		// Create the submission
-		const { error } = await this.client.from('submissions').insert({
-			title,
-			expertise,
-			venue,
-			externalid: externalID,
-			previousid: previousID,
-			authors,
-			payments: charges.map((charge) => charge.payment ?? 0)
-		});
+		const { error } = await this.client
+			.from('submissions')
+			.insert({
+				title,
+				expertise,
+				venue,
+				externalid: externalID,
+				previousid: previousID,
+				authors,
+				payments: charges.map((charge) => charge.payment ?? 0)
+			});
 		if (error) {
 			console.error(error);
 			return 'NewSubmission';
@@ -524,13 +527,15 @@ export default class SupabaseCRUD extends CRUD {
 		if (volunteer.some((v) => v.roleid === roleid)) return 'AlreadyVolunteered';
 
 		// Create the volunteer record.
-		const { error } = await this.client.from('volunteers').insert({
-			scholarid,
-			roleid,
-			active: accepted,
-			accepted: accepted ? 'accepted' : 'invited',
-			expertise: ''
-		});
+		const { error } = await this.client
+			.from('volunteers')
+			.insert({
+				scholarid,
+				roleid,
+				active: accepted,
+				accepted: accepted ? 'accepted' : 'invited',
+				expertise: ''
+			});
 		if (error) {
 			console.error(error);
 			return 'CreateVolunteer';
@@ -711,17 +716,19 @@ export default class SupabaseCRUD extends CRUD {
 		if (fromScholar === null && fromVenue === null) return 'CreateTransaction';
 		if (toScholar === null && toVenue === null) return 'CreateTransaction';
 
-		const { error } = await this.client.from('transactions').insert({
-			creator,
-			from_scholar: fromScholar,
-			from_venue: fromVenue,
-			to_scholar: toScholar,
-			to_venue: toVenue,
-			tokens,
-			currency,
-			purpose,
-			status
-		});
+		const { error } = await this.client
+			.from('transactions')
+			.insert({
+				creator,
+				from_scholar: fromScholar,
+				from_venue: fromVenue,
+				to_scholar: toScholar,
+				to_venue: toVenue,
+				tokens,
+				currency,
+				purpose,
+				status
+			});
 
 		return error ? 'CreateTransaction' : undefined;
 	}
@@ -773,5 +780,43 @@ export default class SupabaseCRUD extends CRUD {
 			.delete()
 			.eq('id', transaction.id);
 		if (updateError) return 'UndeletedTransaction';
+	}
+
+	async approveAssignment(assignment: AssignmentID): Promise<ErrorID | undefined> {
+		const { error } = await this.client
+			.from('assignments')
+			.update({ bid: false })
+			.eq('id', assignment);
+		if (error) return 'ApproveAssignment';
+		else return;
+	}
+
+	async createAssignment(
+		submission: SubmissionID,
+		scholar: ScholarID,
+		roleid: RoleID,
+		bid: boolean
+	): Promise<ErrorID | undefined> {
+		const { data: role, error: roleError } = await this.client
+			.from('roles')
+			.select()
+			.eq('id', roleid)
+			.single();
+		if (role === null) {
+			console.error(roleError);
+			return 'CreateAssignment';
+		}
+
+		const { error } = await this.client
+			.from('assignments')
+			.insert({ submission, scholar, role: roleid, bid, venue: role.venueid });
+		if (error) return 'CreateAssignment';
+		else return;
+	}
+
+	async deleteAssignment(assignment: AssignmentID): Promise<ErrorID | undefined> {
+		const { error } = await this.client.from('assignments').delete().eq('id', assignment);
+		if (error) return 'DeleteAssignment';
+		else return;
 	}
 }
