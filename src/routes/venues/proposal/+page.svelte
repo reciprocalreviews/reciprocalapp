@@ -8,7 +8,7 @@
 	import { validEmails, isntEmpty, validURLError } from '$lib/validation';
 	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../../Auth.svelte';
-	import { addError, isError } from '../../feedback.svelte';
+	import { addError } from '../../feedback.svelte';
 
 	let venue = $state('');
 	let editors = $state('');
@@ -41,7 +41,7 @@
 
 		proposing = true;
 
-		const proposal = await db.proposeVenue(
+		const { data: proposalID, error: proposalError } = await db.proposeVenue(
 			uid,
 			venue,
 			url,
@@ -50,11 +50,11 @@
 			message
 		);
 
-		if (isError(proposal)) {
-			addError(proposal);
+		if (proposalError) {
+			addError(proposalError);
 			proposing = false;
 		} else {
-			goto(`/venues/proposal/${proposal}`);
+			goto(`/venues/proposal/${proposalID}`);
 		}
 		return;
 	}

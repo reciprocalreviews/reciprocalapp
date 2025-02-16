@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import Lead from './Lead.svelte';
 	import Link from './Link.svelte';
-	import { type ErrorID } from '$lib/data/CRUD';
+	import { type Result } from '$lib/data/CRUD';
 	import EditableText from './EditableText.svelte';
 
 	let {
@@ -21,7 +21,7 @@
 		edit?:
 			| {
 					valid: undefined | ((text: string) => string | undefined);
-					update: (text: string) => Promise<ErrorID | undefined>;
+					update: (text: string) => Promise<Result>;
 					placeholder: string;
 			  }
 			| undefined;

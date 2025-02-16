@@ -4,8 +4,8 @@
 	import TextField from './TextField.svelte';
 	import Dots from './Dots.svelte';
 	import { handle } from '../../routes/feedback.svelte';
-	import { type ErrorID } from '$lib/data/CRUD';
 	import { ConfirmLabel, DeleteLabel, EditLabel } from './Labels';
+	import type { Result } from '$lib/data/CRUD';
 
 	type Props = {
 		text: string;
@@ -13,7 +13,7 @@
 		placeholder: string;
 		inline?: boolean;
 		valid?: undefined | ((text: string) => string | undefined);
-		edit: (text: string) => Promise<ErrorID | undefined>;
+		edit: (text: string) => Promise<Result>;
 		note?: string;
 	};
 

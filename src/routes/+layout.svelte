@@ -4,12 +4,13 @@
 	import Header from '$lib/components/Header.svelte';
 	import { onMount, type Snippet } from 'svelte';
 	import { invalidate } from '$app/navigation';
-	import type { Session, SupabaseClient } from '@supabase/supabase-js';
+	import type { PostgrestError, Session, SupabaseClient } from '@supabase/supabase-js';
 	import { createAuthContext, getAuth } from './Auth.svelte';
-	import { Errors, setDB } from '$lib/data/CRUD';
+	import { setDB } from '$lib/data/CRUD';
 	import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
-	import { getFeedback, removeError, type Level, isError } from './feedback.svelte';
+	import { getFeedback, removeError, type Level } from './feedback.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import { enUS } from '../locale/Locale';
 
 	let {
 		data,
@@ -37,12 +38,22 @@
 	});
 
 	// Set client side database cache.
-	setDB(new SupabaseCRUD(data.supabase));
+	setDB(new SupabaseCRUD(data.supabase, enUS));
 </script>
 
-{#snippet MessageBox(message: string, level: Level, index: number)}
+{#snippet MessageBox(
+	message: string,
+	level: Level,
+	index: number,
+	error: PostgrestError | undefined
+)}
 	<div class="feedback {level}">
-		<span>{message}</span>
+		<div>
+			<span>{message}</span>
+			{#if error}
+				<pre>{error.message}</pre>
+			{/if}
+		</div>
 		<Button action={() => removeError(index)} tip="Dismiss notification">𐄂</Button>
 	</div>
 {/snippet}
@@ -53,11 +64,7 @@
 <main>
 	<section class="notifications" aria-live="assertive">
 		{#each feedback as item, index}
-			{@render MessageBox(
-				item.level === 'error' && isError(item.message) ? Errors[item.message] : item.message,
-				item.level,
-				index
-			)}
+			{@render MessageBox(item.message, item.level, index, item.error)}
 		{/each}
 	</section>
 	{@render children()}

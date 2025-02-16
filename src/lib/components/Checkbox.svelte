@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { ErrorID } from '$lib/data/CRUD';
 	import type { Snippet } from 'svelte';
 	import { handle } from '../../routes/feedback.svelte';
+	import type { Result } from '$lib/data/CRUD';
 
 	let {
 		on = $bindable(),
@@ -13,7 +13,7 @@
 		on: boolean;
 		/** Whether the checkbox is enabled */
 		active?: boolean;
-		change?: undefined | ((on: boolean) => Promise<ErrorID | undefined>);
+		change?: undefined | ((on: boolean) => Promise<Result>);
 		children?: Snippet;
 	} = $props();
 </script>

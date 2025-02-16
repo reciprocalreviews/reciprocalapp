@@ -7,7 +7,7 @@
 	import { getAuth } from '../../../Auth.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { addError, handle, isError } from '../../../feedback.svelte';
+	import { addError, handle } from '../../../feedback.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { getDB } from '$lib/data/CRUD';
 	import Date from '$lib/components/Date.svelte';
@@ -48,10 +48,10 @@
 	async function support() {
 		if (uid === null || proposal === null) return;
 		submitting = true;
-		const error = await db.addSupporter(uid, proposal.id, message);
+		const { error } = await db.addSupporter(uid, proposal.id, message);
 		submitting = false;
 
-		if (error && isError(error)) {
+		if (error) {
 			addError(error);
 			submitting = false;
 		} else {
@@ -190,10 +190,13 @@
 						{#if !approved && editable}
 							<Button
 								tip="Delete support"
-								action={() => {
-									db.deleteSupport(supporter.id);
-									invalidateAll();
-									goto('/venues');
+								action={async () => {
+									const { error } = await db.deleteSupport(supporter.id);
+									if (error) addError(error);
+									else {
+										invalidateAll();
+										goto('/venues');
+									}
 								}}>{DeleteLabel}</Button
 							>
 						{/if}

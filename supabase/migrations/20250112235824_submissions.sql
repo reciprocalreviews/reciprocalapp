@@ -6,12 +6,14 @@ create table submissions (
   venue uuid not null references venues(id),
   -- The external unique identifier of the submission, such as a submission number or manuscript number
   externalid text not null,
-  -- An optional link to a previous submission id
+  -- An optional link to a previous external submission id
   previousid text default null,
   -- The scholars associated with the submission
   authors uuid[] not null default '{}'::uuid[] check (cardinality(authors) > 0),
   -- The token amounts proposed for the submission, corresponding to the authors
   payments integer[] not null default '{}'::integer[] check (cardinality(payments) = cardinality(authors)),
+  -- The transactions that correspond to the payments, or null if payment hasn't been made.
+  transactions uuid[] default null,
   -- An optional title for public bidding
   title text not null default ''::text,
   -- An optional description of expertise required for public bidding

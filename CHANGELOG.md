@@ -5,6 +5,14 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.7 2025-02-18
 
+### Added
+
+- More consistent, precise, and type-safe error handling.
+
+### Fixed
+
+- Fixed scholar transactions breadcrumb link.
+
 ### Maintenance
 
 - Updated all minro versions of Supabase, Svelte, SvelteKit.

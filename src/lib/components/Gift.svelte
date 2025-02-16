@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ORCIDRegex } from '$lib/data/ORCID';
-	import { type ErrorID } from '$lib/data/CRUD';
+	import { type Result } from '$lib/data/CRUD';
 	import { validEmail } from '$lib/validation';
 	import { handle } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
@@ -21,7 +21,7 @@
 			receipient: string,
 			amount: number,
 			purpose: string
-		) => Promise<ErrorID | undefined> | undefined;
+		) => Promise<Result<any>> | undefined;
 	} = $props();
 
 	let giftRecipient = $state('');
