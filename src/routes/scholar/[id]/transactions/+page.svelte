@@ -11,7 +11,7 @@
 	<Page
 		title={scholar.name ?? scholar.email ?? 'anonymous'}
 		breadcrumbs={[
-			[`/${scholar.id}`, scholar.name ?? scholar.orcid ?? scholar.email ?? 'anonymous']
+			[`/scholar/${scholar.id}`, scholar.name ?? scholar.orcid ?? scholar.email ?? 'anonymous']
 		]}
 	>
 		{#snippet subtitle()}Transactions{/snippet}
