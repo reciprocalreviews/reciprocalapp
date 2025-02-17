@@ -167,14 +167,12 @@
 			if (user) {
 				const result = handle(
 					db.createSubmission(
-						user,
 						title,
 						expertise,
 						venue,
 						externalID,
 						previousID,
-						chargeTextToCharges(charges),
-						'Manual submission creation by editor'
+						chargeTextToCharges(charges)
 					)
 				);
 

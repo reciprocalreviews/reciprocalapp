@@ -271,16 +271,18 @@ export type Database = {
           payments: number[]
           previousid: string | null
           title: string
+          transactions: string[]
           venue: string
         }
         Insert: {
-          authors?: string[]
+          authors: string[]
           expertise?: string | null
           externalid: string
           id?: string
-          payments?: number[]
+          payments: number[]
           previousid?: string | null
           title?: string
+          transactions: string[]
           venue: string
         }
         Update: {
@@ -291,16 +293,10 @@ export type Database = {
           payments?: number[]
           previousid?: string | null
           title?: string
+          transactions?: string[]
           venue?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "submissions_previousid_fkey"
-            columns: ["previousid"]
-            isOneToOne: false
-            referencedRelation: "submissions"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "submissions_venue_fkey"
             columns: ["venue"]

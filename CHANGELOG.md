@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Added
 
 - More consistent, precise, and type-safe error handling.
+- Added transaction IDs to submission to keep track of charges.
 
 ### Fixed
 

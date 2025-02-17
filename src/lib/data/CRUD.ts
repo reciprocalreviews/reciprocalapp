@@ -36,15 +36,13 @@ export type Result<Type = undefined> = { data?: Type; error?: DBError };
 export default abstract class CRUD {
 	/** Insert a new submission in the database and return a list of transaction ids that paid for it. */
 	abstract createSubmission(
-		editor: ScholarID,
 		title: string,
 		expertise: string,
 		venue: VenueID,
 		externalID: string,
 		previousID: string | null,
-		charges: Charge[],
-		message: string
-	): Promise<Result<string[]>>;
+		charges: Charge[]
+	): Promise<Result<SubmissionID>>;
 
 	/** Given a submission ID, update it's data. */
 	abstract updateSubmissionExpertise(

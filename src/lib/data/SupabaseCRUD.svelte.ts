@@ -137,15 +137,13 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async createSubmission(
-		editor: ScholarID,
 		title: string,
 		expertise: string,
 		venue: VenueID,
 		externalID: string,
 		previousID: string | null,
-		charges: Charge[],
-		message: string
-	): Promise<Result<string[]>> {
+		charges: Charge[]
+	): Promise<Result<SubmissionID>> {
 		// Verify that the charges are valid.
 		const chargeError = await this.verifyCharges(charges);
 		if (chargeError !== true) return { error: { message: this.locale.error.InvalidCharges } };
@@ -168,20 +166,36 @@ export default class SupabaseCRUD extends CRUD {
 			return { error: { message: this.locale.error.MissingSubmissionCharge } };
 
 		// Create the submission
-		const { error } = await this.client.from('submissions').insert({
-			title,
-			expertise,
-			venue,
-			externalid: externalID,
-			previousid: previousID,
-			authors,
-			payments: charges.map((charge) => charge.payment ?? 0)
-		});
+		const { data: submission, error } = await this.client
+			.from('submissions')
+			.insert({
+				title,
+				expertise,
+				venue,
+				externalid: externalID,
+				previousid: previousID,
+				authors,
+				payments: charges.map((charge) => charge.payment ?? 0),
+				// Not yet charged
+				transactions: charges.map(() => NullUUID)
+			})
+			.select()
+			.single();
 		if (error) {
 			console.error(error);
 			return { error: { message: this.locale.error.NewSubmission, details: error } };
 		}
 
+		// Return the transaction IDs.
+		return { data: submission.id };
+	}
+
+	async chargeTokens(
+		charges: Charge[],
+		message: string,
+		editor: ScholarID,
+		venue: VenueID
+	): Promise<Result<TransactionID[]>> {
 		// Create the proposed transactions
 		const transactions: string[] = [];
 		for (const charge of charges) {
@@ -197,8 +211,6 @@ export default class SupabaseCRUD extends CRUD {
 			if (error) return { error: error };
 			else if (data) transactions.push(data);
 		}
-
-		// Return the transaction IDs.
 		return { data: transactions };
 	}
 

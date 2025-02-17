@@ -9,11 +9,11 @@ create table submissions (
   -- An optional link to a previous external submission id
   previousid text default null,
   -- The scholars associated with the submission
-  authors uuid[] not null default '{}'::uuid[] check (cardinality(authors) > 0),
+  authors uuid[] not null check (cardinality(authors) > 0),
   -- The token amounts proposed for the submission, corresponding to the authors
-  payments integer[] not null default '{}'::integer[] check (cardinality(payments) = cardinality(authors)),
-  -- The transactions that correspond to the payments, or null if payment hasn't been made.
-  transactions uuid[] default null,
+  payments integer[] not null check (cardinality(payments) = cardinality(authors)),
+  -- The transactions corresponding to the payments, corresponding to the authors. Null uuid of not yet paid.
+  transactions uuid[] not null check (cardinality(transactions) = cardinality(authors)),
   -- An optional title for public bidding
   title text not null default ''::text,
   -- An optional description of expertise required for public bidding
