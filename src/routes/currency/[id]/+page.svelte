@@ -38,7 +38,17 @@
 	let newTokenCreating = $state(false);
 </script>
 
-<Page title={currency ? currency.name : 'Oops'} breadcrumbs={[]}>
+<Page
+	title={currency ? currency.name : 'Oops'}
+	breadcrumbs={[]}
+	edit={isMinter && currency !== null
+		? {
+				placeholder: 'Name',
+				valid: (text) => (text.length === 0 ? "The name can't be empty" : undefined),
+				update: (text) => db.updateCurrencyName(currency.id, text)
+			}
+		: undefined}
+>
 	{#snippet subtitle()}Currency{/snippet}
 	{#if currency === null}
 		<Feedback error>Unknown currency.</Feedback>
@@ -170,7 +180,7 @@
 					<Feedback error>Unable to load venues.</Feedback>
 				{/if}
 			</Card>
-			{#if isMinter}
+			<!-- {#if isMinter}
 				<Card group="minters" icon="⛭" header="settings" note="Update the name, etc.">
 					<EditableText
 						text={currency.name}
@@ -179,7 +189,7 @@
 						edit={async (text) => await db.updateCurrencyName(currency.id, text)}
 					/>
 				</Card>
-			{/if}
+			{/if} -->
 		</Cards>
 	{/if}
 </Page>

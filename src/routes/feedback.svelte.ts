@@ -1,27 +1,28 @@
 import { invalidateAll } from '$app/navigation';
-import { Errors, type ErrorID } from '$lib/data/CRUD';
+import { type DBError, type Result } from '$lib/data/CRUD';
+import type { PostgrestError } from '@supabase/supabase-js';
 
 export type Level = 'error' | 'warning' | 'success';
-export type Feedback = { message: ErrorID | string; level: Level };
+export type Feedback = { message: string; level: Level; error?: PostgrestError | undefined };
 
 // A global list of errors to display to the user, global to the application.
 let messages = $state<Feedback[]>([]);
 
-export function addFeedback(message: string, level: Level) {
-	messages = [...messages, { message, level }];
+export function addFeedback(message: string, level: Level, error?: PostgrestError | undefined) {
+	messages = [...messages, { message, level, error }];
 }
 
-export function addError(error: ErrorID) {
-	addFeedback(error, 'error');
+export function addError(error: DBError) {
+	addFeedback(error.message, 'error', error.details);
 }
 
 export async function handle(
-	action: Promise<ErrorID | undefined>,
+	action: Promise<Result<any>>,
 	success?: string | undefined
 ): Promise<boolean> {
-	const errorID = await action;
-	if (errorID) {
-		addError(errorID);
+	const { error } = await action;
+	if (error) {
+		addError(error);
 		return false;
 	} else {
 		if (success) addFeedback(success, 'success');
@@ -36,8 +37,4 @@ export function removeError(index: number) {
 
 export function getFeedback(): Feedback[] {
 	return messages;
-}
-
-export function isError(error: string): error is ErrorID {
-	return error in Errors;
 }

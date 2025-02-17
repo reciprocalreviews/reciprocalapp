@@ -43,7 +43,17 @@
 		<p>Unable to find this venue.</p>
 	</Page>
 {:else}
-	<Page title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
+	<Page
+		title={venue.title}
+		breadcrumbs={[[`/venues`, 'Venues']]}
+		edit={editor
+			? {
+					placeholder: 'Title',
+					valid: (text) => (text.length > 0 ? undefined : 'Must include a title'),
+					update: (text) => db.editVenueTitle(venue.id, text)
+				}
+			: undefined}
+	>
 		{#snippet subtitle()}Venue{/snippet}
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 		<!-- Show the description -->
@@ -152,10 +162,6 @@
 									>
 								{/if}
 							</div>
-							<Note
-								>{#if role.description.length > 0}{role.description}{:else}<em>No description.</em
-									>{/if}</Note
-							>
 
 							{#if commitment}
 								<hr />
@@ -165,7 +171,8 @@
 											tip="accept this invitation"
 											action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
 											>Accept</Button
-										><Button
+										>
+										<Button
 											tip="decline this invitation"
 											action={() => handle(db.acceptRoleInvite(commitment.id, 'declined'))}
 											>Decline</Button
@@ -260,13 +267,6 @@
 					<Roles {venue} {roles} />
 				</Card>
 				<Card group="editors" icon="⛭" header="settings" note="Update title, url, costs, etc.">
-					<EditableText
-						text={venue.title}
-						label="title"
-						placeholder=""
-						valid={(text) => (text.length > 0 ? undefined : 'Must include a title')}
-						edit={(text) => db.editVenueTitle(venue.id, text)}
-					/>
 					<EditableText
 						text={venue.url}
 						label="URL"

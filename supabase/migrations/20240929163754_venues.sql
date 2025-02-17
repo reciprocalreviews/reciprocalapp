@@ -34,10 +34,6 @@ create policy "stewards and editors can update venues" on public.venues
 create policy "stewards and editors can delete venues" on public.venues
   for delete to anon, authenticated using (isSteward() or auth.uid() = any(editors));
 
--- only editors can create venue roles
--- anyone can view roles
--- only editors can update roles
--- only editors can delete roles
 create table roles (
   -- The unique id of the role
   id uuid not null default uuid_generate_v1() primary key,
@@ -66,15 +62,19 @@ $$;
 alter table public.roles
   enable row level security;
 
+-- only editors can create venue roles
 create policy "only editors can create venue roles" on public.roles
   for insert to anon, authenticated with check (isEditor(venueid));
 
+-- anyone can view roles
 create policy "anyone can view roles" on public.roles
   for select to anon, authenticated using (true);
 
+-- only editors can update roles
 create policy "only editors can update roles" on public.roles
   for update to anon, authenticated using (isEditor(venueid));
 
+-- only editors can delete roles
 create policy "only editors can delete roles" on public.roles
   for delete to anon, authenticated using (isEditor(venueid));
 
@@ -95,9 +95,8 @@ create table volunteers (
   created timestamp with time zone not null default now(),
   -- Relevant expertise provided by the scholar for the role
   expertise text not null,
-  -- Whether this volunteering committment is active. 
-  -- Helps distinguish between first time volunteer and returning, so that newcomer tokens are only granted once.
-  -- Also indicates whether invite only roles have been accepted.
+  -- If the volunteer role is active or inactive, allowing scholars to unvolunteer, then revolunteer.
+  -- Allows us to keep the record of volunteering without granting newcomer tokens more than once.
   active boolean not null default true,
   -- Whether this role as been accepted by the scholar
   accepted invited not null default 'accepted'

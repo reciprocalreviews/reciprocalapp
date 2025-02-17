@@ -9,9 +9,10 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../../Auth.svelte';
+	import Link from '$lib/components/Link.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { submission, venue, authors } = $derived(data);
+	const { submission, venue, authors, previous } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -36,11 +37,19 @@
 	<Page
 		title={submission.title}
 		breadcrumbs={[[`/venue/${submission.venue}/submissions`, 'Submissions']]}
+		edit={isAuthor || isEditor
+			? {
+					placeholder: 'Title',
+					valid: (text) => (text.trim().length === 0 ? 'Title cannot be empty.' : undefined),
+					update: (text) => db.updateSubmissionTitle(submission.id, text)
+				}
+			: undefined}
 	>
 		{#snippet subtitle()}Submission{/snippet}
 		{#snippet details()}
-			{#if submission.previousid}{submission.previousid} →
-			{/if}{submission.externalid}
+			{#if previous}<Link to="/submission/{previous.id}">{previous.externalid}</Link>
+				→{/if}
+			{submission.externalid}
 		{/snippet}
 
 		<h2>Authors</h2>

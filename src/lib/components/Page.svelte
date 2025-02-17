@@ -2,20 +2,32 @@
 	import type { Snippet } from 'svelte';
 	import Lead from './Lead.svelte';
 	import Link from './Link.svelte';
+	import { type Result } from '$lib/data/CRUD';
+	import EditableText from './EditableText.svelte';
 
 	let {
 		title,
 		subtitle,
 		details,
 		breadcrumbs,
-		children
+		children,
+		edit
 	}: {
 		title: string;
 		subtitle?: Snippet;
 		details?: Snippet;
 		children: Snippet;
 		breadcrumbs: [string, string][];
+		edit?:
+			| {
+					valid: undefined | ((text: string) => string | undefined);
+					update: (text: string) => Promise<Result>;
+					placeholder: string;
+			  }
+			| undefined;
 	} = $props();
+
+	let revisedTitle = $state(title);
 </script>
 
 <svelte:head>
@@ -31,7 +43,14 @@
 				{/each}
 			</div>
 		{/if}
-		<h1>{title}</h1>
+		<h1>
+			{#if edit}<EditableText
+					text={revisedTitle}
+					valid={edit.valid}
+					edit={edit.update}
+					placeholder={edit.placeholder}
+				></EditableText>{:else}{title}{/if}
+		</h1>
 		<div class="details">
 			<Lead>{@render subtitle?.()}</Lead>{@render details?.()}
 		</div>

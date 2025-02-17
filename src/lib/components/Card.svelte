@@ -12,7 +12,7 @@
 		header,
 		note,
 		full = false,
-		expand = false
+		expand = $bindable(false)
 	}: {
 		children: Snippet;
 		icon: string | number;

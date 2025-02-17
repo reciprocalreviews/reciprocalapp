@@ -9,12 +9,14 @@ import {
 	type VolunteerID,
 	type Response,
 	type TokenID,
-	type TransactionStatus
+	type TransactionStatus,
+	type AssignmentID
 } from '../../data/types';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
 import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
 import type { SubmissionID } from '$lib/types/Submission';
+import type { PostgrestError } from '@supabase/supabase-js';
 
 export const DatabaseSymbol = Symbol('database');
 export const NullUUID = '00000000-0000-0000-0000-000000000000';
@@ -27,92 +29,28 @@ export function setDB(db: CRUD) {
 	setContext(DatabaseSymbol, db);
 }
 
-/** The strings for the email errors */
-export const Errors = {
-	UpdateScholarStatus: 'Unable to update your status',
-	UpdateScholarName: 'Unable to update your name',
-	UpdateScholarEmail: 'Unable to update your email',
-	UpdateScholarAvailability: 'Unable to update your availability',
-	CreateProposal: 'Unable to create a venue proposal',
-	EditProposalTitle: 'Unable to edit the proposal title',
-	EditProposalCensus: 'Unable to edit the proposal census',
-	EditProposalEditors: 'Unable to edit the proposal editors',
-	EditProposalURL: 'Unable to edit the proposal URL',
-	CreateSupporter: 'Unable to create a supporter',
-	UpdateCurrencyName: 'Unable to update the currency name',
-	UpdateCurrencyDescription: 'Unable to update the currency description',
-	EditSupport: 'Unable to edit your support',
-	RemoveSupport: 'Unable to remove your support',
-	DeleteProposal: 'Unable to delete the proposal',
-	ApproveProposalNotFound: "Unable to approve the proposal: couldn't find proposal.",
-	ApproveProposalNoScholars:
-		"Unable to approve the proposal: couldn't find any of the specified editors with accounts. As them to create accounts with the specified email addresses and then approve.",
-	ApproveProposalNoVenue: "Unable to approve the proposal: couldn't create the venue.",
-	ApproveProposalCannotUpdateVenue:
-		"Unable to approve the proposal: couldn't update the venue with the proposal.",
-	ApproveProposalNoCurrency:
-		"Unable to approve the proposal: couldn't create a currency for the venue.",
-	EditVenueDescription: 'Unable to edit the venue description',
-	EditVenueEditors: 'Unable to edit the venue editors',
-	EditVenueAddEditorVenueNotFound: 'Unable to find venue',
-	ScholarNotFound: 'Unable to find scholar by this email or ORCID',
-	EditVenueAddEditorAlreadyEditor: 'Scholar is already an editor',
-	EditVenueTitle: 'Unable to edit the venue title',
-	EditVenueURL: 'Unable to edit the venue URL',
-	EditVenueWelcomeAmount: 'Unable to edit the welcome amount',
-	EditVenueSubmissionCost: 'Unable to edit the submission cost',
-	EditVenueBidding: 'Unable to toggle bidding',
-	CreateRole: 'Unable to create new role.',
-	UpdateRoleName: 'Unable to update role name',
-	UpdateRoleDescription: 'Unable to update role description',
-	UpdateRoleInvited: 'Unable to update invited status of role',
-	UpdateRoleAmount: 'Unable to update role compensation',
-	DeleteRole: 'Unable to delete role',
-	CreateVolunteer: 'Unable to add volunteer commitment',
-	AlreadyVolunteered: 'Already created a volunteer commitment for this role.',
-	UpdateVolunteerActive: 'Unable to update volunteer commitment',
-	UpdateVolunteerExpertise: 'Unable to update your expertise',
-	InviteToRole: 'Unable to invite to role',
-	AcceptRoleInvite: 'Unable to accept role invite',
-	EditCurrencyMinters: 'Unable to edit minters',
-	AddCurrencyMinter: 'Unable to add minter',
-	AlreadyMinter: 'This scholar is already a minter',
-	MintTokens: 'Unable to mint tokens',
-	TransferVenueTokens: 'Unable to transfer tokens',
-	TransferScholarTokens: 'Unable to find scholar tokens to transfer',
-	TransferTokensInsufficient: 'Insufficient number tokens to transfer',
-	CreateTransaction: 'Unable to create transaction',
-	UnknownTransaction: 'Unable to find this transaction',
-	AlreadyApproved: 'This transaction is already approved',
-	MissingApprovalVenue: 'The proposed transaction has no venue to transfer from.',
-	MissingRecipient: 'The proposed transaction has no scholar recipient.',
-	UndeletedTransaction: "The proposed transaction couldn't be deleted.",
-	InvalidCharges: "The proposed transaction's charges are invalid.",
-	NewSubmission: 'Unable to create a new submission',
-	UpdateSubmissionExpertise: 'Unable to update the submission expertise'
-};
-
-export type ErrorID = keyof typeof Errors;
+export type DBError = { message: string; details?: PostgrestError };
+export type Result<Type = undefined> = { data?: Type; error?: DBError };
 
 /** This abstract class defines an interface for database access. It's useful for defining mocks as well as enables us to change databases if necessary. */
 export default abstract class CRUD {
-	/** Insert a new submission in the database */
+	/** Insert a new submission in the database and return a list of transaction ids that paid for it. */
 	abstract createSubmission(
-		editor: ScholarID,
 		title: string,
 		expertise: string,
 		venue: VenueID,
 		externalID: string,
 		previousID: string | null,
-		charges: Charge[],
-		message: string
-	): Promise<undefined | ErrorID>;
+		charges: Charge[]
+	): Promise<Result<SubmissionID>>;
 
 	/** Given a submission ID, update it's data. */
 	abstract updateSubmissionExpertise(
 		submissionID: SubmissionID,
 		expertise: string | null
-	): Promise<ErrorID | undefined>;
+	): Promise<Result>;
+
+	abstract updateSubmissionTitle(submissionID: SubmissionID, title: string | null): Promise<Result>;
 
 	/** Check whether the given scholars have enough tokens for the given payments. True if so, and a list of remaining balances by scholar if not. */
 	abstract verifyCharges(charges: Charge[]): Promise<true | Charge[] | undefined>;
@@ -123,19 +61,16 @@ export default abstract class CRUD {
 	abstract getScholar(scholarID: ScholarID): Promise<Scholar | null>;
 
 	/** Update scholar's name */
-	abstract updateScholarName(id: ScholarID, name: string): Promise<ErrorID | undefined>;
+	abstract updateScholarName(id: ScholarID, name: string): Promise<Result>;
 
 	/** Update scholar's availabilty */
-	abstract updateScholarAvailability(
-		id: ScholarID,
-		available: boolean
-	): Promise<ErrorID | undefined>;
+	abstract updateScholarAvailability(id: ScholarID, available: boolean): Promise<Result>;
 
 	/** Update scholar's reviewing status. */
-	abstract updateScholarStatus(id: ScholarID, status: string): Promise<ErrorID | undefined>;
+	abstract updateScholarStatus(id: ScholarID, status: string): Promise<Result>;
 
 	/** Update scholar's reviewing status. */
-	abstract updateScholarEmail(id: ScholarID, email: string): Promise<ErrorID | undefined>;
+	abstract updateScholarEmail(id: ScholarID, email: string): Promise<Result>;
 
 	/** Propose a venue */
 	abstract proposeVenue(
@@ -145,74 +80,65 @@ export default abstract class CRUD {
 		editors: string[],
 		size: number,
 		message: string
-	): Promise<ProposalID | ErrorID>;
+	): Promise<Result<ProposalID>>;
 
-	abstract editProposalTitle(venue: ProposalID, title: string): Promise<ErrorID | undefined>;
-	abstract editProposalCensus(venue: ProposalID, census: number): Promise<ErrorID | undefined>;
-	abstract editProposalEditors(venue: ProposalID, editors: string[]): Promise<ErrorID | undefined>;
-	abstract editProposalURL(venue: ProposalID, url: string): Promise<ErrorID | undefined>;
+	abstract editProposalTitle(venue: ProposalID, title: string): Promise<Result>;
+	abstract editProposalCensus(venue: ProposalID, census: number): Promise<Result>;
+	abstract editProposalEditors(venue: ProposalID, editors: string[]): Promise<Result>;
+	abstract editProposalURL(venue: ProposalID, url: string): Promise<Result>;
 
 	/** Delete a proposal venue */
-	abstract deleteProposal(proposal: ProposalID): Promise<ErrorID | undefined>;
+	abstract deleteProposal(proposal: ProposalID): Promise<Result>;
 
 	/** Approval a venue proposal */
-	abstract approveProposal(proposal: ProposalID): Promise<ErrorID | undefined>;
+	abstract approveProposal(proposal: ProposalID): Promise<Result<string>>;
 
 	/** Add support for a proposal */
-	abstract addSupporter(
-		scholar: ScholarID,
-		proposal: ProposalID,
-		message: string
-	): Promise<ErrorID | undefined>;
+	abstract addSupporter(scholar: ScholarID, proposal: ProposalID, message: string): Promise<Result>;
 
-	abstract editSupport(support: SupporterID, message: string): Promise<ErrorID | undefined>;
-	abstract deleteSupport(support: SupporterID): Promise<ErrorID | undefined>;
+	abstract editSupport(support: SupporterID, message: string): Promise<Result>;
+	abstract deleteSupport(support: SupporterID): Promise<Result>;
 
-	abstract updateCurrencyName(id: CurrencyID, name: string): Promise<ErrorID | undefined>;
-	abstract updateCurrencyDescription(
-		id: CurrencyID,
-		description: string
-	): Promise<ErrorID | undefined>;
+	abstract updateCurrencyName(id: CurrencyID, name: string): Promise<Result>;
+	abstract updateCurrencyDescription(id: CurrencyID, description: string): Promise<Result>;
 
-	abstract editVenueDescription(id: VenueID, description: string): Promise<ErrorID | undefined>;
-	abstract editVenueEditors(id: VenueID, editors: string[]): Promise<ErrorID | undefined>;
-	abstract addVenueEditor(id: VenueID, emailOrORCID: string): Promise<ErrorID | undefined>;
-	abstract editVenueTitle(id: VenueID, title: string): Promise<ErrorID | undefined>;
-	abstract editVenueURL(id: VenueID, url: string): Promise<ErrorID | undefined>;
-	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<ErrorID | undefined>;
-	abstract editVenueSubmissionCost(id: VenueID, amount: number): Promise<ErrorID | undefined>;
-	abstract editVenueBidding(id: VenueID, bidding: boolean): Promise<ErrorID | undefined>;
+	abstract editVenueDescription(id: VenueID, description: string): Promise<Result>;
+	abstract editVenueEditors(id: VenueID, editors: string[]): Promise<Result>;
+	abstract addVenueEditor(id: VenueID, emailOrORCID: string): Promise<Result>;
+	abstract editVenueTitle(id: VenueID, title: string): Promise<Result>;
+	abstract editVenueURL(id: VenueID, url: string): Promise<Result>;
+	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<Result>;
+	abstract editVenueSubmissionCost(id: VenueID, amount: number): Promise<Result>;
+	abstract editVenueBidding(id: VenueID, bidding: boolean): Promise<Result>;
 
-	abstract createRole(id: VenueID, name: string): Promise<ErrorID | undefined>;
-	abstract editRoleName(id: RoleID, name: string): Promise<ErrorID | undefined>;
-	abstract editRoleDescription(id: RoleID, description: string): Promise<ErrorID | undefined>;
-	abstract editRoleInvited(id: RoleID, on: boolean): Promise<ErrorID | undefined>;
-	abstract editRoleAmount(id: RoleID, amount: number): Promise<ErrorID | undefined>;
-	abstract deleteRole(id: RoleID): Promise<ErrorID | undefined>;
+	abstract createRole(id: VenueID, name: string): Promise<Result>;
+	abstract editRoleName(id: RoleID, name: string): Promise<Result>;
+	abstract editRoleDescription(id: RoleID, description: string): Promise<Result>;
+	abstract editRoleInvited(id: RoleID, on: boolean): Promise<Result>;
+	abstract editRoleAmount(id: RoleID, amount: number): Promise<Result>;
+	abstract deleteRole(id: RoleID): Promise<Result>;
 
 	abstract createVolunteer(
 		scholarid: ScholarID,
 		roleid: RoleID,
 		accepted: boolean,
 		compensate: boolean
-	): Promise<ErrorID | undefined>;
-	abstract updateVolunteerActive(id: VolunteerID, active: boolean): Promise<ErrorID | undefined>;
-	abstract updateVolunteerExpertise(
-		id: VolunteerID,
-		expertise: string
-	): Promise<ErrorID | undefined>;
-	abstract inviteToRole(role: RoleID, emails: string[]): Promise<ErrorID | undefined>;
-	abstract acceptRoleInvite(id: VolunteerID, response: Response): Promise<ErrorID | undefined>;
+	): Promise<Result<string>>;
+	abstract updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result>;
+	abstract updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result>;
+	abstract inviteToRole(role: RoleID, emails: string[]): Promise<Result>;
+	abstract acceptRoleInvite(id: VolunteerID, response: Response): Promise<Result>;
 
-	abstract editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<ErrorID | undefined>;
+	abstract editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<Result>;
 	abstract addCurrencyMinter(
 		id: CurrencyID,
 		minters: string[],
 		emailOrORCID: string
-	): Promise<ErrorID | undefined>;
+	): Promise<Result>;
 
-	abstract mintTokens(id: CurrencyID, amount: number, to: VenueID): Promise<ErrorID | undefined>;
+	abstract mintTokens(id: CurrencyID, amount: number, to: VenueID): Promise<Result>;
 
+	/** Move N tokens from source to destination, returning a transaction ID. */
 	abstract transferTokens(
 		scholar: ScholarID,
 		from: VenueID,
@@ -221,7 +147,7 @@ export default abstract class CRUD {
 		toKind: 'venueid' | 'scholarid' | 'emailorcid',
 		amount: number,
 		purpose: string
-	): Promise<ErrorID | undefined>;
+	): Promise<Result<string>>;
 
 	/** Insert a new transaction in the database */
 	abstract createTransaction(
@@ -234,11 +160,24 @@ export default abstract class CRUD {
 		currency: CurrencyID,
 		purpose: string,
 		status: TransactionStatus
-	): Promise<ErrorID | undefined>;
+	): Promise<Result<string>>;
 
 	/**
 	 * Given a transaction ID that is pending, creators or transfers tokens based on the transaction.
 	 * Will only work for a currency's minter because of security rules.
 	 * */
-	abstract approveTransaction(minter: ScholarID, id: TransactionID): Promise<ErrorID | undefined>;
+	abstract approveTransaction(minter: ScholarID, id: TransactionID): Promise<Result>;
+
+	/** Update an assignment for a submission */
+	abstract approveAssignment(assignment: AssignmentID): Promise<Result>;
+
+	/** Create a new assignment record */
+	abstract createAssignment(
+		submission: SubmissionID,
+		scholar: ScholarID,
+		role: RoleID,
+		bid: boolean
+	): Promise<Result>;
+
+	abstract deleteAssignment(assignment: AssignmentID): Promise<Result>;
 }

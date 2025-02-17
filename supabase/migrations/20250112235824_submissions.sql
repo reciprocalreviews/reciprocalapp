@@ -6,12 +6,14 @@ create table submissions (
   venue uuid not null references venues(id),
   -- The external unique identifier of the submission, such as a submission number or manuscript number
   externalid text not null,
-  -- An optional link to a previous submission
-  previousid text references submissions(id),
+  -- An optional link to a previous external submission id
+  previousid text default null,
   -- The scholars associated with the submission
-  authors uuid[] not null default '{}'::uuid[] check (cardinality(authors) > 0),
+  authors uuid[] not null check (cardinality(authors) > 0),
   -- The token amounts proposed for the submission, corresponding to the authors
-  payments integer[] not null default '{}'::integer[] check (cardinality(contributions) = cardinality(authors)),
+  payments integer[] not null check (cardinality(payments) = cardinality(authors)),
+  -- The transactions corresponding to the payments, corresponding to the authors. Null uuid of not yet paid.
+  transactions uuid[] not null check (cardinality(transactions) = cardinality(authors)),
   -- An optional title for public bidding
   title text not null default ''::text,
   -- An optional description of expertise required for public bidding
@@ -72,17 +74,30 @@ create policy "editors can delete submissions" on public.submissions
 alter table public.assignments
   enable row level security;
 
+-- Editors or scholars who are active volunteers for the inserted role can create bidding assignments
 create policy "editors can create assignments" on public.assignments
-  for insert to anon, authenticated with check (isEditor(venue));
+  for insert to anon, authenticated with check (
+    isEditor(venue) or 
+    (
+      bid and 
+      exists (
+        select from volunteers where 
+          volunteers.roleid = role and 
+          volunteers.scholarid = auth.uid() and 
+          volunteers.active and 
+          volunteers.accepted="accepted"
+      )
+    )
+  );
 
 create policy "editors can see assignments" on public.assignments
-  for select to anon, authenticated using (isEditor(venue));
+  for select to anon, authenticated using (isEditor(venue) or scholar = auth.uid());
 
 create policy "editors can update assignments" on public.assignments
   for update to anon, authenticated 
-    using (isEditor(venue))
+    using (isEditor(venue) or scholar = auth.uid())
     with check (true);
 
 create policy "editors can delete assignments" on public.assignments
   for delete to anon, authenticated 
-  using (isEditor(venue));
+  using (isEditor(venue) or scholar = auth.uid());

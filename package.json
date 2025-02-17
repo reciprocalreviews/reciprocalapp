@@ -1,6 +1,6 @@
 {
 	"name": "reciprocalapp",
-	"version": "0.1.4",
+	"version": "0.1.7",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
@@ -15,7 +15,8 @@
 		"start": "supabase start",
 		"stop": "supabase stop",
 		"reset": "supabase db reset && npm run types",
-		"types": "supabase gen types typescript --local > src/data/database.ts"
+		"types": "supabase gen types typescript --local > src/data/database.ts",
+		"deploy": "git checkout main && git merge dev && git push && git checkout dev"
 	},
 	"engines": {
 		"node": "20"

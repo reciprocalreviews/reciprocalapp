@@ -1,16 +1,20 @@
 <script lang="ts">
-	import type { ErrorID } from '$lib/data/CRUD';
 	import type { Snippet } from 'svelte';
 	import { handle } from '../../routes/feedback.svelte';
+	import type { Result } from '$lib/data/CRUD';
 
 	let {
 		on = $bindable(),
 		change = undefined,
+		active = true,
 		children
 	}: {
+		/** Whether the box is selected */
 		on: boolean;
-		change?: undefined | ((on: boolean) => Promise<ErrorID | undefined>);
-		children: Snippet;
+		/** Whether the checkbox is enabled */
+		active?: boolean;
+		change?: undefined | ((on: boolean) => Promise<Result>);
+		children?: Snippet;
 	} = $props();
 </script>
 
@@ -18,6 +22,8 @@
 	><input
 		type="checkbox"
 		aria-checked={on}
+		aria-disabled={!active}
+		disabled={!active}
 		checked={on}
 		onclick={async () => {
 			on = !on;
@@ -25,7 +31,7 @@
 				await handle(change(on));
 			}
 		}}
-	/>{@render children()}</label
+	/>{@render children?.()}</label
 >
 
 <style>
@@ -44,5 +50,6 @@
 		flex-direction: row;
 		gap: var(--spacing);
 		align-items: center;
+		font-size: var(--small-font-size);
 	}
 </style>

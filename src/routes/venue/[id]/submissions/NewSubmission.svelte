@@ -2,6 +2,7 @@
 	import type { VenueID } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Form from '$lib/components/Form.svelte';
+	import Note from '$lib/components/Note.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import { getDB } from '$lib/data/CRUD';
@@ -10,7 +11,11 @@
 	import { getAuth } from '../../../Auth.svelte';
 	import { handle } from '../../../feedback.svelte';
 
-	let { venue, submissionCost }: { venue: VenueID; submissionCost: number } = $props();
+	let {
+		venue,
+		submissionCost,
+		expanded = $bindable(true)
+	}: { venue: VenueID; submissionCost: number; expanded: boolean } = $props();
 
 	const db = getDB();
 	const auth = getAuth();
@@ -147,7 +152,7 @@
 								? `The charges do not sum to the submission cost of ${submissionCost}`
 								: affordable === undefined
 									? "When you're done, check balances below."
-									: undefined}
+									: affordable}
 		note={affordable === true
 			? 'These authors can afford this charge.'
 			: `By line, authors and how many tokens to charge each of them. Tokens must sum to ${submissionCost}.`}
@@ -156,27 +161,37 @@
 		tip="Check if authors have enough tokens"
 		active={validChargeFormat(charges) &&
 			validCharge(charges, submissionCost) &&
-			affordable === undefined}
+			affordable !== true}
 		action={checkAffordability}>Check author balances</Button
 	>
 
 	<Button
 		tip="Create a new submission"
 		active={affordable === true && validSubmission(title, externalID, charges, submissionCost)}
-		action={() =>
-			user
-				? handle(
-						db.createSubmission(
-							user,
-							title,
-							expertise,
-							venue,
-							externalID,
-							previousID,
-							chargeTextToCharges(charges),
-							'Manual submission creation by editor'
-						)
+		action={() => {
+			if (user) {
+				const result = handle(
+					db.createSubmission(
+						title,
+						expertise,
+						venue,
+						externalID,
+						previousID,
+						chargeTextToCharges(charges)
 					)
-				: undefined}>Create submission and charge authors</Button
+				);
+
+				title = '';
+				expertise = '';
+				externalID = '';
+				previousID = '';
+				charges = '';
+				affordable = undefined;
+				expanded = false;
+
+				return result;
+			}
+		}}>Create this submission</Button
 	>
+	<Note>Authors will still need to approve charges.</Note>
 </Form>

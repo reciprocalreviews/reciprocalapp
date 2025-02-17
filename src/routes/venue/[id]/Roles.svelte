@@ -51,14 +51,14 @@
 			<EditableText
 				text={role.name}
 				label="name"
-				placeholder=""
+				placeholder="name"
 				valid={(text) => (isntEmpty(text) ? undefined : 'Must include a name')}
 				edit={(text) => db.editRoleName(role.id, text)}
 			/>
 			<EditableText
 				text={role.description}
 				label="description"
-				placeholder=""
+				placeholder="description"
 				edit={(text) => db.editRoleDescription(role.id, text)}
 			/>
 			<Checkbox on={role.invited} change={(on) => db.editRoleInvited(role.id, on)}

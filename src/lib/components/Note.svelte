@@ -13,6 +13,9 @@
 	}
 
 	.error {
-		color: var(--error-color);
+		background: var(--error-color);
+		color: var(--background-color);
+		padding: var(--spacing);
+		border-radius: var(--roundedness);
 	}
 </style>

@@ -1,5 +1,5 @@
 import type { Charge, TransactionID } from '$lib/types/Transaction';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import type {
 	CurrencyID,
 	ProposalID,
@@ -11,12 +11,14 @@ import type {
 	VolunteerID,
 	Response,
 	TokenID,
-	TransactionStatus
+	TransactionStatus,
+	AssignmentID
 } from '../../data/types';
-import CRUD, { NullUUID, type ErrorID } from './CRUD';
+import CRUD, { NullUUID, type Result } from './CRUD';
 import Scholar from './Scholar.svelte';
 import type { Database } from '$data/database';
 import type { SubmissionID } from '$lib/types/Submission';
+import type Locale from '../../locale/Locale';
 
 export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
@@ -25,39 +27,66 @@ export default class SupabaseCRUD extends CRUD {
 	/** A set of reactive scholar record states, indexed by ID */
 	private readonly scholars: Map<ScholarID, Scholar> = new Map();
 
-	constructor(client: SupabaseClient) {
+	/** The locale for error messages */
+	private readonly locale: Locale;
+
+	constructor(client: SupabaseClient, locale: Locale) {
 		super();
 		this.client = client;
+		this.locale = locale;
+	}
+
+	/** A helper function for creating a result with an error ID. */
+	error(id: keyof Locale['error'], details?: PostgrestError | null) {
+		const message = this.locale.error[id];
+		console.error(message, details);
+		return { error: { message, details: details ?? undefined } };
+	}
+
+	/** A helper function for returning data or an error, depending on what was returned. */
+	errorOrEmpty(id: keyof Locale['error'], error: PostgrestError | null) {
+		return error ? this.error(id, error) : {};
 	}
 
 	async updateSubmissionExpertise(
 		submissionID: SubmissionID,
 		expertise: string | null
-	): Promise<ErrorID | undefined> {
+	): Promise<Result> {
 		const { error } = await this.client
 			.from('submissions')
 			.update({ expertise })
 			.eq('id', submissionID);
-		if (error) return 'UpdateSubmissionExpertise';
-		else return;
+		return this.errorOrEmpty('UpdateSubmissionExpertise', error);
 	}
 
-	async convertORCIDsToScholars(orcids: string[]) {
+	async updateSubmissionTitle(submissionID: SubmissionID, title: string): Promise<Result> {
+		const { error } = await this.client
+			.from('submissions')
+			.update({ title })
+			.eq('id', submissionID);
+		return this.errorOrEmpty('UpdateSubmissionTitle', error);
+	}
+
+	async convertORCIDsToScholars(
+		orcids: string[]
+	): Promise<Result<{ orcid: string | null; id: string }[]>> {
 		// First, find the scholars with the specified ORCIDs.
 		const { data: scholars, error: scholarError } = await this.client
 			.from('scholars')
 			.select('orcid, id')
 			.in('orcid', orcids);
-		if (scholars === null) {
+		if (scholarError || scholars === null || scholars.length !== orcids.length) {
 			console.error(scholarError);
-			return undefined;
+			return this.error('ScholarNotFound', scholarError ?? undefined);
 		}
-		return scholars;
+		return { data: scholars };
 	}
 
 	async verifyCharges(charges: Charge[]): Promise<true | Charge[] | undefined> {
 		// First, find the scholars with the specified ORCIDs.
-		const scholars = await this.convertORCIDsToScholars(charges.map((charge) => charge.scholar));
+		const { data: scholars } = await this.convertORCIDsToScholars(
+			charges.map((charge) => charge.scholar)
+		);
 
 		// Find the scholars that weren't found.
 		if (scholars === undefined) return undefined;
@@ -90,7 +119,7 @@ export default class SupabaseCRUD extends CRUD {
 		// Compute the deficits
 		const deficits = charges.map((charge) => {
 			const scholarID = scholars.find((scholar) => scholar.orcid === charge.scholar)?.id;
-			const balance = scholarID !== undefined ? balances.get(scholarID) : undefined;
+			const balance = scholarID !== undefined ? (balances.get(scholarID) ?? 0) : 0;
 			return {
 				scholar: charge.scholar,
 				payment:
@@ -108,48 +137,69 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async createSubmission(
-		editor: ScholarID,
 		title: string,
 		expertise: string,
 		venue: VenueID,
 		externalID: string,
 		previousID: string | null,
-		charges: Charge[],
-		message: string
-	): Promise<undefined | ErrorID> {
+		charges: Charge[]
+	): Promise<Result<SubmissionID>> {
 		// Verify that the charges are valid.
 		const chargeError = await this.verifyCharges(charges);
-		if (chargeError !== true) return 'InvalidCharges';
+		if (chargeError !== true) return { error: { message: this.locale.error.InvalidCharges } };
 
 		// First, find the scholars with the specified ORCIDs.
-		const scholars = await this.convertORCIDsToScholars(charges.map((charge) => charge.scholar));
+		const { data: scholars, error: scholarsError } = await this.convertORCIDsToScholars(
+			charges.map((charge) => charge.scholar)
+		);
 
-		if (scholars === undefined) return 'NewSubmission';
+		if (scholarsError || scholars === undefined)
+			return {
+				error: { message: this.locale.error.ScholarNotFound, details: scholarsError?.details }
+			};
 
 		const authors = charges
 			.map((charge) => scholars.find((s) => s.orcid === charge.scholar)?.id)
 			.filter((a) => a !== undefined);
 
-		if (authors.length < charges.length) return 'NewSubmission';
+		if (authors.length < charges.length)
+			return { error: { message: this.locale.error.MissingSubmissionCharge } };
 
 		// Create the submission
-		const { error } = await this.client.from('submissions').insert({
-			title,
-			expertise,
-			venue,
-			externalid: externalID,
-			previousid: previousID,
-			authors,
-			payments: charges.map((charge) => charge.payment ?? 0)
-		});
+		const { data: submission, error } = await this.client
+			.from('submissions')
+			.insert({
+				title,
+				expertise,
+				venue,
+				externalid: externalID,
+				previousid: previousID,
+				authors,
+				payments: charges.map((charge) => charge.payment ?? 0),
+				// Not yet charged
+				transactions: charges.map(() => NullUUID)
+			})
+			.select()
+			.single();
 		if (error) {
 			console.error(error);
-			return 'NewSubmission';
+			return { error: { message: this.locale.error.NewSubmission, details: error } };
 		}
 
+		// Return the transaction IDs.
+		return { data: submission.id };
+	}
+
+	async chargeTokens(
+		charges: Charge[],
+		message: string,
+		editor: ScholarID,
+		venue: VenueID
+	): Promise<Result<TransactionID[]>> {
 		// Create the proposed transactions
+		const transactions: string[] = [];
 		for (const charge of charges) {
-			await this.transferTokens(
+			const { data, error } = await this.transferTokens(
 				editor,
 				charge.scholar,
 				'emailorcid',
@@ -158,7 +208,10 @@ export default class SupabaseCRUD extends CRUD {
 				charge.payment ?? 0,
 				message
 			);
+			if (error) return { error: error };
+			else if (data) transactions.push(data);
 		}
+		return { data: transactions };
 	}
 
 	/** Register a reactive scholar state. */
@@ -171,14 +224,14 @@ export default class SupabaseCRUD extends CRUD {
 		return scholar;
 	}
 
-	async findScholar(emailOrORCID: string) {
-		const { data: scholar } = await this.client
+	async findScholar(emailOrORCID: string): Promise<Result<string>> {
+		const { data: scholar, error } = await this.client
 			.from('scholars')
 			.select('id')
 			.or(`orcid.eq.${emailOrORCID},email.eq.${emailOrORCID}`)
 			.single();
 
-		return scholar;
+		return error || scholar === null ? this.error('ScholarNotFound', error) : { data: scholar.id };
 	}
 
 	async getScholar(scholarID: ScholarID): Promise<Scholar | null> {
@@ -194,43 +247,43 @@ export default class SupabaseCRUD extends CRUD {
 		return this.registerScholar(data);
 	}
 
-	async updateScholarName(id: ScholarID, name: string): Promise<ErrorID | undefined> {
+	async updateScholarName(id: ScholarID, name: string): Promise<Result> {
 		const { error } = await this.client.from('scholars').update({ name }).eq('id', id);
-		if (error) return 'UpdateScholarName';
+		if (error) return this.error('UpdateScholarName', error);
 		else {
 			const state = this.scholars.get(id);
 			if (state) state.setName(name);
-			return undefined;
+			return {};
 		}
 	}
 
-	async updateScholarAvailability(id: ScholarID, available: boolean): Promise<ErrorID | undefined> {
+	async updateScholarAvailability(id: ScholarID, available: boolean): Promise<Result> {
 		const { error } = await this.client.from('scholars').update({ available }).eq('id', id);
-		if (error) return 'UpdateScholarAvailability';
+		if (error) return this.error('UpdateScholarAvailability', error);
 		else {
 			const state = this.scholars.get(id);
 			if (state) state.setAvailable(available);
-			return undefined;
+			return {};
 		}
 	}
 
-	async updateScholarStatus(id: ScholarID, status: string): Promise<ErrorID | undefined> {
+	async updateScholarStatus(id: ScholarID, status: string): Promise<Result> {
 		const { error } = await this.client.from('scholars').update({ status }).eq('id', id);
-		if (error) return 'UpdateScholarStatus';
+		if (error) return this.error('UpdateScholarStatus', error);
 		else {
 			const state = this.scholars.get(id);
 			if (state) state.setStatus(status);
-			return undefined;
+			return {};
 		}
 	}
 
-	async updateScholarEmail(id: ScholarID, email: string): Promise<ErrorID | undefined> {
+	async updateScholarEmail(id: ScholarID, email: string): Promise<Result> {
 		const { error } = await this.client.from('scholars').update({ email }).eq('id', id);
-		if (error) return 'UpdateScholarName';
+		if (error) return this.error('UpdateScholarName', error);
 		else {
 			const state = this.scholars.get(id);
 			if (state) state.setEmail(email);
-			return undefined;
+			return {};
 		}
 	}
 
@@ -241,91 +294,88 @@ export default class SupabaseCRUD extends CRUD {
 		editors: string[],
 		census: number,
 		message: string
-	) {
+	): Promise<Result<string>> {
 		// Make a proposal
-		const { data, error } = await this.client
+		const { data, error: insertError } = await this.client
 			.from('proposals')
 			.insert({ title, url, editors, census })
 			.select()
 			.single();
 
-		if (error || data === null) {
-			console.error(error);
-			return 'CreateProposal';
-		}
+		if (insertError || data === null) return this.error('CreateProposal', insertError);
 
 		const proposalid = data.id;
 
-		const supportError = await this.addSupporter(scholarid, proposalid, message);
+		const { error } = await this.addSupporter(scholarid, proposalid, message);
 
-		if (supportError) return supportError;
+		if (error) return { error };
 
-		return proposalid;
+		return { data: proposalid };
 	}
 
-	async editProposalTitle(venue: ProposalID, title: string) {
+	async editProposalTitle(venue: ProposalID, title: string): Promise<Result> {
 		const { error } = await this.client.from('proposals').update({ title }).eq('id', venue);
-		if (error) return 'EditProposalTitle';
-		else return;
+		if (error) return this.error('EditProposalTitle', error);
+		else return {};
 	}
 
-	async editProposalCensus(venue: ProposalID, census: number) {
+	async editProposalCensus(venue: ProposalID, census: number): Promise<Result> {
 		const { error } = await this.client.from('proposals').update({ census }).eq('id', venue);
-		if (error) return 'EditProposalCensus';
-		else return;
+		if (error) return this.error('EditProposalCensus', error);
+		else return {};
 	}
 
-	async editProposalEditors(venue: ProposalID, editors: string[]) {
+	async editProposalEditors(venue: ProposalID, editors: string[]): Promise<Result> {
 		const { error } = await this.client.from('proposals').update({ editors }).eq('id', venue);
-		if (error) return 'EditProposalEditors';
-		else return;
+		if (error) return this.error('EditProposalEditors', error);
+		else return {};
 	}
 
-	async editProposalURL(venue: ProposalID, url: string) {
+	async editProposalURL(venue: ProposalID, url: string): Promise<Result> {
 		const { error } = await this.client.from('proposals').update({ url }).eq('id', venue);
-		if (error) return 'EditProposalURL';
-		else return;
+		if (error) return this.error('EditProposalURL', error);
+		else return {};
 	}
 
-	async deleteProposal(proposal: ProposalID) {
+	async deleteProposal(proposal: ProposalID): Promise<Result> {
 		const { error } = await this.client.from('proposals').delete().eq('id', proposal);
-		if (error) return 'DeleteProposal';
-		else return;
+		if (error) return this.error('DeleteProposal');
+		else return {};
 	}
 
-	async approveProposal(proposal: ProposalID) {
+	async approveProposal(proposal: ProposalID): Promise<Result<string>> {
 		// Get the latest proposal data
-		const { data: proposalData } = await this.client
+		const { data: proposalData, error: proposalError } = await this.client
 			.from('proposals')
 			.select()
 			.eq('id', proposal)
 			.single();
 
 		// Couldn't get proposal data? Return an error.
-		if (proposalData === null) return 'ApproveProposalNotFound';
+		if (proposalData === null) return this.error('ApproveProposalNotFound', proposalError);
 
 		// Find the scholars with the corresponding emails.
-		const { data: scholarsData } = await this.client
+		const { data: scholarsData, error: scholarsError } = await this.client
 			.from('scholars')
 			.select()
 			.in('email', proposalData.editors);
 
-		if (scholarsData === null) return 'ApproveProposalNoScholars';
+		if (scholarsData === null) return this.error('ApproveProposalNoScholars', scholarsError);
 
 		// Build the editor scholar ID list from the editors found.
 		let editors: string[] = scholarsData.map((scholar) => scholar.id);
 
 		// Didn't find a editor?
-		if (editors.length === 0) return 'ApproveProposalNoScholars';
+		if (editors.length === 0) return this.error('ApproveProposalNoScholars');
 
 		// Create a currency for the venue
-		const { data: currencyData } = await this.client
+		const { data: currencyData, error: currencyError } = await this.client
 			.from('currencies')
 			.insert({ name: proposalData.title, minters: editors })
 			.select()
 			.single();
 
-		if (currencyData === null) return 'ApproveProposalNoCurrency';
+		if (currencyError) return this.error('ApproveProposalNoCurrency', currencyError);
 
 		// Create default commitments for the venue
 
@@ -342,60 +392,56 @@ export default class SupabaseCRUD extends CRUD {
 			})
 			.select()
 			.single();
-		if (venueData === null || venueError !== null) return 'ApproveProposalNoVenue';
+		if (venueData === null || venueError !== null)
+			return this.error('ApproveProposalNoVenue', venueError);
 
 		const venue = venueData.id;
 
 		// Update the proposal to link to the venue.
 		const { error } = await this.client.from('proposals').update({ venue }).eq('id', proposal);
-		if (error) return 'ApproveProposalCannotUpdateVenue';
+		if (error) return this.error('ApproveProposalCannotUpdateVenue', error);
 
-		return;
+		return { data: venue };
 	}
 
 	async addSupporter(
 		scholarid: ScholarID,
 		proposalid: ProposalID,
 		message: string
-	): Promise<ErrorID | undefined> {
+	): Promise<Result> {
 		// Make the first supporter
 		const { error } = await this.client
 			.from('supporters')
 			.insert({ proposalid, scholarid, message });
 
-		if (error) {
-			console.error(error);
-			return 'CreateSupporter';
-		}
+		if (error) return this.error('CreateSupporter', error);
+		else return {};
 	}
 
-	async editSupport(support: SupporterID, message: string) {
+	async editSupport(support: SupporterID, message: string): Promise<Result> {
 		const { error } = await this.client.from('supporters').update({ message }).eq('id', support);
-		if (error) return 'EditSupport';
-		else return;
+		return this.errorOrEmpty('EditSupport', error);
 	}
 
-	async deleteSupport(support: SupporterID) {
+	async deleteSupport(support: SupporterID): Promise<Result> {
 		const { error } = await this.client.from('supporters').delete().eq('id', support);
-		if (error) return 'RemoveSupport';
-		else return;
+		if (error) return this.error('RemoveSupport', error);
+		else return {};
 	}
 
-	async updateCurrencyName(id: CurrencyID, name: string) {
+	async updateCurrencyName(id: CurrencyID, name: string): Promise<Result> {
 		const { error } = await this.client.from('currencies').update({ name }).eq('id', id);
-		if (error) return 'UpdateCurrencyName';
-		else return;
+		return this.errorOrEmpty('UpdateCurrencyName', error);
 	}
 
 	async updateCurrencyDescription(id: CurrencyID, description: string) {
 		const { error } = await this.client.from('currencies').update({ description }).eq('id', id);
-		if (error) return 'UpdateCurrencyDescription';
+		return this.errorOrEmpty('UpdateCurrencyDescription', error);
 	}
 
 	async editVenueDescription(id: VenueID, description: string) {
 		const { error } = await this.client.from('venues').update({ description }).eq('id', id);
-		if (error) return 'EditVenueDescription';
-		else return;
+		return this.errorOrEmpty('EditVenueDescription', error);
 	}
 
 	async editVenueEditors(id: VenueID, editors: string[]) {
@@ -403,33 +449,35 @@ export default class SupabaseCRUD extends CRUD {
 			.from('venues')
 			.update({ editors: Array.from(new Set(editors)) })
 			.eq('id', id);
-		if (error) return 'EditVenueEditors';
-		else return;
+		return this.errorOrEmpty('EditVenueEditors', error);
 	}
 
-	async addVenueEditor(id: VenueID, emailOrORCID: string) {
-		const { data: venue } = await this.client.from('venues').select().eq('id', id).single();
+	async addVenueEditor(id: VenueID, emailOrORCID: string): Promise<Result> {
+		const { data: venue, error: venueError } = await this.client
+			.from('venues')
+			.select()
+			.eq('id', id)
+			.single();
 
-		if (venue === null) return 'EditVenueAddEditorVenueNotFound';
+		if (venue === null) return this.error('EditVenueAddEditorVenueNotFound', venueError);
 
-		const scholar = await this.findScholar(emailOrORCID);
-		if (scholar === null) return 'ScholarNotFound';
+		const { data: scholarID, error: scholarError } = await this.findScholar(emailOrORCID);
+		if (scholarID === undefined) return this.error('ScholarNotFound', scholarError?.details);
 
-		if (venue.editors.includes(scholar.id)) return 'EditVenueAddEditorAlreadyEditor';
+		if (venue.editors.includes(scholarID))
+			return { error: { message: this.locale.error.EditVenueAddEditorAlreadyEditor } };
 
-		return this.editVenueEditors(id, Array.from(new Set([...venue.editors, scholar.id])));
+		return this.editVenueEditors(id, Array.from(new Set([...venue.editors, scholarID])));
 	}
 
 	async editVenueTitle(id: VenueID, title: string) {
 		const { error } = await this.client.from('venues').update({ title }).eq('id', id);
-		if (error) return 'EditVenueTitle';
-		else return;
+		return this.errorOrEmpty('EditVenueTitle', error);
 	}
 
 	async editVenueURL(id: VenueID, url: string) {
 		const { error } = await this.client.from('venues').update({ url }).eq('id', id);
-		if (error) return 'EditVenueTitle';
-		else return;
+		return this.errorOrEmpty('EditVenueTitle', error);
 	}
 
 	async editVenueWelcomeAmount(id: VenueID, amount: number) {
@@ -437,8 +485,7 @@ export default class SupabaseCRUD extends CRUD {
 			.from('venues')
 			.update({ welcome_amount: amount })
 			.eq('id', id);
-		if (error) return 'EditVenueWelcomeAmount';
-		else return;
+		return this.errorOrEmpty('EditVenueWelcomeAmount', error);
 	}
 
 	async editVenueSubmissionCost(id: VenueID, amount: number) {
@@ -446,52 +493,44 @@ export default class SupabaseCRUD extends CRUD {
 			.from('venues')
 			.update({ submission_cost: amount })
 			.eq('id', id);
-		if (error) return 'EditVenueSubmissionCost';
-		else return;
+		return this.errorOrEmpty('EditVenueSubmissionCost', error);
 	}
 
 	async editVenueBidding(id: VenueID, bidding: boolean) {
 		const { error } = await this.client.from('venues').update({ bidding }).eq('id', id);
-		if (error) return 'EditVenueBidding';
-		else return;
+		return this.errorOrEmpty('EditVenueBidding', error);
 	}
 
 	async createRole(id: VenueID, name: string) {
 		const { error } = await this.client
 			.from('roles')
 			.insert({ venueid: id, amount: 10, invited: true, name });
-		if (error) return 'CreateRole';
-		else return;
+		return this.errorOrEmpty('CreateRole', error);
 	}
 
 	async editRoleName(id: RoleID, name: string) {
 		const { error } = await this.client.from('roles').update({ name }).eq('id', id);
-		if (error) return 'UpdateRoleName';
-		else return;
+		return this.errorOrEmpty('UpdateRoleName', error);
 	}
 
 	async editRoleDescription(id: RoleID, description: string) {
 		const { error } = await this.client.from('roles').update({ description }).eq('id', id);
-		if (error) return 'UpdateRoleDescription';
-		else return;
+		return this.errorOrEmpty('UpdateRoleDescription', error);
 	}
 
 	async editRoleInvited(id: RoleID, on: boolean) {
 		const { error } = await this.client.from('roles').update({ invited: on }).eq('id', id);
-		if (error) return 'UpdateRoleInvited';
-		else return;
+		return this.errorOrEmpty('UpdateRoleInvited', error);
 	}
 
 	async editRoleAmount(id: RoleID, amount: number) {
 		const { error } = await this.client.from('roles').update({ amount }).eq('id', id);
-		if (error) return 'UpdateRoleAmount';
-		else return;
+		return this.errorOrEmpty('UpdateRoleAmount', error);
 	}
 
 	async deleteRole(id: RoleID) {
 		const { error } = await this.client.from('roles').delete().eq('id', id);
-		if (error) return 'DeleteRole';
-		else return;
+		return this.errorOrEmpty('DeleteRole', error);
 	}
 
 	async createVolunteer(
@@ -499,44 +538,52 @@ export default class SupabaseCRUD extends CRUD {
 		roleid: RoleID,
 		accepted: boolean,
 		compensate: boolean
-	) {
+	): Promise<Result<string>> {
 		// First, get all of the volunteer records for this scholar.
-		const { data: volunteer } = await this.client
+		const { data: volunteer, error: volunteerError } = await this.client
 			.from('volunteers')
 			.select()
 			.eq('scholarid', scholarid);
 		// Couldn't get the volunteer records? Bail.
-		if (volunteer === null) return 'CreateVolunteer';
+		if (volunteer === null) return this.error('CreateVolunteer', volunteerError);
 
 		// Already volunteered for this venue? Bail.
-		if (volunteer.some((v) => v.roleid === roleid)) return 'AlreadyVolunteered';
+		if (volunteer.some((v) => v.roleid === roleid)) return this.error('AlreadyVolunteered');
 
 		// Create the volunteer record.
-		const { error } = await this.client.from('volunteers').insert({
-			scholarid,
-			roleid,
-			active: accepted,
-			accepted: accepted ? 'accepted' : 'invited',
-			expertise: ''
-		});
-		if (error) {
-			console.error(error);
-			return 'CreateVolunteer';
-		}
+		const { data: newVolunteer, error: newVolunteerError } = await this.client
+			.from('volunteers')
+			.insert({
+				scholarid,
+				roleid,
+				active: accepted,
+				accepted: accepted ? 'accepted' : 'invited',
+				expertise: ''
+			})
+			.select()
+			.single();
+		if (newVolunteerError) return this.error('CreateVolunteer', newVolunteerError);
 
 		// If this is their first volunteer role for the venue, grant the number of welcome tokens for the venue.
 		if (volunteer.length === 0 && compensate) {
 			// Get the role and the venue.
-			const { data: role } = await this.client.from('roles').select().eq('id', roleid).single();
-			if (role === null) return 'CreateVolunteer';
+			const { data: role, error: roleError } = await this.client
+				.from('roles')
+				.select()
+				.eq('id', roleid)
+				.single();
+			if (role === null) return this.error('CreateVolunteer', roleError);
 			const venueid = role.venueid;
-			const { data: venue } = await this.client.from('venues').select().eq('id', venueid).single();
-			if (venue === null) return 'CreateVolunteer';
+			const { data: venue, error: venueError } = await this.client
+				.from('venues')
+				.select()
+				.eq('id', venueid)
+				.single();
+			if (venue === null) return this.error('CreateVolunteer', venueError);
 			const welcome = venue.welcome_amount;
 
-			// TODO Finish after tokens and transactions table are created.
 			// Record an approved transaction to log the gift.
-			const error = await this.createTransaction(
+			const { error } = await this.createTransaction(
 				scholarid,
 				null,
 				venueid,
@@ -548,30 +595,35 @@ export default class SupabaseCRUD extends CRUD {
 				'Welcome tokens for volunteering for the venue. Aproved by minter.',
 				'proposed'
 			);
-			if (error) return 'CreateTransaction';
+			if (error) return this.error('CreateTransaction', error.details);
 		}
+
+		return { data: newVolunteer.id };
 	}
 
-	async updateVolunteerActive(id: VolunteerID, active: boolean): Promise<ErrorID | undefined> {
+	async updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result> {
 		const { error } = await this.client.from('volunteers').update({ active }).eq('id', id);
-		if (error) return 'UpdateVolunteerActive';
-		else return;
+		return this.errorOrEmpty('UpdateVolunteerActive', error);
 	}
 
-	async updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<ErrorID | undefined> {
+	async updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result> {
 		const { error } = await this.client.from('volunteers').update({ expertise }).eq('id', id);
-		if (error) return 'UpdateVolunteerExpertise';
-		else return;
+		return this.errorOrEmpty('UpdateVolunteerExpertise', error);
 	}
 
 	async inviteToRole(role: RoleID, emails: string[]) {
-		const { data: scholars } = await this.client.from('scholars').select().in('email', emails);
-		if (scholars === null) return 'InviteToRole';
+		const { data: scholars, error: scholarsError } = await this.client
+			.from('scholars')
+			.select()
+			.in('email', emails);
+		if (scholars === null) return this.error('InviteToRole', scholarsError);
 
 		for (const scholar of scholars) {
-			const error = await this.createVolunteer(scholar.id, role, false, false);
+			const { error } = await this.createVolunteer(scholar.id, role, false, false);
 			if (error) return error;
 		}
+
+		return {};
 	}
 
 	async acceptRoleInvite(id: VolunteerID, response: Response) {
@@ -579,31 +631,25 @@ export default class SupabaseCRUD extends CRUD {
 			.from('volunteers')
 			.update({ active: true, accepted: response })
 			.eq('id', id);
-		if (error) {
-			console.log(error);
-			return 'AcceptRoleInvite';
-		}
+		return this.errorOrEmpty('AcceptRoleInvite', error);
 	}
 
-	async editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<ErrorID | undefined> {
+	async editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<Result> {
 		const { error } = await this.client.from('currencies').update({ minters }).eq('id', id);
-		if (error) {
-			console.error(error);
-			return 'EditCurrencyMinters';
-		}
+		return this.errorOrEmpty('EditCurrencyMinters', error);
 	}
 
 	async addCurrencyMinter(
 		id: CurrencyID,
 		minters: string[],
 		emailOrORCID: string
-	): Promise<ErrorID | undefined> {
-		const scholar = await this.findScholar(emailOrORCID);
-		if (scholar === null) return 'ScholarNotFound';
+	): Promise<Result> {
+		const { data: scholarID, error: scholarError } = await this.findScholar(emailOrORCID);
+		if (scholarID === undefined) return this.error('ScholarNotFound', scholarError?.details);
 
-		if (minters.includes(scholar.id)) return 'AlreadyMinter';
+		if (minters.includes(scholarID)) return this.error('AlreadyMinter');
 
-		return this.editCurrencyMinters(id, Array.from(new Set([...minters, scholar.id])));
+		return this.editCurrencyMinters(id, Array.from(new Set([...minters, scholarID])));
 	}
 
 	async mintTokens(id: CurrencyID, amount: number, to: VenueID) {
@@ -614,10 +660,7 @@ export default class SupabaseCRUD extends CRUD {
 			});
 
 		const { error } = await this.client.from('tokens').insert(rows);
-		if (error) {
-			console.error(error);
-			return 'MintTokens';
-		}
+		return this.errorOrEmpty('MintTokens', error);
 	}
 
 	async resolveEntityID(
@@ -625,9 +668,9 @@ export default class SupabaseCRUD extends CRUD {
 		id: VenueID | ScholarID | string
 	): Promise<VenueID | ScholarID | null> {
 		if (kind === 'venueid' || kind === 'scholarid') return id;
-		const scholar = await this.findScholar(id);
-		if (scholar === null) return null;
-		return scholar.id;
+		const { data: scholar } = await this.findScholar(id);
+		if (scholar === undefined) return null;
+		return scholar;
 	}
 
 	async transferTokens(
@@ -638,23 +681,23 @@ export default class SupabaseCRUD extends CRUD {
 		toKind: 'venueid' | 'scholarid' | 'emailorcid',
 		amount: number,
 		purpose: string
-	) {
+	): Promise<Result<string>> {
 		// Find the approriate ID for the from and to entities.
 		let fromEntity = await this.resolveEntityID(fromKind, from);
 		let toEntity = await this.resolveEntityID(toKind, to);
 
-		if (fromEntity === null) return 'ScholarNotFound';
-		if (toEntity === null) return 'ScholarNotFound';
+		if (fromEntity === null) return this.error('ScholarNotFound');
+		if (toEntity === null) return this.error('ScholarNotFound');
 
 		// Find tokens owned by the from entity
 		const { data: tokens, error: tokensError } = await this.client
 			.from('tokens')
 			.select()
 			.eq(fromKind === 'venueid' ? 'venue' : 'scholar', fromEntity);
-		if (tokensError) return 'TransferScholarTokens';
+		if (tokensError) return this.error('TransferScholarTokens', tokensError);
 
 		// If there aren't enough tokens, bail.
-		if (tokens.length < amount) return 'TransferTokensInsufficient';
+		if (tokens.length < amount) return this.error('TransferTokensInsufficient');
 
 		// Get the list of token IDs to transfer
 		const tokenIDs = tokens.slice(0, amount).map((token) => token.id);
@@ -668,11 +711,11 @@ export default class SupabaseCRUD extends CRUD {
 					scholar: toKind === 'venueid' ? null : toEntity
 				})
 				.eq('id', tokenID);
-			if (error) return 'TransferVenueTokens';
+			if (error) return this.error('TransferVenueTokens', error);
 		}
 
 		// Record an approved transaction to log the gift.
-		const error = await this.createTransaction(
+		return await this.createTransaction(
 			creator,
 			fromKind === 'venueid' ? null : fromEntity,
 			fromKind === 'venueid' ? fromEntity : null,
@@ -683,7 +726,6 @@ export default class SupabaseCRUD extends CRUD {
 			purpose,
 			'approved'
 		);
-		if (error) return 'CreateTransaction';
 	}
 
 	async createTransaction(
@@ -696,23 +738,27 @@ export default class SupabaseCRUD extends CRUD {
 		currency: CurrencyID,
 		purpose: string,
 		status: TransactionStatus
-	) {
-		if (fromScholar === null && fromVenue === null) return 'CreateTransaction';
-		if (toScholar === null && toVenue === null) return 'CreateTransaction';
+	): Promise<Result<string>> {
+		if (fromScholar === null && fromVenue === null) return this.error('TransactionMissingFrom');
+		if (toScholar === null && toVenue === null) return this.error('TransactionMissingTo');
 
-		const { error } = await this.client.from('transactions').insert({
-			creator,
-			from_scholar: fromScholar,
-			from_venue: fromVenue,
-			to_scholar: toScholar,
-			to_venue: toVenue,
-			tokens,
-			currency,
-			purpose,
-			status
-		});
+		const { data, error } = await this.client
+			.from('transactions')
+			.insert({
+				creator,
+				from_scholar: fromScholar,
+				from_venue: fromVenue,
+				to_scholar: toScholar,
+				to_venue: toVenue,
+				tokens,
+				currency,
+				purpose,
+				status
+			})
+			.select()
+			.single();
 
-		return error ? 'CreateTransaction' : undefined;
+		return error ? this.error('CreateTransaction', error) : { data: data.id };
 	}
 
 	async approveTransaction(minter: ScholarID, id: TransactionID) {
@@ -722,14 +768,14 @@ export default class SupabaseCRUD extends CRUD {
 			.select()
 			.eq('id', id)
 			.single();
-		if (transactionError) return 'UnknownTransaction';
+		if (transactionError) return this.error('UnknownTransaction', transactionError);
 
 		// Verify that the transaction is pending. If it's not, bail.
-		if (transaction.status !== 'proposed') return 'AlreadyApproved';
+		if (transaction.status !== 'proposed') return this.error('AlreadyApproved');
 
 		// Verify that the transaction is from a venue
-		if (transaction.from_venue === null) return 'MissingApprovalVenue';
-		if (transaction.to_scholar === null) return 'MissingRecipient';
+		if (transaction.from_venue === null) return this.error('MissingApprovalVenue');
+		if (transaction.to_scholar === null) return this.error('MissingRecipient');
 
 		// See if we need to create any tokens by looking for null UUIDs in the token list.
 		const tokensToCreate = transaction.tokens.filter((id) => id === NullUUID);
@@ -745,7 +791,7 @@ export default class SupabaseCRUD extends CRUD {
 		}
 
 		// Transfer the requested number of tokens to the destination.
-		const transferError = await this.transferTokens(
+		const { error: transferError } = await this.transferTokens(
 			minter,
 			transaction.from_venue,
 			'venueid',
@@ -761,6 +807,41 @@ export default class SupabaseCRUD extends CRUD {
 			.from('transactions')
 			.delete()
 			.eq('id', transaction.id);
-		if (updateError) return 'UndeletedTransaction';
+		return this.errorOrEmpty('UndeletedTransaction', updateError);
+	}
+
+	async approveAssignment(assignment: AssignmentID): Promise<Result> {
+		const { error } = await this.client
+			.from('assignments')
+			.update({ bid: false })
+			.eq('id', assignment);
+		return this.errorOrEmpty('ApproveAssignment', error);
+	}
+
+	async createAssignment(
+		submission: SubmissionID,
+		scholar: ScholarID,
+		roleid: RoleID,
+		bid: boolean
+	): Promise<Result> {
+		const { data: role, error: roleError } = await this.client
+			.from('roles')
+			.select()
+			.eq('id', roleid)
+			.single();
+		if (role === null) {
+			console.error(roleError);
+			return this.error('CreateAssignment', roleError);
+		}
+
+		const { error } = await this.client
+			.from('assignments')
+			.insert({ submission, scholar, role: roleid, bid, venue: role.venueid });
+		return this.errorOrEmpty('CreateAssignment', error);
+	}
+
+	async deleteAssignment(assignment: AssignmentID): Promise<Result> {
+		const { error } = await this.client.from('assignments').delete().eq('id', assignment);
+		return this.errorOrEmpty('DeleteAssignment', error);
 	}
 }

@@ -3,6 +3,48 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](http://semver.org/) format.
 
+## 0.1.7 2025-02-18
+
+### Added
+
+- More consistent, precise, and type-safe error handling.
+- Added transaction IDs to submission to keep track of charges.
+
+### Fixed
+
+- Fixed scholar transactions breadcrumb link.
+- Collapse new submission form after submitting.
+
+### Maintenance
+
+- Updated all minro versions of Supabase, Svelte, SvelteKit.
+
+## 0.1.6 2025-02-09
+
+### Added
+
+- Added basic bidding interface.
+
+### Maintenance
+
+- Updated all minor versions of vite, Typescript, Svelte, Supabase.
+
+## 0.1.5 2025-02-02
+
+### Added
+
+- Edit submission title.
+- Edit titles in place.
+- Added link to previous manuscript submission.
+
+### Fixed
+
+- Resolved several defects with the new submission form.
+
+### Maintenance
+
+- Updated minor versions of all dependencies.
+
 ## 0.1.4 2025-01-19
 
 ### Added

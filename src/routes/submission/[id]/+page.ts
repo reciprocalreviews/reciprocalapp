@@ -27,9 +27,21 @@ export const load: PageLoad = async ({ parent, params }) => {
 			: await supabase.from('scholars').select('*').in('id', submission.authors);
 	if (authorsError) console.error(authorsError);
 
+	// Get the previous submission
+	const { data: previous, error: previousError } =
+		submission !== null && submission.previousid !== null
+			? await supabase
+					.from('submissions')
+					.select('*')
+					.eq('externalid', submission.previousid)
+					.single()
+			: { data: null, error: null };
+	if (previousError) console.error(previousError);
+
 	return {
 		submission,
 		venue,
-		authors
+		authors,
+		previous
 	};
 };

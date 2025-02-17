@@ -124,6 +124,7 @@
 		gap: var(--spacing);
 		width: 100%;
 	}
+
 	input {
 		border: none;
 		border-bottom: var(--thick-border-width) solid var(--text-color);
