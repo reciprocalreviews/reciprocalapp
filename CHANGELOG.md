@@ -13,6 +13,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Fixed
 
 - Fixed scholar transactions breadcrumb link.
+- Collapse new submission form after submitting.
 
 ### Maintenance
 

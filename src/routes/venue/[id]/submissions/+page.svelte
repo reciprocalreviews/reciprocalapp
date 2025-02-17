@@ -26,6 +26,8 @@
 	// Show the bidding interface if there's a venue, its biddable
 	const bidding = $derived(venue !== null && venue.bidding);
 	const submissionCost = $derived(venue?.submission_cost ?? null);
+
+	let newSubmissionExpanded = $state(false);
 </script>
 
 {#if venue}
@@ -45,8 +47,10 @@
 					header="New submission"
 					note="Manually create a new submission"
 					group="editors"
+					bind:expand={newSubmissionExpanded}
 				>
-					<NewSubmission venue={venue.id} {submissionCost}></NewSubmission>
+					<NewSubmission bind:expanded={newSubmissionExpanded} venue={venue.id} {submissionCost}
+					></NewSubmission>
 				</Card>
 			{/if}
 		</Cards>

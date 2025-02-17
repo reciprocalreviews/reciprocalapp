@@ -2,6 +2,7 @@
 	import type { VenueID } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Form from '$lib/components/Form.svelte';
+	import Note from '$lib/components/Note.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import { getDB } from '$lib/data/CRUD';
@@ -10,7 +11,11 @@
 	import { getAuth } from '../../../Auth.svelte';
 	import { handle } from '../../../feedback.svelte';
 
-	let { venue, submissionCost }: { venue: VenueID; submissionCost: number } = $props();
+	let {
+		venue,
+		submissionCost,
+		expanded = $bindable(true)
+	}: { venue: VenueID; submissionCost: number; expanded: boolean } = $props();
 
 	const db = getDB();
 	const auth = getAuth();
@@ -182,9 +187,11 @@
 				previousID = '';
 				charges = '';
 				affordable = undefined;
+				expanded = false;
 
 				return result;
 			}
-		}}>Create submission and charge authors</Button
+		}}>Create this submission</Button
 	>
+	<Note>Authors will still need to approve charges.</Note>
 </Form>
