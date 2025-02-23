@@ -6,19 +6,23 @@
 	} = $props();
 </script>
 
-<div class="count">{count}</div>
+<div class="count">
+	<div class="icon">
+		{typeof count === 'string' ? count.replaceAll('\uFE0F', '') + '\uFE0E' : count}
+	</div>
+</div>
 
 <style>
 	.count {
-		display: inline-block;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 		border-radius: 3em;
 		padding: var(--spacing);
 		background: var(--salient-color);
 		color: var(--background-color);
 		min-width: 1em;
-		min-height: 1em;
-		text-align: center;
-		line-height: 1;
+		height: 1em;
 		font-size: var(--small-font-size);
 		align-self: start;
 	}

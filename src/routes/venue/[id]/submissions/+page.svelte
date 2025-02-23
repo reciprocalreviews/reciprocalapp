@@ -61,7 +61,7 @@
 			{:else}
 				<Table>
 					{#snippet header()}
-						<th>Paid</th>
+						<th>Payment</th>
 						<th>Submission</th>
 						<th>Expertise</th>
 						<th>External ID</th>

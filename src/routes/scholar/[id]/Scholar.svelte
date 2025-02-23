@@ -146,7 +146,7 @@
 			{/if}
 		</Card>
 		{#if editable}
-			<Card icon="⛭" header="settings" note="Email, etc.">
+			<Card icon="⚙️" header="settings" note="Email, etc.">
 				<EditableText
 					text={scholar.getEmail() ?? ''}
 					label="email"

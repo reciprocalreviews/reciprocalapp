@@ -65,7 +65,7 @@ create table transactions (
   -- Can also be used to specify the reason for cancelation.
   purpose text not null,
   -- The status of the transaction
-  status transaction_status not null  
+  status transaction_status not null
 );
 
 -- Enable RLS for tokens
