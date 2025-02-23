@@ -13,9 +13,10 @@
 	import Button from '$lib/components/Button.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import { handle } from '../../../feedback.svelte';
+	import Status from '$lib/components/Status.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { venue, submissions, volunteering, roles, assignments } = $derived(data);
+	const { venue, submissions, volunteering, roles, assignments, transactions } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -79,16 +80,26 @@
 						{/if}
 					{/snippet}
 					{#each submissions as submission}
-						{@const pendingTransactions = submission.transactions.filter(
-							(t) => t === NullUUID
-						).length}
+						{@const submissionTransactions =
+							transactions === null
+								? null
+								: submission.transactions
+										.filter((t) => t === NullUUID)
+										.map((t) => transactions.find((tr) => tr.id === t))
+										.filter((t) => t !== undefined)}
 						<tr>
-							<td
-								>{#if pendingTransactions > 0}{pendingTransactions} pending transaction{pendingTransactions >
-									1
-										? 's'
-										: ''}{:else}paid{/if}</td
-							>
+							<td>
+								<!-- Couldn't load transactions? -->
+								{#if submissionTransactions === null}
+									—
+								{:else if submissionTransactions.length === submission.transactions.length}
+									<Status>paid</Status>
+								{:else}
+									<Status good={false}>
+										{submission.transactions.length - submissionTransactions.length} pending</Status
+									>
+								{/if}
+							</td>
 							<td><SubmissionPreview {submission} /></td>
 							<td>{submission.expertise}</td>
 							<td>{submission.externalid}</td>

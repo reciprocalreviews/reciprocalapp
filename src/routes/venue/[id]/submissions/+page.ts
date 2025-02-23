@@ -52,5 +52,15 @@ export const load: PageLoad = async ({ parent, params }) => {
 						.eq('venue', venueid);
 	if (assignmentsError) console.error(assignmentsError);
 
-	return { venue, submissions, volunteering, roles, assignments };
+	// Transactions in the submissions.
+	const { data: transactions, error: transactionsError } =
+		submissions === null
+			? { data: null, error: null }
+			: await supabase
+					.from('transactions')
+					.select('*')
+					.in('id', submissions?.map((submission) => submission.id) ?? []);
+	if (transactionsError) console.error(transactionsError);
+
+	return { venue, submissions, volunteering, roles, assignments, transactions };
 };
