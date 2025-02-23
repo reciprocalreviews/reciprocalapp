@@ -10,6 +10,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Show transactions pending on submissions page.
 - Show transactions status on submission page.
 - Added a toggleable submission status to each submission, to mark when it is no longer in review.
+- Show submissions on scholar page.
 
 ### Fixed
 

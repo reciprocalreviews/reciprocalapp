@@ -15,6 +15,6 @@
 		display: flex;
 		flex-direction: row;
 		flex-wrap: nowrap;
-		gap: var(--spacing);
+		gap: 0.25em;
 	}
 </style>

@@ -15,19 +15,23 @@
 	import Gift from '$lib/components/Gift.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import { validEmail } from '$lib/validation';
+	import type { SubmissionRow } from '$data/types';
+	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 
 	let {
 		scholar,
 		commitments,
 		editing,
 		tokens,
-		transactions
+		transactions,
+		submissions
 	}: {
 		scholar: Scholar;
 		commitments: { name: string; venue: string; venueid: string }[];
 		editing: { id: string; title: string }[] | null;
 		tokens: number | null;
 		transactions: number | null;
+		submissions: SubmissionRow[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -80,6 +84,25 @@
 	{/if}
 
 	<Cards>
+		<Card
+			full
+			icon={submissions === null ? '📝' : submissions.length}
+			header="submissions"
+			note="Submissions in review"
+		>
+			{#if submissions}
+				<ul>
+					{#each submissions as submission}
+						<li><SubmissionLink {submission}></SubmissionLink></li>
+					{:else}
+						<Feedback>No submissions.</Feedback>
+					{/each}
+				</ul>
+			{:else}
+				<Feedback>Unable to load submissions.</Feedback>
+			{/if}
+		</Card>
+
 		<Card
 			icon={commitments.length + (editing?.length ?? 0)}
 			header="commitments"

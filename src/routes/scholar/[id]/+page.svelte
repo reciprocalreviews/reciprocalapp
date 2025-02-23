@@ -5,7 +5,7 @@
 
 	let { data } = $props();
 
-	let { commitments, venues, editing, tokens, transactions } = $derived(data);
+	let { commitments, venues, editing, tokens, transactions, submissions } = $derived(data);
 
 	let volunteering = $derived(
 		commitments
@@ -29,7 +29,14 @@
 </script>
 
 {#if state}
-	<ScholarView scholar={state} commitments={volunteering} {editing} {tokens} {transactions} />
+	<ScholarView
+		scholar={state}
+		commitments={volunteering}
+		{editing}
+		{tokens}
+		{transactions}
+		{submissions}
+	/>
 {:else}
 	<h1>Oops.</h1>
 	<Feedback error>Unknown scholar.</Feedback>

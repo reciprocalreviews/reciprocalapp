@@ -39,12 +39,20 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.or(`from_scholar.eq.${params.id},to_scholar.eq.${params.id}`);
 	if (transactionsError) console.log(transactionsError);
 
+	// Get the scholar's submissions
+	const { data: submissions, error: submissionsError } = await supabase
+		.from('submissions')
+		.select('*')
+		.contains('authors', [params.id]);
+	if (submissionsError) console.log(submissionsError);
+
 	return {
 		scholar,
 		commitments,
 		venues,
 		editing,
 		tokens: tokens,
-		transactions: transactions
+		transactions: transactions,
+		submissions: submissions
 	};
 };

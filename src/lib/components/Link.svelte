@@ -23,8 +23,8 @@
 	a {
 		color: var(--salient-color);
 		font-weight: 400;
-		text-decoration: none;
-		font-size: inherit;
+		text-decoration: underline var(--salient-color) var(--thick-border-width) solid;
+		text-decoration-skip-ink: none;
 	}
 
 	a.small {
@@ -33,7 +33,7 @@
 
 	a:hover:not([aria-current]) {
 		text-decoration: underline;
-		text-decoration-thickness: var(--thick-border-width);
+		text-decoration-thickness: calc(1.25 * var(--thick-border-width));
 	}
 
 	a:focus {
