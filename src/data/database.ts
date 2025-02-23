@@ -270,6 +270,7 @@ export type Database = {
           id: string
           payments: number[]
           previousid: string | null
+          status: Database["public"]["Enums"]["submission_status"]
           title: string
           transactions: string[]
           venue: string
@@ -281,6 +282,7 @@ export type Database = {
           id?: string
           payments: number[]
           previousid?: string | null
+          status?: Database["public"]["Enums"]["submission_status"]
           title?: string
           transactions: string[]
           venue: string
@@ -292,6 +294,7 @@ export type Database = {
           id?: string
           payments?: number[]
           previousid?: string | null
+          status?: Database["public"]["Enums"]["submission_status"]
           title?: string
           transactions?: string[]
           venue?: string
@@ -588,6 +591,7 @@ export type Database = {
     Enums: {
       exchange_proposal_kind: "create" | "modify" | "merge"
       invited: "invited" | "accepted" | "declined"
+      submission_status: "reviewing" | "done"
       transaction_status: "proposed" | "approved" | "canceled"
     }
     CompositeTypes: {

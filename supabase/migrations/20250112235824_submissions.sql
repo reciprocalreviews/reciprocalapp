@@ -1,3 +1,6 @@
+-- The status of a submission, in relation to payments.
+create type submission_status as enum ('reviewing', 'done');
+
 -- Individual submissions under review
 create table submissions (
   -- The unique ID of the submission
@@ -17,7 +20,9 @@ create table submissions (
   -- An optional title for public bidding
   title text not null default ''::text,
   -- An optional description of expertise required for public bidding
-  expertise text default null
+  expertise text default null,
+  -- The status of the submission in relation to payments.
+  status submission_status not null default 'reviewing'
 );
 
 -- Make it fast to retrieve the submissions of a scholar or venue.

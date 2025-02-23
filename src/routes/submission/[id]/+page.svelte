@@ -11,6 +11,7 @@
 	import { getAuth } from '../../Auth.svelte';
 	import Link from '$lib/components/Link.svelte';
 	import Status from '$lib/components/Status.svelte';
+	import Checkbox from '$lib/components/Checkbox.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const { submission, venue, authors, previous, transactions } = $derived(data);
@@ -53,10 +54,21 @@
 	>
 		{#snippet subtitle()}Submission{/snippet}
 		{#snippet details()}
+			{#if submission.status === 'reviewing'}<Status>reviewing</Status>{:else}<Status good={false}
+					>done</Status
+				>{/if}
 			{#if previous}<Link to="/submission/{previous.id}">{previous.externalid}</Link>
 				→{/if}
 			{submission.externalid}
 		{/snippet}
+
+		{#if isEditor}
+			<Checkbox
+				on={submission.status === 'reviewing'}
+				change={(on) => db.updateSubmissionStatus(submission.id, on ? 'reviewing' : 'done')}
+				>This submission is still in review.</Checkbox
+			>
+		{/if}
 
 		<h2>Authors</h2>
 

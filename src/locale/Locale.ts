@@ -66,6 +66,7 @@ export const enUS = {
 		MissingSubmissionCharge: "Didn't receive enough charge amounts for the authors given",
 		UpdateSubmissionExpertise: 'Unable to update the submission expertise',
 		UpdateSubmissionTitle: "Unable to update the submission's title",
+		UpdateSubmissionStatus: "Unable to update the submission's status",
 		ApproveAssignment: 'Unable to approve the assignment',
 		CreateAssignment: 'Unable to create this assignment',
 		DeleteAssignment: 'Unable to delete this assignment'

@@ -14,7 +14,6 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import Gift from '$lib/components/Gift.svelte';
 	import Page from '$lib/components/Page.svelte';
-	import Row from '$lib/components/Row.svelte';
 	import { validEmail } from '$lib/validation';
 
 	let {
@@ -72,15 +71,13 @@
 		<p>{scholar.getStatus()}</p>
 	{/if}
 
-	<Row>
-		{#if editable}
-			<Checkbox
-				on={scholar.isAvailable()}
-				change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
-				>I am available to review.</Checkbox
-			>
-		{/if}
-	</Row>
+	{#if editable}
+		<Checkbox
+			on={scholar.isAvailable()}
+			change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
+			>I am available to review.</Checkbox
+		>
+	{/if}
 
 	<Cards>
 		<Card

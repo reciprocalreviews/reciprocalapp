@@ -10,7 +10,8 @@ import {
 	type Response,
 	type TokenID,
 	type TransactionStatus,
-	type AssignmentID
+	type AssignmentID,
+	type SubmissionStatus
 } from '../../data/types';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
 import { getContext, setContext } from 'svelte';
@@ -51,6 +52,12 @@ export default abstract class CRUD {
 	): Promise<Result>;
 
 	abstract updateSubmissionTitle(submissionID: SubmissionID, title: string | null): Promise<Result>;
+
+	/** Toggle the submission stats */
+	abstract updateSubmissionStatus(
+		submissionID: SubmissionID,
+		status: SubmissionStatus
+	): Promise<Result>;
 
 	/** Check whether the given scholars have enough tokens for the given payments. True if so, and a list of remaining balances by scholar if not. */
 	abstract verifyCharges(charges: Charge[]): Promise<true | Charge[] | undefined>;

@@ -12,7 +12,8 @@ import type {
 	Response,
 	TokenID,
 	TransactionStatus,
-	AssignmentID
+	AssignmentID,
+	SubmissionStatus
 } from '../../data/types';
 import CRUD, { NullUUID, type Result } from './CRUD';
 import Scholar from './Scholar.svelte';
@@ -65,6 +66,18 @@ export default class SupabaseCRUD extends CRUD {
 			.update({ title })
 			.eq('id', submissionID);
 		return this.errorOrEmpty('UpdateSubmissionTitle', error);
+	}
+
+	/** Toggle the submission stats */
+	async updateSubmissionStatus(
+		submissionID: SubmissionID,
+		status: SubmissionStatus
+	): Promise<Result> {
+		const { error } = await this.client
+			.from('submissions')
+			.update({ status })
+			.eq('id', submissionID);
+		return this.errorOrEmpty('UpdateSubmissionStatus', error);
 	}
 
 	async convertORCIDsToScholars(
