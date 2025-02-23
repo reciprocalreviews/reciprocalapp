@@ -14,6 +14,7 @@
 	let {
 		venue,
 		submissionCost,
+		/** @ts-ignore Whether the form is expanded. Useful for parent components to set and get state. */
 		expanded = $bindable(true)
 	}: { venue: VenueID; submissionCost: number; expanded: boolean } = $props();
 
