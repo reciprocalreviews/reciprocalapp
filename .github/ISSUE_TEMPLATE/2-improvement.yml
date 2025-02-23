@@ -1,7 +1,6 @@
 name: Improvement
 description: Suggest a new or improved feature.
 labels: ['triage']
-projects: ['reciprocalreviews/1']
 type: 'improvement'
 body:
   - type: markdown

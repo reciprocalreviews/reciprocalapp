@@ -1,7 +1,6 @@
 name: Defect
 description: Report an unintended or unexpected behavior.
 labels: ['defect', 'triage']
-projects: ['reciprocalreviews/1']
 type: 'defect'
 body:
   - type: markdown
