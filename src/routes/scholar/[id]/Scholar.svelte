@@ -52,6 +52,9 @@
 	{#snippet subtitle()}Scholar{/snippet}
 	{#snippet details()}
 		<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>
+		<Status good={scholar.isAvailable()}
+			>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status
+		>
 		{#if scholar.getORCID()}
 			<Link to="https://orcid.org/{scholar.getORCID()}">{scholar.getORCID()}</Link>
 		{/if}
@@ -77,9 +80,6 @@
 				>I am available to review.</Checkbox
 			>
 		{/if}
-		<Status good={scholar.isAvailable()}
-			>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status
-		>
 	</Row>
 
 	<Cards>

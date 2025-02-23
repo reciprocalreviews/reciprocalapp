@@ -31,25 +31,26 @@
 				await handle(change(on));
 			}
 		}}
-	/>{@render children?.()}</label
+	/><span class="text">{@render children?.()}</span></label
 >
 
 <style>
+	label {
+		display: flex;
+		flex-direction: row;
+		gap: var(--spacing);
+		align-items: baseline;
+		font-size: var(--small-font-size);
+	}
+
 	input {
+		display: inline;
 		accent-color: var(--salient-color);
-		width: 20px;
-		height: 20px;
+		transform: scale(1.5);
 		border-radius: var(--roundedness);
 	}
 
 	input:focus {
 		outline: solid var(--thick-border-width) var(--focus-color);
-	}
-
-	label {
-		flex-direction: row;
-		gap: var(--spacing);
-		align-items: center;
-		font-size: var(--small-font-size);
 	}
 </style>
