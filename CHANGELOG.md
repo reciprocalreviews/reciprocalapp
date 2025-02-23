@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Fixed
 
 - Use Noto Emoji instead of system default to guarantee monochrome, consistent emojis.
+- Improved tip visual design.
 
 ### Maintenance
 

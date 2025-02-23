@@ -3,7 +3,7 @@
 </script>
 
 <div class="tip">
-	<div class="bulb">?</div>
+	<div class="bulb">💡</div>
 	<div class="content">{@render children()}</div>
 </div>
 
@@ -13,10 +13,29 @@
 		flex-direction: row;
 		flex-wrap: nowrap;
 		gap: var(--spacing);
-		align-items: baseline;
+		align-items: start;
 		font-size: var(--small-font-size);
-		padding-left: var(--spacing);
-		border-left: solid var(--thick-border-width) var(--border-color);
 		border-radius: var(--roundedness);
+	}
+
+	.bulb {
+		font-size: 125%;
+		animation: slideUp 0.5s;
+	}
+
+	.content {
+		border-left: solid var(--thick-border-width) var(--border-color);
+		padding-left: var(--spacing);
+	}
+
+	@keyframes slideUp {
+		from {
+			opacity: 0;
+			transform: translateY(1em);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 </style>
