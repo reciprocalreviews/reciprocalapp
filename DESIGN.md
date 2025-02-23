@@ -344,7 +344,7 @@ A `Submission` represents a manuscript undergoing peer review.
 - [ ] Depending on the venue, `Scholar`s may be able to bid on submissions, simplifying an editor's ability to find qualified reviewers.
 - [x] `Submission`s can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
 - [x] `Submission`s can be added manually by \_`editor`\_s.
-- [ ] Submissions can be proposed through email integrations with review systems, which provide submission metadata, but must then be approved by editors.
+- [ ] Submissions can be proposed through email integrations with review systems, which provide submission metadata, but must then be approved by editors ([#41](https://github.com/reciprocalreviews/reciprocalapp/issues/41))
 
 Here is a SQL schema sketch, for clarity:
 
@@ -402,7 +402,7 @@ The purpose of the about page is to give context about the project. It should:
 - [x] Explain who is creating RR
 - [x] Why RR exists
 - [x] How others can get involved in maintaining and evolving it
-- [ ] How RR is governed and funded.
+- [ ] How RR is governed and funded ([#13](https://github.com/reciprocalreviews/reciprocalapp/issues/13))
 
 It has no functionalty.
 
@@ -412,7 +412,7 @@ The purpose of the login page is to authenticate a person into the application u
 
 It should:
 
-- [ ] Allow a visitor to initiate and complete an ORCID OAuth authentication, landing them at their `/scholar/[id]` dashboard.
+- [ ] ([#19](https://github.com/reciprocalreviews/reciprocalapp/issues/19)): Allow a visitor to initiate and complete an ORCID OAuth authentication, landing them at their `/scholar/[id]` dashboard
 
 ## Scholar `/scholar/[scholarid]`
 
@@ -421,7 +421,7 @@ The purpose of the scholar page is to provide a landing page and dashboard for a
 It should:
 
 - [x] Link to the scholar's ORCID profile (`scholars.orcid`), to help visitors get more information about them.
-- [ ] Display read-only data pulled from the ORCID profile, to reduce the need to navigate to their ORCID profile.
+- [ ] ([#19](https://github.com/reciprocalreviews/reciprocalapp/issues/19)): Display read-only data pulled from the ORCID profile, to reduce the need to navigate to their ORCID profile.
 - [x] Show links to `Venue`s the scholar has volunteered to review for
 - [x] Show links to `Venue`s the scholar is serving as _`editor`_ of.
 
@@ -494,13 +494,13 @@ When a venue is **approved** state:
 
 - [x] _`editor`_: Modify the venue name, description
 - [x] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one
-- [ ] _`editor`_: Set the state to inactive
+- [ ] _`editor`_ ([#42](https://github.com/reciprocalreviews/reciprocalapp/issues/42)): Set the state to inactive
 
-- [ ] _`editor`_: Export the list of reviewers as a CSV file for use on other plaforms, including ORCID, name, email, expertise, role, commitment, and paper count.
+- [ ] _`editor`_ ([#33](https://github.com/reciprocalreviews/reciprocalapp/issues/33)): Export the list of reviewers as a CSV file for use on other plaforms, including ORCID, name, email, expertise, role, commitment, and paper count.
 - [x] _`editor`_: Create roles for the venue.
 - [x] _`editor`_: Edit the descriptions of roles.
 - [x] _`editor`_: Delete a role, confirming they understand that all volunteers will be removed from the role.
-- [ ] _`editor`_: Invite one or more `Scholar`s by ORCID to a particular role.
+- [ ] _`editor`_ ([#32](https://github.com/reciprocalreviews/reciprocalapp/issues/32)): Invite one or more `Scholar`s by ORCID to a particular role.
 - [x] _`editor`_: Invite one or more `Scholar`s by email to a particular role.
 - [x] _`editor`_: Gift tokens from the venue to a scholar
 
@@ -515,7 +515,7 @@ When a venue is **approved** state:
 
 When a venue is in an _inactive_ state:
 
-- [ ] Communicate that it is inactive.
+- [ ] ([#42](https://github.com/reciprocalreviews/reciprocalapp/issues/42)) Communicate that it is inactive.
 
 ## Currency `/currency/[currencyid]`
 
@@ -532,17 +532,17 @@ Basic functionality includes:
 
 There are also several functions related to currency exchange and merger:
 
-- [ ] _`scholar`_: Show any existing exchange rates approved by the platform.
-- [ ] _`scholar`_: View the exchange rates the currency is involved in
-- [ ] _`editor`_: Convert a specific token to another venue's currency. This enables a one-time exchange, such as when an editor might approve someone using currency from another `Venue` to submit to their venue.
-- [ ] _`editor`_: Specify a conversion rate between one venue and another, which enables scholars to independently convert their tokens from one currency to another. This enables an official one way exchange rate, reducing barriers to cross-venue transactions.
-- [ ] _`editor`_: Unify two currencies, removing the need to convert between a currency. Must be approved by the `editors` of both venues. This prevent editors from unilaterally creating changes.
-- [ ] _`minter`_: Propose a new exchange rate for other minters involved in two currencies to approve. Everyone must approve for it to be official. Inactive until all minters involved in both currencies approve.
-- [ ] _`minter`_: Approve a proposed exchange rate.
-- [ ] _`minter`_: Propose a modification to an exchange rate
-- [ ] _`minter`_: Approve a modified exchange rate. Once all have approved, the old exchange between the two is deleted and the new approved one is created.
-- [ ] _`minter`_: Propose a merger of currencies
-- [ ] _`minter`_: Approve a merger of currencies. Once all have approved, all tokens in the secondary currency are deleted, and replaced with new tokens in the first currency using the current exchange rate, and the exchange is deleted.
+- [ ] _`scholar`_ ([#34](https://github.com/reciprocalreviews/reciprocalapp/issues/34)): Show any existing exchange rates approved by the platform.
+- [ ] _`scholar`_ ([#34](https://github.com/reciprocalreviews/reciprocalapp/issues/34)): View the exchange rates the currency is involved in
+- [ ] _`editor`_ ([#34](https://github.com/reciprocalreviews/reciprocalapp/issues/34)): Convert a specific token to another venue's currency. This enables a one-time exchange, such as when an editor might approve someone using currency from another `Venue` to submit to their venue.
+- [ ] _`editor`_ ([#34](https://github.com/reciprocalreviews/reciprocalapp/issues/34)): Specify a conversion rate between one venue and another, which enables scholars to independently convert their tokens from one currency to another. This enables an official one way exchange rate, reducing barriers to cross-venue transactions.
+- [ ] _`editor`_ ([#34](https://github.com/reciprocalreviews/reciprocalapp/issues/34)): Unify two currencies, removing the need to convert between a currency. Must be approved by the `editors` of both venues. This prevent editors from unilaterally creating changes.
+- [ ] _`minter`_ ([#34](https://github.com/reciprocalreviews/reciprocalapp/issues/34)): Propose a new exchange rate for other minters involved in two currencies to approve. Everyone must approve for it to be official. Inactive until all minters involved in both currencies approve.
+- [ ] _`minter`_ ([#34](https://github.com/reciprocalreviews/reciprocalapp/issues/34)): Approve a proposed exchange rate.
+- [ ] _`minter`_ ([#34](https://github.com/reciprocalreviews/reciprocalapp/issues/34)): Propose a modification to an exchange rate
+- [ ] _`minter`_ ([#34](https://github.com/reciprocalreviews/reciprocalapp/issues/34)): Approve a modified exchange rate. Once all have approved, the old exchange between the two is deleted and the new approved one is created.
+- [ ] _`minter`_ ([#35](https://github.com/reciprocalreviews/reciprocalapp/issues/35)): Propose a merger of currencies.
+- [ ] _`minter`_ ([#35](https://github.com/reciprocalreviews/reciprocalapp/issues/35)): Approve a merger of currencies. Once all have approved, all tokens in the secondary currency are deleted, and replaced with new tokens in the first currency using the current exchange rate, and the exchange is deleted.
 
 ## Transactions `/venue/[venueid]/transactions`
 
@@ -554,10 +554,8 @@ The purpose of this page is to allow for management of all `Transaction`s associ
 **FUNCTIONALITY**. The transactions page for a venue should allow for:
 
 - [x] _`editor`_, _`minter`_: View all transactions
-- [ ] _`editor`_, _`minter`_: Search for transactions involving particular people or containing particular text
-- [ ] _`minter`_: Approve pending transactions that do not involve the scholar approving
-- [ ] _`editors`_, _`minters`_: Cancel approved transactions that do not involve the scholar canceling
-- [ ] _`minters`_: Change the frequency of email reminders about unapproved transactions to never, daily, or weekly
+- [ ] _`minter`_ ([#43](https://github.com/reciprocalreviews/reciprocalapp/issues/43)): Approve pending transactions that do not involve the scholar approving
+- [ ] _`minters`_ ([#44](https://github.com/reciprocalreviews/reciprocalapp/issues/44)): Send email reminders about unfinished transactions and work at a customizable frequency.
 
 ## `/venue/[id]/submissions`
 
@@ -568,18 +566,17 @@ The purpose of the submissions page is to help scholars see all active submissio
 
 It should should:
 
-- [ ] Show the total number of active submissions in the system.
-- [ ] _`editor`_: Filter submissions by whether they are active, by author, reviewer, etc.
-- [ ] _`editor`_: Manually add a new submission, including all of the transactions, the manuscript ID specific to the venue, the scholar authors of the submission, and how much each author is contributing. (This is to overcome integration failures, or submisions managed outside of normal reviewing platform flows.)
+- [x] Show the total number of active submissions in the system.
+- [ ] _`editor`_ ([#45](https://github.com/reciprocalreviews/reciprocalapp/issues/45)): Filter submissions by whether they are active, by author, reviewer, etc.
+- [x] _`editor`_: Manually add a new submission, including all of the transactions, the manuscript ID specific to the venue, the scholar authors of the submission, and how much each author is contributing. (This is to overcome integration failures, or submisions managed outside of normal reviewing platform flows.)
 - [ ] _`editor`_: Submit bulk `Submission`s to the system, allowing more than one at a time
 - [ ] _`editor`_: Resolve a specific submission, generating transactions to compensate scholars for their reviewing labor
 - [ ] _`editor`_: Resolve bulk submissions, generating transactions for multiple existing submissions
-- [ ] _`editor`_: View RR email addresses to include on review activity emails on other platforms
-- [ ] _`editor`_: View transaction templates for each transaction type ot include in email text on other platform's email templates
+- [ ] _`editor`_ ([#41](https://github.com/reciprocalreviews/reciprocalapp/issues/41)): View transaction templates for each transaction type ot include in email text on other platform's email templates
 
 If the `Venue` is set to be public:
 
-- [ ] _`scholar`_: View specific active submissions and the topic and method expertise required (but not submission titles), sorted by submissions most in need of reviews
+- [x] _`scholar`_: View specific active submissions and the topic and method expertise required (but not submission titles), sorted by submissions most in need of reviews
 - [ ] _`scholar`_: Bid on active submissions based on expertise required
 
 ## Submission `/venue/[venueid]/submission/[submissionid]`
@@ -593,20 +590,19 @@ The purpose of a submission page is to allow editors and scholars to see informa
 
 RR will also send periodic reminders based on time-based events:
 
-- [ ] `Venue`s are checked daily for a certain proportion of support, and editors are notified when the petition exceeds that threshold.
-- [ ] Send `scholar`s periodic reminders to update their availability
+- [ ] ([#46](https://github.com/reciprocalreviews/reciprocalapp/issues/46)): Send `scholar`s periodic reminders to update their availability
 
 > [!IMPORTANT]
 > Emails below are specific to compensation
 
-- [ ] Send `minters` periodic reminders of unapproved transactions, based on the frequency set in the `Transactions` page
+- [ ] ([#44](https://github.com/reciprocalreviews/reciprocalapp/issues/44)): Send `minters` periodic reminders of unapproved transactions, based on the frequency set in the `Transactions` page
 
 RR will have dedicated email adresses for each venue that, if sent to, will generate events and data that is user facing.
 
 - [ ] When an email is sent to the `Venue`-specific address and proposed `Transaction` meta-data is found, create proposed `Transaction`s corresponding to the transaction meta-data provided. Types of transactions and corresponding metadata include:
-  - [ ] _Submission_ (manuscript ID, ORCID for each author, and amount each author should be deducted).
-  - [ ] _Review_ (manuscript ID, ORCID for the reviewer)
-  - [ ] _Meta-review_ (manuscript ID, ORCID for meta-reviewer)
+  - _Submission_ (manuscript ID, ORCID for each author and amount each author should be deducted).
+  - _Review_ (manuscript ID, ORCID for the reviewer)
+  - _Meta-review_ (manuscript ID, ORCID for meta-reviewer)
 - [ ] When a `Transaction` specified in an email could not be processed — because it lacked metadata, lacked metadata that could be matched to a venue, manuscript, or scholar, or violated a venues requirements — the editor of the venue is notified of the error so they can manually correct it, and potentially any configuration issues with the integration.
 - [ ] When a proposed `Transaction` is declined, an email is sent to the person who proposed it with an explanation for why.
 - [ ] When `Venue`s become **approved**, send emails to the editor and all people who upvoted the venue, notifying them of their new tokens and the live process.
