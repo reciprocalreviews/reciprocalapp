@@ -173,6 +173,7 @@
 			if (user) {
 				const result = handle(
 					db.createSubmission(
+						user,
 						title,
 						expertise,
 						venue,

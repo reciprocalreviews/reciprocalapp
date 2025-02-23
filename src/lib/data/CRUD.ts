@@ -37,6 +37,7 @@ export type Result<Type = undefined> = { data?: Type; error?: DBError };
 export default abstract class CRUD {
 	/** Insert a new submission in the database and return a list of transaction ids that paid for it. */
 	abstract createSubmission(
+		creator: ScholarID,
 		title: string,
 		expertise: string,
 		venue: VenueID,

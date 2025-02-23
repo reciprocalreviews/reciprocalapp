@@ -63,6 +63,7 @@ export const enUS = {
 		UndeletedTransaction: "The proposed transaction couldn't be deleted.",
 		InvalidCharges: "The proposed transaction's charges are invalid.",
 		NewSubmission: 'Unable to create a new submission',
+		UnknownVenue: 'Unable to find venue',
 		MissingSubmissionCharge: "Didn't receive enough charge amounts for the authors given",
 		UpdateSubmissionExpertise: 'Unable to update the submission expertise',
 		UpdateSubmissionTitle: "Unable to update the submission's title",

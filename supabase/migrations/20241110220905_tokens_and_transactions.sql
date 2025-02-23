@@ -57,7 +57,7 @@ create table transactions (
   to_venue uuid references venues(id),
   -- Require that there is either a scholar or venue destination but not both
   constraint check_to check (num_nonnulls(to_scholar, to_venue) = 1),
-  -- An array of token ids moved in the transaction
+  -- An array of token ids moved in the transaction. If the null UUID, then tokens haven't been determined yet.
   tokens uuid[] not null,
   -- The currency the amount is in
   currency uuid not null references currencies(id),

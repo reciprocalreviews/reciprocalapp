@@ -224,7 +224,6 @@
 		</Cards>
 
 		{#if editor}
-			<h2>Editor's corner</h2>
 			<Cards>
 				<Card group="editors" icon={tokens ?? 0} header="tokens" note="balance and gifts">
 					<p>

@@ -150,6 +150,7 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async createSubmission(
+		creator: ScholarID,
 		title: string,
 		expertise: string,
 		venue: VenueID,
@@ -166,17 +167,55 @@ export default class SupabaseCRUD extends CRUD {
 			charges.map((charge) => charge.scholar)
 		);
 
+		// Couldn't find them? Bail.
 		if (scholarsError || scholars === undefined)
 			return {
 				error: { message: this.locale.error.ScholarNotFound, details: scholarsError?.details }
 			};
 
+		// Verify that we found a scholar for all charges.
 		const authors = charges
 			.map((charge) => scholars.find((s) => s.orcid === charge.scholar)?.id)
 			.filter((a) => a !== undefined);
 
 		if (authors.length < charges.length)
 			return { error: { message: this.locale.error.MissingSubmissionCharge } };
+
+		// Get the requested venue
+		const { data: venueData, error: venueError } = await this.client
+			.from('venues')
+			.select()
+			.eq('id', venue)
+			.single();
+		if (venueError || venue === null)
+			return {
+				error: { message: this.locale.error.UnknownVenue, details: venueError ?? undefined }
+			};
+
+		// Create proposed transactions for all charges.
+		const transactions: string[] = [];
+		for (let scholarIndex = 0; scholarIndex < charges.length; scholarIndex++) {
+			const charge = charges[scholarIndex];
+			const scholarID = authors[scholarIndex];
+			const { data: proposedScholarTransactionID, error } = await this.createTransaction(
+				creator,
+				// From this scholar to the given venue
+				scholarID,
+				null,
+				null,
+				venue,
+				// Represent hypothetical tokens with a list of null UUIDs
+				Array.from(new Array(charge.payment ?? 0), () => NullUUID),
+				venueData.currency,
+				`Payment for submission ${externalID}`,
+				'proposed'
+			);
+			if (error) {
+				return {
+					error: { message: this.locale.error.CreateTransaction, details: error.details }
+				};
+			} else if (proposedScholarTransactionID) transactions.push(proposedScholarTransactionID);
+		}
 
 		// Create the submission
 		const { data: submission, error } = await this.client
@@ -189,8 +228,8 @@ export default class SupabaseCRUD extends CRUD {
 				previousid: previousID,
 				authors,
 				payments: charges.map((charge) => charge.payment ?? 0),
-				// Not yet charged
-				transactions: charges.map(() => NullUUID)
+				// Provide the list of proposed transactions
+				transactions: transactions
 			})
 			.select()
 			.single();
@@ -694,7 +733,7 @@ export default class SupabaseCRUD extends CRUD {
 		toKind: 'venueid' | 'scholarid' | 'emailorcid',
 		amount: number,
 		purpose: string
-	): Promise<Result<string>> {
+	): Promise<Result<TransactionID>> {
 		// Find the approriate ID for the from and to entities.
 		let fromEntity = await this.resolveEntityID(fromKind, from);
 		let toEntity = await this.resolveEntityID(toKind, to);

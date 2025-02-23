@@ -90,7 +90,7 @@
 								<Status good={false}>unknown transaction</Status>
 							{:else}
 								{#if transaction.status === 'proposed'}
-									proposed to pay
+									proposes to pay
 								{:else if transaction.status === 'approved'}
 									paid
 								{:else if transaction.status === 'canceled'}

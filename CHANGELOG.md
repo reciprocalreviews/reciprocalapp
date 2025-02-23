@@ -17,6 +17,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Use Noto Emoji instead of system default to guarantee monochrome, consistent emojis.
 - Improved tip visual design.
 - Fixed checkbox label alignment.
+- Generate proposed transactions for submission.
 
 ### Maintenance
 
