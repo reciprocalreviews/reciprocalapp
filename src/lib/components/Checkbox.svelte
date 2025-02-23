@@ -36,8 +36,9 @@
 
 <style>
 	label {
-		display: flex;
+		display: inline-flex;
 		flex-direction: row;
+		align-self: flex-start;
 		gap: var(--spacing);
 		align-items: baseline;
 		font-size: var(--small-font-size);
