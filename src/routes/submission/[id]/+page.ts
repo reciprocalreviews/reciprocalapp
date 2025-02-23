@@ -38,10 +38,18 @@ export const load: PageLoad = async ({ parent, params }) => {
 			: { data: null, error: null };
 	if (previousError) console.error(previousError);
 
+	// Get the transactions for the submission
+	const { data: transactions, error: transactionsError } =
+		submission === null
+			? { data: null, error: null }
+			: await supabase.from('transactions').select('*').in('id', submission.transactions);
+	if (transactionsError) console.error(transactionsError);
+
 	return {
 		submission,
 		venue,
 		authors,
-		previous
+		previous,
+		transactions
 	};
 };

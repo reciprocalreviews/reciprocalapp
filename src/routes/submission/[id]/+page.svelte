@@ -10,13 +10,19 @@
 	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../../Auth.svelte';
 	import Link from '$lib/components/Link.svelte';
+	import Status from '$lib/components/Status.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { submission, venue, authors, previous } = $derived(data);
+	const { submission, venue, authors, previous, transactions } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
 	const user = $derived(auth.getUserID());
+	const authorTransactions = $derived(
+		submission === null || transactions === null
+			? null
+			: submission.transactions.map((id) => transactions.find((t) => t.id === id))
+	);
 
 	let isEditor = $derived(venue !== null && user !== null && venue.editors.includes(user));
 
@@ -58,13 +64,29 @@
 			{#each submission.authors as author}
 				{@const authorIndex = authors.findIndex((a) => a.id === author)}
 				{@const payment = authorIndex !== undefined ? submission.payments[authorIndex] : undefined}
+				{@const transaction =
+					authorTransactions === null || authorIndex === undefined
+						? undefined
+						: authorTransactions[authorIndex]}
 				<Row>
 					{#if authorIndex === undefined}
 						<Feedback error>Unable to find authors.</Feedback>
 					{:else}
 						<ScholarLink id={author}></ScholarLink>
-						{#if payment !== undefined}
-							paid <Tokens amount={payment} />{/if}
+						{#if (isEditor || isAuthor) && payment !== undefined}
+							{#if transaction === undefined}
+								<Status good={false}>unknown transaction</Status>
+							{:else}
+								{#if transaction.status === 'proposed'}
+									proposed to pay
+								{:else if transaction.status === 'approved'}
+									paid
+								{:else if transaction.status === 'canceled'}
+									declined to pay
+								{/if}
+								<Tokens amount={payment} />
+							{/if}
+						{/if}
 					{/if}
 				</Row>
 			{/each}

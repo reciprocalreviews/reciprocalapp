@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Added
 
 - Show transactions pending on submissions page.
+- Show transactions status on submission page.
 
 ### Fixed
 
