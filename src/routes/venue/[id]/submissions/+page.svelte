@@ -9,7 +9,7 @@
 	import Cards from '$lib/components/Cards.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import NewSubmission from './NewSubmission.svelte';
-	import { getDB } from '$lib/data/CRUD';
+	import { getDB, NullUUID } from '$lib/data/CRUD';
 	import Button from '$lib/components/Button.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import { handle } from '../../../feedback.svelte';
@@ -61,6 +61,7 @@
 			{:else}
 				<Table>
 					{#snippet header()}
+						<th>Paid</th>
 						<th>Submission</th>
 						<th>Expertise</th>
 						<th>External ID</th>
@@ -78,7 +79,16 @@
 						{/if}
 					{/snippet}
 					{#each submissions as submission}
+						{@const pendingTransactions = submission.transactions.filter(
+							(t) => t === NullUUID
+						).length}
 						<tr>
+							<td
+								>{#if pendingTransactions > 0}{pendingTransactions} pending transaction{pendingTransactions >
+									1
+										? 's'
+										: ''}{:else}paid{/if}</td
+							>
 							<td><SubmissionPreview {submission} /></td>
 							<td>{submission.expertise}</td>
 							<td>{submission.externalid}</td>
