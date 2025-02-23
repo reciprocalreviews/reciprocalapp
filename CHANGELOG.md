@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.8 2025-02-23
 
+### Fixed
+
+- Use Noto Emoji instead of system default to guarantee monochrome, consistent emojis.
+
 ### Maintenance
 
 - Updated minor versions of Svelte, Vite, Vitest.
