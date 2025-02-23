@@ -1,0 +1,26 @@
+name: Improvement
+description: Suggest a new or improved feature.
+labels: ['triage']
+projects: ['reciprocalreviews/1']
+type: 'improvement'
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to share your idea!
+  - type: textarea
+    id: the-problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that's annoying, hard, or impossible to do with the platform?
+      placeholder: The problem
+    validations:
+      required: true
+  - type: textarea
+    id: the-idea
+    attributes:
+      label: Ideas
+      description: What could we change that would make this easier? It's okay if you don't have one yet.
+      placeholder: What might address the problem?
+    validations:
+      required: true
