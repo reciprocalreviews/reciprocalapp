@@ -85,7 +85,6 @@
 				{valid}
 				bind:text
 				{placeholder}
-				padded={false}
 				active={editing}
 				bind:view={field}
 				done={() => (editing ? saveAndFocus() : undefined)}
