@@ -149,14 +149,16 @@ export default abstract class CRUD {
 	/** Move N tokens from source to destination, returning a transaction ID. */
 	abstract transferTokens(
 		scholar: ScholarID,
-		curency: CurrencyID,
+		currency: CurrencyID,
 		from: VenueID,
 		fromKind: 'venueid' | 'scholarid' | 'emailorcid',
 		to: string,
 		toKind: 'venueid' | 'scholarid' | 'emailorcid',
 		amount: number,
-		purpose: string
-	): Promise<Result<string>>;
+		purpose: string,
+		/* If there's an existing proposed transaction, the ID for it. Otherwise, a transaction is created. */
+		transaction: TransactionID | undefined
+	): Promise<Result<{ transaction: TransactionID; tokens: TokenID[] }>>;
 
 	/** Insert a new transaction in the database */
 	abstract createTransaction(
@@ -173,9 +175,8 @@ export default abstract class CRUD {
 
 	/**
 	 * Given a transaction ID that is pending, transfers tokens based on the transaction.
-	 * Will only work for a currency's minter because of security rules.
 	 * */
-	abstract approveTransaction(minter: ScholarID, id: TransactionID): Promise<Result>;
+	abstract approveTransaction(creator: ScholarID, id: TransactionID): Promise<Result<undefined>>;
 
 	/** Mark the transaction canceled */
 	abstract cancelTransaction(id: TransactionID, reason: string): Promise<Result>;

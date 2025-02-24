@@ -151,6 +151,8 @@
 					{#each currencies as currency}
 						<Tokens amount={tokens.filter((t) => t.currency === currency.id).length} {currency}
 						></Tokens>
+					{:else}
+						<Tokens amount={0}></Tokens>
 					{/each}
 				{/if}
 			</p>
@@ -181,7 +183,8 @@
 									giftRecipient,
 									'emailorcid',
 									giftAmount,
-									purpose
+									purpose,
+									undefined
 								)
 							: undefined}
 				/>

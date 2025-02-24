@@ -709,8 +709,9 @@ export default class SupabaseCRUD extends CRUD {
 		to: VenueID | ScholarID,
 		toKind: 'venueid' | 'scholarid' | 'emailorcid',
 		amount: number,
-		purpose: string
-	): Promise<Result<TransactionID>> {
+		purpose: string,
+		transaction: TransactionID | undefined
+	): Promise<Result<{ transaction: TransactionID; tokens: TokenID[] }>> {
 		// Find the approriate ID for the from and to entities.
 		let fromEntity = await this.resolveEntityID(fromKind, from);
 		let toEntity = await this.resolveEntityID(toKind, to);
@@ -744,18 +745,35 @@ export default class SupabaseCRUD extends CRUD {
 			if (error) return this.error('TransferVenueTokens', error);
 		}
 
+		// Update the existing transaction
+		if (transaction) {
+			const { error } = await this.client
+				.from('transactions')
+				.update({ status: 'approved', tokens: tokenIDs })
+				.eq('id', transaction);
+			if (error) return this.error('TransactionApprovalUpdate', error);
+			return { data: { transaction, tokens: tokenIDs } };
+		}
 		// Record an approved transaction to log the gift.
-		return await this.createTransaction(
-			creator,
-			fromKind === 'venueid' ? null : fromEntity,
-			fromKind === 'venueid' ? fromEntity : null,
-			toKind === 'venueid' ? null : toEntity,
-			toKind === 'venueid' ? toEntity : null,
-			tokenIDs,
-			tokens[0].currency,
-			purpose,
-			'approved'
-		);
+		else {
+			const { data: transactionID, error: transactionError } = transaction
+				? { data: transaction, error: null }
+				: await this.createTransaction(
+						creator,
+						fromKind === 'venueid' ? null : fromEntity,
+						fromKind === 'venueid' ? fromEntity : null,
+						toKind === 'venueid' ? null : toEntity,
+						toKind === 'venueid' ? toEntity : null,
+						tokenIDs,
+						tokens[0].currency,
+						purpose,
+						'approved'
+					);
+			if (transactionID === undefined || transactionError)
+				return this.error('CreateTransaction', transactionError?.details);
+
+			return { data: { transaction: transactionID, tokens: tokenIDs } };
+		}
 	}
 
 	async createTransaction(
@@ -768,7 +786,7 @@ export default class SupabaseCRUD extends CRUD {
 		currency: CurrencyID,
 		purpose: string,
 		status: TransactionStatus
-	): Promise<Result<string>> {
+	): Promise<Result<TransactionID>> {
 		if (fromScholar === null && fromVenue === null) return this.error('TransactionMissingFrom');
 		if (toScholar === null && toVenue === null) return this.error('TransactionMissingTo');
 
@@ -791,7 +809,7 @@ export default class SupabaseCRUD extends CRUD {
 		return error ? this.error('CreateTransaction', error) : { data: data.id };
 	}
 
-	async approveTransaction(minter: ScholarID, id: TransactionID) {
+	async approveTransaction(creator: ScholarID, id: TransactionID) {
 		// First, get the transaction.
 		const { data: transaction, error: transactionError } = await this.client
 			.from('transactions')
@@ -803,42 +821,31 @@ export default class SupabaseCRUD extends CRUD {
 		// Verify that the transaction is pending. If it's not, bail.
 		if (transaction.status !== 'proposed') return this.error('AlreadyApproved');
 
-		// Verify that the transaction is from a venue
-		if (transaction.from_venue === null) return this.error('MissingApprovalVenue');
-		if (transaction.to_scholar === null) return this.error('MissingRecipient');
-
 		// See if we need to create any tokens by looking for null UUIDs in the token list.
-		const tokensToCreate = transaction.tokens.filter((id) => id === NullUUID);
+		// If there are already tokens in the transaction, then something is broken.
+		if (transaction.tokens.some((id) => id !== NullUUID))
+			return this.error('PendingTransactionHasTokens');
 
-		// If there are tokens to mint, mint them.
-		if (tokensToCreate.length > 0) {
-			const mintingError = await this.mintTokens(
-				transaction.currency,
-				tokensToCreate.length,
-				transaction.from_venue
-			);
-			if (mintingError) return mintingError;
-		}
+		const from = transaction.from_scholar ?? transaction.from_venue;
+		const to = transaction.to_scholar ?? transaction.to_venue;
+		if (from === null) return this.error('TransactionMissingFrom');
+		if (to === null) return this.error('TransactionMissingTo');
 
 		// Transfer the requested number of tokens to the destination.
 		const { error: transferError } = await this.transferTokens(
-			minter,
+			creator,
 			transaction.currency,
-			transaction.from_venue,
-			'venueid',
-			transaction.to_scholar,
-			'scholarid',
+			from,
+			from === transaction.from_scholar ? 'scholarid' : 'venueid',
+			to,
+			to === transaction.to_scholar ? 'scholarid' : 'venueid',
 			transaction.tokens.length,
-			transaction.purpose
+			transaction.purpose,
+			transaction.id
 		);
-		if (transferError) return transferError;
+		if (transferError) this.error('TransferVenueTokens', transferError.details);
 
-		// Delete the old transaction
-		const { error: updateError } = await this.client
-			.from('transactions')
-			.delete()
-			.eq('id', transaction.id);
-		return this.errorOrEmpty('UndeletedTransaction', updateError);
+		return { data: undefined };
 	}
 
 	async cancelTransaction(id: TransactionID, reason: string): Promise<Result> {

@@ -56,9 +56,12 @@ export const enUS = {
 		CreateTransaction: 'Unable to create transaction',
 		TransactionMissingFrom: 'No source provided for transaction',
 		TransactionMissingTo: 'No destination provided for transaction',
+		PendingTransactionHasTokens:
+			'This pending transaction already has tokens that were transferred.',
 		UnknownTransaction: 'Unable to find this transaction',
 		TransactionNotCanceled: 'Unable to cancel this transaction',
 		AlreadyApproved: 'This transaction is already approved',
+		TransactionApprovalUpdate: 'Unable to update the proposed transaction',
 		MissingApprovalVenue: 'The proposed transaction has no venue to transfer from.',
 		MissingRecipient: 'The proposed transaction has no scholar recipient.',
 		UndeletedTransaction: "The proposed transaction couldn't be deleted.",
