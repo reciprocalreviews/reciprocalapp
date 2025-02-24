@@ -11,6 +11,7 @@
 		color: var(--background-color);
 		padding: calc(var(--spacing) / 2);
 		font-size: var(--small-font-size);
+		border-radius: var(--roundedness);
 		white-space: nowrap;
 		align-self: flex-start;
 	}

@@ -24,6 +24,7 @@
 			? null
 			: submission.transactions.map((id) => transactions.find((t) => t.id === id))
 	);
+	const done = $derived(submission?.status === 'done');
 
 	let isEditor = $derived(venue !== null && user !== null && venue.editors.includes(user));
 
@@ -54,17 +55,15 @@
 	>
 		{#snippet subtitle()}Submission{/snippet}
 		{#snippet details()}
-			{#if submission.status === 'reviewing'}<Status>reviewing</Status>{:else}<Status good={false}
-					>done</Status
-				>{/if}
 			{#if previous}<Link to="/submission/{previous.id}">{previous.externalid}</Link>
 				→{/if}
 			{submission.externalid}
+			{#if done}<Status good={false}>done</Status>{:else}<Status>reviewing</Status>{/if}
 		{/snippet}
 
 		{#if isEditor}
 			<Checkbox
-				on={submission.status === 'reviewing'}
+				on={!done}
 				change={(on) => db.updateSubmissionStatus(submission.id, on ? 'reviewing' : 'done')}
 				>This submission is still in review.</Checkbox
 			>
