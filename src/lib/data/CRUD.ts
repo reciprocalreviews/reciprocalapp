@@ -172,10 +172,13 @@ export default abstract class CRUD {
 	): Promise<Result<string>>;
 
 	/**
-	 * Given a transaction ID that is pending, creators or transfers tokens based on the transaction.
+	 * Given a transaction ID that is pending, transfers tokens based on the transaction.
 	 * Will only work for a currency's minter because of security rules.
 	 * */
 	abstract approveTransaction(minter: ScholarID, id: TransactionID): Promise<Result>;
+
+	/** Mark the transaction canceled */
+	abstract cancelTransaction(id: TransactionID, reason: string): Promise<Result>;
 
 	/** Update an assignment for a submission */
 	abstract approveAssignment(assignment: AssignmentID): Promise<Result>;

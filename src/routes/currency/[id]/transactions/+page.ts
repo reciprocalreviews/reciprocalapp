@@ -1,4 +1,4 @@
-import getVenueTitles from '$lib/data/venueTitles';
+import getTransactionVenues from '$lib/data/getTransactionVenues';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
@@ -22,7 +22,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: venues, error: venueError } =
 		transactions === null
 			? { data: null, error: null }
-			: await getVenueTitles(supabase, transactions);
+			: await getTransactionVenues(supabase, transactions);
 	if (venueError) console.log(venueError);
 
 	return {

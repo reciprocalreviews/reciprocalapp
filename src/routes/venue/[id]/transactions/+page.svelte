@@ -5,14 +5,14 @@
 	import Transactions from '$lib/components/Transactions.svelte';
 
 	let { data } = $props();
-	let { venue, transactions, venues } = $derived(data);
+	let { venue, transactions, venues, currencies } = $derived(data);
 </script>
 
 {#if venue && transactions && venues}
 	<Page title={venue.title} breadcrumbs={[[`/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all <Circle icon={transactions.length}></Circle> transactions for this venue.</p>
-		<Transactions {transactions} {venues} />
+		<Transactions {transactions} {venues} {currencies} />
 	</Page>
 {:else if venue === null}
 	<h1>Oops.</h1>

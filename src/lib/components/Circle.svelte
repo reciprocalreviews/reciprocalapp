@@ -1,4 +1,6 @@
 <script lang="ts">
+	import monoEmoji from './monoEmoji';
+
 	let {
 		icon: count
 	}: {
@@ -6,11 +8,11 @@
 	} = $props();
 </script>
 
-<div class="count">
-	<div class="icon">
-		{typeof count === 'string' ? count.replaceAll('\uFE0F', '') + '\uFE0E' : count}
-	</div>
-</div>
+<span class="count">
+	<span class="icon">
+		{typeof count === 'string' ? monoEmoji(count) : count}
+	</span>
+</span>
 
 <style>
 	.count {

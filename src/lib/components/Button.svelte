@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { DeleteLabel } from './Labels';
+	import monoEmoji from './monoEmoji';
 
 	let {
 		action,
@@ -12,7 +13,8 @@
 		type = undefined,
 		view: _ = $bindable(undefined),
 		warn = undefined,
-		end = false
+		end = false,
+		background = true
 	}: {
 		children: Snippet;
 		action: ((event?: Event) => void) | ((event?: Event) => Promise<void>);
@@ -24,6 +26,7 @@
 		view?: HTMLButtonElement | undefined;
 		warn?: string | undefined;
 		end?: boolean | undefined;
+		background?: boolean;
 	} = $props();
 
 	let confirming = $state(false);
@@ -38,6 +41,7 @@
 		title={tip}
 		aria-label={tip}
 		disabled={!active}
+		class:background
 		class:warn={warn !== undefined}
 		class:end
 		onclick={(event) => {
@@ -48,7 +52,7 @@
 	>
 {:else}
 	<div class="row">
-		<button onclick={() => (confirming = false)}>{DeleteLabel}</button>
+		<button onclick={() => (confirming = false)}>{monoEmoji(DeleteLabel)}</button>
 		<button
 			class:warn={warn !== undefined}
 			onclick={async (event) => {
@@ -67,10 +71,15 @@
 		border: var(--border-color);
 		border-radius: var(--roundedness);
 		padding: calc(var(--spacing) / 2);
-		background: var(--text-color);
-		color: var(--background-color);
+		background: none;
+		color: var(--foreground-color);
 		cursor: pointer;
 		white-space: nowrap;
+	}
+
+	button.background {
+		background: var(--text-color);
+		color: var(--background-color);
 	}
 
 	.row button:last-child {

@@ -1,25 +1,27 @@
 <script lang="ts">
-	import type { CurrencyRow, TransactionRow, VenueID } from '$data/types';
+	import type { CurrencyRow, TransactionRow, VenueRow } from '$data/types';
 	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../../routes/Auth.svelte';
 	import { handle } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
+	import Dialog from './Dialog.svelte';
 	import Feedback from './Feedback.svelte';
 	import Note from './Note.svelte';
 	import ScholarLink from './ScholarLink.svelte';
 	import Status from './Status.svelte';
 	import Table from './Table.svelte';
+	import TextField from './TextField.svelte';
 	import Tokens from './Tokens.svelte';
 	import VenueLink from './VenueLink.svelte';
 
 	let {
 		transactions,
 		venues,
-		currency = undefined
+		currencies
 	}: {
 		transactions: TransactionRow[];
-		venues: { id: VenueID; title: string }[];
-		currency?: CurrencyRow | undefined;
+		venues: VenueRow[];
+		currencies: CurrencyRow[] | null;
 	} = $props();
 
 	// Get the current user
@@ -28,12 +30,20 @@
 
 	// Editable if the user is the scholar being viewed.
 	let userid = $derived(auth.getUserID());
-	let editable = $derived(
-		userid !== null && currency !== undefined && currency.minters.includes(userid)
-	);
+
+	let showCancel = $state(false);
+	let cancelReason = $state('');
 </script>
 
 {#snippet row(transaction: TransactionRow)}
+	{@const currency = currencies?.find((c) => c.id === transaction.currency)}
+	{@const editable =
+		transaction.status === 'proposed' &&
+		userid !== null &&
+		(transaction.from_scholar === userid ||
+			(transaction.from_venue !== null &&
+				venues.find((v) => v.id === transaction.from_venue)?.editors.includes(userid)) ||
+			currency?.minters.includes(userid))}
 	<tr>
 		<td>
 			<Status good={transaction.status === 'approved'}>{transaction.status}</Status>
@@ -41,6 +51,7 @@
 		<td
 			>{#if transaction.tokens === null}unknown{:else}<Tokens
 					amount={transaction.tokens.length}
+					{currency}
 				/>{/if}</td
 		>
 		<td
@@ -61,10 +72,38 @@
 		>
 		<td><Note>{transaction.purpose}</Note></td>
 		<td>
-			{#if transaction.status === 'proposed' && editable && userid}<Button
-					tip="Approve this proposed transaction"
-					action={() => handle(db.approveTransaction(userid, transaction.id))}>Approve</Button
-				>{/if}
+			{#if editable}
+				<div class="column">
+					<!-- If the authenticated scholar is a minter of the given currency, or the giver, then show an approve button -->
+					<Button
+						tip="Approve this proposed transaction"
+						action={() => handle(db.approveTransaction(userid, transaction.id))}>Approve</Button
+					>
+					<Button
+						tip="Cancel this proposed transaction"
+						active={!showCancel}
+						action={() => (showCancel = true)}>Cancel…</Button
+					>
+					<Dialog bind:show={showCancel}>
+						<p>Indicate a reason and we'll append it to the transaction message.</p>
+						<TextField bind:text={cancelReason} placeholder="Reason for cancellation" />
+						<Button
+							tip="Cancel this proposed transaction"
+							warn="Cancel"
+							active={cancelReason.length > 0}
+							action={async () => {
+								await handle(
+									db.cancelTransaction(
+										transaction.id,
+										transaction.purpose.trim() + ' - ' + cancelReason
+									)
+								);
+								showCancel = false;
+							}}>Cancel this transaction</Button
+						>
+					</Dialog>
+				</div>
+			{/if}
 		</td>
 	</tr>
 {/snippet}
@@ -79,7 +118,7 @@
 			<th>From</th>
 			<th>To</th>
 			<th>Purpose</th>
-			<th></th>
+			<th>Actions</th>
 		{/snippet}
 		{#each transactions.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()) as transaction}
 			{@render row(transaction)}
@@ -91,5 +130,11 @@
 	th,
 	td {
 		font-size: var(--small-font-size);
+	}
+
+	.column {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing);
 	}
 </style>

@@ -57,6 +57,7 @@ export const enUS = {
 		TransactionMissingFrom: 'No source provided for transaction',
 		TransactionMissingTo: 'No destination provided for transaction',
 		UnknownTransaction: 'Unable to find this transaction',
+		TransactionNotCanceled: 'Unable to cancel this transaction',
 		AlreadyApproved: 'This transaction is already approved',
 		MissingApprovalVenue: 'The proposed transaction has no venue to transfer from.',
 		MissingRecipient: 'The proposed transaction has no scholar recipient.',

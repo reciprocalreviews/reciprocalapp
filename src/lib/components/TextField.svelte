@@ -7,7 +7,6 @@
 		label?: string | undefined;
 		placeholder?: string;
 		size?: number | undefined;
-		padded?: boolean;
 		active?: boolean;
 		name?: string | undefined;
 		/** Given a string, return a message describing invalidity, or nothing */

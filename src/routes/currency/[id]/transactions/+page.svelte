@@ -11,7 +11,7 @@
 	<Page title={currency.name} breadcrumbs={[[`/currency/${currency.id}`, currency.name]]}>
 		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all {transactions.length} transactions for this currency.</p>
-		<Transactions {transactions} {venues} {currency} />
+		<Transactions {transactions} {venues} currencies={[currency]} />
 	</Page>
 {:else if currency === null}
 	<h1>Oops.</h1>

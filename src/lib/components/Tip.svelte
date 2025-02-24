@@ -1,9 +1,11 @@
 <script lang="ts">
+	import monoEmoij from './monoEmoji';
+
 	let { children } = $props();
 </script>
 
 <div class="tip">
-	<div class="bulb">💡</div>
+	<div class="bulb">{monoEmoij('💡')}</div>
 	<div class="content">{@render children()}</div>
 </div>
 

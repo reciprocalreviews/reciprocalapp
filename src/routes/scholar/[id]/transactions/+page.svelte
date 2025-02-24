@@ -4,7 +4,7 @@
 	import Transactions from '$lib/components/Transactions.svelte';
 
 	let { data } = $props();
-	let { scholar, transactions, venues } = $derived(data);
+	let { scholar, transactions, venues, currencies } = $derived(data);
 </script>
 
 {#if scholar && transactions && venues}
@@ -16,7 +16,7 @@
 	>
 		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all {transactions.length} transactions for this scholar.</p>
-		<Transactions {transactions} {venues} />
+		<Transactions {transactions} {venues} {currencies} />
 	</Page>
 {:else if scholar === null}
 	<h1>Oops.</h1>

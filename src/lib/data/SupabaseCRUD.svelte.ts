@@ -841,6 +841,14 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('UndeletedTransaction', updateError);
 	}
 
+	async cancelTransaction(id: TransactionID, reason: string): Promise<Result> {
+		const { error } = await this.client
+			.from('transactions')
+			.update({ status: 'canceled', purpose: reason })
+			.eq('id', id);
+		return this.errorOrEmpty('TransactionNotCanceled', error);
+	}
+
 	async approveAssignment(assignment: AssignmentID): Promise<Result> {
 		const { error } = await this.client
 			.from('assignments')
