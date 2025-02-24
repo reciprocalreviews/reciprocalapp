@@ -7,23 +7,28 @@
 	import Checkbox from './Checkbox.svelte';
 	import Slider from './Slider.svelte';
 	import TextField from './TextField.svelte';
+	import type { CurrencyID, CurrencyRow, TokenRow } from '$data/types';
 
 	let {
-		max,
+		tokens,
 		purpose,
 		transfer,
-		success
+		success,
+		currencies
 	}: {
-		max: number | null;
+		tokens: TokenRow[] | null;
 		purpose: string;
 		success: string;
+		currencies: CurrencyRow[];
 		transfer: (
+			currency: CurrencyID,
 			receipient: string,
 			amount: number,
 			purpose: string
 		) => Promise<Result<any>> | undefined;
 	} = $props();
 
+	let currency = $state<undefined | CurrencyID>(undefined);
 	let giftRecipient = $state('');
 	let giftAmount = $state(1);
 	let giftConsent = $state(false);
@@ -40,8 +45,19 @@
 		valid={(text) =>
 			validEmail(text) || ORCIDRegex.test(text) ? undefined : 'Must be an email or ORCID'}
 	/>
-	<Slider min={1} max={max ?? 20} bind:value={giftAmount} step={1} label="# of tokens to give"
-		>{giftAmount}</Slider
+	<label>
+		What currency should be used?
+		<select bind:value={currency}>
+			{#each currencies as currency}<option value={currency.id}>{currency.name}</option
+				>{/each}</select
+		>
+	</label>
+	<Slider
+		min={1}
+		max={tokens?.filter((t) => t.currency === currency).length ?? 20}
+		bind:value={giftAmount}
+		step={1}
+		label="# of tokens to give">{giftAmount}</Slider
 	>
 	<TextField bind:text={giftPurpose} label="Purpose" size={20} placeholder="Purpose" />
 	<Checkbox bind:on={giftConsent}
@@ -49,9 +65,12 @@
 	>
 	<Button
 		tip="Transfer tokens"
-		active={giftConsent && (validEmail(giftRecipient) || ORCIDRegex.test(giftRecipient))}
+		active={currency !== undefined &&
+			giftConsent &&
+			(validEmail(giftRecipient) || ORCIDRegex.test(giftRecipient))}
 		action={async () => {
-			const result = transfer(giftRecipient, giftAmount, giftPurpose);
+			if (currency === undefined) return;
+			const result = transfer(currency, giftRecipient, giftAmount, giftPurpose);
 			if (result && (await handle(result, success))) {
 				giftAmount = 1;
 				giftConsent = false;

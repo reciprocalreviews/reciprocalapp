@@ -149,6 +149,7 @@ export default abstract class CRUD {
 	/** Move N tokens from source to destination, returning a transaction ID. */
 	abstract transferTokens(
 		scholar: ScholarID,
+		curency: CurrencyID,
 		from: VenueID,
 		fromKind: 'venueid' | 'scholarid' | 'emailorcid',
 		to: string,

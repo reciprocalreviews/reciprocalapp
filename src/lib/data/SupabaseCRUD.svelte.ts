@@ -242,30 +242,6 @@ export default class SupabaseCRUD extends CRUD {
 		return { data: submission.id };
 	}
 
-	async chargeTokens(
-		charges: Charge[],
-		message: string,
-		editor: ScholarID,
-		venue: VenueID
-	): Promise<Result<TransactionID[]>> {
-		// Create the proposed transactions
-		const transactions: string[] = [];
-		for (const charge of charges) {
-			const { data, error } = await this.transferTokens(
-				editor,
-				charge.scholar,
-				'emailorcid',
-				venue,
-				'venueid',
-				charge.payment ?? 0,
-				message
-			);
-			if (error) return { error: error };
-			else if (data) transactions.push(data);
-		}
-		return { data: transactions };
-	}
-
 	/** Register a reactive scholar state. */
 	registerScholar(row: ScholarRow) {
 		let scholar = this.scholars.get(row.id);
@@ -727,6 +703,7 @@ export default class SupabaseCRUD extends CRUD {
 
 	async transferTokens(
 		creator: ScholarID,
+		currency: CurrencyID,
 		from: VenueID | ScholarID | string,
 		fromKind: 'venueid' | 'scholarid' | 'emailorcid',
 		to: VenueID | ScholarID,
@@ -745,7 +722,8 @@ export default class SupabaseCRUD extends CRUD {
 		const { data: tokens, error: tokensError } = await this.client
 			.from('tokens')
 			.select()
-			.eq(fromKind === 'venueid' ? 'venue' : 'scholar', fromEntity);
+			.eq(fromKind === 'venueid' ? 'venue' : 'scholar', fromEntity)
+			.eq('currency', currency);
 		if (tokensError) return this.error('TransferScholarTokens', tokensError);
 
 		// If there aren't enough tokens, bail.
@@ -845,6 +823,7 @@ export default class SupabaseCRUD extends CRUD {
 		// Transfer the requested number of tokens to the destination.
 		const { error: transferError } = await this.transferTokens(
 			minter,
+			transaction.currency,
 			transaction.from_venue,
 			'venueid',
 			transaction.to_scholar,

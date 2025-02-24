@@ -29,9 +29,9 @@ export const load: PageLoad = async ({ parent, params }) => {
 	if (commitmentsError) console.error(commitmentsError);
 
 	// See how many tokens the venue posseses.
-	const { count: tokens, error: tokensError } = await supabase
+	const { data: tokens, error: tokensError } = await supabase
 		.from('tokens')
-		.select('*', { count: 'exact' })
+		.select('*')
 		.eq('venue', venueid);
 	if (tokensError) console.error(tokensError);
 

@@ -18,6 +18,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Improved tip visual design.
 - Fixed checkbox label alignment.
 - Generate proposed transactions for submission.
+- Account for currency in gifting and transfers.
 
 ### Maintenance
 

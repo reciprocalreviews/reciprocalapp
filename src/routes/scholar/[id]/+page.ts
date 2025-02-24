@@ -26,11 +26,19 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.contains('editors', [params.id]);
 
 	// Get the scholar's current tokens.
-	const { count: tokens, error: tokensError } = await supabase
+	const { data: tokens, error: tokensError } = await supabase
 		.from('tokens')
-		.select('*', { count: 'exact' })
+		.select('*')
 		.eq('scholar', params.id);
 	if (tokensError) console.log(tokensError);
+
+	// Get the currencies that the tokens use
+	const currencyIDs = tokens ? tokens.map((t) => t.currency) : [];
+	const { data: currencies, error: currenciesError } = await supabase
+		.from('currencies')
+		.select('*')
+		.in('id', currencyIDs);
+	if (currenciesError) console.log(currenciesError);
 
 	// Get the scholar's most recent transactions.
 	const { count: transactions, error: transactionsError } = await supabase
@@ -53,6 +61,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		editing,
 		tokens: tokens,
 		transactions: transactions,
-		submissions: submissions
+		submissions: submissions,
+		currencies: currencies
 	};
 };

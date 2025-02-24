@@ -1,9 +1,14 @@
 <script lang="ts">
-	export let amount: number;
+	import type { CurrencyRow } from '$data/types';
+
+	let { amount, currency }: { amount: number; currency?: CurrencyRow } = $props();
 </script>
 
 <span class="token"
-	>★ {amount} token{#if amount !== 1}s{/if}</span
+	>★ {amount}
+	{#if currency}<span class="currency">{currency.name}</span>
+	{/if}
+	token{#if amount !== 1}s{/if}</span
 >
 
 <style>
@@ -15,5 +20,9 @@
 		background: var(--salient-color);
 		color: var(--background-color);
 		white-space: nowrap;
+	}
+
+	.currency {
+		font-weight: 300;
 	}
 </style>

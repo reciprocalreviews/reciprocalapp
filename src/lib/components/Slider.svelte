@@ -7,6 +7,7 @@
 		value: number;
 		step: number;
 		label?: string | undefined;
+		active?: boolean;
 		change?: undefined | ((value: number) => void);
 		children?: Snippet;
 	}
@@ -16,6 +17,7 @@
 		max,
 		value = $bindable(),
 		step,
+		active = true,
 		label = undefined,
 		change = undefined,
 		children
@@ -34,7 +36,17 @@
 		<span class="label">{label}</span>
 	{/if}
 	<div class="slider">
-		<input bind:this={view} type="range" {min} {max} {value} {step} oninput={handleInput} />
+		<input
+			bind:this={view}
+			disabled={!active}
+			aria-disabled={!active}
+			type="range"
+			{min}
+			{max}
+			{value}
+			{step}
+			oninput={handleInput}
+		/>
 		<span class="value">{@render children?.()}</span>
 	</div>
 </label>

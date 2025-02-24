@@ -19,6 +19,7 @@
 	import Roles from './Roles.svelte';
 	import type { PageData } from './$types';
 	import Gift from '$lib/components/Gift.svelte';
+	import { type CurrencyID } from '$data/types';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -225,24 +226,36 @@
 
 		{#if editor}
 			<Cards>
-				<Card group="editors" icon={tokens ?? 0} header="tokens" note="balance and gifts">
+				<Card
+					group="editors"
+					icon={tokens === null ? '?' : tokens.length}
+					header="tokens"
+					note="balance and gifts"
+				>
 					<p>
-						This venue currently has {#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an
-							unknown number of{/if} tokens and is involved in {#if transactionCount !== null}<strong
+						This venue currently has {#if tokens !== null}<Tokens amount={tokens.length}
+							></Tokens>{:else}an unknown number of{/if} tokens and is involved in {#if transactionCount !== null}<strong
 								>{transactionCount}</strong
 							>{:else}an unknown number of{/if} transactions.
 						<Link to="/venue/{venue.id}/transactions">See all transactions</Link>.
 					</p>
 
-					{#if scholar}
+					{#if scholar && currency !== null}
 						<Gift
-							max={tokens}
+							{tokens}
 							purpose="Venue gift to scholar"
 							success="Your tokens were successfully gifted."
-							transfer={(giftRecipient: string, giftAmount: number, purpose: string) =>
-								scholar
+							currencies={[currency]}
+							transfer={(
+								currency: CurrencyID,
+								giftRecipient: string,
+								giftAmount: number,
+								purpose: string
+							) =>
+								currency !== null
 									? db.transferTokens(
 											scholar.id,
+											currency,
 											venue.id,
 											'venueid',
 											giftRecipient,

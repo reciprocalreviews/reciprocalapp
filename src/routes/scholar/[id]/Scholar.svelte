@@ -15,7 +15,7 @@
 	import Gift from '$lib/components/Gift.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import { validEmail } from '$lib/validation';
-	import type { SubmissionRow } from '$data/types';
+	import type { CurrencyID, CurrencyRow, SubmissionRow, TokenRow } from '$data/types';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 
 	let {
@@ -24,14 +24,16 @@
 		editing,
 		tokens,
 		transactions,
-		submissions
+		submissions,
+		currencies
 	}: {
 		scholar: Scholar;
 		commitments: { name: string; venue: string; venueid: string }[];
 		editing: { id: string; title: string }[] | null;
-		tokens: number | null;
+		tokens: TokenRow[] | null;
 		transactions: number | null;
 		submissions: SubmissionRow[] | null;
+		currencies: CurrencyRow[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -134,10 +136,23 @@
 			{/if}
 		</Card>
 
-		<Card icon={tokens ?? 0} header="tokens" note="Spendable on peer review and gifts">
+		<Card
+			icon={tokens === null ? '?' : tokens.length}
+			header="tokens"
+			note="Spendable on peer review and gifts"
+		>
 			<p>
-				{#if editable}You have{:else}This scholar has{/if}
-				{#if tokens !== null}<Tokens amount={tokens}></Tokens>{:else}an unknown number of{/if} tokens.
+				{#if editable}You have{:else}This scholar has the following tokens:{/if}
+				{#if tokens === null}
+					<Feedback>Unable to load tokens.</Feedback>
+				{:else if currencies === null}
+					<Feedback>Unable to load currencies.</Feedback>
+				{:else}
+					{#each currencies as currency}
+						<Tokens amount={tokens.filter((t) => t.currency === currency.id).length} {currency}
+						></Tokens>
+					{/each}
+				{/if}
 			</p>
 
 			<p>
@@ -145,15 +160,22 @@
 					>{#if transactions === null}your transactions{:else}your {transactions} transactions{/if}</Link
 				>.
 			</p>
-			{#if tokens !== null}
+			{#if tokens !== null && currencies !== null}
 				<Gift
-					max={tokens}
+					{tokens}
 					purpose="Gift to peer"
 					success="This venue's tokens were successfully gifted."
-					transfer={(giftRecipient: string, giftAmount: number, purpose: string) =>
+					{currencies}
+					transfer={(
+						currency: CurrencyID,
+						giftRecipient: string,
+						giftAmount: number,
+						purpose: string
+					) =>
 						scholar
 							? db.transferTokens(
 									scholar.getID(),
+									currency,
 									scholar.getID(),
 									'scholarid',
 									giftRecipient,
