@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.9 2025-03-02
 
+### Fixed
+
+- Account for empty previous id in submission.
+
 ### Maintenance
 
 - Updated minor versions of Supabase, Svelte, Typescript, Vite.

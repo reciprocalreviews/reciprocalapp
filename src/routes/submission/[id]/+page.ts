@@ -29,12 +29,8 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	// Get the previous submission
 	const { data: previous, error: previousError } =
-		submission !== null && submission.previousid !== null
-			? await supabase
-					.from('submissions')
-					.select('*')
-					.eq('externalid', submission.previousid)
-					.single()
+		submission !== null && submission.previousid !== null && submission.previousid.length > 0
+			? await supabase.from('submissions').select('*').eq('externalid', submission.previousid)
 			: { data: null, error: null };
 	if (previousError) console.error(previousError);
 
@@ -49,7 +45,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		submission,
 		venue,
 		authors,
-		previous,
+		previous: previous !== null && previous.length > 0 ? previous[0] : null,
 		transactions
 	};
 };
