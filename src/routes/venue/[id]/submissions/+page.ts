@@ -1,3 +1,4 @@
+import getVenueRoles from '$lib/data/getVenueRoles.js';
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
@@ -17,9 +18,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get all roles.
 	const { data: roles, error: rolesError } =
 		// Missing data? Return nothing.
-		user === null
-			? { data: [], error: null }
-			: await supabase.from('roles').select('*').eq('venueid', venueid);
+		user === null ? { data: [], error: null } : await getVenueRoles(supabase, venueid);
 	if (rolesError) console.error(rolesError);
 
 	const roleids = roles?.map((role) => role.id) ?? [];

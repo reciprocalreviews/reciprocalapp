@@ -12,9 +12,11 @@
 	import Link from '$lib/components/Link.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
+	import Tag from '$lib/components/Tag.svelte';
+	import Table from '$lib/components/Table.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { submission, venue, authors, previous, transactions } = $derived(data);
+	const { submission, venue, authors, previous, transactions, assignments, roles } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -30,6 +32,11 @@
 
 	let isAuthor = $derived(
 		submission !== null && user !== null && submission.authors.includes(user)
+	);
+
+	// Can see assignments if the user is the editor, or has a role for the submission.
+	let canSeeAssignments = $derived(
+		isEditor || (isAuthor && assignments !== null && assignments.length > 0)
 	);
 </script>
 
@@ -119,5 +126,51 @@
 		{:else if submission.expertise}{submission.expertise}{:else}<Feedback
 				>No expertise provided</Feedback
 			>{/if}
+
+		<h2>
+			Assignments {#if isEditor}
+				<Tag>editor</Tag>{/if}
+		</h2>
+
+		<h3>Editor</h3>
+
+		{#if venue !== null && venue.editors.length > 0}
+			{#each venue.editors as editor}
+				<ScholarLink id={editor}></ScholarLink>
+			{/each}
+		{:else}
+			<Feedback error>No editor assigned.</Feedback>
+		{/if}
+
+		<!-- If there are assignments to show, show them. -->
+		{#if venue !== null && canSeeAssignments && user !== null && roles}
+			{#if roles && assignments}
+				{#each roles as role}
+					{@const assigned = assignments.filter((a) => role.id === a.role && !a.bid)[0]}
+					{@const bidded = assignments.filter((a) => role.id === a.role && a.bid)}
+					<h3>{role.name}</h3>
+					{#if assigned}
+						<ScholarLink id={assigned.scholar} /><Tag>Assigned</Tag>
+						{#if bidded.length > 0}{bidded.length} others bidded{/if}.
+					{:else if bidded.length > 0}
+						<Table>
+							{#snippet header()}
+								<tr><th>scholar</th><th>expertise</th></tr>
+							{/snippet}
+							{#each bidded as assignment}
+								<tr>
+									<td><ScholarLink id={assignment.scholar} /></td>
+									<td>Expertise</td>
+								</tr>
+							{/each}
+						</Table>
+					{:else if role.invited}
+						<Feedback error>No one assigned.</Feedback>
+					{:else}
+						<Feedback error>No one assigned, no one has bidded.</Feedback>
+					{/if}
+				{:else}{/each}
+			{/if}
+		{/if}
 	</Page>
 {/if}

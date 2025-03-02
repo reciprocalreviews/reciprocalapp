@@ -26,7 +26,7 @@
 	const db = getDB();
 
 	let newRole: string = $state('');
-	let invites = $state<Record<RoleID, string>>(
+	let invites = $derived<Record<RoleID, string>>(
 		Object.fromEntries((roles ?? []).map((role) => [role.id, '']))
 	);
 </script>
@@ -67,6 +67,14 @@
 						be invited to this role.{/if}</Note
 				>
 			</Checkbox>
+			<Checkbox on={role.biddable} change={(on) => db.editRoleBidding(role.id, on)}
+				>Allow bidding
+			</Checkbox>
+			<Note
+				>{#if role.biddable}Authenticated volunteers can bid to take this role on submissions.{:else}This
+					role can only be set for a submission by editors.{/if}</Note
+			>
+
 			{#if role.invited}
 				<Form inline>
 					<p>Add one or more people to invite to this role, separated by commands.</p>

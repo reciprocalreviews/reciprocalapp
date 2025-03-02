@@ -57,12 +57,20 @@ alter table public.submissions
 create policy "editors can create submissions" on public.submissions
   for insert to anon, authenticated with check (isEditor(venue));
 
-create policy "anyone if biddable or authors, editors, reviewers" on public.submissions
+-- If someone is an author, editor, or the scholar has a role in the venue that is biddable,
+-- then they can see the submission.
+create policy "authors, editors, and bidders can view submissions" on public.submissions
   for select to anon, authenticated using (
-    (select bidding from venues where id = venue) or
     (auth.uid() = any(authors)) or
     (isEditor(venue)) or
-    (exists (select scholar from assignments where auth.uid() = scholar and submission = id))
+    (exists 
+      -- Find all of the accepted volunteering by this scholar for a role that is biddable
+      (select id from volunteers where 
+        scholarid = auth.uid() and 
+        accepted = 'accepted' and 
+        roleid = any(array(select id from roles where venue = venue and invited = false))
+      )
+    )
   );
 
 create policy "editors can update submissions" on public.submissions

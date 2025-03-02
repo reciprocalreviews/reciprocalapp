@@ -1,7 +1,8 @@
+import getVenueRoles from '$lib/data/getVenueRoles.js';
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase } = await parent();
+	const { supabase, user } = await parent();
 
 	const submissionid = params.id;
 
@@ -41,11 +42,48 @@ export const load: PageLoad = async ({ parent, params }) => {
 			: await supabase.from('transactions').select('*').in('id', submission.transactions);
 	if (transactionsError) console.error(transactionsError);
 
+	// Get all of the roles for this venue.
+	const { data: roles, error: rolesError } =
+		venue === null ? { data: null, error: null } : await getVenueRoles(supabase, venue.id);
+	if (rolesError) console.error(rolesError);
+
+	// Get the roles of the authenticated user so we can find the submissions for which they have a role.
+	const { data: volunteerRoles, error: volunteerRolesError } =
+		user === null
+			? { data: null, error: null }
+			: await supabase.from('volunteers').select('roleid').eq('scholarid', user.id);
+	if (volunteerRolesError) console.error(volunteerRolesError);
+
+	const volunteerRoleIDs = volunteerRoles === null ? [] : volunteerRoles.map((r) => r.roleid);
+
+	// The the venues for which this user is editor
+	const { data: venues, error: venuesError } =
+		user === null
+			? { data: null, error: null }
+			: await supabase.from('venues').select('id').contains('editors', [user.id]);
+	if (venuesError) console.log(venuesError);
+
+	const editorVenueIDs = venues === null ? [] : venues.map((v) => v.id);
+
+	// Get the assignments associated with the submission and either the role of the
+	// authenticated user or in a venue for which this is the editor.
+	const { data: assignments, error: assignmentsError } =
+		submission === null
+			? { data: null, error: null }
+			: await supabase
+					.from('assignments')
+					.select('*')
+					.eq('submission', submission.id)
+					.or(`role.in.(${volunteerRoleIDs.join(',')}),venue.in.(${editorVenueIDs.join(',')})`);
+	if (assignmentsError) console.error(assignmentsError);
+
 	return {
 		submission,
 		venue,
 		authors,
 		previous: previous !== null && previous.length > 0 ? previous[0] : null,
-		transactions
+		transactions,
+		assignments,
+		roles
 	};
 };

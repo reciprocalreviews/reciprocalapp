@@ -25,7 +25,6 @@
 	const editor = $derived(uid !== null && venue !== null && venue.editors.includes(uid));
 
 	// Show the bidding interface if there's a venue, its biddable
-	const bidding = $derived(venue !== null && venue.bidding);
 	const submissionCost = $derived(venue?.submission_cost ?? null);
 
 	let newSubmissionExpanded = $state(false);
@@ -67,7 +66,7 @@
 						<th>Expertise</th>
 						<th>External ID</th>
 						<!-- If bidding is enabled, add column for each of the scholar's volunteer roles -->
-						{#if (editor || bidding) && volunteering && roles && assignments}
+						{#if volunteering && roles && assignments}
 							{#if editor}
 								{#each roles as role}
 									<th>{role.name}</th>
@@ -105,40 +104,36 @@
 							<td>{submission.externalid}</td>
 							<!-- If we have all the information, show a checkbox for each role they've volunteered for,
 							 	allowing them to bid, unbid, or otherwise modify the current state of their responsibilities. -->
-							{#if (editor || bidding) && volunteering && roles && assignments && uid}
+							{#if volunteering && roles && assignments && uid}
 								{#each roles as role}
 									{@const submissionAssignments = assignments.filter(
 										(ass) => ass.submission === submission.id && ass.role === role.id
 									)}
 									<td>
-										<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
-										{#if editor}
-											{#each submissionAssignments as assignment}
+										<!-- Active assignment? -->
+										{#each submissionAssignments as assignment}
+											{#if editor}
+												<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
 												<ScholarLink id={assignment.scholar} />
-												{#if assignment.bid}
+												{#if !role.invited}
 													<Button
 														tip="Accept this bid, assigning this scholar to this role for this submission."
 														action={() => handle(db.approveAssignment(assignment.id))}
 														>Assign</Button
 													>
 												{/if}
+											{/if}
+											<!-- If it's a bid, show a button for unbidding. If not, just say its assigned. -->
+											{#if assignment.bid}
+												<Button
+													tip="Remove interest in serving as {role?.description ?? 'in this role'}"
+													action={() => handle(db.deleteAssignment(assignment.id))}>Unbid</Button
+												>
 											{:else}
-												&mdash;
-											{/each}
+												Assigned
+											{/if}
 										{:else}
-											<!-- Active assignment? -->
-											{#each submissionAssignments as assignment}
-												<!-- If it's a bid, show a button for unbidding. If not, just say its assigned. -->
-												{#if assignment.bid}
-													<Button
-														tip="Remove interest in serving as {role?.description ??
-															'in this role'}"
-														action={() => handle(db.deleteAssignment(assignment.id))}>Unbid</Button
-													>
-												{:else}
-													Assigned
-												{/if}
-											{:else}
+											{#if role.biddable && volunteering.some((c) => c.roleid === role.id)}
 												<!-- No assignments? Allow bidding -->
 												<Button
 													tip="Express interest in serving as {role?.description ?? 'in this role'}"
@@ -146,8 +141,10 @@
 														handle(db.createAssignment(submission.id, uid, role.id, true))}
 													>Bid</Button
 												>
-											{/each}
-										{/if}
+											{:else}
+												&mdash;
+											{/if}
+										{/each}
 									</td>
 								{/each}
 							{/if}

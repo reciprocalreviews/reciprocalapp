@@ -524,11 +524,6 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditVenueSubmissionCost', error);
 	}
 
-	async editVenueBidding(id: VenueID, bidding: boolean) {
-		const { error } = await this.client.from('venues').update({ bidding }).eq('id', id);
-		return this.errorOrEmpty('EditVenueBidding', error);
-	}
-
 	async createRole(id: VenueID, name: string) {
 		const { error } = await this.client
 			.from('roles')
@@ -549,6 +544,11 @@ export default class SupabaseCRUD extends CRUD {
 	async editRoleInvited(id: RoleID, on: boolean) {
 		const { error } = await this.client.from('roles').update({ invited: on }).eq('id', id);
 		return this.errorOrEmpty('UpdateRoleInvited', error);
+	}
+
+	async editRoleBidding(id: RoleID, biddable: boolean) {
+		const { error } = await this.client.from('roles').update({ biddable }).eq('id', id);
+		return this.errorOrEmpty('EditRoleBidding', error);
 	}
 
 	async editRoleAmount(id: RoleID, amount: number) {

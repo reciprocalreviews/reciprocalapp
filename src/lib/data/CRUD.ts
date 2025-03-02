@@ -117,12 +117,12 @@ export default abstract class CRUD {
 	abstract editVenueURL(id: VenueID, url: string): Promise<Result>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<Result>;
 	abstract editVenueSubmissionCost(id: VenueID, amount: number): Promise<Result>;
-	abstract editVenueBidding(id: VenueID, bidding: boolean): Promise<Result>;
 
 	abstract createRole(id: VenueID, name: string): Promise<Result>;
 	abstract editRoleName(id: RoleID, name: string): Promise<Result>;
 	abstract editRoleDescription(id: RoleID, description: string): Promise<Result>;
 	abstract editRoleInvited(id: RoleID, on: boolean): Promise<Result>;
+	abstract editRoleBidding(id: RoleID, bidding: boolean): Promise<Result>;
 	abstract editRoleAmount(id: RoleID, amount: number): Promise<Result>;
 	abstract deleteRole(id: RoleID): Promise<Result>;
 

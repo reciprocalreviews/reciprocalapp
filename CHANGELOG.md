@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Fixed
 
 - Account for empty previous id in submission.
+- A bit of assignment and volunteering restructuring to better support requirements.
 
 ### Maintenance
 

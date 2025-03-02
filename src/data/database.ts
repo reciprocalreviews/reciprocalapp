@@ -197,6 +197,7 @@ export type Database = {
       roles: {
         Row: {
           amount: number
+          biddable: boolean
           description: string
           id: string
           invited: boolean
@@ -205,6 +206,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          biddable?: boolean
           description?: string
           id?: string
           invited: boolean
@@ -213,6 +215,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          biddable?: boolean
           description?: string
           id?: string
           invited?: boolean
@@ -478,7 +481,6 @@ export type Database = {
       }
       venues: {
         Row: {
-          bidding: boolean
           currency: string
           description: string
           editors: string[]
@@ -489,7 +491,6 @@ export type Database = {
           welcome_amount: number
         }
         Insert: {
-          bidding?: boolean
           currency: string
           description?: string
           editors?: string[]
@@ -500,7 +501,6 @@ export type Database = {
           welcome_amount: number
         }
         Update: {
-          bidding?: boolean
           currency?: string
           description?: string
           editors?: string[]

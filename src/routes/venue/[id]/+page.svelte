@@ -15,7 +15,6 @@
 	import { DeleteLabel } from '$lib/components/Labels';
 	import { validEmail, validInteger, validURLError } from '$lib/validation';
 	import { handle } from '../../feedback.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Roles from './Roles.svelte';
 	import type { PageData } from './$types';
 	import Gift from '$lib/components/Gift.svelte';
@@ -301,15 +300,6 @@
 						valid={(text) => (validInteger(text) ? undefined : 'Must be a whole number')}
 						edit={(text) => db.editVenueSubmissionCost(venue.id, parseInt(text))}
 					/>
-					<div>
-						<Checkbox on={venue.bidding} change={(on) => db.editVenueBidding(venue.id, on)}
-							>Allow bidding
-						</Checkbox>
-						<Note
-							>{#if venue.bidding}Authenticated volunteers can see submissions and bid on them.{:else}Reviews
-								are invitation only. Submissions are hidden and cannot be bid on.{/if}</Note
-						>
-					</div>
 				</Card>
 			</Cards>
 		{/if}

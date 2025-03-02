@@ -33,7 +33,7 @@ export const enUS = {
 		EditVenueURL: 'Unable to edit the venue URL',
 		EditVenueWelcomeAmount: 'Unable to edit the welcome amount',
 		EditVenueSubmissionCost: 'Unable to edit the submission cost',
-		EditVenueBidding: 'Unable to toggle bidding',
+		EditRoleBidding: 'Unable to toggle bidding',
 		CreateRole: 'Unable to create new role.',
 		UpdateRoleName: 'Unable to update role name',
 		UpdateRoleDescription: 'Unable to update role description',

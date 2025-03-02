@@ -13,8 +13,6 @@ create table venues (
   welcome_amount integer not null,
   -- Submission cost in the venue's currency
   submission_cost integer not null default 0,
-  -- Whether the the venue permits public bidding on submissions
-  bidding boolean not null default true,
   -- One or more scholars who serve as editors of the venue
   editors uuid[] not null default '{}'::uuid[] check (cardinality(editors) > 0)
 );
@@ -43,8 +41,10 @@ create table roles (
   name text not null default ''::text,
   -- The rich text description of the role
   description text not null default ''::text,
-  -- Whether the role is invite only
+  -- Whether the role is invite only. If true, only editors can invite scholars to the role.
   invited boolean not null,
+  -- Whether the role is biddable. If true, scholars can bid on submissions with the role.
+  biddable boolean not null default false,
   -- The token compensation for a commitment, in the venue's currency
   amount integer not null
 );
