@@ -53,9 +53,9 @@ _As Dana, program chair of ACM PLDI, I want to send out invites to a curated set
 _As Derek, EiC of IEEE TSE, I want to curate a set of reviewers who are eager to review journal submissions and access information about their expertise, so that Associate Editors can select people to invite for review._
 
 - Derek logs into RR and proposes a TSE venue instance.
-- The RR stewards approve it
+- The RR stewards approve it.
 - Derek adds a description of the venue and sees the default reviewer role.
-- Amy updates the TSE website to point to the reviewer volunteer link and adjusts the email templates to include RR's email receiver.
+- Derek updates the TSE website to point to the reviewer volunteer link and adjusts the email templates to include RR's email receiver.
 - Community member is looking for reviewing practice and finds the volunteer link, and agrees to volunteer for up to 1 paper at a time.
 - The Associate Editor, when trying to find reviewers, scans the list of volunteers, and finds the volunteer, and invites them through the journal's review platform. This adds the publication record to the reviewer's list.
 - After a decision on the submission is made, an email is sent, triggering an update to the status of the submission in RR, and freeing the reviewer to review again.
@@ -65,15 +65,22 @@ _As Derek, EiC of IEEE TSE, I want to curate a set of reviewers who are eager to
 _As Amy, EiC of ACM TOCE, I want to incentivize reviewers to volunteer by requiring reviewing prior to submitting papers for review, and streamline Associate Editors ability to identify people to review based on their expertise and need for tokens._
 
 - Amy logs into RR and proposes a TOCE venue instance.
-- The RR stewards approve it
-- Amy adds a description of the venue and sees the default reviewer role and finds it suitable.
-- Amy sets the compensation levels to 10 tokens for a review, 10 for an AE recommendation, and 1 for an EiC decision, as well as costs of 40 tokens per submission. She also sets the welcome token rate to 30, enabling newcomers to submit if they review just once.
-- Amy updates the ACM TOCE website to point to the reviewer volunteer link and to the compensation costs. She also sends an email to `sigcse-members` to solicit volunteers and points to the link
-- Community members either receive the email, or see the volunteer link on the website, and log in to voluneer. Those are first time volunteers receive their newly minted welcome tokens.
-- A community member submits a paper, indicating whose accounts to deduct the 40 tokens from.
+- The RR stewards approve it.
+- Amy convinces Becky, another scholar with whom Amy does not have a conflict of interest, to act as an auditor for the token system.
+- Amy logs into RR and proposes a new currency TOCE-Tokens for TOCE where Becky has the responsibility of creating new tokens and monitoring the health of the currency.
+- The RR stewards approve the currency and Becky's nomination.
+- Amy adds a description of the venue and sees the default reviewer role and finds it suitable. 
+- Amy makes TOCE-Tokens the currency for the venue. She accepts the initial setting of no exchanges with other currencies.
+- Amy sets the compensation levels to 10 TOCE-Tokens for completing a review, 10 for submitting an AE recommendation, and 1 for an EiC decision, as well as a cost of 40 TOCE-Tokens per submission. She also sets the welcome token rate to 10, enabling newcomers to submit if they review just once, and she generates a list of prior reviewers who need retroactive compensation.
+- After review, Becky mints the required number of tokens for the initial round of retroactive compensation as well as a initial pool of tokens that should be sufficient to fund reviewing activities for 3-6 months. The tokens are deposited in the venue's wallet.
+- Amy informs past reviewers of the change in policies and sends them gifts from the initial token allocation.
+- Amy updates the ACM TOCE website to point to the reviewer volunteer link and to the compensation costs. She also sends an email to `sigcse-members` to solicit volunteers and points to the link.
+- Community members either receive the email, or see the volunteer link on the website, and log in to volunteer. Those are first time volunteers receive their newly minted welcome tokens.
+- An existing community member (past reviewer) submits a paper, indicating whose accounts to deduct the 40 tokens from.
 - Amy confirms that the paper should not be desk rejected and then approves the transactions and the submission for review, and assigns an Associate Editor.
 - The Associate Editor, when trying to find reviewers, scan the list of volunteers, filtering by expertise keywords, paying attention to reviewers paper limits and other commitments, and ultimately send invites to possible matches. The invites trigger updates to the reviewing status of the reviewer in RR, showing that the reviewer has a TOCE assignment.
 - After a decision on the submission is made, an email is sent, which triggers proposed transactions, and emails notifying reviewers of their compensation.
+- On a periodic basis, both Amy and Becky review the TOCE wallet balance and the transactions made on the currency. Becky mints additional tokens for the venue when the balance is low, if no anomalous transactions are detected, and Amy updates the compensation policies as needed to encourage continued reviewing and submissions by new community members.
 
 # Legend
 
