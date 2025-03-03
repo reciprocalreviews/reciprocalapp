@@ -14,6 +14,8 @@
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import Table from '$lib/components/Table.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import { handle } from '../../feedback.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const { submission, venue, authors, previous, transactions, assignments, roles } = $derived(data);
@@ -146,28 +148,48 @@
 		{#if venue !== null && canSeeAssignments && user !== null && roles}
 			{#if roles && assignments}
 				{#each roles as role}
-					{@const assigned = assignments.filter((a) => role.id === a.role && !a.bid)[0]}
+					{@const assigned = assignments.filter((a) => role.id === a.role && !a.bid)}
 					{@const bidded = assignments.filter((a) => role.id === a.role && a.bid)}
 					<h3>{role.name}</h3>
-					{#if assigned}
-						<ScholarLink id={assigned.scholar} /><Tag>Assigned</Tag>
-						{#if bidded.length > 0}{bidded.length} others bidded{/if}.
-					{:else if bidded.length > 0}
+					{#if isEditor}
+						{#each assigned as assignment}
+							<p>
+								<ScholarLink id={assignment.scholar} /><Tag>Assigned</Tag>
+								<Button
+									tip="Remove this assignment"
+									action={() => handle(db.deleteAssignment(assignment.id))}>Unassign</Button
+								>
+							</p>
+						{:else}
+							<Feedback>No one is assigned.</Feedback>
+						{/each}
+					{/if}
+					{#if bidded.length > 0}
 						<Table>
 							{#snippet header()}
-								<tr><th>scholar</th><th>expertise</th></tr>
+								<th>scholar</th><th>expertise</th>
 							{/snippet}
 							{#each bidded as assignment}
 								<tr>
 									<td><ScholarLink id={assignment.scholar} /></td>
 									<td>Expertise</td>
+									<td>
+										{#if isEditor}
+											<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
+											<ScholarLink id={assignment.scholar} />
+											{#if assignment.bid}
+												<Button
+													tip="Accept this bid, assigning this scholar to this role for this submission."
+													action={() => handle(db.approveAssignment(assignment.id))}>Assign</Button
+												>
+											{/if}
+										{/if}
+									</td>
 								</tr>
 							{/each}
 						</Table>
-					{:else if role.invited}
-						<Feedback error>No one assigned.</Feedback>
 					{:else}
-						<Feedback error>No one assigned, no one has bidded.</Feedback>
+						<Feedback error>No one has bidded.</Feedback>
 					{/if}
 				{:else}{/each}
 			{/if}

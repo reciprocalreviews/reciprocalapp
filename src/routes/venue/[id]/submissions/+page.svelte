@@ -102,38 +102,26 @@
 							<td><SubmissionPreview {submission} /></td>
 							<td>{submission.expertise}</td>
 							<td>{submission.externalid}</td>
-							<!-- If we have all the information, show a checkbox for each role they've volunteered for,
-							 	allowing them to bid, unbid, or otherwise modify the current state of their responsibilities. -->
+							<!-- If we have all the information, show metadata about bidding. -->
 							{#if volunteering && roles && assignments && uid}
 								{#each roles as role}
 									{@const submissionAssignments = assignments.filter(
 										(ass) => ass.submission === submission.id && ass.role === role.id
 									)}
+									{@const assigned = submissionAssignments.filter((a) => !a.bid)}
+									{@const bid = submissionAssignments.find((a) => a.scholar === uid && a.bid)}
 									<td>
-										<!-- Active assignment? -->
-										{#each submissionAssignments as assignment}
-											{#if editor}
+										{#if editor}
+											{#each assigned as assignment}
 												<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
 												<ScholarLink id={assignment.scholar} />
-												{#if !role.invited}
-													<Button
-														tip="Accept this bid, assigning this scholar to this role for this submission."
-														action={() => handle(db.approveAssignment(assignment.id))}
-														>Assign</Button
-													>
-												{/if}
-											{/if}
-											<!-- If it's a bid, show a button for unbidding. If not, just say its assigned. -->
-											{#if assignment.bid}
-												<Button
-													tip="Remove interest in serving as {role?.description ?? 'in this role'}"
-													action={() => handle(db.deleteAssignment(assignment.id))}>Unbid</Button
-												>
-											{:else}
-												Assigned
-											{/if}
-										{:else}
-											{#if role.biddable && volunteering.some((c) => c.roleid === role.id)}
+											{/each}
+											{submissionAssignments.filter((a) => a.bid).length} bids
+										{/if}
+
+										<!-- Active assignment? -->
+										{#if role.biddable}
+											{#if bid === undefined}
 												<!-- No assignments? Allow bidding -->
 												<Button
 													tip="Express interest in serving as {role?.description ?? 'in this role'}"
@@ -142,9 +130,12 @@
 													>Bid</Button
 												>
 											{:else}
-												&mdash;
+												<Button
+													tip="Remove interest in serving as {role?.description ?? 'in this role'}"
+													action={() => handle(db.deleteAssignment(bid.id))}>Unbid</Button
+												>
 											{/if}
-										{/each}
+										{/if}
 									</td>
 								{/each}
 							{/if}
