@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.10 2025-03-09
 
+### Added
+
+- Show expertise in list of bids on paper.
+
 ### Fixed
 
 - Distinguished between a assignment bid and an approved assignment, to remember buds if someone is unassigned.

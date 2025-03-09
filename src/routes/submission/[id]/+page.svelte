@@ -18,7 +18,8 @@
 	import { handle } from '../../feedback.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { submission, venue, authors, previous, transactions, assignments, roles } = $derived(data);
+	const { submission, venue, authors, previous, transactions, assignments, volunteers, roles } =
+		$derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -170,20 +171,27 @@
 								<th>scholar</th><th>expertise</th>
 							{/snippet}
 							{#each bidded as assignment}
+								{@const volunteer = volunteers?.find((v) => v.scholarid === assignment.scholar)}
 								<tr>
 									<td><ScholarLink id={assignment.scholar} /></td>
-									<td>Expertise</td>
+									<td
+										>{#if volunteer}{volunteer.expertise}{:else}<Feedback inline error
+												>Unknown</Feedback
+											>{/if}</td
+									>
 									<td>
 										{#if isEditor}
 											<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
-											<ScholarLink id={assignment.scholar} />
-											{#if assignment.bid}
-												<Button
-													tip="Accept this bid, assigning this scholar to this role for this submission."
-													action={() => handle(db.approveAssignment(assignment.id, true))}
-													>Assign</Button
-												>
-											{/if}
+											<Row>
+												<ScholarLink id={assignment.scholar} />
+												{#if assignment.bid}
+													<Button
+														tip="Accept this bid, assigning this scholar to this role for this submission."
+														action={() => handle(db.approveAssignment(assignment.id, true))}
+														>Assign</Button
+													>
+												{/if}
+											</Row>
 										{/if}
 									</td>
 								</tr>

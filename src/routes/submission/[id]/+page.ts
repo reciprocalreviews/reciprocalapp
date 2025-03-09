@@ -77,6 +77,19 @@ export const load: PageLoad = async ({ parent, params }) => {
 					.or(`role.in.(${volunteerRoleIDs.join(',')}),venue.in.(${editorVenueIDs.join(',')})`);
 	if (assignmentsError) console.error(assignmentsError);
 
+	// Get the volunteer records of those assigned so we can render their expertise.
+	const { data: volunteers, error: volunteersError } =
+		assignments === null
+			? { data: null, error: null }
+			: await supabase
+					.from('volunteers')
+					.select('*')
+					.in(
+						'roleid',
+						assignments.map((a) => a.role)
+					);
+	if (volunteersError) console.error(volunteersError);
+
 	return {
 		submission,
 		venue,
@@ -84,6 +97,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		previous: previous !== null && previous.length > 0 ? previous[0] : null,
 		transactions,
 		assignments,
+		volunteers,
 		roles
 	};
 };
