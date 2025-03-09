@@ -166,7 +166,7 @@
 						{/each}
 					{/if}
 					{#if bidded.length > 0}
-						<Table>
+						<Table full>
 							{#snippet header()}
 								<th>scholar</th><th>expertise</th>
 							{/snippet}

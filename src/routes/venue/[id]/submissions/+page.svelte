@@ -59,7 +59,7 @@
 			{#if submissions.length === 0}
 				<Feedback>No submissions, or none visible to you.</Feedback>
 			{:else}
-				<Table>
+				<Table full>
 					{#snippet header()}
 						<th>Payment</th>
 						<th>Submission</th>

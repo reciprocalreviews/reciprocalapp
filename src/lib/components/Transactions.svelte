@@ -111,7 +111,7 @@
 {#if transactions.length === 0}
 	<Feedback>No transactions yet.</Feedback>
 {:else}
-	<Table>
+	<Table full>
 		{#snippet header()}
 			<th>Status</th>
 			<th>Tokens</th>

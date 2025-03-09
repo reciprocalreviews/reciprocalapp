@@ -30,7 +30,7 @@
 				name={venue.title}
 			/>.
 		</p>
-		<Table>
+		<Table full>
 			{#snippet header()}
 				<th>Role</th>
 				<th>Active</th>
