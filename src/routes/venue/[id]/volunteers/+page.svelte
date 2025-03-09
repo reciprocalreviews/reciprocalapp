@@ -38,7 +38,8 @@
 		</p>
 		{@const rolesIDs = [...new Set(commitments.map((c) => c.roleid))].toSorted(
 			(a, b) =>
-				(roles?.find((r) => r.id === a)?.order ?? 0) - (roles?.find((r) => r.id === b)?.order ?? 0)
+				(roles?.find((r) => r.id === a)?.priority ?? 0) -
+				(roles?.find((r) => r.id === b)?.priority ?? 0)
 		)}
 		{#each rolesIDs as role}
 			{@const roleCommitments = commitments.filter((c) => c.roleid === role)}

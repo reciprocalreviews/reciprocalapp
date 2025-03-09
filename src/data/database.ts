@@ -205,7 +205,7 @@ export type Database = {
           id: string
           invited: boolean
           name: string
-          order: number
+          priority: number
           venueid: string
         }
         Insert: {
@@ -215,7 +215,7 @@ export type Database = {
           id?: string
           invited: boolean
           name?: string
-          order?: number
+          priority?: number
           venueid: string
         }
         Update: {
@@ -225,7 +225,7 @@ export type Database = {
           id?: string
           invited?: boolean
           name?: string
-          order?: number
+          priority?: number
           venueid?: string
         }
         Relationships: [

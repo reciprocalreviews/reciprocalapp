@@ -28,7 +28,7 @@
 	// Show the bidding interface if there's a venue, its biddable
 	const submissionCost = $derived(venue?.submission_cost ?? null);
 
-	const sortedRoles = $derived(roles?.toSorted((a, b) => a.order - b.order));
+	const sortedRoles = $derived(roles?.toSorted((a, b) => a.priority - b.priority));
 
 	let newSubmissionExpanded = $state(false);
 </script>

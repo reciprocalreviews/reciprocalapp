@@ -97,7 +97,7 @@
 				<p>Editors are compensated <Tokens amount={venue.edit_amount} /></p>
 			{/if}
 		</Card>
-		{#each roles.toSorted((a, b) => a.order - b.order) as role, index (role.id)}
+		{#each roles.toSorted((a, b) => a.priority - b.priority) as role, index (role.id)}
 			<Card full subheader icon="👤" header={role.name} note={role.description}>
 				{#snippet controls()}
 					{#if editor}
