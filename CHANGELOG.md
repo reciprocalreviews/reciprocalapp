@@ -12,6 +12,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Fixed #24, redesigning venue page to integrate roles.
 - Split volunteers page by role, in role order.
 - Improved volunteers breadcrumbs.
+- Fixed #40, adding editor compensation amount to venue table.
 
 ### Fixed
 

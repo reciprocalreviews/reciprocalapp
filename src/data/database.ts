@@ -489,6 +489,7 @@ export type Database = {
         Row: {
           currency: string
           description: string
+          edit_amount: number
           editors: string[]
           id: string
           submission_cost: number
@@ -499,6 +500,7 @@ export type Database = {
         Insert: {
           currency: string
           description?: string
+          edit_amount?: number
           editors?: string[]
           id?: string
           submission_cost?: number
@@ -509,6 +511,7 @@ export type Database = {
         Update: {
           currency?: string
           description?: string
+          edit_amount?: number
           editors?: string[]
           id?: string
           submission_cost?: number

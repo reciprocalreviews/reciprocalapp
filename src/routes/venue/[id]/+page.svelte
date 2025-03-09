@@ -5,15 +5,12 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { ORCIDRegex } from '../../../lib/data/ORCID';
 	import Page from '$lib/components/Page.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Card from '$lib/components/Card.svelte';
-	import Note from '$lib/components/Note.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
-	import { validEmail, validInteger, validURLError } from '$lib/validation';
+	import { validInteger, validURLError } from '$lib/validation';
 	import { handle } from '../../feedback.svelte';
 	import Roles from './Roles.svelte';
 	import type { PageData } from './$types';
@@ -34,8 +31,6 @@
 
 	const db = getDB();
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
-
-	let newEditor: string = $state('');
 </script>
 
 {#if venue === null}
@@ -92,39 +87,6 @@
 				.
 			</p>
 		{/each}
-
-		{#if editor}
-			<Card
-				expand={false}
-				icon={venue.editors.length}
-				header="add editors"
-				note="Add a new editor"
-				group="editors"
-			>
-				<form>
-					<TextField
-						bind:text={newEditor}
-						size={19}
-						placeholder="ORCID or email"
-						valid={(text) =>
-							validEmail(text) || ORCIDRegex.test(text)
-								? undefined
-								: 'Must be a valid email or ORCID'}
-					/><Button
-						tip="Add editor"
-						active={validEmail(newEditor) || ORCIDRegex.test(newEditor)}
-						action={async () => {
-							if (await handle(db.addVenueEditor(venue.id, newEditor))) newEditor = '';
-						}}>Add editor</Button
-					>
-				</form>
-				<Note>
-					Editors can edit venue information, add and remove other editors, create and archive
-					submissions, and gift review tokens. They are typically Editors-in-Chief of a journal or
-					Program Chairs of a conference.
-				</Note>
-			</Card>
-		{/if}
 
 		<!-- Key details about costs. -->
 		<p>

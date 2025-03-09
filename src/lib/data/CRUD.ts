@@ -117,6 +117,7 @@ export default abstract class CRUD {
 	abstract editVenueTitle(id: VenueID, title: string): Promise<Result>;
 	abstract editVenueURL(id: VenueID, url: string): Promise<Result>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<Result>;
+	abstract editVenueEditorCompensation(id: VenueID, amount: number): Promise<Result>;
 	abstract editVenueSubmissionCost(id: VenueID, amount: number): Promise<Result>;
 
 	abstract createRole(id: VenueID, name: string): Promise<Result>;

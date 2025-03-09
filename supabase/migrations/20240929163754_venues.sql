@@ -11,6 +11,8 @@ create table venues (
   currency uuid not null references currencies(id),
   -- The optional amount of newly minted tokens granted to new volunteers
   welcome_amount integer not null,
+  -- The amount of tokens granted for each submission for an editor.
+  edit_amount integer not null default 1,
   -- Submission cost in the venue's currency
   submission_cost integer not null default 0,
   -- One or more scholars who serve as editors of the venue

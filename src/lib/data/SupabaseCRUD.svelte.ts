@@ -415,8 +415,9 @@ export default class SupabaseCRUD extends CRUD {
 				title: proposalData.title,
 				url: proposalData.url,
 				editors,
-				welcome_amount: 40,
-				submission_cost: 40,
+				edit_amount: 1,
+				welcome_amount: 10,
+				submission_cost: 10,
 				currency: currencyData.id
 			})
 			.select()
@@ -515,6 +516,11 @@ export default class SupabaseCRUD extends CRUD {
 			.update({ welcome_amount: amount })
 			.eq('id', id);
 		return this.errorOrEmpty('EditVenueWelcomeAmount', error);
+	}
+
+	async editVenueEditorCompensation(id: VenueID, amount: number) {
+		const { error } = await this.client.from('venues').update({ edit_amount: amount }).eq('id', id);
+		return this.errorOrEmpty('EditVenueEditorAmount', error);
 	}
 
 	async editVenueSubmissionCost(id: VenueID, amount: number) {

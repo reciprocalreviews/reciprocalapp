@@ -17,6 +17,7 @@
 	import Link from '$lib/components/Link.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import Cards from '$lib/components/Cards.svelte';
+	import { ORCIDRegex } from '../../../lib/data/ORCID';
 
 	let {
 		venue,
@@ -38,6 +39,8 @@
 	let invites = $derived<Record<RoleID, string>>(
 		Object.fromEntries((roles ?? []).map((role) => [role.id, '']))
 	);
+
+	let newEditor: string = $state('');
 </script>
 
 {#if editor}
@@ -51,6 +54,49 @@
 
 {#if roles}
 	<Cards>
+		<Card
+			icon="👤"
+			subheader
+			header="Editor"
+			note="Scholars who manage submissions and compensation fo this venue."
+		>
+			<p>
+				Editors can edit venue information, add and remove other editors, create and archive
+				submissions, and gift review tokens. They are typically Editors-in-Chief of a journal or
+				Program Chairs of a conference.
+			</p>
+
+			{#if editor}
+				<Slider
+					min={1}
+					max={venue.welcome_amount}
+					value={venue.edit_amount}
+					step={1}
+					label="compensation"
+					change={(value) => handle(db.editVenueEditorCompensation(venue.id, value))}
+					><Tokens amount={venue.edit_amount}></Tokens>/submission</Slider
+				>
+				<form>
+					<TextField
+						bind:text={newEditor}
+						size={19}
+						placeholder="ORCID or email"
+						valid={(text) =>
+							validEmail(text) || ORCIDRegex.test(text)
+								? undefined
+								: 'Must be a valid email or ORCID'}
+					/><Button
+						tip="Add editor"
+						active={validEmail(newEditor) || ORCIDRegex.test(newEditor)}
+						action={async () => {
+							if (await handle(db.addVenueEditor(venue.id, newEditor))) newEditor = '';
+						}}>Add editor</Button
+					>
+				</form>
+			{:else}
+				<p>Editors are compensated <Tokens amount={venue.edit_amount} /></p>
+			{/if}
+		</Card>
 		{#each roles.toSorted((a, b) => a.order - b.order) as role, index (role.id)}
 			<Card full subheader icon="👤" header={role.name} note={role.description}>
 				{#snippet controls()}
