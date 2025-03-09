@@ -36,6 +36,7 @@ export type Database = {
     Tables: {
       assignments: {
         Row: {
+          approved: boolean
           bid: boolean
           id: string
           role: string
@@ -44,6 +45,7 @@ export type Database = {
           venue: string
         }
         Insert: {
+          approved?: boolean
           bid?: boolean
           id?: string
           role: string
@@ -52,6 +54,7 @@ export type Database = {
           venue: string
         }
         Update: {
+          approved?: boolean
           bid?: boolean
           id?: string
           role?: string

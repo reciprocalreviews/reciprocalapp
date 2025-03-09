@@ -148,18 +148,18 @@
 		{#if venue !== null && canSeeAssignments && user !== null && roles}
 			{#if roles && assignments}
 				{#each roles as role}
-					{@const assigned = assignments.filter((a) => role.id === a.role && !a.bid)}
-					{@const bidded = assignments.filter((a) => role.id === a.role && a.bid)}
+					{@const assigned = assignments.filter((a) => role.id === a.role && a.approved)}
+					{@const bidded = assignments.filter((a) => role.id === a.role && a.bid && !a.approved)}
 					<h3>{role.name}</h3>
 					{#if isEditor}
 						{#each assigned as assignment}
-							<p>
+							<Row>
 								<ScholarLink id={assignment.scholar} /><Tag>Assigned</Tag>
 								<Button
 									tip="Remove this assignment"
-									action={() => handle(db.deleteAssignment(assignment.id))}>Unassign</Button
+									action={() => handle(db.approveAssignment(assignment.id, false))}>Unassign</Button
 								>
-							</p>
+							</Row>
 						{:else}
 							<Feedback>No one is assigned.</Feedback>
 						{/each}
@@ -180,7 +180,8 @@
 											{#if assignment.bid}
 												<Button
 													tip="Accept this bid, assigning this scholar to this role for this submission."
-													action={() => handle(db.approveAssignment(assignment.id))}>Assign</Button
+													action={() => handle(db.approveAssignment(assignment.id, true))}
+													>Assign</Button
 												>
 											{/if}
 										{/if}
@@ -189,7 +190,7 @@
 							{/each}
 						</Table>
 					{:else}
-						<Feedback error>No one has bidded.</Feedback>
+						<Feedback error>No bids.</Feedback>
 					{/if}
 				{:else}{/each}
 			{/if}

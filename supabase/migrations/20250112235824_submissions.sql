@@ -42,8 +42,10 @@ create table assignments (
   scholar uuid not null references scholars(id),
   -- The role for which the bid occurred
   role uuid not null references roles(id),
-  -- False if assigned, true if a bid by the reviewer.
-  bid boolean not null default false
+  -- True if a bid by the reviewer.
+  bid boolean not null default false,
+  -- True if the assignment has been approved
+  approved boolean not null default false,
 );
 
 -- Make it fast to retrieve the assignments of a scholar or submission.

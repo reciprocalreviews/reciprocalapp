@@ -182,7 +182,7 @@ export default abstract class CRUD {
 	abstract cancelTransaction(id: TransactionID, reason: string): Promise<Result>;
 
 	/** Update an assignment for a submission */
-	abstract approveAssignment(assignment: AssignmentID): Promise<Result>;
+	abstract approveAssignment(assignment: AssignmentID, approved: boolean): Promise<Result>;
 
 	/** Create a new assignment record */
 	abstract createAssignment(

@@ -856,10 +856,10 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('TransactionNotCanceled', error);
 	}
 
-	async approveAssignment(assignment: AssignmentID): Promise<Result> {
+	async approveAssignment(assignment: AssignmentID, approved: boolean): Promise<Result> {
 		const { error } = await this.client
 			.from('assignments')
-			.update({ bid: false })
+			.update({ approved })
 			.eq('id', assignment);
 		return this.errorOrEmpty('ApproveAssignment', error);
 	}
