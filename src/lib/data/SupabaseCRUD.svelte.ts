@@ -13,7 +13,8 @@ import type {
 	TokenID,
 	TransactionStatus,
 	AssignmentID,
-	SubmissionStatus
+	SubmissionStatus,
+	RoleRow
 } from '../../data/types';
 import CRUD, { NullUUID, type Result } from './CRUD';
 import Scholar from './Scholar.svelte';
@@ -554,6 +555,27 @@ export default class SupabaseCRUD extends CRUD {
 	async editRoleAmount(id: RoleID, amount: number) {
 		const { error } = await this.client.from('roles').update({ amount }).eq('id', id);
 		return this.errorOrEmpty('UpdateRoleAmount', error);
+	}
+
+	async reorderRole(role: RoleRow, roles: RoleRow[], direction: -1 | 1) {
+		// Find the index of the role
+		const index = roles.findIndex((r) => r.id === role.id);
+
+		// Couldn't find the role? Bail.
+		if (index === -1) return this.error('ReorderRole');
+
+		// Swap the roles.
+		const swap = roles[index + direction];
+		roles[index + direction] = role;
+		roles[index] = swap;
+
+		// Renumber the orders.
+		for (const [index, role] of roles.entries()) {
+			const { error } = await this.client.from('roles').update({ order: index }).eq('id', role.id);
+			if (error) return this.error('ReorderRole', error);
+		}
+
+		return {};
 	}
 
 	async deleteRole(id: RoleID) {

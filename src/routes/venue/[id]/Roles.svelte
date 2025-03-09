@@ -46,8 +46,20 @@
 	>
 </form>
 {#if roles}
-	{#each roles as role (role.id)}
+	{#each roles.toSorted((a, b) => a.order - b.order) as role, index (role.id)}
 		<Card subheader icon="👤" header={role.name} note={role.description}>
+			{#snippet controls()}
+				<Button
+					active={index > 0}
+					tip="Move this role up"
+					action={() => handle(db.reorderRole(role, roles, -1))}>↑</Button
+				>
+				<Button
+					active={index < roles.length - 1}
+					tip="Move this role down"
+					action={() => handle(db.reorderRole(role, roles, 1))}>↓</Button
+				>
+			{/snippet}
 			<EditableText
 				text={role.name}
 				label="name"

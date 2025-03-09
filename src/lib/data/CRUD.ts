@@ -11,7 +11,8 @@ import {
 	type TokenID,
 	type TransactionStatus,
 	type AssignmentID,
-	type SubmissionStatus
+	type SubmissionStatus,
+	type RoleRow
 } from '../../data/types';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
 import { getContext, setContext } from 'svelte';
@@ -124,6 +125,7 @@ export default abstract class CRUD {
 	abstract editRoleInvited(id: RoleID, on: boolean): Promise<Result>;
 	abstract editRoleBidding(id: RoleID, bidding: boolean): Promise<Result>;
 	abstract editRoleAmount(id: RoleID, amount: number): Promise<Result>;
+	abstract reorderRole(role: RoleRow, roles: RoleRow[], direction: -1 | 1): Promise<Result>;
 	abstract deleteRole(id: RoleID): Promise<Result>;
 
 	abstract createVolunteer(

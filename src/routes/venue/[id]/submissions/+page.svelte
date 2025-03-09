@@ -28,6 +28,8 @@
 	// Show the bidding interface if there's a venue, its biddable
 	const submissionCost = $derived(venue?.submission_cost ?? null);
 
+	const sortedRoles = $derived(roles?.toSorted((a, b) => a.order - b.order));
+
 	let newSubmissionExpanded = $state(false);
 </script>
 
@@ -67,14 +69,14 @@
 						<th>Expertise</th>
 						<th>External ID</th>
 						<!-- If bidding is enabled, add column for each of the scholar's volunteer roles -->
-						{#if volunteering && roles && assignments}
+						{#if volunteering && sortedRoles && assignments}
 							{#if editor}
-								{#each roles as role}
+								{#each sortedRoles as role}
 									<th>{role.name}</th>
 								{/each}
 							{:else}
 								{#each volunteering as commitment}
-									<th>{roles?.find((role) => role.id === commitment.roleid)?.name ?? '—'}</th>
+									<th>{sortedRoles?.find((role) => role.id === commitment.roleid)?.name ?? '—'}</th>
 								{/each}
 							{/if}
 						{/if}
@@ -104,8 +106,8 @@
 							<td>{submission.expertise}</td>
 							<td>{submission.externalid}</td>
 							<!-- If we have all the information, show metadata about bidding. -->
-							{#if volunteering && roles && assignments && uid}
-								{#each roles as role}
+							{#if volunteering && sortedRoles && assignments && uid}
+								{#each sortedRoles as role}
 									{@const submissionAssignments = assignments.filter(
 										(ass) => ass.submission === submission.id && ass.role === role.id
 									)}

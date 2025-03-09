@@ -148,7 +148,7 @@
 		<!-- If there are assignments to show, show them. -->
 		{#if venue !== null && canSeeAssignments && user !== null && roles}
 			{#if roles && assignments}
-				{#each roles as role}
+				{#each roles.toSorted((a, b) => a.order - b.order) as role}
 					{@const assigned = assignments.filter((a) => role.id === a.role && a.approved)}
 					{@const bidded = assignments.filter((a) => role.id === a.role && a.bid && !a.approved)}
 					<h3>{role.name}</h3>

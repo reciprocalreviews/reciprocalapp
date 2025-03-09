@@ -46,7 +46,9 @@ create table roles (
   -- Whether the role is biddable. If true, scholars can bid on submissions with the role.
   biddable boolean not null default false,
   -- The token compensation for a commitment, in the venue's currency
-  amount integer not null
+  amount integer not null,
+  -- The presentation order of the role, lower is more important
+  order int2 not null default 0
 );
 
 create index roles_venue_index on roles(venueid);

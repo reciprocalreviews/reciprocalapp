@@ -140,7 +140,7 @@
 
 		<Cards>
 			{#if roles}
-				{#each roles as role (role.id)}
+				{#each roles.toSorted((a, b) => a.order - b.order) as role (role.id)}
 					{@const commitment = commitments?.find((c) => c.roleid === role.id)}
 					<Card
 						full

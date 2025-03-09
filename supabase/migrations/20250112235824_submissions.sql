@@ -45,7 +45,7 @@ create table assignments (
   -- True if a bid by the reviewer.
   bid boolean not null default false,
   -- True if the assignment has been approved
-  approved boolean not null default false,
+  approved boolean not null default false
 );
 
 -- Make it fast to retrieve the assignments of a scholar or submission.

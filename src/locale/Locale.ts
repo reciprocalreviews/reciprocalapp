@@ -39,6 +39,7 @@ export const enUS = {
 		UpdateRoleDescription: 'Unable to update role description',
 		UpdateRoleInvited: 'Unable to update invited status of role',
 		UpdateRoleAmount: 'Unable to update role compensation',
+		ReorderRole: 'Unable to reorder roles',
 		DeleteRole: 'Unable to delete role',
 		CreateVolunteer: 'Unable to add volunteer commitment',
 		AlreadyVolunteered: 'Already created a volunteer commitment for this role.',

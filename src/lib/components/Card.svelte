@@ -12,9 +12,11 @@
 		header,
 		note,
 		full = false,
-		expand = $bindable(false)
+		expand = $bindable(false),
+		controls
 	}: {
 		children: Snippet;
+		controls?: Snippet;
 		icon: string | number;
 		header: string;
 		note: string;
@@ -50,6 +52,11 @@
 			{/if}
 			<Note>{note}</Note>
 		</div>
+		{#if controls}
+			<div>
+				{@render controls()}
+			</div>
+		{/if}
 	</div>
 	{#if expanded}
 		{@render children()}
@@ -86,6 +93,7 @@
 		flex-direction: row;
 		gap: var(--spacing);
 		flex-wrap: nowrap;
+		align-items: middle;
 		cursor: pointer;
 		border-bottom: solid transparent var(--thick-border-width);
 	}
