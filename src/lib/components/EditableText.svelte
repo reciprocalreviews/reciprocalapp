@@ -77,19 +77,17 @@
 			/>{:else}{EditLabel}{/if}</Button
 	>
 	<div class="box" class:inline class:editing>
-		{#if editing}
-			<TextField
-				{label}
-				{note}
-				{inline}
-				{valid}
-				bind:text
-				{placeholder}
-				active={editing}
-				bind:view={field}
-				done={() => (editing ? saveAndFocus() : undefined)}
-			/>
-		{:else if text.length === 0}<em>{placeholder}</em>{:else}{text}{/if}
+		<TextField
+			{label}
+			{note}
+			{inline}
+			{valid}
+			bind:text
+			{placeholder}
+			active={editing}
+			bind:view={field}
+			done={() => (editing ? saveAndFocus() : undefined)}
+		/>
 	</div>
 </div>
 

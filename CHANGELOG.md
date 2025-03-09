@@ -17,6 +17,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Align table header cells to bottom.
 - Full width tables.
 - Improved layout and bidding options in submission row.
+- Show label on editable text when not editing.
 
 ### Maintenance
 
