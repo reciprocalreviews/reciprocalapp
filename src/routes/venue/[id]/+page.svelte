@@ -57,6 +57,20 @@
 		{#snippet subtitle()}Venue{/snippet}
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 
+		<!-- Show the description -->
+		{#if editor}
+			<EditableText
+				text={venue.description}
+				placeholder="Venue description."
+				inline={false}
+				edit={(text) => db.editVenueDescription(venue.id, text)}
+			/>
+		{:else}
+			<p>
+				{#if venue.description.length === 0}<em>No description.</em>{:else}{venue.description}{/if}
+			</p>
+		{/if}
+
 		<h2>Editors</h2>
 		{#each venue.editors as editorID, index}
 			<p>
@@ -112,17 +126,6 @@
 			</Card>
 		{/if}
 
-		<!-- Show the description -->
-		{#if editor}
-			<EditableText
-				text={venue.description}
-				placeholder="Venue description."
-				inline={false}
-				edit={(text) => db.editVenueDescription(venue.id, text)}
-			/>{:else}<p>
-				{#if venue.description.length === 0}<em>No description.</em>{:else}{venue.description}{/if}
-			</p>{/if}
-
 		<!-- Key details about costs. -->
 		<p>
 			{#if currency}
@@ -141,8 +144,8 @@
 
 		<h2>Volunteer</h2>
 
-		{#if roles && scholar}
-			<Roles {venue} scholar={scholar.id} {roles} {commitments} editor={editor === true} />
+		{#if roles}
+			<Roles {venue} scholar={scholar?.id} {roles} {commitments} editor={editor === true} />
 		{:else}
 			<Feedback error>Couldn't load venue's roles.</Feedback>
 		{/if}

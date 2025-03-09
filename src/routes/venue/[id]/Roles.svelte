@@ -26,7 +26,7 @@
 		editor
 	}: {
 		venue: VenueRow;
-		scholar: ScholarID;
+		scholar: ScholarID | undefined;
 		roles: RoleRow[] | null;
 		commitments: VolunteerRow[] | null;
 		editor: boolean;
@@ -70,7 +70,11 @@
 
 				{@const commitment = commitments?.find((c) => c.roleid === role.id)}
 
-				<p>This role is compensated <Tokens amount={role.amount}></Tokens> per submission.</p>
+				<p>
+					This {#if role.invited}<strong>invite only</strong>{/if} role is compensated <Tokens
+						amount={role.amount}
+					></Tokens> per submission.
+				</p>
 
 				{#if scholar}
 					{#if role.invited}
@@ -136,6 +140,8 @@
 							</p>
 						{/if}
 					{/if}
+				{:else if !role.invited}
+					<Feedback error inline>Log in to volunteer.</Feedback>
 				{/if}
 
 				{#if editor}

@@ -16,6 +16,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.from('roles')
 		.select()
 		.eq('venueid', venueid);
+
 	if (rolesError) console.error(rolesError);
 
 	// Get any commitments the user has made to the venue.

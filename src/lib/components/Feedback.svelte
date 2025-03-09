@@ -9,9 +9,9 @@
 </script>
 
 {#if inline}
-	<div class={['feedback', error]}>{@render children()}</div>
+	<div class={['feedback', { error }]}>{@render children()}</div>
 {:else}
-	<p class={[error]}>{@render children()}</p>
+	<p class={{ error }}>{@render children()}</p>
 {/if}
 
 <style>
