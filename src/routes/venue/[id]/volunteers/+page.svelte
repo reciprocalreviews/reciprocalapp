@@ -22,7 +22,13 @@
 		<Feedback>Unable to load volunteers for this venue.</Feedback>
 	</Page>
 {:else}
-	<Page title={venue.title} breadcrumbs={[[`/${venue.id}`, venue.title]]}>
+	<Page
+		title={venue.title}
+		breadcrumbs={[
+			['/venues', 'Venues'],
+			[`/venue/${venue.id}`, venue.title]
+		]}
+	>
 		{#snippet subtitle()}Volunteers{/snippet}
 		<p>
 			These are scholars that have volunteered to review for <SourceLink
