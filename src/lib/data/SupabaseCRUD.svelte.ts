@@ -577,7 +577,10 @@ export default class SupabaseCRUD extends CRUD {
 
 		// Renumber the orders.
 		for (const [index, role] of roles.entries()) {
-			const { error } = await this.client.from('roles').update({ order: index }).eq('id', role.id);
+			const { error } = await this.client
+				.from('roles')
+				.update({ priority: index })
+				.eq('id', role.id);
 			if (error) return this.error('ReorderRole', error);
 		}
 
