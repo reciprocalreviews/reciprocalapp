@@ -15,6 +15,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Improved design of feedback in flex layouts.
 - Align table header cells to bottom.
 - Full width tables.
+- Improved layout and bidding options in submission row.
 
 ### Maintenance
 

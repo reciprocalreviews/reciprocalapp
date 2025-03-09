@@ -14,6 +14,7 @@
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import { handle } from '../../../feedback.svelte';
 	import Status from '$lib/components/Status.svelte';
+	import Column from '$lib/components/Column.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const { venue, submissions, volunteering, roles, assignments, transactions } = $derived(data);
@@ -108,34 +109,38 @@
 									{@const submissionAssignments = assignments.filter(
 										(ass) => ass.submission === submission.id && ass.role === role.id
 									)}
-									{@const assigned = submissionAssignments.filter((a) => !a.bid)}
+									{@const assigned = submissionAssignments.filter((a) => a.approved)}
 									{@const bid = submissionAssignments.find((a) => a.scholar === uid && a.bid)}
 									<td>
-										{#if editor}
-											{#each assigned as assignment}
-												<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
-												<ScholarLink id={assignment.scholar} />
-											{/each}
-											{submissionAssignments.filter((a) => a.bid).length} bids
-										{/if}
-
-										<!-- Active assignment? -->
-										{#if role.biddable}
-											{#if bid === undefined}
-												<!-- No assignments? Allow bidding -->
-												<Button
-													tip="Express interest in serving as {role?.description ?? 'in this role'}"
-													action={() =>
-														handle(db.createAssignment(submission.id, uid, role.id, true))}
-													>Bid</Button
-												>
-											{:else}
-												<Button
-													tip="Remove interest in serving as {role?.description ?? 'in this role'}"
-													action={() => handle(db.deleteAssignment(bid.id))}>Unbid</Button
-												>
+										<Column>
+											{#if editor}
+												{#each assigned as assignment}
+													<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
+													<ScholarLink id={assignment.scholar} />
+												{/each}
+												<span>{submissionAssignments.filter((a) => a.bid).length} bids</span>
 											{/if}
-										{/if}
+
+											<!-- Active assignment? -->
+											{#if role.biddable}
+												{#if bid === undefined || !bid.approved}
+													<!-- No assignments? Allow bidding -->
+													<Button
+														tip="Express interest in serving as {role?.description ??
+															'in this role'}"
+														action={() =>
+															handle(db.createAssignment(submission.id, uid, role.id, true))}
+														>Bid</Button
+													>
+												{:else if bid !== undefined && !bid.approved}
+													<Button
+														tip="Remove interest in serving as {role?.description ??
+															'in this role'}"
+														action={() => handle(db.deleteAssignment(bid.id))}>Unbid</Button
+													>
+												{/if}
+											{/if}
+										</Column>
 									</td>
 								{/each}
 							{/if}
