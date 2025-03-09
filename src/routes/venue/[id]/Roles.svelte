@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RoleID, RoleRow, VenueRow } from '$data/types';
+	import type { RoleID, RoleRow, ScholarID, VenueRow, VolunteerRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
@@ -14,13 +14,22 @@
 	import { handle } from '../../feedback.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Form from '$lib/components/Form.svelte';
+	import Link from '$lib/components/Link.svelte';
+	import Tip from '$lib/components/Tip.svelte';
+	import Cards from '$lib/components/Cards.svelte';
 
 	let {
 		venue,
-		roles
+		roles,
+		commitments,
+		scholar,
+		editor
 	}: {
 		venue: VenueRow;
+		scholar: ScholarID;
 		roles: RoleRow[] | null;
+		commitments: VolunteerRow[] | null;
+		editor: boolean;
 	} = $props();
 
 	const db = getDB();
@@ -31,107 +40,204 @@
 	);
 </script>
 
-<form>
-	<TextField
-		bind:text={newRole}
-		size={19}
-		placeholder="name"
-		valid={(text) => (isntEmpty(text) ? undefined : 'Must include a name')}
-	/><Button
-		tip="Create a new role"
-		active={isntEmpty(newRole)}
-		action={async () => {
-			if (await handle(db.createRole(venue.id, newRole))) newRole = '';
-		}}>Create role</Button
-	>
-</form>
-{#if roles}
-	{#each roles.toSorted((a, b) => a.order - b.order) as role, index (role.id)}
-		<Card subheader icon="👤" header={role.name} note={role.description}>
-			{#snippet controls()}
-				<Button
-					active={index > 0}
-					tip="Move this role up"
-					action={() => handle(db.reorderRole(role, roles, -1))}>↑</Button
-				>
-				<Button
-					active={index < roles.length - 1}
-					tip="Move this role down"
-					action={() => handle(db.reorderRole(role, roles, 1))}>↓</Button
-				>
-			{/snippet}
-			<EditableText
-				text={role.name}
-				label="name"
-				placeholder="name"
-				valid={(text) => (isntEmpty(text) ? undefined : 'Must include a name')}
-				edit={(text) => db.editRoleName(role.id, text)}
-			/>
-			<EditableText
-				text={role.description}
-				label="description"
-				placeholder="description"
-				edit={(text) => db.editRoleDescription(role.id, text)}
-			/>
-			<Checkbox on={role.invited} change={(on) => db.editRoleInvited(role.id, on)}
-				>Invited <Note
-					>{#if role.invited}Scholars can volunteer for this without permission{:else}Scholars must
-						be invited to this role.{/if}</Note
-				>
-			</Checkbox>
-			<Checkbox on={role.biddable} change={(on) => db.editRoleBidding(role.id, on)}
-				>Allow bidding
-			</Checkbox>
-			<Note
-				>{#if role.biddable}Authenticated volunteers can bid to take this role on submissions.{:else}This
-					role can only be set for a submission by editors.{/if}</Note
-			>
+{#if editor}
+	<Tip>
+		These are the roles that volunteers can commit to. Create roles such as <em>reviewer</em>,
+		<em>program commitee</em>, <em>associate editor</em> to represent the different kinds of contributions
+		volunteers can make to this venue.
+	</Tip>
+{/if}
+<p>See <Link to="/venue/{venue.id}/volunteers">all volunteers</Link> for this venue.</p>
 
-			{#if role.invited}
-				<Form inline>
-					<p>Add one or more people to invite to this role, separated by commands.</p>
-					<TextField
-						label="email"
-						placeholder=""
-						name="email"
-						size={20}
-						valid={(text) => (validEmail(text) ? undefined : 'Must be a valid email')}
-						bind:text={invites[role.id]}
-					/>
-					<Button
-						tip="Invite people to this role"
-						action={async () => {
-							if (
-								await handle(
-									db.inviteToRole(
-										role.id,
-										invites[role.id].split(',').map((s) => s.trim())
-									)
-								)
-							)
-								invites[role.id] = '';
-						}}>Invite</Button
+{#if roles}
+	<Cards>
+		{#each roles.toSorted((a, b) => a.order - b.order) as role, index (role.id)}
+			<Card full subheader icon="👤" header={role.name} note={role.description}>
+				{#snippet controls()}
+					{#if editor}
+						<Button
+							active={index > 0}
+							tip="Move this role up"
+							action={() => handle(db.reorderRole(role, roles, -1))}>↑</Button
+						>
+						<Button
+							active={index < roles.length - 1}
+							tip="Move this role down"
+							action={() => handle(db.reorderRole(role, roles, 1))}>↓</Button
+						>
+					{/if}
+				{/snippet}
+
+				{@const commitment = commitments?.find((c) => c.roleid === role.id)}
+
+				<p>This role is compensated <Tokens amount={role.amount}></Tokens> per submission.</p>
+
+				{#if scholar}
+					{#if role.invited}
+						{#if commitment}
+							{#if commitment.accepted === 'invited'}
+								<p>
+									The editor has invited you to take this role. <Button
+										tip="accept this invitation"
+										action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
+										>Accept</Button
+									>
+									<Button
+										tip="decline this invitation"
+										action={() => handle(db.acceptRoleInvite(commitment.id, 'declined'))}
+										>Decline</Button
+									>
+								</p>
+							{:else if commitment.accepted === 'declined'}
+								<p>
+									You declined this role. Would you like to accept it?
+									<Button
+										tip="accept this invitation"
+										action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
+										>Accept</Button
+									>
+								</p>
+							{/if}
+						{:else}
+							<Feedback error>This role is invite only.</Feedback>
+						{/if}
+					{:else if commitment === undefined}
+						<Button
+							tip="Volunteer for this role"
+							action={() =>
+								handle(
+									db.createVolunteer(scholar, role.id, true, true),
+									'Thank you for volunteering! The minter will approve your welcome tokens soon.'
+								)}>Volunteer …</Button
+						>
+					{/if}
+					{#if commitment}
+						{#if commitment.active}
+							<p>
+								Thanks for volunteering for this role! <Button
+									tip="Stop volunteering"
+									action={() => handle(db.updateVolunteerActive(commitment.id, false))}
+									>Stop...</Button
+								>
+							</p>
+							<EditableText
+								text={commitment.expertise}
+								label="what is your expertise? (separated by commas)?"
+								placeholder="topic, area, method, theory, etc."
+								edit={(text) => db.updateVolunteerExpertise(commitment.id, text)}
+							/>
+						{:else}
+							<p>
+								You stopped volunteering for this role. <Button
+									tip="Resume volunteering"
+									action={() => handle(db.updateVolunteerActive(commitment.id, true))}
+									>Resume...</Button
+								>
+							</p>
+						{/if}
+					{/if}
+				{/if}
+
+				{#if editor}
+					<Card
+						icon="⚙️"
+						header="settings"
+						note="Edit this role's settings"
+						subheader
+						group="editors"
 					>
-				</Form>
-			{/if}
-			<Slider
-				min={1}
-				max={venue.welcome_amount}
-				value={role.amount}
-				step={1}
-				label="compensation"
-				change={(value) => handle(db.editRoleAmount(role.id, value))}
-				><Tokens amount={role.amount}></Tokens>/submission</Slider
-			>
-			<Button
-				warn="Delete this role and all volunteers?"
-				tip="Delete this role"
-				action={() => handle(db.deleteRole(role.id))}>Delete {DeleteLabel} …</Button
-			>
-		</Card>
-	{:else}
-		<Feedback>No roles yet. Add one.</Feedback>
-	{/each}
+						<EditableText
+							text={role.name}
+							label="name"
+							placeholder="name"
+							valid={(text) => (isntEmpty(text) ? undefined : 'Must include a name')}
+							edit={(text) => db.editRoleName(role.id, text)}
+						/>
+						<EditableText
+							text={role.description}
+							label="description"
+							placeholder="description"
+							edit={(text) => db.editRoleDescription(role.id, text)}
+						/>
+						<Checkbox on={role.invited} change={(on) => db.editRoleInvited(role.id, on)}
+							>Invited <Note
+								>{#if role.invited}Scholars can volunteer for this without permission{:else}Scholars
+									must be invited to this role.{/if}</Note
+							>
+						</Checkbox>
+						{#if role.invited}
+							<Form inline>
+								<p>Add one or more people to invite to this role, separated by commands.</p>
+								<TextField
+									label="email"
+									placeholder=""
+									name="email"
+									size={20}
+									valid={(text) => (validEmail(text) ? undefined : 'Must be a valid email')}
+									bind:text={invites[role.id]}
+								/>
+								<Button
+									tip="Invite people to this role"
+									action={async () => {
+										if (
+											await handle(
+												db.inviteToRole(
+													role.id,
+													invites[role.id].split(',').map((s) => s.trim())
+												)
+											)
+										)
+											invites[role.id] = '';
+									}}>Invite</Button
+								>
+							</Form>
+						{/if}
+						<Checkbox on={role.biddable} change={(on) => db.editRoleBidding(role.id, on)}
+							>Allow bidding
+						</Checkbox>
+						<Note
+							>{#if role.biddable}Authenticated volunteers can bid to take this role on submissions.{:else}This
+								role can only be set for a submission by editors.{/if}</Note
+						>
+						<Slider
+							min={1}
+							max={venue.welcome_amount}
+							value={role.amount}
+							step={1}
+							label="compensation"
+							change={(value) => handle(db.editRoleAmount(role.id, value))}
+							><Tokens amount={role.amount}></Tokens>/submission</Slider
+						>
+						<Button
+							warn="Delete this role and all volunteers?"
+							tip="Delete this role"
+							action={() => handle(db.deleteRole(role.id))}>Delete {DeleteLabel} …</Button
+						>
+					</Card>
+				{/if}
+			</Card>
+		{:else}
+			<Feedback>No roles yet. Add one.</Feedback>
+		{/each}
+	</Cards>
 {:else}
 	<Feedback error>Couldn't load venue's roles.</Feedback>
+{/if}
+{#if editor}
+	<Card icon="+" header="add role" note="Create a new role" subheader group="editors">
+		<form>
+			<TextField
+				bind:text={newRole}
+				size={19}
+				placeholder="name"
+				valid={(text) => (isntEmpty(text) ? undefined : 'Must include a name')}
+			/><Button
+				tip="Create a new role"
+				active={isntEmpty(newRole)}
+				action={async () => {
+					if (await handle(db.createRole(venue.id, newRole))) newRole = '';
+				}}>Create role</Button
+			>
+		</form>
+	</Card>
 {/if}

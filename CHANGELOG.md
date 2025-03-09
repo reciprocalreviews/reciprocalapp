@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 - Show expertise in list of bids on paper.
 - Sortable venue roles, to determine presentation order.
+- Fixed #24, redesigning venue page to integrate roles.
 
 ### Fixed
 
