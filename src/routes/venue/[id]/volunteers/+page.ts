@@ -8,14 +8,21 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get the matching venue.
 	const { data: venue } = await supabase.from('venues').select().eq('id', venueid).single();
 	// The commitments to the venue's roles.
-	const { data: commitments, error } = await supabase
+	const { data: commitments, error: commitmentsError } = await supabase
 		.from('volunteers')
 		.select('*, scholars (name), roles (name, venueid)')
 		.eq('roles.venueid', venueid);
-	if (error) console.error('Failed to load commitments:', error);
+	if (commitmentsError) console.error('Failed to load commitments:', commitmentsError);
+
+	const { data: roles, error: rolesError } = await supabase
+		.from('roles')
+		.select()
+		.eq('venueid', venueid);
+	if (rolesError) console.error('Failed to load roles:', rolesError);
 
 	return {
 		venue,
-		commitments
+		commitments,
+		roles
 	};
 };

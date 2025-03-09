@@ -10,7 +10,7 @@
 	import Status from '$lib/components/Status.svelte';
 
 	let { data } = $props();
-	const { venue, commitments } = $derived(data);
+	const { venue, commitments, roles } = $derived(data);
 </script>
 
 {#if venue === null}
@@ -30,30 +30,36 @@
 				name={venue.title}
 			/>.
 		</p>
-		<Table full>
-			{#snippet header()}
-				<th>Role</th>
-				<th>Active</th>
-				<th>Name</th>
-				<th>Expertise</th>
-			{/snippet}
-			{#each commitments.toSorted((a, b) => a.roles?.name.localeCompare(b.roles?.name ?? '') ?? 0) as volunteer}
-				{@const expertise = volunteer.expertise.split(',').filter((s) => s.trim() !== '')}
-				<tr>
-					<td><Tag>{volunteer.roles?.name}</Tag></td>
-					<td
-						><Status good={volunteer.active}
-							>{#if volunteer.active}active{:else}inactive{/if}</Status
-						></td
-					>
-					<td><ScholarLink id={volunteer.scholarid} /></td>
-					<td
-						><Tags
-							>{#each expertise as topic}<Tag>{topic}</Tag>{:else}<em>—</em>{/each}</Tags
-						></td
-					>
-				</tr>
-			{/each}
-		</Table>
+		{@const rolesIDs = [...new Set(commitments.map((c) => c.roleid))].toSorted(
+			(a, b) =>
+				(roles?.find((r) => r.id === a)?.order ?? 0) - (roles?.find((r) => r.id === b)?.order ?? 0)
+		)}
+		{#each rolesIDs as role}
+			{@const roleCommitments = commitments.filter((c) => c.roleid === role)}
+			<h2>{roleCommitments[0].roles.name}</h2>
+			<Table full>
+				{#snippet header()}
+					<th>Active</th>
+					<th>Name</th>
+					<th>Expertise</th>
+				{/snippet}
+				{#each roleCommitments.toSorted((a, b) => a.roles?.name.localeCompare(b.roles?.name ?? '') ?? 0) as volunteer}
+					{@const expertise = volunteer.expertise.split(',').filter((s) => s.trim() !== '')}
+					<tr>
+						<td
+							><Status good={volunteer.active}
+								>{#if volunteer.active}active{:else}inactive{/if}</Status
+							></td
+						>
+						<td><ScholarLink id={volunteer.scholarid} /></td>
+						<td
+							><Tags
+								>{#each expertise as topic}<Tag>{topic}</Tag>{:else}<em>—</em>{/each}</Tags
+							></td
+						>
+					</tr>
+				{/each}
+			</Table>
+		{/each}
 	</Page>
 {/if}
