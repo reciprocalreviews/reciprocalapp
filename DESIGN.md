@@ -341,7 +341,7 @@ create table transactions (
 
 A `Submission` represents a manuscript undergoing peer review.
 
-- [ ] Depending on the venue, `Scholar`s may be able to bid on submissions, simplifying an editor's ability to find qualified reviewers.
+- [x] Depending on the venue, `Scholar`s may be able to bid on submissions, simplifying an editor's ability to find qualified reviewers.
 - [x] `Submission`s can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
 - [x] `Submission`s can be added manually by \_`editor`\_s.
 - [ ] ([#41](https://github.com/reciprocalreviews/reciprocalapp/issues/41)): Submissions can be proposed through email integrations with review systems, which provide submission metadata, but must then be approved by editors
