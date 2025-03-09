@@ -19,6 +19,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Full width tables.
 - Improved layout and bidding options in submission row.
 - Show label on editable text when not editing.
+- Make volunteers visible to non-authenticated scholars.
 
 ### Maintenance
 
