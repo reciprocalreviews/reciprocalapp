@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Fixed
 
 - Distinguished between a assignment bid and an approved assignment, to remember buds if someone is unassigned.
+- Improved design of feedback in flex layouts.
 
 ### Maintenance
 
