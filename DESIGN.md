@@ -82,6 +82,20 @@ _As Amy, EiC of ACM TOCE, I want to incentivize reviewers to volunteer by requir
 - After a decision on the submission is made, an email is sent, which triggers proposed transactions, and emails notifying reviewers of their compensation.
 - On a periodic basis, both Amy and Becky review the TOCE wallet balance and the transactions made on the currency. Becky mints additional tokens for the venue when the balance is low, if no anomalous transactions are detected, and Amy updates the compensation policies as needed to encourage continued reviewing and submissions by new community members.
 
+## An experienced reviewer from another community wishes to submit to a journal that uses tokens 
+
+_Amy is the EiC of ACM TOCE, which uses tokens to incentivize reviewing, and Alex is the EiC of FictionalEducation, which also uses tokens. Becky is the auditor for the token system ACM TOCE uses, and Basil is the auditor for the token system FictionalEducation uses. Charlie is an experienced reviewer for FictionalEducation.
+
+- Charlie reviews the ACME TOCE website and decides they would like to submit work. However, they do not have TOCE-Tokens to cover the cost of the submission.
+- Charlie logs into RR and checks the conversion rate for FictionalEducation-Tokens to TOCE-Tokens. They find there isn't a posted rate.
+- Charlie requests a currency conversion for FictionalEducation-Tokens and TOCE-Tokens. 
+- The request is received by Amy and Alex. Either of them can propose a token exchange rate. Amy gets to it first and proposes an exchange rate of 1:1 from FictionalEducation-Tokens into TOCE-Tokens and 1:1 from TOCE-Tokens to FictionalEducation-Tokens, after reviewing the two journals compensation rates and finding them similar.
+- Alex reviews the proposal and approves the exchange out of FictionalEducation-Tokens but declines the exchange into FictionalEducation-Tokens because they are concerned about an influx of new authors who are not yet reviewing for the journal.
+- Both Becky and Basil are notified of the currency exchange proposals and their outcome. Either could choose to consult with the currency owners (Amy and Alex) or, in an extreme case, to notify an RR steward if they believe something inappropriate has occurred. In this case, neither has concerns.
+- Charlie logs into RR at a later date and finds that there is now a conversion rate. They propose a Currency Conversion of some of their FictionalEducation-Tokens into TOCE-tokens. The system automatically performs the conversion. 
+- Charlie visits the ACM TOCE site, submits their work, and proposes to pay the submission fee from their own wallet.
+- Becky and Basil can both view the conversion in their logs. Either could choose to make conversions on their currency non-automatic, so that they would be required to approve all conversions, instead of just reviewing them after.  
+
 # Legend
 
 We use a few stylistic conventions in this document that have particular meaning:
