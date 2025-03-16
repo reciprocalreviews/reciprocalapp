@@ -19,15 +19,11 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	if (rolesError) console.error(rolesError);
 
-	// Get any commitments the user has made to the venue.
-	const { data: commitments, error: commitmentsError } = user
-		? await supabase
-				.from('volunteers')
-				.select('*, roles (venueid)')
-				.eq('roles.venueid', venueid)
-				.eq('scholarid', user.id)
+	// Get all volunteers for the venue.
+	const { data: volunteers, error: volunteersError } = user
+		? await supabase.from('volunteers').select('*, roles (venueid)').eq('roles.venueid', venueid)
 		: { data: null };
-	if (commitmentsError) console.error(commitmentsError);
+	if (volunteersError) console.error(volunteersError);
 
 	// See how many tokens the venue posseses.
 	const { data: tokens, error: tokensError } = await supabase
@@ -54,7 +50,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		venue,
 		currency,
 		roles,
-		commitments,
+		volunteers,
 		tokens: tokens,
 		transactionCount,
 		submissionCount

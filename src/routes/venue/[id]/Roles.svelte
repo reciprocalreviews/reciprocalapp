@@ -22,14 +22,14 @@
 	let {
 		venue,
 		roles,
-		commitments,
+		volunteers,
 		scholar,
 		editor
 	}: {
 		venue: VenueRow;
 		scholar: ScholarID | undefined;
 		roles: RoleRow[] | null;
-		commitments: VolunteerRow[] | null;
+		volunteers: VolunteerRow[] | null;
 		editor: boolean;
 	} = $props();
 
@@ -55,7 +55,7 @@
 {#if roles}
 	<Cards>
 		<Card
-			icon="👤"
+			icon={venue.editors.length}
 			subheader
 			header="Editor"
 			note="Scholars who manage submissions and compensation fo this venue."
@@ -98,7 +98,14 @@
 			{/if}
 		</Card>
 		{#each roles.toSorted((a, b) => a.priority - b.priority) as role, index (role.id)}
-			<Card full subheader icon="👤" header={role.name} note={role.description}>
+			{@const roleVolunteers = volunteers?.filter((v) => v.roleid === role.id) ?? []}
+			<Card
+				full
+				subheader
+				icon={roleVolunteers.length === 0 ? '👤' : roleVolunteers.length}
+				header={role.name}
+				note={role.description}
+			>
 				{#snippet controls()}
 					{#if editor}
 						<Button
@@ -114,36 +121,37 @@
 					{/if}
 				{/snippet}
 
-				{@const commitment = commitments?.find((c) => c.roleid === role.id)}
+				{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}
 
 				<p>
 					This {#if role.invited}<strong>invite only</strong>{/if} role is compensated <Tokens
 						amount={role.amount}
-					></Tokens> per submission.
+					></Tokens> per submission. <strong>{roleVolunteers.length ?? 0}</strong> scholars have volunteered
+					for this role.
 				</p>
 
 				{#if scholar}
 					{#if role.invited}
-						{#if commitment}
-							{#if commitment.accepted === 'invited'}
+						{#if scholarVolunteer}
+							{#if scholarVolunteer.accepted === 'invited'}
 								<p>
 									The editor has invited you to take this role. <Button
 										tip="accept this invitation"
-										action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
+										action={() => handle(db.acceptRoleInvite(scholarVolunteer.id, 'accepted'))}
 										>Accept</Button
 									>
 									<Button
 										tip="decline this invitation"
-										action={() => handle(db.acceptRoleInvite(commitment.id, 'declined'))}
+										action={() => handle(db.acceptRoleInvite(scholarVolunteer.id, 'declined'))}
 										>Decline</Button
 									>
 								</p>
-							{:else if commitment.accepted === 'declined'}
+							{:else if scholarVolunteer.accepted === 'declined'}
 								<p>
 									You declined this role. Would you like to accept it?
 									<Button
 										tip="accept this invitation"
-										action={() => handle(db.acceptRoleInvite(commitment.id, 'accepted'))}
+										action={() => handle(db.acceptRoleInvite(scholarVolunteer.id, 'accepted'))}
 										>Accept</Button
 									>
 								</p>
@@ -151,7 +159,7 @@
 						{:else}
 							<Feedback error>This role is invite only.</Feedback>
 						{/if}
-					{:else if commitment === undefined}
+					{:else if scholarVolunteer === undefined}
 						<Button
 							tip="Volunteer for this role"
 							action={() =>
@@ -161,26 +169,26 @@
 								)}>Volunteer …</Button
 						>
 					{/if}
-					{#if commitment}
-						{#if commitment.active}
+					{#if scholarVolunteer}
+						{#if scholarVolunteer.active}
 							<p>
 								Thanks for volunteering for this role! <Button
 									tip="Stop volunteering"
-									action={() => handle(db.updateVolunteerActive(commitment.id, false))}
+									action={() => handle(db.updateVolunteerActive(scholarVolunteer.id, false))}
 									>Stop...</Button
 								>
 							</p>
 							<EditableText
-								text={commitment.expertise}
+								text={scholarVolunteer.expertise}
 								label="what is your expertise? (separated by commas)?"
 								placeholder="topic, area, method, theory, etc."
-								edit={(text) => db.updateVolunteerExpertise(commitment.id, text)}
+								edit={(text) => db.updateVolunteerExpertise(scholarVolunteer.id, text)}
 							/>
 						{:else}
 							<p>
 								You stopped volunteering for this role. <Button
 									tip="Resume volunteering"
-									action={() => handle(db.updateVolunteerActive(commitment.id, true))}
+									action={() => handle(db.updateVolunteerActive(scholarVolunteer.id, true))}
 									>Resume...</Button
 								>
 							</p>

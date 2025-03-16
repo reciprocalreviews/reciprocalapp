@@ -18,16 +18,8 @@
 	import { type CurrencyID } from '$data/types';
 
 	let { data }: { data: PageData } = $props();
-	const {
-		venue,
-		currency,
-		scholar,
-		roles,
-		commitments,
-		tokens,
-		transactionCount,
-		submissionCount
-	} = $derived(data);
+	const { venue, currency, scholar, roles, volunteers, tokens, transactionCount, submissionCount } =
+		$derived(data);
 
 	const db = getDB();
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
@@ -107,7 +99,7 @@
 		<h2>Volunteer</h2>
 
 		{#if roles}
-			<Roles {venue} scholar={scholar?.id} {roles} {commitments} editor={editor === true} />
+			<Roles {venue} scholar={scholar?.id} {roles} {volunteers} editor={editor === true} />
 		{:else}
 			<Feedback error>Couldn't load venue's roles.</Feedback>
 		{/if}
