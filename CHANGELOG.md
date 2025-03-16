@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Maintenance
 
 - Updated minor versions of Supabase, SvelteKit, Svelte, Vite.
+- Ensure SvelteKit is synced upon build, to clearing warning in Vercel builds.
 
 ## 0.1.10 2025-03-09
 

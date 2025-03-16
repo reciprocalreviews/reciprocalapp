@@ -2,6 +2,7 @@
 	"name": "reciprocalapp",
 	"version": "0.1.11",
 	"private": true,
+	"prepare": "svelte-kit sync",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
