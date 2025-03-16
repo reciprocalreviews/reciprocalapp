@@ -52,6 +52,28 @@
 {/if}
 <p>See <Link to="/venue/{venue.id}/volunteers">all volunteers</Link> for this venue.</p>
 
+<!-- Find all invitations -->
+{#if volunteers}
+	{@const invites = volunteers.filter((v) => v.accepted === 'invited')}
+
+	{#each invites as invite}
+		<p>
+			The editor has invited you to the <strong
+				>{roles?.find((r) => r.id === invite.roleid)?.name ?? '—'}</strong
+			>
+			role.
+			<Button
+				tip="accept this invitation"
+				action={() => handle(db.acceptRoleInvite(invite.id, 'accepted'))}>Accept</Button
+			>
+			<Button
+				tip="decline this invitation"
+				action={() => handle(db.acceptRoleInvite(invite.id, 'declined'))}>Decline</Button
+			>
+		</p>
+	{/each}
+{/if}
+
 {#if roles}
 	<Cards>
 		<Card
@@ -126,40 +148,13 @@
 				<p>
 					This {#if role.invited}<strong>invite only</strong>{/if} role is compensated <Tokens
 						amount={role.amount}
-					></Tokens> per submission. <strong>{roleVolunteers.length ?? 0}</strong> scholars have volunteered
-					for this role.
+					></Tokens> per submission. <Link to="/venue/{venue.id}/volunteers"
+						>{roleVolunteers.length ?? 0} scholars</Link
+					> have volunteered for this role.
 				</p>
 
 				{#if scholar}
-					{#if role.invited}
-						{#if scholarVolunteer}
-							{#if scholarVolunteer.accepted === 'invited'}
-								<p>
-									The editor has invited you to take this role. <Button
-										tip="accept this invitation"
-										action={() => handle(db.acceptRoleInvite(scholarVolunteer.id, 'accepted'))}
-										>Accept</Button
-									>
-									<Button
-										tip="decline this invitation"
-										action={() => handle(db.acceptRoleInvite(scholarVolunteer.id, 'declined'))}
-										>Decline</Button
-									>
-								</p>
-							{:else if scholarVolunteer.accepted === 'declined'}
-								<p>
-									You declined this role. Would you like to accept it?
-									<Button
-										tip="accept this invitation"
-										action={() => handle(db.acceptRoleInvite(scholarVolunteer.id, 'accepted'))}
-										>Accept</Button
-									>
-								</p>
-							{/if}
-						{:else}
-							<Feedback error>This role is invite only.</Feedback>
-						{/if}
-					{:else if scholarVolunteer === undefined}
+					{#if !role.invited && scholarVolunteer === undefined}
 						<Button
 							tip="Volunteer for this role"
 							action={() =>
@@ -169,8 +164,17 @@
 								)}>Volunteer …</Button
 						>
 					{/if}
-					{#if scholarVolunteer}
-						{#if scholarVolunteer.active}
+					{#if scholarVolunteer !== undefined}
+						{#if scholarVolunteer.accepted === 'declined'}
+							<p>
+								You declined this role. Would you like to accept it?
+								<Button
+									tip="accept this invitation"
+									action={() => handle(db.acceptRoleInvite(scholarVolunteer.id, 'accepted'))}
+									>Accept</Button
+								>
+							</p>
+						{:else if scholarVolunteer.active}
 							<p>
 								Thanks for volunteering for this role! <Button
 									tip="Stop volunteering"

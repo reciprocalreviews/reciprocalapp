@@ -680,7 +680,7 @@ export default class SupabaseCRUD extends CRUD {
 			.from('scholars')
 			.select()
 			.in('email', emails);
-		if (scholars === null) return this.error('InviteToRole', scholarsError);
+		if (scholarsError) return this.error('InviteToRole', scholarsError);
 
 		const missing = emails.filter((email) => !scholars.some((scholar) => scholar.email === email));
 		if (missing.length > 0) return this.error('InviteToRoleMissing', null, missing.join(', '));
