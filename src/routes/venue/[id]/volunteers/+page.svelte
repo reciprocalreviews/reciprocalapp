@@ -67,6 +67,8 @@
 					</tr>
 				{/each}
 			</Table>
+		{:else}
+			<Feedback>No volunteers yet.</Feedback>
 		{/each}
 	</Page>
 {/if}
