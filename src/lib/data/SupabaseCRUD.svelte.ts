@@ -675,7 +675,7 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('UpdateVolunteerExpertise', error);
 	}
 
-	async inviteToRole(role: RoleID, emails: string[]) {
+	async inviteToRole(role: RoleID, emails: string[]): Promise<Result> {
 		const { data: scholars, error: scholarsError } = await this.client
 			.from('scholars')
 			.select()
@@ -687,10 +687,10 @@ export default class SupabaseCRUD extends CRUD {
 
 		for (const scholar of scholars) {
 			const { error } = await this.createVolunteer(scholar.id, role, false, false);
-			if (error) return error;
+			if (error) return { error };
 		}
 
-		return {};
+		return { error: { message: this.locale.error.InviteToRoleSuccess, details: undefined } };
 	}
 
 	async acceptRoleInvite(id: VolunteerID, response: Response) {

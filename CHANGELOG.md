@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 - Added `approve` field to role, defining what other roles can approve bids for assignments to the role.
 - Feedback on empty volunteer list.
+- Better feedback on role invite success.
 
 ### Fixed
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import Note from './Note.svelte';
+	import Feedback from './Feedback.svelte';
 
 	type Props = {
 		text: string;
@@ -110,8 +110,8 @@
 		>
 	</label>
 	{#if note || (error !== undefined && wasFocused)}
-		<Note error={error !== undefined && wasFocused}
-			>{#if error && wasFocused}{error}{:else}{note}{/if}</Note
+		<Feedback error={error !== undefined && wasFocused}
+			>{#if error && wasFocused}{error}{:else}{note}{/if}</Feedback
 		>
 	{/if}
 </div>
