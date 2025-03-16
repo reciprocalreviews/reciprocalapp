@@ -48,6 +48,7 @@ export const enUS = {
 		UpdateVolunteerActive: 'Unable to update volunteer commitment',
 		UpdateVolunteerExpertise: 'Unable to update your expertise',
 		InviteToRole: 'Unable to invite to role',
+		InviteToRoleMissing: 'Unknown scholars',
 		AcceptRoleInvite: 'Unable to accept role invite',
 		EditCurrencyMinters: 'Unable to edit minters',
 		AddCurrencyMinter: 'Unable to add minter',

@@ -10,7 +10,7 @@
 	import Slider from '$lib/components/Slider.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import { validEmail, isntEmpty } from '$lib/validation';
+	import { validEmail, isntEmpty, validEmails } from '$lib/validation';
 	import { handle } from '../../feedback.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -36,7 +36,7 @@
 	const db = getDB();
 
 	let newRole: string = $state('');
-	let invites = $derived<Record<RoleID, string>>(
+	let invites = $state<Record<RoleID, string>>(
 		Object.fromEntries((roles ?? []).map((role) => [role.id, '']))
 	);
 
@@ -191,6 +191,36 @@
 				{/if}
 
 				{#if editor}
+					<Form inline>
+						<p>Add one or more people to invite to this role, separated by commas.</p>
+						<TextField
+							label="email"
+							placeholder=""
+							name="email"
+							size={20}
+							valid={(text) =>
+								validEmails(text) ? undefined : 'Must a comma separated list of emails'}
+							bind:text={invites[role.id]}
+						/>
+						<Button
+							tip="Invite people to this role"
+							active={validEmails(invites[role.id])}
+							action={async () => {
+								if (
+									await handle(
+										db.inviteToRole(
+											role.id,
+											invites[role.id].split(',').map((s) => s.trim())
+										)
+									)
+								)
+									invites[role.id] = '';
+							}}>Invite</Button
+						>
+					</Form>
+				{/if}
+
+				{#if editor}
 					<Card
 						icon="⚙️"
 						header="settings"
@@ -226,33 +256,6 @@
 									volunteer for this without permission{/if}</Note
 							>
 						</Checkbox>
-						{#if role.invited}
-							<Form inline>
-								<p>Add one or more people to invite to this role, separated by commands.</p>
-								<TextField
-									label="email"
-									placeholder=""
-									name="email"
-									size={20}
-									valid={(text) => (validEmail(text) ? undefined : 'Must be a valid email')}
-									bind:text={invites[role.id]}
-								/>
-								<Button
-									tip="Invite people to this role"
-									action={async () => {
-										if (
-											await handle(
-												db.inviteToRole(
-													role.id,
-													invites[role.id].split(',').map((s) => s.trim())
-												)
-											)
-										)
-											invites[role.id] = '';
-									}}>Invite</Button
-								>
-							</Form>
-						{/if}
 						<Checkbox on={role.biddable} change={(on) => db.editRoleBidding(role.id, on)}
 							>Allow bidding
 						</Checkbox>

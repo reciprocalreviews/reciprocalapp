@@ -39,10 +39,10 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	/** A helper function for creating a result with an error ID. */
-	error(id: keyof Locale['error'], details?: PostgrestError | null) {
-		const message = this.locale.error[id];
-		console.error(message, details);
-		return { error: { message, details: details ?? undefined } };
+	error(id: keyof Locale['error'], error?: PostgrestError | null, details?: string) {
+		const message = this.locale.error[id] + (details ? `: ${details}` : '');
+		console.error(message, error);
+		return { error: { message, details: error ?? undefined } };
 	}
 
 	/** A helper function for returning data or an error, depending on what was returned. */
@@ -681,6 +681,9 @@ export default class SupabaseCRUD extends CRUD {
 			.select()
 			.in('email', emails);
 		if (scholars === null) return this.error('InviteToRole', scholarsError);
+
+		const missing = emails.filter((email) => !scholars.some((scholar) => scholar.email === email));
+		if (missing.length > 0) return this.error('InviteToRoleMissing', null, missing.join(', '));
 
 		for (const scholar of scholars) {
 			const { error } = await this.createVolunteer(scholar.id, role, false, false);
