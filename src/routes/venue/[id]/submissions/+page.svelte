@@ -125,7 +125,7 @@
 
 											<!-- Active assignment? -->
 											{#if role.biddable}
-												{#if bid === undefined || !bid.approved}
+												{#if bid === undefined}
 													<!-- No assignments? Allow bidding -->
 													<Button
 														tip="Express interest in serving as {role?.description ??

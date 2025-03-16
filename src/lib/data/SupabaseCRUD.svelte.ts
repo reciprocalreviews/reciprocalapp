@@ -558,6 +558,11 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditRoleBidding', error);
 	}
 
+	async editRoleApprover(id: RoleID, approver: RoleID) {
+		const { error } = await this.client.from('roles').update({ approver }).eq('id', id);
+		return this.errorOrEmpty('EditRoleApprover', error);
+	}
+
 	async editRoleAmount(id: RoleID, amount: number) {
 		const { error } = await this.client.from('roles').update({ amount }).eq('id', id);
 		return this.errorOrEmpty('UpdateRoleAmount', error);
@@ -651,7 +656,7 @@ export default class SupabaseCRUD extends CRUD {
 				// Create a list of null UUIDs to represent that they don't exist yet.
 				new Array(welcome).fill(NullUUID),
 				venue.currency,
-				'Welcome tokens for volunteering for the venue. Aproved by minter.',
+				'Welcome tokens for volunteering for the venue. Approved by minter.',
 				'proposed'
 			);
 			if (error) return this.error('CreateTransaction', error.details);

@@ -56,25 +56,12 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	const volunteerRoleIDs = volunteerRoles === null ? [] : volunteerRoles.map((r) => r.roleid);
 
-	// The the venues for which this user is editor
-	const { data: venues, error: venuesError } =
-		user === null
-			? { data: null, error: null }
-			: await supabase.from('venues').select('id').contains('editors', [user.id]);
-	if (venuesError) console.log(venuesError);
-
-	const editorVenueIDs = venues === null ? [] : venues.map((v) => v.id);
-
 	// Get the assignments associated with the submission and either the role of the
 	// authenticated user or in a venue for which this is the editor.
 	const { data: assignments, error: assignmentsError } =
 		submission === null
 			? { data: null, error: null }
-			: await supabase
-					.from('assignments')
-					.select('*')
-					.eq('submission', submission.id)
-					.or(`role.in.(${volunteerRoleIDs.join(',')}),venue.in.(${editorVenueIDs.join(',')})`);
+			: await supabase.from('assignments').select('*').eq('submission', submission.id);
 	if (assignmentsError) console.error(assignmentsError);
 
 	// Get the volunteer records of those assigned so we can render their expertise.
@@ -98,6 +85,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		transactions,
 		assignments,
 		volunteers,
-		roles
+		roles,
+		scholarRoles: volunteerRoleIDs
 	};
 };

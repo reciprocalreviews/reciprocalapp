@@ -211,10 +211,19 @@
 							placeholder="description"
 							edit={(text) => db.editRoleDescription(role.id, text)}
 						/>
+						<Slider
+							min={1}
+							max={venue.welcome_amount}
+							value={role.amount}
+							step={1}
+							label="compensation"
+							change={(value) => handle(db.editRoleAmount(role.id, value))}
+							><Tokens amount={role.amount}></Tokens>/submission</Slider
+						>
 						<Checkbox on={role.invited} change={(on) => db.editRoleInvited(role.id, on)}
 							>Invited <Note
-								>{#if role.invited}Scholars can volunteer for this without permission{:else}Scholars
-									must be invited to this role.{/if}</Note
+								>{#if role.invited}Scholars must be invited to this role.{:else}Scholars can
+									volunteer for this without permission{/if}</Note
 							>
 						</Checkbox>
 						{#if role.invited}
@@ -247,19 +256,28 @@
 						<Checkbox on={role.biddable} change={(on) => db.editRoleBidding(role.id, on)}
 							>Allow bidding
 						</Checkbox>
+
+						<label>
+							What role can approve bids for this role, other than the editor?
+							<select
+								value={role.approver}
+								onchange={(e) =>
+									e.target instanceof HTMLSelectElement
+										? db.editRoleApprover(role.id, e.target.value === '' ? null : e.target.value)
+										: null}
+							>
+								<option value={null}>—</option>
+								{#each roles.filter((r) => r.id !== role.id) as otherRole}<option
+										value={otherRole.id}>{otherRole.name}</option
+									>{/each}</select
+							>
+						</label>
+
 						<Note
 							>{#if role.biddable}Authenticated volunteers can bid to take this role on submissions.{:else}This
 								role can only be set for a submission by editors.{/if}</Note
 						>
-						<Slider
-							min={1}
-							max={venue.welcome_amount}
-							value={role.amount}
-							step={1}
-							label="compensation"
-							change={(value) => handle(db.editRoleAmount(role.id, value))}
-							><Tokens amount={role.amount}></Tokens>/submission</Slider
-						>
+
 						<Button
 							warn="Delete this role and all volunteers?"
 							tip="Delete this role"

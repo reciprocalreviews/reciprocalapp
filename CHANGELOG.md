@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.11 2025-03-09
 
+### Added
+
+- Added `approve` field to role, defining what other roles can approve bids for assignments to the role.
+
 ### Maintenance
 
 - Updated minor versions of Supabase, SvelteKit, Svelte, Vite.

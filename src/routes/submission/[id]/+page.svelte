@@ -18,8 +18,17 @@
 	import { handle } from '../../feedback.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { submission, venue, authors, previous, transactions, assignments, volunteers, roles } =
-		$derived(data);
+	const {
+		submission,
+		venue,
+		authors,
+		previous,
+		transactions,
+		assignments,
+		volunteers,
+		roles,
+		scholarRoles
+	} = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -37,24 +46,39 @@
 		submission !== null && user !== null && submission.authors.includes(user)
 	);
 
-	// Can see assignments if the user is the editor, or has a role for the submission.
-	let canSeeAssignments = $derived(
-		isEditor || (isAuthor && assignments !== null && assignments.length > 0)
-	);
+	let isAssigned = $derived(volunteers?.find((v) => v.scholarid === user) !== undefined);
+
+	// Can see assignments if the user is the editor or has a role or has a role for the submission.
+	let canSeeAssignments = $derived(isEditor || isAssigned);
 </script>
 
 {#if submission === null}
-	<Page title="Submission" breadcrumbs={[]}>
+	<Page
+		title="Submission"
+		breadcrumbs={[
+			[`/venue/${venue?.id}`, venue?.title ?? ''],
+			[`/venue/${venue?.id}/submissions`, 'Submissions']
+		]}
+	>
 		<Feedback error>This submission does not exist.</Feedback>
 	</Page>
-{:else if !isEditor && !isAuthor}
-	<Page title="Submission" breadcrumbs={[]}>
+{:else if !isEditor && !isAuthor && !isAssigned}
+	<Page
+		title="Submission"
+		breadcrumbs={[
+			[`/venue/${venue?.id}`, venue?.title ?? ''],
+			[`/venue/${venue?.id}/submissions`, 'Submissions']
+		]}
+	>
 		<Feedback error>You are not authorized to view this submission.</Feedback>
 	</Page>
 {:else}
 	<Page
 		title={submission.title}
-		breadcrumbs={[[`/venue/${submission.venue}/submissions`, 'Submissions']]}
+		breadcrumbs={[
+			[`/venue/${submission.venue}`, venue?.title ?? ''],
+			[`/venue/${submission.venue}/submissions`, 'Submissions']
+		]}
 		edit={isAuthor || isEditor
 			? {
 					placeholder: 'Title',
@@ -152,20 +176,19 @@
 					{@const assigned = assignments.filter((a) => role.id === a.role && a.approved)}
 					{@const bidded = assignments.filter((a) => role.id === a.role && a.bid && !a.approved)}
 					<h3>{role.name}</h3>
-					{#if isEditor}
-						{#each assigned as assignment}
-							<Row>
-								<ScholarLink id={assignment.scholar} /><Tag>Assigned</Tag>
-								<Button
-									tip="Remove this assignment"
-									action={() => handle(db.approveAssignment(assignment.id, false))}>Unassign</Button
-								>
-							</Row>
-						{:else}
-							<Feedback>No one is assigned.</Feedback>
-						{/each}
-					{/if}
-					{#if bidded.length > 0}
+					{#each assigned as assignment}
+						<Row>
+							<ScholarLink id={assignment.scholar} /><Tag>Assigned</Tag>
+							<Button
+								tip="Remove this assignment"
+								action={() => handle(db.approveAssignment(assignment.id, false))}>Unassign</Button
+							>
+						</Row>
+					{:else}
+						<Feedback>No one is assigned.</Feedback>
+					{/each}
+					<!-- Is the current scholar an approver of this role? The bids so they can be approved. -->
+					{#if bidded.length > 0 && (isEditor || (role.approver !== null && scholarRoles.includes(role.approver)))}
 						<Table full>
 							{#snippet header()}
 								<th>scholar</th><th>expertise</th>
@@ -180,25 +203,23 @@
 											>{/if}</td
 									>
 									<td>
-										{#if isEditor}
-											<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
-											<Row>
-												<ScholarLink id={assignment.scholar} />
-												{#if assignment.bid}
-													<Button
-														tip="Accept this bid, assigning this scholar to this role for this submission."
-														action={() => handle(db.approveAssignment(assignment.id, true))}
-														>Assign</Button
-													>
-												{/if}
-											</Row>
-										{/if}
+										<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
+										<Row>
+											<ScholarLink id={assignment.scholar} />
+											{#if assignment.bid}
+												<Button
+													tip="Accept this bid, assigning this scholar to this role for this submission."
+													action={() => handle(db.approveAssignment(assignment.id, true))}
+													>Assign</Button
+												>
+											{/if}
+										</Row>
 									</td>
 								</tr>
 							{/each}
 						</Table>
 					{:else}
-						<Feedback error>No bids.</Feedback>
+						<Feedback error>No visible bids.</Feedback>
 					{/if}
 				{:else}{/each}
 			{/if}

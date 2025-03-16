@@ -200,6 +200,7 @@ export type Database = {
       roles: {
         Row: {
           amount: number
+          approver: string | null
           biddable: boolean
           description: string
           id: string
@@ -210,6 +211,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          approver?: string | null
           biddable?: boolean
           description?: string
           id?: string
@@ -220,6 +222,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          approver?: string | null
           biddable?: boolean
           description?: string
           id?: string
@@ -229,6 +232,13 @@ export type Database = {
           venueid?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "roles_approver_fkey"
+            columns: ["approver"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "roles_venueid_fkey"
             columns: ["venueid"]

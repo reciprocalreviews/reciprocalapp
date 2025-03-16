@@ -44,6 +44,10 @@
 		font-size: var(--small-font-size);
 	}
 
+	label:hover {
+		cursor: pointer;
+	}
+
 	input {
 		display: inline;
 		accent-color: var(--salient-color);

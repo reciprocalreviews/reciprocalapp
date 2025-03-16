@@ -22,7 +22,7 @@
 					>Feedback</Link
 				>
 			</div>
-			<div class="link"><Link small to="/scholar/{auth.getUserID()}">Profile</Link></div>
+			<div class="link"><Link small to="/scholar/{auth.getUserID()}">{auth.user?.email}</Link></div>
 			<div class="link">
 				<Button
 					tip="Sign out"

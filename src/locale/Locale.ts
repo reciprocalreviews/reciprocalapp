@@ -35,6 +35,7 @@ export const enUS = {
 		EditVenueEditorAmount: 'Unable to edit the editor compensation',
 		EditVenueSubmissionCost: 'Unable to edit the submission cost',
 		EditRoleBidding: 'Unable to toggle bidding',
+		EditRoleApprover: 'Unable to set approver',
 		CreateRole: 'Unable to create new role.',
 		UpdateRoleName: 'Unable to update role name',
 		UpdateRoleDescription: 'Unable to update role description',

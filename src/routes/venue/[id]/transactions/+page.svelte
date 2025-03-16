@@ -9,7 +9,7 @@
 </script>
 
 {#if venue && transactions && venues}
-	<Page title={venue.title} breadcrumbs={[[`/${venue.id}`, venue.title]]}>
+	<Page title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all <Circle icon={transactions.length}></Circle> transactions for this venue.</p>
 		<Transactions {transactions} {venues} {currencies} />

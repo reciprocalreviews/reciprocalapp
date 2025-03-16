@@ -47,6 +47,8 @@ create table roles (
   invited boolean not null,
   -- Whether the role is biddable. If true, scholars can bid on submissions with the role.
   biddable boolean not null default false,
+  -- The role that can approve assignments to this role
+  approver uuid references roles(id) on delete set null,
   -- The token compensation for a commitment, in the venue's currency
   amount integer not null,
   -- The presentation order of the role, lower is more important
@@ -84,10 +86,6 @@ create policy "only editors can delete roles" on public.roles
 
 create type invited as enum ('invited', 'accepted', 'declined');
 
--- editors can invite and volunteers if not invite only
--- anyone can view volunteers
--- only volunteers can update
--- editors and volunteers can delete
 create table volunteers (
   -- The unique id of the role
   id uuid not null default uuid_generate_v1() primary key,
