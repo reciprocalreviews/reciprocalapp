@@ -15,6 +15,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Fixed
 
 - Improved error handling on role invite form.
+- Fixed emoji rendering on Safari.
 
 ### Maintenance
 

@@ -27,5 +27,6 @@
 		height: 1em;
 		font-size: var(--small-font-size);
 		align-self: start;
+		font-family: 'Noto Emoji', 'Josefin Sans', sans-serif;
 	}
 </style>
