@@ -18,6 +18,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Fixed emoji rendering on Safari.
 - Made role invitations more visible.
 - Better layout of commitments.
+- Improved status tip.
 
 ### Maintenance
 
