@@ -14,7 +14,7 @@
 		display: flex;
 		flex-direction: row;
 		flex-wrap: nowrap;
-		gap: var(--spacing);
+		gap: calc(var(--spacing) / 2);
 		align-items: start;
 		font-size: var(--small-font-size);
 		border-radius: var(--roundedness);
@@ -23,11 +23,6 @@
 	.bulb {
 		font-size: 125%;
 		animation: slideUp 0.5s;
-	}
-
-	.content {
-		border-left: solid var(--thick-border-width) var(--border-color);
-		padding-left: var(--spacing);
 	}
 
 	@keyframes slideUp {
