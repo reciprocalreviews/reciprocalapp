@@ -110,9 +110,21 @@
 			header="commitments"
 			note="Venues volunteered for"
 		>
-			{#if commitments}
-				{#if commitments.length > 0}
-					<ul>
+			<ul>
+				{#if editing}
+					{#if editing.length > 0}
+						{#each editing as editing}
+							<li>
+								<SourceLink id={editing.id} name={editing.title} />
+								<Tag>Editor</Tag>
+							</li>
+						{/each}
+					{/if}
+				{:else}
+					<li><Feedback>Unable to load editing commitments.</Feedback></li>
+				{/if}
+				{#if commitments}
+					{#if commitments.length > 0}
 						{#each commitments as commitment}
 							<li>
 								<SourceLink id={commitment.venueid} name={commitment.venue} />
@@ -127,13 +139,13 @@
 								</li>
 							{/each}
 						{/if}
-					</ul>
+					{:else if editing?.length === 0}
+						<li><Feedback>No volunteer commitments.</Feedback></li>
+					{/if}
 				{:else}
-					<Feedback>No volunteer commitments.</Feedback>
+					<li><Feedback>Unable to load volunteer commitments.</Feedback></li>
 				{/if}
-			{:else}
-				<Feedback>Unable to load volunteer commitments.</Feedback>
-			{/if}
+			</ul>
 		</Card>
 
 		<Card
