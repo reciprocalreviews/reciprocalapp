@@ -675,7 +675,7 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('UpdateVolunteerExpertise', error);
 	}
 
-	async inviteToRole(role: RoleID, emails: string[]): Promise<Result> {
+	async inviteToRole(role: RoleID, emails: string[]): Promise<Result<string[]>> {
 		const { data: scholars, error: scholarsError } = await this.client
 			.from('scholars')
 			.select()
@@ -685,12 +685,13 @@ export default class SupabaseCRUD extends CRUD {
 		const missing = emails.filter((email) => !scholars.some((scholar) => scholar.email === email));
 		if (missing.length > 0) return this.error('InviteToRoleMissing', null, missing.join(', '));
 
+		const ids: string[] = [];
 		for (const scholar of scholars) {
-			const { error } = await this.createVolunteer(scholar.id, role, false, false);
+			const { data, error } = await this.createVolunteer(scholar.id, role, false, false);
 			if (error) return { error };
+			if (data) ids.push(data);
 		}
-
-		return { error: { message: this.locale.error.InviteToRoleSuccess, details: undefined } };
+		return { data: ids };
 	}
 
 	async acceptRoleInvite(id: VolunteerID, response: Response) {

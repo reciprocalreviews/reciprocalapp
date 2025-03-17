@@ -138,7 +138,7 @@ export default abstract class CRUD {
 	): Promise<Result<string>>;
 	abstract updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result>;
 	abstract updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result>;
-	abstract inviteToRole(role: RoleID, emails: string[]): Promise<Result>;
+	abstract inviteToRole(role: RoleID, emails: string[]): Promise<Result<string[]>>;
 	abstract acceptRoleInvite(id: VolunteerID, response: Response): Promise<Result>;
 
 	abstract editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<Result>;

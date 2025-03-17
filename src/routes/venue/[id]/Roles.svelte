@@ -223,7 +223,8 @@
 										db.inviteToRole(
 											role.id,
 											invites[role.id].split(',').map((s) => s.trim())
-										)
+										),
+										'Invitations sent!'
 									)
 								)
 									invites[role.id] = '';
