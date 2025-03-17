@@ -17,6 +17,7 @@
 	import { validEmail } from '$lib/validation';
 	import type { CurrencyID, CurrencyRow, SubmissionRow, TokenRow } from '$data/types';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
+	import Tip from '$lib/components/Tip.svelte';
 
 	let {
 		scholar,
@@ -71,8 +72,8 @@
 			text={scholar.getStatus()}
 			placeholder="Explain your current reviewing status to others."
 			edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
-			note="Your status is public and will be shown here."
 		/>
+		<Tip>Your status is public and will be shown here.</Tip>
 	{:else}
 		<p>{scholar.getStatus()}</p>
 	{/if}

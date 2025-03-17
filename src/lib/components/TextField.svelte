@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import Feedback from './Feedback.svelte';
+	import Tip from './Tip.svelte';
 
 	type Props = {
 		text: string;
@@ -109,12 +110,15 @@
 			>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n')}</span
 		>
 	</label>
-	{#if note || (error !== undefined && wasFocused)}
+	{#if error !== undefined && wasFocused}
 		<Feedback error={error !== undefined && wasFocused}
-			>{#if error && wasFocused}{error}{:else}{note}{/if}</Feedback
+			>{#if error && wasFocused}{error}{/if}</Feedback
 		>
 	{/if}
 </div>
+{#if note}
+	<Tip>{note}</Tip>
+{/if}
 
 <style>
 	.field {
