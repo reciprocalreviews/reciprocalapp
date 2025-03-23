@@ -51,6 +51,10 @@ const supabase: Handle = async ({ event, resolve }) => {
 		return { session, user };
 	};
 
+	// Deactivate imprecise warning: https://github.com/supabase/auth-js/issues/888
+	// TODO The above is dangerous; we should remove this line once the issue is resolved.
+	event.locals.supabase.auth.suppressGetSessionWarning = true;
+
 	return resolve(event, {
 		filterSerializedResponseHeaders(name) {
 			/**

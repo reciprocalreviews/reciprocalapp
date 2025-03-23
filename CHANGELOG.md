@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Fixed
 
 - Better link to issues page.
+- Supress false positive warning.
 
 ### Maintenance
 
