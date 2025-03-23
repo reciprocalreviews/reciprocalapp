@@ -18,9 +18,7 @@
 	<div class="authenticated">
 		{#if auth.isAuthenticated()}
 			<div class="link">
-				<Link small to="https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose"
-					>Feedback</Link
-				>
+				<Link small to="https://github.com/reciprocalreviews/reciprocalapp/issues/">Feedback</Link>
 			</div>
 			<div class="link"><Link small to="/scholar/{auth.getUserID()}">{auth.user?.email}</Link></div>
 			<div class="link">

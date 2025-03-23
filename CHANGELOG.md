@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.12 2025-03-23
 
+### Fixed
+
+- Better link to issues page.
+
 ### Maintenance
 
 - Updated minor versions of Playwright, Supabase SSR, Svelte, SvelteKit, Eslint, Vitest.
