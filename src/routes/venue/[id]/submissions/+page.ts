@@ -45,13 +45,13 @@ export const load: PageLoad = async ({ parent, params }) => {
 			: await supabase.from('assignments').select('*').eq('venue', venueid);
 	if (assignmentsError) console.error(assignmentsError);
 
-	// Transactions in the submissions.
+	// Transactions in the submissions. Only retrieve IDs to preserve confidentiality.
 	const { data: transactions, error: transactionsError } =
 		submissions === null
 			? { data: null, error: null }
 			: await supabase
 					.from('transactions')
-					.select('*')
+					.select('id')
 					.in('id', submissions?.map((submission) => submission.id) ?? []);
 	if (transactionsError) console.error(transactionsError);
 

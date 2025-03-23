@@ -13,6 +13,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Improved layout of submissions table.
 - Deactivate button while completing it's action.
 - Fixed ordering of roles.
+- Keep transactions confidential on submissions page.
 
 ### Maintenance
 
