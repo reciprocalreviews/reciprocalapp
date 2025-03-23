@@ -321,7 +321,12 @@
 				tip="Create a new role"
 				active={isntEmpty(newRole)}
 				action={async () => {
-					if (await handle(db.createRole(venue.id, newRole))) newRole = '';
+					const result = await handle(db.createRole(venue.id, newRole));
+					if (typeof result !== 'boolean') {
+						// Initialize the invite list for this role
+						invites[result.id] = '';
+						newRole = '';
+					}
 				}}>Create role</Button
 			>
 		</form>

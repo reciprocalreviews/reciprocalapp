@@ -532,10 +532,13 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async createRole(id: VenueID, name: string) {
-		const { error } = await this.client
+		const { data, error } = await this.client
 			.from('roles')
-			.insert({ venueid: id, amount: 10, invited: true, name });
-		return this.errorOrEmpty('CreateRole', error);
+			.insert({ venueid: id, amount: 10, invited: true, name })
+			.select()
+			.single();
+		if (error) return this.error('CreateRole', error);
+		else return { data };
 	}
 
 	async editRoleName(id: RoleID, name: string) {

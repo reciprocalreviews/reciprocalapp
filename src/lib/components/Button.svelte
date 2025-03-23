@@ -34,23 +34,16 @@
 	/** True if this is a confirm button and we're getting confirmation. */
 	let confirming = $state(false);
 
-	async function act(event: Event, confirm: boolean) {
+	async function act(event: Event) {
 		if (active) {
-			if (confirm) {
+			if (warn && !confirming) {
+				confirming = true;
+			} else {
 				acting = true;
 				event.stopPropagation();
 				await action(event);
 				acting = false;
 				confirming = false;
-			} else {
-				if (warn) {
-					confirming = true;
-				} else {
-					acting = true;
-					event.stopPropagation();
-					await action(event);
-					acting = false;
-				}
 			}
 		}
 	}
@@ -68,12 +61,12 @@
 		class:background
 		class:warn={warn !== undefined}
 		class:end
-		onclick={async (event) => await act(event, false)}>{@render children()}</button
+		onclick={async (event) => await act(event)}>{@render children()}</button
 	>
 {:else}
 	<div class="row">
 		<button onclick={() => (confirming = false)}>{DeleteLabel}</button>
-		<button class:warn={warn !== undefined} onclick={async (event) => await act(event, true)}
+		<button class:warn={warn !== undefined} onclick={async (event) => await act(event)}
 			>{warn}</button
 		>
 	</div>

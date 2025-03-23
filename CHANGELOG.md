@@ -14,6 +14,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Deactivate button while completing it's action.
 - Fixed ordering of roles.
 - Keep transactions confidential on submissions page.
+- Handle undefined on new role.
 
 ### Maintenance
 

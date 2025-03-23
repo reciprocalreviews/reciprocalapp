@@ -16,18 +16,19 @@ export function addError(error: DBError) {
 	addFeedback(error.message, 'error', error.details);
 }
 
-export async function handle(
-	action: Promise<Result<any>>,
+export async function handle<T>(
+	action: Promise<Result<T>>,
 	success?: string | undefined
-): Promise<boolean> {
-	const { error } = await action;
+): Promise<T | boolean> {
+	const { data, error } = await action;
 	if (error) {
 		addError(error);
 		return false;
 	} else {
 		if (success) addFeedback(success, 'success');
 		invalidateAll();
-		return true;
+		if (data) return data;
+		else return true;
 	}
 }
 
