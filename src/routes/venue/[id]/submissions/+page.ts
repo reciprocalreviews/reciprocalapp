@@ -38,17 +38,11 @@ export const load: PageLoad = async ({ parent, params }) => {
 						.in('roleid', roleids);
 	if (volunteeringError) console.error(volunteeringError);
 
-	// Editor? Get all the assignments. Non-editor? Get the assignments the scholar has for this venue
+	// Get all selectable assignments for the venue, according to the RLS policy.
 	const { data: assignments, error: assignmentsError } =
 		user === null
 			? { data: [], error: null }
-			: editor
-				? await supabase.from('assignments').select('*').eq('venue', venueid)
-				: await supabase
-						.from('assignments')
-						.select('*')
-						.eq('scholar', user.id)
-						.eq('venue', venueid);
+			: await supabase.from('assignments').select('*').eq('venue', venueid);
 	if (assignmentsError) console.error(assignmentsError);
 
 	// Transactions in the submissions.

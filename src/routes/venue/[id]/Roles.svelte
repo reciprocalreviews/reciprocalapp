@@ -5,7 +5,7 @@
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { DeleteLabel } from '$lib/components/Labels';
+	import { CreateLabel, DeleteLabel, EmptyLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
@@ -59,7 +59,7 @@
 	{#each invites as invite}
 		<p>
 			The editor has invited you to the <strong
-				>{roles?.find((r) => r.id === invite.roleid)?.name ?? '—'}</strong
+				>{roles?.find((r) => r.id === invite.roleid)?.name ?? EmptyLabel}</strong
 			>
 			role.
 			<Button
@@ -133,12 +133,12 @@
 						<Button
 							active={index > 0}
 							tip="Move this role up"
-							action={() => handle(db.reorderRole(role, roles, -1))}>↑</Button
+							action={() => handle(db.reorderRole(role, $state.snapshot(roles), -1))}>↑</Button
 						>
 						<Button
 							active={index < roles.length - 1}
 							tip="Move this role down"
-							action={() => handle(db.reorderRole(role, roles, 1))}>↓</Button
+							action={() => handle(db.reorderRole(role, $state.snapshot(roles), 1))}>↓</Button
 						>
 					{/if}
 				{/snippet}
@@ -282,7 +282,7 @@
 										? db.editRoleApprover(role.id, e.target.value === '' ? null : e.target.value)
 										: null}
 							>
-								<option value={null}>—</option>
+								<option value={null}>{EmptyLabel}</option>
 								{#each roles.filter((r) => r.id !== role.id) as otherRole}<option
 										value={otherRole.id}>{otherRole.name}</option
 									>{/each}</select
@@ -310,7 +310,7 @@
 	<Feedback error>Couldn't load venue's roles.</Feedback>
 {/if}
 {#if editor}
-	<Card icon="+" header="add role" note="Create a new role" subheader group="editors">
+	<Card icon={CreateLabel} header="add role" note="Create a new role" subheader group="editors">
 		<form>
 			<TextField
 				bind:text={newRole}

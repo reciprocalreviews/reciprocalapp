@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { DeleteLabel } from './Labels';
-	import monoEmoji from './monoEmoji';
 
 	let {
 		action,
@@ -29,7 +28,32 @@
 		background?: boolean;
 	} = $props();
 
+	/** True if we're evaluating the action. Allows us to deactivate button while waiting for a promise. */
+	let acting = $state(false);
+
+	/** True if this is a confirm button and we're getting confirmation. */
 	let confirming = $state(false);
+
+	async function act(event: Event, confirm: boolean) {
+		if (active) {
+			if (confirm) {
+				acting = true;
+				event.stopPropagation();
+				await action(event);
+				acting = false;
+				confirming = false;
+			} else {
+				if (warn) {
+					confirming = true;
+				} else {
+					acting = true;
+					event.stopPropagation();
+					await action(event);
+					acting = false;
+				}
+			}
+		}
+	}
 </script>
 
 {#if !warn || !confirming}
@@ -40,26 +64,17 @@
 		{type}
 		title={tip}
 		aria-label={tip}
-		disabled={!active}
+		disabled={!active || acting}
 		class:background
 		class:warn={warn !== undefined}
 		class:end
-		onclick={(event) => {
-			if (active)
-				if (warn) confirming = true;
-				else action(event);
-		}}>{@render children()}</button
+		onclick={async (event) => await act(event, false)}>{@render children()}</button
 	>
 {:else}
 	<div class="row">
-		<button onclick={() => (confirming = false)}>{monoEmoji(DeleteLabel)}</button>
-		<button
-			class:warn={warn !== undefined}
-			onclick={async (event) => {
-				await action(event);
-				confirming = false;
-			}}
-			>{#if confirming}{warn}{:else}{@render children()}{/if}</button
+		<button onclick={() => (confirming = false)}>{DeleteLabel}</button>
+		<button class:warn={warn !== undefined} onclick={async (event) => await act(event, true)}
+			>{warn}</button
 		>
 	</div>
 {/if}
@@ -92,7 +107,7 @@
 	}
 
 	button:not([disabled]):hover {
-		transform: scale(1.05);
+		transform: scaleY(1.05);
 	}
 
 	button:focus {

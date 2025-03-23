@@ -8,6 +8,7 @@
 	import Tag from '$lib/components/Tag.svelte';
 	import Tags from '$lib/components/Tags.svelte';
 	import Status from '$lib/components/Status.svelte';
+	import { EmptyLabel } from '$lib/components/Labels.js';
 
 	let { data } = $props();
 	const { venue, commitments, roles } = $derived(data);
@@ -61,7 +62,8 @@
 						<td><ScholarLink id={volunteer.scholarid} /></td>
 						<td
 							><Tags
-								>{#each expertise as topic}<Tag>{topic}</Tag>{:else}<em>—</em>{/each}</Tags
+								>{#each expertise as topic}<Tag>{topic}</Tag>{:else}<em>{EmptyLabel}</em
+									>{/each}</Tags
 							></td
 						>
 					</tr>

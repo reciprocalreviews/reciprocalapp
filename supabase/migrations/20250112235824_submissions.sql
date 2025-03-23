@@ -119,7 +119,7 @@ create policy "editors, assignees, and approvers can see assignments" on public.
     isApprover(role)
   );
 
-create policy "editors, assignees, and approveers can update assignments" on public.assignments
+create policy "editors, assignees, and approvers can update assignments" on public.assignments
   for update to anon, authenticated 
     using (
       isEditor(venue) or 

@@ -9,6 +9,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 - Better link to issues page.
 - Supress false positive warning.
+- Mirrored front and back end submissions visibility.
+- Improved layout of submissions table.
+- Deactivate button while completing it's action.
+- Fixed ordering of roles.
 
 ### Maintenance
 

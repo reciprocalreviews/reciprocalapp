@@ -191,7 +191,7 @@
 					{#if bidded.length > 0 && (isEditor || (role.approver !== null && scholarRoles.includes(role.approver)))}
 						<Table full>
 							{#snippet header()}
-								<th>scholar</th><th>expertise</th>
+								<th>scholar</th><th>expertise</th><th>bids</th>
 							{/snippet}
 							{#each bidded as assignment}
 								{@const volunteer = volunteers?.find((v) => v.scholarid === assignment.scholar)}
@@ -203,7 +203,6 @@
 											>{/if}</td
 									>
 									<td>
-										<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
 										<Row>
 											<ScholarLink id={assignment.scholar} />
 											{#if assignment.bid}
