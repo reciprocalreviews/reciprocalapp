@@ -16,6 +16,7 @@
 	import Status from '$lib/components/Status.svelte';
 	import { CreateLabel, PrivateLabel } from '$lib/components/Labels';
 	import Column from '$lib/components/Row.svelte';
+	import isRoleApprover from '$lib/data/isRoleApprover';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -59,11 +60,7 @@
 							(v) => v.scholarid === uid && v.roleid === role.id && v.accepted === 'accepted'
 						);
 						const isApprover =
-							isEditor ||
-							volunteering.some(
-								(v) =>
-									v.accepted === 'accepted' && v.scholarid === uid && role.approver === v.roleid
-							);
+							uid !== null && (isEditor || isRoleApprover(role, volunteering, uid));
 
 						return {
 							...role,

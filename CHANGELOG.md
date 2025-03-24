@@ -16,6 +16,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Keep transactions confidential on submissions page.
 - Handle undefined on new role.
 - Improved visual design of assignments for submission.
+- Verified read and write permissions on submission page.
 
 ### Maintenance
 

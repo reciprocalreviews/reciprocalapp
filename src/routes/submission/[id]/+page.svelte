@@ -17,6 +17,8 @@
 	import Button from '$lib/components/Button.svelte';
 	import { handle } from '../../feedback.svelte';
 	import { EmptyLabel } from '$lib/components/Labels';
+	import type { RoleID, ScholarID } from '$data/types';
+	import isRoleApprover from '$lib/data/isRoleApprover';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -35,9 +37,7 @@
 		/** All volunteers for this venue */
 		volunteers,
 		/** All assignments related to this submission */
-		assignments,
-		/** The currently authenticated scholar's roles for this venue */
-		scholarRoles
+		assignments
 	} = $derived(data);
 
 	/** Get the database connection */
@@ -71,9 +71,13 @@
 	let isAssigned = $derived(
 		assignments?.find((a) => a.scholar === user && a.approved) !== undefined
 	);
+
+	function getVolunteer(role: RoleID, scholar: ScholarID) {
+		return volunteers?.find((v) => v.roleid === role && v.scholarid === scholar);
+	}
 </script>
 
-{#if submission === null || venue === null || roles === null || user === null || assignments === null || authors === null}
+{#if submission === null || venue === null || roles === null || user === null || assignments === null || authors === null || volunteers === null}
 	<Page
 		title="Submission"
 		breadcrumbs={[
@@ -138,9 +142,9 @@
 			<Row>
 				{#if authorIndex === undefined}
 					<Feedback error>Unable to find authors.</Feedback>
-				{:else}
+				{:else if isEditor || isAuthor}
 					<ScholarLink id={author}></ScholarLink>
-					{#if (isEditor || isAuthor) && payment !== undefined}
+					{#if payment !== undefined}
 						{#if transaction === undefined}
 							<Status good={false}>unknown transaction</Status>
 						{:else}
@@ -154,6 +158,8 @@
 							<Tokens amount={payment} />
 						{/if}
 					{/if}
+				{:else}
+					<em>anonymized</em>
 				{/if}
 			</Row>
 		{:else}
@@ -198,35 +204,39 @@
 			{#each roles.toSorted((a, b) => a.priority - b.priority) as role}
 				{@const assigned = assignments.filter((a) => role.id === a.role && a.approved)}
 				{@const bidded = assignments.filter((a) => role.id === a.role && a.bid && !a.approved)}
+				{@const isApprover = isEditor || isRoleApprover(role, volunteers, user)}
 				{#each assigned as assignment}
-					{@const volunteer = volunteers?.find(
-						(v) => v.roleid === role.id && v.scholarid === assignment.scholar
-					)}
+					{@const volunteer = getVolunteer(role.id, assignment.scholar)}
 					<tr>
 						<td>{role.name}</td>
-						<td><ScholarLink id={assignment.scholar} /><Tag>Assigned</Tag></td>
+						<td><ScholarLink id={assignment.scholar} /> <Tag>Assigned</Tag></td>
 						<td
 							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 						>
 						<td>
 							<Row>
-								<Button
-									tip="Remove this assignment"
-									action={() => handle(db.approveAssignment(assignment.id, false))}>Unassign</Button
-								>
+								{#if isApprover}
+									<Button
+										tip="Remove this assignment"
+										action={() => handle(db.approveAssignment(assignment.id, false))}
+										>Unassign</Button
+									>
+								{:else}
+									{EmptyLabel}
+								{/if}
 							</Row>
 						</td>
 					</tr>
 				{:else}
-					<tr><td>{role.name}</td><td colspan="3">{EmptyLabel}</td></tr>
+					{#if bidded.length === 0}
+						<tr><td>{role.name}</td><td colspan="3">{EmptyLabel}</td></tr>
+					{/if}
 				{/each}
 
 				<!-- Is the current scholar an approver of this role? The bids so they can be approved. -->
-				{#if bidded.length > 0 && (isEditor || (role.approver !== null && scholarRoles.includes(role.approver)))}
+				{#if bidded.length > 0 && isApprover}
 					{#each bidded as assignment}
-						{@const volunteer = volunteers?.find(
-							(v) => v.roleid === role.id && v.scholarid === assignment.scholar
-						)}
+						{@const volunteer = getVolunteer(role.id, assignment.scholar)}
 						<tr>
 							<td>{role.name}</td>
 							<td><ScholarLink id={assignment.scholar} /></td>

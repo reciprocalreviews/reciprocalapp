@@ -2,7 +2,7 @@ import getVenueRoles from '$lib/data/getVenueRoles.js';
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase, user } = await parent();
+	const { supabase } = await parent();
 
 	const submissionid = params.id;
 
@@ -47,15 +47,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 		venue === null ? { data: null, error: null } : await getVenueRoles(supabase, venue.id);
 	if (rolesError) console.error(rolesError);
 
-	// Get the roles of the authenticated user so we can find the submissions for which they have a role.
-	const { data: volunteerRoles, error: volunteerRolesError } =
-		user === null
-			? { data: null, error: null }
-			: await supabase.from('volunteers').select('roleid').eq('scholarid', user.id);
-	if (volunteerRolesError) console.error(volunteerRolesError);
-
-	const volunteerRoleIDs = volunteerRoles === null ? [] : volunteerRoles.map((r) => r.roleid);
-
 	// Get the assignments associated with the submission and either the role of the
 	// authenticated user or in a venue for which this is the editor.
 	const { data: assignments, error: assignmentsError } =
@@ -85,7 +76,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 		transactions,
 		assignments,
 		volunteers,
-		roles,
-		scholarRoles: volunteerRoleIDs
+		roles
 	};
 };
