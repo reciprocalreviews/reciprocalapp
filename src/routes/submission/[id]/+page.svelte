@@ -16,43 +16,64 @@
 	import Table from '$lib/components/Table.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { handle } from '../../feedback.svelte';
+	import { EmptyLabel } from '$lib/components/Labels';
 
 	let { data }: { data: PageData } = $props();
 	const {
+		/** The submission being viewed */
 		submission,
+		/** The venue of the submission being viewed */
 		venue,
+		/** The authors of the submission viewing viewed */
 		authors,
+		/** The previous submission, if there is one */
 		previous,
+		/** Transactions related to the submission, if visible */
 		transactions,
-		assignments,
-		volunteers,
+		/** The roles for this venue */
 		roles,
+		/** All volunteers for this venue */
+		volunteers,
+		/** All assignments related to this submission */
+		assignments,
+		/** The currently authenticated scholar's roles for this venue */
 		scholarRoles
 	} = $derived(data);
 
+	/** Get the database connection */
 	const db = getDB();
+
+	/** Get the currently authenticated scholar */
 	const auth = getAuth();
+
+	/** The user ID of the authenticated scholar */
 	const user = $derived(auth.getUserID());
+
+	/** Whether the current scholar is an editor */
+	let isEditor = $derived(venue !== null && user !== null && venue.editors.includes(user));
+
+	/** The transactions corresponding to each of the authors */
 	const authorTransactions = $derived(
 		submission === null || transactions === null
 			? null
 			: submission.transactions.map((id) => transactions.find((t) => t.id === id))
 	);
+
+	/** Whether this submission is no longer in review */
 	const done = $derived(submission?.status === 'done');
 
-	let isEditor = $derived(venue !== null && user !== null && venue.editors.includes(user));
-
+	/** Whether the current scholar is an author of the submission */
 	let isAuthor = $derived(
 		submission !== null && user !== null && submission.authors.includes(user)
 	);
 
-	let isAssigned = $derived(volunteers?.find((v) => v.scholarid === user) !== undefined);
-
-	// Can see assignments if the user is the editor or has a role or has a role for the submission.
-	let canSeeAssignments = $derived(isEditor || isAssigned);
+	/** Whether the current scholar is assigned to this submission */
+	let isAssigned = $derived(
+		assignments?.find((a) => a.scholar === user && a.approved) !== undefined
+	);
 </script>
 
-{#if submission === null}
+{#if submission === null || venue === null || roles === null || user === null || assignments === null || authors === null}
 	<Page
 		title="Submission"
 		breadcrumbs={[
@@ -60,7 +81,7 @@
 			[`/venue/${venue?.id}/submissions`, 'Submissions']
 		]}
 	>
-		<Feedback error>This submission does not exist.</Feedback>
+		<Feedback error>This submission does not exist or is not visible to you.</Feedback>
 	</Page>
 {:else if !isEditor && !isAuthor && !isAssigned}
 	<Page
@@ -70,7 +91,7 @@
 			[`/venue/${venue?.id}/submissions`, 'Submissions']
 		]}
 	>
-		<Feedback error>You are not authorized to view this submission.</Feedback>
+		<Feedback error>You this submission is confidential.</Feedback>
 	</Page>
 {:else}
 	<Page
@@ -79,7 +100,8 @@
 			[`/venue/${submission.venue}`, venue?.title ?? ''],
 			[`/venue/${submission.venue}/submissions`, 'Submissions']
 		]}
-		edit={isAuthor || isEditor
+		edit={// Only editors can update the submission title.
+		isEditor
 			? {
 					placeholder: 'Title',
 					valid: (text) => (text.trim().length === 0 ? 'Title cannot be empty.' : undefined),
@@ -95,6 +117,7 @@
 			{#if done}<Status good={false}>done</Status>{:else}<Status>reviewing</Status>{/if}
 		{/snippet}
 
+		<!-- Only editors can update the status of a submission -->
 		{#if isEditor}
 			<Checkbox
 				on={!done}
@@ -105,42 +128,40 @@
 
 		<h2>Authors</h2>
 
-		{#if authors}
-			{#each submission.authors as author}
-				{@const authorIndex = authors.findIndex((a) => a.id === author)}
-				{@const payment = authorIndex !== undefined ? submission.payments[authorIndex] : undefined}
-				{@const transaction =
-					authorTransactions === null || authorIndex === undefined
-						? undefined
-						: authorTransactions[authorIndex]}
-				<Row>
-					{#if authorIndex === undefined}
-						<Feedback error>Unable to find authors.</Feedback>
-					{:else}
-						<ScholarLink id={author}></ScholarLink>
-						{#if (isEditor || isAuthor) && payment !== undefined}
-							{#if transaction === undefined}
-								<Status good={false}>unknown transaction</Status>
-							{:else}
-								{#if transaction.status === 'proposed'}
-									proposes to pay
-								{:else if transaction.status === 'approved'}
-									paid
-								{:else if transaction.status === 'canceled'}
-									declined to pay
-								{/if}
-								<Tokens amount={payment} />
+		{#each submission.authors as author}
+			{@const authorIndex = authors.findIndex((a) => a.id === author)}
+			{@const payment = authorIndex !== undefined ? submission.payments[authorIndex] : undefined}
+			{@const transaction =
+				authorTransactions === null || authorIndex === undefined
+					? undefined
+					: authorTransactions[authorIndex]}
+			<Row>
+				{#if authorIndex === undefined}
+					<Feedback error>Unable to find authors.</Feedback>
+				{:else}
+					<ScholarLink id={author}></ScholarLink>
+					{#if (isEditor || isAuthor) && payment !== undefined}
+						{#if transaction === undefined}
+							<Status good={false}>unknown transaction</Status>
+						{:else}
+							{#if transaction.status === 'proposed'}
+								proposes to pay
+							{:else if transaction.status === 'approved'}
+								paid
+							{:else if transaction.status === 'canceled'}
+								declined to pay
 							{/if}
+							<Tokens amount={payment} />
 						{/if}
 					{/if}
-				</Row>
-			{/each}
-		{:else}{/if}
+				{/if}
+			</Row>
+		{:else}
+			<Feedback error>No visible authors found.</Feedback>
+		{/each}
 
 		<h2>Venue</h2>
-		{#if venue}
-			<VenueLink id={venue.id} name={venue.title} />
-		{/if}
+		<VenueLink id={venue.id} name={venue.title} />
 
 		<h2>Expertise</h2>
 		{#if isAuthor}
@@ -150,78 +171,83 @@
 				edit={(text) =>
 					db.updateSubmissionExpertise(submission.id, text.trim().length === 0 ? null : text)}
 			/>
-		{:else if submission.expertise}{submission.expertise}{:else}<Feedback
-				>No expertise provided</Feedback
-			>{/if}
-
-		<h2>
-			Assignments {#if isEditor}
-				<Tag>editor</Tag>{/if}
-		</h2>
-
-		<h3>Editor</h3>
-
-		{#if venue !== null && venue.editors.length > 0}
-			{#each venue.editors as editor}
-				<ScholarLink id={editor}></ScholarLink>
-			{/each}
+		{:else if submission.expertise}
+			{submission.expertise}
 		{:else}
-			<Feedback error>No editor assigned.</Feedback>
+			<Feedback>No expertise provided</Feedback>
 		{/if}
 
-		<!-- If there are assignments to show, show them. -->
-		{#if venue !== null && canSeeAssignments && user !== null && roles}
-			{#if roles && assignments}
-				{#each roles.toSorted((a, b) => a.priority - b.priority) as role}
-					{@const assigned = assignments.filter((a) => role.id === a.role && a.approved)}
-					{@const bidded = assignments.filter((a) => role.id === a.role && a.bid && !a.approved)}
-					<h3>{role.name}</h3>
-					{#each assigned as assignment}
-						<Row>
-							<ScholarLink id={assignment.scholar} /><Tag>Assigned</Tag>
-							<Button
-								tip="Remove this assignment"
-								action={() => handle(db.approveAssignment(assignment.id, false))}>Unassign</Button
+		<h2>Assignments</h2>
+
+		<Table full>
+			{#snippet header()}
+				<th>Role</th><th>Scholar</th><th>Expertise</th><th>Action</th>
+			{/snippet}
+
+			<!-- First, show the editors -->
+			{#each venue.editors as editor}
+				<tr>
+					<td>Editor</td>
+					<td><ScholarLink id={editor}></ScholarLink></td>
+					<td>{EmptyLabel}</td>
+					<td>{EmptyLabel}</td>
+				</tr>
+			{/each}
+
+			<!-- Sort roles by priority -->
+			{#each roles.toSorted((a, b) => a.priority - b.priority) as role}
+				{@const assigned = assignments.filter((a) => role.id === a.role && a.approved)}
+				{@const bidded = assignments.filter((a) => role.id === a.role && a.bid && !a.approved)}
+				{#each assigned as assignment}
+					{@const volunteer = volunteers?.find(
+						(v) => v.roleid === role.id && v.scholarid === assignment.scholar
+					)}
+					<tr>
+						<td>{role.name}</td>
+						<td><ScholarLink id={assignment.scholar} /><Tag>Assigned</Tag></td>
+						<td
+							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
+						>
+						<td>
+							<Row>
+								<Button
+									tip="Remove this assignment"
+									action={() => handle(db.approveAssignment(assignment.id, false))}>Unassign</Button
+								>
+							</Row>
+						</td>
+					</tr>
+				{:else}
+					<tr><td>{role.name}</td><td colspan="3">{EmptyLabel}</td></tr>
+				{/each}
+
+				<!-- Is the current scholar an approver of this role? The bids so they can be approved. -->
+				{#if bidded.length > 0 && (isEditor || (role.approver !== null && scholarRoles.includes(role.approver)))}
+					{#each bidded as assignment}
+						{@const volunteer = volunteers?.find(
+							(v) => v.roleid === role.id && v.scholarid === assignment.scholar
+						)}
+						<tr>
+							<td>{role.name}</td>
+							<td><ScholarLink id={assignment.scholar} /></td>
+							<td
+								>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 							>
-						</Row>
-					{:else}
-						<Feedback>No one is assigned.</Feedback>
+							<td>
+								<Row>
+									{#if assignment.bid}
+										<Button
+											tip="Accept this bid, assigning this scholar to this role for this submission."
+											action={() => handle(db.approveAssignment(assignment.id, true))}
+											>Assign</Button
+										>
+									{/if}
+								</Row>
+							</td>
+						</tr>
 					{/each}
-					<!-- Is the current scholar an approver of this role? The bids so they can be approved. -->
-					{#if bidded.length > 0 && (isEditor || (role.approver !== null && scholarRoles.includes(role.approver)))}
-						<Table full>
-							{#snippet header()}
-								<th>scholar</th><th>expertise</th><th>bids</th>
-							{/snippet}
-							{#each bidded as assignment}
-								{@const volunteer = volunteers?.find((v) => v.scholarid === assignment.scholar)}
-								<tr>
-									<td><ScholarLink id={assignment.scholar} /></td>
-									<td
-										>{#if volunteer}{volunteer.expertise}{:else}<Feedback inline error
-												>Unknown</Feedback
-											>{/if}</td
-									>
-									<td>
-										<Row>
-											<ScholarLink id={assignment.scholar} />
-											{#if assignment.bid}
-												<Button
-													tip="Accept this bid, assigning this scholar to this role for this submission."
-													action={() => handle(db.approveAssignment(assignment.id, true))}
-													>Assign</Button
-												>
-											{/if}
-										</Row>
-									</td>
-								</tr>
-							{/each}
-						</Table>
-					{:else}
-						<Feedback error>No visible bids.</Feedback>
-					{/if}
-				{:else}{/each}
-			{/if}
-		{/if}
+				{/if}
+			{/each}
+		</Table>
 	</Page>
 {/if}

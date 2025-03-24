@@ -173,7 +173,8 @@
 												<!-- If the current scholar is an editor or approver for this role, show the number of bids. -->
 												{#if role.isApprover}
 													<div><strong>{bids.length}</strong> bids</div>
-												{:else if scholarsBid === undefined}
+												{/if}
+												{#if scholarsBid === undefined}
 													<!-- No assignments? Allow bidding -->
 													<Button
 														tip="Express interest in serving as {role?.description ??
