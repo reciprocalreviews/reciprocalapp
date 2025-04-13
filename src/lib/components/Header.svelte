@@ -46,6 +46,13 @@
 		align-items: center;
 		padding-bottom: var(--spacing);
 		border-block-end: var(--border-color) solid var(--border-width);
+		background: var(--background-color);
+		padding-top: var(--spacing);
+
+		/* The header is sticky */
+		position: sticky;
+		top: 0;
+		z-index: 2;
 	}
 
 	.link {

@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Added
 
 - Added bidding scholar balance to submission bidding table.
+- Fixed #51 sticky header.
 
 ### Maintenance
 
