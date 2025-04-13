@@ -3,6 +3,8 @@
 	import Button from './Button.svelte';
 	import { getAuth } from '../../routes/Auth.svelte';
 	import { goto } from '$app/navigation';
+	import { getPendingActions } from '../../routes/feedback.svelte';
+	import Dots from './Dots.svelte';
 
 	const routes = [
 		{ path: '/', label: 'Home' },
@@ -11,12 +13,19 @@
 	];
 
 	let auth = getAuth();
+
+	let pending = $derived(getPendingActions());
 </script>
 
 <header>
 	{#each routes as route}<div class="link"><Link to={route.path}>{route.label}</Link></div>{/each}
 	<div class="authenticated">
 		{#if auth.isAuthenticated()}
+			<!-- Saving feedback -->
+			{#if pending > 0}
+				<Dots></Dots>
+				{#if pending === 1}saving{:else}{pending} saving{/if}
+			{:else}saved{/if}
 			<div class="link">
 				<Link small to="https://github.com/reciprocalreviews/reciprocalapp/issues/">Feedback</Link>
 			</div>

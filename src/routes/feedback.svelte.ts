@@ -8,6 +8,13 @@ export type Feedback = { message: string; level: Level; error?: PostgrestError |
 // A global list of errors to display to the user, global to the application.
 let messages = $state<Feedback[]>([]);
 
+// A global saving feedback counter.
+let pendingActions = $state(0);
+
+export function getPendingActions() {
+	return pendingActions;
+}
+
 export function addFeedback(message: string, level: Level, error?: PostgrestError | undefined) {
 	messages = [...messages, { message, level, error }];
 }
@@ -20,7 +27,9 @@ export async function handle<T>(
 	action: Promise<Result<T>>,
 	success?: string | undefined
 ): Promise<T | boolean> {
+	pendingActions++;
 	const { data, error } = await action;
+	pendingActions--;
 	if (error) {
 		addError(error);
 		return false;
