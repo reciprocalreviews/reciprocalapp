@@ -21,7 +21,7 @@
 		background: var(--salient-color);
 		color: var(--background-color);
 		font-size: var(--small-font-size);
-		padding: var(--spacing);
+		padding: calc(var(--spacing) / 2);
 		border-radius: var(--roundedness);
 	}
 

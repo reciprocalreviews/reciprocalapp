@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { getPendingActions } from '../../routes/feedback.svelte';
 	import Dots from './Dots.svelte';
+	import Feedback from './Feedback.svelte';
 
 	const routes = [
 		{ path: '/', label: 'Home' },
@@ -22,10 +23,12 @@
 	<div class="authenticated">
 		{#if auth.isAuthenticated()}
 			<!-- Saving feedback -->
-			{#if pending > 0}
-				<Dots></Dots>
-				{#if pending === 1}saving{:else}{pending} saving{/if}
-			{:else}saved{/if}
+			<Feedback inline>
+				{#if pending > 0}
+					<Dots></Dots>
+					{#if pending === 1}saving{:else}{pending} saving{/if}
+				{:else}saved{/if}
+			</Feedback>
 			<div class="link">
 				<Link small to="https://github.com/reciprocalreviews/reciprocalapp/issues/">Feedback</Link>
 			</div>
