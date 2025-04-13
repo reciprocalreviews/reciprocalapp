@@ -68,6 +68,20 @@ export const load: PageLoad = async ({ parent, params }) => {
 					);
 	if (volunteersError) console.error(volunteersError);
 
+	// Get the token balances of each volunteer in the venue's currency, so we can sort by them.
+	const { data: balances, error: balancesError } =
+		volunteers === null || venue === null
+			? { data: null, error: null }
+			: await supabase
+					.from('tokens')
+					.select('scholar, id.count()')
+					.eq('currency', venue.currency)
+					.in(
+						'scholar',
+						volunteers.map((v) => v.scholarid)
+					);
+	if (balancesError) console.error(balancesError);
+
 	return {
 		submission,
 		venue,
@@ -76,6 +90,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		transactions,
 		assignments,
 		volunteers,
-		roles
+		roles,
+		balances
 	};
 };

@@ -37,7 +37,9 @@
 		/** All volunteers for this venue */
 		volunteers,
 		/** All assignments related to this submission */
-		assignments
+		assignments,
+		/** All balances of scholars */
+		balances
 	} = $derived(data);
 
 	/** Get the database connection */
@@ -74,6 +76,10 @@
 
 	function getVolunteer(role: RoleID, scholar: ScholarID) {
 		return volunteers?.find((v) => v.roleid === role && v.scholarid === scholar);
+	}
+
+	function getBalance(scholar: ScholarID) {
+		return balances?.find((balance) => balance.scholar === scholar)?.count ?? 0;
 	}
 </script>
 
@@ -187,7 +193,7 @@
 
 		<Table full>
 			{#snippet header()}
-				<th>Role</th><th>Scholar</th><th>Expertise</th><th>Action</th>
+				<th>Role</th><th>Scholar</th><th>Expertise</th><th>Balance</th><th>Action</th>
 			{/snippet}
 
 			<!-- First, show the editors -->
@@ -197,13 +203,17 @@
 					<td><ScholarLink id={editor}></ScholarLink></td>
 					<td>{EmptyLabel}</td>
 					<td>{EmptyLabel}</td>
+					<td>{EmptyLabel}</td>
 				</tr>
 			{/each}
 
 			<!-- Sort roles by priority -->
 			{#each roles.toSorted((a, b) => a.priority - b.priority) as role}
 				{@const assigned = assignments.filter((a) => role.id === a.role && a.approved)}
-				{@const bidded = assignments.filter((a) => role.id === a.role && a.bid && !a.approved)}
+				<!-- The bidding assignments are those that match this role and aren't approved. We sort them by the balances of the corresponding scholar. -->
+				{@const bidded = assignments
+					.filter((a) => role.id === a.role && a.bid && !a.approved)
+					.toSorted((a, b) => getBalance(a.scholar) - getBalance(b.scholar))}
 				{@const isApprover = isEditor || isRoleApprover(role, volunteers, user)}
 				{#each assigned as assignment}
 					{@const volunteer = getVolunteer(role.id, assignment.scholar)}
@@ -213,6 +223,7 @@
 						<td
 							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 						>
+						<td>{getBalance(assignment.scholar)}</td>
 						<td>
 							<Row>
 								{#if isApprover}
@@ -229,7 +240,7 @@
 					</tr>
 				{:else}
 					{#if bidded.length === 0}
-						<tr><td>{role.name}</td><td colspan="3">{EmptyLabel}</td></tr>
+						<tr><td>{role.name}</td><td colspan="4">{EmptyLabel}</td></tr>
 					{/if}
 				{/each}
 
@@ -243,6 +254,7 @@
 							<td
 								>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 							>
+							<td>{getBalance(assignment.scholar)}</td>
 							<td>
 								<Row>
 									{#if assignment.bid}

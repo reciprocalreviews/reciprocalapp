@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.13 2025-04-13
 
+### Added
+
+- Added bidding scholar balance to submission bidding table.
+
 ### Maintenance
 
 - Updated Svelte, SvelteKit, Supabase, Supabase SSR, and other minor versions.
