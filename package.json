@@ -1,6 +1,6 @@
 {
 	"name": "reciprocalapp",
-	"version": "0.1.12",
+	"version": "0.1.13",
 	"private": true,
 	"prepare": "svelte-kit sync",
 	"scripts": {
@@ -24,7 +24,7 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "^1",
-		"@sveltejs/adapter-auto": "^4",
+		"@sveltejs/adapter-auto": "^6",
 		"@sveltejs/kit": "^2.8",
 		"@sveltejs/vite-plugin-svelte": "^5",
 		"@typescript-eslint/eslint-plugin": "^8",
@@ -44,7 +44,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@supabase/ssr": "^0.5",
+		"@supabase/ssr": "^0.6",
 		"@supabase/supabase-js": "^2"
 	}
 }
