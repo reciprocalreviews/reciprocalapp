@@ -79,7 +79,8 @@ export const enUS = {
 		UpdateSubmissionStatus: "Unable to update the submission's status",
 		ApproveAssignment: 'Unable to approve the assignment',
 		CreateAssignment: 'Unable to create this assignment',
-		DeleteAssignment: 'Unable to delete this assignment'
+		DeleteAssignment: 'Unable to delete this assignment',
+		EmailScholar: 'Unable to email this scholar'
 	}
 };
 

@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.14 2025-04-20
 
+### Added
+
+- Created a Supabase Edge Function and client-side API for sending an email via Resend.
+
 ### Maintenance
 
 - Updated Playwright, Svelte, SveltKit, Vite, eslint.

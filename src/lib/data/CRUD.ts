@@ -18,7 +18,7 @@ import type { Charge, TransactionID } from '$lib/types/Transaction';
 import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
 import type { SubmissionID } from '$lib/types/Submission';
-import type { PostgrestError } from '@supabase/supabase-js';
+import type { AuthError, PostgrestError } from '@supabase/supabase-js';
 
 export const DatabaseSymbol = Symbol('database');
 export const NullUUID = '00000000-0000-0000-0000-000000000000';
@@ -31,7 +31,7 @@ export function setDB(db: CRUD) {
 	setContext(DatabaseSymbol, db);
 }
 
-export type DBError = { message: string; details?: PostgrestError };
+export type DBError = { message: string; details?: PostgrestError | AuthError };
 export type Result<Type = undefined> = { data?: Type; error?: DBError };
 
 /** This abstract class defines an interface for database access. It's useful for defining mocks as well as enables us to change databases if necessary. */
@@ -197,4 +197,6 @@ export default abstract class CRUD {
 	): Promise<Result>;
 
 	abstract deleteAssignment(assignment: AssignmentID): Promise<Result>;
+
+	abstract emailScholar(subject: string, message: string): Promise<Result>;
 }

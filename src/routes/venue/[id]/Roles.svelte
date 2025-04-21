@@ -279,7 +279,7 @@
 								value={role.approver}
 								onchange={(e) =>
 									e.target instanceof HTMLSelectElement
-										? db.editRoleApprover(role.id, e.target.value === '' ? null : e.target.value)
+										? db.editRoleApprover(role.id, e.target.value === null ? null : e.target.value)
 										: null}
 							>
 								<option value={null}>{EmptyLabel}</option>

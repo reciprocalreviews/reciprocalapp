@@ -1,5 +1,5 @@
 import type { Charge, TransactionID } from '$lib/types/Transaction';
-import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
+import type { AuthError, PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import type {
 	CurrencyID,
 	ProposalID,
@@ -24,7 +24,7 @@ import type Locale from '../../locale/Locale';
 
 export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
-	private readonly client: SupabaseClient<Database>;
+	readonly client: SupabaseClient<Database>;
 
 	/** A set of reactive scholar record states, indexed by ID */
 	private readonly scholars: Map<ScholarID, Scholar> = new Map();
@@ -39,7 +39,7 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	/** A helper function for creating a result with an error ID. */
-	error(id: keyof Locale['error'], error?: PostgrestError | null, details?: string) {
+	error(id: keyof Locale['error'], error?: AuthError | PostgrestError | null, details?: string) {
 		const message = this.locale.error[id] + (details ? `: ${details}` : '');
 		console.error(message, error);
 		return { error: { message, details: error ?? undefined } };
@@ -561,7 +561,7 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditRoleBidding', error);
 	}
 
-	async editRoleApprover(id: RoleID, approver: RoleID) {
+	async editRoleApprover(id: RoleID, approver: RoleID | null) {
 		const { error } = await this.client.from('roles').update({ approver }).eq('id', id);
 		return this.errorOrEmpty('EditRoleApprover', error);
 	}
@@ -934,5 +934,22 @@ export default class SupabaseCRUD extends CRUD {
 	async deleteAssignment(assignment: AssignmentID): Promise<Result> {
 		const { error } = await this.client.from('assignments').delete().eq('id', assignment);
 		return this.errorOrEmpty('DeleteAssignment', error);
+	}
+
+	async emailScholar(subject: string, message: string): Promise<Result> {
+		const { data: scholar, error: scholarError } = await this.client.auth.getUser();
+		if (scholar === null || scholar.user === null || scholar.user.email === undefined)
+			return this.error('EmailScholar', scholarError);
+
+		const { error } = await this.client.functions.invoke('resend', {
+			body: {
+				to: scholar.user.email,
+				subject,
+				message
+			}
+		});
+		if (error) return this.error('EmailScholar', scholarError);
+
+		return { data: undefined };
 	}
 }

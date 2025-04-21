@@ -1,6 +1,6 @@
 {
 	"name": "reciprocalapp",
-	"version": "0.1.13",
+	"version": "0.1.14",
 	"private": true,
 	"prepare": "svelte-kit sync",
 	"scripts": {
@@ -13,7 +13,8 @@
 		"format": "prettier --plugin-search-dir . --write .",
 		"test:integration": "playwright test",
 		"test:unit": "vitest",
-		"start": "supabase start",
+		"start": "supabase start && npm run functions",
+		"functions": "supabase functions serve --no-verify-jwt --env-file .env.local",
 		"stop": "supabase stop",
 		"reset": "supabase db reset && npm run types",
 		"types": "supabase gen types typescript --local > src/data/database.ts",
