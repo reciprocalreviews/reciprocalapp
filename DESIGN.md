@@ -84,7 +84,7 @@ _As Amy, EiC of ACM TOCE, I want to incentivize reviewers to volunteer by requir
 
 ## An experienced reviewer from another community wishes to submit to a journal that uses tokens 
 
-_Amy is the EiC of ACM TOCE, which uses tokens to incentivize reviewing, and Alex is the EiC of FictionalEducation, which also uses tokens. Becky is the auditor for the token system ACM TOCE uses, and Basil is the auditor for the token system FictionalEducation uses. Charlie is an experienced reviewer for FictionalEducation.
+_Amy is the EiC of ACM TOCE, which uses tokens to incentivize reviewing, and Alex is the EiC of FictionalEducation, which also uses tokens. Both Amy and Alex are also the owners of their currencies. Becky is the auditor for the token system ACM TOCE uses, and Basil is the auditor for the token system FictionalEducation uses. Charlie is an experienced reviewer for FictionalEducation._
 
 - Charlie reviews the ACME TOCE website and decides they would like to submit work. However, they do not have TOCE-Tokens to cover the cost of the submission.
 - Charlie logs into RR and checks the conversion rate for FictionalEducation-Tokens to TOCE-Tokens. They find there isn't a posted rate.
@@ -95,6 +95,17 @@ _Amy is the EiC of ACM TOCE, which uses tokens to incentivize reviewing, and Ale
 - Charlie logs into RR at a later date and finds that there is now a conversion rate. They propose a Currency Conversion of some of their FictionalEducation-Tokens into TOCE-tokens. The system automatically performs the conversion. 
 - Charlie visits the ACM TOCE site, submits their work, and proposes to pay the submission fee from their own wallet.
 - Becky and Basil can both view the conversion in their logs. Either could choose to make conversions on their currency non-automatic, so that they would be required to approve all conversions, instead of just reviewing them after, but they are aware that this would impose a delay.
+
+## An auditor identifies the potential for destabilization of a currency in an exchange rate proposal
+
+_Amy is the EiC of ACM TOCE, which uses tokens to incentivize reviewing. Becky is the auditor for the token system ACM TOCE uses, and Casey is the owner of the currency._
+
+- Casey logs into RR and finds that a reviewer has requested a currency converesion rate between TOCE-Tokens and another currency that is used by multiple journals.
+- Casey reviews a few of the journals and finds that they award a similar number of tokens per review as compared to ACM TOCE, so they propose a 1:1 exchange rate into TOCE-Tokens. This proposal is approved by the other currency owner.
+- Becky is notified of the currency exchange proposal and its outcome. Before the exchange becomes live, Bekcy has a short (48 hours, in this case) period of time to review the proposal. If they choose not to do so, the exchange would go live.
+- In this case, Becky independently reviews the compensation policies of the journals and is surprised to find that, while compensation policies are similar, the journals using the other currency require a much larger number of tokens to submit. Becky is concerned that they are missing something important, so they reach out to Casey and, in the meantime, cancel the proposal.
+- After discussion, Becky and Casey may decide to go forward, in which case Casey would propose the currency exchange again, or Casey may choose to propose a different exchange rate after learning that, for example, the journals in the other currency require twice as many reviewers per submission.
+- Becky has access to currency conversions in a log they can view, so they can also suspend (cancel) the currency exchange if they become concerned about the number or pattern of exchanges.
 
 # Legend
 
