@@ -43,5 +43,6 @@
 
 	a[aria-current] {
 		color: var(--text-color);
+		text-decoration: none;
 	}
 </style>
