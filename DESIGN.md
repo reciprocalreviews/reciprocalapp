@@ -102,10 +102,21 @@ _Amy is the EiC of ACM TOCE, which uses tokens to incentivize reviewing. Becky i
 
 - Casey logs into RR and finds that a reviewer has requested a currency converesion rate between TOCE-Tokens and another currency that is used by multiple journals.
 - Casey reviews a few of the journals and finds that they award a similar number of tokens per review as compared to ACM TOCE, so they propose a 1:1 exchange rate into TOCE-Tokens. This proposal is approved by the other currency owner.
-- Becky is notified of the currency exchange proposal and its outcome. Before the exchange becomes live, Bekcy has a short (48 hours, in this case) period of time to review the proposal. If they choose not to do so, the exchange would go live.
+- Becky is notified of the currency exchange proposal and its outcome. Before the exchange becomes live, Becky has a short (48 hours, in this case) period of time to review the proposal. If they choose not to do so, the exchange would go live.
 - In this case, Becky independently reviews the compensation policies of the journals and is surprised to find that, while compensation policies are similar, the journals using the other currency require a much larger number of tokens to submit. Becky is concerned that they are missing something important, so they reach out to Casey and, in the meantime, cancel the proposal.
 - After discussion, Becky and Casey may decide to go forward, in which case Casey would propose the currency exchange again, or Casey may choose to propose a different exchange rate after learning that, for example, the journals in the other currency require twice as many reviewers per submission.
 - Becky has access to currency conversions in a log they can view, so they can also suspend (cancel) the currency exchange if they become concerned about the number or pattern of exchanges.
+
+## A venue with its own currency decides to adopt a currency used by several other venues
+
+_Amy is the EiC of ACM TOCE, which uses tokens to incentivize reviewing, and is also the owner of its currency. Becky is the auditor for the TOCE currency, and Basil is the auditor for another currency used by several IEEE venues. Casey is an owner of the IEEE venue currency._
+
+- After noting that many of ACM TOCE's reviewers and authors also publish at IEEE venues, Amy decides it may be useful to pursue adoption of the IEEE currency. Doing so would signal to scholars that any work for ACM TOCE counts in the eyes of the IEEE venues and vice versa. 
+- Amy contacts Casey to discuss a potential merger. They agree that the existing exchange rate is working well, so it does not require modification, and they agree in principal to the ACM TOCE currency being merged into the IEEE currency. Once finalized, this means that all ACM TOCE tokens will be converted to IEEE tokens at the current exchange rate.  
+- Amy submits the merge request. (They would have submitted an exchange rate update first, if changes had been needed.) Casey approves it.
+- Both Becky and Basil are notified that a merge proposal has been received. They have a chance to review the proposal and can accept or decline it. There is no automatic acceptance on this transaction, since currencies will be automatically converted once it goes into force, which will notify users and would be difficult to reverse.
+- Both Becky and Basil accept. When the second auditor accepts, all holders of the currency receive a message informing them of the upcoming conversion of their TOCE tokens to IEEE tokens. 
+- A short period of time (one week, in this case) after the merger is announced, ACM TOCE's currency is changed to IEEE tokens. Then, all TOCE tokens are converted to IEEE tokens at the posted exchange rate. Both Amy and Becky lose their roles as currency owner and auditor of the TOCE currency.
 
 # Legend
 
