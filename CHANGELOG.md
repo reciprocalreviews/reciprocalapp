@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](http://semver.org/) format.
 
+## 0.1.15 2025-05-18
+
+### Maintenance
+
+- Updated Svelte, SvelteKit, Eslint, Prettier, Supabase, Vite, Vitest.
+
 ## 0.1.14 2025-04-20
 
 ### Added
