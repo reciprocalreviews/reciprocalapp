@@ -198,5 +198,12 @@ export default abstract class CRUD {
 
 	abstract deleteAssignment(assignment: AssignmentID): Promise<Result>;
 
-	abstract emailScholar(subject: string, message: string): Promise<Result>;
+	/** Send an email with the given subject and message to the authenticated scholar. */
+	abstract emailScholar(
+		scholarID: ScholarID,
+		venue: VenueID | null,
+		event: string,
+		subject: string,
+		message: string
+	): Promise<Result>;
 }

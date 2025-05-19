@@ -52,6 +52,7 @@ The key tools for local development are:
 - Vite: run `npm run dev` to launch the Vite local development server, and test at the localhost address provided.
 - Svelte check: run `npm run check`, which will report TypeScript and Svelte errors.
 - Supabase: install Supabase and run `supabase start` to start the Supabase database locally. This will require installation of a Docker client.
+- Supabase Edge Functions: run 'npm run functions' to run the edge functions locally after starting the local development environment.
 - vitest: run `npm run test:unit` to run unit tests during development.
 - Playright: run `npm run test:integration` to run integration tests on demand.
 - Supabase CLI: [install](https://supabase.com/docs/guides/cli/getting-started), and then `supabase login`, and then `supabase start` to load the local database with Docker. Don't forget to `supabase stop` when you're done to release Docker resources.
@@ -62,3 +63,14 @@ You will need a `.env.local` file that points to some details from our Supabase 
 
 - vitest unit tests can live anywhere in `/src` and must end with `test.ts`
 - Playwright integration tests live in `/tests`.
+
+## Email notifications
+
+We send emails with [Resend](https://resend.com/).
+
+Some emails are sent by Supabase Auth. Transactional emails are sent with the following pattern:
+
+- We have an `emails` table in our database that takes email metadata
+- We have a trigger defined for that table that invokes a call to an Edge Function that sends the email content
+- In the local environment, the emails are printed to the console, and in our stage and production environments, they are sent via Resend.
+- The client is responsible for adding to the emails table and constructing the email body from the correct template.

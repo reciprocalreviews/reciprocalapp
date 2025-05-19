@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.15 2025-05-18
 
+### Added
+
+- Emails table with trigger that calls Resend edge function to send email.
+
 ### Maintenance
 
 - Updated Svelte, SvelteKit, Eslint, Prettier, Supabase, Vite, Vitest.

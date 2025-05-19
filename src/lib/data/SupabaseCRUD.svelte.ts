@@ -936,19 +936,47 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('DeleteAssignment', error);
 	}
 
-	async emailScholar(subject: string, message: string): Promise<Result> {
-		const { data: scholar, error: scholarError } = await this.client.auth.getUser();
-		if (scholar === null || scholar.user === null || scholar.user.email === undefined)
-			return this.error('EmailScholar', scholarError);
+	/** Use the resend edge function to use the Resend API to send a message to the current user. */
+	async emailScholar(
+		scholarID: ScholarID,
+		venue: VenueID | null,
+		event: string,
+		subject: string,
+		message: string
+	): Promise<Result> {
+		// No to address given? Get the email address of the current scholar. This is just a convenience.
+		const scholar = await this.getScholar(scholarID);
 
-		const { error } = await this.client.functions.invoke('resend', {
-			body: {
-				to: scholar.user.email,
-				subject,
-				message
-			}
+		if (scholar === null) return this.error('EmailScholar', null, 'Scholar not found');
+		const email = scholar.getEmail();
+		if (email === null) return this.error('EmailScholar', null, 'Scholar has no email address');
+
+		// Make sure it has the shape of an email address.
+		if (!/^.+@.+$/.test(email))
+			return this.error('EmailScholar', null, 'Not a valid email address');
+
+		// Insert the email into the database.
+		const { error } = await this.client.from('emails').insert({
+			scholar: scholarID,
+			email,
+			event,
+			venue,
+			subject,
+			message
 		});
-		if (error) return this.error('EmailScholar', scholarError);
+		if (error) return this.error('EmailScholar', error);
+
+		// We rely on an database trigger to call the edge function to send the email after the row is inserted into the emails table.
+		// This is slower and less direct, but ensures that the email sending functionality only lives in one place.
+		// 	const { error } = await this.client.functions.invoke('resend', {
+		// 		body: {
+		// 			to,
+		// 			subject,
+		// 			message
+		// 		}
+		// 	});
+		// 	if (error) return this.error('EmailScholar', error);
+		// }
 
 		return { data: undefined };
 	}

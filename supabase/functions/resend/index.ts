@@ -2,6 +2,7 @@ import z from 'npm:zod';
 import { corsHeaders } from '../_shared/cors.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+const isLocal = Deno.env.get('PUBLIC_SUPABASE_URL')?.includes('host.docker') ?? false;
 
 const ResendBodySchema = z.object({
 	to: z.string().email(),
@@ -23,26 +24,39 @@ const handler = async (request: Request): Promise<Response> => {
 		// Validate the message body
 		const { to, subject, message } = ResendBodySchema.parse(bodyJSON);
 
-		// Post to the resend API using the API key
-		const res = await fetch('https://api.resend.com/emails', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${RESEND_API_KEY}`
-			},
-			body: JSON.stringify({
-				from: 'notifications@reciprocal.reviews',
-				to: to,
-				subject: subject,
-				html: message
-			})
-		});
+		let returnData;
 
-		// Wait for the email to sent.
-		const data = await res.json();
+		if (isLocal) {
+			console.log('--- email sent ---');
+			console.log('to: ', to);
+			console.log('subject:', subject);
+			console.log('message:', message);
+			console.log('---');
+
+			returnData = null;
+		} else {
+			// Post to the resend API using the API key
+			const res = await fetch('https://api.resend.com/emails', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${RESEND_API_KEY}`
+				},
+				body: JSON.stringify({
+					from: 'notifications@reciprocal.reviews',
+					to: to,
+					subject: subject,
+					html: message
+				})
+			});
+
+			// Wait for the email to sent.
+			const data = await res.json();
+			returnData = JSON.stringify(data);
+		}
 
 		// Respond with success.
-		return new Response(JSON.stringify(data), {
+		return new Response(returnData, {
 			status: 200,
 			headers: { ...corsHeaders, 'Content-Type': 'application/json' }
 		});
