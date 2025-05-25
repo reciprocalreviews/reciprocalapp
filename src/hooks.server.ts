@@ -5,6 +5,11 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
 const supabase: Handle = async ({ event, resolve }) => {
+	/** Filter out annoying Chrome logs */
+	if (event.url.pathname.startsWith('/.well-known/appspecific/com.chrome.devtools')) {
+		return new Response(null, { status: 204 }); // Return empty response with 204 No Content
+	}
+
 	/**
 	 * Creates a Supabase client specific to this server request.
 	 *

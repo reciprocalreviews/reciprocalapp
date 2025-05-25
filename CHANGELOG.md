@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Maintenance
 
 - Updated Supabase, sveltKit, Svelte, Vitest.
+- Filtered Chrome log in local development.
 
 ## 0.1.15 2025-05-18
 
