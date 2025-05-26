@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.16 2025-05-25
 
+### Added
+
+- Fixed #37, notifying editors and proposers of approved venue.
+
 ### Maintenance
 
 - Updated Supabase, sveltKit, Svelte, Vitest.

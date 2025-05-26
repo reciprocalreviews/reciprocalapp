@@ -21,6 +21,7 @@ import Scholar from './Scholar.svelte';
 import type { Database } from '$data/database';
 import type { SubmissionID } from '$lib/types/Submission';
 import type Locale from '../../locale/Locale';
+import { renderEmail, type EmailType } from '../../email/templates';
 
 export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
@@ -392,7 +393,7 @@ export default class SupabaseCRUD extends CRUD {
 		if (scholarsData === null) return this.error('ApproveProposalNoScholars', scholarsError);
 
 		// Build the editor scholar ID list from the editors found.
-		let editors: string[] = scholarsData.map((scholar) => scholar.id);
+		let editors: ScholarID[] = scholarsData.map((scholar) => scholar.id);
 
 		// Didn't find a editor?
 		if (editors.length === 0) return this.error('ApproveProposalNoScholars');
@@ -425,13 +426,28 @@ export default class SupabaseCRUD extends CRUD {
 		if (venueData === null || venueError !== null)
 			return this.error('ApproveProposalNoVenue', venueError);
 
-		const venue = venueData.id;
+		const venueID = venueData.id;
 
 		// Update the proposal to link to the venue.
-		const { error } = await this.client.from('proposals').update({ venue }).eq('id', proposal);
+		const { error } = await this.client
+			.from('proposals')
+			.update({ venue: venueID })
+			.eq('id', proposal);
 		if (error) return this.error('ApproveProposalCannotUpdateVenue', error);
 
-		return { data: venue };
+		// Finally, trigger an email to the editors and supporters notifying them that the venue was approved.
+		// First, we get all of the supporters and their emails.
+		const { data: supportersData, error: supportersError } = await this.client
+			.from('supporters')
+			.select('scholarid')
+			.eq('proposalid', proposal);
+		if (supportersData === null) return this.error('ApproveProposalNoSupporters', supportersError);
+		const scholarsToEmail = [...editors, ...supportersData.map((s) => s.scholarid)];
+
+		// Send a notification email to the scholars.
+		this.emailScholars(scholarsToEmail, venueID, 'VenueApproved', [proposalData.title, venueID]);
+
+		return { data: venueID };
 	}
 
 	async addSupporter(
@@ -937,34 +953,47 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	/** Use the resend edge function to use the Resend API to send a message to the current user. */
-	async emailScholar(
-		scholarID: ScholarID,
+	async emailScholars(
+		scholars: ScholarID[],
 		venue: VenueID | null,
-		event: string,
-		subject: string,
-		message: string
+		template: EmailType,
+		args: string[]
 	): Promise<Result> {
-		// No to address given? Get the email address of the current scholar. This is just a convenience.
-		const scholar = await this.getScholar(scholarID);
+		// Get the email addresses of the specified scholars.
+		let { data: scholarData, error: scholarsError } = await this.client
+			.from('scholars')
+			.select('id, email')
+			.in('id', scholars);
+		if (scholarData === null) return this.error('EmailScholar', scholarsError);
 
-		if (scholar === null) return this.error('EmailScholar', null, 'Scholar not found');
-		const email = scholar.getEmail();
-		if (email === null) return this.error('EmailScholar', null, 'Scholar has no email address');
+		// Ignore scholars without an email address.
+		const scholarsWithEmail = scholarData.filter(
+			(scholar): scholar is { id: string; email: string } => scholar.email !== null
+		);
 
-		// Make sure it has the shape of an email address.
-		if (!/^.+@.+$/.test(email))
-			return this.error('EmailScholar', null, 'Not a valid email address');
+		// Make sure all the scholar emails have the shape of an email address.
+		const missingEmails = scholarsWithEmail.filter((scholar) => !/^.+@.+$/.test(scholar.email));
+		if (!scholarsWithEmail.every((scholar) => /^.+@.+$/.test(scholar.email)))
+			return this.error(
+				'EmailScholar',
+				null,
+				`Invalid email addresses: ${missingEmails.map((s) => s.email).join(', ')}`
+			);
 
-		// Insert the email into the database.
-		const { error } = await this.client.from('emails').insert({
-			scholar: scholarID,
-			email,
-			event,
-			venue,
-			subject,
-			message
-		});
-		if (error) return this.error('EmailScholar', error);
+		const { subject, message } = renderEmail(template, args);
+
+		// Insert the emails into the database, which will trigger the edge function to send the email via Resend.
+		const { error: emailInsertError } = await this.client.from('emails').insert(
+			scholarsWithEmail.map((scholar) => ({
+				scholar: scholar.id,
+				email: scholar.email,
+				event: template,
+				venue,
+				subject: subject,
+				message
+			}))
+		);
+		if (emailInsertError) return this.error('EmailScholar', emailInsertError);
 
 		// We rely on an database trigger to call the edge function to send the email after the row is inserted into the emails table.
 		// This is slower and less direct, but ensures that the email sending functionality only lives in one place.

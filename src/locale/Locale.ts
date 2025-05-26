@@ -80,7 +80,8 @@ export const enUS = {
 		ApproveAssignment: 'Unable to approve the assignment',
 		CreateAssignment: 'Unable to create this assignment',
 		DeleteAssignment: 'Unable to delete this assignment',
-		EmailScholar: 'Unable to email this scholar'
+		EmailScholar: 'Unable to email this scholar',
+		ApproveProposalNoSupporters: 'Unable to retrieve supports of proposal for notification.'
 	}
 };
 

@@ -19,6 +19,7 @@ import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
 import type { SubmissionID } from '$lib/types/Submission';
 import type { AuthError, PostgrestError } from '@supabase/supabase-js';
+import type { EmailType } from '../../email/templates';
 
 export const DatabaseSymbol = Symbol('database');
 export const NullUUID = '00000000-0000-0000-0000-000000000000';
@@ -199,11 +200,10 @@ export default abstract class CRUD {
 	abstract deleteAssignment(assignment: AssignmentID): Promise<Result>;
 
 	/** Send an email with the given subject and message to the authenticated scholar. */
-	abstract emailScholar(
-		scholarID: ScholarID,
+	abstract emailScholars(
+		scholars: ScholarID[],
 		venue: VenueID | null,
-		event: string,
-		subject: string,
-		message: string
+		event: EmailType,
+		args: string[]
 	): Promise<Result>;
 }

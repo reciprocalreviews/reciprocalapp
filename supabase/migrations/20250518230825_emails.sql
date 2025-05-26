@@ -47,18 +47,37 @@ create policy "emails can't be deleted" on public.submissions
   for delete to anon, authenticated 
   using (false);
 
+-- Create a schema to store this private function that gets a vault secret.
+create schema private; -- to avoid this function in the API
+
+create or replace function private.get_secret (secret_name text)
+returns text
+security definer
+set search_path = ''
+as
+$$ 
+declare
+   secret text;
+begin
+   select decrypted_secret into secret from vault.decrypted_secrets where name = secret_name;
+   return secret;
+end;
+$$ language plpgsql;
+
 -- Create a function that sends the new email.
 create or replace function send_email()
 returns trigger
 language plpgsql
+security definer
+set search_path = ''
 as $$
 begin
-  -- Post to the Resend edge function.
+  -- Post to the Resend edge function. If the supabase URL is set to localhost, replace it with host.docker.internal so we hit the host machine, not the container.
   perform net.http_post(
-    url:=(select decrypted_secret from vault.decrypted_secrets where name = 'supabase_url') || '/functions/v1/resend',
+    url:=replace(private.get_secret('supabase_url'), '127.0.0.1', 'host.docker.internal') || '/functions/v1/resend',
     headers:=jsonb_build_object(
         'Content-Type', 'application/json', 
-        'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'anon_key')
+        'Authorization', 'Bearer ' || private.get_secret('anon_key')
     )::jsonb,
     body:=jsonb_build_object('to', new.email, 'subject', new.subject, 'message', new.message)
   );
