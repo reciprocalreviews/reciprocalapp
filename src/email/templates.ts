@@ -21,6 +21,21 @@ export const Emails = {
 			'https://reciprocal.reviews/venues/proposal/$2',
 			'Consider reachnig out to the proposals to discuss the proposal further.'
 		]
+	},
+	AssignmentApproved: {
+		subject: 'Your assignment has been approved',
+		paragraphs: [
+			'<a href="mailto:$2">$1</a> assigned you as $3 for this submission:',
+			'https://reciprocal.reviews/submission/$4',
+			'Complete your assignment and you will receive compensation.'
+		]
+	},
+	AssignmentRemoved: {
+		subject: 'You were removed from a submission',
+		paragraphs: [
+			'<a href="mailto:$2">$1</a> removed you as $3 for this submission:',
+			'https://reciprocal.reviews/submission/$4'
+		]
 	}
 } satisfies Record<string, Email>;
 

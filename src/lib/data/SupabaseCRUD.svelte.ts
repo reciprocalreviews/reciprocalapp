@@ -14,7 +14,8 @@ import type {
 	TransactionStatus,
 	AssignmentID,
 	SubmissionStatus,
-	RoleRow
+	RoleRow,
+	AssignmentRow
 } from '../../data/types';
 import CRUD, { NullUUID, type Result } from './CRUD';
 import Scholar from './Scholar.svelte';
@@ -928,12 +929,31 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('TransactionNotCanceled', error);
 	}
 
-	async approveAssignment(assignment: AssignmentID, approved: boolean): Promise<Result> {
-		const { error } = await this.client
+	async approveAssignment(
+		assignment: AssignmentRow,
+		approved: boolean,
+		role: RoleRow,
+		approver: ScholarID
+	): Promise<Result> {
+		const { error: assignmentError } = await this.client
 			.from('assignments')
 			.update({ approved })
-			.eq('id', assignment);
-		return this.errorOrEmpty('ApproveAssignment', error);
+			.eq('id', assignment.id);
+
+		// Notify the assigned
+		if (assignmentError === null) {
+			const scholar = await this.getScholar(approver);
+			if (scholar) {
+				this.emailScholars(
+					[assignment.scholar],
+					assignment.venue,
+					approved ? 'AssignmentApproved' : 'AssignmentRemoved',
+					[scholar.getName() ?? '', scholar.getEmail() ?? '', role.name, assignment.submission]
+				);
+			}
+		}
+
+		return this.errorOrEmpty('ApproveAssignment', assignmentError);
 	}
 
 	async createAssignment(

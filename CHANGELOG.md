@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Added
 
 - Fixed #38, notify stewards of new venue proposal.
+- Fixed #36, notify scholars of when they are added or removed to a submission.
 
 ### Fixed
 

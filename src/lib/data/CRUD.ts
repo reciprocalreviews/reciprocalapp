@@ -12,7 +12,8 @@ import {
 	type TransactionStatus,
 	type AssignmentID,
 	type SubmissionStatus,
-	type RoleRow
+	type RoleRow,
+	type AssignmentRow
 } from '../../data/types';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
 import { getContext, setContext } from 'svelte';
@@ -187,7 +188,12 @@ export default abstract class CRUD {
 	abstract cancelTransaction(id: TransactionID, reason: string): Promise<Result>;
 
 	/** Update an assignment for a submission */
-	abstract approveAssignment(assignment: AssignmentID, approved: boolean): Promise<Result>;
+	abstract approveAssignment(
+		assignment: AssignmentRow,
+		approved: boolean,
+		role: RoleRow,
+		approver: ScholarID
+	): Promise<Result>;
 
 	/** Create a new assignment record */
 	abstract createAssignment(

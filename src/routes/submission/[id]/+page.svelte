@@ -8,7 +8,6 @@
 	import Row from '$lib/components/Row.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import { getAuth } from '../../Auth.svelte';
 	import Link from '$lib/components/Link.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
@@ -39,20 +38,16 @@
 		/** All assignments related to this submission */
 		assignments,
 		/** All balances of scholars */
-		balances
+		balances,
+		/** The current user */
+		user
 	} = $derived(data);
 
 	/** Get the database connection */
 	const db = getDB();
 
-	/** Get the currently authenticated scholar */
-	const auth = getAuth();
-
-	/** The user ID of the authenticated scholar */
-	const user = $derived(auth.getUserID());
-
 	/** Whether the current scholar is an editor */
-	let isEditor = $derived(venue !== null && user !== null && venue.editors.includes(user));
+	let isEditor = $derived(venue !== null && user !== null && venue.editors.includes(user.id));
 
 	/** The transactions corresponding to each of the authors */
 	const authorTransactions = $derived(
@@ -66,12 +61,12 @@
 
 	/** Whether the current scholar is an author of the submission */
 	let isAuthor = $derived(
-		submission !== null && user !== null && submission.authors.includes(user)
+		submission !== null && user !== null && submission.authors.includes(user.id)
 	);
 
 	/** Whether the current scholar is assigned to this submission */
 	let isAssigned = $derived(
-		assignments?.find((a) => a.scholar === user && a.approved) !== undefined
+		user !== null && assignments?.find((a) => a.scholar === user.id && a.approved) !== undefined
 	);
 
 	function getVolunteer(role: RoleID, scholar: ScholarID) {
@@ -214,7 +209,8 @@
 				{@const bidded = assignments
 					.filter((a) => role.id === a.role && a.bid && !a.approved)
 					.toSorted((a, b) => getBalance(a.scholar) - getBalance(b.scholar))}
-				{@const isApprover = isEditor || isRoleApprover(role, volunteers, user)}
+				{@const isApprover =
+					isEditor || (user !== null && isRoleApprover(role, volunteers, user.id))}
 				{#each assigned as assignment}
 					{@const volunteer = getVolunteer(role.id, assignment.scholar)}
 					<tr>
@@ -229,7 +225,7 @@
 								{#if isApprover}
 									<Button
 										tip="Remove this assignment"
-										action={() => handle(db.approveAssignment(assignment.id, false))}
+										action={() => handle(db.approveAssignment(assignment, false, role, user.id))}
 										>Unassign</Button
 									>
 								{:else}
@@ -260,7 +256,8 @@
 									{#if assignment.bid}
 										<Button
 											tip="Accept this bid, assigning this scholar to this role for this submission."
-											action={() => handle(db.approveAssignment(assignment.id, true))}
+											action={() =>
+												user ? handle(db.approveAssignment(assignment, true, role, user.id)) : null}
 											>Assign</Button
 										>
 									{/if}
