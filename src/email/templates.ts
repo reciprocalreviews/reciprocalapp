@@ -12,6 +12,15 @@ export const Emails = {
 			'https://reciprocal.reviews/venue/$2',
 			"If you're a supporter, the editors will likely communicate the timeline for launch separately."
 		]
+	},
+	ProposalCreated: {
+		subject: 'New venue proposal',
+		paragraphs: [
+			'A proposal was created for "$1".',
+			'Review it and discuss it with the other stewards:',
+			'https://reciprocal.reviews/venues/proposal/$2',
+			'Consider reachnig out to the proposals to discuss the proposal further.'
+		]
 	}
 } satisfies Record<string, Email>;
 
@@ -34,7 +43,7 @@ export function renderEmail(
 
 	// Append a footer to the message.
 
-	message += `\n\n---\n\nThis is an automated email was sent by Reciprocal Reviews.`;
+	message += `\n\n---\n\nThis is an automated email sent by Reciprocal Reviews.`;
 
 	return { subject, message };
 }

@@ -340,6 +340,17 @@ export default class SupabaseCRUD extends CRUD {
 
 		if (error) return { error };
 
+		// Find the stewards to notify
+		const { data: stewards } = await this.client.from('scholars').select('id').eq('steward', true);
+
+		if (stewards)
+			await this.emailScholars(
+				stewards.map((s) => s.id),
+				null,
+				'ProposalCreated',
+				[title, proposalid]
+			);
+
 		return { data: proposalid };
 	}
 

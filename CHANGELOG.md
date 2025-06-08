@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.17 2025-06-08
 
+### Added
+
+- Fixed #38, notify stewards of new venue proposal.
+
 ### Fixed
 
 - Typo in editor compensation.
