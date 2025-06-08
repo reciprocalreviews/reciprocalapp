@@ -116,7 +116,7 @@
 					>
 				</form>
 			{:else}
-				<p>Editors are compensated <Tokens amount={venue.edit_amount} /></p>
+				<p>Editors are compensated <Tokens amount={venue.edit_amount} /> per submission.</p>
 			{/if}
 		</Card>
 		{#each roles.toSorted((a, b) => a.priority - b.priority) as role, index (role.id)}
