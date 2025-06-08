@@ -29,10 +29,10 @@ create policy "anyone can view venues" on public.venues
   for select to anon, authenticated using (true);
 
 create policy "stewards and editors can update venues" on public.venues
-  for update to anon, authenticated using (isSteward() or auth.uid() = any(editors));
+  for update to anon, authenticated using (isSteward() or (select auth.uid()) = any(editors));
 
 create policy "stewards and editors can delete venues" on public.venues
-  for delete to anon, authenticated using (isSteward() or auth.uid() = any(editors));
+  for delete to anon, authenticated using (isSteward() or (select auth.uid()) = any(editors));
 
 create table roles (
   -- The unique id of the role
@@ -58,11 +58,12 @@ create table roles (
 create index roles_venue_index on roles(venueid);
 
 -- Check if the given scholar is an stewards
-create function isEditor("_venueid" uuid) 
+create function isEditor("_venueid" uuid)
 returns boolean
 language sql
+security definer set search_path to ''
 as $$
-    select (auth.uid() = any((select editors from venues where id = _venueid)::uuid[]));
+    select ((select auth.uid()) = any((select editors from public.venues where id = _venueid)::uuid[]));
 $$;
 
 alter table public.roles
@@ -113,17 +114,17 @@ alter table public.volunteers
 create policy "editors can invite and volunteers if not invite only" on public.volunteers
   for insert to anon, authenticated with check (
     isEditor((select venueid from roles where id = roleid)) or 
-    (auth.uid() = scholarid and not (select invited from roles where id = roleid))
+    ((select auth.uid()) = scholarid and not (select invited from roles where id = roleid))
     );
 
 create policy "anyone can view volunteers" on public.volunteers
   for select to anon, authenticated using (true);
 
 create policy "volunteers can update" on public.volunteers
-  for update to anon, authenticated using (auth.uid() = scholarid);
+  for update to anon, authenticated using ((select auth.uid()) = scholarid);
 
 create policy "editors and volunteers can delete" on public.volunteers
-  for delete to anon, authenticated using (isEditor((select venueid from roles where id = roleid)) or auth.uid() = scholarid);
+  for delete to anon, authenticated using (isEditor((select venueid from roles where id = roleid)) or (select auth.uid()) = scholarid);
 
 -- anyone can propose venues
 -- anyone can view proposals
@@ -186,8 +187,8 @@ create policy "anyone can view supporters" on public.supporters
   for select to anon, authenticated using (true);
 
 create policy "admins can update proposals" on public.supporters
-  for update to anon, authenticated using (auth.uid() = scholarid);
+  for update to anon, authenticated using ((select auth.uid()) = scholarid);
 
 create policy "supporters can stop supporting" on public.supporters
-  for delete to anon, authenticated using (auth.uid() = scholarid);
+  for delete to anon, authenticated using ((select auth.uid()) = scholarid);
 

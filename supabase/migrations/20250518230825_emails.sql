@@ -33,7 +33,7 @@ create policy "authenticated scholars can send email" on public.emails
 -- Scholars can see the emails sent to them; venue editors can see all emails sent by the venue.
 create policy "scholars and venue editors can see the emails sent" on public.emails
   for select to anon, authenticated using (
-    (auth.uid() = scholar) or
+    ((select auth.uid()) = scholar) or
     (venue is not null and isEditor(venue))
   );
 

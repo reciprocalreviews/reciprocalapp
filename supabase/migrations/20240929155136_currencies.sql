@@ -19,10 +19,10 @@ create policy "anyone can view currencies" on public.currencies
   for select to anon, authenticated using (true);
 
 create policy "minters can update currencies" on public.currencies
-  for update to anon, authenticated using (auth.uid() = any(minters));
+  for update to anon, authenticated using ((select auth.uid()) = any(minters));
 
 create policy "minters can delete currencies" on public.currencies
-  for delete to anon, authenticated using (auth.uid() = any(minters));
+  for delete to anon, authenticated using ((select auth.uid()) = any(minters));
 
 
 -- Three types of exchanges to propose
@@ -58,18 +58,19 @@ alter table public.exchanges
 create function isMinter("_scholarid" uuid, "_currencyid" uuid) 
 returns boolean 
 language sql
+security definer set search_path to ''
 as $$
-    select (exists (select id from currencies where id = _currencyid and _scholarid = any(minters)));
+    select (exists (select id from public.currencies where id = _currencyid and _scholarid = any(minters)));
 $$;
 
 create policy "only minters can create exchanges" on public.exchanges
-  for insert to anon, authenticated with check (isMinter(auth.uid(), currency_from) or isMinter(auth.uid(), currency_to));
+  for insert to anon, authenticated with check (isMinter((select auth.uid()), currency_from) or isMinter((select auth.uid()), currency_to));
 
 create policy "anyone can view exchanges" on public.exchanges
   for select to anon, authenticated using (true);
 
 create policy "only minters can update exchanges" on public.exchanges
-  for update to anon, authenticated using (isMinter(auth.uid(), currency_from) or isMinter(auth.uid(), currency_to));
+  for update to anon, authenticated using (isMinter((select auth.uid()), currency_from) or isMinter((select auth.uid()), currency_to));
 
 create policy "only minters can delete exchanges" on public.exchanges
-  for delete to anon, authenticated using (isMinter(auth.uid(), currency_from) or isMinter(auth.uid(), currency_to));
+  for delete to anon, authenticated using (isMinter((select auth.uid()), currency_from) or isMinter((select auth.uid()), currency_to));

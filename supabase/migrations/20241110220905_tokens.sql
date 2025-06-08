@@ -22,14 +22,14 @@ alter table public.tokens
   enable row level security;
 
 create policy "only minters can create tokens" on public.tokens
-  for insert to anon, authenticated with check (auth.uid() = any((select minters from currencies where id = currency)::uuid[]));
+  for insert to anon, authenticated with check ((select auth.uid()) = any((select minters from currencies where id = currency)::uuid[]));
 
 create policy "tokens are public" on public.tokens
   for select to anon, authenticated using (true);
 
 create policy "only token owners can update a token" on public.tokens
   for update to anon, authenticated 
-    using ((venue is not null and isEditor(venue)) or (scholar is not null and auth.uid() = scholar))
+    using ((venue is not null and isEditor(venue)) or (scholar is not null and (select auth.uid()) = scholar))
     with check (true);
 
 create policy "tokens cannot be deleted" on public.tokens
@@ -78,27 +78,27 @@ create policy "only owners can transfer their tokens if approved" on public.tran
     (
       status = 'approved' and
       (
-        (from_scholar is not null and auth.uid() = from_scholar) or 
-        (from_venue is not null and (auth.uid() = any((select editors from venues where id = from_venue)::uuid[])))
+        (from_scholar is not null and (select auth.uid()) = from_scholar) or 
+        (from_venue is not null and ((select auth.uid()) = any((select editors from venues where id = from_venue)::uuid[])))
       )
     )
 );
 
 create policy "transactions are only visible to minters and those involved" on public.transactions
   for select to anon, authenticated using (
-    (auth.uid() = from_scholar) or 
-    (auth.uid() = to_scholar) or 
-    (auth.uid() = any((select minters from currencies where id = currency)::uuid[])) or
-    (from_venue is not null and auth.uid() = any((select editors from venues where id = from_venue)::uuid[])) or
-    (to_venue is not null and auth.uid() = any((select editors from venues where id = to_venue)::uuid[]))
+    ((select auth.uid()) = from_scholar) or 
+    ((select auth.uid()) = to_scholar) or 
+    ((select auth.uid()) = any((select minters from currencies where id = currency)::uuid[])) or
+    (from_venue is not null and (select auth.uid()) = any((select editors from venues where id = from_venue)::uuid[])) or
+    (to_venue is not null and (select auth.uid()) = any((select editors from venues where id = to_venue)::uuid[]))
 );
 
 create policy "only the giver and minters can update transactions" on public.transactions
   for update to anon, authenticated using (
-    (auth.uid() = from_scholar) or 
-    (auth.uid() = any((select minters from currencies where id = currency)::uuid[])) or
-    (from_venue is not null and auth.uid() = any((select editors from venues where id = from_venue)::uuid[]))
+    ((select auth.uid()) = from_scholar) or 
+    ((select auth.uid()) = any((select minters from currencies where id = currency)::uuid[])) or
+    (from_venue is not null and (select auth.uid()) = any((select editors from venues where id = from_venue)::uuid[]))
   );
 
 create policy "transactions cannot be deleted" on public.transactions
-  for delete to anon, authenticated using (auth.uid() = any((select minters from currencies where id = currency)::uuid[]));
+  for delete to anon, authenticated using ((select auth.uid()) = any((select minters from currencies where id = currency)::uuid[]));

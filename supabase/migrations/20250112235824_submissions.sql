@@ -63,12 +63,12 @@ create policy "editors can create submissions" on public.submissions
 -- then they can see the submission.
 create policy "authors, editors, and bidders can view submissions" on public.submissions
   for select to anon, authenticated using (
-    (auth.uid() = any(authors)) or
+    ((select auth.uid()) = any(authors)) or
     (isEditor(venue)) or
     (exists 
       -- Find all of the accepted volunteering by this scholar for a role that is biddable
       (select id from volunteers where 
-        scholarid = auth.uid() and 
+        scholarid = (select auth.uid()) and 
         accepted = 'accepted' and 
         roleid = any(array(select id from roles where venue = venue))
       )
@@ -88,8 +88,9 @@ create policy "editors can delete submissions" on public.submissions
 create function isApprover("_roleid" uuid) 
 returns boolean
 language sql
+security definer set search_path to ''
 as $$
-    select (exists (select id from volunteers where scholarid = auth.uid() and roleid=(select approver from roles where id=_roleid) and accepted = 'accepted'))
+    select (exists (select id from public.volunteers where scholarid = (select auth.uid()) and roleid=(select approver from public.roles where id=_roleid) and accepted = 'accepted'))
 $$;
 
 -- Enable RLS for assignments
@@ -105,7 +106,7 @@ create policy "editors and volunteers can create assignments" on public.assignme
       exists (
         select from volunteers where 
           volunteers.roleid = role and 
-          volunteers.scholarid = auth.uid() and 
+          volunteers.scholarid = (select auth.uid()) and 
           volunteers.active and 
           volunteers.accepted="accepted"
       )
@@ -115,7 +116,7 @@ create policy "editors and volunteers can create assignments" on public.assignme
 create policy "editors, assignees, and approvers can see assignments" on public.assignments
   for select to anon, authenticated using (
     isEditor(venue) or 
-    scholar = auth.uid() or 
+    scholar = (select auth.uid()) or 
     isApprover(role)
   );
 
@@ -123,11 +124,11 @@ create policy "editors, assignees, and approvers can update assignments" on publ
   for update to anon, authenticated 
     using (
       isEditor(venue) or 
-      scholar = auth.uid() or
+      scholar = (select auth.uid()) or
       isApprover(role)
     )
     with check (true);
 
 create policy "editors and assignees can delete assignments" on public.assignments
   for delete to anon, authenticated
-  using (isEditor(venue) or scholar = auth.uid());
+  using (isEditor(venue) or scholar = (select auth.uid()));
