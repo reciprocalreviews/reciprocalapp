@@ -212,4 +212,12 @@ export default abstract class CRUD {
 		event: EmailType,
 		args: string[]
 	): Promise<Result>;
+
+	/** Send an email to people without scholar accounts */
+	abstract sendEmail(
+		emails: string[] | { id: ScholarID; email: string }[],
+		template: EmailType,
+		venue: VenueID | null,
+		args: string[]
+	): Promise<Result>;
 }

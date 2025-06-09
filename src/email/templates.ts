@@ -13,13 +13,22 @@ export const Emails = {
 			"If you're a supporter, the editors will likely communicate the timeline for launch separately."
 		]
 	},
-	ProposalCreated: {
+	ProposalCreatedStewards: {
 		subject: 'New venue proposal',
 		paragraphs: [
 			'A proposal was created for "$1".',
 			'Review it and discuss it with the other stewards:',
 			'https://reciprocal.reviews/venues/proposal/$2',
 			'Consider reachnig out to the proposals to discuss the proposal further.'
+		]
+	},
+	ProposalCreatedEditors: {
+		subject: 'Proposal created for your academic venue',
+		paragraphs: [
+			'A proposal was created for your academic venue "$1" to help make its peer review more sustainable:',
+			'https://reciprocal.reviews/venues/proposal/$2',
+			"Learn more about Reciprocal Reviews to see if it's a good fit for your academic community.",
+			'https://reciprocal.reviews'
 		]
 	},
 	AssignmentApproved: {

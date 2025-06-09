@@ -120,7 +120,7 @@ export type Database = {
           event: string
           id: string
           message: string
-          scholar: string
+          scholar: string | null
           subject: string
           time_sent: string
           venue: string | null
@@ -130,7 +130,7 @@ export type Database = {
           event: string
           id?: string
           message: string
-          scholar: string
+          scholar?: string | null
           subject: string
           time_sent?: string
           venue?: string | null
@@ -140,7 +140,7 @@ export type Database = {
           event?: string
           id?: string
           message?: string
-          scholar?: string
+          scholar?: string | null
           subject?: string
           time_sent?: string
           venue?: string | null

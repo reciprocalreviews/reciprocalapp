@@ -348,9 +348,12 @@ export default class SupabaseCRUD extends CRUD {
 			await this.emailScholars(
 				stewards.map((s) => s.id),
 				null,
-				'ProposalCreated',
+				'ProposalCreatedStewards',
 				[title, proposalid]
 			);
+
+		// Notify editors
+		await this.sendEmail(editors, 'ProposalCreatedEditors', null, [title, proposalid]);
 
 		return { data: proposalid };
 	}
@@ -1002,24 +1005,36 @@ export default class SupabaseCRUD extends CRUD {
 			(scholar): scholar is { id: string; email: string } => scholar.email !== null
 		);
 
+		return this.sendEmail(scholarsWithEmail, template, venue, args);
+	}
+
+	/** Email some people who aren't scholars */
+	async sendEmail(
+		emails: string[] | { id: ScholarID; email: string }[],
+		template: EmailType,
+		venue: VenueID | null,
+		args: string[]
+	) {
 		// Make sure all the scholar emails have the shape of an email address.
-		const missingEmails = scholarsWithEmail.filter((scholar) => !/^.+@.+$/.test(scholar.email));
-		if (!scholarsWithEmail.every((scholar) => /^.+@.+$/.test(scholar.email)))
+		const missingEmails = emails.filter(
+			(email) => !/^.+@.+$/.test(typeof email === 'string' ? email : email.email)
+		);
+		if (!emails.every((email) => /^.+@.+$/.test(typeof email === 'string' ? email : email.email)))
 			return this.error(
 				'EmailScholar',
 				null,
-				`Invalid email addresses: ${missingEmails.map((s) => s.email).join(', ')}`
+				`Invalid email addresses: ${missingEmails.map((email) => email).join(', ')}`
 			);
 
 		const { subject, message } = renderEmail(template, args);
 
 		// Insert the emails into the database, which will trigger the edge function to send the email via Resend.
 		const { error: emailInsertError } = await this.client.from('emails').insert(
-			scholarsWithEmail.map((scholar) => ({
-				scholar: scholar.id,
-				email: scholar.email,
+			emails.map((email) => ({
+				scholar: typeof email === 'string' ? null : email.id,
+				email: typeof email === 'string' ? email : email.email,
 				event: template,
-				venue,
+				venue: null,
 				subject: subject,
 				message
 			}))
@@ -1028,15 +1043,6 @@ export default class SupabaseCRUD extends CRUD {
 
 		// We rely on an database trigger to call the edge function to send the email after the row is inserted into the emails table.
 		// This is slower and less direct, but ensures that the email sending functionality only lives in one place.
-		// 	const { error } = await this.client.functions.invoke('resend', {
-		// 		body: {
-		// 			to,
-		// 			subject,
-		// 			message
-		// 		}
-		// 	});
-		// 	if (error) return this.error('EmailScholar', error);
-		// }
 
 		return { data: undefined };
 	}

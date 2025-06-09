@@ -4,8 +4,8 @@ create table emails (
   id uuid not null default uuid_generate_v1() primary key,
   -- The event type of the email
   event text not null,
-  -- The scholar to whom the email was sent
-  scholar uuid not null references scholars(id),
+  -- The optional scholar to whom the email was sent
+  scholar uuid references scholars(id),
   -- The optional venue for which the email was sent
   venue uuid references venues(id) default null,
   -- When the email was sent
