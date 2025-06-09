@@ -43,8 +43,8 @@ create policy "emails can't be edited" on public.emails
 using (false);
 
 -- No one can delete emails once sent.
-create policy "emails can't be deleted" on public.submissions
-  for delete to anon, authenticated 
+create policy "emails can't be deleted" on public.emails
+  for delete to authenticated 
   using (false);
 
 -- Create a schema to store this private function that gets a vault secret.

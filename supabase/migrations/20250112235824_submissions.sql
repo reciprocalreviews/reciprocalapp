@@ -57,7 +57,7 @@ alter table public.submissions
   enable row level security;
 
 create policy "editors can create submissions" on public.submissions
-  for insert to anon, authenticated with check (isEditor(venue));
+  for insert to authenticated with check (isEditor(venue));
 
 -- If someone is an author, editor, or the scholar has a role in the venue that is biddable,
 -- then they can see the submission.
@@ -76,12 +76,12 @@ create policy "authors, editors, and bidders can view submissions" on public.sub
   );
 
 create policy "editors can update submissions" on public.submissions
-  for update to anon, authenticated 
+  for update to authenticated 
     using (isEditor(venue))
     with check (true);
 
 create policy "editors can delete submissions" on public.submissions
-  for delete to anon, authenticated 
+  for delete to authenticated 
   using (isEditor(venue));
 
 -- Check if the current scholar is an approver of the given role
@@ -130,5 +130,5 @@ create policy "editors, assignees, and approvers can update assignments" on publ
     with check (true);
 
 create policy "editors and assignees can delete assignments" on public.assignments
-  for delete to anon, authenticated
+  for delete to authenticated
   using (isEditor(venue) or scholar = (select auth.uid()));

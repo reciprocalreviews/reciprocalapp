@@ -15,6 +15,8 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Typo in editor compensation.
 - Resolved all `search_path` security warnings.
 - More efficent calls to `auth.uid()` in RLS policies.
+- Narrow RLS permissions on submissions delete to authenticated scholars.
+- Corrected table for email RLS policy.
 
 ### Maintenance
 
