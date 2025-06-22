@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](http://semver.org/) format.
 
+## 0.1.18 2025-06-22
+
+## Maintenance
+
+- Updated Playrought, Svelte, SvelteKit, Supabase, eslint.
+
 ## 0.1.17 2025-06-08
 
 ### Added
