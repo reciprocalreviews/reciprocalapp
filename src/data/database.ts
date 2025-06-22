@@ -304,6 +304,8 @@ export type Database = {
           name: string | null
           orcid: string | null
           status: string
+          status_reminder_time: string | null
+          status_time: string | null
           steward: boolean
           when: string
         }
@@ -314,6 +316,8 @@ export type Database = {
           name?: string | null
           orcid?: string | null
           status?: string
+          status_reminder_time?: string | null
+          status_time?: string | null
           steward?: boolean
           when?: string
         }
@@ -324,6 +328,8 @@ export type Database = {
           name?: string | null
           orcid?: string | null
           status?: string
+          status_reminder_time?: string | null
+          status_time?: string | null
           steward?: boolean
           when?: string
         }

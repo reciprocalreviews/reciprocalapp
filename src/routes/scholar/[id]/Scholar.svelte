@@ -67,13 +67,18 @@
 	{/snippet}
 
 	{#if editable}
+		{@const time = scholar.getStatusTime()}
 		<EditableText
 			inline={false}
 			text={scholar.getStatus()}
 			placeholder="Explain your current reviewing status to others."
 			edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
 		/>
-		<Tip>Your status is public and will be shown here.</Tip>
+		<Tip
+			>Your status is public. {#if time}You last updated it on {new Date(
+					Date.parse(time)
+				).toLocaleString()}.{/if}</Tip
+		>
 	{:else}
 		<p>{scholar.getStatus()}</p>
 	{/if}

@@ -43,6 +43,10 @@ export default class Scholar {
 		this.data = { ...this.data, status };
 	}
 
+	getStatusTime() {
+		return this.data.status_time;
+	}
+
 	getEmail() {
 		return this.data.email;
 	}

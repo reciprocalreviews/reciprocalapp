@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ## Fixed
 
 - Type error in error handling.
+- Fixed #44: Reminding scholars of stale status.
 
 ## Maintenance
 

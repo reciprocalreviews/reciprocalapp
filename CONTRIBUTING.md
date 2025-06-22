@@ -68,9 +68,17 @@ You will need a `.env.local` file that points to some details from our Supabase 
 
 We send emails with [Resend](https://resend.com/).
 
-Some emails are sent by Supabase Auth. Transactional emails are sent with the following pattern:
+Some emails are sent by Supabase Auth.
+
+Transactional emails are sent with the following pattern:
 
 - We have an `emails` table in our database that takes email metadata
 - We have a trigger defined for that table that invokes a call to an Edge Function that sends the email content
 - In the local environment, the emails are printed to the console, and in our stage and production environments, they are sent via Resend.
 - The client is responsible for adding to the emails table and constructing the email body from the correct template.
+
+Reminder emails are sent as follows:
+
+- We create a Supabase `pg_cron` job that runs weekly on Sunday
+- The cron calls a Supabase Edge Function called `remind`
+- Remind runs with a admin key, finding things like stale reviewing status and other pending tasks, and writes scholars emails about them.

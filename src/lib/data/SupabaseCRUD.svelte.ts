@@ -299,7 +299,10 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async updateScholarStatus(id: ScholarID, status: string): Promise<Result> {
-		const { error } = await this.client.from('scholars').update({ status }).eq('id', id);
+		const { error } = await this.client
+			.from('scholars')
+			.update({ status, status_time: new Date().toISOString() })
+			.eq('id', id);
 		if (error) return this.error('UpdateScholarStatus', error);
 		else {
 			const state = this.scholars.get(id);
