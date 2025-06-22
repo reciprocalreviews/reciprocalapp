@@ -1,9 +1,13 @@
 import { invalidateAll } from '$app/navigation';
 import { type DBError, type Result } from '$lib/data/CRUD';
-import type { PostgrestError } from '@supabase/supabase-js';
+import type { AuthError, PostgrestError } from '@supabase/supabase-js';
 
 export type Level = 'error' | 'warning' | 'success';
-export type Feedback = { message: string; level: Level; error?: PostgrestError | undefined };
+export type Feedback = {
+	message: string;
+	level: Level;
+	error?: PostgrestError | AuthError | undefined;
+};
 
 // A global list of errors to display to the user, global to the application.
 let messages = $state<Feedback[]>([]);
@@ -15,7 +19,11 @@ export function getPendingActions() {
 	return pendingActions;
 }
 
-export function addFeedback(message: string, level: Level, error?: PostgrestError | undefined) {
+export function addFeedback(
+	message: string,
+	level: Level,
+	error?: PostgrestError | AuthError | undefined
+) {
 	messages = [...messages, { message, level, error }];
 }
 

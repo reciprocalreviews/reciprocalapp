@@ -4,7 +4,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import { onMount, type Snippet } from 'svelte';
 	import { invalidate } from '$app/navigation';
-	import type { PostgrestError, Session, SupabaseClient } from '@supabase/supabase-js';
+	import type { AuthError, PostgrestError, Session, SupabaseClient } from '@supabase/supabase-js';
 	import { createAuthContext, getAuth } from './Auth.svelte';
 	import { setDB } from '$lib/data/CRUD';
 	import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
@@ -45,7 +45,7 @@
 	message: string,
 	level: Level,
 	index: number,
-	error: PostgrestError | undefined
+	error: PostgrestError | AuthError | undefined
 )}
 	<div class="feedback {level}">
 		<div>

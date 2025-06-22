@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.18 2025-06-22
 
+## Fixed
+
+- Type error in error handling.
+
 ## Maintenance
 
 - Updated Playrought, Svelte, SvelteKit, Supabase, eslint.
