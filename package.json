@@ -1,6 +1,6 @@
 {
 	"name": "reciprocalapp",
-	"version": "0.1.18",
+	"version": "0.1.19",
 	"private": true,
 	"prepare": "svelte-kit sync",
 	"scripts": {
@@ -27,7 +27,7 @@
 		"@playwright/test": "^1",
 		"@sveltejs/adapter-auto": "^6",
 		"@sveltejs/kit": "^2.8",
-		"@sveltejs/vite-plugin-svelte": "^5",
+		"@sveltejs/vite-plugin-svelte": "^6",
 		"@typescript-eslint/eslint-plugin": "^8",
 		"@typescript-eslint/parser": "^8",
 		"eslint": "^9",
@@ -40,7 +40,7 @@
 		"svelte-check": "^4",
 		"tslib": "^2",
 		"typescript": "^5",
-		"vite": "^6",
+		"vite": "^7",
 		"vitest": "^3"
 	},
 	"type": "module",
