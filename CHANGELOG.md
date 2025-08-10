@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.20 2025-08-10
 
+## Added
+
+- #31: Dynamic steward list.
+
 ## Fixed
 
 - More consistent formatting of currency links.

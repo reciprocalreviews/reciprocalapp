@@ -1,6 +1,10 @@
 <script>
+	import Feedback from '$lib/components/Feedback.svelte';
 	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
+
+	let { data } = $props();
+	let { stewards } = $derived(data);
 </script>
 
 <Page title="About" breadcrumbs={[]}>
@@ -19,10 +23,17 @@
 
 	<p>Current stewards are:</p>
 
-	<ul>
-		<li>
-			<Link to="https://amyko.phd">Amy J. Ko</Link> (Professor, The Information School, University of
-			Washington)
-		</li>
-	</ul>
+	{#if stewards}
+		<ul>
+			{#each stewards as steward}
+				<li>
+					<Link to="/scholar/{steward.id}">{steward.name ?? 'anonymous'}</Link>
+				</li>
+			{/each}
+		</ul>
+	{:else}
+		<Feedback>Unable to load active stewards.</Feedback>
+	{/if}
+
+	<p>Would you like to become a steward? Reach out to us and let's chat.</p>
 </Page>
