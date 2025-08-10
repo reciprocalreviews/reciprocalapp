@@ -83,7 +83,9 @@
 		<!-- Key details about costs. -->
 		<p>
 			{#if currency}
-				This venue uses the <Link to="/currency/{venue.currency}">{currency.name}</Link> currency.
+				This venue uses the <Link background to="/currency/{venue.currency}">★ {currency.name}</Link
+				>
+				currency.
 			{:else}
 				<Feedback error>Unable to load this venue's currency.</Feedback>
 			{/if}

@@ -5,14 +5,16 @@
 	let {
 		to,
 		small = false,
+		background = false,
 		children
-	}: { to: string; small?: boolean; children: Snippet } = $props();
+	}: { to: string; small?: boolean; background?: boolean; children: Snippet } = $props();
 
 	let inactive = $derived(page.url.pathname === to);
 </script>
 
 <a
 	class:small
+	class:background
 	href={inactive ? null : to}
 	target={to.startsWith('http') ? '_blank' : null}
 	aria-current={inactive ? 'page' : null}
@@ -27,7 +29,8 @@
 		text-decoration-skip-ink: none;
 	}
 
-	a.small {
+	a.small,
+	.background {
 		font-size: var(--small-font-size);
 	}
 
@@ -44,5 +47,12 @@
 	a[aria-current] {
 		color: var(--text-color);
 		text-decoration: none;
+	}
+
+	.background {
+		background-color: var(--salient-color);
+		color: var(--background-color);
+		padding: calc(var(--spacing) / 2);
+		border-radius: var(--roundedness);
 	}
 </style>
