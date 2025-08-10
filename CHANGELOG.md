@@ -3,11 +3,17 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](http://semver.org/) format.
 
+## 0.1.20 2025-08-10
+
+## Maintenance
+
+- Updated minor versions of Playwright, Supabase, Svelte, SvelteKit, Typescript, vite.
+
 ## 0.1.19 2025-07-27
 
 ## Maintenance
 
-- Updated minor versions of Playwrite, Supabase, Svelte, SvelteKit, eslint.
+- Updated minor versions of Playwright, Supabase, Svelte, SvelteKit, eslint.
 - Updated to vite 7.
 
 ## 0.1.18 2025-06-22
