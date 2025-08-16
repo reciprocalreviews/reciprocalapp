@@ -31,6 +31,7 @@ export function addError(error: DBError) {
 	addFeedback(error.message, 'error', error.details);
 }
 
+/** Returns false if unsuccessful, true or the expected data if successful. */
 export async function handle<T>(
 	action: Promise<Result<T>>,
 	success?: string | undefined

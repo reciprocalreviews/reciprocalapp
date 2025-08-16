@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 
 ## 0.1.21 2025-08-16
 
+### Added
+
+- Permit zero submission cost and submissions (also to ease testing of submission creation).
+
 ### Fixed
 
 - Improved wrapping of editable text widget.

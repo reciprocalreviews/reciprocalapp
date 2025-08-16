@@ -46,10 +46,13 @@
 	}
 
 	function validChargeFormat(text: string) {
-		return text.split('\n').every((line) => {
-			const parts = line.trim().split(' ');
-			return parts.length === 2 && ORCIDRegex.test(parts[0]) && !isNaN(parseFloat(parts[1]));
-		});
+		return (
+			text.length === 0 ||
+			text.split('\n').every((line) => {
+				const parts = line.trim().split(' ');
+				return parts.length === 2 && ORCIDRegex.test(parts[0]) && !isNaN(parseFloat(parts[1]));
+			})
+		);
 	}
 
 	function duplicateScholars(text: string) {
@@ -58,14 +61,19 @@
 	}
 
 	function validCharge(text: string, cost: number) {
-		return text.split('\n').reduce((sum, line) => sum + parseFloat(line.split(' ')[1]), 0) === cost;
+		return (
+			text.trim().length === 0 ||
+			text.split('\n').reduce((sum, line) => sum + parseFloat(line.split(' ')[1]), 0) === cost
+		);
 	}
 
 	function chargeTextToCharges(text: string): { scholar: string; payment: number }[] {
-		return text.split('\n').map((line) => {
-			const parts = line.split(' ');
-			return { scholar: parts[0], payment: parseFloat(parts[1]) };
-		});
+		return text.trim().length === 0
+			? []
+			: text.split('\n').map((line) => {
+					const parts = line.split(' ');
+					return { scholar: parts[0], payment: parseFloat(parts[1]) };
+				});
 	}
 
 	async function checkAffordability() {
@@ -143,7 +151,7 @@
 		valid={() =>
 			affordable === true
 				? undefined
-				: charges.length === 0
+				: charges.length === 0 && submissionCost > 0
 					? 'You must specify charges for the submission.'
 					: !validChargeFormat(charges)
 						? 'Each line must be an ORCID, then a space, then a number.'
@@ -169,9 +177,9 @@
 	<Button
 		tip="Create a new submission"
 		active={affordable === true && validSubmission(title, externalID, charges, submissionCost)}
-		action={() => {
+		action={async () => {
 			if (user) {
-				const result = handle(
+				const result = await handle(
 					db.createSubmission(
 						user,
 						title,
@@ -183,13 +191,16 @@
 					)
 				);
 
-				title = '';
-				expertise = '';
-				externalID = '';
-				previousID = '';
-				charges = '';
-				affordable = undefined;
-				expanded = false;
+				// Reset form if successful.
+				if (result) {
+					title = '';
+					expertise = '';
+					externalID = '';
+					previousID = '';
+					charges = '';
+					affordable = undefined;
+					expanded = false;
+				}
 
 				return result;
 			}
