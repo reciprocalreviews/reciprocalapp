@@ -14,9 +14,17 @@
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import { handle } from '../../../feedback.svelte';
 	import Status from '$lib/components/Status.svelte';
-	import { CreateLabel, PrivateLabel } from '$lib/components/Labels';
+	import {
+		CreateLabel,
+		DownLabel,
+		FilterLabel,
+		PrivateLabel,
+		UpLabel
+	} from '$lib/components/Labels';
 	import Column from '$lib/components/Row.svelte';
 	import isRoleApprover from '$lib/data/isRoleApprover';
+	import type { SubmissionRow } from '$data/types';
+	import TextField from '$lib/components/TextField.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -74,6 +82,53 @@
 
 	/** Whether the new submission card is expanded */
 	let newSubmissionExpanded = $state(false);
+
+	let paymentSortPendingFirst = $state(true);
+	let titleSortIncreasing = $state(true);
+	let idSortIncreasing = $state(true);
+	let sortOrder = $state<('payment' | 'title' | 'id')[]>(['title', 'id', 'payment']);
+
+	let filter = $state('');
+
+	function sortedAndFiltered(submissions: SubmissionRow[]): SubmissionRow[] {
+		const trimmedFilter = filter.trim().toLowerCase();
+		const subs = submissions.filter(
+			(sub) =>
+				sub.title.toLowerCase().includes(trimmedFilter) ||
+				sub.externalid.toLowerCase().includes(trimmedFilter)
+		);
+		for (const column of sortOrder) {
+			switch (column) {
+				case 'payment':
+					subs.sort(
+						(a, b) => (getSubmissionPaymentStatus(a) ?? -1) - (getSubmissionPaymentStatus(b) ?? -1)
+					);
+					if (!paymentSortPendingFirst) subs.reverse();
+					break;
+				case 'title':
+					subs.sort((a, b) => a.title.localeCompare(b.title));
+					if (!titleSortIncreasing) subs.reverse();
+					break;
+				case 'id':
+					subs.sort((a, b) => a.externalid.localeCompare(b.externalid));
+					if (!idSortIncreasing) subs.reverse();
+					break;
+			}
+		}
+		return subs;
+	}
+
+	function getSubmissionPaymentStatus(submission: SubmissionRow): number | undefined {
+		const submissionTransactions =
+			transactions === null
+				? null
+				: submission.transactions
+						.filter((t) => t === NullUUID)
+						.map((t) => transactions.find((tr) => tr.id === t))
+						.filter((t) => t !== undefined);
+		if (submissionTransactions === null) return undefined;
+		else return submission.transactions.length - submissionTransactions.length;
+	}
 </script>
 
 {#if venue}
@@ -102,105 +157,135 @@
 			</Cards>
 		{/if}
 
+		<TextField label="Filter {FilterLabel}" placeholder="title, id" bind:text={filter}></TextField>
+
 		{#if submissions}
 			{#if submissions.length === 0}
 				<Feedback>This venue has no submissions (or none visible to you).</Feedback>
 			{:else}
-				<!-- Show a full-width table of all submissions, metadata about each, and bidding buttons if the current scholar is a volunteer. -->
-				<Table full>
-					{#snippet header()}
-						<th>Payment</th>
-						<th>Submission</th>
-						<th>Expertise</th>
-						<th>ID</th>
-						<!-- If bidding is enabled, add column for each of the scholar's volunteer roles -->
-						{#each visibleRoles as role}
-							<th>{role.name}</th>
-						{/each}
-					{/snippet}
-					{#each submissions as submission}
-						{@const submissionTransactions =
-							transactions === null
-								? null
-								: submission.transactions
-										.filter((t) => t === NullUUID)
-										.map((t) => transactions.find((tr) => tr.id === t))
-										.filter((t) => t !== undefined)}
-						<tr>
-							<td>
-								<!-- Couldn't load transactions? -->
-								{#if submissionTransactions === null}
-									{PrivateLabel}
-								{:else if submissionTransactions.length === submission.transactions.length}
-									<Status>paid</Status>
-								{:else}
-									<Status good={false}>
-										{submission.transactions.length - submissionTransactions.length} pending</Status
-									>
-								{/if}
-							</td>
-							<td><SubmissionPreview {submission} /></td>
-							<td>{submission.expertise}</td>
-							<td>{submission.externalid}</td>
-							<!-- If we have all the information, show metadata about bidding. -->
+				{@const sorted = sortedAndFiltered(submissions)}
+				{#if sorted.length === 0}
+					<Feedback>All submissions filtered.</Feedback>
+				{:else}
+					<!-- Show a full-width table of all submissions, metadata about each, and bidding buttons if the current scholar is a volunteer. -->
+					<Table full>
+						{#snippet header()}
+							<th
+								>Payment <Button
+									small
+									background={false}
+									tip={paymentSortPendingFirst ? 'Sort by pending last' : 'Sort by pending first'}
+									action={() => {
+										paymentSortPendingFirst = !paymentSortPendingFirst;
+										sortOrder = [...sortOrder.filter((o) => o !== 'payment'), 'payment'];
+									}}>{paymentSortPendingFirst ? DownLabel : UpLabel}</Button
+								></th
+							>
+							<th
+								>Title <Button
+									small
+									background={false}
+									tip={titleSortIncreasing ? 'Reverse sort by title' : 'Sort by title'}
+									action={() => {
+										titleSortIncreasing = !titleSortIncreasing;
+										sortOrder = [...sortOrder.filter((o) => o !== 'title'), 'title'];
+									}}>{titleSortIncreasing ? DownLabel : UpLabel}</Button
+								></th
+							>
+							<th>Expertise</th>
+							<th
+								>ID <Button
+									small
+									background={false}
+									tip={idSortIncreasing ? 'Reverse sort by ID' : 'Sort by ID'}
+									action={() => {
+										idSortIncreasing = !idSortIncreasing;
+										sortOrder = [...sortOrder.filter((o) => o !== 'id'), 'id'];
+									}}>{idSortIncreasing ? DownLabel : UpLabel}</Button
+								></th
+							>
+							<!-- If bidding is enabled, add column for each of the scholar's volunteer roles -->
 							{#each visibleRoles as role}
-								<!-- This cell should show all actions available for this role and submission, based on the current scholar's role. -->
-								<td>
-									<Column>
-										{#if uid}
-											{@const roleAssignments = assignments?.filter(
-												(a) => a.submission === submission.id && a.role === role.id
-											)}
-											{@const approvedAssignments =
-												roleAssignments?.filter((a) => a.approved) ?? []}
-											{@const bids = roleAssignments?.filter((a) => a.bid) ?? []}
-											{@const scholarsBid = bids?.find((a) => a.scholar === uid)}
-											<!-- If the current scholar is an approver, show the current assignemnts -->
-											{#if role.isApprover}
-												{#each approvedAssignments as assignment}
-													<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
-													<ScholarLink id={assignment.scholar} />
-												{:else}
-													<span><strong>0</strong> assigned</span>
-												{/each}
-											{/if}
-
-											<!-- Show bidding if the role is biddable, as bidding is public. -->
-											{#if role.biddable}
-												<!-- If the current scholar is an editor or approver for this role, show the number of bids. -->
-												{#if role.isApprover}
-													<div><strong>{bids.length}</strong> bids</div>
-												{/if}
-												{#if scholarsBid === undefined}
-													<!-- No assignments? Allow bidding -->
-													<Button
-														tip="Express interest in serving as {role?.description ??
-															'in this role'}"
-														action={() =>
-															handle(db.createAssignment(submission.id, uid, role.id, true))}
-														>Bid</Button
-													>
-												{:else if scholarsBid !== undefined && !scholarsBid.approved}
-													<!-- Shown an unbid button if not yet approved -->
-													<Button
-														tip="Remove interest in serving as {role?.description ??
-															'in this role'}"
-														action={() => handle(db.deleteAssignment(scholarsBid.id))}>Unbid</Button
-													>
-												{/if}
-											{/if}
-										{:else}
-											<!-- Not logged in? Don't show any information. -->
-											{PrivateLabel}
-										{/if}
-									</Column>
-								</td>
+								<th>{role.name}</th>
 							{/each}
-						</tr>
-					{:else}
-						<Feedback>No active submissions.</Feedback>
-					{/each}
-				</Table>
+						{/snippet}
+						{#each sorted as submission}
+							{@const status = getSubmissionPaymentStatus(submission)}
+							<tr>
+								<td>
+									<!-- Couldn't load transactions? -->
+									{#if status === undefined}
+										{PrivateLabel}
+									{:else if status === 0}
+										<Status>paid</Status>
+									{:else}
+										<Status good={false}>
+											{status} pending</Status
+										>
+									{/if}
+								</td>
+								<td><SubmissionPreview {submission} /></td>
+								<td>{submission.expertise}</td>
+								<td>{submission.externalid}</td>
+								<!-- If we have all the information, show metadata about bidding. -->
+								{#each visibleRoles as role}
+									<!-- This cell should show all actions available for this role and submission, based on the current scholar's role. -->
+									<td>
+										<Column>
+											{#if uid}
+												{@const roleAssignments = assignments?.filter(
+													(a) => a.submission === submission.id && a.role === role.id
+												)}
+												{@const approvedAssignments =
+													roleAssignments?.filter((a) => a.approved) ?? []}
+												{@const bids = roleAssignments?.filter((a) => a.bid) ?? []}
+												{@const scholarsBid = bids?.find((a) => a.scholar === uid)}
+												<!-- If the current scholar is an approver, show the current assignemnts -->
+												{#if role.isApprover}
+													{#each approvedAssignments as assignment}
+														<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
+														<ScholarLink id={assignment.scholar} />
+													{:else}
+														<span><strong>0</strong> assigned</span>
+													{/each}
+												{/if}
+
+												<!-- Show bidding if the role is biddable, as bidding is public. -->
+												{#if role.biddable}
+													<!-- If the current scholar is an editor or approver for this role, show the number of bids. -->
+													{#if role.isApprover}
+														<div><strong>{bids.length}</strong> bids</div>
+													{/if}
+													{#if scholarsBid === undefined}
+														<!-- No assignments? Allow bidding -->
+														<Button
+															tip="Express interest in serving as {role?.description ??
+																'in this role'}"
+															action={() =>
+																handle(db.createAssignment(submission.id, uid, role.id, true))}
+															>Bid</Button
+														>
+													{:else if scholarsBid !== undefined && !scholarsBid.approved}
+														<!-- Shown an unbid button if not yet approved -->
+														<Button
+															tip="Remove interest in serving as {role?.description ??
+																'in this role'}"
+															action={() => handle(db.deleteAssignment(scholarsBid.id))}
+															>Unbid</Button
+														>
+													{/if}
+												{/if}
+											{:else}
+												<!-- Not logged in? Don't show any information. -->
+												{PrivateLabel}
+											{/if}
+										</Column>
+									</td>
+								{/each}
+							</tr>
+						{/each}
+					</Table>
+				{/if}
 			{/if}
 		{:else}
 			<Feedback error>Unable to load submissions.</Feedback>

@@ -7,3 +7,6 @@ export const EditLabel = monoEmoij('✎');
 export const PrivateLabel = '••••';
 export const EmptyLabel = '—';
 export const UnknownLabel = monoEmoij('🔒');
+export const DownLabel = '↓';
+export const UpLabel = '↑';
+export const FilterLabel = monoEmoij('🔎');

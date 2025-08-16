@@ -13,7 +13,8 @@
 		view: _ = $bindable(undefined),
 		warn = undefined,
 		end = false,
-		background = true
+		background = true,
+		small = false
 	}: {
 		children: Snippet;
 		action: ((event?: Event) => void) | ((event?: Event) => Promise<void>);
@@ -26,6 +27,7 @@
 		warn?: string | undefined;
 		end?: boolean | undefined;
 		background?: boolean;
+		small?: boolean;
 	} = $props();
 
 	/** True if we're evaluating the action. Allows us to deactivate button while waiting for a promise. */
@@ -61,6 +63,7 @@
 		class:background
 		class:warn={warn !== undefined}
 		class:end
+		class:small
 		onclick={async (event) => await act(event)}>{@render children()}</button
 	>
 {:else}
@@ -83,6 +86,10 @@
 		color: var(--foreground-color);
 		cursor: pointer;
 		white-space: nowrap;
+	}
+
+	button.small {
+		font-size: var(--extra-small-font-size);
 	}
 
 	button.background {
