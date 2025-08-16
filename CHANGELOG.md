@@ -15,6 +15,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Improved wrapping of editable text widget.
 - Fixed post-submission behavior, collapsing and resetting form.
 - Improved padding of cards.
+- Better spacing on h1 headers in page.
 
 ### Maintenance
 

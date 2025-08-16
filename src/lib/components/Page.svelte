@@ -66,6 +66,10 @@
 		max-width: 40em;
 		margin: auto;
 	}
+
+	.page :global(h1) {
+		margin-block-start: var(--spacing);
+	}
 	.details {
 		display: flex;
 		flex-direction: row;
