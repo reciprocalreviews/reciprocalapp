@@ -13,7 +13,8 @@ import {
 	type AssignmentID,
 	type SubmissionStatus,
 	type RoleRow,
-	type AssignmentRow
+	type AssignmentRow,
+	type VenueRow
 } from '../../data/types';
 import type { Charge, TransactionID } from '$lib/types/Transaction';
 import { getContext, setContext } from 'svelte';
@@ -140,7 +141,11 @@ export default abstract class CRUD {
 	): Promise<Result<string>>;
 	abstract updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result>;
 	abstract updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result>;
-	abstract inviteToRole(role: RoleID, emails: string[]): Promise<Result<string[]>>;
+	abstract inviteToRole(
+		role: RoleRow,
+		venue: VenueRow,
+		emails: string[]
+	): Promise<Result<string[]>>;
 	abstract acceptRoleInvite(id: VolunteerID, response: Response): Promise<Result>;
 
 	abstract editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<Result>;

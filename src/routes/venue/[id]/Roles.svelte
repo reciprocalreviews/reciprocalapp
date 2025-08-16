@@ -199,7 +199,8 @@
 								if (
 									await handle(
 										db.inviteToRole(
-											role.id,
+											role,
+											venue,
 											invites[role.id].split(',').map((s) => s.trim())
 										),
 										'Invitations sent!'

@@ -15,7 +15,8 @@ import type {
 	AssignmentID,
 	SubmissionStatus,
 	RoleRow,
-	AssignmentRow
+	AssignmentRow,
+	VenueRow
 } from '../../data/types';
 import CRUD, { NullUUID, type Result } from './CRUD';
 import Scholar from './Scholar.svelte';
@@ -714,7 +715,7 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('UpdateVolunteerExpertise', error);
 	}
 
-	async inviteToRole(role: RoleID, emails: string[]): Promise<Result<string[]>> {
+	async inviteToRole(role: RoleRow, venue: VenueRow, emails: string[]): Promise<Result<string[]>> {
 		const { data: scholars, error: scholarsError } = await this.client
 			.from('scholars')
 			.select()
@@ -726,9 +727,17 @@ export default class SupabaseCRUD extends CRUD {
 
 		const ids: string[] = [];
 		for (const scholar of scholars) {
-			const { data, error } = await this.createVolunteer(scholar.id, role, false, false);
+			const { data, error } = await this.createVolunteer(scholar.id, role.id, false, false);
 			if (error) return { error };
-			if (data) ids.push(data);
+			if (data) {
+				ids.push(data);
+				this.emailScholars([scholar.id], role.venueid, 'RoleInvite', [
+					role.name,
+					venue.id,
+					venue.title,
+					scholar.id
+				]);
+			}
 		}
 		return { data: ids };
 	}

@@ -45,6 +45,13 @@ export const Emails = {
 			'<a href="mailto:$2">$1</a> removed you as $3 for this submission:',
 			'https://reciprocal.reviews/submission/$4'
 		]
+	},
+	RoleInvite: {
+		subject: 'You were invited to a reviewing role',
+		paragraphs: [
+			'You have been invited to the $1 role for <a href="https://reciprocal.reviews/venue/$2">$3</a>. You can accept or decline on your profile:',
+			'https://reciprocal.reviews/scholar/$4'
+		]
 	}
 } satisfies Record<string, Email>;
 
