@@ -52,28 +52,6 @@
 {/if}
 <p>See <Link to="/venue/{venue.id}/volunteers">all volunteers</Link> for this venue.</p>
 
-<!-- Find all invitations -->
-{#if volunteers}
-	{@const invites = volunteers.filter((v) => v.accepted === 'invited')}
-
-	{#each invites as invite}
-		<p>
-			The editor has invited you to the <strong
-				>{roles?.find((r) => r.id === invite.roleid)?.name ?? EmptyLabel}</strong
-			>
-			role.
-			<Button
-				tip="accept this invitation"
-				action={() => handle(db.acceptRoleInvite(invite.id, 'accepted'))}>Accept</Button
-			>
-			<Button
-				tip="decline this invitation"
-				action={() => handle(db.acceptRoleInvite(invite.id, 'declined'))}>Decline</Button
-			>
-		</p>
-	{/each}
-{/if}
-
 {#if roles}
 	<Cards>
 		<Card

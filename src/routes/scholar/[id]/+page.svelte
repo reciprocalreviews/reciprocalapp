@@ -12,13 +12,15 @@
 		commitments
 			?.map((c) => {
 				return {
+					id: c.id,
+					invited: c.accepted === 'invited',
 					name: c.roles?.name,
 					venue: venues?.find((v) => v.id === c.roles?.venueid)?.title,
 					venueid: c.roles?.venueid
 				};
 			})
 			.filter(
-				(v): v is { name: string; venue: string; venueid: string } =>
+				(v): v is { id: string; invited: boolean; name: string; venue: string; venueid: string } =>
 					v.name !== undefined && v.venue !== undefined && v.venueid !== undefined
 			) ?? []
 	);

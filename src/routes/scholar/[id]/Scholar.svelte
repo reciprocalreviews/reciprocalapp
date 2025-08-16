@@ -18,6 +18,10 @@
 	import type { CurrencyID, CurrencyRow, SubmissionRow, TokenRow } from '$data/types';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Tip from '$lib/components/Tip.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import { handle } from '../../feedback.svelte';
+	import { EmptyLabel } from '$lib/components/Labels';
+	import VenueLink from '$lib/components/VenueLink.svelte';
 
 	let {
 		scholar,
@@ -29,7 +33,7 @@
 		currencies
 	}: {
 		scholar: Scholar;
-		commitments: { name: string; venue: string; venueid: string }[];
+		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
 		editing: { id: string; title: string }[] | null;
 		tokens: TokenRow[] | null;
 		transactions: number | null;
@@ -89,6 +93,22 @@
 			change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
 			>I am available to review.</Checkbox
 		>
+
+		<!-- Find all invitations -->
+		{#each commitments.filter((v) => v.invited) as invite}
+			<Feedback>
+				The editor has invited you to the <strong>{invite.name ?? EmptyLabel}</strong>
+				role for <VenueLink id={invite.venueid} name={invite.venue} />. Would you like to
+				<Button
+					tip="accept this invitation"
+					action={() => handle(db.acceptRoleInvite(invite.id, 'accepted'))}>Accept</Button
+				>
+				<Button
+					tip="decline this invitation"
+					action={() => handle(db.acceptRoleInvite(invite.id, 'declined'))}>Decline</Button
+				>?
+			</Feedback>
+		{/each}
 	{/if}
 
 	<Cards>

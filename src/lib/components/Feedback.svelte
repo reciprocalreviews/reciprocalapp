@@ -9,23 +9,27 @@
 </script>
 
 {#if inline}
-	<div class={['feedback', { error }]}>{@render children()}</div>
+	<p class={['inline', { error }]}>{@render children()}</p>
 {:else}
 	<p class={{ error }}>{@render children()}</p>
 {/if}
 
 <style>
-	p,
-	div {
+	p {
 		margin-top: 0;
 		background: var(--salient-color);
 		color: var(--background-color);
 		font-size: var(--small-font-size);
-		padding: calc(var(--spacing) / 2);
+		padding: var(--spacing);
 		border-radius: var(--roundedness);
 	}
 
-	div {
+	p :global(a) {
+		color: var(--background-color);
+		text-decoration: underline;
+	}
+
+	.inline {
 		display: inline-block;
 		align-self: flex-start;
 	}
