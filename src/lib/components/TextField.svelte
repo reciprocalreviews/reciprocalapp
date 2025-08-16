@@ -81,6 +81,7 @@
 			<input
 				bind:value={text}
 				bind:this={view}
+				class:active
 				{name}
 				disabled={!active}
 				{size}
@@ -94,6 +95,7 @@
 		{:else}
 			<textarea
 				class:invalid={!isValid}
+				class:active
 				disabled={!active}
 				{placeholder}
 				onfocus={() => (wasFocused = true)}
@@ -106,7 +108,7 @@
 					event.key === 'Enter' && event.metaKey && done ? edit(event) : undefined}
 			></textarea>
 		{/if}
-		<span class="ruler" bind:this={measure}
+		<span class="ruler" class:active={!active} bind:this={measure}
 			>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n')}</span
 		>
 	</label>
@@ -125,7 +127,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing);
-		width: 100%;
 	}
 
 	input {
@@ -142,6 +143,11 @@
 		background: var(--background-color);
 		overflow: visible !important;
 		min-width: 2em;
+		display: none;
+	}
+	input.active,
+	textarea.active {
+		display: inline;
 	}
 
 	textarea {
@@ -159,16 +165,20 @@
 		min-width: 1em;
 		min-height: 1em;
 		overflow: hidden;
+		display: none;
 	}
 
 	.ruler {
 		display: inline-block;
 		width: fit-content;
-		position: absolute;
 		white-space: pre;
-		top: 0;
-		left: 0;
+		left: var(--spacing);
 		visibility: hidden;
+	}
+
+	.ruler.active {
+		visibility: visible;
+		white-space: wrap;
 	}
 
 	input[disabled],
@@ -204,7 +214,6 @@
 
 	label {
 		position: relative;
-		overflow: hidden;
 		font-style: normal;
 	}
 

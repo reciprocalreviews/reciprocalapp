@@ -34,7 +34,7 @@
 	let field = $state<HTMLInputElement | HTMLTextAreaElement | undefined>(undefined);
 	let button = $state<HTMLButtonElement | undefined>(undefined);
 
-	let invalid = $derived(valid === undefined || valid(text) !== undefined);
+	let invalid = $derived(valid !== undefined && valid(text) !== undefined);
 
 	async function saveEdit(event?: Event) {
 		if (invalid) {
@@ -76,19 +76,17 @@
 		>{#if editing}{invalid ? DeleteLabel : ConfirmLabel}{:else if editing === undefined}<Dots
 			/>{:else}{EditLabel}{/if}</Button
 	>
-	<div class="box" class:inline class:editing>
-		<TextField
-			{label}
-			{note}
-			{inline}
-			{valid}
-			bind:text
-			{placeholder}
-			active={editing}
-			bind:view={field}
-			done={() => (editing ? saveAndFocus() : undefined)}
-		/>
-	</div>
+	<TextField
+		{label}
+		{note}
+		{inline}
+		{valid}
+		bind:text
+		{placeholder}
+		active={editing}
+		bind:view={field}
+		done={() => (editing ? saveAndFocus() : undefined)}
+	/>
 </div>
 
 <style>
@@ -96,21 +94,10 @@
 		display: flex;
 		flex-direction: row;
 		gap: var(--spacing);
-		align-items: center;
+		align-items: normal;
 	}
 
 	.editable.inline {
-		align-items: center;
-	}
-
-	.box {
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		gap: var(--spacing);
-		align-items: baseline;
-		flex: 1;
-		/* To align with the button*/
-		padding-block-start: calc(var(--spacing) / 2);
+		align-items: normal;
 	}
 </style>
