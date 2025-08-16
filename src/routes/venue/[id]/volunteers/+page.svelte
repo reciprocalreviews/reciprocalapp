@@ -33,7 +33,7 @@
 		{#snippet subtitle()}Volunteers{/snippet}
 		<p>
 			These are scholars that have volunteered to review for <SourceLink
-				id={page.params.id}
+				id={page.params.id ?? ''}
 				name={venue.title}
 			/>.
 		</p>
