@@ -1,6 +1,6 @@
 {
 	"name": "reciprocalapp",
-	"version": "0.1.20",
+	"version": "0.1.21",
 	"private": true,
 	"prepare": "svelte-kit sync",
 	"scripts": {

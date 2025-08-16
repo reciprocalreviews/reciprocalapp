@@ -3,35 +3,41 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](http://semver.org/) format.
 
+## 0.1.21 2025-08-16
+
+### Maintenance
+
+- Updated minor versions of Svelte, vite, Supabase.
+
 ## 0.1.20 2025-08-10
 
-## Added
+### Added
 
 - #31: Dynamic steward list.
 
-## Fixed
+### Fixed
 
 - More consistent formatting of currency links.
 
-## Maintenance
+### Maintenance
 
 - Updated minor versions of Playwright, Supabase, Svelte, SvelteKit, Typescript, vite.
 
 ## 0.1.19 2025-07-27
 
-## Maintenance
+### Maintenance
 
 - Updated minor versions of Playwright, Supabase, Svelte, SvelteKit, eslint.
 - Updated to vite 7.
 
 ## 0.1.18 2025-06-22
 
-## Fixed
+### Fixed
 
 - Type error in error handling.
 - Fixed #44: Reminding scholars of stale status.
 
-## Maintenance
+### Maintenance
 
 - Updated Playwright, Svelte, SvelteKit, Supabase, eslint.
 
