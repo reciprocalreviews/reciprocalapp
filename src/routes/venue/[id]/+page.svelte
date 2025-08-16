@@ -95,8 +95,14 @@
 		</p>
 
 		<p>
-			See the <Link to="/venue/{venue.id}/submissions">{submissionCount ?? 'all'} submissions</Link>
-			in this venue.
+			{#if submissionCount !== null && submissionCount > 0}
+				See the <Link to="/venue/{venue.id}/submissions"
+					>{submissionCount ?? 'all'} submissions</Link
+				>
+				visible to you in this venue.
+			{:else}
+				There are no submissions visible to you in this venue.
+			{/if}
 		</p>
 
 		<h2>Volunteer</h2>
