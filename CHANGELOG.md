@@ -16,6 +16,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 - Fixed post-submission behavior, collapsing and resetting form.
 - Improved padding of cards.
 - Better spacing on h1 headers in page.
+- Improved venue landing page layout.
 
 ### Maintenance
 

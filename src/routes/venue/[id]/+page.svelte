@@ -58,7 +58,6 @@
 			</p>
 		{/if}
 
-		<h2>Editors</h2>
 		{#each venue.editors as editorID, index}
 			<p>
 				This venue is edited by
@@ -79,6 +78,8 @@
 				.
 			</p>
 		{/each}
+
+		<h2>Costs</h2>
 
 		<!-- Key details about costs. -->
 		<p>
