@@ -12,6 +12,7 @@ Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](
 ### Fixed
 
 - Improved wrapping of editable text widget.
+- Fixed post-submission behavior, collapsing and resetting form.
 
 ### Maintenance
 

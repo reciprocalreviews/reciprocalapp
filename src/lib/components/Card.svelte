@@ -25,8 +25,6 @@
 		full?: boolean;
 		expand?: boolean;
 	} = $props();
-
-	let expanded = $state(expand);
 </script>
 
 {#snippet top()}
@@ -34,14 +32,14 @@
 	{#if group}<div class="group"><Tag>{group}</Tag></div>{/if}
 {/snippet}
 
-<div class="card" class:full class:expanded>
+<div class="card" class:full class:expand>
 	<div
 		class="header"
 		role="button"
-		onclick={() => (expanded = !expanded)}
-		onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (expanded = !expanded)}
+		onclick={() => (expand = !expand)}
+		onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (expand = !expand)}
 		tabindex="0"
-		title={expanded ? 'Collapse this card' : 'Expand this card'}
+		title={expand ? 'Collapse this card' : 'Expand this card'}
 	>
 		<Circle {icon}></Circle>
 		<div class="text">
@@ -58,7 +56,7 @@
 			</div>
 		{/if}
 	</div>
-	{#if expanded}
+	{#if expand}
 		{@render children()}
 	{/if}
 </div>
@@ -108,8 +106,8 @@
 		border-radius: var(--roundedness);
 	}
 
-	:not(.expanded) h2,
-	:not(.expanded) h3 {
+	:not(.expand) h2,
+	:not(.expand) h3 {
 		border-bottom: none;
 		margin-bottom: 0;
 	}
