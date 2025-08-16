@@ -57,7 +57,9 @@
 		{/if}
 	</div>
 	{#if expand}
-		{@render children()}
+		<div class="body">
+			{@render children()}
+		</div>
 	{/if}
 </div>
 
@@ -66,11 +68,18 @@
 		display: flex;
 		flex-direction: column;
 		gap: calc(2 * var(--spacing));
-		padding: var(--spacing);
 		border-radius: var(--roundedness);
 		border: var(--border-color) solid var(--border-width);
 		flex: 1;
 		min-width: 12em;
+	}
+
+	.body {
+		padding: var(--spacing);
+		padding-block-start: 0;
+		display: flex;
+		flex-direction: column;
+		gap: calc(2 * var(--spacing));
 	}
 
 	.full {
@@ -90,6 +99,8 @@
 		display: flex;
 		flex-direction: row;
 		gap: var(--spacing);
+		padding: var(--spacing);
+		padding-block-end: 0;
 		flex-wrap: nowrap;
 		align-items: middle;
 		cursor: pointer;
