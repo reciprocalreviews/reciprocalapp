@@ -8,7 +8,6 @@
 	form {
 		display: flex;
 		flex-direction: column;
-		align-items: left;
 		gap: calc(2 * var(--spacing));
 		align-items: flex-start;
 	}
@@ -16,6 +15,7 @@
 	form.inline {
 		flex-direction: row;
 		flex-wrap: wrap;
+		align-items: baseline;
 		gap: var(--spacing);
 		row-gap: var(--spacing);
 	}

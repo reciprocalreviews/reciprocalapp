@@ -126,7 +126,7 @@
 				subheader
 				icon={roleVolunteers.length === 0 ? '👤' : roleVolunteers.length}
 				header={role.name}
-				note={role.description}
+				note={role.description.length === 0 ? 'Role' : role.description}
 			>
 				{#snippet controls()}
 					{#if editor}
@@ -203,7 +203,7 @@
 				{/if}
 
 				{#if editor}
-					<Form inline>
+					<Form>
 						<p>Add one or more people to invite to this role, separated by commas.</p>
 						<TextField
 							label="email"
