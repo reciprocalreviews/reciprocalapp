@@ -14,6 +14,7 @@ Dates should be in`YYYY-MM-
 - Clarified description of minter role.
 - Max width on drop downs.
 - Properly style error messages.
+- Fixed #52, minting welcome tokens before granting them.
 
 ### Maintenance
 

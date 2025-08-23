@@ -768,12 +768,10 @@ export default class SupabaseCRUD extends CRUD {
 		return this.editCurrencyMinters(id, Array.from(new Set([...minters, scholarID])));
 	}
 
-	async mintTokens(id: CurrencyID, amount: number, to: VenueID) {
+	async mintTokens(currencyID: CurrencyID, amount: number, to: VenueID): Promise<Result> {
 		const rows = Array(amount)
 			.fill(0)
-			.map(() => {
-				return { currency: id, venue: to, scholar: null };
-			});
+			.map(() => ({ currency: currencyID, venue: to, scholar: null }));
 
 		const { error } = await this.client.from('tokens').insert(rows);
 		return this.errorOrEmpty('MintTokens', error);
@@ -919,6 +917,14 @@ export default class SupabaseCRUD extends CRUD {
 		if (from === null) return this.error('TransactionMissingFrom');
 		if (to === null) return this.error('TransactionMissingTo');
 
+		// Create the required tokens so they can be transferred.
+		const { error: mintingError } = await this.mintTokens(
+			transaction.currency,
+			transaction.tokens.length,
+			from
+		);
+		if (mintingError) return this.error('MintTokens', mintingError.details, mintingError.message);
+
 		// Transfer the requested number of tokens to the destination.
 		const { error: transferError } = await this.transferTokens(
 			creator,
@@ -931,7 +937,8 @@ export default class SupabaseCRUD extends CRUD {
 			transaction.purpose,
 			transaction.id
 		);
-		if (transferError) this.error('TransferVenueTokens', transferError.details);
+		if (transferError)
+			return this.error('TransferVenueTokens', transferError.details, transferError.message);
 
 		return { data: undefined };
 	}
