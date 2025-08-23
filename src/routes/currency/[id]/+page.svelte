@@ -66,7 +66,10 @@
 		{/if}
 		<Cards>
 			<Card icon={currency.minters.length} header="minters" note="Scholars with the power to mint.">
-				<p>These scholars are the minters for this currency. They can see all transactions.</p>
+				<p>
+					These scholars are the minters for this currency. They can see and approve all
+					transactions.
+				</p>
 				<ul>
 					{#each currency.minters as minter}
 						<li>

@@ -11,6 +11,7 @@ Dates should be in`YYYY-MM-
 - Improved formatting of inline feedback.
 - Improved layout of login form.
 - Centered save feedback in header.
+- Clarified description of minter role.
 
 ### Maintenance
 
