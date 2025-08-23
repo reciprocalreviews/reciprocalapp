@@ -13,6 +13,7 @@ Dates should be in`YYYY-MM-
 - Centered save feedback in header.
 - Clarified description of minter role.
 - Max width on drop downs.
+- Properly style error messages.
 
 ### Maintenance
 
