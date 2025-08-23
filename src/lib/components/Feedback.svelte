@@ -28,6 +28,7 @@
 		margin-top: 0;
 	}
 
+	span :global(a),
 	p :global(a) {
 		color: var(--background-color);
 		text-decoration: underline;
