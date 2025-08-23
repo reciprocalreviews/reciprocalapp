@@ -55,7 +55,9 @@
 	</div>
 {/snippet}
 
-<Header />
+{#if dev}
+	<Header />
+{/if}
 <main>
 	<section class="notifications" aria-live="assertive">
 		{#each feedback as item, index}
