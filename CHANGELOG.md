@@ -1,7 +1,7 @@
 # Changes
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
-Dates should be in`YYYY-MM-
+Dates should be in`YYYY-MM-DD` format.
 
 ## 0.1.22 2025-08-23
 
