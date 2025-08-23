@@ -83,11 +83,11 @@
 	/** Whether the new submission card is expanded */
 	let newSubmissionExpanded = $state(false);
 
+	/** State of sorting and filtering */
 	let paymentSortPendingFirst = $state(true);
 	let titleSortIncreasing = $state(true);
 	let idSortIncreasing = $state(true);
 	let sortOrder = $state<('payment' | 'title' | 'id')[]>(['title', 'id', 'payment']);
-
 	let filter = $state('');
 
 	function sortedAndFiltered(submissions: SubmissionRow[]): SubmissionRow[] {

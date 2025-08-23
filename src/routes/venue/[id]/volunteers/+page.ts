@@ -10,7 +10,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// The commitments to the venue's roles.
 	const { data: commitments, error: commitmentsError } = await supabase
 		.from('volunteers')
-		.select('*, scholars (name), roles (name, venueid)')
+		.select('*, scholars (name, email, orcid), roles (name, venueid)')
 		.eq('roles.venueid', venueid);
 	if (commitmentsError) console.error('Failed to load commitments:', commitmentsError);
 

@@ -14,9 +14,10 @@ Dates should be in`YYYY-MM-
 - Clarified description of minter role.
 - Max width on drop downs.
 - Properly style error messages.
-- Fixed #52, minting welcome tokens before granting them.
+- Fixed [#52](https://github.com/reciprocalreviews/reciprocalapp/issues/52), minting welcome tokens before granting them.
 - Fixed font on non-emoji icons in cards.
-- Fixed #21, passing session to auth state to prevent page flickering.
+- Fixed [#21](https://github.com/reciprocalreviews/reciprocalapp/issues/21), passing session to auth state to prevent page flickering.
+- Fixed [#29](https://github.com/reciprocalreviews/reciprocalapp/issues/29), adding volunteer filter.
 
 ### Maintenance
 

@@ -8,10 +8,13 @@
 	import Tag from '$lib/components/Tag.svelte';
 	import Tags from '$lib/components/Tags.svelte';
 	import Status from '$lib/components/Status.svelte';
-	import { EmptyLabel } from '$lib/components/Labels.js';
+	import { EmptyLabel, FilterLabel } from '$lib/components/Labels.js';
+	import TextField from '$lib/components/TextField.svelte';
 
 	let { data } = $props();
 	const { venue, commitments, roles } = $derived(data);
+
+	let filter = $state('');
 </script>
 
 {#if venue === null}
@@ -37,6 +40,10 @@
 				name={venue.title}
 			/>.
 		</p>
+
+		<TextField label="Filter {FilterLabel}" placeholder="name, expertise, email" bind:text={filter}
+		></TextField>
+
 		{@const rolesIDs = [...new Set(commitments.map((c) => c.roleid))].toSorted(
 			(a, b) =>
 				(roles?.find((r) => r.id === a)?.priority ?? 0) -
@@ -44,31 +51,42 @@
 		)}
 		{#each rolesIDs as role}
 			{@const roleCommitments = commitments.filter((c) => c.roleid === role)}
-			<h2>{roleCommitments[0].roles.name}</h2>
-			<Table full>
-				{#snippet header()}
-					<th>Active</th>
-					<th>Name</th>
-					<th>Expertise</th>
-				{/snippet}
-				{#each roleCommitments.toSorted((a, b) => a.roles?.name.localeCompare(b.roles?.name ?? '') ?? 0) as volunteer}
-					{@const expertise = volunteer.expertise.split(',').filter((s) => s.trim() !== '')}
-					<tr>
-						<td
-							><Status good={volunteer.active}
-								>{#if volunteer.active}active{:else}inactive{/if}</Status
-							></td
-						>
-						<td><ScholarLink id={volunteer.scholarid} /></td>
-						<td
-							><Tags
-								>{#each expertise as topic}<Tag>{topic}</Tag>{:else}<em>{EmptyLabel}</em
-									>{/each}</Tags
-							></td
-						>
-					</tr>
-				{/each}
-			</Table>
+			{@const filteredScholars =
+				filter.length === 0
+					? roleCommitments
+					: roleCommitments.filter(
+							(c) =>
+								c.scholars.name?.toLowerCase().includes(filter.toLowerCase()) ||
+								c.expertise.toLowerCase().includes(filter.toLowerCase()) ||
+								c.scholars.email?.toLowerCase().includes(filter.toLowerCase())
+						)}
+			{#if filteredScholars.length > 0}
+				<h2>{roleCommitments[0].roles.name}</h2>
+				<Table full>
+					{#snippet header()}
+						<th>Active</th>
+						<th>Name</th>
+						<th>Expertise</th>
+					{/snippet}
+					{#each filteredScholars.toSorted((a, b) => a.roles?.name.localeCompare(b.roles?.name ?? '') ?? 0) as volunteer}
+						{@const expertise = volunteer.expertise.split(',').filter((s) => s.trim() !== '')}
+						<tr>
+							<td
+								><Status good={volunteer.active}
+									>{#if volunteer.active}active{:else}inactive{/if}</Status
+								></td
+							>
+							<td><ScholarLink id={volunteer.scholarid} /></td>
+							<td
+								><Tags
+									>{#each expertise as topic}<Tag>{topic}</Tag>{:else}<em>{EmptyLabel}</em
+										>{/each}</Tags
+								></td
+							>
+						</tr>
+					{/each}
+				</Table>
+			{/if}
 		{:else}
 			<Feedback>No volunteers yet.</Feedback>
 		{/each}
