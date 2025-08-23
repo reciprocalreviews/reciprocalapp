@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-
 
 ## 0.1.22 2025-08-23
 
+### Fixed
+
+- Wrap token formatted text.
+
 ### Maintenance
 
 - Updated minor versions of Playwright, Supabase, SvelteKit, vite.

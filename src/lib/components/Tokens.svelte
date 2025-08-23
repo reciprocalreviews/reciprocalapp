@@ -19,7 +19,7 @@
 		border-radius: var(--roundedness);
 		background: var(--salient-color);
 		color: var(--background-color);
-		white-space: nowrap;
+		box-decoration-break: clone;
 	}
 
 	.currency {
