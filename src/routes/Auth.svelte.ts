@@ -7,10 +7,10 @@ export default class SupabaseAuth extends Authentication<User, AuthError> {
 	user = $state<User | null>(null);
 	private client: SupabaseClient;
 
-	constructor(supabase: SupabaseClient, session: Session) {
+	constructor(supabase: SupabaseClient, session: Session | null) {
 		super();
 		this.client = supabase;
-		this.user = session.user;
+		this.user = session?.user ?? null;
 	}
 
 	setUser(user: User | null) {
@@ -49,7 +49,7 @@ export default class SupabaseAuth extends Authentication<User, AuthError> {
 
 const AuthSymbol = Symbol('auth');
 
-export function createAuthContext(supabase: SupabaseClient, session: Session) {
+export function createAuthContext(supabase: SupabaseClient, session: Session | null) {
 	setContext(AuthSymbol, new SupabaseAuth(supabase, session));
 }
 

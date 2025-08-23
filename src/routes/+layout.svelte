@@ -2,9 +2,9 @@
 	import { dev } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
-	import { onMount, type Snippet } from 'svelte';
+	import { onMount } from 'svelte';
 	import { invalidate } from '$app/navigation';
-	import type { AuthError, PostgrestError, Session, SupabaseClient } from '@supabase/supabase-js';
+	import type { AuthError, PostgrestError } from '@supabase/supabase-js';
 	import { createAuthContext, getAuth } from './Auth.svelte';
 	import { setDB } from '$lib/data/CRUD';
 	import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
@@ -12,10 +12,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import { enUS } from '../locale/Locale';
 
-	let {
-		data,
-		children
-	}: { data: { session: Session; supabase: SupabaseClient }; children: Snippet } = $props();
+	let { data, children } = $props();
 
 	createAuthContext(data.supabase, data.session);
 	const auth = getAuth();
