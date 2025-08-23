@@ -8,7 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Added
 
 - Fixed [#29](https://github.com/reciprocalreviews/reciprocalapp/issues/29), adding volunteer filter.
-- Fixed [#23](https://github.com/reciprocalreviews/reciprocalapp/issues/23), supporting ORCID for role invites.
+- Fixed [#32](https://github.com/reciprocalreviews/reciprocalapp/issues/23), supporting ORCID for role invites.
 
 ### Fixed
 
