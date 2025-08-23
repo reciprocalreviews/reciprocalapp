@@ -20,15 +20,17 @@
 
 <header>
 	{#each routes as route}<div class="link"><Link to={route.path}>{route.label}</Link></div>{/each}
+	<div class="feedback">
+		<!-- Saving feedback -->
+		<Feedback inline>
+			{#if pending > 0}
+				<Dots></Dots>
+				{#if pending === 1}saving{:else}{pending} saving{/if}
+			{:else}saved{/if}
+		</Feedback>
+	</div>
 	<div class="authenticated">
 		{#if auth.isAuthenticated()}
-			<!-- Saving feedback -->
-			<Feedback inline>
-				{#if pending > 0}
-					<Dots></Dots>
-					{#if pending === 1}saving{:else}{pending} saving{/if}
-				{:else}saved{/if}
-			</Feedback>
 			<div class="link">
 				<Link small to="https://github.com/reciprocalreviews/reciprocalapp/issues/">Feedback</Link>
 			</div>
@@ -69,6 +71,10 @@
 
 	.link {
 		display: inline-block;
+	}
+
+	.feedback {
+		margin-inline-start: auto;
 	}
 
 	.authenticated {
