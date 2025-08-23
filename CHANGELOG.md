@@ -1,7 +1,13 @@
 # Changes
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
-Dates should be in`YYYY-MM-DD` format and versions are in [semantic versioning](http://semver.org/) format.
+Dates should be in`YYYY-MM-
+
+## 0.1.22 2025-08-23
+
+### Maintenance
+
+- Updated minor versions of Playwright, Supabase, SvelteKit, vite.
 
 ## 0.1.21 2025-08-16
 
