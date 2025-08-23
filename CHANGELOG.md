@@ -12,6 +12,7 @@ Dates should be in`YYYY-MM-
 - Improved layout of login form.
 - Centered save feedback in header.
 - Clarified description of minter role.
+- Max width on drop downs.
 
 ### Maintenance
 

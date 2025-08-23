@@ -51,7 +51,7 @@
 		<div>
 			<span>{message}</span>
 			{#if error}
-				<pre>{error.message}</pre>
+				<div class="detail">{error.message}</div>
 			{/if}
 		</div>
 		<Button action={() => removeError(index)} tip="Dismiss notification">𐄂</Button>
@@ -105,5 +105,10 @@
 
 	.warning {
 		background: var(--focus-color);
+	}
+
+	.detail {
+		font-family: monospace;
+		font-size: var(--small-font-size);
 	}
 </style>
