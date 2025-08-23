@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-
 
 - Wrap token formatted text.
 - Improved formatting of inline feedback.
+- Improved layout of login form.
 
 ### Maintenance
 

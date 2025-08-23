@@ -40,7 +40,7 @@
 		password.</Feedback
 	>
 
-	<Form inline>
+	<Form>
 		<TextField
 			label="email"
 			placeholder=""
@@ -67,7 +67,7 @@
 
 	{#if submitted}
 		<Feedback>Check your email for a sign in code.</Feedback>
-		<Form inline>
+		<Form>
 			<TextField
 				label="password"
 				placeholder="6 digits"
