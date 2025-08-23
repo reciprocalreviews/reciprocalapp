@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-
 ### Fixed
 
 - Wrap token formatted text.
+- Improved formatting of inline feedback.
 
 ### Maintenance
 

@@ -9,19 +9,23 @@
 </script>
 
 {#if inline}
-	<p class={['inline', { error }]}>{@render children()}</p>
+	<span class={['inline', { error }]}>{@render children()}</span>
 {:else}
 	<p class={{ error }}>{@render children()}</p>
 {/if}
 
 <style>
-	p {
-		margin-top: 0;
+	p,
+	span {
 		background: var(--salient-color);
 		color: var(--background-color);
+		padding: calc(var(--spacing) / 2);
 		font-size: var(--small-font-size);
-		padding: var(--spacing);
 		border-radius: var(--roundedness);
+	}
+
+	p {
+		margin-top: 0;
 	}
 
 	p :global(a) {
