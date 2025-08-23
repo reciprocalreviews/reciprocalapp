@@ -9,7 +9,7 @@
 </script>
 
 <span class="count">
-	<span class="icon">
+	<span class="icon {typeof count === 'string' && /\p{Emoji}/gu.test(count) ? 'emoji' : ''}">
 		{typeof count === 'string' ? monoEmoji(count) : count}
 	</span>
 </span>
@@ -27,6 +27,10 @@
 		height: 1em;
 		font-size: var(--small-font-size);
 		align-self: start;
+		font-family: 'Josefin Sans', sans-serif;
+	}
+
+	.emoji {
 		font-family: 'Noto Emoji', 'Josefin Sans', sans-serif;
 	}
 </style>

@@ -15,6 +15,7 @@ Dates should be in`YYYY-MM-
 - Max width on drop downs.
 - Properly style error messages.
 - Fixed #52, minting welcome tokens before granting them.
+- Fixed font on non-emoji icons in cards.
 
 ### Maintenance
 
