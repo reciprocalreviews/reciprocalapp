@@ -1,5 +1,5 @@
 import Authentication from '$lib/auth/Authentication';
-import type { AuthError, SupabaseClient, User } from '@supabase/supabase-js';
+import type { AuthError, Session, SupabaseClient, User } from '@supabase/supabase-js';
 import { getContext, setContext } from 'svelte';
 
 /** Represents the current authenatication state from Supabase. */
@@ -7,9 +7,10 @@ export default class SupabaseAuth extends Authentication<User, AuthError> {
 	user = $state<User | null>(null);
 	private client: SupabaseClient;
 
-	constructor(supabase: SupabaseClient) {
+	constructor(supabase: SupabaseClient, session: Session) {
 		super();
 		this.client = supabase;
+		this.user = session.user;
 	}
 
 	setUser(user: User | null) {
@@ -48,8 +49,8 @@ export default class SupabaseAuth extends Authentication<User, AuthError> {
 
 const AuthSymbol = Symbol('auth');
 
-export function createAuthContext(supabase: SupabaseClient) {
-	setContext(AuthSymbol, new SupabaseAuth(supabase));
+export function createAuthContext(supabase: SupabaseClient, session: Session) {
+	setContext(AuthSymbol, new SupabaseAuth(supabase, session));
 }
 
 export function getAuth(): SupabaseAuth {

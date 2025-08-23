@@ -18,6 +18,7 @@
 	import { EmptyLabel } from '$lib/components/Labels';
 	import type { RoleID, ScholarID } from '$data/types';
 	import isRoleApprover from '$lib/data/isRoleApprover';
+	import Scholar from '$lib/data/Scholar.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -135,16 +136,17 @@
 
 		{#each submission.authors as author}
 			{@const authorIndex = authors.findIndex((a) => a.id === author)}
-			{@const payment = authorIndex !== undefined ? submission.payments[authorIndex] : undefined}
+			{@const payment = authorIndex > -1 ? submission.payments[authorIndex] : undefined}
 			{@const transaction =
 				authorTransactions === null || authorIndex === undefined
 					? undefined
 					: authorTransactions[authorIndex]}
+			{@const scholar = authorIndex > -1 ? new Scholar(authors[authorIndex]) : undefined}
 			<Row>
 				{#if authorIndex === undefined}
 					<Feedback error>Unable to find authors.</Feedback>
 				{:else if isEditor || isAuthor}
-					<ScholarLink id={author}></ScholarLink>
+					<ScholarLink id={scholar ?? author}></ScholarLink>
 					{#if payment !== undefined}
 						{#if transaction === undefined}
 							<Status good={false}>unknown transaction</Status>

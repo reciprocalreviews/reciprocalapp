@@ -16,6 +16,7 @@ Dates should be in`YYYY-MM-
 - Properly style error messages.
 - Fixed #52, minting welcome tokens before granting them.
 - Fixed font on non-emoji icons in cards.
+- Fixed #21, passing session to auth state to prevent page flickering.
 
 ### Maintenance
 

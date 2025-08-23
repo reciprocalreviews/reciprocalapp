@@ -17,7 +17,7 @@
 		children
 	}: { data: { session: Session; supabase: SupabaseClient }; children: Snippet } = $props();
 
-	createAuthContext(data.supabase);
+	createAuthContext(data.supabase, data.session);
 	const auth = getAuth();
 
 	let feedback = $derived(getFeedback());
@@ -58,9 +58,7 @@
 	</div>
 {/snippet}
 
-{#if dev}
-	<Header />
-{/if}
+<Header />
 <main>
 	<section class="notifications" aria-live="assertive">
 		{#each feedback as item, index}
