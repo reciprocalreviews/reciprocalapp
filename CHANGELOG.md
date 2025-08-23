@@ -18,6 +18,7 @@ Dates should be in`YYYY-MM-
 - Fixed font on non-emoji icons in cards.
 - Fixed [#21](https://github.com/reciprocalreviews/reciprocalapp/issues/21), passing session to auth state to prevent page flickering.
 - Fixed [#29](https://github.com/reciprocalreviews/reciprocalapp/issues/29), adding volunteer filter.
+- Fixed [#23](https://github.com/reciprocalreviews/reciprocalapp/issues/23), showing editor roles correctly in profile page.
 
 ### Maintenance
 

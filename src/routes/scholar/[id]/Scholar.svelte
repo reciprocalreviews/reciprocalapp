@@ -157,14 +157,6 @@
 								<Tag>{commitment.name}</Tag>
 							</li>
 						{/each}
-						{#if editing && editing.length > 0}
-							{#each editing as editing}
-								<li>
-									<SourceLink id={editing.id} name={editing.title} />
-									<Tag>Editor</Tag>
-								</li>
-							{/each}
-						{/if}
 					{:else if editing?.length === 0}
 						<li><Feedback>No volunteer commitments.</Feedback></li>
 					{/if}
