@@ -94,6 +94,8 @@
 			>I am available to review.</Checkbox
 		>
 
+		<h2>volunteering</h2>
+
 		<!-- Find all invitations -->
 		{#each commitments.filter((v) => v.invited) as invite}
 			<Feedback>
@@ -109,6 +111,35 @@
 				>?
 			</Feedback>
 		{/each}
+
+		<ul>
+			{#if editing}
+				{#if editing.length > 0}
+					{#each editing as editing}
+						<li>
+							<SourceLink id={editing.id} name={editing.title} />
+							<Tag>Editor</Tag>
+						</li>
+					{/each}
+				{/if}
+			{:else}
+				<li><Feedback>Unable to load editing commitments.</Feedback></li>
+			{/if}
+			{#if commitments}
+				{#if commitments.length > 0}
+					{#each commitments as commitment}
+						<li>
+							<SourceLink id={commitment.venueid} name={commitment.venue} />
+							<Tag>{commitment.name}</Tag>
+						</li>
+					{/each}
+				{:else if editing?.length === 0}
+					<li><Feedback>No volunteer commitments.</Feedback></li>
+				{/if}
+			{:else}
+				<li><Feedback>Unable to load volunteer commitments.</Feedback></li>
+			{/if}
+		</ul>
 	{/if}
 
 	<Cards>
@@ -129,41 +160,6 @@
 			{:else}
 				<Feedback>Unable to load submissions.</Feedback>
 			{/if}
-		</Card>
-
-		<Card
-			icon={commitments.length + (editing?.length ?? 0)}
-			header="commitments"
-			note="Venues volunteered for"
-		>
-			<ul>
-				{#if editing}
-					{#if editing.length > 0}
-						{#each editing as editing}
-							<li>
-								<SourceLink id={editing.id} name={editing.title} />
-								<Tag>Editor</Tag>
-							</li>
-						{/each}
-					{/if}
-				{:else}
-					<li><Feedback>Unable to load editing commitments.</Feedback></li>
-				{/if}
-				{#if commitments}
-					{#if commitments.length > 0}
-						{#each commitments as commitment}
-							<li>
-								<SourceLink id={commitment.venueid} name={commitment.venue} />
-								<Tag>{commitment.name}</Tag>
-							</li>
-						{/each}
-					{:else if editing?.length === 0}
-						<li><Feedback>No volunteer commitments.</Feedback></li>
-					{/if}
-				{:else}
-					<li><Feedback>Unable to load volunteer commitments.</Feedback></li>
-				{/if}
-			</ul>
 		</Card>
 
 		<Card
