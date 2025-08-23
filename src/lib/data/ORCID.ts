@@ -1,1 +1,1 @@
-export const ORCIDRegex = /^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$/;
+export const ORCIDRegex = /^(\d{4}-){3}\d{3}(\d|X)$/;

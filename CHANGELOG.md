@@ -22,6 +22,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed font on non-emoji icons in cards.
 - Fixed [#21](https://github.com/reciprocalreviews/reciprocalapp/issues/21), passing session to auth state to prevent page flickering.
 - Fixed [#23](https://github.com/reciprocalreviews/reciprocalapp/issues/23), showing editor roles correctly in profile page.
+- Fixed [#23](https://github.com/reciprocalreviews/reciprocalapp/issues/23), supporting ORCID for role invites.
 
 ### Maintenance
 

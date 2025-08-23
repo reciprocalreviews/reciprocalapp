@@ -715,14 +715,26 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('UpdateVolunteerExpertise', error);
 	}
 
-	async inviteToRole(role: RoleRow, venue: VenueRow, emails: string[]): Promise<Result<string[]>> {
+	async inviteToRole(
+		role: RoleRow,
+		venue: VenueRow,
+		emailsOrORCIDs: string[]
+	): Promise<Result<string[]>> {
 		const { data: scholars, error: scholarsError } = await this.client
 			.from('scholars')
 			.select()
-			.in('email', emails);
+			.or(
+				'email.in.(' +
+					emailsOrORCIDs.map((e) => `"${e}"`).join(',') +
+					'), orcid.in.(' +
+					emailsOrORCIDs.map((e) => `"${e}"`).join(',') +
+					')'
+			);
 		if (scholarsError) return this.error('InviteToRole', scholarsError);
 
-		const missing = emails.filter((email) => !scholars.some((scholar) => scholar.email === email));
+		const missing = emailsOrORCIDs.filter(
+			(id) => !scholars.some((scholar) => scholar.email === id || scholar.orcid === id)
+		);
 		if (missing.length > 0) return this.error('InviteToRoleMissing', null, missing.join(', '));
 
 		const ids: string[] = [];

@@ -1,12 +1,25 @@
+import { ORCIDRegex } from './data/ORCID';
+
 export function validEmail(text: string) {
 	return /.+@.+\..+/.test(text);
+}
+
+export function validORCID(id: string) {
+	return ORCIDRegex.test(id);
 }
 
 export function validEmails(text: string) {
 	return text
 		.split(',')
 		.map((email) => email.trim())
-		.every((email) => /.+@.+\..+/.test(email));
+		.every((email) => validEmail(email));
+}
+
+export function validEmailsOrORCIDs(text: string) {
+	return text
+		.split(',')
+		.map((id) => id.trim())
+		.every((id) => validEmail(id) || validORCID(id));
 }
 
 export function isntEmpty(text: string) {

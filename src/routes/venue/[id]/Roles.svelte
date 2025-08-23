@@ -10,14 +10,13 @@
 	import Slider from '$lib/components/Slider.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import { validEmail, isntEmpty, validEmails } from '$lib/validation';
+	import { validEmail, isntEmpty, validEmailsOrORCIDs, validORCID } from '$lib/validation';
 	import { handle } from '../../feedback.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import Link from '$lib/components/Link.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import Cards from '$lib/components/Cards.svelte';
-	import { ORCIDRegex } from '../../../lib/data/ORCID';
 
 	let {
 		venue,
@@ -82,12 +81,10 @@
 						size={19}
 						placeholder="ORCID or email"
 						valid={(text) =>
-							validEmail(text) || ORCIDRegex.test(text)
-								? undefined
-								: 'Must be a valid email or ORCID'}
+							validEmail(text) || validORCID(text) ? undefined : 'Must be a valid email or ORCID'}
 					/><Button
 						tip="Add editor"
-						active={validEmail(newEditor) || ORCIDRegex.test(newEditor)}
+						active={validEmail(newEditor) || validORCID(newEditor)}
 						action={async () => {
 							if (await handle(db.addVenueEditor(venue.id, newEditor))) newEditor = '';
 						}}>Add editor</Button
@@ -182,19 +179,23 @@
 
 				{#if editor}
 					<Form>
-						<p>Add one or more people to invite to this role, separated by commas.</p>
+						<p>
+							Add one or more people to invite to this role by email or ORCID, separated by commas.
+						</p>
 						<TextField
-							label="email"
+							label="email or orcid"
 							placeholder=""
 							name="email"
 							size={20}
 							valid={(text) =>
-								validEmails(text) ? undefined : 'Must a comma separated list of emails'}
+								text.trim() === '' || validEmailsOrORCIDs(text)
+									? undefined
+									: 'Must be a comma separated list of emails or ORCID'}
 							bind:text={invites[role.id]}
 						/>
 						<Button
 							tip="Invite people to this role"
-							active={validEmails(invites[role.id])}
+							active={validEmailsOrORCIDs(invites[role.id])}
 							action={async () => {
 								if (
 									await handle(
