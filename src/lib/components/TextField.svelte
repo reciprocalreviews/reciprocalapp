@@ -108,7 +108,7 @@
 					event.key === 'Enter' && event.metaKey && done ? edit(event) : undefined}
 			></textarea>
 		{/if}
-		<span class="ruler" class:active={!active} bind:this={measure}
+		<span class="ruler" class:inline class:active={!active} bind:this={measure}
 			>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n')}</span
 		>
 	</label>
@@ -127,6 +127,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing);
+		flex-grow: 1;
 	}
 
 	input {
@@ -145,9 +146,12 @@
 		min-width: 2em;
 		display: none;
 	}
-	input.active,
-	textarea.active {
+	input.active {
 		display: inline;
+	}
+
+	textarea.active {
+		display: block;
 	}
 
 	textarea {
@@ -169,14 +173,22 @@
 	}
 
 	.ruler {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
 		display: inline-block;
-		width: fit-content;
 		white-space: pre;
 		left: var(--spacing);
 		visibility: hidden;
 	}
 
+	.ruler.inline {
+		display: inline;
+	}
+
 	.ruler.active {
+		position: static;
 		visibility: visible;
 		white-space: wrap;
 	}
@@ -215,6 +227,9 @@
 	label {
 		position: relative;
 		font-style: normal;
+		display: flex;
+		flex-direction: column;
+		width: 100%;
 	}
 
 	.label {

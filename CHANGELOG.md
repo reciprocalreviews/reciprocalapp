@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.1.23 2025-09-01
 
+### Fixed
+
+- Improved editable text ruler sizing.
+
 ### Maintenance
 
 - Updated minor versions of Supabase, Svelte, Vite.
