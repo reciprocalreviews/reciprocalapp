@@ -146,6 +146,11 @@
 		min-width: 2em;
 		display: none;
 	}
+
+	input::placeholder {
+		font-style: italic;
+	}
+
 	input.active {
 		display: inline;
 	}
@@ -174,7 +179,6 @@
 
 	.ruler {
 		position: absolute;
-		left: 0;
 		top: 0;
 		width: 100%;
 		display: inline-block;
@@ -191,6 +195,7 @@
 		position: static;
 		visibility: visible;
 		white-space: wrap;
+		padding-inline-start: var(--spacing);
 	}
 
 	input[disabled],
