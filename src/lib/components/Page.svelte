@@ -70,6 +70,10 @@
 	.page :global(h1) {
 		margin-block-start: var(--spacing);
 	}
+
+	.page :global(p) {
+		margin-block-end: 0;
+	}
 	.details {
 		display: flex;
 		flex-direction: row;

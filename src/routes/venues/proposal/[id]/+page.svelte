@@ -15,6 +15,7 @@
 	import { DeleteLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
 	import { validEmails, validURLError } from '$lib/validation';
+	import { SettingsIcon } from '$lib/components/Icons';
 
 	let { data } = $props();
 
@@ -98,7 +99,12 @@
 		{/if}
 		<Cards>
 			{#if steward && !approved}
-				<Card group="stewards" icon="⛭" header="settings" note="Title, editors, url, etc.">
+				<Card
+					group="stewards"
+					icon={SettingsIcon}
+					header="settings"
+					note="Title, editors, url, etc."
+				>
 					<EditableText
 						label="title"
 						text={proposal.title}

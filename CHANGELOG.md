@@ -5,6 +5,11 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.1.23 2025-09-01
 
+### Added
+
+- Added a dashboard for high value information on each page, where relevant.
+- Started a minor visual motif redesign using a dashboard-metaphor on each page.
+
 ### Fixed
 
 - Improved editable text ruler sizing.

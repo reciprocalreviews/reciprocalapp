@@ -184,7 +184,7 @@
 				{/if}
 			</Card>
 			<!-- {#if isMinter}
-				<Card group="minters" icon="⛭" header="settings" note="Update the name, etc.">
+				<Card group="minters" icon={SettingsIcon} header="settings" note="Update the name, etc.">
 					<EditableText
 						text={currency.name}
 						label="name"

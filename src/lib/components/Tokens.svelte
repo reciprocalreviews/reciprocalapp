@@ -1,11 +1,13 @@
 <script lang="ts">
 	import type { CurrencyRow } from '$data/types';
+	import { TokenIcon } from './Icons';
 
 	let { amount, currency }: { amount: number; currency?: CurrencyRow } = $props();
 </script>
 
 <span class="token"
-	>★ {amount}
+	>{TokenIcon}
+	{amount}
 	{#if currency}<span class="currency">{currency.name}</span>
 	{/if}
 	token{#if amount !== 1}s{/if}</span

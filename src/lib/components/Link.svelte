@@ -6,8 +6,15 @@
 		to,
 		small = false,
 		background = false,
+		underline = true,
 		children
-	}: { to: string; small?: boolean; background?: boolean; children: Snippet } = $props();
+	}: {
+		to: string;
+		small?: boolean;
+		background?: boolean;
+		underline?: boolean;
+		children: Snippet;
+	} = $props();
 
 	let inactive = $derived(page.url.pathname === to);
 </script>
@@ -15,6 +22,7 @@
 <a
 	class:small
 	class:background
+	class:underline
 	href={inactive ? null : to}
 	target={to.startsWith('http') ? '_blank' : null}
 	aria-current={inactive ? 'page' : null}
@@ -27,6 +35,10 @@
 		font-weight: 400;
 		text-decoration: underline var(--salient-color) var(--thick-border-width) solid;
 		text-decoration-skip-ink: none;
+	}
+
+	a:not(.underline) {
+		text-decoration: none;
 	}
 
 	a.small,

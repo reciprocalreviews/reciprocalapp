@@ -2,7 +2,6 @@
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Link from '$lib/components/Link.svelte';
-	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Page from '$lib/components/Page.svelte';
@@ -16,10 +15,11 @@
 	import type { PageData } from './$types';
 	import Gift from '$lib/components/Gift.svelte';
 	import { type CurrencyID } from '$data/types';
+	import Dashboard from '$lib/components/Dashboard.svelte';
+	import { SettingsIcon, TokenIcon } from '$lib/components/Icons';
 
 	let { data }: { data: PageData } = $props();
-	const { venue, currency, scholar, roles, volunteers, tokens, transactionCount, submissionCount } =
-		$derived(data);
+	const { venue, currency, scholar, roles, volunteers, tokens, submissionCount } = $derived(data);
 
 	const db = getDB();
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
@@ -58,9 +58,9 @@
 			</p>
 		{/if}
 
-		{#each venue.editors as editorID, index}
-			<p>
-				This venue is edited by
+		<p>
+			This venue is edited by
+			{#each venue.editors as editorID, index}
 				<ScholarLink id={editorID} />{#if editor && venue.editors.length > 1}
 					&nbsp;<Button
 						tip="Remove editor"
@@ -76,36 +76,36 @@
 					>{/if}
 				{#if index < venue.editors.length - 1},{/if}
 				.
-			</p>
-		{/each}
-
-		<h2>Costs</h2>
-
-		<!-- Key details about costs. -->
-		<p>
-			{#if currency}
-				This venue uses the <Link background to="/currency/{venue.currency}">★ {currency.name}</Link
-				>
-				currency.
-			{:else}
-				<Feedback error>Unable to load this venue's currency.</Feedback>
-			{/if}
-			New volunteers receive <Tokens amount={venue.welcome_amount}></Tokens> when they volunteer to review.
-			New submissions cost <Tokens amount={venue.submission_cost}></Tokens>.
+			{/each}
 		</p>
 
-		<p>
-			{#if submissionCount !== null && submissionCount > 0}
-				See the <Link to="/venue/{venue.id}/submissions"
-					>{submissionCount ?? 'all'} submissions</Link
-				>
-				visible to you in this venue.
-			{:else}
-				There are no submissions visible to you in this venue.
-			{/if}
-		</p>
+		<Dashboard
+			stats={[
+				{
+					number: venue.welcome_amount ?? undefined,
+					icon: TokenIcon,
+					title: 'tokens for new volunteers'
+				},
+				{
+					number: venue.submission_cost ?? undefined,
+					icon: TokenIcon,
+					title: 'tokens for new submissions'
+				},
+				{
+					number: volunteers?.length ?? undefined,
+					title: 'volunteers',
+					link: `/venue/${venue.id}/volunteers`
+				},
+				{
+					number: submissionCount ?? undefined,
+					title: 'submissions visible to you',
+					link: `/venue/${venue.id}/submissions`
+				},
+				{ number: tokens?.length, title: 'tokens', link: `/venue/${venue.id}/transactions` }
+			]}
+		></Dashboard>
 
-		<h2>Volunteer</h2>
+		<h2>Roles</h2>
 
 		{#if roles}
 			<Roles {venue} scholar={scholar?.id} {roles} {volunteers} editor={editor === true} />
@@ -115,22 +115,22 @@
 
 		{#if editor}
 			<h2>Tokens</h2>
+
+			<!-- Key details about costs. -->
+			<p>
+				This venue uses {#if currency}the <Link background to="/currency/{venue.currency}"
+						>{TokenIcon} {currency.name}</Link
+					>{:else}an unknown{/if}
+				currency.
+			</p>
+
+			{#if editor}
+				<p>
+					<Link to="/venue/{venue.id}/transactions">See all transactions</Link>.
+				</p>
+			{/if}
+
 			<Cards>
-				<Card
-					expand
-					group="editors"
-					icon={tokens === null ? '?' : tokens.length}
-					header="balance"
-					note="balance and gifts"
-				>
-					<p>
-						This venue currently has {#if tokens !== null}<Tokens amount={tokens.length}
-							></Tokens>{:else}an unknown number of{/if} tokens and is involved in {#if transactionCount !== null}<strong
-								>{transactionCount}</strong
-							>{:else}an unknown number of{/if} transactions.
-						<Link to="/venue/{venue.id}/transactions">See all transactions</Link>.
-					</p>
-				</Card>
 				<Card group="editors" icon="🎁" header="gift" note="Send tokens to a scholar">
 					{#if scholar && currency !== null}
 						<Gift
@@ -160,7 +160,12 @@
 						/>
 					{/if}
 				</Card>
-				<Card group="editors" icon="⛭" header="settings" note="Update title, url, costs, etc.">
+				<Card
+					group="editors"
+					icon={SettingsIcon}
+					header="settings"
+					note="Update title, url, costs, etc."
+				>
 					<EditableText
 						text={venue.url}
 						label="URL"

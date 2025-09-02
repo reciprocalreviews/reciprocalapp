@@ -22,6 +22,8 @@
 	import { handle } from '../../feedback.svelte';
 	import { EmptyLabel } from '$lib/components/Labels';
 	import VenueLink from '$lib/components/VenueLink.svelte';
+	import Dashboard from '$lib/components/Dashboard.svelte';
+	import { SettingsIcon } from '$lib/components/Icons';
 
 	let {
 		scholar,
@@ -87,6 +89,22 @@
 		<p>{scholar.getStatus()}</p>
 	{/if}
 
+	<Dashboard
+		stats={[
+			{
+				number: submissions?.length,
+				title: 'submissions',
+				link: `/scholar/${scholar.getID()}/submissions`
+			},
+			{ number: tokens?.length, title: 'tokens', link: `/scholar/${scholar.getID()}/tokens` },
+			{
+				number: transactions ?? undefined,
+				title: 'transactions',
+				link: `/scholar/${scholar.getID()}/transactions`
+			}
+		]}
+	/>
+
 	{#if editable}
 		<Checkbox
 			on={scholar.isAvailable()}
@@ -145,7 +163,7 @@
 	<Cards>
 		<Card
 			full
-			icon={submissions === null ? '📝' : submissions.length}
+			icon={submissions === null ? '—' : submissions.length}
 			header="submissions"
 			note="Submissions in review"
 		>
@@ -183,11 +201,6 @@
 				{/if}
 			</p>
 
-			<p>
-				See <Link to="/scholar/{scholar.getID()}/transactions"
-					>{#if transactions === null}your transactions{:else}your {transactions} transactions{/if}</Link
-				>.
-			</p>
 			{#if tokens !== null && currencies !== null}
 				<Gift
 					{tokens}
@@ -217,7 +230,7 @@
 			{/if}
 		</Card>
 		{#if editable}
-			<Card icon="⚙️" header="settings" note="Email, etc.">
+			<Card icon={SettingsIcon} header="settings" note="Email, etc.">
 				<EditableText
 					text={scholar.getEmail() ?? ''}
 					label="email"
