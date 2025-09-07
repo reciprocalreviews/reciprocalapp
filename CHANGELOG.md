@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.1.24 2025-09-01
+
+### Maintenance
+
+- Updated minor versions of Svelte, Supabase.
+
 ## 0.1.23 2025-09-01
 
 ### Added
