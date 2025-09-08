@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.1.24 2025-09-01
 
+### Fixed
+
+- Refined visual design based on new dashboard/header/card motif.
+
 ### Maintenance
 
 - Updated minor versions of Svelte, Supabase.

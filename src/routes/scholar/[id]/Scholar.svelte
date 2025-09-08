@@ -20,10 +20,9 @@
 	import Tip from '$lib/components/Tip.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { handle } from '../../feedback.svelte';
-	import { EmptyLabel } from '$lib/components/Labels';
+	import { EmptyLabel, TokenLabel } from '$lib/components/Labels';
 	import VenueLink from '$lib/components/VenueLink.svelte';
 	import Dashboard from '$lib/components/Dashboard.svelte';
-	import { SettingsIcon } from '$lib/components/Icons';
 
 	let {
 		scholar,
@@ -74,17 +73,23 @@
 
 	{#if editable}
 		{@const time = scholar.getStatusTime()}
+		<Tip
+			>Your status is public. {#if time}You last updated it on {new Date(
+					Date.parse(time)
+				).toLocaleString()}.{/if}</Tip
+		>
+		<Checkbox
+			on={scholar.isAvailable()}
+			change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
+			>I am available to review.</Checkbox
+		>
+
 		<EditableText
 			inline={false}
 			text={scholar.getStatus()}
 			placeholder="Explain your current reviewing status to others."
 			edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
 		/>
-		<Tip
-			>Your status is public. {#if time}You last updated it on {new Date(
-					Date.parse(time)
-				).toLocaleString()}.{/if}</Tip
-		>
 	{:else}
 		<p>{scholar.getStatus()}</p>
 	{/if}
@@ -94,9 +99,9 @@
 			{
 				number: submissions?.length,
 				title: 'submissions',
-				link: `/scholar/${scholar.getID()}/submissions`
+				link: `#submissions`
 			},
-			{ number: tokens?.length, title: 'tokens', link: `/scholar/${scholar.getID()}/tokens` },
+			{ number: tokens?.length, title: 'tokens', link: `#tokens` },
 			{
 				number: transactions ?? undefined,
 				title: 'transactions',
@@ -106,12 +111,6 @@
 	/>
 
 	{#if editable}
-		<Checkbox
-			on={scholar.isAvailable()}
-			change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
-			>I am available to review.</Checkbox
-		>
-
 		<h2>volunteering</h2>
 
 		<!-- Find all invitations -->
@@ -160,87 +159,82 @@
 		</ul>
 	{/if}
 
-	<Cards>
-		<Card
-			full
-			icon={submissions === null ? '—' : submissions.length}
-			header="submissions"
-			note="Submissions in review"
-		>
-			{#if submissions}
-				<ul>
-					{#each submissions as submission}
-						<li><SubmissionLink {submission}></SubmissionLink></li>
-					{:else}
-						<Feedback>No submissions.</Feedback>
-					{/each}
-				</ul>
+	<h2 id="submissions">submissions</h2>
+
+	{#if submissions}
+		<ul>
+			{#each submissions as submission}
+				<li><SubmissionLink {submission}></SubmissionLink></li>
 			{:else}
-				<Feedback>Unable to load submissions.</Feedback>
-			{/if}
-		</Card>
+				<Feedback>No submissions.</Feedback>
+			{/each}
+		</ul>
+	{:else}
+		<Feedback>Unable to load submissions.</Feedback>
+	{/if}
 
-		<Card
-			icon={tokens === null ? '?' : tokens.length}
-			header="tokens"
-			note="Spendable on peer review and gifts"
-		>
-			<p>
-				{#if editable}You have{:else}This scholar has the following tokens:{/if}
-				{#if tokens === null}
-					<Feedback>Unable to load tokens.</Feedback>
-				{:else if currencies === null}
-					<Feedback>Unable to load currencies.</Feedback>
-				{:else}
-					{#each currencies as currency}
-						<Tokens amount={tokens.filter((t) => t.currency === currency.id).length} {currency}
-						></Tokens>
-					{:else}
-						<Tokens amount={0}></Tokens>
-					{/each}
-				{/if}
-			</p>
+	<h2 id="tokens">tokens</h2>
 
-			{#if tokens !== null && currencies !== null}
-				<Gift
-					{tokens}
-					purpose="Gift to peer"
-					success="This venue's tokens were successfully gifted."
-					{currencies}
-					transfer={(
-						currency: CurrencyID,
-						giftRecipient: string,
-						giftAmount: number,
-						purpose: string
-					) =>
-						scholar
-							? db.transferTokens(
-									scholar.getID(),
-									currency,
-									scholar.getID(),
-									'scholarid',
-									giftRecipient,
-									'emailorcid',
-									giftAmount,
-									purpose,
-									undefined
-								)
-							: undefined}
-				/>
-			{/if}
-		</Card>
-		{#if editable}
-			<Card icon={SettingsIcon} header="settings" note="Email, etc.">
-				<EditableText
-					text={scholar.getEmail() ?? ''}
-					label="email"
-					placeholder="email"
-					inline={false}
-					note="Your email will be public and only used to send notifications."
-					valid={(text) => (validEmail(text) ? undefined : 'Must be a valid email')}
-					edit={(text) => db.updateScholarEmail(scholar.getID(), text)}
-				/>
-			</Card>
+	<p>
+		{#if editable}You have{:else}This scholar has the following tokens:{/if}
+		{#if tokens === null}
+			<Feedback>Unable to load tokens.</Feedback>
+		{:else if currencies === null}
+			<Feedback>Unable to load currencies.</Feedback>
+		{:else}
+			{#each currencies as currency}
+				<Tokens amount={tokens.filter((t) => t.currency === currency.id).length} {currency}
+				></Tokens>
+			{:else}
+				<Tokens amount={0}></Tokens>
+			{/each}
 		{/if}
-	</Cards>
+	</p>
+
+	{#if editable}
+		<Cards>
+			{#if tokens !== null && currencies !== null}
+				<Card subheader icon={TokenLabel} header="gift tokens" note="to other scholars">
+					<Gift
+						{tokens}
+						purpose="Gift to peer"
+						success="This venue's tokens were successfully gifted."
+						{currencies}
+						transfer={(
+							currency: CurrencyID,
+							giftRecipient: string,
+							giftAmount: number,
+							purpose: string
+						) =>
+							scholar
+								? db.transferTokens(
+										scholar.getID(),
+										currency,
+										scholar.getID(),
+										'scholarid',
+										giftRecipient,
+										'emailorcid',
+										giftAmount,
+										purpose,
+										undefined
+									)
+								: undefined}
+					/>
+				</Card>
+			{/if}
+		</Cards>
+	{/if}
+
+	{#if editable}
+		<h2>Settings</h2>
+		<EditableText
+			text={scholar.getEmail() ?? ''}
+			label="email"
+			placeholder="email"
+			inline={false}
+			note="Your email will be public and only used to send notifications."
+			valid={(text) => (validEmail(text) ? undefined : 'Must be a valid email')}
+			edit={(text) => db.updateScholarEmail(scholar.getID(), text)}
+		/>
+	{/if}
 </Page>

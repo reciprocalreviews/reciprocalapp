@@ -19,7 +19,8 @@
 	span {
 		background: var(--salient-color);
 		color: var(--background-color);
-		padding: calc(var(--spacing) / 2);
+		padding: calc(var(--spacing) / 2) calc(var(--spacing)) calc(var(--spacing) / 2)
+			calc(var(--spacing));
 		font-size: var(--small-font-size);
 		border-radius: var(--roundedness);
 	}

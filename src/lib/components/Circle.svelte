@@ -19,12 +19,12 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: 3em;
+		border-radius: 1em;
 		padding: var(--spacing);
 		background: var(--salient-color);
 		color: var(--background-color);
-		min-width: 1em;
-		height: 1em;
+		min-width: 0.5em;
+		height: 0.5em;
 		font-size: var(--small-font-size);
 		align-self: start;
 		font-family: 'Josefin Sans', sans-serif;

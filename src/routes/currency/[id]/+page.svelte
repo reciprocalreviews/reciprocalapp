@@ -4,13 +4,11 @@
 	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../../Auth.svelte';
 	import Page from '$lib/components/Page.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Card from '$lib/components/Card.svelte';
 	import SourceLink from '$lib/components/VenueLink.svelte';
 	import type { PageData } from './$types';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import { handle } from '../../feedback.svelte';
-	import { DeleteLabel } from '$lib/components/Labels';
+	import { DeleteLabel, MinterLabel, plural, TokenLabel } from '$lib/components/Labels';
 	import Button from '$lib/components/Button.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { validEmail } from '$lib/validation';
@@ -20,6 +18,9 @@
 	import Link from '$lib/components/Link.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
+	import Dashboard from '$lib/components/Dashboard.svelte';
+	import Cards from '$lib/components/Cards.svelte';
+	import Card from '$lib/components/Card.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -64,69 +65,38 @@
 		{:else}
 			<p>{currency.description}</p>
 		{/if}
-		<Cards>
-			<Card icon={currency.minters.length} header="minters" note="Scholars with the power to mint.">
-				<p>
-					These scholars are the minters for this currency. They can see and approve all
-					transactions.
-				</p>
-				<ul>
-					{#each currency.minters as minter}
-						<li>
-							<ScholarLink id={minter}></ScholarLink>
-							{#if isMinter && currency.minters.length > 1}&nbsp;<Button
-									tip="Remove yourself as minter"
-									active={currency.minters.length > 1}
-									action={() =>
-										handle(
-											db.editCurrencyMinters(
-												currency.id,
-												currency.minters.filter((m) => m !== minter)
-											)
-										)}>{DeleteLabel}</Button
-								>{/if}
-						</li>
-					{/each}
-				</ul>
 
-				{#if isMinter}
+		<Dashboard
+			stats={[
+				{ icon: TokenLabel, number: count ?? undefined, title: 'tokens', link: `#tokens` },
+				{
+					icon: MinterLabel,
+					number: currency.minters.length,
+					title: plural('minter', currency.minters.length),
+					link: `#minters`
+				},
+				{ number: venueCount ?? undefined, title: 'venues', link: `#venues` }
+			]}
+		/>
+
+		<h2 id="tokens">tokens</h2>
+		<p>
+			There are {#if count !== null}<Tokens amount={count}></Tokens>{:else}an unknown number of{/if}
+			tokens minted in this currency, owned by <strong>{scholarCount}</strong> scholars and
+			<strong>{venueCount}</strong> distinct venues.
+		</p>
+		<p>
+			<Link to="/currency/{currency.id}/transactions">See all transactions</Link> in this currency.
+		</p>
+		{#if isMinter && venues}
+			<Cards>
+				<Card
+					subheader
+					icon={TokenLabel}
+					header="mint tokens"
+					note="Create new tokens in this currency."
+				>
 					<form>
-						<TextField
-							bind:text={newMinter}
-							size={19}
-							placeholder="ORCID or email"
-							valid={(text) =>
-								validEmail(text) || ORCIDRegex.test(text)
-									? undefined
-									: 'Must be a valid email or ORCID'}
-						/><Button
-							tip="Add minter"
-							active={validEmail(newMinter) || ORCIDRegex.test(newMinter)}
-							action={async () => {
-								if (await handle(db.addCurrencyMinter(currency.id, currency.minters, newMinter))) {
-									newMinter = '';
-								}
-							}}>Add minter</Button
-						>
-					</form>
-					<Note>
-						Minters can see, approve, and cancel transactions, and most importantly, mint new tokens
-						in this currency. They can also propose and improve currency exchanges and mergers.
-					</Note>
-				{/if}
-			</Card>
-			<Card icon={count ?? 0} header="tokens" note="And many transactions...">
-				<p>
-					There are {#if count !== null}<Tokens amount={count}></Tokens>{:else}an unknown number of{/if}
-					tokens minted in this currency, owned by <strong>{scholarCount}</strong> scholars and
-					<strong>{venueCount}</strong> distinct venues.
-				</p>
-				<p>
-					<Link to="/currency/{currency.id}/transactions">See all transactions</Link> in this currency.
-				</p>
-				{#if isMinter && venues}
-					<form>
-						<h3>Mint tokens</h3>
 						<Feedback
 							>Be careful creating new tokens. Too many tokens per scholar will diminish the
 							incentive to earn them.</Feedback
@@ -169,30 +139,81 @@
 							}}>Mint tokens</Button
 						>
 					</form>
-				{/if}
-			</Card>
-			<Card icon={venues?.length ?? 0} header="venues" note="Venues using this currency">
-				{#if venues}
-					<p>These are the venues that use this currency:</p>
-					<ul>
-						{#each venues as venue}
-							<li><SourceLink id={venue.id} name={venue.title}></SourceLink></li>
-						{/each}
-					</ul>
-				{:else}
-					<Feedback error>Unable to load venues.</Feedback>
-				{/if}
-			</Card>
-			<!-- {#if isMinter}
-				<Card group="minters" icon={SettingsIcon} header="settings" note="Update the name, etc.">
-					<EditableText
-						text={currency.name}
-						label="name"
-						placeholder="name"
-						edit={async (text) => await db.updateCurrencyName(currency.id, text)}
-					/>
 				</Card>
-			{/if} -->
-		</Cards>
+			</Cards>
+		{/if}
+
+		<h2 id="minters">minters</h2>
+
+		<p>
+			These scholars are the minters for this currency. They can see and approve all transactions.
+		</p>
+
+		<ul>
+			{#each currency.minters as minter}
+				<li>
+					<ScholarLink id={minter}></ScholarLink>
+					{#if isMinter && currency.minters.length > 1}&nbsp;<Button
+							tip="Remove yourself as minter"
+							active={currency.minters.length > 1}
+							action={() =>
+								handle(
+									db.editCurrencyMinters(
+										currency.id,
+										currency.minters.filter((m) => m !== minter)
+									)
+								)}>{DeleteLabel}</Button
+						>{/if}
+				</li>
+			{/each}
+		</ul>
+
+		{#if isMinter}
+			<Cards>
+				<Card
+					subheader
+					icon={MinterLabel}
+					header="add minter"
+					note="Allow another scholar to mint tokens."
+				>
+					<form>
+						<TextField
+							bind:text={newMinter}
+							size={19}
+							placeholder="ORCID or email"
+							valid={(text) =>
+								validEmail(text) || ORCIDRegex.test(text)
+									? undefined
+									: 'Must be a valid email or ORCID'}
+						/><Button
+							tip="Add minter"
+							active={validEmail(newMinter) || ORCIDRegex.test(newMinter)}
+							action={async () => {
+								if (await handle(db.addCurrencyMinter(currency.id, currency.minters, newMinter))) {
+									newMinter = '';
+								}
+							}}>Add minter</Button
+						>
+					</form>
+					<Note>
+						Minters can see, approve, and cancel transactions, and most importantly, mint new tokens
+						in this currency. They can also propose and improve currency exchanges and mergers.
+					</Note>
+				</Card>
+			</Cards>
+		{/if}
+
+		<h2 id="venues">venues</h2>
+
+		{#if venues}
+			<p>These are the venues that use this currency:</p>
+			<ul>
+				{#each venues as venue}
+					<li><SourceLink id={venue.id} name={venue.title}></SourceLink></li>
+				{/each}
+			</ul>
+		{:else}
+			<Feedback error>Unable to load venues.</Feedback>
+		{/if}
 	{/if}
 </Page>

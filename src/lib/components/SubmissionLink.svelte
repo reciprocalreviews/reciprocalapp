@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { type SubmissionRow } from '$data/types';
+	import { SubmissionLabel } from './Labels';
 	import Link from './Link.svelte';
 
 	export let submission: SubmissionRow;
 </script>
 
 <div class="submission">
-	<span class="icon">💡</span>
+	<span>{SubmissionLabel}</span>
 	<Link to="/submission/{submission.id}">{submission.title}</Link>
 </div>
 

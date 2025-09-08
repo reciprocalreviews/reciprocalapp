@@ -15,7 +15,7 @@
 	import { DeleteLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
 	import { validEmails, validURLError } from '$lib/validation';
-	import { SettingsIcon } from '$lib/components/Icons';
+	import { SettingsLabel } from '$lib/components/Labels';
 
 	let { data } = $props();
 
@@ -101,7 +101,7 @@
 			{#if steward && !approved}
 				<Card
 					group="stewards"
-					icon={SettingsIcon}
+					icon={SettingsLabel}
 					header="settings"
 					note="Title, editors, url, etc."
 				>

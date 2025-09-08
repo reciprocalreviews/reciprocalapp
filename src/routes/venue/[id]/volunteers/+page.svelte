@@ -41,7 +41,7 @@
 			/>.
 		</p>
 
-		<TextField label="Filter {FilterLabel}" placeholder="name, expertise, email" bind:text={filter}
+		<TextField label="{FilterLabel} filter" placeholder="name, expertise, email" bind:text={filter}
 		></TextField>
 
 		{@const rolesIDs = [...new Set(commitments.map((c) => c.roleid))].toSorted(

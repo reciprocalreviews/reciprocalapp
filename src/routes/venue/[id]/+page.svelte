@@ -8,7 +8,7 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Card from '$lib/components/Card.svelte';
-	import { DeleteLabel } from '$lib/components/Labels';
+	import { DeleteLabel, SettingsLabel, TokenLabel } from '$lib/components/Labels';
 	import { validInteger, validURLError } from '$lib/validation';
 	import { handle } from '../../feedback.svelte';
 	import Roles from './Roles.svelte';
@@ -16,7 +16,6 @@
 	import Gift from '$lib/components/Gift.svelte';
 	import { type CurrencyID } from '$data/types';
 	import Dashboard from '$lib/components/Dashboard.svelte';
-	import { SettingsIcon, TokenIcon } from '$lib/components/Icons';
 
 	let { data }: { data: PageData } = $props();
 	const { venue, currency, scholar, roles, volunteers, tokens, submissionCount } = $derived(data);
@@ -83,12 +82,12 @@
 			stats={[
 				{
 					number: venue.welcome_amount ?? undefined,
-					icon: TokenIcon,
+					icon: TokenLabel,
 					title: 'tokens for new volunteers'
 				},
 				{
 					number: venue.submission_cost ?? undefined,
-					icon: TokenIcon,
+					icon: TokenLabel,
 					title: 'tokens for new submissions'
 				},
 				{
@@ -119,7 +118,7 @@
 			<!-- Key details about costs. -->
 			<p>
 				This venue uses {#if currency}the <Link background to="/currency/{venue.currency}"
-						>{TokenIcon} {currency.name}</Link
+						>{TokenLabel} {currency.name}</Link
 					>{:else}an unknown{/if}
 				currency.
 			</p>
@@ -162,7 +161,7 @@
 				</Card>
 				<Card
 					group="editors"
-					icon={SettingsIcon}
+					icon={SettingsLabel}
 					header="settings"
 					note="Update title, url, costs, etc."
 				>

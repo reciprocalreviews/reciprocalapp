@@ -123,6 +123,7 @@
 			h2 {
 				font-size: var(--subheader-font-size);
 				border-bottom: var(--border-color) solid var(--border-width);
+				text-transform: capitalize;
 			}
 
 			h2:first-child {
@@ -131,9 +132,10 @@
 
 			h3 {
 				font-size: var(--subsubheader-font-size);
+				font-style: italic;
+				text-transform: lowercase;
 				margin-block-start: 0em;
 				margin-block-end: 0em;
-				border-bottom: var(--border-color) solid var(--border-width);
 			}
 
 			h3:first-child,
@@ -179,9 +181,8 @@
 			}
 
 			form {
-				border: var(--border-color) solid var(--border-width);
-				border-radius: var(--roundedness);
-				padding: var(--spacing);
+				border-left: var(--border-color) solid var(--border-width);
+				padding-left: var(--spacing);
 				display: flex;
 				flex-direction: column;
 				gap: calc(var(--spacing) * 3);
