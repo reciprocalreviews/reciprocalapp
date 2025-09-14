@@ -25,7 +25,7 @@
 		<Feedback inline>
 			{#if pending > 0}
 				<Dots></Dots>
-				{#if pending === 1}saving{:else}{pending} saving{/if}
+				{#if pending === 1}saving…{:else}{pending} saving…{/if}
 			{:else}saved{/if}
 		</Feedback>
 	</div>

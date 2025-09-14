@@ -17,12 +17,13 @@
 <style>
 	p,
 	span {
-		background: var(--salient-color);
-		color: var(--background-color);
-		padding: calc(var(--spacing) / 2) calc(var(--spacing)) calc(var(--spacing) / 2)
-			calc(var(--spacing));
+		border-left: calc(var(--thick-border-width) * 2) solid var(--salient-color);
+		background: var(--salient-color-faded);
+		font-weight: bold;
+		padding: calc(var(--spacing) / 3) calc(var(--spacing));
 		font-size: var(--small-font-size);
-		border-radius: var(--roundedness);
+		border-top-left-radius: var(--roundedness);
+		border-bottom-left-radius: var(--roundedness);
 	}
 
 	p {

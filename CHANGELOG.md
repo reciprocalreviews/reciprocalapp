@@ -3,7 +3,17 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
-## 0.1.24 2025-09-01
+## 0.1.25 2025-09-14
+
+### Fixed
+
+- Distinguished visual design of feedback component from tags.
+
+### Maintenance
+
+- Updated minor versions of Supabase, Svelte, SvelteKit, Vite.
+
+## 0.1.24 2025-09-07
 
 ### Fixed
 
