@@ -279,7 +279,7 @@
 
 			<!-- Sort roles by priority -->
 			{#each roles.toSorted((a, b) => a.priority - b.priority) as role}
-				{@const assigned = assignments.filter((a) => role.id === a.role)}
+				{@const assigned = assignments.filter((a) => role.id === a.role && !a.bid)}
 				<!-- The bidding assignments are those that match this role and aren't approved. We sort them by the balances of the corresponding scholar. -->
 				{@const bidded = assignments
 					.filter((a) => role.id === a.role && a.bid && !a.approved)
