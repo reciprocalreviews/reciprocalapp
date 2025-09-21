@@ -290,8 +290,8 @@
 					{@const volunteer = getVolunteer(role.id, assignment.scholar)}
 					<tr>
 						<td>{role.name}</td>
-						<td
-							><ScholarLink id={assignment.scholar} />
+						<td class={!assignment.approved ? 'unapproved' : undefined}>
+							<ScholarLink id={assignment.scholar} />
 							{#if assignment.approved}<Tag>Assigned</Tag>{/if}</td
 						>
 						<td
@@ -356,3 +356,9 @@
 		</Table>
 	</Page>
 {/if}
+
+<style>
+	.unapproved {
+		text-decoration: line-through;
+	}
+</style>
