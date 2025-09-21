@@ -292,7 +292,9 @@
 						<td>{role.name}</td>
 						<td class={!assignment.approved ? 'unapproved' : undefined}>
 							<ScholarLink id={assignment.scholar} />
-							{#if assignment.approved}<Tag>Assigned</Tag>{/if}</td
+							{#if assignment.completed}<Tag>Completed</Tag>{:else if assignment.approved}<Tag
+									>Assigned</Tag
+								>{/if}</td
 						>
 						<td
 							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
@@ -301,18 +303,28 @@
 						<td>
 							<Row>
 								{#if isApprover}
-									{#if assignment.approved}
-										<Button
-											tip="Remove this assignment"
-											action={() => handle(db.approveAssignment(assignment, false, role, user.id))}
-											>Unassign</Button
-										>
-									{:else}
-										<Button
-											tip="Reassign this scholar"
-											action={() => handle(db.approveAssignment(assignment, true, role, user.id))}
-											>Reassign</Button
-										>
+									{#if !assignment.completed}
+										{#if assignment.approved}
+											<Button
+												tip="Remove this assignment"
+												action={() =>
+													handle(db.approveAssignment(assignment, false, role, user.id))}
+												>Unassign</Button
+											>
+											{#if !assignment.completed}
+												<Button
+													tip="Mark this assignment complete and compensate the scholar for their work"
+													action={() => handle(db.completeAssignment(assignment.id, user.id))}
+													>Complete
+												</Button>
+											{/if}
+										{:else}
+											<Button
+												tip="Reassign this scholar"
+												action={() => handle(db.approveAssignment(assignment, true, role, user.id))}
+												>Reassign</Button
+											>
+										{/if}
 									{/if}
 								{:else}
 									{EmptyLabel}

@@ -1013,6 +1013,52 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('CreateAssignment', error);
 	}
 
+	async completeAssignment(assignment: AssignmentID, completer: ScholarID): Promise<Result> {
+		// Get the assignment data
+		const { data: assignmentData, error: assignmentError } = await this.client
+			.from('assignments')
+			.select()
+			.eq('id', assignment)
+			.single();
+		if (assignmentData === null) return this.error('CompleteAssignmentNotFound', assignmentError);
+
+		// Get the role data, so we can find the compensation rate.
+		const { data: roleData, error: roleError } = await this.client
+			.from('roles')
+			.select()
+			.eq('id', assignmentData.role)
+			.single();
+		if (roleData === null) return this.error('CompleteAssignmentRoleNotFound', roleError);
+
+		// Get the role data, so we can find the compensation rate.
+		const { data: venueData, error: venueError } = await this.client
+			.from('venues')
+			.select()
+			.eq('id', assignmentData.venue)
+			.single();
+		if (venueData === null) return this.error('CompleteAssignmentVenueNotFound', venueError);
+
+		// Create a transaction to pay the scholar.
+		const { error: transactionError } = await this.createTransaction(
+			completer,
+			null,
+			assignmentData.venue,
+			assignmentData.scholar,
+			null,
+			// Create a list of null UUIDs to represent that they don't exist yet.
+			new Array(roleData.amount).fill(NullUUID),
+			venueData.currency,
+			`Compensation for completing the ${roleData.name} role for submission ${assignmentData.submission}.`,
+			'proposed'
+		);
+		if (transactionError) return this.error('CreateTransaction', transactionError.details);
+
+		// Mark the assignment as completed.
+		await this.client.from('assignments').update({ completed: true }).eq('id', assignmentData.id);
+
+		return { data: undefined, error: undefined };
+	}
+
 	async deleteAssignment(assignment: AssignmentID): Promise<Result> {
 		const { error } = await this.client.from('assignments').delete().eq('id', assignment);
 		return this.errorOrEmpty('DeleteAssignment', error);

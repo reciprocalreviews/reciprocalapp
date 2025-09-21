@@ -211,6 +211,9 @@ export default abstract class CRUD {
 		approved?: boolean
 	): Promise<Result>;
 
+	/** Create a new assignment record */
+	abstract completeAssignment(id: AssignmentID, completer: ScholarID): Promise<Result>;
+
 	abstract deleteAssignment(assignment: AssignmentID): Promise<Result>;
 
 	/** Send an email with the given subject and message to the authenticated scholar. */

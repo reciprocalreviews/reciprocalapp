@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Added
 
 - All manual addition and removal of assignments to submission.
+- Fixed #61, compensating roles for completed assignment. Added manual button and CRUD for other contexts.
 
 ### Maintenance
 

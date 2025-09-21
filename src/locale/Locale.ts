@@ -79,6 +79,9 @@ export const enUS = {
 		UpdateSubmissionStatus: "Unable to update the submission's status",
 		ApproveAssignment: 'Unable to approve the assignment',
 		CreateAssignment: 'Unable to create this assignment',
+		CompleteAssignmentNotFound: 'Unable to find this assignment',
+		CompleteAssignmentRoleNotFound: "Unable to find this assignment's role",
+		CompleteAssignmentVenueNotFound: "Unable to find this assignment's venue",
 		DeleteAssignment: 'Unable to delete this assignment',
 		EmailScholar: 'Unable to email this scholar',
 		ApproveProposalNoSupporters: 'Unable to retrieve supports of proposal for notification.'

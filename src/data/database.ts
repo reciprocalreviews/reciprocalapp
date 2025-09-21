@@ -38,6 +38,7 @@ export type Database = {
         Row: {
           approved: boolean
           bid: boolean
+          completed: boolean
           id: string
           role: string
           scholar: string
@@ -47,6 +48,7 @@ export type Database = {
         Insert: {
           approved?: boolean
           bid?: boolean
+          completed?: boolean
           id?: string
           role: string
           scholar: string
@@ -56,6 +58,7 @@ export type Database = {
         Update: {
           approved?: boolean
           bid?: boolean
+          completed?: boolean
           id?: string
           role?: string
           scholar?: string
