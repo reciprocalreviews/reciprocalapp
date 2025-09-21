@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.1.26 2025-09-21
 
+### Added
+
+- All manual addition and removal of assignments to submission.
+
 ### Maintenance
 
 - Updated minor versions of Svelte, SvelteKit, vite.

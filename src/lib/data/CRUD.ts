@@ -69,6 +69,8 @@ export default abstract class CRUD {
 
 	abstract registerScholar(scholar: ScholarRow): Scholar;
 
+	abstract findScholar(emailOrORCID: string): Promise<Result<ScholarID | undefined>>;
+
 	/** Given a scholar ID, get information about the scholar, except the scholar's transactions */
 	abstract getScholar(scholarID: ScholarID): Promise<Scholar | null>;
 
@@ -205,7 +207,8 @@ export default abstract class CRUD {
 		submission: SubmissionID,
 		scholar: ScholarID,
 		role: RoleID,
-		bid: boolean
+		bid: boolean,
+		approved?: boolean
 	): Promise<Result>;
 
 	abstract deleteAssignment(assignment: AssignmentID): Promise<Result>;

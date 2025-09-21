@@ -19,6 +19,10 @@
 	import type { RoleID, ScholarID } from '$data/types';
 	import isRoleApprover from '$lib/data/isRoleApprover';
 	import Scholar from '$lib/data/Scholar.svelte';
+	import Form from '$lib/components/Form.svelte';
+	import Tip from '$lib/components/Tip.svelte';
+	import TextField from '$lib/components/TextField.svelte';
+	import { validEmail, validORCID } from '$lib/validation';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -32,9 +36,9 @@
 		previous,
 		/** Transactions related to the submission, if visible */
 		transactions,
-		/** The roles for this venue */
+		/** The roles for this submission */
 		roles,
-		/** All volunteers for this venue */
+		/** All volunteers for this submission */
 		volunteers,
 		/** All assignments related to this submission */
 		assignments,
@@ -69,6 +73,12 @@
 	let isAssigned = $derived(
 		user !== null && assignments?.find((a) => a.scholar === user.id && a.approved) !== undefined
 	);
+
+	/** State for the assignment form */
+	let newAssignmentRole = $state<RoleID | undefined>(undefined);
+	let newAssignmentScholar = $state<string>('');
+	let newAssignmentSubmitting = $state(false);
+	let newAssignmentError: string | undefined = $state(undefined);
 
 	function getVolunteer(role: RoleID, scholar: ScholarID) {
 		return volunteers?.find((v) => v.roleid === role && v.scholarid === scholar);
@@ -188,6 +198,69 @@
 
 		<h2>Assignments</h2>
 
+		<!-- If the authenticated scholar is an editor or a role approver of one of the roles, then permit them to create new assignments -->
+		{#if isEditor || roles.some((role) => isRoleApprover(role, volunteers, user.id))}
+			<Form>
+				<Tip
+					>Add a new assignment to this submission. These are restricted to the roles for which you
+					have assignment privileges.</Tip
+				>
+				<Row baseline>
+					<select bind:value={newAssignmentRole}>
+						<option value={undefined}>—</option>
+						{#each isEditor ? roles : roles.filter( (role) => isRoleApprover(role, volunteers, user.id) ) as role}
+							<option value={role.id}>{role.name}</option>
+						{/each}
+					</select>
+					<TextField
+						bind:text={newAssignmentScholar}
+						placeholder="email or ORCID"
+						valid={(emailOrORCID) =>
+							emailOrORCID.length > 0 && !validEmail(emailOrORCID) && !validORCID(emailOrORCID)
+								? 'Must be an email or ORCID'
+								: undefined}
+					></TextField>
+					<Button
+						tip="Create a new assignment for this scholar and this role."
+						active={!newAssignmentSubmitting &&
+							newAssignmentRole !== undefined &&
+							(validEmail(newAssignmentScholar) || validORCID(newAssignmentScholar))}
+						action={async () => {
+							newAssignmentSubmitting = true;
+							const role = roles.find((role) => role.id === newAssignmentRole);
+
+							const { data: scholarID } = await db.findScholar(newAssignmentScholar);
+
+							if (role === undefined) {
+								newAssignmentError = 'You must select a valid role.';
+								newAssignmentSubmitting = false;
+								return undefined;
+							} else if (scholarID === undefined) {
+								newAssignmentError = 'No scholar with that email or ORCID exists.';
+								newAssignmentSubmitting = false;
+								return undefined;
+							} else if (
+								assignments.some((v) => v.scholar === scholarID && v.role === newAssignmentRole)
+							) {
+								newAssignmentError = 'This scholar is already assigned to this role.';
+								newAssignmentSubmitting = false;
+								return undefined;
+							}
+
+							return handle(
+								db.createAssignment(submission.id, scholarID, role.id, false, true)
+							).then(() => {
+								newAssignmentRole = undefined;
+								newAssignmentScholar = '';
+								newAssignmentSubmitting = false;
+							});
+						}}>+ assignee</Button
+					>
+				</Row>
+				{#if newAssignmentError !== undefined}<Feedback error>{newAssignmentError}</Feedback>{/if}
+			</Form>
+		{/if}
+
 		<Table full>
 			{#snippet header()}
 				<th>Role</th><th>Scholar</th><th>Expertise</th><th>Balance</th><th>Action</th>
@@ -206,7 +279,7 @@
 
 			<!-- Sort roles by priority -->
 			{#each roles.toSorted((a, b) => a.priority - b.priority) as role}
-				{@const assigned = assignments.filter((a) => role.id === a.role && a.approved)}
+				{@const assigned = assignments.filter((a) => role.id === a.role)}
 				<!-- The bidding assignments are those that match this role and aren't approved. We sort them by the balances of the corresponding scholar. -->
 				{@const bidded = assignments
 					.filter((a) => role.id === a.role && a.bid && !a.approved)
@@ -217,7 +290,10 @@
 					{@const volunteer = getVolunteer(role.id, assignment.scholar)}
 					<tr>
 						<td>{role.name}</td>
-						<td><ScholarLink id={assignment.scholar} /> <Tag>Assigned</Tag></td>
+						<td
+							><ScholarLink id={assignment.scholar} />
+							{#if assignment.approved}<Tag>Assigned</Tag>{/if}</td
+						>
 						<td
 							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 						>
@@ -225,11 +301,19 @@
 						<td>
 							<Row>
 								{#if isApprover}
-									<Button
-										tip="Remove this assignment"
-										action={() => handle(db.approveAssignment(assignment, false, role, user.id))}
-										>Unassign</Button
-									>
+									{#if assignment.approved}
+										<Button
+											tip="Remove this assignment"
+											action={() => handle(db.approveAssignment(assignment, false, role, user.id))}
+											>Unassign</Button
+										>
+									{:else}
+										<Button
+											tip="Reassign this scholar"
+											action={() => handle(db.approveAssignment(assignment, true, role, user.id))}
+											>Reassign</Button
+										>
+									{/if}
 								{:else}
 									{EmptyLabel}
 								{/if}

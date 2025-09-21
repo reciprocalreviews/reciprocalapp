@@ -19,11 +19,10 @@
 	span {
 		border-left: calc(var(--thick-border-width) * 2) solid var(--salient-color);
 		background: var(--salient-color-faded);
-		font-weight: bold;
 		padding: calc(var(--spacing) / 3) calc(var(--spacing));
 		font-size: var(--small-font-size);
-		border-top-left-radius: var(--roundedness);
-		border-bottom-left-radius: var(--roundedness);
+		border-top-right-radius: var(--roundedness);
+		border-bottom-right-radius: var(--roundedness);
 	}
 
 	p {
@@ -42,7 +41,6 @@
 	}
 
 	.error {
-		background: var(--error-color);
-		font-weight: normal;
+		border-left-color: var(--error-color);
 	}
 </style>

@@ -994,7 +994,8 @@ export default class SupabaseCRUD extends CRUD {
 		submission: SubmissionID,
 		scholar: ScholarID,
 		roleid: RoleID,
-		bid: boolean
+		bid: boolean,
+		approved: boolean = false
 	): Promise<Result> {
 		const { data: role, error: roleError } = await this.client
 			.from('roles')
@@ -1008,7 +1009,7 @@ export default class SupabaseCRUD extends CRUD {
 
 		const { error } = await this.client
 			.from('assignments')
-			.insert({ submission, scholar, role: roleid, bid, venue: role.venueid });
+			.insert({ submission, scholar, role: roleid, bid, venue: role.venueid, approved });
 		return this.errorOrEmpty('CreateAssignment', error);
 	}
 
