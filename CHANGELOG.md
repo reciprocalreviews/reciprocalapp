@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.1.26 2025-09-21
+
+### Maintenance
+
+- Updated minor versions of Svelte, SvelteKit, vite.
+
 ## 0.1.25 2025-09-14
 
 ### Fixed
