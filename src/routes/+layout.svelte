@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { dev } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
 	import { onMount } from 'svelte';
@@ -20,9 +19,11 @@
 
 	let feedback = $derived(getFeedback());
 
+	const inProd = PUBLIC_ENV === 'prod';
+
 	/** Always go home in production, pre-release */
 	onMount(() => {
-		if (PUBLIC_ENV === 'prod') goto('/');
+		if (inProd) goto('/');
 
 		// Listen to auth stage changes and invalidate the auth context when they happen.
 		const { data: response } = data.supabase.auth.onAuthStateChange((_, newSession) => {
@@ -56,7 +57,7 @@
 	</div>
 {/snippet}
 
-{#if dev}
+{#if !inProd}
 	<Header />
 {/if}
 <main>

@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { dev } from '$app/environment';
 	import Tip from '$lib/components/Tip.svelte';
 	import Link from '$lib/components/Link.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
+	import { PUBLIC_ENV } from '$env/static/public';
+
+	const inProd = PUBLIC_ENV === 'prod';
 </script>
 
 <svelte:head>
@@ -13,7 +15,7 @@
 
 <Page title="Reciprocal Reviews" breadcrumbs={[]}>
 	{#snippet subtitle()}Make peer review count.{/snippet}
-	{#if dev}
+	{#if !inProd}
 		<p>
 			Academia incentivizes publishing over peer review. That means too many submissions and not
 			enough reviews, or reviews that are late and low quality.
