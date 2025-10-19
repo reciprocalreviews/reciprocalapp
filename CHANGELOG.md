@@ -3,6 +3,13 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.1.3 2025-10-19
+
+### Maintenance
+
+- Updated Vercel adapter to 7.0.
+- Updated minor dependencies: Playwright, Supabase, SvelteKit, Svelte, Typescirpt, vite
+
 ## 0.1.26 2025-09-21
 
 ### Added
