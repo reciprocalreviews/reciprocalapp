@@ -11,6 +11,7 @@
 	import { getFeedback, removeError, type Level } from './feedback.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { enUS } from '../locale/Locale';
+	import { PUBLIC_ENV } from '$env/static/public';
 
 	let { data, children } = $props();
 
@@ -21,7 +22,7 @@
 
 	/** Always go home in production, pre-release */
 	onMount(() => {
-		if (!dev) goto('/');
+		if (PUBLIC_ENV === 'prod') goto('/');
 
 		// Listen to auth stage changes and invalidate the auth context when they happen.
 		const { data: response } = data.supabase.auth.onAuthStateChange((_, newSession) => {
