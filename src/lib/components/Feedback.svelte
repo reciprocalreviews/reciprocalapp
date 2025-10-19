@@ -29,12 +29,6 @@
 		margin-top: 0;
 	}
 
-	span :global(a),
-	p :global(a) {
-		color: var(--background-color);
-		text-decoration: underline;
-	}
-
 	.inline {
 		display: inline-block;
 		align-self: flex-start;
