@@ -195,7 +195,6 @@
 		position: static;
 		visibility: visible;
 		white-space: wrap;
-		padding-inline-start: var(--spacing);
 	}
 
 	input[disabled],
