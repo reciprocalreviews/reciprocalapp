@@ -11,6 +11,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import { enUS } from '../locale/Locale';
 	import { PUBLIC_ENV } from '$env/static/public';
+	import Feedback from '$lib/components/Feedback.svelte';
 
 	let { data, children } = $props();
 
@@ -56,6 +57,12 @@
 		<Button action={() => removeError(index)} tip="Dismiss notification">𐄂</Button>
 	</div>
 {/snippet}
+
+{#if PUBLIC_ENV === 'test'}
+	<Feedback error inline={false}
+		>This is a test environment for preview purposes. Data can be deleted at any time.</Feedback
+	>
+{/if}
 
 {#if !inProd}
 	<Header />
