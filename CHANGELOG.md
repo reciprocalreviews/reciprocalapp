@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.1.4 2025-10-26
+
+### Maintenance
+
+- Sync SvelteKit types before building in Playwright GitHub Action.
+
 ## 0.1.3 2025-10-19
 
 ### Maintenance
