@@ -46,8 +46,6 @@
 		minting: CurrencyRow[] | null;
 	} = $props();
 
-	console.log(minting);
-
 	const db = getDB();
 	const auth = getAuth();
 
