@@ -10,6 +10,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Better tip styling.
 - Consistent currency link styling.
 - Better external link styling.
+- Show minting roles in profile.
 
 ### Fixed
 

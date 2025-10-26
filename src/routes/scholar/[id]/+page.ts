@@ -19,6 +19,12 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: venues } =
 		venueids.length > 0 ? await supabase.from('venues').select().in('id', venueids) : { data: [] };
 
+	// Get the currencies for which the scholar is a minter
+	const { data: minting } = await supabase
+		.from('currencies')
+		.select('*')
+		.contains('minters', [params.id]);
+
 	// Get the scholar's editing
 	const { data: editing } = await supabase
 		.from('venues')
@@ -62,6 +68,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		tokens: tokens,
 		transactions: transactions,
 		submissions: submissions,
-		currencies: currencies
+		currencies: currencies,
+		minting: minting
 	};
 };

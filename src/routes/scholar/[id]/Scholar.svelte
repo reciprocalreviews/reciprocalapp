@@ -23,6 +23,8 @@
 	import { EmptyLabel, TokenLabel } from '$lib/components/Labels';
 	import VenueLink from '$lib/components/VenueLink.svelte';
 	import Dashboard from '$lib/components/Dashboard.svelte';
+	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
+	import Table from '$lib/components/Table.svelte';
 
 	let {
 		scholar,
@@ -31,7 +33,8 @@
 		tokens,
 		transactions,
 		submissions,
-		currencies
+		currencies,
+		minting
 	}: {
 		scholar: Scholar;
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
@@ -40,7 +43,10 @@
 		transactions: number | null;
 		submissions: SubmissionRow[] | null;
 		currencies: CurrencyRow[] | null;
+		minting: CurrencyRow[] | null;
 	} = $props();
+
+	console.log(minting);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -113,6 +119,8 @@
 	{#if editable}
 		<h2>volunteering</h2>
 
+		<Tip>These are commitments you've made to review or manage currencies.</Tip>
+
 		<!-- Find all invitations -->
 		{#each commitments.filter((v) => v.invited) as invite}
 			<Feedback>
@@ -129,34 +137,42 @@
 			</Feedback>
 		{/each}
 
-		<ul>
-			{#if editing}
-				{#if editing.length > 0}
-					{#each editing as editing}
-						<li>
-							<SourceLink id={editing.id} name={editing.title} />
-							<Tag>Editor</Tag>
-						</li>
-					{/each}
+		{#if editing === null}
+			<Feedback>Unable to load editing commitments.</Feedback>
+		{:else}
+			<Table>
+				{#snippet header()}
+					<th>Venue</th>
+					<th>Role</th>
+				{/snippet}
+
+				{#if editing}
+					{#if editing.length > 0}
+						{#each editing as editing}
+							<tr>
+								<td><SourceLink id={editing.id} name={editing.title} /></td>
+								<td><Tag>Editor</Tag></td>
+							</tr>
+						{/each}
+					{/if}
 				{/if}
-			{:else}
-				<li><Feedback>Unable to load editing commitments.</Feedback></li>
-			{/if}
-			{#if commitments}
-				{#if commitments.length > 0}
+				<!-- Are they minters for any currencies? -->
+				{#each minting ?? [] as currency}
+					<tr>
+						<td><CurrencyLink {currency} /></td>
+						<td><Tag>Minter</Tag></td>
+					</tr>
+				{/each}
+				{#if commitments && commitments.length > 0}
 					{#each commitments as commitment}
-						<li>
-							<SourceLink id={commitment.venueid} name={commitment.venue} />
-							<Tag>{commitment.name}</Tag>
-						</li>
+						<tr>
+							<td><SourceLink id={commitment.venueid} name={commitment.venue} /></td>
+							<td><Tag>{commitment.name}</Tag></td>
+						</tr>
 					{/each}
-				{:else if editing?.length === 0}
-					<li><Feedback>No volunteer commitments.</Feedback></li>
 				{/if}
-			{:else}
-				<li><Feedback>Unable to load volunteer commitments.</Feedback></li>
-			{/if}
-		</ul>
+			</Table>
+		{/if}
 	{/if}
 
 	<h2 id="submissions">submissions</h2>

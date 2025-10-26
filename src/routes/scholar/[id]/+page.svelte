@@ -5,7 +5,7 @@
 
 	let { data } = $props();
 
-	let { commitments, venues, editing, tokens, transactions, submissions, currencies } =
+	let { commitments, venues, editing, tokens, transactions, submissions, currencies, minting } =
 		$derived(data);
 
 	let volunteering = $derived(
@@ -40,6 +40,7 @@
 		{transactions}
 		{submissions}
 		{currencies}
+		{minting}
 	/>
 {:else}
 	<h1>Oops.</h1>
