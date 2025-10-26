@@ -9,6 +9,8 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Sync SvelteKit types before building in Playwright GitHub Action.
 - Slim Playwright browsers tested.
+- Updated minor dependencies: supabase, @supabase/supabase-js, @sveltejs/kit, svelte, vite
+- Upgraded to vite 4
 
 ## 0.1.3 2025-10-19
 
