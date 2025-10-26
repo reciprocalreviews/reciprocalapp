@@ -20,11 +20,13 @@
 
 <h2>volunteering</h2>
 
-<Tip>These are commitments you've made to review or manage currencies.</Tip>
-
 {#if editing === null}
 	<Feedback>Unable to load editing commitments.</Feedback>
+{:else if editing.length === 0 && (minting === null || minting.length === 0) && (commitments === null || commitments.length === 0)}
+	<Feedback>You are not volunteering for any roles yet.</Feedback>
 {:else}
+	<Tip>These are commitments you've made to review or manage currencies.</Tip>
+
 	<Table>
 		{#snippet header()}
 			<th>Venue</th>
