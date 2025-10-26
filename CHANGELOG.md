@@ -15,6 +15,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Fixed
 
 - Fixed inline padding of lists.
+- Improved save feedback visual design.
 
 ### Maintenance
 

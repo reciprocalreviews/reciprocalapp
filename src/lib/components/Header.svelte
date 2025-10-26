@@ -5,7 +5,6 @@
 	import { goto } from '$app/navigation';
 	import { getPendingActions } from '../../routes/feedback.svelte';
 	import Dots from './Dots.svelte';
-	import Feedback from './Feedback.svelte';
 
 	const routes = [
 		{ path: '/', label: 'Home' },
@@ -20,14 +19,16 @@
 
 <header>
 	{#each routes as route}<div class="link"><Link to={route.path}>{route.label}</Link></div>{/each}
-	<div class="feedback">
-		<!-- Saving feedback -->
-		<Feedback inline>
-			{#if pending > 0}
-				<Dots></Dots>
-				{#if pending === 1}saving…{:else}{pending} saving…{/if}
-			{:else}saved{/if}
-		</Feedback>
+	<div
+		class="feedback"
+		title={pending === 0
+			? 'No pending actions'
+			: `${pending} pending action${pending > 1 ? 's' : ''}`}
+	>
+		{#if pending > 0}
+			{#if pending > 1}{pending}{/if}
+			<Dots></Dots>
+		{:else}✔{/if}
 	</div>
 	<div class="authenticated">
 		{#if auth.isAuthenticated()}
@@ -74,7 +75,11 @@
 	}
 
 	.feedback {
-		margin-inline-start: auto;
+		font-size: x-small;
+		background: var(--salient-color-faded);
+		border-radius: var(--spacing);
+		padding: 1em;
+		cursor: help;
 	}
 
 	.authenticated {

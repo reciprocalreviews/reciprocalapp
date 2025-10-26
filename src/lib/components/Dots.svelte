@@ -14,4 +14,4 @@
 	});
 </script>
 
-<span>{'.'.repeat(dots + 1)}</span>
+<span>{'•'.repeat(dots + 1)}</span>
