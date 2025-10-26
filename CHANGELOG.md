@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Maintenance
 
 - Sync SvelteKit types before building in Playwright GitHub Action.
+- Slim Playwright browsers tested.
 
 ## 0.1.3 2025-10-19
 
