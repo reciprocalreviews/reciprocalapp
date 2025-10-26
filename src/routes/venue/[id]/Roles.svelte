@@ -1,5 +1,12 @@
 <script lang="ts">
-	import type { RoleID, RoleRow, ScholarID, VenueRow, VolunteerRow } from '$data/types';
+	import type {
+		CurrencyRow,
+		RoleID,
+		RoleRow,
+		ScholarID,
+		VenueRow,
+		VolunteerRow
+	} from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
@@ -17,19 +24,22 @@
 	import Link from '$lib/components/Link.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import Cards from '$lib/components/Cards.svelte';
+	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 
 	let {
 		venue,
 		roles,
 		volunteers,
 		scholar,
-		editor
+		editor,
+		currency
 	}: {
 		venue: VenueRow;
 		scholar: ScholarID | undefined;
 		roles: RoleRow[] | null;
 		volunteers: VolunteerRow[] | null;
 		editor: boolean;
+		currency: CurrencyRow;
 	} = $props();
 
 	const db = getDB();
@@ -62,7 +72,10 @@
 			<p>
 				Editors can edit venue information, add and remove other editors, create and archive
 				submissions, and gift review tokens. They are typically Editors-in-Chief of a journal or
-				Program Chairs of a conference.
+				Program Chairs of a conference. Editors are compensated <Tokens
+					amount={venue.edit_amount}
+				/> per submission in the currency
+				<CurrencyLink {currency} />.
 			</p>
 
 			{#if editor}
@@ -90,8 +103,6 @@
 						}}>Add editor</Button
 					>
 				</form>
-			{:else}
-				<p>Editors are compensated <Tokens amount={venue.edit_amount} /> per submission.</p>
 			{/if}
 		</Card>
 		{#each roles.toSorted((a, b) => a.priority - b.priority) as role, index (role.id)}
@@ -123,8 +134,8 @@
 				<p>
 					This {#if role.invited}<strong>invite only</strong>{/if} role is compensated <Tokens
 						amount={role.amount}
-					></Tokens> per submission. <Link to="/venue/{venue.id}/volunteers"
-						>{roleVolunteers.length ?? 0} scholars</Link
+					></Tokens> per submission in the currency <CurrencyLink {currency} />. <Link
+						to="/venue/{venue.id}/volunteers">{roleVolunteers.length ?? 0} scholars</Link
 					> have volunteered for this role.
 				</p>
 

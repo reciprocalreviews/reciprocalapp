@@ -16,6 +16,7 @@
 	import Gift from '$lib/components/Gift.svelte';
 	import { type CurrencyID } from '$data/types';
 	import Dashboard from '$lib/components/Dashboard.svelte';
+	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const { venue, currency, scholar, roles, volunteers, tokens, submissionCount } = $derived(data);
@@ -106,8 +107,15 @@
 
 		<h2>Roles</h2>
 
-		{#if roles}
-			<Roles {venue} scholar={scholar?.id} {roles} {volunteers} editor={editor === true} />
+		{#if roles && currency}
+			<Roles
+				{venue}
+				scholar={scholar?.id}
+				{roles}
+				{volunteers}
+				editor={editor === true}
+				{currency}
+			/>
 		{:else}
 			<Feedback error>Couldn't load venue's roles.</Feedback>
 		{/if}
@@ -117,8 +125,8 @@
 
 			<!-- Key details about costs. -->
 			<p>
-				This venue uses {#if currency}the <Link background to="/currency/{venue.currency}"
-						>{TokenLabel} {currency.name}</Link
+				This venue uses {#if currency}the <CurrencyLink {currency}>
+						{TokenLabel} {currency.name}</CurrencyLink
 					>{:else}an unknown{/if}
 				currency.
 			</p>

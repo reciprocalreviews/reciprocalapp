@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Added
 
 - Better tip styling.
+- Consistent currency link styling.
 
 ### Maintenance
 
