@@ -11,6 +11,10 @@ Dates should be in`YYYY-MM-DD` format.
 - Consistent currency link styling.
 - Better external link styling.
 
+### Fixed
+
+- Fixed inline padding of lists.
+
 ### Maintenance
 
 - Sync SvelteKit types before building in Playwright GitHub Action.
