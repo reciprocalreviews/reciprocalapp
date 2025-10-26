@@ -22,23 +22,22 @@
 <a
 	class:small
 	class:background
-	class:underline
 	href={inactive ? null : to}
 	target={to.startsWith('http') ? '_blank' : null}
 	aria-current={inactive ? 'page' : null}
-	>{@render children()}{#if to.startsWith('http')}<sub>⏵</sub>{/if}</a
+	><span class:underline>{@render children()}</span>{#if to.startsWith('http')}<sub>🌐</sub>{/if}</a
 >
 
 <style>
 	a {
 		color: var(--salient-color);
 		font-weight: 400;
-		text-decoration: underline var(--salient-color) var(--thick-border-width) solid;
-		text-decoration-skip-ink: none;
+		text-decoration: none;
 	}
 
-	a:not(.underline) {
-		text-decoration: none;
+	a .underline {
+		text-decoration: underline var(--salient-color) var(--thick-border-width) solid;
+		text-decoration-skip-ink: none;
 	}
 
 	a.small,
@@ -46,7 +45,7 @@
 		font-size: var(--small-font-size);
 	}
 
-	a:hover:not([aria-current]) {
+	a span:hover:not([aria-current]) {
 		text-decoration: underline;
 		text-decoration-thickness: calc(1.25 * var(--thick-border-width));
 	}

@@ -62,12 +62,12 @@
 >
 	{#snippet subtitle()}Scholar{/snippet}
 	{#snippet details()}
-		<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>
 		<Status good={scholar.isAvailable()}
 			>{scholar.isAvailable() ? 'Available' : 'Unavailable'}</Status
 		>
+		<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>
 		{#if scholar.getORCID()}
-			<Link to="https://orcid.org/{scholar.getORCID()}">{scholar.getORCID()}</Link>
+			ORCID <Link to="https://orcid.org/{scholar.getORCID()}">{scholar.getORCID()}</Link>
 		{/if}
 	{/snippet}
 
