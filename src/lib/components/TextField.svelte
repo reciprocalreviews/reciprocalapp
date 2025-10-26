@@ -117,10 +117,10 @@
 			>{#if error && wasFocused}{error}{/if}</Feedback
 		>
 	{/if}
+	{#if note}
+		<Tip border={false}>{note}</Tip>
+	{/if}
 </div>
-{#if note}
-	<Tip>{note}</Tip>
-{/if}
 
 <style>
 	.field {

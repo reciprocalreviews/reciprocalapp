@@ -1,10 +1,16 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import monoEmoij from './monoEmoji';
 
-	let { children } = $props();
+	interface Props {
+		border?: boolean;
+		children: Snippet;
+	}
+
+	let { border, children }: Props = $props();
 </script>
 
-<div class="tip">
+<div class="tip" class:border>
 	<div class="bulb">{monoEmoij('💡')}</div>
 	<div class="content">{@render children()}</div>
 </div>
@@ -15,8 +21,11 @@
 		flex-direction: row;
 		flex-wrap: nowrap;
 		gap: calc(var(--spacing) / 2);
-		align-items: start;
+		align-items: first baseline;
 		font-size: var(--small-font-size);
+	}
+
+	.tip.border {
 		border-top: var(--border-width) solid var(--border-color);
 		border-bottom: var(--border-width) solid var(--border-color);
 		padding-top: var(--spacing);
@@ -26,6 +35,10 @@
 	.bulb {
 		font-size: 125%;
 		animation: slideUp 0.5s;
+	}
+
+	.content {
+		font-style: italic;
 	}
 
 	@keyframes slideUp {
