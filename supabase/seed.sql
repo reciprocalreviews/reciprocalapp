@@ -15,17 +15,17 @@ VALUES
 ('d181d165-8b6a-4d79-ad28-a9aece21d813', 'd181d165-8b6a-4d79-ad28-a9aece21d813', '{"sub": "d181d165-8b6a-4d79-ad28-a9aece21d813", "email": "scholar@uni.edu", "email_verified": false, "phone_verified": false}', 'email', '2025-10-19 21:59:30.449912+00', '2025-10-19 21:59:30.449967+00', '2025-10-19 21:59:30.449967+00', 'd03732ca-fa0b-409c-ac8f-5c0aaa035b14');
 
 INSERT INTO "public"."currencies" ("id", "name", "description", "minters") 
-VALUES ('c60c9fca-ad37-11f0-a9a1-57b72e1e85ac', 'ACM TOCAT', '', '{"d181d165-8b6a-4d79-ad28-a9aece21d813"}');
+VALUES ('c60c9fca-ad37-11f0-a9a1-57b72e1e85ac', 'ACM TOCE currency', '', '{"d181d165-8b6a-4d79-ad28-a9aece21d813"}');
 
 UPDATE "public"."scholars" SET orcid = '0000-0001-2345-6780', "name" = 'Rigor Saurus', "email" = 'scholar@college.edu', "available" = 'true', "steward" = 'false' WHERE id='7ff8621a-cbe0-4789-bbee-f008d38c4ac7';
 UPDATE "public"."scholars" SET orcid = '0000-0001-2345-6781', "name" = 'Foot Note', "email" = 'scholar@institute.edu', "available" = 'true', "steward" = 'false', "status" = 'I can review as many things as you send me!' WHERE id='b8a805bf-0aae-4443-9185-de019a8715cb';
 UPDATE "public"."scholars" SET orcid = '0000-0001-2345-6782', "name" = 'Scholar Lee', "email" = 'scholar@uni.edu', "available" = 'true', "steward" = 'true' WHERE id='d181d165-8b6a-4d79-ad28-a9aece21d813';
 
 INSERT INTO "public"."venues" ("id", "title", "description", "url", "currency", "welcome_amount", "edit_amount", "submission_cost", "editors") 
-VALUES ('c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6', 'ACM TOCAT', 'This is a mock venue, for local testing.', 'https://tocat.acm.edu', 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac', '20', '1', '10', '{"d181d165-8b6a-4d79-ad28-a9aece21d813"}');
+VALUES ('c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6', 'ACM TOCE', 'This is a mock venue, for local testing.', 'https://tocat.acm.edu', 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac', '20', '1', '10', '{"d181d165-8b6a-4d79-ad28-a9aece21d813"}');
 
 INSERT INTO "public"."proposals" ("id", "title", "url", "editors", "census", "venue") 
-VALUES ('82246928-ad37-11f0-a071-bb5db9b6e698', 'ACM TOCAT', 'https://tocat.acm.edu', '{"scholar@uni.edu"}', '500', 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6');
+VALUES ('82246928-ad37-11f0-a071-bb5db9b6e698', 'ACM TOCE', 'https://toce.acm.edu', '{"scholar@uni.edu"}', '500', 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6');
 
 INSERT INTO "public"."roles" ("id", "venueid", "name", "description", "invited", "biddable", "approver", "amount", "priority") 
 VALUES 

@@ -420,7 +420,7 @@ export default class SupabaseCRUD extends CRUD {
 		// Create a currency for the venue
 		const { data: currencyData, error: currencyError } = await this.client
 			.from('currencies')
-			.insert({ name: proposalData.title, minters: editors })
+			.insert({ name: proposalData.title + ' currency', minters: editors })
 			.select()
 			.single();
 
