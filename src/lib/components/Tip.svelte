@@ -17,7 +17,10 @@
 		gap: calc(var(--spacing) / 2);
 		align-items: start;
 		font-size: var(--small-font-size);
-		border-radius: var(--roundedness);
+		border-top: var(--border-width) solid var(--border-color);
+		border-bottom: var(--border-width) solid var(--border-color);
+		padding-top: var(--spacing);
+		padding-bottom: var(--spacing);
 	}
 
 	.bulb {

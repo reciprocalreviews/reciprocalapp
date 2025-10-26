@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.1.4 2025-10-26
 
+### Added
+
+- Better tip styling.
+
 ### Maintenance
 
 - Sync SvelteKit types before building in Playwright GitHub Action.
