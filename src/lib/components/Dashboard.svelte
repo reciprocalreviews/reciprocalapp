@@ -88,7 +88,7 @@
 		padding: var(--spacing);
 		border: var(--border-width) var(--border-color) solid;
 		border-radius: var(--roundedness);
-		background: var(--alternating-color);
+		background: var(--salient-color-faded);
 		flex: 1;
 	}
 

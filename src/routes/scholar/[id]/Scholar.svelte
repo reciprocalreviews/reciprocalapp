@@ -9,8 +9,6 @@
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import Tag from '$lib/components/Tag.svelte';
-	import SourceLink from '$lib/components/VenueLink.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import Gift from '$lib/components/Gift.svelte';
 	import Page from '$lib/components/Page.svelte';
@@ -18,23 +16,19 @@
 	import type { CurrencyID, CurrencyRow, SubmissionRow, TokenRow } from '$data/types';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Tip from '$lib/components/Tip.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import { handle } from '../../feedback.svelte';
-	import { EmptyLabel, TokenLabel } from '$lib/components/Labels';
-	import VenueLink from '$lib/components/VenueLink.svelte';
+	import { TokenLabel } from '$lib/components/Labels';
 	import Dashboard from '$lib/components/Dashboard.svelte';
-	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
-	import Table from '$lib/components/Table.svelte';
+	import Commitments from './Commitments.svelte';
 
 	let {
 		scholar,
 		commitments,
 		editing,
+		minting,
 		tokens,
 		transactions,
 		submissions,
-		currencies,
-		minting
+		currencies
 	}: {
 		scholar: Scholar;
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
@@ -119,58 +113,7 @@
 
 		<Tip>These are commitments you've made to review or manage currencies.</Tip>
 
-		<!-- Find all invitations -->
-		{#each commitments.filter((v) => v.invited) as invite}
-			<Feedback>
-				The editor has invited you to the <strong>{invite.name ?? EmptyLabel}</strong>
-				role for <VenueLink id={invite.venueid} name={invite.venue} />. Would you like to
-				<Button
-					tip="accept this invitation"
-					action={() => handle(db.acceptRoleInvite(invite.id, 'accepted'))}>Accept</Button
-				>
-				<Button
-					tip="decline this invitation"
-					action={() => handle(db.acceptRoleInvite(invite.id, 'declined'))}>Decline</Button
-				>?
-			</Feedback>
-		{/each}
-
-		{#if editing === null}
-			<Feedback>Unable to load editing commitments.</Feedback>
-		{:else}
-			<Table>
-				{#snippet header()}
-					<th>Venue</th>
-					<th>Role</th>
-				{/snippet}
-
-				{#if editing}
-					{#if editing.length > 0}
-						{#each editing as editing}
-							<tr>
-								<td><SourceLink id={editing.id} name={editing.title} /></td>
-								<td><Tag>Editor</Tag></td>
-							</tr>
-						{/each}
-					{/if}
-				{/if}
-				<!-- Are they minters for any currencies? -->
-				{#each minting ?? [] as currency}
-					<tr>
-						<td><CurrencyLink {currency} /></td>
-						<td><Tag>Minter</Tag></td>
-					</tr>
-				{/each}
-				{#if commitments && commitments.length > 0}
-					{#each commitments as commitment}
-						<tr>
-							<td><SourceLink id={commitment.venueid} name={commitment.venue} /></td>
-							<td><Tag>{commitment.name}</Tag></td>
-						</tr>
-					{/each}
-				{/if}
-			</Table>
-		{/if}
+		<Commitments {commitments} {editing} {minting}></Commitments>
 	{/if}
 
 	<h2 id="submissions">submissions</h2>
