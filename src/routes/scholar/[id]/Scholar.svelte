@@ -13,12 +13,19 @@
 	import Gift from '$lib/components/Gift.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import { validEmail } from '$lib/validation';
-	import type { CurrencyID, CurrencyRow, SubmissionRow, TokenRow } from '$data/types';
+	import type {
+		CurrencyID,
+		CurrencyRow,
+		SubmissionRow,
+		TokenRow,
+		TransactionRow
+	} from '$data/types';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import { TokenLabel } from '$lib/components/Labels';
 	import Dashboard from '$lib/components/Dashboard.svelte';
 	import Commitments from './Commitments.svelte';
+	import Tasks from './Tasks.svelte';
 
 	let {
 		scholar,
@@ -28,7 +35,8 @@
 		tokens,
 		transactions,
 		submissions,
-		currencies
+		currencies,
+		pending
 	}: {
 		scholar: Scholar;
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
@@ -38,6 +46,7 @@
 		submissions: SubmissionRow[] | null;
 		currencies: CurrencyRow[] | null;
 		minting: CurrencyRow[] | null;
+		pending: TransactionRow[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -109,9 +118,7 @@
 	/>
 
 	{#if editable}
-		<h2>volunteering</h2>
-
-		<Tip>These are commitments you've made to review or manage currencies.</Tip>
+		<Tasks {commitments} {minting} {pending}></Tasks>
 
 		<Commitments {commitments} {editing} {minting}></Commitments>
 	{/if}

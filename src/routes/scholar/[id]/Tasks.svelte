@@ -1,0 +1,71 @@
+<script lang="ts">
+	import type { CurrencyRow, TransactionRow } from '$data/types';
+	import Button from '$lib/components/Button.svelte';
+	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
+	import Feedback from '$lib/components/Feedback.svelte';
+	import { EmptyLabel } from '$lib/components/Labels';
+	import Table from '$lib/components/Table.svelte';
+	import Tip from '$lib/components/Tip.svelte';
+	import VenueLink from '$lib/components/VenueLink.svelte';
+	import { getDB } from '$lib/data/CRUD';
+	import { handle } from '../../feedback.svelte';
+
+	let {
+		commitments,
+		pending,
+		minting
+	}: {
+		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
+		minting: CurrencyRow[] | null;
+		pending: TransactionRow[] | null;
+	} = $props();
+
+	const db = getDB();
+</script>
+
+<h2>Tasks</h2>
+
+{#if commitments.length === 0 && (pending === null || pending.length === 0)}
+	<Feedback>You have no pending tasks.</Feedback>
+{:else}
+	<Tip>These are tasks you need to complete.</Tip>
+
+	<Table>
+		{#snippet header()}
+			<th>Kind</th>
+			<th>Task</th>
+		{/snippet}
+		<!-- Show pending invitations -->
+		{#each commitments.filter((v) => v.invited) as invite}
+			<tr>
+				<td>Invitation</td>
+				<td>
+					The editor has invited you to the <strong>{invite.name ?? EmptyLabel}</strong>
+					role for <VenueLink id={invite.venueid} name={invite.venue} />. Would you like to
+					<Button
+						tip="accept this invitation"
+						action={() => handle(db.acceptRoleInvite(invite.id, 'accepted'))}>Accept</Button
+					>
+					<Button
+						tip="decline this invitation"
+						action={() => handle(db.acceptRoleInvite(invite.id, 'declined'))}>Decline</Button
+					>?
+				</td>
+			</tr>
+		{/each}
+
+		<!-- Show pending transactions -->
+		{#each minting ?? [] as currency}
+			{@const pendingForCurrency = pending?.filter((t) => t.currency === currency.id) ?? []}
+			{#if pendingForCurrency.length > 0}
+				<tr>
+					<td>Transaction</td>
+					<td>
+						As minter, you have {pendingForCurrency.length} proposed transactions to approve. Approve
+						them in the <CurrencyLink {currency} /> dashboard.
+					</td>
+				</tr>
+			{/if}
+		{/each}
+	</Table>
+{/if}

@@ -1,14 +1,11 @@
 <script lang="ts">
 	import type { CurrencyRow } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { EmptyLabel } from '$lib/components/Labels';
 	import Table from '$lib/components/Table.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import VenueLink from '$lib/components/VenueLink.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import { handle } from '../../feedback.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
+	import Tip from '$lib/components/Tip.svelte';
 
 	let {
 		commitments,
@@ -19,25 +16,11 @@
 		editing: { id: string; title: string }[] | null;
 		minting: CurrencyRow[] | null;
 	} = $props();
-
-	const db = getDB();
 </script>
 
-<!-- Find all invitations -->
-{#each commitments.filter((v) => v.invited) as invite}
-	<Feedback>
-		The editor has invited you to the <strong>{invite.name ?? EmptyLabel}</strong>
-		role for <VenueLink id={invite.venueid} name={invite.venue} />. Would you like to
-		<Button
-			tip="accept this invitation"
-			action={() => handle(db.acceptRoleInvite(invite.id, 'accepted'))}>Accept</Button
-		>
-		<Button
-			tip="decline this invitation"
-			action={() => handle(db.acceptRoleInvite(invite.id, 'declined'))}>Decline</Button
-		>?
-	</Feedback>
-{/each}
+<h2>volunteering</h2>
+
+<Tip>These are commitments you've made to review or manage currencies.</Tip>
 
 {#if editing === null}
 	<Feedback>Unable to load editing commitments.</Feedback>

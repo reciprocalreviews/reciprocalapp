@@ -11,6 +11,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Consistent currency link styling.
 - Better external link styling.
 - Show minting roles in profile.
+- Added task list to scholar page to show pending invitations and transactions.
 
 ### Fixed
 

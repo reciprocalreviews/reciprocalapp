@@ -53,6 +53,14 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.or(`from_scholar.eq.${params.id},to_scholar.eq.${params.id}`);
 	if (transactionsError) console.log(transactionsError);
 
+	// Get pending transactions on currencies for which the scholar is a minter
+	const { data: pending, error: pendingTransactionsError } = await supabase
+		.from('transactions')
+		.select('*')
+		.eq('status', 'proposed')
+		.in('currency', minting ? minting.map((c) => c.id) : []);
+	if (pendingTransactionsError) console.log(pendingTransactionsError);
+
 	// Get the scholar's submissions
 	const { data: submissions, error: submissionsError } = await supabase
 		.from('submissions')
@@ -69,6 +77,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		transactions: transactions,
 		submissions: submissions,
 		currencies: currencies,
-		minting: minting
+		minting: minting,
+		pending: pending
 	};
 };
