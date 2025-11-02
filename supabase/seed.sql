@@ -22,7 +22,7 @@ UPDATE "public"."scholars" SET orcid = '0000-0001-2345-6781', "name" = 'Foot Not
 UPDATE "public"."scholars" SET orcid = '0000-0001-2345-6782', "name" = 'Scholar Lee', "email" = 'scholar@uni.edu', "available" = 'true', "steward" = 'true' WHERE id='d181d165-8b6a-4d79-ad28-a9aece21d813';
 
 INSERT INTO "public"."venues" ("id", "title", "description", "url", "currency", "welcome_amount", "edit_amount", "submission_cost", "editors") 
-VALUES ('c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6', 'ACM TOCE', 'This is a mock venue, for local testing.', 'https://tocat.acm.edu', 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac', '20', '1', '10', '{"d181d165-8b6a-4d79-ad28-a9aece21d813"}');
+VALUES ('c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6', 'ACM TOCE', 'This is a mock venue, for local testing.', 'https://toce.acm.edu', 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac', '20', '1', '10', '{"d181d165-8b6a-4d79-ad28-a9aece21d813"}');
 
 INSERT INTO "public"."proposals" ("id", "title", "url", "editors", "census", "venue") 
 VALUES ('82246928-ad37-11f0-a071-bb5db9b6e698', 'ACM TOCE', 'https://toce.acm.edu', '{"scholar@uni.edu"}', '500', 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6');
