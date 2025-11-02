@@ -1,13 +1,20 @@
 <script lang="ts">
 	import { ORCIDRegex } from '$lib/data/ORCID';
 	import { type Result } from '$lib/data/CRUD';
-	import { validEmail } from '$lib/validation';
+	import { validEmail, validORCID } from '$lib/validation';
 	import { handle } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
 	import Checkbox from './Checkbox.svelte';
 	import Slider from './Slider.svelte';
 	import TextField from './TextField.svelte';
-	import type { CurrencyID, CurrencyRow, TokenRow } from '$data/types';
+	import type {
+		CurrencyID,
+		CurrencyRow,
+		ScholarID,
+		TokenRow,
+		VenueID,
+		VenueRow
+	} from '$data/types';
 	import Feedback from './Feedback.svelte';
 
 	let {
@@ -15,15 +22,18 @@
 		purpose,
 		transfer,
 		success,
-		currencies
+		currencies,
+		venues
 	}: {
 		tokens: TokenRow[] | null;
 		purpose: string;
 		success: string;
 		currencies: CurrencyRow[];
+		venues: VenueRow[];
 		transfer: (
 			currency: CurrencyID,
-			receipient: string,
+			kind: 'venue' | 'scholar',
+			receipient: VenueID | ScholarID,
 			amount: number,
 			purpose: string
 		) => Promise<Result<any>> | undefined;
@@ -34,20 +44,44 @@
 	let giftAmount = $state(1);
 	let giftConsent = $state(false);
 	let giftPurpose = $state(purpose);
+	let kind = $state<'scholar' | 'venue'>('scholar');
+	let venue = $state<undefined | string>(undefined);
 </script>
 
 <form>
 	{#if tokens === null || tokens.length === 0}
 		<Feedback>You don't have any tokens to gift.</Feedback>
 	{:else}
-		<TextField
-			bind:text={giftRecipient}
-			label="Recipient"
-			size={20}
-			placeholder="ORCID or email"
-			valid={(text) =>
-				validEmail(text) || ORCIDRegex.test(text) ? undefined : 'Must be an email or ORCID'}
-		/>
+		<fieldset>
+			<legend>Gift to...</legend>
+			<div>
+				<input bind:group={kind} type="radio" id="scholar-choice" name="scholar" value="scholar" />
+				<label for="scholar-choice">Scholar</label>
+			</div>
+			<div>
+				<input bind:group={kind} type="radio" id="venue-choice" name="venue" value="venue" />
+				<label for="venue-choice">Venue</label>
+			</div>
+		</fieldset>
+
+		{#if kind === 'scholar'}
+			<TextField
+				bind:text={giftRecipient}
+				label="Recipient"
+				size={20}
+				placeholder="ORCID or email"
+				valid={(text) =>
+					validEmail(text) || validORCID(text) ? undefined : 'Must be an email or ORCID'}
+			/>
+		{:else}
+			<select bind:value={venue}>
+				<option disabled selected value={undefined}> -- select a venue -- </option>
+				{#each venues as venue}
+					<option value={venue.id}>{venue.title}</option>
+				{/each}
+			</select>
+		{/if}
+
 		<label>
 			What currency should be used?
 			<select bind:value={currency}>
@@ -68,12 +102,16 @@
 		>
 		<Button
 			tip="Transfer tokens"
-			active={currency !== undefined &&
+			active={(currency !== undefined &&
 				giftConsent &&
-				(validEmail(giftRecipient) || ORCIDRegex.test(giftRecipient))}
+				kind === 'scholar' &&
+				(validEmail(giftRecipient) || ORCIDRegex.test(giftRecipient))) ||
+				(kind === 'venue' && venue !== undefined)}
 			action={async () => {
 				if (currency === undefined) return;
-				const result = transfer(currency, giftRecipient, giftAmount, giftPurpose);
+				const recipient = kind === 'venue' ? venue : giftRecipient;
+				if (recipient === undefined) return;
+				const result = transfer(currency, kind, recipient, giftAmount, giftPurpose);
 				if (result && (await handle(result, success))) {
 					giftAmount = 1;
 					giftConsent = false;

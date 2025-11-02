@@ -52,6 +52,10 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.eq('venue', venueid);
 	if (submissionsError) console.error(submissionsError);
 
+	// Get all the venues one can gift to.
+	const { data: venues, error: venuesError } = await supabase.from('venues').select('*');
+	if (venuesError) console.error(venuesError);
+
 	return {
 		venue,
 		currency,
@@ -60,6 +64,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		volunteers,
 		tokens: tokens,
 		transactionCount,
-		submissionCount
+		submissionCount,
+		venues
 	};
 };

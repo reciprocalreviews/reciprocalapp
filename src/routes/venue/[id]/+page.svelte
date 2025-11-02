@@ -19,7 +19,7 @@
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { venue, currency, minters, scholar, roles, volunteers, tokens, submissionCount } =
+	const { venue, currency, minters, scholar, roles, volunteers, tokens, submissionCount, venues } =
 		$derived(data);
 
 	const db = getDB();
@@ -144,11 +144,13 @@
 					{#if scholar && currency !== null}
 						<Gift
 							{tokens}
-							purpose="Venue gift to scholar"
+							purpose="Venue gift"
 							success="Your tokens were successfully gifted."
 							currencies={[currency]}
+							venues={venues ?? []}
 							transfer={(
 								currency: CurrencyID,
+								kind: 'venue' | 'scholar',
 								giftRecipient: string,
 								giftAmount: number,
 								purpose: string
@@ -160,7 +162,7 @@
 											venue.id,
 											'venueid',
 											giftRecipient,
-											'emailorcid',
+											kind === 'venue' ? 'venueid' : 'emailorcid',
 											giftAmount,
 											purpose,
 											undefined

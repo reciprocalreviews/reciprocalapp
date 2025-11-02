@@ -51,6 +51,7 @@
 		{currencies}
 		{minting}
 		{pending}
+		{venues}
 	/>
 {:else}
 	<h1>Oops.</h1>

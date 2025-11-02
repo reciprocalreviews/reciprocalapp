@@ -18,7 +18,8 @@
 		CurrencyRow,
 		SubmissionRow,
 		TokenRow,
-		TransactionRow
+		TransactionRow,
+		VenueRow
 	} from '$data/types';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Tip from '$lib/components/Tip.svelte';
@@ -36,7 +37,8 @@
 		transactions,
 		submissions,
 		currencies,
-		pending
+		pending,
+		venues
 	}: {
 		scholar: Scholar;
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
@@ -47,6 +49,7 @@
 		currencies: CurrencyRow[] | null;
 		minting: CurrencyRow[] | null;
 		pending: TransactionRow[] | null;
+		venues: VenueRow[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -164,8 +167,10 @@
 						purpose="Gift to peer"
 						success="This venue's tokens were successfully gifted."
 						{currencies}
+						venues={venues ?? []}
 						transfer={(
 							currency: CurrencyID,
+							kind: 'venue' | 'scholar',
 							giftRecipient: string,
 							giftAmount: number,
 							purpose: string
@@ -177,7 +182,7 @@
 										scholar.getID(),
 										'scholarid',
 										giftRecipient,
-										'emailorcid',
+										kind === 'venue' ? 'venueid' : 'emailorcid',
 										giftAmount,
 										purpose,
 										undefined

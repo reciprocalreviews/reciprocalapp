@@ -217,6 +217,18 @@
 			select:focus {
 				outline: var(--focus-color) solid var(--thick-border-width);
 			}
+
+			fieldset {
+				display: flex;
+				flex-direction: row;
+				border: none;
+				padding: 0;
+				gap: var(--spacing);
+			}
+
+			legend {
+				font-style: italic;
+			}
 		</style>
 	</head>
 	<body data-sveltekit-preload-data="hover">
