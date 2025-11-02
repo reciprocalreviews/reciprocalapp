@@ -11,6 +11,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Improved names of venue proposal functions.
 - Fixed #30, preventing editors from being minters of a venue's currency.
 - Fixed #66, permit gifting venue.
+- Made currency visible to venue viewers.
 
 ### Maintenance
 

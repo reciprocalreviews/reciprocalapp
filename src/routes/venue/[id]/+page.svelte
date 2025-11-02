@@ -59,26 +59,36 @@
 			</p>
 		{/if}
 
-		<p>
-			This venue is edited by
-			{#each venue.editors as editorID, index}
-				<ScholarLink id={editorID} />{#if editor && venue.editors.length > 1}
-					&nbsp;<Button
-						tip="Remove editor"
-						active={venue.editors.length > 1}
-						warn="Are you sure you want to remove this editor?"
-						action={() =>
-							handle(
-								db.editVenueEditors(
-									venue.id,
-									venue.editors.filter((ed) => ed !== editorID)
-								)
-							)}>{DeleteLabel}</Button
-					>{/if}
-				{#if index < venue.editors.length - 1},{/if}
-				.
-			{/each}
-		</p>
+		<ul>
+			<li>
+				This venue is edited by
+				{#each venue.editors as editorID, index}
+					<ScholarLink id={editorID} />{#if editor && venue.editors.length > 1}
+						&nbsp;<Button
+							tip="Remove editor"
+							active={venue.editors.length > 1}
+							warn="Are you sure you want to remove this editor?"
+							action={() =>
+								handle(
+									db.editVenueEditors(
+										venue.id,
+										venue.editors.filter((ed) => ed !== editorID)
+									)
+								)}>{DeleteLabel}</Button
+						>{/if}
+					{#if index < venue.editors.length - 1},{/if}
+					.
+				{/each}
+			</li>
+
+			<!-- Key details about costs. -->
+			<li>
+				This venue uses {#if currency}the <CurrencyLink {currency}>
+						{TokenLabel} {currency.name}</CurrencyLink
+					>{:else}an unknown{/if}
+				currency.
+			</li>
+		</ul>
 
 		<Dashboard
 			stats={[
@@ -124,14 +134,6 @@
 
 		{#if editor}
 			<h2>Tokens</h2>
-
-			<!-- Key details about costs. -->
-			<p>
-				This venue uses {#if currency}the <CurrencyLink {currency}>
-						{TokenLabel} {currency.name}</CurrencyLink
-					>{:else}an unknown{/if}
-				currency.
-			</p>
 
 			{#if editor}
 				<p>
