@@ -118,7 +118,7 @@
 	/>
 
 	{#if editable}
-		<Tasks {commitments} {minting} {pending}></Tasks>
+		<Tasks scholar={scholar.getID()} {commitments} {minting} {pending}></Tasks>
 
 		<Commitments {commitments} {editing} {minting}></Commitments>
 	{/if}

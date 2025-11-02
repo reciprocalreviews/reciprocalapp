@@ -145,8 +145,8 @@
 							tip="Volunteer for this role"
 							action={() =>
 								handle(
-									db.createVolunteer(scholar, role.id, true, true),
-									'Thank you for volunteering! The minter will approve your welcome tokens soon.'
+									db.createVolunteer(scholar, scholar, role.id, true, true),
+									"Thank you for volunteering! You'll receive your welcome tokens once the minter approves them."
 								)}>Volunteer …</Button
 						>
 					{/if}
@@ -156,8 +156,14 @@
 								You declined this role. Would you like to accept it?
 								<Button
 									tip="accept this invitation"
-									action={() => handle(db.acceptRoleInvite(scholarVolunteer.id, 'accepted'))}
-									>Accept</Button
+									action={() =>
+										handle(
+											db.acceptRoleInvite(
+												scholarVolunteer.scholarid,
+												scholarVolunteer.id,
+												'accepted'
+											)
+										)}>Accept</Button
 								>
 							</p>
 						{:else if scholarVolunteer.active}
@@ -188,7 +194,7 @@
 					<Feedback error inline>Log in to volunteer.</Feedback>
 				{/if}
 
-				{#if editor}
+				{#if editor && scholar}
 					<Form>
 						<p>
 							Add one or more people to invite to this role by email or ORCID, separated by commas.
@@ -211,6 +217,7 @@
 								if (
 									await handle(
 										db.inviteToRole(
+											scholar,
 											role,
 											venue,
 											invites[role.id].split(',').map((s) => s.trim())

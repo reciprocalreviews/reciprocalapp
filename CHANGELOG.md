@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.1.5 2025-11-02
 
+### Fixed
+
+- Fixed #63, granting welcome tokens on volunteer assignment or invite accept.
+
 ### Maintenance
 
 - Updated minor dependencies: Supabase, Svelte, SvelteKit, vitest.

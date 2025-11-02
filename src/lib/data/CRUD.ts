@@ -136,19 +136,34 @@ export default abstract class CRUD {
 	abstract deleteRole(id: RoleID): Promise<Result>;
 
 	abstract createVolunteer(
+		inviter: ScholarID,
 		scholarid: ScholarID,
 		roleid: RoleID,
 		accepted: boolean,
 		compensate: boolean
 	): Promise<Result<string>>;
+
+	abstract welcomeVolunteer(
+		welcomer: ScholarID,
+		scholar: ScholarID,
+		roleid: RoleID,
+		reason: string
+	): Promise<Result>;
+
 	abstract updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result>;
 	abstract updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result>;
 	abstract inviteToRole(
+		inviter: ScholarID,
 		role: RoleRow,
 		venue: VenueRow,
 		emails: string[]
 	): Promise<Result<string[]>>;
-	abstract acceptRoleInvite(id: VolunteerID, response: Response): Promise<Result>;
+
+	abstract acceptRoleInvite(
+		scholar: ScholarID,
+		id: VolunteerID,
+		response: Response
+	): Promise<Result>;
 
 	abstract editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<Result>;
 	abstract addCurrencyMinter(

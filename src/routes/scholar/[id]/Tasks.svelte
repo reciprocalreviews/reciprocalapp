@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CurrencyRow, TransactionRow } from '$data/types';
+	import type { CurrencyRow, ScholarID, TransactionRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
@@ -13,19 +13,23 @@
 	let {
 		commitments,
 		pending,
-		minting
+		minting,
+		scholar
 	}: {
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
 		minting: CurrencyRow[] | null;
 		pending: TransactionRow[] | null;
+		scholar: ScholarID;
 	} = $props();
 
 	const db = getDB();
+
+	const invitedCommitments = $derived(commitments.filter((c) => c.invited));
 </script>
 
 <h2>Tasks</h2>
 
-{#if commitments.length === 0 && (pending === null || pending.length === 0)}
+{#if invitedCommitments.length === 0 && (pending === null || pending.length === 0)}
 	<Feedback>You have no pending tasks.</Feedback>
 {:else}
 	<Tip>These are tasks you need to complete.</Tip>
@@ -36,7 +40,7 @@
 			<th>Task</th>
 		{/snippet}
 		<!-- Show pending invitations -->
-		{#each commitments.filter((v) => v.invited) as invite}
+		{#each invitedCommitments as invite}
 			<tr>
 				<td>Invitation</td>
 				<td>
@@ -44,11 +48,13 @@
 					role for <VenueLink id={invite.venueid} name={invite.venue} />. Would you like to
 					<Button
 						tip="accept this invitation"
-						action={() => handle(db.acceptRoleInvite(invite.id, 'accepted'))}>Accept</Button
+						action={() => handle(db.acceptRoleInvite(scholar, invite.id, 'accepted'))}
+						>Accept</Button
 					>
 					<Button
 						tip="decline this invitation"
-						action={() => handle(db.acceptRoleInvite(invite.id, 'declined'))}>Decline</Button
+						action={() => handle(db.acceptRoleInvite(scholar, invite.id, 'declined'))}
+						>Decline</Button
 					>?
 				</td>
 			</tr>

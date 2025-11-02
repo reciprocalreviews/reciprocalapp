@@ -638,6 +638,7 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async createVolunteer(
+		inviter: ScholarID,
 		scholarid: ScholarID,
 		roleid: RoleID,
 		accepted: boolean,
@@ -669,40 +670,51 @@ export default class SupabaseCRUD extends CRUD {
 		if (newVolunteerError) return this.error('CreateVolunteer', newVolunteerError);
 
 		// If this is their first volunteer role for the venue, grant the number of welcome tokens for the venue.
-		if (volunteer.length === 0 && compensate) {
-			// Get the role and the venue.
-			const { data: role, error: roleError } = await this.client
-				.from('roles')
-				.select()
-				.eq('id', roleid)
-				.single();
-			if (role === null) return this.error('CreateVolunteer', roleError);
-			const venueid = role.venueid;
-			const { data: venue, error: venueError } = await this.client
-				.from('venues')
-				.select()
-				.eq('id', venueid)
-				.single();
-			if (venue === null) return this.error('CreateVolunteer', venueError);
-			const welcome = venue.welcome_amount;
-
-			// Record an approved transaction to log the gift.
-			const { error } = await this.createTransaction(
-				scholarid,
-				null,
-				venueid,
-				scholarid,
-				null,
-				// Create a list of null UUIDs to represent that they don't exist yet.
-				new Array(welcome).fill(NullUUID),
-				venue.currency,
-				'Welcome tokens for volunteering for the venue. Approved by minter.',
-				'proposed'
-			);
-			if (error) return this.error('CreateTransaction', error.details);
-		}
+		if (volunteer.length === 0 && compensate)
+			await this.welcomeVolunteer(inviter, scholarid, roleid, 'Welcome tokens for volunteering');
 
 		return { data: newVolunteer.id };
+	}
+
+	async welcomeVolunteer(
+		welcomer: ScholarID,
+		scholar: ScholarID,
+		roleid: RoleID,
+		reason: string
+	): Promise<Result> {
+		// Get the role and the venue.
+		const { data: role, error: roleError } = await this.client
+			.from('roles')
+			.select()
+			.eq('id', roleid)
+			.single();
+		if (role === null) return this.error('WelcomeVolunteer', roleError);
+		const venueid = role.venueid;
+		const { data: venue, error: venueError } = await this.client
+			.from('venues')
+			.select()
+			.eq('id', venueid)
+			.single();
+		if (venue === null) return this.error('WelcomeVolunteer', venueError);
+
+		const welcome = venue.welcome_amount;
+
+		// Record an approved transaction to log the gift.
+		const { data: transaction, error } = await this.createTransaction(
+			welcomer,
+			null,
+			venueid,
+			scholar,
+			null,
+			// Create a list of null UUIDs to represent that they don't exist yet.
+			new Array(welcome).fill(NullUUID),
+			venue.currency,
+			reason,
+			'proposed'
+		);
+		if (error) return this.error('WelcomeVolunteer', error.details);
+
+		return transaction ? {} : this.error('WelcomeVolunteer');
 	}
 
 	async updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result> {
@@ -716,6 +728,7 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async inviteToRole(
+		inviter: ScholarID,
 		role: RoleRow,
 		venue: VenueRow,
 		emailsOrORCIDs: string[]
@@ -739,7 +752,13 @@ export default class SupabaseCRUD extends CRUD {
 
 		const ids: string[] = [];
 		for (const scholar of scholars) {
-			const { data, error } = await this.createVolunteer(scholar.id, role.id, false, false);
+			const { data, error } = await this.createVolunteer(
+				inviter,
+				scholar.id,
+				role.id,
+				false,
+				false
+			);
 			if (error) return { error };
 			if (data) {
 				ids.push(data);
@@ -754,11 +773,33 @@ export default class SupabaseCRUD extends CRUD {
 		return { data: ids };
 	}
 
-	async acceptRoleInvite(id: VolunteerID, response: Response) {
+	async acceptRoleInvite(scholar: ScholarID, id: VolunteerID, response: Response) {
+		const { data: volunteer, error: volunteerError } = await this.client
+			.from('volunteers')
+			.select()
+			.eq('scholarid', scholar);
+		if (volunteerError) return this.error('AcceptRoleInvite', volunteerError);
+
+		// Mark the volunteer status as
 		const { error } = await this.client
 			.from('volunteers')
 			.update({ active: true, accepted: response })
 			.eq('id', id);
+
+		// If the scholar is accepting the role and this is their first role, grant welcome tokens.
+		if (
+			volunteer &&
+			volunteer.length === 1 &&
+			volunteer[0].accepted === 'invited' &&
+			response === 'accepted'
+		)
+			await this.welcomeVolunteer(
+				scholar,
+				scholar,
+				volunteer[0].roleid,
+				'Welcome tokens for accepting role invite'
+			);
+
 		return this.errorOrEmpty('AcceptRoleInvite', error);
 	}
 

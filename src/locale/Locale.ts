@@ -44,6 +44,7 @@ export const enUS = {
 		ReorderRole: 'Unable to reorder roles',
 		DeleteRole: 'Unable to delete role',
 		CreateVolunteer: 'Unable to add volunteer commitment',
+		WelcomeVolunteer: 'Unable to grant welcome tokens for first volunteer commitment',
 		AlreadyVolunteered: 'Already created a volunteer commitment for this role.',
 		UpdateVolunteerActive: 'Unable to update volunteer commitment',
 		UpdateVolunteerExpertise: 'Unable to update your expertise',
