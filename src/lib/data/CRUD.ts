@@ -96,22 +96,26 @@ export default abstract class CRUD {
 		message: string
 	): Promise<Result<ProposalID>>;
 
-	abstract editProposalTitle(venue: ProposalID, title: string): Promise<Result>;
-	abstract editProposalCensus(venue: ProposalID, census: number): Promise<Result>;
-	abstract editProposalEditors(venue: ProposalID, editors: string[]): Promise<Result>;
-	abstract editProposalURL(venue: ProposalID, url: string): Promise<Result>;
+	abstract editVenueProposalTitle(venue: ProposalID, title: string): Promise<Result>;
+	abstract editVenueProposalCensus(venue: ProposalID, census: number): Promise<Result>;
+	abstract editVenueProposalEditors(venue: ProposalID, editors: string[]): Promise<Result>;
+	abstract editVenueProposalURL(venue: ProposalID, url: string): Promise<Result>;
 
 	/** Delete a proposal venue */
-	abstract deleteProposal(proposal: ProposalID): Promise<Result>;
+	abstract deleteVenueProposal(proposal: ProposalID): Promise<Result>;
 
 	/** Approval a venue proposal */
-	abstract approveProposal(proposal: ProposalID): Promise<Result<string>>;
+	abstract approveVenueProposal(proposal: ProposalID): Promise<Result<string>>;
 
 	/** Add support for a proposal */
-	abstract addSupporter(scholar: ScholarID, proposal: ProposalID, message: string): Promise<Result>;
+	abstract addVenueProposalSupporter(
+		scholar: ScholarID,
+		proposal: ProposalID,
+		message: string
+	): Promise<Result>;
 
-	abstract editSupport(support: SupporterID, message: string): Promise<Result>;
-	abstract deleteSupport(support: SupporterID): Promise<Result>;
+	abstract editVenueProposalSupport(support: SupporterID, message: string): Promise<Result>;
+	abstract deleteVenueProposalSupport(support: SupporterID): Promise<Result>;
 
 	abstract updateCurrencyName(id: CurrencyID, name: string): Promise<Result>;
 	abstract updateCurrencyDescription(id: CurrencyID, description: string): Promise<Result>;

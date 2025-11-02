@@ -49,7 +49,7 @@
 	async function support() {
 		if (uid === null || proposal === null) return;
 		submitting = true;
-		const { error } = await db.addSupporter(uid, proposal.id, message);
+		const { error } = await db.addVenueProposalSupporter(uid, proposal.id, message);
 		submitting = false;
 
 		if (error) {
@@ -110,7 +110,7 @@
 						text={proposal.title}
 						placeholder="Venue title"
 						valid={(text) => (text.length > 0 ? undefined : 'Include a title')}
-						edit={(text) => db.editProposalTitle(proposal.id, text)}
+						edit={(text) => db.editVenueProposalTitle(proposal.id, text)}
 					/>
 					<EditableText
 						label="editors"
@@ -119,7 +119,7 @@
 						valid={(text) =>
 							validEmails(text) ? undefined : 'Must be a list of comma separated email addresses.'}
 						edit={(text) =>
-							db.editProposalEditors(
+							db.editVenueProposalEditors(
 								proposal.id,
 								text.split(',').map((editor) => editor.trim())
 							)}
@@ -129,21 +129,21 @@
 						text={'' + proposal.census}
 						placeholder="Venue census"
 						valid={(text) => (!isNaN(parseInt(text)) ? undefined : 'Must be a whole number')}
-						edit={(text) => db.editProposalCensus(proposal.id, parseInt(text))}
+						edit={(text) => db.editVenueProposalCensus(proposal.id, parseInt(text))}
 					/>
 					<EditableText
 						label="URL"
 						text={proposal.url}
 						placeholder="https://"
 						valid={validURLError}
-						edit={(text) => db.editProposalURL(proposal.id, text)}
+						edit={(text) => db.editVenueProposalURL(proposal.id, text)}
 					/>
 
 					<Button
 						tip="Delete this proposal"
 						warn="Delete this proposal forever?"
 						action={async () => {
-							if (await handle(db.deleteProposal(proposal.id))) goto('/venues');
+							if (await handle(db.deleteVenueProposal(proposal.id))) goto('/venues');
 						}}>Delete proposal…</Button
 					>
 					<Note>This cannot be undone.</Note>
@@ -152,7 +152,7 @@
 						tip="Approve this proposal"
 						warn="Approve and create this venue?"
 						action={async () => {
-							if (await handle(db.approveProposal(proposal.id))) goto('/venues');
+							if (await handle(db.approveVenueProposal(proposal.id))) goto('/venues');
 						}}>Approve proposal…</Button
 					>
 					<Note
@@ -197,7 +197,7 @@
 							<Button
 								tip="Delete support"
 								action={async () => {
-									const { error } = await db.deleteSupport(supporter.id);
+									const { error } = await db.deleteVenueProposalSupport(supporter.id);
 									if (error) addError(error);
 									else {
 										invalidateAll();
@@ -213,7 +213,7 @@
 						text={supporter.message}
 						placeholder="Reasons for support."
 						valid={(text) => (text.length > 0 ? undefined : 'Include a message')}
-						edit={(text) => db.editSupport(supporter.id, text)}
+						edit={(text) => db.editVenueProposalSupport(supporter.id, text)}
 					/>
 				{:else}
 					<p>

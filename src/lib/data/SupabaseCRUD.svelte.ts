@@ -341,7 +341,7 @@ export default class SupabaseCRUD extends CRUD {
 
 		const proposalid = data.id;
 
-		const { error } = await this.addSupporter(scholarid, proposalid, message);
+		const { error } = await this.addVenueProposalSupporter(scholarid, proposalid, message);
 
 		if (error) return { error };
 
@@ -362,37 +362,37 @@ export default class SupabaseCRUD extends CRUD {
 		return { data: proposalid };
 	}
 
-	async editProposalTitle(venue: ProposalID, title: string): Promise<Result> {
+	async editVenueProposalTitle(venue: ProposalID, title: string): Promise<Result> {
 		const { error } = await this.client.from('proposals').update({ title }).eq('id', venue);
 		if (error) return this.error('EditProposalTitle', error);
 		else return {};
 	}
 
-	async editProposalCensus(venue: ProposalID, census: number): Promise<Result> {
+	async editVenueProposalCensus(venue: ProposalID, census: number): Promise<Result> {
 		const { error } = await this.client.from('proposals').update({ census }).eq('id', venue);
 		if (error) return this.error('EditProposalCensus', error);
 		else return {};
 	}
 
-	async editProposalEditors(venue: ProposalID, editors: string[]): Promise<Result> {
+	async editVenueProposalEditors(venue: ProposalID, editors: string[]): Promise<Result> {
 		const { error } = await this.client.from('proposals').update({ editors }).eq('id', venue);
 		if (error) return this.error('EditProposalEditors', error);
 		else return {};
 	}
 
-	async editProposalURL(venue: ProposalID, url: string): Promise<Result> {
+	async editVenueProposalURL(venue: ProposalID, url: string): Promise<Result> {
 		const { error } = await this.client.from('proposals').update({ url }).eq('id', venue);
 		if (error) return this.error('EditProposalURL', error);
 		else return {};
 	}
 
-	async deleteProposal(proposal: ProposalID): Promise<Result> {
+	async deleteVenueProposal(proposal: ProposalID): Promise<Result> {
 		const { error } = await this.client.from('proposals').delete().eq('id', proposal);
 		if (error) return this.error('DeleteProposal');
 		else return {};
 	}
 
-	async approveProposal(proposal: ProposalID): Promise<Result<string>> {
+	async approveVenueProposal(proposal: ProposalID): Promise<Result<string>> {
 		// Get the latest proposal data
 		const { data: proposalData, error: proposalError } = await this.client
 			.from('proposals')
@@ -469,7 +469,7 @@ export default class SupabaseCRUD extends CRUD {
 		return { data: venueID };
 	}
 
-	async addSupporter(
+	async addVenueProposalSupporter(
 		scholarid: ScholarID,
 		proposalid: ProposalID,
 		message: string
@@ -483,12 +483,12 @@ export default class SupabaseCRUD extends CRUD {
 		else return {};
 	}
 
-	async editSupport(support: SupporterID, message: string): Promise<Result> {
+	async editVenueProposalSupport(support: SupporterID, message: string): Promise<Result> {
 		const { error } = await this.client.from('supporters').update({ message }).eq('id', support);
 		return this.errorOrEmpty('EditSupport', error);
 	}
 
-	async deleteSupport(support: SupporterID): Promise<Result> {
+	async deleteVenueProposalSupport(support: SupporterID): Promise<Result> {
 		const { error } = await this.client.from('supporters').delete().eq('id', support);
 		if (error) return this.error('RemoveSupport', error);
 		else return {};
