@@ -1,6 +1,6 @@
 create table venues (
   -- The unique ID of the venue
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The title of the venue
   title text not null default ''::text,
   -- The description of the venue
@@ -36,7 +36,7 @@ create policy "stewards and editors can delete venues" on public.venues
 
 create table roles (
   -- The unique id of the role
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The ID of the venue
   venueid uuid not null references venues(id) on delete cascade,
   -- The name of the role
@@ -89,7 +89,7 @@ create type invited as enum ('invited', 'accepted', 'declined');
 
 create table volunteers (
   -- The unique id of the role
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The id of the scholar who volunteered
   scholarid uuid not null references scholars(id) on delete cascade,
   -- The role they volunteered for
@@ -132,7 +132,7 @@ create policy "editors and volunteers can delete" on public.volunteers
 -- stewards can delete proposals
 create table proposals (
   -- The unique ID of the venue
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The title of the venue
   title text not null default ''::text,
   -- A link to the venue's official web page
@@ -170,7 +170,7 @@ create policy "admins can delete proposals" on public.proposals
 -- supports can stop supporting
 create table supporters (
     -- The unique ID of the support
-    id uuid not null default uuid_generate_v1() primary key,
+    id uuid not null default gen_random_uuid() primary key,
     -- The scholar supporting the proposal
     scholarid uuid not null references scholars(id) on delete cascade,
     -- The message the scholar supported

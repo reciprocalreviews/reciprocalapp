@@ -139,7 +139,7 @@ Here is a SQL sketch of all of the tables involved in this.
 -- only platform stewards and editors can delete venues
 create table venues (
   -- The unique ID of the venue
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The title of the venue
   title text not null default ''::text,
   -- The description of the venue
@@ -162,7 +162,7 @@ create table venues (
 -- only editors can delete venue roles
 create table roles (
   -- The unique id of the role
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The ID of the venue
   venueid uuid not null references venues(id) on delete cascade,
   -- The name of the role
@@ -198,7 +198,7 @@ create table volunteers (
 -- stewards can delete proposals
 create table proposals (
   -- The unique ID of the venue
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The title of the venue
   title text not null default ''::text,
   -- The email addresses of editors responsible for the venue
@@ -213,7 +213,7 @@ create table proposals (
 -- supports can stop supporting
 create table supporters (
     -- The unique ID of the support
-    id uuid not null default uuid_generate_v1() primary key,
+    id uuid not null default gen_random_uuid() primary key,
     -- The scholar supporting the proposal
     scholarid uuid not null references scholars(id) on delete cascade,
     -- The message the scholar supported
@@ -236,7 +236,7 @@ Here is a SQL sketch, for clarity:
 ```sql
 create table currencies (
   -- The unique id of the currency
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The name of the currency
   name text not null default ''::text,
   -- The minters of the currency, corresponding to scholar is in the scholars table. Must be at least one minter.
@@ -249,7 +249,7 @@ create type exchange_proposal_kind as enum ('create', 'modify', 'merge');
 -- Agreements between owners of currencies
 create table exchanges (
   -- The unique id of the currency
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The time the exchange was created
   proposed timestamp with time zone not null default now(),
   -- Whether the minters have approved. Only set when all current active minters have approved.
@@ -284,7 +284,7 @@ Here is a SQL sketch, for clarity:
 ```sql
 create table tokens (
   -- The unique ID of the token
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The currency that the token is in
   currency uuid not null references currencies(id),
   -- The scholar that currently possess the token, or null, representing no one
@@ -312,7 +312,7 @@ Here is a SQL schema sketch, for clarity:
 ```sql
 create table transactions (
   -- The unique ID of the transaction
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The scholar who gave the tokens
   from_scholar uuid references scholars(id),
   -- The venue who gave the tokens
@@ -354,7 +354,7 @@ Here is a SQL schema sketch, for clarity:
 -- Individual submissions under review
 create table submissions (
   -- The unique ID of the submission
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The venue to which the submission corresponds
   venue uuid not null references venues(id),
   -- The external identifier of the submission, such as a submission number or manuscript number
@@ -368,7 +368,7 @@ create table submissions (
 -- Individuals who could be assigned to review a particular paper
 create table assignments (
   -- The unique ID of the bid
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The submission bid on
   submissionid uuid not null references submissions(id),
   -- The scholar who bid

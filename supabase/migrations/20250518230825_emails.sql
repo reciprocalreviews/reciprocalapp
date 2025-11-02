@@ -1,7 +1,7 @@
 -- The emails table is a log of all emails sent to scholars.
 create table emails (
   -- The unique ID of the bid, automatically generated
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The event type of the email
   event text not null,
   -- The optional scholar to whom the email was sent

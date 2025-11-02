@@ -1,6 +1,6 @@
 create table currencies (
   -- The unique id of the currency
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The name of the currency
   name text not null default ''::text,
   -- The description of the currency
@@ -31,7 +31,7 @@ create type exchange_proposal_kind as enum ('create', 'modify', 'merge');
 -- Agreements between owners of currencies
 create table exchanges (
   -- The unique id of the currency
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The time the exchange was created
   proposed timestamp with time zone not null default now(),
   -- Whether the minters have approved. Only set when all current active minters have approved.

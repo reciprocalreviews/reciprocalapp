@@ -1,7 +1,7 @@
 -- A table of minted tokens.
 create table tokens (
   -- The unique ID of the token
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- The currency that the token is in
   currency uuid not null references currencies(id),
   -- The scholar that currently possess the token, or null, representing no one
@@ -40,7 +40,7 @@ create type transaction_status as enum ('proposed', 'approved', 'canceled');
 -- A table of transactions, recording a history of token transfers
 create table transactions (
   -- The unique ID of the transaction
-  id uuid not null default uuid_generate_v1() primary key,
+  id uuid not null default gen_random_uuid() primary key,
   -- When the transaction was created
   created timestamptz not null default now(),
   -- The scholar who created the transaction
