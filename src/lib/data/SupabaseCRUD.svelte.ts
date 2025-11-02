@@ -327,13 +327,15 @@ export default class SupabaseCRUD extends CRUD {
 		title: string,
 		url: string,
 		editors: string[],
+		currency: CurrencyID | null,
+		minters: string[],
 		census: number,
 		message: string
 	): Promise<Result<string>> {
 		// Make a proposal
 		const { data, error: insertError } = await this.client
 			.from('proposals')
-			.insert({ title, url, editors, census })
+			.insert({ title, url, editors, census, currency, minters })
 			.select()
 			.single();
 
@@ -409,7 +411,8 @@ export default class SupabaseCRUD extends CRUD {
 			.select()
 			.in('email', proposalData.editors);
 
-		if (scholarsData === null) return this.error('ApproveProposalNoScholars', scholarsError);
+		if (scholarsData === null || scholarsData.length < proposalData.editors.length)
+			return this.error('ApproveProposalNoScholars', scholarsError);
 
 		// Build the editor scholar ID list from the editors found.
 		let editors: ScholarID[] = scholarsData.map((scholar) => scholar.id);
@@ -417,16 +420,31 @@ export default class SupabaseCRUD extends CRUD {
 		// Didn't find a editor?
 		if (editors.length === 0) return this.error('ApproveProposalNoScholars');
 
-		// Create a currency for the venue
-		const { data: currencyData, error: currencyError } = await this.client
-			.from('currencies')
-			.insert({ name: proposalData.title + ' currency', minters: editors })
-			.select()
-			.single();
+		let currencyID = proposalData.currency;
+		if (currencyID === null) {
+			// Verify all minters have accounts
+			const { data: mintersData, error: mintersError } = await this.client
+				.from('scholars')
+				.select()
+				.in('email', proposalData.minters);
 
-		if (currencyError) return this.error('ApproveProposalNoCurrency', currencyError);
+			if (mintersData === null || mintersData.length < proposalData.minters.length)
+				return this.error('ApproveProposalNoMinters', mintersError);
 
-		// Create default commitments for the venue
+			// Is there a currency proposed for the venue? If not, create a currency for the venue
+			const { data: currencyData, error: currencyError } = await this.client
+				.from('currencies')
+				.insert({
+					name: proposalData.title + ' currency',
+					minters: mintersData.map((minter) => minter.id)
+				})
+				.select()
+				.single();
+
+			if (currencyError) return this.error('ApproveProposalNoCurrency', currencyError);
+
+			currencyID = currencyData.id;
+		}
 
 		// Create the venue with the proposal's title, URL, and scholars.
 		const { data: venueData, error: venueError } = await this.client
@@ -438,7 +456,7 @@ export default class SupabaseCRUD extends CRUD {
 				edit_amount: 1,
 				welcome_amount: 10,
 				submission_cost: 10,
-				currency: currencyData.id
+				currency: currencyID
 			})
 			.select()
 			.single();

@@ -9,9 +9,16 @@
 	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '../../Auth.svelte';
 	import { addError } from '../../feedback.svelte';
+	import type { CurrencyID } from '$data/types';
+
+	let { data } = $props();
+
+	let currencies = $state(data.currencies);
 
 	let venue = $state('');
 	let editors = $state('');
+	let minters = $state('');
+	let currency = $state<undefined | CurrencyID>(undefined);
 	let url = $state('');
 	let size = $state('');
 	let message = $state('');
@@ -28,6 +35,12 @@
 		return text.length > 0;
 	}
 
+	function editorsArentMinters() {
+		const editorsList = editors.split(',').map((e) => e.trim());
+		const mintersList = minters.split(',').map((m) => m.trim());
+		return editorsList.filter((value) => mintersList.includes(value)).length === 0;
+	}
+
 	async function propose() {
 		const uid = auth.getUserID();
 		if (
@@ -35,6 +48,7 @@
 			!validEmails(editors) ||
 			!validSize(size) ||
 			!validMessage(message) ||
+			!editorsArentMinters() ||
 			uid === null
 		)
 			return;
@@ -46,6 +60,8 @@
 			venue,
 			url,
 			editors.split(',').map((editor) => editor.trim()),
+			currency ?? null,
+			minters.split(',').map((minter) => minter.trim()),
 			parseInt(size),
 			message
 		);
@@ -63,7 +79,7 @@
 <Page title="Propose a venue" breadcrumbs={[['/venues', 'Venues']]}>
 	<p>
 		Venues are currently reviewed and approved by the <Link to="/about#managers">stewards</Link>, to
-		ensure that only official editors and steering committees are creating venues.
+		ensure that only official editors and conference steering committees are creating venues.
 	</p>
 
 	<p>
@@ -85,8 +101,31 @@
 				placeholder="email1@email.com, email2@email.com"
 				active={!proposing}
 				valid={(text) =>
-					validEmails(text) ? undefined : 'Must be a list of comma-separated email addresses.'}
+					!validEmails(text, 1) ? 'Must be a list of comma-separated email addresses.' : undefined}
 			/>
+			<label>
+				<span class="label">currency</span>
+				<select bind:value={currency} aria-label="choose a currency or create a new one">
+					<option value={undefined} selected={currency === undefined}>create a new currency</option>
+					{#each currencies as currency}
+						<option value={currency.id}>{currency.name}</option>
+					{/each}
+				</select>
+			</label>
+			{#if currency === undefined}
+				<TextField
+					bind:text={minters}
+					label="minters"
+					placeholder="email1@email.com, email2@email.com"
+					active={!proposing}
+					valid={(text) =>
+						!validEmails(text, 1)
+							? 'Must be a list of at least one comma-separated email addresses of scholars.'
+							: !editorsArentMinters()
+								? "Editors can't be minters"
+								: undefined}
+				/>
+			{/if}
 			<TextField
 				bind:text={url}
 				label="official venue URL"
@@ -114,9 +153,11 @@
 				action={propose}
 				active={!proposing &&
 					isntEmpty(venue) &&
-					validEmails(editors) &&
+					validEmails(editors, 1) &&
+					(currency !== undefined || validEmails(minters, 1)) &&
 					validSize(size) &&
-					validMessage(message)}>Propose venue</Button
+					validMessage(message) &&
+					editorsArentMinters()}>Propose venue</Button
 			>
 		</form>
 	{:else}

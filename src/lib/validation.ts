@@ -8,11 +8,9 @@ export function validORCID(id: string) {
 	return ORCIDRegex.test(id);
 }
 
-export function validEmails(text: string) {
-	return text
-		.split(',')
-		.map((email) => email.trim())
-		.every((email) => validEmail(email));
+export function validEmails(text: string, length = 0) {
+	const list = text.split(',').map((email) => email.trim());
+	return list.every((email) => validEmail(email)) && list.length >= length;
 }
 
 export function validEmailsOrORCIDs(text: string) {

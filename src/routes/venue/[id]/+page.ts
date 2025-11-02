@@ -5,11 +5,17 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	const venueid = params.id;
 
-	// Get the matching venu's currency.
+	// Get the matching venue's currency.
 	const { data: currency, error: currencyError } = venue
 		? await supabase.from('currencies').select().eq('id', venue.currency).single()
 		: { data: null };
 	if (currencyError) console.error(currencyError);
+
+	// Get the current's minter's emails.
+	const { data: minters, error: mintersError } = currency
+		? await supabase.from('scholars').select().in('id', currency.minters)
+		: { data: null };
+	if (mintersError) console.error(mintersError);
 
 	// Get the matching venue's roles.
 	const { data: roles, error: rolesError } = await supabase
@@ -49,6 +55,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	return {
 		venue,
 		currency,
+		minters,
 		roles,
 		volunteers,
 		tokens: tokens,

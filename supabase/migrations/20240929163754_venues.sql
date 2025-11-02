@@ -139,6 +139,10 @@ create table proposals (
   url text not null default ''::text,  
   -- The email addresses of editors responsible for the venue
   editors text[] not null default '{}'::text[],
+  -- The email addresses of minters for the new currency
+  minters text[] not null default '{}'::text[],
+  -- The id of the existing currency to use for the venue, if any
+  currency uuid references currencies(id) default null,
   -- The estimated size of the research community,
   census integer not null,
   -- If set, corresponds to the venue created upon approval.

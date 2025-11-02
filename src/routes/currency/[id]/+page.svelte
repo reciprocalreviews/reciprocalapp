@@ -11,8 +11,7 @@
 	import { DeleteLabel, MinterLabel, plural, TokenLabel } from '$lib/components/Labels';
 	import Button from '$lib/components/Button.svelte';
 	import TextField from '$lib/components/TextField.svelte';
-	import { validEmail } from '$lib/validation';
-	import { ORCIDRegex } from '$lib/data/ORCID';
+	import { validEmail, validORCID } from '$lib/validation';
 	import Note from '$lib/components/Note.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import Link from '$lib/components/Link.svelte';
@@ -21,10 +20,11 @@
 	import Dashboard from '$lib/components/Dashboard.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Card from '$lib/components/Card.svelte';
+	import type { ScholarID } from '$data/types';
 
 	let { data }: { data: PageData } = $props();
 
-	let { currency, venues, count, scholarCount, venueCount } = $derived(data);
+	let { currency, venues, editors, count, scholarCount, venueCount } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -37,6 +37,18 @@
 	let newTokenCount = $state(1);
 	let newTokenConsent = $state(false);
 	let newTokenCreating = $state(false);
+
+	function isValidMinter(text: string | ScholarID) {
+		if (validEmail(text)) {
+			return editors.some((scholar) => scholar.email === text)
+				? "Minters can't be editors of a venue that uses this currency."
+				: undefined;
+		} else if (validORCID(text)) {
+			return editors.some((scholar) => scholar.orcid === text)
+				? "Minters can't be editors of a venue that uses this currency."
+				: undefined;
+		} else return 'Must be a valid email or ORCID';
+	}
 </script>
 
 <Page
@@ -181,13 +193,10 @@
 							bind:text={newMinter}
 							size={19}
 							placeholder="ORCID or email"
-							valid={(text) =>
-								validEmail(text) || ORCIDRegex.test(text)
-									? undefined
-									: 'Must be a valid email or ORCID'}
+							valid={isValidMinter}
 						/><Button
 							tip="Add minter"
-							active={validEmail(newMinter) || ORCIDRegex.test(newMinter)}
+							active={isValidMinter(newMinter) === undefined}
 							action={async () => {
 								if (await handle(db.addCurrencyMinter(currency.id, currency.minters, newMinter))) {
 									newMinter = '';

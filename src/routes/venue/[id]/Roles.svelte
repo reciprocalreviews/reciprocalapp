@@ -4,6 +4,7 @@
 		RoleID,
 		RoleRow,
 		ScholarID,
+		ScholarRow,
 		VenueRow,
 		VolunteerRow
 	} from '$data/types';
@@ -32,7 +33,8 @@
 		volunteers,
 		scholar,
 		editor,
-		currency
+		currency,
+		minters
 	}: {
 		venue: VenueRow;
 		scholar: ScholarID | undefined;
@@ -40,6 +42,7 @@
 		volunteers: VolunteerRow[] | null;
 		editor: boolean;
 		currency: CurrencyRow;
+		minters: ScholarRow[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -50,6 +53,19 @@
 	);
 
 	let newEditor: string = $state('');
+
+	function validEditor(scholar: string | ScholarID): string | undefined {
+		if (validEmail(scholar)) {
+			if (!(minters ?? []).some((m) => m.email === scholar)) return undefined;
+			else return "Editors can't be minters of the venue's currency.";
+		}
+		if (validORCID(scholar)) {
+			if (currency.minters.includes(scholar))
+				return "Editors can't be minters of the venue's currency.";
+			else return undefined;
+		}
+		return 'Must be a valid email or ORCID.';
+	}
 </script>
 
 {#if editor}
@@ -93,11 +109,10 @@
 						bind:text={newEditor}
 						size={19}
 						placeholder="ORCID or email"
-						valid={(text) =>
-							validEmail(text) || validORCID(text) ? undefined : 'Must be a valid email or ORCID'}
+						valid={(text) => validEditor(text)}
 					/><Button
 						tip="Add editor"
-						active={validEmail(newEditor) || validORCID(newEditor)}
+						active={validEditor(newEditor) === undefined}
 						action={async () => {
 							if (await handle(db.addVenueEditor(venue.id, newEditor))) newEditor = '';
 						}}>Add editor</Button

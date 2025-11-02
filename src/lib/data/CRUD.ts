@@ -92,6 +92,8 @@ export default abstract class CRUD {
 		venue: string,
 		url: string,
 		editors: string[],
+		currency: CurrencyID | null,
+		minters: string[],
 		size: number,
 		message: string
 	): Promise<Result<ProposalID>>;

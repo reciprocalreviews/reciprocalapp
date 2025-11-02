@@ -19,7 +19,8 @@
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { venue, currency, scholar, roles, volunteers, tokens, submissionCount } = $derived(data);
+	const { venue, currency, minters, scholar, roles, volunteers, tokens, submissionCount } =
+		$derived(data);
 
 	const db = getDB();
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
@@ -115,6 +116,7 @@
 				{volunteers}
 				editor={editor === true}
 				{currency}
+				{minters}
 			/>
 		{:else}
 			<Feedback error>Couldn't load venue's roles.</Feedback>

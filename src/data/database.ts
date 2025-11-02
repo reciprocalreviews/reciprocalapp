@@ -216,29 +216,42 @@ export type Database = {
       proposals: {
         Row: {
           census: number
+          currency: string | null
           editors: string[]
           id: string
+          minters: string[]
           title: string
           url: string
           venue: string | null
         }
         Insert: {
           census: number
+          currency?: string | null
           editors?: string[]
           id?: string
+          minters?: string[]
           title?: string
           url?: string
           venue?: string | null
         }
         Update: {
           census?: number
+          currency?: string | null
           editors?: string[]
           id?: string
+          minters?: string[]
           title?: string
           url?: string
           venue?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "proposals_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "proposals_venue_fkey"
             columns: ["venue"]
@@ -646,22 +659,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      isapprover: {
-        Args: { _roleid: string }
-        Returns: boolean
-      }
-      iseditor: {
-        Args: { _venueid: string }
-        Returns: boolean
-      }
+      isapprover: { Args: { _roleid: string }; Returns: boolean }
+      iseditor: { Args: { _venueid: string }; Returns: boolean }
       isminter: {
         Args: { _currencyid: string; _scholarid: string }
         Returns: boolean
       }
-      issteward: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      issteward: { Args: never; Returns: boolean }
     }
     Enums: {
       exchange_proposal_kind: "create" | "modify" | "merge"

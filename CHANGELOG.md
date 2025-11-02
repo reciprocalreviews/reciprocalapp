@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Fixed #63, granting welcome tokens on volunteer assignment or invite accept.
 - Improved names of venue proposal functions.
+- Fixed #30, preventing editors from being minters of a venue's currency.
 
 ### Maintenance
 

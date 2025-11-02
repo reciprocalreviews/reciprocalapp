@@ -18,7 +18,9 @@ export const enUS = {
 		DeleteProposal: 'Unable to delete the proposal',
 		ApproveProposalNotFound: "Unable to approve the proposal: couldn't find proposal.",
 		ApproveProposalNoScholars:
-			"Unable to approve the proposal: couldn't find any of the specified editors with accounts. As them to create accounts with the specified email addresses and then approve.",
+			"Unable to approve the proposal: couldn't find all of the specified editors with accounts. As them to create accounts with the specified email addresses and then approve.",
+		ApproveProposalNoMinters:
+			"Unable to approve the proposal: couldn't find all of the specified minters with accounts. As them to create accounts with the specified email addresses and then approve.",
 		ApproveProposalNoVenue: "Unable to approve the proposal: couldn't create the venue.",
 		ApproveProposalCannotUpdateVenue:
 			"Unable to approve the proposal: couldn't update the venue with the proposal.",

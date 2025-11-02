@@ -8,19 +8,29 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.select()
 		.eq('id', params.id)
 		.single();
-	if (currencyError) console.log(currencyError.message);
+	if (currencyError) console.error(currencyError.message);
 
 	const { data: venues, error: venuesError } = await supabase
 		.from('venues')
 		.select()
 		.eq('currency', params.id);
-	if (venuesError) console.log(venuesError.message);
+	if (venuesError) console.error(venuesError.message);
+
+	const editorScholarIDs = (
+		venues?.map((venue) => venue.editors).filter((id) => id !== null) ?? []
+	).flat();
+
+	const { data: editors, error: editorsError } = await supabase
+		.from('scholars')
+		.select()
+		.in('id', editorScholarIDs);
+	if (editorsError) console.error(editorsError.message);
 
 	const { data: tokens, error: tokensError } = await supabase
 		.from('tokens')
 		.select()
 		.eq('currency', params.id);
-	if (tokensError) console.log(tokensError.message);
+	if (tokensError) console.error(tokensError.message);
 
 	const scholarCount = tokens
 		? new Set(tokens.filter((token) => token.scholar !== null).map((token) => token.scholar)).size
@@ -35,6 +45,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		venues: venues,
 		count: tokens?.length ?? null,
 		scholarCount,
-		venueCount
+		venueCount,
+		editors: editors ?? []
 	};
 };
