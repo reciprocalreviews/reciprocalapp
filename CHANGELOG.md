@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.1.6 2025-11-03
 
+### Added
+
+- Fixed #58: Send reminders to editors and scholars to approve proposed transactions.
+
 ### Fixed
 
 - Fixed #43: Better feedback about unapproved transactions; better link to transactions.
