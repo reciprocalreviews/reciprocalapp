@@ -68,7 +68,7 @@
 					<td>Transaction</td>
 					<td>
 						As minter, you have {pendingForCurrency.length} proposed transactions to approve. Approve
-						them in the <CurrencyLink {currency} /> dashboard.
+						them in the <CurrencyLink {currency} transactions /> dashboard.
 					</td>
 				</tr>
 			{/if}

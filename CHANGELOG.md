@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.1.6 2025-11-03
 
+### Fixed
+
+- Fixed #43: Better feedback about unapproved transactions; better link to transactions.
+
 ### Maintenance
 
 - Updated minor versions of Supabase, Svelte, vite, vitest.

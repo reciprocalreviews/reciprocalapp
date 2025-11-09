@@ -37,8 +37,9 @@
 
 {#snippet row(transaction: TransactionRow)}
 	{@const currency = currencies?.find((c) => c.id === transaction.currency)}
+	{@const proposed = transaction.status === 'proposed'}
 	{@const editable =
-		transaction.status === 'proposed' &&
+		proposed &&
 		userid !== null &&
 		(transaction.from_scholar === userid ||
 			(transaction.from_venue !== null &&
@@ -103,6 +104,10 @@
 						>
 					</Dialog>
 				</div>
+			{:else if proposed}
+				<em>Pending approval by editor or minter.</em>
+			{:else}
+				—
 			{/if}
 		</td>
 	</tr>

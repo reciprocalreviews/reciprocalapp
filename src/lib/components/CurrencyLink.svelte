@@ -6,11 +6,12 @@
 	interface Props {
 		currency: { id: string; name: string };
 		children?: Snippet;
+		transactions?: boolean;
 	}
 
-	let { currency, children }: Props = $props();
+	let { currency, children, transactions = false }: Props = $props();
 </script>
 
-<Link background to="/currency/{currency.id}"
+<Link background to="/currency/{currency.id}{transactions ? '/transactions' : ''}"
 	>{#if children}{@render children()}{:else}{TokenLabel} {currency.name}{/if}</Link
 >
