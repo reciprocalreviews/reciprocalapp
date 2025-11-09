@@ -1,5 +1,5 @@
-import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import 'edge-runtime';
+import { createClient } from 'supabase';
 import type { Database } from '../../../src/data/database.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');

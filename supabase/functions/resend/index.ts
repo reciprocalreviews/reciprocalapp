@@ -1,4 +1,4 @@
-import z from 'npm:zod';
+import z from 'zod';
 import { corsHeaders } from '../_shared/cors.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
