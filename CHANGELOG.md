@@ -13,6 +13,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Fixed
 
 - Fixed #43: Better feedback about unapproved transactions; better link to transactions.
+- Improved visual design of forms and text fields.
 
 ### Maintenance
 

@@ -13,7 +13,7 @@
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { CreateLabel, DeleteLabel, EmptyLabel } from '$lib/components/Labels';
+	import { DeleteLabel, EmptyLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
@@ -78,6 +78,29 @@
 <p>See <Link to="/venue/{venue.id}/volunteers">all volunteers</Link> for this venue.</p>
 
 {#if roles}
+	{#if editor}
+		<form>
+			<p>Create a new role.</p>
+			<TextField
+				bind:text={newRole}
+				size={19}
+				placeholder="name"
+				valid={(text) => (isntEmpty(text) ? undefined : 'Must include a name')}
+			/><Button
+				tip="Create a new role"
+				active={isntEmpty(newRole)}
+				action={async () => {
+					const result = await handle(db.createRole(venue.id, newRole));
+					if (typeof result !== 'boolean') {
+						// Initialize the invite list for this role
+						invites[result.id] = '';
+						newRole = '';
+					}
+				}}>Create role</Button
+			>
+		</form>
+	{/if}
+
 	<Cards>
 		<Card
 			icon={venue.editors.length}
@@ -105,6 +128,7 @@
 					><Tokens amount={venue.edit_amount}></Tokens>/submission</Slider
 				>
 				<form>
+					<p>Add a new editor.</p>
 					<TextField
 						bind:text={newEditor}
 						size={19}
@@ -329,27 +353,4 @@
 	</Cards>
 {:else}
 	<Feedback error>Couldn't load venue's roles.</Feedback>
-{/if}
-{#if editor}
-	<Card icon={CreateLabel} header="add role" note="Create a new role" subheader group="editors">
-		<form>
-			<TextField
-				bind:text={newRole}
-				size={19}
-				placeholder="name"
-				valid={(text) => (isntEmpty(text) ? undefined : 'Must include a name')}
-			/><Button
-				tip="Create a new role"
-				active={isntEmpty(newRole)}
-				action={async () => {
-					const result = await handle(db.createRole(venue.id, newRole));
-					if (typeof result !== 'boolean') {
-						// Initialize the invite list for this role
-						invites[result.id] = '';
-						newRole = '';
-					}
-				}}>Create role</Button
-			>
-		</form>
-	</Card>
 {/if}

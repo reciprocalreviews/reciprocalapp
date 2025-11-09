@@ -84,7 +84,7 @@
 				--alternating-color: #f3f3f3;
 				--inactive-color: #888888;
 				--spacing: 1rem;
-				--roundedness: 0.5rem;
+				--roundedness: 0.25rem;
 				--thick-border-width: 3px;
 			}
 
@@ -183,11 +183,14 @@
 			}
 
 			form {
-				border-left: var(--border-color) solid var(--border-width);
-				padding-left: var(--spacing);
+				border: var(--border-color) solid var(--border-width);
+				padding: var(--spacing);
+				box-shadow: inset 3px 3px 3px rgba(0, 0, 0, 0.1);
 				display: flex;
+				background: var(--alternating-color);
+				border-radius: var(--roundedness);
 				flex-direction: column;
-				gap: calc(var(--spacing) * 3);
+				gap: calc(var(--spacing));
 			}
 
 			label .label {
