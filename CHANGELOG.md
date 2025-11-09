@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Added
 
 - Fixed #58: Send reminders to editors and scholars to approve proposed transactions.
+- Fixed #50: Warning on changing roles with volunteers.
 
 ### Fixed
 

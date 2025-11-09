@@ -254,6 +254,14 @@
 						subheader
 						group="editors"
 					>
+						{#if roleVolunteers.length > 0}
+							<Feedback error
+								>This role has <strong>{roleVolunteers.length} volunteers</strong>. We
+								<strong>highly</strong> recommend that you communicate extensively with your community
+								before changing any of the settings below, as they change the terms of volunteering.
+							</Feedback>
+						{/if}
+
 						<EditableText
 							text={role.name}
 							label="name"
