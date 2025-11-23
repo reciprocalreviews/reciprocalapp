@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Linked error message prompts to log in.
 - Expand editing roles by default to make volunteering more obvious.
+- Less intense token color.
 
 ### Maintenance
 

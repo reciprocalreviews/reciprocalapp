@@ -61,9 +61,9 @@
 	}
 
 	.background {
-		background-color: var(--salient-color);
-		color: var(--background-color);
+		background-color: var(--salient-color-faded);
 		padding: calc(var(--spacing) / 2);
 		border-radius: var(--roundedness);
+		color: var(--text-color);
 	}
 </style>

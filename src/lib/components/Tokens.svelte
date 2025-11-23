@@ -6,7 +6,7 @@
 </script>
 
 <span class="token"
-	>{TokenLabel}
+	><span class="star">{TokenLabel}</span>
 	{amount}
 	{#if currency}<span class="currency">{currency.name}</span>
 	{/if}
@@ -19,9 +19,12 @@
 		font-size: var(--small-font-size);
 		padding: calc(var(--spacing) / 2);
 		border-radius: var(--roundedness);
-		background: var(--salient-color);
-		color: var(--background-color);
+		background-color: var(--salient-color-faded);
 		box-decoration-break: clone;
+	}
+
+	.star {
+		color: var(--salient-color);
 	}
 
 	.currency {
