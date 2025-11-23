@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Fixed
 
 - Linked error message prompts to log in.
+- Expand editing roles by default to make volunteering more obvious.
 
 ### Maintenance
 

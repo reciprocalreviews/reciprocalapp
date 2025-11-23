@@ -107,6 +107,7 @@
 			subheader
 			header="Editor"
 			note="Scholars who manage submissions and compensation fo this venue."
+			expand
 		>
 			<p>
 				Editors can edit venue information, add and remove other editors, create and archive
@@ -152,6 +153,7 @@
 				icon={roleVolunteers.length === 0 ? '👤' : roleVolunteers.length}
 				header={role.name}
 				note={role.description.length === 0 ? 'Role' : role.description}
+				expand
 			>
 				{#snippet controls()}
 					{#if editor}
