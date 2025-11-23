@@ -214,3 +214,21 @@ entrypoint = "./functions/remind/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/remind/*.html" ]
+
+[db.migrations]
+schema_paths = [
+    "./schemas/scholars.sql",
+    "./schemas/currencies.sql",
+    "./schemas/exchanges.sql",
+    "./schemas/venues.sql",
+    "./schemas/roles.sql",
+    "./schemas/volunteers.sql",
+    "./schemas/proposals.sql",
+    "./schemas/supporters.sql",
+    "./schemas/tokens.sql",
+    "./schemas/transactions.sql",
+    "./schemas/submissions.sql",
+    "./schemas/assignments.sql",
+    "./schemas/emails.sql",
+    "./schemas/*.sql"
+]

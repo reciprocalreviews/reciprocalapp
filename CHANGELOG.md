@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.1.7 2025-11-23
 
+### Added
+
+- Fixed #53: Migrated to declarative schemas for clarity.
+
 ### Fixed
 
 - Linked error message prompts to log in.
