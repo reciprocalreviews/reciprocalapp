@@ -161,6 +161,6 @@
 			>
 		</form>
 	{:else}
-		<Status good={false}>Log in to propose a venue.</Status>
+		<Status good={false}><Link to="/login">Log in</Link> to propose a venue.</Status>
 	{/if}
 </Page>

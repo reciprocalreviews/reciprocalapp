@@ -230,7 +230,7 @@
 						{/if}
 					{/if}
 				{:else if !role.invited}
-					<Feedback error inline>Log in to volunteer.</Feedback>
+					<Feedback error inline><Link to="/login">Log in</Link> to volunteer.</Feedback>
 				{/if}
 
 				{#if editor && scholar}

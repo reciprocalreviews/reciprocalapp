@@ -34,7 +34,9 @@
 			</ul>
 		{:else}
 			<Feedback
-				>No venues have been proposed yet. {#if !auth.isAuthenticated()}Log in to propose one.{/if}</Feedback
+				>No venues have been proposed yet. {#if !auth.isAuthenticated()}<Link to="/login"
+						>Log in</Link
+					> to propose one.{/if}</Feedback
 			>
 		{/if}
 	{:else}

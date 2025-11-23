@@ -182,7 +182,7 @@
 				<Feedback>You've expressed support. You can edit or delete your support below.</Feedback>
 			{/if}
 		{:else}
-			<Feedback>Log in to express support.</Feedback>
+			<Feedback><Link to="/login">Log in</Link> to express support.</Feedback>
 		{/if}
 
 		{#each supporters.sort((a, b) => b.created.localeCompare(a.created)) as supporter}

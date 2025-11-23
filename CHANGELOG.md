@@ -3,7 +3,11 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
-## 0.1.7 2025-11-17
+## 0.1.7 2025-11-23
+
+### Fixed
+
+- Linked error message prompts to log in.
 
 ### Maintenance
 
