@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.1.8 2025-11-28
+
+### Fixed
+
+- Improved and simplified landing page explanation.
+
 ## 0.1.7 2025-11-23
 
 ### Added

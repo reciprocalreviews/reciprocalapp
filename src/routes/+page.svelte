@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Tip from '$lib/components/Tip.svelte';
 	import Link from '$lib/components/Link.svelte';
-	import Note from '$lib/components/Note.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { PUBLIC_ENV } from '$env/static/public';
@@ -32,25 +31,28 @@
 			</li>
 			<li>
 				<strong>Authors earn tokens</strong> by volunteering for venues, sharing expertise and availability,
-				and submitting on-time, quality reviews.
+				and submitting on-time, quality reviews, on whatever reviewing platform a venue uses.
 			</li>
 			<li>
 				<strong>Authors spend tokens</strong> to submit manuscripts for review, splitting the cost with
-				co-authors. Or, they can gift tokens to individuals or community pools for strategic investments
-				in equity and emerging topics.
+				co-authors. Or, they can gift tokens to individuals or shared pools to strategically support
+				newcomers, colleagues in crisis, or emerging topics.
 			</li>
 		</ol>
 
 		<p>
-			Authors get better, faster reviews and a fairer distribution of peer review labor; editors do
-			less nagging.
+			Because authors need to submit high-quality, on-time reviews to submit, authors get better,
+			faster reviews, editors do less nagging, communities overall have a fairer distribution of
+			peer review labor.
 		</p>
 
-		<Note>
-			See the <Link to="/venues">journals and conferences</Link> using the platform and reach out to
-			their editors for their experiences. Or, <Link to="login">log in</Link> to propose a journal or
-			conference adopt <em>Reciprocal Reviews</em>.
-		</Note>
+		<Tip>
+			<strong>Interested in adopting?</strong> See the <Link to="/venues"
+				>journals and conferences</Link
+			> using the platform and reach out to their editors for their experiences. Or, <Link
+				to="login">log in</Link
+			> to propose a journal or conference adopt <em>Reciprocal Reviews</em>.
+		</Tip>
 
 		<Tip>
 			<strong>Don't want to set a cost?</strong> Use Reciprocal Reviews to track volunteer reviewers
