@@ -35,5 +35,5 @@
 		<Feedback>Unable to load active stewards.</Feedback>
 	{/if}
 
-	<p>Would you like to become a steward? Reach out to us and let's chat.</p>
+	<p>Would you like to become a steward? Reach out to any of the stewards above and let's chat.</p>
 </Page>
