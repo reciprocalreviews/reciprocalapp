@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Fixed
 
 - Improved and simplified landing page explanation.
+- Flipped proposed and active venues on venues page.
 
 ## 0.1.7 2025-11-23
 
