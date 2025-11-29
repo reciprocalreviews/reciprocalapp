@@ -3,7 +3,7 @@ import type { PageLoad } from './$types.js';
 export const load: PageLoad = async ({ parent, params }) => {
 	const { supabase } = await parent();
 
-	const venueid = params.id;
+	const venueid = params.venueid;
 
 	// Get the matching venue.
 	const { data: venue } = await supabase.from('venues').select().eq('id', venueid).single();

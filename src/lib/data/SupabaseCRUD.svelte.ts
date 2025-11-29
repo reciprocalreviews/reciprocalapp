@@ -182,6 +182,7 @@ export default class SupabaseCRUD extends CRUD {
 			.map((charge) => scholars.find((s) => s.orcid === charge.scholar)?.id)
 			.filter((a) => a !== undefined);
 
+		// Verify that the number of authors find is the number of charges specified.
 		if (authors.length < charges.length)
 			return { error: { message: this.locale.error.MissingSubmissionCharge } };
 
@@ -196,7 +197,7 @@ export default class SupabaseCRUD extends CRUD {
 				error: { message: this.locale.error.UnknownVenue, details: venueError ?? undefined }
 			};
 
-		// Create proposed transactions for all charges.
+		// Create proposed transactions for each charges.
 		const transactions: string[] = [];
 		for (let scholarIndex = 0; scholarIndex < charges.length; scholarIndex++) {
 			const charge = charges[scholarIndex];
@@ -1041,7 +1042,13 @@ export default class SupabaseCRUD extends CRUD {
 					[assignment.scholar],
 					assignment.venue,
 					approved ? 'AssignmentApproved' : 'AssignmentRemoved',
-					[scholar.getName() ?? '', scholar.getEmail() ?? '', role.name, assignment.submission]
+					[
+						scholar.getName() ?? '',
+						scholar.getEmail() ?? '',
+						role.name,
+						assignment.venue,
+						assignment.submission
+					]
 				);
 			}
 		}

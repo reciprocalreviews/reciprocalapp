@@ -15,6 +15,8 @@ export const SubmissionLabel = monoEmoij('📄');
 export const TokenLabel = '★';
 export const SettingsLabel = '⛭';
 export const MinterLabel = monoEmoji('💰');
+export const VenueLabel = monoEmoji('📚');
+export const ScholarLabel = monoEmoji('👤');
 
 export function plural(text: string, count: number) {
 	return count === 1 ? text : text + 's';

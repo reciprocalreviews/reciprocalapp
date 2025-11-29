@@ -4,7 +4,7 @@ import type { PageLoad } from './$types.js';
 export const load: PageLoad = async ({ parent, params }) => {
 	const { supabase, venue, user } = await parent();
 
-	const venueid = params.id;
+	const venueid = params.venueid;
 
 	// Get the venue's submissions.
 	const { data: submissions, error: submissionsError } = await supabase
@@ -52,7 +52,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 			: await supabase
 					.from('transactions')
 					.select('id')
-					.in('id', submissions?.map((submission) => submission.id) ?? []);
+					.in('id', submissions.map((submission) => submission.transactions).flat());
 	if (transactionsError) console.error(transactionsError);
 
 	return { venue, submissions, volunteering, roles, assignments, transactions };

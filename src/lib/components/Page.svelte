@@ -4,6 +4,7 @@
 	import Link from './Link.svelte';
 	import { type Result } from '$lib/data/CRUD';
 	import EditableText from './EditableText.svelte';
+	import { ScholarLabel, SubmissionLabel, VenueLabel } from './Labels';
 
 	let {
 		title,
@@ -39,7 +40,16 @@
 		{#if breadcrumbs.length > 0}
 			<div class="breadcrumbs">
 				{#each breadcrumbs as url, index}
-					<Link to={url[0]}>{url[1]}</Link>{#if index < breadcrumbs.length - 1}&gt;{/if}
+					<Link
+						to={url[0]}
+						icon={url[0].startsWith('/venue')
+							? VenueLabel
+							: url[0].startsWith('/scholar')
+								? ScholarLabel
+								: url[0].startsWith('/submission')
+									? SubmissionLabel
+									: null}>{url[1]}</Link
+					>{#if index < breadcrumbs.length - 1}&gt;{/if}
 				{/each}
 			</div>
 		{/if}
@@ -52,7 +62,7 @@
 				></EditableText>{:else}{title}{/if}
 		</h1>
 		<div class="details">
-			<Lead>{@render subtitle?.()}</Lead>{@render details?.()}
+			{#if subtitle}<Lead>{@render subtitle()}</Lead>{/if}{@render details?.()}
 		</div>
 	</div>
 	{@render children()}
@@ -71,7 +81,7 @@
 		margin-block-start: var(--spacing);
 	}
 
-	.page :global(p) {
+	.page > :global(p) {
 		margin-block-end: 0;
 	}
 	.details {
@@ -86,6 +96,6 @@
 		font-size: var(--small-font-size);
 		display: flex;
 		flex-direction: row;
-		gap: var(--spacing);
+		gap: calc(var(--spacing) / 2);
 	}
 </style>

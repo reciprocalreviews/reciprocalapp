@@ -1,22 +1,16 @@
 <script lang="ts">
-	import type { VenueID } from '$data/types';
+	import type { VenueRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import TextField from '$lib/components/TextField.svelte';
-	import Tip from '$lib/components/Tip.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { ORCIDRegex } from '$lib/data/ORCID';
 	import { isntEmpty } from '$lib/validation';
 	import { getAuth } from '../../../Auth.svelte';
 	import { handle } from '../../../feedback.svelte';
 
-	let {
-		venue,
-		submissionCost,
-		/** @ts-ignore Whether the form is expanded. Useful for parent components to set and get state. */
-		expanded = $bindable(true)
-	}: { venue: VenueID; submissionCost: number; expanded: boolean } = $props();
+	let { venue }: { venue: VenueRow } = $props();
 
 	const db = getDB();
 	const auth = getAuth();
@@ -107,9 +101,16 @@
 	}
 </script>
 
-<p>When you create a new submission, authors will be charged the number of tokens you specify.</p>
+<p>
+	Ready to create a new submission? Typically, this form is filled by one of the authors of a
+	submission, to pay for a submission to be reviewed. After filling out this form:
+</p>
 
-<Tip>Set up email integrations to automate submission creation.</Tip>
+<ul>
+	<li>The submission will be created in the system.</li>
+	<li>All scholars listed will need to confirm their payments.</li>
+	<li>Once everyone has paid, the editor will proceed with review.</li>
+</ul>
 
 <Form>
 	<TextField
@@ -125,7 +126,7 @@
 		size={40}
 		placeholder="expertise"
 		bind:text={expertise}
-		note="For bidding, if enabled."
+		note="Help authors and editors find appropriate reviewers."
 	/>
 	<TextField
 		label="manuscript id"
@@ -133,7 +134,7 @@
 		placeholder="id"
 		bind:text={externalID}
 		valid={(text) => (validExternalID(text) ? undefined : 'ID must be non-empty.')}
-		note="The ID from the review system, for reference."
+		note="The manuscript's ID from your review system, to link this transaction to your submission."
 	/>
 	<TextField
 		label="previous manuscript id"
@@ -151,32 +152,33 @@
 		valid={() =>
 			affordable === true
 				? undefined
-				: charges.length === 0 && submissionCost > 0
+				: charges.length === 0 && venue.submission_cost > 0
 					? 'You must specify charges for the submission.'
 					: !validChargeFormat(charges)
 						? 'Each line must be an ORCID, then a space, then a number.'
 						: duplicateScholars(charges)
 							? 'Scholars must be unique.'
-							: !validCharge(charges, submissionCost)
-								? `The charges do not sum to the submission cost of ${submissionCost}`
+							: !validCharge(charges, venue.submission_cost)
+								? `The charges do not sum to the submission cost of ${venue.submission_cost}`
 								: affordable === undefined
 									? "When you're done, check balances below."
 									: affordable}
 		note={affordable === true
 			? 'These authors can afford this charge.'
-			: `By line, authors and how many tokens to charge each of them. Tokens must sum to ${submissionCost}.`}
+			: `By line, authors and how many tokens to charge each of them. Tokens must sum to ${venue.submission_cost}.`}
 	/>
 	<Button
 		tip="Check if authors have enough tokens"
 		active={validChargeFormat(charges) &&
-			validCharge(charges, submissionCost) &&
+			validCharge(charges, venue.submission_cost) &&
 			affordable !== true}
 		action={checkAffordability}>Check author balances</Button
 	>
 
 	<Button
 		tip="Create a new submission"
-		active={affordable === true && validSubmission(title, externalID, charges, submissionCost)}
+		active={affordable === true &&
+			validSubmission(title, externalID, charges, venue.submission_cost)}
 		action={async () => {
 			if (user) {
 				const result = await handle(
@@ -184,7 +186,7 @@
 						user,
 						title,
 						expertise,
-						venue,
+						venue.id,
 						externalID,
 						previousID,
 						chargeTextToCharges(charges)
@@ -199,7 +201,6 @@
 					previousID = '';
 					charges = '';
 					affordable = undefined;
-					expanded = false;
 				}
 
 				return result;

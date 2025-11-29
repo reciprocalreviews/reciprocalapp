@@ -1,10 +1,11 @@
 import getVenueRoles from '$lib/data/getVenueRoles.js';
-import type { PageLoad } from './$types.js';
+import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
 	const { supabase } = await parent();
 
-	const submissionid = params.id;
+	const venueid = params.venueid;
+	const submissionid = params.submissionid;
 
 	// Get the submission.
 	const { data: submission, error: submissionsError } = await supabase
@@ -18,7 +19,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: venue, error: venueError } =
 		submission === null
 			? { data: null, error: null }
-			: await supabase.from('venues').select('*').eq('id', submission.venue).single();
+			: await supabase.from('venues').select('*').eq('id', venueid).single();
 	if (venueError) console.error(venueError);
 
 	// Get the authors

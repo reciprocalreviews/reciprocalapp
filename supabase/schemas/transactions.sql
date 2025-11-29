@@ -1,110 +1,177 @@
 --------------------------------------
 -- Schema
-create type "public"."transaction_status" as enum('proposed', 'approved', 'canceled');
+create type public."transaction_status" as enum('proposed', 'approved', 'canceled');
 
-alter type "public"."transaction_status" OWNER to "postgres";
+alter type public."transaction_status" OWNER to "postgres";
 
 -- A table of transactions, recording a history of token transfers
-create table if not exists "public"."transactions" (
+create table if not exists public.transactions (
 	-- The unique ID of the transaction
-	"id" "uuid" default "gen_random_uuid" () not null,
+	id uuid default gen_random_uuid() not null,
 	-- When the transaction was created
-	"created" timestamp with time zone default "now" () not null,
+	created timestamp with time zone default now() not null,
 	-- The scholar who created the transaction
-	"creator" "uuid" not null,
+	creator uuid not null,
 	-- The scholar is giving the tokens
-	"from_scholar" "uuid",
+	from_scholar uuid,
 	-- The venue giving the tokens
-	"from_venue" "uuid",
+	from_venue uuid,
 	-- The scholar who received the tokens,
-	"to_scholar" "uuid",
+	to_scholar uuid,
 	-- The venue that received the tokens,
-	"to_venue" "uuid",
+	to_venue uuid,
 	-- An array of token ids moved in the transaction. If the null UUID, then tokens haven't been determined yet.
-	"tokens" "uuid" [] not null,
+	tokens uuid[] not null,
 	-- The currency the amount is in
-	"currency" "uuid" not null,
+	currency uuid not null,
 	-- The purpose of the transaction, containing any information necessary for approval of the transaction by the from source
 	-- Can also be used to specify the reason for cancelation.
-	"purpose" "text" not null,
+	purpose text not null,
 	-- The status of the transaction
-	"status" "public"."transaction_status" not null,
+	status public.transaction_status not null,
 	-- Require that there is either a scholar or venue source but not both
-	constraint "check_from" check (("num_nonnulls" ("from_scholar", "from_venue")=1)),
+	constraint check_from check ((num_nonnulls (from_scholar, from_venue)=1)),
 	-- Require that there is either a scholar or venue destination but not both
-	constraint "check_to" check (("num_nonnulls" ("to_scholar", "to_venue")=1))
+	constraint check_to check ((num_nonnulls (to_scholar, to_venue)=1))
 );
 
-alter table "public"."transactions" OWNER to "postgres";
+alter table public.transactions OWNER to "postgres";
 
-grant all on table "public"."transactions" to "anon";
+grant all on table public.transactions to "anon";
 
-grant all on table "public"."transactions" to "authenticated";
+grant all on table public.transactions to "authenticated";
 
-grant all on table "public"."transactions" to "service_role";
+grant all on table public.transactions to "service_role";
 
-alter table only "public"."transactions"
-add constraint "transactions_pkey" primary key ("id");
+alter table only public.transactions
+add constraint transactions_pkey primary key (id);
 
-alter table only "public"."transactions"
-add constraint "transactions_creator_fkey" foreign KEY ("creator") references "public"."scholars" ("id");
+alter table only public.transactions
+add constraint transactions_creator_fkey foreign KEY (creator) references public.scholars (id);
 
-alter table only "public"."transactions"
-add constraint "transactions_currency_fkey" foreign KEY ("currency") references "public"."currencies" ("id");
+alter table only public.transactions
+add constraint transactions_currency_fkey foreign KEY (currency) references public.currencies (id);
 
-alter table only "public"."transactions"
-add constraint "transactions_from_scholar_fkey" foreign KEY ("from_scholar") references "public"."scholars" ("id");
+alter table only public.transactions
+add constraint transactions_from_scholar_fkey foreign KEY (from_scholar) references public.scholars (id);
 
-alter table only "public"."transactions"
-add constraint "transactions_from_venue_fkey" foreign KEY ("from_venue") references "public"."venues" ("id");
+alter table only public.transactions
+add constraint transactions_from_venue_fkey foreign KEY (from_venue) references public.venues (id);
 
-alter table only "public"."transactions"
-add constraint "transactions_to_scholar_fkey" foreign KEY ("to_scholar") references "public"."scholars" ("id");
+alter table only public.transactions
+add constraint transactions_to_scholar_fkey foreign KEY (to_scholar) references public.scholars (id);
 
-alter table only "public"."transactions"
-add constraint "transactions_to_venue_fkey" foreign KEY ("to_venue") references "public"."venues" ("id");
+alter table only public.transactions
+add constraint transactions_to_venue_fkey foreign KEY (to_venue) references public.venues (id);
 
 --------------------------------------
 -- Security
-alter table "public"."transactions" ENABLE row LEVEL SECURITY;
+alter table public.transactions ENABLE row LEVEL SECURITY;
 
-create policy "only owners can transfer their tokens if approved" on "public"."transactions" for INSERT to "authenticated",
+create policy "transactions are only visible to minters and those involved" on public.transactions for
+select
+	to "authenticated",
+	"anon" using (
+		(
+			(
+				(
+					select
+						auth.uid () as uid
+				)=from_scholar
+			)
+			or (
+				(
+					select
+						auth.uid () as uid
+				)=to_scholar
+			)
+			or (
+				(
+					select
+						auth.uid () as uid
+				)=any (
+					(
+						select
+							currencies.minters
+						from
+							currencies
+						where
+							(currencies.id=transactions.currency)
+					)::uuid[]
+				)
+			)
+			or (
+				(from_venue is not null)
+				and (
+					(
+						select
+							auth.uid () as uid
+					)=any (
+						(
+							select
+								venues.editors
+							from
+								venues
+							where
+								(venues.id=transactions.from_venue)
+						)::uuid[]
+					)
+				)
+			)
+			or (
+				(to_venue is not null)
+				and (
+					(
+						select
+							auth.uid () as uid
+					)=any (
+						(
+							select
+								venues.editors
+							from
+								public.venues
+							where
+								(venues.id=transactions.to_venue)
+						)::uuid[]
+					)
+				)
+			)
+		)
+	);
+
+create policy "only owners can transfer their tokens if approved" on public.transactions for INSERT to "authenticated",
 "anon"
 with
 	check (
 		(
-			(
-				"status"='proposed'::"public"."transaction_status"
-			)
+			(status='proposed'::transaction_status)
 			or (
-				(
-					"status"='approved'::"public"."transaction_status"
-				)
+				(status='approved'::transaction_status)
 				and (
 					(
-						("from_scholar" is not null)
+						(from_scholar is not null)
 						and (
 							(
 								select
-									"auth"."uid" () as "uid"
-							)="from_scholar"
+									auth.uid () as uid
+							)=from_scholar
 						)
 					)
 					or (
-						("from_venue" is not null)
+						(from_venue is not null)
 						and (
 							(
 								select
-									"auth"."uid" () as "uid"
+									auth.uid () as uid
 							)=any (
 								(
 									select
-										"venues"."editors"
+										venues.editors
 									from
-										"public"."venues"
+										venues
 									where
-										("venues"."id"="transactions"."from_venue")
-								)::"uuid" []
+										(venues.id=transactions.from_venue)
+								)::uuid[]
 							)
 						)
 					)
@@ -113,7 +180,7 @@ with
 		)
 	);
 
-create policy "only the giver and minters can update transactions" on "public"."transactions"
+create policy "only the giver and minters can update transactions" on public.transactions
 for update
 	to "authenticated",
 	"anon" using (
@@ -121,131 +188,60 @@ for update
 			(
 				(
 					select
-						"auth"."uid" () as "uid"
-				)="from_scholar"
+						auth.uid () as uid
+				)=from_scholar
 			)
 			or (
 				(
 					select
-						"auth"."uid" () as "uid"
+						auth.uid () as uid
 				)=any (
 					(
 						select
-							"currencies"."minters"
+							currencies.minters
 						from
-							"public"."currencies"
+							public.currencies
 						where
-							("currencies"."id"="transactions"."currency")
-					)::"uuid" []
+							(currencies.id=transactions.currency)
+					)::uuid[]
 				)
 			)
 			or (
-				("from_venue" is not null)
+				(from_venue is not null)
 				and (
 					(
 						select
-							"auth"."uid" () as "uid"
+							auth.uid () as uid
 					)=any (
 						(
 							select
-								"venues"."editors"
+								venues.editors
 							from
-								"public"."venues"
+								public.venues
 							where
-								("venues"."id"="transactions"."from_venue")
-						)::"uuid" []
+								(venues.id=transactions.from_venue)
+						)::uuid[]
 					)
 				)
 			)
 		)
 	);
 
-create policy "transactions are only visible to minters and those involved" on "public"."transactions" for
-select
-	to "authenticated",
-	"anon" using (
-		(
-			(
-				(
-					select
-						"auth"."uid" () as "uid"
-				)="from_scholar"
-			)
-			or (
-				(
-					select
-						"auth"."uid" () as "uid"
-				)="to_scholar"
-			)
-			or (
-				(
-					select
-						"auth"."uid" () as "uid"
-				)=any (
-					(
-						select
-							"currencies"."minters"
-						from
-							"public"."currencies"
-						where
-							("currencies"."id"="transactions"."currency")
-					)::"uuid" []
-				)
-			)
-			or (
-				("from_venue" is not null)
-				and (
-					(
-						select
-							"auth"."uid" () as "uid"
-					)=any (
-						(
-							select
-								"venues"."editors"
-							from
-								"public"."venues"
-							where
-								("venues"."id"="transactions"."from_venue")
-						)::"uuid" []
-					)
-				)
-			)
-			or (
-				("to_venue" is not null)
-				and (
-					(
-						select
-							"auth"."uid" () as "uid"
-					)=any (
-						(
-							select
-								"venues"."editors"
-							from
-								"public"."venues"
-							where
-								("venues"."id"="transactions"."to_venue")
-						)::"uuid" []
-					)
-				)
-			)
-		)
-	);
-
-create policy "transactions cannot be deleted" on "public"."transactions" for DELETE to "authenticated",
+create policy "transactions cannot be deleted" on public.transactions for DELETE to "authenticated",
 "anon" using (
 	(
 		(
 			select
-				"auth"."uid" () as "uid"
+				auth.uid () as uid
 		)=any (
 			(
 				select
-					"currencies"."minters"
+					currencies.minters
 				from
-					"public"."currencies"
+					currencies
 				where
-					("currencies"."id"="transactions"."currency")
-			)::"uuid" []
+					(currencies.id=transactions.currency)
+			)::uuid[]
 		)
 	)
 );

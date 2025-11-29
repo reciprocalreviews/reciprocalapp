@@ -3,6 +3,7 @@
 	import { getAuth } from '../Auth.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import VenueLink from '$lib/components/VenueLink.svelte';
 
 	let { data } = $props();
 
@@ -27,9 +28,7 @@
 			<ul>
 				{#each venues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue}
 					<li>
-						<Link to="/venue/{venue.id}"
-							>{#if venue.title.length === 0}<em>Unnamed</em>{:else}{venue.title}{/if}</Link
-						>
+						<VenueLink id={venue.id} name={venue.title}></VenueLink>
 					</li>
 				{/each}
 			</ul>

@@ -35,7 +35,7 @@ export const Emails = {
 		subject: 'Your assignment has been approved',
 		paragraphs: [
 			'<a href="mailto:$2">$1</a> assigned you as $3 for this submission:',
-			'https://reciprocal.reviews/submission/$4',
+			'https://reciprocal.reviews/venue/$4/submission/$5',
 			'Complete your assignment and you will receive compensation.'
 		]
 	},
@@ -43,7 +43,7 @@ export const Emails = {
 		subject: 'You were removed from a submission',
 		paragraphs: [
 			'<a href="mailto:$2">$1</a> removed you as $3 for this submission:',
-			'https://reciprocal.reviews/submission/$4'
+			'https://reciprocal.reviews/venue/$4/submission/$5'
 		]
 	},
 	RoleInvite: {

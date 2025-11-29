@@ -1,99 +1,99 @@
 --------------------------------------
 -- Schema
 -- Individuals who could be assigned to review a particular paper
-create table if not exists "public"."assignments" (
+create table if not exists public.assignments (
 	-- The unique ID of the bid
-	"id" "uuid" default "gen_random_uuid" () not null,
+	id uuid default gen_random_uuid() not null,
 	-- The venue to which this assignment corresponds
-	"venue" "uuid" not null,
+	venue uuid not null,
 	-- The submission bid on
-	"submission" "uuid" not null,
+	submission uuid not null,
 	-- The scholar who bid
-	"scholar" "uuid" not null,
+	scholar uuid not null,
 	-- The role for which the bid occurred
-	"role" "uuid" not null,
+	role uuid not null,
 	-- True if a bid by the reviewer.
-	"bid" boolean default false not null,
+	bid boolean default false not null,
 	-- True if the assignment has been approved
-	"approved" boolean default false not null,
+	approved boolean default false not null,
 	-- True if the assignment has been completed
-	"completed" boolean default false not null
+	completed boolean default false not null
 );
 
-alter table "public"."assignments" OWNER to "postgres";
+alter table public.assignments OWNER to "postgres";
 
-alter table only "public"."assignments"
-add constraint "assignments_pkey" primary key ("id");
+alter table only public.assignments
+add constraint "assignments_pkey" primary key (id);
 
-alter table only "public"."assignments"
-add constraint "assignments_role_fkey" foreign KEY ("role") references "public"."roles" ("id");
+alter table only public.assignments
+add constraint "assignments_role_fkey" foreign KEY (role) references public.roles (id);
 
-alter table only "public"."assignments"
-add constraint "assignments_scholar_fkey" foreign KEY ("scholar") references "public"."scholars" ("id");
+alter table only public.assignments
+add constraint "assignments_scholar_fkey" foreign KEY (scholar) references public.scholars (id);
 
-alter table only "public"."assignments"
-add constraint "assignments_submission_fkey" foreign KEY ("submission") references "public"."submissions" ("id");
+alter table only public.assignments
+add constraint "assignments_submission_fkey" foreign KEY (submission) references public.submissions (id);
 
-alter table only "public"."assignments"
-add constraint "assignments_venue_fkey" foreign KEY ("venue") references "public"."venues" ("id");
+alter table only public.assignments
+add constraint "assignments_venue_fkey" foreign KEY (venue) references public.venues (id);
 
 --------------------------------------
 -- Indexes
-create index "assignments_scholar_index" on "public"."assignments" using "btree" ("scholar");
+create index "assignments_scholar_index" on public.assignments using "btree" (scholar);
 
-create index "assignments_submission_index" on "public"."assignments" using "btree" ("submission");
+create index "assignments_submission_index" on public.assignments using "btree" (submission);
 
-create index "idx_assignments_completed" on "public"."assignments" using "btree" ("completed");
+create index "idx_assignments_completed" on public.assignments using "btree" (completed);
 
 --------------------------------------
 -- Functions
-create or replace function "public"."isapprover" ("_roleid" "uuid") RETURNS boolean LANGUAGE "sql" SECURITY DEFINER
+create or replace function public.isApprover (_roleid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
 set
 	"search_path" to '' as $$
     select (exists (select id from public.volunteers where scholarid = (select auth.uid()) and roleid=(select approver from public.roles where id=_roleid) and accepted = 'accepted'))
 $$;
 
-alter function "public"."isapprover" ("_roleid" "uuid") OWNER to "postgres";
+alter function public.isApprover (_roleid uuid) OWNER to "postgres";
 
-grant all on FUNCTION "public"."isapprover" ("_roleid" "uuid") to "anon";
+grant all on FUNCTION public.isApprover (_roleid uuid) to "anon";
 
-grant all on FUNCTION "public"."isapprover" ("_roleid" "uuid") to "authenticated";
+grant all on FUNCTION public.isApprover (_roleid uuid) to "authenticated";
 
-grant all on FUNCTION "public"."isapprover" ("_roleid" "uuid") to "service_role";
+grant all on FUNCTION public.isApprover (_roleid uuid) to "service_role";
 
 --------------------------------------
 -- Security
-alter table "public"."assignments" ENABLE row LEVEL SECURITY;
+alter table public.assignments ENABLE row LEVEL SECURITY;
 
-create policy "editors, assignees, and approvers can see assignments" on "public"."assignments" for
+create policy "editors, assignees, and approvers can see assignments" on public.assignments for
 select
 	to "authenticated",
 	"anon" using (
 		(
-			"public"."iseditor" ("venue")
+			public.isEditor (venue)
 			or (
 				"scholar"=(
 					select
-						"auth"."uid" () as "uid"
+						auth.uid () as "uid"
 				)
 			)
-			or "public"."isapprover" ("role")
+			or public.isApprover (role)
 		)
 	);
 
-create policy "editors, assignees, and approvers can update assignments" on "public"."assignments"
+create policy "editors, assignees, and approvers can update assignments" on public.assignments
 for update
 	to "authenticated",
 	"anon" using (
 		(
-			"public"."iseditor" ("venue")
+			public.isEditor (venue)
 			or (
 				"scholar"=(
 					select
-						"auth"."uid" () as "uid"
+						auth.uid () as "uid"
 				)
 			)
-			or "public"."isapprover" ("role")
+			or public.isApprover (role)
 		)
 	)
 with
@@ -101,11 +101,11 @@ with
 
 create policy "editors and assignees can delete assignments" on "public"."assignments" for DELETE to "authenticated" using (
 	(
-		"public"."iseditor" ("venue")
+		public.isEditor (venue)
 		or (
 			"scholar"=(
 				select
-					"auth"."uid" () as "uid"
+					auth.uid () as "uid"
 			)
 		)
 	)
@@ -116,25 +116,25 @@ create policy "editors and volunteers can create assignments" on "public"."assig
 with
 	check (
 		(
-			"public"."iseditor" ("venue")
+			public.isEditor (venue)
 			or (
-				"bid"
+				bid
 				and (
 					exists (
 						select
 						from
-							"public"."volunteers"
+							public.volunteers
 						where
 							(
-								("volunteers"."roleid"="assignments"."role")
+								(volunteers.roleid=assignments.role)
 								and (
-									"volunteers"."scholarid"=(
+									volunteers.scholarid=(
 										select
-											"auth"."uid" () as "uid"
+											auth.uid () as "uid"
 									)
 								)
-								and "volunteers"."active"
-								and ("volunteers"."accepted"="volunteers"."accepted")
+								and volunteers.active
+								and (volunteers.accepted=volunteers.accepted)
 							)
 					)
 				)
@@ -142,8 +142,8 @@ with
 		)
 	);
 
-grant all on table "public"."assignments" to "anon";
+grant all on table public.assignments to "anon";
 
-grant all on table "public"."assignments" to "authenticated";
+grant all on table public.assignments to "authenticated";
 
-grant all on table "public"."assignments" to "service_role";
+grant all on table public.assignments to "service_role";

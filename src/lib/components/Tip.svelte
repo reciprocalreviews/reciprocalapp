@@ -33,7 +33,7 @@
 	}
 
 	.bulb {
-		font-size: 125%;
+		font-size: 100%;
 		animation: slideUp 0.5s;
 	}
 

@@ -3,7 +3,7 @@ import type { PageLoad } from './$types.js';
 export const load: PageLoad = async ({ parent, params }) => {
 	const { supabase, user, venue } = await parent();
 
-	const venueid = params.id;
+	const venueid = params.venueid;
 
 	// Get the matching venue's currency.
 	const { data: currency, error: currencyError } = venue

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getDB } from '$lib/data/CRUD';
-	import type Scholar from '$lib/data/Scholar.svelte';
+	import Scholar from '$lib/data/Scholar.svelte';
+	import { ScholarLabel } from './Labels';
 	import Link from './Link.svelte';
 
 	export let id: string | Scholar;
@@ -13,11 +14,17 @@
 		...
 	{:then scholar}
 		{#if scholar}
-			<Link to="/scholar/{scholar.getID()}">{scholar.getName() ?? scholar.getEmail()}</Link>
+			<Link to="/scholar/{scholar.getID()}" icon={ScholarLabel}
+				>{scholar.getName() ?? scholar.getEmail()}</Link
+			>
 		{:else}
 			<em>ORCID {id}</em>
 		{/if}
 	{:catch}<em>Error {id}</em>{/await}
 {:else}
-	<Link to="/scholar/{id.getID()}">{id.getName()}</Link>
+	<div class="scholar">
+		<Link to="/scholar/{id.getID()}">{id.getName()}</Link><sub style="text-decoration: none"
+			>{ScholarLabel}</sub
+		>
+	</div>
 {/if}

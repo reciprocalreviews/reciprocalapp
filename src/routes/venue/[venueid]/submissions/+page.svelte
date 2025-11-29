@@ -6,21 +6,12 @@
 	import { type PageData } from './$types';
 	import Page from '$lib/components/Page.svelte';
 	import Link from '$lib/components/Link.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import NewSubmission from './NewSubmission.svelte';
 	import { getDB, NullUUID } from '$lib/data/CRUD';
 	import Button from '$lib/components/Button.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import { handle } from '../../../feedback.svelte';
 	import Status from '$lib/components/Status.svelte';
-	import {
-		CreateLabel,
-		DownLabel,
-		FilterLabel,
-		PrivateLabel,
-		UpLabel
-	} from '$lib/components/Labels';
+	import { DownLabel, FilterLabel, PrivateLabel, UpLabel } from '$lib/components/Labels';
 	import Column from '$lib/components/Row.svelte';
 	import isRoleApprover from '$lib/data/isRoleApprover';
 	import type { SubmissionRow } from '$data/types';
@@ -54,9 +45,6 @@
 	/** True if the current user is an editor of this venue */
 	const isEditor = $derived(uid !== null && venue !== null && venue.editors.includes(uid));
 
-	/** The cost of submissions, if there is one. */
-	const submissionCost = $derived(venue?.submission_cost ?? null);
-
 	/** The roles to show, filtered by the which role the current scholar has */
 	const visibleRoles = $derived(
 		roles === null || volunteering === null
@@ -79,9 +67,6 @@
 					})
 					.filter((r) => r.isVisible)
 	);
-
-	/** Whether the new submission card is expanded */
-	let newSubmissionExpanded = $state(false);
 
 	/** State of sorting and filtering */
 	let paymentSortPendingFirst = $state(true);
@@ -123,7 +108,7 @@
 			transactions === null
 				? null
 				: submission.transactions
-						.filter((t) => t === NullUUID)
+						.filter((t) => t !== NullUUID)
 						.map((t) => transactions.find((tr) => tr.id === t))
 						.filter((t) => t !== undefined);
 		if (submissionTransactions === null) return undefined;
@@ -141,21 +126,10 @@
 	>
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 
-		<!-- If an editor and there's a submission cost, show the new submission form -->
-		{#if isEditor && submissionCost !== null}
-			<Cards>
-				<Card
-					icon={CreateLabel}
-					header="New submission"
-					note="Manually create a new submission"
-					group="editors"
-					bind:expand={newSubmissionExpanded}
-				>
-					<NewSubmission bind:expanded={newSubmissionExpanded} venue={venue.id} {submissionCost}
-					></NewSubmission>
-				</Card>
-			</Cards>
-		{/if}
+		<!-- Provide a clear link to the new submission page. -->
+		<p>
+			Have a submission to pay for? Pay for a <Link to={`submissions/new`}>new submission</Link>.
+		</p>
 
 		<TextField label="Filter {FilterLabel}" placeholder="title, id" bind:text={filter}></TextField>
 
@@ -243,8 +217,10 @@
 												<!-- If the current scholar is an approver, show the current assignemnts -->
 												{#if role.isApprover}
 													{#each approvedAssignments as assignment}
-														<!-- Editor? Show the people assigned. Otherwise, show bidding interface. -->
-														<ScholarLink id={assignment.scholar} />
+														<!-- Approver? Show the people assigned. Otherwise, show bidding interface. -->
+														{#if assignment.scholar === uid}you{:else}<ScholarLink
+																id={assignment.scholar}
+															/>{/if}
 													{:else}
 														<span><strong>0</strong> assigned</span>
 													{/each}

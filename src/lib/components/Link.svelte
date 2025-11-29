@@ -7,12 +7,14 @@
 		small = false,
 		background = false,
 		underline = true,
+		icon = null,
 		children
 	}: {
 		to: string;
 		small?: boolean;
 		background?: boolean;
 		underline?: boolean;
+		icon?: string | null;
 		children: Snippet;
 	} = $props();
 
@@ -25,7 +27,8 @@
 	href={inactive ? null : to}
 	target={to.startsWith('http') ? '_blank' : null}
 	aria-current={inactive ? 'page' : null}
-	><span class:underline>{@render children()}</span>{#if to.startsWith('http')}<sub>🌐</sub>{/if}</a
+	><span class:underline>{@render children()}</span>{#if to.startsWith('http')}<sub>🌐</sub
+		>{/if}{#if icon}<sub>{icon}</sub>{/if}</a
 >
 
 <style>
@@ -33,6 +36,7 @@
 		color: var(--salient-color);
 		font-weight: 400;
 		text-decoration: none;
+		white-space: wrap;
 	}
 
 	a .underline {

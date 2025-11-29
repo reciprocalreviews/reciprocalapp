@@ -17,6 +17,7 @@
 	import { type CurrencyID } from '$data/types';
 	import Dashboard from '$lib/components/Dashboard.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
+	import Tip from '$lib/components/Tip.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const { venue, currency, minters, scholar, roles, volunteers, tokens, submissionCount, venues } =
@@ -75,12 +76,17 @@
 										venue.editors.filter((ed) => ed !== editorID)
 									)
 								)}>{DeleteLabel}</Button
-						>{/if}
-					{#if index < venue.editors.length - 1},{/if}
-					.
+						>{/if}{#if index < venue.editors.length - 1},{/if}.
 				{/each}
 			</li>
-
+			<!-- Prompt to pay -->
+			<li>
+				Submitted a manuscript? <Link to={`${venue.id}/submissions/new`}>Pay</Link> to start peer review.
+			</li>
+			<!-- Prompt to volunteer -->
+			<li>
+				Need tokens to pay? <Link to="#roles">Volunteer to review</Link>.
+			</li>
 			<!-- Key details about costs. -->
 			<li>
 				This venue uses {#if currency}the <CurrencyLink {currency}>
@@ -116,7 +122,41 @@
 			]}
 		></Dashboard>
 
-		<h2>Roles</h2>
+		{#if editor}
+			<Tip border>
+				<p>
+					Hello editor. Are you ready to integrate into your reviewing system? There are a few
+					steps:
+				</p>
+				<ol>
+					<li>
+						Run a community process to decide the <Link to="#roles">roles</Link> and <Link
+							to="settings">settings</Link
+						> below about compensation and bidding. Once decided, set them up below.
+					</li>
+					<li>
+						Include this venue's <Link to={`${venue.id}/submissions/new`}>payment link</Link> in author
+						instructions and submission confirmations, prompting authors to pay after submission. If
+						you want the manuscript ID to be populated automatically and your reviewing platform supports
+						it, you can use the URL
+						<code>https://reciprocal.reviews/venue/{venue.id}/submission/new?id=[ID]</code>, but
+						replace
+						<code>[ID]</code> with the variable your system uses for manuscript ID.
+					</li>
+					<li>
+						Update your reviewing platform's <strong>review submission</strong> notification email
+						to prompt the scholar receiving it with a link to the submission:
+						<code>https://reciprocal.reviews/venue/{venue.id}/submission/[id]</code>, but replace
+						<code>[id]</code> with the variable your system uses for manuscript ID. In the email,
+						prompt them to add the reviewer to the submission (if they haven't already), evaluate
+						the review, and if it meets your venue's review quality requirements, press the
+						<strong>Complete</strong> button to pay for their work.
+					</li>
+				</ol>
+			</Tip>
+		{/if}
+
+		<h2 id="roles">Roles</h2>
 
 		{#if roles && currency}
 			<Roles
@@ -133,13 +173,7 @@
 		{/if}
 
 		{#if editor}
-			<h2>Tokens</h2>
-
-			{#if editor}
-				<p>
-					<Link to="/venue/{venue.id}/transactions">See all transactions</Link>.
-				</p>
-			{/if}
+			<h2 id="settings">Settings</h2>
 
 			<Cards>
 				<Card group="editors" icon="🎁" header="gift" note="Send tokens to a scholar">

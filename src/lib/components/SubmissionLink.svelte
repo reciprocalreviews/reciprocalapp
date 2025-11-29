@@ -6,16 +6,6 @@
 	export let submission: SubmissionRow;
 </script>
 
-<div class="submission">
-	<span>{SubmissionLabel}</span>
-	<Link to="/submission/{submission.id}">{submission.title}</Link>
-</div>
-
-<style>
-	.submission {
-		display: flex;
-		flex-direction: row;
-		flex-wrap: nowrap;
-		gap: 0.25em;
-	}
-</style>
+<Link to="/venue/{submission.venue}/submission/{submission.id}" icon={SubmissionLabel}
+	>{submission.title}</Link
+>

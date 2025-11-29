@@ -2,87 +2,91 @@
 -- Schema
 --
 -- The emails table is a log of all emails sent to scholars.
-create table if not exists "public"."emails" (
+create table if not exists public.emails (
 	-- The unique ID of the bid, automatically generated
-	"id" "uuid" default "gen_random_uuid" () not null,
+	id uuid default gen_random_uuid() not null,
 	-- The event type of the email
-	"event" "text" not null,
+	event text not null,
 	-- The optional scholar to whom the email was sent
-	"scholar" "uuid",
+	scholar uuid,
 	-- The optional venue for which the email was sent
-	"venue" "uuid",
+	venue uuid,
 	-- When the email was sent
-	"time_sent" timestamp with time zone default "now" () not null,
+	time_sent timestamp with time zone default now() not null,
 	-- The email to whom the email was sent
-	"email" "text" not null,
+	email text not null,
 	-- The subject of the email
-	"subject" "text" not null,
+	subject text not null,
 	-- The body of the email
-	"message" "text" not null
+	message text not null
 );
 
-alter table "public"."emails" OWNER to "postgres";
+alter table public.emails OWNER to "postgres";
 
-grant all on table "public"."emails" to "anon";
+grant all on table public.emails to "anon";
 
-grant all on table "public"."emails" to "authenticated";
+grant all on table public.emails to "authenticated";
 
-grant all on table "public"."emails" to "service_role";
+grant all on table public.emails to "service_role";
 
-alter table only "public"."emails"
-add constraint "emails_pkey" primary key ("id");
+alter table only public.emails
+add constraint "emails_pkey" primary key (id);
 
-alter table only "public"."emails"
-add constraint "emails_scholar_fkey" foreign KEY ("scholar") references "public"."scholars" ("id");
+alter table only public.emails
+add constraint "emails_scholar_fkey" foreign KEY (scholar) references public.scholars (id);
 
-alter table only "public"."emails"
-add constraint "emails_venue_fkey" foreign KEY ("venue") references "public"."venues" ("id");
+alter table only public.emails
+add constraint "emails_venue_fkey" foreign KEY (venue) references public.venues (id);
 
 --------------------------------------
 -- Indexes
 --
-create index "emails_scholar_index" on "public"."emails" using "btree" ("scholar");
+create index emails_scholar_index on public.emails using btree (scholar);
 
-create index "emails_venue_index" on "public"."emails" using "btree" ("venue");
+create index emails_venue_index on public.emails using btree (venue);
 
 --------------------------------------
 -- Security
 --
-alter table "public"."emails" ENABLE row LEVEL SECURITY;
+alter table public.emails ENABLE row LEVEL SECURITY;
 
-create policy "scholars and venue editors can see the emails sent" on "public"."emails" for
+create policy "scholars and venue editors can see the emails sent" on public.emails for
 select
-	to "authenticated",
-	"anon" using (
+	to authenticated,
+	anon using (
 		(
 			(
 				(
 					select
-						"auth"."uid" () as "uid"
-				)="scholar"
+						auth.uid () as uid
+				)=scholar
 			)
 			or (
-				("venue" is not null)
-				and "public"."iseditor" ("venue")
+				(venue is not null)
+				and public.isEditor (venue)
 			)
 		)
 	);
 
-create policy "authenticated scholars can send email" on "public"."emails" for INSERT to "authenticated"
+create policy "authenticated scholars can send email" on public.emails for INSERT to authenticated
 with
 	check (true);
 
-create policy "emails can't be edited" on "public"."emails"
+create policy "emails can't be edited" on public.emails
 for update
-	to "authenticated",
-	"anon" using (false);
+	to authenticated,
+	anon using (false);
 
-create policy "emails can't be deleted" on "public"."emails" for DELETE to "authenticated" using (false);
+create policy "emails can't be deleted" on public.emails for DELETE to authenticated using (false);
 
 --------------------------------------
 -- Functions
 --
-create or replace function "private"."get_secret" ("secret_name" "text") RETURNS "text" LANGUAGE "plpgsql" SECURITY DEFINER
+-- Create a schema to store this private function that gets a vault secret.
+create schema private;
+
+-- to avoid this function in the API
+create or replace function private.get_secret (secret_name text) RETURNS text LANGUAGE plpgsql SECURITY DEFINER
 set
 	"search_path" to '' as $$ 
 declare
@@ -93,9 +97,9 @@ begin
 end;
 $$;
 
-alter function "private"."get_secret" ("secret_name" "text") OWNER to "postgres";
+alter function private.get_secret (secret_name text) OWNER to "postgres";
 
-create or replace function "public"."send_email" () RETURNS "trigger" LANGUAGE "plpgsql" SECURITY DEFINER
+create or replace function public.send_email () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
 set
 	"search_path" to '' as $$
 begin
@@ -112,17 +116,17 @@ begin
 end;
 $$;
 
-alter function "public"."send_email" () OWNER to "postgres";
+alter function public.send_email () OWNER to "postgres";
 
-grant all on FUNCTION "public"."send_email" () to "anon";
+grant all on FUNCTION public.send_email () to "anon";
 
-grant all on FUNCTION "public"."send_email" () to "authenticated";
+grant all on FUNCTION public.send_email () to "authenticated";
 
-grant all on FUNCTION "public"."send_email" () to "service_role";
+grant all on FUNCTION public.send_email () to "service_role";
 
 --------------------------------------
 -- Triggers
 --
-create or replace trigger "send_on_email_insert"
-after INSERT on "public"."emails" for EACH row
-execute FUNCTION "public"."send_email" ();
+create or replace trigger send_on_email_insert
+after INSERT on public.emails for EACH row
+execute FUNCTION public.send_email ();

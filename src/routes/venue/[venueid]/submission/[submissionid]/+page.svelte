@@ -11,10 +11,9 @@
 	import Link from '$lib/components/Link.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
-	import Tag from '$lib/components/Tag.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { handle } from '../../feedback.svelte';
+	import { handle } from '../../../../feedback.svelte';
 	import { EmptyLabel } from '$lib/components/Labels';
 	import type { RoleID, ScholarID } from '$data/types';
 	import isRoleApprover from '$lib/data/isRoleApprover';
@@ -127,7 +126,9 @@
 	>
 		{#snippet subtitle()}Submission{/snippet}
 		{#snippet details()}
-			{#if previous}<Link to="/submission/{previous.id}">{previous.externalid}</Link>
+			{#if previous}<Link to="/venue/{venue.id}/submission/{previous.id}"
+					>{previous.externalid}</Link
+				>
 				→{/if}
 			{submission.externalid}
 			{#if done}<Status good={false}>done</Status>{:else}<Status>reviewing</Status>{/if}
@@ -291,10 +292,11 @@
 					<tr>
 						<td>{role.name}</td>
 						<td class={!assignment.approved ? 'unapproved' : undefined}>
-							<ScholarLink id={assignment.scholar} />
-							{#if assignment.completed}<Tag>Completed</Tag>{:else if assignment.approved}<Tag
-									>Assigned</Tag
-								>{/if}</td
+							{#if assignment.scholar === user.id}you{:else}<ScholarLink
+									id={assignment.scholar}
+								/>{/if}
+							{#if assignment.completed}<Status>Completed</Status
+								>{:else if assignment.approved}<Status good={false}>Incomplete</Status>{/if}</td
 						>
 						<td
 							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
