@@ -27,7 +27,8 @@
 		note = undefined
 	}: Props = $props();
 
-	const original = text;
+	// svelte-ignore state_referenced_locally
+	const original = $state(text);
 
 	// Whether the text is being edited.
 	let editing = $state<boolean | undefined>(false);

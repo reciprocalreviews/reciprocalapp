@@ -43,7 +43,12 @@
 	let giftRecipient = $state('');
 	let giftAmount = $state(1);
 	let giftConsent = $state(false);
-	let giftPurpose = $state(purpose);
+	let giftPurpose = $state('');
+
+	$effect(() => {
+		giftPurpose = purpose;
+	});
+
 	let kind = $state<'scholar' | 'venue'>('scholar');
 	let venue = $state<undefined | string>(undefined);
 </script>

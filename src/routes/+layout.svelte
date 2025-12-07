@@ -15,7 +15,14 @@
 
 	let { data, children } = $props();
 
+	// svelte-ignore state_referenced_locally
 	createAuthContext(data.supabase, data.session);
+
+	let crud = $derived(new SupabaseCRUD(data.supabase, enUS));
+
+	// Set client side database cache.
+	setDB(() => crud);
+
 	const auth = getAuth();
 
 	let feedback = $derived(getFeedback());
@@ -36,9 +43,6 @@
 
 		return () => response.subscription.unsubscribe();
 	});
-
-	// Set client side database cache.
-	setDB(new SupabaseCRUD(data.supabase, enUS));
 </script>
 
 {#snippet MessageBox(

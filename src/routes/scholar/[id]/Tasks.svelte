@@ -48,12 +48,12 @@
 					role for <VenueLink id={invite.venueid} name={invite.venue} />. Would you like to
 					<Button
 						tip="accept this invitation"
-						action={() => handle(db.acceptRoleInvite(scholar, invite.id, 'accepted'))}
+						action={() => handle(db().acceptRoleInvite(scholar, invite.id, 'accepted'))}
 						>Accept</Button
 					>
 					<Button
 						tip="decline this invitation"
-						action={() => handle(db.acceptRoleInvite(scholar, invite.id, 'declined'))}
+						action={() => handle(db().acceptRoleInvite(scholar, invite.id, 'declined'))}
 						>Decline</Button
 					>?
 				</td>

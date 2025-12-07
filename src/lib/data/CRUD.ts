@@ -26,11 +26,11 @@ import type { EmailType } from '../../email/templates';
 export const DatabaseSymbol = Symbol('database');
 export const NullUUID = '00000000-0000-0000-0000-000000000000';
 
-export function getDB() {
-	return getContext<CRUD>(DatabaseSymbol);
+export function getDB(): () => CRUD {
+	return getContext<() => CRUD>(DatabaseSymbol);
 }
 
-export function setDB(db: CRUD) {
+export function setDB(db: () => CRUD) {
 	setContext(DatabaseSymbol, db);
 }
 

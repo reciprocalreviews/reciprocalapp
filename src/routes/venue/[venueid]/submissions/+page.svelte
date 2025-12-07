@@ -238,7 +238,7 @@
 															tip="Express interest in serving as {role?.description ??
 																'in this role'}"
 															action={() =>
-																handle(db.createAssignment(submission.id, uid, role.id, true))}
+																handle(db().createAssignment(submission.id, uid, role.id, true))}
 															>Bid</Button
 														>
 													{:else if scholarsBid !== undefined && !scholarsBid.approved}
@@ -246,7 +246,7 @@
 														<Button
 															tip="Remove interest in serving as {role?.description ??
 																'in this role'}"
-															action={() => handle(db.deleteAssignment(scholarsBid.id))}
+															action={() => handle(db().deleteAssignment(scholarsBid.id))}
 															>Unbid</Button
 														>
 													{/if}

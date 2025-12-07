@@ -78,7 +78,7 @@
 					<!-- If the authenticated scholar is a minter of the given currency, or the giver, then show an approve button -->
 					<Button
 						tip="Approve this proposed transaction"
-						action={() => handle(db.approveTransaction(userid, transaction.id))}>Approve</Button
+						action={() => handle(db().approveTransaction(userid, transaction.id))}>Approve</Button
 					>
 					<Button
 						tip="Cancel this proposed transaction"
@@ -94,7 +94,7 @@
 							active={cancelReason.length > 0}
 							action={async () => {
 								await handle(
-									db.cancelTransaction(
+									db().cancelTransaction(
 										transaction.id,
 										transaction.purpose.trim() + ' - ' + cancelReason
 									)

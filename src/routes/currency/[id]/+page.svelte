@@ -58,7 +58,7 @@
 		? {
 				placeholder: 'Name',
 				valid: (text) => (text.length === 0 ? "The name can't be empty" : undefined),
-				update: (text) => db.updateCurrencyName(currency.id, text)
+				update: (text) => db().updateCurrencyName(currency.id, text)
 			}
 		: undefined}
 >
@@ -71,7 +71,7 @@
 				inline={false}
 				text={currency.description}
 				placeholder="Explain the currency to others."
-				edit={(text) => db.updateCurrencyDescription(currency.id, text)}
+				edit={(text) => db().updateCurrencyDescription(currency.id, text)}
 				note="Currency descriptions are public."
 			/>
 		{:else}
@@ -142,7 +142,7 @@
 								newTokenCreating = true;
 								if (
 									newTokenOwner !== undefined &&
-									(await handle(db.mintTokens(currency.id, newTokenCount, newTokenOwner)))
+									(await handle(db().mintTokens(currency.id, newTokenCount, newTokenOwner)))
 								) {
 									newTokenCount = 0;
 									newTokenCreating = false;
@@ -170,7 +170,7 @@
 							active={currency.minters.length > 1}
 							action={() =>
 								handle(
-									db.editCurrencyMinters(
+									db().editCurrencyMinters(
 										currency.id,
 										currency.minters.filter((m) => m !== minter)
 									)
@@ -198,7 +198,9 @@
 							tip="Add minter"
 							active={isValidMinter(newMinter) === undefined}
 							action={async () => {
-								if (await handle(db.addCurrencyMinter(currency.id, currency.minters, newMinter))) {
+								if (
+									await handle(db().addCurrencyMinter(currency.id, currency.minters, newMinter))
+								) {
 									newMinter = '';
 								}
 							}}>Add minter</Button

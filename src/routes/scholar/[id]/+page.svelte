@@ -37,7 +37,7 @@
 	let db = getDB();
 
 	/** Register a scholar state. */
-	let state = data.scholar ? db.registerScholar(data.scholar) : null;
+	let state = $derived(data.scholar ? db().registerScholar(data.scholar) : null);
 </script>
 
 {#if state}

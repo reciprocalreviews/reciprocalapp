@@ -10,7 +10,7 @@
 </script>
 
 {#if typeof id === 'string'}
-	{#await db.getScholar(id)}
+	{#await db().getScholar(id)}
 		...
 	{:then scholar}
 		{#if scholar}

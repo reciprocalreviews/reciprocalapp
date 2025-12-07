@@ -72,7 +72,7 @@
 
 	async function checkAffordability() {
 		affordable = undefined;
-		const result = await db.verifyCharges(chargeTextToCharges(charges));
+		const result = await db().verifyCharges(chargeTextToCharges(charges));
 		if (result === undefined) {
 			affordable = 'An error occurred while checking balances.';
 		} else if (result !== true) {
@@ -182,7 +182,7 @@
 		action={async () => {
 			if (user) {
 				const result = await handle(
-					db.createSubmission(
+					db().createSubmission(
 						user,
 						title,
 						expertise,

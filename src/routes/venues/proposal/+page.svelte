@@ -13,7 +13,7 @@
 
 	let { data } = $props();
 
-	let currencies = $state(data.currencies);
+	let currencies = $derived(data.currencies);
 
 	let venue = $state('');
 	let editors = $state('');
@@ -55,7 +55,7 @@
 
 		proposing = true;
 
-		const { data: proposalID, error: proposalError } = await db.proposeVenue(
+		const { data: proposalID, error: proposalError } = await db().proposeVenue(
 			uid,
 			venue,
 			url,

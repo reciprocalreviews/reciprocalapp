@@ -49,6 +49,7 @@
 
 	let newRole: string = $state('');
 	let invites = $state<Record<RoleID, string>>(
+		// svelte-ignore state_referenced_locally
 		Object.fromEntries((roles ?? []).map((role) => [role.id, '']))
 	);
 
@@ -90,7 +91,7 @@
 				tip="Create a new role"
 				active={isntEmpty(newRole)}
 				action={async () => {
-					const result = await handle(db.createRole(venue.id, newRole));
+					const result = await handle(db().createRole(venue.id, newRole));
 					if (typeof result !== 'boolean') {
 						// Initialize the invite list for this role
 						invites[result.id] = '';
@@ -125,7 +126,7 @@
 					value={venue.edit_amount}
 					step={1}
 					label="compensation"
-					change={(value) => handle(db.editVenueEditorCompensation(venue.id, value))}
+					change={(value) => handle(db().editVenueEditorCompensation(venue.id, value))}
 					><Tokens amount={venue.edit_amount}></Tokens>/submission</Slider
 				>
 				<form>
@@ -139,7 +140,7 @@
 						tip="Add editor"
 						active={validEditor(newEditor) === undefined}
 						action={async () => {
-							if (await handle(db.addVenueEditor(venue.id, newEditor))) newEditor = '';
+							if (await handle(db().addVenueEditor(venue.id, newEditor))) newEditor = '';
 						}}>Add editor</Button
 					>
 				</form>
@@ -160,12 +161,12 @@
 						<Button
 							active={index > 0}
 							tip="Move this role up"
-							action={() => handle(db.reorderRole(role, $state.snapshot(roles), -1))}>↑</Button
+							action={() => handle(db().reorderRole(role, $state.snapshot(roles), -1))}>↑</Button
 						>
 						<Button
 							active={index < roles.length - 1}
 							tip="Move this role down"
-							action={() => handle(db.reorderRole(role, $state.snapshot(roles), 1))}>↓</Button
+							action={() => handle(db().reorderRole(role, $state.snapshot(roles), 1))}>↓</Button
 						>
 					{/if}
 				{/snippet}
@@ -186,7 +187,7 @@
 							tip="Volunteer for this role"
 							action={() =>
 								handle(
-									db.createVolunteer(scholar, scholar, role.id, true, true),
+									db().createVolunteer(scholar, scholar, role.id, true, true),
 									"Thank you for volunteering! You'll receive your welcome tokens once the minter approves them."
 								)}>Volunteer …</Button
 						>
@@ -199,7 +200,7 @@
 									tip="accept this invitation"
 									action={() =>
 										handle(
-											db.acceptRoleInvite(
+											db().acceptRoleInvite(
 												scholarVolunteer.scholarid,
 												scholarVolunteer.id,
 												'accepted'
@@ -211,7 +212,7 @@
 							<p>
 								Thanks for volunteering for this role! <Button
 									tip="Stop volunteering"
-									action={() => handle(db.updateVolunteerActive(scholarVolunteer.id, false))}
+									action={() => handle(db().updateVolunteerActive(scholarVolunteer.id, false))}
 									>Stop...</Button
 								>
 							</p>
@@ -219,13 +220,13 @@
 								text={scholarVolunteer.expertise}
 								label="what is your expertise? (separated by commas)?"
 								placeholder="topic, area, method, theory, etc."
-								edit={(text) => db.updateVolunteerExpertise(scholarVolunteer.id, text)}
+								edit={(text) => db().updateVolunteerExpertise(scholarVolunteer.id, text)}
 							/>
 						{:else}
 							<p>
 								You stopped volunteering for this role. <Button
 									tip="Resume volunteering"
-									action={() => handle(db.updateVolunteerActive(scholarVolunteer.id, true))}
+									action={() => handle(db().updateVolunteerActive(scholarVolunteer.id, true))}
 									>Resume...</Button
 								>
 							</p>
@@ -257,7 +258,7 @@
 							action={async () => {
 								if (
 									await handle(
-										db.inviteToRole(
+										db().inviteToRole(
 											scholar,
 											role,
 											venue,
@@ -293,13 +294,13 @@
 							label="name"
 							placeholder="name"
 							valid={(text) => (isntEmpty(text) ? undefined : 'Must include a name')}
-							edit={(text) => db.editRoleName(role.id, text)}
+							edit={(text) => db().editRoleName(role.id, text)}
 						/>
 						<EditableText
 							text={role.description}
 							label="description"
 							placeholder="description"
-							edit={(text) => db.editRoleDescription(role.id, text)}
+							edit={(text) => db().editRoleDescription(role.id, text)}
 						/>
 						<Slider
 							min={1}
@@ -307,16 +308,16 @@
 							value={role.amount}
 							step={1}
 							label="compensation"
-							change={(value) => handle(db.editRoleAmount(role.id, value))}
+							change={(value) => handle(db().editRoleAmount(role.id, value))}
 							><Tokens amount={role.amount}></Tokens>/submission</Slider
 						>
-						<Checkbox on={role.invited} change={(on) => db.editRoleInvited(role.id, on)}
+						<Checkbox on={role.invited} change={(on) => db().editRoleInvited(role.id, on)}
 							>Invited <Note
 								>{#if role.invited}Scholars must be invited to this role.{:else}Scholars can
 									volunteer for this without permission{/if}</Note
 							>
 						</Checkbox>
-						<Checkbox on={role.biddable} change={(on) => db.editRoleBidding(role.id, on)}
+						<Checkbox on={role.biddable} change={(on) => db().editRoleBidding(role.id, on)}
 							>Allow bidding
 						</Checkbox>
 
@@ -326,7 +327,10 @@
 								value={role.approver}
 								onchange={(e) =>
 									e.target instanceof HTMLSelectElement
-										? db.editRoleApprover(role.id, e.target.value === null ? null : e.target.value)
+										? db().editRoleApprover(
+												role.id,
+												e.target.value === null ? null : e.target.value
+											)
 										: null}
 							>
 								<option value={null}>{EmptyLabel}</option>
@@ -344,7 +348,7 @@
 						<Button
 							warn="Delete this role and all volunteers?"
 							tip="Delete this role"
-							action={() => handle(db.deleteRole(role.id))}>Delete {DeleteLabel} …</Button
+							action={() => handle(db().deleteRole(role.id))}>Delete {DeleteLabel} …</Button
 						>
 					</Card>
 				{/if}

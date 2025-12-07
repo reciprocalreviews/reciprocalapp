@@ -39,7 +39,7 @@
 			? {
 					placeholder: 'Title',
 					valid: (text) => (text.length > 0 ? undefined : 'Must include a title'),
-					update: (text) => db.editVenueTitle(venue.id, text)
+					update: (text) => db().editVenueTitle(venue.id, text)
 				}
 			: undefined}
 	>
@@ -52,7 +52,7 @@
 				text={venue.description}
 				placeholder="Venue description."
 				inline={false}
-				edit={(text) => db.editVenueDescription(venue.id, text)}
+				edit={(text) => db().editVenueDescription(venue.id, text)}
 			/>
 		{:else}
 			<p>
@@ -71,7 +71,7 @@
 							warn="Are you sure you want to remove this editor?"
 							action={() =>
 								handle(
-									db.editVenueEditors(
+									db().editVenueEditors(
 										venue.id,
 										venue.editors.filter((ed) => ed !== editorID)
 									)
@@ -136,8 +136,8 @@
 					</li>
 					<li>
 						Include this venue's <Link to={`${venue.id}/submissions/new`}>payment link</Link> in author
-						instructions and submission confirmations, prompting authors to pay after submission. If
-						you want the manuscript ID to be populated automatically and your reviewing platform supports
+						instructions and submission confirmations, prompting authors to pay after submission. If you
+						want the manuscript ID to be populated automatically and your reviewing platform supports
 						it, you can use the URL
 						<code>https://reciprocal.reviews/venue/{venue.id}/submission/new?id=[ID]</code>, but
 						replace
@@ -192,7 +192,7 @@
 								purpose: string
 							) =>
 								currency !== null
-									? db.transferTokens(
+									? db().transferTokens(
 											scholar.id,
 											currency,
 											venue.id,
@@ -218,21 +218,21 @@
 						label="URL"
 						placeholder="https://..."
 						valid={validURLError}
-						edit={(text) => db.editVenueURL(venue.id, text)}
+						edit={(text) => db().editVenueURL(venue.id, text)}
 					/>
 					<EditableText
 						text={venue.welcome_amount.toString()}
 						label="Welcome tokens"
 						placeholder="e.g., 40"
 						valid={(text) => (validInteger(text) ? undefined : 'Must be a whole number')}
-						edit={(text) => db.editVenueWelcomeAmount(venue.id, parseInt(text))}
+						edit={(text) => db().editVenueWelcomeAmount(venue.id, parseInt(text))}
 					/>
 					<EditableText
 						text={venue.submission_cost.toString()}
 						label="Submission cost"
 						placeholder="e.g., 40"
 						valid={(text) => (validInteger(text) ? undefined : 'Must be a whole number')}
-						edit={(text) => db.editVenueSubmissionCost(venue.id, parseInt(text))}
+						edit={(text) => db().editVenueSubmissionCost(venue.id, parseInt(text))}
 					/>
 				</Card>
 			</Cards>

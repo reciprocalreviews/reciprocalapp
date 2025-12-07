@@ -120,7 +120,7 @@
 			? {
 					placeholder: 'Title',
 					valid: (text) => (text.trim().length === 0 ? 'Title cannot be empty.' : undefined),
-					update: (text) => db.updateSubmissionTitle(submission.id, text)
+					update: (text) => db().updateSubmissionTitle(submission.id, text)
 				}
 			: undefined}
 	>
@@ -138,7 +138,7 @@
 		{#if isEditor}
 			<Checkbox
 				on={!done}
-				change={(on) => db.updateSubmissionStatus(submission.id, on ? 'reviewing' : 'done')}
+				change={(on) => db().updateSubmissionStatus(submission.id, on ? 'reviewing' : 'done')}
 				>This submission is still in review.</Checkbox
 			>
 		{/if}
@@ -189,7 +189,7 @@
 				text={submission.expertise ?? ''}
 				placeholder="Expertise"
 				edit={(text) =>
-					db.updateSubmissionExpertise(submission.id, text.trim().length === 0 ? null : text)}
+					db().updateSubmissionExpertise(submission.id, text.trim().length === 0 ? null : text)}
 			/>
 		{:else if submission.expertise}
 			{submission.expertise}
@@ -230,7 +230,7 @@
 							newAssignmentSubmitting = true;
 							const role = roles.find((role) => role.id === newAssignmentRole);
 
-							const { data: scholarID } = await db.findScholar(newAssignmentScholar);
+							const { data: scholarID } = await db().findScholar(newAssignmentScholar);
 
 							if (role === undefined) {
 								newAssignmentError = 'You must select a valid role.';
@@ -249,7 +249,7 @@
 							}
 
 							return handle(
-								db.createAssignment(submission.id, scholarID, role.id, false, true)
+								db().createAssignment(submission.id, scholarID, role.id, false, true)
 							).then(() => {
 								newAssignmentRole = undefined;
 								newAssignmentScholar = '';
@@ -310,20 +310,21 @@
 											<Button
 												tip="Remove this assignment"
 												action={() =>
-													handle(db.approveAssignment(assignment, false, role, user.id))}
+													handle(db().approveAssignment(assignment, false, role, user.id))}
 												>Unassign</Button
 											>
 											{#if !assignment.completed}
 												<Button
 													tip="Mark this assignment complete and compensate the scholar for their work"
-													action={() => handle(db.completeAssignment(assignment.id, user.id))}
+													action={() => handle(db().completeAssignment(assignment.id, user.id))}
 													>Complete
 												</Button>
 											{/if}
 										{:else}
 											<Button
 												tip="Reassign this scholar"
-												action={() => handle(db.approveAssignment(assignment, true, role, user.id))}
+												action={() =>
+													handle(db().approveAssignment(assignment, true, role, user.id))}
 												>Reassign</Button
 											>
 										{/if}
@@ -357,8 +358,9 @@
 										<Button
 											tip="Accept this bid, assigning this scholar to this role for this submission."
 											action={() =>
-												user ? handle(db.approveAssignment(assignment, true, role, user.id)) : null}
-											>Assign</Button
+												user
+													? handle(db().approveAssignment(assignment, true, role, user.id))
+													: null}>Assign</Button
 										>
 									{/if}
 								</Row>

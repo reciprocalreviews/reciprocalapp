@@ -66,7 +66,7 @@
 		? {
 				placeholder: 'Name',
 				valid: (name: string) => (name.trim().length === 0 ? 'Name cannot be empty' : undefined),
-				update: (text) => db.updateScholarName(scholar.getID(), text)
+				update: (text) => db().updateScholarName(scholar.getID(), text)
 			}
 		: undefined}
 >
@@ -90,7 +90,7 @@
 		>
 		<Checkbox
 			on={scholar.isAvailable()}
-			change={(on) => db.updateScholarAvailability(scholar.getID(), on)}
+			change={(on) => db().updateScholarAvailability(scholar.getID(), on)}
 			>I am available to review.</Checkbox
 		>
 
@@ -98,7 +98,7 @@
 			inline={false}
 			text={scholar.getStatus()}
 			placeholder="Explain your current reviewing status to others."
-			edit={(text) => db.updateScholarStatus(scholar.getID(), text)}
+			edit={(text) => db().updateScholarStatus(scholar.getID(), text)}
 		/>
 	{:else}
 		<p>{scholar.getStatus()}</p>
@@ -176,7 +176,7 @@
 							purpose: string
 						) =>
 							scholar
-								? db.transferTokens(
+								? db().transferTokens(
 										scholar.getID(),
 										currency,
 										scholar.getID(),
@@ -203,7 +203,7 @@
 			inline={false}
 			note="Your email will be public and only used to send notifications."
 			valid={(text) => (validEmail(text) ? undefined : 'Must be a valid email')}
-			edit={(text) => db.updateScholarEmail(scholar.getID(), text)}
+			edit={(text) => db().updateScholarEmail(scholar.getID(), text)}
 		/>
 	{/if}
 </Page>

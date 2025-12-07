@@ -28,7 +28,7 @@
 			| undefined;
 	} = $props();
 
-	let revisedTitle = $state(title);
+	let revisedTitle = $derived(title);
 </script>
 
 <svelte:head>
