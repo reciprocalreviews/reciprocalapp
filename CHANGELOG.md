@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.1.9 2025-12-07
+
+### Maintenance
+
+- Updated minor versions of `@playwright/test`, `@supabase/ssr`, `@supabase/supabase-js`, `@sveltejs/adapter-vercel`, `@sveltejs/kit`, `prettier`, `supabase`, `svelte`, `vite`, `vitest`.
+
 ## 0.1.8 2025-11-28
 
 ### Fixed
