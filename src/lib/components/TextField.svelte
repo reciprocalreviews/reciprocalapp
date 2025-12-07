@@ -184,7 +184,7 @@
 		position: absolute;
 		top: calc(var(--spacing) / 2);
 		left: calc(var(--spacing) / 2);
-		width: 100%;
+		width: fit-content;
 		display: inline-block;
 		white-space: pre;
 		visibility: hidden;
@@ -231,15 +231,8 @@
 		border-color: var(--focus-color);
 	}
 
-	label {
-		position: relative;
-		font-style: normal;
-		display: flex;
-		flex-direction: column;
-		width: 100%;
-	}
-
 	.label {
 		font-style: italic;
+		font-size: var(--small-font-size);
 	}
 </style>

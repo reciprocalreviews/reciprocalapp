@@ -87,7 +87,11 @@
 					>
 					<Dialog bind:show={showCancel}>
 						<p>Indicate a reason and we'll append it to the transaction message.</p>
-						<TextField bind:text={cancelReason} placeholder="Reason for cancellation" />
+						<TextField
+							label="Reason"
+							bind:text={cancelReason}
+							placeholder="Reason for cancellation"
+						/>
 						<Button
 							tip="Cancel this proposed transaction"
 							warn="Cancel"

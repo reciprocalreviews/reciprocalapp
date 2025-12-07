@@ -7,21 +7,21 @@ alter type "public"."exchange_proposal_kind" OWNER to "postgres";
 -- Agreements between owners of currencies
 create table if not exists "public"."exchanges" (
 	-- The unique id of the currency
-	"id" "uuid" default "gen_random_uuid" () not null,
+	id uuid default gen_random_uuid() not null,
 	-- The time the exchange was created
-	"proposed" timestamp with time zone default "now" () not null,
+	proposed timestamp with time zone default now() not null,
 	-- Whether the minters have approved. Only set when all current active minters have approved.
-	"approved" timestamp with time zone,
+	approved timestamp with time zone,
 	-- The first currency of the exchange
-	"currency_from" "uuid" not null,
+	currency_from uuid not null,
 	-- The second currenty of the exchange
-	"currency_to" "uuid" not null,
+	currency_to uuid not null,
 	-- The multiplier to convert from currency_from to currency_to
-	"ratio" numeric not null,
+	ratio numeric not null,
 	-- List of minters who have approved
-	"approvers" "uuid" [] default '{}'::"uuid" [] not null,
+	approvers uuid[] default '{}'::uuid[] not null,
 	-- The kind of exchange
-	"kind" "public"."exchange_proposal_kind"
+	kind public.exchange_proposal_kind
 );
 
 alter table only "public"."exchanges"

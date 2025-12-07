@@ -26,6 +26,7 @@
 	import Tip from '$lib/components/Tip.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
+	import Options from '$lib/components/Options.svelte';
 
 	let {
 		venue,
@@ -83,6 +84,7 @@
 		<form>
 			<p>Create a new role.</p>
 			<TextField
+				label="Role name"
 				bind:text={newRole}
 				size={19}
 				placeholder="name"
@@ -132,6 +134,7 @@
 				<form>
 					<p>Add a new editor.</p>
 					<TextField
+						label="Scholar"
 						bind:text={newEditor}
 						size={19}
 						placeholder="ORCID or email"
@@ -321,25 +324,18 @@
 							>Allow bidding
 						</Checkbox>
 
-						<label>
-							What role can approve bids for this role, other than the editor?
-							<select
-								value={role.approver}
-								onchange={(e) =>
-									e.target instanceof HTMLSelectElement
-										? db().editRoleApprover(
-												role.id,
-												e.target.value === null ? null : e.target.value
-											)
-										: null}
-							>
-								<option value={null}>{EmptyLabel}</option>
-								{#each roles.filter((r) => r.id !== role.id) as otherRole}<option
-										value={otherRole.id}>{otherRole.name}</option
-									>{/each}</select
-							>
-						</label>
-
+						<Options
+							label="What role can approve bids for this role, other than the editor?"
+							value={role.approver ?? undefined}
+							options={[
+								{ label: EmptyLabel, value: undefined },
+								...roles
+									.filter((r) => r.id !== role.id)
+									.map((r) => ({ label: r.name, value: r.id }))
+							]}
+							onChange={(value) =>
+								db().editRoleApprover(role.id, value === null ? null : (value as RoleID))}
+						/>
 						<Note
 							>{#if role.biddable}Authenticated volunteers can bid to take this role on submissions.{:else}This
 								role can only be set for a submission by editors.{/if}</Note

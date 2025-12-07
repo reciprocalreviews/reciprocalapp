@@ -202,12 +202,11 @@
 				gap: calc(var(--spacing));
 			}
 
-			label .label {
+			label {
+				position: relative;
+				font-style: normal;
 				display: flex;
 				flex-direction: column;
-				gap: 0;
-				font-style: italic;
-				font-size: var(--small-font-size);
 			}
 
 			hr {
@@ -215,19 +214,6 @@
 				border-top: var(--border-color) solid var(--border-width);
 				width: 100%;
 				margin: 0;
-			}
-
-			select {
-				font-family: var(--font-face);
-				font-size: var(--small-font-size);
-				padding: var(--spacing);
-				border: var(--border-color) solid var(--border-width);
-				border-radius: var(--roundedness);
-				max-width: 100%;
-			}
-
-			select:focus {
-				outline: var(--focus-color) solid var(--thick-border-width);
 			}
 
 			fieldset {

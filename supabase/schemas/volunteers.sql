@@ -12,7 +12,7 @@ create table if not exists public.volunteers (
 	-- The role they volunteered for
 	roleid uuid not null,
 	-- When this record was last updated
-	created timestamp with time zone default now() not null,
+	created_at timestamp with time zone default now() not null,
 	-- Relevant expertise provided by the scholar for the role
 	expertise text not null,
 	-- If the volunteer role is active or inactive, allowing scholars to unvolunteer, then revolunteer.

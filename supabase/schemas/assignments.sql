@@ -17,7 +17,9 @@ create table if not exists public.assignments (
 	-- True if the assignment has been approved
 	approved boolean default false not null,
 	-- True if the assignment has been completed
-	completed boolean default false not null
+	completed boolean default false not null,
+	-- Timestamp when the assignment was created
+	created_at timestamp with time zone default timezone ('utc'::text, now()) not null
 );
 
 alter table public.assignments OWNER to "postgres";
@@ -99,7 +101,7 @@ for update
 with
 	check (true);
 
-create policy "editors and assignees can delete assignments" on "public"."assignments" for DELETE to "authenticated" using (
+create policy "editors and assignees can delete assignments" on "public"."assignments" for delete to "authenticated" using (
 	(
 		public.isEditor (venue)
 		or (
@@ -111,7 +113,7 @@ create policy "editors and assignees can delete assignments" on "public"."assign
 	)
 );
 
-create policy "editors and volunteers can create assignments" on "public"."assignments" for INSERT to "authenticated",
+create policy "editors and volunteers can create assignments" on "public"."assignments" for insert to "authenticated",
 "anon"
 with
 	check (

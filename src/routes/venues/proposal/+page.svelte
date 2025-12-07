@@ -10,6 +10,7 @@
 	import { getAuth } from '../../Auth.svelte';
 	import { addError } from '../../feedback.svelte';
 	import type { CurrencyID } from '$data/types';
+	import Options from '$lib/components/Options.svelte';
 
 	let { data } = $props();
 
@@ -103,15 +104,14 @@
 				valid={(text) =>
 					!validEmails(text, 1) ? 'Must be a list of comma-separated email addresses.' : undefined}
 			/>
-			<label>
-				<span class="label">currency</span>
-				<select bind:value={currency} aria-label="choose a currency or create a new one">
-					<option value={undefined} selected={currency === undefined}>create a new currency</option>
-					{#each currencies as currency}
-						<option value={currency.id}>{currency.name}</option>
-					{/each}
-				</select>
-			</label>
+			<Options
+				label="Currency"
+				bind:value={currency}
+				options={(currencies ?? []).map((currency) => ({
+					label: currency.name,
+					value: currency.id
+				}))}
+			/>
 			{#if currency === undefined}
 				<TextField
 					bind:text={minters}

@@ -10,7 +10,7 @@
 	import Card from '$lib/components/Card.svelte';
 	import { DeleteLabel, SettingsLabel, TokenLabel } from '$lib/components/Labels';
 	import { validInteger, validURLError } from '$lib/validation';
-	import { handle } from '../../feedback.svelte';
+	import { addFeedback, handle } from '../../feedback.svelte';
 	import Roles from './Roles.svelte';
 	import type { PageData } from './$types';
 	import Gift from '$lib/components/Gift.svelte';
@@ -18,6 +18,9 @@
 	import Dashboard from '$lib/components/Dashboard.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import Tip from '$lib/components/Tip.svelte';
+	import Form from '$lib/components/Form.svelte';
+	import TextField from '$lib/components/TextField.svelte';
+	import Options from '$lib/components/Options.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const { venue, currency, minters, scholar, roles, volunteers, tokens, submissionCount, venues } =
@@ -25,6 +28,13 @@
 
 	const db = getDB();
 	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
+	let isVolunteer = $derived(
+		scholar && venue && volunteers && volunteers.some((v) => v.scholarid === scholar.id)
+	);
+
+	let compensationManuscript = $state('');
+	let compensationRole = $state('');
+	let compensationNote = $state('');
 </script>
 
 {#if venue === null}
@@ -168,6 +178,54 @@
 				{currency}
 				{minters}
 			/>
+
+			{#if isVolunteer && scholar}
+				<Form>
+					<p>
+						Are you <strong>missing compensation</strong> for a role you accepted? It's possible it hasn't
+						been entered by the scholar responsible. You can request compensation for it here, and the
+						scholar responsible will be notified.
+					</p>
+
+					<TextField
+						label="Manuscript ID"
+						placeholder="The ID associated with the manuscript in your reviewing system"
+						bind:text={compensationManuscript}
+					></TextField>
+					<Options
+						label="Role"
+						options={roles.map((role) => ({
+							label: role.name,
+							value: role.id
+						}))}
+						bind:value={compensationRole}
+					/>
+					<TextField
+						label="Note"
+						placeholder="Message to the scholar responsible"
+						bind:text={compensationNote}
+					></TextField>
+					<Button
+						active={compensationManuscript.length > 0 && compensationRole.length > 0}
+						tip="Request compensation"
+						action={() =>
+							handle(
+								db().requestCompensation(
+									scholar.id,
+									venue.id,
+									compensationManuscript,
+									compensationRole,
+									compensationNote
+								)
+							).then(() => {
+								compensationManuscript = '';
+								compensationRole = '';
+								compensationNote = '';
+								addFeedback('Compensation request sent.', 'success');
+							})}>Request compensation</Button
+					>
+				</Form>
+			{/if}
 		{:else}
 			<Feedback error>Couldn't load venue's roles.</Feedback>
 		{/if}

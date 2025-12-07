@@ -354,13 +354,12 @@ export default class SupabaseCRUD extends CRUD {
 		if (stewards)
 			await this.emailScholars(
 				stewards.map((s) => s.id),
-				null,
 				'ProposalCreatedStewards',
 				[title, proposalid]
 			);
 
 		// Notify editors
-		await this.sendEmail(editors, 'ProposalCreatedEditors', null, [title, proposalid]);
+		await this.sendEmail(editors, 'ProposalCreatedEditors', [title, proposalid]);
 
 		return { data: proposalid };
 	}
@@ -483,7 +482,7 @@ export default class SupabaseCRUD extends CRUD {
 		const scholarsToEmail = [...editors, ...supportersData.map((s) => s.scholarid)];
 
 		// Send a notification email to the scholars.
-		this.emailScholars(scholarsToEmail, venueID, 'VenueApproved', [proposalData.title, venueID]);
+		this.emailScholars(scholarsToEmail, 'VenueApproved', [proposalData.title, venueID]);
 
 		return { data: venueID };
 	}
@@ -781,7 +780,7 @@ export default class SupabaseCRUD extends CRUD {
 			if (error) return { error };
 			if (data) {
 				ids.push(data);
-				this.emailScholars([scholar.id], role.venueid, 'RoleInvite', [
+				this.emailScholars([scholar.id], 'RoleInvite', [
 					role.name,
 					venue.id,
 					venue.title,
@@ -1040,7 +1039,6 @@ export default class SupabaseCRUD extends CRUD {
 			if (scholar) {
 				this.emailScholars(
 					[assignment.scholar],
-					assignment.venue,
 					approved ? 'AssignmentApproved' : 'AssignmentRemoved',
 					[
 						scholar.getName() ?? '',
@@ -1077,6 +1075,43 @@ export default class SupabaseCRUD extends CRUD {
 			.from('assignments')
 			.insert({ submission, scholar, role: roleid, bid, venue: role.venueid, approved });
 		return this.errorOrEmpty('CreateAssignment', error);
+	}
+
+	async requestCompensation(
+		scholarID: ScholarID,
+		venueID: VenueID,
+		externalManuscriptID: string,
+		roleID: RoleID,
+		note: string
+	): Promise<Result> {
+		// Is there a submission that this scholar can view with this manuscript ID?
+		const { data: submissionData, error: submissionError } = await this.client
+			.from('submissions')
+			.select()
+			.eq('externalid', externalManuscriptID);
+
+		if (submissionData === null || submissionData.length === 0)
+			return this.error('CompensationSubmissionNotFound', submissionError);
+
+		const submission = submissionData[0];
+
+		// Is there an assignment for this scholar, venue, role, and submission?
+		const { data: assignmentData, error: assignmentError } = await this.client
+			.from('assignments')
+			.select()
+			.eq('scholar', scholarID)
+			.eq('venue', venueID)
+			.eq('role', roleID)
+			.eq('submission', submission.id);
+
+		if (assignmentError) return this.error('CompensationAssignmentCheck', assignmentError);
+
+		if (assignmentData.length === 0) {
+			const result = await this.createAssignment(submission.id, scholarID, roleID, false, false);
+			if (result.error) return result;
+		}
+
+		return this.emailScholars([scholarID], 'CompensationRequested', [venueID, submission.id, note]);
 	}
 
 	async completeAssignment(assignment: AssignmentID, completer: ScholarID): Promise<Result> {
@@ -1131,12 +1166,7 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	/** Use the resend edge function to use the Resend API to send a message to the current user. */
-	async emailScholars(
-		scholars: ScholarID[],
-		venue: VenueID | null,
-		template: EmailType,
-		args: string[]
-	): Promise<Result> {
+	async emailScholars(scholars: ScholarID[], template: EmailType, args: string[]): Promise<Result> {
 		// Get the email addresses of the specified scholars.
 		let { data: scholarData, error: scholarsError } = await this.client
 			.from('scholars')
@@ -1149,14 +1179,13 @@ export default class SupabaseCRUD extends CRUD {
 			(scholar): scholar is { id: string; email: string } => scholar.email !== null
 		);
 
-		return this.sendEmail(scholarsWithEmail, template, venue, args);
+		return this.sendEmail(scholarsWithEmail, template, args);
 	}
 
 	/** Email some people who aren't scholars */
 	async sendEmail(
 		emails: string[] | { id: ScholarID; email: string }[],
 		template: EmailType,
-		venue: VenueID | null,
 		args: string[]
 	) {
 		// Make sure all the scholar emails have the shape of an email address.

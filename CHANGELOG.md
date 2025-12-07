@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Added volunteer note to landing page.
 - Added a theory of change to the about page.
+- Fixed #68: Request compensation for role.
 
 ### Fixed
 

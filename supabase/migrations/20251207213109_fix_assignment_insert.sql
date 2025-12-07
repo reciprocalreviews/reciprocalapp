@@ -7,25 +7,22 @@ with
 		(
 			public.iseditor (venue)
 			or (
-				bid
-				and (
-					exists (
-						select
-						from
-							public.volunteers
-						where
-							(
-								(volunteers.roleid=assignments.role)
-								and (
-									volunteers.scholarid=(
-										select
-											auth.uid () as uid
-									)
+				exists (
+					select
+					from
+						public.volunteers
+					where
+						(
+							(volunteers.roleid=assignments.role)
+							and (
+								volunteers.scholarid=(
+									select
+										auth.uid () as uid
 								)
-								and volunteers.active
-								and (volunteers.accepted='accepted'::public.invited)
 							)
-					)
+							and volunteers.active
+							and (volunteers.accepted='accepted'::public.invited)
+						)
 				)
 			)
 		)

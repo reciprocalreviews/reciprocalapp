@@ -22,6 +22,7 @@
 	import Tip from '$lib/components/Tip.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { validEmail, validORCID } from '$lib/validation';
+	import Options from '$lib/components/Options.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -186,8 +187,9 @@
 		<h2>Expertise</h2>
 		{#if isAuthor}
 			<EditableText
+				label="Expertise"
 				text={submission.expertise ?? ''}
-				placeholder="Expertise"
+				placeholder="Keywords and phrases describing your expertise."
 				edit={(text) =>
 					db().updateSubmissionExpertise(submission.id, text.trim().length === 0 ? null : text)}
 			/>
@@ -206,58 +208,64 @@
 					>Add a new assignment to this submission. These are restricted to the roles for which you
 					have assignment privileges.</Tip
 				>
-				<Row baseline>
-					<select bind:value={newAssignmentRole}>
-						<option value={undefined}>—</option>
-						{#each isEditor ? roles : roles.filter( (role) => isRoleApprover(role, volunteers, user.id) ) as role}
-							<option value={role.id}>{role.name}</option>
-						{/each}
-					</select>
-					<TextField
-						bind:text={newAssignmentScholar}
-						placeholder="email or ORCID"
-						valid={(emailOrORCID) =>
-							emailOrORCID.length > 0 && !validEmail(emailOrORCID) && !validORCID(emailOrORCID)
-								? 'Must be an email or ORCID'
-								: undefined}
-					></TextField>
-					<Button
-						tip="Create a new assignment for this scholar and this role."
-						active={!newAssignmentSubmitting &&
-							newAssignmentRole !== undefined &&
-							(validEmail(newAssignmentScholar) || validORCID(newAssignmentScholar))}
-						action={async () => {
-							newAssignmentSubmitting = true;
-							const role = roles.find((role) => role.id === newAssignmentRole);
+				<Options
+					label="Role"
+					value={newAssignmentRole}
+					options={[
+						{ label: '—', value: undefined },
+						...roles
+							.filter((role) => isEditor || isRoleApprover(role, volunteers, user.id))
+							.map((role) => ({
+								label: role.name,
+								value: role.id
+							}))
+					]}
+				/>
+				<TextField
+					bind:text={newAssignmentScholar}
+					label="Scholar"
+					placeholder="email or ORCID"
+					valid={(emailOrORCID) =>
+						emailOrORCID.length > 0 && !validEmail(emailOrORCID) && !validORCID(emailOrORCID)
+							? 'Must be an email or ORCID'
+							: undefined}
+				></TextField>
+				<Button
+					tip="Create a new assignment for this scholar and this role."
+					active={!newAssignmentSubmitting &&
+						newAssignmentRole !== undefined &&
+						(validEmail(newAssignmentScholar) || validORCID(newAssignmentScholar))}
+					action={async () => {
+						newAssignmentSubmitting = true;
+						const role = roles.find((role) => role.id === newAssignmentRole);
 
-							const { data: scholarID } = await db().findScholar(newAssignmentScholar);
+						const { data: scholarID } = await db().findScholar(newAssignmentScholar);
 
-							if (role === undefined) {
-								newAssignmentError = 'You must select a valid role.';
-								newAssignmentSubmitting = false;
-								return undefined;
-							} else if (scholarID === undefined) {
-								newAssignmentError = 'No scholar with that email or ORCID exists.';
-								newAssignmentSubmitting = false;
-								return undefined;
-							} else if (
-								assignments.some((v) => v.scholar === scholarID && v.role === newAssignmentRole)
-							) {
-								newAssignmentError = 'This scholar is already assigned to this role.';
-								newAssignmentSubmitting = false;
-								return undefined;
-							}
+						if (role === undefined) {
+							newAssignmentError = 'You must select a valid role.';
+							newAssignmentSubmitting = false;
+							return undefined;
+						} else if (scholarID === undefined) {
+							newAssignmentError = 'No scholar with that email or ORCID exists.';
+							newAssignmentSubmitting = false;
+							return undefined;
+						} else if (
+							assignments.some((v) => v.scholar === scholarID && v.role === newAssignmentRole)
+						) {
+							newAssignmentError = 'This scholar is already assigned to this role.';
+							newAssignmentSubmitting = false;
+							return undefined;
+						}
 
-							return handle(
-								db().createAssignment(submission.id, scholarID, role.id, false, true)
-							).then(() => {
-								newAssignmentRole = undefined;
-								newAssignmentScholar = '';
-								newAssignmentSubmitting = false;
-							});
-						}}>+ assignee</Button
-					>
-				</Row>
+						return handle(
+							db().createAssignment(submission.id, scholarID, role.id, false, true)
+						).then(() => {
+							newAssignmentRole = undefined;
+							newAssignmentScholar = '';
+							newAssignmentSubmitting = false;
+						});
+					}}>+ assignee</Button
+				>
 				{#if newAssignmentError !== undefined}<Feedback error>{newAssignmentError}</Feedback>{/if}
 			</Form>
 		{/if}
@@ -296,7 +304,8 @@
 									id={assignment.scholar}
 								/>{/if}
 							{#if assignment.completed}<Status>Completed</Status
-								>{:else if assignment.approved}<Status good={false}>Incomplete</Status>{/if}</td
+								>{:else if assignment.approved}<Status good={false}>Incomplete</Status
+								>{:else}<Status good={false}>Unapproved</Status>{/if}</td
 						>
 						<td
 							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
@@ -325,7 +334,7 @@
 												tip="Reassign this scholar"
 												action={() =>
 													handle(db().approveAssignment(assignment, true, role, user.id))}
-												>Reassign</Button
+												>Assign</Button
 											>
 										{/if}
 									{/if}
@@ -375,6 +384,6 @@
 
 <style>
 	.unapproved {
-		text-decoration: line-through;
+		font-style: italic;
 	}
 </style>

@@ -82,6 +82,8 @@ export const enUS = {
 		UpdateSubmissionStatus: "Unable to update the submission's status",
 		ApproveAssignment: 'Unable to approve the assignment',
 		CreateAssignment: 'Unable to create this assignment',
+		CompensationSubmissionNotFound: 'Unable to find the submission for compensation request',
+		CompensationAssignmentCheck: 'Could not check for an existing request.',
 		CompleteAssignmentNotFound: 'Unable to find this assignment',
 		CompleteAssignmentRoleNotFound: "Unable to find this assignment's role",
 		CompleteAssignmentVenueNotFound: "Unable to find this assignment's venue",

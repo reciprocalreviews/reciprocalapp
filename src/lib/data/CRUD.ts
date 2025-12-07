@@ -232,6 +232,15 @@ export default abstract class CRUD {
 		approved?: boolean
 	): Promise<Result>;
 
+/** Request compensation for a manuscript the scholar has volunteered for */
+	abstract requestCompensation(
+		scholar: ScholarID,
+		venue: VenueID,
+		manuscript: string,
+		role: RoleID,
+		note: string
+	): Promise<Result>;
+
 	/** Create a new assignment record */
 	abstract completeAssignment(id: AssignmentID, completer: ScholarID): Promise<Result>;
 
@@ -240,7 +249,6 @@ export default abstract class CRUD {
 	/** Send an email with the given subject and message to the authenticated scholar. */
 	abstract emailScholars(
 		scholars: ScholarID[],
-		venue: VenueID | null,
 		event: EmailType,
 		args: string[]
 	): Promise<Result>;
@@ -249,7 +257,6 @@ export default abstract class CRUD {
 	abstract sendEmail(
 		emails: string[] | { id: ScholarID; email: string }[],
 		template: EmailType,
-		venue: VenueID | null,
 		args: string[]
 	): Promise<Result>;
 }

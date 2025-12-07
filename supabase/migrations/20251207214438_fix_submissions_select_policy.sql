@@ -1,3 +1,5 @@
+drop policy "authors, editors, and bidders can view submissions" on "public"."submissions";
+
 create policy "authors, editors, and bidders can view submissions" on "public"."submissions" as permissive for
 select
 	to authenticated,

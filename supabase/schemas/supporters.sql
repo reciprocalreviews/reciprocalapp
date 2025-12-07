@@ -2,15 +2,15 @@
 -- Schema
 create table if not exists "public"."supporters" (
 	-- The unique ID of the support
-	"id" "uuid" default "gen_random_uuid" () not null,
+	id uuid default gen_random_uuid() not null,
 	-- The scholar supporting the proposal
-	"scholarid" "uuid" not null,
+	scholarid uuid not null,
 	-- The message the scholar supported
-	"message" "text" default ''::"text" not null,
+	message text default ''::text not null,
 	-- The proposal being supported
-	"proposalid" "uuid" not null,
+	proposalid uuid not null,
 	-- When this record was last updated
-	"created" timestamp with time zone default "now" () not null
+	created_at timestamp with time zone default now() not null
 );
 
 alter table "public"."supporters" OWNER to "postgres";

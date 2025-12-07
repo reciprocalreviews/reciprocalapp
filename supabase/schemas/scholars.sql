@@ -17,7 +17,7 @@ create table if not exists public.scholars (
 	-- The scholar's explanation of their availabilty
 	status text default ''::text not null,
 	-- When the scholar joined
-	"when" timestamp with time zone default now() not null,
+	created_at timestamp with time zone default now() not null,
 	-- The time the scholar last updated their status
 	status_time timestamp with time zone,
 	-- The last time the scholar was reminded about their status

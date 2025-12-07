@@ -16,6 +16,7 @@
 		VenueRow
 	} from '$data/types';
 	import Feedback from './Feedback.svelte';
+	import Options from './Options.svelte';
 
 	let {
 		tokens,
@@ -79,21 +80,24 @@
 					validEmail(text) || validORCID(text) ? undefined : 'Must be an email or ORCID'}
 			/>
 		{:else}
-			<select bind:value={venue}>
-				<option disabled selected value={undefined}> -- select a venue -- </option>
-				{#each venues as venue}
-					<option value={venue.id}>{venue.title}</option>
-				{/each}
-			</select>
+			<Options
+				bind:value={venue}
+				options={venues.map((venue) => ({
+					label: venue.title,
+					value: venue.id
+				}))}
+				label="Select a venue"
+			/>
 		{/if}
 
-		<label>
-			What currency should be used?
-			<select bind:value={currency}>
-				{#each currencies as currency}<option value={currency.id}>{currency.name}</option
-					>{/each}</select
-			>
-		</label>
+		<Options
+			bind:value={currency}
+			options={currencies.map((currency) => ({
+				label: currency.name,
+				value: currency.id
+			}))}
+			label="What currency should be used?"
+		/>
 		<Slider
 			min={1}
 			max={tokens?.filter((t) => t.currency === currency).length ?? 20}

@@ -21,6 +21,7 @@
 	import Cards from '$lib/components/Cards.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import type { ScholarID } from '$data/types';
+	import Options from '$lib/components/Options.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -113,13 +114,14 @@
 							>Be careful creating new tokens. Too many tokens per scholar will diminish the
 							incentive to earn them.</Feedback
 						>
-						<label>
-							Which venue should own the new tokens?
-							<select bind:value={newTokenOwner}>
-								{#each venues as venue}<option value={venue.id}>{venue.title}</option
-									>{/each}</select
-							>
-						</label>
+						<Options
+							label="Which venue should own the new tokens?"
+							options={venues.map((venue) => ({
+								label: venue.title,
+								value: venue.id
+							}))}
+							value={newTokenOwner}
+						/>
 						<Slider
 							min={1}
 							max={20}
@@ -190,6 +192,7 @@
 				>
 					<form>
 						<TextField
+							label="Scholar"
 							bind:text={newMinter}
 							size={19}
 							placeholder="ORCID or email"

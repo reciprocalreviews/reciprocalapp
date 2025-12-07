@@ -210,6 +210,7 @@
 				</p>
 				{#if !approved && editable}
 					<EditableText
+						label="Reason"
 						text={supporter.message}
 						placeholder="Reasons for support."
 						valid={(text) => (text.length > 0 ? undefined : 'Include a message')}

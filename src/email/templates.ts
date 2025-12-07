@@ -52,6 +52,14 @@ export const Emails = {
 			'You have been invited to the $1 role for <a href="https://reciprocal.reviews/venue/$2">$3</a>. You can accept or decline on your profile:',
 			'https://reciprocal.reviews/scholar/$4'
 		]
+	},
+	CompensationRequested: {
+		subject: 'Compensation requested for volunteer work',
+		paragraphs: [
+			"A scholar requested compensation for <a href='https://reciprocal.reviews/venue/$1/submission/$2'>this submission</a>. Here's the note they included:",
+			'"$3"',
+			"If this is a valid request, approve the assignment, evaluate their work, and if it meets your venue's standards, mark the work complete so they are compensated.",
+		]
 	}
 } satisfies Record<string, Email>;
 

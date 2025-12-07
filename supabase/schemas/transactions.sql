@@ -9,7 +9,7 @@ create table if not exists public.transactions (
 	-- The unique ID of the transaction
 	id uuid default gen_random_uuid() not null,
 	-- When the transaction was created
-	created timestamp with time zone default now() not null,
+	created_at timestamp with time zone default now() not null,
 	-- The scholar who created the transaction
 	creator uuid not null,
 	-- The scholar is giving the tokens
