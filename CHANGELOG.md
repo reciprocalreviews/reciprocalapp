@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Added
 
 - Added volunteer note to landing page.
+- Added a theory of change to the about page.
 
 ### Fixed
 
