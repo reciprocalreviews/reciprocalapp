@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.1.9 2025-12-07
 
+### Added
+
+- Added volunteer note to landing page.
+
 ### Fixed
 
 - Resolved Svelte stale reference warnings.

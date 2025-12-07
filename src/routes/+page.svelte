@@ -35,8 +35,8 @@
 			</li>
 			<li>
 				<strong>Authors spend tokens</strong> to submit manuscripts for review, splitting the cost with
-				co-authors. Or, they can gift tokens to individuals or shared pools to strategically support
-				newcomers, colleagues in crisis, or emerging topics.
+				co-authors. Or, they can gift tokens to individuals or shared pools to strategically support newcomers,
+				colleagues in crisis, or emerging topics.
 			</li>
 		</ol>
 
@@ -55,9 +55,16 @@
 		</Tip>
 
 		<Tip>
-			<strong>Don't want to set a cost?</strong> Use Reciprocal Reviews to track volunteer reviewers
-			and expertise in your community, streamlining reviewing and program committee invitations.
+			<strong>Don't want to set a cost?</strong> Use Reciprocal Reviews to track volunteer reviewers and
+			expertise in your community, streamlining reviewing and program committee invitations.
 		</Tip>
+
+		<Tip
+			><strong>We are a volunteer community</strong> of academics, not a for-profit organization.
+			Our only goal is to improve the sustainability, quality, and integrity of peer review. See our <Link
+				to="/about">about</Link
+			> page if you're interested in helping.</Tip
+		>
 	{:else}
 		<p>
 			We're a volunteer community of academics striving for more equitable and sustainable academic
