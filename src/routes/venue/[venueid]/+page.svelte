@@ -176,7 +176,7 @@
 			<h2 id="settings">Settings</h2>
 
 			<Cards>
-				<Card group="editors" icon="🎁" header="gift" note="Send tokens to a scholar">
+				<Card group="editors" icon="🎁" header="gift" note="Send tokens to a scholar" full>
 					{#if scholar && currency !== null}
 						<Gift
 							{tokens}
@@ -212,6 +212,8 @@
 					icon={SettingsLabel}
 					header="settings"
 					note="Update title, url, costs, etc."
+					expand
+					full
 				>
 					<EditableText
 						text={venue.url}

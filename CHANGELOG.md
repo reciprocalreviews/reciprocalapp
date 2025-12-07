@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Fixed
 
 - Resolved Svelte stale reference warnings.
+- Improved collapsed state of venue editor view.
 
 ### Maintenance
 
