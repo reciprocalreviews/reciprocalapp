@@ -134,7 +134,7 @@ with
 									)
 								)
 								and volunteers.active
-								and (volunteers.accepted=volunteers.accepted)
+								and (volunteers.accepted='accepted')
 							)
 					)
 				)
