@@ -82,7 +82,7 @@ select
 										from
 											public.roles
 										where
-											(submissions.venue=submissions.venue)
+											(roles.venueid=submissions.venue)
 									)
 								)
 							)
