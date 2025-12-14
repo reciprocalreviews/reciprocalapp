@@ -73,6 +73,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: calc(2 * var(--spacing));
+		align-items: start;
 		max-width: 40em;
 		margin: auto;
 	}

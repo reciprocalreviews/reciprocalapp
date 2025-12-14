@@ -3,14 +3,16 @@ import type { PageLoad } from './$types';
 export const load: PageLoad = async ({ parent, params }) => {
 	const { supabase } = await parent();
 
+	const scholarID = params.id;
+
 	// Get the scholar record
-	const { data: scholar } = await supabase.from('scholars').select().eq('id', params.id).single();
+	const { data: scholar } = await supabase.from('scholars').select().eq('id', scholarID).single();
 
 	// Get the scholar's commitments
 	const { data: commitments } = await supabase
 		.from('volunteers')
 		.select('*, roles(name, venueid)')
-		.eq('scholarid', params.id);
+		.eq('scholarid', scholarID);
 
 	const venueids = commitments
 		? commitments.map((c) => c.roles?.venueid).filter((v) => v !== undefined)
@@ -23,19 +25,19 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: minting } = await supabase
 		.from('currencies')
 		.select('*')
-		.contains('minters', [params.id]);
+		.contains('minters', [scholarID]);
 
 	// Get the scholar's editing
 	const { data: editing } = await supabase
 		.from('venues')
 		.select('id, title')
-		.contains('editors', [params.id]);
+		.contains('editors', [scholarID]);
 
 	// Get the scholar's current tokens.
 	const { data: tokens, error: tokensError } = await supabase
 		.from('tokens')
 		.select('*')
-		.eq('scholar', params.id);
+		.eq('scholar', scholarID);
 	if (tokensError) console.log(tokensError);
 
 	// Get the currencies that the tokens use
@@ -50,7 +52,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { count: transactions, error: transactionsError } = await supabase
 		.from('transactions')
 		.select('*', { count: 'exact' })
-		.or(`from_scholar.eq.${params.id},to_scholar.eq.${params.id}`);
+		.or(`from_scholar.eq.${scholarID},to_scholar.eq.${scholarID}`);
 	if (transactionsError) console.log(transactionsError);
 
 	// Get pending transactions on currencies for which the scholar is a minter
@@ -65,8 +67,17 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: submissions, error: submissionsError } = await supabase
 		.from('submissions')
 		.select('*')
-		.contains('authors', [params.id]);
+		.contains('authors', [scholarID]);
 	if (submissionsError) console.log(submissionsError);
+
+	// Get the scholar's reviewing assignments
+	const { data: reviews, error: reviewsError } = await supabase
+		.from('assignments')
+		.select('*, submissions(*)')
+		.eq('scholar', scholarID)
+		.eq('completed', false)
+		.eq('approved', true);
+	if (reviewsError) console.log(reviewsError);
 
 	return {
 		scholar,
@@ -78,6 +89,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		submissions: submissions,
 		currencies: currencies,
 		minting: minting,
-		pending: pending
+		pending: pending,
+		reviews: reviews
 	};
 };

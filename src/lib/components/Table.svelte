@@ -25,8 +25,7 @@
 	table {
 		width: 100%;
 		border-collapse: collapse;
-		margin-block-start: var(--spacing);
-		margin-block-end: var(--spacing);
+		margin: 0;
 		table-layout: auto;
 	}
 

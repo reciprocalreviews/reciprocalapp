@@ -1,9 +1,16 @@
 <script lang="ts">
-	import type { CurrencyRow, ScholarID, TransactionRow } from '$data/types';
+	import type {
+		AssignmentRow,
+		CurrencyRow,
+		ScholarID,
+		SubmissionRow,
+		TransactionRow
+	} from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { EmptyLabel } from '$lib/components/Labels';
+	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import VenueLink from '$lib/components/VenueLink.svelte';
@@ -14,12 +21,14 @@
 		commitments,
 		pending,
 		minting,
-		scholar
+		scholar,
+		reviews
 	}: {
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
 		minting: CurrencyRow[] | null;
 		pending: TransactionRow[] | null;
 		scholar: ScholarID;
+		reviews: (AssignmentRow & { submissions: SubmissionRow })[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -29,7 +38,7 @@
 
 <h2>Tasks</h2>
 
-{#if invitedCommitments.length === 0 && (pending === null || pending.length === 0)}
+{#if invitedCommitments.length === 0 && (pending === null || pending.length === 0) && (reviews === null || reviews.length === 0)}
 	<Feedback>You have no pending tasks.</Feedback>
 {:else}
 	<Tip>These are tasks you need to complete.</Tip>
@@ -72,6 +81,16 @@
 					</td>
 				</tr>
 			{/if}
+		{/each}
+
+		<!-- Show pending reviews -->
+		{#each reviews ?? [] as review}
+			<tr>
+				<td>Review</td>
+				<td>
+					<SubmissionLink submission={review.submissions} />
+				</td>
+			</tr>
 		{/each}
 	</Table>
 {/if}

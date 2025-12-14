@@ -14,6 +14,7 @@
 	import Page from '$lib/components/Page.svelte';
 	import { validEmail } from '$lib/validation';
 	import type {
+		AssignmentRow,
 		CurrencyID,
 		CurrencyRow,
 		SubmissionRow,
@@ -38,7 +39,8 @@
 		submissions,
 		currencies,
 		pending,
-		venues
+		venues,
+		reviews
 	}: {
 		scholar: Scholar;
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
@@ -50,6 +52,7 @@
 		minting: CurrencyRow[] | null;
 		pending: TransactionRow[] | null;
 		venues: VenueRow[] | null;
+		reviews: (AssignmentRow & { submissions: SubmissionRow })[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -111,22 +114,22 @@
 				title: 'submissions',
 				link: `#submissions`
 			},
-			{ number: tokens?.length, title: 'tokens', link: `#tokens` },
+			{ number: tokens?.length, title: 'Tokens', link: `#tokens` },
 			{
 				number: transactions ?? undefined,
-				title: 'transactions',
+				title: 'Transactions',
 				link: `/scholar/${scholar.getID()}/transactions`
 			}
 		]}
 	/>
 
 	{#if editable}
-		<Tasks scholar={scholar.getID()} {commitments} {minting} {pending}></Tasks>
+		<Tasks scholar={scholar.getID()} {commitments} {minting} {pending} {reviews}></Tasks>
 
 		<Commitments {commitments} {editing} {minting}></Commitments>
 	{/if}
 
-	<h2 id="submissions">submissions</h2>
+	<h2 id="submissions">Submissions</h2>
 
 	{#if submissions}
 		<ul>
@@ -140,7 +143,7 @@
 		<Feedback>Unable to load submissions.</Feedback>
 	{/if}
 
-	<h2 id="tokens">tokens</h2>
+	<h2 id="tokens">Tokens</h2>
 
 	<p>
 		{#if editable}You have{:else}This scholar has the following tokens:{/if}

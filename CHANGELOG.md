@@ -7,6 +7,8 @@ Dates should be in`YYYY-MM-DD` format.
 
 ### Added
 
+- Added approved, incomplete submission assignments to task list.
+
 ### Maintenance
 
 - Updated minor versions of `@supabase/supabase-js`, `supabase`, `@sveltejs/kit`, `svelte`, `vite`.

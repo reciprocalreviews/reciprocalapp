@@ -18,7 +18,7 @@
 	} = $props();
 </script>
 
-<h2>volunteering</h2>
+<h2>Volunteering</h2>
 
 {#if editing === null}
 	<Feedback>Unable to load editing commitments.</Feedback>
