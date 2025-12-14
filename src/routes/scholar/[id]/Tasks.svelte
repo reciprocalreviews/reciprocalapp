@@ -3,6 +3,7 @@
 		AssignmentRow,
 		CurrencyRow,
 		ScholarID,
+		ScholarRow,
 		SubmissionRow,
 		TransactionRow
 	} from '$data/types';
@@ -10,6 +11,7 @@
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { EmptyLabel } from '$lib/components/Labels';
+	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import Tip from '$lib/components/Tip.svelte';
@@ -22,13 +24,15 @@
 		pending,
 		minting,
 		scholar,
-		reviews
+		reviews,
+		approvals
 	}: {
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
 		minting: CurrencyRow[] | null;
 		pending: TransactionRow[] | null;
 		scholar: ScholarID;
 		reviews: (AssignmentRow & { submissions: SubmissionRow })[] | null;
+		approvals: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -38,7 +42,7 @@
 
 <h2>Tasks</h2>
 
-{#if invitedCommitments.length === 0 && (pending === null || pending.length === 0) && (reviews === null || reviews.length === 0)}
+{#if invitedCommitments.length === 0 && (pending === null || pending.length === 0) && (reviews === null || reviews.length === 0) && (approvals === null || approvals.length === 0)}
 	<Feedback>You have no pending tasks.</Feedback>
 {:else}
 	<Tip>These are tasks you need to complete.</Tip>
@@ -89,6 +93,18 @@
 				<td>Review</td>
 				<td>
 					<SubmissionLink submission={review.submissions} />
+				</td>
+			</tr>
+		{/each}
+
+		<!-- Show pending assignments -->
+		{#each approvals ?? [] as approval}
+			<tr>
+				<td>Approval</td>
+				<td>
+					<ScholarLink id={approval.scholars} /> pending assignment to <SubmissionLink
+						submission={approval.submissions}
+					/>
 				</td>
 			</tr>
 		{/each}

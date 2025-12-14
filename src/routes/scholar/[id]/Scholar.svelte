@@ -17,6 +17,7 @@
 		AssignmentRow,
 		CurrencyID,
 		CurrencyRow,
+		ScholarRow,
 		SubmissionRow,
 		TokenRow,
 		TransactionRow,
@@ -40,7 +41,8 @@
 		currencies,
 		pending,
 		venues,
-		reviews
+		reviews,
+		approvals
 	}: {
 		scholar: Scholar;
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
@@ -53,6 +55,7 @@
 		pending: TransactionRow[] | null;
 		venues: VenueRow[] | null;
 		reviews: (AssignmentRow & { submissions: SubmissionRow })[] | null;
+		approvals: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -124,7 +127,8 @@
 	/>
 
 	{#if editable}
-		<Tasks scholar={scholar.getID()} {commitments} {minting} {pending} {reviews}></Tasks>
+		<Tasks scholar={scholar.getID()} {commitments} {minting} {pending} {reviews} {approvals}
+		></Tasks>
 
 		<Commitments {commitments} {editing} {minting}></Commitments>
 	{/if}

@@ -15,7 +15,8 @@
 		currencies,
 		minting,
 		pending,
-		reviews
+		reviews,
+		approvals
 	} = $derived(data);
 
 	let volunteering = $derived(
@@ -54,6 +55,7 @@
 		{pending}
 		{venues}
 		{reviews}
+		{approvals}
 	/>
 {:else}
 	<h1>Oops.</h1>

@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Added
 
 - Added approved, incomplete submission assignments to task list.
+- Added pending assignment approval task to scholar task list.
 
 ### Fixed
 
