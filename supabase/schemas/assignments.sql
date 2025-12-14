@@ -65,7 +65,7 @@ grant all on FUNCTION public.isApprover (_roleid uuid) to "service_role";
 
 --------------------------------------
 -- Security
-alter table public.assignments ENABLE row LEVEL SECURITY;
+alter table public.assignments enable row level security;
 
 create policy "editors, assignees, and approvers can see assignments" on public.assignments for
 select

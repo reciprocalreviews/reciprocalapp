@@ -441,7 +441,7 @@ insert into
 		"id",
 		"scholarid",
 		"roleid",
-		"created",
+		"created_at",
 		"expertise",
 		"active",
 		"accepted"
@@ -469,7 +469,7 @@ values
 insert into
 	public.transactions (
 		"id",
-		"created",
+		"created_at",
 		"creator",
 		"from_scholar",
 		"from_venue",

@@ -39,6 +39,7 @@ export type Database = {
           approved: boolean
           bid: boolean
           completed: boolean
+          created_at: string
           id: string
           role: string
           scholar: string
@@ -49,6 +50,7 @@ export type Database = {
           approved?: boolean
           bid?: boolean
           completed?: boolean
+          created_at?: string
           id?: string
           role: string
           scholar: string
@@ -59,6 +61,7 @@ export type Database = {
           approved?: boolean
           bid?: boolean
           completed?: boolean
+          created_at?: string
           id?: string
           role?: string
           scholar?: string
@@ -315,6 +318,7 @@ export type Database = {
       scholars: {
         Row: {
           available: boolean
+          created_at: string
           email: string | null
           id: string
           name: string | null
@@ -323,10 +327,10 @@ export type Database = {
           status_reminder_time: string | null
           status_time: string | null
           steward: boolean
-          when: string
         }
         Insert: {
           available?: boolean
+          created_at?: string
           email?: string | null
           id: string
           name?: string | null
@@ -335,10 +339,10 @@ export type Database = {
           status_reminder_time?: string | null
           status_time?: string | null
           steward?: boolean
-          when?: string
         }
         Update: {
           available?: boolean
+          created_at?: string
           email?: string | null
           id?: string
           name?: string | null
@@ -347,7 +351,6 @@ export type Database = {
           status_reminder_time?: string | null
           status_time?: string | null
           steward?: boolean
-          when?: string
         }
         Relationships: []
       }
@@ -400,21 +403,21 @@ export type Database = {
       }
       supporters: {
         Row: {
-          created: string
+          created_at: string
           id: string
           message: string
           proposalid: string
           scholarid: string
         }
         Insert: {
-          created?: string
+          created_at?: string
           id?: string
           message?: string
           proposalid: string
           scholarid: string
         }
         Update: {
-          created?: string
+          created_at?: string
           id?: string
           message?: string
           proposalid?: string
@@ -482,7 +485,7 @@ export type Database = {
       }
       transactions: {
         Row: {
-          created: string
+          created_at: string
           creator: string
           currency: string
           from_scholar: string | null
@@ -495,7 +498,7 @@ export type Database = {
           tokens: string[]
         }
         Insert: {
-          created?: string
+          created_at?: string
           creator: string
           currency: string
           from_scholar?: string | null
@@ -508,7 +511,7 @@ export type Database = {
           tokens: string[]
         }
         Update: {
-          created?: string
+          created_at?: string
           creator?: string
           currency?: string
           from_scholar?: string | null
@@ -613,7 +616,7 @@ export type Database = {
         Row: {
           accepted: Database["public"]["Enums"]["invited"]
           active: boolean
-          created: string
+          created_at: string
           expertise: string
           id: string
           roleid: string
@@ -622,7 +625,7 @@ export type Database = {
         Insert: {
           accepted?: Database["public"]["Enums"]["invited"]
           active?: boolean
-          created?: string
+          created_at?: string
           expertise: string
           id?: string
           roleid: string
@@ -631,7 +634,7 @@ export type Database = {
         Update: {
           accepted?: Database["public"]["Enums"]["invited"]
           active?: boolean
-          created?: string
+          created_at?: string
           expertise?: string
           id?: string
           roleid?: string
