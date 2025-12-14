@@ -100,7 +100,7 @@
 		<!-- Show pending assignments -->
 		{#each approvals ?? [] as approval}
 			<tr>
-				<td>Approval</td>
+				<td>Assignment</td>
 				<td>
 					<ScholarLink id={approval.scholars} /> pending assignment to <SubmissionLink
 						submission={approval.submissions}
