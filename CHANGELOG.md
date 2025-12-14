@@ -14,6 +14,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Fixed submission assignment visibility.
 - Fixed assignment insertion permissions.
+- Improved usability of scholar charge interface on submission page.
 
 ### Maintenance
 

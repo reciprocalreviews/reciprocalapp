@@ -93,25 +93,33 @@ export default class SupabaseCRUD extends CRUD {
 			.select('orcid, id')
 			.in('orcid', orcids);
 		if (scholarError || scholars === null || scholars.length !== orcids.length) {
-			console.error(scholarError);
-			return this.error('ScholarNotFound', scholarError ?? undefined);
+			return this.error(
+				'ScholarNotFound',
+				scholarError ?? undefined,
+
+				orcids.filter((o) => !scholars?.some((s) => s.orcid === o)).join(', ')
+			);
 		}
 		return { data: scholars };
 	}
 
-	async verifyCharges(charges: Charge[]): Promise<true | Charge[] | undefined> {
+	async verifyCharges(charges: Charge[]): Promise<Result<true | Charge[] | undefined>> {
 		// First, find the scholars with the specified ORCIDs.
-		const { data: scholars } = await this.convertORCIDsToScholars(
+		const { data: scholars, error: scholarsError } = await this.convertORCIDsToScholars(
 			charges.map((charge) => charge.scholar)
 		);
 
+		if (scholarsError) return { error: scholarsError };
+
 		// Find the scholars that weren't found.
-		if (scholars === undefined) return undefined;
+		if (scholars === undefined) return { data: undefined };
 		if (scholars.length < charges.length)
-			return charges.map((charge) => ({
-				scholar: charge.scholar,
-				payment: scholars.some((s) => s.orcid === charge.scholar) ? charge.payment : undefined
-			}));
+			return {
+				data: charges.map((charge) => ({
+					scholar: charge.scholar,
+					payment: scholars.some((s) => s.orcid === charge.scholar) ? charge.payment : undefined
+				}))
+			};
 
 		const scholarIDs = scholars.map((scholar) => scholar.id);
 
@@ -121,8 +129,7 @@ export default class SupabaseCRUD extends CRUD {
 			.select('scholar')
 			.in('scholar', scholarIDs);
 		if (tokenError) {
-			console.error(tokenError);
-			return undefined;
+			return { error: { message: 'Missing token', details: tokenError } };
 		}
 
 		// Sum the tokens possessed by each scholar
@@ -147,10 +154,10 @@ export default class SupabaseCRUD extends CRUD {
 		});
 
 		if (deficits.some((deficit) => deficit.payment === undefined || deficit.payment < 0))
-			return deficits;
+			return { data: deficits };
 
 		// Otherwise, all is good.
-		return true;
+		return { data: true };
 	}
 
 	async createSubmission(
@@ -164,7 +171,8 @@ export default class SupabaseCRUD extends CRUD {
 	): Promise<Result<SubmissionID>> {
 		// Verify that the charges are valid.
 		const chargeError = await this.verifyCharges(charges);
-		if (chargeError !== true) return { error: { message: this.locale.error.InvalidCharges } };
+		if (chargeError.error) return { error: chargeError.error };
+		if (chargeError.data !== true) return { error: { message: this.locale.error.InvalidCharges } };
 
 		// First, find the scholars with the specified ORCIDs.
 		const { data: scholars, error: scholarsError } = await this.convertORCIDsToScholars(

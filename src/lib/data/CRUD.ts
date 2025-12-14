@@ -65,7 +65,7 @@ export default abstract class CRUD {
 	): Promise<Result>;
 
 	/** Check whether the given scholars have enough tokens for the given payments. True if so, and a list of remaining balances by scholar if not. */
-	abstract verifyCharges(charges: Charge[]): Promise<true | Charge[] | undefined>;
+	abstract verifyCharges(charges: Charge[]): Promise<Result<true | Charge[] | undefined>>;
 
 	abstract registerScholar(scholar: ScholarRow): Scholar;
 
@@ -232,7 +232,7 @@ export default abstract class CRUD {
 		approved?: boolean
 	): Promise<Result>;
 
-/** Request compensation for a manuscript the scholar has volunteered for */
+	/** Request compensation for a manuscript the scholar has volunteered for */
 	abstract requestCompensation(
 		scholar: ScholarID,
 		venue: VenueID,
@@ -247,11 +247,7 @@ export default abstract class CRUD {
 	abstract deleteAssignment(assignment: AssignmentID): Promise<Result>;
 
 	/** Send an email with the given subject and message to the authenticated scholar. */
-	abstract emailScholars(
-		scholars: ScholarID[],
-		event: EmailType,
-		args: string[]
-	): Promise<Result>;
+	abstract emailScholars(scholars: ScholarID[], event: EmailType, args: string[]): Promise<Result>;
 
 	/** Send an email to people without scholar accounts */
 	abstract sendEmail(

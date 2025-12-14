@@ -1,12 +1,19 @@
+<script module lang="ts">
+	type Charge = { scholar: string; payment: number };
+</script>
+
 <script lang="ts">
 	import type { VenueRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
+	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import Note from '$lib/components/Note.svelte';
+	import Slider from '$lib/components/Slider.svelte';
+	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { ORCIDRegex } from '$lib/data/ORCID';
-	import { isntEmpty } from '$lib/validation';
+	import { isntEmpty, validORCID } from '$lib/validation';
 	import { getAuth } from '../../../Auth.svelte';
 	import { handle } from '../../../feedback.svelte';
 
@@ -21,7 +28,7 @@
 	let expertise = $state('');
 	let externalID = $state('');
 	let previousID = $state('');
-	let charges = $state('');
+	let charges = $state<Charge[]>([{ scholar: '', payment: 0 }]);
 
 	/** True if the specified charges can be afforded, undefined if checking, string describing the problem. */
 	let affordable = $state<string | undefined | true>(undefined);
@@ -35,50 +42,44 @@
 		return id.length > 0;
 	}
 
-	function validCharges(text: string, cost: number) {
-		return cost === 0 || (validChargeFormat(text) && validCharge(text, cost));
+	function validCharges(charges: Charge[], cost: number) {
+		return cost === 0 || (validChargeFormat(charges) && validCharge(charges, cost));
 	}
 
-	function validChargeFormat(text: string) {
+	function validChargeFormat(charges: Charge[]) {
 		return (
-			text.length === 0 ||
-			text.split('\n').every((line) => {
-				const parts = line.trim().split(' ');
-				return parts.length === 2 && ORCIDRegex.test(parts[0]) && !isNaN(parseFloat(parts[1]));
+			charges.length === 0 ||
+			charges.every((charge) => {
+				return ORCIDRegex.test(charge.scholar) && !isNaN(charge.payment);
 			})
 		);
 	}
 
-	function duplicateScholars(text: string) {
-		const lines = text.split('\n');
-		return new Set(lines.map((line) => line.trim().split(' ')[0])).size !== lines.length;
+	function duplicateScholars(charges: Charge[]) {
+		const scholars = charges.map((charge) => charge.scholar);
+		return new Set(scholars).size !== scholars.length;
 	}
 
-	function validCharge(text: string, cost: number) {
+	function validCharge(charges: Charge[], cost: number) {
 		return (
-			text.trim().length === 0 ||
-			text.split('\n').reduce((sum, line) => sum + parseFloat(line.split(' ')[1]), 0) === cost
+			charges.length === 0 || charges.reduce((sum, charge) => sum + charge.payment, 0) === cost
 		);
-	}
-
-	function chargeTextToCharges(text: string): { scholar: string; payment: number }[] {
-		return text.trim().length === 0
-			? []
-			: text.split('\n').map((line) => {
-					const parts = line.split(' ');
-					return { scholar: parts[0], payment: parseFloat(parts[1]) };
-				});
 	}
 
 	async function checkAffordability() {
 		affordable = undefined;
-		const result = await db().verifyCharges(chargeTextToCharges(charges));
-		if (result === undefined) {
+		const { data, error } = await db().verifyCharges(charges);
+
+		console.log(data);
+		console.log(error);
+
+		if (error) affordable = error.message;
+		else if (data === undefined) {
 			affordable = 'An error occurred while checking balances.';
-		} else if (result !== true) {
+		} else if (data !== true) {
 			affordable =
 				'There are not enough tokens to submit: ' +
-				result
+				data
 					.filter((result) => result.payment === undefined || result.payment < 0)
 					.map((deficit) =>
 						deficit.payment === undefined
@@ -91,7 +92,7 @@
 		}
 	}
 
-	function validSubmission(title: string, externalID: string, charges: string, cost: number) {
+	function validSubmission(title: string, externalID: string, charges: Charge[], cost: number) {
 		return (
 			isntEmpty(title) &&
 			validExternalID(externalID) &&
@@ -113,6 +114,7 @@
 </ul>
 
 <Form>
+	<h3>Details</h3>
 	<TextField
 		label="submission title"
 		size={40}
@@ -143,37 +145,83 @@
 		bind:text={previousID}
 		note="The ID of the previous submission, if this is a revision and you want to track it."
 	/>
-	<TextField
-		label="payment"
-		inline={false}
-		size={40}
-		placeholder="0000-0001-1234-5678 3..."
-		bind:text={charges}
-		valid={() =>
-			affordable === true
-				? undefined
-				: charges.length === 0 && venue.submission_cost > 0
-					? 'You must specify charges for the submission.'
-					: !validChargeFormat(charges)
-						? 'Each line must be an ORCID, then a space, then a number.'
-						: duplicateScholars(charges)
-							? 'Scholars must be unique.'
-							: !validCharge(charges, venue.submission_cost)
-								? `The charges do not sum to the submission cost of ${venue.submission_cost}`
-								: affordable === undefined
-									? "When you're done, check balances below."
-									: affordable}
-		note={affordable === true
-			? 'These authors can afford this charge.'
-			: `By line, authors and how many tokens to charge each of them. Tokens must sum to ${venue.submission_cost}.`}
-	/>
+
+	<!--
+								: duplicateScholars(charges)
+									? 'Scholars must be unique.'
+									: !validCharge(charges, venue.submission_cost)
+										? `The charges do not sum to the submission cost of ${venue.submission_cost}`
+										: affordable === undefined
+											? "When you're done, check balances below."
+											: affordable}
+
+					note={affordable === true
+					? 'These authors can afford this charge.'
+					: `By line, authors and how many tokens to charge each of them. Tokens must sum to ${venue.submission_cost}.`}
+ -->
+	<h3>Payment</h3>
+	<Note>Specify the authors and how many tokens each will pay.</Note>
+	<Table>
+		{#each charges as charge, index}
+			<tr class="charge">
+				<td>
+					<TextField
+						label="author"
+						size={24}
+						placeholder="ORCID"
+						bind:text={charge.scholar}
+						valid={(text) => (validORCID(text) ? undefined : 'Invalid ORCID')}
+					/>
+				</td>
+				<td
+					><Slider
+						label="payment"
+						bind:value={charge.payment}
+						min={0}
+						max={venue.submission_cost}
+						step={1}>{charge.payment}</Slider
+					></td
+				>
+				<td
+					><Button
+						tip="Remove this author from the submission"
+						active={charges.length > 1}
+						action={() => charges.splice(index, 1)}>x</Button
+					>
+				</td>
+			</tr>
+		{/each}
+	</Table>
+
 	<Button
-		tip="Check if authors have enough tokens"
-		active={validChargeFormat(charges) &&
-			validCharge(charges, venue.submission_cost) &&
-			affordable !== true}
-		action={checkAffordability}>Check author balances</Button
+		tip="Add another author to the submission"
+		action={() => charges.push({ scholar: '', payment: 0 })}>Add author</Button
 	>
+
+	{#if duplicateScholars(charges)}
+		<Feedback error>Each author must have a unique ORCID.</Feedback>
+	{:else if charges.reduce((sum, charge) => sum + charge.payment, 0) < venue.submission_cost}
+		<Feedback error
+			>{venue.submission_cost - charges.reduce((sum, charge) => sum + charge.payment, 0)} more tokens
+			to add.</Feedback
+		>
+	{:else}
+		<Note>Verify the balance to enable submission.</Note>
+
+		<Button
+			tip="Check if authors have enough tokens"
+			active={validChargeFormat(charges) &&
+				validCharge(charges, venue.submission_cost) &&
+				affordable !== true}
+			action={checkAffordability}>Check author balances</Button
+		>
+
+		{#if typeof affordable === 'string'}<Feedback error>{affordable}</Feedback>{/if}
+	{/if}
+
+	<h3>Submit</h3>
+
+	<Note>Each author will need to approve payment.</Note>
 
 	<Button
 		tip="Create a new submission"
@@ -182,15 +230,7 @@
 		action={async () => {
 			if (user) {
 				const result = await handle(
-					db().createSubmission(
-						user,
-						title,
-						expertise,
-						venue.id,
-						externalID,
-						previousID,
-						chargeTextToCharges(charges)
-					)
+					db().createSubmission(user, title, expertise, venue.id, externalID, previousID, charges)
 				);
 
 				// Reset form if successful.
@@ -199,7 +239,7 @@
 					expertise = '';
 					externalID = '';
 					previousID = '';
-					charges = '';
+					charges = [];
 					affordable = undefined;
 				}
 
@@ -207,5 +247,10 @@
 			}
 		}}>Create this submission</Button
 	>
-	<Note>Authors will still need to approve charges.</Note>
 </Form>
+
+<style>
+	.charge td {
+		vertical-align: middle;
+	}
+</style>

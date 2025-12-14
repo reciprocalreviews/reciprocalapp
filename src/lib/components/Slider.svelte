@@ -56,7 +56,7 @@
 		display: flex;
 		flex-direction: row;
 		gap: var(--spacing);
-		align-items: baseline;
+		align-items: center;
 	}
 
 	input {
@@ -76,5 +76,7 @@
 		width: 100%;
 		position: relative;
 		overflow: hidden;
+		font-size: var(--small-font-size);
+		font-style: italic;
 	}
 </style>

@@ -2,19 +2,21 @@
 	import type { Snippet } from 'svelte';
 
 	let {
-		header,
+		header = undefined,
 		children,
 		full = false
-	}: { full?: boolean; header: Snippet; children: Snippet } = $props();
+	}: { full?: boolean; header?: Snippet; children: Snippet } = $props();
 </script>
 
 <div class="table" class:full>
 	<table>
-		<thead>
-			<tr>
-				{@render header()}
-			</tr>
-		</thead>
+		{#if header}
+			<thead>
+				<tr>
+					{@render header()}
+				</tr>
+			</thead>
+		{/if}
 		<tbody>
 			{@render children()}
 		</tbody>
@@ -27,6 +29,7 @@
 		border-collapse: collapse;
 		margin: 0;
 		table-layout: auto;
+		border: solid var(--border-color) var(--border-width);
 	}
 
 	thead tr {
