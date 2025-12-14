@@ -37,6 +37,7 @@
 		font-weight: 400;
 		text-decoration: none;
 		white-space: wrap;
+		align-self: start;
 	}
 
 	a .underline {
