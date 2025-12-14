@@ -553,4 +553,14 @@ values
 		false,
 		true,
 		false
+	),
+	(
+		'8fd037b2-2fc2-4a9d-b7f4-90ff2adc1c60',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		false,
+		false
 	);

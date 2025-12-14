@@ -663,6 +663,7 @@ export type Database = {
     }
     Functions: {
       isapprover: { Args: { _roleid: string }; Returns: boolean }
+      isassigned: { Args: { _submissionid: string }; Returns: boolean }
       iseditor: { Args: { _venueid: string }; Returns: boolean }
       isminter: {
         Args: { _currencyid: string; _scholarid: string }

@@ -52,7 +52,16 @@ create index "idx_assignments_completed" on public.assignments using "btree" (co
 create or replace function public.isApprover (_roleid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
 set
 	"search_path" to '' as $$
-    select (exists (select id from public.volunteers where scholarid = (select auth.uid()) and roleid=(select approver from public.roles where id=_roleid) and accepted = 'accepted'))
+    select (
+		exists (
+			select id 
+			from public.volunteers 
+			where 
+				scholarid = (select auth.uid()) and 
+				roleid=(select approver from public.roles where id=_roleid) and 
+				accepted = 'accepted'
+		)
+	)
 $$;
 
 alter function public.isApprover (_roleid uuid) OWNER to "postgres";
@@ -128,12 +137,18 @@ create policy "editors and assignees can delete assignments" on "public"."assign
 	)
 );
 
-create policy "editors and volunteers can create assignments" on "public"."assignments" for insert to "authenticated",
+create policy "editors, approvers, and volunteers can create assignments" on "public"."assignments" for insert to "authenticated",
 "anon"
 with
 	check (
 		(
 			public.isEditor (venue)
+			-- If the current scholar has an assigment to the role that is the approver for the new assignment's role.
+			or (
+				isApprover (role)
+				and isAssigned (submission)
+			)
+			-- If the venue permits bidding and the volunteer has the role for which this assignment is being created.
 			or (
 				bid
 				and (

@@ -56,8 +56,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 			: await supabase.from('assignments').select('*').eq('submission', submission.id);
 	if (assignmentsError) console.error(assignmentsError);
 
-	console.log('assignments:', assignments);
-
 	// Get the volunteer records of those assigned so we can render their expertise.
 	const { data: volunteers, error: volunteersError } =
 		assignments === null

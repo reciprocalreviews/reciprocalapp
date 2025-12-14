@@ -210,15 +210,16 @@
 				>
 				<Options
 					label="Role"
-					value={newAssignmentRole}
+					bind:value={newAssignmentRole}
 					options={[
 						{ label: '—', value: undefined },
-						...roles
-							.filter((role) => isEditor || isRoleApprover(role, volunteers, user.id))
-							.map((role) => ({
-								label: role.name,
-								value: role.id
-							}))
+						...(isEditor
+							? roles
+							: roles.filter((role) => isRoleApprover(role, volunteers, user.id))
+						).map((role) => ({
+							label: role.name,
+							value: role.id
+						}))
 					]}
 				/>
 				<TextField
