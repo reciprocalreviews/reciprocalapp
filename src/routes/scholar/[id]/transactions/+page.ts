@@ -10,7 +10,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.from('transactions')
 		.select()
 		.or(`from_scholar.eq.${params.id},to_scholar.eq.${params.id}`)
-		.order('created', { ascending: false });
+		.order('created_at', { ascending: false });
 	if (transactionsError) console.log(transactionsError);
 
 	const { data: venues, error: venueError } =

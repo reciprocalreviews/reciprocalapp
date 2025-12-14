@@ -5,9 +5,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	const scholarID = params.id;
 
-	// Get the scholar record
-	const { data: scholar } = await supabase.from('scholars').select().eq('id', scholarID).single();
-
 	// Get the scholar's commitments
 	const { data: volunteers } = await supabase
 		.from('volunteers')
@@ -95,7 +92,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 	if (approvalsError) console.log(approvalsError);
 
 	return {
-		scholar,
 		commitments: volunteers,
 		venues,
 		editing,

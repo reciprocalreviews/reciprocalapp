@@ -5,6 +5,8 @@
 
 	let { data } = $props();
 	let { scholar, transactions, venues, currencies } = $derived(data);
+
+	$inspect(scholar);
 </script>
 
 {#if scholar && transactions && venues}
