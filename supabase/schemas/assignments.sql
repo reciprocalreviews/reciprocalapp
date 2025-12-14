@@ -63,6 +63,20 @@ grant all on FUNCTION public.isApprover (_roleid uuid) to "authenticated";
 
 grant all on FUNCTION public.isApprover (_roleid uuid) to "service_role";
 
+create or replace function public.isAssigned (_submissionid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
+set
+	"search_path" to '' as $$
+	select (exists (select id from public.assignments where submission=_submissionid and scholar=(select auth.uid()) and approved=true))
+$$;
+
+alter function public.isAssigned (_submissionid uuid) OWNER to "postgres";
+
+grant all on FUNCTION public.isAssigned (_submissionid uuid) to "anon";
+
+grant all on FUNCTION public.isAssigned (_submissionid uuid) to "authenticated";
+
+grant all on FUNCTION public.isAssigned (_submissionid uuid) to "service_role";
+
 --------------------------------------
 -- Security
 alter table public.assignments enable row level security;
@@ -79,6 +93,7 @@ select
 						auth.uid () as "uid"
 				)
 			)
+			or public.isAssigned (submission)
 			or public.isApprover (role)
 		)
 	);
