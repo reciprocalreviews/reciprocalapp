@@ -19,7 +19,8 @@
 		"stop": "supabase stop",
 		"reset": "supabase db reset && npm run types",
 		"types": "supabase gen types typescript --local > src/data/database.ts",
-		"deploy": "git checkout main && git merge dev && git push && git checkout dev"
+		"deploy": "git checkout main && git merge dev && git push && git checkout dev",
+		"outdated": "npx check-outdated --ignore-pre-releases --columns name,type,current,latest,changes"
 	},
 	"engines": {
 		"node": ">=20.0.0"

@@ -3,6 +3,14 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.2.0 2025-12-14
+
+### Added
+
+### Maintenance
+
+- Updated minor versions of `@supabase/supabase-js`, `supabase`, `@sveltejs/kit`, `svelte`, `vite`.
+
 ## 0.1.9 2025-12-07
 
 ### Added
