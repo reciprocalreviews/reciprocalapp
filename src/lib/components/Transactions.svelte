@@ -129,7 +129,7 @@
 			<th>Purpose</th>
 			<th>Actions</th>
 		{/snippet}
-		{#each transactions.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()) as transaction}
+		{#each transactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) as transaction}
 			{@render row(transaction)}
 		{/each}
 	</Table>

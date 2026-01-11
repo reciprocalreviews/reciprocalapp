@@ -24,7 +24,7 @@ export default class Scholar {
 	}
 
 	getJoined() {
-		return this.data.when;
+		return this.data.created_at;
 	}
 
 	isAvailable() {
