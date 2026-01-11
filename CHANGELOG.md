@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.2.1 2026-01-11
 
+### Added
+
+- Fixed #33: Added volunteer export feature.
+
 ### Maintenance
 
 - Updated minor versions of `@sveltejs`, `supabase`, `@supabase/superbase-js`, `vite`, `vitest` and related dependencies.

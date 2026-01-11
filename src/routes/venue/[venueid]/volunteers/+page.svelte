@@ -10,11 +10,40 @@
 	import Status from '$lib/components/Status.svelte';
 	import { EmptyLabel, FilterLabel } from '$lib/components/Labels.js';
 	import TextField from '$lib/components/TextField.svelte';
+	import Button from '$lib/components/Button.svelte';
 
 	let { data } = $props();
 	const { venue, commitments, roles } = $derived(data);
 
 	let filter = $state('');
+
+	function exportCSV() {
+		if (commitments === null) return;
+
+		const headers = ['Name', 'Email', 'ORCID', 'Role', 'Expertise', 'Active'];
+		const rows = commitments.map((c) => [
+			c.scholars.name ?? '',
+			c.scholars.email ?? '',
+			c.scholars.orcid ?? '',
+			c.roles.name ?? '',
+			c.expertise,
+			c.active ? 'Yes' : 'No'
+		]);
+
+		const csvContent =
+			'data:text/csv;charset=utf-8,' +
+			[headers, ...rows]
+				.map((e) => e.map((v) => `"${v.replace(/"/g, '""')}"`).join(','))
+				.join('\n');
+
+		const encodedUri = encodeURI(csvContent);
+		const link = document.createElement('a');
+		link.setAttribute('href', encodedUri);
+		link.setAttribute('download', `${venue?.title ?? 'volunteers'}.csv`);
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	}
 </script>
 
 {#if venue === null}
@@ -43,6 +72,11 @@
 
 		<TextField label="{FilterLabel} filter" placeholder="name, expertise, email" bind:text={filter}
 		></TextField>
+
+		<Button
+			tip="Export the volunteer names, emails, ORCIDs, roles, expertise, and status as a CSV"
+			action={exportCSV}>Export to CSV...</Button
+		>
 
 		{@const rolesIDs = [...new Set(commitments.map((c) => c.roleid))].toSorted(
 			(a, b) =>
