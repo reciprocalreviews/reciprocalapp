@@ -8,7 +8,7 @@
 	form {
 		display: flex;
 		flex-direction: column;
-		gap: calc(2 * var(--spacing));
+		gap: var(--spacing);
 		align-items: flex-start;
 	}
 

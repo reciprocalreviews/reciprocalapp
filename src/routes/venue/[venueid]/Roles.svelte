@@ -317,7 +317,7 @@
 						<Checkbox on={role.invited} change={(on) => db().editRoleInvited(role.id, on)}
 							>Invited <Note
 								>{#if role.invited}Scholars must be invited to this role.{:else}Scholars can
-									volunteer for this without permission{/if}</Note
+									volunteer for this without invitation{/if}</Note
 							>
 						</Checkbox>
 						<Checkbox on={role.biddable} change={(on) => db().editRoleBidding(role.id, on)}
