@@ -21,14 +21,12 @@
 	{#each routes as route}<div class="link"><Link to={route.path}>{route.label}</Link></div>{/each}
 	<div
 		class="feedback"
-		title={pending === 0
-			? 'No pending actions'
-			: `${pending} pending action${pending > 1 ? 's' : ''}`}
+		title={pending === 0 ? 'No pending saves' : `${pending} pending saves${pending > 1 ? 's' : ''}`}
 	>
 		{#if pending > 0}
 			{#if pending > 1}{pending}{/if}
 			<Dots></Dots>
-		{:else}✔{/if}
+		{:else}✔ saved{/if}
 	</div>
 	<div class="authenticated">
 		{#if auth.isAuthenticated()}
@@ -75,11 +73,10 @@
 	}
 
 	.feedback {
-		font-size: x-small;
+		font-size: var(--extra-small-font-size);
 		background: var(--salient-color-faded);
-		border-radius: var(--spacing);
-		padding: 1em;
-		cursor: help;
+		border-radius: var(--roundedness);
+		padding: var(--roundedness);
 	}
 
 	.authenticated {
