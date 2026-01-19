@@ -217,8 +217,8 @@
 												{@const scholarsBid = bids?.find((a) => a.scholar === uid)}
 												<!-- If the current scholar is an approver, show the current assignemnts -->
 												{#if role.isApprover}
+													<!-- Approver? Show the people assigned. -->
 													{#each approvedAssignments as assignment}
-														<!-- Approver? Show the people assigned. Otherwise, show bidding interface. -->
 														{#if assignment.scholar === uid}you{:else}<ScholarLink
 																id={assignment.scholar}
 															/>{/if}
@@ -228,28 +228,32 @@
 												{/if}
 
 												<!-- Show bidding if the role is biddable, and there are fewer than the number of desired assignments. -->
-												{#if role.biddable && (roleAssignments === undefined || roleAssignments.length < role.desired_assignments)}
-													<!-- If the current scholar is an editor or approver for this role, show the number of bids. -->
-													{#if role.isApprover}
-														<div><strong>{bids.length}</strong> bids</div>
-													{/if}
-													{#if scholarsBid === undefined}
-														<!-- No assignments? Allow bidding -->
-														<Button
-															tip="Express interest in serving as {role?.description ??
-																'in this role'}"
-															action={() =>
-																handle(db().createAssignment(submission.id, uid, role.id, true))}
-															>Bid</Button
-														>
-													{:else if scholarsBid !== undefined && !scholarsBid.approved}
-														<!-- Shown an unbid button if not yet approved -->
-														<Button
-															tip="Remove interest in serving as {role?.description ??
-																'in this role'}"
-															action={() => handle(db().deleteAssignment(scholarsBid.id))}
-															>Unbid</Button
-														>
+												{#if role.biddable}
+													{#if roleAssignments === undefined || roleAssignments.length < role.desired_assignments}
+														<!-- If the current scholar is an editor or approver for this role, show the number of bids. -->
+														{#if role.isApprover}
+															<div><strong>{bids.length}</strong> bids</div>
+														{/if}
+														{#if scholarsBid === undefined}
+															<!-- No assignments? Allow bidding -->
+															<Button
+																tip="Express interest in serving as {role?.description ??
+																	'in this role'}"
+																action={() =>
+																	handle(db().createAssignment(submission.id, uid, role.id, true))}
+																>Bid</Button
+															>
+														{:else if scholarsBid !== undefined && !scholarsBid.approved}
+															<!-- Shown an unbid button if not yet approved -->
+															<Button
+																tip="Remove interest in serving as {role?.description ??
+																	'in this role'}"
+																action={() => handle(db().deleteAssignment(scholarsBid.id))}
+																>Unbid</Button
+															>
+														{/if}
+													{:else}
+														<div><strong>bidding closed</strong></div>
 													{/if}
 												{/if}
 											{:else}
