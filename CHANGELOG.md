@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Added
 
 - Fixed #69, properly filtering submissions based on role bidding status, assignment status, and total desired assignments.
+- Improved saved feedback.
 
 ### Maintenance
 
