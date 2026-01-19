@@ -10,6 +10,10 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed #69, properly filtering submissions based on role bidding status, assignment status, and total desired assignments.
 - Improved saved feedback.
 
+### Fixed
+
+- Clarified meaning of invite and bid.
+
 ### Maintenance
 
 - Updated minor versions of `svelte`, `@sveltejs/kit`, `prettier`, `supabase`, `vitest`.

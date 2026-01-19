@@ -14,7 +14,6 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { DeleteLabel, EmptyLabel } from '$lib/components/Labels';
-	import Note from '$lib/components/Note.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
@@ -315,10 +314,13 @@
 							><Tokens amount={role.amount}></Tokens>/submission</Slider
 						>
 						<Checkbox on={role.invited} change={(on) => db().editRoleInvited(role.id, on)}
-							>Invited <Note
-								>{#if role.invited}Scholars must be invited to this role.{:else}Scholars can
-									volunteer for this without invitation{/if}</Note
-							>
+							>{#if role.invited}Scholars must be invited to this role{:else}Scholars can volunteer
+								for this role without being invited{/if}
+						</Checkbox>
+
+						<Checkbox on={role.biddable} change={(on) => db().editRoleBidding(role.id, on)}
+							>{#if role.biddable}Volunteers can bid on submissions.{:else}Volunteers cannot bid for
+								this role on submissions.{/if}
 						</Checkbox>
 
 						<Slider
@@ -332,28 +334,18 @@
 							>{role.desired_assignments} assignments</Slider
 						>
 
-						<Checkbox on={role.biddable} change={(on) => db().editRoleBidding(role.id, on)}
-							>Allow bidding
-						</Checkbox>
-
-						{#if role.biddable}
-							<Options
-								label="What role can approve bids for this role, other than the editor?"
-								value={role.approver ?? undefined}
-								options={[
-									{ label: EmptyLabel, value: undefined },
-									...roles
-										.filter((r) => r.id !== role.id)
-										.map((r) => ({ label: r.name, value: r.id }))
-								]}
-								onChange={(value) =>
-									db().editRoleApprover(role.id, value === null ? null : (value as RoleID))}
-							/>
-							<Note
-								>{#if role.biddable}Authenticated volunteers can bid to take this role on
-									submissions.{:else}This role can only be set for a submission by editors.{/if}</Note
-							>
-						{/if}
+						<Options
+							label="What role can approve assignments to this role for a submission, other than the editor?"
+							value={role.approver ?? undefined}
+							options={[
+								{ label: EmptyLabel, value: undefined },
+								...roles
+									.filter((r) => r.id !== role.id)
+									.map((r) => ({ label: r.name, value: r.id }))
+							]}
+							onChange={(value) =>
+								db().editRoleApprover(role.id, value === null ? null : (value as RoleID))}
+						/>
 
 						<Button
 							warn="Delete this role and all volunteers?"
