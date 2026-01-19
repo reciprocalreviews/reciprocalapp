@@ -320,26 +320,40 @@
 									volunteer for this without invitation{/if}</Note
 							>
 						</Checkbox>
+
+						<Slider
+							min={1}
+							max={10}
+							value={role.desired_assignments}
+							step={1}
+							label="What is the desired number of assignments for this role? If bidding is on, it will be turned off for a submission that has this number of
+							assignments, to avoid unnecessary bids."
+							change={(value) => handle(db().editRoleDesiredAssignments(role.id, value))}
+							>{role.desired_assignments} assignments</Slider
+						>
+
 						<Checkbox on={role.biddable} change={(on) => db().editRoleBidding(role.id, on)}
 							>Allow bidding
 						</Checkbox>
 
-						<Options
-							label="What role can approve bids for this role, other than the editor?"
-							value={role.approver ?? undefined}
-							options={[
-								{ label: EmptyLabel, value: undefined },
-								...roles
-									.filter((r) => r.id !== role.id)
-									.map((r) => ({ label: r.name, value: r.id }))
-							]}
-							onChange={(value) =>
-								db().editRoleApprover(role.id, value === null ? null : (value as RoleID))}
-						/>
-						<Note
-							>{#if role.biddable}Authenticated volunteers can bid to take this role on submissions.{:else}This
-								role can only be set for a submission by editors.{/if}</Note
-						>
+						{#if role.biddable}
+							<Options
+								label="What role can approve bids for this role, other than the editor?"
+								value={role.approver ?? undefined}
+								options={[
+									{ label: EmptyLabel, value: undefined },
+									...roles
+										.filter((r) => r.id !== role.id)
+										.map((r) => ({ label: r.name, value: r.id }))
+								]}
+								onChange={(value) =>
+									db().editRoleApprover(role.id, value === null ? null : (value as RoleID))}
+							/>
+							<Note
+								>{#if role.biddable}Authenticated volunteers can bid to take this role on
+									submissions.{:else}This role can only be set for a submission by editors.{/if}</Note
+							>
+						{/if}
 
 						<Button
 							warn="Delete this role and all volunteers?"

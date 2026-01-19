@@ -286,7 +286,8 @@ insert into
 		"biddable",
 		"approver",
 		"amount",
-		"priority"
+		"priority",
+		"desired_assignments"
 	)
 values
 	(
@@ -298,7 +299,8 @@ values
 		'false',
 		null,
 		'10',
-		'0'
+		'0',
+		'1'
 	),
 	(
 		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
@@ -309,7 +311,8 @@ values
 		'true',
 		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
 		'10',
-		'0'
+		'0',
+		'3'
 	);
 
 insert into

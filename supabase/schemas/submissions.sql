@@ -52,13 +52,16 @@ select
 	to "authenticated",
 	"anon" using (
 		(
+			-- Authors can see their own submissions
 			(
 				(
 					select
 						auth.uid () as uid
 				)=any (authors)
 			)
+			-- Editors can see all submissions in their venue
 			or public.isEditor (venue)
+			-- Volunteers with accepted biddable roles for the submission's venue
 			or (
 				exists (
 					select
@@ -83,7 +86,28 @@ select
 											public.roles
 										where
 											(roles.venueid=submissions.venue)
+											and roles.biddable=true
 									)
+								)
+							)
+						)
+				)
+			)
+			-- Scholars assigned to the submission
+			or (
+				exists (
+					select
+						assignments.id
+					from
+						public.assignments
+					where
+						(
+							(assignments.submission=submissions.id)
+							and (assignments.approved=true)
+							and (
+								assignments.scholar=(
+									select
+										auth.uid () as uid
 								)
 							)
 						)

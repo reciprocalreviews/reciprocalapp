@@ -18,7 +18,9 @@ create table if not exists public.roles (
 	-- The token compensation for a commitment, in the venue's currency
 	amount integer not null,
 	-- The presentation order of the role, lower is more important
-	priority integer default 0 not null
+	priority integer default 0 not null,
+	-- The number of assignments after which bidding should be turned off. Null for no limit.
+	desired_assignments integer not null default 1
 );
 
 alter table only public.roles

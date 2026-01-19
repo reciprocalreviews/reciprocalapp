@@ -622,6 +622,14 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditRoleBidding', error);
 	}
 
+	async editRoleDesiredAssignments(id: RoleID, desiredAssignments: number) {
+		const { error } = await this.client
+			.from('roles')
+			.update({ desired_assignments: desiredAssignments })
+			.eq('id', id);
+		return this.errorOrEmpty('EditRoleDesiredAssignments', error);
+	}
+
 	async editRoleApprover(id: RoleID, approver: RoleID | null) {
 		const { error } = await this.client.from('roles').update({ approver }).eq('id', id);
 		return this.errorOrEmpty('EditRoleApprover', error);

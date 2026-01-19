@@ -270,6 +270,7 @@ export type Database = {
           approver: string | null
           biddable: boolean
           description: string
+          desired_assignments: number
           id: string
           invited: boolean
           name: string
@@ -281,6 +282,7 @@ export type Database = {
           approver?: string | null
           biddable?: boolean
           description?: string
+          desired_assignments?: number
           id?: string
           invited: boolean
           name?: string
@@ -292,6 +294,7 @@ export type Database = {
           approver?: string | null
           biddable?: boolean
           description?: string
+          desired_assignments?: number
           id?: string
           invited?: boolean
           name?: string

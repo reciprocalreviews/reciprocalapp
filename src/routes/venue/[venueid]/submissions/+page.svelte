@@ -75,6 +75,7 @@
 	let sortOrder = $state<('payment' | 'title' | 'id')[]>(['title', 'id', 'payment']);
 	let filter = $state('');
 
+	/** Sort and filter submissions based on the configuration */
 	function sortedAndFiltered(submissions: SubmissionRow[]): SubmissionRow[] {
 		const trimmedFilter = filter.trim().toLowerCase();
 		const subs = submissions.filter(
@@ -226,8 +227,8 @@
 													{/each}
 												{/if}
 
-												<!-- Show bidding if the role is biddable, as bidding is public. -->
-												{#if role.biddable}
+												<!-- Show bidding if the role is biddable, and there are fewer than the number of desired assignments. -->
+												{#if role.biddable && (roleAssignments === undefined || roleAssignments.length < role.desired_assignments)}
 													<!-- If the current scholar is an editor or approver for this role, show the number of bids. -->
 													{#if role.isApprover}
 														<div><strong>{bids.length}</strong> bids</div>

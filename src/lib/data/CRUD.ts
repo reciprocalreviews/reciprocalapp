@@ -137,6 +137,7 @@ export default abstract class CRUD {
 	abstract editRoleInvited(id: RoleID, on: boolean): Promise<Result>;
 	abstract editRoleBidding(id: RoleID, bidding: boolean): Promise<Result>;
 	abstract editRoleApprover(id: RoleID, approver: RoleID | null): Promise<Result>;
+	abstract editRoleDesiredAssignments(id: RoleID, bidLimit: number | null): Promise<Result>;
 	abstract editRoleAmount(id: RoleID, amount: number): Promise<Result>;
 	abstract reorderRole(role: RoleRow, roles: RoleRow[], direction: -1 | 1): Promise<Result>;
 	abstract deleteRole(id: RoleID): Promise<Result>;
