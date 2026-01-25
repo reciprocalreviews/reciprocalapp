@@ -2,14 +2,14 @@
 -- Schema
 create table if not exists "public"."currencies" (
 	-- The unique id of the currency
-	"id" "uuid" default "gen_random_uuid" () not null,
+	id uuid default "gen_random_uuid" () not null,
 	-- The name of the currency
-	"name" "text" default ''::"text" not null,
+	name text default ''::"text" not null,
 	-- The description of the currency
-	"description" "text" default ''::"text" not null,
+	description text default ''::"text" not null,
 	-- The minters of the currency, corresponding to scholar is in the scholars table. Must be at least one minter.
-	"minters" "uuid" [] default '{}'::"uuid" [] not null,
-	constraint "currencies_minters_check" check (("cardinality" ("minters")>0))
+	minters uuid[] default '{}'::"uuid" [] not null,
+	constraint currencies_minters_check check (("cardinality" ("minters")>0))
 );
 
 alter table "public"."currencies" OWNER to "postgres";

@@ -92,30 +92,39 @@ There are several key types of data in RR.
 `Scholars` are individuals in a research community who are identified by an [ORCID](https://orcid.org/).
 
 - [x] Scholars can volunteer to review for a `Venue`
-- [ ] Scholars can spend and earn `Token`s for that volunteer work
+- [x] Scholars can spend and earn `Token`s for that volunteer work
 - [x] Scholars can receive `Token`s as gifts
 - [x] Scholars can spend `Token`s to submit manuscripts for peer review.
 - [x] Scholars can also have _`editor`_ status on a `Venue`, which gives them the ability to manage the `transaction`s and `submission`s in a `Venue`.
 - [x] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
-- [ ] An individual scholar cannot be both an _`editor`_ and a _`minter`_, as this would allow editors to enrich themselves without oversight. Scholars can specify an email address for communication.
+- [x] An individual scholar cannot be both an _`editor`_ and a _`minter`_, as this would allow editors to enrich themselves without oversight.
+- [x] Scholars can specify an email address for communication.
 - [x] Anyone can view a `Scholar`'s record, but only `Scholars` can create, update, or delete their record.
 
 Here is a SQL schema sketch, for clarity:
 
 ```sql
-create table scholars (
-  -- The internal unique ID for scholars, corresponding to an auth record
-  id uuid not null references auth(id) primary key on delete cascade,
-  -- The scholar's ORCID, a 16-digit number with dashes conforming to the ISO International Standard Name Identifier (ISNI) format, e.g. 0000-0001-2345-6789. References the foreign key on a hypothetical 'auth' table storing authentication details.
-  orcid text not null,
-  -- The scholar's optional preferred email address for review requests
-  email text default null,
-  -- Whether the scholar is available to review
-  available boolean not null default true,
-  -- The scholar's explanation of their availabilty
-  status text not null default '':text,
-  -- The scholar's steward status
-  steward boolean not null default false
+create table (
+	-- The unique auth ID for scholars, corresponding to an auth record on the auth table in Supabase.
+	id uuid not null,
+	-- The scholar's ORCID, a 16-digit number with dashes conforming to the ISO International Standard Name Identifier (ISNI) format, e.g. 0000-0001-2345-6789.
+	orcid text,
+	-- The scholar's public name
+	name text,
+	-- The scholar's optional and public preferred email address for review requests
+	email text,
+	-- Whether the scholar is available to review
+	available boolean default true not null,
+	-- Whether the scholar is a steward
+	steward boolean default false not null,
+	-- The scholar's explanation of their availabilty
+	status text default ''::text not null,
+	-- When the scholar joined
+	created_at timestamp with time zone default now() not null,
+	-- The time the scholar last updated their status
+	status_time timestamp with time zone,
+	-- The last time the scholar was reminded about their status
+	status_reminder_time timestamp with time zone
 );
 ```
 
@@ -128,68 +137,34 @@ A `Venue` is a named and curated collection of manuscripts undergoing peer revie
 - [x] `Venue`s can be proposed, but aren't created until approved.
 - [x] `Venue`s can have one or more volunteer roles, which are helpful for distinguishing between different types of volunteering for a venue (e.g., reviewer, reviewer for track A, meta-reviewer for track B)
 - [x] When a `Scholar` volunteers for a `Venue`, they do so for a particular role, with a particular commitment, and optionally with a number of papers they are committing to review. Volunteering for a venue can also include a statement of expertise relevant to the role.
+- [x] Venues can be set to keep reviewer assignments hidden or visible to authors
 
 Here is a SQL sketch of all of the tables involved in this.
 
 ```sql
-
--- only platform stewards can create venues
--- anyone can view venues
--- only platform stewards and editors can update venues
--- only platform stewards and editors can delete venues
 create table venues (
-  -- The unique ID of the venue
-  id uuid not null default gen_random_uuid() primary key,
-  -- The title of the venue
-  title text not null default ''::text,
-  -- The description of the venue
-  description text not null default ''::text,
-  -- A link to the venue's official web page
-  url text not null default ''::text,
-  -- The id of the currency the venue is currently using
-  currency uuid not null references currencies(id),
-  -- The optional amount of newly minted tokens granted to new volunteers
-  welcome_amount integer not null,
-  -- Whether the the venue permits public bidding on submissions
-  bidding boolean not null default true,
-  -- One or more scholars who serve as editors of the venue
-  editors uuid[] not null default '{}'::uuid[] check (cardinality(editors) > 0)
-);
-
--- only editors can create venue roles
--- anyone can view venue roles
--- only editors can update venue roles
--- only editors can delete venue roles
-create table roles (
-  -- The unique id of the role
-  id uuid not null default gen_random_uuid() primary key,
-  -- The ID of the venue
-  venueid uuid not null references venues(id) on delete cascade,
-  -- The name of the role
-  name text not null default ''::text,
-  -- The rich text description of the role,
-  description text not null default ''::text,
-  -- Whether the role is invite only
-  invited boolean not null
-);
-
--- editors can invite and volunteers if not invite only
--- anyone can view volunteers
--- only volunteers can update
--- editors and volunteers can delete
-create table volunteers (
-  -- The id of the scholar who volunteered
-  scholarid uuid not null references scholars(id) on delete cascade,
-  -- The role they volunteered for
-  roleid uuid not null references roles(id) on delete cascade,
-  -- The id of the venue volunteered for
-  venueid uuid not null references venues(id) on delete cascade,
-  -- When this record was last updated
-  created timestamp with time zone not null default now(),
-  -- Relevant expertise provided by the scholar for the role
-  expertise text not null,
-  -- Optionally, how many submissions they wish to review in the role
-  count integer default null
+	-- The unique ID of the venue
+	id uuid default gen_random_uuid() not null,
+	-- The title of the venue
+	title text default ''::text not null,
+	-- The description of the venue
+	description text default ''::text not null,
+	-- A link to the venue's official web page
+	url text default ''::text not null,
+	-- The id of the currency the venue is currently using
+	currency uuid not null,
+	-- The optional amount of newly minted tokens granted to new volunteers
+	welcome_amount integer not null,
+	-- The amount of tokens granted for each submission for an editor.
+	edit_amount integer default 1 not null,
+	-- Submission cost in the venue's currency
+	submission_cost integer default 0 not null,
+	-- One or more scholars who serve as editors of the venue
+	editors uuid[] default '{}'::uuid[] not null,
+	-- Whether the venue is active; null if so, text if not, explaining why.
+	inactive text default 'This venue is being configured.'::text,
+	-- There must be at least one editor
+	constraint venues_editors_check check (cardinality(editors)>0)
 );
 
 -- anyone can propose venues
@@ -197,14 +172,22 @@ create table volunteers (
 -- stewards can update proposals
 -- stewards can delete proposals
 create table proposals (
-  -- The unique ID of the venue
-  id uuid not null default gen_random_uuid() primary key,
-  -- The title of the venue
-  title text not null default ''::text,
-  -- The email addresses of editors responsible for the venue
-  emails text not null default ''::text,
-  -- The estimated size of the research community,
-  census integer not null
+	-- The unique ID of the venue
+	id uuid default "gen_random_uuid" () not null,
+	-- The title of the venue
+	title text default ''::"text" not null,
+	-- A link to the venue's official web page
+	url text default ''::"text" not null,
+	-- The email addresses of editors responsible for the venue
+	editors text[] default '{}'::"text" [] not null,
+	-- The email addresses of minters for the new currency
+	minters text[] default '{}'::"text" [] not null,
+	-- The id of the existing currency to use for the venue, if any
+	currency uuid,
+	-- The estimated size of the research community,
+	census integer not null,
+	-- If set, corresponds to the venue created upon approval.
+	venue uuid
 );
 
 -- anyone can support proposals
@@ -212,16 +195,64 @@ create table proposals (
 -- supporters can update support
 -- supports can stop supporting
 create table supporters (
-    -- The unique ID of the support
-    id uuid not null default gen_random_uuid() primary key,
-    -- The scholar supporting the proposal
-    scholarid uuid not null references scholars(id) on delete cascade,
-    -- The message the scholar supported
-    message text not null default ''::text,
-    -- The proposal being supported
-    proposalid uuid not null references proposals(id) on delete cascade
+	-- The unique ID of the support
+	id uuid default gen_random_uuid() not null,
+	-- The scholar supporting the proposal
+	scholarid uuid not null,
+	-- The message the scholar supported
+	message text default ''::text not null,
+	-- The proposal being supported
+	proposalid uuid not null,
+	-- When this record was last updated
+	created_at timestamp with time zone default now() not null
+);
+```
+
+## Roles and volunteers
+
+- [ ] Volunteer access to submission
+
+```sql
+create table roles (
+	-- The unique id of the role
+	id uuid default gen_random_uuid() not null,
+	-- The ID of the venue
+	venueid uuid not null,
+	-- The name of the role
+	name text default ''::text not null,
+	-- The rich text description of the role
+	description text default ''::text not null,
+	-- Whether the role is invite only. If true, only editors can invite scholars to the role.
+	invited boolean not null,
+	-- Whether the role is biddable. If true, scholars can bid on submissions with the role.
+	biddable boolean default false not null,
+	-- The role that can approve assignments to this role
+	approver uuid,
+	-- The token compensation for a commitment, in the venue's currency
+	amount integer not null,
+	-- The presentation order of the role, lower is more important
+	priority integer default 0 not null,
+	-- The number of assignments after which bidding should be turned off. Null for no limit.
+	desired_assignments integer not null default 1
 );
 
+create table volunteers (
+	-- The unique id of the role
+	id uuid default gen_random_uuid() not null,
+	-- The id of the scholar who volunteered
+	scholarid uuid not null,
+	-- The role they volunteered for
+	roleid uuid not null,
+	-- When this record was last updated
+	created_at timestamp with time zone default now() not null,
+	-- Relevant expertise provided by the scholar for the role
+	expertise text not null,
+	-- If the volunteer role is active or inactive, allowing scholars to unvolunteer, then revolunteer.
+	-- Allows us to keep the record of volunteering without granting newcomer tokens more than once.
+	active boolean default true not null,
+	-- Whether this role as been accepted by the scholar
+	accepted public.invited default 'accepted'::public.invited not null
+);
 ```
 
 ## Currencies
@@ -235,35 +266,37 @@ Here is a SQL sketch, for clarity:
 
 ```sql
 create table currencies (
-  -- The unique id of the currency
-  id uuid not null default gen_random_uuid() primary key,
-  -- The name of the currency
-  name text not null default ''::text,
-  -- The minters of the currency, corresponding to scholar is in the scholars table. Must be at least one minter.
-  minters uuid[] not null default '{}'::uuid[] check (cardinality(minters) > 0)
+	-- The unique id of the currency
+	id uuid default "gen_random_uuid" () not null,
+	-- The name of the currency
+	name text default ''::"text" not null,
+	-- The description of the currency
+	description text default ''::"text" not null,
+	-- The minters of the currency, corresponding to scholar is in the scholars table. Must be at least one minter.
+	minters uuid[] default '{}'::"uuid" [] not null,
+	constraint currencies_minters_check check (("cardinality" ("minters")>0))
 );
-
 -- Three types of exchanges to propose
 create type exchange_proposal_kind as enum ('create', 'modify', 'merge');
 
 -- Agreements between owners of currencies
 create table exchanges (
-  -- The unique id of the currency
-  id uuid not null default gen_random_uuid() primary key,
-  -- The time the exchange was created
-  proposed timestamp with time zone not null default now(),
-  -- Whether the minters have approved. Only set when all current active minters have approved.
-  approved timestamp with time zone default null,
-  -- The first currency of the exchange
-  currency_from uuid not null references currencies(id),
-  -- The second currenty of the exchange
-  currency_to uuid not null references currencies(id),
-  -- The multiplier to convert from currency_from to currency_to
-  ratio decimal	not null,
-  -- List of minters who have approved
-  approvers uuid[] not null default '{}'::uuid[],
-  -- If a proposal, what kind
-  kind exchange_proposal_kind
+	-- The unique id of the currency
+	id uuid default gen_random_uuid() not null,
+	-- The time the exchange was created
+	proposed timestamp with time zone default now() not null,
+	-- Whether the minters have approved. Only set when all current active minters have approved.
+	approved timestamp with time zone,
+	-- The first currency of the exchange
+	currency_from uuid not null,
+	-- The second currenty of the exchange
+	currency_to uuid not null,
+	-- The multiplier to convert from currency_from to currency_to
+	ratio numeric not null,
+	-- List of minters who have approved
+	approvers uuid[] default '{}'::uuid[] not null,
+	-- The kind of exchange
+	kind public.exchange_proposal_kind
 );
 ```
 
@@ -283,17 +316,16 @@ Here is a SQL sketch, for clarity:
 
 ```sql
 create table tokens (
-  -- The unique ID of the token
-  id uuid not null default gen_random_uuid() primary key,
-  -- The currency that the token is in
-  currency uuid not null references currencies(id),
-  -- The scholar that currently possess the token, or null, representing no one
-  scholar uuid references scholars(id),
-  -- The venue that currently posses the token, or null
-  venue uuid references venues(id),
-  -- Require that there is one owner
-  constraint check_owner check (num_nonnulls(scholar, venue) = 1)
-
+	-- The unique ID of the token
+	id uuid default gen_random_uuid () not null,
+	-- The currency that the token is in
+	currency uuid not null,
+	-- The scholar that currently possess the token, or null, representing no one
+	scholar uuid,
+	-- The venue that currently posses the token, or null
+	venue uuid,
+	-- Require that there is either a scholar or venue owner, but not both
+	constraint "check_owner" check ((num_nonnulls (scholar, venue) = 1))
 );
 ```
 
@@ -311,26 +343,27 @@ Here is a SQL schema sketch, for clarity:
 
 ```sql
 create table transactions (
-  -- The unique ID of the transaction
-  id uuid not null default gen_random_uuid() primary key,
-  -- The scholar who gave the tokens
-  from_scholar uuid references scholars(id),
-  -- The venue who gave the tokens
-  from_venue uuid references venues(id),
-  -- Require that there is either a scholar or venue source but not both
-  constraint check_from check (num_nonnulls(from_scholar, from_venue) = 1),
-  -- The scholar who received the tokens,
-  to_scholar uuid references scholars(id),
-  -- The venue that received the tokens,
-  to_venue uuid references venues(id),
-  -- Require that there is either a scholar or venue destination but not both
-  constraint check_to check (num_nonnulls(to_scholar, to_venue) = 1),
-  -- An array of token ids moved in the transaction
-  tokens uuid[] not null default '{}',
-  -- The currency the amount is in
-  currency uuid not null references currencies(id),
-  -- The purpose of the transaction
-  purpose text not null
+	-- The unique ID of the transaction
+	id uuid default gen_random_uuid() not null,
+	-- When the transaction was created
+	created_at timestamp with time zone default now() not null,
+	-- The scholar who created the transaction
+	creator uuid not null,
+	-- The scholar is giving the tokens
+	from_scholar uuid,
+	-- The venue giving the tokens
+	from_venue uuid,
+	-- The scholar who received the tokens,
+	to_scholar uuid,
+	-- The venue that received the tokens,
+	to_venue uuid,
+	-- An array of token ids moved in the transaction. If the null UUID, then tokens haven't been determined yet.
+	tokens uuid[] not null,
+	-- The currency the amount is in
+	currency uuid not null,
+	-- The purpose of the transaction, containing any information necessary for approval of the transaction by the from source
+	-- Can also be used to specify the reason for cancelation.
+	purpose text not null
 );
 ```
 
@@ -345,7 +378,8 @@ A `Submission` represents a manuscript undergoing peer review.
 - [x] `Submission`s can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
 - [x] `Submission`s can be added manually by \_`editor`\_s.
 - [x] Bids on submissions can be approved by editors
-- [ ] Bids on submissions can be approved by roles that are set to be approving roles for another role (e.g., Associate Editors can approve bids from Reviewers)
+- [x] Bids on submissions can be approved by roles that are set to be approving roles for another role (e.g., Associate Editors can approve bids from Reviewers)
+- [x] Scholars can declare conflicts on submissions visible to them, preventing them from seeing those submissions' assignments if a venue is set to preserve reviewer anonymity
 - [ ] ([#41](https://github.com/reciprocalreviews/reciprocalapp/issues/41)): Submissions can be proposed through email integrations with review systems, which provide submission metadata, but must then be approved by editors
 
 Here is a SQL schema sketch, for clarity:
@@ -353,31 +387,57 @@ Here is a SQL schema sketch, for clarity:
 ```sql
 -- Individual submissions under review
 create table submissions (
-  -- The unique ID of the submission
-  id uuid not null default gen_random_uuid() primary key,
-  -- The venue to which the submission corresponds
-  venue uuid not null references venues(id),
-  -- The external identifier of the submission, such as a submission number or manuscript number
-  externalid text not null,
-  -- An optional title for public bidding,
-  title text default null,
-  -- An optional description of expertise required for public bidding
-  expertise text default null
+	-- The unique ID of the submission
+	id uuid not null default gen_random_uuid() primary key,
+	-- The venue to which the submission corresponds
+	venue uuid not null references venues (id),
+	-- The external unique identifier of the submission, such as a submission number or manuscript number
+	externalid text not null,
+	-- An optional link to a previous external submission id
+	previousid text default null,
+	-- The scholars associated with the submission
+	authors uuid[] not null check (cardinality(authors)>0),
+	-- The token amounts proposed for the submission, corresponding to the authors
+	payments integer[] not null check (cardinality(payments)=cardinality(authors)),
+	-- The transactions corresponding to the payments, corresponding to the authors. Null uuid of not yet paid.
+	transactions uuid[] not null check (cardinality(transactions)=cardinality(authors)),
+	-- An optional title for public bidding
+	title text not null default ''::text,
+	-- An optional description of expertise required for public bidding
+	expertise text default null,
+	-- The status of the submission in relation to payments.
+	status submission_status not null default 'reviewing'
 );
 
 -- Individuals who could be assigned to review a particular paper
-create table assignments (
-  -- The unique ID of the bid
-  id uuid not null default gen_random_uuid() primary key,
-  -- The submission bid on
-  submissionid uuid not null references submissions(id),
-  -- The scholar who bid
-  scholarid uuid not null references scholars(id),
-  -- The role for which the bid occurred
-  roleid uuid not null references roles(id),
-  -- False if assigned, true if a bid by the reviewer.
-  bid boolean not null default false
+create table if not exists public.assignments (
+	-- The unique ID of the bid
+	id uuid default gen_random_uuid() not null,
+	-- The venue to which this assignment corresponds
+	venue uuid not null,
+	-- The submission bid on
+	submission uuid not null,
+	-- The scholar who bid
+	scholar uuid not null,
+	-- The role for which the bid occurred
+	role uuid not null,
+	-- True if a bid by the reviewer.
+	bid boolean default false not null,
+	-- True if the assignment has been approved
+	approved boolean default false not null,
+	-- True if the assignment has been completed
+	completed boolean default false not null,
+	-- Timestamp when the assignment was created
+	created_at timestamp with time zone default timezone ('utc'::text, now()) not null
 );
+
+-- Conflicts on submissions
+create table conflicts (
+  -- The submission on for which there is a conflict
+  submissionid uuid not null references submissions (id),
+  -- The scholar for which there is a conflict
+  scholarid uuid not null references scholars (id)
+)
 ```
 
 # Routes
@@ -496,13 +556,13 @@ When a venue is **approved** state:
 
 - [x] _`editor`_: Modify the venue name, description
 - [x] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one
-- [ ] _`editor`_ ([#42](https://github.com/reciprocalreviews/reciprocalapp/issues/42)): Set the state to inactive
+- [x] _`editor`_: Set the state to inactive
 
-- [ ] _`editor`_ ([#33](https://github.com/reciprocalreviews/reciprocalapp/issues/33)): Export the list of reviewers as a CSV file for use on other plaforms, including ORCID, name, email, expertise, role, commitment, and paper count.
+- [x] _`editor`_: Export the list of reviewers as a CSV file for use on other plaforms, including ORCID, name, email, expertise, role, commitment, and paper count.
 - [x] _`editor`_: Create roles for the venue.
 - [x] _`editor`_: Edit the descriptions of roles.
 - [x] _`editor`_: Delete a role, confirming they understand that all volunteers will be removed from the role.
-- [ ] _`editor`_ ([#32](https://github.com/reciprocalreviews/reciprocalapp/issues/32)): Invite one or more `Scholar`s by ORCID to a particular role.
+- [x] _`editor`_ ([#32](https://github.com/reciprocalreviews/reciprocalapp/issues/32)): Invite one or more `Scholar`s by ORCID to a particular role.
 - [x] _`editor`_: Invite one or more `Scholar`s by email to a particular role.
 - [x] _`editor`_: Gift tokens from the venue to a scholar
 
@@ -517,7 +577,7 @@ When a venue is **approved** state:
 
 When a venue is in an _inactive_ state:
 
-- [ ] ([#42](https://github.com/reciprocalreviews/reciprocalapp/issues/42)) Communicate that it is inactive.
+- [x] ([#42](https://github.com/reciprocalreviews/reciprocalapp/issues/42)) Communicate that it is inactive.
 
 ## Currency `/currency/[currencyid]`
 
@@ -556,8 +616,8 @@ The purpose of this page is to allow for management of all `Transaction`s associ
 **FUNCTIONALITY**. The transactions page for a venue should allow for:
 
 - [x] _`editor`_, _`minter`_: View all transactions
-- [ ] _`minter`_ ([#43](https://github.com/reciprocalreviews/reciprocalapp/issues/43)): Approve pending transactions that do not involve the scholar approving
-- [ ] _`minters`_ ([#44](https://github.com/reciprocalreviews/reciprocalapp/issues/44)): Send email reminders about unfinished transactions and work at a customizable frequency.
+- [x] _`minter`_: Approve pending transactions that do not involve the scholar approving
+- [x] _`minters`_: Send email reminders about unfinished transactions and work at a customizable frequency.
 
 ## `/venue/[id]/submissions`
 
@@ -569,17 +629,17 @@ The purpose of the submissions page is to help scholars see all active submissio
 It should should:
 
 - [x] Show the total number of active submissions in the system.
-- [ ] _`editor`_ ([#45](https://github.com/reciprocalreviews/reciprocalapp/issues/45)): Filter submissions by whether they are active, by author, reviewer, etc.
+- [x] _`editor`_: Filter submissions by whether they are active, by author, reviewer, etc.
 - [x] _`editor`_: Manually add a new submission, including all of the transactions, the manuscript ID specific to the venue, the scholar authors of the submission, and how much each author is contributing. (This is to overcome integration failures, or submisions managed outside of normal reviewing platform flows.)
+- [x] _`editor`_: Resolve a specific submission, generating transactions to compensate scholars for their reviewing labor
 - [ ] _`editor`_: Submit bulk `Submission`s to the system, allowing more than one at a time
-- [ ] _`editor`_: Resolve a specific submission, generating transactions to compensate scholars for their reviewing labor
 - [ ] _`editor`_: Resolve bulk submissions, generating transactions for multiple existing submissions
 - [ ] _`editor`_ ([#41](https://github.com/reciprocalreviews/reciprocalapp/issues/41)): View transaction templates for each transaction type ot include in email text on other platform's email templates
 
 If the `Venue` is set to be public:
 
 - [x] _`scholar`_: View specific active submissions and the topic and method expertise required (but not submission titles), sorted by submissions most in need of reviews
-- [ ] _`scholar`_: Bid on active submissions based on expertise required
+- [x] _`scholar`_: Bid on active submissions based on expertise required
 
 ## Submission `/venue/[venueid]/submission/[submissionid]`
 
@@ -592,12 +652,12 @@ The purpose of a submission page is to allow editors and scholars to see informa
 
 RR will also send periodic reminders based on time-based events:
 
-- [ ] ([#46](https://github.com/reciprocalreviews/reciprocalapp/issues/46)): Send `scholar`s periodic reminders to update their availability
+- [x] ([#46](https://github.com/reciprocalreviews/reciprocalapp/issues/46)): Send `scholar`s periodic reminders to update their availability
 
 > [!IMPORTANT]
 > Emails below are specific to compensation
 
-- [ ] ([#44](https://github.com/reciprocalreviews/reciprocalapp/issues/44)): Send `minters` periodic reminders of unapproved transactions, based on the frequency set in the `Transactions` page
+- [x] ([#44](https://github.com/reciprocalreviews/reciprocalapp/issues/44)): Send `minters` periodic reminders of unapproved transactions, based on the frequency set in the `Transactions` page
 
 RR will have dedicated email adresses for each venue that, if sent to, will generate events and data that is user facing.
 

@@ -3,21 +3,21 @@
 -- Represents a proposal for a venue to be supported.
 create table if not exists "public"."proposals" (
 	-- The unique ID of the venue
-	"id" "uuid" default "gen_random_uuid" () not null,
+	id uuid default "gen_random_uuid" () not null,
 	-- The title of the venue
-	"title" "text" default ''::"text" not null,
+	title text default ''::"text" not null,
 	-- A link to the venue's official web page
-	"url" "text" default ''::"text" not null,
+	url text default ''::"text" not null,
 	-- The email addresses of editors responsible for the venue
-	"editors" "text" [] default '{}'::"text" [] not null,
+	editors text[] default '{}'::"text" [] not null,
 	-- The email addresses of minters for the new currency
-	"minters" "text" [] default '{}'::"text" [] not null,
+	minters text[] default '{}'::"text" [] not null,
 	-- The id of the existing currency to use for the venue, if any
-	"currency" "uuid",
+	currency uuid,
 	-- The estimated size of the research community,
-	"census" integer not null,
+	census integer not null,
 	-- If set, corresponds to the venue created upon approval.
-	"venue" "uuid"
+	venue uuid
 );
 
 alter table "public"."proposals" OWNER to "postgres";
