@@ -54,9 +54,11 @@
 			: roles
 					.toSorted((a, b) => a.priority - b.priority)
 					.map((role) => {
+						// See if this scholar has accepted this role.
 						const hasRole = volunteering.some(
 							(v) => v.scholarid === uid && v.roleid === role.id && v.accepted === 'accepted'
 						);
+						// See if this scholar is an approver for this role.
 						const isApprover =
 							uid !== null && (isEditor || isRoleApprover(role, volunteering, uid));
 

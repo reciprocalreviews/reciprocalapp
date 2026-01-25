@@ -15,6 +15,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Eliminated redundant error `Note`s, merging them with `Feedback`.
 - Narrowed a few RLS policies to prevent unauthenticated inserts and updates.
+- Fixed logic of assignment approval on submissions page.
 
 ## 0.2.2 2026-01-18
 

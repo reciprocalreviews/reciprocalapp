@@ -15,8 +15,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import { handle } from '../../../../feedback.svelte';
 	import { EditLabel, EmptyLabel, ScholarLabel, VenueLabel } from '$lib/components/Labels';
-	import type { RoleID, ScholarID } from '$data/types';
-	import isRoleApprover from '$lib/data/isRoleApprover';
+	import type { RoleID, RoleRow, ScholarID } from '$data/types';
 	import Scholar from '$lib/data/Scholar.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import Tip from '$lib/components/Tip.svelte';
@@ -71,19 +70,28 @@
 	);
 
 	/** Assignment if the authenticated scholar to this submission */
-	let scholarAssignment = $derived(
+	let scholarAssignments = $derived(
 		user !== null && assignments !== null
-			? assignments.find((a) => a.scholar === user.id && a.approved)
+			? assignments.filter((a) => a.scholar === user.id && a.approved)
 			: undefined
 	);
 
 	/** Whether the current scholar is assigned to this submission */
-	let isAssigned = $derived(scholarAssignment !== undefined);
+	let isAssigned = $derived(scholarAssignments !== undefined);
 
-	let assignedRoleIsAnonymous = $derived(
-		scholarAssignment !== undefined &&
-			roles !== null &&
-			roles.find((r) => r.id === scholarAssignment.role)?.anonymous_authors === true
+	/** What role does this assignment approve, if any */
+	let rolesScholarCanApprove = $derived(
+		scholarAssignments !== undefined && roles !== null
+			? roles.filter((r) => scholarAssignments.some((a) => a.role === r.approver))
+			: []
+	);
+
+	let scholarAssignmentRoles = $derived(
+		scholarAssignments !== undefined && roles !== null
+			? scholarAssignments
+					.map((a) => roles.find((r) => r.id === a.role))
+					.filter((r): r is RoleRow => r !== undefined)
+			: []
 	);
 
 	/** State for the assignment form */
@@ -169,7 +177,7 @@
 			<Row>
 				{#if authorIndex === undefined}
 					<Feedback error>Unable to find authors.</Feedback>
-				{:else if isEditor || isAuthor || (isAssigned && !assignedRoleIsAnonymous)}
+				{:else if isEditor || isAuthor || (isAssigned && !scholarAssignmentRoles.some((r) => r.anonymous_authors))}
 					<ScholarLink id={scholar ?? author}></ScholarLink>
 					{#if payment !== undefined}
 						{#if transaction === undefined}
@@ -214,7 +222,7 @@
 		<Subheader icon={EditLabel}>Assignments</Subheader>
 
 		<!-- If the authenticated scholar is an editor or a role approver of one of the roles, then permit them to create new assignments -->
-		{#if isEditor || roles.some((role) => isRoleApprover(role, volunteers, user.id))}
+		{#if isEditor || rolesScholarCanApprove.length > 0}
 			<Form>
 				<Tip
 					>Add a new assignment to this submission. These are restricted to the roles for which you
@@ -225,10 +233,7 @@
 					bind:value={newAssignmentRole}
 					options={[
 						{ label: '—', value: undefined },
-						...(isEditor
-							? roles
-							: roles.filter((role) => isRoleApprover(role, volunteers, user.id))
-						).map((role) => ({
+						...(isEditor ? roles : rolesScholarCanApprove).map((role) => ({
 							label: role.name,
 							value: role.id
 						}))
@@ -307,7 +312,7 @@
 					.filter((a) => role.id === a.role && a.bid && !a.approved)
 					.toSorted((a, b) => getBalance(a.scholar) - getBalance(b.scholar))}
 				{@const isApprover =
-					isEditor || (user !== null && isRoleApprover(role, volunteers, user.id))}
+					isEditor || (user !== null && rolesScholarCanApprove.some((r) => r.id === role.id))}
 				{#each assigned as assignment}
 					{@const volunteer = getVolunteer(role.id, assignment.scholar)}
 					<tr>
