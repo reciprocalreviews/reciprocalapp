@@ -40,18 +40,15 @@ select
 	to "authenticated",
 	"anon" using (true);
 
-create policy "anyone can propose venues" on "public"."proposals" for INSERT to "authenticated",
-"anon"
+create policy "anyone can propose venues" on "public"."proposals" for INSERT to "authenticated"
 with
 	check (true);
 
 create policy "admins can update proposals" on "public"."proposals"
 for update
-	to "authenticated",
-	"anon" using ("public"."issteward" ());
+	to "authenticated" using (public.isSteward ());
 
-create policy "admins can delete proposals" on "public"."proposals" for DELETE to "authenticated",
-"anon" using ("public"."issteward" ());
+create policy "admins can delete proposals" on "public"."proposals" for DELETE to "authenticated" using (public.isSteward ());
 
 grant all on table "public"."proposals" to "anon";
 

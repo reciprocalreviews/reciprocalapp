@@ -191,9 +191,7 @@ for update
 			)
 			or public.isApprover (role)
 		)
-	)
-with
-	check (true);
+	);
 
 create policy "editors and assignees can delete assignments" on "public"."assignments" for delete to "authenticated" using (
 	(

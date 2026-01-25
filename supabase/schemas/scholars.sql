@@ -78,10 +78,10 @@ grant all on FUNCTION public.handle_new_scholar () to "service_role";
 -- SECURITY
 alter table public.scholars ENABLE row LEVEL SECURITY;
 
-create policy "Scholar can insert themselves" on public.scholars for INSERT to "authenticated",
+create policy "Scholars cannot be inserted except by platform" on public.scholars for INSERT to "authenticated",
 "anon"
 with
-	check (true);
+	check (false);
 
 create policy "Scholar metadata is public" on public.scholars for
 select

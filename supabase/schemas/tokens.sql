@@ -68,8 +68,7 @@ with
 
 create policy "only token owners can update a token" on public.tokens
 for update
-	to authenticated,
-	anon using (
+	to authenticated using (
 		(
 			(
 				(venue is not null)

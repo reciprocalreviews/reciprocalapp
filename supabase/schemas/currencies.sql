@@ -30,7 +30,7 @@ alter table "public"."currencies" ENABLE row LEVEL SECURITY;
 create policy "anyone can create currencies" on "public"."currencies" for INSERT to "authenticated",
 "anon"
 with
-	check (true);
+	check ("public"."issteward" ());
 
 create policy "anyone can view currencies" on "public"."currencies" for
 select

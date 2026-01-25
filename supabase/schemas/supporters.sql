@@ -33,8 +33,7 @@ select
 	to "authenticated",
 	"anon" using (true);
 
-create policy "anyone can support proposals" on "public"."supporters" for INSERT to "authenticated",
-"anon"
+create policy "anyone can support proposals" on "public"."supporters" for INSERT to "authenticated"
 with
 	check (true);
 

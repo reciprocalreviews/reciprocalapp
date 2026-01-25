@@ -54,8 +54,6 @@ with
 
 create policy "editors can update submissions" on public.submissions
 for update
-	to authenticated using (public.isEditor (venue))
-with
-	check (true);
+	to authenticated using (public.isEditor (venue));
 
 create policy "editors can delete submissions" on public.submissions for DELETE to authenticated using (public.isEditor (venue));

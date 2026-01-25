@@ -13,6 +13,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Fixed
 
 - Eliminated redundant error `Note`s, merging them with `Feedback`.
+- Narrowed a few RLS policies to prevent unauthenticated inserts and updates.
 
 ## 0.2.2 2026-01-18
 
