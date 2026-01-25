@@ -38,6 +38,5 @@
 	.error {
 		border-left-color: var(--error-color);
 		background: var(--error-color-faded);
-		font-style: italic;
 	}
 </style>
