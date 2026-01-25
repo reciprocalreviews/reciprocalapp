@@ -21,6 +21,7 @@
 	import Form from '$lib/components/Form.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Options from '$lib/components/Options.svelte';
+	import Checkbox from '$lib/components/Checkbox.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const { venue, currency, minters, scholar, roles, volunteers, tokens, submissionCount, venues } =
@@ -135,10 +136,14 @@
 		{#if editor}
 			<Tip border>
 				<p>
-					Hello editor. Are you ready to integrate into your reviewing system? There are a few
+					Hello editor! Are you ready to integrate into your reviewing system? There are a few
 					steps:
 				</p>
 				<ol>
+					<li>
+						Update the inactive message in the settings below, so your community know you're busy
+						configuring things.
+					</li>
 					<li>
 						Run a community process to decide the <Link to="#roles">roles</Link> and <Link
 							to="settings">settings</Link
@@ -161,6 +166,10 @@
 						prompt them to add the reviewer to the submission (if they haven't already), evaluate
 						the review, and if it meets your venue's review quality requirements, press the
 						<strong>Complete</strong> button to pay for their work.
+					</li>
+					<li>
+						Remove the inactive message in the settings below when you're ready to launch, and the
+						venue will be open for volunteering.
 					</li>
 				</ol>
 			</Tip>
@@ -280,6 +289,26 @@
 						valid={validURLError}
 						edit={(text) => db().editVenueURL(venue.id, text)}
 					/>
+					<Checkbox
+						on={venue.inactive !== null}
+						change={(on) =>
+							db().editVenueInactive(venue.id, on ? 'This venue is not active.' : null)}
+					>
+						Inactive venue. <em
+							>Scholars cannot volunteer, submit, or otherwise interact with this venue.</em
+						>
+					</Checkbox>
+					{#if venue.inactive !== null}
+						<div style="margin-left: var(--spacing)">
+							<EditableText
+								text={venue.inactive ?? ''}
+								label="Inactive message"
+								placeholder="e.g., We're currently configuring the venue."
+								valid={(text) => (text.length > 0 ? undefined : 'You must include a message')}
+								edit={(text) => db().editVenueInactive(venue.id, text)}
+							/>
+						</div>
+					{/if}
 					<EditableText
 						text={venue.welcome_amount.toString()}
 						label="Welcome tokens"

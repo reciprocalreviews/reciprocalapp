@@ -571,6 +571,11 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditVenueTitle', error);
 	}
 
+	async editVenueInactive(id: VenueID, inactive: string | null) {
+		const { error } = await this.client.from('venues').update({ inactive }).eq('id', id);
+		return this.errorOrEmpty('EditVenueInactive', error);
+	}
+
 	async editVenueWelcomeAmount(id: VenueID, amount: number) {
 		const { error } = await this.client
 			.from('venues')

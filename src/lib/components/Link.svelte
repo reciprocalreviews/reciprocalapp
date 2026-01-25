@@ -24,6 +24,7 @@
 <a
 	class:small
 	class:background
+	class:inactive
 	href={inactive ? null : to}
 	target={to.startsWith('http') ? '_blank' : null}
 	aria-current={inactive ? 'page' : null}
@@ -61,6 +62,11 @@
 
 	a[aria-current] {
 		color: var(--text-color);
+		text-decoration: none;
+	}
+
+	.inactive span,
+	.inactive span:hover:not([aria-current]) {
 		text-decoration: none;
 	}
 

@@ -33,6 +33,7 @@ export const enUS = {
 		EditVenueAddEditorAlreadyEditor: 'Scholar is already an editor',
 		EditVenueTitle: 'Unable to edit the venue title',
 		EditVenueURL: 'Unable to edit the venue URL',
+		EditVenueInactive: 'Unable to edit the inactive message',
 		EditVenueWelcomeAmount: 'Unable to edit the welcome amount',
 		EditVenueEditorAmount: 'Unable to edit the editor compensation',
 		EditVenueSubmissionCost: 'Unable to edit the submission cost',

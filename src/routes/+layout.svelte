@@ -83,6 +83,9 @@
 <style>
 	main {
 		margin-block-start: var(--spacing);
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing);
 	}
 
 	.notifications {

@@ -18,4 +18,8 @@
 		padding: var(--spacing);
 		border-radius: var(--roundedness);
 	}
+
+	.error :global(a) {
+		color: var(--background-color);
+	}
 </style>

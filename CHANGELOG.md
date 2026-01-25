@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.2.3 2026-01-25
+
+### Added
+
+- Added venue active/inactive switch, to allow for venues to be created without being availabe for use yet.
+
 ## 0.2.2 2026-01-18
 
 ### Added

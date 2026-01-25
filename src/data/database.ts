@@ -578,6 +578,7 @@ export type Database = {
           edit_amount: number
           editors: string[]
           id: string
+          inactive: string | null
           submission_cost: number
           title: string
           url: string
@@ -589,6 +590,7 @@ export type Database = {
           edit_amount?: number
           editors?: string[]
           id?: string
+          inactive?: string | null
           submission_cost?: number
           title?: string
           url?: string
@@ -600,6 +602,7 @@ export type Database = {
           edit_amount?: number
           editors?: string[]
           id?: string
+          inactive?: string | null
           submission_cost?: number
           title?: string
           url?: string
