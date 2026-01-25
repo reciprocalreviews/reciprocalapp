@@ -23,11 +23,13 @@
 		<Note error><strong>{venue.inactive}</strong></Note>
 	</Page>
 {:else}
-	<Note error
-		>This venue is currently inactive. Only you and other editors can see it, whereas everyone else
-		sees this message: "{venue.inactive}". When you're ready, activate it in <Link
-			to="/venue/{venue.id}">venue settings</Link
-		>.</Note
-	>
+	{#if venue.inactive !== null}
+		<Note error
+			>This venue is currently inactive. Only you and other editors can see it, whereas everyone
+			else sees this message: "{venue.inactive}". When you're ready, activate it in <Link
+				to="/venue/{venue.id}">venue settings</Link
+			>.</Note
+		>
+	{/if}
 	{@render children()}
 {/if}
