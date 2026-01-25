@@ -21,7 +21,7 @@
 	}: {
 		transactions: TransactionRow[];
 		venues: VenueRow[];
-		currencies: CurrencyRow[] | null;
+		currencies: CurrencyRow[];
 	} = $props();
 
 	// Get the current user

@@ -27,7 +27,7 @@
 		<Note error
 			>This venue is currently inactive. Only you and other editors can see it, whereas everyone
 			else sees this message: "{venue.inactive}". When you're ready, activate it in <Link
-				to="/venue/{venue.id}">venue settings</Link
+				to="/venue/{venue.id}/settings">venue settings</Link
 			>.</Note
 		>
 	{/if}

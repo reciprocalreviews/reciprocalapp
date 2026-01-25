@@ -2,7 +2,7 @@
 	import { type Snippet, tick } from 'svelte';
 	import { clickOutside } from './clickOutside';
 	import Button from './Button.svelte';
-	import monoEmoij from './monoEmoji';
+	import { DeleteLabel } from './Labels';
 
 	interface Props {
 		show?: boolean;
@@ -40,7 +40,7 @@
 		{#if closeable}
 			<div class="close">
 				<Button background={false} tip="Close this dialog" action={() => (show = false)}
-					>{monoEmoij('✖')}</Button
+					>{DeleteLabel}</Button
 				>
 			</div>
 		{/if}

@@ -77,7 +77,7 @@
 		margin: auto;
 	}
 
-	.page :global(h1) {
+	.page :global(h1:first-child) {
 		margin-block-start: var(--spacing);
 	}
 

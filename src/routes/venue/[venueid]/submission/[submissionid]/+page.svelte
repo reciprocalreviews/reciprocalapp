@@ -14,7 +14,7 @@
 	import Table from '$lib/components/Table.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { handle } from '../../../../feedback.svelte';
-	import { EmptyLabel } from '$lib/components/Labels';
+	import { EditLabel, EmptyLabel, ScholarLabel, VenueLabel } from '$lib/components/Labels';
 	import type { RoleID, ScholarID } from '$data/types';
 	import isRoleApprover from '$lib/data/isRoleApprover';
 	import Scholar from '$lib/data/Scholar.svelte';
@@ -23,6 +23,7 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import { validEmail, validORCID } from '$lib/validation';
 	import Options from '$lib/components/Options.svelte';
+	import Subheader from '$lib/components/Subheader.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -144,7 +145,7 @@
 			>
 		{/if}
 
-		<h2>Authors</h2>
+		<Subheader icon={ScholarLabel}>Authors</Subheader>
 
 		{#each submission.authors as author}
 			{@const authorIndex = authors.findIndex((a) => a.id === author)}
@@ -181,10 +182,10 @@
 			<Feedback error>No visible authors found.</Feedback>
 		{/each}
 
-		<h2>Venue</h2>
+		<Subheader icon={VenueLabel}>Venue</Subheader>
 		<VenueLink id={venue.id} name={venue.title} />
 
-		<h2>Expertise</h2>
+		<Subheader icon={EditLabel}>Expertise</Subheader>
 		{#if isAuthor}
 			<EditableText
 				label="Expertise"
@@ -199,7 +200,7 @@
 			<Feedback>No expertise provided</Feedback>
 		{/if}
 
-		<h2>Assignments</h2>
+		<Subheader icon={EditLabel}>Assignments</Subheader>
 
 		<!-- If the authenticated scholar is an editor or a role approver of one of the roles, then permit them to create new assignments -->
 		{#if isEditor || roles.some((role) => isRoleApprover(role, volunteers, user.id))}

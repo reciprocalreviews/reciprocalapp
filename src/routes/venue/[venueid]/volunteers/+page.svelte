@@ -8,9 +8,10 @@
 	import Tag from '$lib/components/Tag.svelte';
 	import Tags from '$lib/components/Tags.svelte';
 	import Status from '$lib/components/Status.svelte';
-	import { EmptyLabel, FilterLabel } from '$lib/components/Labels.js';
+	import { EmptyLabel, FilterLabel, ScholarLabel } from '$lib/components/Labels.js';
 	import TextField from '$lib/components/TextField.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import Subheader from '$lib/components/Subheader.svelte';
 
 	let { data } = $props();
 	const { venue, commitments, roles } = $derived(data);
@@ -95,7 +96,7 @@
 								c.scholars.email?.toLowerCase().includes(filter.toLowerCase())
 						)}
 			{#if filteredScholars.length > 0}
-				<h2>{roleCommitments[0].roles.name}</h2>
+				<Subheader icon={ScholarLabel}>{roleCommitments[0].roles.name}</Subheader>
 				<Table full>
 					{#snippet header()}
 						<th>Active</th>

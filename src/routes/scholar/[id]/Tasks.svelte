@@ -10,8 +10,9 @@
 	import Button from '$lib/components/Button.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { EmptyLabel } from '$lib/components/Labels';
+	import { EmptyLabel, TaskLabel } from '$lib/components/Labels';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
+	import Subheader from '$lib/components/Subheader.svelte';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import Tip from '$lib/components/Tip.svelte';
@@ -40,7 +41,7 @@
 	const invitedCommitments = $derived(commitments.filter((c) => c.invited));
 </script>
 
-<h2>Tasks</h2>
+<Subheader icon={TaskLabel}>Tasks</Subheader>
 
 {#if invitedCommitments.length === 0 && (pending === null || pending.length === 0) && (reviews === null || reviews.length === 0) && (approvals === null || approvals.length === 0)}
 	<Feedback>You have no pending tasks.</Feedback>

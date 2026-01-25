@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Added
 
 - Added venue active/inactive switch, to allow for venues to be created without being availabe for use yet.
+- Created editor-guarded settings page to organize venue settings and declutter landing page.
 
 ## 0.2.2 2026-01-18
 

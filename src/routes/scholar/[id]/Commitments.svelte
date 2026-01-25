@@ -6,6 +6,8 @@
 	import VenueLink from '$lib/components/VenueLink.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import Tip from '$lib/components/Tip.svelte';
+	import Subheader from '$lib/components/Subheader.svelte';
+	import { ScholarLabel } from '$lib/components/Labels';
 
 	let {
 		commitments,
@@ -18,7 +20,7 @@
 	} = $props();
 </script>
 
-<h2>Volunteering</h2>
+<Subheader icon={ScholarLabel}>Volunteering</Subheader>
 
 {#if editing === null}
 	<Feedback>Unable to load editing commitments.</Feedback>

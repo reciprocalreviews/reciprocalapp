@@ -4,6 +4,8 @@
 	import Page from '$lib/components/Page.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import VenueLink from '$lib/components/VenueLink.svelte';
+	import Subheader from '$lib/components/Subheader.svelte';
+	import { VenueLabel } from '$lib/components/Labels';
 
 	let { data } = $props();
 
@@ -21,7 +23,7 @@
 
 	{#if auth.isAuthenticated()}<Link to="/venues/proposal">Propose a new venue</Link>{/if}
 
-	<h2>Active venues</h2>
+	<Subheader icon={VenueLabel}>Active venues</Subheader>
 
 	{#if venues}
 		{#if venues.length > 0}
@@ -39,7 +41,7 @@
 		<Feedback error>We couldn't load the venues.</Feedback>
 	{/if}
 
-	<h2>Proposed venues</h2>
+	<Subheader icon={VenueLabel}>Proposed venues</Subheader>
 	{#if proposals !== null}
 		{#if proposals.length > 0}
 			<ul>

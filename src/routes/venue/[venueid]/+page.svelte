@@ -6,25 +6,20 @@
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import { DeleteLabel, SettingsLabel, TokenLabel } from '$lib/components/Labels';
-	import { validInteger, validURLError } from '$lib/validation';
+	import { DeleteLabel, ScholarLabel, TokenLabel } from '$lib/components/Labels';
 	import { addFeedback, handle } from '../../feedback.svelte';
 	import Roles from './Roles.svelte';
 	import type { PageData } from './$types';
-	import Gift from '$lib/components/Gift.svelte';
-	import { type CurrencyID } from '$data/types';
 	import Dashboard from '$lib/components/Dashboard.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
-	import Tip from '$lib/components/Tip.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Options from '$lib/components/Options.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
+	import Tip from '$lib/components/Tip.svelte';
+	import Subheader from '$lib/components/Subheader.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { venue, currency, minters, scholar, roles, volunteers, tokens, submissionCount, venues } =
+	const { venue, currency, minters, scholar, roles, volunteers, tokens, submissionCount } =
 		$derived(data);
 
 	const db = getDB();
@@ -107,6 +102,14 @@
 			</li>
 		</ul>
 
+		{#if editor}
+			<Tip>
+				Welcome editor! You edit role and venue settings on the <Link
+					to="/venue/{venue.id}/settings">settings</Link
+				> page.
+			</Tip>
+		{/if}
+
 		<Dashboard
 			stats={[
 				{
@@ -133,57 +136,17 @@
 			]}
 		></Dashboard>
 
-		{#if editor}
-			<Tip border>
-				<p>
-					Hello editor! Are you ready to integrate into your reviewing system? There are a few
-					steps:
-				</p>
-				<ol>
-					<li>
-						Update the inactive message in the settings below, so your community know you're busy
-						configuring things.
-					</li>
-					<li>
-						Run a community process to decide the <Link to="#roles">roles</Link> and <Link
-							to="settings">settings</Link
-						> below about compensation and bidding. Once decided, set them up below.
-					</li>
-					<li>
-						Include this venue's <Link to={`${venue.id}/submissions/new`}>payment link</Link> in author
-						instructions and submission confirmations, prompting authors to pay after submission. If you
-						want the manuscript ID to be populated automatically and your reviewing platform supports
-						it, you can use the URL
-						<code>https://reciprocal.reviews/venue/{venue.id}/submission/new?id=[ID]</code>, but
-						replace
-						<code>[ID]</code> with the variable your system uses for manuscript ID.
-					</li>
-					<li>
-						Update your reviewing platform's <strong>review submission</strong> notification email
-						to prompt the scholar receiving it with a link to the submission:
-						<code>https://reciprocal.reviews/venue/{venue.id}/submission/[id]</code>, but replace
-						<code>[id]</code> with the variable your system uses for manuscript ID. In the email,
-						prompt them to add the reviewer to the submission (if they haven't already), evaluate
-						the review, and if it meets your venue's review quality requirements, press the
-						<strong>Complete</strong> button to pay for their work.
-					</li>
-					<li>
-						Remove the inactive message in the settings below when you're ready to launch, and the
-						venue will be open for volunteering.
-					</li>
-				</ol>
-			</Tip>
-		{/if}
-
-		<h2 id="roles">Roles</h2>
+		<Subheader id="roles" icon={ScholarLabel}>Roles</Subheader>
 
 		{#if roles && currency}
+			<p>See <Link to="/venue/{venue.id}/volunteers">all volunteers</Link> for this venue.</p>
+
 			<Roles
 				{venue}
 				scholar={scholar?.id}
 				{roles}
 				{volunteers}
-				editor={editor === true}
+				editor={false}
 				{currency}
 				{minters}
 			/>
@@ -237,94 +200,6 @@
 			{/if}
 		{:else}
 			<Feedback error>Couldn't load venue's roles.</Feedback>
-		{/if}
-
-		{#if editor}
-			<h2 id="settings">Settings</h2>
-
-			<Cards>
-				<Card group="editors" icon="🎁" header="gift" note="Send tokens to a scholar" full>
-					{#if scholar && currency !== null}
-						<Gift
-							{tokens}
-							purpose="Venue gift"
-							success="Your tokens were successfully gifted."
-							currencies={[currency]}
-							venues={venues ?? []}
-							transfer={(
-								currency: CurrencyID,
-								kind: 'venue' | 'scholar',
-								giftRecipient: string,
-								giftAmount: number,
-								purpose: string
-							) =>
-								currency !== null
-									? db().transferTokens(
-											scholar.id,
-											currency,
-											venue.id,
-											'venueid',
-											giftRecipient,
-											kind === 'venue' ? 'venueid' : 'emailorcid',
-											giftAmount,
-											purpose,
-											undefined
-										)
-									: undefined}
-						/>
-					{/if}
-				</Card>
-				<Card
-					group="editors"
-					icon={SettingsLabel}
-					header="settings"
-					note="Update title, url, costs, etc."
-					expand
-					full
-				>
-					<EditableText
-						text={venue.url}
-						label="URL"
-						placeholder="https://..."
-						valid={validURLError}
-						edit={(text) => db().editVenueURL(venue.id, text)}
-					/>
-					<Checkbox
-						on={venue.inactive !== null}
-						change={(on) =>
-							db().editVenueInactive(venue.id, on ? 'This venue is not active.' : null)}
-					>
-						Inactive venue. <em
-							>Scholars cannot volunteer, submit, or otherwise interact with this venue.</em
-						>
-					</Checkbox>
-					{#if venue.inactive !== null}
-						<div style="margin-left: var(--spacing)">
-							<EditableText
-								text={venue.inactive ?? ''}
-								label="Inactive message"
-								placeholder="e.g., We're currently configuring the venue."
-								valid={(text) => (text.length > 0 ? undefined : 'You must include a message')}
-								edit={(text) => db().editVenueInactive(venue.id, text)}
-							/>
-						</div>
-					{/if}
-					<EditableText
-						text={venue.welcome_amount.toString()}
-						label="Welcome tokens"
-						placeholder="e.g., 40"
-						valid={(text) => (validInteger(text) ? undefined : 'Must be a whole number')}
-						edit={(text) => db().editVenueWelcomeAmount(venue.id, parseInt(text))}
-					/>
-					<EditableText
-						text={venue.submission_cost.toString()}
-						label="Submission cost"
-						placeholder="e.g., 40"
-						valid={(text) => (validInteger(text) ? undefined : 'Must be a whole number')}
-						edit={(text) => db().editVenueSubmissionCost(venue.id, parseInt(text))}
-					/>
-				</Card>
-			</Cards>
 		{/if}
 	</Page>
 {/if}

@@ -44,11 +44,7 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
 
 	// If there's a user, return scholar
 	if (user) {
-		const { data, error } = await supabase
-			.from('scholars')
-			.select('id, orcid, name, email, steward')
-			.eq('id', user.id)
-			.single();
+		const { data, error } = await supabase.from('scholars').select().eq('id', user.id).single();
 		if (data && error === null) {
 			scholar = data;
 		}

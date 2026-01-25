@@ -8,7 +8,7 @@
 	import type { PageData } from './$types';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import { handle } from '../../feedback.svelte';
-	import { DeleteLabel, MinterLabel, plural, TokenLabel } from '$lib/components/Labels';
+	import { DeleteLabel, MinterLabel, plural, TokenLabel, VenueLabel } from '$lib/components/Labels';
 	import Button from '$lib/components/Button.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { validEmail, validORCID } from '$lib/validation';
@@ -22,6 +22,7 @@
 	import Card from '$lib/components/Card.svelte';
 	import type { ScholarID } from '$data/types';
 	import Options from '$lib/components/Options.svelte';
+	import Subheader from '$lib/components/Subheader.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -92,7 +93,7 @@
 			]}
 		/>
 
-		<h2 id="tokens">tokens</h2>
+		<Subheader icon={TokenLabel} id="tokens">tokens</Subheader>
 		<p>
 			There are {#if count !== null}<Tokens amount={count}></Tokens>{:else}an unknown number of{/if}
 			tokens minted in this currency, owned by <strong>{scholarCount}</strong> scholars and
@@ -157,7 +158,7 @@
 			</Cards>
 		{/if}
 
-		<h2 id="minters">minters</h2>
+		<Subheader icon={MinterLabel} id="minters">minters</Subheader>
 
 		<p>
 			These scholars are the minters for this currency. They can see and approve all transactions.
@@ -217,7 +218,7 @@
 			</Cards>
 		{/if}
 
-		<h2 id="venues">venues</h2>
+		<Subheader icon={VenueLabel} id="venues">venues</Subheader>
 
 		{#if venues}
 			<p>These are the venues that use this currency:</p>

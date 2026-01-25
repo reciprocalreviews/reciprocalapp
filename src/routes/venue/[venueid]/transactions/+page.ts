@@ -24,9 +24,17 @@ export const load: PageLoad = async ({ parent, params }) => {
 			: await getTransactionCurrencies(supabase, transactions);
 	if (currencyError) console.log(currencyError);
 
+	// Get the venue's tokens.
+	const { data: tokens, error: tokensError } = await supabase
+		.from('tokens')
+		.select('*')
+		.eq('venue', params.venueid);
+	if (tokensError) console.error(tokensError);
+
 	return {
 		transactions,
 		venues,
-		currencies
+		currencies,
+		tokens
 	};
 };

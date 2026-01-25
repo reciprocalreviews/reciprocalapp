@@ -1,7 +1,9 @@
 <script>
 	import Feedback from '$lib/components/Feedback.svelte';
+	import { IdeaLabel, ScholarLabel } from '$lib/components/Labels.js';
 	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
+	import Subheader from '$lib/components/Subheader.svelte';
 
 	let { data } = $props();
 	let { stewards } = $derived(data);
@@ -14,7 +16,7 @@
 		yourself on <Link to="https://github.com/reciprocalreviews">GitHub</Link>.
 	</p>
 
-	<h2>Stewards</h2>
+	<Subheader icon={ScholarLabel}>Stewards</Subheader>
 
 	<p>
 		Stewards oversee the platform and its use, guiding design, implementation, and usage with the
@@ -37,7 +39,7 @@
 
 	<p>Would you like to become a steward? Reach out to any of the stewards above and let's chat.</p>
 
-	<h2>Theory of change</h2>
+	<Subheader icon={IdeaLabel}>Theory of change</Subheader>
 
 	<p>The theory of change behind this platform is rests upon the following argument:</p>
 

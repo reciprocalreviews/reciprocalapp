@@ -13,7 +13,7 @@
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { DeleteLabel, EmptyLabel } from '$lib/components/Labels';
+	import { DeleteLabel, EmptyLabel, ScholarLabel } from '$lib/components/Labels';
 	import Slider from '$lib/components/Slider.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
@@ -22,7 +22,6 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import Link from '$lib/components/Link.svelte';
-	import Tip from '$lib/components/Tip.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import Options from '$lib/components/Options.svelte';
@@ -69,15 +68,6 @@
 	}
 </script>
 
-{#if editor}
-	<Tip>
-		These are the roles that volunteers can commit to. Create roles such as <em>reviewer</em>,
-		<em>program commitee</em>, <em>associate editor</em> to represent the different kinds of contributions
-		volunteers can make to this venue.
-	</Tip>
-{/if}
-<p>See <Link to="/venue/{venue.id}/volunteers">all volunteers</Link> for this venue.</p>
-
 {#if roles}
 	{#if editor}
 		<form>
@@ -108,7 +98,7 @@
 			icon={venue.editors.length}
 			subheader
 			header="Editor"
-			note="Scholars who manage submissions and compensation fo this venue."
+			note="Scholars who manage submissions and compensation for this venue."
 			expand={!editor}
 		>
 			<p>
@@ -153,7 +143,7 @@
 			<Card
 				full
 				subheader
-				icon={roleVolunteers.length === 0 ? '👤' : roleVolunteers.length}
+				icon={roleVolunteers.length === 0 ? ScholarLabel : roleVolunteers.length}
 				header={role.name}
 				note={role.description.length === 0 ? 'Role' : role.description}
 				expand={!editor}

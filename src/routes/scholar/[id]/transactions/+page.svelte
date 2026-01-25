@@ -9,7 +9,7 @@
 	$inspect(scholar);
 </script>
 
-{#if scholar && transactions && venues}
+{#if scholar && transactions && venues && currencies}
 	<Page
 		title={scholar.name ?? scholar.email ?? 'anonymous'}
 		breadcrumbs={[

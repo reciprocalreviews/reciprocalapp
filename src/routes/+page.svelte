@@ -4,6 +4,8 @@
 	import Page from '$lib/components/Page.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { PUBLIC_ENV } from '$env/static/public';
+	import Subheader from '$lib/components/Subheader.svelte';
+	import { IdeaLabel } from '$lib/components/Labels';
 
 	const inProd = PUBLIC_ENV === 'prod';
 </script>
@@ -77,7 +79,7 @@
 		</p>
 	{/if}
 
-	<h2>Updates</h2>
+	<Subheader icon={IdeaLabel}>Updates</Subheader>
 
 	<p>Follow along on our newsletter.</p>
 

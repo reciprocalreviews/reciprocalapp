@@ -25,10 +25,11 @@
 	} from '$data/types';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Tip from '$lib/components/Tip.svelte';
-	import { TokenLabel } from '$lib/components/Labels';
+	import { SettingsLabel, SubmissionLabel, TokenLabel } from '$lib/components/Labels';
 	import Dashboard from '$lib/components/Dashboard.svelte';
 	import Commitments from './Commitments.svelte';
 	import Tasks from './Tasks.svelte';
+	import Subheader from '$lib/components/Subheader.svelte';
 
 	let {
 		scholar,
@@ -133,7 +134,7 @@
 		<Commitments {commitments} {editing} {minting}></Commitments>
 	{/if}
 
-	<h2 id="submissions">Submissions</h2>
+	<Subheader icon={SubmissionLabel} id="submissions">Submissions</Subheader>
 
 	{#if submissions}
 		<ul>
@@ -147,7 +148,7 @@
 		<Feedback>Unable to load submissions.</Feedback>
 	{/if}
 
-	<h2 id="tokens">Tokens</h2>
+	<Subheader icon={TokenLabel} id="tokens">Tokens</Subheader>
 
 	<p>
 		{#if editable}You have{:else}This scholar has the following tokens:{/if}
@@ -202,7 +203,7 @@
 	{/if}
 
 	{#if editable}
-		<h2>Settings</h2>
+		<Subheader icon={SettingsLabel}>Settings</Subheader>
 		<EditableText
 			text={scholar.getEmail() ?? ''}
 			label="email"
