@@ -34,11 +34,13 @@ export const enUS = {
 		EditVenueTitle: 'Unable to edit the venue title',
 		EditVenueURL: 'Unable to edit the venue URL',
 		EditVenueInactive: 'Unable to edit the inactive message',
+		EditVenueAnonymousAssignments: 'Unable to edit anonymous assignments setting',
 		EditVenueWelcomeAmount: 'Unable to edit the welcome amount',
 		EditVenueEditorAmount: 'Unable to edit the editor compensation',
 		EditVenueSubmissionCost: 'Unable to edit the submission cost',
 		EditRoleBidding: 'Unable to toggle bidding',
 		EditRoleDesiredAssignments: 'Unable to set desired assignments',
+		EditRoleAnonymousAuthors: 'Unable to toggle anonymous authors',
 		EditRoleApprover: 'Unable to set approver',
 		CreateRole: 'Unable to create new role.',
 		UpdateRoleName: 'Unable to update role name',
@@ -91,7 +93,8 @@ export const enUS = {
 		CompleteAssignmentVenueNotFound: "Unable to find this assignment's venue",
 		DeleteAssignment: 'Unable to delete this assignment',
 		EmailScholar: 'Unable to email this scholar',
-		ApproveProposalNoSupporters: 'Unable to retrieve supports of proposal for notification.'
+		ApproveProposalNoSupporters: 'Unable to retrieve supports of proposal for notification.',
+		DeclareConflict: 'Unable to declare a conflict with this submission.'
 	}
 };
 

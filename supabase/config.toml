@@ -229,6 +229,7 @@ schema_paths = [
     "./schemas/transactions.sql",
     "./schemas/submissions.sql",
     "./schemas/assignments.sql",
+    "./schemas/conflicts.sql",
     "./schemas/emails.sql",
     "./schemas/*.sql"
 ]

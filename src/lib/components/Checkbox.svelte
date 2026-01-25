@@ -42,6 +42,7 @@
 		gap: var(--spacing);
 		align-items: baseline;
 		font-size: var(--small-font-size);
+		font-style: italic;
 	}
 
 	label:hover {

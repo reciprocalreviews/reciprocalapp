@@ -162,17 +162,31 @@ select
 
 create policy "editors, assignees, and approvers can see assignments" on public.assignments for
 select
-	to "authenticated",
-	"anon" using (
+	to "authenticated" using (
 		(
-			public.isEditor (venue)
+			-- If the venue does not use anonymous assignments, anyone can see assignments
+			(
+				(
+					select
+						anonymous_assignments
+					from
+						public.venues
+					where
+						id=venue
+				)=false
+			)
+			-- Editors can see all assignments in their venue, unless conflicted
+			or public.isEditor (venue)
+			-- The assigned scholar can see their assignments
 			or (
 				"scholar"=(
 					select
 						auth.uid () as "uid"
 				)
 			)
+			-- Scholars assigned to this assignment's submission can see other assignments
 			or public.isAssigned (submission)
+			-- Approvers for this assignment's role can see assignments, since they make them.
 			or public.isApprover (role)
 		)
 	);

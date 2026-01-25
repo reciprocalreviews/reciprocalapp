@@ -30,7 +30,9 @@
 		/** If an editor, all submission assignments; otherwise, all of the current scholar's assignments. */
 		assignments,
 		/** All transctions for all submissions in this venue */
-		transactions
+		transactions,
+		/** The conflicts for the current scholar */
+		conflicts
 	} = $derived(data);
 
 	/** Get the current database connection */
@@ -78,11 +80,14 @@
 	/** Sort and filter submissions based on the configuration */
 	function sortedAndFiltered(submissions: SubmissionRow[]): SubmissionRow[] {
 		const trimmedFilter = filter.trim().toLowerCase();
-		const subs = submissions.filter(
-			(sub) =>
-				sub.title.toLowerCase().includes(trimmedFilter) ||
-				sub.externalid.toLowerCase().includes(trimmedFilter)
-		);
+		const subs = submissions
+			.filter(
+				(sub) =>
+					sub.title.toLowerCase().includes(trimmedFilter) ||
+					sub.externalid.toLowerCase().includes(trimmedFilter)
+			)
+			.filter((sub) => conflicts !== null && !conflicts.some((c) => c.submissionid === sub.id));
+
 		for (const column of sortOrder) {
 			switch (column) {
 				case 'payment':
@@ -117,7 +122,7 @@
 	}
 </script>
 
-{#if venue}
+{#if venue && conflicts}
 	<Page
 		title="Submissions"
 		breadcrumbs={[
@@ -199,7 +204,20 @@
 										>
 									{/if}
 								</td>
-								<td><SubmissionPreview {submission} /></td>
+								<td>
+									<Column>
+										<SubmissionPreview {submission} />
+										{#if uid && conflicts !== null && !conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id) && assignments !== null && !assignments.some((a) => a.submission === submission.id && a.scholar === uid)}
+											<Button
+												tip="Declare a conflict with this submission. You will no longer see this submission in your bidding list."
+												action={() =>
+													handle(db().declareConflict(uid, submission.id, 'Scholar declared'))}
+											>
+												Declare conflict
+											</Button>
+										{/if}
+									</Column>
+								</td>
 								<td>{submission.expertise}</td>
 								<td>{submission.externalid}</td>
 								<!-- If we have all the information, show metadata about bidding. -->
@@ -227,9 +245,12 @@
 													{/each}
 												{/if}
 
-												<!-- Show bidding if the role is biddable, and there are fewer than the number of desired assignments. -->
+												<!-- Show bidding if the role is biddable and there are fewer than the number of desired assignments-->
 												{#if role.biddable}
-													{#if roleAssignments === undefined || roleAssignments.length < role.desired_assignments}
+													{#if submission.authors.includes(uid) || conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id)}
+														<!-- Can't bid if conflicted -->
+														<div><strong>conflicted</strong></div>
+													{:else if roleAssignments === undefined || roleAssignments.length < role.desired_assignments}
 														<!-- If the current scholar is an editor or approver for this role, show the number of bids. -->
 														{#if role.isApprover}
 															<div><strong>{bids.length}</strong> bids</div>

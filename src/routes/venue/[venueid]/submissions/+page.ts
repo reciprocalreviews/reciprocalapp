@@ -55,5 +55,12 @@ export const load: PageLoad = async ({ parent, params }) => {
 					.in('id', submissions.map((submission) => submission.transactions).flat());
 	if (transactionsError) console.error(transactionsError);
 
-	return { venue, submissions, volunteering, roles, assignments, transactions };
+	// Find all conflicts for the current user.
+	const { data: conflicts, error: conflictsError } =
+		user === null
+			? { data: [], error: null }
+			: await supabase.from('conflicts').select('*').eq('scholarid', user.id);
+	if (conflictsError) console.error(conflictsError);
+
+	return { venue, submissions, volunteering, roles, assignments, transactions, conflicts };
 };

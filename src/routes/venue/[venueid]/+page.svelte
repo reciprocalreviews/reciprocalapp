@@ -15,8 +15,8 @@
 	import Form from '$lib/components/Form.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Options from '$lib/components/Options.svelte';
-	import Tip from '$lib/components/Tip.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
+	import { validURLError } from '$lib/validation';
 
 	let { data }: { data: PageData } = $props();
 	const { venue, currency, minters, scholar, roles, volunteers, tokens, submissionCount } =
@@ -50,7 +50,15 @@
 			: undefined}
 	>
 		{#snippet subtitle()}Venue{/snippet}
-		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
+		{#snippet details()}
+			{#if editor}
+				<EditableText
+					text={venue.url}
+					placeholder="https://..."
+					valid={validURLError}
+					edit={(text) => db().editVenueURL(venue.id, text)}
+				/>
+			{:else}<Link to={venue.url}>{venue.url}</Link>{/if}{/snippet}
 
 		<!-- Show the description -->
 		{#if editor}
@@ -103,11 +111,10 @@
 		</ul>
 
 		{#if editor}
-			<Tip>
-				Welcome editor! You edit role and venue settings on the <Link
-					to="/venue/{venue.id}/settings">settings</Link
-				> page.
-			</Tip>
+			<Feedback inline={false}>
+				Welcome editor! Check the <Link to="/venue/{venue.id}/settings">settings</Link> page to edit venue
+				compensation, roles, and anonymity.
+			</Feedback>
 		{/if}
 
 		<Dashboard

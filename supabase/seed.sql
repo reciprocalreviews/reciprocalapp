@@ -523,6 +523,30 @@ values
 		'A Study on the Effectiveness of Peer Review Incentives in Academic Publishing',
 		'Peer review, academic publishing, field study',
 		'reviewing'
+	),
+	(
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c13',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-002',
+		null,
+		array['7ff8621a-cbe0-4789-bbee-f008d38c4ac7']::uuid[],
+		array[15]::integer[],
+		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
+		'A Windmill Study on the Failures of Peer Review',
+		'Engineering',
+		'reviewing'
+	),
+	(
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c14',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-003',
+		null,
+		array['7ff8621a-cbe0-4789-bbee-f008d38c4ac7']::uuid[],
+		array[15]::integer[],
+		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
+		'A Reverse Engineering of Authorship from Reference Counts',
+		'Peer review, academic publishing, log analysis',
+		'reviewing'
 	);
 
 insert into

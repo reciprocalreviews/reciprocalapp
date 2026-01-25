@@ -308,6 +308,13 @@
 								for this role without being invited{/if}
 						</Checkbox>
 
+						<Checkbox
+							on={role.anonymous_authors}
+							change={(on) => db().editRoleAnonymousAuthors(role.id, on)}
+							>{#if role.anonymous_authors}This role cannot see author information.{:else}This role
+								can see author information.{/if}
+						</Checkbox>
+
 						<Checkbox on={role.biddable} change={(on) => db().editRoleBidding(role.id, on)}
 							>{#if role.biddable}Volunteers can bid on submissions.{:else}Volunteers cannot bid for
 								this role on submissions.{/if}

@@ -21,6 +21,8 @@ create table if not exists public.venues (
 	editors uuid[] default '{}'::uuid[] not null,
 	-- Whether the venue is active; null if so, text if not, explaining why.
 	inactive text default 'This venue is being configured.'::text,
+	-- Whether assignments are visible to conflicted scholars (open reviewing)
+	anonymous_assignments boolean default true not null,
 	-- There must be at least one editor
 	constraint venues_editors_check check (cardinality(editors)>0)
 );

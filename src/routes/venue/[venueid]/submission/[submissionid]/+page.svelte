@@ -70,9 +70,20 @@
 		submission !== null && user !== null && submission.authors.includes(user.id)
 	);
 
+	/** Assignment if the authenticated scholar to this submission */
+	let scholarAssignment = $derived(
+		user !== null && assignments !== null
+			? assignments.find((a) => a.scholar === user.id && a.approved)
+			: undefined
+	);
+
 	/** Whether the current scholar is assigned to this submission */
-	let isAssigned = $derived(
-		user !== null && assignments?.find((a) => a.scholar === user.id && a.approved) !== undefined
+	let isAssigned = $derived(scholarAssignment !== undefined);
+
+	let assignedRoleIsAnonymous = $derived(
+		scholarAssignment !== undefined &&
+			roles !== null &&
+			roles.find((r) => r.id === scholarAssignment.role)?.anonymous_authors === true
 	);
 
 	/** State for the assignment form */
@@ -108,7 +119,7 @@
 			[`/venue/${venue?.id}/submissions`, 'Submissions']
 		]}
 	>
-		<Feedback error>You this submission is confidential.</Feedback>
+		<Feedback error>This submission is confidential to you.</Feedback>
 	</Page>
 {:else}
 	<Page
@@ -158,7 +169,7 @@
 			<Row>
 				{#if authorIndex === undefined}
 					<Feedback error>Unable to find authors.</Feedback>
-				{:else if isEditor || isAuthor}
+				{:else if isEditor || isAuthor || (isAssigned && !assignedRoleIsAnonymous)}
 					<ScholarLink id={scholar ?? author}></ScholarLink>
 					{#if payment !== undefined}
 						{#if transaction === undefined}

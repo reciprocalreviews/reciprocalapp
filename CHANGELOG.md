@@ -3,10 +3,11 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
-## 0.2.3 2026-01-25
+## 0.3.0 2026-01-25
 
 ### Added
 
+- Fixed #54, adding anonymity and conflicts support to venues and roles, to implement double anonymous, single anonymous, and open reviewing.
 - Added venue active/inactive switch, to allow for venues to be created without being availabe for use yet.
 - Created editor-guarded settings page to organize venue settings and declutter landing page.
 

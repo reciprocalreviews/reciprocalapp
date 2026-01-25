@@ -436,7 +436,9 @@ create table conflicts (
   -- The submission on for which there is a conflict
   submissionid uuid not null references submissions (id),
   -- The scholar for which there is a conflict
-  scholarid uuid not null references scholars (id)
+  scholarid uuid not null references scholars (id),
+  -- The reason for the conflict
+  reason text default ''::text not null
 )
 ```
 

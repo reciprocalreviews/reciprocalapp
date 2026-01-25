@@ -576,6 +576,14 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditVenueInactive', error);
 	}
 
+	async editVenueAnonymousAssignments(id: VenueID, anonymous_assignments: boolean) {
+		const { error } = await this.client
+			.from('venues')
+			.update({ anonymous_assignments })
+			.eq('id', id);
+		return this.errorOrEmpty('EditVenueAnonymousAssignments', error);
+	}
+
 	async editVenueWelcomeAmount(id: VenueID, amount: number) {
 		const { error } = await this.client
 			.from('venues')
@@ -625,6 +633,14 @@ export default class SupabaseCRUD extends CRUD {
 	async editRoleBidding(id: RoleID, biddable: boolean) {
 		const { error } = await this.client.from('roles').update({ biddable }).eq('id', id);
 		return this.errorOrEmpty('EditRoleBidding', error);
+	}
+
+	async editRoleAnonymousAuthors(id: RoleID, anonymous: boolean): Promise<Result> {
+		const { error } = await this.client
+			.from('roles')
+			.update({ anonymous_authors: anonymous })
+			.eq('id', id);
+		return this.errorOrEmpty('EditRoleAnonymousAuthors', error);
 	}
 
 	async editRoleDesiredAssignments(id: RoleID, desiredAssignments: number) {
@@ -1237,6 +1253,20 @@ export default class SupabaseCRUD extends CRUD {
 
 		// We rely on an database trigger to call the edge function to send the email after the row is inserted into the emails table.
 		// This is slower and less direct, but ensures that the email sending functionality only lives in one place.
+
+		return { data: undefined };
+	}
+
+	async declareConflict(
+		scholarid: ScholarID,
+		submissionid: SubmissionID,
+		reason: string
+	): Promise<Result> {
+		// Is there a submission that this scholar can view with this manuscript ID?
+		const { error } = await this.client
+			.from('conflicts')
+			.insert({ scholarid, submissionid, reason });
+		if (error) return this.error('DeclareConflict', error);
 
 		return { data: undefined };
 	}

@@ -99,6 +99,39 @@ export type Database = {
           },
         ]
       }
+      conflicts: {
+        Row: {
+          reason: string
+          scholarid: string
+          submissionid: string
+        }
+        Insert: {
+          reason?: string
+          scholarid: string
+          submissionid: string
+        }
+        Update: {
+          reason?: string
+          scholarid?: string
+          submissionid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conflicts_scholarid_fkey"
+            columns: ["scholarid"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conflicts_submissionid_fkey"
+            columns: ["submissionid"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       currencies: {
         Row: {
           description: string
@@ -267,6 +300,7 @@ export type Database = {
       roles: {
         Row: {
           amount: number
+          anonymous_authors: boolean
           approver: string | null
           biddable: boolean
           description: string
@@ -279,6 +313,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          anonymous_authors?: boolean
           approver?: string | null
           biddable?: boolean
           description?: string
@@ -291,6 +326,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          anonymous_authors?: boolean
           approver?: string | null
           biddable?: boolean
           description?: string
@@ -573,6 +609,7 @@ export type Database = {
       }
       venues: {
         Row: {
+          anonymous_assignments: boolean
           currency: string
           description: string
           edit_amount: number
@@ -585,6 +622,7 @@ export type Database = {
           welcome_amount: number
         }
         Insert: {
+          anonymous_assignments?: boolean
           currency: string
           description?: string
           edit_amount?: number
@@ -597,6 +635,7 @@ export type Database = {
           welcome_amount: number
         }
         Update: {
+          anonymous_assignments?: boolean
           currency?: string
           description?: string
           edit_amount?: number

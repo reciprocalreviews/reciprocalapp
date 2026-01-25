@@ -95,10 +95,10 @@
 		display: flex;
 		flex-direction: row;
 		gap: var(--spacing);
-		align-items: normal;
+		align-items: baseline;
 	}
 
 	.editable.inline {
-		align-items: normal;
+		align-items: center;
 	}
 </style>

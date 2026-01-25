@@ -79,7 +79,7 @@
 		padding-block-start: 0;
 		display: flex;
 		flex-direction: column;
-		gap: calc(2 * var(--spacing));
+		gap: var(--spacing);
 	}
 
 	.full {

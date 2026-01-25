@@ -128,6 +128,7 @@ export default abstract class CRUD {
 	abstract editVenueTitle(id: VenueID, title: string): Promise<Result>;
 	abstract editVenueURL(id: VenueID, url: string): Promise<Result>;
 	abstract editVenueInactive(id: VenueID, inactive: string | null): Promise<Result>;
+	abstract editVenueAnonymousAssignments(id: VenueID, anonymous: boolean): Promise<Result>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<Result>;
 	abstract editVenueEditorCompensation(id: VenueID, amount: number): Promise<Result>;
 	abstract editVenueSubmissionCost(id: VenueID, amount: number): Promise<Result>;
@@ -137,6 +138,7 @@ export default abstract class CRUD {
 	abstract editRoleDescription(id: RoleID, description: string): Promise<Result>;
 	abstract editRoleInvited(id: RoleID, on: boolean): Promise<Result>;
 	abstract editRoleBidding(id: RoleID, bidding: boolean): Promise<Result>;
+	abstract editRoleAnonymousAuthors(id: RoleID, anonymous: boolean): Promise<Result>;
 	abstract editRoleApprover(id: RoleID, approver: RoleID | null): Promise<Result>;
 	abstract editRoleDesiredAssignments(id: RoleID, bidLimit: number | null): Promise<Result>;
 	abstract editRoleAmount(id: RoleID, amount: number): Promise<Result>;
@@ -256,5 +258,12 @@ export default abstract class CRUD {
 		emails: string[] | { id: ScholarID; email: string }[],
 		template: EmailType,
 		args: string[]
+	): Promise<Result>;
+
+	/** Add a conflict */
+	abstract declareConflict(
+		scholar: ScholarID,
+		submission: SubmissionID,
+		reason: string
 	): Promise<Result>;
 }

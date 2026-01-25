@@ -19,6 +19,8 @@ create table if not exists public.roles (
 	amount integer not null,
 	-- The presentation order of the role, lower is more important
 	priority integer default 0 not null,
+	-- Whether authors are visible to scholars assigned to a submission
+	anonymous_authors boolean default true not null,
 	-- The number of assignments after which bidding should be turned off. Null for no limit.
 	desired_assignments integer not null default 1
 );
