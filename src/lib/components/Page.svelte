@@ -73,7 +73,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: calc(1.5 * var(--spacing));
-		max-width: 40em;
+		max-width: var(--page-width);
 		margin: auto;
 	}
 

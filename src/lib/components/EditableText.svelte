@@ -99,6 +99,6 @@
 	}
 
 	.editable.inline {
-		align-items: center;
+		align-items: normal;
 	}
 </style>

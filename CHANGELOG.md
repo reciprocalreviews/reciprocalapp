@@ -8,12 +8,13 @@ Dates should be in`YYYY-MM-DD` format.
 ### Added
 
 - Differentiated between venue admins and editor role, to ensure confidentiality, manage conflicts, and enable compensation (#73).
-- Made volunteering public on a scholar's profile page.
+- Made volunteering public on a scholar's profile page (#76).
 
 ### Fixed
 
 - Support creating a new currency in a venue proposal (#74).
 - Improved layout of volunteers table (#77).
+- Editable text no longer grows the page unbounded (#75).
 
 ### Changed
 

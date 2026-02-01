@@ -145,6 +145,8 @@
 		background: var(--background-color);
 		overflow: visible !important;
 		min-width: 2em;
+		flex-grow: 1;
+		max-width: fit-content;
 		display: none;
 	}
 
@@ -176,6 +178,8 @@
 		resize: none;
 		min-width: 1em;
 		min-height: 1em;
+		flex-grow: 1;
+		max-width: fit-content;
 		overflow: hidden;
 		display: none;
 	}
@@ -188,16 +192,14 @@
 		display: inline-block;
 		white-space: pre;
 		visibility: hidden;
-	}
-
-	.ruler.inline {
-		display: inline;
+		flex-grow: 1;
 	}
 
 	.ruler.active {
 		position: static;
 		visibility: visible;
 		white-space: wrap;
+		word-break: break-word;
 	}
 
 	input[disabled],
