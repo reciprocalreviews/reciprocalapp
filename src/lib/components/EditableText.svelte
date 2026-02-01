@@ -99,6 +99,10 @@
 	}
 
 	.editable.inline {
-		align-items: normal;
+		align-items: stretch;
+	}
+
+	.editable :global(.field) {
+		align-self: center;
 	}
 </style>

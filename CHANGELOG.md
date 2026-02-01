@@ -17,6 +17,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Editable text no longer grows the page unbounded (#75).
 - Fixed submissions update RLS role to allow editors to edit.
 - Better spacing in page metadata.
+- Improved spacing of editable text in flex layouts.
 
 ### Changed
 
