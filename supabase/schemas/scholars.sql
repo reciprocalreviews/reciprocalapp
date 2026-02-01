@@ -112,3 +112,6 @@ create policy "Scholars can remove themselves" on public.scholars for DELETE to 
 		)
 	)
 );
+
+alter publication supabase_realtime
+add table scholars;

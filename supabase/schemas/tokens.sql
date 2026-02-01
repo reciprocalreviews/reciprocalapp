@@ -96,3 +96,6 @@ grant all on table public.tokens to anon;
 grant all on table public.tokens to authenticated;
 
 grant all on table public.tokens to service_role;
+
+alter publication supabase_realtime
+add table tokens;

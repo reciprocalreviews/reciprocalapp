@@ -107,3 +107,6 @@ create policy "admins can delete conflicts" on public.conflicts for DELETE to "a
 		)
 	)
 );
+
+alter publication supabase_realtime
+add table conflicts;

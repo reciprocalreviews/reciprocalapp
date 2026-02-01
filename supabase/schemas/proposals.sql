@@ -55,3 +55,6 @@ grant all on table "public"."proposals" to "anon";
 grant all on table "public"."proposals" to "authenticated";
 
 grant all on table "public"."proposals" to "service_role";
+
+alter publication supabase_realtime
+add table proposals;

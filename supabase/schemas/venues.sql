@@ -123,3 +123,6 @@ create or replace trigger no_minter_admins BEFORE INSERT
 or
 update on public.venues for EACH row
 execute FUNCTION public.no_minter_admins ();
+
+alter publication supabase_realtime
+add table venues;

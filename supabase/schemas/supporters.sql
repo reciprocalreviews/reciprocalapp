@@ -64,3 +64,6 @@ grant all on table "public"."supporters" to "anon";
 grant all on table "public"."supporters" to "authenticated";
 
 grant all on table "public"."supporters" to "service_role";
+
+alter publication supabase_realtime
+add table supporters;

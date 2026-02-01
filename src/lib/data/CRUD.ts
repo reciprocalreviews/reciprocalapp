@@ -22,15 +22,16 @@ import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
 import type { AuthError, PostgrestError } from '@supabase/supabase-js';
 import type { EmailType } from '../../email/templates';
+import type SupabaseCRUD from './SupabaseCRUD.svelte';
 
 export const DatabaseSymbol = Symbol('database');
 export const NullUUID = '00000000-0000-0000-0000-000000000000';
 
-export function getDB(): () => CRUD {
-	return getContext<() => CRUD>(DatabaseSymbol);
+export function getDB(): () => SupabaseCRUD {
+	return getContext<() => SupabaseCRUD>(DatabaseSymbol);
 }
 
-export function setDB(db: () => CRUD) {
+export function setDB(db: () => SupabaseCRUD) {
 	setContext(DatabaseSymbol, db);
 }
 

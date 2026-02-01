@@ -255,3 +255,6 @@ create policy "transactions cannot be deleted" on public.transactions for DELETE
 		)
 	)
 );
+
+alter publication supabase_realtime
+add table transactions;

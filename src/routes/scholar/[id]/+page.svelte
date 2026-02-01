@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { getDB } from '$lib/data/CRUD';
+	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
 	import { default as ScholarView } from './Scholar.svelte';
 
 	let { data } = $props();
@@ -40,6 +42,18 @@
 
 	/** Register a scholar state. */
 	let state = $derived(data.scholar ? db().registerScholar(data.scholar) : null);
+
+	// Reload when any related scholar info changes.
+	reloadOnChanges('scholar_info_changes', [
+		{ table: 'volunteers', filter: `scholarid=eq.${page.params.id}` },
+		{ table: 'tokens', filter: `scholar=eq.${page.params.id}` },
+		{ table: 'transactions', filter: `from_scholar=eq.${page.params.id}` },
+		{ table: 'transactions', filter: `to_scholar=eq.${page.params.id}` },
+		{ table: 'assignments', filter: `scholar=eq.${page.params.id}` },
+		{ table: 'submissions', filter: `authors=in.(${page.params.id})` },
+		{ table: 'venues', filter: `admins=in.(${page.params.id})` },
+		{ table: 'currencies', filter: `minters=in.(${page.params.id})` }
+	]);
 </script>
 
 {#if state}

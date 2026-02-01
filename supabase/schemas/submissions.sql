@@ -53,3 +53,6 @@ with
 	check (true);
 
 create policy "admins can delete submissions" on public.submissions for DELETE to authenticated using (public.isAdmin (venue));
+
+alter publication supabase_realtime
+add table submissions;

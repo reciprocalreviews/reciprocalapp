@@ -5,11 +5,12 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	const scholarID = params.id;
 
-	// Get the scholar's commitments
+	// Get the scholar's active commitments
 	const { data: volunteers } = await supabase
 		.from('volunteers')
 		.select('*, roles(name, venueid, approver)')
-		.eq('scholarid', scholarID);
+		.eq('scholarid', scholarID)
+		.eq('active', true);
 
 	const venueids = volunteers
 		? volunteers.map((c) => c.roles?.venueid).filter((v) => v !== undefined)

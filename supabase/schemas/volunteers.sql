@@ -123,3 +123,6 @@ anon using (
 		)
 	)
 );
+
+alter publication supabase_realtime
+add table volunteers;

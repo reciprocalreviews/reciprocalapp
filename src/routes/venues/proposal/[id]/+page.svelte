@@ -16,11 +16,18 @@
 	import Note from '$lib/components/Note.svelte';
 	import { validEmails, validURLError } from '$lib/validation';
 	import { SettingsLabel } from '$lib/components/Labels';
+	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
+	import { page } from '$app/state';
 
 	let { data } = $props();
 
 	const db = getDB();
 	const auth = getAuth();
+
+	// Reload when support changes.
+	reloadOnChanges('proposal_changes', [
+		{ table: 'supporters', filter: `proposalid=eq.${page.params.id}` }
+	]);
 
 	let uid = $derived(auth.getUserID());
 	let message = $state('');

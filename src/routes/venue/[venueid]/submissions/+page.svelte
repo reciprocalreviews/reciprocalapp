@@ -16,6 +16,7 @@
 	import isRoleApprover from '$lib/data/isRoleApprover';
 	import type { SubmissionRow } from '$data/types';
 	import TextField from '$lib/components/TextField.svelte';
+	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -40,6 +41,11 @@
 
 	/** Get the current auth state */
 	const auth = getAuth();
+
+	// Reload when the venue or its related data changes.
+	reloadOnChanges('conflict_changes', [
+		{ table: 'conflicts', filter: `scholar=eq.${auth.getUserID()}` }
+	]);
 
 	/** Get the current user ID state */
 	const uid = $derived(auth.getUserID());

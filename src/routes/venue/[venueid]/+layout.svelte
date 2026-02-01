@@ -5,9 +5,22 @@
 	import Link from '$lib/components/Link.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
+	import { page } from '$app/state';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 	const { venue } = $derived(data);
+
+	// Reload when the venue or its related data changes.
+	reloadOnChanges('venue_changes', [
+		{ table: 'venues', filter: `id=eq.${page.params.venueid}` },
+		{ table: 'roles', filter: `venueid=eq.${page.params.venueid}` },
+		{ table: 'transactions', filter: `from_venue=eq.${page.params.venueid}` },
+		{ table: 'transactions', filter: `to_venue=eq.${page.params.venueid}` },
+		{ table: 'tokens', filter: `venue=eq.${page.params.venueid}` },
+		{ table: 'submissions', filter: `venue=eq.${page.params.venueid}` },
+		{ table: 'assignments', filter: `venue=eq.${page.params.venueid}` }
+	]);
 </script>
 
 {#if venue === null}

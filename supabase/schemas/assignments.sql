@@ -293,3 +293,6 @@ grant all on table public.assignments to "anon";
 grant all on table public.assignments to "authenticated";
 
 grant all on table public.assignments to "service_role";
+
+alter publication supabase_realtime
+add table assignments;

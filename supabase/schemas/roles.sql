@@ -65,3 +65,6 @@ grant all on table public.roles to "anon";
 grant all on table public.roles to "authenticated";
 
 grant all on table public.roles to "service_role";
+
+alter publication supabase_realtime
+add table roles;

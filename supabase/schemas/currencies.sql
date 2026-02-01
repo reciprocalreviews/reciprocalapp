@@ -86,3 +86,6 @@ grant all on FUNCTION "public"."no_admin_minters" () to "service_role";
 create or replace trigger "no_admin_minters" BEFORE
 update on "public"."currencies" for EACH row
 execute FUNCTION "public"."no_admin_minters" ();
+
+alter publication supabase_realtime
+add table currencies;

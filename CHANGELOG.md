@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Differentiated between venue admins and editor role, to ensure confidentiality, manage conflicts, and enable compensation (#73).
 - Made volunteering public on a scholar's profile page (#76).
+- Realtime updates on all schoar, currency, venue, submission, and proposals pages (#26).
 
 ### Fixed
 
