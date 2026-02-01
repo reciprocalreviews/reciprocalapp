@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.3.1 2026-02-01
+
+### Changed
+
+- Updated minor versions of `supabase/supabase-js`, `@playright/test`, `@sveltejs/adapter-vercel`, `@svelte/kit`, `prettier`, `supabase`, `svelte`, `svelte-check`, and `vitest`.
+
 ## 0.3.0 2026-01-25
 
 ### Added
@@ -28,7 +34,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Clarified meaning of invite and bid.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of `svelte`, `@sveltejs/kit`, `prettier`, `supabase`, `vitest`.
 
@@ -38,7 +44,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Fixed #33: Added volunteer export feature.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of `@sveltejs`, `supabase`, `@supabase/superbase-js`, `vite`, `vitest` and related dependencies.
 
@@ -55,7 +61,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed assignment insertion permissions.
 - Improved usability of scholar charge interface on submission page.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of `@supabase/supabase-js`, `supabase`, `@sveltejs/kit`, `svelte`, `vite`.
 
@@ -72,7 +78,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Resolved Svelte stale reference warnings.
 - Improved collapsed state of venue editor view.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of `@playwright/test`, `@supabase/ssr`, `@supabase/supabase-js`, `@sveltejs/adapter-vercel`, `@sveltejs/kit`, `prettier`, `supabase`, `svelte`, `vite`, `vitest`.
 
@@ -95,7 +101,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Expand editing roles by default to make volunteering more obvious.
 - Less intense token color.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Supabase, supabase-js, Svelte, SvelteKit, svelte-check, vitest.
 
@@ -111,7 +117,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed #43: Better feedback about unapproved transactions; better link to transactions.
 - Improved visual design of forms and text fields.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Supabase, Svelte, vite, vitest.
 
@@ -125,7 +131,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed #66, permit gifting venue.
 - Made currency visible to venue viewers.
 
-### Maintenance
+### Changed
 
 - Updated minor dependencies: Supabase, Svelte, SvelteKit, vitest.
 
@@ -144,7 +150,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed inline padding of lists.
 - Improved save feedback visual design.
 
-### Maintenance
+### Changed
 
 - Sync SvelteKit types before building in Playwright GitHub Action.
 - Slim Playwright browsers tested.
@@ -153,7 +159,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.1.3 2025-10-19
 
-### Maintenance
+### Changed
 
 - Updated Vercel adapter to 7.0.
 - Updated minor dependencies: Playwright, Supabase, SvelteKit, Svelte, Typescirpt, vite
@@ -165,7 +171,7 @@ Dates should be in`YYYY-MM-DD` format.
 - All manual addition and removal of assignments to submission.
 - Fixed #61, compensating roles for completed assignment. Added manual button and CRUD for other contexts.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Svelte, SvelteKit, vite.
 
@@ -175,7 +181,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Distinguished visual design of feedback component from tags.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Supabase, Svelte, SvelteKit, Vite.
 
@@ -185,7 +191,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Refined visual design based on new dashboard/header/card motif.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Svelte, Supabase.
 
@@ -200,7 +206,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Improved editable text ruler sizing.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Supabase, Svelte, Vite.
 
@@ -226,7 +232,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed [#23](https://github.com/reciprocalreviews/reciprocalapp/issues/23), showing editor roles correctly in profile page.
 - Restructured list of volunteer roles.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Playwright, Supabase, SvelteKit, vite.
 
@@ -248,7 +254,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Improved venue landing page layout.
 - Handle no submissions visible on venue landing page.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Svelte, vite, Supabase.
 
@@ -262,13 +268,13 @@ Dates should be in`YYYY-MM-DD` format.
 
 - More consistent formatting of currency links.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Playwright, Supabase, Svelte, SvelteKit, Typescript, vite.
 
 ## 0.1.19 2025-07-27
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Playwright, Supabase, Svelte, SvelteKit, eslint.
 - Updated to vite 7.
@@ -280,7 +286,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Type error in error handling.
 - Fixed #44: Reminding scholars of stale status.
 
-### Maintenance
+### Changed
 
 - Updated Playwright, Svelte, SvelteKit, Supabase, eslint.
 
@@ -300,7 +306,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Narrow RLS permissions on submissions delete to authenticated scholars.
 - Corrected table for email RLS policy.
 
-### Maintenance
+### Changed
 
 - Updated Supabase, Svelte, SvelteKit, eslint, vitest.
 
@@ -310,7 +316,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Fixed #37, notifying editors and proposers of approved venue.
 
-### Maintenance
+### Changed
 
 - Updated Supabase, sveltKit, Svelte, Vitest.
 - Filtered Chrome log in local development.
@@ -321,7 +327,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Emails table with trigger that calls Resend edge function to send email.
 
-### Maintenance
+### Changed
 
 - Updated Svelte, SvelteKit, Eslint, Prettier, Supabase, Vite, Vitest.
 
@@ -331,7 +337,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Created a Supabase Edge Function and client-side API for sending an email via Resend.
 
-### Maintenance
+### Changed
 
 - Updated Playwright, Svelte, SveltKit, Vite, eslint.
 
@@ -343,7 +349,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed #51 sticky header.
 - Saving feedback in sticky header.
 
-### Maintenance
+### Changed
 
 - Updated Svelte, SvelteKit, Supabase, Supabase SSR, and other minor versions.
 
@@ -362,7 +368,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Improved visual design of assignments for submission.
 - Verified read and write permissions on submission page.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Playwright, Supabase SSR, Svelte, SvelteKit, Eslint, Vitest.
 
@@ -384,7 +390,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Improved status tip.
 - Improved invitation feedback.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Supabase, SvelteKit, Svelte, Vite.
 - Ensure SvelteKit is synced upon build, to clearing warning in Vercel builds.
@@ -410,7 +416,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Show label on editable text when not editing.
 - Make volunteers visible to non-authenticated scholars.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Playright, Svelte, SvelteKit, Vite, Vitest.
 
@@ -421,7 +427,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Account for empty previous id in submission.
 - A bit of assignment and volunteering restructuring to better support requirements.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Supabase, Svelte, Typescript, Vite.
 
@@ -444,7 +450,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Generate proposed transactions for submission.
 - Account for currency in gifting and transfers.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of Svelte, Vite, Vitest.
 
@@ -460,7 +466,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed scholar transactions breadcrumb link.
 - Collapse new submission form after submitting.
 
-### Maintenance
+### Changed
 
 - Updated all minor versions of Supabase, Svelte, SvelteKit.
 
@@ -470,7 +476,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Added basic bidding interface.
 
-### Maintenance
+### Changed
 
 - Updated all minor versions of vite, Typescript, Svelte, Supabase.
 
@@ -486,7 +492,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Resolved several defects with the new submission form.
 
-### Maintenance
+### Changed
 
 - Updated minor versions of all dependencies.
 
@@ -499,7 +505,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Added breadcrumbs on all pages to streamline navigation.
 - Defined a page to display a submission to authors or editors.
 
-### Maintenance
+### Changed
 
 - Updated all minor versions of vite, Typescript, Svelte, Supabase.
 
@@ -509,7 +515,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Initial progress on `submissions` schema.
 
-### Maintenance
+### Changed
 
 - Updated all minor versions of vite, Typescript, Svelte, Supabase.
 
@@ -519,7 +525,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Improved styling of expandable cards.
 
-### Maintenance
+### Changed
 
 - Updated all minor versions of dependencies, including Svelte, SvelteKit, and Vite.
 
@@ -544,7 +550,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Allow scholars to gift tokens.
 - Added pattern for explicit success feedback.
 
-### Maintenance
+### Changed
 
 - Updated all minor releases of dependencies.
 - Updated to vite 6.
@@ -563,7 +569,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Minters mint tokens.
 - Venues can gift tokens to scholars.
 
-### Maintenance
+### Changed
 
 - Updated Svelte and Supabase point releases.
 
@@ -576,7 +582,7 @@ Dates should be in`YYYY-MM-DD` format.
 - List minters on a currency.
 - Add and remove minters from currency.
 
-### Maintenance
+### Changed
 
 - Renamed SourceLink to VenueLink for consistency.
 - Upgraded Svelte, SvelteKit, Supabase dependencies.
@@ -595,7 +601,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Fixed venues link on home page.
 
-### Maintenance
+### Changed
 
 - Upgraded Svelte, eslint, and dependencies.
 
@@ -611,7 +617,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Deactivated hover feedback on inactive buttons.
 - Fixed rendering for missing name in venue proposal.
 
-### Maintenance
+### Changed
 
 - Upgraded to Svelte 5.0.
 
@@ -648,14 +654,14 @@ Dates should be in`YYYY-MM-DD` format.
 - Create currencies and exchanges.
 - Create currency route.
 
-### Maintenance
+### Changed
 
 - Updated Svelte and Supabase minor versions.
 - Updated GitHub checkout action dependencies.
 
 ## 0.0.3 2024-09-01
 
-### Maintenance
+### Changed
 
 - Updated Svelte and Supabase minor revisions.
 
@@ -666,7 +672,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Supabase scripts for documentation.
 - Basic email one-time password authenatication.
 
-### Maintenance
+### Changed
 
 - Updated Svelte and Supabase minor revisions
 - Migrated auth state to Svelte state class.
