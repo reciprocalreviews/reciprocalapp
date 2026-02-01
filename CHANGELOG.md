@@ -16,6 +16,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Improved layout of volunteers table (#77).
 - Editable text no longer grows the page unbounded (#75).
 - Fixed submissions update RLS role to allow editors to edit.
+- Better spacing in page metadata.
 
 ### Changed
 

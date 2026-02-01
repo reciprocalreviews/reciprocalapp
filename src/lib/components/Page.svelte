@@ -36,7 +36,7 @@
 </svelte:head>
 
 <section class="page">
-	<div>
+	<div class="metadata">
 		{#if breadcrumbs.length > 0}
 			<div class="breadcrumbs">
 				{#each breadcrumbs as url, index}
@@ -84,6 +84,13 @@
 	.page > :global(p) {
 		margin-block-end: 0;
 	}
+
+	.metadata {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing);
+	}
+
 	.details {
 		display: flex;
 		flex-direction: row;
