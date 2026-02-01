@@ -3,10 +3,9 @@
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Link from '$lib/components/Link.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
-	import { DeleteLabel, ScholarLabel, TokenLabel } from '$lib/components/Labels';
+	import { ScholarLabel, TokenLabel } from '$lib/components/Labels';
 	import { addFeedback, handle } from '../../feedback.svelte';
 	import Roles from './Roles.svelte';
 	import type { PageData } from './$types';
@@ -23,7 +22,7 @@
 		$derived(data);
 
 	const db = getDB();
-	let editor = $derived(scholar && venue && venue.editors.includes(scholar.id));
+	let isAdmin = $derived(scholar && venue && venue.admins.includes(scholar.id));
 	let isVolunteer = $derived(
 		scholar && venue && volunteers && volunteers.some((v) => v.scholarid === scholar.id)
 	);
@@ -41,7 +40,7 @@
 	<Page
 		title={venue.title}
 		breadcrumbs={[[`/venues`, 'Venues']]}
-		edit={editor
+		edit={isAdmin
 			? {
 					placeholder: 'Title',
 					valid: (text) => (text.length > 0 ? undefined : 'Must include a title'),
@@ -51,7 +50,7 @@
 	>
 		{#snippet subtitle()}Venue{/snippet}
 		{#snippet details()}
-			{#if editor}
+			{#if isAdmin}
 				<EditableText
 					text={venue.url}
 					placeholder="https://..."
@@ -61,7 +60,7 @@
 			{:else}<Link to={venue.url}>{venue.url}</Link>{/if}{/snippet}
 
 		<!-- Show the description -->
-		{#if editor}
+		{#if isAdmin}
 			<EditableText
 				text={venue.description}
 				placeholder="Venue description."
@@ -75,24 +74,6 @@
 		{/if}
 
 		<ul>
-			<li>
-				This venue is edited by
-				{#each venue.editors as editorID, index}
-					<ScholarLink id={editorID} />{#if editor && venue.editors.length > 1}
-						&nbsp;<Button
-							tip="Remove editor"
-							active={venue.editors.length > 1}
-							warn="Are you sure you want to remove this editor?"
-							action={() =>
-								handle(
-									db().editVenueEditors(
-										venue.id,
-										venue.editors.filter((ed) => ed !== editorID)
-									)
-								)}>{DeleteLabel}</Button
-						>{/if}{#if index < venue.editors.length - 1},{/if}.
-				{/each}
-			</li>
 			<!-- Prompt to pay -->
 			<li>
 				Submitted a manuscript? <Link to={`${venue.id}/submissions/new`}>Pay</Link> to start peer review.
@@ -110,9 +91,9 @@
 			</li>
 		</ul>
 
-		{#if editor}
+		{#if isAdmin}
 			<Feedback inline={false}>
-				Welcome editor! Check the <Link to="/venue/{venue.id}/settings">settings</Link> page to edit venue
+				Welcome admin! Check the <Link to="/venue/{venue.id}/settings">settings</Link> page to edit venue
 				compensation, roles, and anonymity.
 			</Feedback>
 		{/if}
@@ -153,7 +134,7 @@
 				scholar={scholar?.id}
 				{roles}
 				{volunteers}
-				editor={false}
+				isAdmin={false}
 				{currency}
 				{minters}
 			/>

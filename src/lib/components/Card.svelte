@@ -21,7 +21,7 @@
 		header: string;
 		note: string;
 		subheader?: boolean;
-		group?: 'editors' | 'minters' | 'stewards' | 'invite only';
+		group?: 'admins' | 'minters' | 'stewards' | 'invite only';
 		full?: boolean;
 		expand?: boolean;
 	} = $props();

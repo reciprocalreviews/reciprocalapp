@@ -66,13 +66,13 @@ with
 		)
 	);
 
-create policy "only token owners can update a token" on public.tokens
+create policy "only token owners and venue admins can update a token" on public.tokens
 for update
 	to authenticated using (
 		(
 			(
 				(venue is not null)
-				and public.isEditor ("venue")
+				and public.isAdmin (venue)
 			)
 			or (
 				(scholar is not null)

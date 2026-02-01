@@ -44,8 +44,8 @@
 	/** Get the current user ID state */
 	const uid = $derived(auth.getUserID());
 
-	/** True if the current user is an editor of this venue */
-	const isEditor = $derived(uid !== null && venue !== null && venue.editors.includes(uid));
+	/** True if the current user is an admin of this venue */
+	const isAdmin = $derived(uid !== null && venue !== null && venue.admins.includes(uid));
 
 	/** The roles to show, filtered by the which role the current scholar has */
 	const visibleRoles = $derived(
@@ -59,12 +59,11 @@
 							(v) => v.scholarid === uid && v.roleid === role.id && v.accepted === 'accepted'
 						);
 						// See if this scholar is an approver for this role.
-						const isApprover =
-							uid !== null && (isEditor || isRoleApprover(role, volunteering, uid));
+						const isApprover = uid !== null && (isAdmin || isRoleApprover(role, volunteering, uid));
 
 						return {
 							...role,
-							isVisible: isEditor || role.biddable || hasRole || isApprover,
+							isVisible: isAdmin || role.biddable || hasRole || isApprover,
 							hasRole,
 							isApprover
 						};

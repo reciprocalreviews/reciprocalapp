@@ -9,7 +9,7 @@ create table if not exists public.roles (
 	name text default ''::text not null,
 	-- The rich text description of the role
 	description text default ''::text not null,
-	-- Whether the role is invite only. If true, only editors can invite scholars to the role.
+	-- Whether the role is invite only. If true, only role approvers can invite scholars to the role.
 	invited boolean not null,
 	-- Whether the role is biddable. If true, scholars can bid on submissions with the role.
 	biddable boolean default false not null,
@@ -47,18 +47,18 @@ select
 	to "authenticated",
 	"anon" using (true);
 
-create policy "only editors can create venue roles" on public.roles for INSERT to "authenticated",
+create policy "only admins can create venue roles" on public.roles for INSERT to "authenticated",
 "anon"
 with
-	check (public.isEditor (venueid));
+	check (public.isAdmin (venueid));
 
-create policy "only editors can update roles" on public.roles
+create policy "only admins can update roles" on public.roles
 for update
 	to "authenticated",
-	"anon" using (public.isEditor (venueid));
+	"anon" using (public.isAdmin (venueid));
 
-create policy "only editors can delete roles" on public.roles for DELETE to "authenticated",
-"anon" using (public.isEditor (venueid));
+create policy "only admins can delete roles" on public.roles for DELETE to "authenticated",
+"anon" using (public.isAdmin (venueid));
 
 grant all on table public.roles to "anon";
 

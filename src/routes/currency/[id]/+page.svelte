@@ -26,7 +26,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let { currency, venues, editors, count, scholarCount, venueCount } = $derived(data);
+	let { currency, venues, admins, count, scholarCount, venueCount } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -42,12 +42,12 @@
 
 	function isValidMinter(text: string | ScholarID) {
 		if (validEmail(text)) {
-			return editors.some((scholar) => scholar.email === text)
-				? "Minters can't be editors of a venue that uses this currency."
+			return admins.some((scholar) => scholar.email === text)
+				? "Minters can't be admins of a venue that uses this currency."
 				: undefined;
 		} else if (validORCID(text)) {
-			return editors.some((scholar) => scholar.orcid === text)
-				? "Minters can't be editors of a venue that uses this currency."
+			return admins.some((scholar) => scholar.orcid === text)
+				? "Minters can't be admins of a venue that uses this currency."
 				: undefined;
 		} else return 'Must be a valid email or ORCID';
 	}

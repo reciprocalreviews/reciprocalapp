@@ -34,7 +34,7 @@
 	let {
 		scholar,
 		commitments,
-		editing,
+		admins,
 		minting,
 		tokens,
 		transactions,
@@ -47,7 +47,7 @@
 	}: {
 		scholar: Scholar;
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
-		editing: { id: string; title: string }[] | null;
+		admins: { id: string; title: string }[] | null;
 		tokens: TokenRow[] | null;
 		transactions: number | null;
 		submissions: SubmissionRow[] | null;
@@ -131,7 +131,7 @@
 		<Tasks scholar={scholar.getID()} {commitments} {minting} {pending} {reviews} {approvals}
 		></Tasks>
 
-		<Commitments {commitments} {editing} {minting}></Commitments>
+		<Commitments {commitments} {admins} {minting}></Commitments>
 	{/if}
 
 	<Subheader icon={SubmissionLabel} id="submissions">Submissions</Subheader>

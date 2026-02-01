@@ -8,7 +8,7 @@
 	let {
 		commitments,
 		venues,
-		editing,
+		admins,
 		tokens,
 		transactions,
 		submissions,
@@ -46,7 +46,7 @@
 	<ScholarView
 		scholar={state}
 		commitments={volunteering}
-		{editing}
+		{admins}
 		{tokens}
 		{transactions}
 		{submissions}

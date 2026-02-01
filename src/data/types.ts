@@ -17,6 +17,7 @@ export type VolunteerRow = Tables['volunteers']['Row'];
 export type VolunteerID = VolunteerRow['id'];
 export type Response = Database['public']['Enums']['invited'];
 export type TransactionRow = Tables['transactions']['Row'];
+export type TransactionID = TransactionRow['id'];
 export type TokenID = Tables['tokens']['Row']['id'];
 export type TokenRow = Tables['tokens']['Row'];
 export type TransactionStatus = Database['public']['Enums']['transaction_status'];

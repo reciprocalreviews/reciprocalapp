@@ -73,18 +73,21 @@ select
 	to "authenticated",
 	"anon" using (
 		(
+			-- Scholars giving can see their transactions
 			(
 				(
 					select
 						auth.uid () as uid
 				)=from_scholar
 			)
+			-- Scholars receiving can see their transactions
 			or (
 				(
 					select
 						auth.uid () as uid
 				)=to_scholar
 			)
+			-- Minters can see all transactions
 			or (
 				(
 					select
@@ -100,6 +103,7 @@ select
 					)::uuid[]
 				)
 			)
+			-- Giving venue admins can see the venue's transactions given
 			or (
 				(from_venue is not null)
 				and (
@@ -109,7 +113,7 @@ select
 					)=any (
 						(
 							select
-								venues.editors
+								venues.admins
 							from
 								venues
 							where
@@ -118,6 +122,7 @@ select
 					)
 				)
 			)
+			-- Receiving venues can see the venue's transactions received
 			or (
 				(to_venue is not null)
 				and (
@@ -127,7 +132,7 @@ select
 					)=any (
 						(
 							select
-								venues.editors
+								venues.admins
 							from
 								public.venues
 							where
@@ -144,8 +149,10 @@ create policy "only owners can transfer their tokens if approved" on public.tran
 with
 	check (
 		(
+			-- Transactions can be proposed by anyone
 			(status='proposed'::transaction_status)
 			or (
+				-- Transactions can be approved by the giver
 				(status='approved'::transaction_status)
 				and (
 					(
@@ -166,7 +173,7 @@ with
 							)=any (
 								(
 									select
-										venues.editors
+										venues.admins
 									from
 										venues
 									where
@@ -185,12 +192,14 @@ for update
 	to "authenticated",
 	"anon" using (
 		(
+			-- Givers can update their transactions
 			(
 				(
 					select
 						auth.uid () as uid
 				)=from_scholar
 			)
+			-- Minters can update transactions
 			or (
 				(
 					select
@@ -206,6 +215,7 @@ for update
 					)::uuid[]
 				)
 			)
+			-- Giving venue admins can update the venue's transactions given
 			or (
 				(from_venue is not null)
 				and (
@@ -215,7 +225,7 @@ for update
 					)=any (
 						(
 							select
-								venues.editors
+								venues.admins
 							from
 								public.venues
 							where

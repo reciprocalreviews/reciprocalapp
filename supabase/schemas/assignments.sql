@@ -28,16 +28,16 @@ alter table only public.assignments
 add constraint "assignments_pkey" primary key (id);
 
 alter table only public.assignments
-add constraint "assignments_role_fkey" foreign KEY (role) references public.roles (id);
+add constraint "assignments_role_fkey" foreign KEY (role) references public.roles (id) on delete cascade;
 
 alter table only public.assignments
-add constraint "assignments_scholar_fkey" foreign KEY (scholar) references public.scholars (id);
+add constraint "assignments_scholar_fkey" foreign KEY (scholar) references public.scholars (id) on delete cascade;
 
 alter table only public.assignments
-add constraint "assignments_submission_fkey" foreign KEY (submission) references public.submissions (id);
+add constraint "assignments_submission_fkey" foreign KEY (submission) references public.submissions (id) on delete cascade;
 
 alter table only public.assignments
-add constraint "assignments_venue_fkey" foreign KEY (venue) references public.venues (id);
+add constraint "assignments_venue_fkey" foreign KEY (venue) references public.venues (id) on delete cascade;
 
 --------------------------------------
 -- Indexes
@@ -91,7 +91,7 @@ grant all on FUNCTION public.isAssigned (_submissionid uuid) to "service_role";
 alter table public.assignments enable row level security;
 
 -- We declare the select policy for submissions after the assigments table is created.
-create policy "authors, editors, and bidders can view submissions" on public.submissions for
+create policy "authors, assigned, and bidders can view submissions" on public.submissions for
 select
 	to "authenticated",
 	"anon" using (
@@ -103,8 +103,6 @@ select
 						auth.uid () as uid
 				)=any (authors)
 			)
-			-- Editors can see all submissions in their venue
-			or public.isEditor (venue)
 			-- Volunteers with accepted biddable roles for the submission's venue
 			or (
 				exists (
@@ -160,7 +158,46 @@ select
 		)
 	);
 
-create policy "editors, assignees, and approvers can see assignments" on public.assignments for
+-- We declare the submissions update policy after the assignments table is created
+-- So we can refer to the assignments.
+create policy "authors and editors can update submissions" on public.submissions
+for update
+	to authenticated using (
+		-- The authenticated scholar has a top priority role on this submission
+		(
+			exists (
+				select
+					id
+				from
+					public.assignments
+				where
+					submission=id
+					and scholar=(
+						select
+							auth.uid ()
+					)
+					and approved=true
+					and exists (
+						select
+							id
+						from
+							public.roles
+						where
+							id=assignments.role
+							and priority=0
+					)
+			)
+		)
+		-- The authenticated scholar is an author on this submission
+		or (
+			(
+				select
+					auth.uid ()
+			)=any (authors)
+		)
+	);
+
+create policy "assignees and approvers can see assignments" on public.assignments for
 select
 	to "authenticated" using (
 		(
@@ -175,30 +212,27 @@ select
 						id=venue
 				)=false
 			)
-			-- Editors can see all assignments in their venue, unless conflicted
-			or public.isEditor (venue)
 			-- The assigned scholar can see their assignments
 			or (
-				"scholar"=(
+				scholar=(
 					select
 						auth.uid () as "uid"
 				)
 			)
-			-- Scholars assigned to this assignment's submission can see other assignments
+			-- Scholars assigned to this assignment's submission can see other assignments on this submission.
 			or public.isAssigned (submission)
 			-- Approvers for this assignment's role can see assignments, since they make them.
 			or public.isApprover (role)
 		)
 	);
 
-create policy "editors, assignees, and approvers can update assignments" on public.assignments
+create policy "assignees and approvers can update assignments" on public.assignments
 for update
 	to "authenticated",
 	"anon" using (
 		(
-			public.isEditor (venue)
-			or (
-				"scholar"=(
+			(
+				scholar=(
 					select
 						auth.uid () as "uid"
 				)
@@ -207,26 +241,24 @@ for update
 		)
 	);
 
-create policy "editors and assignees can delete assignments" on "public"."assignments" for delete to "authenticated" using (
+create policy "assignees can delete assignments" on "public"."assignments" for delete to "authenticated" using (
 	(
-		public.isEditor (venue)
-		or (
-			"scholar"=(
-				select
-					auth.uid () as "uid"
-			)
+		scholar=(
+			select
+				auth.uid () as "uid"
 		)
 	)
 );
 
-create policy "editors, approvers, and volunteers can create assignments" on "public"."assignments" for insert to "authenticated",
+create policy "admins, approvers and volunteers can create assignments" on "public"."assignments" for insert to "authenticated",
 "anon"
 with
 	check (
 		(
-			public.isEditor (venue)
+			-- If the current scholar is an admin, they can create any assignment.
+			public.isAdmin (venue)
 			-- If the current scholar has an assigment to the role that is the approver for the new assignment's role.
-			or (
+			(
 				isApprover (role)
 				and isAssigned (submission)
 			)

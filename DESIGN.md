@@ -95,7 +95,7 @@ There are several key types of data in RR.
 - [x] Scholars can spend and earn `Token`s for that volunteer work
 - [x] Scholars can receive `Token`s as gifts
 - [x] Scholars can spend `Token`s to submit manuscripts for peer review.
-- [x] Scholars can also have _`editor`_ status on a `Venue`, which gives them the ability to manage the `transaction`s and `submission`s in a `Venue`.
+- [x] Scholars can also have _`admin`_ status on a `Venue`, which gives them the ability to manage the configuration of the venue `Venue`.
 - [x] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
 - [x] An individual scholar cannot be both an _`editor`_ and a _`minter`_, as this would allow editors to enrich themselves without oversight.
 - [x] Scholars can specify an email address for communication.
@@ -155,16 +155,14 @@ create table venues (
 	currency uuid not null,
 	-- The optional amount of newly minted tokens granted to new volunteers
 	welcome_amount integer not null,
-	-- The amount of tokens granted for each submission for an editor.
-	edit_amount integer default 1 not null,
 	-- Submission cost in the venue's currency
 	submission_cost integer default 0 not null,
-	-- One or more scholars who serve as editors of the venue
-	editors uuid[] default '{}'::uuid[] not null,
+	-- One or more scholars who serve as admins of the venue
+	admins uuid[] default '{}'::uuid[] not null,
 	-- Whether the venue is active; null if so, text if not, explaining why.
 	inactive text default 'This venue is being configured.'::text,
 	-- There must be at least one editor
-	constraint venues_editors_check check (cardinality(editors)>0)
+	constraint venues_admins_check check (cardinality(admins)>0)
 );
 
 -- anyone can propose venues
@@ -222,7 +220,7 @@ create table roles (
 	name text default ''::text not null,
 	-- The rich text description of the role
 	description text default ''::text not null,
-	-- Whether the role is invite only. If true, only editors can invite scholars to the role.
+	-- Whether the role is invite only. If true, only role approvers can invite scholars to the role.
 	invited boolean not null,
 	-- Whether the role is biddable. If true, scholars can bid on submissions with the role.
 	biddable boolean default false not null,
@@ -377,7 +375,7 @@ A `Submission` represents a manuscript undergoing peer review.
 - [x] Depending on the venue, `Scholar`s may be able to bid on submissions, simplifying an editor's ability to find qualified reviewers.
 - [x] `Submission`s can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
 - [x] `Submission`s can be added manually by \_`editor`\_s.
-- [x] Bids on submissions can be approved by editors
+- [x] Bids on submissions can be approved by approvers
 - [x] Bids on submissions can be approved by roles that are set to be approving roles for another role (e.g., Associate Editors can approve bids from Reviewers)
 - [x] Scholars can declare conflicts on submissions visible to them, preventing them from seeing those submissions' assignments if a venue is set to preserve reviewer anonymity
 - [ ] ([#41](https://github.com/reciprocalreviews/reciprocalapp/issues/41)): Submissions can be proposed through email integrations with review systems, which provide submission metadata, but must then be approved by editors
@@ -648,7 +646,7 @@ If the `Venue` is set to be public:
 > [!IMPORTANT]
 > All functionality below is specific to compensation
 
-The purpose of a submission page is to allow editors and scholars to see information about the submission. This page will not have any major functionality, unless future versions of RR also support reviewing activity itself. In those future versions, this would be the route where scholars access the submission draft and submit reviews and meta reviews, and discuss the submission to come to a recommendation.
+The purpose of a submission page is to allow assigned reviewers and authors to see information about the submission. This page will not have any major functionality, unless future versions of RR also support reviewing activity itself. In those future versions, this would be the route where scholars access the submission draft and submit reviews and meta reviews, and discuss the submission to come to a recommendation.
 
 # Notifications
 

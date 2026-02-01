@@ -14,18 +14,24 @@
 	<Page title="Unknown venue" breadcrumbs={[[`/venues`, 'Venue']]}>
 		<p>Unable to find this venue.</p>
 	</Page>
-{:else if venue.inactive !== null && !venue.editors.includes(data.scholar?.id ?? '')}
+{:else if venue.inactive !== null && !venue.admins.includes(data.scholar?.id ?? '')}
 	<Page title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
 		{#snippet subtitle()}Venue{/snippet}
-		{#snippet details()}<Link to={venue.url}>{venue.url}</Link> Editors: {#each venue.editors as editorID}
-				<ScholarLink id={editorID} />
+		{#snippet details()}<Link to={venue.url}>{venue.url}</Link> Admins: {#each venue.admins as adminID}
+				<ScholarLink id={adminID} />
 			{/each}{/snippet}
-		<Feedback error><strong>{venue.inactive}</strong></Feedback>
+		<Feedback error>
+			<p>
+				This venue is currently <strong>inactive</strong>, so only admins can see its details. Here
+				is the message from the admins.
+			</p>
+			<p><em>{venue.inactive}</em></p>
+		</Feedback>
 	</Page>
 {:else}
 	{#if venue.inactive !== null}
 		<Feedback error
-			>This venue is currently <strong>inactive</strong>. Only you and other editors can see it,
+			>This venue is currently <strong>inactive</strong>. Only you and other admins can see it,
 			along with the message set in the <Link to="/venue/{venue.id}/settings">venue settings</Link>.
 			Visit the settings to activate the venue.</Feedback
 		>

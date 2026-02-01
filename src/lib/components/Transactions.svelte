@@ -43,7 +43,7 @@
 		userid !== null &&
 		(transaction.from_scholar === userid ||
 			(transaction.from_venue !== null &&
-				venues.find((v) => v.id === transaction.from_venue)?.editors.includes(userid)) ||
+				venues.find((v) => v.id === transaction.from_venue)?.admins.includes(userid)) ||
 			currency?.minters.includes(userid))}
 	<tr>
 		<td>
@@ -60,7 +60,7 @@
 					id={transaction.from_scholar}
 				/>{:else if transaction.from_venue}<VenueLink
 					id={transaction.from_venue}
-					name={venues.find((v) => v.id === transaction.from_venue)?.title ?? 'unknkown venue'}
+					name={venues.find((v) => v.id === transaction.from_venue)?.title ?? 'unknown venue'}
 				></VenueLink>{/if}</td
 		>
 		<td
@@ -68,7 +68,7 @@
 					id={transaction.to_scholar}
 				/>{:else if transaction.to_venue}<VenueLink
 					id={transaction.to_venue}
-					name={venues.find((v) => v.id === transaction.to_venue)?.title ?? 'unknkown venue'}
+					name={venues.find((v) => v.id === transaction.to_venue)?.title ?? 'unknown venue'}
 				></VenueLink>{/if}</td
 		>
 		<td><Note>{transaction.purpose}</Note></td>

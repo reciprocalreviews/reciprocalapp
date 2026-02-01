@@ -5,7 +5,7 @@
 		display: flex;
 		flex-direction: row;
 		flex-wrap: wrap;
-		gap: var(--spacing);
-		row-gap: var(--spacing);
+		gap: var(--spacing-half);
+		row-gap: var(--spacing-half);
 	}
 </style>

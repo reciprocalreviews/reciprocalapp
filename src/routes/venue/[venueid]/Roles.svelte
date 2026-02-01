@@ -25,13 +25,14 @@
 	import Cards from '$lib/components/Cards.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import Options from '$lib/components/Options.svelte';
+	import ScholarLink from '$lib/components/ScholarLink.svelte';
 
 	let {
 		venue,
 		roles,
 		volunteers,
 		scholar,
-		editor,
+		isAdmin,
 		currency,
 		minters
 	}: {
@@ -39,7 +40,7 @@
 		scholar: ScholarID | undefined;
 		roles: RoleRow[] | null;
 		volunteers: VolunteerRow[] | null;
-		editor: boolean;
+		isAdmin: boolean;
 		currency: CurrencyRow;
 		minters: ScholarRow[] | null;
 	} = $props();
@@ -54,14 +55,14 @@
 
 	let newEditor: string = $state('');
 
-	function validEditor(scholar: string | ScholarID): string | undefined {
+	function validAdmin(scholar: string | ScholarID): string | undefined {
 		if (validEmail(scholar)) {
 			if (!(minters ?? []).some((m) => m.email === scholar)) return undefined;
-			else return "Editors can't be minters of the venue's currency.";
+			else return "Admins can't be minters of the venue's currency.";
 		}
 		if (validORCID(scholar)) {
 			if (currency.minters.includes(scholar))
-				return "Editors can't be minters of the venue's currency.";
+				return "Admins can't be minters of the venue's currency.";
 			else return undefined;
 		}
 		return 'Must be a valid email or ORCID.';
@@ -69,7 +70,7 @@
 </script>
 
 {#if roles}
-	{#if editor}
+	{#if isAdmin}
 		<form>
 			<p>Create a new role.</p>
 			<TextField
@@ -95,45 +96,52 @@
 
 	<Cards>
 		<Card
-			icon={venue.editors.length}
+			icon={venue.admins.length}
 			subheader
-			header="Editor"
-			note="Scholars who manage submissions and compensation for this venue."
-			expand={!editor}
+			header="Admins"
+			note="Scholars who manage this venue's configuration."
+			expand={!isAdmin}
 		>
 			<p>
-				Editors can edit venue information, add and remove other editors, create and archive
-				submissions, and gift review tokens. They are typically Editors-in-Chief of a journal or
-				Program Chairs of a conference. Editors are compensated <Tokens
-					amount={venue.edit_amount}
-				/> per submission in the currency
-				<CurrencyLink {currency} />.
+				This venue is administered by
+				{#each venue.admins as adminID, index}
+					{#if index > 0 && venue.admins.length > 1},{/if}
+					{#if index === venue.admins.length - 1}and{/if}
+					<ScholarLink id={adminID} />{#if isAdmin && venue.admins.length > 1}
+						&nbsp;<Button
+							tip="Remove admin"
+							active={venue.admins.length > 1}
+							warn="Are you sure you want to remove this admin?"
+							action={() =>
+								handle(
+									db().editVenueAdmins(
+										venue.id,
+										venue.admins.filter((ad) => ad !== adminID)
+									)
+								)}>{DeleteLabel}</Button
+						>{/if}
+				{/each}.
+			</p>
+			<p>
+				Admins can edit venue information, add and remove other admins, and gift tokens. They are
+				typically Editors-in-Chief, Program Chairs of a conference, or editorial staff.
 			</p>
 
-			{#if editor}
-				<Slider
-					min={1}
-					max={venue.welcome_amount}
-					value={venue.edit_amount}
-					step={1}
-					label="compensation"
-					change={(value) => handle(db().editVenueEditorCompensation(venue.id, value))}
-					><Tokens amount={venue.edit_amount}></Tokens>/submission</Slider
-				>
+			{#if isAdmin}
 				<form>
-					<p>Add a new editor.</p>
+					<p>Add a new admin.</p>
 					<TextField
 						label="Scholar"
 						bind:text={newEditor}
 						size={19}
 						placeholder="ORCID or email"
-						valid={(text) => validEditor(text)}
+						valid={(text) => validAdmin(text)}
 					/><Button
-						tip="Add editor"
-						active={validEditor(newEditor) === undefined}
+						tip="Add admin"
+						active={validAdmin(newEditor) === undefined}
 						action={async () => {
-							if (await handle(db().addVenueEditor(venue.id, newEditor))) newEditor = '';
-						}}>Add editor</Button
+							if (await handle(db().addVenueAdmin(venue.id, newEditor))) newEditor = '';
+						}}>Add admin</Button
 					>
 				</form>
 			{/if}
@@ -146,22 +154,29 @@
 				icon={roleVolunteers.length === 0 ? ScholarLabel : roleVolunteers.length}
 				header={role.name}
 				note={role.description.length === 0 ? 'Role' : role.description}
-				expand={!editor}
+				expand={!isAdmin}
 			>
 				{#snippet controls()}
-					{#if editor}
+					{#if isAdmin}
 						<Button
 							active={index > 0}
-							tip="Move this role up"
+							tip="Move this role's priority up"
 							action={() => handle(db().reorderRole(role, $state.snapshot(roles), -1))}>↑</Button
 						>
 						<Button
 							active={index < roles.length - 1}
-							tip="Move this role down"
+							tip="Move this role's priority down"
 							action={() => handle(db().reorderRole(role, $state.snapshot(roles), 1))}>↓</Button
 						>
 					{/if}
 				{/snippet}
+
+				{#if role.priority === 0}
+					<Feedback
+						>Because this role is the highest priority, volunteers for this role are assigned the
+						role for new submissions.
+					</Feedback>
+				{/if}
 
 				{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}
 
@@ -228,7 +243,7 @@
 					<Feedback error inline><Link to="/login">Log in</Link> to volunteer.</Feedback>
 				{/if}
 
-				{#if editor && scholar}
+				{#if isAdmin && scholar}
 					<Form>
 						<p>
 							Add one or more people to invite to this role by email or ORCID, separated by commas.
@@ -265,13 +280,13 @@
 					</Form>
 				{/if}
 
-				{#if editor}
+				{#if isAdmin}
 					<Card
 						icon="⚙️"
 						header="settings"
 						note="Edit this role's settings"
 						subheader
-						group="editors"
+						group="admins"
 					>
 						{#if roleVolunteers.length > 0}
 							<Feedback error
@@ -347,7 +362,9 @@
 						<Button
 							warn="Delete this role and all volunteers?"
 							tip="Delete this role"
-							action={() => handle(db().deleteRole(role.id))}>Delete {DeleteLabel} …</Button
+							active={roles.length > 1}
+							action={() => handle(db().deleteRole(role.id))}
+							>{#if roles.length > 1}Delete {DeleteLabel} …{:else}Can't delete the last role{/if}</Button
 						>
 					</Card>
 				{/if}

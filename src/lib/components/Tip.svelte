@@ -20,7 +20,7 @@
 		display: flex;
 		flex-direction: row;
 		flex-wrap: nowrap;
-		gap: calc(var(--spacing) / 2);
+		gap: var(--spacing-half);
 		align-items: first baseline;
 		font-size: var(--small-font-size);
 	}

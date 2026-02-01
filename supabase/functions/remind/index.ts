@@ -61,10 +61,10 @@ async function getStaleStatusReminder(supabase: SupabaseClient<Database>): Promi
 }
 
 async function getTransactionReminders(supabase: SupabaseClient<Database>): Promise<Email[]> {
-	// Remind editors and minters of non-null from_venues of unapproved proposed transactions.
+	// Remind admins and minters of non-null from_venues of unapproved proposed transactions.
 	const { data: unapprovedTransactions, error: unapprovedTransactionsError } = await supabase
 		.from('transactions')
-		.select('id, status, venues!from_venue(editors), currencies!currency(minters)')
+		.select('id, status, venues!from_venue(admins), currencies!currency(minters)')
 		.eq('status', 'proposed')
 		.not('from_venue', 'is', null);
 
@@ -81,14 +81,14 @@ async function getTransactionReminders(supabase: SupabaseClient<Database>): Prom
 	const scholarsToRemind = new Map<string, string[]>();
 
 	for (const transaction of unapprovedTransactions) {
-		const editors = transaction.venues?.editors ?? [];
+		const admins = transaction.venues?.admins ?? [];
 		const minters = transaction.currencies.minters;
 
-		for (const editor of editors) {
-			if (!scholarsToRemind.has(editor)) {
-				scholarsToRemind.set(editor, []);
+		for (const admin of admins) {
+			if (!scholarsToRemind.has(admin)) {
+				scholarsToRemind.set(admin, []);
 			}
-			scholarsToRemind.get(editor)?.push(transaction.id);
+			scholarsToRemind.get(admin)?.push(transaction.id);
 		}
 
 		for (const minter of minters) {

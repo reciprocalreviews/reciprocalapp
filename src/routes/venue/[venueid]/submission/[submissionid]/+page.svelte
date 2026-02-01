@@ -52,7 +52,17 @@
 	const db = getDB();
 
 	/** Whether the current scholar is an editor */
-	let isEditor = $derived(venue !== null && user !== null && venue.editors.includes(user.id));
+	let isAdmin = $derived(venue !== null && user !== null && venue.admins.includes(user.id));
+
+	/** Whether the current scholar has the highest rank role on this submission */
+	let isEditor = $derived(
+		assignments?.some(
+			(a) =>
+				roles !== null &&
+				a.scholar === user?.id &&
+				roles.some((r) => r.id === a.role && r.priority === 0)
+		)
+	);
 
 	/** The transactions corresponding to each of the authors */
 	const authorTransactions = $derived(
@@ -119,7 +129,7 @@
 	>
 		<Feedback error>This submission does not exist or is not visible to you.</Feedback>
 	</Page>
-{:else if !isEditor && !isAuthor && !isAssigned}
+{:else if !isAuthor && !isAssigned}
 	<Page
 		title="Submission"
 		breadcrumbs={[
@@ -232,8 +242,7 @@
 					label="Role"
 					bind:value={newAssignmentRole}
 					options={[
-						{ label: '—', value: undefined },
-						...(isEditor ? roles : rolesScholarCanApprove).map((role) => ({
+						...(isAdmin ? roles : rolesScholarCanApprove).map((role) => ({
 							label: role.name,
 							value: role.id
 						}))
@@ -292,17 +301,6 @@
 			{#snippet header()}
 				<th>Role</th><th>Scholar</th><th>Expertise</th><th>Balance</th><th>Action</th>
 			{/snippet}
-
-			<!-- First, show the editors -->
-			{#each venue.editors as editor}
-				<tr>
-					<td>Editor</td>
-					<td><ScholarLink id={editor}></ScholarLink></td>
-					<td>{EmptyLabel}</td>
-					<td>{EmptyLabel}</td>
-					<td>{EmptyLabel}</td>
-				</tr>
-			{/each}
 
 			<!-- Sort roles by priority -->
 			{#each roles.toSorted((a, b) => a.priority - b.priority) as role}

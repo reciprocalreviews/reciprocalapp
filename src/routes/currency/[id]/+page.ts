@@ -16,16 +16,15 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.eq('currency', params.id);
 	if (venuesError) console.error(venuesError.message);
 
-	const editorScholarIDs = (
-		venues?.map((venue) => venue.editors).filter((id) => id !== null) ?? []
+	const adminScholarIDs = (
+		venues?.map((venue) => venue.admins).filter((id) => id !== null) ?? []
 	).flat();
 
-	const { data: editors, error: editorsError } = await supabase
+	const { data: admins, error: adminsError } = await supabase
 		.from('scholars')
 		.select()
-		.in('id', editorScholarIDs);
-	if (editorsError) console.error(editorsError.message);
-
+		.in('id', adminScholarIDs);
+	if (adminsError) console.error(adminsError.message);
 	const { data: tokens, error: tokensError } = await supabase
 		.from('tokens')
 		.select()
@@ -46,6 +45,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 		count: tokens?.length ?? null,
 		scholarCount,
 		venueCount,
-		editors: editors ?? []
+		admins: admins ?? []
 	};
 };

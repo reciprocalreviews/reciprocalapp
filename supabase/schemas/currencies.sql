@@ -61,28 +61,28 @@ for update
 
 --------------------------------------
 -- Functions
-create or replace function "public"."no_editor_minters" () RETURNS "trigger" LANGUAGE "plpgsql" SECURITY DEFINER
+create or replace function "public"."no_admin_minters" () RETURNS "trigger" LANGUAGE "plpgsql" SECURITY DEFINER
 set
 	"search_path" to '' as $$
 begin
-    -- If the editor of this venue is a minter of its currency, raise an exception
-    if exists (select * from public.venues where public.venues.currency = new.id and (public.venues.editors && new.minters)) then
-        raise exception 'A venue minter cannot be the editor of the venue currency';
+    -- If the admin of this venue is a minter of its currency, raise an exception
+    if exists (select * from public.venues where public.venues.currency = new.id and (public.venues.admins && new.minters)) then
+        raise exception 'A venue minter cannot be the admin of the venue currency';
     end if;
     return new;
 end;
 $$;
 
-alter function "public"."no_editor_minters" () OWNER to "postgres";
+alter function "public"."no_admin_minters" () OWNER to "postgres";
 
-grant all on FUNCTION "public"."no_editor_minters" () to "anon";
+grant all on FUNCTION "public"."no_admin_minters" () to "anon";
 
-grant all on FUNCTION "public"."no_editor_minters" () to "authenticated";
+grant all on FUNCTION "public"."no_admin_minters" () to "authenticated";
 
-grant all on FUNCTION "public"."no_editor_minters" () to "service_role";
+grant all on FUNCTION "public"."no_admin_minters" () to "service_role";
 
 --------------------------------------
 -- Triggers
-create or replace trigger "no_editor_minters" BEFORE
+create or replace trigger "no_admin_minters" BEFORE
 update on "public"."currencies" for EACH row
-execute FUNCTION "public"."no_editor_minters" ();
+execute FUNCTION "public"."no_admin_minters" ();

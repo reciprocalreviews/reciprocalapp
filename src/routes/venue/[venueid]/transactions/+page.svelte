@@ -20,9 +20,9 @@
 		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all <Circle icon={transactions.length}></Circle> transactions for this venue.</p>
 
-		{#if venue.editors.includes(scholar.id)}
+		{#if venue.admins.includes(scholar.id)}
 			<Cards>
-				<Card group="editors" icon="🎁" header="gift" note="Send tokens to a scholar" full>
+				<Card group="admins" icon="🎁" header="gift" note="Send tokens to a scholar" full>
 					{#if scholar}
 						<Gift
 							{tokens}

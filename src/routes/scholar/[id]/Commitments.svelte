@@ -11,20 +11,20 @@
 
 	let {
 		commitments,
-		editing,
+		admins,
 		minting
 	}: {
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
-		editing: { id: string; title: string }[] | null;
+		admins: { id: string; title: string }[] | null;
 		minting: CurrencyRow[] | null;
 	} = $props();
 </script>
 
 <Subheader icon={ScholarLabel}>Volunteering</Subheader>
 
-{#if editing === null}
+{#if admins === null}
 	<Feedback>Unable to load editing commitments.</Feedback>
-{:else if editing.length === 0 && (minting === null || minting.length === 0) && (commitments === null || commitments.length === 0)}
+{:else if admins.length === 0 && (minting === null || minting.length === 0) && (commitments === null || commitments.length === 0)}
 	<Feedback>You are not volunteering for any roles yet.</Feedback>
 {:else}
 	<Tip>These are commitments you've made to review or manage currencies.</Tip>
@@ -35,12 +35,12 @@
 			<th>Role</th>
 		{/snippet}
 
-		{#if editing}
-			{#if editing.length > 0}
-				{#each editing as editing}
+		{#if admins}
+			{#if admins.length > 0}
+				{#each admins as admin}
 					<tr>
-						<td><VenueLink id={editing.id} name={editing.title} /></td>
-						<td><Tag>Editor</Tag></td>
+						<td><VenueLink id={admin.id} name={admin.title} /></td>
+						<td><Tag>Admin</Tag></td>
 					</tr>
 				{/each}
 			{/if}

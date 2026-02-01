@@ -1,4 +1,3 @@
-import type { Charge, TransactionID } from '$lib/types/Transaction';
 import type { AuthError, PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import type {
 	CurrencyID,
@@ -16,12 +15,13 @@ import type {
 	SubmissionStatus,
 	RoleRow,
 	AssignmentRow,
-	VenueRow
+	VenueRow,
+	SubmissionID,
+	TransactionID
 } from '../../data/types';
-import CRUD, { NullUUID, type Result } from './CRUD';
+import CRUD, { NullUUID, type Charge, type Result } from './CRUD';
 import Scholar from './Scholar.svelte';
 import type { Database } from '$data/database';
-import type { SubmissionID } from '$lib/types/Submission';
 import type Locale from '../../locale/Locale';
 import { renderEmail, type EmailType } from '../../email/templates';
 
@@ -425,9 +425,10 @@ export default class SupabaseCRUD extends CRUD {
 		// Build the editor scholar ID list from the editors found.
 		let editors: ScholarID[] = scholarsData.map((scholar) => scholar.id);
 
-		// Didn't find a editor?
+		// Didn't find a editor? Bail.
 		if (editors.length === 0) return this.error('ApproveProposalNoScholars');
 
+		// Determine the currency to use for the venue. If none was proposed, create a new currency.
 		let currencyID = proposalData.currency;
 		if (currencyID === null) {
 			// Verify all minters have accounts
@@ -460,8 +461,7 @@ export default class SupabaseCRUD extends CRUD {
 			.insert({
 				title: proposalData.title,
 				url: proposalData.url,
-				editors,
-				edit_amount: 1,
+				admins: editors,
 				welcome_amount: 10,
 				submission_cost: 10,
 				currency: currencyID
@@ -479,6 +479,20 @@ export default class SupabaseCRUD extends CRUD {
 			.update({ venue: venueID })
 			.eq('id', proposal);
 		if (error) return this.error('ApproveProposalCannotUpdateVenue', error);
+
+		// Create an editor role for the venue, and assign all editors to it.
+		const { data: roleData, error: roleError } = await this.createRole(
+			venueID,
+			'Editor',
+			1,
+			'Triages submissions, assigns meta-reviewers, and makes final decisions on submissions.'
+		);
+		if (roleError || roleData === undefined)
+			return this.error('ApproveProposalCannotUpdateVenue', roleError?.details);
+
+		// Volunteer all editors for this role.
+		for (const editorsID of editors)
+			await this.createVolunteer(editorsID, editorsID, roleData.id, true, false);
 
 		// Finally, trigger an email to the editors and supporters notifying them that the venue was approved.
 		// First, we get all of the supporters and their emails.
@@ -535,15 +549,15 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditVenueDescription', error);
 	}
 
-	async editVenueEditors(id: VenueID, editors: string[]) {
+	async editVenueAdmins(id: VenueID, admins: string[]) {
 		const { error } = await this.client
 			.from('venues')
-			.update({ editors: Array.from(new Set(editors)) })
+			.update({ admins: Array.from(new Set(admins)) })
 			.eq('id', id);
-		return this.errorOrEmpty('EditVenueEditors', error);
+		return this.errorOrEmpty('EditVenueAdmins', error);
 	}
 
-	async addVenueEditor(id: VenueID, emailOrORCID: string): Promise<Result> {
+	async addVenueAdmin(id: VenueID, emailOrORCID: string): Promise<Result> {
 		const { data: venue, error: venueError } = await this.client
 			.from('venues')
 			.select()
@@ -555,10 +569,10 @@ export default class SupabaseCRUD extends CRUD {
 		const { data: scholarID, error: scholarError } = await this.findScholar(emailOrORCID);
 		if (scholarID === undefined) return this.error('ScholarNotFound', scholarError?.details);
 
-		if (venue.editors.includes(scholarID))
+		if (venue.admins.includes(scholarID))
 			return { error: { message: this.locale.error.EditVenueAddEditorAlreadyEditor } };
 
-		return this.editVenueEditors(id, Array.from(new Set([...venue.editors, scholarID])));
+		return this.editVenueAdmins(id, Array.from(new Set([...venue.admins, scholarID])));
 	}
 
 	async editVenueTitle(id: VenueID, title: string) {
@@ -592,11 +606,6 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditVenueWelcomeAmount', error);
 	}
 
-	async editVenueEditorCompensation(id: VenueID, amount: number) {
-		const { error } = await this.client.from('venues').update({ edit_amount: amount }).eq('id', id);
-		return this.errorOrEmpty('EditVenueEditorAmount', error);
-	}
-
 	async editVenueSubmissionCost(id: VenueID, amount: number) {
 		const { error } = await this.client
 			.from('venues')
@@ -605,10 +614,15 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditVenueSubmissionCost', error);
 	}
 
-	async createRole(id: VenueID, name: string) {
+	async createRole(
+		id: VenueID,
+		name: string,
+		compensation: number = 10,
+		description: string = ''
+	): Promise<Result<RoleRow>> {
 		const { data, error } = await this.client
 			.from('roles')
-			.insert({ venueid: id, amount: 10, invited: true, name })
+			.insert({ venueid: id, amount: compensation, invited: true, name, description })
 			.select()
 			.single();
 		if (error) return this.error('CreateRole', error);

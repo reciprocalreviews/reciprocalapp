@@ -50,7 +50,7 @@ create index emails_venue_index on public.emails using btree (venue);
 --
 alter table public.emails ENABLE row LEVEL SECURITY;
 
-create policy "scholars and venue editors can see the emails sent" on public.emails for
+create policy "recipients and venue admins can see the emails sent" on public.emails for
 select
 	to authenticated,
 	anon using (
@@ -63,7 +63,7 @@ select
 			)
 			or (
 				(venue is not null)
-				and public.isEditor (venue)
+				and public.isAdmin (venue)
 			)
 		)
 	);

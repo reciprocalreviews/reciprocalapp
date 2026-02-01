@@ -13,7 +13,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.eq('venue', venueid);
 	if (submissionsError) console.error(submissionsError);
 
-	const editor = venue !== null && user !== null && venue.editors.includes(user.id);
+	const admin = venue !== null && user !== null && venue.admins.includes(user.id);
 
 	// Get all roles.
 	const { data: roles, error: rolesError } =
@@ -23,11 +23,11 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	const roleids = roles?.map((role) => role.id) ?? [];
 
-	// Editor? Get all the volunteers. Non-editor? Get all commitments that are active, approved, and a role for this venue.
+	// Admin? Get all the volunteers. Non-admin? Get all commitments that are active, approved, and a role for this venue.
 	const { data: volunteering, error: volunteeringError } =
 		user === null
 			? { data: [], error: null }
-			: editor
+			: admin
 				? await supabase.from('volunteers').select('*').in('roleid', roleids)
 				: await supabase
 						.from('volunteers')

@@ -27,7 +27,7 @@ export const enUS = {
 		ApproveProposalNoCurrency:
 			"Unable to approve the proposal: couldn't create a currency for the venue.",
 		EditVenueDescription: 'Unable to edit the venue description',
-		EditVenueEditors: 'Unable to edit the venue editors',
+		EditVenueAdmins: 'Unable to edit the venue admins',
 		EditVenueAddEditorVenueNotFound: 'Unable to find venue',
 		ScholarNotFound: 'Unable to find scholar by this email or ORCID',
 		EditVenueAddEditorAlreadyEditor: 'Scholar is already an editor',
@@ -36,7 +36,6 @@ export const enUS = {
 		EditVenueInactive: 'Unable to edit the inactive message',
 		EditVenueAnonymousAssignments: 'Unable to edit anonymous assignments setting',
 		EditVenueWelcomeAmount: 'Unable to edit the welcome amount',
-		EditVenueEditorAmount: 'Unable to edit the editor compensation',
 		EditVenueSubmissionCost: 'Unable to edit the submission cost',
 		EditRoleBidding: 'Unable to toggle bidding',
 		EditRoleDesiredAssignments: 'Unable to set desired assignments',

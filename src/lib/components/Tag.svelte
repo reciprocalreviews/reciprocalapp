@@ -5,10 +5,9 @@
 		font-family: var(--font-face);
 		background: var(--salient-color);
 		color: var(--background-color);
-		padding: calc(var(--spacing) / 4) calc(var(--spacing)) calc(var(--spacing) / 4)
-			calc(var(--spacing));
+		padding: calc(var(--spacing) / 4) var(--spacing-half);
 		border-radius: 0.5em;
-		font-size: var(--small-font-size);
+		font-size: var(--extra-small-font-size);
 		white-space: nowrap;
 	}
 </style>

@@ -54,12 +54,12 @@ select
 	to authenticated,
 	anon using (true);
 
-create policy "editors can invite and volunteers if not invite only" on public.volunteers for INSERT to authenticated,
+create policy "admins can invite and volunteers if not invite only" on public.volunteers for INSERT to authenticated,
 anon
 with
 	check (
 		(
-			public.isEditor (
+			public.isAdmin (
 				(
 					select
 						roles.venueid
@@ -102,10 +102,10 @@ for update
 		)
 	);
 
-create policy "editors and volunteers can delete" on public.volunteers for DELETE to authenticated,
+create policy "admins and volunteers can delete" on public.volunteers for DELETE to authenticated,
 anon using (
 	(
-		public.isEditor (
+		public.isAdmin (
 			(
 				select
 					roles.venueid

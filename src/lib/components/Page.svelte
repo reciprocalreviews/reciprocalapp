@@ -96,6 +96,6 @@
 		font-size: var(--small-font-size);
 		display: flex;
 		flex-direction: row;
-		gap: calc(var(--spacing) / 2);
+		gap: var(--spacing-half);
 	}
 </style>

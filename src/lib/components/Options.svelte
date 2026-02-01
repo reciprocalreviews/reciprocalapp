@@ -28,7 +28,7 @@
 	select {
 		font-family: var(--font-face);
 		font-size: var(--small-font-size);
-		padding: calc(var(--spacing) / 2);
+		padding: var(--spacing-half);
 		border: var(--border-color) solid var(--border-width);
 		border-radius: var(--roundedness);
 		width: fit-content;

@@ -40,7 +40,7 @@
 						email: string;
 					};
 					message: any;
-					created: any;
+					created_at: string;
 			  }[]
 			| null
 	);
@@ -62,7 +62,10 @@
 	}
 </script>
 
-{#if proposal && supporters}
+{#if proposal === null || supporters === null}
+	<h1>Oops.</h1>
+	<Feedback error>Unknown proposal.</Feedback>
+{:else}
 	<Page title={proposal.title} breadcrumbs={[['/venues', 'Venues']]}>
 		{#snippet subtitle()}
 			{#if approved}
@@ -185,14 +188,14 @@
 			<Feedback><Link to="/login">Log in</Link> to express support.</Feedback>
 		{/if}
 
-		{#each supporters.sort((a, b) => b.created.localeCompare(a.created)) as supporter}
+		{#each supporters.sort((a, b) => b.created_at.localeCompare(a.created_at)) as supporter}
 			{@const scholar = supporter.scholarid}
 			{@const editable = scholar.id === uid}
 			<div class="support">
 				<p class="support">
 					<span class="meta"
 						><Link to={`/scholar/${scholar.id}`}>{scholar.name ? scholar.name : scholar.email}</Link
-						><Date time={supporter.created} />
+						><Date time={supporter.created_at} />
 						{#if !approved && editable}
 							<Button
 								tip="Delete support"
@@ -224,9 +227,6 @@
 			</div>
 		{/each}
 	</Page>
-{:else}
-	<h1>Oops.</h1>
-	<Feedback error>Unknown proposal.</Feedback>
 {/if}
 
 <style>

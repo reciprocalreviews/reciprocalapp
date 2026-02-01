@@ -19,7 +19,7 @@
 	span {
 		border-left: calc(var(--thick-border-width) * 2) solid var(--salient-color);
 		background: var(--salient-color-faded);
-		padding: calc(var(--spacing) / 2);
+		padding: var(--spacing-half);
 		font-size: var(--small-font-size);
 		border-top-right-radius: var(--roundedness);
 		border-bottom-right-radius: var(--roundedness);

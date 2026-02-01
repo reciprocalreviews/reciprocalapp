@@ -81,7 +81,7 @@
 		font-size: var(--small-font-size);
 		border: var(--border-color);
 		border-radius: var(--roundedness);
-		padding: calc(var(--spacing) / 2);
+		padding: var(--spacing-half);
 		background: none;
 		color: var(--foreground-color);
 		cursor: pointer;
@@ -101,11 +101,6 @@
 		flex-grow: 1;
 	}
 
-	button[disabled] {
-		background: var(--inactive-color);
-		cursor: auto;
-	}
-
 	button:not([disabled]):hover {
 		transform: scaleY(1.05);
 	}
@@ -117,6 +112,11 @@
 	button.warn {
 		background-color: var(--error-color);
 		color: var(--background-color);
+	}
+
+	button[disabled] {
+		background: var(--inactive-color);
+		cursor: auto;
 	}
 
 	.row {

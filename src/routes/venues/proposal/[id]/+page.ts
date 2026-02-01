@@ -8,13 +8,17 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.select()
 		.eq('id', params.id)
 		.single();
+	if (proposalError) console.error(proposalError);
+
 	const { data: supporters, error: supportersError } = await supabase
 		.from('supporters')
-		.select('id, scholarid(id, name, email), message, created')
+		.select('id, scholarid(id, name, email), message, created_at')
 		.eq('proposalid', params.id);
 
+	if (supportersError) console.error(supportersError);
+
 	return {
-		proposal: proposal && proposalError === null ? proposal : null,
-		supporters: supporters && supportersError === null ? supporters : null
+		proposal: proposal ? proposal : null,
+		supporters: supporters ? supporters : null
 	};
 };

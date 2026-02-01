@@ -13,18 +13,16 @@ create table if not exists public.venues (
 	currency uuid not null,
 	-- The optional amount of newly minted tokens granted to new volunteers
 	welcome_amount integer not null,
-	-- The amount of tokens granted for each submission for an editor.
-	edit_amount integer default 1 not null,
 	-- Submission cost in the venue's currency
 	submission_cost integer default 0 not null,
-	-- One or more scholars who serve as editors of the venue
-	editors uuid[] default '{}'::uuid[] not null,
+	-- One or more scholars who serve as admins of the venue
+	admins uuid[] default '{}'::uuid[] not null,
 	-- Whether the venue is active; null if so, text if not, explaining why.
 	inactive text default 'This venue is being configured.'::text,
 	-- Whether assignments are visible to conflicted scholars (open reviewing)
 	anonymous_assignments boolean default true not null,
-	-- There must be at least one editor
-	constraint venues_editors_check check (cardinality(editors)>0)
+	-- There must be at least one admin
+	constraint venues_admins_check check (cardinality(admins)>0)
 );
 
 alter table only public.venues
@@ -37,39 +35,39 @@ alter table public.venues OWNER to "postgres";
 
 --------------------------------------
 -- Functions
-create or replace function public.isEditor (_venueid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
+create or replace function public.isAdmin (_venueid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
 set
 	"search_path" to '' as $$
-    select ((select auth.uid()) = any((select editors from public.venues where id = _venueid)::uuid[]));
+    select ((select auth.uid()) = any((select admins from public.venues where id = _venueid)::uuid[]));
 $$;
 
-alter function public.isEditor (_venueid uuid) OWNER to postgres;
+alter function public.isAdmin (_venueid uuid) OWNER to postgres;
 
-grant all on FUNCTION public.isEditor (_venueid uuid) to anon;
+grant all on FUNCTION public.isAdmin (_venueid uuid) to anon;
 
-grant all on FUNCTION public.isEditor (_venueid uuid) to authenticated;
+grant all on FUNCTION public.isAdmin (_venueid uuid) to authenticated;
 
-grant all on FUNCTION public.isEditor (_venueid uuid) to service_role;
+grant all on FUNCTION public.isAdmin (_venueid uuid) to service_role;
 
-create or replace function public.no_minter_editors () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+create or replace function public.no_minter_admins () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
 set
 	"search_path" to '' as $$
 begin
-    -- If the editor of this venue is a minter of its currency, raise an exception
-    if new.editors && (select minters from public.currencies where id = new.currency) then
-        raise exception 'A venue editor cannot be the minter of the venue currency';
+    -- If the admin of this venue is a minter of its currency, raise an exception
+    if new.admins && (select minters from public.currencies where id = new.currency) then
+        raise exception 'A venue admin cannot be the minter of the venue currency';
     end if;
     return new;
 end;
 $$;
 
-alter function public.no_minter_editors () OWNER to "postgres";
+alter function public.no_minter_admins () OWNER to "postgres";
 
-grant all on FUNCTION public.no_minter_editors () to "anon";
+grant all on FUNCTION public.no_minter_admins () to "anon";
 
-grant all on FUNCTION public.no_minter_editors () to "authenticated";
+grant all on FUNCTION public.no_minter_admins () to "authenticated";
 
-grant all on FUNCTION public.no_minter_editors () to "service_role";
+grant all on FUNCTION public.no_minter_admins () to "service_role";
 
 --------------------------------------
 -- Security
@@ -85,7 +83,7 @@ create policy "only stewards can create venues" on public.venues for INSERT to "
 with
 	check (public.isSteward ());
 
-create policy "stewards and editors can update venues" on public.venues
+create policy "stewards and admins can update venues" on public.venues
 for update
 	to "authenticated",
 	"anon" using (
@@ -95,12 +93,12 @@ for update
 				(
 					select
 						auth.uid () as "uid"
-				)=any (editors)
+				)=any (admins)
 			)
 		)
 	);
 
-create policy "stewards and editors can delete venues" on public.venues for DELETE to "authenticated",
+create policy "stewards and admins can delete venues" on public.venues for DELETE to "authenticated",
 "anon" using (
 	(
 		public.isSteward ()
@@ -108,7 +106,7 @@ create policy "stewards and editors can delete venues" on public.venues for DELE
 			(
 				select
 					auth.uid () as "uid"
-			)=any (editors)
+			)=any (admins)
 		)
 	)
 );
@@ -121,7 +119,7 @@ grant all on table public.venues to "service_role";
 
 --------------------------------------
 -- Trigger
-create or replace trigger no_minter_editors BEFORE INSERT
+create or replace trigger no_minter_admins BEFORE INSERT
 or
 update on public.venues for EACH row
-execute FUNCTION public.no_minter_editors ();
+execute FUNCTION public.no_minter_admins ();

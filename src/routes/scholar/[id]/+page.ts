@@ -24,11 +24,11 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.select('*')
 		.contains('minters', [scholarID]);
 
-	// Get the scholar's editing
-	const { data: editing } = await supabase
+	// Get the scholar's administered venues
+	const { data: admins } = await supabase
 		.from('venues')
 		.select('id, title')
-		.contains('editors', [scholarID]);
+		.contains('admins', [scholarID]);
 
 	// Get the scholar's current tokens.
 	const { data: tokens, error: tokensError } = await supabase
@@ -94,7 +94,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	return {
 		commitments: volunteers,
 		venues,
-		editing,
+		admins: admins,
 		tokens: tokens,
 		transactions: transactions,
 		submissions: submissions,

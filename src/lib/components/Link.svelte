@@ -72,7 +72,7 @@
 
 	.background {
 		background-color: var(--salient-color-faded);
-		padding: calc(var(--spacing) / 2);
+		padding: var(--spacing-half);
 		border-radius: var(--roundedness);
 		color: var(--text-color);
 	}

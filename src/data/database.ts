@@ -609,11 +609,10 @@ export type Database = {
       }
       venues: {
         Row: {
+          admins: string[]
           anonymous_assignments: boolean
           currency: string
           description: string
-          edit_amount: number
-          editors: string[]
           id: string
           inactive: string | null
           submission_cost: number
@@ -622,11 +621,10 @@ export type Database = {
           welcome_amount: number
         }
         Insert: {
+          admins?: string[]
           anonymous_assignments?: boolean
           currency: string
           description?: string
-          edit_amount?: number
-          editors?: string[]
           id?: string
           inactive?: string | null
           submission_cost?: number
@@ -635,11 +633,10 @@ export type Database = {
           welcome_amount: number
         }
         Update: {
+          admins?: string[]
           anonymous_assignments?: boolean
           currency?: string
           description?: string
-          edit_amount?: number
-          editors?: string[]
           id?: string
           inactive?: string | null
           submission_cost?: number
@@ -707,9 +704,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      isadmin: { Args: { _venueid: string }; Returns: boolean }
       isapprover: { Args: { _roleid: string }; Returns: boolean }
       isassigned: { Args: { _submissionid: string }; Returns: boolean }
-      iseditor: { Args: { _venueid: string }; Returns: boolean }
       isminter: {
         Args: { _currencyid: string; _scholarid: string }
         Returns: boolean

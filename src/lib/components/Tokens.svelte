@@ -17,7 +17,7 @@
 	.token {
 		font-weight: 500;
 		font-size: var(--small-font-size);
-		padding: calc(var(--spacing) / 2);
+		padding: var(--spacing-half);
 		border-radius: var(--roundedness);
 		background-color: var(--salient-color-faded);
 		box-decoration-break: clone;

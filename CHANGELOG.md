@@ -11,6 +11,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 ### Changed
 
+- Differentiated between venue admins and editor role, to ensure confidentiality, manage conflicts, and enable compensation (#73).
 - Updated minor versions of `supabase/supabase-js`, `@playright/test`, `@sveltejs/adapter-vercel`, `@svelte/kit`, `prettier`, `supabase`, `svelte`, `svelte-check`, and `vitest`.
 
 ## 0.3.0 2026-01-25

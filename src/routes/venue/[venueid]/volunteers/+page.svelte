@@ -96,7 +96,7 @@
 								c.scholars.email?.toLowerCase().includes(filter.toLowerCase())
 						)}
 			{#if filteredScholars.length > 0}
-				<Subheader icon={ScholarLabel}>{roleCommitments[0].roles.name}</Subheader>
+				<Subheader icon={ScholarLabel}>{filteredScholars[0].roles?.name}</Subheader>
 				<Table full>
 					{#snippet header()}
 						<th>Active</th>

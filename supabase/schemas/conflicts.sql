@@ -27,13 +27,13 @@ create policy "anyone can see conflicts" on public.conflicts for
 select
 	to "authenticated" using (true);
 
-create policy "editors and volunteers can create conflicts" on public.conflicts for INSERT to "authenticated",
+create policy "admins and volunteers can create conflicts" on public.conflicts for INSERT to "authenticated",
 "anon"
 with
 	check (
 		(
 			-- Scholar is editor of the submission's venue
-			public.isEditor (
+			public.isAdmin (
 				(
 					select
 						submissions.venue
@@ -76,10 +76,10 @@ with
 		)
 	);
 
-create policy "editors can update conflicts" on public.conflicts
+create policy "admins can update conflicts" on public.conflicts
 for update
 	to "authenticated" using (
-		public.isEditor (
+		public.isAdmin (
 			(
 				select
 					submissions.venue
@@ -91,10 +91,10 @@ for update
 		)
 	);
 
-create policy "editors can delete conflicts" on public.conflicts for DELETE to "authenticated" using (
+create policy "admins can delete conflicts" on public.conflicts for DELETE to "authenticated" using (
 	(
 		(
-			public.isEditor (
+			public.isAdmin (
 				(
 					select
 						submissions.venue

@@ -126,14 +126,14 @@
 	.field {
 		display: flex;
 		flex-direction: column;
-		gap: calc(var(--spacing) / 2);
+		gap: var(--spacing-half);
 		flex-grow: 1;
 	}
 
 	input {
 		border: none;
 		border-bottom: var(--thick-border-width) solid var(--text-color);
-		padding: calc(var(--spacing) / 2);
+		padding: var(--spacing-half);
 		border-top-right-radius: var(--roundedness);
 		border-top-left-radius: var(--roundedness);
 		box-shadow: inset 3px 3px 3px rgba(0, 0, 0, 0.1);
@@ -162,7 +162,7 @@
 
 	textarea {
 		border: none;
-		padding: calc(var(--spacing) / 2);
+		padding: var(--spacing-half);
 		border-top-right-radius: var(--roundedness);
 		border-bottom-right-radius: var(--roundedness);
 		box-shadow: inset 3px 3px 3px rgba(0, 0, 0, 0.1);
@@ -182,8 +182,8 @@
 
 	.ruler {
 		position: absolute;
-		top: calc(var(--spacing) / 2);
-		left: calc(var(--spacing) / 2);
+		top: var(--spacing-half);
+		left: var(--spacing-half);
 		width: fit-content;
 		display: inline-block;
 		white-space: pre;

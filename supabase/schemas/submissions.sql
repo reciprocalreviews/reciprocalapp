@@ -52,8 +52,4 @@ create policy "anyone can create submissions" on public.submissions for INSERT t
 with
 	check (true);
 
-create policy "editors can update submissions" on public.submissions
-for update
-	to authenticated using (public.isEditor (venue));
-
-create policy "editors can delete submissions" on public.submissions for DELETE to authenticated using (public.isEditor (venue));
+create policy "admins can delete submissions" on public.submissions for DELETE to authenticated using (public.isAdmin (venue));

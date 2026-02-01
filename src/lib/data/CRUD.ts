@@ -14,12 +14,12 @@ import {
 	type SubmissionStatus,
 	type RoleRow,
 	type AssignmentRow,
-	type VenueRow
+	type VenueRow,
+	type SubmissionID,
+	type TransactionID
 } from '../../data/types';
-import type { Charge, TransactionID } from '$lib/types/Transaction';
 import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
-import type { SubmissionID } from '$lib/types/Submission';
 import type { AuthError, PostgrestError } from '@supabase/supabase-js';
 import type { EmailType } from '../../email/templates';
 
@@ -36,6 +36,8 @@ export function setDB(db: () => CRUD) {
 
 export type DBError = { message: string; details?: PostgrestError | AuthError };
 export type Result<Type = undefined> = { data?: Type; error?: DBError };
+
+export type Charge = { scholar: string; payment: number | undefined };
 
 /** This abstract class defines an interface for database access. It's useful for defining mocks as well as enables us to change databases if necessary. */
 export default abstract class CRUD {
@@ -123,14 +125,13 @@ export default abstract class CRUD {
 	abstract updateCurrencyDescription(id: CurrencyID, description: string): Promise<Result>;
 
 	abstract editVenueDescription(id: VenueID, description: string): Promise<Result>;
-	abstract editVenueEditors(id: VenueID, editors: string[]): Promise<Result>;
-	abstract addVenueEditor(id: VenueID, emailOrORCID: string): Promise<Result>;
+	abstract editVenueAdmins(id: VenueID, admins: string[]): Promise<Result>;
+	abstract addVenueAdmin(id: VenueID, emailOrORCID: string): Promise<Result>;
 	abstract editVenueTitle(id: VenueID, title: string): Promise<Result>;
 	abstract editVenueURL(id: VenueID, url: string): Promise<Result>;
 	abstract editVenueInactive(id: VenueID, inactive: string | null): Promise<Result>;
 	abstract editVenueAnonymousAssignments(id: VenueID, anonymous: boolean): Promise<Result>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<Result>;
-	abstract editVenueEditorCompensation(id: VenueID, amount: number): Promise<Result>;
 	abstract editVenueSubmissionCost(id: VenueID, amount: number): Promise<Result>;
 
 	abstract createRole(id: VenueID, name: string): Promise<Result<RoleRow>>;

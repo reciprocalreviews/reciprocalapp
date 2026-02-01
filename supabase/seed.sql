@@ -44,7 +44,7 @@ values
 		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
 		'authenticated',
 		'authenticated',
-		'rigor@college.edu',
+		'r1@uni.edu',
 		'$2a$10$Z1.OMhB4ppiHyIshPx7sz.3rfv1kywhjFWpHWso3DYlUB1D1TJjj.',
 		'2025-10-19 22:00:38.377967+00',
 		null,
@@ -57,7 +57,79 @@ values
 		null,
 		'2025-10-19 22:08:47.45125+00',
 		'{"provider": "email", "providers": ["email"]}',
-		'{"sub": "7ff8621a-cbe0-4789-bbee-f008d38c4ac7", "email": "rigor@college.edu", "email_verified": true, "phone_verified": false}',
+		'{"sub": "7ff8621a-cbe0-4789-bbee-f008d38c4ac7", "email": "r1@uni.edu", "email_verified": true, "phone_verified": false}',
+		null,
+		'2025-10-19 22:00:38.374+00',
+		'2025-10-19 22:08:47.453525+00',
+		null,
+		null,
+		'',
+		'',
+		null,
+		'',
+		'0',
+		null,
+		'',
+		null,
+		'false',
+		null,
+		'false'
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac8',
+		'authenticated',
+		'authenticated',
+		'r2@uni.edu',
+		'$2a$10$Z1.OMhB4ppiHyIshPx7sz.3rfv1kywhjFWpHWso3DYlUB1D1TJjj.',
+		'2025-10-19 22:00:38.377967+00',
+		null,
+		'',
+		null,
+		'',
+		'2025-10-19 22:08:42.414842+00',
+		'',
+		'',
+		null,
+		'2025-10-19 22:08:47.45125+00',
+		'{"provider": "email", "providers": ["email"]}',
+		'{"sub": "7ff8621a-cbe0-4789-bbee-f008d38c4ac8", "email": "r2@uni.edu", "email_verified": true, "phone_verified": false}',
+		null,
+		'2025-10-19 22:00:38.374+00',
+		'2025-10-19 22:08:47.453525+00',
+		null,
+		null,
+		'',
+		'',
+		null,
+		'',
+		'0',
+		null,
+		'',
+		null,
+		'false',
+		null,
+		'false'
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac9',
+		'authenticated',
+		'authenticated',
+		'r3@uni.edu',
+		'$2a$10$Z1.OMhB4ppiHyIshPx7sz.3rfv1kywhjFWpHWso3DYlUB1D1TJjj.',
+		'2025-10-19 22:00:38.377967+00',
+		null,
+		'',
+		null,
+		'',
+		'2025-10-19 22:08:42.414842+00',
+		'',
+		'',
+		null,
+		'2025-10-19 22:08:47.45125+00',
+		'{"provider": "email", "providers": ["email"]}',
+		'{"sub": "7ff8621a-cbe0-4789-bbee-f008d38c4ac9", "email": "r3@uni.edu", "email_verified": true, "phone_verified": false}',
 		null,
 		'2025-10-19 22:00:38.374+00',
 		'2025-10-19 22:08:47.453525+00',
@@ -80,7 +152,7 @@ values
 		'b8a805bf-0aae-4443-9185-de019a8715cb',
 		'authenticated',
 		'authenticated',
-		'foot@institute.edu',
+		'author1@uni.edu',
 		'$2a$10$4lVmpmDpZuRTwwtl82JmKOuMIsIUNbf6ygJYO9m7V808kSlOb0r5W',
 		'2025-10-19 22:01:42.35992+00',
 		null,
@@ -93,7 +165,43 @@ values
 		null,
 		'2025-10-19 22:15:07.828069+00',
 		'{"provider": "email", "providers": ["email"]}',
-		'{"sub": "b8a805bf-0aae-4443-9185-de019a8715cb", "email": "foot@institute.edu", "email_verified": true, "phone_verified": false}',
+		'{"sub": "b8a805bf-0aae-4443-9185-de019a8715cb", "email": "author1@uni.edu", "email_verified": true, "phone_verified": false}',
+		null,
+		'2025-10-19 22:01:42.357405+00',
+		'2025-10-19 22:15:07.830042+00',
+		null,
+		null,
+		'',
+		'',
+		null,
+		'',
+		'0',
+		null,
+		'',
+		null,
+		'false',
+		null,
+		'false'
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		'authenticated',
+		'authenticated',
+		'ae@uni.edu',
+		'$2a$10$4lVmpmDpZuRTwwtl82JmKOuMIsIUNbf6ygJYO9m7V808kSlOb0r5W',
+		'2025-10-19 22:01:42.35992+00',
+		null,
+		'',
+		null,
+		'',
+		'2025-10-19 22:15:01.192536+00',
+		'',
+		'',
+		null,
+		'2025-10-19 22:15:07.828069+00',
+		'{"provider": "email", "providers": ["email"]}',
+		'{"sub": "b8a805bf-0aae-4443-9185-de019a8715db", "email": "ae@uni.edu", "email_verified": true, "phone_verified": false}',
 		null,
 		'2025-10-19 22:01:42.357405+00',
 		'2025-10-19 22:15:07.830042+00',
@@ -116,7 +224,7 @@ values
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
 		'authenticated',
 		'authenticated',
-		'scholar@uni.edu',
+		'editor@uni.edu',
 		'$2a$10$yjCwuy5aByQoh20o5THmjulaAXi0DIEbdGDr0Wn3vuSrX7XgxgjyO',
 		'2025-10-19 21:59:30.452557+00',
 		null,
@@ -129,7 +237,7 @@ values
 		null,
 		'2025-10-19 22:13:08.982757+00',
 		'{"provider": "email", "providers": ["email"]}',
-		'{"sub": "d181d165-8b6a-4d79-ad28-a9aece21d813", "email": "scholar@uni.edu", "email_verified": true, "phone_verified": false}',
+		'{"sub": "d181d165-8b6a-4d79-ad28-a9aece21d813", "email": "editor@uni.edu", "email_verified": true, "phone_verified": false}',
 		null,
 		'2025-10-19 21:59:30.445372+00',
 		'2025-10-19 22:13:08.986024+00',
@@ -163,7 +271,7 @@ values
 	(
 		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
 		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
-		'{"sub": "7ff8621a-cbe0-4789-bbee-f008d38c4ac7", "email": "rigor@college.edu", "email_verified": false, "phone_verified": false}',
+		'{"sub": "7ff8621a-cbe0-4789-bbee-f008d38c4ac7", "email": "r1@uni.edu", "email_verified": false, "phone_verified": false}',
 		'email',
 		'2025-10-19 22:00:38.375679+00',
 		'2025-10-19 22:00:38.375695+00',
@@ -173,7 +281,7 @@ values
 	(
 		'b8a805bf-0aae-4443-9185-de019a8715cb',
 		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		'{"sub": "b8a805bf-0aae-4443-9185-de019a8715cb", "email": "foot@institute.edu", "email_verified": false, "phone_verified": false}',
+		'{"sub": "b8a805bf-0aae-4443-9185-de019a8715cb", "email": "author1@uni.edu", "email_verified": false, "phone_verified": false}',
 		'email',
 		'2025-10-19 22:01:42.358867+00',
 		'2025-10-19 22:01:42.358883+00',
@@ -183,7 +291,7 @@ values
 	(
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
-		'{"sub": "d181d165-8b6a-4d79-ad28-a9aece21d813", "email": "scholar@uni.edu", "email_verified": false, "phone_verified": false}',
+		'{"sub": "d181d165-8b6a-4d79-ad28-a9aece21d813", "email": "editor@uni.edu", "email_verified": false, "phone_verified": false}',
 		'email',
 		'2025-10-19 21:59:30.449912+00',
 		'2025-10-19 21:59:30.449967+00',
@@ -205,7 +313,7 @@ update public.scholars
 set
 	orcid='0000-0001-2345-6780',
 	"name"='Rigor Russ',
-	"email"='rigor@college.edu',
+	"email"='r1@uni.edu',
 	"available"='true',
 	"steward"='false'
 where
@@ -213,9 +321,29 @@ where
 
 update public.scholars
 set
+	orcid='0000-0001-2345-6782',
+	"name"='Reese Urcher',
+	"email"='r2@uni.edu',
+	"available"='true',
+	"steward"='false'
+where
+	id='7ff8621a-cbe0-4789-bbee-f008d38c4ac8';
+
+update public.scholars
+set
+	orcid='0000-0001-2345-6782',
+	"name"='Sai Entist',
+	"email"='r3@uni.edu',
+	"available"='true',
+	"steward"='false'
+where
+	id='7ff8621a-cbe0-4789-bbee-f008d38c4ac9';
+
+update public.scholars
+set
 	orcid='0000-0001-2345-6781',
 	"name"='Foot Note',
-	"email"='foot@institute.edu',
+	"email"='author1@uni.edu',
 	"available"='true',
 	"steward"='false',
 	"status"='I can review as many things as you send me!'
@@ -226,11 +354,21 @@ update public.scholars
 set
 	orcid='0000-0001-2345-6782',
 	"name"='Scholar Lee',
-	"email"='scholar@uni.edu',
+	"email"='editor@uni.edu',
 	"available"='true',
 	"steward"='true'
 where
 	id='d181d165-8b6a-4d79-ad28-a9aece21d813';
+
+update public.scholars
+set
+	orcid='0000-0001-2345-6782',
+	"name"='Grant Seeker',
+	"email"='ae@uni.edu',
+	"available"='true',
+	"steward"='false'
+where
+	id='b8a805bf-0aae-4443-9185-de019a8715db';
 
 insert into
 	public.venues (
@@ -240,9 +378,8 @@ insert into
 		"url",
 		"currency",
 		"welcome_amount",
-		"edit_amount",
 		"submission_cost",
-		"editors"
+		"admins"
 	)
 values
 	(
@@ -252,7 +389,6 @@ values
 		'https://tok.science.org',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'20',
-		'1',
 		'10',
 		'{"d181d165-8b6a-4d79-ad28-a9aece21d813"}'
 	);
@@ -271,7 +407,7 @@ values
 		'82246928-ad37-11f0-a071-bb5db9b6e698',
 		'Transactions on Knowledge',
 		'https://toce.acm.edu',
-		'{"scholar@uni.edu"}',
+		'{"editor@uni.edu"}',
 		'500',
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6'
 	);
@@ -291,6 +427,18 @@ insert into
 	)
 values
 	(
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'Editor',
+		'Desk rejects, assigns an Associate Editor, and makes final decisions.',
+		'true',
+		'false',
+		null,
+		'1',
+		0,
+		1
+	),
+	(
 		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'Associate Editor',
@@ -299,8 +447,8 @@ values
 		'false',
 		null,
 		'10',
-		'0',
-		'1'
+		1,
+		1
 	),
 	(
 		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
@@ -311,8 +459,8 @@ values
 		'true',
 		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
 		'10',
-		'0',
-		'3'
+		2,
+		3
 	);
 
 insert into
@@ -451,20 +599,47 @@ insert into
 	)
 values
 	(
+		'f9bfb99c-ad37-11f0-83e8-875a9c988799',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		'2025-10-19 22:07:17.336976+00',
+		'Peer review, academic publishing, incentives',
+		'true',
+		'accepted'
+	),
+	(
 		'f9bfb99c-ad37-11f0-83e8-875a9c9887b5',
 		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
-		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
 		'2025-10-19 22:07:17.336976+00',
-		'',
+		'Knowledge representation, peer review, academic publishing',
+		'true',
+		'accepted'
+	),
+	(
+		'f9bfb99c-ad37-11f0-83e8-875a9c9887b6',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac8',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2025-10-19 22:07:17.336976+00',
+		'Knowledge representation, peer review, academic publishing',
+		'true',
+		'accepted'
+	),
+	(
+		'f9bfb99c-ad37-11f0-83e8-875a9c9887b7',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac9',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2025-10-19 22:07:17.336976+00',
+		'Knowledge representation, peer review, academic publishing',
 		'true',
 		'accepted'
 	),
 	(
 		'fefccf8a-ad37-11f0-a9a3-7bcd0d5d1666',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
 		'2025-10-19 22:07:26.125662+00',
-		'',
+		'Peer review',
 		'true',
 		'accepted'
 	);
@@ -562,10 +737,20 @@ insert into
 	)
 values
 	(
-		'c61b2e1e-ad3a-11f0-9806-5f4e3b2c1d34',
+		'c61b2e1e-ad3a-11f0-9806-5f4e3b2c1d99',
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		false,
+		true,
+		false
+	),
+	(
+		'c61b2e1e-ad3a-11f0-9806-5f4e3b2c1d34',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
 		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
 		false,
 		true,
@@ -579,15 +764,5 @@ values
 		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
 		false,
 		true,
-		false
-	),
-	(
-		'8fd037b2-2fc2-4a9d-b7f4-90ff2adc1c60',
-		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
-		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
-		false,
-		false,
 		false
 	);

@@ -24,7 +24,7 @@
 {:else if !scholar}
 	<h1>Oops.</h1>
 	<Feedback error><Link to="/login">Log in</Link> to view this page.</Feedback>
-{:else if !venue.editors.includes(scholar.id)}
+{:else if !venue.admins.includes(scholar.id)}
 	<h1>Oops.</h1>
 	<Page
 		title={venue.title}
@@ -34,7 +34,7 @@
 		]}
 	>
 		{#snippet subtitle()}Settings{/snippet}
-		<Feedback error>Only editors of this venue can view this page.</Feedback>
+		<Feedback error>Only admins of this venue can view this page.</Feedback>
 	</Page>
 {:else}
 	<Page
@@ -45,7 +45,7 @@
 		]}
 	>
 		{#snippet subtitle()}Settings{/snippet}
-		<p>Welcome editor! You can manage this venue's settings here.</p>
+		<p>Welcome venue admin! You can manage this venue's settings here.</p>
 
 		<Card
 			subheader
@@ -55,7 +55,8 @@
 			expand={venue.inactive !== null}
 		>
 			<p>
-				Hello editor! Are you ready to integrate into your reviewing system? There are a few steps:
+				Hello venue admin! Are you ready to integrate into your reviewing system? There are a few
+				steps:
 			</p>
 			<ol>
 				<li>
@@ -149,6 +150,6 @@
 			{/if}
 		</Checkbox>
 
-		<Roles {venue} scholar={scholar?.id} {roles} {volunteers} editor={true} {currency} {minters} />
+		<Roles {venue} scholar={scholar?.id} {roles} {volunteers} isAdmin={true} {currency} {minters} />
 	</Page>
 {/if}
