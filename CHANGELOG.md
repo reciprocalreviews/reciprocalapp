@@ -5,13 +5,17 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.3.1 2026-02-01
 
+### Added
+
+- Differentiated between venue admins and editor role, to ensure confidentiality, manage conflicts, and enable compensation (#73).
+
 ### Fixed
 
 - Support creating a new currency in a venue proposal (#74).
+- Improved layout of volunteers table (#77).
 
 ### Changed
 
-- Differentiated between venue admins and editor role, to ensure confidentiality, manage conflicts, and enable compensation (#73).
 - Updated minor versions of `supabase/supabase-js`, `@playright/test`, `@sveltejs/adapter-vercel`, `@svelte/kit`, `prettier`, `supabase`, `svelte`, `svelte-check`, and `vitest`.
 
 ## 0.3.0 2026-01-25
