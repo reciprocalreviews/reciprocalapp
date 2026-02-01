@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.3.1 2026-02-01
 
+### Fixed
+
+- Support creating a new currency in a venue proposal (#74).
+
 ### Changed
 
 - Updated minor versions of `supabase/supabase-js`, `@playright/test`, `@sveltejs/adapter-vercel`, `@svelte/kit`, `prettier`, `supabase`, `svelte`, `svelte-check`, and `vitest`.

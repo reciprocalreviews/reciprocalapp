@@ -31,6 +31,7 @@
 		padding: calc(var(--spacing) / 2);
 		border: var(--border-color) solid var(--border-width);
 		border-radius: var(--roundedness);
+		width: fit-content;
 		max-width: 100%;
 	}
 

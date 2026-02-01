@@ -92,13 +92,13 @@
 		<form>
 			<TextField
 				bind:text={venue}
-				label="venue"
+				label="Venue"
 				placeholder="name"
 				valid={(text) => (text.length > 0 ? undefined : 'Must include a venue name')}
 			/>
 			<TextField
 				bind:text={editors}
-				label="editors"
+				label="Editors"
 				placeholder="email1@email.com, email2@email.com"
 				active={!proposing}
 				valid={(text) =>
@@ -107,15 +107,18 @@
 			<Options
 				label="Currency"
 				bind:value={currency}
-				options={(currencies ?? []).map((currency) => ({
-					label: currency.name,
-					value: currency.id
-				}))}
+				options={[
+					{ label: 'Create a new currency', value: undefined },
+					...(currencies ?? []).map((currency) => ({
+						label: currency.name,
+						value: currency.id
+					}))
+				]}
 			/>
 			{#if currency === undefined}
 				<TextField
 					bind:text={minters}
-					label="minters"
+					label="Minters"
 					placeholder="email1@email.com, email2@email.com"
 					active={!proposing}
 					valid={(text) =>
@@ -128,21 +131,21 @@
 			{/if}
 			<TextField
 				bind:text={url}
-				label="official venue URL"
+				label="Official venue URL"
 				placeholder="https://..."
 				active={!proposing}
 				valid={validURLError}
 			/>
 			<TextField
 				bind:text={size}
-				label="community size"
+				label="Community size"
 				placeholder="number"
 				active={!proposing}
 				valid={(text) => (validSize(text) ? undefined : 'Must be a positive whole number')}
 			/>
 			<TextField
 				bind:text={message}
-				label="why should the editors adopt Reciprocal Reviews?"
+				label="Why should the editors adopt Reciprocal Reviews? This will be shown publicly."
 				inline={false}
 				placeholder="why"
 				active={!proposing}
