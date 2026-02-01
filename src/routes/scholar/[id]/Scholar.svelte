@@ -130,20 +130,19 @@
 	{#if editable}
 		<Tasks scholar={scholar.getID()} {commitments} {minting} {pending} {reviews} {approvals}
 		></Tasks>
-
-		<Commitments {commitments} {admins} {minting}></Commitments>
 	{/if}
 
-	<Subheader icon={SubmissionLabel} id="submissions">Submissions</Subheader>
+	<Commitments {commitments} {admins} {minting} self={editable}></Commitments>
 
 	{#if submissions}
-		<ul>
-			{#each submissions as submission}
-				<li><SubmissionLink {submission}></SubmissionLink></li>
-			{:else}
-				<Feedback>No submissions.</Feedback>
-			{/each}
-		</ul>
+		{#if submissions.length > 0}
+			<Subheader icon={SubmissionLabel} id="submissions">Submissions</Subheader>
+			<ul>
+				{#each submissions as submission}
+					<li><SubmissionLink {submission}></SubmissionLink></li>
+				{:else}{/each}
+			</ul>
+		{/if}
 	{:else}
 		<Feedback>Unable to load submissions.</Feedback>
 	{/if}

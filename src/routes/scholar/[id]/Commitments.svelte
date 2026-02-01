@@ -12,11 +12,13 @@
 	let {
 		commitments,
 		admins,
-		minting
+		minting,
+		self
 	}: {
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
 		admins: { id: string; title: string }[] | null;
 		minting: CurrencyRow[] | null;
+		self: boolean;
 	} = $props();
 </script>
 
@@ -27,7 +29,13 @@
 {:else if admins.length === 0 && (minting === null || minting.length === 0) && (commitments === null || commitments.length === 0)}
 	<Feedback>You are not volunteering for any roles yet.</Feedback>
 {:else}
-	<Tip>These are commitments you've made to review or manage currencies.</Tip>
+	<Tip>
+		{#if self}
+			These are roles you've volunteered for.
+		{:else}
+			These are roles this scholar has volunteered for.
+		{/if}
+	</Tip>
 
 	<Table>
 		{#snippet header()}
@@ -35,16 +43,16 @@
 			<th>Role</th>
 		{/snippet}
 
-		{#if admins}
-			{#if admins.length > 0}
-				{#each admins as admin}
-					<tr>
-						<td><VenueLink id={admin.id} name={admin.title} /></td>
-						<td><Tag>Admin</Tag></td>
-					</tr>
-				{/each}
-			{/if}
+		<!-- Any admin roles? -->
+		{#if admins.length > 0}
+			{#each admins as admin}
+				<tr>
+					<td><VenueLink id={admin.id} name={admin.title} /></td>
+					<td><Tag>Admin</Tag></td>
+				</tr>
+			{/each}
 		{/if}
+
 		<!-- Are they minters for any currencies? -->
 		{#each minting ?? [] as currency}
 			<tr>
@@ -52,6 +60,8 @@
 				<td><Tag>Minter</Tag></td>
 			</tr>
 		{/each}
+
+		<!-- Any volunteering commitments -->
 		{#if commitments && commitments.length > 0}
 			{#each commitments as commitment}
 				<tr>
