@@ -55,10 +55,7 @@ alter table "public"."venues"
 drop column "edit_amount";
 
 alter table "public"."venues"
-drop column "editors";
-
-alter table "public"."venues"
-add column "admins" uuid[] not null default '{}'::uuid[];
+rename column editors to admins;
 
 alter table "public"."venues"
 add constraint "venues_admins_check" check ((cardinality(admins)>0)) not valid;
