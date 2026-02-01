@@ -94,6 +94,8 @@
 		</form>
 	{/if}
 
+	{@const admins = venue.admins}
+
 	<Cards>
 		<Card
 			icon={venue.admins.length}
@@ -104,10 +106,10 @@
 		>
 			<p>
 				This venue is administered by
-				{#each venue.admins as adminID, index}
-					{#if index > 0 && venue.admins.length > 1},{/if}
-					{#if index === venue.admins.length - 1}and{/if}
-					<ScholarLink id={adminID} />{#if isAdmin && venue.admins.length > 1}
+				{#each admins as adminID, index}
+					{#if index > 0 && admins.length > 2},{/if}
+					{#if index === admins.length - 1 && admins.length > 1}and{/if}
+					<ScholarLink id={adminID} />{#if isAdmin && admins.length > 1}
 						&nbsp;<Button
 							tip="Remove admin"
 							active={venue.admins.length > 1}
