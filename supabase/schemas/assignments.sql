@@ -171,7 +171,7 @@ for update
 				from
 					public.assignments
 				where
-					submission=id
+					assignments.submission=submissions.id
 					and scholar=(
 						select
 							auth.uid ()
@@ -258,7 +258,7 @@ with
 			-- If the current scholar is an admin, they can create any assignment.
 			public.isAdmin (venue)
 			-- If the current scholar has an assigment to the role that is the approver for the new assignment's role.
-			(
+			or (
 				isApprover (role)
 				and isAssigned (submission)
 			)

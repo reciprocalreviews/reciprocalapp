@@ -168,9 +168,9 @@
 		<!-- Only editors can update the status of a submission -->
 		{#if isEditor}
 			<Checkbox
-				on={!done}
-				change={(on) => db().updateSubmissionStatus(submission.id, on ? 'reviewing' : 'done')}
-				>This submission is still in review.</Checkbox
+				on={done}
+				change={(on) => db().updateSubmissionStatus(submission.id, on ? 'done' : 'reviewing')}
+				>This submission's review is complete.</Checkbox
 			>
 		{/if}
 

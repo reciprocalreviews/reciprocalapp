@@ -15,6 +15,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Support creating a new currency in a venue proposal (#74).
 - Improved layout of volunteers table (#77).
 - Editable text no longer grows the page unbounded (#75).
+- Fixed submissions update RLS role to allow editors to edit.
 
 ### Changed
 
