@@ -199,9 +199,7 @@
 				</Card>
 			{/if}
 		</Cards>
-	{/if}
 
-	{#if editable}
 		<Subheader icon={SettingsLabel}>Settings</Subheader>
 		<EditableText
 			text={scholar.getEmail() ?? ''}

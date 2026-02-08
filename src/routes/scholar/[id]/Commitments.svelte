@@ -45,8 +45,8 @@
 
 		<!-- Any admin roles? -->
 		{#if admins.length > 0}
-			{#each admins as admin}
-				<tr>
+			{#each admins as admin, index}
+				<tr data-testid="admin-{index}">
 					<td><VenueLink id={admin.id} name={admin.title} /></td>
 					<td><Tag>Admin</Tag></td>
 				</tr>
@@ -63,8 +63,8 @@
 
 		<!-- Any volunteering commitments -->
 		{#if commitments && commitments.length > 0}
-			{#each commitments as commitment}
-				<tr>
+			{#each commitments as commitment, index}
+				<tr data-testid="commitment-{index}">
 					<td><VenueLink id={commitment.venueid} name={commitment.venue} /></td>
 					<td><Tag>{commitment.name}</Tag></td>
 				</tr>
