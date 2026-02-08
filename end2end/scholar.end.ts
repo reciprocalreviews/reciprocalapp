@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { login, logout } from '../../login';
+import { login, logout } from '../src/routes/login';
 
 test('the read-only scholar profile page should show volunteering roles', async ({ page }) => {
 	await page.goto('/scholar/d181d165-8b6a-4d79-ad28-a9aece21d813');

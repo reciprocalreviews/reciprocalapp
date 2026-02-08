@@ -9,8 +9,8 @@ const config: PlaywrightTestConfig = {
 		reuseExistingServer: !process.env.CI,
 		port: 4173
 	},
-	testDir: 'src',
-	testMatch: /(.+\.)?(spec)\.ts/,
+	testDir: 'end2end',
+	testMatch: /(.+\.)?(end)\.ts/,
 	projects: [
 		{
 			name: 'chromium',

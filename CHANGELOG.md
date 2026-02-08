@@ -40,6 +40,8 @@ Dates should be in`YYYY-MM-DD` format.
 
 ### Added
 
+π
+
 - Fixed #54, adding anonymity and conflicts support to venues and roles, to implement double anonymous, single anonymous, and open reviewing.
 - Added venue active/inactive switch, to allow for venues to be created without being availabe for use yet.
 - Created editor-guarded settings page to organize venue settings and declutter landing page.
