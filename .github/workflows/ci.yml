@@ -16,7 +16,7 @@ jobs:
           version: latest
 
       - name: Start Supabase local development setup
-        run: supabase db start
+        run: supabase db start --exclude storage-api,imgproxy,logflare,supavisor
 
       - name: Verify generated types are checked in
         run: |

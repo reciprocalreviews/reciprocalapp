@@ -2,7 +2,10 @@ import { type PlaywrightTestConfig, devices } from '@playwright/test';
 
 const config: PlaywrightTestConfig = {
 	webServer: {
-		command: 'npm run sync && npm run build && npm run preview',
+		command:
+			'npm run sync && npm run build && npm run preview && supabase db start --exclude storage-api,imgproxy,logflare,supavisor',
+		name: 'dev',
+		reuseExistingServer: !process.env.CI,
 		port: 4173
 	},
 	testDir: 'tests',

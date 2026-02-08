@@ -16,13 +16,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
       - name: Install dependencies
         run: npm ci
       - name: Define environment variables for build.
         run: echo "${{ secrets.TEST_ENV }}" > .env
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
-      - name: Run Playwright tests
+      - name: Run Playwright tests using the vite dev server and Supabase local development setup
         run: npx playwright test
       - uses: actions/upload-artifact@v4
         if: always()

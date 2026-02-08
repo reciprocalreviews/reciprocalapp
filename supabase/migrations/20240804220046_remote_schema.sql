@@ -1,51 +1,103 @@
+set
+	statement_timeout=0;
 
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
+set
+	lock_timeout=0;
 
-CREATE EXTENSION IF NOT EXISTS "pgsodium" WITH SCHEMA "pgsodium";
+set
+	idle_in_transaction_session_timeout=0;
 
-COMMENT ON SCHEMA "public" IS 'standard public schema';
+set
+	client_encoding='UTF8';
 
-CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
+set
+	standard_conforming_strings=on;
 
-CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
+select
+	pg_catalog.set_config ('search_path', '', false);
 
-CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
+set
+	check_function_bodies=false;
 
-CREATE EXTENSION IF NOT EXISTS "pgjwt" WITH SCHEMA "extensions";
+set
+	xmloption=content;
 
-CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
+set
+	client_min_messages=warning;
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
+set
+	row_security=off;
 
-ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
+comment on SCHEMA "public" is 'standard public schema';
 
-GRANT USAGE ON SCHEMA "public" TO "postgres";
-GRANT USAGE ON SCHEMA "public" TO "anon";
-GRANT USAGE ON SCHEMA "public" TO "authenticated";
-GRANT USAGE ON SCHEMA "public" TO "service_role";
+create extension IF not exists "pg_graphql"
+with
+	SCHEMA "graphql";
 
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "service_role";
+create extension IF not exists "pg_stat_statements"
+with
+	SCHEMA "extensions";
 
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "service_role";
+create extension IF not exists "pgcrypto"
+with
+	SCHEMA "extensions";
 
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "service_role";
+create extension IF not exists "pgjwt"
+with
+	SCHEMA "extensions";
 
-RESET ALL;
+create extension IF not exists "supabase_vault"
+with
+	SCHEMA "vault";
+
+create extension IF not exists "uuid-ossp"
+with
+	SCHEMA "extensions";
+
+alter publication "supabase_realtime" OWNER to "postgres";
+
+grant USAGE on SCHEMA "public" to "postgres";
+
+grant USAGE on SCHEMA "public" to "anon";
+
+grant USAGE on SCHEMA "public" to "authenticated";
+
+grant USAGE on SCHEMA "public" to "service_role";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on SEQUENCES to "postgres";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on SEQUENCES to "anon";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on SEQUENCES to "authenticated";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on SEQUENCES to "service_role";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on FUNCTIONS to "postgres";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on FUNCTIONS to "anon";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on FUNCTIONS to "authenticated";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on FUNCTIONS to "service_role";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on TABLES to "postgres";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on TABLES to "anon";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on TABLES to "authenticated";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on TABLES to "service_role";
+
+reset all;
