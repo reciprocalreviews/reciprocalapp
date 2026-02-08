@@ -150,12 +150,12 @@
 	<Subheader icon={TokenLabel} id="tokens">Tokens</Subheader>
 
 	<p>
-		{#if editable}You have{:else}This scholar has the following tokens:{/if}
 		{#if tokens === null}
 			<Feedback>Unable to load tokens.</Feedback>
 		{:else if currencies === null}
 			<Feedback>Unable to load currencies.</Feedback>
 		{:else}
+			{#if editable}You have{:else}This scholar has:{/if}
 			{#each currencies as currency}
 				<Tokens amount={tokens.filter((t) => t.currency === currency.id).length} {currency}
 				></Tokens>
