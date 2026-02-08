@@ -14,7 +14,8 @@
 		warn = undefined,
 		end = false,
 		background = true,
-		small = false
+		small = false,
+		testid = undefined
 	}: {
 		children: Snippet;
 		action: ((event?: Event) => void) | ((event?: Event) => Promise<void>);
@@ -28,6 +29,7 @@
 		end?: boolean | undefined;
 		background?: boolean;
 		small?: boolean;
+		testid?: string;
 	} = $props();
 
 	/** True if we're evaluating the action. Allows us to deactivate button while waiting for a promise. */
@@ -59,6 +61,7 @@
 		{type}
 		title={tip}
 		aria-label={tip}
+		data-testid={testid}
 		disabled={!active || acting}
 		class:background
 		class:warn={warn !== undefined}
@@ -69,8 +72,10 @@
 {:else}
 	<div class="row">
 		<button onclick={() => (confirming = false)}>{DeleteLabel}</button>
-		<button class:warn={warn !== undefined} onclick={async (event) => await act(event)}
-			>{warn}</button
+		<button
+			data-testid={testid}
+			class:warn={warn !== undefined}
+			onclick={async (event) => await act(event)}>{warn}</button
 		>
 	</div>
 {/if}

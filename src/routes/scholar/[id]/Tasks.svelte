@@ -54,8 +54,8 @@
 			<th>Task</th>
 		{/snippet}
 		<!-- Show pending invitations -->
-		{#each invitedCommitments as invite}
-			<tr>
+		{#each invitedCommitments as invite, index}
+			<tr data-testid="invitation-{index}">
 				<td>Invitation</td>
 				<td>
 					The editor has invited you to the <strong>{invite.name ?? EmptyLabel}</strong>
@@ -75,10 +75,10 @@
 		{/each}
 
 		<!-- Show pending transactions -->
-		{#each minting ?? [] as currency}
+		{#each minting ?? [] as currency, index}
 			{@const pendingForCurrency = pending?.filter((t) => t.currency === currency.id) ?? []}
 			{#if pendingForCurrency.length > 0}
-				<tr>
+				<tr data-testid="transaction-{index}">
 					<td>Transaction</td>
 					<td>
 						As minter, you have {pendingForCurrency.length} proposed transactions to approve. Approve
@@ -89,8 +89,8 @@
 		{/each}
 
 		<!-- Show pending reviews -->
-		{#each reviews ?? [] as review}
-			<tr>
+		{#each reviews ?? [] as review, index}
+			<tr data-testid="review-{index}">
 				<td>Review</td>
 				<td>
 					<SubmissionLink submission={review.submissions} />
@@ -99,8 +99,8 @@
 		{/each}
 
 		<!-- Show pending assignments -->
-		{#each approvals ?? [] as approval}
-			<tr>
+		{#each approvals ?? [] as approval, index}
+			<tr data-testid="assignment-{index}">
 				<td>Assignment</td>
 				<td>
 					<ScholarLink id={approval.scholars} /> pending assignment to <SubmissionLink

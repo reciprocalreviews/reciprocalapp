@@ -48,9 +48,11 @@
 				name="email"
 				size={19}
 				bind:text={email}
+				testid="email-input"
 			/>
 			<Button
 				tip="Send one-time password"
+				testid="email-submit"
 				action={async () => {
 					const authError = await auth.signIn(email, undefined);
 					if (authError) {
@@ -74,9 +76,11 @@
 					name="password"
 					size={19}
 					bind:text={password}
+					testid="otp-input"
 				/>
 				<Button
 					tip="Sign in"
+					testid="otp-submit"
 					action={async () => {
 						const response = await auth.signIn(email, password);
 						if (typeof response === 'string') {

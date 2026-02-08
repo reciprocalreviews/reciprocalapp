@@ -39,6 +39,7 @@
 			<div class="link">
 				<Button
 					small
+					testid="logout-button"
 					tip="Sign out"
 					action={() => {
 						auth.signOut();

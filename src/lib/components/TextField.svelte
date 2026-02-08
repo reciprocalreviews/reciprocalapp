@@ -17,6 +17,7 @@
 		view?: HTMLInputElement | HTMLTextAreaElement | undefined;
 		done?: ((() => void) | undefined) | undefined;
 		note?: string | undefined;
+		testid?: string;
 	};
 
 	let {
@@ -31,7 +32,8 @@
 		inline = true,
 		password = false,
 		view = $bindable(undefined),
-		done = undefined
+		done = undefined,
+		testid = undefined
 	}: Props = $props();
 
 	let error = $derived(valid ? valid(text) : undefined);
@@ -82,6 +84,7 @@
 				bind:value={text}
 				bind:this={view}
 				class:active
+				data-testid={testid}
 				{name}
 				disabled={!active}
 				{size}
@@ -98,6 +101,7 @@
 				class:active
 				disabled={!active}
 				{placeholder}
+				data-testid={testid}
 				onfocus={() => (wasFocused = true)}
 				bind:value={text}
 				bind:this={view}

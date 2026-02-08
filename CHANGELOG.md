@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Added a sticky footer for less frequently used site-wide information and links.
 - Make staging and deployment runs dependent on test workflows.
+- Added tests for `/`, `/about`, `/scholar/[id]` pages, as well as some utility functions for logging in and out of seeded scholars.
 
 ### Changed
 
