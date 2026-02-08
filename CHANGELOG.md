@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.3.2 2026-02-08
+
+### Changed
+
+- Updated minor versions of `@playright/test`, `@sveltejs/kit`, `supabase`, `svelte`, `@supabase/supabase-js`
+
 ## 0.3.1 2026-02-01
 
 ### Added
