@@ -76,17 +76,18 @@
 				<li>
 					Some research communities call for changes to promotion criteria (e.g., tenure packets
 					that only permit a fixed number of publications), but these are often adopted
-					inconsistently across institutions and do not address cultural incentives.
+					inconsistently across institutions and do not address reputational incentives.
 				</li>
 				<li>
-					Communities try to create reviewer trainings to address quality, but many reviewers to not
+					Communities try to create reviewer trainings to address quality, but many reviewers do not
 					engage them.
 				</li>
 			</ul>
 		</li>
 		<li>
-			The most direct way to address the root cause of the imbalance and review quality is to link
-			rights to publish to high-quality reviewing labor in proportion to a scholar's submissions.
+			The most direct way to address the root cause of the imbalance and review quality is to <strong
+				>link rights to publish to high-quality reviewing labor</strong
+			> in proportion to a scholar's submissions.
 		</li>
 		<li>
 			Doing this in a direct way, such as requiring authors to review post submission in order for
@@ -105,7 +106,7 @@
 			Creating this alignment not only ensures sufficient labor for the volume of submissions, but
 			requires authors to account for that labor in their own workload by adding a cost to
 			submitting, likely reducing the volume of submissions. It also gives power to editors to set a
-			standard for review quality, only awarding tokens for reviews that meet that standard.
+			minimum standard for review quality, only awarding tokens for reviews that meet that standard.
 		</li>
 		<li>
 			Having a more liquid currency to reflect past reviewing effort also allows that currency to be
