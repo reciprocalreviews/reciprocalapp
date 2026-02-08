@@ -2,6 +2,10 @@ name: Playwright
 on:
   # Allow this workflow to be called.
   workflow_call:
+    secrets:
+      TEST_ENV:
+        required: true
+        description: 'Environment variables for testing, in the format of KEY=VALUE pairs, separated by newlines.'
 
 jobs:
   test:

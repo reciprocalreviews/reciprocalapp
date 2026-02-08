@@ -13,6 +13,8 @@ jobs:
 
   playwright:
     uses: ./.github/workflows/playwright.yml
+    secrets:
+      TEST_ENV: ${{ secrets.TEST_ENV }}
 
   deploy:
     runs-on: ubuntu-latest
