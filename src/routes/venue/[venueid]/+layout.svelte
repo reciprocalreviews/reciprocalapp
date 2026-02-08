@@ -33,7 +33,7 @@
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link> Admins: {#each venue.admins as adminID}
 				<ScholarLink id={adminID} />
 			{/each}{/snippet}
-		<Feedback error>
+		<Feedback error inline={false}>
 			<p>
 				This venue is currently <strong>inactive</strong>, so only admins can see its details. Here
 				is the message from the admins.
@@ -43,7 +43,7 @@
 	</Page>
 {:else}
 	{#if venue.inactive !== null}
-		<Feedback error
+		<Feedback error inline={false}
 			>This venue is currently <strong>inactive</strong>. Only you and other admins can see it,
 			along with the message set in the <Link to="/venue/{venue.id}/settings">venue settings</Link>.
 			Visit the settings to activate the venue.</Feedback

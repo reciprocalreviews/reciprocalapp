@@ -8,8 +8,7 @@
 
 	const routes = [
 		{ path: '/', label: 'Home' },
-		{ path: '/venues', label: 'Venues' },
-		{ path: '/about', label: 'About' }
+		{ path: '/venues', label: 'Venues' }
 	];
 
 	let auth = getAuth();
@@ -18,24 +17,28 @@
 </script>
 
 <header>
-	{#each routes as route}<div class="link"><Link to={route.path}>{route.label}</Link></div>{/each}
-	<div
-		class="feedback"
-		title={pending === 0 ? 'No pending saves' : `${pending} pending saves${pending > 1 ? 's' : ''}`}
-	>
-		{#if pending > 0}
-			{#if pending > 1}{pending}{/if}
-			<Dots></Dots>
-		{:else}✔ saved{/if}
-	</div>
+	{#each routes as route}<div class="link">
+			<Link small to={route.path}>{route.label}</Link>
+		</div>{/each}
 	<div class="authenticated">
+		<div
+			class="feedback"
+			title={pending === 0
+				? 'No pending saves'
+				: `${pending} pending saves${pending > 1 ? 's' : ''}`}
+		>
+			{#if pending > 0}
+				{#if pending > 1}{pending}{/if}
+				<Dots></Dots>
+			{:else}✔ saved{/if}
+		</div>
 		{#if auth.isAuthenticated()}
 			<div class="link">
-				<Link small to="https://github.com/reciprocalreviews/reciprocalapp/issues/">Feedback</Link>
+				<Link small to="/scholar/{auth.getUserID()}">{auth.user?.email}</Link>
 			</div>
-			<div class="link"><Link small to="/scholar/{auth.getUserID()}">{auth.user?.email}</Link></div>
 			<div class="link">
 				<Button
+					small
 					tip="Sign out"
 					action={() => {
 						auth.signOut();
@@ -44,7 +47,7 @@
 				>
 			</div>
 		{:else}
-			<div class="link"><Link to="/login">Login</Link></div>
+			<div class="link"><Link small to="/login">Login</Link></div>
 		{/if}
 	</div>
 </header>
@@ -57,10 +60,9 @@
 		gap: var(--spacing);
 		row-gap: var(--spacing);
 		align-items: center;
-		padding-bottom: var(--spacing);
 		border-block-end: var(--border-color) solid var(--border-width);
 		background: var(--background-color);
-		padding-top: var(--spacing);
+		padding: var(--spacing);
 
 		/* The header is sticky */
 		position: sticky;
@@ -83,7 +85,7 @@
 		display: flex;
 		flex-direction: row;
 		flex-wrap: wrap;
-		gap: calc(2 * var(--spacing));
+		gap: var(--spacing);
 		margin-inline-start: auto;
 		align-items: center;
 	}

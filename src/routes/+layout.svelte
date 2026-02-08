@@ -12,6 +12,7 @@
 	import { enUS } from '../locale/Locale';
 	import { PUBLIC_ENV } from '$env/static/public';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 
 	let { data, children } = $props();
 
@@ -79,6 +80,9 @@
 	</section>
 	{@render children()}
 </main>
+{#if !inProd}
+	<Footer />
+{/if}
 
 <style>
 	main {
@@ -86,6 +90,9 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing);
+		padding: var(--spacing);
+		margin: auto;
+		max-width: var(--page-width);
 	}
 
 	.notifications {

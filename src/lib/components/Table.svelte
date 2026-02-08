@@ -48,7 +48,7 @@
 	}
 
 	.full {
-		width: calc(100vw - 2em);
-		margin-left: calc(-1 * (100vw - 2em - 100%) / 2);
+		width: calc(100vw - var(--spacing) * 2);
+		margin-inline-start: calc(-1 * (100vw - var(--spacing) * 2 - 100%) / 2);
 	}
 </style>

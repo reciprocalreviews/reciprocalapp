@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.3.2 2026-02-08
 
+### Added
+
+- Added a sticky footer for less frequently used site-wide information and links.
+
 ### Changed
 
 - Updated minor versions of `@playright/test`, `@sveltejs/kit`, `supabase`, `svelte`, `@supabase/supabase-js`

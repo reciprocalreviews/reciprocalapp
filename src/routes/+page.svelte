@@ -88,7 +88,7 @@
 		title="Newsletter subscription"
 		width="480"
 		height="150"
-		style="border:none; background:white;"
+		style="border:none; background:white; align-self: center;"
 		frameborder="0"
 		scrolling="no"
 	></iframe>
