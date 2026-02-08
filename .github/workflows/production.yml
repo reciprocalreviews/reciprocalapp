@@ -10,8 +10,10 @@ on:
 jobs:
   unit-tests:
     uses: ./.github/workflows/vitest.yml
+
   playwright:
     uses: ./.github/workflows/playwright.yml
+
   deploy:
     runs-on: ubuntu-latest
 
@@ -32,8 +34,3 @@ jobs:
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       - run: supabase db push
-  on-failure:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Notify of failed deployment
-        run: echo "Production deployment failed due to failed tests. Please check the Playwright and Unit Tests workflows for more details."
