@@ -107,25 +107,29 @@
 			placeholder="Explain your current reviewing status to others."
 			edit={(text) => db().updateScholarStatus(scholar.getID(), text)}
 		/>
+	{:else if scholar.getStatus().trim().length === 0}
+		<Feedback>This scholar has not shared their reviewing status.</Feedback>
 	{:else}
 		<p>{scholar.getStatus()}</p>
 	{/if}
 
-	<Dashboard
-		stats={[
-			{
-				number: submissions?.length,
-				title: 'submissions',
-				link: `#submissions`
-			},
-			{ number: tokens?.length, title: 'Tokens', link: `#tokens` },
-			{
-				number: transactions ?? undefined,
-				title: 'Transactions',
-				link: `/scholar/${scholar.getID()}/transactions`
-			}
-		]}
-	/>
+	{#if editable}
+		<Dashboard
+			stats={[
+				{
+					number: submissions?.length,
+					title: 'submissions',
+					link: `#submissions`
+				},
+				{ number: tokens?.length, title: 'Tokens', link: `#tokens` },
+				{
+					number: transactions ?? undefined,
+					title: 'Transactions',
+					link: `/scholar/${scholar.getID()}/transactions`
+				}
+			]}
+		/>
+	{/if}
 
 	{#if editable}
 		<Tasks scholar={scholar.getID()} {commitments} {minting} {pending} {reviews} {approvals}

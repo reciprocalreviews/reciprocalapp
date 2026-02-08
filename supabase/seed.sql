@@ -356,7 +356,8 @@ set
 	"name"='Scholar Lee',
 	"email"='editor@uni.edu',
 	"available"='true',
-	"steward"='true'
+	"steward"='true',
+	"status"='I am an editor and steward. I can review as many things as you send me, and I can also help you with any questions or issues you have about the platform. Feel free to reach out to me!'
 where
 	id='d181d165-8b6a-4d79-ad28-a9aece21d813';
 

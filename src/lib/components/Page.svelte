@@ -74,11 +74,7 @@
 		flex-direction: column;
 		gap: calc(1.5 * var(--spacing));
 		margin: auto;
-		max-width: var(--page-width);
-	}
-
-	.page :global(h1:first-child) {
-		margin-block-start: var(--spacing);
+		width: var(--page-width);
 	}
 
 	.page > :global(p) {
