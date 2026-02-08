@@ -8,7 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Added
 
 - Added a sticky footer for less frequently used site-wide information and links.
-- Run unit tests and end to end tests on merges to `dev` branch, and only deploy to staging server if successul.
+- Make staging and deployment runs dependent on test workflows.
 
 ### Changed
 

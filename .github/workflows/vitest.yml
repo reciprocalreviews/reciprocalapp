@@ -4,10 +4,8 @@
 name: Unit Tests
 
 on:
-  push:
-    branches: ['dev']
-  pull_request:
-    branches: ['dev']
+  # Allow this workflow to be called.
+  workflow_call:
 
 jobs:
   build:

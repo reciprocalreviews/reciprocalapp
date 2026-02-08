@@ -1,11 +1,8 @@
 name: Playwright
 on:
-  # Wait for Unit Tests to complete before running this workflow
-  workflow_run:
-    workflows: ['Unit Tests']
-    branches: ['dev']
-    types:
-      - completed
+  # Allow this workflow to be called.
+  workflow_call:
+
 jobs:
   test:
     timeout-minutes: 60

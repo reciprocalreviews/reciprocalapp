@@ -3,9 +3,15 @@ name: Deploy Supabase Migrations to Production
 on:
   push:
     branches: ['main']
+  pull_request:
+    branches: ['main']
   workflow_dispatch:
 
 jobs:
+  unit-tests:
+    uses: ./.github/workflows/vitest.yml
+  playwright:
+    uses: ./.github/workflows/playwright.yml
   deploy:
     runs-on: ubuntu-latest
 
@@ -14,7 +20,9 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.PRODUCTION_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.PRODUCTION_PROJECT_ID }}
 
-    # Only run this workflow if the tests were successful
+    # Only run this if tests were successful
+    needs: [unit-tests, playwright]
+
     steps:
       - uses: actions/checkout@v4
 
