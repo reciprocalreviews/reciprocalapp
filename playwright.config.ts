@@ -9,7 +9,7 @@ const config: PlaywrightTestConfig = {
 		reuseExistingServer: !process.env.CI,
 		port: 4173
 	},
-	testDir: 'tests',
+	testDir: 'src',
 	testMatch: /(.+\.)?(spec)\.ts/,
 	projects: [
 		{

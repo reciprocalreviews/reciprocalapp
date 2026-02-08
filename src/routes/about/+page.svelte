@@ -27,9 +27,11 @@
 
 	{#if stewards}
 		<ul>
-			{#each stewards as steward}
+			{#each stewards as steward, index}
 				<li>
-					<Link to="/scholar/{steward.id}">{steward.name ?? 'anonymous'}</Link>
+					<Link to="/scholar/{steward.id}" testid={'steward-' + index}
+						>{steward.name ?? 'anonymous'}</Link
+					>
 				</li>
 			{/each}
 		</ul>
