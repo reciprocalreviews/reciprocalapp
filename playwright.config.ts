@@ -3,11 +3,13 @@ import { type PlaywrightTestConfig, devices } from '@playwright/test';
 const config: PlaywrightTestConfig = {
 	webServer: {
 		// Sync types, build with vite, run the preview server, and start Supabase locally, without services we don't use.
-		command:
-			'npm run sync && npm run build && npm run preview && supabase db start --exclude storage-api,imgproxy,logflare,supavisor',
+		command: 'npm run emu',
 		name: 'dev',
 		reuseExistingServer: !process.env.CI,
-		port: 4173
+		port: 4173,
+		stderr: 'pipe',
+		stdout: 'pipe',
+		timeout: 200000
 	},
 	testDir: 'end2end',
 	testMatch: /(.+\.)?(end)\.ts/,

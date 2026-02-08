@@ -12,13 +12,14 @@
 		"sync": "svelte-kit sync",
 		"test:end": "playwright test",
 		"test:unit": "vitest",
-		"start": "supabase start && npm run functions",
-		"functions": "supabase functions serve --no-verify-jwt --env-file .env",
+		"start": "supabase start --exclude storage-api,imgproxy,logflare,supavisor && npm run functions",
+		"functions": "supabase functions serve --no-verify-jwt --env-file .env &",
 		"stop": "supabase stop",
 		"reset": "supabase db reset && npm run types",
 		"types": "supabase gen types typescript --local > src/data/database.ts",
 		"deploy": "git checkout main && git merge dev && git push && git checkout dev && git push",
-		"outdated": "npx check-outdated --ignore-pre-releases --columns name,type,current,latest,changes"
+		"outdated": "npx check-outdated --ignore-pre-releases --columns name,type,current,latest,changes",
+		"emu": "npm run sync && npm run build && npm run start && npm run preview"
 	},
 	"engines": {
 		"node": ">=20.0.0"
