@@ -1,9 +1,11 @@
 name: Deploy Supabase Migrations to Staging
 
 on:
-  push:
-    branches:
-      - dev
+  # Wait for Playwright tests to complete before running this workflow, and implicity unit tests.
+  workflow_run:
+    workflows: [Playwright]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
@@ -15,6 +17,8 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.STAGING_PROJECT_ID }}
 
+    # Only run this workflow if the tests were successful
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -24,3 +28,9 @@ jobs:
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       - run: supabase db push
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - name: Notify of failed deployment
+        run: echo "Staging deployment failed due to failed tests. Please check the Playwright and Unit Tests workflows for more details."

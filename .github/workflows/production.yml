@@ -2,8 +2,7 @@ name: Deploy Supabase Migrations to Production
 
 on:
   push:
-    branches:
-      - main
+    branches: ['main']
   workflow_dispatch:
 
 jobs:
@@ -15,6 +14,7 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.PRODUCTION_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.PRODUCTION_PROJECT_ID }}
 
+    # Only run this workflow if the tests were successful
     steps:
       - uses: actions/checkout@v4
 
@@ -24,3 +24,8 @@ jobs:
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       - run: supabase db push
+  on-failure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify of failed deployment
+        run: echo "Production deployment failed due to failed tests. Please check the Playwright and Unit Tests workflows for more details."

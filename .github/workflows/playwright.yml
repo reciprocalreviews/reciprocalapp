@@ -1,9 +1,10 @@
-name: Playwright Tests
+name: Playwright
 on:
-  push:
-    branches: [dev]
-  pull_request:
-    branches: [dev]
+  # Wait for Unit Tests to complete before running this workflow
+  workflow_run:
+    workflows: [Unit Tests]
+    types:
+      - completed
 jobs:
   test:
     timeout-minutes: 60
