@@ -53,7 +53,7 @@
 				{/each}
 			</div>
 		{/if}
-		<h1>
+		<h1 data-testid="page-header">
 			{#if edit}<EditableText
 					text={revisedTitle}
 					valid={edit.valid}
