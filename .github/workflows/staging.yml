@@ -3,7 +3,8 @@ name: Deploy Supabase Migrations to Staging
 on:
   # Wait for Playwright tests to complete before running this workflow, and implicity unit tests.
   workflow_run:
-    workflows: [Playwright]
+    workflows: ['Playwright']
+    branches: ['dev']
     types:
       - completed
   workflow_dispatch:
