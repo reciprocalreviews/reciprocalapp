@@ -10,7 +10,7 @@ const config: PlaywrightTestConfig = {
 		port: 4173
 	},
 	testDir: 'tests',
-	testMatch: /(.+\.)?(test|spec)\.[jt]s/,
+	testMatch: /(.+\.)?(spec)\.ts/,
 	projects: [
 		{
 			name: 'chromium',

@@ -5,9 +5,10 @@
 	interface Props {
 		id: string;
 		name: string;
+		testid?: string;
 	}
 
-	let { id, name }: Props = $props();
+	let { id, name, testid }: Props = $props();
 </script>
 
-<Link to="/venue/{id}" icon={VenueLabel}>{name}</Link>
+<Link to="/venue/{id}" icon={VenueLabel} {testid}>{name}</Link>

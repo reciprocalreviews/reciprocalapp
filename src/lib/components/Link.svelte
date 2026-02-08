@@ -8,6 +8,7 @@
 		background = false,
 		underline = true,
 		icon = null,
+		testid,
 		children
 	}: {
 		to: string;
@@ -15,6 +16,7 @@
 		background?: boolean;
 		underline?: boolean;
 		icon?: string | null;
+		testid?: string;
 		children: Snippet;
 	} = $props();
 
@@ -28,6 +30,7 @@
 	href={inactive ? null : to}
 	target={to.startsWith('http') ? '_blank' : null}
 	aria-current={inactive ? 'page' : null}
+	data-testid={testid}
 	><span class:underline>{@render children()}</span>{#if to.startsWith('http')}<sub>🌐</sub
 		>{/if}{#if icon}<sub>{icon}</sub>{/if}</a
 >
