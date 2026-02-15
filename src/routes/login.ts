@@ -14,7 +14,7 @@ export async function login(email: string, page: Page, context: BrowserContext) 
 	await mailpit.goto('http://localhost:54324');
 
 	// Click the first message in the list
-	await mailpit.locator('.message').first().click();
+	await mailpit.locator(`a.message:has-text("${email}")`).first().click();
 
 	// Get the third paragraph with the OTP code
 	const text = await mailpit.frameLocator('#preview-html').locator('p').nth(2).textContent();

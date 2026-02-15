@@ -4,14 +4,15 @@
 	const {
 		error = false,
 		inline = true,
-		children
-	}: { error?: boolean; inline?: boolean; children: Snippet } = $props();
+		children,
+		testid
+	}: { error?: boolean; inline?: boolean; children: Snippet; testid?: string } = $props();
 </script>
 
 {#if inline}
-	<span class={['inline', { error }]}>{@render children()}</span>
+	<span class={['feedback', 'inline', { error }]} data-testid={testid}>{@render children()}</span>
 {:else}
-	<p class={{ error }}>{@render children()}</p>
+	<p class={['feedback', { error }]} data-testid={testid}>{@render children()}</p>
 {/if}
 
 <style>

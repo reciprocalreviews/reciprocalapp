@@ -17,11 +17,13 @@
 	let {
 		transactions,
 		venues,
-		currencies
+		currencies,
+		testid
 	}: {
 		transactions: TransactionRow[];
 		venues: VenueRow[];
 		currencies: CurrencyRow[];
+		testid?: string;
 	} = $props();
 
 	// Get the current user
@@ -35,7 +37,7 @@
 	let cancelReason = $state('');
 </script>
 
-{#snippet row(transaction: TransactionRow)}
+{#snippet row(transaction: TransactionRow, index: number)}
 	{@const currency = currencies?.find((c) => c.id === transaction.currency)}
 	{@const proposed = transaction.status === 'proposed'}
 	{@const editable =
@@ -45,7 +47,7 @@
 			(transaction.from_venue !== null &&
 				venues.find((v) => v.id === transaction.from_venue)?.admins.includes(userid)) ||
 			currency?.minters.includes(userid))}
-	<tr>
+	<tr data-testid={testid + '-' + index}>
 		<td>
 			<Status good={transaction.status === 'approved'}>{transaction.status}</Status>
 		</td>
@@ -118,7 +120,7 @@
 {/snippet}
 
 {#if transactions.length === 0}
-	<Feedback>No transactions yet.</Feedback>
+	<Feedback testid="no-transactions">No transactions.</Feedback>
 {:else}
 	<Table full>
 		{#snippet header()}
@@ -129,8 +131,8 @@
 			<th>Purpose</th>
 			<th>Actions</th>
 		{/snippet}
-		{#each transactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) as transaction}
-			{@render row(transaction)}
+		{#each transactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) as transaction, index}
+			{@render row(transaction, index)}
 		{/each}
 	</Table>
 {/if}

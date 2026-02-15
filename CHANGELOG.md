@@ -7,13 +7,14 @@ Dates should be in`YYYY-MM-DD` format.
 
 ### Added
 
-- Added tests for `/currency/[id]` page.
+- Added tests for `/currency/[id]` and `/curency/[id]/transaction` pages.
 
 ### Changed
 
 - Updated minor versions of `@sveltejs/kit`, `svelte`, `svelte-check`, and `supabase`.
 - Updated seed to have more tokens for testing.
 - Improved display of scholar tokens.
+- Improved layout of footer.
 
 ### Fixed
 
