@@ -9,6 +9,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of `@sveltejs/kit`, `svelte`, `svelte-check`, and `supabase`.
 
+### Fixed
+
+- Fixed page margins.
+
 ## 0.3.2 2026-02-08
 
 ### Added

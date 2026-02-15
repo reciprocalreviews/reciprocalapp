@@ -74,7 +74,7 @@
 		flex-direction: column;
 		gap: calc(1.5 * var(--spacing));
 		margin: auto;
-		width: var(--page-width);
+		width: 100%;
 	}
 
 	.page > :global(p) {
