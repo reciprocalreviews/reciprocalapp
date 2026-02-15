@@ -54,8 +54,8 @@
 {/snippet}
 
 <div class="dashboard">
-	{#each stats as stat}
-		<div class="stat">
+	{#each stats as stat, index}
+		<div class="stat" data-testid="stat-{index}">
 			{#if stat.link}
 				<Link to={stat.link} underline={false}>
 					<div class="content">

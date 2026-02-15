@@ -165,8 +165,8 @@
 		</p>
 
 		<ul>
-			{#each currency.minters as minter}
-				<li>
+			{#each currency.minters as minter, index}
+				<li data-testid="minter-{index}">
 					<ScholarLink id={minter}></ScholarLink>
 					{#if isMinter && currency.minters.length > 1}&nbsp;<Button
 							tip="Remove yourself as minter"
@@ -223,8 +223,10 @@
 		{#if venues}
 			<p>These are the venues that use this currency:</p>
 			<ul>
-				{#each venues as venue}
-					<li><SourceLink id={venue.id} name={venue.title}></SourceLink></li>
+				{#each venues as venue, index}
+					<li data-testid="venue-{index}">
+						<SourceLink id={venue.id} name={venue.title}></SourceLink>
+					</li>
 				{/each}
 			</ul>
 		{:else}

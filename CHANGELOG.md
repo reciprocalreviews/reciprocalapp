@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.3.3 2026-02-15
 
+### Added
+
+- Added tests for `/currency/[id]` page.
+
 ### Changed
 
 - Updated minor versions of `@sveltejs/kit`, `svelte`, `svelte-check`, and `supabase`.
