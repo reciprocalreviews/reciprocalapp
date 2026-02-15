@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.3.3 2026-02-15
+
+### Changed
+
+- Updated minor versions of `@sveltejs/kit`, `svelte`, `svelte-check`, and `supabase`.
+
 ## 0.3.2 2026-02-08
 
 ### Added
