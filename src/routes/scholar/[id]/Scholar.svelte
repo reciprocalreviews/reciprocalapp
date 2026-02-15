@@ -121,7 +121,11 @@
 					title: 'submissions',
 					link: `#submissions`
 				},
-				{ number: tokens?.length, title: 'Tokens', link: `#tokens` },
+				{
+					number: tokens?.length,
+					title: `Tokens in ${currencies?.length} ${currencies?.length === 1 ? 'currency' : 'currencies'}`,
+					link: `#tokens`
+				},
 				{
 					number: transactions ?? undefined,
 					title: 'Transactions',
@@ -153,21 +157,25 @@
 
 	<Subheader icon={TokenLabel} id="tokens">Tokens</Subheader>
 
-	<p>
-		{#if tokens === null}
-			<Feedback>Unable to load tokens.</Feedback>
-		{:else if currencies === null}
-			<Feedback>Unable to load currencies.</Feedback>
-		{:else}
-			{#if editable}You have{:else}This scholar has:{/if}
+	{#if tokens === null}
+		<Feedback>Unable to load tokens.</Feedback>
+	{:else if currencies === null}
+		<Feedback>Unable to load currencies.</Feedback>
+	{:else}
+		<p>
+			{#if editable}You have{:else}This scholar has{/if}:
+		</p>
+		<ul>
 			{#each currencies as currency}
-				<Tokens amount={tokens.filter((t) => t.currency === currency.id).length} {currency}
-				></Tokens>
+				<li>
+					<Tokens amount={tokens.filter((t) => t.currency === currency.id).length} {currency}
+					></Tokens>
+				</li>
 			{:else}
 				<Tokens amount={0}></Tokens>
 			{/each}
-		{/if}
-	</p>
+		</ul>
+	{/if}
 
 	{#if editable}
 		<Cards>

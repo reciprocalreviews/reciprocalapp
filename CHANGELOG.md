@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of `@sveltejs/kit`, `svelte`, `svelte-check`, and `supabase`.
 - Updated seed to have more tokens for testing.
+- Improved display of scholar tokens.
 
 ### Fixed
 

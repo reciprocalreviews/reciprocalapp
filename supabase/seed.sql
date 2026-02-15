@@ -304,7 +304,7 @@ insert into
 values
 	(
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'ACM TOCE currency',
+		'Epistemology',
 		'',
 		'{"7ff8621a-cbe0-4789-bbee-f008d38c4ac7"}'
 	);
