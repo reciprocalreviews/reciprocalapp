@@ -4,7 +4,7 @@
 
 	let {
 		to,
-		small = false,
+		size = 'normal',
 		background = false,
 		underline = true,
 		icon = null,
@@ -12,7 +12,7 @@
 		children
 	}: {
 		to: string;
-		small?: boolean;
+		size?: 'small' | 'normal' | 'extra-small';
 		background?: boolean;
 		underline?: boolean;
 		icon?: string | null;
@@ -24,7 +24,7 @@
 </script>
 
 <a
-	class:small
+	class={size}
 	class:background
 	class:inactive
 	href={inactive ? null : to}
@@ -41,6 +41,7 @@
 		font-weight: 400;
 		text-decoration: none;
 		white-space: wrap;
+		font-size: var(--paragraph-font-size);
 	}
 
 	a .underline {
@@ -53,6 +54,9 @@
 		font-size: var(--small-font-size);
 	}
 
+	a.extra-small {
+		font-size: var(--extra-small-font-size);
+	}
 	a span:hover:not([aria-current]) {
 		text-decoration: underline;
 		text-decoration-thickness: calc(1.25 * var(--thick-border-width));

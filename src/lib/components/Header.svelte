@@ -18,7 +18,7 @@
 
 <header>
 	{#each routes as route}<div class="link">
-			<Link small to={route.path}>{route.label}</Link>
+			<Link size="small" to={route.path}>{route.label}</Link>
 		</div>{/each}
 	<div class="authenticated">
 		<div
@@ -34,7 +34,7 @@
 		</div>
 		{#if auth.isAuthenticated()}
 			<div class="link">
-				<Link small to="/scholar/{auth.getUserID()}">{auth.user?.email}</Link>
+				<Link size="small" to="/scholar/{auth.getUserID()}">{auth.user?.email}</Link>
 			</div>
 			<div class="link">
 				<Button
@@ -48,7 +48,7 @@
 				>
 			</div>
 		{:else}
-			<div class="link"><Link small to="/login">Login</Link></div>
+			<div class="link"><Link size="small" to="/login">Login</Link></div>
 		{/if}
 	</div>
 </header>
@@ -63,7 +63,7 @@
 		align-items: center;
 		border-block-end: var(--border-color) solid var(--border-width);
 		background: var(--background-color);
-		padding: var(--spacing);
+		padding: calc(var(--spacing) / 2) var(--spacing);
 
 		/* The header is sticky */
 		position: sticky;
