@@ -19,3 +19,25 @@ test('the logged in scholar should see many things', async ({ page, context }) =
 	// Log out
 	await logout(page);
 });
+
+test('anonymous visitor should not see transactions', async ({ page }) => {
+	// Go to the transactions page
+	await page.goto('scholar/b8a805bf-0aae-4443-9185-de019a8715cb/transactions');
+
+	// Expect a transaction to be visible
+	await expect(page.getByTestId('no-transactions')).toBeVisible();
+});
+
+test('scholar should see their transactions', async ({ page, context }) => {
+	// Log in as the author with a transaction
+	await login('author1@uni.edu', page, context);
+
+	// Go to the transactions page
+	await page.goto('scholar/b8a805bf-0aae-4443-9185-de019a8715cb/transactions');
+
+	// Expect a transaction to be visible
+	await expect(page.getByTestId('scholar-transaction-0')).toBeVisible();
+
+	// Log out
+	await logout(page);
+});

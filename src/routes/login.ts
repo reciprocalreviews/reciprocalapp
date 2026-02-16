@@ -21,10 +21,14 @@ export async function login(email: string, page: Page, context: BrowserContext) 
 
 	// Extract the code using a regular expression
 	const codeMatch = text?.match(/(\d{6})/);
+	const code = codeMatch ? codeMatch[1] : '';
 
 	// Back on the login page, enter the code into the OTP input and submit the form.
-	await page.getByTestId('otp-input').fill(codeMatch ? codeMatch[1] : '');
+	await page.getByTestId('otp-input').fill(code);
 	await page.getByTestId('otp-submit').click();
+
+	// Wait for the scholar page to be reached.
+	await page.waitForURL(/\/scholar\/.+/);
 }
 
 /** A reusable function for logging out */

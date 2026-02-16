@@ -5,8 +5,6 @@
 
 	let { data } = $props();
 	let { scholar, transactions, venues, currencies } = $derived(data);
-
-	$inspect(scholar);
 </script>
 
 {#if scholar && transactions && venues && currencies}
@@ -17,8 +15,8 @@
 		]}
 	>
 		{#snippet subtitle()}Transactions{/snippet}
-		<p>These are all {transactions.length} transactions for this scholar.</p>
-		<Transactions {transactions} {venues} {currencies} />
+		<p>These are all {transactions.length} transactions for this scholar visible to you.</p>
+		<Transactions {transactions} {venues} {currencies} testid="scholar-transaction" />
 	</Page>
 {:else if scholar === null}
 	<h1>Oops.</h1>

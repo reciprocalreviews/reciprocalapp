@@ -7,7 +7,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 ### Added
 
-- Added tests for `/currency/[id]` and `/curency/[id]/transaction` pages.
+- Added tests for `/currency/[id]`, `/curency/[id]/transactions`, `/scholar/[id]/transactions` pages.
 
 ### Changed
 
