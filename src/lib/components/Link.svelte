@@ -41,7 +41,7 @@
 		font-weight: 400;
 		text-decoration: none;
 		white-space: wrap;
-		font-size: var(--paragraph-font-size);
+		font-size: inherit;
 	}
 
 	a .underline {

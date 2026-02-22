@@ -7,6 +7,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 ### Changed
 
+- Updated prod landing page to add a bit more info about the platform.
 - Updated minor versions of `@supabase/supbase-js`, `@sveltjs/kit`, `prettier-plugin-svelte`, `supabase`, `svelte`, `svelte-check`.
 
 ## 0.3.3 2026-02-15
