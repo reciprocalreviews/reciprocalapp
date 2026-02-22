@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.3.4 2026-02-22
+
+### Changed
+
+- Updated minor versions of `@supabase/supbase-js`, `@sveltjs/kit`, `prettier-plugin-svelte`, `supabase`, `svelte`, `svelte-check`.
+
 ## 0.3.3 2026-02-15
 
 ### Added
