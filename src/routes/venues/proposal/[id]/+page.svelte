@@ -135,6 +135,18 @@
 							)}
 					/>
 					<EditableText
+						label="minters"
+						text={proposal.minters.join(', ')}
+						placeholder="Venue minters"
+						valid={(text) =>
+							validEmails(text) ? undefined : 'Must be a list of comma separated email addresses.'}
+						edit={(text) =>
+							db().editVenueProposalMinters(
+								proposal.id,
+								text.split(',').map((editor) => editor.trim())
+							)}
+					/>
+					<EditableText
 						label="census"
 						text={'' + proposal.census}
 						placeholder="Venue census"

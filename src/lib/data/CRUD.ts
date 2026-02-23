@@ -16,7 +16,10 @@ import {
 	type AssignmentRow,
 	type VenueRow,
 	type SubmissionID,
-	type TransactionID
+	type TransactionID,
+	type SubmissionTypeID,
+	type SubmissionType,
+	type CompensationRow
 } from '../../data/types';
 import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
@@ -50,8 +53,14 @@ export default abstract class CRUD {
 		venue: VenueID,
 		externalID: string,
 		previousID: string | null,
+		submission_type: SubmissionTypeID,
 		charges: Charge[]
 	): Promise<Result<SubmissionID>>;
+
+	abstract updateSubmissionType(
+		submissionID: SubmissionID,
+		submissionTypeID: SubmissionTypeID
+	): Promise<Result>;
 
 	/** Given a submission ID, update it's data. */
 	abstract updateSubmissionExpertise(
@@ -143,9 +152,38 @@ export default abstract class CRUD {
 	abstract editRoleAnonymousAuthors(id: RoleID, anonymous: boolean): Promise<Result>;
 	abstract editRoleApprover(id: RoleID, approver: RoleID | null): Promise<Result>;
 	abstract editRoleDesiredAssignments(id: RoleID, bidLimit: number | null): Promise<Result>;
-	abstract editRoleAmount(id: RoleID, amount: number): Promise<Result>;
 	abstract reorderRole(role: RoleRow, roles: RoleRow[], direction: -1 | 1): Promise<Result>;
 	abstract deleteRole(id: RoleID): Promise<Result>;
+
+	abstract createSubmissionType(
+		venue: VenueID,
+		name: string,
+		description: string,
+		revision: SubmissionTypeID | null
+	): Promise<Result<SubmissionType>>;
+
+	abstract editSubmissionType(
+		id: SubmissionTypeID,
+		name: string,
+		description: string,
+		revision: SubmissionTypeID | null
+	): Promise<Result>;
+
+	abstract deleteSubmissionType(id: SubmissionTypeID): Promise<Result>;
+
+	abstract createCompensation(
+		submission_type: SubmissionTypeID,
+		role: RoleID,
+		amount: number | null,
+		rationale: string
+	): Promise<Result<CompensationRow>>;
+
+	abstract editCompensation(
+		submission_type: SubmissionTypeID,
+		role: RoleID,
+		amount: number | null,
+		rationale: string
+	): Promise<Result>;
 
 	abstract createVolunteer(
 		inviter: ScholarID,

@@ -17,7 +17,10 @@ import type {
 	AssignmentRow,
 	VenueRow,
 	SubmissionID,
-	TransactionID
+	TransactionID,
+	SubmissionTypeID,
+	SubmissionType,
+	CompensationRow
 } from '../../data/types';
 import CRUD, { NullUUID, type Charge, type Result } from './CRUD';
 import Scholar from './Scholar.svelte';
@@ -167,6 +170,7 @@ export default class SupabaseCRUD extends CRUD {
 		venue: VenueID,
 		externalID: string,
 		previousID: string | null,
+		submission_type: SubmissionTypeID,
 		charges: Charge[]
 	): Promise<Result<SubmissionID>> {
 		// Verify that the charges are valid.
@@ -239,6 +243,7 @@ export default class SupabaseCRUD extends CRUD {
 				venue,
 				externalid: externalID,
 				previousid: previousID,
+				submission_type,
 				authors,
 				payments: charges.map((charge) => charge.payment ?? 0),
 				// Provide the list of proposed transactions
@@ -253,6 +258,18 @@ export default class SupabaseCRUD extends CRUD {
 
 		// Return the transaction IDs.
 		return { data: submission.id };
+	}
+
+	async updateSubmissionType(
+		submissionID: SubmissionID,
+		submissionTypeID: SubmissionTypeID
+	): Promise<Result> {
+		const { error } = await this.client
+			.from('submissions')
+			.update({ submission_type: submissionTypeID })
+			.eq('id', submissionID);
+		if (error) return this.error('UpdateSubmissionType', error);
+		else return {};
 	}
 
 	/** Register a reactive scholar state. */
@@ -390,6 +407,12 @@ export default class SupabaseCRUD extends CRUD {
 		else return {};
 	}
 
+	async editVenueProposalMinters(venue: ProposalID, minters: string[]): Promise<Result> {
+		const { error } = await this.client.from('proposals').update({ minters }).eq('id', venue);
+		if (error) return this.error('EditProposalMinters', error);
+		else return {};
+	}
+
 	async editVenueProposalURL(venue: ProposalID, url: string): Promise<Result> {
 		const { error } = await this.client.from('proposals').update({ url }).eq('id', venue);
 		if (error) return this.error('EditProposalURL', error);
@@ -484,7 +507,6 @@ export default class SupabaseCRUD extends CRUD {
 		const { data: roleData, error: roleError } = await this.createRole(
 			venueID,
 			'Editor',
-			1,
 			'Triages submissions, assigns meta-reviewers, and makes final decisions on submissions.'
 		);
 		if (roleError || roleData === undefined)
@@ -493,6 +515,24 @@ export default class SupabaseCRUD extends CRUD {
 		// Volunteer all editors for this role.
 		for (const editorsID of editors)
 			await this.createVolunteer(editorsID, editorsID, roleData.id, true, false);
+
+		// Create a submission type for the venue.
+		const { data: submissionType } = await this.createSubmissionType(
+			venueID,
+			'Research Article',
+			'The default submission type for this venue.',
+			null
+		);
+
+		if (submissionType === undefined) return this.error('CreateSubmissionType');
+
+		// Create compensation for the default role.
+		await this.createCompensation(
+			submissionType.id,
+			roleData.id,
+			1,
+			'It takes some time to triage a new submission and make a decision.'
+		);
 
 		// Finally, trigger an email to the editors and supporters notifying them that the venue was approved.
 		// First, we get all of the supporters and their emails.
@@ -614,15 +654,10 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditVenueSubmissionCost', error);
 	}
 
-	async createRole(
-		id: VenueID,
-		name: string,
-		compensation: number = 10,
-		description: string = ''
-	): Promise<Result<RoleRow>> {
+	async createRole(id: VenueID, name: string, description: string = ''): Promise<Result<RoleRow>> {
 		const { data, error } = await this.client
 			.from('roles')
-			.insert({ venueid: id, amount: compensation, invited: true, name, description })
+			.insert({ venueid: id, invited: true, name, description })
 			.select()
 			.single();
 		if (error) return this.error('CreateRole', error);
@@ -670,11 +705,6 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditRoleApprover', error);
 	}
 
-	async editRoleAmount(id: RoleID, amount: number) {
-		const { error } = await this.client.from('roles').update({ amount }).eq('id', id);
-		return this.errorOrEmpty('UpdateRoleAmount', error);
-	}
-
 	async reorderRole(role: RoleRow, roles: RoleRow[], direction: -1 | 1) {
 		// Sort the roles to ensure priority order
 		const sorted = roles.toSorted((a, b) => a.priority - b.priority);
@@ -704,6 +734,74 @@ export default class SupabaseCRUD extends CRUD {
 	async deleteRole(id: RoleID) {
 		const { error } = await this.client.from('roles').delete().eq('id', id);
 		return this.errorOrEmpty('DeleteRole', error);
+	}
+
+	async createSubmissionType(
+		venue: VenueID,
+		name: string,
+		description: string,
+		revision_of: SubmissionTypeID | null
+	): Promise<Result<SubmissionType>> {
+		const { data, error } = await this.client
+			.from('submission_types')
+			.insert({ venue, name, description, revision_of })
+			.select()
+			.single();
+
+		if (error) return this.error('CreateSubmissionType', error);
+		return { data };
+	}
+
+	async editSubmissionType(
+		id: SubmissionTypeID,
+		name: string,
+		description: string,
+		revision_of: SubmissionTypeID | null
+	): Promise<Result> {
+		const { error } = await this.client
+			.from('submission_types')
+			.update({ name, description, revision_of })
+			.eq('id', id);
+
+		if (error) return this.error('EditSubmissionType', error);
+		return { data: undefined };
+	}
+
+	async deleteSubmissionType(id: SubmissionTypeID): Promise<Result> {
+		const { error } = await this.client.from('submission_types').delete().eq('id', id);
+		return this.errorOrEmpty('DeleteSubmissionType', error);
+	}
+
+	async createCompensation(
+		submission_type: SubmissionTypeID,
+		role: RoleID,
+		amount: number,
+		rationale: string
+	): Promise<Result<CompensationRow>> {
+		const { data, error } = await this.client
+			.from('compensation')
+			.insert({ submission_type, role, amount, rationale })
+			.select()
+			.single();
+
+		if (error) return this.error('CreateCompensation', error);
+		return { data };
+	}
+
+	async editCompensation(
+		submission_type: SubmissionTypeID,
+		role: RoleID,
+		amount: number | null,
+		rationale: string
+	): Promise<Result> {
+		const { error } = await this.client
+			.from('compensation')
+			.upsert({ submission_type, role, amount, rationale })
+			.select()
+			.single();
+
+		if (error) return this.error('EditCompensation', error);
+		return { data: undefined };
 	}
 
 	async createVolunteer(
@@ -1174,7 +1272,7 @@ export default class SupabaseCRUD extends CRUD {
 			.single();
 		if (assignmentData === null) return this.error('CompleteAssignmentNotFound', assignmentError);
 
-		// Get the role data, so we can find the compensation rate.
+		// Get the role data, so we can generate a message with its name.
 		const { data: roleData, error: roleError } = await this.client
 			.from('roles')
 			.select()
@@ -1182,13 +1280,35 @@ export default class SupabaseCRUD extends CRUD {
 			.single();
 		if (roleData === null) return this.error('CompleteAssignmentRoleNotFound', roleError);
 
-		// Get the role data, so we can find the compensation rate.
+		// Get the submission type from the submission, so we can look up the compensation amount.
+		const { data: submissionData, error: submissionError } = await this.client
+			.from('submissions')
+			.select('submission_type')
+			.eq('id', assignmentData.submission)
+			.single();
+		if (submissionData === null)
+			return this.error('CompleteAssignmentRoleNotFound', submissionError);
+
+		// Get the compensation data for this role, so we know the compensation amount.
+		const { data: compensationData, error: compensationError } = await this.client
+			.from('compensation')
+			.select()
+			.eq('role', assignmentData.role)
+			.eq('submission_type', submissionData.submission_type)
+			.single();
+		if (compensationData === null)
+			return this.error('CompleteAssignmentRoleNotFound', compensationError);
+
+		// Get the venue data, so we can get the currency.
 		const { data: venueData, error: venueError } = await this.client
 			.from('venues')
 			.select()
 			.eq('id', assignmentData.venue)
 			.single();
 		if (venueData === null) return this.error('CompleteAssignmentVenueNotFound', venueError);
+
+		// Bail if no amount for this role/submission type.
+		if (compensationData.amount === null) return this.error('NoRoleCompensation');
 
 		// Create a transaction to pay the scholar.
 		const { error: transactionError } = await this.createTransaction(
@@ -1198,7 +1318,7 @@ export default class SupabaseCRUD extends CRUD {
 			assignmentData.scholar,
 			null,
 			// Create a list of null UUIDs to represent that they don't exist yet.
-			new Array(roleData.amount).fill(NullUUID),
+			new Array(compensationData.amount).fill(NullUUID),
 			venueData.currency,
 			`Compensation for completing the ${roleData.name} role for submission ${assignmentData.submission}.`,
 			'proposed'

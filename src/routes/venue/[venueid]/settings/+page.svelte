@@ -13,7 +13,8 @@
 	import Roles from '../Roles.svelte';
 
 	let { data } = $props();
-	let { venue, scholar, roles, volunteers, currency, minters } = $derived(data);
+	let { venue, scholar, roles, volunteers, currency, minters, types, compensation } =
+		$derived(data);
 
 	const db = getDB();
 </script>
@@ -150,6 +151,16 @@
 			{/if}
 		</Checkbox>
 
-		<Roles {venue} scholar={scholar?.id} {roles} {volunteers} isAdmin={true} {currency} {minters} />
+		<Roles
+			{venue}
+			scholar={scholar?.id}
+			{roles}
+			{volunteers}
+			isAdmin={true}
+			{currency}
+			{minters}
+			{types}
+			{compensation}
+		/>
 	</Page>
 {/if}

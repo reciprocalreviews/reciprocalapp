@@ -31,11 +31,27 @@ export const load: PageLoad = async ({ parent, params }) => {
 		: { data: null };
 	if (volunteersError) console.error(volunteersError);
 
+	// Get all the submission types
+	const { data: types, error: typesError } = await supabase
+		.from('submission_types')
+		.select('*')
+		.eq('venue', venueid);
+	if (typesError) console.error(typesError);
+
+	// Get all the compensation
+	const { data: compensation, error: compensationError } = await supabase
+		.from('compensation')
+		.select('*')
+		.in('submission_type', types?.map((s) => s.id) ?? []);
+	if (compensationError) console.error(compensationError);
+
 	return {
 		venue,
 		roles,
 		volunteers,
 		currency,
-		minters
+		minters,
+		types,
+		compensation
 	};
 };

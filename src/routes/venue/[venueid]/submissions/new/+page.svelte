@@ -7,6 +7,7 @@
 	let { data }: { data: PageData } = $props();
 
 	let venue = $derived(data.venue);
+	let submissionTypes = $derived(data.submissionTypes);
 </script>
 
 {#if venue === null}
@@ -21,6 +22,10 @@
 			[`/venue/${venue.id}/submissions`, 'Submissions']
 		]}
 	>
-		<NewSubmission {venue}></NewSubmission>
+		{#if submissionTypes === null}
+			<Feedback error>Failed to load submission types.</Feedback>
+		{:else}
+			<NewSubmission {venue} {submissionTypes}></NewSubmission>
+		{/if}
 	</Page>
 {/if}

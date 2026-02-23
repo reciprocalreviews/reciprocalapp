@@ -13,6 +13,8 @@ create table submissions (
 	externalid text not null,
 	-- An optional link to a previous external submission id
 	previousid text default null,
+	-- The submission type of the paper
+	submission_type uuid not null references submission_types (id),
 	-- The scholars associated with the submission
 	authors uuid[] not null check (cardinality(authors)>0),
 	-- The token amounts proposed for the submission, corresponding to the authors

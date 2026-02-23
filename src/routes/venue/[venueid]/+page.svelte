@@ -5,7 +5,7 @@
 	import { getDB } from '$lib/data/CRUD';
 	import Page from '$lib/components/Page.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
-	import { ScholarLabel, TokenLabel } from '$lib/components/Labels';
+	import { ConfirmLabel, DeleteLabel, ScholarLabel, TokenLabel } from '$lib/components/Labels';
 	import { addFeedback, handle } from '../../feedback.svelte';
 	import Roles from './Roles.svelte';
 	import type { PageData } from './$types';
@@ -16,10 +16,21 @@
 	import Options from '$lib/components/Options.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
 	import { validURLError } from '$lib/validation';
+	import Table from '$lib/components/Table.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const { venue, currency, minters, scholar, roles, volunteers, tokens, submissionCount } =
-		$derived(data);
+	const {
+		venue,
+		currency,
+		minters,
+		scholar,
+		roles,
+		volunteers,
+		tokens,
+		submissionCount,
+		types,
+		compensation
+	} = $derived(data);
 
 	const db = getDB();
 	let isAdmin = $derived(scholar && venue && venue.admins.includes(scholar.id));
@@ -124,6 +135,95 @@
 			]}
 		></Dashboard>
 
+		<Subheader icon={ScholarLabel}>Submission types</Subheader>
+
+		<p>
+			These are the submission types for this venue. Each role can have a different amount of
+			compensation for each type (e.g., reviews of new submissions may be compensated more than
+			re-reviews).
+		</p>
+
+		{#if isAdmin}
+			<Button
+				tip="Add a submission type"
+				action={() =>
+					handle(db().createSubmissionType(venue.id, 'New type', 'New submission type', null))}
+			>
+				New submission type
+			</Button>
+		{/if}
+
+		{#if types}
+			<Table>
+				{#snippet header()}
+					<th>Type</th>
+					<th>Description</th>
+					<th>Revision of</th>
+					{#if isAdmin && types.length > 1}<th></th>{/if}
+				{/snippet}
+				{#each types as type}
+					<tr>
+						<td>
+							{#if isAdmin}
+								<EditableText
+									text={type.name}
+									placeholder="Type name"
+									edit={(text) => db().editSubmissionType(type.id, text, type.description, null)}
+								/>
+							{:else}
+								<em>{type.name}</em>
+							{/if}
+						</td>
+						<td>
+							{#if isAdmin}
+								<EditableText
+									text={type.description}
+									placeholder="Type description"
+									inline={false}
+									edit={(text) => db().editSubmissionType(type.id, type.name, text, null)}
+								/>
+							{:else}
+								{type.description}
+							{/if}
+						</td>
+						<td>
+							{#if isAdmin}
+								<Options
+									options={[
+										{ label: '—', value: undefined },
+										...types
+											.filter(
+												(t) =>
+													t.id !== type.id && !types.some((other) => other.revision_of === type.id)
+											)
+											.map((t) => ({ label: t.name, value: t.id }))
+									]}
+									value={type.revision_of ?? undefined}
+									onChange={(value) =>
+										db().editSubmissionType(type.id, type.name, type.description, value ?? null)}
+								></Options>
+							{:else}
+								{types.find((t) => t.id === type.revision_of)?.name ?? '—'}
+							{/if}
+						</td>
+						{#if isAdmin && types.length > 1}
+							<td>
+								<Button
+									warn={ConfirmLabel}
+									tip="Remove this submission type"
+									action={() => handle(db().deleteSubmissionType(type.id))}
+								>
+									{DeleteLabel}
+								</Button>
+							</td>
+						{/if}
+					</tr>
+				{/each}
+			</Table>
+		{:else}
+			<Feedback error>Couldn't load venue's submission types.</Feedback>
+		{/if}
+
 		<Subheader id="roles" icon={ScholarLabel}>Roles</Subheader>
 
 		{#if roles && currency}
@@ -137,6 +237,8 @@
 				isAdmin={false}
 				{currency}
 				{minters}
+				{compensation}
+				{types}
 			/>
 
 			{#if isVolunteer && scholar}

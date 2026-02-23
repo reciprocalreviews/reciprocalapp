@@ -62,5 +62,21 @@ export const load: PageLoad = async ({ parent, params }) => {
 			: await supabase.from('conflicts').select('*').eq('scholarid', user.id);
 	if (conflictsError) console.error(conflictsError);
 
-	return { venue, submissions, volunteering, roles, assignments, transactions, conflicts };
+	// Find all of the submissions types for the venue.
+	const { data: submissionTypes, error: submissionTypesError } = await supabase
+		.from('submission_types')
+		.select('*')
+		.eq('venue', venueid);
+	if (submissionTypesError) console.error(submissionTypesError);
+
+	return {
+		venue,
+		submissions,
+		volunteering,
+		roles,
+		assignments,
+		transactions,
+		conflicts,
+		submissionTypes
+	};
 };

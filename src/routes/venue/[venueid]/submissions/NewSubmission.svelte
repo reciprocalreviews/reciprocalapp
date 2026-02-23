@@ -2,12 +2,14 @@
 	type Charge = { scholar: string; payment: number };
 </script>
 
+<!-- svelte-ignore state_referenced_locally -->
 <script lang="ts">
-	import type { VenueRow } from '$data/types';
+	import type { SubmissionType, SubmissionTypeID, VenueRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import Note from '$lib/components/Note.svelte';
+	import Options from '$lib/components/Options.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
@@ -17,7 +19,7 @@
 	import { getAuth } from '../../../Auth.svelte';
 	import { handle } from '../../../feedback.svelte';
 
-	let { venue }: { venue: VenueRow } = $props();
+	let { venue, submissionTypes }: { venue: VenueRow; submissionTypes: SubmissionType[] } = $props();
 
 	const db = getDB();
 	const auth = getAuth();
@@ -28,6 +30,7 @@
 	let expertise = $state('');
 	let externalID = $state('');
 	let previousID = $state('');
+	let submissionType = $state<SubmissionTypeID>(submissionTypes[0].id);
 	let charges = $state<Charge[]>([{ scholar: '', payment: 0 }]);
 
 	/** True if the specified charges can be afforded, undefined if checking, string describing the problem. */
@@ -145,6 +148,11 @@
 		bind:text={previousID}
 		note="The ID of the previous submission, if this is a revision and you want to track it."
 	/>
+	<Options
+		label="submission type"
+		bind:value={submissionType}
+		options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
+	></Options>
 
 	<!--
 								: duplicateScholars(charges)
@@ -230,7 +238,16 @@
 		action={async () => {
 			if (user) {
 				const result = await handle(
-					db().createSubmission(user, title, expertise, venue.id, externalID, previousID, charges)
+					db().createSubmission(
+						user,
+						title,
+						expertise,
+						venue.id,
+						externalID,
+						previousID,
+						submissionType,
+						charges
+					)
 				);
 
 				// Reset form if successful.

@@ -26,3 +26,6 @@ export type SubmissionID = SubmissionRow['id'];
 export type SubmissionStatus = Database['public']['Enums']['submission_status'];
 export type AssignmentRow = Tables['assignments']['Row'];
 export type AssignmentID = AssignmentRow['id'];
+export type SubmissionType = Tables['submission_types']['Row'];
+export type SubmissionTypeID = SubmissionType['id'];
+export type CompensationRow = Tables['compensation']['Row'];

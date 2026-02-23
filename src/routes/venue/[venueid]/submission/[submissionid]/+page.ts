@@ -83,6 +83,13 @@ export const load: PageLoad = async ({ parent, params }) => {
 					);
 	if (balancesError) console.error(balancesError);
 
+	// Get the submission types in case we need to change it.
+	const { data: submissionTypes, error: submissionTypesError } = await supabase
+		.from('submission_types')
+		.select('*')
+		.eq('venue', venueid);
+	if (submissionTypesError) console.error(submissionTypesError);
+
 	return {
 		submission,
 		venue,
@@ -92,6 +99,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		assignments,
 		volunteers,
 		roles,
-		balances
+		balances,
+		submissionTypes
 	};
 };

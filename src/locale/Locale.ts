@@ -9,6 +9,7 @@ export const enUS = {
 		EditProposalTitle: 'Unable to edit the proposal title',
 		EditProposalCensus: 'Unable to edit the proposal census',
 		EditProposalEditors: 'Unable to edit the proposal editors',
+		EditProposalMinters: 'Unable to edit the proposal minters',
 		EditProposalURL: 'Unable to edit the proposal URL',
 		CreateSupporter: 'Unable to create a supporter',
 		UpdateCurrencyName: 'Unable to update the currency name',
@@ -18,9 +19,9 @@ export const enUS = {
 		DeleteProposal: 'Unable to delete the proposal',
 		ApproveProposalNotFound: "Unable to approve the proposal: couldn't find proposal.",
 		ApproveProposalNoScholars:
-			"Unable to approve the proposal: couldn't find all of the specified editors with accounts. As them to create accounts with the specified email addresses and then approve.",
+			"Unable to approve the proposal: couldn't find all of the specified editors with accounts. Ask them to create accounts with the specified email addresses and then approve.",
 		ApproveProposalNoMinters:
-			"Unable to approve the proposal: couldn't find all of the specified minters with accounts. As them to create accounts with the specified email addresses and then approve.",
+			"Unable to approve the proposal: couldn't find all of the specified minters with accounts. Ask them to create accounts with the specified email addresses and then approve.",
 		ApproveProposalNoVenue: "Unable to approve the proposal: couldn't create the venue.",
 		ApproveProposalCannotUpdateVenue:
 			"Unable to approve the proposal: couldn't update the venue with the proposal.",
@@ -48,6 +49,12 @@ export const enUS = {
 		UpdateRoleAmount: 'Unable to update role compensation',
 		ReorderRole: 'Unable to reorder roles',
 		DeleteRole: 'Unable to delete role',
+		UpdateSubmissionType: 'Unable to update submission type',
+		CreateSubmissionType: 'Unable to create submission type',
+		EditSubmissionType: 'Unable to edit submission type',
+		DeleteSubmissionType: 'Unable to delete submission type',
+		CreateCompensation: 'Unable to create compensation for role',
+		EditCompensation: 'Unable to create compensation for role',
 		CreateVolunteer: 'Unable to add volunteer commitment',
 		WelcomeVolunteer: 'Unable to grant welcome tokens for first volunteer commitment',
 		AlreadyVolunteered: 'Already created a volunteer commitment for this role.',
@@ -93,7 +100,9 @@ export const enUS = {
 		DeleteAssignment: 'Unable to delete this assignment',
 		EmailScholar: 'Unable to email this scholar',
 		ApproveProposalNoSupporters: 'Unable to retrieve supports of proposal for notification.',
-		DeclareConflict: 'Unable to declare a conflict with this submission.'
+		DeclareConflict: 'Unable to declare a conflict with this submission.',
+		NoRoleCompensation:
+			"The role being compensated doesn't have a compensation amount for this submission type."
 	}
 };
 

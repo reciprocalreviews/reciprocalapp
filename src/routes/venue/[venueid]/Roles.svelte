@@ -1,10 +1,12 @@
 <script lang="ts">
 	import type {
+		CompensationRow,
 		CurrencyRow,
 		RoleID,
 		RoleRow,
 		ScholarID,
 		ScholarRow,
+		SubmissionType,
 		VenueRow,
 		VolunteerRow
 	} from '$data/types';
@@ -26,6 +28,7 @@
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import Options from '$lib/components/Options.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
+	import Table from '$lib/components/Table.svelte';
 
 	let {
 		venue,
@@ -34,7 +37,9 @@
 		scholar,
 		isAdmin,
 		currency,
-		minters
+		minters,
+		compensation,
+		types
 	}: {
 		venue: VenueRow;
 		scholar: ScholarID | undefined;
@@ -43,6 +48,8 @@
 		isAdmin: boolean;
 		currency: CurrencyRow;
 		minters: ScholarRow[] | null;
+		types: SubmissionType[] | null;
+		compensation: CompensationRow[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -183,11 +190,76 @@
 				{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}
 
 				<p>
-					This {#if role.invited}<strong>invite only</strong>{/if} role is compensated <Tokens
-						amount={role.amount}
-					></Tokens> per submission in the currency <CurrencyLink {currency} />. <Link
-						to="/venue/{venue.id}/volunteers">{roleVolunteers.length ?? 0} scholars</Link
-					> have volunteered for this role.
+					This {#if role.invited}<strong>invite only</strong>{/if} role is compensated in <CurrencyLink
+						{currency}
+					/> as follows:
+				</p>
+
+				<Table>
+					{#snippet header()}
+						<th style="width: 20%">Type</th>
+						<th style="width: 40%">Compensation</th>
+						<th style="width: 40%">Rationale</th>
+					{/snippet}
+					{#each types as type}
+						{@const comp = compensation?.find(
+							(c) => c.role === role.id && c.submission_type === type.id
+						)}
+						<tr>
+							<td style="width: 20%">{type.name}</td>
+							<td style="width: 40%">
+								{#if isAdmin}
+									{#if comp === undefined || comp.amount === null}
+										<Button
+											small
+											tip="Add compensation for this submission role"
+											action={async () =>
+												handle(db().editCompensation(type.id, role.id, 1, comp?.rationale ?? ''))}
+											>Add compensation</Button
+										>
+									{:else}
+										<Slider
+											min={1}
+											max={venue.welcome_amount}
+											value={comp.amount}
+											step={1}
+											change={(value) =>
+												handle(db().editCompensation(type.id, role.id, value, comp.rationale))}
+											><Tokens amount={comp.amount}></Tokens>/submission</Slider
+										>
+										<Button
+											small
+											tip="Remove compensation for this submission role"
+											action={async () =>
+												handle(db().editCompensation(type.id, role.id, null, comp.rationale))}
+											>{DeleteLabel}</Button
+										>
+									{/if}
+								{:else if comp === undefined || comp.amount === null}
+									no role
+								{:else}
+									<Tokens amount={comp.amount} />
+								{/if}
+							</td>
+							<td style="width: 40%">
+								{#if comp && comp.amount !== null}
+									{#if isAdmin}
+										<EditableText
+											text={comp.rationale}
+											placeholder="Why this amount?"
+											edit={(text) => db().editCompensation(type.id, role.id, comp.amount, text)}
+										/>
+									{:else}
+										{comp.rationale}
+									{/if}
+								{:else}—{/if}
+							</td>
+						</tr>
+					{/each}
+				</Table>
+				<p>
+					<Link to="/venue/{venue.id}/volunteers">{roleVolunteers.length ?? 0} scholars</Link> have volunteered
+					for this role.
 				</p>
 
 				{#if scholar}
@@ -311,15 +383,6 @@
 							placeholder="description"
 							edit={(text) => db().editRoleDescription(role.id, text)}
 						/>
-						<Slider
-							min={1}
-							max={venue.welcome_amount}
-							value={role.amount}
-							step={1}
-							label="compensation"
-							change={(value) => handle(db().editRoleAmount(role.id, value))}
-							><Tokens amount={role.amount}></Tokens>/submission</Slider
-						>
 						<Checkbox on={role.invited} change={(on) => db().editRoleInvited(role.id, on)}
 							>{#if role.invited}Scholars must be invited to this role{:else}Scholars can volunteer
 								for this role without being invited{/if}

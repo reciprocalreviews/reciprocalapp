@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.3.4 2026-02-22
 
+### Added
+
+- Added a submission type and compensation rate by submission type to allow for compensation rates to vary.
+
 ### Changed
 
 - Updated prod landing page to add a bit more info about the platform.

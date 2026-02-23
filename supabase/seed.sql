@@ -424,7 +424,6 @@ insert into
 		"invited",
 		"biddable",
 		"approver",
-		"amount",
 		"priority",
 		"desired_assignments"
 	)
@@ -437,7 +436,6 @@ values
 		'true',
 		'false',
 		null,
-		'1',
 		0,
 		1
 	),
@@ -449,7 +447,6 @@ values
 		'true',
 		'false',
 		null,
-		'10',
 		1,
 		1
 	),
@@ -461,9 +458,40 @@ values
 		'false',
 		'true',
 		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
-		'10',
 		2,
 		3
+	);
+
+insert into
+	public.submission_types (id, venue, name, description)
+values
+	(
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'Research Article',
+		'This is a new submission of a research article.'
+	);
+
+insert into
+	public.compensation (submission_type, role, amount, rationale)
+values
+	(
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		1,
+		'Editors get 1 token for handling a submission.'
+	),
+	(
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		10,
+		'Associate editors get 10 tokens for handling a submission, since they have more work than editors.'
+	),
+	(
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		10,
+		'Reviewers get 10 tokens for handling a submission, since they do the most'
 	);
 
 insert into
@@ -772,6 +800,7 @@ insert into
 		venue,
 		externalid,
 		previousid,
+		submission_type,
 		authors,
 		payments,
 		transactions,
@@ -785,6 +814,7 @@ values
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'TOK-2025-001',
 		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
 		array['b8a805bf-0aae-4443-9185-de019a8715cb']::uuid[],
 		array[15]::integer[],
 		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
@@ -797,6 +827,7 @@ values
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'TOK-2025-002',
 		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
 		array['7ff8621a-cbe0-4789-bbee-f008d38c4ac7']::uuid[],
 		array[15]::integer[],
 		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
@@ -809,6 +840,7 @@ values
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'TOK-2025-003',
 		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
 		array['7ff8621a-cbe0-4789-bbee-f008d38c4ac7']::uuid[],
 		array[15]::integer[],
 		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],

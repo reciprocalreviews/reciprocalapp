@@ -99,6 +99,42 @@ export type Database = {
           },
         ]
       }
+      compensation: {
+        Row: {
+          amount: number | null
+          rationale: string
+          role: string
+          submission_type: string
+        }
+        Insert: {
+          amount?: number | null
+          rationale?: string
+          role: string
+          submission_type: string
+        }
+        Update: {
+          amount?: number | null
+          rationale?: string
+          role?: string
+          submission_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compensation_role_fkey"
+            columns: ["role"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compensation_submission_type_fkey"
+            columns: ["submission_type"]
+            isOneToOne: false
+            referencedRelation: "submission_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conflicts: {
         Row: {
           reason: string
@@ -299,7 +335,6 @@ export type Database = {
       }
       roles: {
         Row: {
-          amount: number
           anonymous_authors: boolean
           approver: string | null
           biddable: boolean
@@ -312,7 +347,6 @@ export type Database = {
           venueid: string
         }
         Insert: {
-          amount: number
           anonymous_authors?: boolean
           approver?: string | null
           biddable?: boolean
@@ -325,7 +359,6 @@ export type Database = {
           venueid: string
         }
         Update: {
-          amount?: number
           anonymous_authors?: boolean
           approver?: string | null
           biddable?: boolean
@@ -393,6 +426,45 @@ export type Database = {
         }
         Relationships: []
       }
+      submission_types: {
+        Row: {
+          description: string
+          id: string
+          name: string
+          revision_of: string | null
+          venue: string
+        }
+        Insert: {
+          description?: string
+          id?: string
+          name?: string
+          revision_of?: string | null
+          venue: string
+        }
+        Update: {
+          description?: string
+          id?: string
+          name?: string
+          revision_of?: string | null
+          venue?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submission_types_revision_of_fkey"
+            columns: ["revision_of"]
+            isOneToOne: false
+            referencedRelation: "submission_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submission_types_venue_fkey"
+            columns: ["venue"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       submissions: {
         Row: {
           authors: string[]
@@ -402,6 +474,7 @@ export type Database = {
           payments: number[]
           previousid: string | null
           status: Database["public"]["Enums"]["submission_status"]
+          submission_type: string
           title: string
           transactions: string[]
           venue: string
@@ -414,6 +487,7 @@ export type Database = {
           payments: number[]
           previousid?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
+          submission_type: string
           title?: string
           transactions: string[]
           venue: string
@@ -426,11 +500,19 @@ export type Database = {
           payments?: number[]
           previousid?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
+          submission_type?: string
           title?: string
           transactions?: string[]
           venue?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "submissions_submission_type_fkey"
+            columns: ["submission_type"]
+            isOneToOne: false
+            referencedRelation: "submission_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "submissions_venue_fkey"
             columns: ["venue"]

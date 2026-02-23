@@ -7,7 +7,7 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import Row from '$lib/components/Row.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
-	import { getDB } from '$lib/data/CRUD';
+	import { getDB, NullUUID } from '$lib/data/CRUD';
 	import Link from '$lib/components/Link.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
@@ -45,7 +45,9 @@
 		/** All balances of scholars */
 		balances,
 		/** The current user */
-		user
+		user,
+		/** The submission types for this venue */
+		submissionTypes
 	} = $derived(data);
 
 	/** Get the database connection */
@@ -53,6 +55,13 @@
 
 	/** Whether the current scholar is an editor */
 	let isAdmin = $derived(venue !== null && user !== null && venue.admins.includes(user.id));
+
+	let submissionType = $derived(
+		(submission !== null && submissionTypes !== null
+			? (submissionTypes.find((t) => t.id === submission.submission_type)?.id ??
+				submissionTypes[0].id)
+			: undefined) ?? NullUUID
+	);
 
 	/** Whether the current scholar has the highest rank role on this submission */
 	let isEditor = $derived(
@@ -119,7 +128,7 @@
 	}
 </script>
 
-{#if submission === null || venue === null || roles === null || user === null || assignments === null || authors === null || volunteers === null}
+{#if submission === null || venue === null || roles === null || user === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
 	<Page
 		title="Submission"
 		breadcrumbs={[
@@ -155,7 +164,18 @@
 				}
 			: undefined}
 	>
-		{#snippet subtitle()}Submission{/snippet}
+		{#snippet subtitle()}
+			{#if isEditor}
+				<Options
+					bind:value={submissionType}
+					options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
+					onChange={(typeID) =>
+						typeID !== undefined ? db().updateSubmissionType(submission.id, typeID) : undefined}
+				></Options>
+			{:else}
+				{submissionType ?? 'Submission'}
+			{/if}
+		{/snippet}
 		{#snippet details()}
 			{#if previous}<Link to="/venue/{venue.id}/submission/{previous.id}"
 					>{previous.externalid}</Link

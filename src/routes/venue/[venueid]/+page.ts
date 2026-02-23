@@ -52,6 +52,20 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.eq('venue', venueid);
 	if (submissionsError) console.error(submissionsError);
 
+	// Get all the submission types
+	const { data: types, error: typesError } = await supabase
+		.from('submission_types')
+		.select('*')
+		.eq('venue', venueid);
+	if (typesError) console.error(typesError);
+
+	// Get all the compensation
+	const { data: compensation, error: compensationError } = await supabase
+		.from('compensation')
+		.select('*')
+		.in('submission_type', types?.map((s) => s.id) ?? []);
+	if (compensationError) console.error(compensationError);
+
 	// Get all the venues one can gift to.
 	const { data: venues, error: venuesError } = await supabase.from('venues').select('*');
 	if (venuesError) console.error(venuesError);
@@ -65,6 +79,8 @@ export const load: PageLoad = async ({ parent, params }) => {
 		tokens: tokens,
 		transactionCount,
 		submissionCount,
-		venues
+		venues,
+		types,
+		compensation
 	};
 };

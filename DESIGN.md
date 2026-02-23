@@ -138,6 +138,8 @@ A `Venue` is a named and curated collection of manuscripts undergoing peer revie
 - [x] `Venue`s can have one or more volunteer roles, which are helpful for distinguishing between different types of volunteering for a venue (e.g., reviewer, reviewer for track A, meta-reviewer for track B)
 - [x] When a `Scholar` volunteers for a `Venue`, they do so for a particular role, with a particular commitment, and optionally with a number of papers they are committing to review. Volunteering for a venue can also include a statement of expertise relevant to the role.
 - [x] Venues can be set to keep reviewer assignments hidden or visible to authors
+- [x] Venues have one or more submission types to represent submission categories, and resubmission types
+- [x] Venues have compensation rates by submission type, to allow for different levels of compensation for different tasks
 
 Here is a SQL sketch of all of the tables involved in this.
 
@@ -204,6 +206,35 @@ create table supporters (
 	-- When this record was last updated
 	created_at timestamp with time zone default now() not null
 );
+
+-- Venues have submission types
+create table if not exists submission_types (
+	-- The unique ID of the submission type
+	id uuid not null default gen_random_uuid() primary key,
+	-- The venue to which the submission type corresponds
+	venue uuid not null references venues (id) on delete cascade,
+	-- The submission type that this type is a resubmission of, if applicable
+	revision_of uuid default null references submission_types (id) on delete cascade,
+	-- The type of the submission, such as "research paper", "research - resubmssion"
+	name text not null default ''::text,
+	-- A longer description of the submission type, such as "a new research paper submission"
+	description text not null default ''::text
+);
+
+-- Venues have compensation rates by submission type
+create table if not exists compensation (
+	-- The submission type that this compensation corresponds to
+	submission_type uuid not null references submission_types (id) on delete cascade,
+	-- The role for which this compensation applies
+	role uuid not null references roles (id) on delete cascade,
+	-- The amount of compensation for this role and submission type, or null if the role is not compensated for this submission type.
+	amount integer,
+	-- The rationale for the amount of compensation, for transparency with scholars
+	rationale text not null default ''::text,
+	-- Composite primary key on submission type and role, as each role can only have one compensation amount per submission type, and each submission type can only have one compensation amount per role.
+	primary key (submission_type, role)
+);
+
 ```
 
 ## Roles and volunteers

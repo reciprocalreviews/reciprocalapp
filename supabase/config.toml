@@ -227,6 +227,8 @@ schema_paths = [
     "./schemas/supporters.sql",
     "./schemas/tokens.sql",
     "./schemas/transactions.sql",
+    "./schemas/submission_types.sql",
+    "./schemas/compensation.sql",
     "./schemas/submissions.sql",
     "./schemas/assignments.sql",
     "./schemas/conflicts.sql",

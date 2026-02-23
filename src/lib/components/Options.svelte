@@ -3,20 +3,22 @@
 		options: { label: string; value: string | undefined }[];
 		value: string | undefined;
 		disabled?: boolean;
-		onChange?: ((value: string) => void) | undefined;
-		label: string;
+		onChange?: ((value: string | undefined) => void) | undefined;
+		label?: string;
 	};
 
 	let { options, value = $bindable(), onChange, disabled = false, label }: Props = $props();
 
 	function handleChange(event: Event) {
 		const target = event.target as HTMLSelectElement;
-		if (onChange) onChange(target.value);
+		if (onChange) onChange(target.value === '' ? undefined : target.value);
 	}
 </script>
 
 <label>
-	<span class="label">{label}</span>
+	{#if label}
+		<span class="label">{label}</span>
+	{/if}
 	<select bind:value onchange={handleChange} {disabled}>
 		{#each options as option}
 			<option value={option.value}>{option.label}</option>

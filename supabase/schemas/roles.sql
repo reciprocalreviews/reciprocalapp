@@ -15,8 +15,6 @@ create table if not exists public.roles (
 	biddable boolean default false not null,
 	-- The role that can approve assignments to this role
 	approver uuid,
-	-- The token compensation for a commitment, in the venue's currency
-	amount integer not null,
 	-- The presentation order of the role, lower is more important
 	priority integer default 0 not null,
 	-- Whether authors are visible to scholars assigned to a submission
