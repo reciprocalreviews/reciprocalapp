@@ -27,7 +27,13 @@
 {#if admins === null}
 	<Feedback>Unable to load editing commitments.</Feedback>
 {:else if admins.length === 0 && (minting === null || minting.length === 0) && (commitments === null || commitments.length === 0)}
-	<Feedback>You are not volunteering for any roles yet.</Feedback>
+	<Feedback>
+		{#if self}
+			You are not volunteering for any roles yet.
+		{:else}
+			This scholar is not volunteering for any roles yet.
+		{/if}</Feedback
+	>
 {:else}
 	<Tip>
 		{#if self}
