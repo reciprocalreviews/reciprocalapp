@@ -346,7 +346,7 @@
 						<td
 							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 						>
-						<td>{getBalance(assignment.scholar)}</td>
+						<td><Tokens amount={getBalance(assignment.scholar)} /></td>
 						<td>
 							<Row>
 								{#if isApprover}
@@ -396,7 +396,7 @@
 							<td
 								>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 							>
-							<td>{getBalance(assignment.scholar)}</td>
+							<td><Tokens amount={getBalance(assignment.scholar)} /></td>
 							<td>
 								<Row>
 									{#if assignment.bid}
