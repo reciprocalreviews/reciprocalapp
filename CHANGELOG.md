@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Changed
 
 - Updated minor versions of Svelte and Supabase.
+- Better page and header padding.
 
 ## 0.3.4 2026-02-22
 

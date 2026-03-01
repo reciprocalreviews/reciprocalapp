@@ -16,9 +16,14 @@
 </h2>
 
 <style>
+	h2 {
+		display: flex;
+		gap: 0.25rem;
+		align-items: baseline;
+	}
+
 	span {
 		font-family: 'Noto Emoji', 'Josefin Sans', sans-serif;
-		font-size: 80%;
-		color: var(--inactive-color);
+		color: var(--border-color);
 	}
 </style>

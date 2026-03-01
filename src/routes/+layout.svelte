@@ -90,7 +90,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing);
-		padding: var(--spacing);
+		padding: calc(var(--spacing) * 2);
 		margin: auto;
 		max-width: var(--page-width);
 	}
