@@ -34,8 +34,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 		: { data: null };
 	if (volunteersError) console.error(volunteersError);
 
-	console.log(volunteers);
-
 	// See how many tokens the venue posseses.
 	const { data: tokens, error: tokensError } = await supabase
 		.from('tokens')
