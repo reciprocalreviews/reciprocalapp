@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.3.5 2026-03-01
 
+### Fixed
+
+- Corrected volunteer count on venue page.
+
 ### Changed
 
 - Updated minor versions of Svelte and Supabase.

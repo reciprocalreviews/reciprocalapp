@@ -27,9 +27,14 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	// Get all volunteers for the venue.
 	const { data: volunteers, error: volunteersError } = user
-		? await supabase.from('volunteers').select('*, roles (venueid)').eq('roles.venueid', venueid)
+		? await supabase
+				.from('volunteers')
+				.select('*, roles!inner(venueid)')
+				.eq('roles.venueid', venueid)
 		: { data: null };
 	if (volunteersError) console.error(volunteersError);
+
+	console.log(volunteers);
 
 	// See how many tokens the venue posseses.
 	const { data: tokens, error: tokensError } = await supabase
