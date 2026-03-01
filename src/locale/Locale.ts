@@ -72,6 +72,7 @@ export const enUS = {
 		TransferScholarTokens: 'Unable to find scholar tokens to transfer',
 		TransferTokensInsufficient: 'Insufficient number tokens to transfer',
 		CreateTransaction: 'Unable to create transaction',
+		GetScholarTransactions: 'Unable to get transactions for this scholar',
 		TransactionMissingFrom: 'No source provided for transaction',
 		TransactionMissingTo: 'No destination provided for transaction',
 		PendingTransactionHasTokens:

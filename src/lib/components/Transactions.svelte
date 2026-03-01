@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { CurrencyRow, TransactionRow, VenueRow } from '$data/types';
 	import { getDB } from '$lib/data/CRUD';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { getAuth } from '../../routes/Auth.svelte';
 	import { handle } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
@@ -16,14 +17,18 @@
 
 	let {
 		transactions,
+		count,
 		venues,
 		currencies,
-		testid
+		testid,
+		more
 	}: {
 		transactions: TransactionRow[];
 		venues: VenueRow[];
 		currencies: CurrencyRow[];
 		testid?: string;
+		count: number;
+		more: (page: number) => Promise<{ data: TransactionRow[] | null; error: any }>;
 	} = $props();
 
 	// Get the current user
@@ -35,6 +40,28 @@
 
 	let showCancel = $state(false);
 	let cancelReason = $state('');
+
+	// The loaded transactions, starting with the ones passed in as props.
+	// svelte-ignore state_referenced_locally
+	let transactionsByPage = $state(new SvelteMap([[0, transactions]]));
+	let page = $state(0);
+	let allTransactions = $derived(Array.from(transactionsByPage.values()).flat());
+
+	let loading = $state(false);
+	async function loadMore() {
+		// Don't load more if we've already loaded all transactions.
+		if (allTransactions.length >= count) return;
+		loading = true;
+		page = page + 1;
+		const { data: transactions, error } = await more(page);
+		if (error || transactions === null) {
+			handle(error);
+			page = page - 1;
+		} else {
+			transactionsByPage.set(page, transactions);
+		}
+		loading = false;
+	}
 </script>
 
 {#snippet row(transaction: TransactionRow, index: number)}
@@ -119,7 +146,7 @@
 	</tr>
 {/snippet}
 
-{#if transactions.length === 0}
+{#if allTransactions.length === 0}
 	<Feedback testid="no-transactions">No transactions.</Feedback>
 {:else}
 	<Table full>
@@ -131,9 +158,20 @@
 			<th>Purpose</th>
 			<th>Actions</th>
 		{/snippet}
-		{#each transactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) as transaction, index}
+		{#each allTransactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) as transaction, index}
 			{@render row(transaction, index)}
 		{/each}
+		<tr>
+			<td colspan="100">
+				{#if allTransactions.length >= count}
+					All transactions loaded.
+				{:else}
+					<Button tip="Load more transactions" action={() => loadMore()} active={!loading}
+						>{#if loading}Loading…{:else}Load more transactions...{/if}</Button
+					>
+				{/if}
+			</td>
+		</tr>
 	</Table>
 {/if}
 

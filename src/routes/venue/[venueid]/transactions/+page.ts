@@ -1,15 +1,20 @@
 import getTransactionCurrencies from '$lib/data/getTransactionCurrencies';
 import getTransactionVenues from '$lib/data/getTransactionVenues';
+import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
+import { enUS } from '../../../../locale/Locale';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
 	const { supabase } = await parent();
 
+	const CRUD = new SupabaseCRUD(supabase, enUS);
+
 	// Get the scholar's most recent transactions.
-	const { data: transactions, error: transactionsError } = await supabase
-		.from('transactions')
-		.select()
-		.or(`from_venue.eq.${params.venueid},to_venue.eq.${params.venueid}`);
+	const {
+		data: transactions,
+		count,
+		error: transactionsError
+	} = await CRUD.getVenueTransactions(params.venueid);
 	if (transactionsError) console.log(transactionsError);
 
 	const { data: venues, error: venueError } =
@@ -35,6 +40,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		transactions,
 		venues,
 		currencies,
-		tokens
+		tokens,
+		count
 	};
 };

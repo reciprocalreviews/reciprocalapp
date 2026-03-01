@@ -28,6 +28,9 @@ import type { Database } from '$data/database';
 import type Locale from '../../locale/Locale';
 import { renderEmail, type EmailType } from '../../email/templates';
 
+// A constant page size for paginated queries.
+export const PAGE_SIZE = 10;
+
 export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
 	readonly client: SupabaseClient<Database>;
@@ -1113,6 +1116,33 @@ export default class SupabaseCRUD extends CRUD {
 			.single();
 
 		return error ? this.error('CreateTransaction', error) : { data: data.id };
+	}
+
+	async getScholarTransactions(scholar: ScholarID, page: number = 0) {
+		return await this.client
+			.from('transactions')
+			.select('*', { count: 'exact' })
+			.or(`from_scholar.eq.${scholar},to_scholar.eq.${scholar}`)
+			.order('created_at', { ascending: false })
+			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+	}
+
+	async getVenueTransactions(venue: VenueID, page: number = 0) {
+		return await this.client
+			.from('transactions')
+			.select('*', { count: 'exact' })
+			.or(`from_venue.eq.${venue},to_venue.eq.${venue}`)
+			.order('created_at', { ascending: false })
+			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+	}
+
+	async getCurrencyTransactions(currency: CurrencyID, page: number = 0) {
+		return await this.client
+			.from('transactions')
+			.select('*', { count: 'exact' })
+			.eq('currency', currency)
+			.order('created_at', { ascending: false })
+			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 	}
 
 	async approveTransaction(creator: ScholarID, id: TransactionID) {

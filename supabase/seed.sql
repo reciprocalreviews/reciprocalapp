@@ -504,123 +504,15 @@ values
 		null
 	),
 	(
-		'ec74db86-ad38-11f0-97f1-8bcd8f9c8254',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74dc3a-ad38-11f0-97f2-f39915e62804',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74dc6c-ad38-11f0-97f3-6fe2b890b86c',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74dc9e-ad38-11f0-97f4-07fb88341648',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74dcd0-ad38-11f0-97f5-73d10c3cf0e2',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74dcf8-ad38-11f0-97f6-033df7b8246c',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74dd20-ad38-11f0-97f7-1776b16e0855',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74de7e-ad38-11f0-97f8-6392d6dffa33',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74df00-ad38-11f0-97f9-f310de92543e',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74df32-ad38-11f0-97fa-13316bd5a967',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74df82-ad38-11f0-97fb-1744e83622a7',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74dfb4-ad38-11f0-97fc-979f820dc15f',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74dfdc-ad38-11f0-97fd-fb653a615af7',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74e004-ad38-11f0-97fe-57efeb37df3a',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'b8a805bf-0aae-4443-9185-de019a8715cb',
-		null
-	),
-	(
-		'ec74e036-ad38-11f0-97ff-9b4690da85ed',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		null,
-		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6'
-	),
-	(
-		'ec74e05e-ad38-11f0-9800-6fcd74da877e',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		null,
-		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6'
-	),
-	(
-		'ec74e086-ad38-11f0-9801-7f99e92ce9a0',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		null,
-		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6'
-	),
-	(
-		'ec74e0b8-ad38-11f0-9802-3f3bd3aa0e75',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		null,
-		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6'
-	),
-	(
-		'ec74e0e0-ad38-11f0-9803-cf3d40db77f3',
-		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		null,
-		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6'
-	),
-	(
 		'ec74bbba-ad38-11f0-97f0-dbd5772afa09',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'ec74db86-ad38-11f0-97f1-8bcd8f9c8254',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
 		null
 	),
 	(
@@ -630,9 +522,21 @@ values
 		null
 	),
 	(
+		'ec74dc3a-ad38-11f0-97f2-f39915e62804',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
+		null
+	),
+	(
 		'ec74dc3a-ad38-11f0-97f2-f39915e62806',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'ec74dc6c-ad38-11f0-97f3-6fe2b890b86c',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
 		null
 	),
 	(
@@ -642,9 +546,21 @@ values
 		null
 	),
 	(
+		'ec74dc9e-ad38-11f0-97f4-07fb88341648',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
+		null
+	),
+	(
 		'ec74dc9e-ad38-11f0-97f4-07fb88341649',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'ec74dcd0-ad38-11f0-97f5-73d10c3cf0e2',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
 		null
 	),
 	(
@@ -654,9 +570,21 @@ values
 		null
 	),
 	(
+		'ec74dcf8-ad38-11f0-97f6-033df7b8246c',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
+		null
+	),
+	(
 		'ec74dcf8-ad38-11f0-97f6-033df7b8246d',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'ec74dd20-ad38-11f0-97f7-1776b16e0855',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
 		null
 	),
 	(
@@ -666,9 +594,21 @@ values
 		null
 	),
 	(
+		'ec74de7e-ad38-11f0-97f8-6392d6dffa33',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
+		null
+	),
+	(
 		'ec74de7e-ad38-11f0-97f8-6392d6dffa34',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'ec74df00-ad38-11f0-97f9-f310de92543e',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
 		null
 	),
 	(
@@ -678,9 +618,21 @@ values
 		null
 	),
 	(
+		'ec74df32-ad38-11f0-97fa-13316bd5a967',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
+		null
+	),
+	(
 		'ec74df32-ad38-11f0-97fa-13316bd5a968',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'ec74df82-ad38-11f0-97fb-1744e83622a7',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
 		null
 	),
 	(
@@ -690,9 +642,21 @@ values
 		null
 	),
 	(
+		'ec74dfb4-ad38-11f0-97fc-979f820dc15f',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
+		null
+	),
+	(
 		'ec74dfb4-ad38-11f0-97fc-979f820dc160',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'ec74dfdc-ad38-11f0-97fd-fb653a615af7',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
 		null
 	),
 	(
@@ -702,7 +666,43 @@ values
 		null
 	),
 	(
+		'ec74e004-ad38-11f0-97fe-57efeb37df3a',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715cb',
+		null
+	),
+	(
 		'ec74e004-ad38-11f0-97fe-57efeb37df3b',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'ec74e036-ad38-11f0-97ff-9b4690da85ed',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'ec74e05e-ad38-11f0-9800-6fcd74da877e',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'ec74e086-ad38-11f0-9801-7f99e92ce9a0',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'ec74e0b8-ad38-11f0-9802-3f3bd3aa0e75',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'ec74e0e0-ad38-11f0-9803-cf3d40db77f3',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
 		null
@@ -792,7 +792,74 @@ values
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'Payment for submission',
 		'approved'
+	),
+	(
+		'0d920b9a-1c9f-4cb2-80cd-20266002f9f3',
+		'2026-03-01 23:07:58.77327+00',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		array["ec74e036-ad38-11f0-97ff-9b4690da85ed"],
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'Venue gift',
+		'approved'
+	),
+	(
+		'30ace877-5c9f-42e1-abf0-225c093ffc8b',
+		'2026-03-01 23:08:20.021985+00',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		array["ec74e0b8-ad38-11f0-9802-3f3bd3aa0e75"],
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'Venue gift',
+		'approved'
+	),
+	(
+		'32709a67-e5f1-4df4-a9a6-4199cf6204ec',
+		'2026-03-01 23:08:26.356946+00',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		array["ec74e0e0-ad38-11f0-9803-cf3d40db77f3"],
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'Venue gift',
+		'approved'
+	),
+	(
+		'9ced2fce-d3e7-4f12-a352-ba9d896c45bd',
+		'2026-03-01 23:08:11.789909+00',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		array["ec74e05e-ad38-11f0-9800-6fcd74da877e"],
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'Venue gift',
+		'approved'
+	),
+	(
+		'bc8686f1-5a2e-4c84-a1cf-61b837eef381',
+		'2026-03-01 23:08:14.954625+00',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		array["ec74e086-ad38-11f0-9801-7f99e92ce9a0"],
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'Venue gift',
+		'approved'
 	);
+
+;
 
 insert into
 	public.submissions (

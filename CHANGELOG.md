@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.3.5 2026-03-01
 
+### Added
+
+- Added pagination to transaction pages for scalability (#72).
+
 ### Fixed
 
 - Corrected volunteer count on venue page.

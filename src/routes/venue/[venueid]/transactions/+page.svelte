@@ -10,15 +10,15 @@
 	import { getDB } from '$lib/data/CRUD.js';
 
 	let { data } = $props();
-	let { venue, transactions, venues, currencies, scholar, tokens } = $derived(data);
+	let { venue, transactions, count, venues, currencies, scholar, tokens } = $derived(data);
 
 	let db = getDB();
 </script>
 
-{#if venue && transactions && venues && currencies && scholar && tokens}
+{#if venue && transactions && venues && currencies && scholar && tokens && count}
 	<Page title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}Transactions{/snippet}
-		<p>These are all <Circle icon={transactions.length}></Circle> transactions for this venue.</p>
+		<p>These are all <Circle icon={count}></Circle> transactions for this venue.</p>
 
 		{#if venue.admins.includes(scholar.id)}
 			<Cards>
@@ -56,7 +56,13 @@
 			</Cards>
 		{/if}
 
-		<Transactions {transactions} {venues} {currencies} />
+		<Transactions
+			{transactions}
+			{count}
+			{venues}
+			{currencies}
+			more={async (page) => db().getVenueTransactions(venue.id, page)}
+		/>
 	</Page>
 {:else if venue === null}
 	<h1>Oops.</h1>

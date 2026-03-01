@@ -1,14 +1,19 @@
 import getTransactionVenues from '$lib/data/getTransactionVenues';
+import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
+import { enUS } from '../../../../locale/Locale';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
 	const { supabase } = await parent();
 
+	const CURD = new SupabaseCRUD(supabase, enUS);
+
 	// Get the currency's most recent transactions.
-	const { data: transactions, error: transactionsError } = await supabase
-		.from('transactions')
-		.select()
-		.eq('currency', params.id);
+	const {
+		data: transactions,
+		count,
+		error: transactionsError
+	} = await CURD.getCurrencyTransactions(params.id);
 	if (transactionsError) console.log(transactionsError);
 
 	// Is the current scholar a minter on the venue?
@@ -28,6 +33,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	return {
 		currency,
 		transactions,
-		venues
+		venues,
+		count
 	};
 };
