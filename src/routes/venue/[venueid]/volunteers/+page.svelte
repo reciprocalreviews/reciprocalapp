@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import Page from '$lib/components/Page.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import SourceLink from '$lib/components/VenueLink.svelte';
+	import VenueLink from '$lib/components/VenueLink.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Tag from '$lib/components/Tag.svelte';
@@ -64,8 +64,8 @@
 	>
 		{#snippet subtitle()}Volunteers{/snippet}
 		<p>
-			These are scholars that have volunteered to review for <SourceLink
-				id={page.params.id ?? ''}
+			These are scholars that have volunteered to review for <VenueLink
+				id={page.params.venueid ?? ''}
 				name={venue.title}
 			/>.
 		</p>

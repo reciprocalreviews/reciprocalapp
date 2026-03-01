@@ -13,6 +13,8 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Svelte and Supabase.
 - Better page and header padding.
+- Improved header styles.
+- Fixed venue link.
 
 ## 0.3.4 2026-02-22
 
