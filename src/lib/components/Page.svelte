@@ -7,6 +7,7 @@
 	import { ScholarLabel, SubmissionLabel, VenueLabel } from './Labels';
 
 	let {
+		icon,
 		title,
 		subtitle,
 		details,
@@ -14,6 +15,7 @@
 		children,
 		edit
 	}: {
+		icon: string;
 		title: string;
 		subtitle?: Snippet;
 		details?: Snippet;
@@ -54,6 +56,7 @@
 			</div>
 		{/if}
 		<h1 data-testid="page-header">
+			<span class="emoji">{icon}</span>
 			{#if edit}<EditableText
 					text={revisedTitle}
 					valid={edit.valid}
@@ -75,6 +78,17 @@
 		gap: calc(1.5 * var(--spacing));
 		margin: auto;
 		width: 100%;
+	}
+
+	.emoji {
+		font-family: 'Noto Emoji', 'Josefin Sans', sans-serif;
+		font-size: 80%;
+	}
+
+	h1 {
+		display: flex;
+		gap: 0.5rem;
+		align-items: baseline;
 	}
 
 	.page > :global(p) {

@@ -5,6 +5,7 @@
 	import Circle from '$lib/components/Circle.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Gift from '$lib/components/Gift.svelte';
+	import { VenueLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
 	import Transactions from '$lib/components/Transactions.svelte';
 	import { getDB } from '$lib/data/CRUD.js';
@@ -16,7 +17,7 @@
 </script>
 
 {#if venue && transactions && venues && currencies && scholar && tokens && count}
-	<Page title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
+	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all <Circle icon={count}></Circle> transactions for this venue.</p>
 

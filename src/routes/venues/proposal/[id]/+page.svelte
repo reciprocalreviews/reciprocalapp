@@ -12,7 +12,7 @@
 	import { getDB } from '$lib/data/CRUD';
 	import Date from '$lib/components/Date.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
-	import { DeleteLabel } from '$lib/components/Labels';
+	import { DeleteLabel, VenueLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
 	import { validEmails, validURLError } from '$lib/validation';
 	import { SettingsLabel } from '$lib/components/Labels';
@@ -73,7 +73,7 @@
 	<h1>Oops.</h1>
 	<Feedback error>Unknown proposal.</Feedback>
 {:else}
-	<Page title={proposal.title} breadcrumbs={[['/venues', 'Venues']]}>
+	<Page icon={VenueLabel} title={proposal.title} breadcrumbs={[['/venues', 'Venues']]}>
 		{#snippet subtitle()}
 			{#if approved}
 				Approved

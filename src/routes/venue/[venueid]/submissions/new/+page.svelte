@@ -3,6 +3,7 @@
 	import Page from '$lib/components/Page.svelte';
 	import { type PageData } from './$types';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import { ErrorLabel, SubmissionLabel } from '$lib/components/Labels';
 
 	let { data }: { data: PageData } = $props();
 
@@ -11,11 +12,12 @@
 </script>
 
 {#if venue === null}
-	<Page title="New submission" breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title="New submission" breadcrumbs={[]}>
 		<Feedback error>Venue not found.</Feedback>
 	</Page>
 {:else}
 	<Page
+		icon={SubmissionLabel}
 		title="New submission"
 		breadcrumbs={[
 			[`/venue/${venue.id}`, venue.title],

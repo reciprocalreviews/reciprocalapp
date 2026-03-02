@@ -5,6 +5,7 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { PUBLIC_ENV } from '$env/static/public';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import { TokenLabel } from '$lib/components/Labels';
 
 	const inProd = PUBLIC_ENV === 'prod';
 </script>
@@ -13,7 +14,7 @@
 	<title>Reciprocal Reviews</title>
 </svelte:head>
 
-<Page title="Reciprocal Reviews" breadcrumbs={[]}>
+<Page icon={TokenLabel} title="Reciprocal Reviews" breadcrumbs={[]}>
 	{#snippet subtitle()}Make peer review count.{/snippet}
 	<p>
 		Academia incentivizes publishing over peer review. That means too many submissions and not

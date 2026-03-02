@@ -7,6 +7,7 @@
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
 	import { page } from '$app/state';
+	import { ErrorLabel, VenueLabel } from '$lib/components/Labels';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 	const { venue } = $derived(data);
@@ -24,11 +25,11 @@
 </script>
 
 {#if venue === null}
-	<Page title="Unknown venue" breadcrumbs={[[`/venues`, 'Venue']]}>
+	<Page icon={ErrorLabel} title="Unknown venue" breadcrumbs={[[`/venues`, 'Venue']]}>
 		<p>Unable to find this venue.</p>
 	</Page>
 {:else if venue.inactive !== null && !venue.admins.includes(data.scholar?.id ?? '')}
-	<Page title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
+	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
 		{#snippet subtitle()}Venue{/snippet}
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link> Admins: {#each venue.admins as adminID}
 				<ScholarLink id={adminID} />

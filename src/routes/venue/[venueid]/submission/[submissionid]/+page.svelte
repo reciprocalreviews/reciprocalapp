@@ -14,7 +14,14 @@
 	import Table from '$lib/components/Table.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { handle } from '../../../../feedback.svelte';
-	import { EditLabel, EmptyLabel, ScholarLabel, VenueLabel } from '$lib/components/Labels';
+	import {
+		EditLabel,
+		EmptyLabel,
+		ErrorLabel,
+		ScholarLabel,
+		SubmissionLabel,
+		VenueLabel
+	} from '$lib/components/Labels';
 	import type { RoleID, RoleRow, ScholarID } from '$data/types';
 	import Scholar from '$lib/data/Scholar.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -130,6 +137,7 @@
 
 {#if submission === null || venue === null || roles === null || user === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
 	<Page
+		icon={ErrorLabel}
 		title="Submission"
 		breadcrumbs={[
 			[`/venue/${venue?.id}`, venue?.title ?? ''],
@@ -140,6 +148,7 @@
 	</Page>
 {:else if !isAuthor && !isAssigned}
 	<Page
+		icon={ErrorLabel}
 		title="Submission"
 		breadcrumbs={[
 			[`/venue/${venue?.id}`, venue?.title ?? ''],
@@ -150,6 +159,7 @@
 	</Page>
 {:else}
 	<Page
+		icon={SubmissionLabel}
 		title={submission.title}
 		breadcrumbs={[
 			[`/venue/${submission.venue}`, venue?.title ?? ''],

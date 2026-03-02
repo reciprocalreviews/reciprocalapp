@@ -5,7 +5,14 @@
 	import { getDB } from '$lib/data/CRUD';
 	import Page from '$lib/components/Page.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
-	import { ConfirmLabel, DeleteLabel, ScholarLabel, TokenLabel } from '$lib/components/Labels';
+	import {
+		ConfirmLabel,
+		DeleteLabel,
+		ErrorLabel,
+		ScholarLabel,
+		TokenLabel,
+		VenueLabel
+	} from '$lib/components/Labels';
 	import { addFeedback, handle } from '../../feedback.svelte';
 	import Roles from './Roles.svelte';
 	import type { PageData } from './$types';
@@ -44,11 +51,12 @@
 </script>
 
 {#if venue === null}
-	<Page title="Unknown venue" breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title="Unknown venue" breadcrumbs={[]}>
 		<p>Unable to find this venue.</p>
 	</Page>
 {:else}
 	<Page
+		icon={VenueLabel}
 		title={venue.title}
 		breadcrumbs={[[`/venues`, 'Venues']]}
 		edit={isAdmin

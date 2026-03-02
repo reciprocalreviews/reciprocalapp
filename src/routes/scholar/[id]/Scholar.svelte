@@ -25,7 +25,7 @@
 	} from '$data/types';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Tip from '$lib/components/Tip.svelte';
-	import { SettingsLabel, SubmissionLabel, TokenLabel } from '$lib/components/Labels';
+	import { ScholarLabel, SettingsLabel, SubmissionLabel, TokenLabel } from '$lib/components/Labels';
 	import Dashboard from '$lib/components/Dashboard.svelte';
 	import Commitments from './Commitments.svelte';
 	import Tasks from './Tasks.svelte';
@@ -67,6 +67,7 @@
 </script>
 
 <Page
+	icon={ScholarLabel}
 	title={scholar.getName() ?? 'anonymous'}
 	breadcrumbs={[]}
 	edit={editable

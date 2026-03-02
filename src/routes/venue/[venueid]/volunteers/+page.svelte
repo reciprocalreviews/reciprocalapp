@@ -8,7 +8,13 @@
 	import Tag from '$lib/components/Tag.svelte';
 	import Tags from '$lib/components/Tags.svelte';
 	import Status from '$lib/components/Status.svelte';
-	import { EmptyLabel, FilterLabel, ScholarLabel } from '$lib/components/Labels.js';
+	import {
+		EmptyLabel,
+		ErrorLabel,
+		FilterLabel,
+		ScholarLabel,
+		VenueLabel
+	} from '$lib/components/Labels.js';
 	import TextField from '$lib/components/TextField.svelte';
 	import Button from '$lib/components/Button.svelte';
 
@@ -47,15 +53,20 @@
 </script>
 
 {#if venue === null}
-	<Page title="Unknown venue" breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title="Unknown venue" breadcrumbs={[]}>
 		<Feedback>Unable to find this venue.</Feedback>
 	</Page>
 {:else if commitments === null}
-	<Page title="Volunteers unavailable" breadcrumbs={[[`/${venue.id}`, venue.title]]}>
+	<Page
+		icon={ErrorLabel}
+		title="Volunteers unavailable"
+		breadcrumbs={[[`/${venue.id}`, venue.title]]}
+	>
 		<Feedback>Unable to load volunteers for this venue.</Feedback>
 	</Page>
 {:else}
 	<Page
+		icon={VenueLabel}
 		title={venue.title}
 		breadcrumbs={[
 			['/venues', 'Venues'],

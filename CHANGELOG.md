@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Added
 
 - Added pagination to transaction pages for scalability (#72).
+- Added emoji icons to page headers for consistency and distinguishability.
 
 ### Fixed
 

@@ -3,7 +3,7 @@
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { ScholarLabel, SettingsLabel } from '$lib/components/Labels.js';
+	import { ErrorLabel, ScholarLabel, SettingsLabel, VenueLabel } from '$lib/components/Labels.js';
 	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
@@ -28,6 +28,7 @@
 {:else if !venue.admins.includes(scholar.id)}
 	<h1>Oops.</h1>
 	<Page
+		icon={ErrorLabel}
 		title={venue.title}
 		breadcrumbs={[
 			['/venues', 'Venues'],
@@ -39,6 +40,7 @@
 	</Page>
 {:else}
 	<Page
+		icon={VenueLabel}
 		title={venue.title}
 		breadcrumbs={[
 			['/venues', 'Venues'],

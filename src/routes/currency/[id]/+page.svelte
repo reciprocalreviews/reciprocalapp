@@ -54,6 +54,7 @@
 </script>
 
 <Page
+	icon={TokenLabel}
 	title={currency ? currency.name : 'Oops'}
 	breadcrumbs={[]}
 	edit={isMinter && currency !== null

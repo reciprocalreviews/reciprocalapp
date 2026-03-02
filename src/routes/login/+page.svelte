@@ -8,6 +8,7 @@
 	import Form from '$lib/components/Form.svelte';
 	import { goto } from '$app/navigation';
 	import Page from '$lib/components/Page.svelte';
+	import { ScholarLabel } from '$lib/components/Labels';
 
 	let email = $state('');
 
@@ -29,7 +30,7 @@
 	});
 </script>
 
-<Page title="Login" breadcrumbs={[['/', 'Home']]}>
+<Page icon={ScholarLabel} title="Login" breadcrumbs={[['/', 'Home']]}>
 	{#if auth.isAuthenticated()}
 		<p>You are logged in.</p>
 	{:else}

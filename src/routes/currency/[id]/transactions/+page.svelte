@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Feedback from '$lib/components/Feedback.svelte';
+	import { TokenLabel } from '$lib/components/Labels';
 	import Page from '$lib/components/Page.svelte';
 	import Transactions from '$lib/components/Transactions.svelte';
 	import { getDB } from '$lib/data/CRUD';
@@ -11,7 +12,11 @@
 </script>
 
 {#if currency && transactions && venues && count}
-	<Page title={currency.name} breadcrumbs={[[`/currency/${currency.id}`, currency.name]]}>
+	<Page
+		icon={TokenLabel}
+		title={currency.name}
+		breadcrumbs={[[`/currency/${currency.id}`, `${TokenLabel} ${currency.name}`]]}
+	>
 		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all {count} transactions for this currency visible to you.</p>
 		<Transactions
@@ -25,8 +30,8 @@
 	</Page>
 {:else if currency === null}
 	<h1>Oops.</h1>
-	<Feedback error>Unknown scholar.</Feedback>
+	<Feedback error>Unknown currency.</Feedback>
 {:else if transactions === null}
 	<h1>Oops.</h1>
-	<Feedback error>Unknown scholar.</Feedback>
+	<Feedback error>Unable to load transactions.</Feedback>
 {/if}

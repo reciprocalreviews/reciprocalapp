@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Feedback from '$lib/components/Feedback.svelte';
+	import { ScholarLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
 	import Transactions from '$lib/components/Transactions.svelte';
 	import { getDB } from '$lib/data/CRUD.js';
@@ -12,6 +13,7 @@
 
 {#if scholar && transactions && venues && currencies && count}
 	<Page
+		icon={ScholarLabel}
 		title={scholar.name ?? scholar.email ?? 'anonymous'}
 		breadcrumbs={[
 			[`/scholar/${scholar.id}`, scholar.name ?? scholar.orcid ?? scholar.email ?? 'anonymous']

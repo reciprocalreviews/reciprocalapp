@@ -11,7 +11,13 @@
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import { handle } from '../../../feedback.svelte';
 	import Status from '$lib/components/Status.svelte';
-	import { DownLabel, FilterLabel, PrivateLabel, UpLabel } from '$lib/components/Labels';
+	import {
+		DownLabel,
+		FilterLabel,
+		PrivateLabel,
+		SubmissionLabel,
+		UpLabel
+	} from '$lib/components/Labels';
 	import Column from '$lib/components/Row.svelte';
 	import isRoleApprover from '$lib/data/isRoleApprover';
 	import type { SubmissionRow } from '$data/types';
@@ -131,6 +137,7 @@
 
 {#if venue && conflicts}
 	<Page
+		icon={SubmissionLabel}
 		title="Submissions"
 		breadcrumbs={[
 			['/venues', 'Venues'],
