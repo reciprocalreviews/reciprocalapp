@@ -16,7 +16,7 @@
 	let db = getDB();
 </script>
 
-{#if venue && transactions && venues && currencies && scholar && tokens && count}
+{#if venue && transactions && venues && currencies && scholar && tokens && count !== null}
 	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}Transactions{/snippet}
 		<p>These are all <Circle icon={count}></Circle> transactions on this venue visible to you.</p>

@@ -7,5 +7,5 @@ test('landing page is visible', async ({ page }) => {
 	await expect(page).toHaveTitle('Reciprocal Reviews');
 
 	// Expect the header to also be Reciprocal Reviews.
-	await expect(page.getByTestId('page-header')).toHaveText('Reciprocal Reviews');
+	await expect(page.getByTestId('page-header')).toHaveText('★ Reciprocal Reviews');
 });

@@ -12,7 +12,7 @@
 	const db = getDB();
 </script>
 
-{#if currency && transactions && venues && count}
+{#if currency && transactions && venues && count !== null}
 	<Page
 		icon={TokenLabel}
 		title={currency.name}
