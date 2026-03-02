@@ -88,7 +88,7 @@
 	h1 {
 		display: flex;
 		gap: 0.5rem;
-		align-items: baseline;
+		align-items: center;
 	}
 
 	.page > :global(p) {

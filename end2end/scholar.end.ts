@@ -16,6 +16,13 @@ test('the logged in scholar should see many things', async ({ page, context }) =
 	// Expect a seeded review
 	await expect(page.getByTestId('review-0')).toBeVisible();
 
+	// Expected two volunteer rows
+	await expect(page.getByTestId('commitment-0')).toBeVisible();
+	await expect(page.getByTestId('commitment-1')).toBeVisible();
+
+	// Expect a token count
+	await expect(page.getByTestId('currency-0')).toBeVisible();
+
 	// Log out
 	await logout(page);
 });

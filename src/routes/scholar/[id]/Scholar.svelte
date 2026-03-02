@@ -167,8 +167,8 @@
 			{#if editable}You have{:else}This scholar has{/if}:
 		</p>
 		<ul>
-			{#each currencies as currency}
-				<li>
+			{#each currencies as currency, index}
+				<li data-testid={'currency-' + index}>
 					<Tokens amount={tokens.filter((t) => t.currency === currency.id).length} {currency}
 					></Tokens>
 				</li>
