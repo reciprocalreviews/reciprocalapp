@@ -801,7 +801,7 @@ values
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
 		null,
-		array["ec74e036-ad38-11f0-97ff-9b4690da85ed"],
+		'{"ec74e036-ad38-11f0-97ff-9b4690da85ed"}',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'Venue gift',
 		'approved'
@@ -814,7 +814,7 @@ values
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
 		null,
-		array["ec74e0b8-ad38-11f0-9802-3f3bd3aa0e75"],
+		'{"ec74e0b8-ad38-11f0-9802-3f3bd3aa0e75"}',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'Venue gift',
 		'approved'
@@ -827,7 +827,7 @@ values
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
 		null,
-		array["ec74e0e0-ad38-11f0-9803-cf3d40db77f3"],
+		'{"ec74e0e0-ad38-11f0-9803-cf3d40db77f3"}',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'Venue gift',
 		'approved'
@@ -840,7 +840,7 @@ values
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
 		null,
-		array["ec74e05e-ad38-11f0-9800-6fcd74da877e"],
+		'{"ec74e05e-ad38-11f0-9800-6fcd74da877e"}',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'Venue gift',
 		'approved'
@@ -853,7 +853,7 @@ values
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
 		null,
-		array["ec74e086-ad38-11f0-9801-7f99e92ce9a0"],
+		'{"ec74e086-ad38-11f0-9801-7f99e92ce9a0"}',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'Venue gift',
 		'approved'
