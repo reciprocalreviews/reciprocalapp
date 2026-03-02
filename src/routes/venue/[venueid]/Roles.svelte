@@ -15,7 +15,7 @@
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { DeleteLabel, EmptyLabel, ScholarLabel } from '$lib/components/Labels';
+	import { DeleteLabel, EmptyLabel, ScholarLabel, SettingsLabel } from '$lib/components/Labels';
 	import Slider from '$lib/components/Slider.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
@@ -356,7 +356,7 @@
 
 				{#if isAdmin}
 					<Card
-						icon="⚙️"
+						icon={SettingsLabel}
 						header="settings"
 						note="Edit this role's settings"
 						subheader

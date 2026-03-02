@@ -23,7 +23,7 @@
 		padding: calc(var(--spacing) * 0.8);
 		background: var(--salient-color);
 		color: var(--background-color);
-		min-width: 0.5em;
+		width: 0.5em;
 		height: 0.5em;
 		font-size: var(--small-font-size);
 		align-self: start;
