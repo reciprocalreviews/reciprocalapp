@@ -19,7 +19,7 @@
 {#if venue && transactions && venues && currencies && scholar && tokens && count}
 	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}Transactions{/snippet}
-		<p>These are all <Circle icon={count}></Circle> transactions for this venue.</p>
+		<p>These are all <Circle icon={count}></Circle> transactions on this venue visible to you.</p>
 
 		{#if venue.admins.includes(scholar.id)}
 			<Cards>

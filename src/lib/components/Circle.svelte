@@ -19,8 +19,8 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: 1em;
-		padding: var(--spacing);
+		border-radius: 50%;
+		padding: calc(var(--spacing) * 0.8);
 		background: var(--salient-color);
 		color: var(--background-color);
 		min-width: 0.5em;

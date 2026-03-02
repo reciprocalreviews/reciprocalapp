@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Circle from '$lib/components/Circle.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { ScholarLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
@@ -11,7 +12,7 @@
 	const db = getDB();
 </script>
 
-{#if scholar && transactions && venues && currencies && count}
+{#if scholar && transactions && venues && currencies && count !== null}
 	<Page
 		icon={ScholarLabel}
 		title={scholar.name ?? scholar.email ?? 'anonymous'}
@@ -20,7 +21,7 @@
 		]}
 	>
 		{#snippet subtitle()}Transactions{/snippet}
-		<p>These are all {count} transactions for this scholar visible to you.</p>
+		<p>There are <Circle icon={count}></Circle> transactions visible to you.</p>
 		<Transactions
 			{transactions}
 			{venues}
@@ -35,5 +36,5 @@
 	<Feedback error>Unknown scholar.</Feedback>
 {:else if transactions === null}
 	<h1>Oops.</h1>
-	<Feedback error>Unknown scholar.</Feedback>
+	<Feedback error>Unable to load transactions for this scholar.</Feedback>
 {/if}

@@ -16,10 +16,11 @@ Dates should be in`YYYY-MM-DD` format.
 
 ### Changed
 
-- Updated minor versions of Svelte and Supabase.
+- More consistent rendering and phrasing of transactions.
 - Better page and header padding.
 - Improved header styles.
 - Fixed venue link.
+- Updated minor versions of Svelte and Supabase.
 
 ## 0.3.4 2026-02-22
 
