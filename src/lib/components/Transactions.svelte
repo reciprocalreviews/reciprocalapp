@@ -21,7 +21,8 @@
 		venues,
 		currencies,
 		testid,
-		more
+		more,
+		isDebit
 	}: {
 		transactions: TransactionRow[];
 		venues: VenueRow[];
@@ -29,6 +30,8 @@
 		testid?: string;
 		count: number;
 		more: (page: number) => Promise<{ data: TransactionRow[] | null; error: any }>;
+		/** Should return true if the row should be treated as a debit */
+		isDebit: (transaction: TransactionRow) => boolean;
 	} = $props();
 
 	// Get the current user
@@ -81,6 +84,7 @@
 		<td
 			>{#if transaction.tokens === null}unknown{:else}<Tokens
 					amount={transaction.tokens.length}
+					debit={isDebit(transaction)}
 					{currency}
 				/>{/if}</td
 		>

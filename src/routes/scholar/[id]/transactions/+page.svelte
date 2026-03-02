@@ -29,6 +29,7 @@
 			testid="scholar-transaction"
 			{count}
 			more={async (page) => db().getScholarTransactions(scholar.id, page)}
+			isDebit={(transaction) => transaction.from_scholar === scholar.id}
 		/>
 	</Page>
 {:else if scholar === null}

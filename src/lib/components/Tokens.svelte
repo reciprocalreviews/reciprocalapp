@@ -2,10 +2,14 @@
 	import type { CurrencyRow } from '$data/types';
 	import { TokenLabel } from './Labels';
 
-	let { amount, currency }: { amount: number; currency?: CurrencyRow } = $props();
+	let {
+		amount,
+		currency,
+		debit = false
+	}: { amount: number; debit: boolean; currency?: CurrencyRow } = $props();
 </script>
 
-<span class="token"
+<span class="token" class:debit
 	><span class="star">{TokenLabel}</span>
 	{amount}
 	{#if currency}<span class="currency">{currency.name}</span>
@@ -29,5 +33,13 @@
 
 	.currency {
 		font-weight: 300;
+	}
+
+	.debit .star {
+		color: var(--error-color);
+	}
+
+	.debit {
+		background-color: var(--error-color-faded);
 	}
 </style>

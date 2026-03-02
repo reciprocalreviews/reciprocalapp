@@ -26,6 +26,8 @@
 			{venues}
 			currencies={[currency]}
 			more={async (page) => db().getCurrencyTransactions(currency.id, page)}
+			// Currency transactions are never a debit, as there's no perspective.
+			isDebit={() => false}
 			testid="currency-transaction"
 		/>
 	</Page>
