@@ -6,7 +6,7 @@
 		amount,
 		currency,
 		debit = false
-	}: { amount: number; debit: boolean; currency?: CurrencyRow } = $props();
+	}: { amount: number; debit?: boolean; currency?: CurrencyRow } = $props();
 </script>
 
 <span class="token" class:debit
