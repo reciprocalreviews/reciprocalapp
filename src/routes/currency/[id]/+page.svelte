@@ -39,6 +39,7 @@
 	let newTokenCount = $state(1);
 	let newTokenConsent = $state(false);
 	let newTokenCreating = $state(false);
+	let newTokenPurpose = $state('');
 
 	function isValidMinter(text: string | ScholarID) {
 		if (validEmail(text)) {
@@ -103,7 +104,7 @@
 		<p>
 			<Link to="/currency/{currency.id}/transactions">See all transactions</Link> in this currency.
 		</p>
-		{#if isMinter && venues}
+		{#if user && isMinter && venues}
 			<Cards>
 				<Card
 					subheader
@@ -122,7 +123,7 @@
 								label: venue.title,
 								value: venue.id
 							}))}
-							value={newTokenOwner}
+							bind:value={newTokenOwner}
 						/>
 						<Slider
 							min={1}
@@ -132,8 +133,15 @@
 							label="Number of new tokens"
 							change={(val) => (newTokenCount = val)}>{newTokenCount}</Slider
 						>
+						<TextField
+							label="Why are these tokens being minted? This purpose will be public in the transaction history."
+							bind:text={newTokenPurpose}
+							size={40}
+							valid={(text) => (text.length === 0 ? "Purpose can't be empty" : undefined)}
+							placeholder="Purpose"
+						/>
 						<Checkbox bind:on={newTokenConsent}>
-							I understand that creating excess tokens will erode this currencies value.</Checkbox
+							I understand that creating excess tokens will erode this currency's value.</Checkbox
 						>
 
 						<Button
@@ -141,12 +149,21 @@
 							active={!newTokenCreating &&
 								newTokenConsent &&
 								newTokenCount > 0 &&
-								newTokenOwner !== undefined}
+								newTokenOwner !== undefined &&
+								newTokenPurpose.length > 0}
 							action={async () => {
 								newTokenCreating = true;
 								if (
 									newTokenOwner !== undefined &&
-									(await handle(db().mintTokens(currency.id, newTokenCount, newTokenOwner)))
+									(await handle(
+										db().mintTokens(
+											user,
+											currency.id,
+											newTokenCount,
+											newTokenOwner,
+											newTokenPurpose
+										)
+									))
 								) {
 									newTokenCount = 0;
 									newTokenCreating = false;

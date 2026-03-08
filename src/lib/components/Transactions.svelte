@@ -88,18 +88,25 @@
 					{currency}
 				/>{/if}</td
 		>
+		<td>
+			<ScholarLink size="extra-small" id={transaction.creator} />
+		</td>
 		<td
 			>{#if transaction.from_scholar}<ScholarLink
+					size="extra-small"
 					id={transaction.from_scholar}
 				/>{:else if transaction.from_venue}<VenueLink
+					size="extra-small"
 					id={transaction.from_venue}
 					name={venues.find((v) => v.id === transaction.from_venue)?.title ?? 'unknown venue'}
-				></VenueLink>{/if}</td
+				></VenueLink>{:else}<em>minted</em>{/if}</td
 		>
 		<td
 			>{#if transaction.to_scholar}<ScholarLink
+					size="extra-small"
 					id={transaction.to_scholar}
 				/>{:else if transaction.to_venue}<VenueLink
+					size="extra-small"
 					id={transaction.to_venue}
 					name={venues.find((v) => v.id === transaction.to_venue)?.title ?? 'unknown venue'}
 				></VenueLink>{/if}</td
@@ -157,6 +164,7 @@
 		{#snippet header()}
 			<th>Status</th>
 			<th>Tokens</th>
+			<th>Scholar</th>
 			<th>From</th>
 			<th>To</th>
 			<th>Purpose</th>

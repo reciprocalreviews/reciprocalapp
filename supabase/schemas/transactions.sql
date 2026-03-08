@@ -30,7 +30,7 @@ create table if not exists public.transactions (
 	-- The status of the transaction
 	status public.transaction_status not null,
 	-- Require that there is either a scholar or venue source but not both
-	constraint check_from check ((num_nonnulls (from_scholar, from_venue)=1)),
+	constraint check_from check ((num_nonnulls (from_scholar, from_venue)<=1)),
 	-- Require that there is either a scholar or venue destination but not both
 	constraint check_to check ((num_nonnulls (to_scholar, to_venue)=1))
 );
@@ -152,7 +152,7 @@ with
 			-- Transactions can be proposed by anyone
 			(status='proposed'::transaction_status)
 			or (
-				-- Transactions can be approved by the giver
+				-- Transactions can be approved by the giver, if there is one
 				(status='approved'::transaction_status)
 				and (
 					(
@@ -181,6 +181,10 @@ with
 								)::uuid[]
 							)
 						)
+					)
+					or (
+						from_scholar is null
+						and from_venue is null
 					)
 				)
 			)

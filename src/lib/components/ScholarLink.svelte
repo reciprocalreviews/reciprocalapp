@@ -5,7 +5,13 @@
 	import { ScholarLabel } from './Labels';
 	import Link from './Link.svelte';
 
-	export let id: string | Scholar | ScholarRow;
+	let {
+		id,
+		size = 'normal'
+	}: {
+		id: string | Scholar | ScholarRow;
+		size?: 'small' | 'normal' | 'extra-small';
+	} = $props();
 
 	const db = getDB();
 </script>
@@ -15,7 +21,7 @@
 		...
 	{:then scholar}
 		{#if scholar}
-			<Link to="/scholar/{scholar.getID()}" icon={ScholarLabel}
+			<Link {size} to="/scholar/{scholar.getID()}" icon={ScholarLabel}
 				>{scholar.getName() ?? scholar.getEmail()}</Link
 			>
 		{:else}
@@ -24,11 +30,12 @@
 	{:catch}<em>Error {id}</em>{/await}
 {:else if id instanceof Scholar}
 	<div class="scholar">
-		<Link to="/scholar/{id.getID()}">{id.getName()}</Link><sub style="text-decoration: none"
+		<Link {size} to="/scholar/{id.getID()}">{id.getName()}</Link><sub style="text-decoration: none"
 			>{ScholarLabel}</sub
 		>
 	</div>
 {:else}
-	<Link to="/scholar/{id.id}">{id.name}</Link><sub style="text-decoration: none">{ScholarLabel}</sub
+	<Link {size} to="/scholar/{id.id}">{id.name}</Link><sub style="text-decoration: none"
+		>{ScholarLabel}</sub
 	>
 {/if}

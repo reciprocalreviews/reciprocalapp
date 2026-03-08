@@ -7,7 +7,8 @@ Dates should be in`YYYY-MM-DD` format.
 
 ### Added
 
-- Added an updates page to mirror changelog content.
+- Added an updates page to mirror changelog content (#81).
+- We now record transactions when tokens are minted on a currency, for transparency.
 
 ## 0.3.5 - 2026-03-01
 

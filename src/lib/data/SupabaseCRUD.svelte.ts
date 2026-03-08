@@ -991,13 +991,37 @@ export default class SupabaseCRUD extends CRUD {
 		return this.editCurrencyMinters(id, Array.from(new Set([...minters, scholarID])));
 	}
 
-	async mintTokens(currencyID: CurrencyID, amount: number, to: VenueID): Promise<Result> {
+	async mintTokens(
+		creator: ScholarID,
+		currencyID: CurrencyID,
+		amount: number,
+		to: VenueID,
+		/** Why are these tokens being minted? */
+		purpose: string
+	): Promise<Result> {
 		const rows = Array(amount)
 			.fill(0)
 			.map(() => ({ currency: currencyID, venue: to, scholar: null }));
 
-		const { error } = await this.client.from('tokens').insert(rows);
-		return this.errorOrEmpty('MintTokens', error);
+		const { data: tokens, error } = await this.client.from('tokens').insert(rows).select();
+
+		if (error || tokens === null) return this.error('MintTokens', error);
+
+		// Note the transaction for minting these tokens.
+		const { error: transactionError } = await this.createTransaction(
+			creator,
+			null,
+			null,
+			null,
+			to,
+			tokens.map((t) => t.id),
+			currencyID,
+			purpose,
+			'approved'
+		);
+		if (transactionError) return this.error('MintTokens', transactionError.details);
+
+		return { data: undefined };
 	}
 
 	async resolveEntityID(
@@ -1096,7 +1120,6 @@ export default class SupabaseCRUD extends CRUD {
 		purpose: string,
 		status: TransactionStatus
 	): Promise<Result<TransactionID>> {
-		if (fromScholar === null && fromVenue === null) return this.error('TransactionMissingFrom');
 		if (toScholar === null && toVenue === null) return this.error('TransactionMissingTo');
 
 		const { data, error } = await this.client
@@ -1169,9 +1192,11 @@ export default class SupabaseCRUD extends CRUD {
 
 		// Create the required tokens so they can be transferred.
 		const { error: mintingError } = await this.mintTokens(
+			creator,
 			transaction.currency,
 			transaction.tokens.length,
-			from
+			from,
+			transaction.purpose
 		);
 		if (mintingError) return this.error('MintTokens', mintingError.details, mintingError.message);
 

@@ -222,7 +222,13 @@ export default abstract class CRUD {
 		emailOrORCID: string
 	): Promise<Result>;
 
-	abstract mintTokens(id: CurrencyID, amount: number, to: VenueID): Promise<Result>;
+	abstract mintTokens(
+		creator: ScholarID,
+		id: CurrencyID,
+		amount: number,
+		to: VenueID,
+		purpose: string
+	): Promise<Result>;
 
 	/** Move N tokens from source to destination, returning a transaction ID. */
 	abstract transferTokens(

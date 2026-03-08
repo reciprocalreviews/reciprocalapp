@@ -6,9 +6,10 @@
 		id: string;
 		name: string;
 		testid?: string;
+		size?: 'small' | 'normal' | 'extra-small';
 	}
 
-	let { id, name, testid }: Props = $props();
+	let { id, name, testid, size = 'normal' }: Props = $props();
 </script>
 
-<Link to="/venue/{id}" icon={VenueLabel} {testid}>{name}</Link>
+<Link to="/venue/{id}" icon={VenueLabel} {testid} {size}>{name}</Link>
