@@ -37,18 +37,18 @@ alter table "public"."proposals" ENABLE row LEVEL SECURITY;
 
 create policy "anyone can view proposals" on "public"."proposals" for
 select
-	to "authenticated",
-	"anon" using (true);
+	to authenticated,
+	anon using (true);
 
-create policy "anyone can propose venues" on "public"."proposals" for INSERT to "authenticated"
+create policy "anyone can propose venues" on "public"."proposals" for INSERT to authenticated
 with
 	check (true);
 
 create policy "admins can update proposals" on "public"."proposals"
 for update
-	to "authenticated" using (public.isSteward ());
+	to authenticated using (public.isSteward ());
 
-create policy "admins can delete proposals" on "public"."proposals" for DELETE to "authenticated" using (public.isSteward ());
+create policy "admins can delete proposals" on "public"."proposals" for DELETE to authenticated using (public.isSteward ());
 
 grant all on table "public"."proposals" to "anon";
 

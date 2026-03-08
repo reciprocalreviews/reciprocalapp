@@ -153,6 +153,7 @@
 
 		{#if isAdmin}
 			<Button
+				testid="new-submission-type"
 				tip="Add a submission type"
 				action={() =>
 					handle(db().createSubmissionType(venue.id, 'New type', 'New submission type', null))}
@@ -169,8 +170,8 @@
 					<th>Revision of</th>
 					{#if isAdmin && types.length > 1}<th></th>{/if}
 				{/snippet}
-				{#each types as type}
-					<tr>
+				{#each types as type, index}
+					<tr data-testid="submission-type-{index}">
 						<td>
 							{#if isAdmin}
 								<EditableText

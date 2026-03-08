@@ -61,11 +61,10 @@ alter table "public"."exchanges" ENABLE row LEVEL SECURITY;
 
 create policy "anyone can view exchanges" on "public"."exchanges" for
 select
-	to "authenticated",
-	"anon" using (true);
+	to authenticated,
+	anon using (true);
 
-create policy "only minters can create exchanges" on "public"."exchanges" for INSERT to "authenticated",
-"anon"
+create policy "only minters can create exchanges" on "public"."exchanges" for INSERT to authenticated
 with
 	check (
 		(
@@ -88,8 +87,7 @@ with
 
 create policy "only minters can update exchanges" on "public"."exchanges"
 for update
-	to "authenticated",
-	"anon" using (
+	to authenticated using (
 		(
 			"public"."isminter" (
 				(
@@ -108,8 +106,7 @@ for update
 		)
 	);
 
-create policy "only minters can delete exchanges" on "public"."exchanges" for DELETE to "authenticated",
-"anon" using (
+create policy "only minters can delete exchanges" on "public"."exchanges" for DELETE to authenticated using (
 	(
 		"public"."isminter" (
 			(

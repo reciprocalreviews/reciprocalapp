@@ -52,8 +52,7 @@ alter table public.emails ENABLE row LEVEL SECURITY;
 
 create policy "recipients and venue admins can see the emails sent" on public.emails for
 select
-	to authenticated,
-	anon using (
+	to authenticated using (
 		(
 			(
 				(
@@ -74,8 +73,7 @@ with
 
 create policy "emails can't be edited" on public.emails
 for update
-	to authenticated,
-	anon using (false);
+	to authenticated using (false);
 
 create policy "emails can't be deleted" on public.emails for DELETE to authenticated using (false);
 

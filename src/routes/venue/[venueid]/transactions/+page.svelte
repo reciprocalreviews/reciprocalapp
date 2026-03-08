@@ -64,6 +64,7 @@
 			{currencies}
 			more={async (page) => db().getVenueTransactions(venue.id, page)}
 			isDebit={(transaction) => transaction.from_venue === venue.id}
+			testid="venue-transaction"
 		/>
 	</Page>
 {:else if venue === null}

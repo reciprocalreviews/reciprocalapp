@@ -54,8 +54,7 @@ select
 	to authenticated,
 	anon using (true);
 
-create policy "admins can invite and volunteers if not invite only" on public.volunteers for INSERT to authenticated,
-anon
+create policy "admins can invite and volunteers if not invite only" on public.volunteers for INSERT to authenticated
 with
 	check (
 		(
@@ -92,8 +91,7 @@ with
 
 create policy "volunteers can update" on public.volunteers
 for update
-	to authenticated,
-	anon using (
+	to authenticated using (
 		(
 			(
 				select
@@ -102,8 +100,7 @@ for update
 		)
 	);
 
-create policy "admins and volunteers can delete" on public.volunteers for DELETE to authenticated,
-anon using (
+create policy "admins and volunteers can delete" on public.volunteers for DELETE to authenticated using (
 	(
 		public.isAdmin (
 			(

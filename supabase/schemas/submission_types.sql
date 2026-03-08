@@ -37,7 +37,8 @@ with
 -- Anyone can see submission types for a venue
 create policy "anyone can read submission types" on public.submission_types for
 select
-	to authenticated using (true);
+	to anon,
+	authenticated using (true);
 
 -- Venue admins can update submission types for their venue.
 create policy "venue admins can update submission types" on public.submission_types

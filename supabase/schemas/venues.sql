@@ -75,18 +75,16 @@ alter table public.venues ENABLE row LEVEL SECURITY;
 
 create policy "anyone can view venues" on public.venues for
 select
-	to "authenticated",
-	"anon" using (true);
+	to authenticated,
+	anon using (true);
 
-create policy "only stewards can create venues" on public.venues for INSERT to "authenticated",
-"anon"
+create policy "only stewards can create venues" on public.venues for INSERT to authenticated
 with
 	check (public.isSteward ());
 
 create policy "stewards and admins can update venues" on public.venues
 for update
-	to "authenticated",
-	"anon" using (
+	to authenticated using (
 		(
 			public.isSteward ()
 			or (
@@ -98,8 +96,7 @@ for update
 		)
 	);
 
-create policy "stewards and admins can delete venues" on public.venues for DELETE to "authenticated",
-"anon" using (
+create policy "stewards and admins can delete venues" on public.venues for DELETE to authenticated using (
 	(
 		public.isSteward ()
 		or (

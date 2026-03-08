@@ -45,8 +45,7 @@ select
 	to authenticated,
 	anon using (true);
 
-create policy "only minters can create tokens" on public.tokens for INSERT to authenticated,
-anon
+create policy "only minters can create tokens" on public.tokens for INSERT to authenticated
 with
 	check (
 		(
@@ -88,8 +87,7 @@ for update
 with
 	check (true);
 
-create policy "tokens cannot be deleted" on public.tokens for DELETE to authenticated,
-anon using (false);
+create policy "tokens cannot be deleted" on public.tokens for DELETE to authenticated using (false);
 
 grant all on table public.tokens to anon;
 

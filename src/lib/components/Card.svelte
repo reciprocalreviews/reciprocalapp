@@ -13,7 +13,8 @@
 		note,
 		full = false,
 		expand = $bindable(false),
-		controls
+		controls,
+		testid
 	}: {
 		children: Snippet;
 		controls?: Snippet;
@@ -24,6 +25,7 @@
 		group?: 'admins' | 'minters' | 'stewards' | 'invite only';
 		full?: boolean;
 		expand?: boolean;
+		testid?: string;
 	} = $props();
 </script>
 
@@ -32,7 +34,7 @@
 	{#if group}<div class="group"><Tag>{group}</Tag></div>{/if}
 {/snippet}
 
-<div class="card" class:full class:expand>
+<div class="card" class:full class:expand data-testid={testid}>
 	<div
 		class="header"
 		role="button"

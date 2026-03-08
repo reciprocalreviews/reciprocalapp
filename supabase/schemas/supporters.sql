@@ -30,17 +30,16 @@ alter table "public"."supporters" ENABLE row LEVEL SECURITY;
 
 create policy "anyone can view supporters" on "public"."supporters" for
 select
-	to "authenticated",
-	"anon" using (true);
+	to authenticated,
+	anon using (true);
 
-create policy "anyone can support proposals" on "public"."supporters" for INSERT to "authenticated"
+create policy "anyone can support proposals" on "public"."supporters" for INSERT to authenticated
 with
 	check (true);
 
 create policy "admins can update proposals" on "public"."supporters"
 for update
-	to "authenticated",
-	"anon" using (
+	to authenticated using (
 		(
 			(
 				select
@@ -49,8 +48,7 @@ for update
 		)
 	);
 
-create policy "supporters can stop supporting" on "public"."supporters" for DELETE to "authenticated",
-"anon" using (
+create policy "supporters can stop supporting" on "public"."supporters" for DELETE to authenticated using (
 	(
 		(
 			select

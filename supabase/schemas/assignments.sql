@@ -93,8 +93,7 @@ alter table public.assignments enable row level security;
 -- We declare the select policy for submissions after the assigments table is created.
 create policy "authors, assigned, and bidders can view submissions" on public.submissions for
 select
-	to "authenticated",
-	"anon" using (
+	to authenticated using (
 		(
 			-- Authors can see their own submissions
 			(
@@ -199,7 +198,7 @@ for update
 
 create policy "assignees and approvers can see assignments" on public.assignments for
 select
-	to "authenticated" using (
+	to authenticated using (
 		(
 			-- If the venue does not use anonymous assignments, anyone can see assignments
 			(
@@ -228,8 +227,7 @@ select
 
 create policy "assignees and approvers can update assignments" on public.assignments
 for update
-	to "authenticated",
-	"anon" using (
+	to authenticated using (
 		(
 			(
 				scholar=(
@@ -241,7 +239,7 @@ for update
 		)
 	);
 
-create policy "assignees can delete assignments" on "public"."assignments" for delete to "authenticated" using (
+create policy "assignees can delete assignments" on "public"."assignments" for delete to authenticated using (
 	(
 		scholar=(
 			select
@@ -250,8 +248,7 @@ create policy "assignees can delete assignments" on "public"."assignments" for d
 	)
 );
 
-create policy "admins, approvers and volunteers can create assignments" on "public"."assignments" for insert to "authenticated",
-"anon"
+create policy "admins, approvers and volunteers can create assignments" on "public"."assignments" for insert to "authenticated"
 with
 	check (
 		(

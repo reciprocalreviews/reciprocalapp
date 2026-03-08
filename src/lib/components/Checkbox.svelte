@@ -7,7 +7,8 @@
 		on = $bindable(),
 		change = undefined,
 		active = true,
-		children
+		children,
+		testid = undefined
 	}: {
 		/** Whether the box is selected */
 		on: boolean;
@@ -15,12 +16,14 @@
 		active?: boolean;
 		change?: undefined | ((on: boolean) => Promise<Result>);
 		children?: Snippet;
+		testid?: string | undefined;
 	} = $props();
 </script>
 
 <label
 	><input
 		type="checkbox"
+		data-testid={testid}
 		aria-checked={on}
 		aria-disabled={!active}
 		disabled={!active}

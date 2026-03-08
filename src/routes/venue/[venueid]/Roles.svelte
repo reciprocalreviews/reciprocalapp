@@ -81,6 +81,7 @@
 		<form>
 			<p>Create a new role.</p>
 			<TextField
+				testid="new-role-name"
 				label="Role name"
 				bind:text={newRole}
 				size={19}
@@ -164,6 +165,7 @@
 				header={role.name}
 				note={role.description.length === 0 ? 'Role' : role.description}
 				expand={!isAdmin}
+				testid="role-{role.name}"
 			>
 				{#snippet controls()}
 					{#if isAdmin}
@@ -292,6 +294,7 @@
 						{:else if scholarVolunteer.active}
 							<p>
 								Thanks for volunteering for this role! <Button
+									testid="volunteered-for-role"
 									tip="Stop volunteering"
 									action={() => handle(db().updateVolunteerActive(scholarVolunteer.id, false))}
 									>Stop...</Button

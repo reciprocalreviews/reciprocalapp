@@ -70,8 +70,7 @@ alter table public.transactions ENABLE row LEVEL SECURITY;
 
 create policy "transactions are only visible to minters and those involved" on public.transactions for
 select
-	to "authenticated",
-	"anon" using (
+	to authenticated using (
 		(
 			-- Scholars giving can see their transactions
 			(
@@ -144,8 +143,7 @@ select
 		)
 	);
 
-create policy "only owners can transfer their tokens if approved" on public.transactions for INSERT to "authenticated",
-"anon"
+create policy "only owners can transfer their tokens if approved" on public.transactions for INSERT to authenticated
 with
 	check (
 		(
@@ -193,8 +191,7 @@ with
 
 create policy "only the giver and minters can update transactions" on public.transactions
 for update
-	to "authenticated",
-	"anon" using (
+	to authenticated using (
 		(
 			-- Givers can update their transactions
 			(
@@ -241,8 +238,7 @@ for update
 		)
 	);
 
-create policy "transactions cannot be deleted" on public.transactions for DELETE to "authenticated",
-"anon" using (
+create policy "transactions cannot be deleted" on public.transactions for DELETE to authenticated using (
 	(
 		(
 			select

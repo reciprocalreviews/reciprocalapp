@@ -56,6 +56,7 @@
 			icon={SettingsLabel}
 			note="Steps to get your venue ready for volunteers and submissions"
 			expand={venue.inactive !== null}
+			testid="setup-card"
 		>
 			<p>
 				Hello venue admin! Are you ready to integrate into your reviewing system? There are a few
@@ -95,6 +96,7 @@
 		<Subheader icon={SettingsLabel}>Status</Subheader>
 
 		<Checkbox
+			testid="inactive-checkbox"
 			on={venue.inactive !== null}
 			change={(on) => db().editVenueInactive(venue.id, on ? 'This venue is not active.' : null)}
 		>

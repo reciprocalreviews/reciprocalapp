@@ -25,10 +25,9 @@ alter table public.conflicts ENABLE row LEVEL SECURITY;
 
 create policy "anyone can see conflicts" on public.conflicts for
 select
-	to "authenticated" using (true);
+	to authenticated using (true);
 
-create policy "admins and volunteers can create conflicts" on public.conflicts for INSERT to "authenticated",
-"anon"
+create policy "admins and volunteers can create conflicts" on public.conflicts for INSERT to "authenticated"
 with
 	check (
 		(
@@ -78,7 +77,7 @@ with
 
 create policy "admins can update conflicts" on public.conflicts
 for update
-	to "authenticated" using (
+	to authenticated using (
 		public.isAdmin (
 			(
 				select
@@ -91,7 +90,7 @@ for update
 		)
 	);
 
-create policy "admins can delete conflicts" on public.conflicts for DELETE to "authenticated" using (
+create policy "admins can delete conflicts" on public.conflicts for DELETE to authenticated using (
 	(
 		(
 			public.isAdmin (

@@ -27,8 +27,7 @@ add constraint "currencies_pkey" primary key ("id");
 -- Security
 alter table "public"."currencies" ENABLE row LEVEL SECURITY;
 
-create policy "anyone can create currencies" on "public"."currencies" for INSERT to "authenticated",
-"anon"
+create policy "anyone can create currencies" on "public"."currencies" for INSERT to authenticated
 with
 	check ("public"."issteward" ());
 
@@ -37,8 +36,7 @@ select
 	to "authenticated",
 	"anon" using (true);
 
-create policy "minters can delete currencies" on "public"."currencies" for DELETE to "authenticated",
-"anon" using (
+create policy "minters can delete currencies" on "public"."currencies" for DELETE to authenticated using (
 	(
 		(
 			select
@@ -49,8 +47,7 @@ create policy "minters can delete currencies" on "public"."currencies" for DELET
 
 create policy "minters can update currencies" on "public"."currencies"
 for update
-	to "authenticated",
-	"anon" using (
+	to authenticated using (
 		(
 			(
 				select

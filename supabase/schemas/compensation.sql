@@ -44,7 +44,8 @@ with
 -- Anyone can see compensation.
 create policy "anyone can read compensation" on public.compensation for
 select
-	to authenticated using (true);
+	to anon,
+	authenticated using (true);
 
 -- Venue admins can update compensation for their venue.
 create policy "venue admins can update compensation" on public.compensation

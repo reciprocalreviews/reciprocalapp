@@ -203,9 +203,9 @@
 								<th>{role.name}</th>
 							{/each}
 						{/snippet}
-						{#each sorted as submission}
+						{#each sorted as submission, index}
 							{@const status = getSubmissionPaymentStatus(submission)}
-							<tr>
+							<tr data-testid="submission-{index}">
 								<td>
 									<!-- Couldn't load transactions? -->
 									{#if status === undefined}

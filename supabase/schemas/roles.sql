@@ -42,21 +42,18 @@ alter table public.roles ENABLE row LEVEL SECURITY;
 
 create policy "anyone can view roles" on public.roles for
 select
-	to "authenticated",
-	"anon" using (true);
+	to authenticated,
+	anon using (true);
 
-create policy "only admins can create venue roles" on public.roles for INSERT to "authenticated",
-"anon"
+create policy "only admins can create venue roles" on public.roles for INSERT to authenticated
 with
 	check (public.isAdmin (venueid));
 
 create policy "only admins can update roles" on public.roles
 for update
-	to "authenticated",
-	"anon" using (public.isAdmin (venueid));
+	to authenticated using (public.isAdmin (venueid));
 
-create policy "only admins can delete roles" on public.roles for DELETE to "authenticated",
-"anon" using (public.isAdmin (venueid));
+create policy "only admins can delete roles" on public.roles for DELETE to authenticated using (public.isAdmin (venueid));
 
 grant all on table public.roles to "anon";
 

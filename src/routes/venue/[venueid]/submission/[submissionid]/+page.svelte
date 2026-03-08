@@ -288,6 +288,7 @@
 							: undefined}
 				></TextField>
 				<Button
+					testid="new-assignment"
 					tip="Create a new assignment for this scholar and this role."
 					active={!newAssignmentSubmitting &&
 						newAssignmentRole !== undefined &&

@@ -104,7 +104,7 @@
 					<th>Name</th>
 					<th>Expertise</th>
 				{/snippet}
-				{#each rolesIDs as role}
+				{#each rolesIDs as role, roleIndex}
 					{@const roleCommitments = commitments.filter((c) => c.roleid === role)}
 					{@const filteredScholars =
 						filter.length === 0
@@ -120,9 +120,9 @@
 							><td colspan="3"><strong>{ScholarLabel} {filteredScholars[0].roles?.name}</strong></td
 							></tr
 						>
-						{#each filteredScholars.toSorted((a, b) => a.roles?.name.localeCompare(b.roles?.name ?? '') ?? 0) as volunteer}
+						{#each filteredScholars.toSorted((a, b) => a.roles?.name.localeCompare(b.roles?.name ?? '') ?? 0) as volunteer, volunteerIndex}
 							{@const expertise = volunteer.expertise.split(',').filter((s) => s.trim() !== '')}
-							<tr>
+							<tr data-testid="volunteer-row-{roleIndex}-{volunteerIndex}">
 								<td
 									><Status good={volunteer.active}
 										>{#if volunteer.active}active{:else}inactive{/if}</Status
