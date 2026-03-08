@@ -13,6 +13,7 @@
 	import { PUBLIC_ENV } from '$env/static/public';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Footer from '$lib/components/Footer.svelte';
+	import { page } from '$app/state';
 
 	let { data, children } = $props();
 
@@ -32,7 +33,7 @@
 
 	/** Always go home in production, pre-release */
 	onMount(() => {
-		if (inProd) goto('/');
+		if (inProd && !['/updates', '/about'].some((p) => page.url.pathname.startsWith(p))) goto('/');
 
 		// Listen to auth stage changes and invalidate the auth context when they happen.
 		const { data: response } = data.supabase.auth.onAuthStateChange((_, newSession) => {
