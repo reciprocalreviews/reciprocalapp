@@ -76,8 +76,11 @@
 				to="https://github.com/reciprocalreviews/reciprocalapp/issues?q=is:open%20milestone:%22Beta%22"
 				>beta milestone</Link
 			> for the work that remains. Subscribe to our low-volume
-			<Link to="https://reciprocalreviews.substack.com/">newsletter</Link> to follow along. And if you
-			feel like helping, email us! We're a small volunteer group of academics.
+			<Link to="https://reciprocalreviews.substack.com/">newsletter</Link> to follow along, check the
+			<Link to="/updates">updates page</Link> to see our weekly progress, or check our <Link
+				to="https://github.com/reciprocalreviews/reciprocalapp/issues?q=is:open%20milestone:%22Beta%22"
+				>beta milestone</Link
+			> to see what's left. And if you feel like helping, email us! We're a small volunteer group of academics.
 		</Feedback>
 	{/if}
 </Page>

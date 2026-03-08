@@ -81,9 +81,7 @@
 	</section>
 	{@render children()}
 </main>
-{#if !inProd}
-	<Footer />
-{/if}
+<Footer />
 
 <style>
 	main {
