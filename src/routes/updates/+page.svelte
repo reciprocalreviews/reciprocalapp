@@ -19,10 +19,10 @@
 	function markdownToSegments(text: string) {
 		const segments: (
 			| string
-			| { type: 'issue' | 'code' | 'bold' | 'italic' | 'link'; text: string }
+			| { type: 'issue' | 'code' | 'bold' | 'italic' | 'link'; text: string; link?: string }
 		)[] = [];
 		let currentIndex = 0;
-		const regex = /#([0-9]+)|`([^`]+)`|\*\*([^*]+)\*\*|\*([^*]+)\*|\[([^\]]+)\]\(([^)]+)\)/g;
+		const regex = /\(#([0-9]+)\)|`([^`]+)`|\*\*([^*]+)\*\*|\*([^*]+)\*|\[([^\]]+)\]\(([^)]+)\)/g;
 		let match;
 
 		while ((match = regex.exec(text)) !== null) {
@@ -37,8 +37,8 @@
 				segments.push({ type: 'bold', text: match[3] });
 			} else if (match[4]) {
 				segments.push({ type: 'italic', text: match[4] });
-			} else if (match[5]) {
-				segments.push({ type: 'link', text: match[5] });
+			} else if (match[6]) {
+				segments.push({ type: 'link', link: match[6], text: match[5] });
 			}
 			currentIndex = regex.lastIndex;
 		}
@@ -68,7 +68,7 @@
 			{:else if segment.type === 'italic'}
 				<em>{segment.text}</em>
 			{:else if segment.type === 'link'}
-				<a href={segment.text}>{segment.text}</a>
+				<a href={segment.link}>{segment.text}</a>
 			{/if}
 		{/each}
 	</li>
