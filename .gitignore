@@ -10,3 +10,5 @@ node_modules
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 /test-results
+/src/routes/updates/updates.json
+/src/routes/updates/date.json

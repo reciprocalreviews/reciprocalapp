@@ -3,7 +3,13 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
-## 0.3.5 2026-03-01
+## 0.3.6 - 2026-03-08
+
+### Added
+
+- Added an updates page to mirror changelog content.
+
+## 0.3.5 - 2026-03-01
 
 ### Added
 
@@ -24,7 +30,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed venue link.
 - Updated minor versions of Svelte and Supabase.
 
-## 0.3.4 2026-02-22
+## 0.3.4 - 2026-02-22
 
 ### Added
 
@@ -35,7 +41,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Updated prod landing page to add a bit more info about the platform.
 - Updated minor versions of `@supabase/supbase-js`, `@sveltjs/kit`, `prettier-plugin-svelte`, `supabase`, `svelte`, `svelte-check`.
 
-## 0.3.3 2026-02-15
+## 0.3.3 - 2026-02-15
 
 ### Added
 
@@ -52,7 +58,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Fixed page margins.
 
-## 0.3.2 2026-02-08
+## 0.3.2 - 2026-02-08
 
 ### Added
 
@@ -64,7 +70,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of `@playright/test`, `@sveltejs/kit`, `supabase`, `svelte`, `@supabase/supabase-js`
 
-## 0.3.1 2026-02-01
+## 0.3.1 - 2026-02-01
 
 ### Added
 
@@ -85,11 +91,9 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of `supabase/supabase-js`, `@playright/test`, `@sveltejs/adapter-vercel`, `@svelte/kit`, `prettier`, `supabase`, `svelte`, `svelte-check`, and `vitest`.
 
-## 0.3.0 2026-01-25
+## 0.3.0 - 2026-01-25
 
 ### Added
-
-π
 
 - Fixed #54, adding anonymity and conflicts support to venues and roles, to implement double anonymous, single anonymous, and open reviewing.
 - Added venue active/inactive switch, to allow for venues to be created without being availabe for use yet.
@@ -101,7 +105,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Narrowed a few RLS policies to prevent unauthenticated inserts and updates.
 - Fixed logic of assignment approval on submissions page.
 
-## 0.2.2 2026-01-18
+## 0.2.2 - 2026-01-18
 
 ### Added
 
@@ -116,7 +120,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of `svelte`, `@sveltejs/kit`, `prettier`, `supabase`, `vitest`.
 
-## 0.2.1 2026-01-11
+## 0.2.1 - 2026-01-11
 
 ### Added
 
@@ -126,7 +130,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of `@sveltejs`, `supabase`, `@supabase/superbase-js`, `vite`, `vitest` and related dependencies.
 
-## 0.2.0 2025-12-14
+## 0.2.0 - 2025-12-14
 
 ### Added
 
@@ -143,7 +147,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of `@supabase/supabase-js`, `supabase`, `@sveltejs/kit`, `svelte`, `vite`.
 
-## 0.1.9 2025-12-07
+## 0.1.9 - 2025-12-07
 
 ### Added
 
@@ -160,14 +164,14 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of `@playwright/test`, `@supabase/ssr`, `@supabase/supabase-js`, `@sveltejs/adapter-vercel`, `@sveltejs/kit`, `prettier`, `supabase`, `svelte`, `vite`, `vitest`.
 
-## 0.1.8 2025-11-28
+## 0.1.8 - 2025-11-28
 
 ### Fixed
 
 - Improved and simplified landing page explanation.
 - Flipped proposed and active venues on venues page.
 
-## 0.1.7 2025-11-23
+## 0.1.7 - 2025-11-23
 
 ### Added
 
@@ -183,7 +187,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Supabase, supabase-js, Svelte, SvelteKit, svelte-check, vitest.
 
-## 0.1.6 2025-11-03
+## 0.1.6 - 2025-11-03
 
 ### Added
 
@@ -199,7 +203,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Supabase, Svelte, vite, vitest.
 
-## 0.1.5 2025-11-02
+## 0.1.5 - 2025-11-02
 
 ### Fixed
 
@@ -213,7 +217,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor dependencies: Supabase, Svelte, SvelteKit, vitest.
 
-## 0.1.4 2025-10-26
+## 0.1.4 - 2025-10-26
 
 ### Added
 
@@ -235,14 +239,14 @@ Dates should be in`YYYY-MM-DD` format.
 - Updated minor dependencies: supabase, @supabase/supabase-js, @sveltejs/kit, svelte, vite
 - Upgraded to vite 4
 
-## 0.1.3 2025-10-19
+## 0.1.3 - 2025-10-19
 
 ### Changed
 
 - Updated Vercel adapter to 7.0.
 - Updated minor dependencies: Playwright, Supabase, SvelteKit, Svelte, Typescirpt, vite
 
-## 0.1.26 2025-09-21
+## 0.1.26 - 2025-09-21
 
 ### Added
 
@@ -253,7 +257,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Svelte, SvelteKit, vite.
 
-## 0.1.25 2025-09-14
+## 0.1.25 - 2025-09-14
 
 ### Fixed
 
@@ -263,7 +267,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Supabase, Svelte, SvelteKit, Vite.
 
-## 0.1.24 2025-09-07
+## 0.1.24 - 2025-09-07
 
 ### Fixed
 
@@ -273,7 +277,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Svelte, Supabase.
 
-## 0.1.23 2025-09-01
+## 0.1.23 - 2025-09-01
 
 ### Added
 
@@ -288,7 +292,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Supabase, Svelte, Vite.
 
-## 0.1.22 2025-08-23
+## 0.1.22 - 2025-08-23
 
 ### Added
 
@@ -314,7 +318,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Playwright, Supabase, SvelteKit, vite.
 
-## 0.1.21 2025-08-16
+## 0.1.21 - 2025-08-16
 
 ### Added
 
@@ -336,7 +340,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Svelte, vite, Supabase.
 
-## 0.1.20 2025-08-10
+## 0.1.20 - 2025-08-10
 
 ### Added
 
@@ -350,14 +354,14 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Playwright, Supabase, Svelte, SvelteKit, Typescript, vite.
 
-## 0.1.19 2025-07-27
+## 0.1.19 - 2025-07-27
 
 ### Changed
 
 - Updated minor versions of Playwright, Supabase, Svelte, SvelteKit, eslint.
 - Updated to vite 7.
 
-## 0.1.18 2025-06-22
+## 0.1.18 - 2025-06-22
 
 ### Fixed
 
@@ -368,7 +372,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated Playwright, Svelte, SvelteKit, Supabase, eslint.
 
-## 0.1.17 2025-06-08
+## 0.1.17 - 2025-06-08
 
 ### Added
 
@@ -388,7 +392,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated Supabase, Svelte, SvelteKit, eslint, vitest.
 
-## 0.1.16 2025-05-25
+## 0.1.16 - 2025-05-25
 
 ### Added
 
@@ -399,7 +403,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Updated Supabase, sveltKit, Svelte, Vitest.
 - Filtered Chrome log in local development.
 
-## 0.1.15 2025-05-18
+## 0.1.15 - 2025-05-18
 
 ### Added
 
@@ -409,7 +413,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated Svelte, SvelteKit, Eslint, Prettier, Supabase, Vite, Vitest.
 
-## 0.1.14 2025-04-20
+## 0.1.14 - 2025-04-20
 
 ### Added
 
@@ -419,7 +423,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated Playwright, Svelte, SveltKit, Vite, eslint.
 
-## 0.1.13 2025-04-13
+## 0.1.13 - 2025-04-13
 
 ### Added
 
@@ -431,7 +435,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated Svelte, SvelteKit, Supabase, Supabase SSR, and other minor versions.
 
-## 0.1.12 2025-03-23
+## 0.1.12 - 2025-03-23
 
 ### Fixed
 
@@ -450,7 +454,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Playwright, Supabase SSR, Svelte, SvelteKit, Eslint, Vitest.
 
-## 0.1.11 2025-03-09
+## 0.1.11 - 2025-03-09
 
 ### Added
 
@@ -473,7 +477,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Updated minor versions of Supabase, SvelteKit, Svelte, Vite.
 - Ensure SvelteKit is synced upon build, to clearing warning in Vercel builds.
 
-## 0.1.10 2025-03-09
+## 0.1.10 - 2025-03-09
 
 ### Added
 
@@ -498,7 +502,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Playright, Svelte, SvelteKit, Vite, Vitest.
 
-## 0.1.9 2025-03-02
+## 0.1.9 - 2025-03-02
 
 ### Fixed
 
@@ -509,7 +513,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Supabase, Svelte, Typescript, Vite.
 
-## 0.1.8 2025-02-23
+## 0.1.8 - 2025-02-23
 
 ### Added
 
@@ -532,7 +536,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of Svelte, Vite, Vitest.
 
-## 0.1.7 2025-02-18
+## 0.1.7 - 2025-02-18
 
 ### Added
 
@@ -548,7 +552,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated all minor versions of Supabase, Svelte, SvelteKit.
 
-## 0.1.6 2025-02-09
+## 0.1.6 - 2025-02-09
 
 ### Added
 
@@ -558,7 +562,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated all minor versions of vite, Typescript, Svelte, Supabase.
 
-## 0.1.5 2025-02-02
+## 0.1.5 - 2025-02-02
 
 ### Added
 
@@ -574,7 +578,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated minor versions of all dependencies.
 
-## 0.1.4 2025-01-19
+## 0.1.4 - 2025-01-19
 
 ### Added
 
@@ -587,7 +591,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated all minor versions of vite, Typescript, Svelte, Supabase.
 
-## 0.1.3 2025-01-12
+## 0.1.3 - 2025-01-12
 
 ### Added
 
@@ -597,7 +601,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated all minor versions of vite, Typescript, Svelte, Supabase.
 
-## 0.1.2 2024-12-29
+## 0.1.2 - 2024-12-29
 
 ### Added
 
@@ -607,7 +611,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated all minor versions of dependencies, including Svelte, SvelteKit, and Vite.
 
-## 0.1.1 2024-12-08
+## 0.1.1 - 2024-12-08
 
 ### Added
 
@@ -617,7 +621,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Redesigned cards to be collapsible, to simplify initial view, make data salient, and convey purpose.
 
-## 0.1.0 2024-12-01
+## 0.1.0 - 2024-12-01
 
 ### Fixed
 
@@ -633,7 +637,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Updated all minor releases of dependencies.
 - Updated to vite 6.
 
-## 0.0.10 2024-11-17
+## 0.0.10 - 2024-11-17
 
 ### Added
 
@@ -651,7 +655,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated Svelte and Supabase point releases.
 
-## 0.0.9 2024-11-10
+## 0.0.9 - 2024-11-10
 
 ### Added
 
@@ -665,7 +669,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Renamed SourceLink to VenueLink for consistency.
 - Upgraded Svelte, SvelteKit, Supabase dependencies.
 
-## 0.0.8 2024-11-03
+## 0.0.8 - 2024-11-03
 
 ### Added
 
@@ -683,7 +687,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Upgraded Svelte, eslint, and dependencies.
 
-## 0.0.7 2024-10-20
+## 0.0.7 - 2024-10-20
 
 ### Added
 
@@ -699,7 +703,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Upgraded to Svelte 5.0.
 
-## 0.0.6 2024-10-13
+## 0.0.6 - 2024-10-13
 
 ### Added
 
@@ -714,7 +718,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Corrected automatic height on text areas.
 
-## 0.0.5 2024-10-06
+## 0.0.5 - 2024-10-06
 
 ### Added
 
@@ -723,7 +727,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Render proposed venue content.
 - Allow additional support to a proposal.
 
-## 0.0.4 2024-09-28
+## 0.0.4 - 2024-09-28
 
 ### Added
 
@@ -737,13 +741,13 @@ Dates should be in`YYYY-MM-DD` format.
 - Updated Svelte and Supabase minor versions.
 - Updated GitHub checkout action dependencies.
 
-## 0.0.3 2024-09-01
+## 0.0.3 - 2024-09-01
 
 ### Changed
 
 - Updated Svelte and Supabase minor revisions.
 
-## 0.0.2 2024-08-25
+## 0.0.2 - 2024-08-25
 
 ### Added
 
@@ -755,7 +759,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Updated Svelte and Supabase minor revisions
 - Migrated auth state to Svelte state class.
 
-## 0.0.1 2024-08-04
+## 0.0.1 - 2024-08-04
 
 ### Added
 

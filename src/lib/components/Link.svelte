@@ -36,14 +36,6 @@
 >
 
 <style>
-	a {
-		color: var(--salient-color);
-		font-weight: 400;
-		text-decoration: none;
-		white-space: wrap;
-		font-size: inherit;
-	}
-
 	a .underline {
 		text-decoration: underline var(--salient-color) var(--thick-border-width) solid;
 		text-decoration-skip-ink: none;

@@ -5,7 +5,7 @@
 	"prepare": "svelte-kit sync",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "npm run updates && vite build",
 		"preview": "vite preview",
 		"test": "npm run test:end && npm run test:unit",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -19,7 +19,8 @@
 		"types": "supabase gen types typescript --local > src/data/database.ts",
 		"deploy": "git checkout main && git merge dev && git push && git checkout dev && git push",
 		"outdated": "npx check-outdated --ignore-pre-releases --columns name,type,current,latest,changes",
-		"emu": "npm run sync && npm run build && npm run start && npm run preview"
+		"emu": "npm run sync && npm run build && npm run start && npm run preview",
+		"updates": "node scripts/updates.js"
 	},
 	"engines": {
 		"node": ">=20.0.0"

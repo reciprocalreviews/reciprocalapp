@@ -4,6 +4,7 @@
 
 <footer>
 	<Link size="extra-small" to="/about">About</Link>
+	<Link size="extra-small" to="/updates">Updates</Link>
 	<Link size="extra-small" to="https://github.com/reciprocalreviews/reciprocalapp/issues/"
 		>Feedback</Link
 	>
