@@ -32,7 +32,16 @@
 		<Feedback error>Only admins of this venue can view this page.</Feedback>
 	</Page>
 {:else}
-	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
+	<Page
+		icon={VenueLabel}
+		title={venue.title}
+		breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}
+		edit={{
+			placeholder: 'Title',
+			valid: (text) => (text.length > 0 ? undefined : 'Must include a title'),
+			update: (text) => db().editVenueTitle(venue.id, text)
+		}}
+	>
 		{#snippet subtitle()}Settings{/snippet}
 		<p>Welcome venue admin! You can manage this venue's settings here.</p>
 
@@ -81,6 +90,11 @@
 
 		<Subheader icon={SettingsLabel}>Status</Subheader>
 
+		<Tip
+			>Check the inactive message in the settings below, so your community knows you're busy
+			configuring things.</Tip
+		>
+
 		<Checkbox
 			testid="inactive-checkbox"
 			on={venue.inactive !== null}
@@ -104,6 +118,12 @@
 
 		<Subheader icon={SettingsLabel}>Compensation</Subheader>
 
+		<Tip
+			>It is critical that you think carefully about the compensation structure for your venue.
+			Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter
+			newcomers from contributring.</Tip
+		>
+
 		<EditableText
 			text={venue.welcome_amount.toString()}
 			label="Welcome tokens (received when first volunteering)"
@@ -123,9 +143,10 @@
 		<Subheader id="roles" icon={ScholarLabel}>Roles</Subheader>
 
 		<Tip>
-			Configure your venue's volunteer roles below, create roles such as <em>reviewer</em>,
-			<em>program commitee</em>, <em>associate editor</em> to represent the different kinds of contributions
-			volunteers can make to this venue.
+			Configure your venue's volunteer roles below, create roles such as <strong>reviewer</strong>,
+			<strong>program commitee</strong>, <strong>associate editor</strong> to represent the different
+			kinds of contributions volunteers can make to this venue. Ensure you set total compensation levels
+			for each role to not be higher than the cost of a submission.
 		</Tip>
 
 		<Checkbox

@@ -64,7 +64,7 @@
 	.page {
 		display: flex;
 		flex-direction: column;
-		gap: calc(1.5 * var(--spacing));
+		gap: calc(2 * var(--spacing));
 		margin: auto;
 		width: 100%;
 	}
@@ -107,6 +107,6 @@
 	.content {
 		display: flex;
 		flex-direction: column;
-		gap: calc(1.5 * var(--spacing));
+		gap: calc(2 * var(--spacing));
 	}
 </style>

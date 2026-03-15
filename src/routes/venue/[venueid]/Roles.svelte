@@ -29,6 +29,7 @@
 	import Options from '$lib/components/Options.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Table from '$lib/components/Table.svelte';
+	import Tip from '$lib/components/Tip.svelte';
 
 	let {
 		venue,
@@ -183,10 +184,10 @@
 				{/snippet}
 
 				{#if role.priority === 0}
-					<Feedback
-						>Because this role is the highest priority, volunteers for this role are assigned the
-						role for new submissions.
-					</Feedback>
+					<Tip
+						>This is the highest priority role. Any volunteers for this role are automatically
+						assigned this role for new submissions.
+					</Tip>
 				{/if}
 
 				{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}

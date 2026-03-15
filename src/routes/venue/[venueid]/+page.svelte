@@ -55,18 +55,7 @@
 		<p>Unable to find this venue.</p>
 	</Page>
 {:else}
-	<Page
-		icon={VenueLabel}
-		title={venue.title}
-		breadcrumbs={[[`/venues`, 'Venues']]}
-		edit={isAdmin
-			? {
-					placeholder: 'Title',
-					valid: (text) => (text.length > 0 ? undefined : 'Must include a title'),
-					update: (text) => db().editVenueTitle(venue.id, text)
-				}
-			: undefined}
-	>
+	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
 		{#snippet subtitle()}Venue{/snippet}
 		{#snippet details()}
 			{#if isAdmin}

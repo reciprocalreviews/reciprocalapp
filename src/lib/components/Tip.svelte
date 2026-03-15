@@ -23,6 +23,9 @@
 		gap: var(--spacing-half);
 		align-items: first baseline;
 		font-size: var(--small-font-size);
+		background: var(--salient-color-faded);
+		padding: var(--spacing);
+		border-radius: var(--roundedness);
 	}
 
 	.tip.border {

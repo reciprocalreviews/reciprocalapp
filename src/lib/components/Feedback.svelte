@@ -23,9 +23,6 @@
 		padding: var(--spacing-half);
 		padding-left: var(--spacing);
 		font-size: var(--small-font-size);
-		border-top-right-radius: var(--roundedness);
-		border-bottom-right-radius: var(--roundedness);
-		border-radius: var(--roundedness);
 	}
 
 	p {
