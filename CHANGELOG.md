@@ -9,6 +9,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated internal tooling for stability and speed.
 - Improved page header styling and spacing.
+- Merged breadcrumbs in page header.
 
 ## 0.3.6 - 2026-03-08
 

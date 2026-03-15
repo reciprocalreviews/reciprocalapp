@@ -139,10 +139,7 @@
 	<Page
 		icon={SubmissionLabel}
 		title="Submissions"
-		breadcrumbs={[
-			['/venues', 'Venues'],
-			[`/venue/${venue.id}`, venue.title]
-		]}
+		breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}
 	>
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 

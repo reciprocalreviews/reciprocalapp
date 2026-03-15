@@ -78,7 +78,7 @@
 	}
 </script>
 
-<Page icon={VenueLabel} title="Propose a venue" breadcrumbs={[['/venues', 'Venues']]}>
+<Page icon={VenueLabel} title="Propose a venue" breadcrumbs={[]}>
 	<p>
 		Venues are currently reviewed and approved by the <Link to="/about#managers">stewards</Link>, to
 		ensure that only official editors and conference steering committees are creating venues.

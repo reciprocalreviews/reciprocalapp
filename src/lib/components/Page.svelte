@@ -1,10 +1,8 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { getContext, type Snippet } from 'svelte';
 	import Lead from './Lead.svelte';
-	import Link from './Link.svelte';
 	import { type Result } from '$lib/data/CRUD';
 	import EditableText from './EditableText.svelte';
-	import { ScholarLabel, SubmissionLabel, VenueLabel } from './Labels';
 
 	let {
 		icon,
@@ -31,6 +29,11 @@
 	} = $props();
 
 	let revisedTitle = $derived(title);
+
+	const breadcrumbsContext = getContext<{ breadcrumbs: [string, string][] }>('breadcrumbs');
+	$effect(() => {
+		if (breadcrumbsContext) breadcrumbsContext.breadcrumbs = breadcrumbs;
+	});
 </script>
 
 <svelte:head>
@@ -48,22 +51,6 @@
 					placeholder={edit.placeholder}
 				></EditableText>{:else}{title}{/if}
 		</h1>
-		{#if breadcrumbs.length > 0}
-			<div class="breadcrumbs">
-				{#each breadcrumbs as url, index}
-					<Link
-						to={url[0]}
-						icon={url[0].startsWith('/venue')
-							? VenueLabel
-							: url[0].startsWith('/scholar')
-								? ScholarLabel
-								: url[0].startsWith('/submission')
-									? SubmissionLabel
-									: null}>{url[1]}</Link
-					>{#if index < breadcrumbs.length - 1}&gt;{/if}
-				{/each}
-			</div>
-		{/if}
 		<div class="details">
 			{#if subtitle}<Lead>{@render subtitle()}</Lead>{/if}{@render details?.()}
 		</div>
@@ -112,17 +99,9 @@
 	}
 
 	.details,
-	.content,
-	.breadcrumbs {
+	.content {
 		padding-left: calc(var(--spacing) * 2);
 		padding-right: calc(var(--spacing) * 2);
-	}
-
-	.breadcrumbs {
-		font-size: var(--small-font-size);
-		display: flex;
-		flex-direction: row;
-		gap: var(--spacing-half);
 	}
 
 	.content {

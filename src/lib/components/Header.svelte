@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { getPendingActions } from '../../routes/feedback.svelte';
 	import Dots from './Dots.svelte';
+	import { ScholarLabel, SubmissionLabel, VenueLabel } from './Labels';
 
 	const routes = [
 		{ path: '/', label: 'Home' },
@@ -14,12 +15,32 @@
 	let auth = getAuth();
 
 	let pending = $derived(getPendingActions());
+
+	const { breadcrumbs }: { breadcrumbs: [string, string][] } = $props();
 </script>
 
 <header>
-	{#each routes as route}<div class="link">
+	{#each routes as route}
+		<div class="link">
 			<Link size="small" to={route.path}>{route.label}</Link>
-		</div>{/each}
+		</div>
+	{/each}
+	{#each breadcrumbs as [url, label]}
+		<small>&gt;</small>
+		<div class="link">
+			<Link
+				size="small"
+				to={url}
+				icon={url.startsWith('/venue')
+					? VenueLabel
+					: url.startsWith('/scholar')
+						? ScholarLabel
+						: url.startsWith('/submission')
+							? SubmissionLabel
+							: null}>{label}</Link
+			>
+		</div>
+	{/each}
 	<div class="authenticated">
 		<div
 			class="feedback"
@@ -58,7 +79,7 @@
 		display: flex;
 		flex-direction: row;
 		flex-wrap: wrap;
-		gap: var(--spacing);
+		gap: calc(var(--spacing) / 2);
 		row-gap: var(--spacing);
 		align-items: center;
 		border-block-end: var(--border-color) solid var(--border-width);

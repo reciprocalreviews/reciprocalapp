@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
-	import { onMount } from 'svelte';
+	import { onMount, setContext } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import type { AuthError, PostgrestError } from '@supabase/supabase-js';
 	import { createAuthContext, getAuth } from './Auth.svelte';
@@ -45,6 +45,11 @@
 
 		return () => response.subscription.unsubscribe();
 	});
+
+	// This global state stores breadcrumb data. The Page component sets it.
+	let breadcrumbs = $state<{ breadcrumbs: [string, string][] }>({ breadcrumbs: [] });
+
+	setContext('breadcrumbs', breadcrumbs);
 </script>
 
 {#snippet MessageBox(
@@ -71,7 +76,7 @@
 {/if}
 
 {#if !inProd}
-	<Header />
+	<Header breadcrumbs={breadcrumbs.breadcrumbs}></Header>
 {/if}
 <main>
 	<section class="notifications" aria-live="assertive">

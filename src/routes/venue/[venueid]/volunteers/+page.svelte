@@ -65,14 +65,7 @@
 		<Feedback>Unable to load volunteers for this venue.</Feedback>
 	</Page>
 {:else}
-	<Page
-		icon={VenueLabel}
-		title={venue.title}
-		breadcrumbs={[
-			['/venues', 'Venues'],
-			[`/venue/${venue.id}`, venue.title]
-		]}
-	>
+	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}Volunteers{/snippet}
 		<p>
 			These are scholars that have volunteered to review for <VenueLink

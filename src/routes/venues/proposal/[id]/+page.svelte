@@ -73,7 +73,7 @@
 	<h1>Oops.</h1>
 	<Feedback error>Unknown proposal.</Feedback>
 {:else}
-	<Page icon={VenueLabel} title={proposal.title} breadcrumbs={[['/venues', 'Venues']]}>
+	<Page icon={VenueLabel} title={proposal.title} breadcrumbs={[]}>
 		{#snippet subtitle()}
 			{#if approved}
 				Approved

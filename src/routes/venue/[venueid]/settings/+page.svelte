@@ -27,26 +27,12 @@
 	<Feedback error><Link to="/login">Log in</Link> to view this page.</Feedback>
 {:else if !venue.admins.includes(scholar.id)}
 	<h1>Oops.</h1>
-	<Page
-		icon={ErrorLabel}
-		title={venue.title}
-		breadcrumbs={[
-			['/venues', 'Venues'],
-			[`/venue/${venue.id}`, venue.title]
-		]}
-	>
+	<Page icon={ErrorLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}Settings{/snippet}
 		<Feedback error>Only admins of this venue can view this page.</Feedback>
 	</Page>
 {:else}
-	<Page
-		icon={VenueLabel}
-		title={venue.title}
-		breadcrumbs={[
-			['/venues', 'Venues'],
-			[`/venue/${venue.id}`, venue.title]
-		]}
-	>
+	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}Settings{/snippet}
 		<p>Welcome venue admin! You can manage this venue's settings here.</p>
 
