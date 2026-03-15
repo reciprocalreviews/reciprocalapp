@@ -39,6 +39,15 @@
 
 <section class="page">
 	<div class="metadata">
+		<h1 data-testid="page-header">
+			<span class="emoji">{icon}</span>
+			{#if edit}<EditableText
+					text={revisedTitle}
+					valid={edit.valid}
+					edit={edit.update}
+					placeholder={edit.placeholder}
+				></EditableText>{:else}{title}{/if}
+		</h1>
 		{#if breadcrumbs.length > 0}
 			<div class="breadcrumbs">
 				{#each breadcrumbs as url, index}
@@ -55,20 +64,13 @@
 				{/each}
 			</div>
 		{/if}
-		<h1 data-testid="page-header">
-			<span class="emoji">{icon}</span>
-			{#if edit}<EditableText
-					text={revisedTitle}
-					valid={edit.valid}
-					edit={edit.update}
-					placeholder={edit.placeholder}
-				></EditableText>{:else}{title}{/if}
-		</h1>
 		<div class="details">
 			{#if subtitle}<Lead>{@render subtitle()}</Lead>{/if}{@render details?.()}
 		</div>
 	</div>
-	{@render children()}
+	<div class="content">
+		{@render children()}
+	</div>
 </section>
 
 <style>
@@ -109,10 +111,23 @@
 		font-size: var(--small-font-size);
 	}
 
+	.details,
+	.content,
+	.breadcrumbs {
+		padding-left: calc(var(--spacing) * 2);
+		padding-right: calc(var(--spacing) * 2);
+	}
+
 	.breadcrumbs {
 		font-size: var(--small-font-size);
 		display: flex;
 		flex-direction: row;
 		gap: var(--spacing-half);
+	}
+
+	.content {
+		display: flex;
+		flex-direction: column;
+		gap: calc(1.5 * var(--spacing));
 	}
 </style>
