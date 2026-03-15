@@ -10,6 +10,8 @@
 		active?: boolean;
 		change?: undefined | ((value: number) => void);
 		children?: Snippet;
+		/** If true, fires change event during drag. */
+		immediately?: boolean;
 	}
 
 	let {
@@ -20,7 +22,8 @@
 		active = true,
 		label = undefined,
 		change = undefined,
-		children
+		children,
+		immediately = true
 	}: Props = $props();
 
 	let view: HTMLInputElement | undefined = $state();
@@ -45,7 +48,8 @@
 			{max}
 			{value}
 			{step}
-			oninput={handleInput}
+			oninput={immediately ? handleInput : undefined}
+			onchange={handleInput}
 		/>
 		<span class="value">{@render children?.()}</span>
 	</div>

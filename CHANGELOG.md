@@ -11,6 +11,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Improved page header styling and spacing.
 - Merged breadcrumbs in page header.
 - Improved setup instructions.
+- Allow some sliders to not fire immediately, especially if they hit the database.
 
 ## 0.3.6 - 2026-03-08
 
