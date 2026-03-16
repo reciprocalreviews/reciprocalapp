@@ -4,8 +4,8 @@ import fs from 'fs';
 import path from 'path';
 
 const changelogPath = path.join(process.cwd(), 'CHANGELOG.md');
-const outputPath = path.join(process.cwd(), 'src', 'routes', 'updates', 'updates.json');
-const datePath = path.join(process.cwd(), 'src', 'routes', 'updates', 'date.json');
+const outputPath = path.join(process.cwd(), 'src', 'routes', '[[lang]]', 'updates', 'updates.json');
+const datePath = path.join(process.cwd(), 'src', 'routes', '[[lang]]', 'updates', 'date.json');
 
 function parseChangelog(changelog) {
 	const lines = changelog.split('\n');
