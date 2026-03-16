@@ -36,6 +36,10 @@
 >
 
 <style>
+	a {
+		text-decoration: none;
+	}
+
 	a .underline {
 		text-decoration: underline var(--salient-color) var(--thick-border-width) solid;
 		text-decoration-skip-ink: none;

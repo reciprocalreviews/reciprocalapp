@@ -9,6 +9,9 @@ jobs:
   unit-tests:
     uses: ./.github/workflows/vitest.yml
 
+  locale-validation:
+    uses: ./.github/workflows/locales.yml
+
   playwright:
     uses: ./.github/workflows/playwright.yml
     secrets:
@@ -22,7 +25,7 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ secrets.PRODUCTION_PROJECT_ID }}
 
     # Only run this if tests were successful
-    needs: [unit-tests, playwright]
+    needs: [unit-tests, playwright, locale-validation]
 
     steps:
       - uses: actions/checkout@v4

@@ -1,18 +1,19 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import type LocaleText from '$lib/locales/Locale';
+	import Text from '$lib/locales/Text.svelte';
 
 	interface Props {
 		icon: string;
+		text: string | ((locale: LocaleText) => string | string[]);
 		id?: string;
-		children: Snippet;
 	}
 
-	let { icon, id, children }: Props = $props();
+	let { icon, id, text }: Props = $props();
 </script>
 
 <h2 {id}>
 	<span>{icon}</span>
-	{@render children()}
+	{#if typeof text === 'string'}{text}{:else}<Text path={text} />{/if}
 </h2>
 
 <style>

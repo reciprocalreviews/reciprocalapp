@@ -1,0 +1,1202 @@
+{
+  "$ref": "#/definitions/LocaleText",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "LocaleText": {
+      "additionalProperties": false,
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "error": {
+          "additionalProperties": false,
+          "properties": {
+            "AcceptRoleInvite": {
+              "type": "string"
+            },
+            "AddCurrencyMinter": {
+              "type": "string"
+            },
+            "AlreadyApproved": {
+              "type": "string"
+            },
+            "AlreadyMinter": {
+              "type": "string"
+            },
+            "AlreadyVolunteered": {
+              "type": "string"
+            },
+            "ApproveAssignment": {
+              "type": "string"
+            },
+            "ApproveProposalCannotUpdateVenue": {
+              "type": "string"
+            },
+            "ApproveProposalNoCurrency": {
+              "type": "string"
+            },
+            "ApproveProposalNoMinters": {
+              "type": "string"
+            },
+            "ApproveProposalNoScholars": {
+              "type": "string"
+            },
+            "ApproveProposalNoSupporters": {
+              "type": "string"
+            },
+            "ApproveProposalNoVenue": {
+              "type": "string"
+            },
+            "ApproveProposalNotFound": {
+              "type": "string"
+            },
+            "CompensationAssignmentCheck": {
+              "type": "string"
+            },
+            "CompensationSubmissionNotFound": {
+              "type": "string"
+            },
+            "CompleteAssignmentNotFound": {
+              "type": "string"
+            },
+            "CompleteAssignmentRoleNotFound": {
+              "type": "string"
+            },
+            "CompleteAssignmentVenueNotFound": {
+              "type": "string"
+            },
+            "CreateAssignment": {
+              "type": "string"
+            },
+            "CreateCompensation": {
+              "type": "string"
+            },
+            "CreateProposal": {
+              "type": "string"
+            },
+            "CreateRole": {
+              "type": "string"
+            },
+            "CreateSubmissionType": {
+              "type": "string"
+            },
+            "CreateSupporter": {
+              "type": "string"
+            },
+            "CreateTransaction": {
+              "type": "string"
+            },
+            "CreateVolunteer": {
+              "type": "string"
+            },
+            "DeclareConflict": {
+              "type": "string"
+            },
+            "DeleteAssignment": {
+              "type": "string"
+            },
+            "DeleteProposal": {
+              "type": "string"
+            },
+            "DeleteRole": {
+              "type": "string"
+            },
+            "DeleteSubmissionType": {
+              "type": "string"
+            },
+            "EditCompensation": {
+              "type": "string"
+            },
+            "EditCurrencyMinters": {
+              "type": "string"
+            },
+            "EditProposalCensus": {
+              "type": "string"
+            },
+            "EditProposalEditors": {
+              "type": "string"
+            },
+            "EditProposalMinters": {
+              "type": "string"
+            },
+            "EditProposalTitle": {
+              "type": "string"
+            },
+            "EditProposalURL": {
+              "type": "string"
+            },
+            "EditRoleAnonymousAuthors": {
+              "type": "string"
+            },
+            "EditRoleApprover": {
+              "type": "string"
+            },
+            "EditRoleBidding": {
+              "type": "string"
+            },
+            "EditRoleDesiredAssignments": {
+              "type": "string"
+            },
+            "EditSubmissionType": {
+              "type": "string"
+            },
+            "EditSupport": {
+              "type": "string"
+            },
+            "EditVenueAddEditorAlreadyEditor": {
+              "type": "string"
+            },
+            "EditVenueAddEditorVenueNotFound": {
+              "type": "string"
+            },
+            "EditVenueAdmins": {
+              "type": "string"
+            },
+            "EditVenueAnonymousAssignments": {
+              "type": "string"
+            },
+            "EditVenueDescription": {
+              "type": "string"
+            },
+            "EditVenueInactive": {
+              "type": "string"
+            },
+            "EditVenueSubmissionCost": {
+              "type": "string"
+            },
+            "EditVenueTitle": {
+              "type": "string"
+            },
+            "EditVenueURL": {
+              "type": "string"
+            },
+            "EditVenueWelcomeAmount": {
+              "type": "string"
+            },
+            "EmailScholar": {
+              "type": "string"
+            },
+            "GetScholarTransactions": {
+              "type": "string"
+            },
+            "InvalidCharges": {
+              "type": "string"
+            },
+            "InviteToRole": {
+              "type": "string"
+            },
+            "InviteToRoleMissing": {
+              "type": "string"
+            },
+            "InviteToRoleSuccess": {
+              "type": "string"
+            },
+            "MintTokens": {
+              "type": "string"
+            },
+            "MissingApprovalVenue": {
+              "type": "string"
+            },
+            "MissingRecipient": {
+              "type": "string"
+            },
+            "MissingSubmissionCharge": {
+              "type": "string"
+            },
+            "NewSubmission": {
+              "type": "string"
+            },
+            "NoRoleCompensation": {
+              "type": "string"
+            },
+            "PendingTransactionHasTokens": {
+              "type": "string"
+            },
+            "RemoveSupport": {
+              "type": "string"
+            },
+            "ReorderRole": {
+              "type": "string"
+            },
+            "ScholarNotFound": {
+              "type": "string"
+            },
+            "TransactionApprovalUpdate": {
+              "type": "string"
+            },
+            "TransactionMissingFrom": {
+              "type": "string"
+            },
+            "TransactionMissingTo": {
+              "type": "string"
+            },
+            "TransactionNotCanceled": {
+              "type": "string"
+            },
+            "TransferScholarTokens": {
+              "type": "string"
+            },
+            "TransferTokensInsufficient": {
+              "type": "string"
+            },
+            "TransferVenueTokens": {
+              "type": "string"
+            },
+            "UndeletedTransaction": {
+              "type": "string"
+            },
+            "UnknownTransaction": {
+              "type": "string"
+            },
+            "UnknownVenue": {
+              "type": "string"
+            },
+            "UpdateCurrencyDescription": {
+              "type": "string"
+            },
+            "UpdateCurrencyName": {
+              "type": "string"
+            },
+            "UpdateRoleAmount": {
+              "type": "string"
+            },
+            "UpdateRoleDescription": {
+              "type": "string"
+            },
+            "UpdateRoleInvited": {
+              "type": "string"
+            },
+            "UpdateRoleName": {
+              "type": "string"
+            },
+            "UpdateScholarAvailability": {
+              "type": "string"
+            },
+            "UpdateScholarEmail": {
+              "type": "string"
+            },
+            "UpdateScholarName": {
+              "type": "string"
+            },
+            "UpdateScholarStatus": {
+              "type": "string"
+            },
+            "UpdateSubmissionExpertise": {
+              "type": "string"
+            },
+            "UpdateSubmissionStatus": {
+              "type": "string"
+            },
+            "UpdateSubmissionTitle": {
+              "type": "string"
+            },
+            "UpdateSubmissionType": {
+              "type": "string"
+            },
+            "UpdateVolunteerActive": {
+              "type": "string"
+            },
+            "UpdateVolunteerExpertise": {
+              "type": "string"
+            },
+            "WelcomeVolunteer": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "UpdateScholarStatus",
+            "UpdateScholarName",
+            "UpdateScholarEmail",
+            "UpdateScholarAvailability",
+            "CreateProposal",
+            "EditProposalTitle",
+            "EditProposalCensus",
+            "EditProposalEditors",
+            "EditProposalMinters",
+            "EditProposalURL",
+            "CreateSupporter",
+            "UpdateCurrencyName",
+            "UpdateCurrencyDescription",
+            "EditSupport",
+            "RemoveSupport",
+            "DeleteProposal",
+            "ApproveProposalNotFound",
+            "ApproveProposalNoScholars",
+            "ApproveProposalNoMinters",
+            "ApproveProposalNoVenue",
+            "ApproveProposalCannotUpdateVenue",
+            "ApproveProposalNoCurrency",
+            "EditVenueDescription",
+            "EditVenueAdmins",
+            "EditVenueAddEditorVenueNotFound",
+            "ScholarNotFound",
+            "EditVenueAddEditorAlreadyEditor",
+            "EditVenueTitle",
+            "EditVenueURL",
+            "EditVenueInactive",
+            "EditVenueAnonymousAssignments",
+            "EditVenueWelcomeAmount",
+            "EditVenueSubmissionCost",
+            "EditRoleBidding",
+            "EditRoleDesiredAssignments",
+            "EditRoleAnonymousAuthors",
+            "EditRoleApprover",
+            "CreateRole",
+            "UpdateRoleName",
+            "UpdateRoleDescription",
+            "UpdateRoleInvited",
+            "UpdateRoleAmount",
+            "ReorderRole",
+            "DeleteRole",
+            "UpdateSubmissionType",
+            "CreateSubmissionType",
+            "EditSubmissionType",
+            "DeleteSubmissionType",
+            "CreateCompensation",
+            "EditCompensation",
+            "CreateVolunteer",
+            "WelcomeVolunteer",
+            "AlreadyVolunteered",
+            "UpdateVolunteerActive",
+            "UpdateVolunteerExpertise",
+            "InviteToRole",
+            "InviteToRoleMissing",
+            "InviteToRoleSuccess",
+            "AcceptRoleInvite",
+            "EditCurrencyMinters",
+            "AddCurrencyMinter",
+            "AlreadyMinter",
+            "MintTokens",
+            "TransferVenueTokens",
+            "TransferScholarTokens",
+            "TransferTokensInsufficient",
+            "CreateTransaction",
+            "GetScholarTransactions",
+            "TransactionMissingFrom",
+            "TransactionMissingTo",
+            "PendingTransactionHasTokens",
+            "UnknownTransaction",
+            "TransactionNotCanceled",
+            "AlreadyApproved",
+            "TransactionApprovalUpdate",
+            "MissingApprovalVenue",
+            "MissingRecipient",
+            "UndeletedTransaction",
+            "InvalidCharges",
+            "NewSubmission",
+            "UnknownVenue",
+            "MissingSubmissionCharge",
+            "UpdateSubmissionExpertise",
+            "UpdateSubmissionTitle",
+            "UpdateSubmissionStatus",
+            "ApproveAssignment",
+            "CreateAssignment",
+            "CompensationSubmissionNotFound",
+            "CompensationAssignmentCheck",
+            "CompleteAssignmentNotFound",
+            "CompleteAssignmentRoleNotFound",
+            "CompleteAssignmentVenueNotFound",
+            "DeleteAssignment",
+            "EmailScholar",
+            "ApproveProposalNoSupporters",
+            "DeclareConflict",
+            "NoRoleCompensation"
+          ],
+          "type": "object"
+        },
+        "footer": {
+          "additionalProperties": false,
+          "properties": {
+            "link": {
+              "additionalProperties": false,
+              "properties": {
+                "about": {
+                  "type": "string"
+                },
+                "feedback": {
+                  "type": "string"
+                },
+                "updates": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "about",
+                "updates",
+                "feedback"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "link"
+          ],
+          "type": "object"
+        },
+        "header": {
+          "additionalProperties": false,
+          "properties": {
+            "feedback": {
+              "additionalProperties": false,
+              "properties": {
+                "testWarning": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "testWarning"
+              ],
+              "type": "object"
+            },
+            "home": {
+              "type": "string"
+            },
+            "link": {
+              "additionalProperties": false,
+              "properties": {
+                "login": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "login"
+              ],
+              "type": "object"
+            },
+            "saved": {
+              "type": "string"
+            },
+            "venues": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "home",
+            "venues",
+            "saved",
+            "link",
+            "feedback"
+          ],
+          "type": "object"
+        },
+        "lang": {
+          "type": "string"
+        },
+        "page": {
+          "additionalProperties": false,
+          "properties": {
+            "about": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "stewardsNotLoaded": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "stewardsNotLoaded"
+                  ],
+                  "type": "object"
+                },
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "change": {
+                      "type": "string"
+                    },
+                    "stewards": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "stewards",
+                    "change"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "header",
+                "feedback"
+              ],
+              "type": "object"
+            },
+            "currency": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "notLoaded": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "notLoaded"
+                  ],
+                  "type": "object"
+                },
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "minters": {
+                      "type": "string"
+                    },
+                    "tokens": {
+                      "type": "string"
+                    },
+                    "venues": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "minters",
+                    "venues",
+                    "tokens"
+                  ],
+                  "type": "object"
+                },
+                "tip": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "mintWarning": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "mintWarning"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "feedback",
+                "tip",
+                "header"
+              ],
+              "type": "object"
+            },
+            "home": {
+              "additionalProperties": false,
+              "properties": {
+                "call": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "beta": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "beta"
+                  ],
+                  "type": "object"
+                },
+                "lead": {
+                  "type": "string"
+                },
+                "tip": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "about": {
+                      "type": "string"
+                    },
+                    "browse": {
+                      "type": "string"
+                    },
+                    "track": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "browse",
+                    "about",
+                    "track"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "lead",
+                "call",
+                "tip",
+                "feedback"
+              ],
+              "type": "object"
+            },
+            "newSubmission": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "duplicateScholars": {
+                      "type": "string"
+                    },
+                    "incompletePayment": {
+                      "type": "string"
+                    },
+                    "notLoaded": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "notLoaded",
+                    "duplicateScholars",
+                    "incompletePayment"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "feedback"
+              ],
+              "type": "object"
+            },
+            "proposal": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "alreadySupported": {
+                      "type": "string"
+                    },
+                    "logIn": {
+                      "type": "string"
+                    },
+                    "notFound": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "alreadySupported",
+                    "logIn",
+                    "notFound"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "feedback"
+              ],
+              "type": "object"
+            },
+            "scholar": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "commitmentsNotLoaded": {
+                      "type": "string"
+                    },
+                    "noStatus": {
+                      "type": "string"
+                    },
+                    "noTasks": {
+                      "type": "string"
+                    },
+                    "notLoaded": {
+                      "type": "string"
+                    },
+                    "notVolunteeringFirst": {
+                      "type": "string"
+                    },
+                    "notVolunteeringThird": {
+                      "type": "string"
+                    },
+                    "submissionsNotLoaded": {
+                      "type": "string"
+                    },
+                    "tokensNotLoaded": {
+                      "type": "string"
+                    },
+                    "volunteeringFirst": {
+                      "type": "string"
+                    },
+                    "volunteeringThird": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "notLoaded",
+                    "noStatus",
+                    "submissionsNotLoaded",
+                    "tokensNotLoaded",
+                    "noTasks",
+                    "commitmentsNotLoaded",
+                    "notVolunteeringFirst",
+                    "notVolunteeringThird",
+                    "volunteeringFirst",
+                    "volunteeringThird"
+                  ],
+                  "type": "object"
+                },
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "settings": {
+                      "type": "string"
+                    },
+                    "submissions": {
+                      "type": "string"
+                    },
+                    "tasks": {
+                      "type": "string"
+                    },
+                    "tokens": {
+                      "type": "string"
+                    },
+                    "volunteering": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "submissions",
+                    "tokens",
+                    "settings",
+                    "tasks",
+                    "volunteering"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "header",
+                "feedback"
+              ],
+              "type": "object"
+            },
+            "settings": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "adminsOnly": {
+                      "type": "string"
+                    },
+                    "logIn": {
+                      "type": "string"
+                    },
+                    "unknownVenue": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "unknownVenue",
+                    "logIn",
+                    "adminsOnly"
+                  ],
+                  "type": "object"
+                },
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "compensation": {
+                      "type": "string"
+                    },
+                    "roles": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "roles",
+                    "compensation"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "header",
+                "feedback"
+              ],
+              "type": "object"
+            },
+            "submission": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "confidential": {
+                      "type": "string"
+                    },
+                    "missingAuthors": {
+                      "type": "string"
+                    },
+                    "noAuthors": {
+                      "type": "string"
+                    },
+                    "noExpertise": {
+                      "type": "string"
+                    },
+                    "notLoaded": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "notLoaded",
+                    "confidential",
+                    "missingAuthors",
+                    "noAuthors",
+                    "noExpertise"
+                  ],
+                  "type": "object"
+                },
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "assignments": {
+                      "type": "string"
+                    },
+                    "authors": {
+                      "type": "string"
+                    },
+                    "expertise": {
+                      "type": "string"
+                    },
+                    "venue": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "authors",
+                    "venue",
+                    "assignments",
+                    "expertise"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "header",
+                "feedback"
+              ],
+              "type": "object"
+            },
+            "submissions": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "noSubmissions": {
+                      "type": "string"
+                    },
+                    "noneFiltered": {
+                      "type": "string"
+                    },
+                    "notLoaded": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "notLoaded",
+                    "noSubmissions",
+                    "noneFiltered"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "feedback"
+              ],
+              "type": "object"
+            },
+            "venue": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "inactive": {
+                      "type": "string"
+                    },
+                    "inactivePrompt": {
+                      "type": "string"
+                    },
+                    "rolesNotLoaded": {
+                      "type": "string"
+                    },
+                    "typesNotLoaded": {
+                      "type": "string"
+                    },
+                    "viewSettings": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "viewSettings",
+                    "typesNotLoaded",
+                    "rolesNotLoaded",
+                    "inactive",
+                    "inactivePrompt"
+                  ],
+                  "type": "object"
+                },
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "roles": {
+                      "type": "string"
+                    },
+                    "submissionTypes": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "submissionTypes",
+                    "roles"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "header",
+                "feedback"
+              ],
+              "type": "object"
+            },
+            "venueTransactions": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "transactionsNotLoaded": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "transactionsNotLoaded"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "feedback"
+              ],
+              "type": "object"
+            },
+            "venues": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "noProposals": {
+                      "type": "string"
+                    },
+                    "noVenues": {
+                      "type": "string"
+                    },
+                    "proposalsNotLoaded": {
+                      "type": "string"
+                    },
+                    "venuesNotLoaded": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "noVenues",
+                    "venuesNotLoaded",
+                    "noProposals",
+                    "proposalsNotLoaded"
+                  ],
+                  "type": "object"
+                },
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "active": {
+                      "type": "string"
+                    },
+                    "proposed": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "proposed",
+                    "active"
+                  ],
+                  "type": "object"
+                },
+                "link": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "propose": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "propose"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "description",
+                "header",
+                "link",
+                "feedback"
+              ],
+              "type": "object"
+            },
+            "volunteers": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "noVolunteers": {
+                      "type": "string"
+                    },
+                    "unknownVenue": {
+                      "type": "string"
+                    },
+                    "volunteersNotLoaded": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "unknownVenue",
+                    "volunteersNotLoaded",
+                    "noVolunteers"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "feedback"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "home",
+            "venues",
+            "proposal",
+            "volunteers",
+            "venueTransactions",
+            "newSubmission",
+            "submissions",
+            "submission",
+            "venue",
+            "settings",
+            "scholar",
+            "currency",
+            "about"
+          ],
+          "type": "object"
+        },
+        "view": {
+          "additionalProperties": false,
+          "properties": {
+            "gift": {
+              "additionalProperties": false,
+              "properties": {
+                "noTokens": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "noTokens"
+              ],
+              "type": "object"
+            },
+            "roles": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "consult": {
+                      "type": "string"
+                    },
+                    "noRoles": {
+                      "type": "string"
+                    },
+                    "notInvited": {
+                      "type": "string"
+                    },
+                    "notLoaded": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "notInvited",
+                    "consult",
+                    "noRoles",
+                    "notLoaded"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "feedback"
+              ],
+              "type": "object"
+            },
+            "transactions": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "noTransactions": {
+                      "type": "string"
+                    },
+                    "notLoaded": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "noTransactions",
+                    "notLoaded"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "feedback"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "gift",
+            "transactions",
+            "roles"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "$schema",
+        "lang",
+        "header",
+        "footer",
+        "page",
+        "view",
+        "error"
+      ],
+      "type": "object"
+    }
+  }
+}

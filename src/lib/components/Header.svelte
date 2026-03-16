@@ -6,10 +6,14 @@
 	import { getPendingActions } from '../../routes/feedback.svelte';
 	import Dots from './Dots.svelte';
 	import { ScholarLabel, SubmissionLabel, VenueLabel } from './Labels';
+	import { getLocaleContext } from '$routes/Contexts';
+	import Text from '$lib/locales/Text.svelte';
+
+	const locale = getLocaleContext();
 
 	const routes = [
-		{ path: '/', label: 'Home' },
-		{ path: '/venues', label: 'Venues' }
+		{ path: '/', label: locale.header.home },
+		{ path: '/venues', label: locale.header.venues }
 	];
 
 	let auth = getAuth();
@@ -42,16 +46,11 @@
 		</div>
 	{/each}
 	<div class="authenticated">
-		<div
-			class="feedback"
-			title={pending === 0
-				? 'No pending saves'
-				: `${pending} pending saves${pending > 1 ? 's' : ''}`}
-		>
+		<div class="feedback">
 			{#if pending > 0}
 				{#if pending > 1}{pending}{/if}
 				<Dots></Dots>
-			{:else}✔ saved{/if}
+			{:else}✔ {locale.header.saved}{/if}
 		</div>
 		{#if auth.isAuthenticated()}
 			<div class="link">
@@ -69,7 +68,9 @@
 				>
 			</div>
 		{:else}
-			<div class="link"><Link size="small" to="/login">Login</Link></div>
+			<div class="link">
+				<Link size="small" to="/login"><Text path={(l) => l.header.link.login} /></Link>
+			</div>
 		{/if}
 	</div>
 </header>

@@ -56,7 +56,7 @@
 
 <form>
 	{#if tokens === null || tokens.length === 0}
-		<Feedback>You don't have any tokens to gift.</Feedback>
+		<Feedback text={(l) => l.view.gift.noTokens}></Feedback>
 	{:else}
 		<fieldset>
 			<legend>Gift to...</legend>

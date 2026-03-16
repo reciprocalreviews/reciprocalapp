@@ -117,9 +117,7 @@
 		>
 	</label>
 	{#if error !== undefined && wasFocused}
-		<Feedback error={error !== undefined && wasFocused}
-			>{#if error && wasFocused}{error}{/if}</Feedback
-		>
+		<Feedback error={error !== undefined && wasFocused} text={error!} />
 	{/if}
 	{#if note}
 		<Tip border={false}>{note}</Tip>

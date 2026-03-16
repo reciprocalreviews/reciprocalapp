@@ -1,18 +1,28 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import type LocaleText from '$lib/locales/Locale';
+	import Text from '$lib/locales/Text.svelte';
 
 	const {
 		error = false,
 		inline = true,
-		children,
-		testid
-	}: { error?: boolean; inline?: boolean; children: Snippet; testid?: string } = $props();
+		testid,
+		text
+	}: {
+		error?: boolean;
+		inline?: boolean;
+		testid?: string;
+		text: string | ((locale: LocaleText) => string | string[]);
+	} = $props();
 </script>
 
+{#snippet content()}
+	{#if typeof text === 'function'}<Text markdown path={text} />{:else}{text}{/if}
+{/snippet}
+
 {#if inline}
-	<span class={['feedback', 'inline', { error }]} data-testid={testid}>{@render children()}</span>
+	<span class={['feedback', 'inline', { error }]} data-testid={testid}>{@render content()}</span>
 {:else}
-	<p class={['feedback', { error }]} data-testid={testid}>{@render children()}</p>
+	<p class={['feedback', { error }]} data-testid={testid}>{@render content()}</p>
 {/if}
 
 <style>

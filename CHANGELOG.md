@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.3.7 - 2026-03-15
 
+### Added
+
+- Implemented localization support and extracted many strings to a default English locale.
+
 ### Changed
 
 - Updated internal tooling for stability and speed.

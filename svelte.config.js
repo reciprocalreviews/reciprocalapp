@@ -10,7 +10,8 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		alias: {
-			$data: 'src/data'
+			$data: 'src/data',
+			$routes: 'src/routes'
 		}
 	}
 };

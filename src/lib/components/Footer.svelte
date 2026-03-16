@@ -1,12 +1,13 @@
 <script lang="ts">
 	import Link from './Link.svelte';
+	import Text from '$lib/locales/Text.svelte';
 </script>
 
 <footer>
-	<Link size="extra-small" to="/about">About</Link>
-	<Link size="extra-small" to="/updates">Updates</Link>
+	<Link size="extra-small" to="/about"><Text path={(l) => l.footer.link.about} /></Link>
+	<Link size="extra-small" to="/updates"><Text path={(l) => l.footer.link.updates} /></Link>
 	<Link size="extra-small" to="https://github.com/reciprocalreviews/reciprocalapp/issues/"
-		>Feedback</Link
+		><Text path={(l) => l.footer.link.feedback} /></Link
 	>
 </footer>
 

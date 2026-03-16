@@ -1,0 +1,38 @@
+import getTransactionVenues from '$lib/data/getTransactionVenues';
+import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
+import type { PageLoad } from './$types';
+
+export const load: PageLoad = async ({ parent, params }) => {
+	const { supabase, locale } = await parent();
+
+	const CURD = new SupabaseCRUD(supabase, locale);
+
+	// Get the currency's most recent transactions.
+	const {
+		data: transactions,
+		count,
+		error: transactionsError
+	} = await CURD.getCurrencyTransactions(params.id);
+	if (transactionsError) console.log(transactionsError);
+
+	// Is the current scholar a minter on the venue?
+	const { data: currency, error: currencyError } = await supabase
+		.from('currencies')
+		.select()
+		.eq('id', params.id)
+		.single();
+	if (currencyError) console.log(currencyError);
+
+	const { data: venues, error: venueError } =
+		transactions === null
+			? { data: null, error: null }
+			: await getTransactionVenues(supabase, transactions);
+	if (venueError) console.log(venueError);
+
+	return {
+		currency,
+		transactions,
+		venues,
+		count
+	};
+};

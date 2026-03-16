@@ -1,0 +1,293 @@
+{
+	"$schema": "../LocaleText.json",
+	"lang": "en",
+	"header": {
+		"home": "Home",
+		"venues": "Venues",
+		"saved": "saved",
+		"link": {
+			"login": "Log in"
+		},
+		"feedback": {
+			"testWarning": "This is a test environment for preview purposes. Data can be deleted at any time."
+		}
+	},
+	"footer": {
+		"link": {
+			"about": "About",
+			"updates": "Updates",
+			"feedback": "Feedback"
+		}
+	},
+	"page": {
+		"home": {
+			"lead": "Make peer review count.",
+			"call": [
+				"Academia incentivizes publishing over peer review. That means too many submissions and not enough reviews, or reviews that are late and low quality.",
+				"**Reciprocal Reviews** breaks this cycle:",
+				"1. **Editors set a cost** for submissions, priced in review tokens.",
+				"2. **Authors earn tokens** by volunteering for venues, sharing expertise and availability, and submitting on-time, quality reviews, on whatever reviewing platform a venue uses.",
+				"3. **Authors spend tokens** to submit manuscripts for review, splitting the cost with co-authors. Or, they can gift tokens to individuals or shared pools to strategically support newcomers, colleagues in crisis, or emerging topics.",
+				"Because authors need to submit high-quality, on-time reviews to submit, authors get better, faster reviews, editors do less nagging, communities overall have a fairer distribution of peer review labor."
+			],
+			"tip": {
+				"browse": "**Interested in adopting?** See the [journals and conferences](/venues) using the platform and reach out to their editors for their experiences. Or, [log in](/login) to propose a journal or conference adopt *Reciprocal Reviews*.",
+				"about": "**We are a volunteer community** of academics, not a for-profit organization. Our only goal is to improve the sustainability, quality, and integrity of peer review. See our [about](/about) page if you're interested in helping.",
+				"track": "**Don't want to set a cost?** Use Reciprocal Reviews to track volunteer reviewers and expertise in your community, streamlining reviewing and program committee invitations."
+			},
+			"feedback": {
+				"beta": "We're in development! A public beta is likely in 2026. Visit [GitHub](https://github.com/reciprocalreviews) to see who's involved, see our [beta milestone](https://github.com/reciprocalreviews/reciprocalapp/issues?q=is:open%20milestone:%22Beta%22) for the work that remains. Subscribe to our low-volume [newsletter](https://reciprocalreviews.substack.com/) to follow along, check the [updates](/updates) page to see our weekly progress. And if you feel like helping, email us! We're a small volunteer group of academics."
+			}
+		},
+		"venues": {
+			"description": "These are journals and conferences using Reciprocal Reviews to track and incentivize peer review. Choose one to see it's policies or volunteer to review for it, or propose a new one.",
+			"header": {
+				"proposed": "Proposed venues",
+				"active": "Active venues"
+			},
+			"link": {
+				"propose": "Propose a new venue"
+			},
+			"feedback": {
+				"noVenues": "There are no active venues.",
+				"venuesNotLoaded": "We couldn't load the venues.",
+				"noProposals": "No venues have been proposed yet.",
+				"proposalsNotLoaded": "We couldn't load the venue proposals."
+			}
+		},
+		"proposal": {
+			"feedback": {
+				"alreadySupported": "You've expressed support. You can edit or delete your support below.",
+				"logIn": "[Log in](/login) to express support.",
+				"notFound": "Unknown proposal."
+			}
+		},
+		"volunteers": {
+			"feedback": {
+				"unknownVenue": "Unable to find this venue.",
+				"noVolunteers": "No volunteers yet.",
+				"volunteersNotLoaded": "Unable to load volunteers for this venue."
+			}
+		},
+		"venueTransactions": {
+			"feedback": {
+				"transactionsNotLoaded": "Unable to load transactions for this venue."
+			}
+		},
+		"newSubmission": {
+			"feedback": {
+				"notLoaded": "Unable to load the venue and/or submission types for this page.",
+				"duplicateScholars": "Each author must have a unique ORCID.",
+				"incompletePayment": "{deficit} more tokens to add."
+			}
+		},
+		"submissions": {
+			"feedback": {
+				"notLoaded": "Unable to load submissions.",
+				"noSubmissions": "This venue has no submissions (or none visible to you).",
+				"noneFiltered": "All submissions filtered."
+			}
+		},
+		"submission": {
+			"header": {
+				"authors": "Authors",
+				"venue": "Venue",
+				"assignments": "Assignments",
+				"expertise": "Expertise"
+			},
+			"feedback": {
+				"notLoaded": "This submission does not exist or is not visible to you.",
+				"confidential": "This submission is confidential to you.",
+				"missingAuthors": "Unable to find authors.",
+				"noAuthors": "No visible authors found.",
+				"noExpertise": "No expertise provided."
+			}
+		},
+		"venue": {
+			"header": {
+				"submissionTypes": "Submission types",
+				"roles": "Roles"
+			},
+			"feedback": {
+				"viewSettings": "Welcome admin! Check the [settings](/venue/{venue}/settings) page to edit venue compensation, roles, and anonymity.",
+				"typesNotLoaded": "Couldn't load venue's submission types.",
+				"rolesNotLoaded": "Couldn't load venue's roles.",
+				"inactive": "This venue is currently **inactive**, so only admins can see its details. Here is the message from the admins: *{message}*",
+				"inactivePrompt": "This venue is currently **inactive**. Only you and other admins can see it, along with the message set in the [venue settings](/venue/{venue}/settings). Visit the settings to activate the venue."
+			}
+		},
+		"settings": {
+			"header": {
+				"status": "Status",
+				"roles": "Roles",
+				"compensation": "Compensation"
+			},
+			"feedback": {
+				"unknownVenue": "Unable to load this venue.",
+				"logIn": "[Log in](/login) to view this venue's settings.",
+				"adminsOnly": "Only admins of this venue can view this page."
+			}
+		},
+		"scholar": {
+			"header": {
+				"submissions": "Submissions",
+				"tokens": "Ttokens",
+				"settings": "Settings",
+				"tasks": "Tasks",
+				"volunteering": "Volunteering"
+			},
+			"feedback": {
+				"notLoaded": "Unable to load scholar profile.",
+				"submissionsNotLoaded": "Unable to load this scholar's submissions.",
+				"noStatus": "This scholar has not shared their reviewing status.",
+				"tokensNotLoaded": "Unable to load this scholar's tokens.",
+				"noTasks": "You have no pending tasks.",
+				"commitmentsNotLoaded": "Unable to load editing volunteering commitments.",
+				"notVolunteeringFirst": "You are not volunteering for any roles yet.",
+				"notVolunteeringThird": "This scholar is not volunteering for any roles yet.",
+				"volunteeringFirst": "You are not volunteering for any roles yet.",
+				"volunteeringThird": "This scholar is not volunteering for any roles yet."
+			}
+		},
+		"currency": {
+			"feedback": {
+				"notLoaded": "Unable to load this currency."
+			},
+			"tip": {
+				"mintWarning": "Be careful creating new tokens. Too many tokens per scholar will diminish the incentive to earn them."
+			},
+			"header": {
+				"minters": "Minters",
+				"venues": "Venues",
+				"tokens": "Tokens"
+			}
+		},
+		"about": {
+			"header": {
+				"stewards": "Stewards",
+				"change": "Theory of change"
+			},
+			"feedback": {
+				"stewardsNotLoaded": "Unable to load active stewards."
+			}
+		}
+	},
+	"view": {
+		"gift": {
+			"noTokens": "You don't have any tokens to gift."
+		},
+		"transactions": {
+			"feedback": {
+				"noTransactions": "No transactions.",
+				"notLoaded": "Unable to load transactions."
+			}
+		},
+		"roles": {
+			"feedback": {
+				"notInvited": "[Log in](/login) to volunteer.",
+				"consult": "This role has **{count} volunteers**. We **highly** recommend that you communicate extensively with your community before changing any of the settings below, as they change the terms of volunteering.",
+				"noRoles": "No roles yet. Add one.",
+				"notLoaded": "Couldn't load venue's roles."
+			}
+		}
+	},
+	"error": {
+		"UpdateScholarStatus": "Unable to update your status",
+		"UpdateScholarName": "Unable to update your name",
+		"UpdateScholarEmail": "Unable to update your email",
+		"UpdateScholarAvailability": "Unable to update your availability",
+		"CreateProposal": "Unable to create a venue proposal",
+		"EditProposalTitle": "Unable to edit the proposal title",
+		"EditProposalCensus": "Unable to edit the proposal census",
+		"EditProposalEditors": "Unable to edit the proposal editors",
+		"EditProposalMinters": "Unable to edit the proposal minters",
+		"EditProposalURL": "Unable to edit the proposal URL",
+		"CreateSupporter": "Unable to create a supporter",
+		"UpdateCurrencyName": "Unable to update the currency name",
+		"UpdateCurrencyDescription": "Unable to update the currency description",
+		"EditSupport": "Unable to edit your support",
+		"RemoveSupport": "Unable to remove your support",
+		"DeleteProposal": "Unable to delete the proposal",
+		"ApproveProposalNotFound": "Unable to approve the proposal: couldn't find proposal.",
+		"ApproveProposalNoScholars": "Unable to approve the proposal: couldn't find all of the specified editors with accounts. Ask them to create accounts with the specified email addresses and then approve.",
+		"ApproveProposalNoMinters": "Unable to approve the proposal: couldn't find all of the specified minters with accounts. Ask them to create accounts with the specified email addresses and then approve.",
+		"ApproveProposalNoVenue": "Unable to approve the proposal: couldn't create the venue.",
+		"ApproveProposalCannotUpdateVenue": "Unable to approve the proposal: couldn't update the venue with the proposal.",
+		"ApproveProposalNoCurrency": "Unable to approve the proposal: couldn't create a currency for the venue.",
+		"EditVenueDescription": "Unable to edit the venue description",
+		"EditVenueAdmins": "Unable to edit the venue admins",
+		"EditVenueAddEditorVenueNotFound": "Unable to find venue",
+		"ScholarNotFound": "Unable to find scholar by this email or ORCID",
+		"EditVenueAddEditorAlreadyEditor": "Scholar is already an editor",
+		"EditVenueTitle": "Unable to edit the venue title",
+		"EditVenueURL": "Unable to edit the venue URL",
+		"EditVenueInactive": "Unable to edit the inactive message",
+		"EditVenueAnonymousAssignments": "Unable to edit anonymous assignments setting",
+		"EditVenueWelcomeAmount": "Unable to edit the welcome amount",
+		"EditVenueSubmissionCost": "Unable to edit the submission cost",
+		"EditRoleBidding": "Unable to toggle bidding",
+		"EditRoleDesiredAssignments": "Unable to set desired assignments",
+		"EditRoleAnonymousAuthors": "Unable to toggle anonymous authors",
+		"EditRoleApprover": "Unable to set approver",
+		"CreateRole": "Unable to create new role.",
+		"UpdateRoleName": "Unable to update role name",
+		"UpdateRoleDescription": "Unable to update role description",
+		"UpdateRoleInvited": "Unable to update invited status of role",
+		"UpdateRoleAmount": "Unable to update role compensation",
+		"ReorderRole": "Unable to reorder roles",
+		"DeleteRole": "Unable to delete role",
+		"UpdateSubmissionType": "Unable to update submission type",
+		"CreateSubmissionType": "Unable to create submission type",
+		"EditSubmissionType": "Unable to edit submission type",
+		"DeleteSubmissionType": "Unable to delete submission type",
+		"CreateCompensation": "Unable to create compensation for role",
+		"EditCompensation": "Unable to create compensation for role",
+		"CreateVolunteer": "Unable to add volunteer commitment",
+		"WelcomeVolunteer": "Unable to grant welcome tokens for first volunteer commitment",
+		"AlreadyVolunteered": "Already created a volunteer commitment for this role.",
+		"UpdateVolunteerActive": "Unable to update volunteer commitment",
+		"UpdateVolunteerExpertise": "Unable to update your expertise",
+		"InviteToRole": "Unable to invite to role",
+		"InviteToRoleMissing": "Unknown scholars",
+		"InviteToRoleSuccess": "Successfully invited scholars to role.",
+		"AcceptRoleInvite": "Unable to accept role invite",
+		"EditCurrencyMinters": "Unable to edit minters",
+		"AddCurrencyMinter": "Unable to add minter",
+		"AlreadyMinter": "This scholar is already a minter",
+		"MintTokens": "Unable to mint tokens",
+		"TransferVenueTokens": "Unable to transfer tokens",
+		"TransferScholarTokens": "Unable to find scholar tokens to transfer",
+		"TransferTokensInsufficient": "Insufficient number tokens to transfer",
+		"CreateTransaction": "Unable to create transaction",
+		"GetScholarTransactions": "Unable to get transactions for this scholar",
+		"TransactionMissingFrom": "No source provided for transaction",
+		"TransactionMissingTo": "No destination provided for transaction",
+		"PendingTransactionHasTokens": "This pending transaction already has tokens that were transferred.",
+		"UnknownTransaction": "Unable to find this transaction",
+		"TransactionNotCanceled": "Unable to cancel this transaction",
+		"AlreadyApproved": "This transaction is already approved",
+		"TransactionApprovalUpdate": "Unable to update the proposed transaction",
+		"MissingApprovalVenue": "The proposed transaction has no venue to transfer from.",
+		"MissingRecipient": "The proposed transaction has no scholar recipient.",
+		"UndeletedTransaction": "The proposed transaction couldn't be deleted.",
+		"InvalidCharges": "The proposed transaction's charges are invalid.",
+		"NewSubmission": "Unable to create a new submission",
+		"UnknownVenue": "Unable to find venue",
+		"MissingSubmissionCharge": "Didn't receive enough charge amounts for the authors given",
+		"UpdateSubmissionExpertise": "Unable to update the submission expertise",
+		"UpdateSubmissionTitle": "Unable to update the submission's title",
+		"UpdateSubmissionStatus": "Unable to update the submission's status",
+		"ApproveAssignment": "Unable to approve the assignment",
+		"CreateAssignment": "Unable to create this assignment",
+		"CompensationSubmissionNotFound": "Unable to find the submission for compensation request",
+		"CompensationAssignmentCheck": "Could not check for an existing request.",
+		"CompleteAssignmentNotFound": "Unable to find this assignment",
+		"CompleteAssignmentRoleNotFound": "Unable to find this assignment's role",
+		"CompleteAssignmentVenueNotFound": "Unable to find this assignment's venue",
+		"DeleteAssignment": "Unable to delete this assignment",
+		"EmailScholar": "Unable to email this scholar",
+		"ApproveProposalNoSupporters": "Unable to retrieve supports of proposal for notification.",
+		"DeclareConflict": "Unable to declare a conflict with this submission.",
+		"NoRoleCompensation": "The role being compensated doesn't have a compensation amount for this submission type."
+	}
+}

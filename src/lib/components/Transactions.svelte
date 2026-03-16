@@ -158,7 +158,7 @@
 {/snippet}
 
 {#if allTransactions.length === 0}
-	<Feedback testid="no-transactions">No transactions.</Feedback>
+	<Feedback testid="no-transactions" text={(l) => l.view.transactions.feedback.noTransactions} />
 {:else}
 	<Table full>
 		{#snippet header()}

@@ -9,18 +9,22 @@
 	import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
 	import { getFeedback, removeError, type Level } from './feedback.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { enUS } from '../locale/Locale';
 	import { PUBLIC_ENV } from '$env/static/public';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import { page } from '$app/state';
+	import { setLocaleContext } from './Contexts';
 
 	let { data, children } = $props();
 
 	// svelte-ignore state_referenced_locally
 	createAuthContext(data.supabase, data.session);
 
-	let crud = $derived(new SupabaseCRUD(data.supabase, enUS));
+	let locale = $derived(data.locale);
+	// svelte-ignore state_referenced_locally
+	setLocaleContext(locale);
+
+	let crud = $derived(new SupabaseCRUD(data.supabase, locale));
 
 	// Set client side database cache.
 	setDB(() => crud);
@@ -70,9 +74,7 @@
 {/snippet}
 
 {#if PUBLIC_ENV === 'test'}
-	<Feedback error inline={false}
-		>This is a test environment for preview purposes. Data can be deleted at any time.</Feedback
-	>
+	<Feedback error inline={false} text={(l) => l.header.feedback.testWarning}></Feedback>
 {/if}
 
 {#if !inProd}

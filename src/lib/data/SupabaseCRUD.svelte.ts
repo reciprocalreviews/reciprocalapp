@@ -25,7 +25,7 @@ import type {
 import CRUD, { NullUUID, type Charge, type Result } from './CRUD';
 import Scholar from './Scholar.svelte';
 import type { Database } from '$data/database';
-import type Locale from '../../locale/Locale';
+import type Locale from '../locales/Locale';
 import { renderEmail, type EmailType } from '../../email/templates';
 
 // A constant page size for paginated queries.
