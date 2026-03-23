@@ -30,6 +30,7 @@
 	import { validEmail, validORCID } from '$lib/validation';
 	import Options from '$lib/components/Options.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
+	import Text from '$lib/locales/Text.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -183,9 +184,9 @@
 					onChange={(typeID) =>
 						typeID !== undefined ? db().updateSubmissionType(submission.id, typeID) : undefined}
 				></Options>
-			{:else}
-				{#if submissionType}{submissionType}{:else}<Text path={(l) => l.page.submission.subtitle} />{/if}
-			{/if}
+			{:else if submissionType}{submissionType}{:else}<Text
+					path={(l) => l.page.submission.subtitle}
+				/>{/if}
 		{/snippet}
 		{#snippet details()}
 			{#if previous}<Link to="/venue/{venue.id}/submission/{previous.id}"
@@ -193,7 +194,9 @@
 				>
 				→{/if}
 			{submission.externalid}
-			{#if done}<Status good={false} label={(l) => l.page.submission.status.done} />{:else}<Status label={(l) => l.page.submission.status.reviewing} />{/if}
+			{#if done}<Status good={false} label={(l) => l.page.submission.status.done} />{:else}<Status
+					label={(l) => l.page.submission.status.reviewing}
+				/>{/if}
 		{/snippet}
 
 		<!-- Only editors can update the status of a submission -->
@@ -352,7 +355,15 @@
 							{#if assignment.scholar === user.id}you{:else}<ScholarLink
 									id={assignment.scholar}
 								/>{/if}
-							{#if assignment.completed}<Status label={(l) => l.page.submission.status.completed} />{:else if assignment.approved}<Status good={false} label={(l) => l.page.submission.status.incomplete} />{:else}<Status good={false} label={(l) => l.page.submission.status.unapproved} />{/if}</td
+							{#if assignment.completed}<Status
+									label={(l) => l.page.submission.status.completed}
+								/>{:else if assignment.approved}<Status
+									good={false}
+									label={(l) => l.page.submission.status.incomplete}
+								/>{:else}<Status
+									good={false}
+									label={(l) => l.page.submission.status.unapproved}
+								/>{/if}</td
 						>
 						<td
 							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
