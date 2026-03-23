@@ -5,6 +5,7 @@
 	import type Locale from '$lib/locales/Locale';
 	import type { LocaleText, NotedTextFieldText, TextFieldText } from '$lib/locales/Locale';
 	import { getLocaleContext } from '$routes/Contexts';
+	import Text from '$lib/locales/Text.svelte';
 
 	type Props = {
 		/** The current text in the field */
@@ -84,7 +85,7 @@
 <div class="field">
 	<label bind:this={labelView}>
 		{#if label}
-			<span class="label">{label}</span>
+			<span class="label"><Text path={label} /></span>
 		{/if}
 		{#if inline}
 			<input
