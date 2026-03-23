@@ -165,6 +165,6 @@
 			/>
 		</form>
 	{:else}
-		<Status good={false}><Link to="/login">Log in</Link> to propose a venue.</Status>
+		<Status good={false} label={(l) => l.page.proposeVenue.status.notLoggedIn} />
 	{/if}
 </Page>

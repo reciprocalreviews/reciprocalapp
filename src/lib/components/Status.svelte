@@ -1,8 +1,14 @@
 <script lang="ts">
-	export let good = true;
+	import type LocaleText from '$lib/locales/Locale';
+	import Text from '$lib/locales/Text.svelte';
+
+	let { good = true, label }: {
+		good?: boolean;
+		label: (l: LocaleText) => string;
+	} = $props();
 </script>
 
-<span class="status" class:good><slot /></span>
+<span class="status" class:good><Text path={label} markdown /></span>
 
 <style>
 	.status {

@@ -79,7 +79,10 @@
 			currency?.minters.includes(userid))}
 	<tr data-testid={testid + '-' + index}>
 		<td>
-			<Status good={transaction.status === 'approved'}>{transaction.status}</Status>
+			<Status
+				good={transaction.status === 'approved'}
+				label={(l) => transaction.status === 'approved' ? l.view.transactions.status.approved : transaction.status === 'canceled' ? l.view.transactions.status.canceled : l.view.transactions.status.proposed}
+			/>
 		</td>
 		<td
 			>{#if transaction.tokens === null}unknown{:else}<Tokens

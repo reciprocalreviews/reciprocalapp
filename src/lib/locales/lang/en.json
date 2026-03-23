@@ -168,6 +168,9 @@
 					"placeholder": "why",
 					"invalid": "Must include a rationale"
 				}
+			},
+			"status": {
+				"notLoggedIn": "[Log in](/login) to propose a venue."
 			}
 		},
 		"proposal": {
@@ -252,7 +255,11 @@
 					"placeholder": "name, expertise, email"
 				}
 			},
-			"unavailableTitle": "Volunteers unavailable"
+			"unavailableTitle": "Volunteers unavailable",
+			"status": {
+				"active": "active",
+				"inactive": "inactive"
+			}
 		},
 		"venueTransactions": {
 			"title": "Transactions",
@@ -392,6 +399,10 @@
 					"label": "filter submissions $filter",
 					"placeholder": "title, id..."
 				}
+			},
+			"status": {
+				"paid": "paid",
+				"pending": "{count} pending"
 			}
 		},
 		"submission": {
@@ -445,6 +456,14 @@
 			},
 			"checkbox": {
 				"reviewComplete": "This submission's review is complete."
+			},
+			"status": {
+				"done": "done",
+				"reviewing": "reviewing",
+				"unknownTransaction": "unknown transaction",
+				"completed": "Completed",
+				"incomplete": "Incomplete",
+				"unapproved": "Unapproved"
 			}
 		},
 		"venue": {
@@ -588,6 +607,10 @@
 			},
 			"checkbox": {
 				"available": "I am available to review."
+			},
+			"status": {
+				"available": "Available",
+				"unavailable": "Unavailable"
 			}
 		},
 		"currency": {
@@ -722,6 +745,11 @@
 					"label": "Reason",
 					"placeholder": "Reason for cancellation"
 				}
+			},
+			"status": {
+				"proposed": "proposed",
+				"approved": "approved",
+				"canceled": "canceled"
 			}
 		},
 		"roles": {

@@ -148,6 +148,10 @@ export type LocaleText = {
 			field: {
 				filter: TextFieldText;
 			};
+			status: {
+				active: string;
+				inactive: string;
+			};
 		};
 		venueTransactions: {
 			title: string;
@@ -206,6 +210,10 @@ export type LocaleText = {
 				previousID: NotedTextFieldText;
 				filter: TextFieldText;
 			};
+			status: {
+				paid: string;
+				pending: string;
+			};
 		};
 		submission: {
 			title: string;
@@ -235,6 +243,14 @@ export type LocaleText = {
 			};
 			checkbox: {
 				reviewComplete: string;
+			};
+			status: {
+				done: string;
+				reviewing: string;
+				unknownTransaction: string;
+				completed: string;
+				incomplete: string;
+				unapproved: string;
 			};
 		};
 		venue: {
@@ -322,6 +338,10 @@ export type LocaleText = {
 			checkbox: {
 				available: string;
 			};
+			status: {
+				available: string;
+				unavailable: string;
+			};
 		};
 		currency: {
 			title: string;
@@ -374,6 +394,9 @@ export type LocaleText = {
 		};
 		proposeVenue: {
 			title: string;
+			status: {
+				notLoggedIn: string;
+			};
 			button: {
 				propose: ButtonText;
 			};
@@ -428,6 +451,11 @@ export type LocaleText = {
 			};
 			field: {
 				cancelReason: TextFieldText;
+			};
+			status: {
+				proposed: string;
+				approved: string;
+				canceled: string;
 			};
 		};
 		roles: {

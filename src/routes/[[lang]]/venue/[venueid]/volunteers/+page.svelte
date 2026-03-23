@@ -107,9 +107,10 @@
 							{@const expertise = volunteer.expertise.split(',').filter((s) => s.trim() !== '')}
 							<tr data-testid="volunteer-row-{roleIndex}-{volunteerIndex}">
 								<td
-									><Status good={volunteer.active}
-										>{#if volunteer.active}active{:else}inactive{/if}</Status
-									></td
+									><Status
+										good={volunteer.active}
+										label={(l) => volunteer.active ? l.page.volunteers.status.active : l.page.volunteers.status.inactive}
+									/></td
 								>
 								<td><ScholarLink id={volunteer.scholarid} /></td>
 								<td

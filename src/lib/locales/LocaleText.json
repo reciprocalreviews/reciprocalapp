@@ -1267,12 +1267,25 @@
                 },
                 "title": {
                   "type": "string"
+                },
+                "status": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "notLoggedIn": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "notLoggedIn"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
                 "title",
                 "button",
-                "field"
+                "field",
+                "status"
               ],
               "type": "object"
             },
@@ -1420,6 +1433,22 @@
                     "available"
                   ],
                   "type": "object"
+                },
+                "status": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "available": {
+                      "type": "string"
+                    },
+                    "unavailable": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "available",
+                    "unavailable"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
@@ -1428,7 +1457,8 @@
                 "feedback",
                 "field",
                 "card",
-                "checkbox"
+                "checkbox",
+                "status"
               ],
               "type": "object"
             },
@@ -1669,6 +1699,38 @@
                     "reviewComplete"
                   ],
                   "type": "object"
+                },
+                "status": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "done": {
+                      "type": "string"
+                    },
+                    "reviewing": {
+                      "type": "string"
+                    },
+                    "unknownTransaction": {
+                      "type": "string"
+                    },
+                    "completed": {
+                      "type": "string"
+                    },
+                    "incomplete": {
+                      "type": "string"
+                    },
+                    "unapproved": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "done",
+                    "reviewing",
+                    "unknownTransaction",
+                    "completed",
+                    "incomplete",
+                    "unapproved"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
@@ -1677,7 +1739,8 @@
                 "feedback",
                 "button",
                 "field",
-                "checkbox"
+                "checkbox",
+                "status"
               ],
               "type": "object"
             },
@@ -1826,13 +1889,30 @@
                 },
                 "title": {
                   "type": "string"
+                },
+                "status": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "paid": {
+                      "type": "string"
+                    },
+                    "pending": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "paid",
+                    "pending"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
                 "title",
                 "feedback",
                 "button",
-                "field"
+                "field",
+                "status"
               ],
               "type": "object"
             },
@@ -2300,6 +2380,22 @@
                 },
                 "unavailableTitle": {
                   "type": "string"
+                },
+                "status": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "active": {
+                      "type": "string"
+                    },
+                    "inactive": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "active",
+                    "inactive"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
@@ -2307,7 +2403,8 @@
                 "unavailableTitle",
                 "feedback",
                 "button",
-                "field"
+                "field",
+                "status"
               ],
               "type": "object"
             }
@@ -2737,12 +2834,33 @@
                     "cancelReason"
                   ],
                   "type": "object"
+                },
+                "status": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "proposed": {
+                      "type": "string"
+                    },
+                    "approved": {
+                      "type": "string"
+                    },
+                    "canceled": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "proposed",
+                    "approved",
+                    "canceled"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
                 "feedback",
                 "button",
-                "field"
+                "field",
+                "status"
               ],
               "type": "object"
             }

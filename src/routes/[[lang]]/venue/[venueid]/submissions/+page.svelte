@@ -212,11 +212,9 @@
 								{#if status === undefined}
 									{PrivateLabel}
 								{:else if status === 0}
-									<Status>paid</Status>
+									<Status label={(l) => l.page.submissions.status.paid} />
 								{:else}
-									<Status good={false}>
-										{status} pending</Status
-									>
+									<Status good={false} label={(l) => l.page.submissions.status.pending.replace('{count}', status.toString())} />
 								{/if}
 							</td>
 							<td>

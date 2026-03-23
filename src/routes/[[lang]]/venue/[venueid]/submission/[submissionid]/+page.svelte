@@ -193,7 +193,7 @@
 				>
 				→{/if}
 			{submission.externalid}
-			{#if done}<Status good={false}>done</Status>{:else}<Status>reviewing</Status>{/if}
+			{#if done}<Status good={false} label={(l) => l.page.submission.status.done} />{:else}<Status label={(l) => l.page.submission.status.reviewing} />{/if}
 		{/snippet}
 
 		<!-- Only editors can update the status of a submission -->
@@ -222,7 +222,7 @@
 					<ScholarLink id={scholar ?? author}></ScholarLink>
 					{#if payment !== undefined}
 						{#if transaction === undefined}
-							<Status good={false}>unknown transaction</Status>
+							<Status good={false} label={(l) => l.page.submission.status.unknownTransaction} />
 						{:else}
 							{#if transaction.status === 'proposed'}
 								proposes to pay
@@ -352,9 +352,7 @@
 							{#if assignment.scholar === user.id}you{:else}<ScholarLink
 									id={assignment.scholar}
 								/>{/if}
-							{#if assignment.completed}<Status>Completed</Status
-								>{:else if assignment.approved}<Status good={false}>Incomplete</Status
-								>{:else}<Status good={false}>Unapproved</Status>{/if}</td
+							{#if assignment.completed}<Status label={(l) => l.page.submission.status.completed} />{:else if assignment.approved}<Status good={false} label={(l) => l.page.submission.status.incomplete} />{:else}<Status good={false} label={(l) => l.page.submission.status.unapproved} />{/if}</td
 						>
 						<td
 							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
