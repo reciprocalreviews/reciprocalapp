@@ -9,7 +9,8 @@
 		"admin": "Admin",
 		"minter": "Minter",
 		"steward": "Steward",
-		"orcid": "ORCID"
+		"orcid": "ORCID",
+		"empty": "-"
 	},
 	"header": {
 		"home": "Home",
@@ -172,6 +173,12 @@
 			},
 			"status": {
 				"notLoggedIn": "[Log in](/login) to propose a venue."
+			},
+			"options": {
+				"currency": {
+					"label": "Currency",
+					"createNew": "Create a new currency"
+				}
 			}
 		},
 		"proposal": {
@@ -337,6 +344,11 @@
 				"payment": {
 					"label": "Payment"
 				}
+			},
+			"options": {
+				"submissionType": {
+					"label": "Submission type"
+				}
 			}
 		},
 		"submissions": {
@@ -477,7 +489,13 @@
 				"incomplete": "Incomplete",
 				"unapproved": "Unapproved"
 			},
-			"subtitle": "Submission"
+			"subtitle": "Submission",
+			"options": {
+				"submissionType": {},
+				"assignmentRole": {
+					"label": "Role"
+				}
+			}
 		},
 		"venue": {
 			"title": "Venue",
@@ -537,7 +555,15 @@
 				}
 			},
 			"unknownTitle": "Unknown venue",
-			"subtitle": "Venue"
+			"subtitle": "Venue",
+			"options": {
+				"revisionOf": {
+					"none": "—"
+				},
+				"compensationRole": {
+					"label": "Role"
+				}
+			}
 		},
 		"settings": {
 			"title": "Settings",
@@ -698,6 +724,11 @@
 					"label": "Number of new tokens"
 				}
 			},
+			"options": {
+				"tokenOwner": {
+					"label": "Which venue should own the new tokens?"
+				}
+			},
 			"subtitle": "Currency"
 		},
 		"about": {
@@ -746,6 +777,14 @@
 			"slider": {
 				"tokenAmount": {
 					"label": "Number of tokens to give"
+				}
+			},
+			"options": {
+				"venue": {
+					"label": "Select a venue"
+				},
+				"currency": {
+					"label": "What currency should be used?"
 				}
 			}
 		},
@@ -913,6 +952,12 @@
 				"desiredAssignments": {
 					"label": "Desired number of assignments for this role. If bidding is on, it will be turned off for a submission that has this number of assignments, to avoid unnecessary bids.",
 					"suffix": " assignments"
+				}
+			},
+			"options": {
+				"approver": {
+					"label": "What role can approve assignments to this role for a submission, other than the editor?",
+					"none": "—"
 				}
 			}
 		},

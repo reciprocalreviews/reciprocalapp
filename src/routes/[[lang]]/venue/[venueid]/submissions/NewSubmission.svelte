@@ -138,7 +138,7 @@
 		bind:text={previousID}
 	/>
 	<Options
-		label="submission type"
+		strings={(l) => l.page.newSubmission.options.submissionType}
 		bind:value={submissionType}
 		options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
 	></Options>

@@ -113,7 +113,7 @@
 					<form>
 						<Tip><Text path={(l) => l.page.currency.tip.mintWarning} /></Tip>
 						<Options
-							label="Which venue should own the new tokens?"
+							strings={(l) => l.page.currency.options.tokenOwner}
 							options={venues.map((venue) => ({
 								label: venue.title,
 								value: venue.id

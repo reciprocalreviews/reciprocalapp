@@ -1,13 +1,20 @@
 <script lang="ts">
+	import { getLocaleContext } from '$routes/Contexts';
+	import type LocaleText from '$lib/locales/Locale';
+	import type { OptionsText } from '$lib/locales/Locale';
+
 	type Props = {
 		options: { label: string; value: string | undefined }[];
 		value: string | undefined;
 		disabled?: boolean;
 		onChange?: ((value: string | undefined) => void) | undefined;
-		label?: string;
+		strings?: (l: LocaleText) => OptionsText;
 	};
 
-	let { options, value = $bindable(), onChange, disabled = false, label }: Props = $props();
+	let { options, value = $bindable(), onChange, disabled = false, strings }: Props = $props();
+
+	const locale = getLocaleContext();
+	const text = $derived(strings ? strings(locale) : undefined);
 
 	function handleChange(event: Event) {
 		const target = event.target as HTMLSelectElement;
@@ -16,8 +23,8 @@
 </script>
 
 <label>
-	{#if label}
-		<span class="label">{label}</span>
+	{#if text?.label}
+		<span class="label">{text.label}</span>
 	{/if}
 	<select bind:value onchange={handleChange} {disabled}>
 		{#each options as option}

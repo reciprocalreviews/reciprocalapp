@@ -15,12 +15,13 @@
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { DeleteLabel, EmptyLabel, ScholarLabel, SettingsLabel } from '$lib/components/Labels';
+	import { DeleteLabel, ScholarLabel, SettingsLabel } from '$lib/components/Labels';
 	import Slider from '$lib/components/Slider.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { validEmail, isntEmpty, validEmailsOrORCIDs, validORCID } from '$lib/validation';
 	import type { LocaleText } from '$lib/locales/Locale';
+	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -55,6 +56,7 @@
 	} = $props();
 
 	const db = getDB();
+	const locale = getLocaleContext();
 
 	let newRole: string = $state('');
 	let invites = $state<Record<RoleID, string>>(
@@ -394,19 +396,26 @@
 						<Checkbox
 							on={role.invited}
 							change={(on) => db().editRoleInvited(role.id, on)}
-							label={(l) => role.invited ? l.view.roles.checkbox.invited.on : l.view.roles.checkbox.invited.off}
+							label={(l) =>
+								role.invited ? l.view.roles.checkbox.invited.on : l.view.roles.checkbox.invited.off}
 						/>
 
 						<Checkbox
 							on={role.anonymous_authors}
 							change={(on) => db().editRoleAnonymousAuthors(role.id, on)}
-							label={(l) => role.anonymous_authors ? l.view.roles.checkbox.anonymousAuthors.on : l.view.roles.checkbox.anonymousAuthors.off}
+							label={(l) =>
+								role.anonymous_authors
+									? l.view.roles.checkbox.anonymousAuthors.on
+									: l.view.roles.checkbox.anonymousAuthors.off}
 						/>
 
 						<Checkbox
 							on={role.biddable}
 							change={(on) => db().editRoleBidding(role.id, on)}
-							label={(l) => role.biddable ? l.view.roles.checkbox.biddable.on : l.view.roles.checkbox.biddable.off}
+							label={(l) =>
+								role.biddable
+									? l.view.roles.checkbox.biddable.on
+									: l.view.roles.checkbox.biddable.off}
 						/>
 
 						<Slider
@@ -420,10 +429,10 @@
 						/>
 
 						<Options
-							label="What role can approve assignments to this role for a submission, other than the editor?"
+							strings={(l) => l.view.roles.options.approver}
 							value={role.approver ?? undefined}
 							options={[
-								{ label: EmptyLabel, value: undefined },
+								{ label: locale.shorthand.empty, value: undefined },
 								...roles
 									.filter((r) => r.id !== role.id)
 									.map((r) => ({ label: r.name, value: r.id }))

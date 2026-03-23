@@ -87,7 +87,7 @@
 					label: venue.title,
 					value: venue.id
 				}))}
-				label="Select a venue"
+				strings={(l) => l.view.gift.options.venue}
 			/>
 		{/if}
 
@@ -97,7 +97,7 @@
 				label: currency.name,
 				value: currency.id
 			}))}
-			label="What currency should be used?"
+			strings={(l) => l.view.gift.options.currency}
 		/>
 		<Slider
 			min={1}

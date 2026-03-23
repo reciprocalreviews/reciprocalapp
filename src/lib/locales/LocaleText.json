@@ -839,6 +839,18 @@
                   ],
                   "type": "object"
                 },
+                "options": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "tokenOwner": {
+                      "$ref": "#/definitions/OptionsText"
+                    }
+                  },
+                  "required": [
+                    "tokenOwner"
+                  ],
+                  "type": "object"
+                },
                 "slider": {
                   "additionalProperties": false,
                   "properties": {
@@ -881,7 +893,8 @@
                 "field",
                 "card",
                 "checkbox",
-                "slider"
+                "slider",
+                "options"
               ],
               "type": "object"
             },
@@ -1120,6 +1133,18 @@
                   ],
                   "type": "object"
                 },
+                "options": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "submissionType": {
+                      "$ref": "#/definitions/OptionsText"
+                    }
+                  },
+                  "required": [
+                    "submissionType"
+                  ],
+                  "type": "object"
+                },
                 "slider": {
                   "additionalProperties": false,
                   "properties": {
@@ -1142,7 +1167,8 @@
                 "button",
                 "note",
                 "field",
-                "slider"
+                "slider",
+                "options"
               ],
               "type": "object"
             },
@@ -1341,6 +1367,31 @@
                   ],
                   "type": "object"
                 },
+                "options": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "currency": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "createNew": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the select",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "createNew"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "currency"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -1361,7 +1412,8 @@
                 "title",
                 "status",
                 "button",
-                "field"
+                "field",
+                "options"
               ],
               "type": "object"
             },
@@ -1780,6 +1832,22 @@
                   ],
                   "type": "object"
                 },
+                "options": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "assignmentRole": {
+                      "$ref": "#/definitions/OptionsText"
+                    },
+                    "submissionType": {
+                      "$ref": "#/definitions/OptionsText"
+                    }
+                  },
+                  "required": [
+                    "submissionType",
+                    "assignmentRole"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -1827,7 +1895,8 @@
                 "button",
                 "field",
                 "checkbox",
-                "status"
+                "status",
+                "options"
               ],
               "type": "object"
             },
@@ -2164,6 +2233,31 @@
                   ],
                   "type": "object"
                 },
+                "options": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "compensationRole": {
+                      "$ref": "#/definitions/OptionsText"
+                    },
+                    "revisionOf": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "none": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "none"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "revisionOf",
+                    "compensationRole"
+                  ],
+                  "type": "object"
+                },
                 "subtitle": {
                   "type": "string"
                 },
@@ -2182,7 +2276,8 @@
                 "button",
                 "feedback",
                 "field",
-                "card"
+                "card",
+                "options"
               ],
               "type": "object"
             },
@@ -2546,6 +2641,9 @@
             "edit": {
               "type": "string"
             },
+            "empty": {
+              "type": "string"
+            },
             "filter": {
               "type": "string"
             },
@@ -2567,7 +2665,8 @@
             "admin",
             "minter",
             "steward",
-            "orcid"
+            "orcid",
+            "empty"
           ],
           "type": "object"
         },
@@ -2639,6 +2738,22 @@
                 "noTokens": {
                   "type": "string"
                 },
+                "options": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "currency": {
+                      "$ref": "#/definitions/OptionsText"
+                    },
+                    "venue": {
+                      "$ref": "#/definitions/OptionsText"
+                    }
+                  },
+                  "required": [
+                    "venue",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
                 "slider": {
                   "additionalProperties": false,
                   "properties": {
@@ -2657,7 +2772,8 @@
                 "button",
                 "field",
                 "checkbox",
-                "slider"
+                "slider",
+                "options"
               ],
               "type": "object"
             },
@@ -2824,6 +2940,31 @@
                   ],
                   "type": "object"
                 },
+                "options": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "approver": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "label": {
+                          "description": "The optional label to show above the select",
+                          "type": "string"
+                        },
+                        "none": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "none"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "approver"
+                  ],
+                  "type": "object"
+                },
                 "slider": {
                   "additionalProperties": false,
                   "properties": {
@@ -2847,7 +2988,8 @@
                 "field",
                 "card",
                 "checkbox",
-                "slider"
+                "slider",
+                "options"
               ],
               "type": "object"
             },
@@ -3007,6 +3149,17 @@
         "note",
         "placeholder"
       ],
+      "type": "object"
+    },
+    "OptionsText": {
+      "additionalProperties": false,
+      "description": "Text for the Options (select) component",
+      "properties": {
+        "label": {
+          "description": "The optional label to show above the select",
+          "type": "string"
+        }
+      },
       "type": "object"
     },
     "SliderText": {

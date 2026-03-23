@@ -179,6 +179,7 @@
 		{#snippet subtitle()}
 			{#if isEditor}
 				<Options
+					strings={(l) => l.page.submission.options.submissionType}
 					bind:value={submissionType}
 					options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
 					onChange={(typeID) =>
@@ -276,7 +277,7 @@
 					have assignment privileges.</Tip
 				>
 				<Options
-					label="Role"
+					strings={(l) => l.page.submission.options.assignmentRole}
 					bind:value={newAssignmentRole}
 					options={[
 						...(isAdmin ? roles : rolesScholarCanApprove).map((role) => ({

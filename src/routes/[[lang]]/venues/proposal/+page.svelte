@@ -12,6 +12,7 @@
 	import type { CurrencyID } from '$data/types';
 	import Options from '$lib/components/Options.svelte';
 	import { VenueLabel } from '$lib/components/Labels';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	let { data } = $props();
 
@@ -28,6 +29,7 @@
 
 	const db = getDB();
 	const auth = getAuth();
+	const locale = getLocaleContext();
 
 	function validSize(text: string) {
 		return parseInt(text) > 0;
@@ -107,10 +109,10 @@
 						: undefined}
 			/>
 			<Options
-				label="Currency"
+				strings={(l) => l.page.proposeVenue.options.currency}
 				bind:value={currency}
 				options={[
-					{ label: 'Create a new currency', value: undefined },
+					{ label: locale.page.proposeVenue.options.currency.createNew, value: undefined },
 					...(currencies ?? []).map((currency) => ({
 						label: currency.name,
 						value: currency.id

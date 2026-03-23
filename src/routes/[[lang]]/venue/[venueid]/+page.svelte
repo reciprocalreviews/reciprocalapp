@@ -15,6 +15,7 @@
 	import Form from '$lib/components/Form.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Options from '$lib/components/Options.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
 	import Subheader from '$lib/components/Subheader.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import { validURL } from '$lib/validation';
@@ -34,6 +35,7 @@
 	} = $derived(data);
 
 	const db = getDB();
+	const locale = getLocaleContext();
 	let isAdmin = $derived(scholar && venue && venue.admins.includes(scholar.id));
 	let isVolunteer = $derived(
 		scholar && venue && volunteers && volunteers.some((v) => v.scholarid === scholar.id)
@@ -185,7 +187,7 @@
 							{#if isAdmin}
 								<Options
 									options={[
-										{ label: '—', value: undefined },
+										{ label: locale.shorthand.empty, value: undefined },
 										...types
 											.filter(
 												(t) =>
@@ -249,7 +251,7 @@
 						bind:text={compensationManuscript}
 					></TextField>
 					<Options
-						label="Role"
+						strings={(l) => l.page.venue.options.compensationRole}
 						options={roles.map((role) => ({
 							label: role.name,
 							value: role.id

@@ -26,6 +26,12 @@ export type ConfirmButtonText = ButtonText & { warn: string };
 /** Text for a checkbox with on/off state variants */
 export type CheckboxOnOff = { on: string; off: string };
 
+/** Text for the Options (select) component */
+export type OptionsText = {
+	/** The optional label to show above the select */
+	label?: string;
+};
+
 /** Text for the Slider component */
 export type SliderText = {
 	/** The label describing the slider's purpose */
@@ -54,6 +60,7 @@ export type LocaleText = {
 		minter: string;
 		steward: string;
 		orcid: string;
+		empty: string;
 	};
 	header: {
 		home: string;
@@ -199,6 +206,9 @@ export type LocaleText = {
 			slider: {
 				payment: SliderText;
 			};
+			options: {
+				submissionType: OptionsText;
+			};
 		};
 		submissions: {
 			title: string;
@@ -268,6 +278,10 @@ export type LocaleText = {
 				incomplete: string;
 				unapproved: string;
 			};
+			options: {
+				submissionType: OptionsText;
+				assignmentRole: OptionsText;
+			};
 		};
 		venue: {
 			title: string;
@@ -299,6 +313,9 @@ export type LocaleText = {
 			card: {
 				setup: CardText;
 				gift: CardText;
+			};
+			options: {
+				compensationRole: OptionsText;
 			};
 		};
 		settings: {
@@ -400,6 +417,9 @@ export type LocaleText = {
 			slider: {
 				newTokenCount: SliderText;
 			};
+			options: {
+				tokenOwner: OptionsText;
+			};
 		};
 		currencyTransactions: {
 			subtitle: string;
@@ -438,6 +458,9 @@ export type LocaleText = {
 				size: TextFieldText;
 				rationale: TextFieldText;
 			};
+			options: {
+				currency: OptionsText & { createNew: string };
+			};
 		};
 		about: {
 			title: string;
@@ -468,6 +491,10 @@ export type LocaleText = {
 			};
 			slider: {
 				tokenAmount: SliderText;
+			};
+			options: {
+				venue: OptionsText;
+				currency: OptionsText;
 			};
 		};
 		transactions: {
@@ -534,6 +561,9 @@ export type LocaleText = {
 			slider: {
 				compensation: SliderText;
 				desiredAssignments: SliderText;
+			};
+			options: {
+				approver: OptionsText;
 			};
 		};
 		tasks: {
