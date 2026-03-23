@@ -59,7 +59,10 @@
 					valid={(text) => (validURL(text) ? undefined : (l) => l.page.venue.field.url.invalid)}
 					edit={(text) => db().editVenueURL(venue.id, text)}
 				/>
-			{:else}<Link to={venue.url}>{venue.url}</Link>{/if}{/snippet}
+			{:else}
+				<Link to={venue.url}>{venue.url}</Link>
+			{/if}
+		{/snippet}
 
 		<!-- Show the description -->
 		{#if isAdmin}

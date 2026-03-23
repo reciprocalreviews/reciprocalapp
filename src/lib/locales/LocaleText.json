@@ -2552,6 +2552,9 @@
             "minter": {
               "type": "string"
             },
+            "orcid": {
+              "type": "string"
+            },
             "steward": {
               "type": "string"
             }
@@ -2563,7 +2566,8 @@
             "filter",
             "admin",
             "minter",
-            "steward"
+            "steward",
+            "orcid"
           ],
           "type": "object"
         },

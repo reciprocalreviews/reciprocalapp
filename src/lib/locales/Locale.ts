@@ -53,6 +53,7 @@ export type LocaleText = {
 		admin: string;
 		minter: string;
 		steward: string;
+		orcid: string;
 	};
 	header: {
 		home: string;

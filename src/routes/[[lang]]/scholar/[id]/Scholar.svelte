@@ -82,7 +82,11 @@
 >
 	{#snippet subtitle()}<Text path={(l) => l.page.scholar.subtitle} />{/snippet}
 	{#snippet details()}
-		<Status good={scholar.isAvailable()} label={(l) => scholar.isAvailable() ? l.page.scholar.status.available : l.page.scholar.status.unavailable} />
+		<Status
+			good={scholar.isAvailable()}
+			label={(l) =>
+				scholar.isAvailable() ? l.page.scholar.status.available : l.page.scholar.status.unavailable}
+		/>
 		<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>
 		{#if scholar.getORCID()}
 			ORCID <Link to="https://orcid.org/{scholar.getORCID()}">{scholar.getORCID()}</Link>

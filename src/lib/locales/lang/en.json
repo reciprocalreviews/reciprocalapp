@@ -8,7 +8,8 @@
 		"filter": "\ud83d\udd0e",
 		"admin": "Admin",
 		"minter": "Minter",
-		"steward": "Steward"
+		"steward": "Steward",
+		"orcid": "ORCID"
 	},
 	"header": {
 		"home": "Home",

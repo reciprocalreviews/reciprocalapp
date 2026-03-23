@@ -189,14 +189,15 @@
 				/>{/if}
 		{/snippet}
 		{#snippet details()}
-			{#if previous}<Link to="/venue/{venue.id}/submission/{previous.id}"
-					>{previous.externalid}</Link
-				>
-				→{/if}
+			{#if previous}
+				<Link to="/venue/{venue.id}/submission/{previous.id}">{previous.externalid}</Link>→
+			{/if}
 			{submission.externalid}
-			{#if done}<Status good={false} label={(l) => l.page.submission.status.done} />{:else}<Status
-					label={(l) => l.page.submission.status.reviewing}
-				/>{/if}
+			{#if done}
+				<Status good={false} label={(l) => l.page.submission.status.done} />
+			{:else}
+				<Status label={(l) => l.page.submission.status.reviewing} />
+			{/if}
 		{/snippet}
 
 		<!-- Only editors can update the status of a submission -->

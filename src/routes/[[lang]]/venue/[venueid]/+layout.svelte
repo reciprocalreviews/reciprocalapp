@@ -26,15 +26,23 @@
 </script>
 
 {#if venue === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.venue.unknownTitle} breadcrumbs={[[`/venues`, 'Venue']]}>
+	<Page
+		icon={ErrorLabel}
+		title={(l) => l.page.venue.unknownTitle}
+		breadcrumbs={[[`/venues`, 'Venue']]}
+	>
 		<p>Unable to find this venue.</p>
 	</Page>
 {:else if venue.inactive !== null && !venue.admins.includes(data.scholar?.id ?? '')}
 	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
 		{#snippet subtitle()}<Text path={(l) => l.page.venue.subtitle} />{/snippet}
-		{#snippet details()}<Link to={venue.url}>{venue.url}</Link> Admins: {#each venue.admins as adminID}
+		{#snippet details()}
+			<Link to={venue.url}>{venue.url}</Link>
+			<Text path={(l) => l.shorthand.admin} />
+			{#each venue.admins as adminID}
 				<ScholarLink id={adminID} />
-			{/each}{/snippet}
+			{/each}
+		{/snippet}
 		<Feedback
 			error
 			inline={false}
