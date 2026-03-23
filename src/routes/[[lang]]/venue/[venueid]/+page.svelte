@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/Button.svelte';
+	import Text from '$lib/locales/Text.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Link from '$lib/components/Link.svelte';
 	import { getDB } from '$lib/data/CRUD';
@@ -49,7 +50,7 @@
 	</Page>
 {:else}
 	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
-		{#snippet subtitle()}Venue{/snippet}
+		{#snippet subtitle()}<Text path={(l) => l.page.venue.subtitle} />{/snippet}
 		{#snippet details()}
 			{#if isAdmin}
 				<EditableText

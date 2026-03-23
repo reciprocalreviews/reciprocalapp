@@ -235,6 +235,10 @@
 					"placeholder": "Why should the editors adopt Reciprocal Reviews?",
 					"invalid": "Must include a rationale"
 				}
+			},
+			"subtitle": {
+				"proposal": "Proposal",
+				"approved": "Approved"
 			}
 		},
 		"volunteers": {
@@ -259,13 +263,15 @@
 			"status": {
 				"active": "active",
 				"inactive": "inactive"
-			}
+			},
+			"subtitle": "Volunteers"
 		},
 		"venueTransactions": {
 			"title": "Transactions",
 			"feedback": {
 				"transactionsNotLoaded": "Unable to load transactions for this venue."
-			}
+			},
+			"subtitle": "Transactions"
 		},
 		"newSubmission": {
 			"title": "New submission",
@@ -464,7 +470,8 @@
 				"completed": "Completed",
 				"incomplete": "Incomplete",
 				"unapproved": "Unapproved"
-			}
+			},
+			"subtitle": "Submission"
 		},
 		"venue": {
 			"title": "Venue",
@@ -523,7 +530,8 @@
 					"note": "Send tokens to a scholar"
 				}
 			},
-			"unknownTitle": "Unknown venue"
+			"unknownTitle": "Unknown venue",
+			"subtitle": "Venue"
 		},
 		"settings": {
 			"title": "Settings",
@@ -560,7 +568,8 @@
 					"on": "**Anonymous assignments**: Authors and conflicted scholars cannot see who is assigned to review their submissions.",
 					"off": "**Visible assignments**: Authors and conflicted scholars can see who is assigned to review their submissions. This is open reviewing."
 				}
-			}
+			},
+			"subtitle": "Settings"
 		},
 		"scholar": {
 			"title": "Anonymous",
@@ -611,7 +620,8 @@
 			"status": {
 				"available": "Available",
 				"unavailable": "Unavailable"
-			}
+			},
+			"subtitle": "Scholar"
 		},
 		"currency": {
 			"title": "Currency",
@@ -676,7 +686,8 @@
 			},
 			"checkbox": {
 				"mintConsent": "I understand that creating excess tokens will erode this currency's value."
-			}
+			},
+			"subtitle": "Currency"
 		},
 		"about": {
 			"title": "About",
@@ -690,6 +701,12 @@
 		},
 		"updates": {
 			"title": "Updates"
+		},
+		"currencyTransactions": {
+			"subtitle": "Transactions"
+		},
+		"scholarTransactions": {
+			"subtitle": "Transactions"
 		}
 	},
 	"view": {

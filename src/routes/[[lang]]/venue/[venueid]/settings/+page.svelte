@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Card from '$lib/components/Card.svelte';
+	import Text from '$lib/locales/Text.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
@@ -29,7 +30,7 @@
 	</Page>
 {:else if !venue.admins.includes(scholar.id)}
 	<Page icon={ErrorLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
-		{#snippet subtitle()}Settings{/snippet}
+		{#snippet subtitle()}<Text path={(l) => l.page.settings.subtitle} />{/snippet}
 		<Feedback error text={(l) => l.page.settings.feedback.adminsOnly} />
 	</Page>
 {:else}
@@ -43,7 +44,7 @@
 			update: (text) => db().editVenueTitle(venue.id, text)
 		}}
 	>
-		{#snippet subtitle()}Settings{/snippet}
+		{#snippet subtitle()}<Text path={(l) => l.page.settings.subtitle} />{/snippet}
 		<p>Welcome venue admin! You can manage this venue's settings here.</p>
 
 		<Card

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import Text from '$lib/locales/Text.svelte';
 	import type { LayoutData } from './$types';
 	import Page from '$lib/components/Page.svelte';
 	import Link from '$lib/components/Link.svelte';
@@ -30,7 +31,7 @@
 	</Page>
 {:else if venue.inactive !== null && !venue.admins.includes(data.scholar?.id ?? '')}
 	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
-		{#snippet subtitle()}Venue{/snippet}
+		{#snippet subtitle()}<Text path={(l) => l.page.venue.subtitle} />{/snippet}
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link> Admins: {#each venue.admins as adminID}
 				<ScholarLink id={adminID} />
 			{/each}{/snippet}

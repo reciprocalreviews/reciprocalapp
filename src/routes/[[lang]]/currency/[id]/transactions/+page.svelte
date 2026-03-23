@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Circle from '$lib/components/Circle.svelte';
+	import Text from '$lib/locales/Text.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { ErrorLabel, TokenLabel } from '$lib/components/Labels';
 	import Page from '$lib/components/Page.svelte';
@@ -18,7 +19,7 @@
 		title={currency.name}
 		breadcrumbs={[[`/currency/${currency.id}`, `${TokenLabel} ${currency.name}`]]}
 	>
-		{#snippet subtitle()}Transactions{/snippet}
+		{#snippet subtitle()}<Text path={(l) => l.page.currencyTransactions.subtitle} />{/snippet}
 		<p>There are <Circle icon={count}></Circle> transactions with this currency visible to you.</p>
 		<Transactions
 			{transactions}

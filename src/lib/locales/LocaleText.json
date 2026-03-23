@@ -1,2938 +1,3009 @@
 {
-  "$ref": "#/definitions/LocaleText",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "definitions": {
-    "ButtonText": {
-      "additionalProperties": false,
-      "properties": {
-        "label": {
-          "description": "The button label to show",
-          "type": "string"
-        },
-        "tip": {
-          "description": "The tooltip and ARIA label for a button",
-          "type": "string"
-        },
-        "warn": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "tip",
-        "label"
-      ],
-      "type": "object"
-    },
-    "CardText": {
-      "additionalProperties": false,
-      "description": "Text for the Card component",
-      "properties": {
-        "header": {
-          "description": "The header at the top of the card",
-          "type": "string"
-        },
-        "note": {
-          "description": "The note below the header",
-          "type": "string"
-        }
-      },
-      "required": [
-        "header",
-        "note"
-      ],
-      "type": "object"
-    },
-    "ConfirmButtonText": {
-      "additionalProperties": false,
-      "description": "An optional warning text for confirm buttons",
-      "properties": {
-        "label": {
-          "description": "The button label to show",
-          "type": "string"
-        },
-        "tip": {
-          "description": "The tooltip and ARIA label for a button",
-          "type": "string"
-        },
-        "warn": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "label",
-        "tip",
-        "warn"
-      ],
-      "type": "object"
-    },
-    "LocaleText": {
-      "additionalProperties": false,
-      "properties": {
-        "$schema": {
-          "type": "string"
-        },
-        "component": {
-          "additionalProperties": false,
-          "properties": {
-            "dialog": {
-              "additionalProperties": false,
-              "properties": {
-                "close": {
-                  "$ref": "#/definitions/ButtonText"
-                }
-              },
-              "required": [
-                "close"
-              ],
-              "type": "object"
-            },
-            "header": {
-              "additionalProperties": false,
-              "properties": {
-                "logout": {
-                  "$ref": "#/definitions/ButtonText"
-                }
-              },
-              "required": [
-                "logout"
-              ],
-              "type": "object"
-            },
-            "notification": {
-              "additionalProperties": false,
-              "properties": {
-                "dismiss": {
-                  "$ref": "#/definitions/ButtonText"
-                }
-              },
-              "required": [
-                "dismiss"
-              ],
-              "type": "object"
-            },
-            "text": {
-              "additionalProperties": false,
-              "properties": {
-                "cancel": {
-                  "$ref": "#/definitions/ButtonText"
-                },
-                "edit": {
-                  "$ref": "#/definitions/ButtonText"
-                },
-                "save": {
-                  "$ref": "#/definitions/ButtonText"
-                }
-              },
-              "required": [
-                "save",
-                "edit",
-                "cancel"
-              ],
-              "type": "object"
-            }
-          },
-          "required": [
-            "dialog",
-            "text",
-            "header",
-            "notification"
-          ],
-          "type": "object"
-        },
-        "error": {
-          "additionalProperties": false,
-          "properties": {
-            "AcceptRoleInvite": {
-              "type": "string"
-            },
-            "AddCurrencyMinter": {
-              "type": "string"
-            },
-            "AlreadyApproved": {
-              "type": "string"
-            },
-            "AlreadyMinter": {
-              "type": "string"
-            },
-            "AlreadyVolunteered": {
-              "type": "string"
-            },
-            "ApproveAssignment": {
-              "type": "string"
-            },
-            "ApproveProposalCannotUpdateVenue": {
-              "type": "string"
-            },
-            "ApproveProposalNoCurrency": {
-              "type": "string"
-            },
-            "ApproveProposalNoMinters": {
-              "type": "string"
-            },
-            "ApproveProposalNoScholars": {
-              "type": "string"
-            },
-            "ApproveProposalNoSupporters": {
-              "type": "string"
-            },
-            "ApproveProposalNoVenue": {
-              "type": "string"
-            },
-            "ApproveProposalNotFound": {
-              "type": "string"
-            },
-            "CompensationAssignmentCheck": {
-              "type": "string"
-            },
-            "CompensationSubmissionNotFound": {
-              "type": "string"
-            },
-            "CompleteAssignmentNotFound": {
-              "type": "string"
-            },
-            "CompleteAssignmentRoleNotFound": {
-              "type": "string"
-            },
-            "CompleteAssignmentVenueNotFound": {
-              "type": "string"
-            },
-            "CreateAssignment": {
-              "type": "string"
-            },
-            "CreateCompensation": {
-              "type": "string"
-            },
-            "CreateProposal": {
-              "type": "string"
-            },
-            "CreateRole": {
-              "type": "string"
-            },
-            "CreateSubmissionType": {
-              "type": "string"
-            },
-            "CreateSupporter": {
-              "type": "string"
-            },
-            "CreateTransaction": {
-              "type": "string"
-            },
-            "CreateVolunteer": {
-              "type": "string"
-            },
-            "DeclareConflict": {
-              "type": "string"
-            },
-            "DeleteAssignment": {
-              "type": "string"
-            },
-            "DeleteProposal": {
-              "type": "string"
-            },
-            "DeleteRole": {
-              "type": "string"
-            },
-            "DeleteSubmissionType": {
-              "type": "string"
-            },
-            "EditCompensation": {
-              "type": "string"
-            },
-            "EditCurrencyMinters": {
-              "type": "string"
-            },
-            "EditProposalCensus": {
-              "type": "string"
-            },
-            "EditProposalEditors": {
-              "type": "string"
-            },
-            "EditProposalMinters": {
-              "type": "string"
-            },
-            "EditProposalTitle": {
-              "type": "string"
-            },
-            "EditProposalURL": {
-              "type": "string"
-            },
-            "EditRoleAnonymousAuthors": {
-              "type": "string"
-            },
-            "EditRoleApprover": {
-              "type": "string"
-            },
-            "EditRoleBidding": {
-              "type": "string"
-            },
-            "EditRoleDesiredAssignments": {
-              "type": "string"
-            },
-            "EditSubmissionType": {
-              "type": "string"
-            },
-            "EditSupport": {
-              "type": "string"
-            },
-            "EditVenueAddEditorAlreadyEditor": {
-              "type": "string"
-            },
-            "EditVenueAddEditorVenueNotFound": {
-              "type": "string"
-            },
-            "EditVenueAdmins": {
-              "type": "string"
-            },
-            "EditVenueAnonymousAssignments": {
-              "type": "string"
-            },
-            "EditVenueDescription": {
-              "type": "string"
-            },
-            "EditVenueInactive": {
-              "type": "string"
-            },
-            "EditVenueSubmissionCost": {
-              "type": "string"
-            },
-            "EditVenueTitle": {
-              "type": "string"
-            },
-            "EditVenueURL": {
-              "type": "string"
-            },
-            "EditVenueWelcomeAmount": {
-              "type": "string"
-            },
-            "EmailScholar": {
-              "type": "string"
-            },
-            "GetScholarTransactions": {
-              "type": "string"
-            },
-            "InvalidCharges": {
-              "type": "string"
-            },
-            "InviteToRole": {
-              "type": "string"
-            },
-            "InviteToRoleMissing": {
-              "type": "string"
-            },
-            "InviteToRoleSuccess": {
-              "type": "string"
-            },
-            "MintTokens": {
-              "type": "string"
-            },
-            "MissingApprovalVenue": {
-              "type": "string"
-            },
-            "MissingRecipient": {
-              "type": "string"
-            },
-            "MissingSubmissionCharge": {
-              "type": "string"
-            },
-            "NewSubmission": {
-              "type": "string"
-            },
-            "NoRoleCompensation": {
-              "type": "string"
-            },
-            "PendingTransactionHasTokens": {
-              "type": "string"
-            },
-            "RemoveSupport": {
-              "type": "string"
-            },
-            "ReorderRole": {
-              "type": "string"
-            },
-            "ScholarNotFound": {
-              "type": "string"
-            },
-            "TransactionApprovalUpdate": {
-              "type": "string"
-            },
-            "TransactionMissingFrom": {
-              "type": "string"
-            },
-            "TransactionMissingTo": {
-              "type": "string"
-            },
-            "TransactionNotCanceled": {
-              "type": "string"
-            },
-            "TransferScholarTokens": {
-              "type": "string"
-            },
-            "TransferTokensInsufficient": {
-              "type": "string"
-            },
-            "TransferVenueTokens": {
-              "type": "string"
-            },
-            "UndeletedTransaction": {
-              "type": "string"
-            },
-            "UnknownTransaction": {
-              "type": "string"
-            },
-            "UnknownVenue": {
-              "type": "string"
-            },
-            "UpdateCurrencyDescription": {
-              "type": "string"
-            },
-            "UpdateCurrencyName": {
-              "type": "string"
-            },
-            "UpdateRoleAmount": {
-              "type": "string"
-            },
-            "UpdateRoleDescription": {
-              "type": "string"
-            },
-            "UpdateRoleInvited": {
-              "type": "string"
-            },
-            "UpdateRoleName": {
-              "type": "string"
-            },
-            "UpdateScholarAvailability": {
-              "type": "string"
-            },
-            "UpdateScholarEmail": {
-              "type": "string"
-            },
-            "UpdateScholarName": {
-              "type": "string"
-            },
-            "UpdateScholarStatus": {
-              "type": "string"
-            },
-            "UpdateSubmissionExpertise": {
-              "type": "string"
-            },
-            "UpdateSubmissionStatus": {
-              "type": "string"
-            },
-            "UpdateSubmissionTitle": {
-              "type": "string"
-            },
-            "UpdateSubmissionType": {
-              "type": "string"
-            },
-            "UpdateVolunteerActive": {
-              "type": "string"
-            },
-            "UpdateVolunteerExpertise": {
-              "type": "string"
-            },
-            "WelcomeVolunteer": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "UpdateScholarStatus",
-            "UpdateScholarName",
-            "UpdateScholarEmail",
-            "UpdateScholarAvailability",
-            "CreateProposal",
-            "EditProposalTitle",
-            "EditProposalCensus",
-            "EditProposalEditors",
-            "EditProposalMinters",
-            "EditProposalURL",
-            "CreateSupporter",
-            "UpdateCurrencyName",
-            "UpdateCurrencyDescription",
-            "EditSupport",
-            "RemoveSupport",
-            "DeleteProposal",
-            "ApproveProposalNotFound",
-            "ApproveProposalNoScholars",
-            "ApproveProposalNoMinters",
-            "ApproveProposalNoVenue",
-            "ApproveProposalCannotUpdateVenue",
-            "ApproveProposalNoCurrency",
-            "EditVenueDescription",
-            "EditVenueAdmins",
-            "EditVenueAddEditorVenueNotFound",
-            "ScholarNotFound",
-            "EditVenueAddEditorAlreadyEditor",
-            "EditVenueTitle",
-            "EditVenueURL",
-            "EditVenueInactive",
-            "EditVenueAnonymousAssignments",
-            "EditVenueWelcomeAmount",
-            "EditVenueSubmissionCost",
-            "EditRoleBidding",
-            "EditRoleDesiredAssignments",
-            "EditRoleAnonymousAuthors",
-            "EditRoleApprover",
-            "CreateRole",
-            "UpdateRoleName",
-            "UpdateRoleDescription",
-            "UpdateRoleInvited",
-            "UpdateRoleAmount",
-            "ReorderRole",
-            "DeleteRole",
-            "UpdateSubmissionType",
-            "CreateSubmissionType",
-            "EditSubmissionType",
-            "DeleteSubmissionType",
-            "CreateCompensation",
-            "EditCompensation",
-            "CreateVolunteer",
-            "WelcomeVolunteer",
-            "AlreadyVolunteered",
-            "UpdateVolunteerActive",
-            "UpdateVolunteerExpertise",
-            "InviteToRole",
-            "InviteToRoleMissing",
-            "InviteToRoleSuccess",
-            "AcceptRoleInvite",
-            "EditCurrencyMinters",
-            "AddCurrencyMinter",
-            "AlreadyMinter",
-            "MintTokens",
-            "TransferVenueTokens",
-            "TransferScholarTokens",
-            "TransferTokensInsufficient",
-            "CreateTransaction",
-            "GetScholarTransactions",
-            "TransactionMissingFrom",
-            "TransactionMissingTo",
-            "PendingTransactionHasTokens",
-            "UnknownTransaction",
-            "TransactionNotCanceled",
-            "AlreadyApproved",
-            "TransactionApprovalUpdate",
-            "MissingApprovalVenue",
-            "MissingRecipient",
-            "UndeletedTransaction",
-            "InvalidCharges",
-            "NewSubmission",
-            "UnknownVenue",
-            "MissingSubmissionCharge",
-            "UpdateSubmissionExpertise",
-            "UpdateSubmissionTitle",
-            "UpdateSubmissionStatus",
-            "ApproveAssignment",
-            "CreateAssignment",
-            "CompensationSubmissionNotFound",
-            "CompensationAssignmentCheck",
-            "CompleteAssignmentNotFound",
-            "CompleteAssignmentRoleNotFound",
-            "CompleteAssignmentVenueNotFound",
-            "DeleteAssignment",
-            "EmailScholar",
-            "ApproveProposalNoSupporters",
-            "DeclareConflict",
-            "NoRoleCompensation"
-          ],
-          "type": "object"
-        },
-        "footer": {
-          "additionalProperties": false,
-          "properties": {
-            "link": {
-              "additionalProperties": false,
-              "properties": {
-                "about": {
-                  "type": "string"
-                },
-                "feedback": {
-                  "type": "string"
-                },
-                "updates": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "about",
-                "updates",
-                "feedback"
-              ],
-              "type": "object"
-            }
-          },
-          "required": [
-            "link"
-          ],
-          "type": "object"
-        },
-        "header": {
-          "additionalProperties": false,
-          "properties": {
-            "feedback": {
-              "additionalProperties": false,
-              "properties": {
-                "testWarning": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "testWarning"
-              ],
-              "type": "object"
-            },
-            "home": {
-              "type": "string"
-            },
-            "link": {
-              "additionalProperties": false,
-              "properties": {
-                "login": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "login"
-              ],
-              "type": "object"
-            },
-            "saved": {
-              "type": "string"
-            },
-            "venues": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "home",
-            "venues",
-            "saved",
-            "link",
-            "feedback"
-          ],
-          "type": "object"
-        },
-        "lang": {
-          "type": "string"
-        },
-        "page": {
-          "additionalProperties": false,
-          "properties": {
-            "about": {
-              "additionalProperties": false,
-              "properties": {
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "stewardsNotLoaded": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "stewardsNotLoaded"
-                  ],
-                  "type": "object"
-                },
-                "header": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "change": {
-                      "type": "string"
-                    },
-                    "stewards": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "stewards",
-                    "change"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "title",
-                "header",
-                "feedback"
-              ],
-              "type": "object"
-            },
-            "currency": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "addMinter": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "mint": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "removeMinter": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "mint",
-                    "removeMinter",
-                    "addMinter"
-                  ],
-                  "type": "object"
-                },
-                "card": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "addMinter": {
-                      "$ref": "#/definitions/CardText"
-                    },
-                    "mint": {
-                      "$ref": "#/definitions/CardText"
-                    }
-                  },
-                  "required": [
-                    "mint",
-                    "addMinter"
-                  ],
-                  "type": "object"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "notLoaded": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "notLoaded"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "description": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "mintPurpose": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "minter": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "invalidContact": {
-                          "type": "string"
-                        },
-                        "invalidMinter": {
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalidContact",
-                        "invalidMinter",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    },
-                    "name": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    }
-                  },
-                  "required": [
-                    "name",
-                    "mintPurpose",
-                    "minter",
-                    "description"
-                  ],
-                  "type": "object"
-                },
-                "header": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "minters": {
-                      "type": "string"
-                    },
-                    "tokens": {
-                      "type": "string"
-                    },
-                    "venues": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "minters",
-                    "venues",
-                    "tokens"
-                  ],
-                  "type": "object"
-                },
-                "note": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "minters": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "minters"
-                  ],
-                  "type": "object"
-                },
-                "tip": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "mintWarning": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "mintWarning"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "checkbox": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "mintConsent": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "mintConsent"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "title",
-                "feedback",
-                "tip",
-                "header",
-                "button",
-                "note",
-                "field",
-                "card",
-                "checkbox"
-              ],
-              "type": "object"
-            },
-            "error": {
-              "additionalProperties": false,
-              "properties": {
-                "title": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "title"
-              ],
-              "type": "object"
-            },
-            "home": {
-              "additionalProperties": false,
-              "properties": {
-                "call": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "beta": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "beta"
-                  ],
-                  "type": "object"
-                },
-                "lead": {
-                  "type": "string"
-                },
-                "tip": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "about": {
-                      "type": "string"
-                    },
-                    "browse": {
-                      "type": "string"
-                    },
-                    "track": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "browse",
-                    "about",
-                    "track"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "title",
-                "lead",
-                "call",
-                "tip",
-                "feedback"
-              ],
-              "type": "object"
-            },
-            "login": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "sendPassword": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "signIn": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "sendPassword",
-                    "signIn"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "email": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "password": {
-                      "$ref": "#/definitions/TextFieldText"
-                    }
-                  },
-                  "required": [
-                    "email",
-                    "password"
-                  ],
-                  "type": "object"
-                },
-                "note": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "orcid": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "orcid"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "title",
-                "button",
-                "note",
-                "field"
-              ],
-              "type": "object"
-            },
-            "newSubmission": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "addAuthor": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "checkBalances": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "removeAuthor": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "submit": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "removeAuthor",
-                    "addAuthor",
-                    "checkBalances",
-                    "submit"
-                  ],
-                  "type": "object"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "duplicateScholars": {
-                      "type": "string"
-                    },
-                    "incompletePayment": {
-                      "type": "string"
-                    },
-                    "notLoaded": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "notLoaded",
-                    "duplicateScholars",
-                    "incompletePayment"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "authorOrcid": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "expertise": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "manuscriptId": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "previousId": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "title": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    }
-                  },
-                  "required": [
-                    "title",
-                    "expertise",
-                    "manuscriptId",
-                    "previousId",
-                    "authorOrcid"
-                  ],
-                  "type": "object"
-                },
-                "note": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "approve": {
-                      "type": "string"
-                    },
-                    "balance": {
-                      "type": "string"
-                    },
-                    "payment": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "payment",
-                    "balance",
-                    "approve"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "title",
-                "feedback",
-                "button",
-                "note",
-                "field"
-              ],
-              "type": "object"
-            },
-            "proposal": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "approve": {
-                      "$ref": "#/definitions/ConfirmButtonText"
-                    },
-                    "deleteProposal": {
-                      "$ref": "#/definitions/ConfirmButtonText"
-                    },
-                    "deleteSupport": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "submitSupport": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "deleteSupport",
-                    "deleteProposal",
-                    "approve",
-                    "submitSupport"
-                  ],
-                  "type": "object"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "alreadySupported": {
-                      "type": "string"
-                    },
-                    "logIn": {
-                      "type": "string"
-                    },
-                    "notFound": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "alreadySupported",
-                    "logIn",
-                    "notFound"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "census": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "editors": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "minters": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "support": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "title": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "url": {
-                      "$ref": "#/definitions/TextFieldText"
-                    }
-                  },
-                  "required": [
-                    "title",
-                    "editors",
-                    "minters",
-                    "census",
-                    "url",
-                    "support"
-                  ],
-                  "type": "object"
-                },
-                "note": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "delete": {
-                      "type": "string"
-                    },
-                    "editors": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "delete",
-                    "editors"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "title",
-                "feedback",
-                "button",
-                "note",
-                "field"
-              ],
-              "type": "object"
-            },
-            "proposeVenue": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "propose": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "propose"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "editors": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "minters": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "mintersConflict": {
-                      "type": "string"
-                    },
-                    "rationale": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "size": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "url": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    },
-                    "venueName": {
-                      "$ref": "#/definitions/TextFieldText"
-                    }
-                  },
-                  "required": [
-                    "venueName",
-                    "editors",
-                    "minters",
-                    "mintersConflict",
-                    "url",
-                    "size",
-                    "rationale"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "status": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "notLoggedIn": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "notLoggedIn"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "title",
-                "button",
-                "field",
-                "status"
-              ],
-              "type": "object"
-            },
-            "scholar": {
-              "additionalProperties": false,
-              "properties": {
-                "card": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "gift": {
-                      "$ref": "#/definitions/CardText"
-                    }
-                  },
-                  "required": [
-                    "gift"
-                  ],
-                  "type": "object"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "commitmentsNotLoaded": {
-                      "type": "string"
-                    },
-                    "noStatus": {
-                      "type": "string"
-                    },
-                    "noTasks": {
-                      "type": "string"
-                    },
-                    "notLoaded": {
-                      "type": "string"
-                    },
-                    "notVolunteeringFirst": {
-                      "type": "string"
-                    },
-                    "notVolunteeringThird": {
-                      "type": "string"
-                    },
-                    "submissionsNotLoaded": {
-                      "type": "string"
-                    },
-                    "tokensNotLoaded": {
-                      "type": "string"
-                    },
-                    "volunteeringFirst": {
-                      "type": "string"
-                    },
-                    "volunteeringThird": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "notLoaded",
-                    "noStatus",
-                    "submissionsNotLoaded",
-                    "tokensNotLoaded",
-                    "noTasks",
-                    "commitmentsNotLoaded",
-                    "notVolunteeringFirst",
-                    "notVolunteeringThird",
-                    "volunteeringFirst",
-                    "volunteeringThird"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "email": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "name": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    },
-                    "status": {
-                      "$ref": "#/definitions/TextFieldText"
-                    }
-                  },
-                  "required": [
-                    "name",
-                    "status",
-                    "email"
-                  ],
-                  "type": "object"
-                },
-                "header": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "settings": {
-                      "type": "string"
-                    },
-                    "submissions": {
-                      "type": "string"
-                    },
-                    "tasks": {
-                      "type": "string"
-                    },
-                    "tokens": {
-                      "type": "string"
-                    },
-                    "volunteering": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "submissions",
-                    "tokens",
-                    "settings",
-                    "tasks",
-                    "volunteering"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "checkbox": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "available": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "available"
-                  ],
-                  "type": "object"
-                },
-                "status": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "available": {
-                      "type": "string"
-                    },
-                    "unavailable": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "available",
-                    "unavailable"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "title",
-                "header",
-                "feedback",
-                "field",
-                "card",
-                "checkbox",
-                "status"
-              ],
-              "type": "object"
-            },
-            "settings": {
-              "additionalProperties": false,
-              "properties": {
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "adminsOnly": {
-                      "type": "string"
-                    },
-                    "logIn": {
-                      "type": "string"
-                    },
-                    "unknownVenue": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "unknownVenue",
-                    "logIn",
-                    "adminsOnly"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "inactiveMessage": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "submissionCost": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "welcomeTokens": {
-                      "$ref": "#/definitions/TextFieldText"
-                    }
-                  },
-                  "required": [
-                    "inactiveMessage",
-                    "welcomeTokens",
-                    "submissionCost"
-                  ],
-                  "type": "object"
-                },
-                "header": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "compensation": {
-                      "type": "string"
-                    },
-                    "roles": {
-                      "type": "string"
-                    },
-                    "status": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "status",
-                    "roles",
-                    "compensation"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "checkbox": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "anonymousAssignments": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "off": {
-                          "type": "string"
-                        },
-                        "on": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "on",
-                        "off"
-                      ],
-                      "type": "object"
-                    },
-                    "inactive": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "inactive",
-                    "anonymousAssignments"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "title",
-                "header",
-                "feedback",
-                "field",
-                "checkbox"
-              ],
-              "type": "object"
-            },
-            "submission": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "approve": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "approveBid": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "complete": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "createAssignment": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "unassign": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "createAssignment",
-                    "unassign",
-                    "complete",
-                    "approve",
-                    "approveBid"
-                  ],
-                  "type": "object"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "confidential": {
-                      "type": "string"
-                    },
-                    "missingAuthors": {
-                      "type": "string"
-                    },
-                    "noAuthors": {
-                      "type": "string"
-                    },
-                    "noExpertise": {
-                      "type": "string"
-                    },
-                    "notLoaded": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "notLoaded",
-                    "confidential",
-                    "missingAuthors",
-                    "noAuthors",
-                    "noExpertise"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "newAssignment": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    },
-                    "scholar": {
-                      "$ref": "#/definitions/TextFieldText"
-                    }
-                  },
-                  "required": [
-                    "scholar",
-                    "newAssignment"
-                  ],
-                  "type": "object"
-                },
-                "header": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "assignments": {
-                      "type": "string"
-                    },
-                    "authors": {
-                      "type": "string"
-                    },
-                    "expertise": {
-                      "type": "string"
-                    },
-                    "venue": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "authors",
-                    "venue",
-                    "assignments",
-                    "expertise"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "checkbox": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "reviewComplete": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "reviewComplete"
-                  ],
-                  "type": "object"
-                },
-                "status": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "done": {
-                      "type": "string"
-                    },
-                    "reviewing": {
-                      "type": "string"
-                    },
-                    "unknownTransaction": {
-                      "type": "string"
-                    },
-                    "completed": {
-                      "type": "string"
-                    },
-                    "incomplete": {
-                      "type": "string"
-                    },
-                    "unapproved": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "done",
-                    "reviewing",
-                    "unknownTransaction",
-                    "completed",
-                    "incomplete",
-                    "unapproved"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "title",
-                "header",
-                "feedback",
-                "button",
-                "field",
-                "checkbox",
-                "status"
-              ],
-              "type": "object"
-            },
-            "submissions": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "bid": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "declareConflict": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "sortIDAsc": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "sortIDDesc": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "sortPaymentFirst": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "sortPaymentLast": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "sortTitleAsc": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "sortTitleDesc": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "unbid": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "sortPaymentFirst",
-                    "sortPaymentLast",
-                    "sortTitleAsc",
-                    "sortTitleDesc",
-                    "sortIDAsc",
-                    "sortIDDesc",
-                    "declareConflict",
-                    "bid",
-                    "unbid"
-                  ],
-                  "type": "object"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "noSubmissions": {
-                      "type": "string"
-                    },
-                    "noneFiltered": {
-                      "type": "string"
-                    },
-                    "notLoaded": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "notLoaded",
-                    "noSubmissions",
-                    "noneFiltered"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "expertise": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "filter": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "manuscriptID": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "note": {
-                          "description": "The note to show below the text field",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "note",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    },
-                    "previousID": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "title": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "note": {
-                          "description": "The note to show below the text field",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "note",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    }
-                  },
-                  "required": [
-                    "title",
-                    "expertise",
-                    "manuscriptID",
-                    "previousID",
-                    "filter"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "status": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "paid": {
-                      "type": "string"
-                    },
-                    "pending": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "paid",
-                    "pending"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "title",
-                "feedback",
-                "button",
-                "field",
-                "status"
-              ],
-              "type": "object"
-            },
-            "updates": {
-              "additionalProperties": false,
-              "properties": {
-                "title": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "title"
-              ],
-              "type": "object"
-            },
-            "venue": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "deleteSubmissionType": {
-                      "$ref": "#/definitions/ConfirmButtonText"
-                    },
-                    "newSubmissionType": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "requestCompensation": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "newSubmissionType",
-                    "deleteSubmissionType",
-                    "requestCompensation"
-                  ],
-                  "type": "object"
-                },
-                "card": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "gift": {
-                      "$ref": "#/definitions/CardText"
-                    },
-                    "setup": {
-                      "$ref": "#/definitions/CardText"
-                    }
-                  },
-                  "required": [
-                    "setup",
-                    "gift"
-                  ],
-                  "type": "object"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "inactive": {
-                      "type": "string"
-                    },
-                    "inactivePrompt": {
-                      "type": "string"
-                    },
-                    "rolesNotLoaded": {
-                      "type": "string"
-                    },
-                    "typesNotLoaded": {
-                      "type": "string"
-                    },
-                    "viewSettings": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "viewSettings",
-                    "typesNotLoaded",
-                    "rolesNotLoaded",
-                    "inactive",
-                    "inactivePrompt"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "description": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "name": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    },
-                    "typeDescription": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "typeName": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "url": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    }
-                  },
-                  "required": [
-                    "name",
-                    "url",
-                    "description",
-                    "typeName",
-                    "typeDescription"
-                  ],
-                  "type": "object"
-                },
-                "header": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "roles": {
-                      "type": "string"
-                    },
-                    "submissionTypes": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "submissionTypes",
-                    "roles"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "unknownTitle": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "title",
-                "unknownTitle",
-                "header",
-                "button",
-                "feedback",
-                "field",
-                "card"
-              ],
-              "type": "object"
-            },
-            "venueTransactions": {
-              "additionalProperties": false,
-              "properties": {
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "transactionsNotLoaded": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "transactionsNotLoaded"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "title",
-                "feedback"
-              ],
-              "type": "object"
-            },
-            "venues": {
-              "additionalProperties": false,
-              "properties": {
-                "card": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "settings": {
-                      "$ref": "#/definitions/CardText"
-                    }
-                  },
-                  "required": [
-                    "settings"
-                  ],
-                  "type": "object"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "noProposals": {
-                      "type": "string"
-                    },
-                    "noVenues": {
-                      "type": "string"
-                    },
-                    "proposalsNotLoaded": {
-                      "type": "string"
-                    },
-                    "venuesNotLoaded": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "noVenues",
-                    "venuesNotLoaded",
-                    "noProposals",
-                    "proposalsNotLoaded"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "census": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    },
-                    "editors": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    },
-                    "minters": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    },
-                    "title": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    },
-                    "url": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    }
-                  },
-                  "required": [
-                    "title",
-                    "editors",
-                    "minters",
-                    "census",
-                    "url"
-                  ],
-                  "type": "object"
-                },
-                "header": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "active": {
-                      "type": "string"
-                    },
-                    "proposed": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "proposed",
-                    "active"
-                  ],
-                  "type": "object"
-                },
-                "link": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "propose": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "propose"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "title",
-                "description",
-                "header",
-                "link",
-                "feedback",
-                "field",
-                "card"
-              ],
-              "type": "object"
-            },
-            "volunteers": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "exportCSV": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "exportCSV"
-                  ],
-                  "type": "object"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "noVolunteers": {
-                      "type": "string"
-                    },
-                    "unknownVenue": {
-                      "type": "string"
-                    },
-                    "volunteersNotLoaded": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "unknownVenue",
-                    "volunteersNotLoaded",
-                    "noVolunteers"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "filter": {
-                      "$ref": "#/definitions/TextFieldText"
-                    }
-                  },
-                  "required": [
-                    "filter"
-                  ],
-                  "type": "object"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "unavailableTitle": {
-                  "type": "string"
-                },
-                "status": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "active": {
-                      "type": "string"
-                    },
-                    "inactive": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "active",
-                    "inactive"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "title",
-                "unavailableTitle",
-                "feedback",
-                "button",
-                "field",
-                "status"
-              ],
-              "type": "object"
-            }
-          },
-          "required": [
-            "error",
-            "home",
-            "venues",
-            "proposal",
-            "volunteers",
-            "venueTransactions",
-            "newSubmission",
-            "submissions",
-            "submission",
-            "venue",
-            "settings",
-            "scholar",
-            "currency",
-            "login",
-            "proposeVenue",
-            "about",
-            "updates"
-          ],
-          "type": "object"
-        },
-        "shorthand": {
-          "additionalProperties": false,
-          "properties": {
-            "admin": {
-              "type": "string"
-            },
-            "confirm": {
-              "type": "string"
-            },
-            "delete": {
-              "type": "string"
-            },
-            "edit": {
-              "type": "string"
-            },
-            "filter": {
-              "type": "string"
-            },
-            "minter": {
-              "type": "string"
-            },
-            "steward": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "delete",
-            "confirm",
-            "edit",
-            "filter",
-            "admin",
-            "minter",
-            "steward"
-          ],
-          "type": "object"
-        },
-        "view": {
-          "additionalProperties": false,
-          "properties": {
-            "gift": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "giftTokens": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "giftTokens"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "purpose": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "recipient": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "invalid": {
-                          "description": "The optional validation error message",
-                          "type": "string"
-                        },
-                        "label": {
-                          "description": "The optional label to show above the text feild",
-                          "type": "string"
-                        },
-                        "placeholder": {
-                          "description": "The placeholder to show in the text field",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "invalid",
-                        "placeholder"
-                      ],
-                      "type": "object"
-                    }
-                  },
-                  "required": [
-                    "recipient",
-                    "purpose"
-                  ],
-                  "type": "object"
-                },
-                "noTokens": {
-                  "type": "string"
-                },
-                "checkbox": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "consent": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "consent"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "noTokens",
-                "button",
-                "field",
-                "checkbox"
-              ],
-              "type": "object"
-            },
-            "roles": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "accept": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "addAdmin": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "addCompensation": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "createRole": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "deleteRole": {
-                      "$ref": "#/definitions/ConfirmButtonText"
-                    },
-                    "invite": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "priorityDown": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "priorityUp": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "removeAdmin": {
-                      "$ref": "#/definitions/ConfirmButtonText"
-                    },
-                    "removeCompensation": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "resume": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "stop": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "volunteer": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "createRole",
-                    "removeAdmin",
-                    "addAdmin",
-                    "priorityUp",
-                    "priorityDown",
-                    "addCompensation",
-                    "removeCompensation",
-                    "volunteer",
-                    "accept",
-                    "stop",
-                    "resume",
-                    "invite",
-                    "deleteRole"
-                  ],
-                  "type": "object"
-                },
-                "card": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "admins": {
-                      "$ref": "#/definitions/CardText"
-                    },
-                    "settings": {
-                      "$ref": "#/definitions/CardText"
-                    },
-                    "unnamed": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "settings",
-                    "admins",
-                    "unnamed"
-                  ],
-                  "type": "object"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "consult": {
-                      "type": "string"
-                    },
-                    "noRoles": {
-                      "type": "string"
-                    },
-                    "notInvited": {
-                      "type": "string"
-                    },
-                    "notLoaded": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "notInvited",
-                    "consult",
-                    "noRoles",
-                    "notLoaded"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "adminScholar": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "compensationRationale": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "expertise": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "invite": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "newRoleName": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "roleDescription": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "roleName": {
-                      "$ref": "#/definitions/TextFieldText"
-                    }
-                  },
-                  "required": [
-                    "newRoleName",
-                    "adminScholar",
-                    "invite",
-                    "roleName",
-                    "roleDescription",
-                    "compensationRationale",
-                    "expertise"
-                  ],
-                  "type": "object"
-                },
-                "checkbox": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "anonymousAuthors": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "off": {
-                          "type": "string"
-                        },
-                        "on": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "on",
-                        "off"
-                      ],
-                      "type": "object"
-                    },
-                    "biddable": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "off": {
-                          "type": "string"
-                        },
-                        "on": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "on",
-                        "off"
-                      ],
-                      "type": "object"
-                    },
-                    "invited": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "off": {
-                          "type": "string"
-                        },
-                        "on": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "on",
-                        "off"
-                      ],
-                      "type": "object"
-                    }
-                  },
-                  "required": [
-                    "invited",
-                    "anonymousAuthors",
-                    "biddable"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "feedback",
-                "button",
-                "field",
-                "card",
-                "checkbox"
-              ],
-              "type": "object"
-            },
-            "tasks": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "accept": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "decline": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "accept",
-                    "decline"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "button"
-              ],
-              "type": "object"
-            },
-            "transactions": {
-              "additionalProperties": false,
-              "properties": {
-                "button": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "approve": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "cancelConfirm": {
-                      "$ref": "#/definitions/ConfirmButtonText"
-                    },
-                    "cancelInitiate": {
-                      "$ref": "#/definitions/ButtonText"
-                    },
-                    "loadMore": {
-                      "$ref": "#/definitions/ButtonText"
-                    }
-                  },
-                  "required": [
-                    "approve",
-                    "cancelInitiate",
-                    "cancelConfirm",
-                    "loadMore"
-                  ],
-                  "type": "object"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "noTransactions": {
-                      "type": "string"
-                    },
-                    "notLoaded": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "noTransactions",
-                    "notLoaded"
-                  ],
-                  "type": "object"
-                },
-                "field": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "cancelReason": {
-                      "$ref": "#/definitions/TextFieldText"
-                    }
-                  },
-                  "required": [
-                    "cancelReason"
-                  ],
-                  "type": "object"
-                },
-                "status": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "proposed": {
-                      "type": "string"
-                    },
-                    "approved": {
-                      "type": "string"
-                    },
-                    "canceled": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "proposed",
-                    "approved",
-                    "canceled"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "feedback",
-                "button",
-                "field",
-                "status"
-              ],
-              "type": "object"
-            }
-          },
-          "required": [
-            "gift",
-            "transactions",
-            "roles",
-            "tasks"
-          ],
-          "type": "object"
-        }
-      },
-      "required": [
-        "$schema",
-        "lang",
-        "shorthand",
-        "header",
-        "footer",
-        "page",
-        "view",
-        "component",
-        "error"
-      ],
-      "type": "object"
-    },
-    "NotedTextFieldText": {
-      "additionalProperties": false,
-      "properties": {
-        "invalid": {
-          "description": "The optional validation error message",
-          "type": "string"
-        },
-        "label": {
-          "description": "The optional label to show above the text feild",
-          "type": "string"
-        },
-        "note": {
-          "description": "The note to show below the text field",
-          "type": "string"
-        },
-        "placeholder": {
-          "description": "The placeholder to show in the text field",
-          "type": "string"
-        }
-      },
-      "required": [
-        "note",
-        "placeholder"
-      ],
-      "type": "object"
-    },
-    "TextFieldText": {
-      "additionalProperties": false,
-      "properties": {
-        "invalid": {
-          "description": "The optional validation error message",
-          "type": "string"
-        },
-        "label": {
-          "description": "The optional label to show above the text feild",
-          "type": "string"
-        },
-        "placeholder": {
-          "description": "The placeholder to show in the text field",
-          "type": "string"
-        }
-      },
-      "required": [
-        "placeholder"
-      ],
-      "type": "object"
-    }
-  }
+	"$ref": "#/definitions/LocaleText",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"definitions": {
+		"ButtonText": {
+			"additionalProperties": false,
+			"properties": {
+				"label": {
+					"description": "The button label to show",
+					"type": "string"
+				},
+				"tip": {
+					"description": "The tooltip and ARIA label for a button",
+					"type": "string"
+				},
+				"warn": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"tip",
+				"label"
+			],
+			"type": "object"
+		},
+		"CardText": {
+			"additionalProperties": false,
+			"description": "Text for the Card component",
+			"properties": {
+				"header": {
+					"description": "The header at the top of the card",
+					"type": "string"
+				},
+				"note": {
+					"description": "The note below the header",
+					"type": "string"
+				}
+			},
+			"required": [
+				"header",
+				"note"
+			],
+			"type": "object"
+		},
+		"ConfirmButtonText": {
+			"additionalProperties": false,
+			"description": "An optional warning text for confirm buttons",
+			"properties": {
+				"label": {
+					"description": "The button label to show",
+					"type": "string"
+				},
+				"tip": {
+					"description": "The tooltip and ARIA label for a button",
+					"type": "string"
+				},
+				"warn": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"label",
+				"tip",
+				"warn"
+			],
+			"type": "object"
+		},
+		"LocaleText": {
+			"additionalProperties": false,
+			"properties": {
+				"$schema": {
+					"type": "string"
+				},
+				"component": {
+					"additionalProperties": false,
+					"properties": {
+						"dialog": {
+							"additionalProperties": false,
+							"properties": {
+								"close": {
+									"$ref": "#/definitions/ButtonText"
+								}
+							},
+							"required": [
+								"close"
+							],
+							"type": "object"
+						},
+						"header": {
+							"additionalProperties": false,
+							"properties": {
+								"logout": {
+									"$ref": "#/definitions/ButtonText"
+								}
+							},
+							"required": [
+								"logout"
+							],
+							"type": "object"
+						},
+						"notification": {
+							"additionalProperties": false,
+							"properties": {
+								"dismiss": {
+									"$ref": "#/definitions/ButtonText"
+								}
+							},
+							"required": [
+								"dismiss"
+							],
+							"type": "object"
+						},
+						"text": {
+							"additionalProperties": false,
+							"properties": {
+								"cancel": {
+									"$ref": "#/definitions/ButtonText"
+								},
+								"edit": {
+									"$ref": "#/definitions/ButtonText"
+								},
+								"save": {
+									"$ref": "#/definitions/ButtonText"
+								}
+							},
+							"required": [
+								"save",
+								"edit",
+								"cancel"
+							],
+							"type": "object"
+						}
+					},
+					"required": [
+						"dialog",
+						"text",
+						"header",
+						"notification"
+					],
+					"type": "object"
+				},
+				"error": {
+					"additionalProperties": false,
+					"properties": {
+						"AcceptRoleInvite": {
+							"type": "string"
+						},
+						"AddCurrencyMinter": {
+							"type": "string"
+						},
+						"AlreadyApproved": {
+							"type": "string"
+						},
+						"AlreadyMinter": {
+							"type": "string"
+						},
+						"AlreadyVolunteered": {
+							"type": "string"
+						},
+						"ApproveAssignment": {
+							"type": "string"
+						},
+						"ApproveProposalCannotUpdateVenue": {
+							"type": "string"
+						},
+						"ApproveProposalNoCurrency": {
+							"type": "string"
+						},
+						"ApproveProposalNoMinters": {
+							"type": "string"
+						},
+						"ApproveProposalNoScholars": {
+							"type": "string"
+						},
+						"ApproveProposalNoSupporters": {
+							"type": "string"
+						},
+						"ApproveProposalNoVenue": {
+							"type": "string"
+						},
+						"ApproveProposalNotFound": {
+							"type": "string"
+						},
+						"CompensationAssignmentCheck": {
+							"type": "string"
+						},
+						"CompensationSubmissionNotFound": {
+							"type": "string"
+						},
+						"CompleteAssignmentNotFound": {
+							"type": "string"
+						},
+						"CompleteAssignmentRoleNotFound": {
+							"type": "string"
+						},
+						"CompleteAssignmentVenueNotFound": {
+							"type": "string"
+						},
+						"CreateAssignment": {
+							"type": "string"
+						},
+						"CreateCompensation": {
+							"type": "string"
+						},
+						"CreateProposal": {
+							"type": "string"
+						},
+						"CreateRole": {
+							"type": "string"
+						},
+						"CreateSubmissionType": {
+							"type": "string"
+						},
+						"CreateSupporter": {
+							"type": "string"
+						},
+						"CreateTransaction": {
+							"type": "string"
+						},
+						"CreateVolunteer": {
+							"type": "string"
+						},
+						"DeclareConflict": {
+							"type": "string"
+						},
+						"DeleteAssignment": {
+							"type": "string"
+						},
+						"DeleteProposal": {
+							"type": "string"
+						},
+						"DeleteRole": {
+							"type": "string"
+						},
+						"DeleteSubmissionType": {
+							"type": "string"
+						},
+						"EditCompensation": {
+							"type": "string"
+						},
+						"EditCurrencyMinters": {
+							"type": "string"
+						},
+						"EditProposalCensus": {
+							"type": "string"
+						},
+						"EditProposalEditors": {
+							"type": "string"
+						},
+						"EditProposalMinters": {
+							"type": "string"
+						},
+						"EditProposalTitle": {
+							"type": "string"
+						},
+						"EditProposalURL": {
+							"type": "string"
+						},
+						"EditRoleAnonymousAuthors": {
+							"type": "string"
+						},
+						"EditRoleApprover": {
+							"type": "string"
+						},
+						"EditRoleBidding": {
+							"type": "string"
+						},
+						"EditRoleDesiredAssignments": {
+							"type": "string"
+						},
+						"EditSubmissionType": {
+							"type": "string"
+						},
+						"EditSupport": {
+							"type": "string"
+						},
+						"EditVenueAddEditorAlreadyEditor": {
+							"type": "string"
+						},
+						"EditVenueAddEditorVenueNotFound": {
+							"type": "string"
+						},
+						"EditVenueAdmins": {
+							"type": "string"
+						},
+						"EditVenueAnonymousAssignments": {
+							"type": "string"
+						},
+						"EditVenueDescription": {
+							"type": "string"
+						},
+						"EditVenueInactive": {
+							"type": "string"
+						},
+						"EditVenueSubmissionCost": {
+							"type": "string"
+						},
+						"EditVenueTitle": {
+							"type": "string"
+						},
+						"EditVenueURL": {
+							"type": "string"
+						},
+						"EditVenueWelcomeAmount": {
+							"type": "string"
+						},
+						"EmailScholar": {
+							"type": "string"
+						},
+						"GetScholarTransactions": {
+							"type": "string"
+						},
+						"InvalidCharges": {
+							"type": "string"
+						},
+						"InviteToRole": {
+							"type": "string"
+						},
+						"InviteToRoleMissing": {
+							"type": "string"
+						},
+						"InviteToRoleSuccess": {
+							"type": "string"
+						},
+						"MintTokens": {
+							"type": "string"
+						},
+						"MissingApprovalVenue": {
+							"type": "string"
+						},
+						"MissingRecipient": {
+							"type": "string"
+						},
+						"MissingSubmissionCharge": {
+							"type": "string"
+						},
+						"NewSubmission": {
+							"type": "string"
+						},
+						"NoRoleCompensation": {
+							"type": "string"
+						},
+						"PendingTransactionHasTokens": {
+							"type": "string"
+						},
+						"RemoveSupport": {
+							"type": "string"
+						},
+						"ReorderRole": {
+							"type": "string"
+						},
+						"ScholarNotFound": {
+							"type": "string"
+						},
+						"TransactionApprovalUpdate": {
+							"type": "string"
+						},
+						"TransactionMissingFrom": {
+							"type": "string"
+						},
+						"TransactionMissingTo": {
+							"type": "string"
+						},
+						"TransactionNotCanceled": {
+							"type": "string"
+						},
+						"TransferScholarTokens": {
+							"type": "string"
+						},
+						"TransferTokensInsufficient": {
+							"type": "string"
+						},
+						"TransferVenueTokens": {
+							"type": "string"
+						},
+						"UndeletedTransaction": {
+							"type": "string"
+						},
+						"UnknownTransaction": {
+							"type": "string"
+						},
+						"UnknownVenue": {
+							"type": "string"
+						},
+						"UpdateCurrencyDescription": {
+							"type": "string"
+						},
+						"UpdateCurrencyName": {
+							"type": "string"
+						},
+						"UpdateRoleAmount": {
+							"type": "string"
+						},
+						"UpdateRoleDescription": {
+							"type": "string"
+						},
+						"UpdateRoleInvited": {
+							"type": "string"
+						},
+						"UpdateRoleName": {
+							"type": "string"
+						},
+						"UpdateScholarAvailability": {
+							"type": "string"
+						},
+						"UpdateScholarEmail": {
+							"type": "string"
+						},
+						"UpdateScholarName": {
+							"type": "string"
+						},
+						"UpdateScholarStatus": {
+							"type": "string"
+						},
+						"UpdateSubmissionExpertise": {
+							"type": "string"
+						},
+						"UpdateSubmissionStatus": {
+							"type": "string"
+						},
+						"UpdateSubmissionTitle": {
+							"type": "string"
+						},
+						"UpdateSubmissionType": {
+							"type": "string"
+						},
+						"UpdateVolunteerActive": {
+							"type": "string"
+						},
+						"UpdateVolunteerExpertise": {
+							"type": "string"
+						},
+						"WelcomeVolunteer": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"UpdateScholarStatus",
+						"UpdateScholarName",
+						"UpdateScholarEmail",
+						"UpdateScholarAvailability",
+						"CreateProposal",
+						"EditProposalTitle",
+						"EditProposalCensus",
+						"EditProposalEditors",
+						"EditProposalMinters",
+						"EditProposalURL",
+						"CreateSupporter",
+						"UpdateCurrencyName",
+						"UpdateCurrencyDescription",
+						"EditSupport",
+						"RemoveSupport",
+						"DeleteProposal",
+						"ApproveProposalNotFound",
+						"ApproveProposalNoScholars",
+						"ApproveProposalNoMinters",
+						"ApproveProposalNoVenue",
+						"ApproveProposalCannotUpdateVenue",
+						"ApproveProposalNoCurrency",
+						"EditVenueDescription",
+						"EditVenueAdmins",
+						"EditVenueAddEditorVenueNotFound",
+						"ScholarNotFound",
+						"EditVenueAddEditorAlreadyEditor",
+						"EditVenueTitle",
+						"EditVenueURL",
+						"EditVenueInactive",
+						"EditVenueAnonymousAssignments",
+						"EditVenueWelcomeAmount",
+						"EditVenueSubmissionCost",
+						"EditRoleBidding",
+						"EditRoleDesiredAssignments",
+						"EditRoleAnonymousAuthors",
+						"EditRoleApprover",
+						"CreateRole",
+						"UpdateRoleName",
+						"UpdateRoleDescription",
+						"UpdateRoleInvited",
+						"UpdateRoleAmount",
+						"ReorderRole",
+						"DeleteRole",
+						"UpdateSubmissionType",
+						"CreateSubmissionType",
+						"EditSubmissionType",
+						"DeleteSubmissionType",
+						"CreateCompensation",
+						"EditCompensation",
+						"CreateVolunteer",
+						"WelcomeVolunteer",
+						"AlreadyVolunteered",
+						"UpdateVolunteerActive",
+						"UpdateVolunteerExpertise",
+						"InviteToRole",
+						"InviteToRoleMissing",
+						"InviteToRoleSuccess",
+						"AcceptRoleInvite",
+						"EditCurrencyMinters",
+						"AddCurrencyMinter",
+						"AlreadyMinter",
+						"MintTokens",
+						"TransferVenueTokens",
+						"TransferScholarTokens",
+						"TransferTokensInsufficient",
+						"CreateTransaction",
+						"GetScholarTransactions",
+						"TransactionMissingFrom",
+						"TransactionMissingTo",
+						"PendingTransactionHasTokens",
+						"UnknownTransaction",
+						"TransactionNotCanceled",
+						"AlreadyApproved",
+						"TransactionApprovalUpdate",
+						"MissingApprovalVenue",
+						"MissingRecipient",
+						"UndeletedTransaction",
+						"InvalidCharges",
+						"NewSubmission",
+						"UnknownVenue",
+						"MissingSubmissionCharge",
+						"UpdateSubmissionExpertise",
+						"UpdateSubmissionTitle",
+						"UpdateSubmissionStatus",
+						"ApproveAssignment",
+						"CreateAssignment",
+						"CompensationSubmissionNotFound",
+						"CompensationAssignmentCheck",
+						"CompleteAssignmentNotFound",
+						"CompleteAssignmentRoleNotFound",
+						"CompleteAssignmentVenueNotFound",
+						"DeleteAssignment",
+						"EmailScholar",
+						"ApproveProposalNoSupporters",
+						"DeclareConflict",
+						"NoRoleCompensation"
+					],
+					"type": "object"
+				},
+				"footer": {
+					"additionalProperties": false,
+					"properties": {
+						"link": {
+							"additionalProperties": false,
+							"properties": {
+								"about": {
+									"type": "string"
+								},
+								"feedback": {
+									"type": "string"
+								},
+								"updates": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"about",
+								"updates",
+								"feedback"
+							],
+							"type": "object"
+						}
+					},
+					"required": [
+						"link"
+					],
+					"type": "object"
+				},
+				"header": {
+					"additionalProperties": false,
+					"properties": {
+						"feedback": {
+							"additionalProperties": false,
+							"properties": {
+								"testWarning": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"testWarning"
+							],
+							"type": "object"
+						},
+						"home": {
+							"type": "string"
+						},
+						"link": {
+							"additionalProperties": false,
+							"properties": {
+								"login": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"login"
+							],
+							"type": "object"
+						},
+						"saved": {
+							"type": "string"
+						},
+						"venues": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"home",
+						"venues",
+						"saved",
+						"link",
+						"feedback"
+					],
+					"type": "object"
+				},
+				"lang": {
+					"type": "string"
+				},
+				"page": {
+					"additionalProperties": false,
+					"properties": {
+						"about": {
+							"additionalProperties": false,
+							"properties": {
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"stewardsNotLoaded": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"stewardsNotLoaded"
+									],
+									"type": "object"
+								},
+								"header": {
+									"additionalProperties": false,
+									"properties": {
+										"change": {
+											"type": "string"
+										},
+										"stewards": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"stewards",
+										"change"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"header",
+								"feedback"
+							],
+							"type": "object"
+						},
+						"currency": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"addMinter": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"mint": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"removeMinter": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"mint",
+										"removeMinter",
+										"addMinter"
+									],
+									"type": "object"
+								},
+								"card": {
+									"additionalProperties": false,
+									"properties": {
+										"addMinter": {
+											"$ref": "#/definitions/CardText"
+										},
+										"mint": {
+											"$ref": "#/definitions/CardText"
+										}
+									},
+									"required": [
+										"mint",
+										"addMinter"
+									],
+									"type": "object"
+								},
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"notLoaded": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"notLoaded"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"description": {
+											"$ref": "#/definitions/NotedTextFieldText"
+										},
+										"mintPurpose": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"minter": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"invalidContact": {
+													"type": "string"
+												},
+												"invalidMinter": {
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalidContact",
+												"invalidMinter",
+												"placeholder"
+											],
+											"type": "object"
+										},
+										"name": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"placeholder"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"name",
+										"mintPurpose",
+										"minter",
+										"description"
+									],
+									"type": "object"
+								},
+								"header": {
+									"additionalProperties": false,
+									"properties": {
+										"minters": {
+											"type": "string"
+										},
+										"tokens": {
+											"type": "string"
+										},
+										"venues": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"minters",
+										"venues",
+										"tokens"
+									],
+									"type": "object"
+								},
+								"note": {
+									"additionalProperties": false,
+									"properties": {
+										"minters": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"minters"
+									],
+									"type": "object"
+								},
+								"tip": {
+									"additionalProperties": false,
+									"properties": {
+										"mintWarning": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"mintWarning"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								},
+								"checkbox": {
+									"additionalProperties": false,
+									"properties": {
+										"mintConsent": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"mintConsent"
+									],
+									"type": "object"
+								},
+								"subtitle": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"feedback",
+								"tip",
+								"header",
+								"button",
+								"note",
+								"field",
+								"card",
+								"checkbox",
+								"subtitle"
+							],
+							"type": "object"
+						},
+						"error": {
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title"
+							],
+							"type": "object"
+						},
+						"home": {
+							"additionalProperties": false,
+							"properties": {
+								"call": {
+									"items": {
+										"type": "string"
+									},
+									"type": "array"
+								},
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"beta": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"beta"
+									],
+									"type": "object"
+								},
+								"lead": {
+									"type": "string"
+								},
+								"tip": {
+									"additionalProperties": false,
+									"properties": {
+										"about": {
+											"type": "string"
+										},
+										"browse": {
+											"type": "string"
+										},
+										"track": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"browse",
+										"about",
+										"track"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"lead",
+								"call",
+								"tip",
+								"feedback"
+							],
+							"type": "object"
+						},
+						"login": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"sendPassword": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"signIn": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"sendPassword",
+										"signIn"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"email": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"password": {
+											"$ref": "#/definitions/TextFieldText"
+										}
+									},
+									"required": [
+										"email",
+										"password"
+									],
+									"type": "object"
+								},
+								"note": {
+									"additionalProperties": false,
+									"properties": {
+										"orcid": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"orcid"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"button",
+								"note",
+								"field"
+							],
+							"type": "object"
+						},
+						"newSubmission": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"addAuthor": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"checkBalances": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"removeAuthor": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"submit": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"removeAuthor",
+										"addAuthor",
+										"checkBalances",
+										"submit"
+									],
+									"type": "object"
+								},
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"duplicateScholars": {
+											"type": "string"
+										},
+										"incompletePayment": {
+											"type": "string"
+										},
+										"notLoaded": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"notLoaded",
+										"duplicateScholars",
+										"incompletePayment"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"authorOrcid": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"expertise": {
+											"$ref": "#/definitions/NotedTextFieldText"
+										},
+										"manuscriptId": {
+											"$ref": "#/definitions/NotedTextFieldText"
+										},
+										"previousId": {
+											"$ref": "#/definitions/NotedTextFieldText"
+										},
+										"title": {
+											"$ref": "#/definitions/NotedTextFieldText"
+										}
+									},
+									"required": [
+										"title",
+										"expertise",
+										"manuscriptId",
+										"previousId",
+										"authorOrcid"
+									],
+									"type": "object"
+								},
+								"note": {
+									"additionalProperties": false,
+									"properties": {
+										"approve": {
+											"type": "string"
+										},
+										"balance": {
+											"type": "string"
+										},
+										"payment": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"payment",
+										"balance",
+										"approve"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"feedback",
+								"button",
+								"note",
+								"field"
+							],
+							"type": "object"
+						},
+						"proposal": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"approve": {
+											"$ref": "#/definitions/ConfirmButtonText"
+										},
+										"deleteProposal": {
+											"$ref": "#/definitions/ConfirmButtonText"
+										},
+										"deleteSupport": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"submitSupport": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"deleteSupport",
+										"deleteProposal",
+										"approve",
+										"submitSupport"
+									],
+									"type": "object"
+								},
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"alreadySupported": {
+											"type": "string"
+										},
+										"logIn": {
+											"type": "string"
+										},
+										"notFound": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"alreadySupported",
+										"logIn",
+										"notFound"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"census": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"editors": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"minters": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"support": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"title": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"url": {
+											"$ref": "#/definitions/TextFieldText"
+										}
+									},
+									"required": [
+										"title",
+										"editors",
+										"minters",
+										"census",
+										"url",
+										"support"
+									],
+									"type": "object"
+								},
+								"note": {
+									"additionalProperties": false,
+									"properties": {
+										"delete": {
+											"type": "string"
+										},
+										"editors": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"delete",
+										"editors"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								},
+								"subtitle": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"proposal": {
+											"type": "string"
+										},
+										"approved": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"proposal",
+										"approved"
+									]
+								}
+							},
+							"required": [
+								"title",
+								"feedback",
+								"button",
+								"note",
+								"field",
+								"subtitle"
+							],
+							"type": "object"
+						},
+						"proposeVenue": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"propose": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"propose"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"editors": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"minters": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"mintersConflict": {
+											"type": "string"
+										},
+										"rationale": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"size": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"url": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"placeholder"
+											],
+											"type": "object"
+										},
+										"venueName": {
+											"$ref": "#/definitions/TextFieldText"
+										}
+									},
+									"required": [
+										"venueName",
+										"editors",
+										"minters",
+										"mintersConflict",
+										"url",
+										"size",
+										"rationale"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								},
+								"status": {
+									"additionalProperties": false,
+									"properties": {
+										"notLoggedIn": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"notLoggedIn"
+									],
+									"type": "object"
+								}
+							},
+							"required": [
+								"title",
+								"button",
+								"field",
+								"status"
+							],
+							"type": "object"
+						},
+						"scholar": {
+							"additionalProperties": false,
+							"properties": {
+								"card": {
+									"additionalProperties": false,
+									"properties": {
+										"gift": {
+											"$ref": "#/definitions/CardText"
+										}
+									},
+									"required": [
+										"gift"
+									],
+									"type": "object"
+								},
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"commitmentsNotLoaded": {
+											"type": "string"
+										},
+										"noStatus": {
+											"type": "string"
+										},
+										"noTasks": {
+											"type": "string"
+										},
+										"notLoaded": {
+											"type": "string"
+										},
+										"notVolunteeringFirst": {
+											"type": "string"
+										},
+										"notVolunteeringThird": {
+											"type": "string"
+										},
+										"submissionsNotLoaded": {
+											"type": "string"
+										},
+										"tokensNotLoaded": {
+											"type": "string"
+										},
+										"volunteeringFirst": {
+											"type": "string"
+										},
+										"volunteeringThird": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"notLoaded",
+										"noStatus",
+										"submissionsNotLoaded",
+										"tokensNotLoaded",
+										"noTasks",
+										"commitmentsNotLoaded",
+										"notVolunteeringFirst",
+										"notVolunteeringThird",
+										"volunteeringFirst",
+										"volunteeringThird"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"email": {
+											"$ref": "#/definitions/NotedTextFieldText"
+										},
+										"name": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"placeholder"
+											],
+											"type": "object"
+										},
+										"status": {
+											"$ref": "#/definitions/TextFieldText"
+										}
+									},
+									"required": [
+										"name",
+										"status",
+										"email"
+									],
+									"type": "object"
+								},
+								"header": {
+									"additionalProperties": false,
+									"properties": {
+										"settings": {
+											"type": "string"
+										},
+										"submissions": {
+											"type": "string"
+										},
+										"tasks": {
+											"type": "string"
+										},
+										"tokens": {
+											"type": "string"
+										},
+										"volunteering": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"submissions",
+										"tokens",
+										"settings",
+										"tasks",
+										"volunteering"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								},
+								"checkbox": {
+									"additionalProperties": false,
+									"properties": {
+										"available": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"available"
+									],
+									"type": "object"
+								},
+								"status": {
+									"additionalProperties": false,
+									"properties": {
+										"available": {
+											"type": "string"
+										},
+										"unavailable": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"available",
+										"unavailable"
+									],
+									"type": "object"
+								},
+								"subtitle": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"header",
+								"feedback",
+								"field",
+								"card",
+								"checkbox",
+								"status",
+								"subtitle"
+							],
+							"type": "object"
+						},
+						"settings": {
+							"additionalProperties": false,
+							"properties": {
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"adminsOnly": {
+											"type": "string"
+										},
+										"logIn": {
+											"type": "string"
+										},
+										"unknownVenue": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"unknownVenue",
+										"logIn",
+										"adminsOnly"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"inactiveMessage": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"submissionCost": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"welcomeTokens": {
+											"$ref": "#/definitions/TextFieldText"
+										}
+									},
+									"required": [
+										"inactiveMessage",
+										"welcomeTokens",
+										"submissionCost"
+									],
+									"type": "object"
+								},
+								"header": {
+									"additionalProperties": false,
+									"properties": {
+										"compensation": {
+											"type": "string"
+										},
+										"roles": {
+											"type": "string"
+										},
+										"status": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"roles",
+										"compensation"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								},
+								"checkbox": {
+									"additionalProperties": false,
+									"properties": {
+										"anonymousAssignments": {
+											"additionalProperties": false,
+											"properties": {
+												"off": {
+													"type": "string"
+												},
+												"on": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"on",
+												"off"
+											],
+											"type": "object"
+										},
+										"inactive": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"inactive",
+										"anonymousAssignments"
+									],
+									"type": "object"
+								},
+								"subtitle": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"header",
+								"feedback",
+								"field",
+								"checkbox",
+								"subtitle"
+							],
+							"type": "object"
+						},
+						"submission": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"approve": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"approveBid": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"complete": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"createAssignment": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"unassign": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"createAssignment",
+										"unassign",
+										"complete",
+										"approve",
+										"approveBid"
+									],
+									"type": "object"
+								},
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"confidential": {
+											"type": "string"
+										},
+										"missingAuthors": {
+											"type": "string"
+										},
+										"noAuthors": {
+											"type": "string"
+										},
+										"noExpertise": {
+											"type": "string"
+										},
+										"notLoaded": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"notLoaded",
+										"confidential",
+										"missingAuthors",
+										"noAuthors",
+										"noExpertise"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"newAssignment": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"placeholder"
+											],
+											"type": "object"
+										},
+										"scholar": {
+											"$ref": "#/definitions/TextFieldText"
+										}
+									},
+									"required": [
+										"scholar",
+										"newAssignment"
+									],
+									"type": "object"
+								},
+								"header": {
+									"additionalProperties": false,
+									"properties": {
+										"assignments": {
+											"type": "string"
+										},
+										"authors": {
+											"type": "string"
+										},
+										"expertise": {
+											"type": "string"
+										},
+										"venue": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"authors",
+										"venue",
+										"assignments",
+										"expertise"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								},
+								"checkbox": {
+									"additionalProperties": false,
+									"properties": {
+										"reviewComplete": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reviewComplete"
+									],
+									"type": "object"
+								},
+								"status": {
+									"additionalProperties": false,
+									"properties": {
+										"done": {
+											"type": "string"
+										},
+										"reviewing": {
+											"type": "string"
+										},
+										"unknownTransaction": {
+											"type": "string"
+										},
+										"completed": {
+											"type": "string"
+										},
+										"incomplete": {
+											"type": "string"
+										},
+										"unapproved": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"done",
+										"reviewing",
+										"unknownTransaction",
+										"completed",
+										"incomplete",
+										"unapproved"
+									],
+									"type": "object"
+								},
+								"subtitle": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"header",
+								"feedback",
+								"button",
+								"field",
+								"checkbox",
+								"status",
+								"subtitle"
+							],
+							"type": "object"
+						},
+						"submissions": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"bid": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"declareConflict": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"sortIDAsc": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"sortIDDesc": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"sortPaymentFirst": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"sortPaymentLast": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"sortTitleAsc": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"sortTitleDesc": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"unbid": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"sortPaymentFirst",
+										"sortPaymentLast",
+										"sortTitleAsc",
+										"sortTitleDesc",
+										"sortIDAsc",
+										"sortIDDesc",
+										"declareConflict",
+										"bid",
+										"unbid"
+									],
+									"type": "object"
+								},
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"noSubmissions": {
+											"type": "string"
+										},
+										"noneFiltered": {
+											"type": "string"
+										},
+										"notLoaded": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"notLoaded",
+										"noSubmissions",
+										"noneFiltered"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"expertise": {
+											"$ref": "#/definitions/NotedTextFieldText"
+										},
+										"filter": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"manuscriptID": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"note": {
+													"description": "The note to show below the text field",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"note",
+												"placeholder"
+											],
+											"type": "object"
+										},
+										"previousID": {
+											"$ref": "#/definitions/NotedTextFieldText"
+										},
+										"title": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"note": {
+													"description": "The note to show below the text field",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"note",
+												"placeholder"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"title",
+										"expertise",
+										"manuscriptID",
+										"previousID",
+										"filter"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								},
+								"status": {
+									"additionalProperties": false,
+									"properties": {
+										"paid": {
+											"type": "string"
+										},
+										"pending": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"paid",
+										"pending"
+									],
+									"type": "object"
+								}
+							},
+							"required": [
+								"title",
+								"feedback",
+								"button",
+								"field",
+								"status"
+							],
+							"type": "object"
+						},
+						"updates": {
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title"
+							],
+							"type": "object"
+						},
+						"venue": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"deleteSubmissionType": {
+											"$ref": "#/definitions/ConfirmButtonText"
+										},
+										"newSubmissionType": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"requestCompensation": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"newSubmissionType",
+										"deleteSubmissionType",
+										"requestCompensation"
+									],
+									"type": "object"
+								},
+								"card": {
+									"additionalProperties": false,
+									"properties": {
+										"gift": {
+											"$ref": "#/definitions/CardText"
+										},
+										"setup": {
+											"$ref": "#/definitions/CardText"
+										}
+									},
+									"required": [
+										"setup",
+										"gift"
+									],
+									"type": "object"
+								},
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"inactive": {
+											"type": "string"
+										},
+										"inactivePrompt": {
+											"type": "string"
+										},
+										"rolesNotLoaded": {
+											"type": "string"
+										},
+										"typesNotLoaded": {
+											"type": "string"
+										},
+										"viewSettings": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"viewSettings",
+										"typesNotLoaded",
+										"rolesNotLoaded",
+										"inactive",
+										"inactivePrompt"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"description": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"name": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"placeholder"
+											],
+											"type": "object"
+										},
+										"typeDescription": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"typeName": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"url": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"placeholder"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"name",
+										"url",
+										"description",
+										"typeName",
+										"typeDescription"
+									],
+									"type": "object"
+								},
+								"header": {
+									"additionalProperties": false,
+									"properties": {
+										"roles": {
+											"type": "string"
+										},
+										"submissionTypes": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"submissionTypes",
+										"roles"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								},
+								"unknownTitle": {
+									"type": "string"
+								},
+								"subtitle": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"unknownTitle",
+								"header",
+								"button",
+								"feedback",
+								"field",
+								"card",
+								"subtitle"
+							],
+							"type": "object"
+						},
+						"venueTransactions": {
+							"additionalProperties": false,
+							"properties": {
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"transactionsNotLoaded": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"transactionsNotLoaded"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								},
+								"subtitle": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"feedback",
+								"subtitle"
+							],
+							"type": "object"
+						},
+						"venues": {
+							"additionalProperties": false,
+							"properties": {
+								"card": {
+									"additionalProperties": false,
+									"properties": {
+										"settings": {
+											"$ref": "#/definitions/CardText"
+										}
+									},
+									"required": [
+										"settings"
+									],
+									"type": "object"
+								},
+								"description": {
+									"type": "string"
+								},
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"noProposals": {
+											"type": "string"
+										},
+										"noVenues": {
+											"type": "string"
+										},
+										"proposalsNotLoaded": {
+											"type": "string"
+										},
+										"venuesNotLoaded": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"noVenues",
+										"venuesNotLoaded",
+										"noProposals",
+										"proposalsNotLoaded"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"census": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"placeholder"
+											],
+											"type": "object"
+										},
+										"editors": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"placeholder"
+											],
+											"type": "object"
+										},
+										"minters": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"placeholder"
+											],
+											"type": "object"
+										},
+										"title": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"placeholder"
+											],
+											"type": "object"
+										},
+										"url": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"placeholder"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"title",
+										"editors",
+										"minters",
+										"census",
+										"url"
+									],
+									"type": "object"
+								},
+								"header": {
+									"additionalProperties": false,
+									"properties": {
+										"active": {
+											"type": "string"
+										},
+										"proposed": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"proposed",
+										"active"
+									],
+									"type": "object"
+								},
+								"link": {
+									"additionalProperties": false,
+									"properties": {
+										"propose": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"propose"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"description",
+								"header",
+								"link",
+								"feedback",
+								"field",
+								"card"
+							],
+							"type": "object"
+						},
+						"volunteers": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"exportCSV": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"exportCSV"
+									],
+									"type": "object"
+								},
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"noVolunteers": {
+											"type": "string"
+										},
+										"unknownVenue": {
+											"type": "string"
+										},
+										"volunteersNotLoaded": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"unknownVenue",
+										"volunteersNotLoaded",
+										"noVolunteers"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"filter": {
+											"$ref": "#/definitions/TextFieldText"
+										}
+									},
+									"required": [
+										"filter"
+									],
+									"type": "object"
+								},
+								"title": {
+									"type": "string"
+								},
+								"unavailableTitle": {
+									"type": "string"
+								},
+								"status": {
+									"additionalProperties": false,
+									"properties": {
+										"active": {
+											"type": "string"
+										},
+										"inactive": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"active",
+										"inactive"
+									],
+									"type": "object"
+								},
+								"subtitle": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"unavailableTitle",
+								"feedback",
+								"button",
+								"field",
+								"status",
+								"subtitle"
+							],
+							"type": "object"
+						},
+						"currencyTransactions": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"subtitle": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"subtitle"
+							]
+						},
+						"scholarTransactions": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"subtitle": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"subtitle"
+							]
+						}
+					},
+					"required": [
+						"error",
+						"home",
+						"venues",
+						"proposal",
+						"volunteers",
+						"venueTransactions",
+						"newSubmission",
+						"submissions",
+						"submission",
+						"venue",
+						"settings",
+						"scholar",
+						"currency",
+						"login",
+						"proposeVenue",
+						"about",
+						"updates",
+						"currencyTransactions",
+						"scholarTransactions"
+					],
+					"type": "object"
+				},
+				"shorthand": {
+					"additionalProperties": false,
+					"properties": {
+						"admin": {
+							"type": "string"
+						},
+						"confirm": {
+							"type": "string"
+						},
+						"delete": {
+							"type": "string"
+						},
+						"edit": {
+							"type": "string"
+						},
+						"filter": {
+							"type": "string"
+						},
+						"minter": {
+							"type": "string"
+						},
+						"steward": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"delete",
+						"confirm",
+						"edit",
+						"filter",
+						"admin",
+						"minter",
+						"steward"
+					],
+					"type": "object"
+				},
+				"view": {
+					"additionalProperties": false,
+					"properties": {
+						"gift": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"giftTokens": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"giftTokens"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"purpose": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"recipient": {
+											"additionalProperties": false,
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": [
+												"invalid",
+												"placeholder"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"recipient",
+										"purpose"
+									],
+									"type": "object"
+								},
+								"noTokens": {
+									"type": "string"
+								},
+								"checkbox": {
+									"additionalProperties": false,
+									"properties": {
+										"consent": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"consent"
+									],
+									"type": "object"
+								}
+							},
+							"required": [
+								"noTokens",
+								"button",
+								"field",
+								"checkbox"
+							],
+							"type": "object"
+						},
+						"roles": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"accept": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"addAdmin": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"addCompensation": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"createRole": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"deleteRole": {
+											"$ref": "#/definitions/ConfirmButtonText"
+										},
+										"invite": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"priorityDown": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"priorityUp": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"removeAdmin": {
+											"$ref": "#/definitions/ConfirmButtonText"
+										},
+										"removeCompensation": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"resume": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"stop": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"volunteer": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"createRole",
+										"removeAdmin",
+										"addAdmin",
+										"priorityUp",
+										"priorityDown",
+										"addCompensation",
+										"removeCompensation",
+										"volunteer",
+										"accept",
+										"stop",
+										"resume",
+										"invite",
+										"deleteRole"
+									],
+									"type": "object"
+								},
+								"card": {
+									"additionalProperties": false,
+									"properties": {
+										"admins": {
+											"$ref": "#/definitions/CardText"
+										},
+										"settings": {
+											"$ref": "#/definitions/CardText"
+										},
+										"unnamed": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"settings",
+										"admins",
+										"unnamed"
+									],
+									"type": "object"
+								},
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"consult": {
+											"type": "string"
+										},
+										"noRoles": {
+											"type": "string"
+										},
+										"notInvited": {
+											"type": "string"
+										},
+										"notLoaded": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"notInvited",
+										"consult",
+										"noRoles",
+										"notLoaded"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"adminScholar": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"compensationRationale": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"expertise": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"invite": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"newRoleName": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"roleDescription": {
+											"$ref": "#/definitions/TextFieldText"
+										},
+										"roleName": {
+											"$ref": "#/definitions/TextFieldText"
+										}
+									},
+									"required": [
+										"newRoleName",
+										"adminScholar",
+										"invite",
+										"roleName",
+										"roleDescription",
+										"compensationRationale",
+										"expertise"
+									],
+									"type": "object"
+								},
+								"checkbox": {
+									"additionalProperties": false,
+									"properties": {
+										"anonymousAuthors": {
+											"additionalProperties": false,
+											"properties": {
+												"off": {
+													"type": "string"
+												},
+												"on": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"on",
+												"off"
+											],
+											"type": "object"
+										},
+										"biddable": {
+											"additionalProperties": false,
+											"properties": {
+												"off": {
+													"type": "string"
+												},
+												"on": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"on",
+												"off"
+											],
+											"type": "object"
+										},
+										"invited": {
+											"additionalProperties": false,
+											"properties": {
+												"off": {
+													"type": "string"
+												},
+												"on": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"on",
+												"off"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"invited",
+										"anonymousAuthors",
+										"biddable"
+									],
+									"type": "object"
+								}
+							},
+							"required": [
+								"feedback",
+								"button",
+								"field",
+								"card",
+								"checkbox"
+							],
+							"type": "object"
+						},
+						"tasks": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"accept": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"decline": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"accept",
+										"decline"
+									],
+									"type": "object"
+								}
+							},
+							"required": [
+								"button"
+							],
+							"type": "object"
+						},
+						"transactions": {
+							"additionalProperties": false,
+							"properties": {
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"approve": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"cancelConfirm": {
+											"$ref": "#/definitions/ConfirmButtonText"
+										},
+										"cancelInitiate": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"loadMore": {
+											"$ref": "#/definitions/ButtonText"
+										}
+									},
+									"required": [
+										"approve",
+										"cancelInitiate",
+										"cancelConfirm",
+										"loadMore"
+									],
+									"type": "object"
+								},
+								"feedback": {
+									"additionalProperties": false,
+									"properties": {
+										"noTransactions": {
+											"type": "string"
+										},
+										"notLoaded": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"noTransactions",
+										"notLoaded"
+									],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"cancelReason": {
+											"$ref": "#/definitions/TextFieldText"
+										}
+									},
+									"required": [
+										"cancelReason"
+									],
+									"type": "object"
+								},
+								"status": {
+									"additionalProperties": false,
+									"properties": {
+										"proposed": {
+											"type": "string"
+										},
+										"approved": {
+											"type": "string"
+										},
+										"canceled": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"proposed",
+										"approved",
+										"canceled"
+									],
+									"type": "object"
+								}
+							},
+							"required": [
+								"feedback",
+								"button",
+								"field",
+								"status"
+							],
+							"type": "object"
+						}
+					},
+					"required": [
+						"gift",
+						"transactions",
+						"roles",
+						"tasks"
+					],
+					"type": "object"
+				}
+			},
+			"required": [
+				"$schema",
+				"lang",
+				"shorthand",
+				"header",
+				"footer",
+				"page",
+				"view",
+				"component",
+				"error"
+			],
+			"type": "object"
+		},
+		"NotedTextFieldText": {
+			"additionalProperties": false,
+			"properties": {
+				"invalid": {
+					"description": "The optional validation error message",
+					"type": "string"
+				},
+				"label": {
+					"description": "The optional label to show above the text feild",
+					"type": "string"
+				},
+				"note": {
+					"description": "The note to show below the text field",
+					"type": "string"
+				},
+				"placeholder": {
+					"description": "The placeholder to show in the text field",
+					"type": "string"
+				}
+			},
+			"required": [
+				"note",
+				"placeholder"
+			],
+			"type": "object"
+		},
+		"TextFieldText": {
+			"additionalProperties": false,
+			"properties": {
+				"invalid": {
+					"description": "The optional validation error message",
+					"type": "string"
+				},
+				"label": {
+					"description": "The optional label to show above the text feild",
+					"type": "string"
+				},
+				"placeholder": {
+					"description": "The placeholder to show in the text field",
+					"type": "string"
+				}
+			},
+			"required": [
+				"placeholder"
+			],
+			"type": "object"
+		}
+	}
 }

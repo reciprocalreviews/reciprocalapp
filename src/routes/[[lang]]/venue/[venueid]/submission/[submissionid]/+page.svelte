@@ -184,7 +184,7 @@
 						typeID !== undefined ? db().updateSubmissionType(submission.id, typeID) : undefined}
 				></Options>
 			{:else}
-				{submissionType ?? 'Submission'}
+				{#if submissionType}{submissionType}{:else}<Text path={(l) => l.page.submission.subtitle} />{/if}
 			{/if}
 		{/snippet}
 		{#snippet details()}

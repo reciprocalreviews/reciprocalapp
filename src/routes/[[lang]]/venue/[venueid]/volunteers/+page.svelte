@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import Text from '$lib/locales/Text.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import VenueLink from '$lib/components/VenueLink.svelte';
@@ -60,7 +61,7 @@
 	</Page>
 {:else}
 	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
-		{#snippet subtitle()}Volunteers{/snippet}
+		{#snippet subtitle()}<Text path={(l) => l.page.volunteers.subtitle} />{/snippet}
 		<p>
 			These are scholars that have volunteered to review for <VenueLink
 				id={page.params.venueid ?? ''}

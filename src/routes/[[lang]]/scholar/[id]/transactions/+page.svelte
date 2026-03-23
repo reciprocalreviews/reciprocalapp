@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Circle from '$lib/components/Circle.svelte';
+	import Text from '$lib/locales/Text.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { ErrorLabel, ScholarLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
@@ -20,7 +21,7 @@
 			[`/scholar/${scholar.id}`, scholar.name ?? scholar.orcid ?? scholar.email ?? 'anonymous']
 		]}
 	>
-		{#snippet subtitle()}Transactions{/snippet}
+		{#snippet subtitle()}<Text path={(l) => l.page.scholarTransactions.subtitle} />{/snippet}
 		<p>There are <Circle icon={count}></Circle> transactions visible to you.</p>
 		<Transactions
 			{transactions}

@@ -30,6 +30,7 @@
 	import Commitments from './Commitments.svelte';
 	import Tasks from './Tasks.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
+	import Text from '$lib/locales/Text.svelte';
 
 	let {
 		scholar,
@@ -79,7 +80,7 @@
 			}
 		: undefined}
 >
-	{#snippet subtitle()}Scholar{/snippet}
+	{#snippet subtitle()}<Text path={(l) => l.page.scholar.subtitle} />{/snippet}
 	{#snippet details()}
 		<Status good={scholar.isAvailable()} label={(l) => scholar.isAvailable() ? l.page.scholar.status.available : l.page.scholar.status.unavailable} />
 		<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { type CurrencyID } from '$data/types.js';
+	import Text from '$lib/locales/Text.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Circle from '$lib/components/Circle.svelte';
@@ -18,7 +19,7 @@
 
 {#if venue && transactions && venues && currencies && scholar && tokens && count !== null}
 	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
-		{#snippet subtitle()}Transactions{/snippet}
+		{#snippet subtitle()}<Text path={(l) => l.page.venueTransactions.subtitle} />{/snippet}
 		<p>These are all <Circle icon={count}></Circle> transactions on this venue visible to you.</p>
 
 		{#if venue.admins.includes(scholar.id)}

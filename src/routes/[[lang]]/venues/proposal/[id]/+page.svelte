@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Page from '$lib/components/Page.svelte';
+	import Text from '$lib/locales/Text.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Card from '$lib/components/Card.svelte';
@@ -75,13 +76,7 @@
 	</Page>
 {:else}
 	<Page icon={VenueLabel} title={proposal.title} breadcrumbs={[]}>
-		{#snippet subtitle()}
-			{#if approved}
-				Approved
-			{:else}
-				Proposal
-			{/if}
-		{/snippet}
+		{#snippet subtitle()}<Text path={(l) => approved ? l.page.proposal.subtitle.approved : l.page.proposal.subtitle.proposal} />{/snippet}
 		{#if approved}
 			<p>This proposal was approved. See the <Link to="/venue/{proposal.venue}">venue</Link>.</p>
 		{:else}

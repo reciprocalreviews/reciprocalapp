@@ -110,6 +110,7 @@ export type LocaleText = {
 		};
 		proposal: {
 			title: string;
+			subtitle: { proposal: string; approved: string };
 			feedback: {
 				alreadySupported: string;
 				logIn: string;
@@ -136,6 +137,7 @@ export type LocaleText = {
 		};
 		volunteers: {
 			title: string;
+			subtitle: string;
 			unavailableTitle: string;
 			feedback: {
 				unknownVenue: string;
@@ -155,6 +157,7 @@ export type LocaleText = {
 		};
 		venueTransactions: {
 			title: string;
+			subtitle: string;
 			feedback: {
 				transactionsNotLoaded: string;
 			};
@@ -217,6 +220,7 @@ export type LocaleText = {
 		};
 		submission: {
 			title: string;
+			subtitle: string;
 			header: {
 				authors: string;
 				venue: string;
@@ -255,6 +259,7 @@ export type LocaleText = {
 		};
 		venue: {
 			title: string;
+			subtitle: string;
 			unknownTitle: string;
 			header: {
 				submissionTypes: string;
@@ -286,6 +291,7 @@ export type LocaleText = {
 		};
 		settings: {
 			title: string;
+			subtitle: string;
 			header: {
 				status: string;
 				roles: string;
@@ -308,6 +314,7 @@ export type LocaleText = {
 		};
 		scholar: {
 			title: string;
+			subtitle: string;
 			header: {
 				submissions: string;
 				tokens: string;
@@ -345,6 +352,7 @@ export type LocaleText = {
 		};
 		currency: {
 			title: string;
+			subtitle: string;
 			feedback: {
 				notLoaded: string;
 			};
@@ -377,6 +385,12 @@ export type LocaleText = {
 			checkbox: {
 				mintConsent: string;
 			};
+		};
+		currencyTransactions: {
+			subtitle: string;
+		};
+		scholarTransactions: {
+			subtitle: string;
 		};
 		login: {
 			title: string;

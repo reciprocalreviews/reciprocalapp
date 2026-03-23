@@ -70,7 +70,7 @@
 			}
 		: undefined}
 >
-	{#snippet subtitle()}Currency{/snippet}
+	{#snippet subtitle()}<Text path={(l) => l.page.currency.subtitle} />{/snippet}
 	{#if currency === null}
 		<Feedback error text={(l) => l.page.currency.feedback.notLoaded} />
 	{:else}
