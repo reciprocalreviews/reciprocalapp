@@ -331,6 +331,11 @@
 					"placeholder": "ORCID",
 					"invalid": "Invalid ORCID"
 				}
+			},
+			"slider": {
+				"payment": {
+					"label": "Payment"
+				}
 			}
 		},
 		"submissions": {
@@ -687,6 +692,11 @@
 			"checkbox": {
 				"mintConsent": "I understand that creating excess tokens will erode this currency's value."
 			},
+			"slider": {
+				"newTokenCount": {
+					"label": "Number of new tokens"
+				}
+			},
 			"subtitle": "Currency"
 		},
 		"about": {
@@ -731,6 +741,11 @@
 			},
 			"checkbox": {
 				"consent": "I understand that these tokens can't be transferred back without the recipient's consent."
+			},
+			"slider": {
+				"tokenAmount": {
+					"label": "Number of tokens to give"
+				}
 			}
 		},
 		"transactions": {
@@ -887,6 +902,16 @@
 				"biddable": {
 					"on": "Volunteers can bid on submissions.",
 					"off": "Volunteers cannot bid for this role on submissions."
+				}
+			},
+			"slider": {
+				"compensation": {
+					"label": "Compensation amount",
+					"suffix": "/submission"
+				},
+				"desiredAssignments": {
+					"label": "Desired number of assignments for this role. If bidding is on, it will be turned off for a submission that has this number of assignments, to avoid unnecessary bids.",
+					"suffix": " assignments"
 				}
 			}
 		},

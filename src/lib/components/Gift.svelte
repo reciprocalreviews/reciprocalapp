@@ -104,8 +104,8 @@
 			max={tokens?.filter((t) => t.currency === currency).length ?? 20}
 			bind:value={giftAmount}
 			step={1}
-			label="# of tokens to give">{giftAmount}</Slider
-		>
+			strings={(l) => l.view.gift.slider.tokenAmount}
+		/>
 		<TextField bind:text={giftPurpose} strings={(l) => l.view.gift.field.purpose} size={20} />
 		<Checkbox bind:on={giftConsent} label={(l) => l.view.gift.checkbox.consent} />
 		<Button

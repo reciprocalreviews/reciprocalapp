@@ -125,9 +125,9 @@
 							max={20}
 							value={newTokenCount}
 							step={1}
-							label="Number of new tokens"
-							change={(val) => (newTokenCount = val)}>{newTokenCount}</Slider
-						>
+							strings={(l) => l.page.currency.slider.newTokenCount}
+							change={(val) => (newTokenCount = val)}
+						/>
 						<TextField
 							strings={(l) => l.page.currency.field.mintPurpose}
 							bind:text={newTokenPurpose}

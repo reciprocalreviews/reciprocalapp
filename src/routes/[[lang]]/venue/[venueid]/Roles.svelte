@@ -231,10 +231,10 @@
 											value={comp.amount}
 											step={1}
 											immediately={false}
+											strings={(l) => l.view.roles.slider.compensation}
 											change={(value) =>
 												handle(db().editCompensation(type.id, role.id, value, comp.rationale))}
-											><Tokens amount={comp.amount}></Tokens>/submission</Slider
-										>
+										/>
 										<Button
 											small
 											strings={(l) => l.view.roles.button.removeCompensation}
@@ -414,12 +414,10 @@
 							max={10}
 							value={role.desired_assignments}
 							step={1}
-							label="What is the desired number of assignments for this role? If bidding is on, it will be turned off for a submission that has this number of
-							assignments, to avoid unnecessary bids."
+							strings={(l) => l.view.roles.slider.desiredAssignments}
 							immediately={false}
 							change={(value) => handle(db().editRoleDesiredAssignments(role.id, value))}
-							>{role.desired_assignments} assignments</Slider
-						>
+						/>
 
 						<Options
 							label="What role can approve assignments to this role for a submission, other than the editor?"

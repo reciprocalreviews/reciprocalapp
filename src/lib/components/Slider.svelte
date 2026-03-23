@@ -1,15 +1,16 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { getLocaleContext } from '$routes/Contexts';
+	import type LocaleText from '$lib/locales/Locale';
+	import type { SliderText } from '$lib/locales/Locale';
 
 	interface Props {
 		min: number;
 		max: number;
 		value: number;
 		step: number;
-		label?: string | undefined;
+		strings: (l: LocaleText) => SliderText;
 		active?: boolean;
 		change?: undefined | ((value: number) => void);
-		children?: Snippet;
 		/** If true, fires change event during drag. */
 		immediately?: boolean;
 	}
@@ -20,11 +21,13 @@
 		value = $bindable(),
 		step,
 		active = true,
-		label = undefined,
+		strings,
 		change = undefined,
-		children,
 		immediately = true
 	}: Props = $props();
+
+	const locale = getLocaleContext();
+	const text = $derived(strings(locale));
 
 	let view: HTMLInputElement | undefined = $state();
 
@@ -35,9 +38,7 @@
 </script>
 
 <label>
-	{#if label}
-		<span class="label">{label}</span>
-	{/if}
+	<span class="label">{text.label}</span>
 	<div class="slider">
 		<input
 			bind:this={view}
@@ -51,7 +52,7 @@
 			oninput={immediately ? handleInput : undefined}
 			onchange={handleInput}
 		/>
-		<span class="value">{@render children?.()}</span>
+		<span class="value">{value}{text.suffix ?? ''}</span>
 	</div>
 </label>
 

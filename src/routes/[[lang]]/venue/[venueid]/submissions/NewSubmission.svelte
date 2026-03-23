@@ -174,12 +174,12 @@
 				</td>
 				<td
 					><Slider
-						label="payment"
+						strings={(l) => l.page.newSubmission.slider.payment}
 						bind:value={charge.payment}
 						min={0}
 						max={venue.submission_cost}
-						step={1}>{charge.payment}</Slider
-					></td
+						step={1}
+					/></td
 				>
 				<td
 					><Button

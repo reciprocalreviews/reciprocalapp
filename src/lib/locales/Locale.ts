@@ -26,6 +26,14 @@ export type ConfirmButtonText = ButtonText & { warn: string };
 /** Text for a checkbox with on/off state variants */
 export type CheckboxOnOff = { on: string; off: string };
 
+/** Text for the Slider component */
+export type SliderText = {
+	/** The label describing the slider's purpose */
+	label: string;
+	/** Optional suffix text to display after the current value */
+	suffix?: string;
+};
+
 /** Text for the Card component */
 export type CardText = {
 	/** The header at the top of the card */
@@ -186,6 +194,9 @@ export type LocaleText = {
 				manuscriptId: NotedTextFieldText;
 				previousId: NotedTextFieldText;
 				authorOrcid: TextFieldText;
+			};
+			slider: {
+				payment: SliderText;
 			};
 		};
 		submissions: {
@@ -385,6 +396,9 @@ export type LocaleText = {
 			checkbox: {
 				mintConsent: string;
 			};
+			slider: {
+				newTokenCount: SliderText;
+			};
 		};
 		currencyTransactions: {
 			subtitle: string;
@@ -451,6 +465,9 @@ export type LocaleText = {
 			checkbox: {
 				consent: string;
 			};
+			slider: {
+				tokenAmount: SliderText;
+			};
 		};
 		transactions: {
 			feedback: {
@@ -512,6 +529,10 @@ export type LocaleText = {
 				invited: CheckboxOnOff;
 				anonymousAuthors: CheckboxOnOff;
 				biddable: CheckboxOnOff;
+			};
+			slider: {
+				compensation: SliderText;
+				desiredAssignments: SliderText;
 			};
 		};
 		tasks: {
