@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import Header from '$lib/components/Header.svelte';
+	import Nav from '$lib/components/Nav.svelte';
 	import { onMount, setContext } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import type { AuthError, PostgrestError } from '@supabase/supabase-js';
@@ -78,7 +78,7 @@
 {/if}
 
 {#if !inProd}
-	<Header breadcrumbs={breadcrumbs.breadcrumbs}></Header>
+	<Nav breadcrumbs={breadcrumbs.breadcrumbs}></Nav>
 {/if}
 <main>
 	<section class="notifications" aria-live="assertive">
