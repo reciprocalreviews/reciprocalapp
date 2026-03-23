@@ -107,9 +107,7 @@
 			label="# of tokens to give">{giftAmount}</Slider
 		>
 		<TextField bind:text={giftPurpose} strings={(l) => l.view.gift.field.purpose} size={20} />
-		<Checkbox bind:on={giftConsent}
-			>I understand that these tokens can't be transferred back without the recipient's consent.</Checkbox
-		>
+		<Checkbox bind:on={giftConsent} label={(l) => l.view.gift.checkbox.consent} />
 		<Button
 			strings={(l) => l.view.gift.button.giftTokens}
 			active={(currency !== undefined &&

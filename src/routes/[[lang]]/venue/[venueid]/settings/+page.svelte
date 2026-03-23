@@ -99,10 +99,8 @@
 			testid="inactive-checkbox"
 			on={venue.inactive !== null}
 			change={(on) => db().editVenueInactive(venue.id, on ? 'This venue is not active.' : null)}
-		>
-			<strong>Inactive venue</strong>: Scholars cannot volunteer, submit, or otherwise interact with
-			this venue.
-		</Checkbox>
+			label={(l) => l.page.settings.checkbox.inactive}
+		/>
 
 		{#if venue.inactive !== null}
 			<div style="margin-left: var(--spacing)">
@@ -154,15 +152,8 @@
 		<Checkbox
 			on={venue.anonymous_assignments}
 			change={(on) => db().editVenueAnonymousAssignments(venue.id, on)}
-		>
-			{#if venue.anonymous_assignments}
-				<strong>Anonymous assignments</strong>: Authors and conflicted scholars cannot see who is
-				assigned to review their submissions.
-			{:else}
-				<strong>Visible assignments</strong>: Authors and conflicted scholars can see who is
-				assigned to review their submissions. This is open reviewing.
-			{/if}
-		</Checkbox>
+			label={(l) => venue.anonymous_assignments ? l.page.settings.checkbox.anonymousAssignments.on : l.page.settings.checkbox.anonymousAssignments.off}
+		/>
 
 		<Roles
 			{venue}

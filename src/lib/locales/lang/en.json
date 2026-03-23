@@ -442,6 +442,9 @@
 					"placeholder": "email or ORCID",
 					"invalid": "Must be an email or ORCID"
 				}
+			},
+			"checkbox": {
+				"reviewComplete": "This submission's review is complete."
 			}
 		},
 		"venue": {
@@ -531,6 +534,13 @@
 					"placeholder": "e.g., 40",
 					"invalid": "Must be a whole number"
 				}
+			},
+			"checkbox": {
+				"inactive": "**Inactive venue**: Scholars cannot volunteer, submit, or otherwise interact with this venue.",
+				"anonymousAssignments": {
+					"on": "**Anonymous assignments**: Authors and conflicted scholars cannot see who is assigned to review their submissions.",
+					"off": "**Visible assignments**: Authors and conflicted scholars can see who is assigned to review their submissions. This is open reviewing."
+				}
 			}
 		},
 		"scholar": {
@@ -575,6 +585,9 @@
 					"header": "gift tokens",
 					"note": "to other scholars"
 				}
+			},
+			"checkbox": {
+				"available": "I am available to review."
 			}
 		},
 		"currency": {
@@ -637,6 +650,9 @@
 					"header": "add minter",
 					"note": "Allow another scholar to mint tokens."
 				}
+			},
+			"checkbox": {
+				"mintConsent": "I understand that creating excess tokens will erode this currency's value."
 			}
 		},
 		"about": {
@@ -672,6 +688,9 @@
 					"label": "Purpose",
 					"placeholder": "What is the gift for?"
 				}
+			},
+			"checkbox": {
+				"consent": "I understand that these tokens can't be transferred back without the recipient's consent."
 			}
 		},
 		"transactions": {
@@ -810,6 +829,20 @@
 					"note": "Edit this role's settings"
 				},
 				"unnamed": "Role"
+			},
+			"checkbox": {
+				"invited": {
+					"on": "Scholars must be invited to this role.",
+					"off": "Scholars can volunteer for this role without being invited."
+				},
+				"anonymousAuthors": {
+					"on": "This role cannot see author information.",
+					"off": "This role can see author information."
+				},
+				"biddable": {
+					"on": "Volunteers can bid on submissions.",
+					"off": "Volunteers cannot bid for this role on submissions."
+				}
 			}
 		},
 		"tasks": {

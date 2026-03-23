@@ -824,6 +824,18 @@
                 },
                 "title": {
                   "type": "string"
+                },
+                "checkbox": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "mintConsent": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "mintConsent"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
@@ -834,7 +846,8 @@
                 "button",
                 "note",
                 "field",
-                "card"
+                "card",
+                "checkbox"
               ],
               "type": "object"
             },
@@ -1395,6 +1408,18 @@
                 },
                 "title": {
                   "type": "string"
+                },
+                "checkbox": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "available": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "available"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
@@ -1402,7 +1427,8 @@
                 "header",
                 "feedback",
                 "field",
-                "card"
+                "card",
+                "checkbox"
               ],
               "type": "object"
             },
@@ -1471,13 +1497,43 @@
                 },
                 "title": {
                   "type": "string"
+                },
+                "checkbox": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "anonymousAssignments": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "off": {
+                          "type": "string"
+                        },
+                        "on": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "on",
+                        "off"
+                      ],
+                      "type": "object"
+                    },
+                    "inactive": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "inactive",
+                    "anonymousAssignments"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
                 "title",
                 "header",
                 "feedback",
-                "field"
+                "field",
+                "checkbox"
               ],
               "type": "object"
             },
@@ -1601,6 +1657,18 @@
                 },
                 "title": {
                   "type": "string"
+                },
+                "checkbox": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "reviewComplete": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "reviewComplete"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
@@ -1608,7 +1676,8 @@
                 "header",
                 "feedback",
                 "button",
-                "field"
+                "field",
+                "checkbox"
               ],
               "type": "object"
             },
@@ -2355,12 +2424,25 @@
                 },
                 "noTokens": {
                   "type": "string"
+                },
+                "checkbox": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "consent": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "consent"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
                 "noTokens",
                 "button",
-                "field"
+                "field",
+                "checkbox"
               ],
               "type": "object"
             },
@@ -2506,13 +2588,73 @@
                     "expertise"
                   ],
                   "type": "object"
+                },
+                "checkbox": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "anonymousAuthors": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "off": {
+                          "type": "string"
+                        },
+                        "on": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "on",
+                        "off"
+                      ],
+                      "type": "object"
+                    },
+                    "biddable": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "off": {
+                          "type": "string"
+                        },
+                        "on": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "on",
+                        "off"
+                      ],
+                      "type": "object"
+                    },
+                    "invited": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "off": {
+                          "type": "string"
+                        },
+                        "on": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "on",
+                        "off"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "invited",
+                    "anonymousAuthors",
+                    "biddable"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
                 "feedback",
                 "button",
                 "field",
-                "card"
+                "card",
+                "checkbox"
               ],
               "type": "object"
             },

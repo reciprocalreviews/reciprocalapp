@@ -201,8 +201,8 @@
 			<Checkbox
 				on={done}
 				change={(on) => db().updateSubmissionStatus(submission.id, on ? 'done' : 'reviewing')}
-				>This submission's review is complete.</Checkbox
-			>
+				label={(l) => l.page.submission.checkbox.reviewComplete}
+			/>
 		{/if}
 
 		<Subheader icon={ScholarLabel} text={(l) => l.page.submission.header.authors}></Subheader>

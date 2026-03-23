@@ -1,13 +1,14 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
 	import { handle } from '../../routes/feedback.svelte';
 	import type { Result } from '$lib/data/CRUD';
+	import type LocaleText from '$lib/locales/Locale';
+	import Text from '$lib/locales/Text.svelte';
 
 	let {
 		on = $bindable(),
 		change = undefined,
 		active = true,
-		children,
+		label,
 		testid = undefined
 	}: {
 		/** Whether the box is selected */
@@ -15,7 +16,7 @@
 		/** Whether the checkbox is enabled */
 		active?: boolean;
 		change?: undefined | ((on: boolean) => Promise<Result>);
-		children?: Snippet;
+		label: (l: LocaleText) => string;
 		testid?: string | undefined;
 	} = $props();
 </script>
@@ -34,7 +35,7 @@
 				await handle(change(on));
 			}
 		}}
-	/><span class="text">{@render children?.()}</span></label
+	/><span class="text"><Text path={label} markdown /></span></label
 >
 
 <style>

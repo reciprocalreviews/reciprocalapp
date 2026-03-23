@@ -23,6 +23,9 @@ export type NotedTextFieldText = TextFieldText & {
 /** An optional warning text for confirm buttons */
 export type ConfirmButtonText = ButtonText & { warn: string };
 
+/** Text for a checkbox with on/off state variants */
+export type CheckboxOnOff = { on: string; off: string };
+
 /** Text for the Card component */
 export type CardText = {
 	/** The header at the top of the card */
@@ -230,6 +233,9 @@ export type LocaleText = {
 				scholar: TextFieldText;
 				newAssignment: TextFieldText & { invalid: string };
 			};
+			checkbox: {
+				reviewComplete: string;
+			};
 		};
 		venue: {
 			title: string;
@@ -279,6 +285,10 @@ export type LocaleText = {
 				welcomeTokens: TextFieldText;
 				submissionCost: TextFieldText;
 			};
+			checkbox: {
+				inactive: string;
+				anonymousAssignments: CheckboxOnOff;
+			};
 		};
 		scholar: {
 			title: string;
@@ -308,6 +318,9 @@ export type LocaleText = {
 			};
 			card: {
 				gift: CardText;
+			};
+			checkbox: {
+				available: string;
 			};
 		};
 		currency: {
@@ -340,6 +353,9 @@ export type LocaleText = {
 			card: {
 				mint: CardText;
 				addMinter: CardText;
+			};
+			checkbox: {
+				mintConsent: string;
 			};
 		};
 		login: {
@@ -395,6 +411,9 @@ export type LocaleText = {
 				recipient: TextFieldText & { invalid: string };
 				purpose: TextFieldText;
 			};
+			checkbox: {
+				consent: string;
+			};
 		};
 		transactions: {
 			feedback: {
@@ -446,6 +465,11 @@ export type LocaleText = {
 				settings: CardText;
 				admins: CardText;
 				unnamed: string;
+			};
+			checkbox: {
+				invited: CheckboxOnOff;
+				anonymousAuthors: CheckboxOnOff;
+				biddable: CheckboxOnOff;
 			};
 		};
 		tasks: {

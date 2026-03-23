@@ -137,9 +137,7 @@
 									? (l) => l.page.currency.field.mintPurpose.invalid ?? ''
 									: undefined}
 						/>
-						<Checkbox bind:on={newTokenConsent}>
-							I understand that creating excess tokens will erode this currency's value.</Checkbox
-						>
+						<Checkbox bind:on={newTokenConsent} label={(l) => l.page.currency.checkbox.mintConsent} />
 
 						<Button
 							strings={(l) => l.page.currency.button.mint}

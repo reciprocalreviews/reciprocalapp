@@ -100,8 +100,8 @@
 		<Checkbox
 			on={scholar.isAvailable()}
 			change={(on) => db().updateScholarAvailability(scholar.getID(), on)}
-			>I am available to review.</Checkbox
-		>
+			label={(l) => l.page.scholar.checkbox.available}
+		/>
 
 		<EditableText
 			inline={false}

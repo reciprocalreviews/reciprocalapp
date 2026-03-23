@@ -391,22 +391,23 @@
 							strings={(l) => l.view.roles.field.roleDescription}
 							edit={(text) => db().editRoleDescription(role.id, text)}
 						/>
-						<Checkbox on={role.invited} change={(on) => db().editRoleInvited(role.id, on)}
-							>{#if role.invited}Scholars must be invited to this role{:else}Scholars can volunteer
-								for this role without being invited{/if}
-						</Checkbox>
+						<Checkbox
+							on={role.invited}
+							change={(on) => db().editRoleInvited(role.id, on)}
+							label={(l) => role.invited ? l.view.roles.checkbox.invited.on : l.view.roles.checkbox.invited.off}
+						/>
 
 						<Checkbox
 							on={role.anonymous_authors}
 							change={(on) => db().editRoleAnonymousAuthors(role.id, on)}
-							>{#if role.anonymous_authors}This role cannot see author information.{:else}This role
-								can see author information.{/if}
-						</Checkbox>
+							label={(l) => role.anonymous_authors ? l.view.roles.checkbox.anonymousAuthors.on : l.view.roles.checkbox.anonymousAuthors.off}
+						/>
 
-						<Checkbox on={role.biddable} change={(on) => db().editRoleBidding(role.id, on)}
-							>{#if role.biddable}Volunteers can bid on submissions.{:else}Volunteers cannot bid for
-								this role on submissions.{/if}
-						</Checkbox>
+						<Checkbox
+							on={role.biddable}
+							change={(on) => db().editRoleBidding(role.id, on)}
+							label={(l) => role.biddable ? l.view.roles.checkbox.biddable.on : l.view.roles.checkbox.biddable.off}
+						/>
 
 						<Slider
 							min={1}
