@@ -74,7 +74,7 @@
 	</li>
 {/snippet}
 
-<Page icon={IdeaLabel} title="Updates" breadcrumbs={[['/', 'Home']]}>
+<Page icon={IdeaLabel} title={(l) => l.page.updates.title} breadcrumbs={[['/', 'Home']]}>
 	<p>
 		Here are the updates to Reciprocal Reviews. Have an <a
 			href="https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=1-defect.yml"

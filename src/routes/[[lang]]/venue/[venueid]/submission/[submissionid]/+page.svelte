@@ -138,7 +138,7 @@
 {#if submission === null || venue === null || roles === null || user === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
 	<Page
 		icon={ErrorLabel}
-		title="Submission"
+		title={(l) => l.page.submission.title}
 		breadcrumbs={[
 			[`/venue/${venue?.id}`, venue?.title ?? ''],
 			[`/venue/${venue?.id}/submissions`, 'Submissions']
@@ -149,7 +149,7 @@
 {:else if !isAuthor && !isAssigned}
 	<Page
 		icon={ErrorLabel}
-		title="Submission"
+		title={(l) => l.page.submission.title}
 		breadcrumbs={[
 			[`/venue/${venue?.id}`, venue?.title ?? ''],
 			[`/venue/${venue?.id}/submissions`, 'Submissions']

@@ -12,13 +12,13 @@
 </script>
 
 {#if venue === null || submissionTypes === null}
-	<Page icon={ErrorLabel} title="New submission" breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.newSubmission.title} breadcrumbs={[]}>
 		<Feedback error text={(l) => l.page.newSubmission.feedback.notLoaded}></Feedback>
 	</Page>
 {:else}
 	<Page
 		icon={SubmissionLabel}
-		title="New submission"
+		title={(l) => l.page.newSubmission.title}
 		breadcrumbs={[
 			[`/venue/${venue.id}`, venue.title],
 			[`/venue/${venue.id}/submissions`, 'Submissions']

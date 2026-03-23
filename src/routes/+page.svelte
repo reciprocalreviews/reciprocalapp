@@ -9,11 +9,7 @@
 	const inProd = PUBLIC_ENV === 'prod';
 </script>
 
-<svelte:head>
-	<title>Reciprocal Reviews</title>
-</svelte:head>
-
-<Page icon={TokenLabel} title="Reciprocal Reviews" breadcrumbs={[]}>
+<Page icon={TokenLabel} title={(l) => l.page.home.title} breadcrumbs={[]}>
 	{#snippet subtitle()}<Text path={(l) => l.page.home.lead} />{/snippet}
 
 	<Text markdown path={(l) => l.page.home.call} />

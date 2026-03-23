@@ -47,13 +47,13 @@
 </script>
 
 {#if venue === null}
-	<Page icon={ErrorLabel} title="Unknown venue" breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.venue.unknownTitle} breadcrumbs={[]}>
 		<Feedback text={(l) => l.page.volunteers.feedback.unknownVenue}></Feedback>
 	</Page>
 {:else if commitments === null}
 	<Page
 		icon={ErrorLabel}
-		title="Volunteers unavailable"
+		title={(l) => l.page.volunteers.unavailableTitle}
 		breadcrumbs={[[`/${venue.id}`, venue.title]]}
 	>
 		<Feedback text={(l) => l.page.volunteers.feedback.volunteersNotLoaded}></Feedback>

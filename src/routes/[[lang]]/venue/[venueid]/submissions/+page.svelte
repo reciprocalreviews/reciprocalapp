@@ -132,7 +132,7 @@
 {#if venue && conflicts}
 	<Page
 		icon={SubmissionLabel}
-		title="Submissions"
+		title={(l) => l.page.submissions.title}
 		breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}
 	>
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}

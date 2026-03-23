@@ -646,9 +646,13 @@
                     "change"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "header",
                 "feedback"
               ],
@@ -817,9 +821,13 @@
                     "mintWarning"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "feedback",
                 "tip",
                 "header",
@@ -873,9 +881,13 @@
                     "track"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "lead",
                 "call",
                 "tip",
@@ -929,9 +941,13 @@
                     "orcid"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "button",
                 "note",
                 "field"
@@ -1032,9 +1048,13 @@
                     "approve"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "feedback",
                 "button",
                 "note",
@@ -1136,9 +1156,13 @@
                     "editors"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "feedback",
                 "button",
                 "note",
@@ -1215,9 +1239,13 @@
                     "rationale"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "button",
                 "field"
               ],
@@ -1292,11 +1320,34 @@
                     "email": {
                       "$ref": "#/definitions/NotedTextFieldText"
                     },
+                    "name": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
                     "status": {
                       "$ref": "#/definitions/TextFieldText"
                     }
                   },
                   "required": [
+                    "name",
                     "status",
                     "email"
                   ],
@@ -1329,9 +1380,13 @@
                     "volunteering"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "header",
                 "feedback",
                 "field",
@@ -1401,9 +1456,13 @@
                     "compensation"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "header",
                 "feedback",
                 "field"
@@ -1527,9 +1586,13 @@
                     "expertise"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "header",
                 "feedback",
                 "button",
@@ -1679,12 +1742,28 @@
                     "filter"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "feedback",
                 "button",
                 "field"
+              ],
+              "type": "object"
+            },
+            "updates": {
+              "additionalProperties": false,
+              "properties": {
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title"
               ],
               "type": "object"
             },
@@ -1836,9 +1915,17 @@
                     "roles"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "unknownTitle": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
+                "unknownTitle",
                 "header",
                 "button",
                 "feedback",
@@ -1861,9 +1948,13 @@
                     "transactionsNotLoaded"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "feedback"
               ],
               "type": "object"
@@ -2060,9 +2151,13 @@
                     "propose"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
                 "description",
                 "header",
                 "link",
@@ -2118,9 +2213,17 @@
                     "filter"
                   ],
                   "type": "object"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "unavailableTitle": {
+                  "type": "string"
                 }
               },
               "required": [
+                "title",
+                "unavailableTitle",
                 "feedback",
                 "button",
                 "field"
@@ -2143,7 +2246,8 @@
             "currency",
             "login",
             "proposeVenue",
-            "about"
+            "about",
+            "updates"
           ],
           "type": "object"
         },

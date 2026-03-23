@@ -68,7 +68,7 @@
 
 <Page
 	icon={ScholarLabel}
-	title={scholar.getName() ?? 'anonymous'}
+	title={(l) => scholar.getName() ?? l.page.scholar.title}
 	breadcrumbs={[]}
 	edit={editable
 		? {

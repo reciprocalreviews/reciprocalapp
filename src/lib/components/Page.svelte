@@ -4,6 +4,7 @@
 	import { type Result } from '$lib/data/CRUD';
 	import EditableText from './EditableText.svelte';
 	import type LocaleText from '$lib/locales/Locale';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	let {
 		icon,
@@ -15,7 +16,7 @@
 		edit
 	}: {
 		icon: string;
-		title: string;
+		title: string | ((l: LocaleText) => string);
 		subtitle?: Snippet;
 		details?: Snippet;
 		children: Snippet;
@@ -29,7 +30,9 @@
 			| undefined;
 	} = $props();
 
-	let revisedTitle = $derived(title);
+	const locale = getLocaleContext();
+
+	let revisedTitle = $derived(typeof title === 'function' ? title(locale) : title);
 
 	const breadcrumbsContext = getContext<{ breadcrumbs: [string, string][] }>('breadcrumbs');
 	$effect(() => {
@@ -38,7 +41,7 @@
 </script>
 
 <svelte:head>
-	<title>{title}</title>
+	<title>{revisedTitle}</title>
 </svelte:head>
 
 <section class="page">
@@ -52,7 +55,7 @@
 					strings={(l) => ({
 						placeholder: edit.placeholder(l)
 					})}
-				></EditableText>{:else}{title}{/if}
+				></EditableText>{:else}{revisedTitle}{/if}
 		</h1>
 		<div class="details">
 			{#if subtitle}<Lead>{@render subtitle()}</Lead>{/if}{@render details?.()}

@@ -1,4 +1,11 @@
-<p class="lead"><slot /></p>
+<script lang="ts">
+	import type { Snippet } from 'svelte';
+
+	/** A lead paragraph, which is styled larger and italicized. */
+	let { children }: { children: Snippet } = $props();
+</script>
+
+<p class="lead">{@render children()}</p>
 
 <style>
 	.lead {

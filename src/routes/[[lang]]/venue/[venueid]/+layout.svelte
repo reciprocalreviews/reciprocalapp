@@ -25,7 +25,7 @@
 </script>
 
 {#if venue === null}
-	<Page icon={ErrorLabel} title="Unknown venue" breadcrumbs={[[`/venues`, 'Venue']]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.venue.unknownTitle} breadcrumbs={[[`/venues`, 'Venue']]}>
 		<p>Unable to find this venue.</p>
 	</Page>
 {:else if venue.inactive !== null && !venue.admins.includes(data.scholar?.id ?? '')}

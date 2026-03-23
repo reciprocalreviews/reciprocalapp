@@ -15,7 +15,7 @@
 {#if scholar && transactions && venues && currencies && count !== null}
 	<Page
 		icon={ScholarLabel}
-		title={scholar.name ?? scholar.email ?? 'anonymous'}
+		title={scholar.name ?? scholar.email ?? ((l) => l.page.scholar.title)}
 		breadcrumbs={[
 			[`/scholar/${scholar.id}`, scholar.name ?? scholar.orcid ?? scholar.email ?? 'anonymous']
 		]}

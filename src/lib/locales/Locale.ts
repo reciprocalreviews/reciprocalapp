@@ -60,6 +60,7 @@ export type LocaleText = {
 	};
 	page: {
 		home: {
+			title: string;
 			lead: string;
 			call: string[];
 			tip: {
@@ -72,6 +73,7 @@ export type LocaleText = {
 			};
 		};
 		venues: {
+			title: string;
 			description: string;
 			header: {
 				proposed: string;
@@ -98,6 +100,7 @@ export type LocaleText = {
 			};
 		};
 		proposal: {
+			title: string;
 			feedback: {
 				alreadySupported: string;
 				logIn: string;
@@ -123,6 +126,8 @@ export type LocaleText = {
 			};
 		};
 		volunteers: {
+			title: string;
+			unavailableTitle: string;
 			feedback: {
 				unknownVenue: string;
 				volunteersNotLoaded: string;
@@ -136,11 +141,13 @@ export type LocaleText = {
 			};
 		};
 		venueTransactions: {
+			title: string;
 			feedback: {
 				transactionsNotLoaded: string;
 			};
 		};
 		newSubmission: {
+			title: string;
 			feedback: {
 				notLoaded: string;
 				duplicateScholars: string;
@@ -166,6 +173,7 @@ export type LocaleText = {
 			};
 		};
 		submissions: {
+			title: string;
 			feedback: {
 				notLoaded: string;
 				noSubmissions: string;
@@ -191,6 +199,7 @@ export type LocaleText = {
 			};
 		};
 		submission: {
+			title: string;
 			header: {
 				authors: string;
 				venue: string;
@@ -217,6 +226,8 @@ export type LocaleText = {
 			};
 		};
 		venue: {
+			title: string;
+			unknownTitle: string;
 			header: {
 				submissionTypes: string;
 				roles: string;
@@ -246,6 +257,7 @@ export type LocaleText = {
 			};
 		};
 		settings: {
+			title: string;
 			header: {
 				status: string;
 				roles: string;
@@ -263,6 +275,7 @@ export type LocaleText = {
 			};
 		};
 		scholar: {
+			title: string;
 			header: {
 				submissions: string;
 				tokens: string;
@@ -292,6 +305,7 @@ export type LocaleText = {
 			};
 		};
 		currency: {
+			title: string;
 			feedback: {
 				notLoaded: string;
 			};
@@ -323,6 +337,7 @@ export type LocaleText = {
 			};
 		};
 		login: {
+			title: string;
 			button: {
 				sendPassword: ButtonText;
 				signIn: ButtonText;
@@ -336,6 +351,7 @@ export type LocaleText = {
 			};
 		};
 		proposeVenue: {
+			title: string;
 			button: {
 				propose: ButtonText;
 			};
@@ -350,6 +366,7 @@ export type LocaleText = {
 			};
 		};
 		about: {
+			title: string;
 			header: {
 				stewards: string;
 				change: string;
@@ -357,6 +374,9 @@ export type LocaleText = {
 			feedback: {
 				stewardsNotLoaded: string;
 			};
+		};
+		updates: {
+			title: string;
 		};
 	};
 	view: {

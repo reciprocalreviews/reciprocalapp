@@ -29,7 +29,7 @@
 	});
 </script>
 
-<Page icon={ScholarLabel} title="Login" breadcrumbs={[['/', 'Home']]}>
+<Page icon={ScholarLabel} title={(l) => l.page.login.title} breadcrumbs={[['/', 'Home']]}>
 	{#if auth.isAuthenticated()}
 		<p>You are logged in.</p>
 	{:else}

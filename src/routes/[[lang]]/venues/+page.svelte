@@ -16,7 +16,7 @@
 	const auth = getAuth();
 </script>
 
-<Page icon={VenueLabel} title="Venues" breadcrumbs={[]}>
+<Page icon={VenueLabel} title={(l) => l.page.venues.title} breadcrumbs={[]}>
 	<Text markdown path={(l) => l.page.venues.description} />
 
 	{#if auth.isAuthenticated()}<Link to="/venues/proposal"

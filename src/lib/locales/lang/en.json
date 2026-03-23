@@ -2,10 +2,10 @@
 	"$schema": "../LocaleText.json",
 	"lang": "en",
 	"shorthand": {
-		"delete": "✖",
-		"confirm": "✓",
-		"edit": "✎",
-		"filter": "🔎"
+		"delete": "\u2716",
+		"confirm": "\u2713",
+		"edit": "\u270e",
+		"filter": "\ud83d\udd0e"
 	},
 	"header": {
 		"home": "Home",
@@ -27,6 +27,7 @@
 	},
 	"page": {
 		"home": {
+			"title": "Reciprocal Reviews",
 			"lead": "Make peer review count.",
 			"call": [
 				"Academia incentivizes publishing over peer review. That means too many submissions and not enough reviews, or reviews that are late and low quality.",
@@ -46,6 +47,7 @@
 			}
 		},
 		"venues": {
+			"title": "Venues",
 			"description": "These are journals and conferences using Reciprocal Reviews to track and incentivize peer review. Choose one to see it's policies or volunteer to review for it, or propose a new one.",
 			"header": {
 				"proposed": "Proposed venues",
@@ -95,6 +97,7 @@
 			}
 		},
 		"login": {
+			"title": "Login",
 			"button": {
 				"sendPassword": {
 					"tip": "Send one-time password",
@@ -109,11 +112,18 @@
 				"orcid": "[ORCID](https://orcid.org/) is the de facto way to manage scholar identity."
 			},
 			"field": {
-				"email": { "label": "email", "placeholder": "" },
-				"password": { "label": "password", "placeholder": "6 digits" }
+				"email": {
+					"label": "email",
+					"placeholder": ""
+				},
+				"password": {
+					"label": "password",
+					"placeholder": "6 digits"
+				}
 			}
 		},
 		"proposeVenue": {
+			"title": "Propose a venue",
 			"button": {
 				"propose": {
 					"tip": "Propose venue",
@@ -155,6 +165,7 @@
 			}
 		},
 		"proposal": {
+			"title": "Proposal",
 			"feedback": {
 				"alreadySupported": "You've expressed support. You can edit or delete your support below.",
 				"logIn": "[Log in](/login) to express support.",
@@ -172,7 +183,7 @@
 				},
 				"approve": {
 					"tip": "Approve this proposal",
-					"label": "Approve…",
+					"label": "Approve\u2026",
 					"warn": "Approve and create this venue?"
 				},
 				"submitSupport": {
@@ -185,7 +196,11 @@
 				"editors": "After approving a proposal, the editors above will become the editors of the venue."
 			},
 			"field": {
-				"title": { "label": "title", "placeholder": "Venue title", "invalid": "Include a title" },
+				"title": {
+					"label": "title",
+					"placeholder": "Venue title",
+					"invalid": "Include a title"
+				},
 				"editors": {
 					"label": "editors",
 					"placeholder": "Venue editors",
@@ -201,7 +216,11 @@
 					"placeholder": "Venue census",
 					"invalid": "Must be a whole number"
 				},
-				"url": { "label": "URL", "placeholder": "https://", "invalid": "Must be a valid URL" },
+				"url": {
+					"label": "URL",
+					"placeholder": "https://",
+					"invalid": "Must be a valid URL"
+				},
 				"support": {
 					"label": "support",
 					"placeholder": "Why should the editors adopt Reciprocal Reviews?",
@@ -210,6 +229,7 @@
 			}
 		},
 		"volunteers": {
+			"title": "Volunteers",
 			"feedback": {
 				"unknownVenue": "Unable to find this venue.",
 				"noVolunteers": "No volunteers yet.",
@@ -222,28 +242,42 @@
 				}
 			},
 			"field": {
-				"filter": { "placeholder": "name, expertise, email" }
-			}
+				"filter": {
+					"placeholder": "name, expertise, email"
+				}
+			},
+			"unavailableTitle": "Volunteers unavailable"
 		},
 		"venueTransactions": {
+			"title": "Transactions",
 			"feedback": {
 				"transactionsNotLoaded": "Unable to load transactions for this venue."
 			}
 		},
 		"newSubmission": {
+			"title": "New submission",
 			"feedback": {
 				"notLoaded": "Unable to load the venue and/or submission types for this page.",
 				"duplicateScholars": "Each author must have a unique ORCID.",
 				"incompletePayment": "{deficit} more tokens to add."
 			},
 			"button": {
-				"removeAuthor": { "tip": "Remove this author from the submission", "label": "x" },
-				"addAuthor": { "tip": "Add another author to the submission", "label": "Add author" },
+				"removeAuthor": {
+					"tip": "Remove this author from the submission",
+					"label": "x"
+				},
+				"addAuthor": {
+					"tip": "Add another author to the submission",
+					"label": "Add author"
+				},
 				"checkBalances": {
 					"tip": "Check if authors have enough tokens",
 					"label": "Check author balances"
 				},
-				"submit": { "tip": "Create a new submission", "label": "Submit" }
+				"submit": {
+					"tip": "Create a new submission",
+					"label": "Submit"
+				}
 			},
 			"note": {
 				"payment": "Specify the authors and how many tokens each will pay.",
@@ -273,28 +307,57 @@
 					"placeholder": "id",
 					"note": "The ID of the previous submission, if this is a revision and you want to track it."
 				},
-				"authorOrcid": { "label": "author", "placeholder": "ORCID", "invalid": "Invalid ORCID" }
+				"authorOrcid": {
+					"label": "author",
+					"placeholder": "ORCID",
+					"invalid": "Invalid ORCID"
+				}
 			}
 		},
 		"submissions": {
+			"title": "Submissions",
 			"feedback": {
 				"notLoaded": "Unable to load submissions.",
 				"noSubmissions": "This venue has no submissions (or none visible to you).",
 				"noneFiltered": "All submissions filtered."
 			},
 			"button": {
-				"sortPaymentFirst": { "tip": "Sort by pending first", "label": "↓" },
-				"sortPaymentLast": { "tip": "Sort by pending last", "label": "↑" },
-				"sortTitleAsc": { "tip": "Sort by title", "label": "↓" },
-				"sortTitleDesc": { "tip": "Reverse sort by title", "label": "↑" },
-				"sortIDAsc": { "tip": "Sort by ID", "label": "↓" },
-				"sortIDDesc": { "tip": "Reverse sort by ID", "label": "↑" },
+				"sortPaymentFirst": {
+					"tip": "Sort by pending first",
+					"label": "\u2193"
+				},
+				"sortPaymentLast": {
+					"tip": "Sort by pending last",
+					"label": "\u2191"
+				},
+				"sortTitleAsc": {
+					"tip": "Sort by title",
+					"label": "\u2193"
+				},
+				"sortTitleDesc": {
+					"tip": "Reverse sort by title",
+					"label": "\u2191"
+				},
+				"sortIDAsc": {
+					"tip": "Sort by ID",
+					"label": "\u2193"
+				},
+				"sortIDDesc": {
+					"tip": "Reverse sort by ID",
+					"label": "\u2191"
+				},
 				"declareConflict": {
 					"tip": "Declare a conflict with this submission. You will no longer see this submission in your bidding list.",
 					"label": "Declare conflict"
 				},
-				"bid": { "tip": "Express interest in serving as {role}", "label": "Bid" },
-				"unbid": { "tip": "Remove interest in serving as {role}", "label": "Unbid" }
+				"bid": {
+					"tip": "Express interest in serving as {role}",
+					"label": "Bid"
+				},
+				"unbid": {
+					"tip": "Remove interest in serving as {role}",
+					"label": "Unbid"
+				}
 			},
 			"field": {
 				"title": {
@@ -326,6 +389,7 @@
 			}
 		},
 		"submission": {
+			"title": "Submission",
 			"header": {
 				"authors": "Authors",
 				"venue": "Venue",
@@ -344,12 +408,18 @@
 					"tip": "Create a new assignment for this scholar and role",
 					"label": "+ assignee"
 				},
-				"unassign": { "tip": "Remove this assignment", "label": "Unassign" },
+				"unassign": {
+					"tip": "Remove this assignment",
+					"label": "Unassign"
+				},
 				"complete": {
 					"tip": "Mark this assignment complete and compensate the scholar for their work",
 					"label": "Complete"
 				},
-				"approve": { "tip": "Assign this scholar to this role", "label": "Assign" },
+				"approve": {
+					"tip": "Assign this scholar to this role",
+					"label": "Assign"
+				},
 				"approveBid": {
 					"tip": "Accept this bid, assigning this scholar to this role for this submission",
 					"label": "Assign"
@@ -369,6 +439,7 @@
 			}
 		},
 		"venue": {
+			"title": "Venue",
 			"header": {
 				"submissionTypes": "Submission types",
 				"roles": "Roles"
@@ -378,8 +449,13 @@
 					"placeholder": "Name",
 					"invalid": "Title cannot be empty."
 				},
-				"url": { "placeholder": "https://...", "invalid": "Must be a valid URL" },
-				"description": { "placeholder": "Venue description." },
+				"url": {
+					"placeholder": "https://...",
+					"invalid": "Must be a valid URL"
+				},
+				"description": {
+					"placeholder": "Venue description."
+				},
 				"typeName": {
 					"placeholder": "name"
 				},
@@ -418,9 +494,11 @@
 					"header": "gift",
 					"note": "Send tokens to a scholar"
 				}
-			}
+			},
+			"unknownTitle": "Unknown venue"
 		},
 		"settings": {
+			"title": "Settings",
 			"header": {
 				"status": "Status",
 				"roles": "Roles",
@@ -450,6 +528,7 @@
 			}
 		},
 		"scholar": {
+			"title": "Anonymous",
 			"header": {
 				"submissions": "Submissions",
 				"tokens": "Ttokens",
@@ -470,7 +549,14 @@
 				"volunteeringThird": "This scholar is not volunteering for any roles yet."
 			},
 			"field": {
-				"status": { "placeholder": "Explain your current reviewing status to others." },
+				"name": {
+					"label": "name",
+					"placeholder": "name",
+					"invalid": "Name must be at least 1 character"
+				},
+				"status": {
+					"placeholder": "Explain your current reviewing status to others."
+				},
 				"email": {
 					"label": "email",
 					"placeholder": "email",
@@ -486,6 +572,7 @@
 			}
 		},
 		"currency": {
+			"title": "Currency",
 			"feedback": {
 				"notLoaded": "Unable to load this currency."
 			},
@@ -547,6 +634,7 @@
 			}
 		},
 		"about": {
+			"title": "About",
 			"header": {
 				"stewards": "Stewards",
 				"change": "Theory of change"
@@ -554,6 +642,9 @@
 			"feedback": {
 				"stewardsNotLoaded": "Unable to load active stewards."
 			}
+		},
+		"updates": {
+			"title": "Updates"
 		}
 	},
 	"view": {
@@ -589,7 +680,7 @@
 				},
 				"cancelInitiate": {
 					"tip": "Cancel this proposed transaction",
-					"label": "Cancel…"
+					"label": "Cancel\u2026"
 				},
 				"cancelConfirm": {
 					"tip": "Cancel this proposed transaction",
@@ -602,7 +693,10 @@
 				}
 			},
 			"field": {
-				"cancelReason": { "label": "Reason", "placeholder": "Reason for cancellation" }
+				"cancelReason": {
+					"label": "Reason",
+					"placeholder": "Reason for cancellation"
+				}
 			}
 		},
 		"roles": {
@@ -628,11 +722,11 @@
 				},
 				"priorityUp": {
 					"tip": "Move this role's priority up",
-					"label": "↑"
+					"label": "\u2191"
 				},
 				"priorityDown": {
 					"tip": "Move this role's priority down",
-					"label": "↓"
+					"label": "\u2193"
 				},
 				"addCompensation": {
 					"tip": "Add compensation for this submission role",
@@ -644,7 +738,7 @@
 				},
 				"volunteer": {
 					"tip": "Volunteer for this role",
-					"label": "Volunteer…"
+					"label": "Volunteer\u2026"
 				},
 				"accept": {
 					"tip": "Accept this invitation",
@@ -664,7 +758,7 @@
 				},
 				"deleteRole": {
 					"tip": "Delete this role",
-					"label": "Delete $delete…",
+					"label": "Delete $delete\u2026",
 					"warn": "Delete this role and all volunteers?"
 				}
 			},
@@ -674,15 +768,27 @@
 					"placeholder": "name",
 					"invalid": "Must include a name"
 				},
-				"adminScholar": { "label": "Scholar", "placeholder": "ORCID or email" },
+				"adminScholar": {
+					"label": "Scholar",
+					"placeholder": "ORCID or email"
+				},
 				"invite": {
 					"label": "email or orcid",
 					"placeholder": "",
 					"invalid": "Must be a comma separated list of emails or ORCID"
 				},
-				"roleName": { "label": "name", "placeholder": "name", "invalid": "Must include a name" },
-				"roleDescription": { "label": "description", "placeholder": "description" },
-				"compensationRationale": { "placeholder": "Why this amount?" },
+				"roleName": {
+					"label": "name",
+					"placeholder": "name",
+					"invalid": "Must include a name"
+				},
+				"roleDescription": {
+					"label": "description",
+					"placeholder": "description"
+				},
+				"compensationRationale": {
+					"placeholder": "Why this amount?"
+				},
 				"expertise": {
 					"label": "what is your expertise? (separated by commas)?",
 					"placeholder": "topic, area, method, theory, etc."
@@ -743,7 +849,7 @@
 		"notification": {
 			"dismiss": {
 				"tip": "Dismiss notification",
-				"label": "𐄂"
+				"label": "\ud800\udd02"
 			}
 		}
 	},

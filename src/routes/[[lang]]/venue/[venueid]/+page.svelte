@@ -44,7 +44,7 @@
 </script>
 
 {#if venue === null}
-	<Page icon={ErrorLabel} title="Unknown venue" breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.venue.unknownTitle} breadcrumbs={[]}>
 		<p>Unable to find this venue.</p>
 	</Page>
 {:else}
