@@ -62,6 +62,9 @@ export type LocaleText = {
 		};
 	};
 	page: {
+		error: {
+			title: string;
+		};
 		home: {
 			title: string;
 			lead: string;

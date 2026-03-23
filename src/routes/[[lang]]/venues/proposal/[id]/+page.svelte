@@ -12,7 +12,7 @@
 	import { getDB } from '$lib/data/CRUD';
 	import Date from '$lib/components/Date.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
-	import { VenueLabel } from '$lib/components/Labels';
+	import { ErrorLabel, VenueLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
 	import { validEmails, validURL } from '$lib/validation';
 	import { SettingsLabel } from '$lib/components/Labels';
@@ -70,8 +70,9 @@
 </script>
 
 {#if proposal === null || supporters === null}
-	<h1>Oops.</h1>
-	<Feedback error text={(l) => l.page.proposal.feedback.notFound}></Feedback>
+	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+		<Feedback error text={(l) => l.page.proposal.feedback.notFound}></Feedback>
+	</Page>
 {:else}
 	<Page icon={VenueLabel} title={proposal.title} breadcrumbs={[]}>
 		{#snippet subtitle()}

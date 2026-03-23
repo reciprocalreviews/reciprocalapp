@@ -5,7 +5,7 @@
 	import Circle from '$lib/components/Circle.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Gift from '$lib/components/Gift.svelte';
-	import { VenueLabel } from '$lib/components/Labels.js';
+	import { ErrorLabel, VenueLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
 	import Transactions from '$lib/components/Transactions.svelte';
 	import { getDB } from '$lib/data/CRUD.js';
@@ -23,7 +23,7 @@
 
 		{#if venue.admins.includes(scholar.id)}
 			<Cards>
-				<Card group="admins" icon="🎁" strings={(l) => l.page.venue.card.gift} full>
+				<Card group="admin" icon="🎁" strings={(l) => l.page.venue.card.gift} full>
 					{#if scholar}
 						<Gift
 							{tokens}
@@ -68,6 +68,8 @@
 		/>
 	</Page>
 {:else}
-	<h1>Oops.</h1>
-	<Feedback error text={(l) => l.page.venueTransactions.feedback.transactionsNotLoaded}></Feedback>
+	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+		<Feedback error text={(l) => l.page.venueTransactions.feedback.transactionsNotLoaded}
+		></Feedback>
+	</Page>
 {/if}

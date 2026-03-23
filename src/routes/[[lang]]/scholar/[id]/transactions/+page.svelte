@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Circle from '$lib/components/Circle.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { ScholarLabel } from '$lib/components/Labels.js';
+	import { ErrorLabel, ScholarLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
 	import Transactions from '$lib/components/Transactions.svelte';
 	import { getDB } from '$lib/data/CRUD.js';
@@ -33,6 +33,7 @@
 		/>
 	</Page>
 {:else}
-	<h1>Oops.</h1>
-	<Feedback error text={(l) => l.view.transactions.feedback.notLoaded}></Feedback>
+	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+		<Feedback error text={(l) => l.view.transactions.feedback.notLoaded}></Feedback>
+	</Page>
 {/if}

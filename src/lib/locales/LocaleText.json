@@ -838,6 +838,18 @@
               ],
               "type": "object"
             },
+            "error": {
+              "additionalProperties": false,
+              "properties": {
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title"
+              ],
+              "type": "object"
+            },
             "home": {
               "additionalProperties": false,
               "properties": {
@@ -2232,6 +2244,7 @@
             }
           },
           "required": [
+            "error",
             "home",
             "venues",
             "proposal",
@@ -2271,6 +2284,9 @@
             },
             "minter": {
               "type": "string"
+            },
+            "steward": {
+              "type": "string"
             }
           },
           "required": [
@@ -2279,7 +2295,8 @@
             "edit",
             "filter",
             "admin",
-            "minter"
+            "minter",
+            "steward"
           ],
           "type": "object"
         },

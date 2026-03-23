@@ -29,6 +29,9 @@
 		}
 	},
 	"page": {
+		"error": {
+			"title": "Oops."
+		},
 		"home": {
 			"title": "Reciprocal Reviews",
 			"lead": "Make peer review count.",

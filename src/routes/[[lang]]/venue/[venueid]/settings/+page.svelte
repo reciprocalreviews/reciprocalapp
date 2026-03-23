@@ -20,13 +20,14 @@
 </script>
 
 {#if venue === null || currency === null}
-	<h1>Oops.</h1>
-	<Feedback error text={(l) => l.page.settings.feedback.unknownVenue} />
+	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+		<Feedback error text={(l) => l.page.settings.feedback.unknownVenue} />
+	</Page>
 {:else if !scholar}
-	<h1>Oops.</h1>
-	<Feedback error text={(l) => l.page.settings.feedback.logIn} />
+	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+		<Feedback error text={(l) => l.page.settings.feedback.logIn} />
+	</Page>
 {:else if !venue.admins.includes(scholar.id)}
-	<h1>Oops.</h1>
 	<Page icon={ErrorLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}Settings{/snippet}
 		<Feedback error text={(l) => l.page.settings.feedback.adminsOnly} />
