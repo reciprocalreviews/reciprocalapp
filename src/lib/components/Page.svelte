@@ -3,6 +3,7 @@
 	import Lead from './Lead.svelte';
 	import { type Result } from '$lib/data/CRUD';
 	import EditableText from './EditableText.svelte';
+	import type LocaleText from '$lib/locales/Locale';
 
 	let {
 		icon,
@@ -21,9 +22,9 @@
 		breadcrumbs: [string, string][];
 		edit?:
 			| {
-					valid: undefined | ((text: string) => string | undefined);
+					valid: undefined | ((text: string) => ((l: LocaleText) => string) | undefined);
 					update: (text: string) => Promise<Result>;
-					placeholder: string;
+					placeholder: (l: LocaleText) => string;
 			  }
 			| undefined;
 	} = $props();
@@ -48,7 +49,9 @@
 					text={revisedTitle}
 					valid={edit.valid}
 					edit={edit.update}
-					placeholder={edit.placeholder}
+					strings={(l) => ({
+						placeholder: edit.placeholder(l)
+					})}
 				></EditableText>{:else}{title}{/if}
 		</h1>
 		<div class="details">

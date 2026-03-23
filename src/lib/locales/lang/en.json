@@ -1,6 +1,12 @@
 {
 	"$schema": "../LocaleText.json",
 	"lang": "en",
+	"shorthand": {
+		"delete": "✖",
+		"confirm": "✓",
+		"edit": "✎",
+		"filter": "🔎"
+	},
 	"header": {
 		"home": "Home",
 		"venues": "Venues",
@@ -53,6 +59,99 @@
 				"venuesNotLoaded": "We couldn't load the venues.",
 				"noProposals": "No venues have been proposed yet.",
 				"proposalsNotLoaded": "We couldn't load the venue proposals."
+			},
+			"field": {
+				"title": {
+					"label": "title",
+					"placeholder": "venue title",
+					"invalid": "Must be at least 1"
+				},
+				"editors": {
+					"label": "editors",
+					"placeholder": "email, email, ...",
+					"invalid": "Must be a list of comma separated email addresses."
+				},
+				"minters": {
+					"label": "minters",
+					"placeholder": "email, email, ...",
+					"invalid": "Must be a list of comma separated email addresses."
+				},
+				"url": {
+					"label": "URL",
+					"placeholder": "https://",
+					"invalid": "Not a valid URL"
+				},
+				"census": {
+					"label": "census",
+					"placeholder": "Venue census",
+					"invalid": "Must be a whole number"
+				}
+			},
+			"card": {
+				"settings": {
+					"header": "settings",
+					"note": "Title, editors, url, etc."
+				}
+			}
+		},
+		"login": {
+			"button": {
+				"sendPassword": {
+					"tip": "Send one-time password",
+					"label": "Login"
+				},
+				"signIn": {
+					"tip": "Sign in",
+					"label": "Login"
+				}
+			},
+			"note": {
+				"orcid": "[ORCID](https://orcid.org/) is the de facto way to manage scholar identity."
+			},
+			"field": {
+				"email": { "label": "email", "placeholder": "" },
+				"password": { "label": "password", "placeholder": "6 digits" }
+			}
+		},
+		"proposeVenue": {
+			"button": {
+				"propose": {
+					"tip": "Propose venue",
+					"label": "Propose venue"
+				}
+			},
+			"field": {
+				"venueName": {
+					"label": "Venue",
+					"placeholder": "name",
+					"invalid": "Must include a venue name"
+				},
+				"editors": {
+					"label": "Editors",
+					"placeholder": "email1@email.com, email2@email.com",
+					"invalid": "Must be a list of comma-separated email addresses."
+				},
+				"minters": {
+					"label": "Minters",
+					"placeholder": "email1@email.com, email2@email.com",
+					"invalid": "Must be a list of at least one comma-separated email address."
+				},
+				"mintersConflict": "Editors can't be minters",
+				"url": {
+					"label": "Official venue URL",
+					"placeholder": "https://...",
+					"invalid": "Must be a valid URL"
+				},
+				"size": {
+					"label": "Community size",
+					"placeholder": "number",
+					"invalid": "Must be a positive whole number"
+				},
+				"rationale": {
+					"label": "Why should the editors adopt Reciprocal Reviews? This will be shown publicly.",
+					"placeholder": "why",
+					"invalid": "Must include a rationale"
+				}
 			}
 		},
 		"proposal": {
@@ -60,6 +159,54 @@
 				"alreadySupported": "You've expressed support. You can edit or delete your support below.",
 				"logIn": "[Log in](/login) to express support.",
 				"notFound": "Unknown proposal."
+			},
+			"button": {
+				"deleteSupport": {
+					"tip": "Delete your support for this proposal",
+					"label": "$delete"
+				},
+				"deleteProposal": {
+					"tip": "Delete this proposal",
+					"label": "$delete",
+					"warn": "Delete this proposal forever?"
+				},
+				"approve": {
+					"tip": "Approve this proposal",
+					"label": "Approve…",
+					"warn": "Approve and create this venue?"
+				},
+				"submitSupport": {
+					"tip": "Submit your support",
+					"label": "Support"
+				}
+			},
+			"note": {
+				"delete": "This cannot be undone.",
+				"editors": "After approving a proposal, the editors above will become the editors of the venue."
+			},
+			"field": {
+				"title": { "label": "title", "placeholder": "Venue title", "invalid": "Include a title" },
+				"editors": {
+					"label": "editors",
+					"placeholder": "Venue editors",
+					"invalid": "Must be a list of comma separated email addresses."
+				},
+				"minters": {
+					"label": "minters",
+					"placeholder": "Venue minters",
+					"invalid": "Must be a list of comma separated email addresses."
+				},
+				"census": {
+					"label": "census",
+					"placeholder": "Venue census",
+					"invalid": "Must be a whole number"
+				},
+				"url": { "label": "URL", "placeholder": "https://", "invalid": "Must be a valid URL" },
+				"support": {
+					"label": "support",
+					"placeholder": "Why should the editors adopt Reciprocal Reviews?",
+					"invalid": "Must include a rationale"
+				}
 			}
 		},
 		"volunteers": {
@@ -67,6 +214,15 @@
 				"unknownVenue": "Unable to find this venue.",
 				"noVolunteers": "No volunteers yet.",
 				"volunteersNotLoaded": "Unable to load volunteers for this venue."
+			},
+			"button": {
+				"exportCSV": {
+					"tip": "Export the volunteer names, emails, ORCIDs, roles, expertise, and status as a CSV",
+					"label": "Export to CSV..."
+				}
+			},
+			"field": {
+				"filter": { "placeholder": "name, expertise, email" }
 			}
 		},
 		"venueTransactions": {
@@ -79,6 +235,45 @@
 				"notLoaded": "Unable to load the venue and/or submission types for this page.",
 				"duplicateScholars": "Each author must have a unique ORCID.",
 				"incompletePayment": "{deficit} more tokens to add."
+			},
+			"button": {
+				"removeAuthor": { "tip": "Remove this author from the submission", "label": "x" },
+				"addAuthor": { "tip": "Add another author to the submission", "label": "Add author" },
+				"checkBalances": {
+					"tip": "Check if authors have enough tokens",
+					"label": "Check author balances"
+				},
+				"submit": { "tip": "Create a new submission", "label": "Submit" }
+			},
+			"note": {
+				"payment": "Specify the authors and how many tokens each will pay.",
+				"balance": "Verify the balance to enable submission.",
+				"approve": "Each author will need to approve payment."
+			},
+			"field": {
+				"title": {
+					"label": "submission title",
+					"placeholder": "title",
+					"note": "For internal tracking, and bidding if enabled.",
+					"invalid": "Title must be non-empty."
+				},
+				"expertise": {
+					"label": "expertise required to review (optional)",
+					"placeholder": "expertise",
+					"note": "Help authors and editors find appropriate reviewers."
+				},
+				"manuscriptId": {
+					"label": "manuscript id",
+					"placeholder": "id",
+					"note": "The manuscript's ID from your review system, to link this transaction to your submission.",
+					"invalid": "ID must be non-empty."
+				},
+				"previousId": {
+					"label": "previous manuscript id",
+					"placeholder": "id",
+					"note": "The ID of the previous submission, if this is a revision and you want to track it."
+				},
+				"authorOrcid": { "label": "author", "placeholder": "ORCID", "invalid": "Invalid ORCID" }
 			}
 		},
 		"submissions": {
@@ -86,6 +281,48 @@
 				"notLoaded": "Unable to load submissions.",
 				"noSubmissions": "This venue has no submissions (or none visible to you).",
 				"noneFiltered": "All submissions filtered."
+			},
+			"button": {
+				"sortPaymentFirst": { "tip": "Sort by pending first", "label": "↓" },
+				"sortPaymentLast": { "tip": "Sort by pending last", "label": "↑" },
+				"sortTitleAsc": { "tip": "Sort by title", "label": "↓" },
+				"sortTitleDesc": { "tip": "Reverse sort by title", "label": "↑" },
+				"sortIDAsc": { "tip": "Sort by ID", "label": "↓" },
+				"sortIDDesc": { "tip": "Reverse sort by ID", "label": "↑" },
+				"declareConflict": {
+					"tip": "Declare a conflict with this submission. You will no longer see this submission in your bidding list.",
+					"label": "Declare conflict"
+				},
+				"bid": { "tip": "Express interest in serving as {role}", "label": "Bid" },
+				"unbid": { "tip": "Remove interest in serving as {role}", "label": "Unbid" }
+			},
+			"field": {
+				"title": {
+					"label": "submission title",
+					"placeholder": "title",
+					"invalid": "Title must be non-empty.",
+					"note": "For internal tracking, and bidding if enabled."
+				},
+				"expertise": {
+					"label": "expertise required to review (optional)",
+					"placeholder": "expertise",
+					"note": "Help authors and editors find appropriate reviewers."
+				},
+				"manuscriptID": {
+					"label": "manuscript id",
+					"placeholder": "id",
+					"note": "The manuscript's ID from your review system, to link this transaction to your submission.",
+					"invalid": "ID must be non-empty."
+				},
+				"previousID": {
+					"label": "previous manuscript id",
+					"placeholder": "id",
+					"note": "The ID of the previous submission, if this is a revision and you want to track it."
+				},
+				"filter": {
+					"label": "filter submissions $filter",
+					"placeholder": "title, id..."
+				}
 			}
 		},
 		"submission": {
@@ -101,6 +338,34 @@
 				"missingAuthors": "Unable to find authors.",
 				"noAuthors": "No visible authors found.",
 				"noExpertise": "No expertise provided."
+			},
+			"button": {
+				"createAssignment": {
+					"tip": "Create a new assignment for this scholar and role",
+					"label": "+ assignee"
+				},
+				"unassign": { "tip": "Remove this assignment", "label": "Unassign" },
+				"complete": {
+					"tip": "Mark this assignment complete and compensate the scholar for their work",
+					"label": "Complete"
+				},
+				"approve": { "tip": "Assign this scholar to this role", "label": "Assign" },
+				"approveBid": {
+					"tip": "Accept this bid, assigning this scholar to this role for this submission",
+					"label": "Assign"
+				}
+			},
+			"field": {
+				"scholar": {
+					"label": "Scholar",
+					"placeholder": "email or ORCID",
+					"invalid": "Must be an email or ORCID"
+				},
+				"newAssignment": {
+					"label": "Scholar",
+					"placeholder": "email or ORCID",
+					"invalid": "Must be an email or ORCID"
+				}
 			}
 		},
 		"venue": {
@@ -108,12 +373,51 @@
 				"submissionTypes": "Submission types",
 				"roles": "Roles"
 			},
+			"field": {
+				"name": {
+					"placeholder": "Name",
+					"invalid": "Title cannot be empty."
+				},
+				"url": { "placeholder": "https://...", "invalid": "Must be a valid URL" },
+				"description": { "placeholder": "Venue description." },
+				"typeName": {
+					"placeholder": "name"
+				},
+				"typeDescription": {
+					"placeholder": "description"
+				}
+			},
+			"button": {
+				"newSubmissionType": {
+					"tip": "Add a submission type",
+					"label": "New submission type"
+				},
+				"deleteSubmissionType": {
+					"tip": "Remove this submission type",
+					"label": "$delete",
+					"warn": "Delete this submission type?"
+				},
+				"requestCompensation": {
+					"tip": "Request compensation",
+					"label": "Request compensation"
+				}
+			},
 			"feedback": {
 				"viewSettings": "Welcome admin! Check the [settings](/venue/{venue}/settings) page to edit venue compensation, roles, and anonymity.",
 				"typesNotLoaded": "Couldn't load venue's submission types.",
 				"rolesNotLoaded": "Couldn't load venue's roles.",
 				"inactive": "This venue is currently **inactive**, so only admins can see its details. Here is the message from the admins: *{message}*",
 				"inactivePrompt": "This venue is currently **inactive**. Only you and other admins can see it, along with the message set in the [venue settings](/venue/{venue}/settings). Visit the settings to activate the venue."
+			},
+			"card": {
+				"setup": {
+					"header": "Setup",
+					"note": "Steps to get your venue ready for volunteers and submissions"
+				},
+				"gift": {
+					"header": "gift",
+					"note": "Send tokens to a scholar"
+				}
 			}
 		},
 		"settings": {
@@ -126,6 +430,23 @@
 				"unknownVenue": "Unable to load this venue.",
 				"logIn": "[Log in](/login) to view this venue's settings.",
 				"adminsOnly": "Only admins of this venue can view this page."
+			},
+			"field": {
+				"inactiveMessage": {
+					"label": "Inactive message",
+					"placeholder": "e.g., We're currently configuring the venue.",
+					"invalid": "You must include a message"
+				},
+				"welcomeTokens": {
+					"label": "Welcome tokens (received when first volunteering)",
+					"placeholder": "e.g., 40",
+					"invalid": "Must be a whole number"
+				},
+				"submissionCost": {
+					"label": "Submission cost (price to submit a manuscript to the venue)",
+					"placeholder": "e.g., 40",
+					"invalid": "Must be a whole number"
+				}
 			}
 		},
 		"scholar": {
@@ -147,6 +468,21 @@
 				"notVolunteeringThird": "This scholar is not volunteering for any roles yet.",
 				"volunteeringFirst": "You are not volunteering for any roles yet.",
 				"volunteeringThird": "This scholar is not volunteering for any roles yet."
+			},
+			"field": {
+				"status": { "placeholder": "Explain your current reviewing status to others." },
+				"email": {
+					"label": "email",
+					"placeholder": "email",
+					"note": "Your email will be public and only used to send notifications.",
+					"invalid": "Must be a valid email"
+				}
+			},
+			"card": {
+				"gift": {
+					"header": "gift tokens",
+					"note": "to other scholars"
+				}
 			}
 		},
 		"currency": {
@@ -160,6 +496,54 @@
 				"minters": "Minters",
 				"venues": "Venues",
 				"tokens": "Tokens"
+			},
+			"button": {
+				"mint": {
+					"tip": "Mint tokens",
+					"label": "Mint tokens"
+				},
+				"removeMinter": {
+					"tip": "Remove yourself as minter",
+					"label": "$delete"
+				},
+				"addMinter": {
+					"tip": "Add minter",
+					"label": "Add minter"
+				}
+			},
+			"note": {
+				"minters": "Minters can see, approve, and cancel transactions, and most importantly, mint new tokens in this currency. They can also propose and improve currency exchanges and mergers."
+			},
+			"field": {
+				"name": {
+					"placeholder": "Name",
+					"invalid": "The name can't be empty"
+				},
+				"mintPurpose": {
+					"label": "Why are these tokens being minted? This purpose will be public in the transaction history.",
+					"placeholder": "Purpose",
+					"invalid": "Purpose can't be empty"
+				},
+				"minter": {
+					"label": "Scholar",
+					"placeholder": "ORCID or email",
+					"invalidMinter": "Minters can't be admins of a venue that uses this currency.",
+					"invalidContact": "Must be a valid email or ORCID"
+				},
+				"description": {
+					"placeholder": "Explain the currency to others.",
+					"note": "Currency descriptions are public."
+				}
+			},
+			"card": {
+				"mint": {
+					"header": "mint tokens",
+					"note": "Create new tokens in this currency."
+				},
+				"addMinter": {
+					"header": "add minter",
+					"note": "Allow another scholar to mint tokens."
+				}
 			}
 		},
 		"about": {
@@ -174,12 +558,51 @@
 	},
 	"view": {
 		"gift": {
-			"noTokens": "You don't have any tokens to gift."
+			"noTokens": "You don't have any tokens to gift.",
+			"button": {
+				"giftTokens": {
+					"tip": "Transfer tokens",
+					"label": "Gift tokens"
+				}
+			},
+			"field": {
+				"recipient": {
+					"label": "Recipient",
+					"placeholder": "ORCID or email",
+					"invalid": "Must be an email or ORCID"
+				},
+				"purpose": {
+					"label": "Purpose",
+					"placeholder": "What is the gift for?"
+				}
+			}
 		},
 		"transactions": {
 			"feedback": {
 				"noTransactions": "No transactions.",
 				"notLoaded": "Unable to load transactions."
+			},
+			"button": {
+				"approve": {
+					"tip": "Approve this proposed transaction",
+					"label": "Approve"
+				},
+				"cancelInitiate": {
+					"tip": "Cancel this proposed transaction",
+					"label": "Cancel…"
+				},
+				"cancelConfirm": {
+					"tip": "Cancel this proposed transaction",
+					"label": "Cancel this transaction",
+					"warn": "Cancel"
+				},
+				"loadMore": {
+					"tip": "Load more transactions",
+					"label": "Load more transactions..."
+				}
+			},
+			"field": {
+				"cancelReason": { "label": "Reason", "placeholder": "Reason for cancellation" }
 			}
 		},
 		"roles": {
@@ -188,6 +611,139 @@
 				"consult": "This role has **{count} volunteers**. We **highly** recommend that you communicate extensively with your community before changing any of the settings below, as they change the terms of volunteering.",
 				"noRoles": "No roles yet. Add one.",
 				"notLoaded": "Couldn't load venue's roles."
+			},
+			"button": {
+				"createRole": {
+					"tip": "Create a new role",
+					"label": "Create role"
+				},
+				"removeAdmin": {
+					"tip": "Remove admin",
+					"label": "$delete",
+					"warn": "Are you sure you want to remove this admin?"
+				},
+				"addAdmin": {
+					"tip": "Add admin",
+					"label": "Add admin"
+				},
+				"priorityUp": {
+					"tip": "Move this role's priority up",
+					"label": "↑"
+				},
+				"priorityDown": {
+					"tip": "Move this role's priority down",
+					"label": "↓"
+				},
+				"addCompensation": {
+					"tip": "Add compensation for this submission role",
+					"label": "Add compensation"
+				},
+				"removeCompensation": {
+					"tip": "Remove compensation for this submission role",
+					"label": "$delete"
+				},
+				"volunteer": {
+					"tip": "Volunteer for this role",
+					"label": "Volunteer…"
+				},
+				"accept": {
+					"tip": "Accept this invitation",
+					"label": "Accept"
+				},
+				"stop": {
+					"tip": "Stop volunteering",
+					"label": "Stop..."
+				},
+				"resume": {
+					"tip": "Resume volunteering",
+					"label": "Resume..."
+				},
+				"invite": {
+					"tip": "Invite people to this role",
+					"label": "Invite"
+				},
+				"deleteRole": {
+					"tip": "Delete this role",
+					"label": "Delete $delete…",
+					"warn": "Delete this role and all volunteers?"
+				}
+			},
+			"field": {
+				"newRoleName": {
+					"label": "Role name",
+					"placeholder": "name",
+					"invalid": "Must include a name"
+				},
+				"adminScholar": { "label": "Scholar", "placeholder": "ORCID or email" },
+				"invite": {
+					"label": "email or orcid",
+					"placeholder": "",
+					"invalid": "Must be a comma separated list of emails or ORCID"
+				},
+				"roleName": { "label": "name", "placeholder": "name", "invalid": "Must include a name" },
+				"roleDescription": { "label": "description", "placeholder": "description" },
+				"compensationRationale": { "placeholder": "Why this amount?" },
+				"expertise": {
+					"label": "what is your expertise? (separated by commas)?",
+					"placeholder": "topic, area, method, theory, etc."
+				}
+			},
+			"card": {
+				"admins": {
+					"header": "Admins",
+					"note": "Scholars who manage this venue's configuration."
+				},
+				"settings": {
+					"header": "settings",
+					"note": "Edit this role's settings"
+				},
+				"unnamed": "Role"
+			}
+		},
+		"tasks": {
+			"button": {
+				"accept": {
+					"tip": "Accept this invitation",
+					"label": "Accept"
+				},
+				"decline": {
+					"tip": "Decline this invitation",
+					"label": "Decline"
+				}
+			}
+		}
+	},
+	"component": {
+		"dialog": {
+			"close": {
+				"tip": "Close this dialog",
+				"label": "Close"
+			}
+		},
+		"text": {
+			"save": {
+				"tip": "Save this edit",
+				"label": "$confirm"
+			},
+			"edit": {
+				"tip": "Edit this text",
+				"label": "$edit"
+			},
+			"cancel": {
+				"tip": "Discard this invalid text",
+				"label": "$delete"
+			}
+		},
+		"header": {
+			"logout": {
+				"tip": "Sign out",
+				"label": "Logout"
+			}
+		},
+		"notification": {
+			"dismiss": {
+				"tip": "Dismiss notification",
+				"label": "𐄂"
 			}
 		}
 	},

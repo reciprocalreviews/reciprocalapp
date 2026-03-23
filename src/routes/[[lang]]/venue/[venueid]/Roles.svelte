@@ -20,6 +20,7 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { validEmail, isntEmpty, validEmailsOrORCIDs, validORCID } from '$lib/validation';
+	import type { LocaleText } from '$lib/locales/Locale';
 	import { handle } from '$routes/feedback.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -63,17 +64,17 @@
 
 	let newEditor: string = $state('');
 
-	function validAdmin(scholar: string | ScholarID): string | undefined {
+	function validAdmin(scholar: string | ScholarID): ((l: LocaleText) => string) | undefined {
 		if (validEmail(scholar)) {
 			if (!(minters ?? []).some((m) => m.email === scholar)) return undefined;
-			else return "Admins can't be minters of the venue's currency.";
+			else return (_l) => "Admins can't be minters of the venue's currency.";
 		}
 		if (validORCID(scholar)) {
 			if (currency.minters.includes(scholar))
-				return "Admins can't be minters of the venue's currency.";
+				return (_l) => "Admins can't be minters of the venue's currency.";
 			else return undefined;
 		}
-		return 'Must be a valid email or ORCID.';
+		return (_l) => 'Must be a valid email or ORCID.';
 	}
 </script>
 
@@ -85,13 +86,13 @@
 			<p>Create a new role.</p>
 			<TextField
 				testid="new-role-name"
-				label="Role name"
+				strings={(l) => l.view.roles.field.newRoleName}
 				bind:text={newRole}
 				size={19}
-				placeholder="name"
-				valid={(text) => (isntEmpty(text) ? undefined : 'Must include a name')}
+				valid={(text) =>
+					isntEmpty(text) ? undefined : (l) => l.view.roles.field.newRoleName.invalid ?? ''}
 			/><Button
-				tip="Create a new role"
+				strings={(l) => l.view.roles.button.createRole}
 				active={isntEmpty(newRole)}
 				action={async () => {
 					const result = await handle(db().createRole(venue.id, newRole));
@@ -100,8 +101,8 @@
 						invites[result.id] = '';
 						newRole = '';
 					}
-				}}>Create role</Button
-			>
+				}}
+			/>
 		</form>
 	{/if}
 
@@ -111,8 +112,7 @@
 		<Card
 			icon={venue.admins.length}
 			subheader
-			header="Admins"
-			note="Scholars who manage this venue's configuration."
+			strings={(l) => l.view.roles.card.admins}
 			expand={!isAdmin}
 		>
 			<p>
@@ -122,9 +122,8 @@
 					{#if index === admins.length - 1 && admins.length > 1}and{/if}
 					<ScholarLink id={adminID} />{#if isAdmin && admins.length > 1}
 						&nbsp;<Button
-							tip="Remove admin"
+							strings={(l) => l.view.roles.button.removeAdmin}
 							active={venue.admins.length > 1}
-							warn="Are you sure you want to remove this admin?"
 							action={() =>
 								handle(
 									db().editVenueAdmins(
@@ -144,18 +143,17 @@
 				<form>
 					<p>Add a new admin.</p>
 					<TextField
-						label="Scholar"
+						strings={(l) => l.view.roles.field.adminScholar}
 						bind:text={newEditor}
 						size={19}
-						placeholder="ORCID or email"
 						valid={(text) => validAdmin(text)}
 					/><Button
-						tip="Add admin"
+						strings={(l) => l.view.roles.button.addAdmin}
 						active={validAdmin(newEditor) === undefined}
 						action={async () => {
 							if (await handle(db().addVenueAdmin(venue.id, newEditor))) newEditor = '';
-						}}>Add admin</Button
-					>
+						}}
+					/>
 				</form>
 			{/if}
 		</Card>
@@ -165,8 +163,12 @@
 				full
 				subheader
 				icon={roleVolunteers.length === 0 ? ScholarLabel : roleVolunteers.length}
-				header={role.name}
-				note={role.description.length === 0 ? 'Role' : role.description}
+				strings={(l) => {
+					return {
+						header: role.name,
+						note: role.description.length === 0 ? l.view.roles.card.unnamed : role.description
+					};
+				}}
 				expand={!isAdmin}
 				testid="role-{role.name}"
 			>
@@ -174,12 +176,12 @@
 					{#if isAdmin}
 						<Button
 							active={index > 0}
-							tip="Move this role's priority up"
+							strings={(l) => l.view.roles.button.priorityUp}
 							action={() => handle(db().reorderRole(role, $state.snapshot(roles), -1))}>↑</Button
 						>
 						<Button
 							active={index < roles.length - 1}
-							tip="Move this role's priority down"
+							strings={(l) => l.view.roles.button.priorityDown}
 							action={() => handle(db().reorderRole(role, $state.snapshot(roles), 1))}>↓</Button
 						>
 					{/if}
@@ -217,7 +219,7 @@
 									{#if comp === undefined || comp.amount === null}
 										<Button
 											small
-											tip="Add compensation for this submission role"
+											strings={(l) => l.view.roles.button.addCompensation}
 											action={async () =>
 												handle(db().editCompensation(type.id, role.id, 1, comp?.rationale ?? ''))}
 											>Add compensation</Button
@@ -235,7 +237,7 @@
 										>
 										<Button
 											small
-											tip="Remove compensation for this submission role"
+											strings={(l) => l.view.roles.button.removeCompensation}
 											action={async () =>
 												handle(db().editCompensation(type.id, role.id, null, comp.rationale))}
 											>{DeleteLabel}</Button
@@ -252,7 +254,7 @@
 									{#if isAdmin}
 										<EditableText
 											text={comp.rationale}
-											placeholder="Why this amount?"
+											strings={(l) => l.view.roles.field.compensationRationale}
 											edit={(text) => db().editCompensation(type.id, role.id, comp.amount, text)}
 										/>
 									{:else}
@@ -271,7 +273,7 @@
 				{#if scholar}
 					{#if !role.invited && scholarVolunteer === undefined}
 						<Button
-							tip="Volunteer for this role"
+							strings={(l) => l.view.roles.button.volunteer}
 							action={() =>
 								handle(
 									db().createVolunteer(scholar, scholar, role.id, true, true),
@@ -284,7 +286,7 @@
 							<p>
 								You declined this role. Would you like to accept it?
 								<Button
-									tip="accept this invitation"
+									strings={(l) => l.view.roles.button.accept}
 									action={() =>
 										handle(
 											db().acceptRoleInvite(
@@ -299,21 +301,20 @@
 							<p>
 								Thanks for volunteering for this role! <Button
 									testid="volunteered-for-role"
-									tip="Stop volunteering"
+									strings={(l) => l.view.roles.button.stop}
 									action={() => handle(db().updateVolunteerActive(scholarVolunteer.id, false))}
 									>Stop...</Button
 								>
 							</p>
 							<EditableText
 								text={scholarVolunteer.expertise}
-								label="what is your expertise? (separated by commas)?"
-								placeholder="topic, area, method, theory, etc."
+								strings={(l) => l.view.roles.field.expertise}
 								edit={(text) => db().updateVolunteerExpertise(scholarVolunteer.id, text)}
 							/>
 						{:else}
 							<p>
 								You stopped volunteering for this role. <Button
-									tip="Resume volunteering"
+									strings={(l) => l.view.roles.button.resume}
 									action={() => handle(db().updateVolunteerActive(scholarVolunteer.id, true))}
 									>Resume...</Button
 								>
@@ -330,18 +331,17 @@
 							Add one or more people to invite to this role by email or ORCID, separated by commas.
 						</p>
 						<TextField
-							label="email or orcid"
-							placeholder=""
+							strings={(l) => l.view.roles.field.invite}
 							name="email"
 							size={20}
 							valid={(text) =>
 								text.trim() === '' || validEmailsOrORCIDs(text)
 									? undefined
-									: 'Must be a comma separated list of emails or ORCID'}
+									: (l) => l.view.roles.field.invite.invalid ?? ''}
 							bind:text={invites[role.id]}
 						/>
 						<Button
-							tip="Invite people to this role"
+							strings={(l) => l.view.roles.button.invite}
 							active={validEmailsOrORCIDs(invites[role.id])}
 							action={async () => {
 								if (
@@ -364,8 +364,7 @@
 				{#if isAdmin}
 					<Card
 						icon={SettingsLabel}
-						header="settings"
-						note="Edit this role's settings"
+						strings={(l) => l.view.roles.card.settings}
 						subheader
 						group="admins"
 					>
@@ -382,15 +381,14 @@
 
 						<EditableText
 							text={role.name}
-							label="name"
-							placeholder="name"
-							valid={(text) => (isntEmpty(text) ? undefined : 'Must include a name')}
+							strings={(l) => l.view.roles.field.roleName}
+							valid={(text) =>
+								isntEmpty(text) ? undefined : (l) => l.view.roles.field.roleName.invalid ?? ''}
 							edit={(text) => db().editRoleName(role.id, text)}
 						/>
 						<EditableText
 							text={role.description}
-							label="description"
-							placeholder="description"
+							strings={(l) => l.view.roles.field.roleDescription}
 							edit={(text) => db().editRoleDescription(role.id, text)}
 						/>
 						<Checkbox on={role.invited} change={(on) => db().editRoleInvited(role.id, on)}
@@ -436,8 +434,7 @@
 						/>
 
 						<Button
-							warn="Delete this role and all volunteers?"
-							tip="Delete this role"
+							strings={(l) => l.view.roles.button.deleteRole}
 							active={roles.length > 1}
 							action={() => handle(db().deleteRole(role.id))}
 							>{#if roles.length > 1}Delete {DeleteLabel} …{:else}Can't delete the last role{/if}</Button

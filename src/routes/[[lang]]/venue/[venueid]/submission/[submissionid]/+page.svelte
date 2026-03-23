@@ -168,8 +168,9 @@
 		edit={// Only editors can update the submission title.
 		isEditor
 			? {
-					placeholder: 'Title',
-					valid: (text) => (text.trim().length === 0 ? 'Title cannot be empty.' : undefined),
+					placeholder: (l) => l.page.venue.field.name.placeholder,
+					valid: (text) =>
+						text.trim().length === 0 ? (l) => l.page.venue.field.name.invalid : undefined,
 					update: (text) => db().updateSubmissionTitle(submission.id, text)
 				}
 			: undefined}
@@ -247,9 +248,11 @@
 		<Subheader icon={EditLabel} text={(l) => l.page.submission.header.expertise}></Subheader>
 		{#if isAuthor}
 			<EditableText
-				label="Expertise"
+				strings={(l) => ({
+					label: 'Expertise',
+					placeholder: 'Keywords and phrases describing your expertise.'
+				})}
 				text={submission.expertise ?? ''}
-				placeholder="Keywords and phrases describing your expertise."
 				edit={(text) =>
 					db().updateSubmissionExpertise(submission.id, text.trim().length === 0 ? null : text)}
 			/>
@@ -280,16 +283,15 @@
 				/>
 				<TextField
 					bind:text={newAssignmentScholar}
-					label="Scholar"
-					placeholder="email or ORCID"
+					strings={(l) => l.page.submission.field.newAssignment}
 					valid={(emailOrORCID) =>
 						emailOrORCID.length > 0 && !validEmail(emailOrORCID) && !validORCID(emailOrORCID)
-							? 'Must be an email or ORCID'
+							? (l) => l.page.submission.field.newAssignment.invalid
 							: undefined}
 				></TextField>
 				<Button
 					testid="new-assignment"
-					tip="Create a new assignment for this scholar and this role."
+					strings={(l) => l.page.submission.button.createAssignment}
 					active={!newAssignmentSubmitting &&
 						newAssignmentRole !== undefined &&
 						(validEmail(newAssignmentScholar) || validORCID(newAssignmentScholar))}
@@ -364,25 +366,22 @@
 									{#if !assignment.completed}
 										{#if assignment.approved}
 											<Button
-												tip="Remove this assignment"
+												strings={(l) => l.page.submission.button.unassign}
 												action={() =>
 													handle(db().approveAssignment(assignment, false, role, user.id))}
-												>Unassign</Button
-											>
+											/>
 											{#if !assignment.completed}
 												<Button
-													tip="Mark this assignment complete and compensate the scholar for their work"
+													strings={(l) => l.page.submission.button.complete}
 													action={() => handle(db().completeAssignment(assignment.id, user.id))}
-													>Complete
-												</Button>
+												/>
 											{/if}
 										{:else}
 											<Button
-												tip="Reassign this scholar"
+												strings={(l) => l.page.submission.button.approve}
 												action={() =>
 													handle(db().approveAssignment(assignment, true, role, user.id))}
-												>Assign</Button
-											>
+											/>
 										{/if}
 									{/if}
 								{:else}
@@ -412,12 +411,12 @@
 								<Row>
 									{#if assignment.bid}
 										<Button
-											tip="Accept this bid, assigning this scholar to this role for this submission."
+											strings={(l) => l.page.submission.button.approveBid}
 											action={() =>
 												user
 													? handle(db().approveAssignment(assignment, true, role, user.id))
-													: null}>Assign</Button
-										>
+													: null}
+										/>
 									{/if}
 								</Row>
 							</td>

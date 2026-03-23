@@ -73,11 +73,12 @@
 		{#if kind === 'scholar'}
 			<TextField
 				bind:text={giftRecipient}
-				label="Recipient"
+				strings={(l) => l.view.gift.field.recipient}
 				size={20}
-				placeholder="ORCID or email"
 				valid={(text) =>
-					validEmail(text) || validORCID(text) ? undefined : 'Must be an email or ORCID'}
+					validEmail(text) || validORCID(text)
+						? undefined
+						: (l) => l.view.gift.field.recipient.invalid}
 			/>
 		{:else}
 			<Options
@@ -105,12 +106,12 @@
 			step={1}
 			label="# of tokens to give">{giftAmount}</Slider
 		>
-		<TextField bind:text={giftPurpose} label="Purpose" size={20} placeholder="Purpose" />
+		<TextField bind:text={giftPurpose} strings={(l) => l.view.gift.field.purpose} size={20} />
 		<Checkbox bind:on={giftConsent}
 			>I understand that these tokens can't be transferred back without the recipient's consent.</Checkbox
 		>
 		<Button
-			tip="Transfer tokens"
+			strings={(l) => l.view.gift.button.giftTokens}
 			active={(currency !== undefined &&
 				giftConsent &&
 				kind === 'scholar' &&
@@ -126,7 +127,7 @@
 					giftConsent = false;
 					giftRecipient = '';
 				}
-			}}>Gift tokens</Button
-		>
+			}}
+		/>
 	{/if}
 </form>

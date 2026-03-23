@@ -1,11 +1,43 @@
 [
   {
+    "version": "0.3.8",
+    "date": "2026-03-22",
+    "changes": {
+      "added": [],
+      "fixed": [],
+      "changed": [
+        "Updated internal tooling for stability.",
+        "Localized all buttons, text fields, notes, and cards."
+      ],
+      "removed": []
+    }
+  },
+  {
+    "version": "0.3.7",
+    "date": "2026-03-15",
+    "changes": {
+      "added": [
+        "Implemented localization support and extracted many strings to a default English locale."
+      ],
+      "fixed": [],
+      "changed": [
+        "Updated internal tooling for stability and speed.",
+        "Improved page header styling and spacing.",
+        "Merged breadcrumbs in page header.",
+        "Improved setup instructions.",
+        "Allow some sliders to not fire immediately, especially if they hit the database."
+      ],
+      "removed": []
+    }
+  },
+  {
     "version": "0.3.6",
     "date": "2026-03-08",
     "changes": {
       "added": [
         "Added an updates page to mirror changelog content (#81).",
-        "We now record transactions when tokens are minted on a currency, for transparency."
+        "We now record transactions when tokens are minted on a currency, for transparency.",
+        "Added basic coverage of end-to-end tests for all routes and authentication states (#49)."
       ],
       "fixed": [
         "Corrected permissions on several table security settings."

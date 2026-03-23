@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/Button.svelte';
 	import TextField from '$lib/components/TextField.svelte';
-	import Link from '$lib/components/Link.svelte';
 	import { getAuth } from '../../Auth.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
@@ -44,8 +43,7 @@
 
 		<Form>
 			<TextField
-				label="email"
-				placeholder=""
+				strings={(l) => l.page.login.field.email}
 				active={!submitted}
 				name="email"
 				size={19}
@@ -53,7 +51,7 @@
 				testid="email-input"
 			/>
 			<Button
-				tip="Send one-time password"
+				strings={(l) => l.page.login.button.sendPassword}
 				testid="email-submit"
 				action={async () => {
 					const authError = await auth.signIn(email, undefined);
@@ -65,23 +63,22 @@
 						submitted = true;
 					}
 				}}
-				active={!submitted}>Login</Button
-			>
+				active={!submitted}
+			/>
 		</Form>
 
 		{#if submitted}
 			<Feedback text="Check your email for a sign in code." />
 			<Form>
 				<TextField
-					label="password"
-					placeholder="6 digits"
+					strings={(l) => l.page.login.field.password}
 					name="password"
 					size={19}
 					bind:text={password}
 					testid="otp-input"
 				/>
 				<Button
-					tip="Sign in"
+					strings={(l) => l.page.login.button.signIn}
 					testid="otp-submit"
 					action={async () => {
 						const response = await auth.signIn(email, password);
@@ -94,14 +91,12 @@
 							error = 'Unable to sign in.';
 						}
 					}}
-					active={password.length > 0}>Login</Button
-				>
+					active={password.length > 0}
+				/>
 			</Form>
 		{/if}
 
-		<Note>
-			<Link to="https://orcid.org/">ORCID</Link> is the de facto way to manage scholar identity.
-		</Note>
+		<Note path={(l) => l.page.login.note.orcid} />
 	{/if}
 
 	{#if error}

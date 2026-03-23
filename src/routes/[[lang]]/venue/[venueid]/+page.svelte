@@ -5,14 +5,7 @@
 	import { getDB } from '$lib/data/CRUD';
 	import Page from '$lib/components/Page.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
-	import {
-		ConfirmLabel,
-		DeleteLabel,
-		ErrorLabel,
-		ScholarLabel,
-		TokenLabel,
-		VenueLabel
-	} from '$lib/components/Labels';
+	import { ErrorLabel, ScholarLabel, TokenLabel, VenueLabel } from '$lib/components/Labels';
 	import { addFeedback, handle } from '$routes/feedback.svelte';
 	import Roles from './Roles.svelte';
 	import type { PageData } from './$types';
@@ -22,8 +15,8 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import Options from '$lib/components/Options.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
-	import { validURLError } from '$lib/validation';
 	import Table from '$lib/components/Table.svelte';
+	import { validURL } from '$lib/validation';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -61,8 +54,8 @@
 			{#if isAdmin}
 				<EditableText
 					text={venue.url}
-					placeholder="https://..."
-					valid={validURLError}
+					strings={(l) => l.page.venue.field.url}
+					valid={(text) => (validURL(text) ? undefined : (l) => l.page.venue.field.url.invalid)}
 					edit={(text) => db().editVenueURL(venue.id, text)}
 				/>
 			{:else}<Link to={venue.url}>{venue.url}</Link>{/if}{/snippet}
@@ -71,7 +64,7 @@
 		{#if isAdmin}
 			<EditableText
 				text={venue.description}
-				placeholder="Venue description."
+				strings={(l) => l.page.venue.field.description}
 				inline={false}
 				edit={(text) => db().editVenueDescription(venue.id, text)}
 			/>
@@ -143,12 +136,10 @@
 		{#if isAdmin}
 			<Button
 				testid="new-submission-type"
-				tip="Add a submission type"
+				strings={(l) => l.page.venue.button.newSubmissionType}
 				action={() =>
 					handle(db().createSubmissionType(venue.id, 'New type', 'New submission type', null))}
-			>
-				New submission type
-			</Button>
+			/>
 		{/if}
 
 		{#if types === null}
@@ -167,7 +158,7 @@
 							{#if isAdmin}
 								<EditableText
 									text={type.name}
-									placeholder="Type name"
+									strings={(l) => l.page.venue.field.typeName}
 									edit={(text) => db().editSubmissionType(type.id, text, type.description, null)}
 								/>
 							{:else}
@@ -178,7 +169,7 @@
 							{#if isAdmin}
 								<EditableText
 									text={type.description}
-									placeholder="Type description"
+									strings={(l) => l.page.venue.field.typeDescription}
 									inline={false}
 									edit={(text) => db().editSubmissionType(type.id, type.name, text, null)}
 								/>
@@ -209,12 +200,9 @@
 						{#if isAdmin && types.length > 1}
 							<td>
 								<Button
-									warn={ConfirmLabel}
-									tip="Remove this submission type"
+									strings={(l) => l.page.venue.button.deleteSubmissionType}
 									action={() => handle(db().deleteSubmissionType(type.id))}
-								>
-									{DeleteLabel}
-								</Button>
+								/>
 							</td>
 						{/if}
 					</tr>
@@ -250,8 +238,10 @@
 					</p>
 
 					<TextField
-						label="Manuscript ID"
-						placeholder="The ID associated with the manuscript in your reviewing system"
+						strings={(l) => ({
+							placeholder: 'The ID associated with the manuscript in your reviewing system',
+							label: 'Manuscript ID'
+						})}
 						bind:text={compensationManuscript}
 					></TextField>
 					<Options
@@ -263,13 +253,12 @@
 						bind:value={compensationRole}
 					/>
 					<TextField
-						label="Note"
-						placeholder="Message to the scholar responsible"
+						strings={(l) => ({ placeholder: 'Message to the scholar responsible', label: 'Note' })}
 						bind:text={compensationNote}
 					></TextField>
 					<Button
 						active={compensationManuscript.length > 0 && compensationRole.length > 0}
-						tip="Request compensation"
+						strings={(l) => l.page.venue.button.requestCompensation}
 						action={() =>
 							handle(
 								db().requestCompensation(
@@ -284,8 +273,8 @@
 								compensationRole = '';
 								compensationNote = '';
 								addFeedback('Compensation request sent.', 'success');
-							})}>Request compensation</Button
-					>
+							})}
+					/>
 				</Form>
 			{/if}
 		{/if}

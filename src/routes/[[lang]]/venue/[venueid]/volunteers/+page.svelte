@@ -8,13 +8,7 @@
 	import Tag from '$lib/components/Tag.svelte';
 	import Tags from '$lib/components/Tags.svelte';
 	import Status from '$lib/components/Status.svelte';
-	import {
-		EmptyLabel,
-		ErrorLabel,
-		FilterLabel,
-		ScholarLabel,
-		VenueLabel
-	} from '$lib/components/Labels.js';
+	import { EmptyLabel, ErrorLabel, ScholarLabel, VenueLabel } from '$lib/components/Labels.js';
 	import TextField from '$lib/components/TextField.svelte';
 	import Button from '$lib/components/Button.svelte';
 
@@ -74,13 +68,9 @@
 			/>.
 		</p>
 
-		<TextField label="{FilterLabel} filter" placeholder="name, expertise, email" bind:text={filter}
-		></TextField>
+		<TextField strings={(l) => l.page.volunteers.field.filter} bind:text={filter}></TextField>
 
-		<Button
-			tip="Export the volunteer names, emails, ORCIDs, roles, expertise, and status as a CSV"
-			action={exportCSV}>Export to CSV...</Button
-		>
+		<Button strings={(l) => l.page.volunteers.button.exportCSV} action={exportCSV} />
 
 		{@const rolesIDs = [...new Set(commitments.map((c) => c.roleid))].toSorted(
 			(a, b) =>

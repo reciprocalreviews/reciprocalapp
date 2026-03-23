@@ -1,10 +1,11 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import Text from '$lib/locales/Text.svelte';
+	import type LocaleText from '$lib/locales/Locale';
 
-	let { children }: { children: Snippet } = $props();
+	let { path }: { path: (l: LocaleText) => string } = $props();
 </script>
 
-<div>{@render children()}</div>
+<div><Text {path} markdown /></div>
 
 <style>
 	div {

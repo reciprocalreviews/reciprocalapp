@@ -60,12 +60,12 @@
 				<Button
 					small
 					testid="logout-button"
-					tip="Sign out"
+					strings={(l) => l.component.header.logout}
 					action={() => {
 						auth.signOut();
 						goto('/login');
-					}}>Logout</Button
-				>
+					}}
+				/>
 			</div>
 		{:else}
 			<div class="link">

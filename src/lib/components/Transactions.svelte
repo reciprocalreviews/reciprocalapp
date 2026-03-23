@@ -111,30 +111,28 @@
 					name={venues.find((v) => v.id === transaction.to_venue)?.title ?? 'unknown venue'}
 				></VenueLink>{/if}</td
 		>
-		<td><Note>{transaction.purpose}</Note></td>
+		<td><Note path={() => transaction.purpose} /></td>
 		<td>
 			{#if editable}
 				<div class="column">
 					<!-- If the authenticated scholar is a minter of the given currency, or the giver, then show an approve button -->
 					<Button
-						tip="Approve this proposed transaction"
-						action={() => handle(db().approveTransaction(userid, transaction.id))}>Approve</Button
-					>
+						strings={(l) => l.view.transactions.button.approve}
+						action={() => handle(db().approveTransaction(userid, transaction.id))}
+					/>
 					<Button
-						tip="Cancel this proposed transaction"
+						strings={(l) => l.view.transactions.button.cancelInitiate}
 						active={!showCancel}
-						action={() => (showCancel = true)}>Cancel…</Button
-					>
+						action={() => (showCancel = true)}
+					/>
 					<Dialog bind:show={showCancel}>
 						<p>Indicate a reason and we'll append it to the transaction message.</p>
 						<TextField
-							label="Reason"
+							strings={(l) => l.view.transactions.field.cancelReason}
 							bind:text={cancelReason}
-							placeholder="Reason for cancellation"
 						/>
 						<Button
-							tip="Cancel this proposed transaction"
-							warn="Cancel"
+							strings={(l) => l.view.transactions.button.cancelConfirm}
 							active={cancelReason.length > 0}
 							action={async () => {
 								await handle(
@@ -144,8 +142,8 @@
 									)
 								);
 								showCancel = false;
-							}}>Cancel this transaction</Button
-						>
+							}}
+						/>
 					</Dialog>
 				</div>
 			{:else if proposed}
@@ -178,7 +176,10 @@
 				{#if allTransactions.length >= count}
 					All transactions loaded.
 				{:else}
-					<Button tip="Load more transactions" action={() => loadMore()} active={!loading}
+					<Button
+						strings={(l) => l.view.transactions.button.loadMore}
+						action={() => loadMore()}
+						active={!loading}
 						>{#if loading}Loading…{:else}Load more transactions...{/if}</Button
 					>
 				{/if}

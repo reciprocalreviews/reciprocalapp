@@ -1,31 +1,32 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { DeleteLabel } from './Labels';
+	import type LocaleText from '$lib/locales/Locale';
+	import { getLocaleContext } from '$routes/Contexts';
+	import Text from '$lib/locales/Text.svelte';
+	import type { ButtonText, ConfirmButtonText } from '$lib/locales/Locale';
 
 	let {
 		action,
-		tip,
-		children,
+		strings,
+		children = undefined,
 		active = true,
 		formaction = undefined,
 		name = undefined,
 		type = undefined,
 		view: _ = $bindable(undefined),
-		warn = undefined,
 		end = false,
 		background = true,
 		small = false,
 		testid = undefined
 	}: {
-		children: Snippet;
+		children?: Snippet;
 		action: ((event?: Event) => void) | ((event?: Event) => Promise<void>);
-		tip: string;
+		strings: (locale: LocaleText) => ButtonText | ConfirmButtonText;
 		active?: boolean;
 		formaction?: string | undefined;
 		name?: string | undefined;
 		type?: 'submit' | undefined;
 		view?: HTMLButtonElement | undefined;
-		warn?: string | undefined;
 		end?: boolean | undefined;
 		background?: boolean;
 		small?: boolean;
@@ -37,6 +38,12 @@
 
 	/** True if this is a confirm button and we're getting confirmation. */
 	let confirming = $state(false);
+
+	let locale = getLocaleContext();
+
+	let buttonText = $derived(strings(locale));
+	let warn = $derived(buttonText.warn);
+	let tip = $derived(buttonText.tip);
 
 	async function act(event: Event) {
 		if (active) {
@@ -67,15 +74,17 @@
 		class:warn={warn !== undefined}
 		class:end
 		class:small
-		onclick={async (event) => await act(event)}>{@render children()}</button
+		onclick={async (event) => await act(event)}
+		>{#if children}{@render children()}{:else}<Text path={(l) => strings(l).label} />{/if}</button
 	>
 {:else}
 	<div class="row">
-		<button onclick={() => (confirming = false)}>{DeleteLabel}</button>
+		<button onclick={() => (confirming = false)}><Text path={(l) => l.shorthand.delete} /></button>
 		<button
 			data-testid={testid}
 			class:warn={warn !== undefined}
-			onclick={async (event) => await act(event)}>{warn}</button
+			onclick={async (event) => await act(event)}
+			><Text path={(l) => strings(l).warn ?? ''} /></button
 		>
 	</div>
 {/if}

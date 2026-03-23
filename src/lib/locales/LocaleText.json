@@ -2,11 +2,142 @@
   "$ref": "#/definitions/LocaleText",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "ButtonText": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "description": "The button label to show",
+          "type": "string"
+        },
+        "tip": {
+          "description": "The tooltip and ARIA label for a button",
+          "type": "string"
+        },
+        "warn": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tip",
+        "label"
+      ],
+      "type": "object"
+    },
+    "CardText": {
+      "additionalProperties": false,
+      "description": "Text for the Card component",
+      "properties": {
+        "header": {
+          "description": "The header at the top of the card",
+          "type": "string"
+        },
+        "note": {
+          "description": "The note below the header",
+          "type": "string"
+        }
+      },
+      "required": [
+        "header",
+        "note"
+      ],
+      "type": "object"
+    },
+    "ConfirmButtonText": {
+      "additionalProperties": false,
+      "description": "An optional warning text for confirm buttons",
+      "properties": {
+        "label": {
+          "description": "The button label to show",
+          "type": "string"
+        },
+        "tip": {
+          "description": "The tooltip and ARIA label for a button",
+          "type": "string"
+        },
+        "warn": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "tip",
+        "warn"
+      ],
+      "type": "object"
+    },
     "LocaleText": {
       "additionalProperties": false,
       "properties": {
         "$schema": {
           "type": "string"
+        },
+        "component": {
+          "additionalProperties": false,
+          "properties": {
+            "dialog": {
+              "additionalProperties": false,
+              "properties": {
+                "close": {
+                  "$ref": "#/definitions/ButtonText"
+                }
+              },
+              "required": [
+                "close"
+              ],
+              "type": "object"
+            },
+            "header": {
+              "additionalProperties": false,
+              "properties": {
+                "logout": {
+                  "$ref": "#/definitions/ButtonText"
+                }
+              },
+              "required": [
+                "logout"
+              ],
+              "type": "object"
+            },
+            "notification": {
+              "additionalProperties": false,
+              "properties": {
+                "dismiss": {
+                  "$ref": "#/definitions/ButtonText"
+                }
+              },
+              "required": [
+                "dismiss"
+              ],
+              "type": "object"
+            },
+            "text": {
+              "additionalProperties": false,
+              "properties": {
+                "cancel": {
+                  "$ref": "#/definitions/ButtonText"
+                },
+                "edit": {
+                  "$ref": "#/definitions/ButtonText"
+                },
+                "save": {
+                  "$ref": "#/definitions/ButtonText"
+                }
+              },
+              "required": [
+                "save",
+                "edit",
+                "cancel"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "dialog",
+            "text",
+            "header",
+            "notification"
+          ],
+          "type": "object"
         },
         "error": {
           "additionalProperties": false,
@@ -526,6 +657,42 @@
             "currency": {
               "additionalProperties": false,
               "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addMinter": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "mint": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "removeMinter": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "mint",
+                    "removeMinter",
+                    "addMinter"
+                  ],
+                  "type": "object"
+                },
+                "card": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addMinter": {
+                      "$ref": "#/definitions/CardText"
+                    },
+                    "mint": {
+                      "$ref": "#/definitions/CardText"
+                    }
+                  },
+                  "required": [
+                    "mint",
+                    "addMinter"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -535,6 +702,75 @@
                   },
                   "required": [
                     "notLoaded"
+                  ],
+                  "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    },
+                    "mintPurpose": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "minter": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "invalidContact": {
+                          "type": "string"
+                        },
+                        "invalidMinter": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalidContact",
+                        "invalidMinter",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
+                    "name": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "mintPurpose",
+                    "minter",
+                    "description"
                   ],
                   "type": "object"
                 },
@@ -558,6 +794,18 @@
                   ],
                   "type": "object"
                 },
+                "note": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "minters": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "minters"
+                  ],
+                  "type": "object"
+                },
                 "tip": {
                   "additionalProperties": false,
                   "properties": {
@@ -574,7 +822,11 @@
               "required": [
                 "feedback",
                 "tip",
-                "header"
+                "header",
+                "button",
+                "note",
+                "field",
+                "card"
               ],
               "type": "object"
             },
@@ -631,9 +883,88 @@
               ],
               "type": "object"
             },
+            "login": {
+              "additionalProperties": false,
+              "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "sendPassword": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "signIn": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "sendPassword",
+                    "signIn"
+                  ],
+                  "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "email": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "password": {
+                      "$ref": "#/definitions/TextFieldText"
+                    }
+                  },
+                  "required": [
+                    "email",
+                    "password"
+                  ],
+                  "type": "object"
+                },
+                "note": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "orcid": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "orcid"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "button",
+                "note",
+                "field"
+              ],
+              "type": "object"
+            },
             "newSubmission": {
               "additionalProperties": false,
               "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addAuthor": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "checkBalances": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "removeAuthor": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "submit": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "removeAuthor",
+                    "addAuthor",
+                    "checkBalances",
+                    "submit"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -653,16 +984,91 @@
                     "incompletePayment"
                   ],
                   "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "authorOrcid": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "expertise": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    },
+                    "manuscriptId": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    },
+                    "previousId": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    },
+                    "title": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "expertise",
+                    "manuscriptId",
+                    "previousId",
+                    "authorOrcid"
+                  ],
+                  "type": "object"
+                },
+                "note": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "approve": {
+                      "type": "string"
+                    },
+                    "balance": {
+                      "type": "string"
+                    },
+                    "payment": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "payment",
+                    "balance",
+                    "approve"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
-                "feedback"
+                "feedback",
+                "button",
+                "note",
+                "field"
               ],
               "type": "object"
             },
             "proposal": {
               "additionalProperties": false,
               "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "approve": {
+                      "$ref": "#/definitions/ConfirmButtonText"
+                    },
+                    "deleteProposal": {
+                      "$ref": "#/definitions/ConfirmButtonText"
+                    },
+                    "deleteSupport": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "submitSupport": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "deleteSupport",
+                    "deleteProposal",
+                    "approve",
+                    "submitSupport"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -682,16 +1088,156 @@
                     "notFound"
                   ],
                   "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "census": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "editors": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "minters": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "support": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "title": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "url": {
+                      "$ref": "#/definitions/TextFieldText"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "editors",
+                    "minters",
+                    "census",
+                    "url",
+                    "support"
+                  ],
+                  "type": "object"
+                },
+                "note": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "delete": {
+                      "type": "string"
+                    },
+                    "editors": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "delete",
+                    "editors"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
-                "feedback"
+                "feedback",
+                "button",
+                "note",
+                "field"
+              ],
+              "type": "object"
+            },
+            "proposeVenue": {
+              "additionalProperties": false,
+              "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "propose": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "propose"
+                  ],
+                  "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "editors": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "minters": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "mintersConflict": {
+                      "type": "string"
+                    },
+                    "rationale": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "size": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "url": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
+                    "venueName": {
+                      "$ref": "#/definitions/TextFieldText"
+                    }
+                  },
+                  "required": [
+                    "venueName",
+                    "editors",
+                    "minters",
+                    "mintersConflict",
+                    "url",
+                    "size",
+                    "rationale"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "button",
+                "field"
               ],
               "type": "object"
             },
             "scholar": {
               "additionalProperties": false,
               "properties": {
+                "card": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "gift": {
+                      "$ref": "#/definitions/CardText"
+                    }
+                  },
+                  "required": [
+                    "gift"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -740,6 +1286,22 @@
                   ],
                   "type": "object"
                 },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "email": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    },
+                    "status": {
+                      "$ref": "#/definitions/TextFieldText"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "email"
+                  ],
+                  "type": "object"
+                },
                 "header": {
                   "additionalProperties": false,
                   "properties": {
@@ -771,7 +1333,9 @@
               },
               "required": [
                 "header",
-                "feedback"
+                "feedback",
+                "field",
+                "card"
               ],
               "type": "object"
             },
@@ -798,6 +1362,26 @@
                   ],
                   "type": "object"
                 },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "inactiveMessage": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "submissionCost": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "welcomeTokens": {
+                      "$ref": "#/definitions/TextFieldText"
+                    }
+                  },
+                  "required": [
+                    "inactiveMessage",
+                    "welcomeTokens",
+                    "submissionCost"
+                  ],
+                  "type": "object"
+                },
                 "header": {
                   "additionalProperties": false,
                   "properties": {
@@ -821,13 +1405,42 @@
               },
               "required": [
                 "header",
-                "feedback"
+                "feedback",
+                "field"
               ],
               "type": "object"
             },
             "submission": {
               "additionalProperties": false,
               "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "approve": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "approveBid": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "complete": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "createAssignment": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "unassign": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "createAssignment",
+                    "unassign",
+                    "complete",
+                    "approve",
+                    "approveBid"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -853,6 +1466,41 @@
                     "missingAuthors",
                     "noAuthors",
                     "noExpertise"
+                  ],
+                  "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "newAssignment": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
+                    "scholar": {
+                      "$ref": "#/definitions/TextFieldText"
+                    }
+                  },
+                  "required": [
+                    "scholar",
+                    "newAssignment"
                   ],
                   "type": "object"
                 },
@@ -883,13 +1531,59 @@
               },
               "required": [
                 "header",
-                "feedback"
+                "feedback",
+                "button",
+                "field"
               ],
               "type": "object"
             },
             "submissions": {
               "additionalProperties": false,
               "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "bid": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "declareConflict": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "sortIDAsc": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "sortIDDesc": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "sortPaymentFirst": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "sortPaymentLast": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "sortTitleAsc": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "sortTitleDesc": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "unbid": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "sortPaymentFirst",
+                    "sortPaymentLast",
+                    "sortTitleAsc",
+                    "sortTitleDesc",
+                    "sortIDAsc",
+                    "sortIDDesc",
+                    "declareConflict",
+                    "bid",
+                    "unbid"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -909,16 +1603,130 @@
                     "noneFiltered"
                   ],
                   "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "expertise": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    },
+                    "filter": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "manuscriptID": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "note": {
+                          "description": "The note to show below the text field",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "note",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
+                    "previousID": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    },
+                    "title": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "note": {
+                          "description": "The note to show below the text field",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "note",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "expertise",
+                    "manuscriptID",
+                    "previousID",
+                    "filter"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
-                "feedback"
+                "feedback",
+                "button",
+                "field"
               ],
               "type": "object"
             },
             "venue": {
               "additionalProperties": false,
               "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "deleteSubmissionType": {
+                      "$ref": "#/definitions/ConfirmButtonText"
+                    },
+                    "newSubmissionType": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "requestCompensation": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "newSubmissionType",
+                    "deleteSubmissionType",
+                    "requestCompensation"
+                  ],
+                  "type": "object"
+                },
+                "card": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "gift": {
+                      "$ref": "#/definitions/CardText"
+                    },
+                    "setup": {
+                      "$ref": "#/definitions/CardText"
+                    }
+                  },
+                  "required": [
+                    "setup",
+                    "gift"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -947,6 +1755,72 @@
                   ],
                   "type": "object"
                 },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "name": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
+                    "typeDescription": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "typeName": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "url": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "url",
+                    "description",
+                    "typeName",
+                    "typeDescription"
+                  ],
+                  "type": "object"
+                },
                 "header": {
                   "additionalProperties": false,
                   "properties": {
@@ -966,7 +1840,10 @@
               },
               "required": [
                 "header",
-                "feedback"
+                "button",
+                "feedback",
+                "field",
+                "card"
               ],
               "type": "object"
             },
@@ -994,6 +1871,18 @@
             "venues": {
               "additionalProperties": false,
               "properties": {
+                "card": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "settings": {
+                      "$ref": "#/definitions/CardText"
+                    }
+                  },
+                  "required": [
+                    "settings"
+                  ],
+                  "type": "object"
+                },
                 "description": {
                   "type": "string"
                 },
@@ -1018,6 +1907,129 @@
                     "venuesNotLoaded",
                     "noProposals",
                     "proposalsNotLoaded"
+                  ],
+                  "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "census": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
+                    "editors": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
+                    "minters": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
+                    "title": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
+                    "url": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "editors",
+                    "minters",
+                    "census",
+                    "url"
                   ],
                   "type": "object"
                 },
@@ -1054,13 +2066,27 @@
                 "description",
                 "header",
                 "link",
-                "feedback"
+                "feedback",
+                "field",
+                "card"
               ],
               "type": "object"
             },
             "volunteers": {
               "additionalProperties": false,
               "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "exportCSV": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "exportCSV"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -1080,10 +2106,24 @@
                     "noVolunteers"
                   ],
                   "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "filter": {
+                      "$ref": "#/definitions/TextFieldText"
+                    }
+                  },
+                  "required": [
+                    "filter"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
-                "feedback"
+                "feedback",
+                "button",
+                "field"
               ],
               "type": "object"
             }
@@ -1101,7 +2141,33 @@
             "settings",
             "scholar",
             "currency",
+            "login",
+            "proposeVenue",
             "about"
+          ],
+          "type": "object"
+        },
+        "shorthand": {
+          "additionalProperties": false,
+          "properties": {
+            "confirm": {
+              "type": "string"
+            },
+            "delete": {
+              "type": "string"
+            },
+            "edit": {
+              "type": "string"
+            },
+            "filter": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "delete",
+            "confirm",
+            "edit",
+            "filter"
           ],
           "type": "object"
         },
@@ -1111,18 +2177,147 @@
             "gift": {
               "additionalProperties": false,
               "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "giftTokens": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "giftTokens"
+                  ],
+                  "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "purpose": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "recipient": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "recipient",
+                    "purpose"
+                  ],
+                  "type": "object"
+                },
                 "noTokens": {
                   "type": "string"
                 }
               },
               "required": [
-                "noTokens"
+                "noTokens",
+                "button",
+                "field"
               ],
               "type": "object"
             },
             "roles": {
               "additionalProperties": false,
               "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "accept": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "addAdmin": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "addCompensation": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "createRole": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "deleteRole": {
+                      "$ref": "#/definitions/ConfirmButtonText"
+                    },
+                    "invite": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "priorityDown": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "priorityUp": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "removeAdmin": {
+                      "$ref": "#/definitions/ConfirmButtonText"
+                    },
+                    "removeCompensation": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "resume": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "stop": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "volunteer": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "createRole",
+                    "removeAdmin",
+                    "addAdmin",
+                    "priorityUp",
+                    "priorityDown",
+                    "addCompensation",
+                    "removeCompensation",
+                    "volunteer",
+                    "accept",
+                    "stop",
+                    "resume",
+                    "invite",
+                    "deleteRole"
+                  ],
+                  "type": "object"
+                },
+                "card": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "admins": {
+                      "$ref": "#/definitions/CardText"
+                    },
+                    "settings": {
+                      "$ref": "#/definitions/CardText"
+                    },
+                    "unnamed": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "settings",
+                    "admins",
+                    "unnamed"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -1146,16 +2341,104 @@
                     "notLoaded"
                   ],
                   "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "adminScholar": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "compensationRationale": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "expertise": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "invite": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "newRoleName": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "roleDescription": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "roleName": {
+                      "$ref": "#/definitions/TextFieldText"
+                    }
+                  },
+                  "required": [
+                    "newRoleName",
+                    "adminScholar",
+                    "invite",
+                    "roleName",
+                    "roleDescription",
+                    "compensationRationale",
+                    "expertise"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
-                "feedback"
+                "feedback",
+                "button",
+                "field",
+                "card"
+              ],
+              "type": "object"
+            },
+            "tasks": {
+              "additionalProperties": false,
+              "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "accept": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "decline": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "accept",
+                    "decline"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "button"
               ],
               "type": "object"
             },
             "transactions": {
               "additionalProperties": false,
               "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "approve": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "cancelConfirm": {
+                      "$ref": "#/definitions/ConfirmButtonText"
+                    },
+                    "cancelInitiate": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "loadMore": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "approve",
+                    "cancelInitiate",
+                    "cancelConfirm",
+                    "loadMore"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -1171,10 +2454,24 @@
                     "notLoaded"
                   ],
                   "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "cancelReason": {
+                      "$ref": "#/definitions/TextFieldText"
+                    }
+                  },
+                  "required": [
+                    "cancelReason"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
-                "feedback"
+                "feedback",
+                "button",
+                "field"
               ],
               "type": "object"
             }
@@ -1182,7 +2479,8 @@
           "required": [
             "gift",
             "transactions",
-            "roles"
+            "roles",
+            "tasks"
           ],
           "type": "object"
         }
@@ -1190,11 +2488,60 @@
       "required": [
         "$schema",
         "lang",
+        "shorthand",
         "header",
         "footer",
         "page",
         "view",
+        "component",
         "error"
+      ],
+      "type": "object"
+    },
+    "NotedTextFieldText": {
+      "additionalProperties": false,
+      "properties": {
+        "invalid": {
+          "description": "The optional validation error message",
+          "type": "string"
+        },
+        "label": {
+          "description": "The optional label to show above the text feild",
+          "type": "string"
+        },
+        "note": {
+          "description": "The note to show below the text field",
+          "type": "string"
+        },
+        "placeholder": {
+          "description": "The placeholder to show in the text field",
+          "type": "string"
+        }
+      },
+      "required": [
+        "note",
+        "placeholder"
+      ],
+      "type": "object"
+    },
+    "TextFieldText": {
+      "additionalProperties": false,
+      "properties": {
+        "invalid": {
+          "description": "The optional validation error message",
+          "type": "string"
+        },
+        "label": {
+          "description": "The optional label to show above the text feild",
+          "type": "string"
+        },
+        "placeholder": {
+          "description": "The placeholder to show in the text field",
+          "type": "string"
+        }
+      },
+      "required": [
+        "placeholder"
       ],
       "type": "object"
     }

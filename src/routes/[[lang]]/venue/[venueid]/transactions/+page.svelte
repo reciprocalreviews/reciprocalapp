@@ -23,7 +23,7 @@
 
 		{#if venue.admins.includes(scholar.id)}
 			<Cards>
-				<Card group="admins" icon="🎁" header="gift" note="Send tokens to a scholar" full>
+				<Card group="admins" icon="🎁" strings={(l) => l.page.venue.card.gift} full>
 					{#if scholar}
 						<Gift
 							{tokens}

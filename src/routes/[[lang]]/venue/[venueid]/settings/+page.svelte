@@ -37,8 +37,8 @@
 		title={venue.title}
 		breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}
 		edit={{
-			placeholder: 'Title',
-			valid: (text) => (text.length > 0 ? undefined : 'Must include a title'),
+			placeholder: (l) => l.page.venue.field.name.placeholder,
+			valid: (text) => (text.length > 0 ? undefined : (l) => l.page.venue.field.name.invalid),
 			update: (text) => db().editVenueTitle(venue.id, text)
 		}}
 	>
@@ -47,9 +47,8 @@
 
 		<Card
 			subheader
-			header="Setup"
+			strings={(l) => l.page.venue.card.setup}
 			icon={SettingsLabel}
-			note="Steps to get your venue ready for volunteers and submissions"
 			expand={venue.inactive !== null}
 			testid="setup-card"
 		>
@@ -108,9 +107,11 @@
 			<div style="margin-left: var(--spacing)">
 				<EditableText
 					text={venue.inactive ?? ''}
-					label="Inactive message"
-					placeholder="e.g., We're currently configuring the venue."
-					valid={(text) => (text.length > 0 ? undefined : 'You must include a message')}
+					strings={(l) => l.page.settings.field.inactiveMessage}
+					valid={(text) =>
+						text.length > 0
+							? undefined
+							: (l) => l.page.settings.field.inactiveMessage.invalid ?? ''}
 					edit={(text) => db().editVenueInactive(venue.id, text)}
 				/>
 			</div>
@@ -126,17 +127,17 @@
 
 		<EditableText
 			text={venue.welcome_amount.toString()}
-			label="Welcome tokens (received when first volunteering)"
-			placeholder="e.g., 40"
-			valid={(text) => (validInteger(text) ? undefined : 'Must be a whole number')}
+			strings={(l) => l.page.settings.field.welcomeTokens}
+			valid={(text) =>
+				validInteger(text) ? undefined : (l) => l.page.settings.field.welcomeTokens.invalid ?? ''}
 			edit={(text) => db().editVenueWelcomeAmount(venue.id, parseInt(text))}
 		/>
 
 		<EditableText
 			text={venue.submission_cost.toString()}
-			label="Submission cost (price to submit a manuscript to the venue)"
-			placeholder="e.g., 40"
-			valid={(text) => (validInteger(text) ? undefined : 'Must be a whole number')}
+			strings={(l) => l.page.settings.field.submissionCost}
+			valid={(text) =>
+				validInteger(text) ? undefined : (l) => l.page.settings.field.submissionCost.invalid ?? ''}
 			edit={(text) => db().editVenueSubmissionCost(venue.id, parseInt(text))}
 		/>
 

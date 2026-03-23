@@ -14,11 +14,16 @@
 	const text = $derived.by(() => {
 		const stuff = path(locale);
 		// If it's an array, treat it like multiple paragraphs and join with newlines. Otherwise, just return the string.
-		if (Array.isArray(stuff)) {
-			return stuff.join('\n\n');
-		} else {
-			return stuff;
-		}
+		let text = Array.isArray(stuff) ? stuff.join('\n\n') : stuff;
+
+		// Replace any shorthand in the text with the corresponding shorthand in the locale file.
+		text = text.replace(/\$(\w+)/g, (_, key) => {
+			return key in locale.shorthand
+				? locale.shorthand[key as keyof typeof locale.shorthand]
+				: `$${key}`;
+		});
+
+		return text;
 	});
 </script>
 

@@ -2,30 +2,20 @@
 	import { tick } from 'svelte';
 	import Button from './Button.svelte';
 	import TextField from './TextField.svelte';
-	import Dots from './Dots.svelte';
 	import { handle } from '../../routes/feedback.svelte';
-	import { ConfirmLabel, DeleteLabel, EditLabel } from './Labels';
 	import type { Result } from '$lib/data/CRUD';
+	import { type LocaleText, type TextFieldText } from '$lib/locales/Locale';
+	import type Locale from '$lib/locales/Locale';
 
 	type Props = {
 		text: string;
-		label?: string | undefined;
-		placeholder: string;
+		strings: (l: Locale) => TextFieldText;
 		inline?: boolean;
-		valid?: undefined | ((text: string) => string | undefined);
+		valid?: undefined | ((text: string) => undefined | ((l: LocaleText) => string));
 		edit: (text: string) => Promise<Result>;
-		note?: string;
 	};
 
-	let {
-		text,
-		label,
-		placeholder,
-		edit,
-		valid = undefined,
-		inline = true,
-		note = undefined
-	}: Props = $props();
+	let { text, strings, edit, valid = undefined, inline = true }: Props = $props();
 
 	// svelte-ignore state_referenced_locally
 	const original = $state(text);
@@ -70,20 +60,20 @@
 <div class="editable" class:inline>
 	<Button
 		bind:view={button}
-		tip={editing ? 'Save ' + (label ?? placeholder) : 'Edit ' + (label ?? placeholder)}
+		strings={editing
+			? invalid
+				? (l) => l.component.text.cancel
+				: (l) => l.component.text.save
+			: (l) => l.component.text.edit}
 		type="submit"
 		active={valid !== undefined && editing ? valid(text) === undefined : undefined}
 		action={(event) => (editing ? saveEdit(event) : startEditing(event))}
-		>{#if editing}{invalid ? DeleteLabel : ConfirmLabel}{:else if editing === undefined}<Dots
-			/>{:else}{EditLabel}{/if}</Button
-	>
+	></Button>
 	<TextField
-		{label}
-		{note}
+		{strings}
 		{inline}
 		{valid}
 		bind:text
-		{placeholder}
 		active={editing}
 		bind:view={field}
 		done={() => (editing ? saveAndFocus() : undefined)}

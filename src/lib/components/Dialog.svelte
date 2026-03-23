@@ -39,8 +39,10 @@
 	<div class="container">
 		{#if closeable}
 			<div class="close">
-				<Button background={false} tip="Close this dialog" action={() => (show = false)}
-					>{DeleteLabel}</Button
+				<Button
+					background={false}
+					strings={(l) => l.component.dialog.close}
+					action={() => (show = false)}>{DeleteLabel}</Button
 				>
 			</div>
 		{/if}

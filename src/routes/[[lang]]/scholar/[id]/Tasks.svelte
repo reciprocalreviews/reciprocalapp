@@ -61,15 +61,13 @@
 					The editor has invited you to the <strong>{invite.name ?? EmptyLabel}</strong>
 					role for <VenueLink id={invite.venueid} name={invite.venue} />. Would you like to
 					<Button
-						tip="accept this invitation"
+						strings={(l) => l.view.tasks.button.accept}
 						action={() => handle(db().acceptRoleInvite(scholar, invite.id, 'accepted'))}
-						>Accept</Button
-					>
+					/>
 					<Button
-						tip="decline this invitation"
+						strings={(l) => l.view.tasks.button.decline}
 						action={() => handle(db().acceptRoleInvite(scholar, invite.id, 'declined'))}
-						>Decline</Button
-					>?
+					/>?
 				</td>
 			</tr>
 		{/each}

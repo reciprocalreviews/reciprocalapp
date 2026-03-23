@@ -11,13 +11,7 @@
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import { handle } from '$routes/feedback.svelte';
 	import Status from '$lib/components/Status.svelte';
-	import {
-		DownLabel,
-		FilterLabel,
-		PrivateLabel,
-		SubmissionLabel,
-		UpLabel
-	} from '$lib/components/Labels';
+	import { DownLabel, PrivateLabel, SubmissionLabel, UpLabel } from '$lib/components/Labels';
 	import Column from '$lib/components/Row.svelte';
 	import isRoleApprover from '$lib/data/isRoleApprover';
 	import type { SubmissionRow } from '$data/types';
@@ -148,7 +142,7 @@
 			Have a submission to pay for? Pay for a <Link to={`submissions/new`}>new submission</Link>.
 		</p>
 
-		<TextField label="Filter {FilterLabel}" placeholder="title, id" bind:text={filter}></TextField>
+		<TextField strings={(l) => l.page.submissions.field.filter} bind:text={filter}></TextField>
 
 		{#if submissions === null}
 			<Feedback error text={(l) => l.page.submissions.feedback.notLoaded}></Feedback>
@@ -166,7 +160,10 @@
 							>Payment <Button
 								small
 								background={false}
-								tip={paymentSortPendingFirst ? 'Sort by pending last' : 'Sort by pending first'}
+								strings={(l) =>
+									paymentSortPendingFirst
+										? l.page.submissions.button.sortPaymentLast
+										: l.page.submissions.button.sortPaymentFirst}
 								action={() => {
 									paymentSortPendingFirst = !paymentSortPendingFirst;
 									sortOrder = [...sortOrder.filter((o) => o !== 'payment'), 'payment'];
@@ -177,7 +174,10 @@
 							>Title <Button
 								small
 								background={false}
-								tip={titleSortIncreasing ? 'Reverse sort by title' : 'Sort by title'}
+								strings={(l) =>
+									titleSortIncreasing
+										? l.page.submissions.button.sortTitleDesc
+										: l.page.submissions.button.sortTitleAsc}
 								action={() => {
 									titleSortIncreasing = !titleSortIncreasing;
 									sortOrder = [...sortOrder.filter((o) => o !== 'title'), 'title'];
@@ -189,7 +189,10 @@
 							>ID <Button
 								small
 								background={false}
-								tip={idSortIncreasing ? 'Reverse sort by ID' : 'Sort by ID'}
+								strings={(l) =>
+									idSortIncreasing
+										? l.page.submissions.button.sortIDDesc
+										: l.page.submissions.button.sortIDAsc}
 								action={() => {
 									idSortIncreasing = !idSortIncreasing;
 									sortOrder = [...sortOrder.filter((o) => o !== 'id'), 'id'];
@@ -221,12 +224,10 @@
 									<SubmissionPreview {submission} />
 									{#if uid && conflicts !== null && !conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id) && assignments !== null && !assignments.some((a) => a.submission === submission.id && a.scholar === uid)}
 										<Button
-											tip="Declare a conflict with this submission. You will no longer see this submission in your bidding list."
+											strings={(l) => l.page.submissions.button.declareConflict}
 											action={() =>
 												handle(db().declareConflict(uid, submission.id, 'Scholar declared'))}
-										>
-											Declare conflict
-										</Button>
+										/>
 									{/if}
 								</Column>
 							</td>
@@ -270,19 +271,28 @@
 													{#if scholarsBid === undefined}
 														<!-- No assignments? Allow bidding -->
 														<Button
-															tip="Express interest in serving as {role?.description ??
-																'in this role'}"
+															strings={(l) => ({
+																tip: l.page.submissions.button.bid.tip.replace(
+																	'{role}',
+																	role?.description ?? 'in this role'
+																),
+																label: l.page.submissions.button.bid.label
+															})}
 															action={() =>
 																handle(db().createAssignment(submission.id, uid, role.id, true))}
-															>Bid</Button
-														>
+														/>
 													{:else if scholarsBid !== undefined && !scholarsBid.approved}
 														<!-- Shown an unbid button if not yet approved -->
 														<Button
-															tip="Remove interest in serving as {role?.description ??
-																'in this role'}"
+															strings={(l) => ({
+																tip: l.page.submissions.button.unbid.tip.replace(
+																	'{role}',
+																	role?.description ?? 'in this role'
+																),
+																label: l.page.submissions.button.unbid.label
+															})}
 															action={() => handle(db().deleteAssignment(scholarsBid.id))}
-															>Unbid</Button
+														/>
 														>
 													{/if}
 												{:else}

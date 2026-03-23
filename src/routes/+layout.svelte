@@ -69,7 +69,7 @@
 				<div class="detail">{error.message}</div>
 			{/if}
 		</div>
-		<Button action={() => removeError(index)} tip="Dismiss notification">𐄂</Button>
+		<Button action={() => removeError(index)} strings={(l) => l.component.notification.dismiss} />
 	</div>
 {/snippet}
 

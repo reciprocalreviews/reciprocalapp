@@ -72,8 +72,9 @@
 	breadcrumbs={[]}
 	edit={editable
 		? {
-				placeholder: 'Name',
-				valid: (name: string) => (name.trim().length === 0 ? 'Name cannot be empty' : undefined),
+				placeholder: (l) => l.page.scholar.field.name.placeholder,
+				valid: (name: string) =>
+					name.trim().length === 0 ? (l) => l.page.scholar.field.name.invalid : undefined,
 				update: (text) => db().updateScholarName(scholar.getID(), text)
 			}
 		: undefined}
@@ -105,7 +106,7 @@
 		<EditableText
 			inline={false}
 			text={scholar.getStatus()}
-			placeholder="Explain your current reviewing status to others."
+			strings={(l) => l.page.scholar.field.status}
 			edit={(text) => db().updateScholarStatus(scholar.getID(), text)}
 		/>
 	{:else if scholar.getStatus().trim().length === 0}
@@ -181,7 +182,7 @@
 	{#if editable}
 		<Cards>
 			{#if tokens !== null && currencies !== null}
-				<Card subheader icon={TokenLabel} header="gift tokens" note="to other scholars">
+				<Card subheader icon={TokenLabel} strings={(l) => l.page.scholar.card.gift}>
 					<Gift
 						{tokens}
 						purpose="Gift to peer"
@@ -216,11 +217,10 @@
 		<Subheader icon={SettingsLabel} text={(l) => l.page.scholar.header.settings}></Subheader>
 		<EditableText
 			text={scholar.getEmail() ?? ''}
-			label="email"
-			placeholder="email"
+			strings={(l) => l.page.scholar.field.email}
 			inline={false}
-			note="Your email will be public and only used to send notifications."
-			valid={(text) => (validEmail(text) ? undefined : 'Must be a valid email')}
+			valid={(text) =>
+				validEmail(text) ? undefined : (l) => l.page.scholar.field.email.invalid ?? ''}
 			edit={(text) => db().updateScholarEmail(scholar.getID(), text)}
 		/>
 	{/if}

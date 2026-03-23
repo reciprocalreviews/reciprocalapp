@@ -3,14 +3,16 @@
 	import Tag from './Tag.svelte';
 	import Circle from './Circle.svelte';
 	import Note from './Note.svelte';
+	import type { CardText, LocaleText } from '$lib/locales/Locale';
+	import { getLocaleContext } from '$routes/Contexts';
+	import Text from '$lib/locales/Text.svelte';
 
 	let {
 		children,
 		subheader = false,
 		group,
 		icon,
-		header,
-		note,
+		strings,
 		full = false,
 		expand = $bindable(false),
 		controls,
@@ -19,18 +21,19 @@
 		children: Snippet;
 		controls?: Snippet;
 		icon: string | number;
-		header: string;
-		note: string;
+		strings: (l: LocaleText) => CardText;
 		subheader?: boolean;
 		group?: 'admins' | 'minters' | 'stewards' | 'invite only';
 		full?: boolean;
 		expand?: boolean;
 		testid?: string;
 	} = $props();
+
+	let locale = getLocaleContext();
 </script>
 
 {#snippet top()}
-	{header}
+	<Text path={(l) => strings(l).header} />
 	{#if group}<div class="group"><Tag>{group}</Tag></div>{/if}
 {/snippet}
 
@@ -50,7 +53,7 @@
 			{:else}
 				<h2>{@render top()}</h2>
 			{/if}
-			<Note>{note}</Note>
+			<Note path={(l) => strings(locale).note} />
 		</div>
 		{#if controls}
 			<div>

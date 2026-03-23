@@ -2,29 +2,30 @@
 	import { tick } from 'svelte';
 	import Feedback from './Feedback.svelte';
 	import Tip from './Tip.svelte';
+	import type Locale from '$lib/locales/Locale';
+	import type { LocaleText, NotedTextFieldText, TextFieldText } from '$lib/locales/Locale';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	type Props = {
+		/** The current text in the field */
 		text: string;
-		label?: string | undefined;
-		placeholder?: string;
+		/** The localization strings for the field */
+		strings: (l: Locale) => TextFieldText | NotedTextFieldText;
 		size?: number | undefined;
 		active?: boolean;
 		name?: string | undefined;
 		/** Given a string, return a message describing invalidity, or nothing */
-		valid?: undefined | ((text: string) => string | undefined);
+		valid?: undefined | ((text: string) => ((l: LocaleText) => string) | undefined);
 		inline?: boolean;
 		password?: boolean;
 		view?: HTMLInputElement | HTMLTextAreaElement | undefined;
 		done?: ((() => void) | undefined) | undefined;
-		note?: string | undefined;
 		testid?: string;
 	};
 
 	let {
 		text = $bindable(''),
-		placeholder = '',
-		note,
-		label,
+		strings,
 		size = undefined,
 		active = true,
 		name = undefined,
@@ -41,6 +42,12 @@
 	let measure = $state<HTMLSpanElement | undefined>(undefined);
 	let width = $state(0);
 	let height = $state(0);
+
+	let locale = getLocaleContext();
+	let labels = $derived(strings(locale));
+	let note = $derived('note' in labels ? labels.note : undefined);
+	let label = $derived(labels.label);
+	let placeholder = $derived(labels.placeholder);
 
 	/** We keep track of the first focus to avoid showing validation errors until interaction. */
 	let wasFocused = $state(false);
@@ -181,7 +188,6 @@
 		min-width: 1em;
 		min-height: 1em;
 		flex-grow: 1;
-		max-width: fit-content;
 		overflow: hidden;
 		display: none;
 	}

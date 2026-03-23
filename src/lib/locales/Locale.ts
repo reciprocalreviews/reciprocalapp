@@ -1,6 +1,45 @@
+export type ButtonText = {
+	/** The tooltip and ARIA label for a button */
+	tip: string;
+	/** The button label to show */
+	label: string;
+	warn?: string;
+};
+
+export type TextFieldText = {
+	/** The placeholder to show in the text field */
+	placeholder: string;
+	/** The optional label to show above the text feild */
+	label?: string;
+	/** The optional validation error message */
+	invalid?: string;
+};
+
+export type NotedTextFieldText = TextFieldText & {
+	/** The note to show below the text field */
+	note: string;
+};
+
+/** An optional warning text for confirm buttons */
+export type ConfirmButtonText = ButtonText & { warn: string };
+
+/** Text for the Card component */
+export type CardText = {
+	/** The header at the top of the card */
+	header: string;
+	/** The note below the header */
+	note: string;
+};
+
 export type LocaleText = {
 	$schema: string;
 	lang: string;
+	shorthand: {
+		delete: string;
+		confirm: string;
+		edit: string;
+		filter: string;
+	};
 	header: {
 		home: string;
 		venues: string;
@@ -47,6 +86,16 @@ export type LocaleText = {
 				noProposals: string;
 				proposalsNotLoaded: string;
 			};
+			field: {
+				title: TextFieldText & { invalid: string };
+				editors: TextFieldText & { invalid: string };
+				minters: TextFieldText & { invalid: string };
+				census: TextFieldText & { invalid: string };
+				url: TextFieldText & { invalid: string };
+			};
+			card: {
+				settings: CardText;
+			};
 		};
 		proposal: {
 			feedback: {
@@ -54,12 +103,36 @@ export type LocaleText = {
 				logIn: string;
 				notFound: string;
 			};
+			button: {
+				deleteSupport: ButtonText;
+				deleteProposal: ConfirmButtonText;
+				approve: ConfirmButtonText;
+				submitSupport: ButtonText;
+			};
+			note: {
+				delete: string;
+				editors: string;
+			};
+			field: {
+				title: TextFieldText;
+				editors: TextFieldText;
+				minters: TextFieldText;
+				census: TextFieldText;
+				url: TextFieldText;
+				support: TextFieldText;
+			};
 		};
 		volunteers: {
 			feedback: {
 				unknownVenue: string;
 				volunteersNotLoaded: string;
 				noVolunteers: string;
+			};
+			button: {
+				exportCSV: ButtonText;
+			};
+			field: {
+				filter: TextFieldText;
 			};
 		};
 		venueTransactions: {
@@ -73,12 +146,48 @@ export type LocaleText = {
 				duplicateScholars: string;
 				incompletePayment: string;
 			};
+			button: {
+				removeAuthor: ButtonText;
+				addAuthor: ButtonText;
+				checkBalances: ButtonText;
+				submit: ButtonText;
+			};
+			note: {
+				payment: string;
+				balance: string;
+				approve: string;
+			};
+			field: {
+				title: NotedTextFieldText;
+				expertise: NotedTextFieldText;
+				manuscriptId: NotedTextFieldText;
+				previousId: NotedTextFieldText;
+				authorOrcid: TextFieldText;
+			};
 		};
 		submissions: {
 			feedback: {
 				notLoaded: string;
 				noSubmissions: string;
 				noneFiltered: string;
+			};
+			button: {
+				sortPaymentFirst: ButtonText;
+				sortPaymentLast: ButtonText;
+				sortTitleAsc: ButtonText;
+				sortTitleDesc: ButtonText;
+				sortIDAsc: ButtonText;
+				sortIDDesc: ButtonText;
+				declareConflict: ButtonText;
+				bid: ButtonText;
+				unbid: ButtonText;
+			};
+			field: {
+				title: NotedTextFieldText & { invalid: string };
+				expertise: NotedTextFieldText;
+				manuscriptID: NotedTextFieldText & { invalid: string };
+				previousID: NotedTextFieldText;
+				filter: TextFieldText;
 			};
 		};
 		submission: {
@@ -95,11 +204,27 @@ export type LocaleText = {
 				noAuthors: string;
 				noExpertise: string;
 			};
+			button: {
+				createAssignment: ButtonText;
+				unassign: ButtonText;
+				complete: ButtonText;
+				approve: ButtonText;
+				approveBid: ButtonText;
+			};
+			field: {
+				scholar: TextFieldText;
+				newAssignment: TextFieldText & { invalid: string };
+			};
 		};
 		venue: {
 			header: {
 				submissionTypes: string;
 				roles: string;
+			};
+			button: {
+				newSubmissionType: ButtonText;
+				deleteSubmissionType: ConfirmButtonText;
+				requestCompensation: ButtonText;
 			};
 			feedback: {
 				viewSettings: string;
@@ -107,6 +232,17 @@ export type LocaleText = {
 				rolesNotLoaded: string;
 				inactive: string;
 				inactivePrompt: string;
+			};
+			field: {
+				name: TextFieldText & { invalid: string };
+				url: TextFieldText & { invalid: string };
+				description: TextFieldText;
+				typeName: TextFieldText;
+				typeDescription: TextFieldText;
+			};
+			card: {
+				setup: CardText;
+				gift: CardText;
 			};
 		};
 		settings: {
@@ -119,6 +255,11 @@ export type LocaleText = {
 				unknownVenue: string;
 				logIn: string;
 				adminsOnly: string;
+			};
+			field: {
+				inactiveMessage: TextFieldText;
+				welcomeTokens: TextFieldText;
+				submissionCost: TextFieldText;
 			};
 		};
 		scholar: {
@@ -141,6 +282,14 @@ export type LocaleText = {
 				volunteeringFirst: string;
 				volunteeringThird: string;
 			};
+			field: {
+				name: TextFieldText & { invalid: string };
+				status: TextFieldText;
+				email: NotedTextFieldText;
+			};
+			card: {
+				gift: CardText;
+			};
 		};
 		currency: {
 			feedback: {
@@ -153,6 +302,51 @@ export type LocaleText = {
 				minters: string;
 				venues: string;
 				tokens: string;
+			};
+			button: {
+				mint: ButtonText;
+				removeMinter: ButtonText;
+				addMinter: ButtonText;
+			};
+			note: {
+				minters: string;
+			};
+			field: {
+				name: TextFieldText & { invalid: string };
+				mintPurpose: TextFieldText;
+				minter: TextFieldText & { invalidMinter: string; invalidContact: string };
+				description: NotedTextFieldText;
+			};
+			card: {
+				mint: CardText;
+				addMinter: CardText;
+			};
+		};
+		login: {
+			button: {
+				sendPassword: ButtonText;
+				signIn: ButtonText;
+			};
+			note: {
+				orcid: string;
+			};
+			field: {
+				email: TextFieldText;
+				password: TextFieldText;
+			};
+		};
+		proposeVenue: {
+			button: {
+				propose: ButtonText;
+			};
+			field: {
+				venueName: TextFieldText;
+				editors: TextFieldText;
+				minters: TextFieldText;
+				mintersConflict: string;
+				url: TextFieldText & { invalid: string };
+				size: TextFieldText;
+				rationale: TextFieldText;
 			};
 		};
 		about: {
@@ -168,11 +362,27 @@ export type LocaleText = {
 	view: {
 		gift: {
 			noTokens: string;
+			button: {
+				giftTokens: ButtonText;
+			};
+			field: {
+				recipient: TextFieldText & { invalid: string };
+				purpose: TextFieldText;
+			};
 		};
 		transactions: {
 			feedback: {
 				noTransactions: string;
 				notLoaded: string;
+			};
+			button: {
+				approve: ButtonText;
+				cancelInitiate: ButtonText;
+				cancelConfirm: ConfirmButtonText;
+				loadMore: ButtonText;
+			};
+			field: {
+				cancelReason: TextFieldText;
 			};
 		};
 		roles: {
@@ -182,6 +392,57 @@ export type LocaleText = {
 				noRoles: string;
 				notLoaded: string;
 			};
+			button: {
+				createRole: ButtonText;
+				removeAdmin: ConfirmButtonText;
+				addAdmin: ButtonText;
+				priorityUp: ButtonText;
+				priorityDown: ButtonText;
+				addCompensation: ButtonText;
+				removeCompensation: ButtonText;
+				volunteer: ButtonText;
+				accept: ButtonText;
+				stop: ButtonText;
+				resume: ButtonText;
+				invite: ButtonText;
+				deleteRole: ConfirmButtonText;
+			};
+			field: {
+				newRoleName: TextFieldText;
+				adminScholar: TextFieldText;
+				invite: TextFieldText;
+				roleName: TextFieldText;
+				roleDescription: TextFieldText;
+				compensationRationale: TextFieldText;
+				expertise: TextFieldText;
+			};
+			card: {
+				settings: CardText;
+				admins: CardText;
+				unnamed: string;
+			};
+		};
+		tasks: {
+			button: {
+				accept: ButtonText;
+				decline: ButtonText;
+			};
+		};
+	};
+	component: {
+		dialog: {
+			close: ButtonText;
+		};
+		text: {
+			save: ButtonText;
+			edit: ButtonText;
+			cancel: ButtonText;
+		};
+		header: {
+			logout: ButtonText;
+		};
+		notification: {
+			dismiss: ButtonText;
 		};
 	};
 	error: {

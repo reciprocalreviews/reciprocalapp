@@ -8,7 +8,7 @@
 	import type { PageData } from './$types';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import { handle } from '$routes/feedback.svelte';
-	import { DeleteLabel, MinterLabel, plural, TokenLabel, VenueLabel } from '$lib/components/Labels';
+	import { MinterLabel, plural, TokenLabel, VenueLabel } from '$lib/components/Labels';
 	import Button from '$lib/components/Button.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { validEmail, validORCID } from '$lib/validation';
@@ -25,6 +25,7 @@
 	import Subheader from '$lib/components/Subheader.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import Text from '$lib/locales/Text.svelte';
+	import type LocaleText from '$lib/locales/Locale';
 
 	let { data }: { data: PageData } = $props();
 
@@ -46,13 +47,13 @@
 	function isValidMinter(text: string | ScholarID) {
 		if (validEmail(text)) {
 			return admins.some((scholar) => scholar.email === text)
-				? "Minters can't be admins of a venue that uses this currency."
+				? (l: LocaleText) => l.page.currency.field.minter.invalidMinter
 				: undefined;
 		} else if (validORCID(text)) {
 			return admins.some((scholar) => scholar.orcid === text)
-				? "Minters can't be admins of a venue that uses this currency."
+				? (l: LocaleText) => l.page.currency.field.minter.invalidMinter
 				: undefined;
-		} else return 'Must be a valid email or ORCID';
+		} else return (l: LocaleText) => l.page.currency.field.minter.invalidContact;
 	}
 </script>
 
@@ -62,8 +63,9 @@
 	breadcrumbs={[]}
 	edit={isMinter && currency !== null
 		? {
-				placeholder: 'Name',
-				valid: (text) => (text.length === 0 ? "The name can't be empty" : undefined),
+				placeholder: (l: LocaleText) => l.page.currency.field.name.placeholder,
+				valid: (text) =>
+					text.length === 0 ? (l: LocaleText) => l.page.currency.field.name.invalid : undefined,
 				update: (text) => db().updateCurrencyName(currency.id, text)
 			}
 		: undefined}
@@ -76,9 +78,8 @@
 			<EditableText
 				inline={false}
 				text={currency.description}
-				placeholder="Explain the currency to others."
+				strings={(l) => l.page.currency.field.description}
 				edit={(text) => db().updateCurrencyDescription(currency.id, text)}
-				note="Currency descriptions are public."
 			/>
 		{:else}
 			<p>{currency.description}</p>
@@ -108,12 +109,7 @@
 		</p>
 		{#if user && isMinter && venues}
 			<Cards>
-				<Card
-					subheader
-					icon={TokenLabel}
-					header="mint tokens"
-					note="Create new tokens in this currency."
-				>
+				<Card subheader icon={TokenLabel} strings={(l) => l.page.currency.card.mint}>
 					<form>
 						<Tip><Text path={(l) => l.page.currency.tip.mintWarning} /></Tip>
 						<Options
@@ -133,18 +129,20 @@
 							change={(val) => (newTokenCount = val)}>{newTokenCount}</Slider
 						>
 						<TextField
-							label="Why are these tokens being minted? This purpose will be public in the transaction history."
+							strings={(l) => l.page.currency.field.mintPurpose}
 							bind:text={newTokenPurpose}
 							size={40}
-							valid={(text) => (text.length === 0 ? "Purpose can't be empty" : undefined)}
-							placeholder="Purpose"
+							valid={(text) =>
+								text.length === 0
+									? (l) => l.page.currency.field.mintPurpose.invalid ?? ''
+									: undefined}
 						/>
 						<Checkbox bind:on={newTokenConsent}>
 							I understand that creating excess tokens will erode this currency's value.</Checkbox
 						>
 
 						<Button
-							tip="Mint tokens"
+							strings={(l) => l.page.currency.button.mint}
 							active={!newTokenCreating &&
 								newTokenConsent &&
 								newTokenCount > 0 &&
@@ -168,8 +166,8 @@
 									newTokenCreating = false;
 									newTokenConsent = false;
 								}
-							}}>Mint tokens</Button
-						>
+							}}
+						/>
 					</form>
 				</Card>
 			</Cards>
@@ -186,7 +184,7 @@
 				<li data-testid="minter-{index}">
 					<ScholarLink id={minter}></ScholarLink>
 					{#if isMinter && currency.minters.length > 1}&nbsp;<Button
-							tip="Remove yourself as minter"
+							strings={(l) => l.page.currency.button.removeMinter}
 							active={currency.minters.length > 1}
 							action={() =>
 								handle(
@@ -194,29 +192,23 @@
 										currency.id,
 										currency.minters.filter((m) => m !== minter)
 									)
-								)}>{DeleteLabel}</Button
-						>{/if}
+								)}
+						/>{/if}
 				</li>
 			{/each}
 		</ul>
 
 		{#if isMinter}
 			<Cards>
-				<Card
-					subheader
-					icon={MinterLabel}
-					header="add minter"
-					note="Allow another scholar to mint tokens."
-				>
+				<Card subheader icon={MinterLabel} strings={(l) => l.page.currency.card.addMinter}>
 					<form>
 						<TextField
-							label="Scholar"
+							strings={(l) => l.page.currency.field.minter}
 							bind:text={newMinter}
 							size={19}
-							placeholder="ORCID or email"
 							valid={isValidMinter}
 						/><Button
-							tip="Add minter"
+							strings={(l) => l.page.currency.button.addMinter}
 							active={isValidMinter(newMinter) === undefined}
 							action={async () => {
 								if (
@@ -224,13 +216,10 @@
 								) {
 									newMinter = '';
 								}
-							}}>Add minter</Button
-						>
+							}}
+						/>
 					</form>
-					<Note>
-						Minters can see, approve, and cancel transactions, and most importantly, mint new tokens
-						in this currency. They can also propose and improve currency exchanges and mergers.
-					</Note>
+					<Note path={(l) => l.page.currency.note.minters} />
 				</Card>
 			</Cards>
 		{/if}

@@ -5,7 +5,7 @@
 	import Page from '$lib/components/Page.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import TextField from '$lib/components/TextField.svelte';
-	import { validEmails, isntEmpty, validURLError } from '$lib/validation';
+	import { validEmails, isntEmpty, validURL } from '$lib/validation';
 	import { getDB } from '$lib/data/CRUD';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { addError } from '$routes/feedback.svelte';
@@ -93,17 +93,18 @@
 		<form>
 			<TextField
 				bind:text={venue}
-				label="Venue"
-				placeholder="name"
-				valid={(text) => (text.length > 0 ? undefined : 'Must include a venue name')}
+				strings={(l) => l.page.proposeVenue.field.venueName}
+				valid={(text) =>
+					text.length > 0 ? undefined : (l) => l.page.proposeVenue.field.venueName.invalid ?? ''}
 			/>
 			<TextField
 				bind:text={editors}
-				label="Editors"
-				placeholder="email1@email.com, email2@email.com"
+				strings={(l) => l.page.proposeVenue.field.editors}
 				active={!proposing}
 				valid={(text) =>
-					!validEmails(text, 1) ? 'Must be a list of comma-separated email addresses.' : undefined}
+					!validEmails(text, 1)
+						? (l) => l.page.proposeVenue.field.editors.invalid ?? ''
+						: undefined}
 			/>
 			<Options
 				label="Currency"
@@ -119,41 +120,40 @@
 			{#if currency === undefined}
 				<TextField
 					bind:text={minters}
-					label="Minters"
-					placeholder="email1@email.com, email2@email.com"
+					strings={(l) => l.page.proposeVenue.field.minters}
 					active={!proposing}
 					valid={(text) =>
 						!validEmails(text, 1)
-							? 'Must be a list of at least one comma-separated email addresses of scholars.'
+							? (l) => l.page.proposeVenue.field.minters.invalid ?? ''
 							: !editorsArentMinters()
-								? "Editors can't be minters"
+								? (l) => l.page.proposeVenue.field.mintersConflict
 								: undefined}
 				/>
 			{/if}
 			<TextField
 				bind:text={url}
-				label="Official venue URL"
-				placeholder="https://..."
+				strings={(l) => l.page.proposeVenue.field.url}
 				active={!proposing}
-				valid={validURLError}
+				valid={(text) =>
+					validURL(text) ? undefined : (l) => l.page.proposeVenue.field.url.invalid}
 			/>
 			<TextField
 				bind:text={size}
-				label="Community size"
-				placeholder="number"
+				strings={(l) => l.page.proposeVenue.field.size}
 				active={!proposing}
-				valid={(text) => (validSize(text) ? undefined : 'Must be a positive whole number')}
+				valid={(text) =>
+					validSize(text) ? undefined : (l) => l.page.proposeVenue.field.size.invalid ?? ''}
 			/>
 			<TextField
 				bind:text={message}
-				label="Why should the editors adopt Reciprocal Reviews? This will be shown publicly."
+				strings={(l) => l.page.proposeVenue.field.rationale}
 				inline={false}
-				placeholder="why"
 				active={!proposing}
-				valid={(text) => (validMessage(text) ? undefined : 'Must include a rationale')}
+				valid={(text) =>
+					validMessage(text) ? undefined : (l) => l.page.proposeVenue.field.rationale.invalid ?? ''}
 			/>
 			<Button
-				tip="Propose venue"
+				strings={(l) => l.page.proposeVenue.button.propose}
 				action={propose}
 				active={!proposing &&
 					isntEmpty(venue) &&
@@ -161,8 +161,8 @@
 					(currency !== undefined || validEmails(minters, 1)) &&
 					validSize(size) &&
 					validMessage(message) &&
-					editorsArentMinters()}>Propose venue</Button
-			>
+					editorsArentMinters()}
+			/>
 		</form>
 	{:else}
 		<Status good={false}><Link to="/login">Log in</Link> to propose a venue.</Status>

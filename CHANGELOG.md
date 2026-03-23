@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Changed
 
 - Updated internal tooling for stability.
+- Localized all buttons, text fields, notes, and cards.
 
 ## 0.3.7 - 2026-03-15
 

@@ -30,10 +30,6 @@ export function validURL(text: string) {
 	);
 }
 
-export function validURLError(text: string): string | undefined {
-	return validURL(text) ? undefined : 'Must be a valid URL';
-}
-
 export function validInteger(text: string) {
 	return /[0-9]+/.test(text);
 }

@@ -12,9 +12,9 @@
 	import { getDB } from '$lib/data/CRUD';
 	import Date from '$lib/components/Date.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
-	import { DeleteLabel, VenueLabel } from '$lib/components/Labels';
+	import { VenueLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
-	import { validEmails, validURLError } from '$lib/validation';
+	import { validEmails, validURL } from '$lib/validation';
 	import { SettingsLabel } from '$lib/components/Labels';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
 	import { page } from '$app/state';
@@ -109,25 +109,19 @@
 		{/if}
 		<Cards>
 			{#if steward && !approved}
-				<Card
-					group="stewards"
-					icon={SettingsLabel}
-					header="settings"
-					note="Title, editors, url, etc."
-				>
+				<Card group="stewards" icon={SettingsLabel} strings={(l) => l.page.venues.card.settings}>
 					<EditableText
-						label="title"
+						strings={(l) => l.page.venues.field.title}
 						text={proposal.title}
-						placeholder="Venue title"
-						valid={(text) => (text.length > 0 ? undefined : 'Include a title')}
+						valid={(text) =>
+							text.length > 0 ? undefined : (l) => l.page.venues.field.title.invalid}
 						edit={(text) => db().editVenueProposalTitle(proposal.id, text)}
 					/>
 					<EditableText
-						label="editors"
+						strings={(l) => l.page.venues.field.editors}
 						text={proposal.editors.join(', ')}
-						placeholder="Venue editors"
 						valid={(text) =>
-							validEmails(text) ? undefined : 'Must be a list of comma separated email addresses.'}
+							validEmails(text) ? undefined : (l) => l.page.venues.field.editors.invalid}
 						edit={(text) =>
 							db().editVenueProposalEditors(
 								proposal.id,
@@ -135,11 +129,10 @@
 							)}
 					/>
 					<EditableText
-						label="minters"
+						strings={(l) => l.page.venues.field.minters}
 						text={proposal.minters.join(', ')}
-						placeholder="Venue minters"
 						valid={(text) =>
-							validEmails(text) ? undefined : 'Must be a list of comma separated email addresses.'}
+							validEmails(text) ? undefined : (l) => l.page.venues.field.minters.invalid}
 						edit={(text) =>
 							db().editVenueProposalMinters(
 								proposal.id,
@@ -147,40 +140,35 @@
 							)}
 					/>
 					<EditableText
-						label="census"
 						text={'' + proposal.census}
-						placeholder="Venue census"
-						valid={(text) => (!isNaN(parseInt(text)) ? undefined : 'Must be a whole number')}
+						strings={(l) => l.page.venues.field.census}
+						valid={(text) =>
+							!isNaN(parseInt(text)) ? undefined : (l) => l.page.venues.field.census.invalid}
 						edit={(text) => db().editVenueProposalCensus(proposal.id, parseInt(text))}
 					/>
 					<EditableText
-						label="URL"
+						strings={(l) => l.page.venues.field.url}
 						text={proposal.url}
-						placeholder="https://"
-						valid={validURLError}
+						valid={(text) => (validURL(text) ? undefined : (l) => l.page.venues.field.url.invalid)}
 						edit={(text) => db().editVenueProposalURL(proposal.id, text)}
 					/>
 
 					<Button
-						tip="Delete this proposal"
-						warn="Delete this proposal forever?"
+						strings={(l) => l.page.proposal.button.deleteProposal}
 						action={async () => {
 							if (await handle(db().deleteVenueProposal(proposal.id))) goto('/venues');
-						}}>Delete proposal…</Button
-					>
-					<Note>This cannot be undone.</Note>
+						}}
+					/>
+					<Note path={(l) => l.page.proposal.note.delete} />
 
 					<Button
-						tip="Approve this proposal"
-						warn="Approve and create this venue?"
+						strings={(l) => l.page.proposal.button.approve}
 						action={async () => {
 							if (await handle(db().approveVenueProposal(proposal.id))) goto('/venues');
-						}}>Approve proposal…</Button
-					>
-					<Note
-						>After approving a proposal, <strong>{proposal.editors.join(',')}</strong>
-						above will become the editors of the venue.</Note
-					>
+						}}
+					/>
+
+					<Note path={(l) => l.page.proposal.note.editors} />
 				</Card>
 			{/if}
 		</Cards>
@@ -190,15 +178,17 @@
 				<form>
 					<TextField
 						bind:text={message}
-						label="support"
+						strings={(l) => l.page.proposal.field.support}
 						inline
-						placeholder="Why should the editors adopt Reciprocal Reviews?"
 						active={!submitting}
-						valid={(text) => (text.length > 0 ? undefined : 'Must include a rationale')}
+						valid={(text) =>
+							text.length > 0 ? undefined : (l) => l.page.proposal.field.support.invalid ?? ''}
 					/>
-					<Button tip="Submit support" action={support} active={message.length > 0 && !submitting}
-						>Add support</Button
-					>
+					<Button
+						strings={(l) => l.page.proposal.button.submitSupport}
+						action={support}
+						active={message.length > 0 && !submitting}
+					/>
 				</form>
 			{:else if !approved}
 				<Feedback text={(l) => l.page.proposal.feedback.alreadySupported}></Feedback>
@@ -217,7 +207,7 @@
 						><Date time={supporter.created_at} />
 						{#if !approved && editable}
 							<Button
-								tip="Delete support"
+								strings={(l) => l.page.proposal.button.deleteSupport}
 								action={async () => {
 									const { error } = await db().deleteVenueProposalSupport(supporter.id);
 									if (error) addError(error);
@@ -225,17 +215,17 @@
 										invalidateAll();
 										goto('/venues');
 									}
-								}}>{DeleteLabel}</Button
-							>
+								}}
+							></Button>
 						{/if}
 					</span>
 				</p>
 				{#if !approved && editable}
 					<EditableText
-						label="Reason"
+						strings={(l) => l.page.proposal.field.support}
 						text={supporter.message}
-						placeholder="Reasons for support."
-						valid={(text) => (text.length > 0 ? undefined : 'Include a message')}
+						valid={(text) =>
+							text.length > 0 ? undefined : (l) => l.page.proposal.field.support.invalid ?? ''}
 						edit={(text) => db().editVenueProposalSupport(supporter.id, text)}
 					/>
 				{:else}

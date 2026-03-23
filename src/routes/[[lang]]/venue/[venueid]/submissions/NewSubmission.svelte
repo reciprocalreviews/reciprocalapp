@@ -119,34 +119,23 @@
 <Form>
 	<h3>Details</h3>
 	<TextField
-		label="submission title"
+		strings={(l) => l.page.submissions.field.title}
 		size={40}
-		placeholder="title"
 		bind:text={title}
-		valid={(text) => (isntEmpty(text) ? undefined : 'Title must be non-empty.')}
-		note="For internal tracking, and bidding if enabled."
+		valid={(text) => (isntEmpty(text) ? undefined : (l) => l.page.submissions.field.title.invalid)}
 	/>
+	<TextField strings={(l) => l.page.submissions.field.expertise} size={40} bind:text={expertise} />
 	<TextField
-		label="expertise required to review (optional)"
+		strings={(l) => l.page.submissions.field.manuscriptID}
 		size={40}
-		placeholder="expertise"
-		bind:text={expertise}
-		note="Help authors and editors find appropriate reviewers."
-	/>
-	<TextField
-		label="manuscript id"
-		size={40}
-		placeholder="id"
 		bind:text={externalID}
-		valid={(text) => (validExternalID(text) ? undefined : 'ID must be non-empty.')}
-		note="The manuscript's ID from your review system, to link this transaction to your submission."
+		valid={(text) =>
+			validExternalID(text) ? undefined : (l) => l.page.submissions.field.manuscriptID.invalid}
 	/>
 	<TextField
-		label="previous manuscript id"
+		strings={(l) => l.page.submissions.field.previousID}
 		size={40}
-		placeholder="id"
 		bind:text={previousID}
-		note="The ID of the previous submission, if this is a revision and you want to track it."
 	/>
 	<Options
 		label="submission type"
@@ -168,17 +157,19 @@
 					: `By line, authors and how many tokens to charge each of them. Tokens must sum to ${venue.submission_cost}.`}
  -->
 	<h3>Payment</h3>
-	<Note>Specify the authors and how many tokens each will pay.</Note>
+	<Note path={(l) => l.page.newSubmission.note.payment} />
 	<Table>
 		{#each charges as charge, index}
 			<tr class="charge">
 				<td>
 					<TextField
-						label="author"
+						strings={(l) => l.page.newSubmission.field.authorOrcid}
 						size={24}
-						placeholder="ORCID"
 						bind:text={charge.scholar}
-						valid={(text) => (validORCID(text) ? undefined : 'Invalid ORCID')}
+						valid={(text) =>
+							validORCID(text)
+								? undefined
+								: (l) => l.page.newSubmission.field.authorOrcid.invalid ?? ''}
 					/>
 				</td>
 				<td
@@ -192,19 +183,19 @@
 				>
 				<td
 					><Button
-						tip="Remove this author from the submission"
+						strings={(l) => l.page.newSubmission.button.removeAuthor}
 						active={charges.length > 1}
-						action={() => charges.splice(index, 1)}>x</Button
-					>
+						action={() => charges.splice(index, 1)}
+					/>
 				</td>
 			</tr>
 		{/each}
 	</Table>
 
 	<Button
-		tip="Add another author to the submission"
-		action={() => charges.push({ scholar: '', payment: 0 })}>Add author</Button
-	>
+		strings={(l) => l.page.newSubmission.button.addAuthor}
+		action={() => charges.push({ scholar: '', payment: 0 })}
+	/>
 
 	{#if duplicateScholars(charges)}
 		<Feedback error text={(l) => l.page.newSubmission.feedback.duplicateScholars}></Feedback>
@@ -220,25 +211,25 @@
 				)}
 		/>
 	{:else}
-		<Note>Verify the balance to enable submission.</Note>
+		<Note path={(l) => l.page.newSubmission.note.balance} />
 
 		<Button
-			tip="Check if authors have enough tokens"
+			strings={(l) => l.page.newSubmission.button.checkBalances}
 			active={validChargeFormat(charges) &&
 				validCharge(charges, venue.submission_cost) &&
 				affordable !== true}
-			action={checkAffordability}>Check author balances</Button
-		>
+			action={checkAffordability}
+		/>
 
 		{#if typeof affordable === 'string'}<Feedback error text={affordable} />{/if}
 	{/if}
 
 	<h3>Submit</h3>
 
-	<Note>Each author will need to approve payment.</Note>
+	<Note path={(l) => l.page.newSubmission.note.approve} />
 
 	<Button
-		tip="Create a new submission"
+		strings={(l) => l.page.newSubmission.button.submit}
 		active={affordable === true &&
 			validSubmission(title, externalID, charges, venue.submission_cost)}
 		action={async () => {
