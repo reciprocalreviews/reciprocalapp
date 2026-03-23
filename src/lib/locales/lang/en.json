@@ -5,7 +5,10 @@
 		"delete": "\u2716",
 		"confirm": "\u2713",
 		"edit": "\u270e",
-		"filter": "\ud83d\udd0e"
+		"filter": "\ud83d\udd0e",
+		"admin": "Admin",
+		"minter": "Minter",
+		"steward": "Steward"
 	},
 	"header": {
 		"home": "Home",

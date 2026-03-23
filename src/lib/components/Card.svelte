@@ -23,7 +23,7 @@
 		icon: string | number;
 		strings: (l: LocaleText) => CardText;
 		subheader?: boolean;
-		group?: 'admins' | 'minters' | 'stewards' | 'invite only';
+		group?: 'admin' | 'minter' | 'steward';
 		full?: boolean;
 		expand?: boolean;
 		testid?: string;
@@ -34,7 +34,7 @@
 
 {#snippet top()}
 	<Text path={(l) => strings(l).header} />
-	{#if group}<div class="group"><Tag>{group}</Tag></div>{/if}
+	{#if group}<div class="group"><Tag><Text path={(l) => l.shorthand[group]} /></Tag></div>{/if}
 {/snippet}
 
 <div class="card" class:full class:expand data-testid={testid}>

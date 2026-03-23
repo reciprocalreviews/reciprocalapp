@@ -366,7 +366,7 @@
 						icon={SettingsLabel}
 						strings={(l) => l.view.roles.card.settings}
 						subheader
-						group="admins"
+						group="admin"
 					>
 						{#if roleVolunteers.length > 0}
 							<Feedback

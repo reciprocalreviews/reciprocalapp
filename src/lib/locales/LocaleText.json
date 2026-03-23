@@ -2254,6 +2254,9 @@
         "shorthand": {
           "additionalProperties": false,
           "properties": {
+            "admin": {
+              "type": "string"
+            },
             "confirm": {
               "type": "string"
             },
@@ -2265,13 +2268,18 @@
             },
             "filter": {
               "type": "string"
+            },
+            "minter": {
+              "type": "string"
             }
           },
           "required": [
             "delete",
             "confirm",
             "edit",
-            "filter"
+            "filter",
+            "admin",
+            "minter"
           ],
           "type": "object"
         },

@@ -109,7 +109,7 @@
 		{/if}
 		<Cards>
 			{#if steward && !approved}
-				<Card group="stewards" icon={SettingsLabel} strings={(l) => l.page.venues.card.settings}>
+				<Card group="steward" icon={SettingsLabel} strings={(l) => l.page.venues.card.settings}>
 					<EditableText
 						strings={(l) => l.page.venues.field.title}
 						text={proposal.title}

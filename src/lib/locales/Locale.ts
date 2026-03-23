@@ -39,6 +39,9 @@ export type LocaleText = {
 		confirm: string;
 		edit: string;
 		filter: string;
+		admin: string;
+		minter: string;
+		steward: string;
 	};
 	header: {
 		home: string;

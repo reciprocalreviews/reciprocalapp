@@ -51,7 +51,7 @@
 			{#each admins as admin, index}
 				<tr data-testid="admin-{index}">
 					<td><VenueLink id={admin.id} name={admin.title} /></td>
-					<td><Tag>Admin</Tag></td>
+					<td><Tag><Text path={(l) => l.shorthand.admin} /></Tag></td>
 				</tr>
 			{/each}
 		{/if}
@@ -60,7 +60,7 @@
 		{#each minting ?? [] as currency}
 			<tr>
 				<td><CurrencyLink {currency} /></td>
-				<td><Tag>Minter</Tag></td>
+				<td><Tag><Text path={(l) => l.shorthand.minter} /></Tag></td>
 			</tr>
 		{/each}
 
