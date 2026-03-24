@@ -17,6 +17,7 @@
 	} from '$data/types';
 	import Feedback from './Feedback.svelte';
 	import Options from './Options.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	let {
 		tokens,
@@ -52,6 +53,8 @@
 
 	let kind = $state<'scholar' | 'venue'>('scholar');
 	let venue = $state<undefined | string>(undefined);
+
+	const locale = getLocaleContext();
 </script>
 
 <form>
@@ -59,14 +62,14 @@
 		<Feedback text={(l) => l.view.gift.noTokens}></Feedback>
 	{:else}
 		<fieldset>
-			<legend>Gift to...</legend>
+			<legend>{locale.view.gift.fieldset.legend}</legend>
 			<div>
 				<input bind:group={kind} type="radio" id="scholar-choice" name="scholar" value="scholar" />
-				<label for="scholar-choice">Scholar</label>
+				<label for="scholar-choice">{locale.view.gift.fieldset.scholar}</label>
 			</div>
 			<div>
 				<input bind:group={kind} type="radio" id="venue-choice" name="venue" value="venue" />
-				<label for="venue-choice">Venue</label>
+				<label for="venue-choice">{locale.view.gift.fieldset.venue}</label>
 			</div>
 		</fieldset>
 

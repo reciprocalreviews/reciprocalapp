@@ -496,6 +496,11 @@ export type LocaleText = {
 				venue: OptionsText;
 				currency: OptionsText;
 			};
+			fieldset: {
+				legend: string;
+				scholar: string;
+				venue: string;
+			};
 		};
 		transactions: {
 			feedback: {

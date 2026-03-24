@@ -557,9 +557,6 @@
 			"unknownTitle": "Unknown venue",
 			"subtitle": "Venue",
 			"options": {
-				"revisionOf": {
-					"none": "—"
-				},
 				"compensationRole": {
 					"label": "Role"
 				}
@@ -786,6 +783,11 @@
 				"currency": {
 					"label": "What currency should be used?"
 				}
+			},
+			"fieldset": {
+				"legend": "Gift to...",
+				"scholar": "Scholar",
+				"venue": "Venue"
 			}
 		},
 		"transactions": {
@@ -956,8 +958,7 @@
 			},
 			"options": {
 				"approver": {
-					"label": "What role can approve assignments to this role for a submission, other than the editor?",
-					"none": "—"
+					"label": "What role can approve assignments to this role for a submission, other than the editor?"
 				}
 			}
 		},
