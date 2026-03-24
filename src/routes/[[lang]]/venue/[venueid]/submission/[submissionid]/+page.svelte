@@ -232,17 +232,17 @@
 							<Status good={false} label={(l) => l.page.submission.status.unknownTransaction} />
 						{:else}
 							{#if transaction.status === 'proposed'}
-								proposes to pay
+								{locale.page.submission.cell.proposesToPay}
 							{:else if transaction.status === 'approved'}
-								paid
+								{locale.page.submission.cell.paid}
 							{:else if transaction.status === 'canceled'}
-								declined to pay
+								{locale.page.submission.cell.declinedToPay}
 							{/if}
 							<Tokens amount={payment} />
 						{/if}
 					{/if}
 				{:else}
-					<em>anonymized</em>
+					<em>{locale.page.submission.cell.anonymized}</em>
 				{/if}
 			</Row>
 		{:else}
@@ -360,7 +360,7 @@
 					<tr>
 						<td>{role.name}</td>
 						<td class={!assignment.approved ? 'unapproved' : undefined}>
-							{#if assignment.scholar === user.id}you{:else}<ScholarLink
+							{#if assignment.scholar === user.id}{locale.page.submission.cell.you}{:else}<ScholarLink
 									id={assignment.scholar}
 								/>{/if}
 							{#if assignment.completed}<Status

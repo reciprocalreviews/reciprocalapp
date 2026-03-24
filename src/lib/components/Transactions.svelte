@@ -104,7 +104,7 @@
 					size="extra-small"
 					id={transaction.from_venue}
 					name={venues.find((v) => v.id === transaction.from_venue)?.title ?? 'unknown venue'}
-				></VenueLink>{:else}<em>minted</em>{/if}</td
+				></VenueLink>{:else}<em>{locale.view.transactions.cell.minted}</em>{/if}</td
 		>
 		<td
 			>{#if transaction.to_scholar}<ScholarLink
@@ -152,7 +152,7 @@
 					</Dialog>
 				</div>
 			{:else if proposed}
-				<em>Pending approval by editor or minter.</em>
+				<em>{locale.view.transactions.cell.pendingApproval}</em>
 			{:else}
 				—
 			{/if}
@@ -179,7 +179,7 @@
 		<tr>
 			<td colspan="100">
 				{#if allTransactions.length >= count}
-					All transactions loaded.
+					{locale.view.transactions.cell.allLoaded}
 				{:else}
 					<Button
 						strings={(l) => l.view.transactions.button.loadMore}

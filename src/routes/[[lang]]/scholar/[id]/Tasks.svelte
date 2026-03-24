@@ -58,10 +58,10 @@
 		<!-- Show pending invitations -->
 		{#each invitedCommitments as invite, index}
 			<tr data-testid="invitation-{index}">
-				<td>Invitation</td>
+				<td>{locale.view.tasks.cell.kind.invitation}</td>
 				<td>
-					The editor has invited you to the <strong>{invite.name ?? EmptyLabel}</strong>
-					role for <VenueLink id={invite.venueid} name={invite.venue} />. Would you like to
+					<strong>{invite.name ?? EmptyLabel}</strong>
+					<VenueLink id={invite.venueid} name={invite.venue} />
 					<Button
 						strings={(l) => l.view.tasks.button.accept}
 						action={() => handle(db().acceptRoleInvite(scholar, invite.id, 'accepted'))}
@@ -79,10 +79,10 @@
 			{@const pendingForCurrency = pending?.filter((t) => t.currency === currency.id) ?? []}
 			{#if pendingForCurrency.length > 0}
 				<tr data-testid="transaction-{index}">
-					<td>Transaction</td>
+					<td>{locale.view.tasks.cell.kind.transaction}</td>
 					<td>
-						As minter, you have {pendingForCurrency.length} proposed transactions to approve. Approve
-						them in the <CurrencyLink {currency} transactions /> dashboard.
+						{pendingForCurrency.length}
+						<CurrencyLink {currency} transactions /> {locale.view.tasks.cell.pendingTransactionsAfter}
 					</td>
 				</tr>
 			{/if}
@@ -91,7 +91,7 @@
 		<!-- Show pending reviews -->
 		{#each reviews ?? [] as review, index}
 			<tr data-testid="review-{index}">
-				<td>Review</td>
+				<td>{locale.view.tasks.cell.kind.review}</td>
 				<td>
 					<SubmissionLink submission={review.submissions} />
 				</td>
@@ -101,11 +101,10 @@
 		<!-- Show pending assignments -->
 		{#each approvals ?? [] as approval, index}
 			<tr data-testid="assignment-{index}">
-				<td>Assignment</td>
+				<td>{locale.view.tasks.cell.kind.pendingAssignment}</td>
 				<td>
-					<ScholarLink id={approval.scholars} /> pending assignment to <SubmissionLink
-						submission={approval.submissions}
-					/>
+					<ScholarLink id={approval.scholars} />
+					<SubmissionLink submission={approval.submissions} />
 				</td>
 			</tr>
 		{/each}

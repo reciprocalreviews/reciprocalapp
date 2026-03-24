@@ -2,10 +2,10 @@
 	"$schema": "../LocaleText.json",
 	"lang": "en",
 	"shorthand": {
-		"delete": "\u2716",
-		"confirm": "\u2713",
-		"edit": "\u270e",
-		"filter": "\ud83d\udd0e",
+		"delete": "✖",
+		"confirm": "✓",
+		"edit": "✎",
+		"filter": "🔎",
 		"admin": "Admin",
 		"minter": "Minter",
 		"steward": "Steward",
@@ -200,7 +200,7 @@
 				},
 				"approve": {
 					"tip": "Approve this proposal",
-					"label": "Approve\u2026",
+					"label": "Approve…",
 					"warn": "Approve and create this venue?"
 				},
 				"submitSupport": {
@@ -366,27 +366,27 @@
 			"button": {
 				"sortPaymentFirst": {
 					"tip": "Sort by pending first",
-					"label": "\u2193"
+					"label": "↓"
 				},
 				"sortPaymentLast": {
 					"tip": "Sort by pending last",
-					"label": "\u2191"
+					"label": "↑"
 				},
 				"sortTitleAsc": {
 					"tip": "Sort by title",
-					"label": "\u2193"
+					"label": "↓"
 				},
 				"sortTitleDesc": {
 					"tip": "Reverse sort by title",
-					"label": "\u2191"
+					"label": "↑"
 				},
 				"sortIDAsc": {
 					"tip": "Sort by ID",
-					"label": "\u2193"
+					"label": "↓"
 				},
 				"sortIDDesc": {
 					"tip": "Reverse sort by ID",
-					"label": "\u2191"
+					"label": "↑"
 				},
 				"declareConflict": {
 					"tip": "Declare a conflict with this submission. You will no longer see this submission in your bidding list.",
@@ -438,6 +438,13 @@
 			"status": {
 				"paid": "paid",
 				"pending": "{count} pending"
+			},
+			"cell": {
+				"you": "you",
+				"assigned": "assigned",
+				"conflicted": "conflicted",
+				"bids": "bids",
+				"biddingClosed": "bidding closed"
 			}
 		},
 		"submission": {
@@ -513,6 +520,13 @@
 				"expertise": "Expertise",
 				"balance": "Balance",
 				"action": "Action"
+			},
+			"cell": {
+				"proposesToPay": "proposes to pay",
+				"paid": "paid",
+				"declinedToPay": "declined to pay",
+				"anonymized": "anonymized",
+				"you": "you"
 			}
 		},
 		"venue": {
@@ -825,7 +839,7 @@
 				},
 				"cancelInitiate": {
 					"tip": "Cancel this proposed transaction",
-					"label": "Cancel\u2026"
+					"label": "Cancel…"
 				},
 				"cancelConfirm": {
 					"tip": "Cancel this proposed transaction",
@@ -856,6 +870,11 @@
 				"to": "To",
 				"purpose": "Purpose",
 				"actions": "Actions"
+			},
+			"cell": {
+				"minted": "minted",
+				"pendingApproval": "Pending approval by editor or minter.",
+				"allLoaded": "All transactions loaded."
 			}
 		},
 		"roles": {
@@ -881,11 +900,11 @@
 				},
 				"priorityUp": {
 					"tip": "Move this role's priority up",
-					"label": "\u2191"
+					"label": "↑"
 				},
 				"priorityDown": {
 					"tip": "Move this role's priority down",
-					"label": "\u2193"
+					"label": "↓"
 				},
 				"addCompensation": {
 					"tip": "Add compensation for this submission role",
@@ -897,7 +916,7 @@
 				},
 				"volunteer": {
 					"tip": "Volunteer for this role",
-					"label": "Volunteer\u2026"
+					"label": "Volunteer…"
 				},
 				"accept": {
 					"tip": "Accept this invitation",
@@ -917,7 +936,7 @@
 				},
 				"deleteRole": {
 					"tip": "Delete this role",
-					"label": "Delete $delete\u2026",
+					"label": "Delete $delete…",
 					"warn": "Delete this role and all volunteers?"
 				}
 			},
@@ -1013,6 +1032,15 @@
 			"headers": {
 				"kind": "Kind",
 				"task": "Task"
+			},
+			"cell": {
+				"kind": {
+					"invitation": "Invitation",
+					"transaction": "Transaction",
+					"review": "Review",
+					"pendingAssignment": "Pending assignment"
+				},
+				"pendingTransactionsAfter": "pending transactions to approve"
 			}
 		},
 		"commitments": {
@@ -1052,7 +1080,7 @@
 		"notification": {
 			"dismiss": {
 				"tip": "Dismiss notification",
-				"label": "\ud800\udd02"
+				"label": "𐄂"
 			}
 		}
 	},

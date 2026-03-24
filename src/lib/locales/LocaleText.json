@@ -1733,6 +1733,34 @@
                   ],
                   "type": "object"
                 },
+                "cell": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "anonymized": {
+                      "type": "string"
+                    },
+                    "declinedToPay": {
+                      "type": "string"
+                    },
+                    "paid": {
+                      "type": "string"
+                    },
+                    "proposesToPay": {
+                      "type": "string"
+                    },
+                    "you": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "proposesToPay",
+                    "paid",
+                    "declinedToPay",
+                    "anonymized",
+                    "you"
+                  ],
+                  "type": "object"
+                },
                 "checkbox": {
                   "additionalProperties": false,
                   "properties": {
@@ -1918,6 +1946,7 @@
               "required": [
                 "title",
                 "subtitle",
+                "cell",
                 "header",
                 "feedback",
                 "button",
@@ -1973,6 +2002,34 @@
                     "declareConflict",
                     "bid",
                     "unbid"
+                  ],
+                  "type": "object"
+                },
+                "cell": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "assigned": {
+                      "type": "string"
+                    },
+                    "biddingClosed": {
+                      "type": "string"
+                    },
+                    "bids": {
+                      "type": "string"
+                    },
+                    "conflicted": {
+                      "type": "string"
+                    },
+                    "you": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "you",
+                    "assigned",
+                    "conflicted",
+                    "bids",
+                    "biddingClosed"
                   ],
                   "type": "object"
                 },
@@ -2118,6 +2175,7 @@
               },
               "required": [
                 "title",
+                "cell",
                 "feedback",
                 "button",
                 "headers",
@@ -3149,6 +3207,43 @@
                   ],
                   "type": "object"
                 },
+                "cell": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invitation": {
+                          "type": "string"
+                        },
+                        "pendingAssignment": {
+                          "type": "string"
+                        },
+                        "review": {
+                          "type": "string"
+                        },
+                        "transaction": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invitation",
+                        "transaction",
+                        "review",
+                        "pendingAssignment"
+                      ],
+                      "type": "object"
+                    },
+                    "pendingTransactionsAfter": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "pendingTransactionsAfter"
+                  ],
+                  "type": "object"
+                },
                 "headers": {
                   "additionalProperties": false,
                   "properties": {
@@ -3168,7 +3263,8 @@
               },
               "required": [
                 "button",
-                "headers"
+                "headers",
+                "cell"
               ],
               "type": "object"
             },
@@ -3196,6 +3292,26 @@
                     "cancelInitiate",
                     "cancelConfirm",
                     "loadMore"
+                  ],
+                  "type": "object"
+                },
+                "cell": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "allLoaded": {
+                      "type": "string"
+                    },
+                    "minted": {
+                      "type": "string"
+                    },
+                    "pendingApproval": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "minted",
+                    "pendingApproval",
+                    "allLoaded"
                   ],
                   "type": "object"
                 },
@@ -3286,6 +3402,7 @@
               },
               "required": [
                 "feedback",
+                "cell",
                 "button",
                 "field",
                 "status",

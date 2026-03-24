@@ -250,11 +250,11 @@
 											{#if role.isApprover}
 												<!-- Approver? Show the people assigned. -->
 												{#each approvedAssignments as assignment}
-													{#if assignment.scholar === uid}you{:else}<ScholarLink
+													{#if assignment.scholar === uid}{locale.page.submissions.cell.you}{:else}<ScholarLink
 															id={assignment.scholar}
 														/>{/if}
 												{:else}
-													<span><strong>0</strong> assigned</span>
+													<span><strong>0</strong> {locale.page.submissions.cell.assigned}</span>
 												{/each}
 											{/if}
 
@@ -262,11 +262,11 @@
 											{#if role.biddable}
 												{#if submission.authors.includes(uid) || conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id)}
 													<!-- Can't bid if conflicted -->
-													<div><strong>conflicted</strong></div>
+													<div><strong>{locale.page.submissions.cell.conflicted}</strong></div>
 												{:else if roleAssignments === undefined || roleAssignments.length < role.desired_assignments}
 													<!-- If the current scholar is an editor or approver for this role, show the number of bids. -->
 													{#if role.isApprover}
-														<div><strong>{bids.length}</strong> bids</div>
+														<div><strong>{bids.length}</strong> {locale.page.submissions.cell.bids}</div>
 													{/if}
 													{#if scholarsBid === undefined}
 														<!-- No assignments? Allow bidding -->
@@ -296,7 +296,7 @@
 														>
 													{/if}
 												{:else}
-													<div><strong>bidding closed</strong></div>
+													<div><strong>{locale.page.submissions.cell.biddingClosed}</strong></div>
 												{/if}
 											{/if}
 										{:else}

@@ -217,6 +217,13 @@ export type LocaleText = {
 		};
 		submissions: {
 			title: string;
+			cell: {
+				you: string;
+				assigned: string;
+				conflicted: string;
+				bids: string;
+				biddingClosed: string;
+			};
 			feedback: {
 				notLoaded: string;
 				noSubmissions: string;
@@ -254,6 +261,13 @@ export type LocaleText = {
 		submission: {
 			title: string;
 			subtitle: string;
+			cell: {
+				proposesToPay: string;
+				paid: string;
+				declinedToPay: string;
+				anonymized: string;
+				you: string;
+			};
 			header: {
 				authors: string;
 				venue: string;
@@ -530,6 +544,11 @@ export type LocaleText = {
 				noTransactions: string;
 				notLoaded: string;
 			};
+			cell: {
+				minted: string;
+				pendingApproval: string;
+				allLoaded: string;
+			};
 			button: {
 				approve: ButtonText;
 				cancelInitiate: ButtonText;
@@ -616,6 +635,15 @@ export type LocaleText = {
 			headers: {
 				kind: string;
 				task: string;
+			};
+			cell: {
+				kind: {
+					invitation: string;
+					transaction: string;
+					review: string;
+					pendingAssignment: string;
+				};
+				pendingTransactionsAfter: string;
 			};
 		};
 		commitments: {
