@@ -1578,12 +1578,25 @@
                 "subtitle": {
                   "type": "string"
                 },
+                "tip": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ],
+                  "type": "object"
+                },
                 "title": {
                   "type": "string"
                 }
               },
               "required": [
                 "title",
+                "tip",
                 "subtitle",
                 "header",
                 "feedback",
@@ -1688,6 +1701,26 @@
                 "subtitle": {
                   "type": "string"
                 },
+                "tip": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "compensation": {
+                      "type": "string"
+                    },
+                    "inactive": {
+                      "type": "string"
+                    },
+                    "roles": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "inactive",
+                    "compensation",
+                    "roles"
+                  ],
+                  "type": "object"
+                },
                 "title": {
                   "type": "string"
                 }
@@ -1695,6 +1728,7 @@
               "required": [
                 "title",
                 "subtitle",
+                "tip",
                 "header",
                 "feedback",
                 "field",
@@ -1939,6 +1973,18 @@
                 "subtitle": {
                   "type": "string"
                 },
+                "tip": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "newAssignment": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "newAssignment"
+                  ],
+                  "type": "object"
+                },
                 "title": {
                   "type": "string"
                 }
@@ -1946,6 +1992,7 @@
               "required": [
                 "title",
                 "subtitle",
+                "tip",
                 "cell",
                 "header",
                 "feedback",
@@ -3174,9 +3221,22 @@
                     "desiredAssignments"
                   ],
                   "type": "object"
+                },
+                "tip": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "highestPriority": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "highestPriority"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
+                "tip",
                 "feedback",
                 "button",
                 "field",
@@ -3259,11 +3319,24 @@
                     "task"
                   ],
                   "type": "object"
+                },
+                "tip": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "tasks": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "tasks"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
                 "button",
                 "headers",
+                "tip",
                 "cell"
               ],
               "type": "object"

@@ -274,10 +274,7 @@
 		<!-- If the authenticated scholar is an editor or a role approver of one of the roles, then permit them to create new assignments -->
 		{#if isEditor || rolesScholarCanApprove.length > 0}
 			<Form>
-				<Tip
-					>Add a new assignment to this submission. These are restricted to the roles for which you
-					have assignment privileges.</Tip
-				>
+				<Tip><Text path={(l) => l.page.submission.tip.newAssignment} /></Tip>
 				<Options
 					strings={(l) => l.page.submission.options.assignmentRole}
 					bind:value={newAssignmentRole}

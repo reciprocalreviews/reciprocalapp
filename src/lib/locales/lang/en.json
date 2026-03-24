@@ -527,6 +527,9 @@
 				"declinedToPay": "declined to pay",
 				"anonymized": "anonymized",
 				"you": "you"
+			},
+			"tip": {
+				"newAssignment": "Add a new assignment to this submission. These are restricted to the roles for which you have assignment privileges."
 			}
 		},
 		"venue": {
@@ -635,7 +638,12 @@
 					"off": "**Visible assignments**: Authors and conflicted scholars can see who is assigned to review their submissions. This is open reviewing."
 				}
 			},
-			"subtitle": "Settings"
+			"subtitle": "Settings",
+			"tip": {
+				"inactive": "Check the inactive message in the settings below, so your community knows you're busy configuring things.",
+				"compensation": "It is critical that you think carefully about the compensation structure for your venue. Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter newcomers from contributring.",
+				"roles": "Configure your venue's volunteer roles below, create roles such as **reviewer**, **program commitee**, **associate editor** to represent the different kinds of contributions volunteers can make to this venue. Ensure you set total compensation levels for each role to not be higher than the cost of a submission."
+			}
 		},
 		"scholar": {
 			"title": "Anonymous",
@@ -687,7 +695,10 @@
 				"available": "Available",
 				"unavailable": "Unavailable"
 			},
-			"subtitle": "Scholar"
+			"subtitle": "Scholar",
+			"tip": {
+				"status": "Your status is public."
+			}
 		},
 		"currency": {
 			"title": "Currency",
@@ -1016,6 +1027,9 @@
 				"type": "Type",
 				"compensation": "Compensation",
 				"rationale": "Rationale"
+			},
+			"tip": {
+				"highestPriority": "This is the highest priority role. Any volunteers for this role are automatically assigned this role for new submissions."
 			}
 		},
 		"tasks": {
@@ -1041,6 +1055,9 @@
 					"pendingAssignment": "Pending assignment"
 				},
 				"pendingTransactionsAfter": "pending transactions to approve"
+			},
+			"tip": {
+				"tasks": "These are tasks you need to complete."
 			}
 		},
 		"commitments": {

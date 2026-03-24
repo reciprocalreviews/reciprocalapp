@@ -15,6 +15,7 @@
 	import Subheader from '$lib/components/Subheader.svelte';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Table from '$lib/components/Table.svelte';
+	import Text from '$lib/locales/Text.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import VenueLink from '$lib/components/VenueLink.svelte';
 	import { getDB } from '$lib/data/CRUD';
@@ -48,7 +49,7 @@
 {#if invitedCommitments.length === 0 && (pending === null || pending.length === 0) && (reviews === null || reviews.length === 0) && (approvals === null || approvals.length === 0)}
 	<Feedback text={(l) => l.page.scholar.feedback.noTasks}></Feedback>
 {:else}
-	<Tip>These are tasks you need to complete.</Tip>
+	<Tip><Text path={(l) => l.view.tasks.tip.tasks} /></Tip>
 
 	<Table>
 		{#snippet header()}

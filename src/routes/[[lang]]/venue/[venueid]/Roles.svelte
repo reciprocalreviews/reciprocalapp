@@ -190,10 +190,7 @@
 				{/snippet}
 
 				{#if role.priority === 0}
-					<Tip
-						>This is the highest priority role. Any volunteers for this role are automatically
-						assigned this role for new submissions.
-					</Tip>
+					<Tip>{locale.view.roles.tip.highestPriority}</Tip>
 				{/if}
 
 				{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}

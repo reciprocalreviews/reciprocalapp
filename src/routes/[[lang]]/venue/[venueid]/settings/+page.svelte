@@ -91,10 +91,7 @@
 
 		<Subheader icon={SettingsLabel} text={(l) => l.page.settings.header.status} />
 
-		<Tip
-			>Check the inactive message in the settings below, so your community knows you're busy
-			configuring things.</Tip
-		>
+		<Tip><Text path={(l) => l.page.settings.tip.inactive} /></Tip>
 
 		<Checkbox
 			testid="inactive-checkbox"
@@ -119,11 +116,7 @@
 
 		<Subheader icon={SettingsLabel} text={(l) => l.page.settings.header.compensation} />
 
-		<Tip
-			>It is critical that you think carefully about the compensation structure for your venue.
-			Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter
-			newcomers from contributring.</Tip
-		>
+		<Tip><Text path={(l) => l.page.settings.tip.compensation} /></Tip>
 
 		<EditableText
 			text={venue.welcome_amount.toString()}
@@ -143,12 +136,7 @@
 
 		<Subheader id="roles" icon={ScholarLabel} text={(l) => l.page.settings.header.roles} />
 
-		<Tip>
-			Configure your venue's volunteer roles below, create roles such as <strong>reviewer</strong>,
-			<strong>program commitee</strong>, <strong>associate editor</strong> to represent the different
-			kinds of contributions volunteers can make to this venue. Ensure you set total compensation levels
-			for each role to not be higher than the cost of a submission.
-		</Tip>
+		<Tip><Text markdown path={(l) => l.page.settings.tip.roles} /></Tip>
 
 		<Checkbox
 			on={venue.anonymous_assignments}

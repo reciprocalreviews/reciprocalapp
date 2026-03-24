@@ -31,6 +31,7 @@
 	import Tasks from './Tasks.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
 	import Text from '$lib/locales/Text.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	let {
 		scholar,
@@ -62,6 +63,7 @@
 
 	const db = getDB();
 	const auth = getAuth();
+	const locale = getLocaleContext();
 
 	// Editable if the user is the scholar being viewed.
 	let editable = $derived(auth.getUserID() === scholar.getID());
@@ -96,9 +98,8 @@
 	{#if editable}
 		{@const time = scholar.getStatusTime()}
 		<Tip
-			>Your status is public. {#if time}You last updated it on {new Date(
-					Date.parse(time)
-				).toLocaleString()}.{/if}</Tip
+			>{locale.page.scholar.tip.status}
+			{#if time}{new Date(Date.parse(time)).toLocaleString()}{/if}</Tip
 		>
 		<Checkbox
 			on={scholar.isAvailable()}

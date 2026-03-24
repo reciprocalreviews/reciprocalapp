@@ -261,6 +261,9 @@ export type LocaleText = {
 		submission: {
 			title: string;
 			subtitle: string;
+			tip: {
+				newAssignment: string;
+			};
 			cell: {
 				proposesToPay: string;
 				paid: string;
@@ -358,6 +361,11 @@ export type LocaleText = {
 		settings: {
 			title: string;
 			subtitle: string;
+			tip: {
+				inactive: string;
+				compensation: string;
+				roles: string;
+			};
 			header: {
 				status: string;
 				roles: string;
@@ -380,6 +388,9 @@ export type LocaleText = {
 		};
 		scholar: {
 			title: string;
+			tip: {
+				status: string;
+			};
 			subtitle: string;
 			header: {
 				submissions: string;
@@ -574,6 +585,9 @@ export type LocaleText = {
 			};
 		};
 		roles: {
+			tip: {
+				highestPriority: string;
+			};
 			feedback: {
 				notInvited: string;
 				consult: string;
@@ -635,6 +649,9 @@ export type LocaleText = {
 			headers: {
 				kind: string;
 				task: string;
+			};
+			tip: {
+				tasks: string;
 			};
 			cell: {
 				kind: {
