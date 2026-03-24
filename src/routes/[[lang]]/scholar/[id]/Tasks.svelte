@@ -19,6 +19,7 @@
 	import VenueLink from '$lib/components/VenueLink.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { handle } from '$routes/feedback.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	let {
 		commitments,
@@ -37,6 +38,7 @@
 	} = $props();
 
 	const db = getDB();
+	const locale = getLocaleContext();
 
 	const invitedCommitments = $derived(commitments.filter((c) => c.invited));
 </script>
@@ -50,8 +52,8 @@
 
 	<Table>
 		{#snippet header()}
-			<th>Kind</th>
-			<th>Task</th>
+			<th>{locale.view.tasks.headers.kind}</th>
+			<th>{locale.view.tasks.headers.task}</th>
 		{/snippet}
 		<!-- Show pending invitations -->
 		{#each invitedCommitments as invite, index}

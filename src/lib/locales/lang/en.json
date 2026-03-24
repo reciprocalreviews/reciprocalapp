@@ -272,6 +272,11 @@
 				"active": "active",
 				"inactive": "inactive"
 			},
+			"headers": {
+				"active": "Active",
+				"name": "Name",
+				"expertise": "Expertise"
+			},
 			"subtitle": "Volunteers"
 		},
 		"venueTransactions": {
@@ -424,6 +429,12 @@
 					"placeholder": "title, id..."
 				}
 			},
+			"headers": {
+				"payment": "Payment",
+				"title": "Title",
+				"expertise": "Expertise",
+				"id": "ID"
+			},
 			"status": {
 				"paid": "paid",
 				"pending": "{count} pending"
@@ -495,6 +506,13 @@
 				"assignmentRole": {
 					"label": "Role"
 				}
+			},
+			"headers": {
+				"role": "Role",
+				"scholar": "Scholar",
+				"expertise": "Expertise",
+				"balance": "Balance",
+				"action": "Action"
 			}
 		},
 		"venue": {
@@ -560,6 +578,11 @@
 				"compensationRole": {
 					"label": "Role"
 				}
+			},
+			"headers": {
+				"type": "Type",
+				"description": "Description",
+				"revisionOf": "Revision of"
 			}
 		},
 		"settings": {
@@ -824,6 +847,15 @@
 				"proposed": "proposed",
 				"approved": "approved",
 				"canceled": "canceled"
+			},
+			"headers": {
+				"status": "Status",
+				"tokens": "Tokens",
+				"scholar": "Scholar",
+				"from": "From",
+				"to": "To",
+				"purpose": "Purpose",
+				"actions": "Actions"
 			}
 		},
 		"roles": {
@@ -960,6 +992,11 @@
 				"approver": {
 					"label": "What role can approve assignments to this role for a submission, other than the editor?"
 				}
+			},
+			"headers": {
+				"type": "Type",
+				"compensation": "Compensation",
+				"rationale": "Rationale"
 			}
 		},
 		"tasks": {
@@ -972,6 +1009,16 @@
 					"tip": "Decline this invitation",
 					"label": "Decline"
 				}
+			},
+			"headers": {
+				"kind": "Kind",
+				"task": "Task"
+			}
+		},
+		"commitments": {
+			"headers": {
+				"venue": "Venue",
+				"role": "Role"
 			}
 		}
 	},

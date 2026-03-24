@@ -17,6 +17,7 @@
 	import type { SubmissionRow } from '$data/types';
 	import TextField from '$lib/components/TextField.svelte';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -83,6 +84,7 @@
 	let idSortIncreasing = $state(true);
 	let sortOrder = $state<('payment' | 'title' | 'id')[]>(['title', 'id', 'payment']);
 	let filter = $state('');
+	const locale = getLocaleContext();
 
 	/** Sort and filter submissions based on the configuration */
 	function sortedAndFiltered(submissions: SubmissionRow[]): SubmissionRow[] {
@@ -157,7 +159,7 @@
 				<Table full>
 					{#snippet header()}
 						<th
-							>Payment <Button
+							>{locale.page.submissions.headers.payment} <Button
 								small
 								background={false}
 								strings={(l) =>
@@ -171,7 +173,7 @@
 							></th
 						>
 						<th
-							>Title <Button
+							>{locale.page.submissions.headers.title} <Button
 								small
 								background={false}
 								strings={(l) =>
@@ -184,9 +186,9 @@
 								}}>{titleSortIncreasing ? DownLabel : UpLabel}</Button
 							></th
 						>
-						<th>Expertise</th>
+						<th>{locale.page.submissions.headers.expertise}</th>
 						<th
-							>ID <Button
+							>{locale.page.submissions.headers.id} <Button
 								small
 								background={false}
 								strings={(l) =>

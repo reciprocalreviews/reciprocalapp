@@ -31,6 +31,7 @@
 	import Options from '$lib/components/Options.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
 	import Text from '$lib/locales/Text.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -60,6 +61,7 @@
 
 	/** Get the database connection */
 	const db = getDB();
+	const locale = getLocaleContext();
 
 	/** Whether the current scholar is an editor */
 	let isAdmin = $derived(venue !== null && user !== null && venue.admins.includes(user.id));
@@ -337,7 +339,11 @@
 
 		<Table full>
 			{#snippet header()}
-				<th>Role</th><th>Scholar</th><th>Expertise</th><th>Balance</th><th>Action</th>
+				<th>{locale.page.submission.headers.role}</th>
+				<th>{locale.page.submission.headers.scholar}</th>
+				<th>{locale.page.submission.headers.expertise}</th>
+				<th>{locale.page.submission.headers.balance}</th>
+				<th>{locale.page.submission.headers.action}</th>
 			{/snippet}
 
 			<!-- Sort roles by priority -->

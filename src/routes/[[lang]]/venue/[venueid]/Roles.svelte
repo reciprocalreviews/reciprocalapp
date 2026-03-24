@@ -206,9 +206,9 @@
 
 				<Table>
 					{#snippet header()}
-						<th style="width: 20%">Type</th>
-						<th style="width: 40%">Compensation</th>
-						<th style="width: 40%">Rationale</th>
+						<th style="width: 20%">{locale.view.roles.headers.type}</th>
+						<th style="width: 40%">{locale.view.roles.headers.compensation}</th>
+						<th style="width: 40%">{locale.view.roles.headers.rationale}</th>
 					{/snippet}
 					{#each types as type}
 						{@const comp = compensation?.find(

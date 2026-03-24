@@ -12,11 +12,13 @@
 	import { EmptyLabel, ErrorLabel, ScholarLabel, VenueLabel } from '$lib/components/Labels.js';
 	import TextField from '$lib/components/TextField.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	let { data } = $props();
 	const { venue, commitments, roles } = $derived(data);
 
 	let filter = $state('');
+	const locale = getLocaleContext();
 
 	function exportCSV() {
 		if (commitments === null) return;
@@ -84,9 +86,9 @@
 		{:else}
 			<Table full>
 				{#snippet header()}
-					<th>Active</th>
-					<th>Name</th>
-					<th>Expertise</th>
+					<th>{locale.page.volunteers.headers.active}</th>
+					<th>{locale.page.volunteers.headers.name}</th>
+					<th>{locale.page.volunteers.headers.expertise}</th>
 				{/snippet}
 				{#each rolesIDs as role, roleIndex}
 					{@const roleCommitments = commitments.filter((c) => c.roleid === role)}

@@ -170,6 +170,11 @@ export type LocaleText = {
 				active: string;
 				inactive: string;
 			};
+			headers: {
+				active: string;
+				name: string;
+				expertise: string;
+			};
 		};
 		venueTransactions: {
 			title: string;
@@ -228,6 +233,12 @@ export type LocaleText = {
 				bid: ButtonText;
 				unbid: ButtonText;
 			};
+			headers: {
+				payment: string;
+				title: string;
+				expertise: string;
+				id: string;
+			};
 			field: {
 				title: NotedTextFieldText & { invalid: string };
 				expertise: NotedTextFieldText;
@@ -282,6 +293,13 @@ export type LocaleText = {
 				submissionType: OptionsText;
 				assignmentRole: OptionsText;
 			};
+			headers: {
+				role: string;
+				scholar: string;
+				expertise: string;
+				balance: string;
+				action: string;
+			};
 		};
 		venue: {
 			title: string;
@@ -316,6 +334,11 @@ export type LocaleText = {
 			};
 			options: {
 				compensationRole: OptionsText;
+			};
+			headers: {
+				type: string;
+				description: string;
+				revisionOf: string;
 			};
 		};
 		settings: {
@@ -521,6 +544,15 @@ export type LocaleText = {
 				approved: string;
 				canceled: string;
 			};
+			headers: {
+				status: string;
+				tokens: string;
+				scholar: string;
+				from: string;
+				to: string;
+				purpose: string;
+				actions: string;
+			};
 		};
 		roles: {
 			feedback: {
@@ -570,11 +602,26 @@ export type LocaleText = {
 			options: {
 				approver: OptionsText;
 			};
+			headers: {
+				type: string;
+				compensation: string;
+				rationale: string;
+			};
 		};
 		tasks: {
 			button: {
 				accept: ButtonText;
 				decline: ButtonText;
+			};
+			headers: {
+				kind: string;
+				task: string;
+			};
+		};
+		commitments: {
+			headers: {
+				venue: string;
+				role: string;
 			};
 		};
 	};

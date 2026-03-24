@@ -1832,6 +1832,34 @@
                   ],
                   "type": "object"
                 },
+                "headers": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "action": {
+                      "type": "string"
+                    },
+                    "balance": {
+                      "type": "string"
+                    },
+                    "expertise": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "scholar": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "scholar",
+                    "expertise",
+                    "balance",
+                    "action"
+                  ],
+                  "type": "object"
+                },
                 "options": {
                   "additionalProperties": false,
                   "properties": {
@@ -1896,7 +1924,8 @@
                 "field",
                 "checkbox",
                 "status",
-                "options"
+                "options",
+                "headers"
               ],
               "type": "object"
             },
@@ -2043,6 +2072,30 @@
                   ],
                   "type": "object"
                 },
+                "headers": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "expertise": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "payment": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "payment",
+                    "title",
+                    "expertise",
+                    "id"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -2067,6 +2120,7 @@
                 "title",
                 "feedback",
                 "button",
+                "headers",
                 "field",
                 "status"
               ],
@@ -2233,6 +2287,26 @@
                   ],
                   "type": "object"
                 },
+                "headers": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "revisionOf": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "description",
+                    "revisionOf"
+                  ],
+                  "type": "object"
+                },
                 "options": {
                   "additionalProperties": false,
                   "properties": {
@@ -2264,7 +2338,8 @@
                 "feedback",
                 "field",
                 "card",
-                "options"
+                "options",
+                "headers"
               ],
               "type": "object"
             },
@@ -2552,6 +2627,26 @@
                   ],
                   "type": "object"
                 },
+                "headers": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "active": {
+                      "type": "string"
+                    },
+                    "expertise": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "active",
+                    "name",
+                    "expertise"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -2585,7 +2680,8 @@
                 "feedback",
                 "button",
                 "field",
-                "status"
+                "status",
+                "headers"
               ],
               "type": "object"
             }
@@ -2660,6 +2756,31 @@
         "view": {
           "additionalProperties": false,
           "properties": {
+            "commitments": {
+              "additionalProperties": false,
+              "properties": {
+                "headers": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "role": {
+                      "type": "string"
+                    },
+                    "venue": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "venue",
+                    "role"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "headers"
+              ],
+              "type": "object"
+            },
             "gift": {
               "additionalProperties": false,
               "properties": {
@@ -2948,6 +3069,26 @@
                   ],
                   "type": "object"
                 },
+                "headers": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "compensation": {
+                      "type": "string"
+                    },
+                    "rationale": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "compensation",
+                    "rationale"
+                  ],
+                  "type": "object"
+                },
                 "options": {
                   "additionalProperties": false,
                   "properties": {
@@ -2984,7 +3125,8 @@
                 "card",
                 "checkbox",
                 "slider",
-                "options"
+                "options",
+                "headers"
               ],
               "type": "object"
             },
@@ -3006,10 +3148,27 @@
                     "decline"
                   ],
                   "type": "object"
+                },
+                "headers": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "type": "string"
+                    },
+                    "task": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "task"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
-                "button"
+                "button",
+                "headers"
               ],
               "type": "object"
             },
@@ -3068,6 +3227,42 @@
                   ],
                   "type": "object"
                 },
+                "headers": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "actions": {
+                      "type": "string"
+                    },
+                    "from": {
+                      "type": "string"
+                    },
+                    "purpose": {
+                      "type": "string"
+                    },
+                    "scholar": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "to": {
+                      "type": "string"
+                    },
+                    "tokens": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "tokens",
+                    "scholar",
+                    "from",
+                    "to",
+                    "purpose",
+                    "actions"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -3093,7 +3288,8 @@
                 "feedback",
                 "button",
                 "field",
-                "status"
+                "status",
+                "headers"
               ],
               "type": "object"
             }
@@ -3102,7 +3298,8 @@
             "gift",
             "transactions",
             "roles",
-            "tasks"
+            "tasks",
+            "commitments"
           ],
           "type": "object"
         }

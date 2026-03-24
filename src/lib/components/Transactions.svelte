@@ -14,6 +14,7 @@
 	import TextField from './TextField.svelte';
 	import Tokens from './Tokens.svelte';
 	import VenueLink from './VenueLink.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	let {
 		transactions,
@@ -37,6 +38,7 @@
 	// Get the current user
 	const db = getDB();
 	const auth = getAuth();
+	const locale = getLocaleContext();
 
 	// Editable if the user is the scholar being viewed.
 	let userid = $derived(auth.getUserID());
@@ -163,13 +165,13 @@
 {:else}
 	<Table full>
 		{#snippet header()}
-			<th>Status</th>
-			<th>Tokens</th>
-			<th>Scholar</th>
-			<th>From</th>
-			<th>To</th>
-			<th>Purpose</th>
-			<th>Actions</th>
+			<th>{locale.view.transactions.headers.status}</th>
+			<th>{locale.view.transactions.headers.tokens}</th>
+			<th>{locale.view.transactions.headers.scholar}</th>
+			<th>{locale.view.transactions.headers.from}</th>
+			<th>{locale.view.transactions.headers.to}</th>
+			<th>{locale.view.transactions.headers.purpose}</th>
+			<th>{locale.view.transactions.headers.actions}</th>
 		{/snippet}
 		{#each allTransactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) as transaction, index}
 			{@render row(transaction, index)}

@@ -153,9 +153,9 @@
 		{:else}
 			<Table>
 				{#snippet header()}
-					<th>Type</th>
-					<th>Description</th>
-					<th>Revision of</th>
+					<th>{locale.page.venue.headers.type}</th>
+					<th>{locale.page.venue.headers.description}</th>
+					<th>{locale.page.venue.headers.revisionOf}</th>
 					{#if isAdmin && types.length > 1}<th></th>{/if}
 				{/snippet}
 				{#each types as type, index}

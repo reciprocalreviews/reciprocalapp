@@ -8,6 +8,7 @@
 	import Subheader from '$lib/components/Subheader.svelte';
 	import { ScholarLabel } from '$lib/components/Labels';
 	import Text from '$lib/locales/Text.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	let {
 		commitments,
@@ -20,6 +21,8 @@
 		minting: CurrencyRow[] | null;
 		self: boolean;
 	} = $props();
+
+	const locale = getLocaleContext();
 </script>
 
 <Subheader icon={ScholarLabel} text={(l) => l.page.scholar.header.volunteering}></Subheader>
@@ -42,8 +45,8 @@
 
 	<Table>
 		{#snippet header()}
-			<th>Venue</th>
-			<th>Role</th>
+			<th>{locale.view.commitments.headers.venue}</th>
+			<th>{locale.view.commitments.headers.role}</th>
 		{/snippet}
 
 		<!-- Any admin roles? -->

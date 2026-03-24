@@ -8,7 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Changed
 
 - Updated internal tooling for stability.
-- Localized all buttons, text fields, notes, cards, sliders, drop downs, and page headers.
+- Localized all buttons, text fields, notes, cards, sliders, drop downs, tables, and page headers.
 
 ## 0.3.7 - 2026-03-15
 
