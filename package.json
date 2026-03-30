@@ -12,7 +12,7 @@
 		"sync": "svelte-kit sync",
 		"test:end": "playwright test",
 		"test:unit": "vitest",
-		"start": "supabase start --exclude storage-api,imgproxy,logflare,supavisor && npm run functions",
+		"start": "supabase start --ignore-health-check --exclude storage-api,imgproxy,logflare,supavisor && npm run functions",
 		"functions": "supabase functions serve --no-verify-jwt --env-file .env &",
 		"stop": "supabase stop",
 		"reset": "supabase db reset && npm run types",
