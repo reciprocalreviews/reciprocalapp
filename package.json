@@ -33,14 +33,14 @@
 		"@sveltejs/adapter-vercel": "^6",
 		"@sveltejs/kit": "^2",
 		"@sveltejs/vite-plugin-svelte": "^7",
-		"ajv-cli": "^5.0.0",
+		"ajv-cli": "^5",
 		"prettier": "^3",
 		"prettier-plugin-sql": "^0",
 		"prettier-plugin-svelte": "^3",
 		"supabase": "^2",
 		"svelte": "^5",
 		"svelte-check": "^4",
-		"ts-json-schema-generator": "^2.9.0",
+		"ts-json-schema-generator": "^2",
 		"tslib": "^2",
 		"typescript": "^5",
 		"vite": "^8",
@@ -50,6 +50,6 @@
 	"dependencies": {
 		"@supabase/ssr": "^0",
 		"@supabase/supabase-js": "^2",
-		"marked": "^17.0.4"
+		"marked": "^17"
 	}
 }
