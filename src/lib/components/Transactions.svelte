@@ -15,6 +15,7 @@
 	import Tokens from './Tokens.svelte';
 	import VenueLink from './VenueLink.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
+	import Paragraph from './Paragraph.svelte';
 
 	let {
 		transactions,
@@ -83,16 +84,15 @@
 		<td>
 			<Status
 				good={transaction.status === 'approved'}
-				label={(l) => transaction.status === 'approved' ? l.view.transactions.status.approved : transaction.status === 'canceled' ? l.view.transactions.status.canceled : l.view.transactions.status.proposed}
+				label={(l) =>
+					transaction.status === 'approved'
+						? l.view.transactions.status.approved
+						: transaction.status === 'canceled'
+							? l.view.transactions.status.canceled
+							: l.view.transactions.status.proposed}
 			/>
 		</td>
-		<td
-			>{#if transaction.tokens === null}unknown{:else}<Tokens
-					amount={transaction.tokens.length}
-					debit={isDebit(transaction)}
-					{currency}
-				/>{/if}</td
-		>
+		<td><Tokens amount={transaction.tokens.length} debit={isDebit(transaction)} {currency} /></td>
 		<td>
 			<ScholarLink size="extra-small" id={transaction.creator} />
 		</td>
@@ -103,7 +103,8 @@
 				/>{:else if transaction.from_venue}<VenueLink
 					size="extra-small"
 					id={transaction.from_venue}
-					name={venues.find((v) => v.id === transaction.from_venue)?.title ?? 'unknown venue'}
+					name={venues.find((v) => v.id === transaction.from_venue)?.title ??
+						locale.view.transactions.error.unknownVenue}
 				></VenueLink>{:else}<em>{locale.view.transactions.cell.minted}</em>{/if}</td
 		>
 		<td
@@ -113,7 +114,8 @@
 				/>{:else if transaction.to_venue}<VenueLink
 					size="extra-small"
 					id={transaction.to_venue}
-					name={venues.find((v) => v.id === transaction.to_venue)?.title ?? 'unknown venue'}
+					name={venues.find((v) => v.id === transaction.to_venue)?.title ??
+						locale.view.transactions.error.unknownVenue}
 				></VenueLink>{/if}</td
 		>
 		<td><Note path={() => transaction.purpose} /></td>
@@ -131,7 +133,7 @@
 						action={() => (showCancel = true)}
 					/>
 					<Dialog bind:show={showCancel}>
-						<p>Indicate a reason and we'll append it to the transaction message.</p>
+						<Paragraph text={(l) => l.view.transactions.paragraph.cancelReason} />
 						<TextField
 							strings={(l) => l.view.transactions.field.cancelReason}
 							bind:text={cancelReason}
@@ -185,7 +187,7 @@
 						strings={(l) => l.view.transactions.button.loadMore}
 						action={() => loadMore()}
 						active={!loading}
-						>{#if loading}Loading…{:else}Load more transactions...{/if}</Button
+						>{#if loading}…{/if}</Button
 					>
 				{/if}
 			</td>

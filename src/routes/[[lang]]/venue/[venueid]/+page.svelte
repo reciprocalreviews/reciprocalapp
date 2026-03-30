@@ -16,6 +16,7 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import Options from '$lib/components/Options.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import { validURL } from '$lib/validation';
@@ -48,7 +49,7 @@
 
 {#if venue === null}
 	<Page icon={ErrorLabel} title={(l) => l.page.venue.unknownTitle} breadcrumbs={[]}>
-		<p>Unable to find this venue.</p>
+		<Paragraph text={(l) => l.page.venue.paragraph.notFound} />
 	</Page>
 {:else}
 	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
@@ -75,9 +76,10 @@
 				edit={(text) => db().editVenueDescription(venue.id, text)}
 			/>
 		{:else}
-			<p>
-				{#if venue.description.length === 0}<em>No description.</em>{:else}{venue.description}{/if}
-			</p>
+			<Paragraph
+				text={(l) => venue.description.length === 0 ? l.page.venue.paragraph.noDescription : l.page.venue.paragraph.description}
+				inputs={venue.description.length === 0 ? {} : { description: venue.description }}
+			/>
 		{/if}
 
 		<ul>
@@ -133,11 +135,7 @@
 
 		<Subheader icon={ScholarLabel} text={(l) => l.page.venue.header.submissionTypes} />
 
-		<p>
-			These are the submission types for this venue. Each role can have a different amount of
-			compensation for each type (e.g., reviews of new submissions may be compensated more than
-			re-reviews).
-		</p>
+		<Paragraph text={(l) => l.page.venue.paragraph.submissionTypes} />
 
 		{#if isAdmin}
 			<Button
@@ -221,7 +219,7 @@
 		{#if roles === null || currency === null}
 			<Feedback error text={(l) => l.page.venue.feedback.rolesNotLoaded}></Feedback>
 		{:else}
-			<p>See <Link to="/venue/{venue.id}/volunteers">all volunteers</Link> for this venue.</p>
+			<Paragraph text={(l) => l.page.venue.paragraph.allVolunteers} inputs={{ volunteersLink: `/venue/${venue.id}/volunteers` }} />
 
 			<Roles
 				{venue}
@@ -237,11 +235,7 @@
 
 			{#if isVolunteer && scholar}
 				<Form>
-					<p>
-						Are you <strong>missing compensation</strong> for a role you accepted? It's possible it hasn't
-						been entered by the scholar responsible. You can request compensation for it here, and the
-						scholar responsible will be notified.
-					</p>
+					<Paragraph text={(l) => l.page.venue.paragraph.missingCompensation} />
 
 					<TextField
 						strings={(l) => ({

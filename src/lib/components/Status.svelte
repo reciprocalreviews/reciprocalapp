@@ -2,13 +2,16 @@
 	import type LocaleText from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
 
-	let { good = true, label }: {
+	let {
+		good = true,
+		label
+	}: {
 		good?: boolean;
 		label: (l: LocaleText) => string;
 	} = $props();
 </script>
 
-<span class="status" class:good><Text path={label} markdown /></span>
+<span class="status" class:good><Text path={label} /></span>
 
 <style>
 	.status {

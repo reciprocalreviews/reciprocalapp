@@ -3,6 +3,13 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.3.9 - 2026-03-29
+
+### Changed
+
+- Updated internal tooling for stability.
+- Localized card toggle, tokens component, all paragraph text, and other lingering fallback and default text. Localization should be complete.
+
 ## 0.3.8 - 2026-03-22
 
 ### Changed

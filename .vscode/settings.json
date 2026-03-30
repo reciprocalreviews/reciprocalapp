@@ -1,4 +1,8 @@
 {
 	"deno.enable": true,
-	"deno.enablePaths": ["supabase/functions"]
+	"deno.enablePaths": ["supabase/functions"],
+	"editor.codeActionsOnSave": {
+		"source.organizeImports": "explicit",
+		"source.fixAll": "explicit"
+	}
 }

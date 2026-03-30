@@ -6,6 +6,7 @@
 	import Link from '$lib/components/Link.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
 	import { page } from '$app/state';
 	import { ErrorLabel, VenueLabel } from '$lib/components/Labels';
@@ -31,7 +32,7 @@
 		title={(l) => l.page.venue.unknownTitle}
 		breadcrumbs={[[`/venues`, 'Venue']]}
 	>
-		<p>Unable to find this venue.</p>
+		<Paragraph text={(l) => l.page.venue.paragraph.notFound} />
 	</Page>
 {:else if venue.inactive !== null && !venue.admins.includes(data.scholar?.id ?? '')}
 	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>

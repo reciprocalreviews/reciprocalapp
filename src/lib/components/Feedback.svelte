@@ -11,12 +11,12 @@
 		error?: boolean;
 		inline?: boolean;
 		testid?: string;
-		text: string | ((locale: LocaleText) => string | string[]);
+		text: (locale: LocaleText) => string | string[];
 	} = $props();
 </script>
 
 {#snippet content()}
-	{#if typeof text === 'function'}<Text markdown path={text} />{:else}{text}{/if}
+	<Text markdown path={text} />
 {/snippet}
 
 {#if inline}

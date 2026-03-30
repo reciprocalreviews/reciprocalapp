@@ -20,6 +20,6 @@ export const ScholarLabel = monoEmoji('👤');
 export const IdeaLabel = monoEmoji('💡');
 export const ErrorLabel = monoEmoji('⚠️');
 
-export function plural(text: string, count: number) {
+export function plural(text: string, count: number | undefined | null) {
 	return count === 1 ? text : text + 's';
 }

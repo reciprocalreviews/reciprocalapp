@@ -1,9 +1,7 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import Text from '$lib/locales/Text.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import VenueLink from '$lib/components/VenueLink.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Tag from '$lib/components/Tag.svelte';
@@ -13,6 +11,7 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 
 	let { data } = $props();
 	const { venue, commitments, roles } = $derived(data);
@@ -64,12 +63,7 @@
 {:else}
 	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}<Text path={(l) => l.page.volunteers.subtitle} />{/snippet}
-		<p>
-			These are scholars that have volunteered to review for <VenueLink
-				id={page.params.venueid ?? ''}
-				name={venue.title}
-			/>.
-		</p>
+		<Paragraph text={(l) => l.page.volunteers.paragraph.intro} />
 
 		<TextField strings={(l) => l.page.volunteers.field.filter} bind:text={filter}></TextField>
 
@@ -112,7 +106,10 @@
 								<td
 									><Status
 										good={volunteer.active}
-										label={(l) => volunteer.active ? l.page.volunteers.status.active : l.page.volunteers.status.inactive}
+										label={(l) =>
+											volunteer.active
+												? l.page.volunteers.status.active
+												: l.page.volunteers.status.inactive}
 									/></td
 								>
 								<td><ScholarLink id={volunteer.scholarid} /></td>

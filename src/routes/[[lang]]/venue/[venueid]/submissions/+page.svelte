@@ -18,6 +18,7 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
 	import { getLocaleContext } from '$routes/Contexts';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -140,9 +141,7 @@
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 
 		<!-- Provide a clear link to the new submission page. -->
-		<p>
-			Have a submission to pay for? Pay for a <Link to={`submissions/new`}>new submission</Link>.
-		</p>
+		<Paragraph text={(l) => l.page.submissions.paragraph.newSubmission} />
 
 		<TextField strings={(l) => l.page.submissions.field.filter} bind:text={filter}></TextField>
 

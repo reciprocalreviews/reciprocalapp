@@ -3,6 +3,7 @@
 	import Page from '$lib/components/Page.svelte';
 	import { IdeaLabel } from '$lib/components/Labels';
 	import Subheader from '$lib/components/Subheader.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 
 	// Get the dated updates in reverse chronological order.
 	const datedUpdates = updates
@@ -75,17 +76,7 @@
 {/snippet}
 
 <Page icon={IdeaLabel} title={(l) => l.page.updates.title} breadcrumbs={[['/', 'Home']]}>
-	<p>
-		Here are the updates to Reciprocal Reviews. Have an <a
-			href="https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=1-defect.yml"
-			>defect</a
-		>
-		to report or
-		<a
-			href="https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=2-improvement.yml"
-			>improvement</a
-		> to suggest?
-	</p>
+	<Paragraph text={(l) => l.page.updates.paragraph.intro} />
 
 	{#each datedUpdates as update}
 		<Subheader

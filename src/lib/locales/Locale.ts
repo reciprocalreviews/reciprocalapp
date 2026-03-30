@@ -80,6 +80,16 @@ export type LocaleText = {
 			feedback: string;
 		};
 	};
+	widget: {
+		card: {
+			expand: string;
+			collapse: string;
+		};
+		tokens: {
+			single: string;
+			plural: string;
+		};
+	};
 	page: {
 		error: {
 			title: string;
@@ -150,6 +160,12 @@ export type LocaleText = {
 				url: TextFieldText;
 				support: TextFieldText;
 			};
+			paragraph: {
+				editorsDescription: string;
+				approved: string;
+				proposed: string;
+				census: string;
+			};
 		};
 		volunteers: {
 			title: string;
@@ -175,6 +191,9 @@ export type LocaleText = {
 				name: string;
 				expertise: string;
 			};
+			paragraph: {
+				intro: string;
+			};
 		};
 		venueTransactions: {
 			title: string;
@@ -182,9 +201,15 @@ export type LocaleText = {
 			feedback: {
 				transactionsNotLoaded: string;
 			};
+			paragraph: {
+				count: string;
+			};
 		};
 		newSubmission: {
 			title: string;
+			paragraph: {
+				intro: string;
+			};
 			feedback: {
 				notLoaded: string;
 				duplicateScholars: string;
@@ -213,6 +238,11 @@ export type LocaleText = {
 			};
 			options: {
 				submissionType: OptionsText;
+			};
+			error: {
+				balanceCheck: string;
+				notFound: string;
+				insufficentFunds: string;
 			};
 		};
 		submissions: {
@@ -257,6 +287,9 @@ export type LocaleText = {
 				paid: string;
 				pending: string;
 			};
+			paragraph: {
+				newSubmission: string;
+			};
 		};
 		submission: {
 			title: string;
@@ -283,6 +316,9 @@ export type LocaleText = {
 				missingAuthors: string;
 				noAuthors: string;
 				noExpertise: string;
+				invalidRole: string;
+				scholarNotFound: string;
+				alreadyAssigned: string;
 			};
 			button: {
 				createAssignment: ButtonText;
@@ -347,7 +383,7 @@ export type LocaleText = {
 			};
 			card: {
 				setup: CardText;
-				gift: CardText;
+				gift: CardText & { purpose: string; success: string };
 			};
 			options: {
 				compensationRole: OptionsText;
@@ -356,6 +392,14 @@ export type LocaleText = {
 				type: string;
 				description: string;
 				revisionOf: string;
+			};
+			paragraph: {
+				notFound: string;
+				submissionTypes: string;
+				missingCompensation: string;
+				noDescription: string;
+				description: string;
+				allVolunteers: string;
 			};
 		};
 		settings: {
@@ -384,6 +428,10 @@ export type LocaleText = {
 			checkbox: {
 				inactive: string;
 				anonymousAssignments: CheckboxOnOff;
+			};
+			paragraph: {
+				welcome: string;
+				setupIntro: string;
 			};
 		};
 		scholar: {
@@ -417,7 +465,7 @@ export type LocaleText = {
 				email: NotedTextFieldText;
 			};
 			card: {
-				gift: CardText;
+				gift: CardText & { purpose: string; success: string };
 			};
 			checkbox: {
 				available: string;
@@ -425,6 +473,10 @@ export type LocaleText = {
 			status: {
 				available: string;
 				unavailable: string;
+			};
+			paragraph: {
+				youHave: string;
+				thisScholarHas: string;
 			};
 		};
 		currency: {
@@ -468,12 +520,23 @@ export type LocaleText = {
 			options: {
 				tokenOwner: OptionsText;
 			};
+			paragraph: {
+				mintersDescription: string;
+				venuesDescription: string;
+				allTokens: string;
+			};
 		};
 		currencyTransactions: {
 			subtitle: string;
+			paragraph: {
+				count: string;
+			};
 		};
 		scholarTransactions: {
 			subtitle: string;
+			paragraph: {
+				count: string;
+			};
 		};
 		login: {
 			title: string;
@@ -487,6 +550,15 @@ export type LocaleText = {
 			field: {
 				email: TextFieldText;
 				password: TextFieldText;
+			};
+			feedback: {
+				orcidNote: string;
+				checkEmail: string;
+				sendPasswordError: string;
+				signInError: string;
+			};
+			paragraph: {
+				loggedIn: string;
 			};
 		};
 		proposeVenue: {
@@ -509,6 +581,10 @@ export type LocaleText = {
 			options: {
 				currency: OptionsText & { createNew: string };
 			};
+			paragraph: {
+				reviewedBy: string;
+				howToPropose: string;
+			};
 		};
 		about: {
 			title: string;
@@ -519,9 +595,20 @@ export type LocaleText = {
 			feedback: {
 				stewardsNotLoaded: string;
 			};
+			paragraph: {
+				community: string;
+				stewardsIntro: string;
+				currentStewards: string;
+				joinStewards: string;
+				theoryIntro: string;
+				closing: string;
+			};
 		};
 		updates: {
 			title: string;
+			paragraph: {
+				intro: string;
+			};
 		};
 	};
 	view: {
@@ -583,6 +670,12 @@ export type LocaleText = {
 				purpose: string;
 				actions: string;
 			};
+			error: {
+				unknownVenue: string;
+			};
+			paragraph: {
+				cancelReason: string;
+			};
 		};
 		roles: {
 			tip: {
@@ -639,6 +732,19 @@ export type LocaleText = {
 				type: string;
 				compensation: string;
 				rationale: string;
+			};
+			paragraph: {
+				createRole: string;
+				adminsDescription: string;
+				addAdmin: string;
+				inviteDescription: string;
+				administeredBy: string;
+				roleCompensation: string;
+				roleCompensationInviteOnly: string;
+				volunteersCount: string;
+				declined: string;
+				volunteering: string;
+				stopped: string;
 			};
 		};
 		tasks: {

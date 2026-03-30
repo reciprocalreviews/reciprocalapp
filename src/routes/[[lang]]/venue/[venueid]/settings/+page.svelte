@@ -7,6 +7,7 @@
 	import { ErrorLabel, ScholarLabel, SettingsLabel, VenueLabel } from '$lib/components/Labels.js';
 	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import { getDB } from '$lib/data/CRUD.js';
@@ -45,7 +46,7 @@
 		}}
 	>
 		{#snippet subtitle()}<Text path={(l) => l.page.settings.subtitle} />{/snippet}
-		<p>Welcome venue admin! You can manage this venue's settings here.</p>
+		<Paragraph text={(l) => l.page.settings.paragraph.welcome} />
 
 		<Card
 			subheader
@@ -54,10 +55,7 @@
 			expand={venue.inactive !== null}
 			testid="setup-card"
 		>
-			<p>
-				Hello venue admin! Are you ready to integrate into your reviewing system? There are a few
-				steps:
-			</p>
+			<Paragraph text={(l) => l.page.settings.paragraph.setupIntro} />
 			<ol>
 				<li>
 					Update the inactive message in the settings below, so your community know you're busy

@@ -1,31 +1,36 @@
 <script lang="ts">
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import { getAuth } from '$routes/Auth.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import SourceLink from '$lib/components/VenueLink.svelte';
-	import type { PageData } from './$types';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import { handle } from '$routes/feedback.svelte';
-	import { MinterLabel, plural, TokenLabel, VenueLabel } from '$lib/components/Labels';
+	import type { ScholarID } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { validEmail, validORCID } from '$lib/validation';
-	import Note from '$lib/components/Note.svelte';
-	import Tokens from '$lib/components/Tokens.svelte';
-	import Link from '$lib/components/Link.svelte';
-	import Slider from '$lib/components/Slider.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import Cards from '$lib/components/Cards.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Dashboard from '$lib/components/Dashboard.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import type { ScholarID } from '$data/types';
+	import EditableText from '$lib/components/EditableText.svelte';
+	import Feedback from '$lib/components/Feedback.svelte';
+	import {
+		MinterLabel,
+		plural,
+		ScholarLabel,
+		TokenLabel,
+		VenueLabel
+	} from '$lib/components/Labels';
+	import Note from '$lib/components/Note.svelte';
 	import Options from '$lib/components/Options.svelte';
+	import Page from '$lib/components/Page.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
+	import ScholarLink from '$lib/components/ScholarLink.svelte';
+	import Slider from '$lib/components/Slider.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
+	import TextField from '$lib/components/TextField.svelte';
 	import Tip from '$lib/components/Tip.svelte';
-	import Text from '$lib/locales/Text.svelte';
+	import SourceLink from '$lib/components/VenueLink.svelte';
+	import { getDB } from '$lib/data/CRUD';
 	import type LocaleText from '$lib/locales/Locale';
+	import Text from '$lib/locales/Text.svelte';
+	import { validEmail, validORCID } from '$lib/validation';
+	import { getAuth } from '$routes/Auth.svelte';
+	import { handle } from '$routes/feedback.svelte';
+	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
@@ -82,12 +87,17 @@
 				edit={(text) => db().updateCurrencyDescription(currency.id, text)}
 			/>
 		{:else}
-			<p>{currency.description}</p>
+			<Paragraph text={() => currency.description} />
 		{/if}
 
 		<Dashboard
 			stats={[
 				{ icon: TokenLabel, number: count ?? undefined, title: 'tokens', link: `#tokens` },
+				{
+					icon: ScholarLabel,
+					number: scholarCount ?? undefined,
+					title: plural('scholar', scholarCount)
+				},
 				{
 					icon: MinterLabel,
 					number: currency.minters.length,
@@ -99,14 +109,9 @@
 		/>
 
 		<Subheader icon={TokenLabel} id="tokens" text={(l) => l.page.currency.header.tokens} />
-		<p>
-			There are {#if count !== null}<Tokens amount={count}></Tokens>{:else}an unknown number of{/if}
-			tokens minted in this currency, owned by <strong>{scholarCount}</strong> scholars and
-			<strong>{venueCount}</strong> distinct venues.
-		</p>
-		<p>
-			<Link to="/currency/{currency.id}/transactions">See all transactions</Link> in this currency.
-		</p>
+
+		<Paragraph text={(l) => l.page.currency.paragraph.allTokens} inputs={{ id: currency.id }} />
+
 		{#if user && isMinter && venues}
 			<Cards>
 				<Card subheader icon={TokenLabel} strings={(l) => l.page.currency.card.mint}>
@@ -137,7 +142,10 @@
 									? (l) => l.page.currency.field.mintPurpose.invalid ?? ''
 									: undefined}
 						/>
-						<Checkbox bind:on={newTokenConsent} label={(l) => l.page.currency.checkbox.mintConsent} />
+						<Checkbox
+							bind:on={newTokenConsent}
+							label={(l) => l.page.currency.checkbox.mintConsent}
+						/>
 
 						<Button
 							strings={(l) => l.page.currency.button.mint}
@@ -173,9 +181,7 @@
 
 		<Subheader icon={MinterLabel} id="minters" text={(l) => l.page.currency.header.minters} />
 
-		<p>
-			These scholars are the minters for this currency. They can see and approve all transactions.
-		</p>
+		<Paragraph text={(l) => l.page.currency.paragraph.mintersDescription} />
 
 		<ul>
 			{#each currency.minters as minter, index}
@@ -225,7 +231,7 @@
 		<Subheader icon={VenueLabel} id="venues" text={(l) => l.page.currency.header.venues} />
 
 		{#if venues}
-			<p>These are the venues that use this currency:</p>
+			<Paragraph text={(l) => l.page.currency.paragraph.venuesDescription} />
 			<ul>
 				{#each venues as venue, index}
 					<li data-testid="venue-{index}">

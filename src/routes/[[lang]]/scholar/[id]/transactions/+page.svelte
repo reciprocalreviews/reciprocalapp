@@ -1,11 +1,11 @@
 <script lang="ts">
-	import Circle from '$lib/components/Circle.svelte';
-	import Text from '$lib/locales/Text.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { ErrorLabel, ScholarLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Transactions from '$lib/components/Transactions.svelte';
 	import { getDB } from '$lib/data/CRUD.js';
+	import Text from '$lib/locales/Text.svelte';
 
 	let { data } = $props();
 	let { scholar, transactions, count, venues, currencies } = $derived(data);
@@ -22,7 +22,10 @@
 		]}
 	>
 		{#snippet subtitle()}<Text path={(l) => l.page.scholarTransactions.subtitle} />{/snippet}
-		<p>There are <Circle icon={count}></Circle> transactions visible to you.</p>
+		<Paragraph
+			text={(l) => l.page.scholarTransactions.paragraph.count}
+			inputs={{ count: count.toString() }}
+		/>
 		<Transactions
 			{transactions}
 			{venues}

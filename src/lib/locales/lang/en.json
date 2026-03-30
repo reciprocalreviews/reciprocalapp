@@ -30,6 +30,16 @@
 			"feedback": "Feedback"
 		}
 	},
+	"widget": {
+		"card": {
+			"expand": "Expand this card",
+			"collapse": "Collapse this card"
+		},
+		"tokens": {
+			"single": "token",
+			"plural": "tokens"
+		}
+	},
 	"page": {
 		"error": {
 			"title": "Oops."
@@ -128,6 +138,15 @@
 					"label": "password",
 					"placeholder": "6 digits"
 				}
+			},
+			"feedback": {
+				"orcidNote": "We're still implementing ORCID authentication. For now, enter your email for a one time password.",
+				"checkEmail": "Check your email for a sign in code.",
+				"sendPasswordError": "Unable to send one-time password.",
+				"signInError": "Unable to sign in."
+			},
+			"paragraph": {
+				"loggedIn": "You are logged in."
 			}
 		},
 		"proposeVenue": {
@@ -179,6 +198,10 @@
 					"label": "Currency",
 					"createNew": "Create a new currency"
 				}
+			},
+			"paragraph": {
+				"reviewedBy": "Venues are currently reviewed and approved by the [stewards](/about#managers), to ensure that only official editors and conference steering committees are creating venues.",
+				"howToPropose": "To propose a venue, share a few details about the venue, and the stewards will review them. Your proposal will appear publicly on the venues page, for others to support."
 			}
 		},
 		"proposal": {
@@ -247,6 +270,12 @@
 			"subtitle": {
 				"proposal": "Proposal",
 				"approved": "Approved"
+			},
+			"paragraph": {
+				"editorsDescription": "These are the editors the proposers indicated oversee the venue. If they aren't correct, you may contact a [steward](/about) to correct it.",
+				"approved": "This proposal was approved. See the [venue]({venueLink}).",
+				"proposed": "A community member has proposed [{title}]({url}) adopt Reciprocal Reviews. See below for information about the proposal.",
+				"census": "The reported estimated number of scholars in this community is **{census}**. We won't reach out to the editors above until there are at least 20% of the community supporting this proposal. If this estimate is off, contact a [steward](/about) to correct it."
 			}
 		},
 		"volunteers": {
@@ -277,17 +306,26 @@
 				"name": "Name",
 				"expertise": "Expertise"
 			},
-			"subtitle": "Volunteers"
+			"subtitle": "Volunteers",
+			"paragraph": {
+				"intro": ""
+			}
 		},
 		"venueTransactions": {
 			"title": "Transactions",
 			"feedback": {
 				"transactionsNotLoaded": "Unable to load transactions for this venue."
 			},
-			"subtitle": "Transactions"
+			"subtitle": "Transactions",
+			"paragraph": {
+				"count": "There are **{count}** transactions involving this venue visible to you."
+			}
 		},
 		"newSubmission": {
 			"title": "New submission",
+			"paragraph": {
+				"intro": "Ready to create a new submission? Typically, this form is filled by one of the authors of a submission, to pay for a submission to be reviewed. After filling out this form:\n\n- The submission will be created in the system.\n- All scholars listed will need to confirm their payments.\n- Once everyone has paid, the editor will proceed with review."
+			},
 			"feedback": {
 				"notLoaded": "Unable to load the venue and/or submission types for this page.",
 				"duplicateScholars": "Each author must have a unique ORCID.",
@@ -354,6 +392,11 @@
 				"submissionType": {
 					"label": "Submission type"
 				}
+			},
+			"error": {
+				"balanceCheck": "An error occurred while checking balances.",
+				"notFound": "These scholars were not found: {scholars}.",
+				"insufficentFunds": "These scholars do not have enough tokens: {short}."
 			}
 		},
 		"submissions": {
@@ -445,6 +488,9 @@
 				"conflicted": "conflicted",
 				"bids": "bids",
 				"biddingClosed": "bidding closed"
+			},
+			"paragraph": {
+				"newSubmission": "Have a submission to pay for? Pay for a [new submission](submissions/new)."
 			}
 		},
 		"submission": {
@@ -460,7 +506,10 @@
 				"confidential": "This submission is confidential to you.",
 				"missingAuthors": "Unable to find authors.",
 				"noAuthors": "No visible authors found.",
-				"noExpertise": "No expertise provided."
+				"noExpertise": "No expertise provided.",
+				"invalidRole": "You must select a valid role.",
+				"scholarNotFound": "No scholar with that email or ORCID exists.",
+				"alreadyAssigned": "This scholar is already assigned to this role."
 			},
 			"button": {
 				"createAssignment": {
@@ -509,7 +558,7 @@
 			},
 			"subtitle": "Submission",
 			"options": {
-				"submissionType": {},
+				"submissionType": { "label": "Submission type" },
 				"assignmentRole": {
 					"label": "Role"
 				}
@@ -586,7 +635,9 @@
 				},
 				"gift": {
 					"header": "gift",
-					"note": "Send tokens to a scholar"
+					"note": "Send tokens to a scholar",
+					"purpose": "Venue gift",
+					"success": "Your tokens were successfully gifted."
 				}
 			},
 			"unknownTitle": "Unknown venue",
@@ -600,6 +651,14 @@
 				"type": "Type",
 				"description": "Description",
 				"revisionOf": "Revision of"
+			},
+			"paragraph": {
+				"notFound": "Unable to find this venue.",
+				"submissionTypes": "These are the submission types for this venue. Each role can have a different amount of compensation for each type (e.g., reviews of new submissions may be compensated more than re-reviews).",
+				"missingCompensation": "Are you **missing compensation** for a role you accepted? It's possible it hasn't been entered by the scholar responsible. You can request compensation for it here, and the scholar responsible will be notified.",
+				"noDescription": "*No description.*",
+				"description": "{description}",
+				"allVolunteers": "See [all volunteers]({volunteersLink}) for this venue."
 			}
 		},
 		"settings": {
@@ -638,6 +697,10 @@
 					"off": "**Visible assignments**: Authors and conflicted scholars can see who is assigned to review their submissions. This is open reviewing."
 				}
 			},
+			"paragraph": {
+				"welcome": "Welcome venue admin! You can manage this venue's settings here.",
+				"setupIntro": "Hello venue admin! Are you ready to integrate into your reviewing system? There are a few steps:"
+			},
 			"subtitle": "Settings",
 			"tip": {
 				"inactive": "Check the inactive message in the settings below, so your community knows you're busy configuring things.",
@@ -649,7 +712,7 @@
 			"title": "Anonymous",
 			"header": {
 				"submissions": "Submissions",
-				"tokens": "Ttokens",
+				"tokens": "Tokens",
 				"settings": "Settings",
 				"tasks": "Tasks",
 				"volunteering": "Volunteering"
@@ -685,7 +748,9 @@
 			"card": {
 				"gift": {
 					"header": "gift tokens",
-					"note": "to other scholars"
+					"note": "to other scholars",
+					"purpose": "Gift to peer",
+					"success": "Your tokens were successfully gifted."
 				}
 			},
 			"checkbox": {
@@ -698,6 +763,10 @@
 			"subtitle": "Scholar",
 			"tip": {
 				"status": "Your status is public."
+			},
+			"paragraph": {
+				"youHave": "You have:",
+				"thisScholarHas": "This scholar has:"
 			}
 		},
 		"currency": {
@@ -774,6 +843,11 @@
 					"label": "Which venue should own the new tokens?"
 				}
 			},
+			"paragraph": {
+				"mintersDescription": "These scholars are the minters for this currency. They can see and approve all transactions.",
+				"venuesDescription": "These are the venues that use this currency:",
+				"allTokens": "[See all transactions](/currency/{id}/transactions) in this currency."
+			},
 			"subtitle": "Currency"
 		},
 		"about": {
@@ -784,16 +858,33 @@
 			},
 			"feedback": {
 				"stewardsNotLoaded": "Unable to load active stewards."
+			},
+			"paragraph": {
+				"community": "We are a volunteer community of academics interested in keeping peer review sustainable, for ourselves and our communities. You can learn more about who's contributing and how to contribute yourself on [GitHub](https://github.com/reciprocalreviews).",
+				"stewardsIntro": "Stewards oversee the platform and its use, guiding design, implementation, and usage with the goal of ensuring the platform is improving the sustainability of academic peer review:",
+				"currentStewards": "Current stewards are:",
+				"joinStewards": "Would you like to become a steward? Reach out to any of the stewards above and let's chat.",
+				"theoryIntro": "The theory of change behind this platform is rests upon the following argument:",
+				"closing": "We built this platform to test the claims above, and hope you'll join us in this effort!"
 			}
 		},
 		"updates": {
-			"title": "Updates"
+			"title": "Updates",
+			"paragraph": {
+				"intro": "Here are the updates to Reciprocal Reviews. Have a [defect](https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=1-defect.yml) to report or [improvement](https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=2-improvement.yml) to suggest?"
+			}
 		},
 		"currencyTransactions": {
-			"subtitle": "Transactions"
+			"subtitle": "Transactions",
+			"paragraph": {
+				"count": "There are **{count}** transactions with this currency visible to you."
+			}
 		},
 		"scholarTransactions": {
-			"subtitle": "Transactions"
+			"subtitle": "Transactions",
+			"paragraph": {
+				"count": "There are **{count}** transactions involving this scholar visible to you."
+			}
 		}
 	},
 	"view": {
@@ -886,6 +977,12 @@
 				"minted": "minted",
 				"pendingApproval": "Pending approval by editor or minter.",
 				"allLoaded": "All transactions loaded."
+			},
+			"paragraph": {
+				"cancelReason": "Indicate a reason and we'll append it to the transaction message."
+			},
+			"error": {
+				"unknownVenue": "Unknown venue"
 			}
 		},
 		"roles": {
@@ -1030,6 +1127,19 @@
 			},
 			"tip": {
 				"highestPriority": "This is the highest priority role. Any volunteers for this role are automatically assigned this role for new submissions."
+			},
+			"paragraph": {
+				"createRole": "Create a new role.",
+				"adminsDescription": "Admins can edit venue information, add and remove other admins, and gift tokens. They are typically Editors-in-Chief, Program Chairs of a conference, or editorial staff.",
+				"addAdmin": "Add a new admin.",
+				"inviteDescription": "Add one or more people to invite to this role by email or ORCID, separated by commas.",
+				"administeredBy": "This venue is administered by",
+				"roleCompensation": "This role is compensated in",
+				"roleCompensationInviteOnly": "This invite only role is compensated in",
+				"volunteersCount": "[{count} scholars](/venue/{venueid}/volunteers) have volunteered for this venue.",
+				"declined": "You declined this role. Would you like to accept it?",
+				"volunteering": "Thanks for volunteering for this role!",
+				"stopped": "You stopped volunteering for this role."
 			}
 		},
 		"tasks": {

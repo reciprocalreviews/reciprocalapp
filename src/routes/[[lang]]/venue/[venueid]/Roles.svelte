@@ -12,26 +12,26 @@
 	} from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
+	import Cards from '$lib/components/Cards.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
+	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import Form from '$lib/components/Form.svelte';
 	import { DeleteLabel, ScholarLabel, SettingsLabel } from '$lib/components/Labels';
+	import Options from '$lib/components/Options.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
+	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Slider from '$lib/components/Slider.svelte';
+	import Table from '$lib/components/Table.svelte';
+	import TextField from '$lib/components/TextField.svelte';
+	import Tip from '$lib/components/Tip.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import { validEmail, isntEmpty, validEmailsOrORCIDs, validORCID } from '$lib/validation';
 	import type { LocaleText } from '$lib/locales/Locale';
+	import { isntEmpty, validEmail, validEmailsOrORCIDs, validORCID } from '$lib/validation';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import Link from '$lib/components/Link.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
-	import Options from '$lib/components/Options.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import Tip from '$lib/components/Tip.svelte';
 
 	let {
 		venue,
@@ -85,7 +85,7 @@
 {:else}
 	{#if isAdmin}
 		<form>
-			<p>Create a new role.</p>
+			<Paragraph text={(l) => l.view.roles.paragraph.createRole} />
 			<TextField
 				testid="new-role-name"
 				strings={(l) => l.view.roles.field.newRoleName}
@@ -118,7 +118,7 @@
 			expand={!isAdmin}
 		>
 			<p>
-				This venue is administered by
+				{locale.view.roles.paragraph.administeredBy}
 				{#each admins as adminID, index}
 					{#if index > 0 && admins.length > 2},{/if}
 					{#if index === admins.length - 1 && admins.length > 1}and{/if}
@@ -136,14 +136,11 @@
 						>{/if}
 				{/each}.
 			</p>
-			<p>
-				Admins can edit venue information, add and remove other admins, and gift tokens. They are
-				typically Editors-in-Chief, Program Chairs of a conference, or editorial staff.
-			</p>
+			<Paragraph text={(l) => l.view.roles.paragraph.adminsDescription} />
 
 			{#if isAdmin}
 				<form>
-					<p>Add a new admin.</p>
+					<Paragraph text={(l) => l.view.roles.paragraph.addAdmin} />
 					<TextField
 						strings={(l) => l.view.roles.field.adminScholar}
 						bind:text={newEditor}
@@ -196,9 +193,9 @@
 				{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}
 
 				<p>
-					This {#if role.invited}<strong>invite only</strong>{/if} role is compensated in <CurrencyLink
-						{currency}
-					/> as follows:
+					{#if role.invited}{locale.view.roles.paragraph.roleCompensationInviteOnly}{:else}{locale
+							.view.roles.paragraph.roleCompensation}{/if}
+					<CurrencyLink {currency} />
 				</p>
 
 				<Table>
@@ -264,10 +261,11 @@
 						</tr>
 					{/each}
 				</Table>
-				<p>
-					<Link to="/venue/{venue.id}/volunteers">{roleVolunteers.length ?? 0} scholars</Link> have volunteered
-					for this role.
-				</p>
+
+				<Paragraph
+					text={(l) => l.view.roles.paragraph.volunteersCount}
+					inputs={{ count: (roleVolunteers.length ?? 0).toString(), venueid: venue.id }}
+				/>
 
 				{#if scholar}
 					{#if !role.invited && scholarVolunteer === undefined}
@@ -283,7 +281,7 @@
 					{#if scholarVolunteer !== undefined}
 						{#if scholarVolunteer.accepted === 'declined'}
 							<p>
-								You declined this role. Would you like to accept it?
+								{locale.view.roles.paragraph.declined}
 								<Button
 									strings={(l) => l.view.roles.button.accept}
 									action={() =>
@@ -298,7 +296,8 @@
 							</p>
 						{:else if scholarVolunteer.active}
 							<p>
-								Thanks for volunteering for this role! <Button
+								{locale.view.roles.paragraph.volunteering}
+								<Button
 									testid="volunteered-for-role"
 									strings={(l) => l.view.roles.button.stop}
 									action={() => handle(db().updateVolunteerActive(scholarVolunteer.id, false))}
@@ -312,7 +311,8 @@
 							/>
 						{:else}
 							<p>
-								You stopped volunteering for this role. <Button
+								{locale.view.roles.paragraph.stopped}
+								<Button
 									strings={(l) => l.view.roles.button.resume}
 									action={() => handle(db().updateVolunteerActive(scholarVolunteer.id, true))}
 									>Resume...</Button
@@ -326,9 +326,7 @@
 
 				{#if isAdmin && scholar}
 					<Form>
-						<p>
-							Add one or more people to invite to this role by email or ORCID, separated by commas.
-						</p>
+						<Paragraph text={(l) => l.view.roles.paragraph.inviteDescription} />
 						<TextField
 							strings={(l) => l.view.roles.field.invite}
 							name="email"

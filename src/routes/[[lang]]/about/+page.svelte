@@ -3,6 +3,7 @@
 	import { IdeaLabel, ScholarLabel } from '$lib/components/Labels.js';
 	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
 
 	let { data } = $props();
@@ -10,20 +11,13 @@
 </script>
 
 <Page icon={IdeaLabel} title={(l) => l.page.about.title} breadcrumbs={[]}>
-	<p>
-		We are a volunteer community of academics interested in keeping peer review sustainable, for
-		ourselves and our communities. You can learn more about who's contributing and how to contribute
-		yourself on <Link to="https://github.com/reciprocalreviews">GitHub</Link>.
-	</p>
+	<Paragraph text={(l) => l.page.about.paragraph.community} />
 
 	<Subheader icon={ScholarLabel} text={(l) => l.page.about.header.stewards} />
 
-	<p>
-		Stewards oversee the platform and its use, guiding design, implementation, and usage with the
-		goal of ensuring the platform is improving the sustainability of academic peer review:
-	</p>
+	<Paragraph text={(l) => l.page.about.paragraph.stewardsIntro} />
 
-	<p>Current stewards are:</p>
+	<Paragraph text={(l) => l.page.about.paragraph.currentStewards} />
 
 	{#if stewards}
 		<ul>
@@ -39,11 +33,11 @@
 		<Feedback text={(l) => l.page.about.feedback.stewardsNotLoaded} />
 	{/if}
 
-	<p>Would you like to become a steward? Reach out to any of the stewards above and let's chat.</p>
+	<Paragraph text={(l) => l.page.about.paragraph.joinStewards} />
 
 	<Subheader icon={IdeaLabel} text={(l) => l.page.about.header.change} />
 
-	<p>The theory of change behind this platform is rests upon the following argument:</p>
+	<Paragraph text={(l) => l.page.about.paragraph.theoryIntro} />
 
 	<ol>
 		<li>
@@ -118,5 +112,5 @@
 		</li>
 	</ol>
 
-	<p>We built this platform to test the claims above, and hope you'll join us in this effort!</p>
+	<Paragraph text={(l) => l.page.about.paragraph.closing} />
 </Page>

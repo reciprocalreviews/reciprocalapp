@@ -1,26 +1,32 @@
 <script lang="ts">
 	import { type CurrencyID } from '$data/types.js';
-	import Text from '$lib/locales/Text.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
-	import Circle from '$lib/components/Circle.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Gift from '$lib/components/Gift.svelte';
 	import { ErrorLabel, VenueLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Transactions from '$lib/components/Transactions.svelte';
 	import { getDB } from '$lib/data/CRUD.js';
+	import Text from '$lib/locales/Text.svelte';
+	import { getLocaleContext } from '$routes/Contexts.js';
 
 	let { data } = $props();
 	let { venue, transactions, count, venues, currencies, scholar, tokens } = $derived(data);
 
 	let db = getDB();
+	let locale = getLocaleContext();
 </script>
 
 {#if venue && transactions && venues && currencies && scholar && tokens && count !== null}
 	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
 		{#snippet subtitle()}<Text path={(l) => l.page.venueTransactions.subtitle} />{/snippet}
-		<p>These are all <Circle icon={count}></Circle> transactions on this venue visible to you.</p>
+
+		<Paragraph
+			text={(l) => l.page.venueTransactions.paragraph.count}
+			inputs={{ count: count.toString() }}
+		/>
 
 		{#if venue.admins.includes(scholar.id)}
 			<Cards>
@@ -28,8 +34,8 @@
 					{#if scholar}
 						<Gift
 							{tokens}
-							purpose="Venue gift"
-							success="Your tokens were successfully gifted."
+							purpose={locale.page.venue.card.gift.purpose}
+							success={locale.page.venue.card.gift.success}
 							{currencies}
 							venues={venues ?? []}
 							transfer={(

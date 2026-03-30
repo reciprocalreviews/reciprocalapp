@@ -23,6 +23,7 @@
 		VenueLabel
 	} from '$lib/components/Labels';
 	import type { RoleID, RoleRow, ScholarID } from '$data/types';
+	import type LocaleText from '$lib/locales/Locale';
 	import Scholar from '$lib/data/Scholar.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import Tip from '$lib/components/Tip.svelte';
@@ -127,7 +128,7 @@
 	let newAssignmentRole = $state<RoleID | undefined>(undefined);
 	let newAssignmentScholar = $state<string>('');
 	let newAssignmentSubmitting = $state(false);
-	let newAssignmentError: string | undefined = $state(undefined);
+	let newAssignmentError: ((l: LocaleText) => string) | undefined = $state(undefined);
 
 	function getVolunteer(role: RoleID, scholar: ScholarID) {
 		return volunteers?.find((v) => v.roleid === role && v.scholarid === scholar);
@@ -306,17 +307,17 @@
 						const { data: scholarID } = await db().findScholar(newAssignmentScholar);
 
 						if (role === undefined) {
-							newAssignmentError = 'You must select a valid role.';
+							newAssignmentError = (l) => l.page.submission.feedback.invalidRole;
 							newAssignmentSubmitting = false;
 							return undefined;
 						} else if (scholarID === undefined) {
-							newAssignmentError = 'No scholar with that email or ORCID exists.';
+							newAssignmentError = (l) => l.page.submission.feedback.scholarNotFound;
 							newAssignmentSubmitting = false;
 							return undefined;
 						} else if (
 							assignments.some((v) => v.scholar === scholarID && v.role === newAssignmentRole)
 						) {
-							newAssignmentError = 'This scholar is already assigned to this role.';
+							newAssignmentError = (l) => l.page.submission.feedback.alreadyAssigned;
 							newAssignmentSubmitting = false;
 							return undefined;
 						}

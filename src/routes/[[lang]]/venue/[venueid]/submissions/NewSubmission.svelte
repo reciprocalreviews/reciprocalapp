@@ -15,9 +15,11 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { ORCIDRegex } from '$lib/data/ORCID';
+	import type Locale from '$lib/locales/Locale';
 	import { isntEmpty, validORCID } from '$lib/validation';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { handle } from '$routes/feedback.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 
 	let { venue, submissionTypes }: { venue: VenueRow; submissionTypes: SubmissionType[] } = $props();
 
@@ -34,7 +36,7 @@
 	let charges = $state<Charge[]>([{ scholar: '', payment: 0 }]);
 
 	/** True if the specified charges can be afforded, undefined if checking, string describing the problem. */
-	let affordable = $state<string | undefined | true>(undefined);
+	let affordable = $state<((l: Locale) => string) | undefined | true>(undefined);
 
 	/** When charges change, reset affordable */
 	$effect(() => {
@@ -73,23 +75,22 @@
 		affordable = undefined;
 		const { data, error } = await db().verifyCharges(charges);
 
-		console.log(data);
-		console.log(error);
-
-		if (error) affordable = error.message;
+		if (error) affordable = () => error.message;
 		else if (data === undefined) {
-			affordable = 'An error occurred while checking balances.';
+			affordable = (l) => l.page.newSubmission.error.balanceCheck;
 		} else if (data !== true) {
-			affordable =
-				'There are not enough tokens to submit: ' +
-				data
-					.filter((result) => result.payment === undefined || result.payment < 0)
-					.map((deficit) =>
-						deficit.payment === undefined
-							? `${deficit.scholar} could not be found`
-							: `${deficit.scholar} is short ${Math.abs(deficit.payment)}`
-					)
-					.join(', ');
+			const notFound = data
+				.filter((result) => result.payment === undefined)
+				.map((result) => result.scholar);
+			const short = data
+				.filter((result) => result.payment !== undefined && result.payment < 0)
+				.map((result) => result.scholar);
+			if (notFound.length > 0)
+				affordable = (l) =>
+					l.page.newSubmission.error.notFound.replace('{scholars}', notFound.join(', '));
+			else if (short.length > 0)
+				affordable = (l) =>
+					l.page.newSubmission.error.insufficentFunds.replace('{short}', short.join(', '));
 		} else {
 			affordable = true;
 		}
@@ -105,16 +106,7 @@
 	}
 </script>
 
-<p>
-	Ready to create a new submission? Typically, this form is filled by one of the authors of a
-	submission, to pay for a submission to be reviewed. After filling out this form:
-</p>
-
-<ul>
-	<li>The submission will be created in the system.</li>
-	<li>All scholars listed will need to confirm their payments.</li>
-	<li>Once everyone has paid, the editor will proceed with review.</li>
-</ul>
+<Paragraph text={(l) => l.page.newSubmission.paragraph.intro} />
 
 <Form>
 	<h3>Details</h3>

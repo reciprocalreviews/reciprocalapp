@@ -664,6 +664,38 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "closing": {
+                      "type": "string"
+                    },
+                    "community": {
+                      "type": "string"
+                    },
+                    "currentStewards": {
+                      "type": "string"
+                    },
+                    "joinStewards": {
+                      "type": "string"
+                    },
+                    "stewardsIntro": {
+                      "type": "string"
+                    },
+                    "theoryIntro": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "community",
+                    "stewardsIntro",
+                    "currentStewards",
+                    "joinStewards",
+                    "theoryIntro",
+                    "closing"
+                  ],
+                  "type": "object"
+                },
                 "title": {
                   "type": "string"
                 }
@@ -671,7 +703,8 @@
               "required": [
                 "title",
                 "header",
-                "feedback"
+                "feedback",
+                "paragraph"
               ],
               "type": "object"
             },
@@ -851,6 +884,26 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "allTokens": {
+                      "type": "string"
+                    },
+                    "mintersDescription": {
+                      "type": "string"
+                    },
+                    "venuesDescription": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "mintersDescription",
+                    "venuesDescription",
+                    "allTokens"
+                  ],
+                  "type": "object"
+                },
                 "slider": {
                   "additionalProperties": false,
                   "properties": {
@@ -894,19 +947,33 @@
                 "card",
                 "checkbox",
                 "slider",
-                "options"
+                "options",
+                "paragraph"
               ],
               "type": "object"
             },
             "currencyTransactions": {
               "additionalProperties": false,
               "properties": {
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "count": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "count"
+                  ],
+                  "type": "object"
+                },
                 "subtitle": {
                   "type": "string"
                 }
               },
               "required": [
-                "subtitle"
+                "subtitle",
+                "paragraph"
               ],
               "type": "object"
             },
@@ -998,6 +1065,30 @@
                   ],
                   "type": "object"
                 },
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "checkEmail": {
+                      "type": "string"
+                    },
+                    "orcidNote": {
+                      "type": "string"
+                    },
+                    "sendPasswordError": {
+                      "type": "string"
+                    },
+                    "signInError": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "orcidNote",
+                    "checkEmail",
+                    "sendPasswordError",
+                    "signInError"
+                  ],
+                  "type": "object"
+                },
                 "field": {
                   "additionalProperties": false,
                   "properties": {
@@ -1026,6 +1117,18 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "loggedIn": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "loggedIn"
+                  ],
+                  "type": "object"
+                },
                 "title": {
                   "type": "string"
                 }
@@ -1034,7 +1137,9 @@
                 "title",
                 "button",
                 "note",
-                "field"
+                "field",
+                "feedback",
+                "paragraph"
               ],
               "type": "object"
             },
@@ -1062,6 +1167,26 @@
                     "addAuthor",
                     "checkBalances",
                     "submit"
+                  ],
+                  "type": "object"
+                },
+                "error": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "balanceCheck": {
+                      "type": "string"
+                    },
+                    "insufficentFunds": {
+                      "type": "string"
+                    },
+                    "notFound": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "balanceCheck",
+                    "notFound",
+                    "insufficentFunds"
                   ],
                   "type": "object"
                 },
@@ -1145,6 +1270,18 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "intro": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "intro"
+                  ],
+                  "type": "object"
+                },
                 "slider": {
                   "additionalProperties": false,
                   "properties": {
@@ -1163,12 +1300,14 @@
               },
               "required": [
                 "title",
+                "paragraph",
                 "feedback",
                 "button",
                 "note",
                 "field",
                 "slider",
-                "options"
+                "options",
+                "error"
               ],
               "type": "object"
             },
@@ -1267,6 +1406,30 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "approved": {
+                      "type": "string"
+                    },
+                    "census": {
+                      "type": "string"
+                    },
+                    "editorsDescription": {
+                      "type": "string"
+                    },
+                    "proposed": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "editorsDescription",
+                    "approved",
+                    "proposed",
+                    "census"
+                  ],
+                  "type": "object"
+                },
                 "subtitle": {
                   "additionalProperties": false,
                   "properties": {
@@ -1293,7 +1456,8 @@
                 "feedback",
                 "button",
                 "note",
-                "field"
+                "field",
+                "paragraph"
               ],
               "type": "object"
             },
@@ -1392,6 +1556,22 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "howToPropose": {
+                      "type": "string"
+                    },
+                    "reviewedBy": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "reviewedBy",
+                    "howToPropose"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -1413,7 +1593,8 @@
                 "status",
                 "button",
                 "field",
-                "options"
+                "options",
+                "paragraph"
               ],
               "type": "object"
             },
@@ -1424,7 +1605,30 @@
                   "additionalProperties": false,
                   "properties": {
                     "gift": {
-                      "$ref": "#/definitions/CardText"
+                      "additionalProperties": false,
+                      "properties": {
+                        "header": {
+                          "description": "The header at the top of the card",
+                          "type": "string"
+                        },
+                        "note": {
+                          "description": "The note below the header",
+                          "type": "string"
+                        },
+                        "purpose": {
+                          "type": "string"
+                        },
+                        "success": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "header",
+                        "note",
+                        "purpose",
+                        "success"
+                      ],
+                      "type": "object"
                     }
                   },
                   "required": [
@@ -1559,6 +1763,22 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "thisScholarHas": {
+                      "type": "string"
+                    },
+                    "youHave": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "youHave",
+                    "thisScholarHas"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -1603,19 +1823,33 @@
                 "field",
                 "card",
                 "checkbox",
-                "status"
+                "status",
+                "paragraph"
               ],
               "type": "object"
             },
             "scholarTransactions": {
               "additionalProperties": false,
               "properties": {
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "count": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "count"
+                  ],
+                  "type": "object"
+                },
                 "subtitle": {
                   "type": "string"
                 }
               },
               "required": [
-                "subtitle"
+                "subtitle",
+                "paragraph"
               ],
               "type": "object"
             },
@@ -1698,6 +1932,22 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "setupIntro": {
+                      "type": "string"
+                    },
+                    "welcome": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "welcome",
+                    "setupIntro"
+                  ],
+                  "type": "object"
+                },
                 "subtitle": {
                   "type": "string"
                 },
@@ -1732,7 +1982,8 @@
                 "header",
                 "feedback",
                 "field",
-                "checkbox"
+                "checkbox",
+                "paragraph"
               ],
               "type": "object"
             },
@@ -1810,7 +2061,13 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "alreadyAssigned": {
+                      "type": "string"
+                    },
                     "confidential": {
+                      "type": "string"
+                    },
+                    "invalidRole": {
                       "type": "string"
                     },
                     "missingAuthors": {
@@ -1824,6 +2081,9 @@
                     },
                     "notLoaded": {
                       "type": "string"
+                    },
+                    "scholarNotFound": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -1831,7 +2091,10 @@
                     "confidential",
                     "missingAuthors",
                     "noAuthors",
-                    "noExpertise"
+                    "noExpertise",
+                    "invalidRole",
+                    "scholarNotFound",
+                    "alreadyAssigned"
                   ],
                   "type": "object"
                 },
@@ -2200,6 +2463,18 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "newSubmission": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "newSubmission"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -2227,19 +2502,33 @@
                 "button",
                 "headers",
                 "field",
-                "status"
+                "status",
+                "paragraph"
               ],
               "type": "object"
             },
             "updates": {
               "additionalProperties": false,
               "properties": {
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "intro": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "intro"
+                  ],
+                  "type": "object"
+                },
                 "title": {
                   "type": "string"
                 }
               },
               "required": [
-                "title"
+                "title",
+                "paragraph"
               ],
               "type": "object"
             },
@@ -2270,7 +2559,30 @@
                   "additionalProperties": false,
                   "properties": {
                     "gift": {
-                      "$ref": "#/definitions/CardText"
+                      "additionalProperties": false,
+                      "properties": {
+                        "header": {
+                          "description": "The header at the top of the card",
+                          "type": "string"
+                        },
+                        "note": {
+                          "description": "The note below the header",
+                          "type": "string"
+                        },
+                        "purpose": {
+                          "type": "string"
+                        },
+                        "success": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "header",
+                        "note",
+                        "purpose",
+                        "success"
+                      ],
+                      "type": "object"
                     },
                     "setup": {
                       "$ref": "#/definitions/CardText"
@@ -2424,6 +2736,38 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "allVolunteers": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "missingCompensation": {
+                      "type": "string"
+                    },
+                    "noDescription": {
+                      "type": "string"
+                    },
+                    "notFound": {
+                      "type": "string"
+                    },
+                    "submissionTypes": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "notFound",
+                    "submissionTypes",
+                    "missingCompensation",
+                    "noDescription",
+                    "description",
+                    "allVolunteers"
+                  ],
+                  "type": "object"
+                },
                 "subtitle": {
                   "type": "string"
                 },
@@ -2444,7 +2788,8 @@
                 "field",
                 "card",
                 "options",
-                "headers"
+                "headers",
+                "paragraph"
               ],
               "type": "object"
             },
@@ -2463,6 +2808,18 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "count": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "count"
+                  ],
+                  "type": "object"
+                },
                 "subtitle": {
                   "type": "string"
                 },
@@ -2473,7 +2830,8 @@
               "required": [
                 "title",
                 "subtitle",
-                "feedback"
+                "feedback",
+                "paragraph"
               ],
               "type": "object"
             },
@@ -2752,6 +3110,18 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "intro": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "intro"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -2786,7 +3156,8 @@
                 "button",
                 "field",
                 "status",
-                "headers"
+                "headers",
+                "paragraph"
               ],
               "type": "object"
             }
@@ -3206,6 +3577,58 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addAdmin": {
+                      "type": "string"
+                    },
+                    "administeredBy": {
+                      "type": "string"
+                    },
+                    "adminsDescription": {
+                      "type": "string"
+                    },
+                    "createRole": {
+                      "type": "string"
+                    },
+                    "declined": {
+                      "type": "string"
+                    },
+                    "inviteDescription": {
+                      "type": "string"
+                    },
+                    "roleCompensation": {
+                      "type": "string"
+                    },
+                    "roleCompensationInviteOnly": {
+                      "type": "string"
+                    },
+                    "stopped": {
+                      "type": "string"
+                    },
+                    "volunteering": {
+                      "type": "string"
+                    },
+                    "volunteersCount": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "createRole",
+                    "adminsDescription",
+                    "addAdmin",
+                    "inviteDescription",
+                    "administeredBy",
+                    "roleCompensation",
+                    "roleCompensationInviteOnly",
+                    "volunteersCount",
+                    "declined",
+                    "volunteering",
+                    "stopped"
+                  ],
+                  "type": "object"
+                },
                 "slider": {
                   "additionalProperties": false,
                   "properties": {
@@ -3244,7 +3667,8 @@
                 "checkbox",
                 "slider",
                 "options",
-                "headers"
+                "headers",
+                "paragraph"
               ],
               "type": "object"
             },
@@ -3388,6 +3812,18 @@
                   ],
                   "type": "object"
                 },
+                "error": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "unknownVenue": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "unknownVenue"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -3452,6 +3888,18 @@
                   ],
                   "type": "object"
                 },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "cancelReason": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "cancelReason"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -3479,7 +3927,9 @@
                 "button",
                 "field",
                 "status",
-                "headers"
+                "headers",
+                "error",
+                "paragraph"
               ],
               "type": "object"
             }
@@ -3492,6 +3942,48 @@
             "commitments"
           ],
           "type": "object"
+        },
+        "widget": {
+          "additionalProperties": false,
+          "properties": {
+            "card": {
+              "additionalProperties": false,
+              "properties": {
+                "collapse": {
+                  "type": "string"
+                },
+                "expand": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expand",
+                "collapse"
+              ],
+              "type": "object"
+            },
+            "tokens": {
+              "additionalProperties": false,
+              "properties": {
+                "plural": {
+                  "type": "string"
+                },
+                "single": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "single",
+                "plural"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "card",
+            "tokens"
+          ],
+          "type": "object"
         }
       },
       "required": [
@@ -3500,6 +3992,7 @@
         "shorthand",
         "header",
         "footer",
+        "widget",
         "page",
         "view",
         "component",

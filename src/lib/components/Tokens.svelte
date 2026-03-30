@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { CurrencyRow } from '$data/types';
+	import { getLocaleContext } from '$routes/Contexts';
 	import { TokenLabel } from './Labels';
 
 	let {
@@ -7,6 +8,8 @@
 		currency,
 		debit = false
 	}: { amount: number; debit?: boolean; currency?: CurrencyRow } = $props();
+
+	let locale = getLocaleContext();
 </script>
 
 <span class="token" class:debit
@@ -14,7 +17,7 @@
 	{amount}
 	{#if currency}<span class="currency">{currency.name}</span>
 	{/if}
-	token{#if amount !== 1}s{/if}</span
+	{#if amount === 1}{locale.widget.tokens.single}{:else}{locale.widget.tokens.plural}{/if}</span
 >
 
 <style>

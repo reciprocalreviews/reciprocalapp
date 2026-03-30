@@ -1,11 +1,11 @@
 <script lang="ts">
-	import Circle from '$lib/components/Circle.svelte';
-	import Text from '$lib/locales/Text.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { ErrorLabel, TokenLabel } from '$lib/components/Labels';
 	import Page from '$lib/components/Page.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Transactions from '$lib/components/Transactions.svelte';
 	import { getDB } from '$lib/data/CRUD';
+	import Text from '$lib/locales/Text.svelte';
 
 	let { data } = $props();
 	let { currency, transactions, count, venues } = $derived(data);
@@ -20,7 +20,12 @@
 		breadcrumbs={[[`/currency/${currency.id}`, `${TokenLabel} ${currency.name}`]]}
 	>
 		{#snippet subtitle()}<Text path={(l) => l.page.currencyTransactions.subtitle} />{/snippet}
-		<p>There are <Circle icon={count}></Circle> transactions with this currency visible to you.</p>
+
+		<Paragraph
+			text={(l) => l.page.currencyTransactions.paragraph.count}
+			inputs={{ count: count.toString() }}
+		/>
+
 		<Transactions
 			{transactions}
 			{count}

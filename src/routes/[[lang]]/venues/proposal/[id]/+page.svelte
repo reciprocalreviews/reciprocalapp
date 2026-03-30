@@ -15,6 +15,7 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import { ErrorLabel, VenueLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 	import { validEmails, validURL } from '$lib/validation';
 	import { SettingsLabel } from '$lib/components/Labels';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
@@ -76,27 +77,27 @@
 	</Page>
 {:else}
 	<Page icon={VenueLabel} title={proposal.title} breadcrumbs={[]}>
-		{#snippet subtitle()}<Text path={(l) => approved ? l.page.proposal.subtitle.approved : l.page.proposal.subtitle.proposal} />{/snippet}
+		{#snippet subtitle()}<Text
+				path={(l) =>
+					approved ? l.page.proposal.subtitle.approved : l.page.proposal.subtitle.proposal}
+			/>{/snippet}
 		{#if approved}
-			<p>This proposal was approved. See the <Link to="/venue/{proposal.venue}">venue</Link>.</p>
+			<Paragraph
+				text={(l) => l.page.proposal.paragraph.approved}
+				inputs={{ venueLink: `/venue/${proposal.venue}` }}
+			/>
 		{:else}
-			<p>
-				A community member has proposed <Link to={proposal.url}>{proposal.title}</Link> adopt Reciprocal
-				Reviews. See below for information about the proposal.
-			</p>
+			<Paragraph
+				text={(l) => l.page.proposal.paragraph.proposed}
+				inputs={{ url: proposal.url, title: proposal.title }}
+			/>
 
-			<p>
-				The reported estimated number of scholars in this community is <strong
-					>{proposal.census}</strong
-				>. We won't reach out to the editors above until there are at least 20% of the community
-				supporting this proposal. If this estimate is off, contact a <Link to="/about">steward</Link
-				> to correct it.
-			</p>
+			<Paragraph
+				text={(l) => l.page.proposal.paragraph.census}
+				inputs={{ census: String(proposal.census) }}
+			/>
 
-			<p>
-				These are the editors the proposers indicated oversee the venue. If they aren't correct, you
-				may contact a <Link to="/about">steward</Link> to correct it.
-			</p>
+			<Paragraph text={(l) => l.page.proposal.paragraph.editorsDescription} />
 			<ul>
 				{#each proposal.editors as editor}
 					<li><Link to={`mailto:${editor}`}>{editor}</Link></li>
@@ -225,9 +226,7 @@
 						edit={(text) => db().editVenueProposalSupport(supporter.id, text)}
 					/>
 				{:else}
-					<p>
-						{supporter.message}
-					</p>
+					<Paragraph text={() => supporter.message} />
 				{/if}
 			</div>
 		{/each}

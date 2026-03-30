@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Button from '$lib/components/Button.svelte';
-	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import TextField from '$lib/components/TextField.svelte';
@@ -13,6 +12,7 @@
 	import Options from '$lib/components/Options.svelte';
 	import { VenueLabel } from '$lib/components/Labels';
 	import { getLocaleContext } from '$routes/Contexts';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 
 	let { data } = $props();
 
@@ -81,15 +81,9 @@
 </script>
 
 <Page icon={VenueLabel} title={(l) => l.page.proposeVenue.title} breadcrumbs={[]}>
-	<p>
-		Venues are currently reviewed and approved by the <Link to="/about#managers">stewards</Link>, to
-		ensure that only official editors and conference steering committees are creating venues.
-	</p>
+	<Paragraph text={(l) => l.page.proposeVenue.paragraph.reviewedBy} />
 
-	<p>
-		To propose a venue, share a few details about the venue, and the stewards will review them. Your
-		proposal will appear publicly on the venues page, for others to support.
-	</p>
+	<Paragraph text={(l) => l.page.proposeVenue.paragraph.howToPropose} />
 
 	{#if auth.getUserID()}
 		<form>

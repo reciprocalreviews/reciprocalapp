@@ -5,8 +5,13 @@
 
 	let {
 		path,
-		markdown = false
-	}: { path: string | ((locale: LocaleText) => string | string[]); markdown?: boolean } = $props();
+		markdown = false,
+		inputs = {}
+	}: {
+		path: string | ((locale: LocaleText) => string | string[]);
+		markdown?: boolean;
+		inputs?: Record<string, string>;
+	} = $props();
 
 	const locale = getLocaleContext();
 
@@ -22,6 +27,9 @@
 				? locale.shorthand[key as keyof typeof locale.shorthand]
 				: `$${key}`;
 		});
+
+		// Replace any template inputs in the text with the corresponding values.
+		text = text.replace(/\{(\w+)\}/g, (match, key) => (key in inputs ? inputs[key] : match));
 
 		return text;
 	});

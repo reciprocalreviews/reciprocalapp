@@ -1,18 +1,4 @@
 <script lang="ts">
-	import { getDB } from '$lib/data/CRUD';
-	import Link from '$lib/components/Link.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import { getAuth } from '$routes/Auth.svelte';
-	import type Scholar from '$lib/data/Scholar.svelte';
-	import Status from '$lib/components/Status.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Tokens from '$lib/components/Tokens.svelte';
-	import Gift from '$lib/components/Gift.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import { validEmail } from '$lib/validation';
 	import type {
 		AssignmentRow,
 		CurrencyID,
@@ -23,15 +9,30 @@
 		TransactionRow,
 		VenueRow
 	} from '$data/types';
+	import Card from '$lib/components/Card.svelte';
+	import Cards from '$lib/components/Cards.svelte';
+	import Checkbox from '$lib/components/Checkbox.svelte';
+	import Dashboard from '$lib/components/Dashboard.svelte';
+	import EditableText from '$lib/components/EditableText.svelte';
+	import Feedback from '$lib/components/Feedback.svelte';
+	import Gift from '$lib/components/Gift.svelte';
+	import { ScholarLabel, SettingsLabel, SubmissionLabel, TokenLabel } from '$lib/components/Labels';
+	import Link from '$lib/components/Link.svelte';
+	import Page from '$lib/components/Page.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
+	import Status from '$lib/components/Status.svelte';
+	import Subheader from '$lib/components/Subheader.svelte';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Tip from '$lib/components/Tip.svelte';
-	import { ScholarLabel, SettingsLabel, SubmissionLabel, TokenLabel } from '$lib/components/Labels';
-	import Dashboard from '$lib/components/Dashboard.svelte';
+	import Tokens from '$lib/components/Tokens.svelte';
+	import { getDB } from '$lib/data/CRUD';
+	import type Scholar from '$lib/data/Scholar.svelte';
+	import Text from '$lib/locales/Text.svelte';
+	import { validEmail } from '$lib/validation';
+	import { getAuth } from '$routes/Auth.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
 	import Commitments from './Commitments.svelte';
 	import Tasks from './Tasks.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import Text from '$lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
 
 	let {
 		scholar,
@@ -116,7 +117,7 @@
 	{:else if scholar.getStatus().trim().length === 0}
 		<Feedback text={(l) => l.page.scholar.feedback.noStatus}></Feedback>
 	{:else}
-		<p>{scholar.getStatus()}</p>
+		<Paragraph text={() => scholar.getStatus()} />
 	{/if}
 
 	{#if editable}
@@ -168,9 +169,10 @@
 	{#if tokens === null || currencies === null}
 		<Feedback text={(l) => l.page.scholar.feedback.tokensNotLoaded}></Feedback>
 	{:else}
-		<p>
-			{#if editable}You have{:else}This scholar has{/if}:
-		</p>
+		<Paragraph
+			text={(l) =>
+				editable ? l.page.scholar.paragraph.youHave : l.page.scholar.paragraph.thisScholarHas}
+		/>
 		<ul>
 			{#each currencies as currency, index}
 				<li data-testid={'currency-' + index}>
@@ -189,8 +191,8 @@
 				<Card subheader icon={TokenLabel} strings={(l) => l.page.scholar.card.gift}>
 					<Gift
 						{tokens}
-						purpose="Gift to peer"
-						success="This venue's tokens were successfully gifted."
+						purpose={locale.page.scholar.card.gift.purpose}
+						success={locale.page.scholar.card.gift.success}
 						{currencies}
 						venues={venues ?? []}
 						transfer={(

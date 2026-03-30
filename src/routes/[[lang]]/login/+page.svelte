@@ -8,6 +8,8 @@
 	import { goto } from '$app/navigation';
 	import Page from '$lib/components/Page.svelte';
 	import { ScholarLabel } from '$lib/components/Labels';
+	import type LocaleText from '$lib/locales/Locale';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 
 	let email = $state('');
 
@@ -17,7 +19,7 @@
 
 	let auth = getAuth();
 
-	let error = $state<undefined | string>(undefined);
+	let error = $state<undefined | ((l: LocaleText) => string)>(undefined);
 	let submitted = $state(false);
 	let password = $state('');
 
@@ -31,15 +33,9 @@
 
 <Page icon={ScholarLabel} title={(l) => l.page.login.title} breadcrumbs={[['/', 'Home']]}>
 	{#if auth.isAuthenticated()}
-		<p>You are logged in.</p>
+		<Paragraph text={(l) => l.page.login.paragraph.loggedIn} />
 	{:else}
-		<!-- <p>Login with your <Link to="https://orcid.org/">ORCID</Link> account.</p> -->
-
-		<Feedback
-			error
-			text="We're still implementing ORCID authentication. For now, enter your email for a one time
-			password."
-		/>
+		<Feedback error text={(l) => l.page.login.feedback.orcidNote} />
 
 		<Form>
 			<TextField
@@ -57,7 +53,7 @@
 					const authError = await auth.signIn(email, undefined);
 					if (authError) {
 						console.error(authError);
-						error = 'Unable to send one-time password.';
+						error = (l) => l.page.login.feedback.sendPasswordError;
 					} else {
 						error = undefined;
 						submitted = true;
@@ -68,7 +64,7 @@
 		</Form>
 
 		{#if submitted}
-			<Feedback text="Check your email for a sign in code." />
+			<Feedback text={(l) => l.page.login.feedback.checkEmail} />
 			<Form>
 				<TextField
 					strings={(l) => l.page.login.field.password}
@@ -88,7 +84,7 @@
 							goto(`/scholar/${response}`);
 						} else {
 							console.error(response);
-							error = 'Unable to sign in.';
+							error = (l) => l.page.login.feedback.signInError;
 						}
 					}}
 					active={password.length > 0}

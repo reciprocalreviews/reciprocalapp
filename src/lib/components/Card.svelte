@@ -44,7 +44,7 @@
 		onclick={() => (expand = !expand)}
 		onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (expand = !expand)}
 		tabindex="0"
-		title={expand ? 'Collapse this card' : 'Expand this card'}
+		title={expand ? locale.widget.card.collapse : locale.widget.card.expand}
 	>
 		<Circle {icon}></Circle>
 		<div class="text">
