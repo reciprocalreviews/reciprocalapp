@@ -14,7 +14,6 @@
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
-	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -192,12 +191,11 @@
 
 				{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}
 
-				<p>
-					{#if role.invited}{locale().view.roles.paragraph
-							.roleCompensationInviteOnly}{:else}{locale().view.roles.paragraph
-							.roleCompensation}{/if}
-					<CurrencyLink {currency} />
-				</p>
+				<Paragraph
+					text={role.invited
+						? (l) => l.view.roles.paragraph.roleInvited
+						: (l) => l.view.roles.paragraph.roleOpen}
+				/>
 
 				<Table>
 					{#snippet header()}

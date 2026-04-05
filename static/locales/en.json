@@ -1,5 +1,5 @@
 {
-	"$schema": "../LocaleText.json",
+	"$schema": "../../src/lib/locales/LocaleText.json",
 	"lang": "en",
 	"shorthand": {
 		"delete": "✖",
@@ -987,7 +987,7 @@
 		},
 		"roles": {
 			"feedback": {
-				"notInvited": "[Log in](/login) to volunteer.",
+				"notInvited": "[Log in](/login) to volunteer for this role.",
 				"consult": "This role has **{count} volunteers**. We **highly** recommend that you communicate extensively with your community before changing any of the settings below, as they change the terms of volunteering.",
 				"noRoles": "No roles yet. Add one.",
 				"notLoaded": "Couldn't load venue's roles."
@@ -1134,9 +1134,9 @@
 				"addAdmin": "Add a new admin.",
 				"inviteDescription": "Add one or more people to invite to this role by email or ORCID, separated by commas.",
 				"administeredBy": "This venue is administered by",
-				"roleCompensation": "This role is compensated in",
-				"roleCompensationInviteOnly": "This invite only role is compensated in",
-				"volunteersCount": "[{count} scholars](/venue/{venueid}/volunteers) have volunteered for this venue.",
+				"roleOpen": "This role is open to **volunteers**.",
+				"roleInvited": "This role is **invite-only**.",
+				"volunteersCount": "[{count} scholars](/venue/{venueid}/volunteers) have volunteered for this role.",
 				"declined": "You declined this role. Would you like to accept it?",
 				"volunteering": "Thanks for volunteering for this role!",
 				"stopped": "You stopped volunteering for this role."

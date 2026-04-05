@@ -739,8 +739,8 @@ export type LocaleText = {
 				addAdmin: string;
 				inviteDescription: string;
 				administeredBy: string;
-				roleCompensation: string;
-				roleCompensationInviteOnly: string;
+				roleOpen: string;
+				roleInvited: string;
 				volunteersCount: string;
 				declined: string;
 				volunteering: string;

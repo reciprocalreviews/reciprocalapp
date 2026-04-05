@@ -12,6 +12,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Removed redundant breadcrumb to venues page.
 - Improved styling of feedback.
 - Improved font sizes.
+- Organized locale files for future translation.
 
 ## 0.3.9 - 2026-03-29
 

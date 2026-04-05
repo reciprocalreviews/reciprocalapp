@@ -11,7 +11,7 @@
 		"sourceMap": true,
 		"strict": true
 	},
-	"include": ["./src", ".svelte-kit/ambient.d.ts"]
+	"include": ["./src", ".svelte-kit/ambient.d.ts", "static/locales/en.json"]
 	// Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
 	//
 	// If you want to overwrite includes/excludes, make sure to copy over the relevant includes/excludes

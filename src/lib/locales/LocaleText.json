@@ -3598,10 +3598,10 @@
                     "inviteDescription": {
                       "type": "string"
                     },
-                    "roleCompensation": {
+                    "roleInvited": {
                       "type": "string"
                     },
-                    "roleCompensationInviteOnly": {
+                    "roleOpen": {
                       "type": "string"
                     },
                     "stopped": {
@@ -3620,8 +3620,8 @@
                     "addAdmin",
                     "inviteDescription",
                     "administeredBy",
-                    "roleCompensation",
-                    "roleCompensationInviteOnly",
+                    "roleOpen",
+                    "roleInvited",
                     "volunteersCount",
                     "declined",
                     "volunteering",
