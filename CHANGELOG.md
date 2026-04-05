@@ -10,6 +10,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Updated internal tooling for stability.
 - Updated SvelteKit auth approach with Supabase to avoid session security vulnerabilities (#71).
 - Removed redundant breadcrumb to venues page.
+- Improved styling of feedback.
 
 ## 0.3.9 - 2026-03-29
 
