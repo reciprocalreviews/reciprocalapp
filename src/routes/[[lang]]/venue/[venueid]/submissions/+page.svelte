@@ -1,24 +1,24 @@
 <script lang="ts">
+	import type { SubmissionRow } from '$data/types';
+	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import { DownLabel, PrivateLabel, SubmissionLabel, UpLabel } from '$lib/components/Labels';
+	import Link from '$lib/components/Link.svelte';
+	import Page from '$lib/components/Page.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
+	import Column from '$lib/components/Row.svelte';
+	import ScholarLink from '$lib/components/ScholarLink.svelte';
+	import Status from '$lib/components/Status.svelte';
 	import SubmissionPreview from '$lib/components/SubmissionLink.svelte';
 	import Table from '$lib/components/Table.svelte';
-	import { getAuth } from '$routes/Auth.svelte';
-	import { type PageData } from './$types';
-	import Page from '$lib/components/Page.svelte';
-	import Link from '$lib/components/Link.svelte';
-	import { getDB, NullUUID } from '$lib/data/CRUD';
-	import Button from '$lib/components/Button.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import { handle } from '$routes/feedback.svelte';
-	import Status from '$lib/components/Status.svelte';
-	import { DownLabel, PrivateLabel, SubmissionLabel, UpLabel } from '$lib/components/Labels';
-	import Column from '$lib/components/Row.svelte';
-	import isRoleApprover from '$lib/data/isRoleApprover';
-	import type { SubmissionRow } from '$data/types';
 	import TextField from '$lib/components/TextField.svelte';
+	import { getDB, NullUUID } from '$lib/data/CRUD';
+	import isRoleApprover from '$lib/data/isRoleApprover';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
+	import { getAuth } from '$routes/Auth.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
-	import Paragraph from '$lib/components/Paragraph.svelte';
+	import { handle } from '$routes/feedback.svelte';
+	import { type PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -46,11 +46,11 @@
 
 	// Reload when the venue or its related data changes.
 	reloadOnChanges('conflict_changes', [
-		{ table: 'conflicts', filter: `scholar=eq.${auth.getUserID()}` }
+		{ table: 'conflicts', filter: `scholar=eq.${auth().getUserID()}` }
 	]);
 
 	/** Get the current user ID state */
-	const uid = $derived(auth.getUserID());
+	const uid = $derived(auth().getUserID());
 
 	/** True if the current user is an admin of this venue */
 	const isAdmin = $derived(uid !== null && venue !== null && venue.admins.includes(uid));
@@ -158,7 +158,8 @@
 				<Table full>
 					{#snippet header()}
 						<th
-							>{locale.page.submissions.headers.payment} <Button
+							>{locale().page.submissions.headers.payment}
+							<Button
 								small
 								background={false}
 								strings={(l) =>
@@ -172,7 +173,8 @@
 							></th
 						>
 						<th
-							>{locale.page.submissions.headers.title} <Button
+							>{locale().page.submissions.headers.title}
+							<Button
 								small
 								background={false}
 								strings={(l) =>
@@ -185,9 +187,10 @@
 								}}>{titleSortIncreasing ? DownLabel : UpLabel}</Button
 							></th
 						>
-						<th>{locale.page.submissions.headers.expertise}</th>
+						<th>{locale().page.submissions.headers.expertise}</th>
 						<th
-							>{locale.page.submissions.headers.id} <Button
+							>{locale().page.submissions.headers.id}
+							<Button
 								small
 								background={false}
 								strings={(l) =>
@@ -215,7 +218,11 @@
 								{:else if status === 0}
 									<Status label={(l) => l.page.submissions.status.paid} />
 								{:else}
-									<Status good={false} label={(l) => l.page.submissions.status.pending.replace('{count}', status.toString())} />
+									<Status
+										good={false}
+										label={(l) =>
+											l.page.submissions.status.pending.replace('{count}', status.toString())}
+									/>
 								{/if}
 							</td>
 							<td>
@@ -249,11 +256,10 @@
 											{#if role.isApprover}
 												<!-- Approver? Show the people assigned. -->
 												{#each approvedAssignments as assignment}
-													{#if assignment.scholar === uid}{locale.page.submissions.cell.you}{:else}<ScholarLink
-															id={assignment.scholar}
-														/>{/if}
+													{#if assignment.scholar === uid}{locale().page.submissions.cell
+															.you}{:else}<ScholarLink id={assignment.scholar} />{/if}
 												{:else}
-													<span><strong>0</strong> {locale.page.submissions.cell.assigned}</span>
+													<span><strong>0</strong> {locale().page.submissions.cell.assigned}</span>
 												{/each}
 											{/if}
 
@@ -261,11 +267,14 @@
 											{#if role.biddable}
 												{#if submission.authors.includes(uid) || conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id)}
 													<!-- Can't bid if conflicted -->
-													<div><strong>{locale.page.submissions.cell.conflicted}</strong></div>
+													<div><strong>{locale().page.submissions.cell.conflicted}</strong></div>
 												{:else if roleAssignments === undefined || roleAssignments.length < role.desired_assignments}
 													<!-- If the current scholar is an editor or approver for this role, show the number of bids. -->
 													{#if role.isApprover}
-														<div><strong>{bids.length}</strong> {locale.page.submissions.cell.bids}</div>
+														<div>
+															<strong>{bids.length}</strong>
+															{locale().page.submissions.cell.bids}
+														</div>
 													{/if}
 													{#if scholarsBid === undefined}
 														<!-- No assignments? Allow bidding -->
@@ -295,7 +304,7 @@
 														>
 													{/if}
 												{:else}
-													<div><strong>{locale.page.submissions.cell.biddingClosed}</strong></div>
+													<div><strong>{locale().page.submissions.cell.biddingClosed}</strong></div>
 												{/if}
 											{/if}
 										{:else}

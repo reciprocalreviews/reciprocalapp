@@ -39,7 +39,7 @@
 	const db = getDB();
 	const auth = getAuth();
 
-	let user = $derived(auth.getUserID());
+	let user = $derived(auth().getUserID());
 	let isMinter = $derived(currency && user && currency.minters.includes(user));
 
 	let newMinter = $state('');

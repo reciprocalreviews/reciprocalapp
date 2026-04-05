@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
 	import type LocaleText from '$lib/locales/Locale';
-	import { getLocaleContext } from '$routes/Contexts';
-	import Text from '$lib/locales/Text.svelte';
 	import type { ButtonText, ConfirmButtonText } from '$lib/locales/Locale';
+	import Text from '$lib/locales/Text.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
+	import type { Snippet } from 'svelte';
 
 	let {
 		action,
@@ -41,7 +41,7 @@
 
 	let locale = getLocaleContext();
 
-	let buttonText = $derived(strings(locale));
+	let buttonText = $derived(strings(locale()));
 	let warn = $derived(buttonText.warn);
 	let tip = $derived(buttonText.tip);
 

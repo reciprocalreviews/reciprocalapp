@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { getContext, type Snippet } from 'svelte';
-	import Lead from './Lead.svelte';
 	import { type Result } from '$lib/data/CRUD';
-	import EditableText from './EditableText.svelte';
 	import type LocaleText from '$lib/locales/Locale';
 	import { getLocaleContext } from '$routes/Contexts';
+	import { getContext, type Snippet } from 'svelte';
+	import EditableText from './EditableText.svelte';
+	import Lead from './Lead.svelte';
 
 	let {
 		icon,
@@ -32,7 +32,7 @@
 
 	const locale = getLocaleContext();
 
-	let revisedTitle = $derived(typeof title === 'function' ? title(locale) : title);
+	let revisedTitle = $derived(typeof title === 'function' ? title(locale()) : title);
 
 	const breadcrumbsContext = getContext<{ breadcrumbs: [string, string][] }>('breadcrumbs');
 	$effect(() => {

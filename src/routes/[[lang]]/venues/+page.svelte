@@ -1,12 +1,12 @@
 <script lang="ts">
-	import Link from '$lib/components/Link.svelte';
-	import { getAuth } from '$routes/Auth.svelte';
-	import Page from '$lib/components/Page.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import VenueLink from '$lib/components/VenueLink.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
 	import { VenueLabel } from '$lib/components/Labels';
+	import Link from '$lib/components/Link.svelte';
+	import Page from '$lib/components/Page.svelte';
+	import Subheader from '$lib/components/Subheader.svelte';
+	import VenueLink from '$lib/components/VenueLink.svelte';
 	import Text from '$lib/locales/Text.svelte';
+	import { getAuth } from '$routes/Auth.svelte';
 
 	let { data } = $props();
 
@@ -19,7 +19,7 @@
 <Page icon={VenueLabel} title={(l) => l.page.venues.title} breadcrumbs={[]}>
 	<Text markdown path={(l) => l.page.venues.description} />
 
-	{#if auth.isAuthenticated()}<Link to="/venues/proposal"
+	{#if auth().isAuthenticated()}<Link to="/venues/proposal"
 			><Text path={(l) => l.page.venues.link.propose} /></Link
 		>{/if}
 

@@ -1,35 +1,32 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import Nav from '$lib/components/Nav.svelte';
-	import { onMount, setContext } from 'svelte';
-	import { invalidate } from '$app/navigation';
-	import type { AuthError, PostgrestError } from '@supabase/supabase-js';
-	import { createAuthContext, getAuth } from './Auth.svelte';
-	import { setDB } from '$lib/data/CRUD';
-	import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
-	import { getFeedback, removeError, type Level } from './feedback.svelte';
-	import Button from '$lib/components/Button.svelte';
+	import { goto, invalidate } from '$app/navigation';
+	import { page } from '$app/state';
 	import { PUBLIC_ENV } from '$env/static/public';
+	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import { page } from '$app/state';
+	import Nav from '$lib/components/Nav.svelte';
+	import { setDB } from '$lib/data/CRUD';
+	import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
+	import type { AuthError, PostgrestError } from '@supabase/supabase-js';
+	import { onMount, setContext } from 'svelte';
+	import SupabaseAuth, { setAuth } from './Auth.svelte';
 	import { setLocaleContext } from './Contexts';
+	import { getFeedback, removeError, type Level } from './feedback.svelte';
 
 	let { data, children } = $props();
+	let { supabase, scholar, claims, locale } = $derived(data);
 
-	// svelte-ignore state_referenced_locally
-	createAuthContext(data.supabase, data.session);
+	let auth = $derived(new SupabaseAuth(supabase, scholar));
 
-	let locale = $derived(data.locale);
-	// svelte-ignore state_referenced_locally
-	setLocaleContext(locale);
+	setAuth(() => auth);
 
-	let crud = $derived(new SupabaseCRUD(data.supabase, locale));
+	setLocaleContext(() => locale);
+
+	let crud = $derived(new SupabaseCRUD(supabase, locale));
 
 	// Set client side database cache.
 	setDB(() => crud);
-
-	const auth = getAuth();
 
 	let feedback = $derived(getFeedback());
 
@@ -40,14 +37,12 @@
 		if (inProd && !['/updates', '/about'].some((p) => page.url.pathname.startsWith(p))) goto('/');
 
 		// Listen to auth stage changes and invalidate the auth context when they happen.
-		const { data: response } = data.supabase.auth.onAuthStateChange((_, newSession) => {
-			auth.setUser(newSession?.user ?? null);
-			if (newSession?.expires_at !== data.session?.expires_at) {
+		const { data } = supabase.auth.onAuthStateChange((_, _session) => {
+			if (_session?.expires_at !== claims?.exp) {
 				invalidate('supabase:auth');
 			}
 		});
-
-		return () => response.subscription.unsubscribe();
+		return () => data.subscription.unsubscribe();
 	});
 
 	// This global state stores breadcrumb data. The Page component sets it.

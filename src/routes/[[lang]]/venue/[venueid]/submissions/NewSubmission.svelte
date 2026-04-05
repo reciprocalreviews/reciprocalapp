@@ -10,6 +10,7 @@
 	import Form from '$lib/components/Form.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import Options from '$lib/components/Options.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
@@ -19,13 +20,12 @@
 	import { isntEmpty, validORCID } from '$lib/validation';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { handle } from '$routes/feedback.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
 
 	let { venue, submissionTypes }: { venue: VenueRow; submissionTypes: SubmissionType[] } = $props();
 
 	const db = getDB();
 	const auth = getAuth();
-	const user = $derived(auth.getUserID());
+	const user = $derived(auth().getUserID());
 
 	/** The title of the submission we're adding */
 	let title = $state('');

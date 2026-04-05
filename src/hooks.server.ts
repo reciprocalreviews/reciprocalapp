@@ -1,10 +1,9 @@
 import { createServerClient } from '@supabase/ssr';
-import { type Handle, redirect } from '@sveltejs/kit';
-import { sequence } from '@sveltejs/kit/hooks';
+import { type Handle } from '@sveltejs/kit';
 
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 
-const supabase: Handle = async ({ event, resolve }) => {
+export const handle: Handle = async ({ event, resolve }) => {
 	/** Filter out annoying Chrome logs */
 	if (event.url.pathname.startsWith('/.well-known/appspecific/com.chrome.devtools')) {
 		return new Response(null, { status: 204 }); // Return empty response with 204 No Content
@@ -19,46 +18,21 @@ const supabase: Handle = async ({ event, resolve }) => {
 		cookies: {
 			getAll: () => event.cookies.getAll(),
 			/**
-			 * SvelteKit's cookies API requires `path` to be explicitly set in
-			 * the cookie options. Setting `path` to `/` replicates previous/
-			 * standard behavior.
+			 * Note: You have to add the `path` variable to the
+			 * set and remove method due to sveltekit's cookie API
+			 * requiring this to be set, setting the path to `/`
+			 * will replicate previous/standard behaviour (https://kit.svelte.dev/docs/types#public-types-cookies)
 			 */
-			setAll: (cookiesToSet) => {
+			setAll: (cookiesToSet, headers) => {
 				cookiesToSet.forEach(({ name, value, options }) => {
 					event.cookies.set(name, value, { ...options, path: '/' });
 				});
+				if (Object.keys(headers).length > 0) {
+					event.setHeaders(headers);
+				}
 			}
 		}
 	});
-
-	/**
-	 * Unlike `supabase.auth.getSession()`, which returns the session _without_
-	 * validating the JWT, this function also calls `getUser()` to validate the
-	 * JWT before returning the session.
-	 */
-	event.locals.safeGetSession = async () => {
-		const {
-			data: { session }
-		} = await event.locals.supabase.auth.getSession();
-		if (!session) {
-			return { session: null, user: null };
-		}
-
-		const {
-			data: { user },
-			error
-		} = await event.locals.supabase.auth.getUser();
-		if (error) {
-			// JWT validation has failed
-			return { session: null, user: null };
-		}
-
-		return { session, user };
-	};
-
-	// Deactivate imprecise warning: https://github.com/supabase/auth-js/issues/888
-	// TODO The above is dangerous; we should remove this line once the issue is resolved.
-	event.locals.supabase.auth.suppressGetSessionWarning = true;
 
 	return resolve(event, {
 		filterSerializedResponseHeaders(name) {
@@ -70,21 +44,3 @@ const supabase: Handle = async ({ event, resolve }) => {
 		}
 	});
 };
-
-const authGuard: Handle = async ({ event, resolve }) => {
-	const { session, user } = await event.locals.safeGetSession();
-	event.locals.session = session;
-	event.locals.user = user;
-
-	if (!event.locals.session && event.url.pathname.startsWith('/private')) {
-		redirect(303, '/auth');
-	}
-
-	if (event.locals.session && event.url.pathname === '/auth') {
-		redirect(303, '/private');
-	}
-
-	return resolve(event);
-};
-
-export const handle: Handle = sequence(supabase, authGuard);

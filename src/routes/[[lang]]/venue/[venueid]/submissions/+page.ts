@@ -2,7 +2,9 @@ import getVenueRoles from '$lib/data/getVenueRoles.js';
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase, venue, user } = await parent();
+	const { supabase, venue, scholar } = await parent();
+
+	const uid = scholar?.id ?? null;
 
 	const venueid = params.venueid;
 
@@ -13,26 +15,26 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.eq('venue', venueid);
 	if (submissionsError) console.error(submissionsError);
 
-	const admin = venue !== null && user !== null && venue.admins.includes(user.id);
+	const admin = venue !== null && uid !== null && venue.admins.includes(uid);
 
 	// Get all roles.
 	const { data: roles, error: rolesError } =
 		// Missing data? Return nothing.
-		user === null ? { data: [], error: null } : await getVenueRoles(supabase, venueid);
+		uid === null ? { data: [], error: null } : await getVenueRoles(supabase, venueid);
 	if (rolesError) console.error(rolesError);
 
 	const roleids = roles?.map((role) => role.id) ?? [];
 
 	// Admin? Get all the volunteers. Non-admin? Get all commitments that are active, approved, and a role for this venue.
 	const { data: volunteering, error: volunteeringError } =
-		user === null
+		uid === null
 			? { data: [], error: null }
 			: admin
 				? await supabase.from('volunteers').select('*').in('roleid', roleids)
 				: await supabase
 						.from('volunteers')
 						.select('*')
-						.eq('scholarid', user.id)
+						.eq('scholarid', uid)
 						.eq('active', true)
 						.eq('accepted', 'accepted')
 						.in('roleid', roleids);
@@ -40,7 +42,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	// Get all selectable assignments for the venue, according to the RLS policy.
 	const { data: assignments, error: assignmentsError } =
-		user === null
+		uid === null
 			? { data: [], error: null }
 			: await supabase.from('assignments').select('*').eq('venue', venueid);
 	if (assignmentsError) console.error(assignmentsError);
@@ -57,9 +59,9 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	// Find all conflicts for the current user.
 	const { data: conflicts, error: conflictsError } =
-		user === null
+		uid === null
 			? { data: [], error: null }
-			: await supabase.from('conflicts').select('*').eq('scholarid', user.id);
+			: await supabase.from('conflicts').select('*').eq('scholarid', uid);
 	if (conflictsError) console.error(conflictsError);
 
 	// Find all of the submissions types for the venue.

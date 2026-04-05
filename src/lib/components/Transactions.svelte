@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { CurrencyRow, TransactionRow, VenueRow } from '$data/types';
 	import { getDB } from '$lib/data/CRUD';
+	import { getLocaleContext } from '$routes/Contexts';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { getAuth } from '../../routes/Auth.svelte';
 	import { handle } from '../../routes/feedback.svelte';
@@ -8,14 +9,13 @@
 	import Dialog from './Dialog.svelte';
 	import Feedback from './Feedback.svelte';
 	import Note from './Note.svelte';
+	import Paragraph from './Paragraph.svelte';
 	import ScholarLink from './ScholarLink.svelte';
 	import Status from './Status.svelte';
 	import Table from './Table.svelte';
 	import TextField from './TextField.svelte';
 	import Tokens from './Tokens.svelte';
 	import VenueLink from './VenueLink.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
-	import Paragraph from './Paragraph.svelte';
 
 	let {
 		transactions,
@@ -42,7 +42,7 @@
 	const locale = getLocaleContext();
 
 	// Editable if the user is the scholar being viewed.
-	let userid = $derived(auth.getUserID());
+	let userid = $derived(auth().getUserID());
 
 	let showCancel = $state(false);
 	let cancelReason = $state('');
@@ -104,8 +104,8 @@
 					size="extra-small"
 					id={transaction.from_venue}
 					name={venues.find((v) => v.id === transaction.from_venue)?.title ??
-						locale.view.transactions.error.unknownVenue}
-				></VenueLink>{:else}<em>{locale.view.transactions.cell.minted}</em>{/if}</td
+						locale().view.transactions.error.unknownVenue}
+				></VenueLink>{:else}<em>{locale().view.transactions.cell.minted}</em>{/if}</td
 		>
 		<td
 			>{#if transaction.to_scholar}<ScholarLink
@@ -115,7 +115,7 @@
 					size="extra-small"
 					id={transaction.to_venue}
 					name={venues.find((v) => v.id === transaction.to_venue)?.title ??
-						locale.view.transactions.error.unknownVenue}
+						locale().view.transactions.error.unknownVenue}
 				></VenueLink>{/if}</td
 		>
 		<td><Note path={() => transaction.purpose} /></td>
@@ -154,7 +154,7 @@
 					</Dialog>
 				</div>
 			{:else if proposed}
-				<em>{locale.view.transactions.cell.pendingApproval}</em>
+				<em>{locale().view.transactions.cell.pendingApproval}</em>
 			{:else}
 				—
 			{/if}
@@ -167,13 +167,13 @@
 {:else}
 	<Table full>
 		{#snippet header()}
-			<th>{locale.view.transactions.headers.status}</th>
-			<th>{locale.view.transactions.headers.tokens}</th>
-			<th>{locale.view.transactions.headers.scholar}</th>
-			<th>{locale.view.transactions.headers.from}</th>
-			<th>{locale.view.transactions.headers.to}</th>
-			<th>{locale.view.transactions.headers.purpose}</th>
-			<th>{locale.view.transactions.headers.actions}</th>
+			<th>{locale().view.transactions.headers.status}</th>
+			<th>{locale().view.transactions.headers.tokens}</th>
+			<th>{locale().view.transactions.headers.scholar}</th>
+			<th>{locale().view.transactions.headers.from}</th>
+			<th>{locale().view.transactions.headers.to}</th>
+			<th>{locale().view.transactions.headers.purpose}</th>
+			<th>{locale().view.transactions.headers.actions}</th>
 		{/snippet}
 		{#each allTransactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) as transaction, index}
 			{@render row(transaction, index)}
@@ -181,7 +181,7 @@
 		<tr>
 			<td colspan="100">
 				{#if allTransactions.length >= count}
-					{locale.view.transactions.cell.allLoaded}
+					{locale().view.transactions.cell.allLoaded}
 				{:else}
 					<Button
 						strings={(l) => l.view.transactions.button.loadMore}

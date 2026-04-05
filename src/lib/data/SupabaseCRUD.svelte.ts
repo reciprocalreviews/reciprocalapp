@@ -1,32 +1,32 @@
+import type { Database } from '$data/database';
 import type { AuthError, PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import type {
+	AssignmentID,
+	AssignmentRow,
+	CompensationRow,
 	CurrencyID,
 	ProposalID,
+	Response,
 	RoleID,
+	RoleRow,
 	ScholarID,
 	ScholarRow,
-	SupporterID,
-	VenueID,
-	VolunteerID,
-	Response,
-	TokenID,
-	TransactionStatus,
-	AssignmentID,
-	SubmissionStatus,
-	RoleRow,
-	AssignmentRow,
-	VenueRow,
 	SubmissionID,
-	TransactionID,
-	SubmissionTypeID,
+	SubmissionStatus,
 	SubmissionType,
-	CompensationRow
+	SubmissionTypeID,
+	SupporterID,
+	TokenID,
+	TransactionID,
+	TransactionStatus,
+	VenueID,
+	VenueRow,
+	VolunteerID
 } from '../../data/types';
+import { renderEmail, type EmailType } from '../../email/templates';
+import type Locale from '../locales/Locale';
 import CRUD, { NullUUID, type Charge, type Result } from './CRUD';
 import Scholar from './Scholar.svelte';
-import type { Database } from '$data/database';
-import type Locale from '../locales/Locale';
-import { renderEmail, type EmailType } from '../../email/templates';
 
 // A constant page size for paginated queries.
 export const PAGE_SIZE = 10;

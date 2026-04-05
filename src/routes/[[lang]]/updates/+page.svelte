@@ -1,16 +1,16 @@
 <script lang="ts">
-	import updates from './updates.json';
-	import Page from '$lib/components/Page.svelte';
 	import { IdeaLabel } from '$lib/components/Labels';
-	import Subheader from '$lib/components/Subheader.svelte';
+	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
+	import Subheader from '$lib/components/Subheader.svelte';
+	import updates from './updates.json';
 
 	// Get the dated updates in reverse chronological order.
 	const datedUpdates = updates
 		.filter((update) => update.date !== null)
 		.map((update) => ({
 			...update,
-			// Add a time zone to ensure consistent sorting regardless of the user's locale.
+			// Add a time zone to ensure consistent sorting regardless of the user's locale().
 			date: update.date + 'T00:00:00'
 		}))
 		.toSorted((a, b) => {

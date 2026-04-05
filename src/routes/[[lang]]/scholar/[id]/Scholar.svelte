@@ -67,7 +67,7 @@
 	const locale = getLocaleContext();
 
 	// Editable if the user is the scholar being viewed.
-	let editable = $derived(auth.getUserID() === scholar.getID());
+	let editable = $derived(auth().getUserID() === scholar.getID());
 </script>
 
 <Page
@@ -99,7 +99,7 @@
 	{#if editable}
 		{@const time = scholar.getStatusTime()}
 		<Tip
-			>{locale.page.scholar.tip.status}
+			>{locale().page.scholar.tip.status}
 			{#if time}{new Date(Date.parse(time)).toLocaleString()}{/if}</Tip
 		>
 		<Checkbox
@@ -191,8 +191,8 @@
 				<Card subheader icon={TokenLabel} strings={(l) => l.page.scholar.card.gift}>
 					<Gift
 						{tokens}
-						purpose={locale.page.scholar.card.gift.purpose}
-						success={locale.page.scholar.card.gift.success}
+						purpose={locale().page.scholar.card.gift.purpose}
+						success={locale().page.scholar.card.gift.success}
 						{currencies}
 						venues={venues ?? []}
 						transfer={(

@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Changed
 
 - Updated internal tooling for stability.
+- Updated SvelteKit auth approach with Supabase to avoid session security vulnerabilities (#71).
 
 ## 0.3.9 - 2026-03-29
 
@@ -27,7 +28,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 ### Added
 
-- Implemented localization support and extracted many strings to a default English locale.
+- Implemented localization support and extracted many strings to a default English locale().
 
 ### Changed
 

@@ -1,11 +1,11 @@
 <script lang="ts">
+	import type { CardText, LocaleText } from '$lib/locales/Locale';
+	import Text from '$lib/locales/Text.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
 	import type { Snippet } from 'svelte';
-	import Tag from './Tag.svelte';
 	import Circle from './Circle.svelte';
 	import Note from './Note.svelte';
-	import type { CardText, LocaleText } from '$lib/locales/Locale';
-	import { getLocaleContext } from '$routes/Contexts';
-	import Text from '$lib/locales/Text.svelte';
+	import Tag from './Tag.svelte';
 
 	let {
 		children,
@@ -44,7 +44,7 @@
 		onclick={() => (expand = !expand)}
 		onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (expand = !expand)}
 		tabindex="0"
-		title={expand ? locale.widget.card.collapse : locale.widget.card.expand}
+		title={expand ? locale().widget.card.collapse : locale().widget.card.expand}
 	>
 		<Circle {icon}></Circle>
 		<div class="text">
@@ -53,7 +53,7 @@
 			{:else}
 				<h2>{@render top()}</h2>
 			{/if}
-			<Note path={(l) => strings(locale).note} />
+			<Note path={(l) => strings(locale()).note} />
 		</div>
 		{#if controls}
 			<div>

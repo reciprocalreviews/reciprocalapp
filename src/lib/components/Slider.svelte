@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { getLocaleContext } from '$routes/Contexts';
 	import type LocaleText from '$lib/locales/Locale';
 	import type { SliderText } from '$lib/locales/Locale';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	interface Props {
 		min: number;
@@ -27,7 +27,7 @@
 	}: Props = $props();
 
 	const locale = getLocaleContext();
-	const text = $derived(strings(locale));
+	const text = $derived(strings(locale()));
 
 	let view: HTMLInputElement | undefined = $state();
 

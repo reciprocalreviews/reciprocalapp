@@ -1,25 +1,25 @@
 <script lang="ts">
 	import Button from '$lib/components/Button.svelte';
-	import Text from '$lib/locales/Text.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Link from '$lib/components/Link.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import Page from '$lib/components/Page.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import { ErrorLabel, ScholarLabel, TokenLabel, VenueLabel } from '$lib/components/Labels';
-	import { addFeedback, handle } from '$routes/feedback.svelte';
-	import Roles from './Roles.svelte';
-	import type { PageData } from './$types';
-	import Dashboard from '$lib/components/Dashboard.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
+	import Dashboard from '$lib/components/Dashboard.svelte';
+	import EditableText from '$lib/components/EditableText.svelte';
+	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
-	import TextField from '$lib/components/TextField.svelte';
+	import { ErrorLabel, ScholarLabel, TokenLabel, VenueLabel } from '$lib/components/Labels';
+	import Link from '$lib/components/Link.svelte';
 	import Options from '$lib/components/Options.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
 	import Table from '$lib/components/Table.svelte';
+	import TextField from '$lib/components/TextField.svelte';
+	import { getDB } from '$lib/data/CRUD';
+	import Text from '$lib/locales/Text.svelte';
 	import { validURL } from '$lib/validation';
+	import { getLocaleContext } from '$routes/Contexts';
+	import { addFeedback, handle } from '$routes/feedback.svelte';
+	import type { PageData } from './$types';
+	import Roles from './Roles.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -77,7 +77,10 @@
 			/>
 		{:else}
 			<Paragraph
-				text={(l) => venue.description.length === 0 ? l.page.venue.paragraph.noDescription : l.page.venue.paragraph.description}
+				text={(l) =>
+					venue.description.length === 0
+						? l.page.venue.paragraph.noDescription
+						: l.page.venue.paragraph.description}
 				inputs={venue.description.length === 0 ? {} : { description: venue.description }}
 			/>
 		{/if}
@@ -151,9 +154,9 @@
 		{:else}
 			<Table>
 				{#snippet header()}
-					<th>{locale.page.venue.headers.type}</th>
-					<th>{locale.page.venue.headers.description}</th>
-					<th>{locale.page.venue.headers.revisionOf}</th>
+					<th>{locale().page.venue.headers.type}</th>
+					<th>{locale().page.venue.headers.description}</th>
+					<th>{locale().page.venue.headers.revisionOf}</th>
 					{#if isAdmin && types.length > 1}<th></th>{/if}
 				{/snippet}
 				{#each types as type, index}
@@ -185,7 +188,7 @@
 							{#if isAdmin}
 								<Options
 									options={[
-										{ label: locale.shorthand.empty, value: undefined },
+										{ label: locale().shorthand.empty, value: undefined },
 										...types
 											.filter(
 												(t) =>
@@ -219,7 +222,10 @@
 		{#if roles === null || currency === null}
 			<Feedback error text={(l) => l.page.venue.feedback.rolesNotLoaded}></Feedback>
 		{:else}
-			<Paragraph text={(l) => l.page.venue.paragraph.allVolunteers} inputs={{ volunteersLink: `/venue/${venue.id}/volunteers` }} />
+			<Paragraph
+				text={(l) => l.page.venue.paragraph.allVolunteers}
+				inputs={{ volunteersLink: `/venue/${venue.id}/volunteers` }}
+			/>
 
 			<Roles
 				{venue}

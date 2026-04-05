@@ -1,11 +1,11 @@
 <script lang="ts">
+	import type Locale from '$lib/locales/Locale';
+	import type { LocaleText, NotedTextFieldText, TextFieldText } from '$lib/locales/Locale';
+	import Text from '$lib/locales/Text.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
 	import { tick } from 'svelte';
 	import Feedback from './Feedback.svelte';
 	import Tip from './Tip.svelte';
-	import type Locale from '$lib/locales/Locale';
-	import type { LocaleText, NotedTextFieldText, TextFieldText } from '$lib/locales/Locale';
-	import { getLocaleContext } from '$routes/Contexts';
-	import Text from '$lib/locales/Text.svelte';
 
 	type Props = {
 		/** The current text in the field */
@@ -45,7 +45,7 @@
 	let height = $state(0);
 
 	let locale = getLocaleContext();
-	let labels = $derived(strings(locale));
+	let labels = $derived(strings(locale()));
 	let note = $derived('note' in labels ? labels.note : undefined);
 	let label = $derived(labels.label);
 	let placeholder = $derived(labels.placeholder);

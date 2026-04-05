@@ -1,7 +1,7 @@
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase, user, venue } = await parent();
+	const { supabase, scholar, venue } = await parent();
 
 	const venueid = params.venueid;
 
@@ -26,7 +26,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	if (rolesError) console.error(rolesError);
 
 	// Get all volunteers for the venue.
-	const { data: volunteers, error: volunteersError } = user
+	const { data: volunteers, error: volunteersError } = scholar
 		? await supabase
 				.from('volunteers')
 				.select('*, roles!inner(venueid)')

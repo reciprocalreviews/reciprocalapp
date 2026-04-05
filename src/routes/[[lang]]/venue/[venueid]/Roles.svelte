@@ -118,7 +118,7 @@
 			expand={!isAdmin}
 		>
 			<p>
-				{locale.view.roles.paragraph.administeredBy}
+				{locale().view.roles.paragraph.administeredBy}
 				{#each admins as adminID, index}
 					{#if index > 0 && admins.length > 2},{/if}
 					{#if index === admins.length - 1 && admins.length > 1}and{/if}
@@ -187,22 +187,23 @@
 				{/snippet}
 
 				{#if role.priority === 0}
-					<Tip>{locale.view.roles.tip.highestPriority}</Tip>
+					<Tip>{locale().view.roles.tip.highestPriority}</Tip>
 				{/if}
 
 				{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}
 
 				<p>
-					{#if role.invited}{locale.view.roles.paragraph.roleCompensationInviteOnly}{:else}{locale
-							.view.roles.paragraph.roleCompensation}{/if}
+					{#if role.invited}{locale().view.roles.paragraph
+							.roleCompensationInviteOnly}{:else}{locale().view.roles.paragraph
+							.roleCompensation}{/if}
 					<CurrencyLink {currency} />
 				</p>
 
 				<Table>
 					{#snippet header()}
-						<th style="width: 20%">{locale.view.roles.headers.type}</th>
-						<th style="width: 40%">{locale.view.roles.headers.compensation}</th>
-						<th style="width: 40%">{locale.view.roles.headers.rationale}</th>
+						<th style="width: 20%">{locale().view.roles.headers.type}</th>
+						<th style="width: 40%">{locale().view.roles.headers.compensation}</th>
+						<th style="width: 40%">{locale().view.roles.headers.rationale}</th>
 					{/snippet}
 					{#each types as type}
 						{@const comp = compensation?.find(
@@ -281,7 +282,7 @@
 					{#if scholarVolunteer !== undefined}
 						{#if scholarVolunteer.accepted === 'declined'}
 							<p>
-								{locale.view.roles.paragraph.declined}
+								{locale().view.roles.paragraph.declined}
 								<Button
 									strings={(l) => l.view.roles.button.accept}
 									action={() =>
@@ -296,7 +297,7 @@
 							</p>
 						{:else if scholarVolunteer.active}
 							<p>
-								{locale.view.roles.paragraph.volunteering}
+								{locale().view.roles.paragraph.volunteering}
 								<Button
 									testid="volunteered-for-role"
 									strings={(l) => l.view.roles.button.stop}
@@ -311,7 +312,7 @@
 							/>
 						{:else}
 							<p>
-								{locale.view.roles.paragraph.stopped}
+								{locale().view.roles.paragraph.stopped}
 								<Button
 									strings={(l) => l.view.roles.button.resume}
 									action={() => handle(db().updateVolunteerActive(scholarVolunteer.id, true))}
@@ -427,7 +428,7 @@
 							strings={(l) => l.view.roles.options.approver}
 							value={role.approver ?? undefined}
 							options={[
-								{ label: locale.shorthand.empty, value: undefined },
+								{ label: locale().shorthand.empty, value: undefined },
 								...roles
 									.filter((r) => r.id !== role.id)
 									.map((r) => ({ label: r.name, value: r.id }))

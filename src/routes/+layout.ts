@@ -1,7 +1,8 @@
-import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr';
-import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
-import type { LayoutLoad } from './$types';
 import type { Database } from '$data/database';
+import type { ScholarRow } from '$data/types';
+import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
+import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr';
+import type { LayoutLoad } from './$types';
 
 export const load: LayoutLoad = async ({ data, depends, fetch }) => {
 	/**
@@ -27,28 +28,26 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
 				}
 			});
 
+	let scholar: ScholarRow | null = null;
+
 	/**
-	 * It's fine to use `getSession` here, because on the client, `getSession` is
-	 * safe, and on the server, it reads `session` from the `LayoutData`, which
-	 * safely checked the session using `safeGetSession`.
+	 * `getClaims` validates the JWT signature locally (for asymmetric keys) once
+	 * the relevant signing keys are available or cached, and returns the decoded
+	 * claims. While an initial or periodic network request may be required to
+	 * fetch or refresh keys, this is both faster and safer than `getSession`,
+	 * which does not validate the JWT.
 	 */
-	const {
-		data: { session }
-	} = await supabase.auth.getSession();
-
-	const {
-		data: { user }
-	} = await supabase.auth.getUser();
-
-	let scholar;
+	const { data: claimsData, error } = await supabase.auth.getClaims();
+	const claims = error ? null : claimsData?.claims;
+	const userID = claims?.sub;
 
 	// If there's a user, return scholar
-	if (user) {
-		const { data, error } = await supabase.from('scholars').select().eq('id', user.id).single();
+	if (userID) {
+		const { data, error } = await supabase.from('scholars').select().eq('id', userID).single();
 		if (data && error === null) {
 			scholar = data;
 		}
 	} else scholar = null;
 
-	return { session, supabase, user, scholar, locale: data.locale };
+	return { claims, supabase, scholar, locale: data.locale };
 };

@@ -1,1015 +1,911 @@
 [
-  {
-    "version": "0.3.10",
-    "date": "2026-04-05",
-    "changes": {
-      "added": [],
-      "fixed": [],
-      "changed": [
-        "Updated internal tooling for stability."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.3.9",
-    "date": "2026-03-29",
-    "changes": {
-      "added": [],
-      "fixed": [],
-      "changed": [
-        "Updated internal tooling for stability.",
-        "Localized card toggle, tokens component, all paragraph text, and other lingering fallback and default text. Localization should be complete."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.3.8",
-    "date": "2026-03-22",
-    "changes": {
-      "added": [],
-      "fixed": [],
-      "changed": [
-        "Updated internal tooling for stability.",
-        "Localized all buttons, text fields, notes, cards, sliders, drop downs, tables, and page headers."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.3.7",
-    "date": "2026-03-15",
-    "changes": {
-      "added": [
-        "Implemented localization support and extracted many strings to a default English locale."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated internal tooling for stability and speed.",
-        "Improved page header styling and spacing.",
-        "Merged breadcrumbs in page header.",
-        "Improved setup instructions.",
-        "Allow some sliders to not fire immediately, especially if they hit the database."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.3.6",
-    "date": "2026-03-08",
-    "changes": {
-      "added": [
-        "Added an updates page to mirror changelog content (#81).",
-        "We now record transactions when tokens are minted on a currency, for transparency.",
-        "Added basic coverage of end-to-end tests for all routes and authentication states (#49)."
-      ],
-      "fixed": [
-        "Corrected permissions on several table security settings."
-      ],
-      "changed": [],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.3.5",
-    "date": "2026-03-01",
-    "changes": {
-      "added": [
-        "Added pagination to transaction pages for scalability (#72).",
-        "Added emoji icons to page headers for consistency and distinguishability.",
-        "Styled debits in transaction for visibility.",
-        "More tests of the authenticated scholar profile."
-      ],
-      "fixed": [
-        "Corrected volunteer count on venue page."
-      ],
-      "changed": [
-        "More consistent rendering and phrasing of transactions.",
-        "Better page and header padding.",
-        "Improved header styles.",
-        "Fixed venue link.",
-        "Updated minor versions of Svelte and Supabase."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.3.4",
-    "date": "2026-02-22",
-    "changes": {
-      "added": [
-        "Added a submission type and compensation rate by submission type to allow for compensation rates to vary."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated prod landing page to add a bit more info about the platform.",
-        "Updated minor versions of `@supabase/supbase-js`, `@sveltjs/kit`, `prettier-plugin-svelte`, `supabase`, `svelte`, `svelte-check`."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.3.3",
-    "date": "2026-02-15",
-    "changes": {
-      "added": [
-        "Added tests for `/currency/[id]`, `/curency/[id]/transactions`, `/scholar/[id]/transactions` pages."
-      ],
-      "fixed": [
-        "Fixed page margins."
-      ],
-      "changed": [
-        "Updated minor versions of `@sveltejs/kit`, `svelte`, `svelte-check`, and `supabase`.",
-        "Updated seed to have more tokens for testing.",
-        "Improved display of scholar tokens.",
-        "Improved layout of footer."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.3.2",
-    "date": "2026-02-08",
-    "changes": {
-      "added": [
-        "Added a sticky footer for less frequently used site-wide information and links.",
-        "Make staging and deployment runs dependent on test workflows.",
-        "Added tests for `/`, `/about`, `/scholar/[id]` pages, as well as some utility functions for logging in and out of seeded scholars."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated minor versions of `@playright/test`, `@sveltejs/kit`, `supabase`, `svelte`, `@supabase/supabase-js`"
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.3.1",
-    "date": "2026-02-01",
-    "changes": {
-      "added": [
-        "Differentiated between venue admins and editor role, to ensure confidentiality, manage conflicts, and enable compensation (#73).",
-        "Made volunteering public on a scholar's profile page (#76).",
-        "Realtime updates on all schoar, currency, venue, submission, and proposals pages (#26)."
-      ],
-      "fixed": [
-        "Support creating a new currency in a venue proposal (#74).",
-        "Improved layout of volunteers table (#77).",
-        "Editable text no longer grows the page unbounded (#75).",
-        "Fixed submissions update RLS role to allow editors to edit.",
-        "Better spacing in page metadata.",
-        "Improved spacing of editable text in flex layouts."
-      ],
-      "changed": [
-        "Updated minor versions of `supabase/supabase-js`, `@playright/test`, `@sveltejs/adapter-vercel`, `@svelte/kit`, `prettier`, `supabase`, `svelte`, `svelte-check`, and `vitest`."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.3.0",
-    "date": "2026-01-25",
-    "changes": {
-      "added": [
-        "Fixed #54, adding anonymity and conflicts support to venues and roles, to implement double anonymous, single anonymous, and open reviewing.",
-        "Added venue active/inactive switch, to allow for venues to be created without being availabe for use yet.",
-        "Created editor-guarded settings page to organize venue settings and declutter landing page."
-      ],
-      "fixed": [
-        "Eliminated redundant error `Note`s, merging them with `Feedback`.",
-        "Narrowed a few RLS policies to prevent unauthenticated inserts and updates.",
-        "Fixed logic of assignment approval on submissions page."
-      ],
-      "changed": [],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.2.2",
-    "date": "2026-01-18",
-    "changes": {
-      "added": [
-        "Fixed #69, properly filtering submissions based on role bidding status, assignment status, and total desired assignments.",
-        "Improved saved feedback."
-      ],
-      "fixed": [
-        "Clarified meaning of invite and bid."
-      ],
-      "changed": [
-        "Updated minor versions of `svelte`, `@sveltejs/kit`, `prettier`, `supabase`, `vitest`."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.2.1",
-    "date": "2026-01-11",
-    "changes": {
-      "added": [
-        "Fixed #33: Added volunteer export feature."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated minor versions of `@sveltejs`, `supabase`, `@supabase/superbase-js`, `vite`, `vitest` and related dependencies."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.2.0",
-    "date": "2025-12-14",
-    "changes": {
-      "added": [
-        "Added approved, incomplete submission assignments to task list.",
-        "Added pending assignment approval task to scholar task list."
-      ],
-      "fixed": [
-        "Fixed submission assignment visibility.",
-        "Fixed assignment insertion permissions.",
-        "Improved usability of scholar charge interface on submission page."
-      ],
-      "changed": [
-        "Updated minor versions of `@supabase/supabase-js`, `supabase`, `@sveltejs/kit`, `svelte`, `vite`."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.9",
-    "date": "2025-12-07",
-    "changes": {
-      "added": [
-        "Added volunteer note to landing page.",
-        "Added a theory of change to the about page.",
-        "Fixed #68: Request compensation for role."
-      ],
-      "fixed": [
-        "Resolved Svelte stale reference warnings.",
-        "Improved collapsed state of venue editor view."
-      ],
-      "changed": [
-        "Updated minor versions of `@playwright/test`, `@supabase/ssr`, `@supabase/supabase-js`, `@sveltejs/adapter-vercel`, `@sveltejs/kit`, `prettier`, `supabase`, `svelte`, `vite`, `vitest`."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.8",
-    "date": "2025-11-28",
-    "changes": {
-      "added": [],
-      "fixed": [
-        "Improved and simplified landing page explanation.",
-        "Flipped proposed and active venues on venues page."
-      ],
-      "changed": [],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.7",
-    "date": "2025-11-23",
-    "changes": {
-      "added": [
-        "Fixed #53: Migrated to declarative schemas for clarity."
-      ],
-      "fixed": [
-        "Linked error message prompts to log in.",
-        "Expand editing roles by default to make volunteering more obvious.",
-        "Less intense token color."
-      ],
-      "changed": [
-        "Updated minor versions of Supabase, supabase-js, Svelte, SvelteKit, svelte-check, vitest."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.6",
-    "date": "2025-11-03",
-    "changes": {
-      "added": [
-        "Fixed #58: Send reminders to editors and scholars to approve proposed transactions.",
-        "Fixed #50: Warning on changing roles with volunteers."
-      ],
-      "fixed": [
-        "Fixed #43: Better feedback about unapproved transactions; better link to transactions.",
-        "Improved visual design of forms and text fields."
-      ],
-      "changed": [
-        "Updated minor versions of Supabase, Svelte, vite, vitest."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.5",
-    "date": "2025-11-02",
-    "changes": {
-      "added": [],
-      "fixed": [
-        "Fixed #63, granting welcome tokens on volunteer assignment or invite accept.",
-        "Improved names of venue proposal functions.",
-        "Fixed #30, preventing editors from being minters of a venue's currency.",
-        "Fixed #66, permit gifting venue.",
-        "Made currency visible to venue viewers."
-      ],
-      "changed": [
-        "Updated minor dependencies: Supabase, Svelte, SvelteKit, vitest."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.4",
-    "date": "2025-10-26",
-    "changes": {
-      "added": [
-        "Better tip styling.",
-        "Consistent currency link styling.",
-        "Better external link styling.",
-        "Show minting roles in profile.",
-        "Added task list to scholar page to show pending invitations and transactions."
-      ],
-      "fixed": [
-        "Fixed inline padding of lists.",
-        "Improved save feedback visual design."
-      ],
-      "changed": [
-        "Sync SvelteKit types before building in Playwright GitHub Action.",
-        "Slim Playwright browsers tested.",
-        "Updated minor dependencies: supabase, @supabase/supabase-js, @sveltejs/kit, svelte, vite",
-        "Upgraded to vite 4"
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.3",
-    "date": "2025-10-19",
-    "changes": {
-      "added": [],
-      "fixed": [],
-      "changed": [
-        "Updated Vercel adapter to 7.0.",
-        "Updated minor dependencies: Playwright, Supabase, SvelteKit, Svelte, Typescirpt, vite"
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.26",
-    "date": "2025-09-21",
-    "changes": {
-      "added": [
-        "All manual addition and removal of assignments to submission.",
-        "Fixed #61, compensating roles for completed assignment. Added manual button and CRUD for other contexts."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated minor versions of Svelte, SvelteKit, vite."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.25",
-    "date": "2025-09-14",
-    "changes": {
-      "added": [],
-      "fixed": [
-        "Distinguished visual design of feedback component from tags."
-      ],
-      "changed": [
-        "Updated minor versions of Supabase, Svelte, SvelteKit, Vite."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.24",
-    "date": "2025-09-07",
-    "changes": {
-      "added": [],
-      "fixed": [
-        "Refined visual design based on new dashboard/header/card motif."
-      ],
-      "changed": [
-        "Updated minor versions of Svelte, Supabase."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.23",
-    "date": "2025-09-01",
-    "changes": {
-      "added": [
-        "Added a dashboard for high value information on each page, where relevant.",
-        "Started a minor visual motif redesign using a dashboard-metaphor on each page."
-      ],
-      "fixed": [
-        "Improved editable text ruler sizing."
-      ],
-      "changed": [
-        "Updated minor versions of Supabase, Svelte, Vite."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.22",
-    "date": "2025-08-23",
-    "changes": {
-      "added": [
-        "Fixed [#29](https://github.com/reciprocalreviews/reciprocalapp/issues/29), adding volunteer filter.",
-        "Fixed [#32](https://github.com/reciprocalreviews/reciprocalapp/issues/23), supporting ORCID for role invites."
-      ],
-      "fixed": [
-        "Wrap token formatted text.",
-        "Improved formatting of inline feedback.",
-        "Improved layout of login form.",
-        "Centered save feedback in header.",
-        "Clarified description of minter role.",
-        "Max width on drop downs.",
-        "Properly style error messages.",
-        "Fixed [#52](https://github.com/reciprocalreviews/reciprocalapp/issues/52), minting welcome tokens before granting them.",
-        "Fixed font on non-emoji icons in cards.",
-        "Fixed [#21](https://github.com/reciprocalreviews/reciprocalapp/issues/21), passing session to auth state to prevent page flickering.",
-        "Fixed [#23](https://github.com/reciprocalreviews/reciprocalapp/issues/23), showing editor roles correctly in profile page.",
-        "Restructured list of volunteer roles."
-      ],
-      "changed": [
-        "Updated minor versions of Playwright, Supabase, SvelteKit, vite."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.21",
-    "date": "2025-08-16",
-    "changes": {
-      "added": [
-        "Permit zero submission cost and submissions (also to ease testing of submission creation).",
-        "Fixed #45: Sorting and filtering submissions.",
-        "Fixed #28: Moved invitations to scholar page.",
-        "Send email notification to scholars when invited to a role."
-      ],
-      "fixed": [
-        "Improved wrapping of editable text widget.",
-        "Fixed post-submission behavior, collapsing and resetting form.",
-        "Improved padding of cards.",
-        "Better spacing on h1 headers in page.",
-        "Improved venue landing page layout.",
-        "Handle no submissions visible on venue landing page."
-      ],
-      "changed": [
-        "Updated minor versions of Svelte, vite, Supabase."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.20",
-    "date": "2025-08-10",
-    "changes": {
-      "added": [
-        "#31: Dynamic steward list."
-      ],
-      "fixed": [
-        "More consistent formatting of currency links."
-      ],
-      "changed": [
-        "Updated minor versions of Playwright, Supabase, Svelte, SvelteKit, Typescript, vite."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.19",
-    "date": "2025-07-27",
-    "changes": {
-      "added": [],
-      "fixed": [],
-      "changed": [
-        "Updated minor versions of Playwright, Supabase, Svelte, SvelteKit, eslint.",
-        "Updated to vite 7."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.18",
-    "date": "2025-06-22",
-    "changes": {
-      "added": [],
-      "fixed": [
-        "Type error in error handling.",
-        "Fixed #44: Reminding scholars of stale status."
-      ],
-      "changed": [
-        "Updated Playwright, Svelte, SvelteKit, Supabase, eslint."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.17",
-    "date": "2025-06-08",
-    "changes": {
-      "added": [
-        "Fixed #38, notify stewards of new venue proposal.",
-        "Fixed #36, notify scholars of when they are added or removed to a submission.",
-        "Fixed #39, notify editors of a new venue proposal."
-      ],
-      "fixed": [
-        "Typo in editor compensation.",
-        "Resolved all `search_path` security warnings.",
-        "More efficent calls to `auth.uid()` in RLS policies.",
-        "Narrow RLS permissions on submissions delete to authenticated scholars.",
-        "Corrected table for email RLS policy."
-      ],
-      "changed": [
-        "Updated Supabase, Svelte, SvelteKit, eslint, vitest."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.16",
-    "date": "2025-05-25",
-    "changes": {
-      "added": [
-        "Fixed #37, notifying editors and proposers of approved venue."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated Supabase, sveltKit, Svelte, Vitest.",
-        "Filtered Chrome log in local development."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.15",
-    "date": "2025-05-18",
-    "changes": {
-      "added": [
-        "Emails table with trigger that calls Resend edge function to send email."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated Svelte, SvelteKit, Eslint, Prettier, Supabase, Vite, Vitest."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.14",
-    "date": "2025-04-20",
-    "changes": {
-      "added": [
-        "Created a Supabase Edge Function and client-side API for sending an email via Resend."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated Playwright, Svelte, SveltKit, Vite, eslint."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.13",
-    "date": "2025-04-13",
-    "changes": {
-      "added": [
-        "Added bidding scholar balance to submission bidding table.",
-        "Fixed #51 sticky header.",
-        "Saving feedback in sticky header."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated Svelte, SvelteKit, Supabase, Supabase SSR, and other minor versions."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.12",
-    "date": "2025-03-23",
-    "changes": {
-      "added": [],
-      "fixed": [
-        "Better link to issues page.",
-        "Supress false positive warning.",
-        "Mirrored front and back end submissions visibility.",
-        "Improved layout of submissions table.",
-        "Deactivate button while completing it's action.",
-        "Fixed ordering of roles.",
-        "Keep transactions confidential on submissions page.",
-        "Handle undefined on new role.",
-        "Improved visual design of assignments for submission.",
-        "Verified read and write permissions on submission page."
-      ],
-      "changed": [
-        "Updated minor versions of Playwright, Supabase SSR, Svelte, SvelteKit, Eslint, Vitest."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.11",
-    "date": "2025-03-09",
-    "changes": {
-      "added": [
-        "Added `approve` field to role, defining what other roles can approve bids for assignments to the role.",
-        "Feedback on empty volunteer list.",
-        "Better feedback on role invite success.",
-        "List the number of volunteers in a role on the venue page."
-      ],
-      "fixed": [
-        "Improved error handling on role invite form.",
-        "Fixed emoji rendering on Safari.",
-        "Made role invitations more visible.",
-        "Better layout of commitments.",
-        "Improved status tip.",
-        "Improved invitation feedback."
-      ],
-      "changed": [
-        "Updated minor versions of Supabase, SvelteKit, Svelte, Vite.",
-        "Ensure SvelteKit is synced upon build, to clearing warning in Vercel builds."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.10",
-    "date": "2025-03-09",
-    "changes": {
-      "added": [
-        "Show expertise in list of bids on paper.",
-        "Sortable venue roles, to determine presentation order.",
-        "Fixed #24, redesigning venue page to integrate roles.",
-        "Split volunteers page by role, in role order.",
-        "Improved volunteers breadcrumbs.",
-        "Fixed #40, adding editor compensation amount to venue table."
-      ],
-      "fixed": [
-        "Distinguished between a assignment bid and an approved assignment, to remember buds if someone is unassigned.",
-        "Improved design of feedback in flex layouts.",
-        "Align table header cells to bottom.",
-        "Full width tables.",
-        "Improved layout and bidding options in submission row.",
-        "Show label on editable text when not editing.",
-        "Make volunteers visible to non-authenticated scholars."
-      ],
-      "changed": [
-        "Updated minor versions of Playright, Svelte, SvelteKit, Vite, Vitest."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.9",
-    "date": "2025-03-02",
-    "changes": {
-      "added": [],
-      "fixed": [
-        "Account for empty previous id in submission.",
-        "A bit of assignment and volunteering restructuring to better support requirements."
-      ],
-      "changed": [
-        "Updated minor versions of Supabase, Svelte, Typescript, Vite."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.8",
-    "date": "2025-02-23",
-    "changes": {
-      "added": [
-        "Show transactions pending on submissions page.",
-        "Show transactions status on submission page.",
-        "Added a toggleable submission status to each submission, to mark when it is no longer in review.",
-        "Show submissions on scholar page.",
-        "Transaction approval by giver or minter.",
-        "Transaction cancelation by giver, editor, or minter."
-      ],
-      "fixed": [
-        "Use Noto Emoji instead of system default to guarantee monochrome, consistent emojis.",
-        "Improved tip visual design.",
-        "Fixed checkbox label alignment.",
-        "Generate proposed transactions for submission.",
-        "Account for currency in gifting and transfers."
-      ],
-      "changed": [
-        "Updated minor versions of Svelte, Vite, Vitest."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.7",
-    "date": "2025-02-18",
-    "changes": {
-      "added": [
-        "More consistent, precise, and type-safe error handling.",
-        "Added transaction IDs to submission to keep track of charges."
-      ],
-      "fixed": [
-        "Fixed scholar transactions breadcrumb link.",
-        "Collapse new submission form after submitting."
-      ],
-      "changed": [
-        "Updated all minor versions of Supabase, Svelte, SvelteKit."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.6",
-    "date": "2025-02-09",
-    "changes": {
-      "added": [
-        "Added basic bidding interface."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated all minor versions of vite, Typescript, Svelte, Supabase."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.5",
-    "date": "2025-02-02",
-    "changes": {
-      "added": [
-        "Edit submission title.",
-        "Edit titles in place.",
-        "Added link to previous manuscript submission."
-      ],
-      "fixed": [
-        "Resolved several defects with the new submission form."
-      ],
-      "changed": [
-        "Updated minor versions of all dependencies."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.4",
-    "date": "2025-01-19",
-    "changes": {
-      "added": [
-        "Implemented manual submission creation form.",
-        "Styled submission list.",
-        "Added breadcrumbs on all pages to streamline navigation.",
-        "Defined a page to display a submission to authors or editors."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated all minor versions of vite, Typescript, Svelte, Supabase."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.3",
-    "date": "2025-01-12",
-    "changes": {
-      "added": [
-        "Initial progress on `submissions` schema."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated all minor versions of vite, Typescript, Svelte, Supabase."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.2",
-    "date": "2024-12-29",
-    "changes": {
-      "added": [
-        "Improved styling of expandable cards."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated all minor versions of dependencies, including Svelte, SvelteKit, and Vite."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.1",
-    "date": "2024-12-08",
-    "changes": {
-      "added": [
-        "When scholars volunteer for a venue for the first time, create a proposed transaction request for minter to approve, and allow minters to approve it, generating tokens and transferring them to the scholar."
-      ],
-      "fixed": [
-        "Redesigned cards to be collapsible, to simplify initial view, make data salient, and convey purpose."
-      ],
-      "changed": [],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.1.0",
-    "date": "2024-12-01",
-    "changes": {
-      "added": [
-        "Allow scholars to gift tokens.",
-        "Added pattern for explicit success feedback."
-      ],
-      "fixed": [
-        "Fixed RLS policy for volunteer insertion."
-      ],
-      "changed": [
-        "Updated all minor releases of dependencies.",
-        "Updated to vite 6."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.0.10",
-    "date": "2024-11-17",
-    "changes": {
-      "added": [
-        "Added number of tokens minted for a currency to the currency page.",
-        "Show number of tokens possed by a venue.",
-        "Show scholar's token count.",
-        "Show scholar's transactions.",
-        "Show venue's transactions.",
-        "Show currency's transactions.",
-        "Added approval status to transactions and updated security rules accordingly.",
-        "Minters mint tokens.",
-        "Venues can gift tokens to scholars."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated Svelte and Supabase point releases."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.0.9",
-    "date": "2024-11-10",
-    "changes": {
-      "added": [
-        "Defined tokens and transactions table and draft security rules.",
-        "List venues using a currency.",
-        "List minters on a currency.",
-        "Add and remove minters from currency."
-      ],
-      "fixed": [],
-      "changed": [
-        "Renamed SourceLink to VenueLink for consistency.",
-        "Upgraded Svelte, SvelteKit, Supabase dependencies."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.0.8",
-    "date": "2024-11-03",
-    "changes": {
-      "added": [
-        "Added ability to volunteer for a role and set expertise.",
-        "Added ability to stop volunteering for a role.",
-        "Added ability to invite scholars to roles and for scholars to accept and decline roles.",
-        "Added list of volunteer roles to profile.",
-        "Added list of venue volunteers."
-      ],
-      "fixed": [
-        "Fixed venues link on home page."
-      ],
-      "changed": [
-        "Upgraded Svelte, eslint, and dependencies."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.0.7",
-    "date": "2024-10-20",
-    "changes": {
-      "added": [
-        "Venue page: currency link, welcome amount, bidding toggle, role creation, editing, and deletion."
-      ],
-      "fixed": [
-        "A few typography improvements.",
-        "Deactivated hover feedback on inactive buttons.",
-        "Fixed rendering for missing name in venue proposal."
-      ],
-      "changed": [
-        "Upgraded to Svelte 5.0."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.0.6",
-    "date": "2024-10-13",
-    "changes": {
-      "added": [
-        "Subtitles for pages, with more consistent display.",
-        "Edit and delete support for a venue proposal.",
-        "Stewards can edit, delete, and approve a venue proposal.",
-        "List active venues.",
-        "Display venue title, description, and link.",
-        "Edit venue editors, title, and URL."
-      ],
-      "fixed": [
-        "Corrected automatic height on text areas."
-      ],
-      "changed": [],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.0.5",
-    "date": "2024-10-06",
-    "changes": {
-      "added": [
-        "Currency name and description display and editing.",
-        "Show proposed venues on the venues page.",
-        "Render proposed venue content.",
-        "Allow additional support to a proposal."
-      ],
-      "fixed": [],
-      "changed": [],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.0.4",
-    "date": "2024-09-28",
-    "changes": {
-      "added": [
-        "Visual design polish on components.",
-        "Added accessible notifications section.",
-        "Create currencies and exchanges.",
-        "Create currency route."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated Svelte and Supabase minor versions.",
-        "Updated GitHub checkout action dependencies."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.0.3",
-    "date": "2024-09-01",
-    "changes": {
-      "added": [],
-      "fixed": [],
-      "changed": [
-        "Updated Svelte and Supabase minor revisions."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.0.2",
-    "date": "2024-08-25",
-    "changes": {
-      "added": [
-        "Supabase scripts for documentation.",
-        "Basic email one-time password authenatication."
-      ],
-      "fixed": [],
-      "changed": [
-        "Updated Svelte and Supabase minor revisions",
-        "Migrated auth state to Svelte state class."
-      ],
-      "removed": []
-    }
-  },
-  {
-    "version": "0.0.1",
-    "date": "2024-08-04",
-    "changes": {
-      "added": [
-        "Created CHANGELOG.",
-        "Custom favicon.",
-        "Set up GitHub actions for unit and integration tests.",
-        "Configured Supabase, including continuous integration on `dev` and `main` branches to `reciprocal-staging` and `reciprocal-production`, respectively.",
-        "Added basic OTP authentication for dev purposes.",
-        "typescript, vite, vitest, svelte, prettier, playwright"
-      ],
-      "fixed": [],
-      "changed": [],
-      "removed": []
-    }
-  }
+	{
+		"version": "0.3.10",
+		"date": "2026-04-05",
+		"changes": {
+			"added": [],
+			"fixed": [],
+			"changed": ["Updated internal tooling for stability."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.3.9",
+		"date": "2026-03-29",
+		"changes": {
+			"added": [],
+			"fixed": [],
+			"changed": [
+				"Updated internal tooling for stability.",
+				"Localized card toggle, tokens component, all paragraph text, and other lingering fallback and default text. Localization should be complete."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.3.8",
+		"date": "2026-03-22",
+		"changes": {
+			"added": [],
+			"fixed": [],
+			"changed": [
+				"Updated internal tooling for stability.",
+				"Localized all buttons, text fields, notes, cards, sliders, drop downs, tables, and page headers."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.3.7",
+		"date": "2026-03-15",
+		"changes": {
+			"added": [
+				"Implemented localization support and extracted many strings to a default English locale()."
+			],
+			"fixed": [],
+			"changed": [
+				"Updated internal tooling for stability and speed.",
+				"Improved page header styling and spacing.",
+				"Merged breadcrumbs in page header.",
+				"Improved setup instructions.",
+				"Allow some sliders to not fire immediately, especially if they hit the database."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.3.6",
+		"date": "2026-03-08",
+		"changes": {
+			"added": [
+				"Added an updates page to mirror changelog content (#81).",
+				"We now record transactions when tokens are minted on a currency, for transparency.",
+				"Added basic coverage of end-to-end tests for all routes and authentication states (#49)."
+			],
+			"fixed": ["Corrected permissions on several table security settings."],
+			"changed": [],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.3.5",
+		"date": "2026-03-01",
+		"changes": {
+			"added": [
+				"Added pagination to transaction pages for scalability (#72).",
+				"Added emoji icons to page headers for consistency and distinguishability.",
+				"Styled debits in transaction for visibility.",
+				"More tests of the authenticated scholar profile."
+			],
+			"fixed": ["Corrected volunteer count on venue page."],
+			"changed": [
+				"More consistent rendering and phrasing of transactions.",
+				"Better page and header padding.",
+				"Improved header styles.",
+				"Fixed venue link.",
+				"Updated minor versions of Svelte and Supabase."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.3.4",
+		"date": "2026-02-22",
+		"changes": {
+			"added": [
+				"Added a submission type and compensation rate by submission type to allow for compensation rates to vary."
+			],
+			"fixed": [],
+			"changed": [
+				"Updated prod landing page to add a bit more info about the platform.",
+				"Updated minor versions of `@supabase/supbase-js`, `@sveltjs/kit`, `prettier-plugin-svelte`, `supabase`, `svelte`, `svelte-check`."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.3.3",
+		"date": "2026-02-15",
+		"changes": {
+			"added": [
+				"Added tests for `/currency/[id]`, `/curency/[id]/transactions`, `/scholar/[id]/transactions` pages."
+			],
+			"fixed": ["Fixed page margins."],
+			"changed": [
+				"Updated minor versions of `@sveltejs/kit`, `svelte`, `svelte-check`, and `supabase`.",
+				"Updated seed to have more tokens for testing.",
+				"Improved display of scholar tokens.",
+				"Improved layout of footer."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.3.2",
+		"date": "2026-02-08",
+		"changes": {
+			"added": [
+				"Added a sticky footer for less frequently used site-wide information and links.",
+				"Make staging and deployment runs dependent on test workflows.",
+				"Added tests for `/`, `/about`, `/scholar/[id]` pages, as well as some utility functions for logging in and out of seeded scholars."
+			],
+			"fixed": [],
+			"changed": [
+				"Updated minor versions of `@playright/test`, `@sveltejs/kit`, `supabase`, `svelte`, `@supabase/supabase-js`"
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.3.1",
+		"date": "2026-02-01",
+		"changes": {
+			"added": [
+				"Differentiated between venue admins and editor role, to ensure confidentiality, manage conflicts, and enable compensation (#73).",
+				"Made volunteering public on a scholar's profile page (#76).",
+				"Realtime updates on all schoar, currency, venue, submission, and proposals pages (#26)."
+			],
+			"fixed": [
+				"Support creating a new currency in a venue proposal (#74).",
+				"Improved layout of volunteers table (#77).",
+				"Editable text no longer grows the page unbounded (#75).",
+				"Fixed submissions update RLS role to allow editors to edit.",
+				"Better spacing in page metadata.",
+				"Improved spacing of editable text in flex layouts."
+			],
+			"changed": [
+				"Updated minor versions of `supabase/supabase-js`, `@playright/test`, `@sveltejs/adapter-vercel`, `@svelte/kit`, `prettier`, `supabase`, `svelte`, `svelte-check`, and `vitest`."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.3.0",
+		"date": "2026-01-25",
+		"changes": {
+			"added": [
+				"Fixed #54, adding anonymity and conflicts support to venues and roles, to implement double anonymous, single anonymous, and open reviewing.",
+				"Added venue active/inactive switch, to allow for venues to be created without being availabe for use yet.",
+				"Created editor-guarded settings page to organize venue settings and declutter landing page."
+			],
+			"fixed": [
+				"Eliminated redundant error `Note`s, merging them with `Feedback`.",
+				"Narrowed a few RLS policies to prevent unauthenticated inserts and updates.",
+				"Fixed logic of assignment approval on submissions page."
+			],
+			"changed": [],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.2.2",
+		"date": "2026-01-18",
+		"changes": {
+			"added": [
+				"Fixed #69, properly filtering submissions based on role bidding status, assignment status, and total desired assignments.",
+				"Improved saved feedback."
+			],
+			"fixed": ["Clarified meaning of invite and bid."],
+			"changed": [
+				"Updated minor versions of `svelte`, `@sveltejs/kit`, `prettier`, `supabase`, `vitest`."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.2.1",
+		"date": "2026-01-11",
+		"changes": {
+			"added": ["Fixed #33: Added volunteer export feature."],
+			"fixed": [],
+			"changed": [
+				"Updated minor versions of `@sveltejs`, `supabase`, `@supabase/superbase-js`, `vite`, `vitest` and related dependencies."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.2.0",
+		"date": "2025-12-14",
+		"changes": {
+			"added": [
+				"Added approved, incomplete submission assignments to task list.",
+				"Added pending assignment approval task to scholar task list."
+			],
+			"fixed": [
+				"Fixed submission assignment visibility.",
+				"Fixed assignment insertion permissions.",
+				"Improved usability of scholar charge interface on submission page."
+			],
+			"changed": [
+				"Updated minor versions of `@supabase/supabase-js`, `supabase`, `@sveltejs/kit`, `svelte`, `vite`."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.9",
+		"date": "2025-12-07",
+		"changes": {
+			"added": [
+				"Added volunteer note to landing page.",
+				"Added a theory of change to the about page.",
+				"Fixed #68: Request compensation for role."
+			],
+			"fixed": [
+				"Resolved Svelte stale reference warnings.",
+				"Improved collapsed state of venue editor view."
+			],
+			"changed": [
+				"Updated minor versions of `@playwright/test`, `@supabase/ssr`, `@supabase/supabase-js`, `@sveltejs/adapter-vercel`, `@sveltejs/kit`, `prettier`, `supabase`, `svelte`, `vite`, `vitest`."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.8",
+		"date": "2025-11-28",
+		"changes": {
+			"added": [],
+			"fixed": [
+				"Improved and simplified landing page explanation.",
+				"Flipped proposed and active venues on venues page."
+			],
+			"changed": [],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.7",
+		"date": "2025-11-23",
+		"changes": {
+			"added": ["Fixed #53: Migrated to declarative schemas for clarity."],
+			"fixed": [
+				"Linked error message prompts to log in.",
+				"Expand editing roles by default to make volunteering more obvious.",
+				"Less intense token color."
+			],
+			"changed": [
+				"Updated minor versions of Supabase, supabase-js, Svelte, SvelteKit, svelte-check, vitest."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.6",
+		"date": "2025-11-03",
+		"changes": {
+			"added": [
+				"Fixed #58: Send reminders to editors and scholars to approve proposed transactions.",
+				"Fixed #50: Warning on changing roles with volunteers."
+			],
+			"fixed": [
+				"Fixed #43: Better feedback about unapproved transactions; better link to transactions.",
+				"Improved visual design of forms and text fields."
+			],
+			"changed": ["Updated minor versions of Supabase, Svelte, vite, vitest."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.5",
+		"date": "2025-11-02",
+		"changes": {
+			"added": [],
+			"fixed": [
+				"Fixed #63, granting welcome tokens on volunteer assignment or invite accept.",
+				"Improved names of venue proposal functions.",
+				"Fixed #30, preventing editors from being minters of a venue's currency.",
+				"Fixed #66, permit gifting venue.",
+				"Made currency visible to venue viewers."
+			],
+			"changed": ["Updated minor dependencies: Supabase, Svelte, SvelteKit, vitest."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.4",
+		"date": "2025-10-26",
+		"changes": {
+			"added": [
+				"Better tip styling.",
+				"Consistent currency link styling.",
+				"Better external link styling.",
+				"Show minting roles in profile.",
+				"Added task list to scholar page to show pending invitations and transactions."
+			],
+			"fixed": ["Fixed inline padding of lists.", "Improved save feedback visual design."],
+			"changed": [
+				"Sync SvelteKit types before building in Playwright GitHub Action.",
+				"Slim Playwright browsers tested.",
+				"Updated minor dependencies: supabase, @supabase/supabase-js, @sveltejs/kit, svelte, vite",
+				"Upgraded to vite 4"
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.3",
+		"date": "2025-10-19",
+		"changes": {
+			"added": [],
+			"fixed": [],
+			"changed": [
+				"Updated Vercel adapter to 7.0.",
+				"Updated minor dependencies: Playwright, Supabase, SvelteKit, Svelte, Typescirpt, vite"
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.26",
+		"date": "2025-09-21",
+		"changes": {
+			"added": [
+				"All manual addition and removal of assignments to submission.",
+				"Fixed #61, compensating roles for completed assignment. Added manual button and CRUD for other contexts."
+			],
+			"fixed": [],
+			"changed": ["Updated minor versions of Svelte, SvelteKit, vite."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.25",
+		"date": "2025-09-14",
+		"changes": {
+			"added": [],
+			"fixed": ["Distinguished visual design of feedback component from tags."],
+			"changed": ["Updated minor versions of Supabase, Svelte, SvelteKit, Vite."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.24",
+		"date": "2025-09-07",
+		"changes": {
+			"added": [],
+			"fixed": ["Refined visual design based on new dashboard/header/card motif."],
+			"changed": ["Updated minor versions of Svelte, Supabase."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.23",
+		"date": "2025-09-01",
+		"changes": {
+			"added": [
+				"Added a dashboard for high value information on each page, where relevant.",
+				"Started a minor visual motif redesign using a dashboard-metaphor on each page."
+			],
+			"fixed": ["Improved editable text ruler sizing."],
+			"changed": ["Updated minor versions of Supabase, Svelte, Vite."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.22",
+		"date": "2025-08-23",
+		"changes": {
+			"added": [
+				"Fixed [#29](https://github.com/reciprocalreviews/reciprocalapp/issues/29), adding volunteer filter.",
+				"Fixed [#32](https://github.com/reciprocalreviews/reciprocalapp/issues/23), supporting ORCID for role invites."
+			],
+			"fixed": [
+				"Wrap token formatted text.",
+				"Improved formatting of inline feedback.",
+				"Improved layout of login form.",
+				"Centered save feedback in header.",
+				"Clarified description of minter role.",
+				"Max width on drop downs.",
+				"Properly style error messages.",
+				"Fixed [#52](https://github.com/reciprocalreviews/reciprocalapp/issues/52), minting welcome tokens before granting them.",
+				"Fixed font on non-emoji icons in cards.",
+				"Fixed [#21](https://github.com/reciprocalreviews/reciprocalapp/issues/21), passing session to auth state to prevent page flickering.",
+				"Fixed [#23](https://github.com/reciprocalreviews/reciprocalapp/issues/23), showing editor roles correctly in profile page.",
+				"Restructured list of volunteer roles."
+			],
+			"changed": ["Updated minor versions of Playwright, Supabase, SvelteKit, vite."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.21",
+		"date": "2025-08-16",
+		"changes": {
+			"added": [
+				"Permit zero submission cost and submissions (also to ease testing of submission creation).",
+				"Fixed #45: Sorting and filtering submissions.",
+				"Fixed #28: Moved invitations to scholar page.",
+				"Send email notification to scholars when invited to a role."
+			],
+			"fixed": [
+				"Improved wrapping of editable text widget.",
+				"Fixed post-submission behavior, collapsing and resetting form.",
+				"Improved padding of cards.",
+				"Better spacing on h1 headers in page.",
+				"Improved venue landing page layout.",
+				"Handle no submissions visible on venue landing page."
+			],
+			"changed": ["Updated minor versions of Svelte, vite, Supabase."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.20",
+		"date": "2025-08-10",
+		"changes": {
+			"added": ["#31: Dynamic steward list."],
+			"fixed": ["More consistent formatting of currency links."],
+			"changed": [
+				"Updated minor versions of Playwright, Supabase, Svelte, SvelteKit, Typescript, vite."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.19",
+		"date": "2025-07-27",
+		"changes": {
+			"added": [],
+			"fixed": [],
+			"changed": [
+				"Updated minor versions of Playwright, Supabase, Svelte, SvelteKit, eslint.",
+				"Updated to vite 7."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.18",
+		"date": "2025-06-22",
+		"changes": {
+			"added": [],
+			"fixed": ["Type error in error handling.", "Fixed #44: Reminding scholars of stale status."],
+			"changed": ["Updated Playwright, Svelte, SvelteKit, Supabase, eslint."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.17",
+		"date": "2025-06-08",
+		"changes": {
+			"added": [
+				"Fixed #38, notify stewards of new venue proposal.",
+				"Fixed #36, notify scholars of when they are added or removed to a submission.",
+				"Fixed #39, notify editors of a new venue proposal."
+			],
+			"fixed": [
+				"Typo in editor compensation.",
+				"Resolved all `search_path` security warnings.",
+				"More efficent calls to `auth.uid()` in RLS policies.",
+				"Narrow RLS permissions on submissions delete to authenticated scholars.",
+				"Corrected table for email RLS policy."
+			],
+			"changed": ["Updated Supabase, Svelte, SvelteKit, eslint, vitest."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.16",
+		"date": "2025-05-25",
+		"changes": {
+			"added": ["Fixed #37, notifying editors and proposers of approved venue."],
+			"fixed": [],
+			"changed": [
+				"Updated Supabase, sveltKit, Svelte, Vitest.",
+				"Filtered Chrome log in local development."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.15",
+		"date": "2025-05-18",
+		"changes": {
+			"added": ["Emails table with trigger that calls Resend edge function to send email."],
+			"fixed": [],
+			"changed": ["Updated Svelte, SvelteKit, Eslint, Prettier, Supabase, Vite, Vitest."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.14",
+		"date": "2025-04-20",
+		"changes": {
+			"added": [
+				"Created a Supabase Edge Function and client-side API for sending an email via Resend."
+			],
+			"fixed": [],
+			"changed": ["Updated Playwright, Svelte, SveltKit, Vite, eslint."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.13",
+		"date": "2025-04-13",
+		"changes": {
+			"added": [
+				"Added bidding scholar balance to submission bidding table.",
+				"Fixed #51 sticky header.",
+				"Saving feedback in sticky header."
+			],
+			"fixed": [],
+			"changed": ["Updated Svelte, SvelteKit, Supabase, Supabase SSR, and other minor versions."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.12",
+		"date": "2025-03-23",
+		"changes": {
+			"added": [],
+			"fixed": [
+				"Better link to issues page.",
+				"Supress false positive warning.",
+				"Mirrored front and back end submissions visibility.",
+				"Improved layout of submissions table.",
+				"Deactivate button while completing it's action.",
+				"Fixed ordering of roles.",
+				"Keep transactions confidential on submissions page.",
+				"Handle undefined on new role.",
+				"Improved visual design of assignments for submission.",
+				"Verified read and write permissions on submission page."
+			],
+			"changed": [
+				"Updated minor versions of Playwright, Supabase SSR, Svelte, SvelteKit, Eslint, Vitest."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.11",
+		"date": "2025-03-09",
+		"changes": {
+			"added": [
+				"Added `approve` field to role, defining what other roles can approve bids for assignments to the role.",
+				"Feedback on empty volunteer list.",
+				"Better feedback on role invite success.",
+				"List the number of volunteers in a role on the venue page."
+			],
+			"fixed": [
+				"Improved error handling on role invite form.",
+				"Fixed emoji rendering on Safari.",
+				"Made role invitations more visible.",
+				"Better layout of commitments.",
+				"Improved status tip.",
+				"Improved invitation feedback."
+			],
+			"changed": [
+				"Updated minor versions of Supabase, SvelteKit, Svelte, Vite.",
+				"Ensure SvelteKit is synced upon build, to clearing warning in Vercel builds."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.10",
+		"date": "2025-03-09",
+		"changes": {
+			"added": [
+				"Show expertise in list of bids on paper.",
+				"Sortable venue roles, to determine presentation order.",
+				"Fixed #24, redesigning venue page to integrate roles.",
+				"Split volunteers page by role, in role order.",
+				"Improved volunteers breadcrumbs.",
+				"Fixed #40, adding editor compensation amount to venue table."
+			],
+			"fixed": [
+				"Distinguished between a assignment bid and an approved assignment, to remember buds if someone is unassigned.",
+				"Improved design of feedback in flex layouts.",
+				"Align table header cells to bottom.",
+				"Full width tables.",
+				"Improved layout and bidding options in submission row.",
+				"Show label on editable text when not editing.",
+				"Make volunteers visible to non-authenticated scholars."
+			],
+			"changed": ["Updated minor versions of Playright, Svelte, SvelteKit, Vite, Vitest."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.9",
+		"date": "2025-03-02",
+		"changes": {
+			"added": [],
+			"fixed": [
+				"Account for empty previous id in submission.",
+				"A bit of assignment and volunteering restructuring to better support requirements."
+			],
+			"changed": ["Updated minor versions of Supabase, Svelte, Typescript, Vite."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.8",
+		"date": "2025-02-23",
+		"changes": {
+			"added": [
+				"Show transactions pending on submissions page.",
+				"Show transactions status on submission page.",
+				"Added a toggleable submission status to each submission, to mark when it is no longer in review.",
+				"Show submissions on scholar page.",
+				"Transaction approval by giver or minter.",
+				"Transaction cancelation by giver, editor, or minter."
+			],
+			"fixed": [
+				"Use Noto Emoji instead of system default to guarantee monochrome, consistent emojis.",
+				"Improved tip visual design.",
+				"Fixed checkbox label alignment.",
+				"Generate proposed transactions for submission.",
+				"Account for currency in gifting and transfers."
+			],
+			"changed": ["Updated minor versions of Svelte, Vite, Vitest."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.7",
+		"date": "2025-02-18",
+		"changes": {
+			"added": [
+				"More consistent, precise, and type-safe error handling.",
+				"Added transaction IDs to submission to keep track of charges."
+			],
+			"fixed": [
+				"Fixed scholar transactions breadcrumb link.",
+				"Collapse new submission form after submitting."
+			],
+			"changed": ["Updated all minor versions of Supabase, Svelte, SvelteKit."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.6",
+		"date": "2025-02-09",
+		"changes": {
+			"added": ["Added basic bidding interface."],
+			"fixed": [],
+			"changed": ["Updated all minor versions of vite, Typescript, Svelte, Supabase."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.5",
+		"date": "2025-02-02",
+		"changes": {
+			"added": [
+				"Edit submission title.",
+				"Edit titles in place.",
+				"Added link to previous manuscript submission."
+			],
+			"fixed": ["Resolved several defects with the new submission form."],
+			"changed": ["Updated minor versions of all dependencies."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.4",
+		"date": "2025-01-19",
+		"changes": {
+			"added": [
+				"Implemented manual submission creation form.",
+				"Styled submission list.",
+				"Added breadcrumbs on all pages to streamline navigation.",
+				"Defined a page to display a submission to authors or editors."
+			],
+			"fixed": [],
+			"changed": ["Updated all minor versions of vite, Typescript, Svelte, Supabase."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.3",
+		"date": "2025-01-12",
+		"changes": {
+			"added": ["Initial progress on `submissions` schema."],
+			"fixed": [],
+			"changed": ["Updated all minor versions of vite, Typescript, Svelte, Supabase."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.2",
+		"date": "2024-12-29",
+		"changes": {
+			"added": ["Improved styling of expandable cards."],
+			"fixed": [],
+			"changed": [
+				"Updated all minor versions of dependencies, including Svelte, SvelteKit, and Vite."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.1",
+		"date": "2024-12-08",
+		"changes": {
+			"added": [
+				"When scholars volunteer for a venue for the first time, create a proposed transaction request for minter to approve, and allow minters to approve it, generating tokens and transferring them to the scholar."
+			],
+			"fixed": [
+				"Redesigned cards to be collapsible, to simplify initial view, make data salient, and convey purpose."
+			],
+			"changed": [],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.1.0",
+		"date": "2024-12-01",
+		"changes": {
+			"added": ["Allow scholars to gift tokens.", "Added pattern for explicit success feedback."],
+			"fixed": ["Fixed RLS policy for volunteer insertion."],
+			"changed": ["Updated all minor releases of dependencies.", "Updated to vite 6."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.0.10",
+		"date": "2024-11-17",
+		"changes": {
+			"added": [
+				"Added number of tokens minted for a currency to the currency page.",
+				"Show number of tokens possed by a venue.",
+				"Show scholar's token count.",
+				"Show scholar's transactions.",
+				"Show venue's transactions.",
+				"Show currency's transactions.",
+				"Added approval status to transactions and updated security rules accordingly.",
+				"Minters mint tokens.",
+				"Venues can gift tokens to scholars."
+			],
+			"fixed": [],
+			"changed": ["Updated Svelte and Supabase point releases."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.0.9",
+		"date": "2024-11-10",
+		"changes": {
+			"added": [
+				"Defined tokens and transactions table and draft security rules.",
+				"List venues using a currency.",
+				"List minters on a currency.",
+				"Add and remove minters from currency."
+			],
+			"fixed": [],
+			"changed": [
+				"Renamed SourceLink to VenueLink for consistency.",
+				"Upgraded Svelte, SvelteKit, Supabase dependencies."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.0.8",
+		"date": "2024-11-03",
+		"changes": {
+			"added": [
+				"Added ability to volunteer for a role and set expertise.",
+				"Added ability to stop volunteering for a role.",
+				"Added ability to invite scholars to roles and for scholars to accept and decline roles.",
+				"Added list of volunteer roles to profile.",
+				"Added list of venue volunteers."
+			],
+			"fixed": ["Fixed venues link on home page."],
+			"changed": ["Upgraded Svelte, eslint, and dependencies."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.0.7",
+		"date": "2024-10-20",
+		"changes": {
+			"added": [
+				"Venue page: currency link, welcome amount, bidding toggle, role creation, editing, and deletion."
+			],
+			"fixed": [
+				"A few typography improvements.",
+				"Deactivated hover feedback on inactive buttons.",
+				"Fixed rendering for missing name in venue proposal."
+			],
+			"changed": ["Upgraded to Svelte 5.0."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.0.6",
+		"date": "2024-10-13",
+		"changes": {
+			"added": [
+				"Subtitles for pages, with more consistent display.",
+				"Edit and delete support for a venue proposal.",
+				"Stewards can edit, delete, and approve a venue proposal.",
+				"List active venues.",
+				"Display venue title, description, and link.",
+				"Edit venue editors, title, and URL."
+			],
+			"fixed": ["Corrected automatic height on text areas."],
+			"changed": [],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.0.5",
+		"date": "2024-10-06",
+		"changes": {
+			"added": [
+				"Currency name and description display and editing.",
+				"Show proposed venues on the venues page.",
+				"Render proposed venue content.",
+				"Allow additional support to a proposal."
+			],
+			"fixed": [],
+			"changed": [],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.0.4",
+		"date": "2024-09-28",
+		"changes": {
+			"added": [
+				"Visual design polish on components.",
+				"Added accessible notifications section.",
+				"Create currencies and exchanges.",
+				"Create currency route."
+			],
+			"fixed": [],
+			"changed": [
+				"Updated Svelte and Supabase minor versions.",
+				"Updated GitHub checkout action dependencies."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.0.3",
+		"date": "2024-09-01",
+		"changes": {
+			"added": [],
+			"fixed": [],
+			"changed": ["Updated Svelte and Supabase minor revisions."],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.0.2",
+		"date": "2024-08-25",
+		"changes": {
+			"added": [
+				"Supabase scripts for documentation.",
+				"Basic email one-time password authenatication."
+			],
+			"fixed": [],
+			"changed": [
+				"Updated Svelte and Supabase minor revisions",
+				"Migrated auth state to Svelte state class."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.0.1",
+		"date": "2024-08-04",
+		"changes": {
+			"added": [
+				"Created CHANGELOG.",
+				"Custom favicon.",
+				"Set up GitHub actions for unit and integration tests.",
+				"Configured Supabase, including continuous integration on `dev` and `main` branches to `reciprocal-staging` and `reciprocal-production`, respectively.",
+				"Added basic OTP authentication for dev purposes.",
+				"typescript, vite, vitest, svelte, prettier, playwright"
+			],
+			"fixed": [],
+			"changed": [],
+			"removed": []
+		}
+	}
 ]

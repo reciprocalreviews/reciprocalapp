@@ -1,25 +1,24 @@
 <script lang="ts">
-	import Page from '$lib/components/Page.svelte';
-	import Text from '$lib/locales/Text.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Link from '$lib/components/Link.svelte';
-	import { getAuth } from '../../../../Auth.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import { addError, handle } from '../../../../feedback.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { getDB } from '$lib/data/CRUD';
+	import { page } from '$app/state';
+	import Button from '$lib/components/Button.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import Cards from '$lib/components/Cards.svelte';
 	import Date from '$lib/components/Date.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
-	import { ErrorLabel, VenueLabel } from '$lib/components/Labels';
+	import Feedback from '$lib/components/Feedback.svelte';
+	import { ErrorLabel, SettingsLabel, VenueLabel } from '$lib/components/Labels';
+	import Link from '$lib/components/Link.svelte';
 	import Note from '$lib/components/Note.svelte';
+	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
-	import { validEmails, validURL } from '$lib/validation';
-	import { SettingsLabel } from '$lib/components/Labels';
+	import TextField from '$lib/components/TextField.svelte';
+	import { getDB } from '$lib/data/CRUD';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
-	import { page } from '$app/state';
+	import Text from '$lib/locales/Text.svelte';
+	import { validEmails, validURL } from '$lib/validation';
+	import { getAuth } from '../../../../Auth.svelte';
+	import { addError, handle } from '../../../../feedback.svelte';
 
 	let { data } = $props();
 
@@ -31,7 +30,7 @@
 		{ table: 'supporters', filter: `proposalid=eq.${page.params.id}` }
 	]);
 
-	let uid = $derived(auth.getUserID());
+	let uid = $derived(auth().getUserID());
 	let message = $state('');
 
 	let proposal = $derived(data.proposal);

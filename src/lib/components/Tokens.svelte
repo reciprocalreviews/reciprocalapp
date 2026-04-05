@@ -17,7 +17,7 @@
 	{amount}
 	{#if currency}<span class="currency">{currency.name}</span>
 	{/if}
-	{#if amount === 1}{locale.widget.tokens.single}{:else}{locale.widget.tokens.plural}{/if}</span
+	{#if amount === 1}{locale().widget.tokens.single}{:else}{locale().widget.tokens.plural}{/if}</span
 >
 
 <style>

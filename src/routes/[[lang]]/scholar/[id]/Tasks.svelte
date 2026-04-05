@@ -15,12 +15,12 @@
 	import Subheader from '$lib/components/Subheader.svelte';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Table from '$lib/components/Table.svelte';
-	import Text from '$lib/locales/Text.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import VenueLink from '$lib/components/VenueLink.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import { handle } from '$routes/feedback.svelte';
+	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
+	import { handle } from '$routes/feedback.svelte';
 
 	let {
 		commitments,
@@ -53,13 +53,13 @@
 
 	<Table>
 		{#snippet header()}
-			<th>{locale.view.tasks.headers.kind}</th>
-			<th>{locale.view.tasks.headers.task}</th>
+			<th>{locale().view.tasks.headers.kind}</th>
+			<th>{locale().view.tasks.headers.task}</th>
 		{/snippet}
 		<!-- Show pending invitations -->
 		{#each invitedCommitments as invite, index}
 			<tr data-testid="invitation-{index}">
-				<td>{locale.view.tasks.cell.kind.invitation}</td>
+				<td>{locale().view.tasks.cell.kind.invitation}</td>
 				<td>
 					<strong>{invite.name ?? EmptyLabel}</strong>
 					<VenueLink id={invite.venueid} name={invite.venue} />
@@ -80,10 +80,11 @@
 			{@const pendingForCurrency = pending?.filter((t) => t.currency === currency.id) ?? []}
 			{#if pendingForCurrency.length > 0}
 				<tr data-testid="transaction-{index}">
-					<td>{locale.view.tasks.cell.kind.transaction}</td>
+					<td>{locale().view.tasks.cell.kind.transaction}</td>
 					<td>
 						{pendingForCurrency.length}
-						<CurrencyLink {currency} transactions /> {locale.view.tasks.cell.pendingTransactionsAfter}
+						<CurrencyLink {currency} transactions />
+						{locale().view.tasks.cell.pendingTransactionsAfter}
 					</td>
 				</tr>
 			{/if}
@@ -92,7 +93,7 @@
 		<!-- Show pending reviews -->
 		{#each reviews ?? [] as review, index}
 			<tr data-testid="review-{index}">
-				<td>{locale.view.tasks.cell.kind.review}</td>
+				<td>{locale().view.tasks.cell.kind.review}</td>
 				<td>
 					<SubmissionLink submission={review.submissions} />
 				</td>
@@ -102,7 +103,7 @@
 		<!-- Show pending assignments -->
 		{#each approvals ?? [] as approval, index}
 			<tr data-testid="assignment-{index}">
-				<td>{locale.view.tasks.cell.kind.pendingAssignment}</td>
+				<td>{locale().view.tasks.cell.kind.pendingAssignment}</td>
 				<td>
 					<ScholarLink id={approval.scholars} />
 					<SubmissionLink submission={approval.submissions} />

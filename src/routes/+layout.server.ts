@@ -1,7 +1,7 @@
 import type { LocaleText } from '$lib/locales/Locale';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ locals: { session }, cookies, params }) => {
+export const load: LayoutServerLoad = async ({ cookies, params }) => {
 	const lang = params.lang || 'en';
 
 	// Dynamically import the correct translation file
@@ -16,7 +16,6 @@ export const load: LayoutServerLoad = async ({ locals: { session }, cookies, par
 	}
 
 	return {
-		session,
 		cookies: cookies.getAll(),
 		locale
 	};

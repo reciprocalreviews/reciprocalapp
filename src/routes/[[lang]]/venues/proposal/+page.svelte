@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import type { CurrencyID } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
+	import { VenueLabel } from '$lib/components/Labels';
+	import Options from '$lib/components/Options.svelte';
 	import Page from '$lib/components/Page.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import TextField from '$lib/components/TextField.svelte';
-	import { validEmails, isntEmpty, validURL } from '$lib/validation';
 	import { getDB } from '$lib/data/CRUD';
+	import { isntEmpty, validEmails, validURL } from '$lib/validation';
 	import { getAuth } from '$routes/Auth.svelte';
-	import { addError } from '$routes/feedback.svelte';
-	import type { CurrencyID } from '$data/types';
-	import Options from '$lib/components/Options.svelte';
-	import { VenueLabel } from '$lib/components/Labels';
 	import { getLocaleContext } from '$routes/Contexts';
-	import Paragraph from '$lib/components/Paragraph.svelte';
+	import { addError } from '$routes/feedback.svelte';
 
 	let { data } = $props();
 
@@ -46,7 +46,7 @@
 	}
 
 	async function propose() {
-		const uid = auth.getUserID();
+		const uid = auth().getUserID();
 		if (
 			!isntEmpty(venue) ||
 			!validEmails(editors) ||
@@ -85,7 +85,7 @@
 
 	<Paragraph text={(l) => l.page.proposeVenue.paragraph.howToPropose} />
 
-	{#if auth.getUserID()}
+	{#if auth().getUserID()}
 		<form>
 			<TextField
 				bind:text={venue}
@@ -106,7 +106,7 @@
 				strings={(l) => l.page.proposeVenue.options.currency}
 				bind:value={currency}
 				options={[
-					{ label: locale.page.proposeVenue.options.currency.createNew, value: undefined },
+					{ label: locale().page.proposeVenue.options.currency.createNew, value: undefined },
 					...(currencies ?? []).map((currency) => ({
 						label: currency.name,
 						value: currency.id

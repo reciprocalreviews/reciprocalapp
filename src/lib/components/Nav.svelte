@@ -1,19 +1,19 @@
 <script lang="ts">
-	import Link from './Link.svelte';
-	import Button from './Button.svelte';
-	import { getAuth } from '../../routes/Auth.svelte';
 	import { goto } from '$app/navigation';
+	import Text from '$lib/locales/Text.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
+	import { getAuth } from '../../routes/Auth.svelte';
 	import { getPendingActions } from '../../routes/feedback.svelte';
+	import Button from './Button.svelte';
 	import Dots from './Dots.svelte';
 	import { ScholarLabel, SubmissionLabel, VenueLabel } from './Labels';
-	import { getLocaleContext } from '$routes/Contexts';
-	import Text from '$lib/locales/Text.svelte';
+	import Link from './Link.svelte';
 
 	const locale = getLocaleContext();
 
 	const routes = [
-		{ path: '/', label: locale.header.home },
-		{ path: '/venues', label: locale.header.venues }
+		{ path: '/', label: locale().header.home },
+		{ path: '/venues', label: locale().header.venues }
 	];
 
 	let auth = getAuth();
@@ -50,11 +50,11 @@
 			{#if pending > 0}
 				{#if pending > 1}{pending}{/if}
 				<Dots></Dots>
-			{:else}✔ {locale.header.saved}{/if}
+			{:else}✔ {locale().header.saved}{/if}
 		</div>
-		{#if auth.isAuthenticated()}
+		{#if auth().isAuthenticated()}
 			<div class="link">
-				<Link size="small" to="/scholar/{auth.getUserID()}">{auth.user?.email}</Link>
+				<Link size="small" to="/scholar/{auth().getUserID()}">{auth().user?.email}</Link>
 			</div>
 			<div class="link">
 				<Button
@@ -62,7 +62,7 @@
 					testid="logout-button"
 					strings={(l) => l.component.header.logout}
 					action={() => {
-						auth.signOut();
+						auth().signOut();
 						goto('/login');
 					}}
 				/>

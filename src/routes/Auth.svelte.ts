@@ -1,19 +1,20 @@
+import type { ScholarRow } from '$data/types';
 import Authentication from '$lib/auth/Authentication';
-import type { AuthError, Session, SupabaseClient, User } from '@supabase/supabase-js';
+import type { AuthError, SupabaseClient } from '@supabase/supabase-js';
 import { getContext, setContext } from 'svelte';
 
 /** Represents the current authenatication state from Supabase. */
-export default class SupabaseAuth extends Authentication<User, AuthError> {
-	user = $state<User | null>(null);
+export default class SupabaseAuth extends Authentication<ScholarRow, AuthError> {
+	user = $state<ScholarRow | null>(null);
 	private client: SupabaseClient;
 
-	constructor(supabase: SupabaseClient, session: Session | null) {
+	constructor(supabase: SupabaseClient, scholar: ScholarRow | null) {
 		super();
 		this.client = supabase;
-		this.user = session?.user ?? null;
+		this.user = scholar;
 	}
 
-	setUser(user: User | null) {
+	setUser(user: ScholarRow | null) {
 		this.user = user;
 	}
 
@@ -49,10 +50,10 @@ export default class SupabaseAuth extends Authentication<User, AuthError> {
 
 const AuthSymbol = Symbol('auth');
 
-export function createAuthContext(supabase: SupabaseClient, session: Session | null) {
-	setContext(AuthSymbol, new SupabaseAuth(supabase, session));
+export function setAuth(auth: () => SupabaseAuth) {
+	setContext(AuthSymbol, auth);
 }
 
-export function getAuth(): SupabaseAuth {
-	return getContext<SupabaseAuth>(AuthSymbol);
+export function getAuth(): () => SupabaseAuth {
+	return getContext<() => SupabaseAuth>(AuthSymbol);
 }

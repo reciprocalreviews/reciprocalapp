@@ -1,19 +1,10 @@
 <script lang="ts">
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { type PageData } from './$types';
-	import Page from '$lib/components/Page.svelte';
-	import VenueLink from '$lib/components/VenueLink.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import Tokens from '$lib/components/Tokens.svelte';
-	import Row from '$lib/components/Row.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import { getDB, NullUUID } from '$lib/data/CRUD';
-	import Link from '$lib/components/Link.svelte';
-	import Status from '$lib/components/Status.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import Table from '$lib/components/Table.svelte';
+	import type { RoleID, RoleRow, ScholarID } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
-	import { handle } from '$routes/feedback.svelte';
+	import Checkbox from '$lib/components/Checkbox.svelte';
+	import EditableText from '$lib/components/EditableText.svelte';
+	import Feedback from '$lib/components/Feedback.svelte';
+	import Form from '$lib/components/Form.svelte';
 	import {
 		EditLabel,
 		EmptyLabel,
@@ -22,17 +13,26 @@
 		SubmissionLabel,
 		VenueLabel
 	} from '$lib/components/Labels';
-	import type { RoleID, RoleRow, ScholarID } from '$data/types';
-	import type LocaleText from '$lib/locales/Locale';
-	import Scholar from '$lib/data/Scholar.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { validEmail, validORCID } from '$lib/validation';
+	import Link from '$lib/components/Link.svelte';
 	import Options from '$lib/components/Options.svelte';
+	import Page from '$lib/components/Page.svelte';
+	import Row from '$lib/components/Row.svelte';
+	import ScholarLink from '$lib/components/ScholarLink.svelte';
+	import Status from '$lib/components/Status.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
+	import Table from '$lib/components/Table.svelte';
+	import TextField from '$lib/components/TextField.svelte';
+	import Tip from '$lib/components/Tip.svelte';
+	import Tokens from '$lib/components/Tokens.svelte';
+	import VenueLink from '$lib/components/VenueLink.svelte';
+	import { getDB, NullUUID } from '$lib/data/CRUD';
+	import Scholar from '$lib/data/Scholar.svelte';
+	import type LocaleText from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
+	import { validEmail, validORCID } from '$lib/validation';
 	import { getLocaleContext } from '$routes/Contexts';
+	import { handle } from '$routes/feedback.svelte';
+	import { type PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -55,7 +55,7 @@
 		/** All balances of scholars */
 		balances,
 		/** The current user */
-		user,
+		scholar,
 		/** The submission types for this venue */
 		submissionTypes
 	} = $derived(data);
@@ -65,7 +65,7 @@
 	const locale = getLocaleContext();
 
 	/** Whether the current scholar is an editor */
-	let isAdmin = $derived(venue !== null && user !== null && venue.admins.includes(user.id));
+	let isAdmin = $derived(venue !== null && scholar !== null && venue.admins.includes(scholar.id));
 
 	let submissionType = $derived(
 		(submission !== null && submissionTypes !== null
@@ -79,7 +79,7 @@
 		assignments?.some(
 			(a) =>
 				roles !== null &&
-				a.scholar === user?.id &&
+				a.scholar === scholar?.id &&
 				roles.some((r) => r.id === a.role && r.priority === 0)
 		)
 	);
@@ -96,13 +96,13 @@
 
 	/** Whether the current scholar is an author of the submission */
 	let isAuthor = $derived(
-		submission !== null && user !== null && submission.authors.includes(user.id)
+		submission !== null && scholar !== null && submission.authors.includes(scholar.id)
 	);
 
 	/** Assignment if the authenticated scholar to this submission */
 	let scholarAssignments = $derived(
-		user !== null && assignments !== null
-			? assignments.filter((a) => a.scholar === user.id && a.approved)
+		scholar !== null && assignments !== null
+			? assignments.filter((a) => a.scholar === scholar.id && a.approved)
 			: undefined
 	);
 
@@ -139,7 +139,7 @@
 	}
 </script>
 
-{#if submission === null || venue === null || roles === null || user === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
+{#if submission === null || venue === null || roles === null || scholar === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
 	<Page
 		icon={ErrorLabel}
 		title={(l) => l.page.submission.title}
@@ -233,17 +233,17 @@
 							<Status good={false} label={(l) => l.page.submission.status.unknownTransaction} />
 						{:else}
 							{#if transaction.status === 'proposed'}
-								{locale.page.submission.cell.proposesToPay}
+								{locale().page.submission.cell.proposesToPay}
 							{:else if transaction.status === 'approved'}
-								{locale.page.submission.cell.paid}
+								{locale().page.submission.cell.paid}
 							{:else if transaction.status === 'canceled'}
-								{locale.page.submission.cell.declinedToPay}
+								{locale().page.submission.cell.declinedToPay}
 							{/if}
 							<Tokens amount={payment} />
 						{/if}
 					{/if}
 				{:else}
-					<em>{locale.page.submission.cell.anonymized}</em>
+					<em>{locale().page.submission.cell.anonymized}</em>
 				{/if}
 			</Row>
 		{:else}
@@ -337,11 +337,11 @@
 
 		<Table full>
 			{#snippet header()}
-				<th>{locale.page.submission.headers.role}</th>
-				<th>{locale.page.submission.headers.scholar}</th>
-				<th>{locale.page.submission.headers.expertise}</th>
-				<th>{locale.page.submission.headers.balance}</th>
-				<th>{locale.page.submission.headers.action}</th>
+				<th>{locale().page.submission.headers.role}</th>
+				<th>{locale().page.submission.headers.scholar}</th>
+				<th>{locale().page.submission.headers.expertise}</th>
+				<th>{locale().page.submission.headers.balance}</th>
+				<th>{locale().page.submission.headers.action}</th>
 			{/snippet}
 
 			<!-- Sort roles by priority -->
@@ -352,15 +352,14 @@
 					.filter((a) => role.id === a.role && a.bid && !a.approved)
 					.toSorted((a, b) => getBalance(a.scholar) - getBalance(b.scholar))}
 				{@const isApprover =
-					isEditor || (user !== null && rolesScholarCanApprove.some((r) => r.id === role.id))}
+					isEditor || (scholar !== null && rolesScholarCanApprove.some((r) => r.id === role.id))}
 				{#each assigned as assignment}
 					{@const volunteer = getVolunteer(role.id, assignment.scholar)}
 					<tr>
 						<td>{role.name}</td>
 						<td class={!assignment.approved ? 'unapproved' : undefined}>
-							{#if assignment.scholar === user.id}{locale.page.submission.cell.you}{:else}<ScholarLink
-									id={assignment.scholar}
-								/>{/if}
+							{#if assignment.scholar === scholar.id}{locale().page.submission.cell
+									.you}{:else}<ScholarLink id={assignment.scholar} />{/if}
 							{#if assignment.completed}<Status
 									label={(l) => l.page.submission.status.completed}
 								/>{:else if assignment.approved}<Status
@@ -383,19 +382,19 @@
 											<Button
 												strings={(l) => l.page.submission.button.unassign}
 												action={() =>
-													handle(db().approveAssignment(assignment, false, role, user.id))}
+													handle(db().approveAssignment(assignment, false, role, scholar.id))}
 											/>
 											{#if !assignment.completed}
 												<Button
 													strings={(l) => l.page.submission.button.complete}
-													action={() => handle(db().completeAssignment(assignment.id, user.id))}
+													action={() => handle(db().completeAssignment(assignment.id, scholar.id))}
 												/>
 											{/if}
 										{:else}
 											<Button
 												strings={(l) => l.page.submission.button.approve}
 												action={() =>
-													handle(db().approveAssignment(assignment, true, role, user.id))}
+													handle(db().approveAssignment(assignment, true, role, scholar.id))}
 											/>
 										{/if}
 									{/if}
@@ -428,8 +427,8 @@
 										<Button
 											strings={(l) => l.page.submission.button.approveBid}
 											action={() =>
-												user
-													? handle(db().approveAssignment(assignment, true, role, user.id))
+												scholar
+													? handle(db().approveAssignment(assignment, true, role, scholar.id))
 													: null}
 										/>
 									{/if}

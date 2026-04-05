@@ -1,12 +1,4 @@
 <script lang="ts">
-	import { ORCIDRegex } from '$lib/data/ORCID';
-	import { type Result } from '$lib/data/CRUD';
-	import { validEmail, validORCID } from '$lib/validation';
-	import { handle } from '../../routes/feedback.svelte';
-	import Button from './Button.svelte';
-	import Checkbox from './Checkbox.svelte';
-	import Slider from './Slider.svelte';
-	import TextField from './TextField.svelte';
 	import type {
 		CurrencyID,
 		CurrencyRow,
@@ -15,9 +7,17 @@
 		VenueID,
 		VenueRow
 	} from '$data/types';
+	import { type Result } from '$lib/data/CRUD';
+	import { ORCIDRegex } from '$lib/data/ORCID';
+	import { validEmail, validORCID } from '$lib/validation';
+	import { getLocaleContext } from '$routes/Contexts';
+	import { handle } from '../../routes/feedback.svelte';
+	import Button from './Button.svelte';
+	import Checkbox from './Checkbox.svelte';
 	import Feedback from './Feedback.svelte';
 	import Options from './Options.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	import Slider from './Slider.svelte';
+	import TextField from './TextField.svelte';
 
 	let {
 		tokens,
@@ -62,14 +62,14 @@
 		<Feedback text={(l) => l.view.gift.noTokens}></Feedback>
 	{:else}
 		<fieldset>
-			<legend>{locale.view.gift.fieldset.legend}</legend>
+			<legend>{locale().view.gift.fieldset.legend}</legend>
 			<div>
 				<input bind:group={kind} type="radio" id="scholar-choice" name="scholar" value="scholar" />
-				<label for="scholar-choice">{locale.view.gift.fieldset.scholar}</label>
+				<label for="scholar-choice">{locale().view.gift.fieldset.scholar}</label>
 			</div>
 			<div>
 				<input bind:group={kind} type="radio" id="venue-choice" name="venue" value="venue" />
-				<label for="venue-choice">{locale.view.gift.fieldset.venue}</label>
+				<label for="venue-choice">{locale().view.gift.fieldset.venue}</label>
 			</div>
 		</fieldset>
 

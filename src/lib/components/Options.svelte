@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { getLocaleContext } from '$routes/Contexts';
 	import type LocaleText from '$lib/locales/Locale';
 	import type { OptionsText } from '$lib/locales/Locale';
+	import { getLocaleContext } from '$routes/Contexts';
 
 	type Props = {
 		options: { label: string; value: string | undefined }[];
@@ -14,7 +14,7 @@
 	let { options, value = $bindable(), onChange, disabled = false, strings }: Props = $props();
 
 	const locale = getLocaleContext();
-	const text = $derived(strings ? strings(locale) : undefined);
+	const text = $derived(strings ? strings(locale()) : undefined);
 
 	function handleChange(event: Event) {
 		const target = event.target as HTMLSelectElement;

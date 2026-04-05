@@ -34,8 +34,8 @@
 					{#if scholar}
 						<Gift
 							{tokens}
-							purpose={locale.page.venue.card.gift.purpose}
-							success={locale.page.venue.card.gift.success}
+							purpose={locale().page.venue.card.gift.purpose}
+							success={locale().page.venue.card.gift.success}
 							{currencies}
 							venues={venues ?? []}
 							transfer={(

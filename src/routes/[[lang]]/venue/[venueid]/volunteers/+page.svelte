@@ -1,17 +1,17 @@
 <script lang="ts">
-	import Text from '$lib/locales/Text.svelte';
-	import Page from '$lib/components/Page.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import Table from '$lib/components/Table.svelte';
+	import { EmptyLabel, ErrorLabel, ScholarLabel, VenueLabel } from '$lib/components/Labels.js';
+	import Page from '$lib/components/Page.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
+	import Status from '$lib/components/Status.svelte';
+	import Table from '$lib/components/Table.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import Tags from '$lib/components/Tags.svelte';
-	import Status from '$lib/components/Status.svelte';
-	import { EmptyLabel, ErrorLabel, ScholarLabel, VenueLabel } from '$lib/components/Labels.js';
 	import TextField from '$lib/components/TextField.svelte';
-	import Button from '$lib/components/Button.svelte';
+	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
-	import Paragraph from '$lib/components/Paragraph.svelte';
 
 	let { data } = $props();
 	const { venue, commitments, roles } = $derived(data);
@@ -80,9 +80,9 @@
 		{:else}
 			<Table full>
 				{#snippet header()}
-					<th>{locale.page.volunteers.headers.active}</th>
-					<th>{locale.page.volunteers.headers.name}</th>
-					<th>{locale.page.volunteers.headers.expertise}</th>
+					<th>{locale().page.volunteers.headers.active}</th>
+					<th>{locale().page.volunteers.headers.name}</th>
+					<th>{locale().page.volunteers.headers.expertise}</th>
 				{/snippet}
 				{#each rolesIDs as role, roleIndex}
 					{@const roleCommitments = commitments.filter((c) => c.roleid === role)}
