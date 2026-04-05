@@ -31,7 +31,7 @@
 	});
 </script>
 
-<Page icon={ScholarLabel} title={(l) => l.page.login.title} breadcrumbs={[['/', 'Home']]}>
+<Page icon={ScholarLabel} title={(l) => l.page.login.title} breadcrumbs={[]}>
 	{#if auth().isAuthenticated()}
 		<Paragraph text={(l) => l.page.login.paragraph.loggedIn} />
 	{:else}
