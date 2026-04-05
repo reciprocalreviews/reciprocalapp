@@ -13,6 +13,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Improved styling of feedback.
 - Improved font sizes.
 - Organized locale files for future translation.
+- Made volunteers visible without login.
 
 ## 0.3.9 - 2026-03-29
 

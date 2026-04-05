@@ -1,7 +1,7 @@
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase, scholar, venue } = await parent();
+	const { supabase, venue } = await parent();
 
 	const venueid = params.venueid;
 
@@ -26,12 +26,10 @@ export const load: PageLoad = async ({ parent, params }) => {
 	if (rolesError) console.error(rolesError);
 
 	// Get all volunteers for the venue.
-	const { data: volunteers, error: volunteersError } = scholar
-		? await supabase
-				.from('volunteers')
-				.select('*, roles!inner(venueid)')
-				.eq('roles.venueid', venueid)
-		: { data: null };
+	const { data: volunteers, error: volunteersError } = await supabase
+		.from('volunteers')
+		.select('*, roles!inner(venueid)')
+		.eq('roles.venueid', venueid);
 	if (volunteersError) console.error(volunteersError);
 
 	// See how many tokens the venue posseses.
