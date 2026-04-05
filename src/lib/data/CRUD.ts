@@ -228,7 +228,7 @@ export default abstract class CRUD {
 		amount: number,
 		to: VenueID,
 		purpose: string
-	): Promise<Result>;
+	): Promise<Result<TokenID[]>>;
 
 	/** Move N tokens from source to destination, returning a transaction ID. */
 	abstract transferTokens(

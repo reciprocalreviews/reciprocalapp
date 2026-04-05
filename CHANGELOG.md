@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.3.10 - 2026-04-05
 
+### Fixed
+
+- Fixed a problem where new volunteer tokens were not minting or transferring correctly to the volunteer.
+
 ### Changed
 
 - Updated internal tooling for stability.

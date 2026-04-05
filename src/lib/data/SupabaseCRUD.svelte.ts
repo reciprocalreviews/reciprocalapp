@@ -998,7 +998,7 @@ export default class SupabaseCRUD extends CRUD {
 		to: VenueID,
 		/** Why are these tokens being minted? */
 		purpose: string
-	): Promise<Result> {
+	): Promise<Result<TokenID[]>> {
 		const rows = Array(amount)
 			.fill(0)
 			.map(() => ({ currency: currencyID, venue: to, scholar: null }));
@@ -1021,7 +1021,7 @@ export default class SupabaseCRUD extends CRUD {
 		);
 		if (transactionError) return this.error('MintTokens', transactionError.details);
 
-		return { data: undefined };
+		return { data: tokens.map((t) => t.id) };
 	}
 
 	async resolveEntityID(
@@ -1180,27 +1180,26 @@ export default class SupabaseCRUD extends CRUD {
 		// Verify that the transaction is pending. If it's not, bail.
 		if (transaction.status !== 'proposed') return this.error('AlreadyApproved');
 
-		// See if we need to create any tokens by looking for null UUIDs in the token list.
-		// If there are already tokens in the transaction, then something is broken.
-		if (transaction.tokens.some((id) => id !== NullUUID))
-			return this.error('PendingTransactionHasTokens');
-
 		const from = transaction.from_scholar ?? transaction.from_venue;
 		const to = transaction.to_scholar ?? transaction.to_venue;
 		if (from === null) return this.error('TransactionMissingFrom');
 		if (to === null) return this.error('TransactionMissingTo');
 
-		// Create the required tokens so they can be transferred.
-		const { error: mintingError } = await this.mintTokens(
-			creator,
-			transaction.currency,
-			transaction.tokens.length,
-			from,
-			transaction.purpose
-		);
-		if (mintingError) return this.error('MintTokens', mintingError.details, mintingError.message);
+		// Mint any tokens that still need to be created, assigning them to the sender first.
+		const nullCount = transaction.tokens.filter((tokenId) => tokenId === NullUUID).length;
+		if (nullCount > 0) {
+			const { error: mintingError } = await this.mintTokens(
+				creator,
+				transaction.currency,
+				nullCount,
+				from,
+				transaction.purpose
+			);
+			if (mintingError)
+				return this.error('MintTokens', mintingError.details, mintingError.message);
+		}
 
-		// Transfer the requested number of tokens to the destination.
+		// Transfer all tokens (existing and newly minted) to the recipient.
 		const { error: transferError } = await this.transferTokens(
 			creator,
 			transaction.currency,

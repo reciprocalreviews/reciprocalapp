@@ -51,6 +51,13 @@
 	// svelte-ignore state_referenced_locally
 	let transactionsByPage = $state(new SvelteMap([[0, transactions]]));
 	let page = $state(0);
+
+	// Re-sync when the prop changes (e.g. after invalidateAll() from a realtime event).
+	$effect(() => {
+		transactionsByPage = new SvelteMap([[0, transactions]]);
+		page = 0;
+	});
+
 	let allTransactions = $derived(Array.from(transactionsByPage.values()).flat());
 
 	let loading = $state(false);
