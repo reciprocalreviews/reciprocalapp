@@ -110,52 +110,7 @@
 	{@const admins = venue.admins}
 
 	<Cards>
-		<Card
-			icon={venue.admins.length}
-			subheader
-			strings={(l) => l.view.roles.card.admins}
-			expand={!isAdmin}
-		>
-			<p>
-				{locale().view.roles.paragraph.administeredBy}
-				{#each admins as adminID, index}
-					{#if index > 0 && admins.length > 2},{/if}
-					{#if index === admins.length - 1 && admins.length > 1}and{/if}
-					<ScholarLink id={adminID} />{#if isAdmin && admins.length > 1}
-						&nbsp;<Button
-							strings={(l) => l.view.roles.button.removeAdmin}
-							active={venue.admins.length > 1}
-							action={() =>
-								handle(
-									db().editVenueAdmins(
-										venue.id,
-										venue.admins.filter((ad) => ad !== adminID)
-									)
-								)}>{DeleteLabel}</Button
-						>{/if}
-				{/each}.
-			</p>
-			<Paragraph text={(l) => l.view.roles.paragraph.adminsDescription} />
-
-			{#if isAdmin}
-				<form>
-					<Paragraph text={(l) => l.view.roles.paragraph.addAdmin} />
-					<TextField
-						strings={(l) => l.view.roles.field.adminScholar}
-						bind:text={newEditor}
-						size={19}
-						valid={(text) => validAdmin(text)}
-					/><Button
-						strings={(l) => l.view.roles.button.addAdmin}
-						active={validAdmin(newEditor) === undefined}
-						action={async () => {
-							if (await handle(db().addVenueAdmin(venue.id, newEditor))) newEditor = '';
-						}}
-					/>
-				</form>
-			{/if}
-		</Card>
-		{#each roles.toSorted((a, b) => a.priority - b.priority) as role, index (role.id)}
+		{#each roles.toSorted((a, b) => b.priority - a.priority) as role, index (role.id)}
 			{@const roleVolunteers = volunteers?.filter((v) => v.roleid === role.id) ?? []}
 			<Card
 				full
@@ -167,7 +122,7 @@
 						note: role.description.length === 0 ? l.view.roles.card.unnamed : role.description
 					};
 				}}
-				expand={!isAdmin}
+				expand={isAdmin || !role.invited}
 				testid="role-{role.name}"
 			>
 				{#snippet controls()}
@@ -185,7 +140,7 @@
 					{/if}
 				{/snippet}
 
-				{#if role.priority === 0}
+				{#if isAdmin && role.priority === 0}
 					<Tip>{locale().view.roles.tip.highestPriority}</Tip>
 				{/if}
 
@@ -447,5 +402,50 @@
 		{:else}
 			<Feedback text={(l) => l.view.roles.feedback.noRoles}></Feedback>
 		{/each}
+		<Card
+			icon={venue.admins.length}
+			subheader
+			strings={(l) => l.view.roles.card.admins}
+			expand={isAdmin}
+		>
+			<p>
+				{locale().view.roles.paragraph.administeredBy}
+				{#each admins as adminID, index}
+					{#if index > 0 && admins.length > 2},{/if}
+					{#if index === admins.length - 1 && admins.length > 1}and{/if}
+					<ScholarLink id={adminID} />{#if isAdmin && admins.length > 1}
+						&nbsp;<Button
+							strings={(l) => l.view.roles.button.removeAdmin}
+							active={venue.admins.length > 1}
+							action={() =>
+								handle(
+									db().editVenueAdmins(
+										venue.id,
+										venue.admins.filter((ad) => ad !== adminID)
+									)
+								)}>{DeleteLabel}</Button
+						>{/if}
+				{/each}.
+			</p>
+			<Paragraph text={(l) => l.view.roles.paragraph.adminsDescription} />
+
+			{#if isAdmin}
+				<form>
+					<Paragraph text={(l) => l.view.roles.paragraph.addAdmin} />
+					<TextField
+						strings={(l) => l.view.roles.field.adminScholar}
+						bind:text={newEditor}
+						size={19}
+						valid={(text) => validAdmin(text)}
+					/><Button
+						strings={(l) => l.view.roles.button.addAdmin}
+						active={validAdmin(newEditor) === undefined}
+						action={async () => {
+							if (await handle(db().addVenueAdmin(venue.id, newEditor))) newEditor = '';
+						}}
+					/>
+				</form>
+			{/if}
+		</Card>
 	</Cards>
 {/if}

@@ -1031,11 +1031,11 @@
 					"label": "Accept"
 				},
 				"stop": {
-					"tip": "Stop volunteering",
-					"label": "Stop..."
+					"tip": "If clicked, you will be shown as inactive in the reviewer list. You will need to resume to be considered for assignments to this role.",
+					"label": "Pause volunteering"
 				},
 				"resume": {
-					"tip": "Resume volunteering",
+					"tip": "Resume volunteering for this role. You will again appear as active in the list of volunteers for this role, and be considered for assignments to this role.",
 					"label": "Resume..."
 				},
 				"invite": {
@@ -1076,7 +1076,7 @@
 					"placeholder": "Why this amount?"
 				},
 				"expertise": {
-					"label": "what is your expertise? (separated by commas)?",
+					"label": "share your expertise as phrases, separated by commas (public)",
 					"placeholder": "topic, area, method, theory, etc."
 				}
 			},

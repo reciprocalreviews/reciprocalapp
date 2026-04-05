@@ -14,6 +14,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Improved font sizes.
 - Organized locale files for future translation.
 - Made volunteers visible without login.
+- Improved visibility and explanation of role volunteering.
 
 ## 0.3.9 - 2026-03-29
 
