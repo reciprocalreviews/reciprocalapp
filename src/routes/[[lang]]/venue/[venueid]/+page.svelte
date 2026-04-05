@@ -52,7 +52,7 @@
 		<Paragraph text={(l) => l.page.venue.paragraph.notFound} />
 	</Page>
 {:else}
-	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
+	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[]}>
 		{#snippet subtitle()}<Text path={(l) => l.page.venue.subtitle} />{/snippet}
 		{#snippet details()}
 			{#if isAdmin}

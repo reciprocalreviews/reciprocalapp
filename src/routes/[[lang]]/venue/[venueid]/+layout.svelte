@@ -1,15 +1,15 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
-	import Text from '$lib/locales/Text.svelte';
-	import type { LayoutData } from './$types';
-	import Page from '$lib/components/Page.svelte';
-	import Link from '$lib/components/Link.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
 	import { page } from '$app/state';
+	import Feedback from '$lib/components/Feedback.svelte';
 	import { ErrorLabel, VenueLabel } from '$lib/components/Labels';
+	import Link from '$lib/components/Link.svelte';
+	import Page from '$lib/components/Page.svelte';
+	import Paragraph from '$lib/components/Paragraph.svelte';
+	import ScholarLink from '$lib/components/ScholarLink.svelte';
+	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
+	import Text from '$lib/locales/Text.svelte';
+	import type { Snippet } from 'svelte';
+	import type { LayoutData } from './$types';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 	const { venue } = $derived(data);
@@ -27,15 +27,11 @@
 </script>
 
 {#if venue === null}
-	<Page
-		icon={ErrorLabel}
-		title={(l) => l.page.venue.unknownTitle}
-		breadcrumbs={[[`/venues`, 'Venue']]}
-	>
+	<Page icon={ErrorLabel} title={(l) => l.page.venue.unknownTitle} breadcrumbs={[]}>
 		<Paragraph text={(l) => l.page.venue.paragraph.notFound} />
 	</Page>
 {:else if venue.inactive !== null && !venue.admins.includes(data.scholar?.id ?? '')}
-	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venues`, 'Venues']]}>
+	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[]}>
 		{#snippet subtitle()}<Text path={(l) => l.page.venue.subtitle} />{/snippet}
 		{#snippet details()}
 			<Link to={venue.url}>{venue.url}</Link>
