@@ -479,19 +479,19 @@ values
 		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
 		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
 		1,
-		'Editors get 1 token for handling a submission.'
+		'Submissions typically take much less time to manage than to meta-review.'
 	),
 	(
 		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
 		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
 		10,
-		'Associate editors get 10 tokens for handling a submission, since they have more work than editors.'
+		'Associate editors get 10 tokens for handling a submission, as they are often as much work as writing a review.'
 	),
 	(
 		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
 		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
 		10,
-		'Reviewers get 10 tokens for handling a submission, since they do the most'
+		'Reviewers get 10 tokens for handling a submission.'
 	);
 
 insert into
