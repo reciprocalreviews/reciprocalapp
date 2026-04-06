@@ -5,11 +5,13 @@
 	const {
 		error = false,
 		inline = true,
+		round = true,
 		testid,
 		text
 	}: {
 		error?: boolean;
 		inline?: boolean;
+		round?: boolean;
 		testid?: string;
 		text: (locale: LocaleText) => string | string[];
 	} = $props();
@@ -20,9 +22,11 @@
 {/snippet}
 
 {#if inline}
-	<span class={['feedback', 'inline', { error }]} data-testid={testid}>{@render content()}</span>
+	<span class={['feedback', 'inline', { error, round }]} data-testid={testid}
+		>{@render content()}</span
+	>
 {:else}
-	<p class={['feedback', { error }]} data-testid={testid}>{@render content()}</p>
+	<p class={['feedback', { error, round }]} data-testid={testid}>{@render content()}</p>
 {/if}
 
 <style>
@@ -34,7 +38,6 @@
 		padding: var(--spacing-half);
 		padding-left: var(--spacing);
 		font-size: var(--small-font-size);
-		border-radius: var(--roundedness);
 	}
 
 	p {
@@ -50,5 +53,9 @@
 		border-left-color: var(--error-color);
 		background: var(--error-color-faded);
 		color: var(--error-color);
+	}
+
+	.round {
+		border-radius: var(--roundedness);
 	}
 </style>

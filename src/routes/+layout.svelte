@@ -69,7 +69,8 @@
 {/snippet}
 
 {#if PUBLIC_ENV === 'test'}
-	<Feedback error inline={false} text={(l) => l.header.feedback.testWarning}></Feedback>
+	<Feedback error round={false} inline={false} text={(l) => l.header.feedback.testWarning}
+	></Feedback>
 {/if}
 
 {#if !inProd}
