@@ -30,6 +30,7 @@
 	span {
 		border-left: calc(var(--thick-border-width) * 2) solid var(--salient-color);
 		background: var(--salient-color-faded);
+		color: var(--text-color);
 		padding: var(--spacing-half);
 		padding-left: var(--spacing);
 		font-size: var(--small-font-size);
@@ -48,5 +49,6 @@
 	.error {
 		border-left-color: var(--error-color);
 		background: var(--error-color-faded);
+		color: var(--error-color);
 	}
 </style>

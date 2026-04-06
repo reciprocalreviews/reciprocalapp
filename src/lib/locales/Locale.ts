@@ -449,6 +449,7 @@ export type LocaleText = {
 			};
 			feedback: {
 				notLoaded: string;
+				noName: string;
 				noStatus: string;
 				submissionsNotLoaded: string;
 				tokensNotLoaded: string;

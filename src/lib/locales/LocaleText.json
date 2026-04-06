@@ -1654,6 +1654,9 @@
                     "commitmentsNotLoaded": {
                       "type": "string"
                     },
+                    "noName": {
+                      "type": "string"
+                    },
                     "noStatus": {
                       "type": "string"
                     },
@@ -1684,6 +1687,7 @@
                   },
                   "required": [
                     "notLoaded",
+                    "noName",
                     "noStatus",
                     "submissionsNotLoaded",
                     "tokensNotLoaded",

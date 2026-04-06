@@ -120,8 +120,12 @@
 					event.key === 'Enter' && event.metaKey && done ? edit(event) : undefined}
 			></textarea>
 		{/if}
-		<span class="ruler" class:inline class:active={!active} bind:this={measure}
-			>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n')}</span
+		<span
+			class="ruler"
+			class:inline
+			class:active={!active}
+			class:placeholder={text.length === 0}
+			bind:this={measure}>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n')}</span
 		>
 	</label>
 	{#if error !== undefined && wasFocused}
@@ -209,6 +213,10 @@
 		visibility: visible;
 		white-space: wrap;
 		word-break: break-word;
+	}
+
+	.ruler.placeholder {
+		font-style: italic;
 	}
 
 	input[disabled],

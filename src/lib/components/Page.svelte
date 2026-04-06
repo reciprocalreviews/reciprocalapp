@@ -13,6 +13,7 @@
 		details,
 		breadcrumbs,
 		children,
+		wobble = false,
 		edit
 	}: {
 		icon: string;
@@ -21,6 +22,7 @@
 		details?: Snippet;
 		children: Snippet;
 		breadcrumbs: [string, string][];
+		wobble?: boolean;
 		edit?:
 			| {
 					valid: undefined | ((text: string) => ((l: LocaleText) => string) | undefined);
@@ -46,7 +48,7 @@
 
 <section class="page">
 	<div class="metadata">
-		<h1 data-testid="page-header">
+		<h1 class:wobble data-testid="page-header">
 			<span class="emoji">{icon}</span>
 			{#if edit}<EditableText
 					text={revisedTitle}
@@ -84,6 +86,29 @@
 		display: flex;
 		gap: 0.5rem;
 		align-items: center;
+	}
+
+	@keyframes wobble {
+		0%,
+		100% {
+			transform: translateX(0);
+		}
+		20% {
+			transform: translateX(-5px);
+		}
+		40% {
+			transform: translateX(5px);
+		}
+		60% {
+			transform: translateX(-3px);
+		}
+		80% {
+			transform: translateX(3px);
+		}
+	}
+
+	.wobble {
+		animation: wobble 0.8s ease-in-out 0.3s 3;
 	}
 
 	.page > :global(p) {

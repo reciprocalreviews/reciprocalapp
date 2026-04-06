@@ -68,12 +68,14 @@
 
 	// Editable if the user is the scholar being viewed.
 	let editable = $derived(auth().getUserID() === scholar.getID());
+	let anonymous = $derived(editable && scholar.getName() === null);
 </script>
 
 <Page
 	icon={ScholarLabel}
 	title={(l) => scholar.getName() ?? l.page.scholar.title}
 	breadcrumbs={[]}
+	wobble={anonymous}
 	edit={editable
 		? {
 				placeholder: (l) => l.page.scholar.field.name.placeholder,
@@ -84,6 +86,9 @@
 		: undefined}
 >
 	{#snippet subtitle()}<Text path={(l) => l.page.scholar.subtitle} />{/snippet}
+	{#if anonymous}
+		<Feedback inline={false} text={(l) => l.page.scholar.feedback.noName} />
+	{/if}
 	{#snippet details()}
 		<Status
 			good={scholar.isAvailable()}

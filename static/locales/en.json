@@ -558,7 +558,9 @@
 			},
 			"subtitle": "Submission",
 			"options": {
-				"submissionType": { "label": "Submission type" },
+				"submissionType": {
+					"label": "Submission type"
+				},
 				"assignmentRole": {
 					"label": "Role"
 				}
@@ -727,7 +729,8 @@
 				"notVolunteeringFirst": "You are not volunteering for any roles yet.",
 				"notVolunteeringThird": "This scholar is not volunteering for any roles yet.",
 				"volunteeringFirst": "You are not volunteering for any roles yet.",
-				"volunteeringThird": "This scholar is not volunteering for any roles yet."
+				"volunteeringThird": "This scholar is not volunteering for any roles yet.",
+				"noName": "Welcome! Edit your name above to set it, then share your reviewing status below so others know your availability."
 			},
 			"field": {
 				"name": {
