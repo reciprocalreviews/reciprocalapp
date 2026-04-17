@@ -13,9 +13,8 @@
 </script>
 
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-
-	import Link from './Link.svelte';
 
 	type Props = {
 		stats: [Stat, ...Stat[]];
@@ -23,6 +22,7 @@
 
 	let { stats }: Props = $props();
 
+	// Animation state
 	let percent = $state(0);
 
 	function step() {
@@ -37,6 +37,20 @@
 	onMount(() => {
 		step();
 	});
+
+	
+	function navigate(href?: string) {
+		if (!href) return;
+		goto(href);
+	}
+
+	function handleKeyNavigate(e: KeyboardEvent, href?: string) {
+		if (!href) return;
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			navigate(href);
+		}
+	}
 </script>
 
 {#snippet number(stat: number | undefined, icon: string | undefined)}
@@ -55,21 +69,27 @@
 
 <div class="dashboard">
 	{#each stats as stat, index}
-		<div class="stat" data-testid="stat-{index}">
-			{#if stat.link}
-				<Link to={stat.link} underline={false}>
-					<div class="content">
-						{@render number(stat.number, stat.icon)}
-						{@render title(stat.title)}
-					</div>
-				</Link>
-			{:else}
+		{#if stat.link}
+			<a
+				class="stat"
+				href={stat.link}
+				onclick={(e) => { e.preventDefault(); navigate(stat.link); }}
+				onkeydown={(e) => handleKeyNavigate(e, stat.link)}
+				data-testid="stat-{index}"
+			>
 				<div class="content">
 					{@render number(stat.number, stat.icon)}
 					{@render title(stat.title)}
 				</div>
-			{/if}
-		</div>
+			</a>
+		{:else}
+			<div class="stat" data-testid="stat-{index}">
+				<div class="content">
+					{@render number(stat.number, stat.icon)}
+					{@render title(stat.title)}
+				</div>
+			</div>
+		{/if}
 	{/each}
 </div>
 
@@ -89,24 +109,56 @@
 		border: var(--border-width) var(--border-color) solid;
 		border-radius: var(--roundedness);
 		background: var(--salient-color-faded);
-		flex: 1;
+		flex: 1 1 0;
+		min-width: 180px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+		transition: background 0.2s, box-shadow 0.2s;
+		text-decoration: none;
+		color: inherit;
+		cursor: default;
+	}
+
+	a.stat {
+		cursor: pointer;
+		border-color: var(--salient-color);
+	}
+
+	a.stat:hover,
+	a.stat:focus-visible {
+		background: var(--salient-color-faded);
+		box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+		filter: brightness(0.97);
+	}
+
+	.stat:focus-visible {
+		outline: 3px solid rgba(0,120,140,0.12);
+		outline-offset: 2px;
 	}
 
 	.content {
 		display: flex;
 		flex-direction: column;
-		align-items: baseline;
-		line-height: 1;
+		align-items: center;
+		line-height: 1.2;
 	}
 
 	.number {
 		font-size: var(--header-font-size);
 		font-weight: bold;
+		text-align: center;
+		color: var(--salient-color);
 	}
 
 	.title {
 		font-size: var(--small-font-size);
 		font-style: italic;
-		max-width: 8em;
+		max-width: 12em;
+		text-align: center;
+		margin-top: 0.5em;
+		word-break: break-word;
 	}
+
 </style>
