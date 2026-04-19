@@ -12,6 +12,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Improved the visual design of tip, text field, and form components.
 - Fully localized the new submission page.
 - Lowercased English labels for consistency.
+- Fixed invalid HTML caused by markdown wrapped in paragraphs.
 
 ## 0.3.10 - 2026-04-05
 
