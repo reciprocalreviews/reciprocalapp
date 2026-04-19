@@ -58,7 +58,6 @@
 	function resize() {
 		if (view === undefined) return;
 		width = measure?.clientWidth ?? 0;
-		inputWidth = view.offsetWidth;
 
 		if (inline) height = measure?.clientHeight ?? 0;
 		// Reset the textarea height before measuring scroll height.
@@ -72,7 +71,11 @@
 	$effect(() => {
 		text;
 		active;
-		tick().then(() => resize());
+		tick().then(async () => {
+			resize();
+			await tick();
+			if (view) inputWidth = view.offsetWidth;
+		});
 	});
 
 	function edit(event: Event) {
