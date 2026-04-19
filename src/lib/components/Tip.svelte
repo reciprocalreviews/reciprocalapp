@@ -23,17 +23,13 @@
 		gap: var(--spacing-half);
 		align-items: first baseline;
 		font-size: var(--small-font-size);
+	}
+
+	.tip.border {
 		background: var(--salient-color-faded);
 		padding: var(--spacing-half);
 		border-radius: var(--roundedness);
 		border-left: var(--thick-border-width) solid var(--salient-color);
-	}
-
-	.tip.border {
-		border-top: var(--border-width) solid var(--border-color);
-		border-bottom: var(--border-width) solid var(--border-color);
-		padding-top: var(--spacing);
-		padding-bottom: var(--spacing);
 	}
 
 	.bulb {

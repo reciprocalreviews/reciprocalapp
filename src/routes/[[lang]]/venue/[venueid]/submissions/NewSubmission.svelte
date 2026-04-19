@@ -16,8 +16,8 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { ORCIDRegex } from '$lib/data/ORCID';
-	import Text from '$lib/locales/Text.svelte';
 	import type Locale from '$lib/locales/Locale';
+	import Text from '$lib/locales/Text.svelte';
 	import { isntEmpty, validORCID } from '$lib/validation';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { handle } from '$routes/feedback.svelte';

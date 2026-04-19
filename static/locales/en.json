@@ -159,33 +159,33 @@
 			},
 			"field": {
 				"venueName": {
-					"label": "Venue",
+					"label": "venue",
 					"placeholder": "name",
 					"invalid": "Must include a venue name"
 				},
 				"editors": {
-					"label": "Editors",
+					"label": "editors",
 					"placeholder": "email1@email.com, email2@email.com",
 					"invalid": "Must be a list of comma-separated email addresses."
 				},
 				"minters": {
-					"label": "Minters",
+					"label": "minters",
 					"placeholder": "email1@email.com, email2@email.com",
 					"invalid": "Must be a list of at least one comma-separated email address."
 				},
 				"mintersConflict": "Editors can't be minters",
 				"url": {
-					"label": "Official venue URL",
+					"label": "official venue URL",
 					"placeholder": "https://...",
 					"invalid": "Must be a valid URL"
 				},
 				"size": {
-					"label": "Community size",
+					"label": "community size",
 					"placeholder": "number",
 					"invalid": "Must be a positive whole number"
 				},
 				"rationale": {
-					"label": "Why should the editors adopt Reciprocal Reviews? This will be shown publicly.",
+					"label": "why should the editors adopt Reciprocal Reviews? This will be shown publicly.",
 					"placeholder": "why",
 					"invalid": "Must include a rationale"
 				}
@@ -195,7 +195,7 @@
 			},
 			"options": {
 				"currency": {
-					"label": "Currency",
+					"label": "currency",
 					"createNew": "Create a new currency"
 				}
 			},
@@ -343,12 +343,12 @@
 			},
 			"slider": {
 				"payment": {
-					"label": "Payment"
+					"label": "payment"
 				}
 			},
 			"options": {
 				"submissionType": {
-					"label": "Submission type"
+					"label": "submission type"
 				}
 			},
 			"error": {
@@ -415,14 +415,14 @@
 					"note": "Used by editors (and reviewers if bidding is enabled)"
 				},
 				"manuscriptID": {
-					"label": "manuscript id",
-					"placeholder": "id",
+					"label": "manuscript ID",
+					"placeholder": "ID",
 					"note": "The manuscript's ID from your review system, to link this transaction to your submission.",
 					"invalid": "ID must be non-empty."
 				},
 				"previousID": {
-					"label": "previous manuscript id",
-					"placeholder": "id",
+					"label": "previous manuscript ID",
+					"placeholder": "ID",
 					"note": "The ID of the previous submission, if this is a revision and you want to track it."
 				},
 				"filter": {
@@ -493,7 +493,7 @@
 			},
 			"field": {
 				"newAssignment": {
-					"label": "Scholar",
+					"label": "scholar",
 					"placeholder": "email or ORCID",
 					"invalid": "Must be an email or ORCID"
 				}
@@ -512,10 +512,10 @@
 			"subtitle": "Submission",
 			"options": {
 				"submissionType": {
-					"label": "Submission type"
+					"label": "submission type"
 				},
 				"assignmentRole": {
-					"label": "Role"
+					"label": "role"
 				}
 			},
 			"headers": {
@@ -599,7 +599,7 @@
 			"subtitle": "Venue",
 			"options": {
 				"compensationRole": {
-					"label": "Role"
+					"label": "role"
 				}
 			},
 			"headers": {
@@ -630,17 +630,17 @@
 			},
 			"field": {
 				"inactiveMessage": {
-					"label": "Inactive message",
+					"label": "inactive message",
 					"placeholder": "e.g., We're currently configuring the venue.",
 					"invalid": "You must include a message"
 				},
 				"welcomeTokens": {
-					"label": "Welcome tokens (received when first volunteering)",
+					"label": "welcome tokens (received when first volunteering)",
 					"placeholder": "e.g., 40",
 					"invalid": "Must be a whole number"
 				},
 				"submissionCost": {
-					"label": "Submission cost (price to submit a manuscript to the venue)",
+					"label": "submission cost (price to submit a manuscript to the venue)",
 					"placeholder": "e.g., 40",
 					"invalid": "Must be a whole number"
 				}
@@ -761,12 +761,12 @@
 					"invalid": "The name can't be empty"
 				},
 				"mintPurpose": {
-					"label": "Why are these tokens being minted? This purpose will be public in the transaction history.",
+					"label": "why are these tokens being minted? This purpose will be public in the transaction history.",
 					"placeholder": "Purpose",
 					"invalid": "Purpose can't be empty"
 				},
 				"minter": {
-					"label": "Scholar",
+					"label": "scholar",
 					"placeholder": "ORCID or email",
 					"invalidMinter": "Minters can't be admins of a venue that uses this currency.",
 					"invalidContact": "Must be a valid email or ORCID"
@@ -791,12 +791,12 @@
 			},
 			"slider": {
 				"newTokenCount": {
-					"label": "Number of new tokens"
+					"label": "number of new tokens"
 				}
 			},
 			"options": {
 				"tokenOwner": {
-					"label": "Which venue should own the new tokens?"
+					"label": "which venue should own the new tokens?"
 				}
 			},
 			"paragraph": {
@@ -854,12 +854,12 @@
 			},
 			"field": {
 				"recipient": {
-					"label": "Recipient",
+					"label": "recipient",
 					"placeholder": "ORCID or email",
 					"invalid": "Must be an email or ORCID"
 				},
 				"purpose": {
-					"label": "Purpose",
+					"label": "purpose",
 					"placeholder": "What is the gift for?"
 				}
 			},
@@ -868,15 +868,15 @@
 			},
 			"slider": {
 				"tokenAmount": {
-					"label": "Number of tokens to give"
+					"label": "number of tokens to give"
 				}
 			},
 			"options": {
 				"venue": {
-					"label": "Select a venue"
+					"label": "select a venue"
 				},
 				"currency": {
-					"label": "What currency should be used?"
+					"label": "what currency should be used?"
 				}
 			},
 			"fieldset": {
@@ -911,7 +911,7 @@
 			},
 			"field": {
 				"cancelReason": {
-					"label": "Reason",
+					"label": "reason",
 					"placeholder": "Reason for cancellation"
 				}
 			},
@@ -1006,12 +1006,12 @@
 			},
 			"field": {
 				"newRoleName": {
-					"label": "Role name",
+					"label": "role name",
 					"placeholder": "name",
 					"invalid": "Must include a name"
 				},
 				"adminScholar": {
-					"label": "Scholar",
+					"label": "scholar",
 					"placeholder": "ORCID or email"
 				},
 				"invite": {
@@ -1063,17 +1063,17 @@
 			},
 			"slider": {
 				"compensation": {
-					"label": "Compensation amount",
+					"label": "compensation amount",
 					"suffix": "/submission"
 				},
 				"desiredAssignments": {
-					"label": "Desired number of assignments for this role. If bidding is on, it will be turned off for a submission that has this number of assignments, to avoid unnecessary bids.",
+					"label": "desired number of assignments for this role. If bidding is on, it will be turned off for a submission that has this number of assignments, to avoid unnecessary bids.",
 					"suffix": " assignments"
 				}
 			},
 			"options": {
 				"approver": {
-					"label": "What role can approve assignments to this role for a submission, other than the editor?"
+					"label": "what role can approve assignments to this role for a submission, other than the editor?"
 				}
 			},
 			"headers": {
