@@ -16,6 +16,7 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { ORCIDRegex } from '$lib/data/ORCID';
+	import Text from '$lib/locales/Text.svelte';
 	import type Locale from '$lib/locales/Locale';
 	import { isntEmpty, validORCID } from '$lib/validation';
 	import { getAuth } from '$routes/Auth.svelte';
@@ -109,7 +110,7 @@
 <Paragraph text={(l) => l.page.newSubmission.paragraph.intro} />
 
 <Form>
-	<h3>Details</h3>
+	<h3><Text path={(l) => l.page.newSubmission.header.details} /></h3>
 	<TextField
 		strings={(l) => l.page.submissions.field.title}
 		size={40}
@@ -148,7 +149,7 @@
 					? 'These authors can afford this charge.'
 					: `By line, authors and how many tokens to charge each of them. Tokens must sum to ${venue.submission_cost}.`}
  -->
-	<h3>Payment</h3>
+	<h3><Text path={(l) => l.page.newSubmission.header.payment} /></h3>
 	<Note path={(l) => l.page.newSubmission.note.payment} />
 	<Table>
 		{#each charges as charge, index}
@@ -216,7 +217,7 @@
 		{#if typeof affordable === 'string'}<Feedback error text={affordable} />{/if}
 	{/if}
 
-	<h3>Submit</h3>
+	<h3><Text path={(l) => l.page.newSubmission.header.submit} /></h3>
 
 	<Note path={(l) => l.page.newSubmission.note.approve} />
 
@@ -251,8 +252,8 @@
 
 				return result;
 			}
-		}}>Create this submission</Button
-	>
+		}}
+	/>
 </Form>
 
 <style>

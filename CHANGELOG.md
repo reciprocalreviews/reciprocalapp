@@ -10,6 +10,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Updated internal tooling for stability.
 - Removed some unused locale strings.
 - Improved the visual design of tip, text field, and form components.
+- Fully localized the new submission page.
 
 ## 0.3.10 - 2026-04-05
 

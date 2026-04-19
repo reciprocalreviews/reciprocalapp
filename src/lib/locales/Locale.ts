@@ -202,6 +202,11 @@ export type LocaleText = {
 		};
 		newSubmission: {
 			title: string;
+			header: {
+				details: string;
+				payment: string;
+				submit: string;
+			};
 			paragraph: {
 				intro: string;
 			};

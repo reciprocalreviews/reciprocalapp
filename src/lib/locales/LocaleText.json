@@ -1222,6 +1222,26 @@
                   ],
                   "type": "object"
                 },
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "details": {
+                      "type": "string"
+                    },
+                    "payment": {
+                      "type": "string"
+                    },
+                    "submit": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "details",
+                    "payment",
+                    "submit"
+                  ],
+                  "type": "object"
+                },
                 "note": {
                   "additionalProperties": false,
                   "properties": {
@@ -1284,6 +1304,7 @@
               },
               "required": [
                 "title",
+                "header",
                 "paragraph",
                 "feedback",
                 "button",

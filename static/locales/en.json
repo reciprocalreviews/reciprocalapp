@@ -298,6 +298,11 @@
 		},
 		"newSubmission": {
 			"title": "New submission",
+			"header": {
+				"details": "Details",
+				"payment": "Payment",
+				"submit": "Submit"
+			},
 			"paragraph": {
 				"intro": "Ready to create a new submission? Typically, this form is filled by one of the authors of a submission, to pay for a submission to be reviewed. After filling out this form:\n\n- The submission will be created in the system.\n- All scholars listed will need to confirm their payments.\n- Once everyone has paid, the editor will proceed with review."
 			},
@@ -321,7 +326,7 @@
 				},
 				"submit": {
 					"tip": "Create a new submission",
-					"label": "Submit"
+					"label": "Create this submission"
 				}
 			},
 			"note": {
