@@ -47,10 +47,23 @@
 		align-items: baseline;
 		font-size: var(--small-font-size);
 		font-style: italic;
+		padding: 2px 4px;
+		border-radius: var(--roundedness);
+		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.2);
+		background: var(--background-color);
+		transition:
+			box-shadow 60ms ease,
+			transform 60ms ease;
 	}
 
 	label:hover {
 		cursor: pointer;
+	}
+
+	label:has(input:active),
+	label:has(input:focus) {
+		box-shadow: none;
+		transform: translate(2px, 3px);
 	}
 
 	input {

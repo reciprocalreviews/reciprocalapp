@@ -100,6 +100,10 @@
 		color: var(--foreground-color);
 		cursor: pointer;
 		white-space: nowrap;
+		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.2);
+		transition:
+			box-shadow 60ms ease,
+			transform 60ms ease;
 	}
 
 	button.small {
@@ -107,7 +111,7 @@
 	}
 
 	button.background {
-		background: var(--text-color);
+		background: var(--salient-color);
 		color: var(--background-color);
 	}
 
@@ -115,8 +119,10 @@
 		flex-grow: 1;
 	}
 
-	button:not([disabled]):hover {
-		transform: scaleY(1.05);
+	button:not([disabled]):active,
+	button:not([disabled]):focus {
+		box-shadow: none;
+		transform: translate(2px, 3px);
 	}
 
 	button:focus {
@@ -131,6 +137,7 @@
 	button[disabled] {
 		background: var(--inactive-color);
 		cursor: auto;
+		box-shadow: none;
 	}
 
 	.row {

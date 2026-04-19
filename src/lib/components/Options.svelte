@@ -42,6 +42,16 @@
 		border-radius: var(--roundedness);
 		width: fit-content;
 		max-width: 100%;
+		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.2);
+		transition:
+			box-shadow 60ms ease,
+			transform 60ms ease;
+	}
+
+	select:active,
+	select:focus {
+		box-shadow: inset 1px 2px 4px rgba(0, 0, 0, 0.15);
+		transform: translate(1px, 1px);
 	}
 
 	select:focus {

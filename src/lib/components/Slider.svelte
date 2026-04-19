@@ -62,6 +62,20 @@
 		flex-direction: row;
 		gap: var(--spacing);
 		align-items: center;
+		padding: var(--spacing-half);
+		border: var(--border-width) solid var(--border-color);
+		border-radius: var(--roundedness);
+		background: var(--background-color);
+		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.2);
+		transition:
+			box-shadow 60ms ease,
+			transform 60ms ease;
+	}
+
+	.slider:has(input:active),
+	.slider:has(input:focus) {
+		box-shadow: none;
+		transform: translate(2px, 3px);
 	}
 
 	input {
@@ -80,8 +94,8 @@
 	label {
 		width: 100%;
 		position: relative;
-		overflow: hidden;
 		font-size: var(--small-font-size);
 		font-style: italic;
+		padding-block-end: 4px;
 	}
 </style>
