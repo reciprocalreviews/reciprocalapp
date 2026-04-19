@@ -576,7 +576,7 @@
 				"deleteSubmissionType": {
 					"tip": "Remove this submission type",
 					"label": "$delete",
-					"warn": "Delete this submission type?"
+					"warn": "Delete?"
 				},
 				"requestCompensation": {
 					"tip": "Request compensation",
