@@ -196,7 +196,7 @@
 			error
 			text={(l) =>
 				l.page.newSubmission.feedback.incompletePayment.replace(
-					'{amount}',
+					'{deficit}',
 					(
 						venue.submission_cost - charges.reduce((sum, charge) => sum + charge.payment, 0)
 					).toString()
