@@ -68,14 +68,20 @@
 		background: var(--background-color);
 		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.2);
 		transition:
-			box-shadow 60ms ease,
-			transform 60ms ease;
+			box-shadow 150ms ease-out,
+			transform 150ms ease-out;
+	}
+
+	.slider:not(:has(input:focus)):hover {
+		box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.25);
+		transform: translate(-1px, -1.5px);
 	}
 
 	.slider:has(input:active),
 	.slider:has(input:focus) {
 		box-shadow: none;
 		transform: translate(2px, 3px);
+		transition-duration: 60ms;
 	}
 
 	input {

@@ -102,8 +102,8 @@
 		white-space: nowrap;
 		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.2);
 		transition:
-			box-shadow 60ms ease,
-			transform 60ms ease;
+			box-shadow 150ms ease-out,
+			transform 150ms ease-out;
 	}
 
 	button.small {
@@ -119,10 +119,16 @@
 		flex-grow: 1;
 	}
 
+	button:not([disabled]):hover {
+		box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.25);
+		transform: translate(-1px, -1.5px);
+	}
+
 	button:not([disabled]):active,
 	button:not([disabled]):focus {
 		box-shadow: none;
 		transform: translate(2px, 3px);
+		transition-duration: 60ms;
 	}
 
 	button:focus {

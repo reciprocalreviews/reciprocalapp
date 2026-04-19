@@ -52,18 +52,21 @@
 		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.2);
 		background: var(--background-color);
 		transition:
-			box-shadow 60ms ease,
-			transform 60ms ease;
+			box-shadow 150ms ease-out,
+			transform 150ms ease-out;
 	}
 
 	label:hover {
 		cursor: pointer;
+		box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.25);
+		transform: translate(-1px, -1.5px);
 	}
 
 	label:has(input:active),
 	label:has(input:focus) {
 		box-shadow: none;
 		transform: translate(2px, 3px);
+		transition-duration: 60ms;
 	}
 
 	input {

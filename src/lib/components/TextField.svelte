@@ -163,8 +163,8 @@
 		display: none;
 		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.15);
 		transition:
-			box-shadow 60ms ease,
-			transform 60ms ease;
+			box-shadow 150ms ease-out,
+			transform 150ms ease-out;
 	}
 
 	input::placeholder {
@@ -199,8 +199,14 @@
 		display: none;
 		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.15);
 		transition:
-			box-shadow 60ms ease,
-			transform 60ms ease;
+			box-shadow 150ms ease-out,
+			transform 150ms ease-out;
+	}
+
+	input.active:not(:focus):hover,
+	textarea.active:not(:focus):hover {
+		box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.2);
+		transform: translate(-1px, -1.5px);
 	}
 
 	.ruler {
@@ -255,6 +261,7 @@
 		outline: none;
 		box-shadow: inset 1px 2px 4px rgba(0, 0, 0, 0.15);
 		transform: translate(1px, 1px);
+		transition-duration: 60ms;
 	}
 
 	input:not(.invalid):focus {
