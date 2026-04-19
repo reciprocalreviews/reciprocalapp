@@ -97,6 +97,7 @@
 				disabled={!active}
 				{size}
 				onfocus={() => (wasFocused = true)}
+				onblur={() => done?.()}
 				style:width={size === undefined ? (width === 0 ? 'auto' : width + 'px') : undefined}
 				class:invalid={!isValid}
 				{placeholder}
@@ -111,6 +112,7 @@
 				{placeholder}
 				data-testid={testid}
 				onfocus={() => (wasFocused = true)}
+				onblur={() => done?.()}
 				bind:value={text}
 				bind:this={view}
 				cols={size}

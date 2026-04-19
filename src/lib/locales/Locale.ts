@@ -35,7 +35,7 @@ export type OptionsText = {
 /** Text for the Slider component */
 export type SliderText = {
 	/** The label describing the slider's purpose */
-	label: string;
+	label?: string;
 	/** Optional suffix text to display after the current value */
 	suffix?: string;
 };
@@ -215,9 +215,6 @@ export type LocaleText = {
 				duplicateScholars: string;
 				incompletePayment: string;
 			};
-			label: {
-				removeAuthor: string;
-			};
 			button: {
 				removeAuthor: ButtonText;
 				addAuthor: ButtonText;
@@ -230,10 +227,16 @@ export type LocaleText = {
 				approve: string;
 			};
 			field: {
-				authorOrcid: TextFieldText;
+				authorOrcid: TextFieldText & { unknownScholar: string };
 			};
 			slider: {
 				payment: SliderText;
+			};
+			table: {
+				orcid: string;
+				name: string;
+				payment: string;
+				removeAuthor: string;
 			};
 			options: {
 				submissionType: OptionsText;

@@ -1146,18 +1146,6 @@
             "newSubmission": {
               "additionalProperties": false,
               "properties": {
-                "label": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "removeAuthor": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "removeAuthor"
-                  ],
-                  "type": "object"
-                },
                 "button": {
                   "additionalProperties": false,
                   "properties": {
@@ -1226,7 +1214,29 @@
                   "additionalProperties": false,
                   "properties": {
                     "authorOrcid": {
-                      "$ref": "#/definitions/TextFieldText"
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        },
+                        "unknownScholar": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "placeholder",
+                        "unknownScholar"
+                      ],
+                      "type": "object"
                     }
                   },
                   "required": [
@@ -1310,6 +1320,30 @@
                   ],
                   "type": "object"
                 },
+                "table": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "orcid": {
+                      "type": "string"
+                    },
+                    "payment": {
+                      "type": "string"
+                    },
+                    "removeAuthor": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "orcid",
+                    "name",
+                    "payment",
+                    "removeAuthor"
+                  ],
+                  "type": "object"
+                },
                 "title": {
                   "type": "string"
                 }
@@ -1319,11 +1353,11 @@
                 "header",
                 "paragraph",
                 "feedback",
-                "label",
                 "button",
                 "note",
                 "field",
                 "slider",
+                "table",
                 "options",
                 "error"
               ],
@@ -4048,9 +4082,6 @@
           "type": "string"
         }
       },
-      "required": [
-        "label"
-      ],
       "type": "object"
     },
     "TextFieldText": {

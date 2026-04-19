@@ -38,7 +38,9 @@
 </script>
 
 <label>
-	<span class="label">{text.label}</span>
+	{#if text.label}
+		<span class="label">{text.label}</span>
+	{/if}
 	<div class="slider">
 		<input
 			bind:this={view}

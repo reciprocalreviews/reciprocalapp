@@ -8,9 +8,11 @@
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
+	import Loading from '$lib/components/Loading.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import Options from '$lib/components/Options.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
+	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
@@ -35,6 +37,21 @@
 	let previousID = $state('');
 	let submissionType = $state<SubmissionTypeID>(submissionTypes[0].id);
 	let charges = $state<Charge[]>([{ scholar: '', payment: 0 }]);
+
+	type ScholarState =
+		| { status: 'idle' }
+		| { status: 'loading' }
+		| { status: 'found'; id: string }
+		| { status: 'notfound' };
+
+	let scholarStates = $state<ScholarState[]>([{ status: 'idle' }]);
+
+	async function lookupScholar(index: number, orcid: string) {
+		if (!validORCID(orcid)) return;
+		scholarStates[index] = { status: 'loading' };
+		const { data } = await db().findScholar(orcid);
+		scholarStates[index] = data ? { status: 'found', id: data } : { status: 'notfound' };
+	}
 
 	/** True if the specified charges can be afforded, undefined if checking, string describing the problem. */
 	let affordable = $state<((l: Locale) => string) | undefined | true>(undefined);
@@ -139,22 +156,40 @@
 	<h3><Text path={(l) => l.page.newSubmission.header.payment} /></h3>
 	<Note path={(l) => l.page.newSubmission.note.payment} />
 	<Table>
+		{#snippet header()}
+			<th><Text path={(l) => l.page.newSubmission.table.orcid} /></th>
+			<th><Text path={(l) => l.page.newSubmission.table.name} /></th>
+			<th><Text path={(l) => l.page.newSubmission.table.payment} /></th>
+			<th><Text path={(l) => l.page.newSubmission.table.removeAuthor} /></th>
+		{/snippet}
 		{#each charges as charge, index}
 			<tr class="charge">
 				<td>
 					<TextField
-						strings={(l) => l.page.newSubmission.field.authorOrcid}
+						strings={(l) => ({ ...l.page.newSubmission.field.authorOrcid, label: undefined })}
 						size={24}
 						bind:text={charge.scholar}
-						valid={(text) =>
-							validORCID(text)
-								? undefined
-								: (l) => l.page.newSubmission.field.authorOrcid.invalid ?? ''}
+						valid={(text) => {
+							if (!validORCID(text))
+								return (l) => l.page.newSubmission.field.authorOrcid.invalid ?? '';
+							if (scholarStates[index]?.status === 'notfound')
+								return (l) => l.page.newSubmission.field.authorOrcid.unknownScholar;
+							return undefined;
+						}}
+						done={() => lookupScholar(index, charge.scholar)}
 					/>
+				</td>
+				<td class="scholar-name">
+					{#if scholarStates[index]?.status === 'loading'}
+						<Loading />
+					{:else if scholarStates[index]?.status === 'found'}
+						<ScholarLink id={scholarStates[index].id} />
+					{:else}&mdash;
+					{/if}
 				</td>
 				<td
 					><Slider
-						strings={(l) => l.page.newSubmission.slider.payment}
+						strings={(l) => ({ ...l.page.newSubmission.slider.payment, label: undefined })}
 						bind:value={charge.payment}
 						min={0}
 						max={venue.submission_cost}
@@ -162,14 +197,14 @@
 					/></td
 				>
 				<td
-					><label
-						><Text path={(l) => l.page.newSubmission.label.removeAuthor} />
-						<Button
-							strings={(l) => l.page.newSubmission.button.removeAuthor}
-							active={charges.length > 1}
-							action={() => charges.splice(index, 1)}
-						/>
-					</label>
+					><Button
+						strings={(l) => l.page.newSubmission.button.removeAuthor}
+						active={charges.length > 1}
+						action={() => {
+							charges.splice(index, 1);
+							scholarStates.splice(index, 1);
+						}}
+					/>
 				</td>
 			</tr>
 		{/each}
@@ -177,7 +212,10 @@
 
 	<Button
 		strings={(l) => l.page.newSubmission.button.addAuthor}
-		action={() => charges.push({ scholar: '', payment: 0 })}
+		action={() => {
+			charges.push({ scholar: '', payment: 0 });
+			scholarStates.push({ status: 'idle' });
+		}}
 	/>
 
 	{#if duplicateScholars(charges)}

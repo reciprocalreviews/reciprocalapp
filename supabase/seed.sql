@@ -311,7 +311,7 @@ values
 
 update public.scholars
 set
-	orcid='0000-0001-2345-6780',
+	orcid='0000-0001-2345-6789',
 	"name"='Rigor Russ',
 	"email"='r1@uni.edu',
 	"available"='true',
@@ -321,7 +321,7 @@ where
 
 update public.scholars
 set
-	orcid='0000-0001-2345-6782',
+	orcid='0000-0001-2345-6790',
 	"name"='Reese Urcher',
 	"email"='r2@uni.edu',
 	"available"='true',
@@ -331,7 +331,7 @@ where
 
 update public.scholars
 set
-	orcid='0000-0001-2345-6782',
+	orcid='0000-0001-2345-6791',
 	"name"='Sai Entist',
 	"email"='r3@uni.edu',
 	"available"='true',
@@ -341,7 +341,7 @@ where
 
 update public.scholars
 set
-	orcid='0000-0001-2345-6781',
+	orcid='0000-0001-2345-6792',
 	"name"='Foot Note',
 	"email"='author1@uni.edu',
 	"available"='true',
@@ -352,7 +352,7 @@ where
 
 update public.scholars
 set
-	orcid='0000-0001-2345-6782',
+	orcid='0000-0001-2345-6793',
 	"name"='Scholar Lee',
 	"email"='editor@uni.edu',
 	"available"='true',
@@ -363,7 +363,7 @@ where
 
 update public.scholars
 set
-	orcid='0000-0001-2345-6782',
+	orcid='0000-0001-2345-6794',
 	"name"='Grant Seeker',
 	"email"='ae@uni.edu',
 	"available"='true',

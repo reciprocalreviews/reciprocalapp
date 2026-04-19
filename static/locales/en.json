@@ -308,11 +308,8 @@
 			},
 			"feedback": {
 				"notLoaded": "Unable to load the venue and/or submission types for this page.",
-				"duplicateScholars": "Each author must have a unique ORCID.",
+				"duplicateScholars": "Authors must be unique.",
 				"incompletePayment": "{deficit} more tokens to add."
-			},
-			"label": {
-				"removeAuthor": "remove"
 			},
 			"button": {
 				"removeAuthor": {
@@ -341,13 +338,20 @@
 				"authorOrcid": {
 					"label": "author",
 					"placeholder": "ORCID",
-					"invalid": "Invalid ORCID"
+					"invalid": "Invalid ORCID",
+					"unknownScholar": "Unknown scholar"
 				}
 			},
 			"slider": {
 				"payment": {
 					"label": "payment"
 				}
+			},
+			"table": {
+				"orcid": "ORCID",
+				"name": "Name",
+				"payment": "Payment",
+				"removeAuthor": "Remove author"
 			},
 			"options": {
 				"submissionType": {

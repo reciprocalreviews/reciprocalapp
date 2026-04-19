@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.3.11 - 2026-04-19
 
+### Added
+
+- The new submission page now looks up scholars by ORCID ID, to help authors verify they have the right ORCID.
+
 ### Changed
 
 - Updated internal tooling for stability.

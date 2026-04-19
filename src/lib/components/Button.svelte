@@ -12,7 +12,7 @@
 		active = true,
 		formaction = undefined,
 		name = undefined,
-		type = undefined,
+		type = 'button',
 		view: _ = $bindable(undefined),
 		end = false,
 		background = true,
@@ -25,7 +25,7 @@
 		active?: boolean;
 		formaction?: string | undefined;
 		name?: string | undefined;
-		type?: 'submit' | undefined;
+		type?: 'submit' | 'button';
 		view?: HTMLButtonElement | undefined;
 		end?: boolean | undefined;
 		background?: boolean;
