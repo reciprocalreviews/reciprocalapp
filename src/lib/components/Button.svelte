@@ -93,7 +93,7 @@
 	button {
 		font-family: var(--font-face);
 		font-size: var(--small-font-size);
-		border: var(--border-color);
+		border: none;
 		border-radius: var(--roundedness);
 		padding: var(--spacing-half);
 		background: none;
@@ -132,7 +132,8 @@
 	}
 
 	button:focus {
-		outline: var(--focus-color) solid var(--thick-border-width);
+		outline: none;
+		background: var(--focus-color);
 	}
 
 	button.warn {

@@ -58,10 +58,11 @@
 		box-shadow: inset 1px 2px 4px rgba(0, 0, 0, 0.15);
 		transform: translate(1px, 1px);
 		transition-duration: 60ms;
+		outline: none;
 	}
 
 	select:focus {
-		outline: var(--focus-color) solid var(--thick-border-width);
+		border-color: var(--focus-color);
 	}
 
 	.label {

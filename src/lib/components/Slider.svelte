@@ -82,6 +82,7 @@
 	.slider:has(input:active),
 	.slider:has(input:focus) {
 		box-shadow: none;
+		border-color: var(--focus-color);
 		transform: translate(2px, 3px);
 		transition-duration: 60ms;
 	}
@@ -92,11 +93,11 @@
 		color: inherit;
 		accent-color: var(--salient-color);
 		width: 100%;
+		outline: none;
 	}
 
 	input:focus {
-		outline: var(--focus-color) solid var(--thick-border-width);
-		border-radius: var(--roundedness);
+		accent-color: var(--focus-color);
 	}
 
 	label {
