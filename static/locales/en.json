@@ -311,6 +311,9 @@
 				"duplicateScholars": "Each author must have a unique ORCID.",
 				"incompletePayment": "{deficit} more tokens to add."
 			},
+			"label": {
+				"removeAuthor": "remove"
+			},
 			"button": {
 				"removeAuthor": {
 					"tip": "Remove this author from the submission",

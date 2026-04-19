@@ -9,7 +9,7 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated internal tooling for stability.
 - Removed some unused locale strings.
-- Improved the visual design of tip, text field, and form components.
+- Improved the visual design of all components for consistency and usability.
 - Fully localized the new submission page.
 - Lowercased English labels for consistency.
 - Fixed invalid HTML caused by markdown wrapped in paragraphs.

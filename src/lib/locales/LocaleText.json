@@ -1146,6 +1146,18 @@
             "newSubmission": {
               "additionalProperties": false,
               "properties": {
+                "label": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "removeAuthor": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "removeAuthor"
+                  ],
+                  "type": "object"
+                },
                 "button": {
                   "additionalProperties": false,
                   "properties": {
@@ -1307,6 +1319,7 @@
                 "header",
                 "paragraph",
                 "feedback",
+                "label",
                 "button",
                 "note",
                 "field",

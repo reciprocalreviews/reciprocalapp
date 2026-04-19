@@ -175,11 +175,14 @@
 					/></td
 				>
 				<td
-					><Button
-						strings={(l) => l.page.newSubmission.button.removeAuthor}
-						active={charges.length > 1}
-						action={() => charges.splice(index, 1)}
-					/>
+					><label
+						><Text path={(l) => l.page.newSubmission.label.removeAuthor} />
+						<Button
+							strings={(l) => l.page.newSubmission.button.removeAuthor}
+							active={charges.length > 1}
+							action={() => charges.splice(index, 1)}
+						/>
+					</label>
 				</td>
 			</tr>
 		{/each}
@@ -258,6 +261,6 @@
 
 <style>
 	.charge td {
-		vertical-align: middle;
+		vertical-align: baseline;
 	}
 </style>
