@@ -236,31 +236,6 @@
 				"editors": "After approving a proposal, the editors above will become the editors of the venue."
 			},
 			"field": {
-				"title": {
-					"label": "title",
-					"placeholder": "Venue title",
-					"invalid": "Include a title"
-				},
-				"editors": {
-					"label": "editors",
-					"placeholder": "Venue editors",
-					"invalid": "Must be a list of comma separated email addresses."
-				},
-				"minters": {
-					"label": "minters",
-					"placeholder": "Venue minters",
-					"invalid": "Must be a list of comma separated email addresses."
-				},
-				"census": {
-					"label": "census",
-					"placeholder": "Venue census",
-					"invalid": "Must be a whole number"
-				},
-				"url": {
-					"label": "URL",
-					"placeholder": "https://",
-					"invalid": "Must be a valid URL"
-				},
 				"support": {
 					"label": "support",
 					"placeholder": "Why should the editors adopt Reciprocal Reviews?",
@@ -355,28 +330,6 @@
 				"approve": "Each author will need to approve payment."
 			},
 			"field": {
-				"title": {
-					"label": "submission title",
-					"placeholder": "title",
-					"note": "For internal tracking, and bidding if enabled.",
-					"invalid": "Title must be non-empty."
-				},
-				"expertise": {
-					"label": "expertise required to review (optional)",
-					"placeholder": "expertise",
-					"note": "Help authors and editors find appropriate reviewers."
-				},
-				"manuscriptId": {
-					"label": "manuscript id",
-					"placeholder": "id",
-					"note": "The manuscript's ID from your review system, to link this transaction to your submission.",
-					"invalid": "ID must be non-empty."
-				},
-				"previousId": {
-					"label": "previous manuscript id",
-					"placeholder": "id",
-					"note": "The ID of the previous submission, if this is a revision and you want to track it."
-				},
 				"authorOrcid": {
 					"label": "author",
 					"placeholder": "ORCID",
@@ -534,11 +487,6 @@
 				}
 			},
 			"field": {
-				"scholar": {
-					"label": "Scholar",
-					"placeholder": "email or ORCID",
-					"invalid": "Must be an email or ORCID"
-				},
 				"newAssignment": {
 					"label": "Scholar",
 					"placeholder": "email or ORCID",

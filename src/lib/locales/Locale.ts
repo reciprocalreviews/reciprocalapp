@@ -153,11 +153,6 @@ export type LocaleText = {
 				editors: string;
 			};
 			field: {
-				title: TextFieldText;
-				editors: TextFieldText;
-				minters: TextFieldText;
-				census: TextFieldText;
-				url: TextFieldText;
 				support: TextFieldText;
 			};
 			paragraph: {
@@ -227,10 +222,6 @@ export type LocaleText = {
 				approve: string;
 			};
 			field: {
-				title: NotedTextFieldText;
-				expertise: NotedTextFieldText;
-				manuscriptId: NotedTextFieldText;
-				previousId: NotedTextFieldText;
 				authorOrcid: TextFieldText;
 			};
 			slider: {
@@ -328,7 +319,6 @@ export type LocaleText = {
 				approveBid: ButtonText;
 			};
 			field: {
-				scholar: TextFieldText;
 				newAssignment: TextFieldText & { invalid: string };
 			};
 			checkbox: {

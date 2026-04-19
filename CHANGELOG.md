@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Changed
 
 - Updated internal tooling for stability.
+- Removed some unused locale strings.
 
 ## 0.3.10 - 2026-04-05
 

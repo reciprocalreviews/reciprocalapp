@@ -1215,25 +1215,9 @@
                   "properties": {
                     "authorOrcid": {
                       "$ref": "#/definitions/TextFieldText"
-                    },
-                    "expertise": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "manuscriptId": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "previousId": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "title": {
-                      "$ref": "#/definitions/NotedTextFieldText"
                     }
                   },
                   "required": [
-                    "title",
-                    "expertise",
-                    "manuscriptId",
-                    "previousId",
                     "authorOrcid"
                   ],
                   "type": "object"
@@ -1361,31 +1345,11 @@
                 "field": {
                   "additionalProperties": false,
                   "properties": {
-                    "census": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "editors": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "minters": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
                     "support": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "title": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "url": {
                       "$ref": "#/definitions/TextFieldText"
                     }
                   },
                   "required": [
-                    "title",
-                    "editors",
-                    "minters",
-                    "census",
-                    "url",
                     "support"
                   ],
                   "type": "object"
@@ -2126,13 +2090,9 @@
                         "placeholder"
                       ],
                       "type": "object"
-                    },
-                    "scholar": {
-                      "$ref": "#/definitions/TextFieldText"
                     }
                   },
                   "required": [
-                    "scholar",
                     "newAssignment"
                   ],
                   "type": "object"
