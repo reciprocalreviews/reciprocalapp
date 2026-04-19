@@ -136,19 +136,6 @@
 		options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
 	></Options>
 
-	<!--
-								: duplicateScholars(charges)
-									? 'Scholars must be unique.'
-									: !validCharge(charges, venue.submission_cost)
-										? `The charges do not sum to the submission cost of ${venue.submission_cost}`
-										: affordable === undefined
-											? "When you're done, check balances below."
-											: affordable}
-
-					note={affordable === true
-					? 'These authors can afford this charge.'
-					: `By line, authors and how many tokens to charge each of them. Tokens must sum to ${venue.submission_cost}.`}
- -->
 	<h3><Text path={(l) => l.page.newSubmission.header.payment} /></h3>
 	<Note path={(l) => l.page.newSubmission.note.payment} />
 	<Table>
