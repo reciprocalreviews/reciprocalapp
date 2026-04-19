@@ -32,7 +32,7 @@
 <style>
 	p,
 	span {
-		border-left: calc(var(--thick-border-width) * 2) solid var(--salient-color);
+		border-left: var(--thick-border-width) solid var(--salient-color);
 		background: var(--salient-color-faded);
 		color: var(--text-color);
 		padding: var(--spacing-half);

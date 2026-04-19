@@ -15,6 +15,7 @@
 	import Button from './Button.svelte';
 	import Checkbox from './Checkbox.svelte';
 	import Feedback from './Feedback.svelte';
+	import Form from './Form.svelte';
 	import Options from './Options.svelte';
 	import Slider from './Slider.svelte';
 	import TextField from './TextField.svelte';
@@ -57,7 +58,7 @@
 	const locale = getLocaleContext();
 </script>
 
-<form>
+<Form>
 	{#if tokens === null || tokens.length === 0}
 		<Feedback text={(l) => l.view.gift.noTokens}></Feedback>
 	{:else}
@@ -131,4 +132,4 @@
 			}}
 		/>
 	{/if}
-</form>
+</Form>

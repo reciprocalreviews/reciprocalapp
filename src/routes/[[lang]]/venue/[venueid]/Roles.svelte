@@ -83,7 +83,7 @@
 	<Feedback error text={(l) => l.view.roles.feedback.notLoaded}></Feedback>
 {:else}
 	{#if isAdmin}
-		<form>
+		<Form>
 			<Paragraph text={(l) => l.view.roles.paragraph.createRole} />
 			<TextField
 				testid="new-role-name"
@@ -104,7 +104,7 @@
 					}
 				}}
 			/>
-		</form>
+		</Form>
 	{/if}
 
 	{@const admins = venue.admins}
@@ -430,7 +430,7 @@
 			<Paragraph text={(l) => l.view.roles.paragraph.adminsDescription} />
 
 			{#if isAdmin}
-				<form>
+				<Form>
 					<Paragraph text={(l) => l.view.roles.paragraph.addAdmin} />
 					<TextField
 						strings={(l) => l.view.roles.field.adminScholar}
@@ -444,7 +444,7 @@
 							if (await handle(db().addVenueAdmin(venue.id, newEditor))) newEditor = '';
 						}}
 					/>
-				</form>
+				</Form>
 			{/if}
 		</Card>
 	</Cards>
