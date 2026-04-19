@@ -71,6 +71,7 @@
 
 	$effect(() => {
 		text;
+		active;
 		tick().then(() => resize());
 	});
 
@@ -99,7 +100,7 @@
 					disabled={!active}
 					{size}
 					onfocus={() => (wasFocused = true)}
-					onblur={() => done?.()}
+					onblur={(e) => { if (!(e.relatedTarget instanceof HTMLButtonElement)) done?.(); }}
 					style:width={size === undefined ? (width === 0 ? 'auto' : width + 'px') : undefined}
 					class:invalid={!isValid}
 					{placeholder}
@@ -114,7 +115,7 @@
 					{placeholder}
 					data-testid={testid}
 					onfocus={() => (wasFocused = true)}
-					onblur={() => done?.()}
+					onblur={(e) => { if (!(e.relatedTarget instanceof HTMLButtonElement)) done?.(); }}
 					bind:value={text}
 					bind:this={view}
 					cols={size}
