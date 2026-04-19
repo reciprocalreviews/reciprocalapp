@@ -454,7 +454,7 @@
 				"expertise": {
 					"label": "expertise required to review (optional)",
 					"placeholder": "expertise",
-					"note": "Help authors and editors find appropriate reviewers."
+					"note": "Used by editors (and reviewers if bidding is enabled)"
 				},
 				"manuscriptID": {
 					"label": "manuscript id",
