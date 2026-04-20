@@ -3,6 +3,29 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.3.11 - 2026-04-19
+
+### Added
+
+- The new submission page now looks up scholars by ORCID ID, to help authors verify they have the right ORCID.
+
+### Changed
+
+- Updated internal tooling for stability.
+- Removed some unused locale strings.
+- Improved the visual design of all components for consistency and usability.
+- Fully localized the new submission page.
+- Lowercased English labels for consistency.
+- Fixed invalid HTML caused by markdown wrapped in paragraphs.
+- Moved the header and details into the nav bar, to persist while scrolling.
+- Redirect to a submission's page after creating a submission.
+
+### Fixed
+
+- Prevented non-authors from attempting to create a submission.
+- Fixed submission type on the submission page.
+- Submit forms on enter.
+
 ## 0.3.10 - 2026-04-05
 
 ### Added

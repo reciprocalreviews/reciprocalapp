@@ -12,7 +12,7 @@
 		active = true,
 		formaction = undefined,
 		name = undefined,
-		type = undefined,
+		type = 'button',
 		view: _ = $bindable(undefined),
 		end = false,
 		background = true,
@@ -25,7 +25,7 @@
 		active?: boolean;
 		formaction?: string | undefined;
 		name?: string | undefined;
-		type?: 'submit' | undefined;
+		type?: 'submit' | 'button';
 		view?: HTMLButtonElement | undefined;
 		end?: boolean | undefined;
 		background?: boolean;
@@ -93,13 +93,17 @@
 	button {
 		font-family: var(--font-face);
 		font-size: var(--small-font-size);
-		border: var(--border-color);
+		border: none;
 		border-radius: var(--roundedness);
 		padding: var(--spacing-half);
 		background: none;
 		color: var(--foreground-color);
 		cursor: pointer;
 		white-space: nowrap;
+		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.2);
+		transition:
+			box-shadow 150ms ease-out,
+			transform 150ms ease-out;
 	}
 
 	button.small {
@@ -107,7 +111,7 @@
 	}
 
 	button.background {
-		background: var(--text-color);
+		background: var(--salient-color);
 		color: var(--background-color);
 	}
 
@@ -116,11 +120,20 @@
 	}
 
 	button:not([disabled]):hover {
-		transform: scaleY(1.05);
+		box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.25);
+		transform: translate(-1px, -1.5px);
+	}
+
+	button:not([disabled]):active,
+	button:not([disabled]):focus {
+		box-shadow: none;
+		transform: translate(2px, 3px);
+		transition-duration: 60ms;
 	}
 
 	button:focus {
-		outline: var(--focus-color) solid var(--thick-border-width);
+		outline: none;
+		background: var(--focus-color);
 	}
 
 	button.warn {
@@ -131,6 +144,7 @@
 	button[disabled] {
 		background: var(--inactive-color);
 		cursor: auto;
+		box-shadow: none;
 	}
 
 	.row {

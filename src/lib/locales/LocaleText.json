@@ -1201,12 +1201,20 @@
                     },
                     "notLoaded": {
                       "type": "string"
+                    },
+                    "onlyAuthors": {
+                      "type": "string"
+                    },
+                    "sufficientBalance": {
+                      "type": "string"
                     }
                   },
                   "required": [
                     "notLoaded",
                     "duplicateScholars",
-                    "incompletePayment"
+                    "incompletePayment",
+                    "sufficientBalance",
+                    "onlyAuthors"
                   ],
                   "type": "object"
                 },
@@ -1214,27 +1222,53 @@
                   "additionalProperties": false,
                   "properties": {
                     "authorOrcid": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "expertise": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "manuscriptId": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "previousId": {
-                      "$ref": "#/definitions/NotedTextFieldText"
-                    },
-                    "title": {
-                      "$ref": "#/definitions/NotedTextFieldText"
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        },
+                        "unknownScholar": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "placeholder",
+                        "unknownScholar"
+                      ],
+                      "type": "object"
                     }
                   },
                   "required": [
-                    "title",
-                    "expertise",
-                    "manuscriptId",
-                    "previousId",
                     "authorOrcid"
+                  ],
+                  "type": "object"
+                },
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "details": {
+                      "type": "string"
+                    },
+                    "payment": {
+                      "type": "string"
+                    },
+                    "submit": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "details",
+                    "payment",
+                    "submit"
                   ],
                   "type": "object"
                 },
@@ -1294,18 +1328,44 @@
                   ],
                   "type": "object"
                 },
+                "table": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "orcid": {
+                      "type": "string"
+                    },
+                    "payment": {
+                      "type": "string"
+                    },
+                    "removeAuthor": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "orcid",
+                    "name",
+                    "payment",
+                    "removeAuthor"
+                  ],
+                  "type": "object"
+                },
                 "title": {
                   "type": "string"
                 }
               },
               "required": [
                 "title",
+                "header",
                 "paragraph",
                 "feedback",
                 "button",
                 "note",
                 "field",
                 "slider",
+                "table",
                 "options",
                 "error"
               ],
@@ -1361,31 +1421,11 @@
                 "field": {
                   "additionalProperties": false,
                   "properties": {
-                    "census": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "editors": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "minters": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
                     "support": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "title": {
-                      "$ref": "#/definitions/TextFieldText"
-                    },
-                    "url": {
                       "$ref": "#/definitions/TextFieldText"
                     }
                   },
                   "required": [
-                    "title",
-                    "editors",
-                    "minters",
-                    "census",
-                    "url",
                     "support"
                   ],
                   "type": "object"
@@ -2126,13 +2166,9 @@
                         "placeholder"
                       ],
                       "type": "object"
-                    },
-                    "scholar": {
-                      "$ref": "#/definitions/TextFieldText"
                     }
                   },
                   "required": [
-                    "scholar",
                     "newAssignment"
                   ],
                   "type": "object"
@@ -4054,9 +4090,6 @@
           "type": "string"
         }
       },
-      "required": [
-        "label"
-      ],
       "type": "object"
     },
     "TextFieldText": {

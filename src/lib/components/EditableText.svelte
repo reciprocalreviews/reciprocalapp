@@ -66,7 +66,6 @@
 				: (l) => l.component.text.save
 			: (l) => l.component.text.edit}
 		type="submit"
-		active={valid !== undefined && editing ? valid(text) === undefined : undefined}
 		action={(event) => (editing ? saveEdit(event) : startEditing(event))}
 	></Button>
 	<TextField

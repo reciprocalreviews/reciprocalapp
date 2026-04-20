@@ -10,4 +10,21 @@
 	const { text, inputs = {} }: Props = $props();
 </script>
 
-<p><Text markdown path={text} {inputs} /></p>
+<div class="markdown"><Text markdown path={text} {inputs} /></div>
+
+<style>
+	.markdown :global(p),
+	.markdown :global(ul),
+	.markdown :global(ol) {
+		margin-bottom: 0.75em;
+	}
+	.markdown :global(p:last-child),
+	.markdown :global(ul:last-child),
+	.markdown :global(ol:last-child) {
+		margin-bottom: 0;
+	}
+	.markdown :global(ul),
+	.markdown :global(ol) {
+		padding-left: 1.5em;
+	}
+</style>

@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import type { CurrencyID } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
+	import Form from '$lib/components/Form.svelte';
 	import { VenueLabel } from '$lib/components/Labels';
 	import Options from '$lib/components/Options.svelte';
 	import Page from '$lib/components/Page.svelte';
@@ -86,7 +87,7 @@
 	<Paragraph text={(l) => l.page.proposeVenue.paragraph.howToPropose} />
 
 	{#if auth().getUserID()}
-		<form>
+		<Form>
 			<TextField
 				bind:text={venue}
 				strings={(l) => l.page.proposeVenue.field.venueName}
@@ -159,7 +160,7 @@
 					validMessage(message) &&
 					editorsArentMinters()}
 			/>
-		</form>
+		</Form>
 	{:else}
 		<Status good={false} label={(l) => l.page.proposeVenue.status.notLoggedIn} />
 	{/if}

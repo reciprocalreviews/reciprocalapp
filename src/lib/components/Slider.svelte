@@ -38,7 +38,9 @@
 </script>
 
 <label>
-	<span class="label">{text.label}</span>
+	{#if text.label}
+		<span class="label">{text.label}</span>
+	{/if}
 	<div class="slider">
 		<input
 			bind:this={view}
@@ -62,6 +64,27 @@
 		flex-direction: row;
 		gap: var(--spacing);
 		align-items: center;
+		padding: var(--spacing-half);
+		border: var(--border-width) solid var(--border-color);
+		border-radius: var(--roundedness);
+		background: var(--background-color);
+		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.2);
+		transition:
+			box-shadow 150ms ease-out,
+			transform 150ms ease-out;
+	}
+
+	.slider:not(:has(input:focus)):hover {
+		box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.25);
+		transform: translate(-1px, -1.5px);
+	}
+
+	.slider:has(input:active),
+	.slider:has(input:focus) {
+		box-shadow: none;
+		border-color: var(--focus-color);
+		transform: translate(2px, 3px);
+		transition-duration: 60ms;
 	}
 
 	input {
@@ -70,18 +93,18 @@
 		color: inherit;
 		accent-color: var(--salient-color);
 		width: 100%;
+		outline: none;
 	}
 
 	input:focus {
-		outline: var(--focus-color) solid var(--thick-border-width);
-		border-radius: var(--roundedness);
+		accent-color: var(--focus-color);
 	}
 
 	label {
 		width: 100%;
 		position: relative;
-		overflow: hidden;
 		font-size: var(--small-font-size);
 		font-style: italic;
+		padding-block-end: 4px;
 	}
 </style>

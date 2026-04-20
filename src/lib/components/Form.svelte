@@ -1,15 +1,20 @@
 <script lang="ts">
-	export let inline = false;
+	import type { Snippet } from 'svelte';
+
+	let { inline = false, children }: { inline?: boolean; children: Snippet } = $props();
 </script>
 
-<form class:inline><slot /></form>
+<form class:inline onsubmit={(e) => e.preventDefault()}>{@render children()}</form>
 
 <style>
 	form {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing);
+		gap: var(--spacing-twice);
 		align-items: flex-start;
+		border: var(--border-color) solid var(--border-width);
+		padding: var(--spacing);
+		border-radius: var(--roundedness);
 	}
 
 	form.inline {

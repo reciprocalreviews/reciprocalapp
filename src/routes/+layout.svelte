@@ -13,6 +13,7 @@
 	import SupabaseAuth, { setAuth } from './Auth.svelte';
 	import { setLocaleContext } from './Contexts';
 	import { getFeedback, removeError, type Level } from './feedback.svelte';
+	import type PageHeader from './PageHeader';
 
 	let { data, children } = $props();
 	let { supabase, scholar, claims, locale } = $derived(data);
@@ -49,6 +50,17 @@
 	let breadcrumbs = $state<{ breadcrumbs: [string, string][] }>({ breadcrumbs: [] });
 
 	setContext('breadcrumbs', breadcrumbs);
+
+	let pageHeader = $state<PageHeader>({
+		icon: '',
+		title: '',
+		wobble: false,
+		subtitle: undefined,
+		details: undefined,
+		edit: undefined
+	});
+
+	setContext('pageHeader', pageHeader);
 </script>
 
 {#snippet MessageBox(

@@ -4,7 +4,6 @@
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { tick } from 'svelte';
-	import Feedback from './Feedback.svelte';
 	import Tip from './Tip.svelte';
 
 	type Props = {
@@ -43,6 +42,7 @@
 	let measure = $state<HTMLSpanElement | undefined>(undefined);
 	let width = $state(0);
 	let height = $state(0);
+	let inputWidth = $state(0);
 
 	let locale = getLocaleContext();
 	let labels = $derived(strings(locale()));
@@ -70,14 +70,19 @@
 
 	$effect(() => {
 		text;
-		tick().then(() => resize());
+		active;
+		tick().then(async () => {
+			resize();
+			await tick();
+			if (view) inputWidth = view.offsetWidth;
+		});
 	});
 
 	function edit(event: Event) {
 		if (done) {
 			done();
 			if (labelView) labelView.scrollLeft = 0;
-			event.stopPropagation();
+			event.preventDefault();
 		}
 	}
 </script>
@@ -87,39 +92,46 @@
 		{#if label}
 			<span class="label"><Text path={label} /></span>
 		{/if}
-		{#if inline}
-			<input
-				bind:value={text}
-				bind:this={view}
-				class:active
-				data-testid={testid}
-				{name}
-				disabled={!active}
-				{size}
-				onfocus={() => (wasFocused = true)}
-				style:width={size === undefined ? (width === 0 ? 'auto' : width + 'px') : undefined}
-				class:invalid={!isValid}
-				{placeholder}
-				type={password ? 'password' : 'text'}
-				onkeydown={(event) => (event.key === 'Enter' && done ? edit(event) : undefined)}
-			/>
-		{:else}
-			<textarea
-				class:invalid={!isValid}
-				class:active
-				disabled={!active}
-				{placeholder}
-				data-testid={testid}
-				onfocus={() => (wasFocused = true)}
-				bind:value={text}
-				bind:this={view}
-				cols={size}
-				style:width={size ? undefined : 'auth'}
-				style:height={size ? undefined : height + 'px'}
-				onkeydown={(event) =>
-					event.key === 'Enter' && event.metaKey && done ? edit(event) : undefined}
-			></textarea>
-		{/if}
+		<div class="input-wrap" class:inline style:width={inline && inputWidth > 0 ? inputWidth + 'px' : undefined}>
+			{#if inline}
+				<input
+					bind:value={text}
+					bind:this={view}
+					class:active
+					data-testid={testid}
+					{name}
+					disabled={!active}
+					{size}
+					onfocus={() => (wasFocused = true)}
+					onblur={(e) => { if (!(e.relatedTarget instanceof HTMLButtonElement)) done?.(); }}
+					style:width={size === undefined ? (width === 0 ? 'auto' : width + 'px') : undefined}
+					class:invalid={!isValid}
+					{placeholder}
+					type={password ? 'password' : 'text'}
+					onkeydown={(event) => (event.key === 'Enter' && done ? edit(event) : undefined)}
+				/>
+			{:else}
+				<textarea
+					class:invalid={!isValid}
+					class:active
+					disabled={!active}
+					{placeholder}
+					data-testid={testid}
+					onfocus={() => (wasFocused = true)}
+					onblur={(e) => { if (!(e.relatedTarget instanceof HTMLButtonElement)) done?.(); }}
+					bind:value={text}
+					bind:this={view}
+					cols={size}
+					style:width={size ? undefined : 'auth'}
+					style:height={size ? undefined : height + 'px'}
+					onkeydown={(event) =>
+						event.key === 'Enter' && event.metaKey && done ? edit(event) : undefined}
+				></textarea>
+			{/if}
+			{#if error !== undefined && wasFocused}
+				<span class="field-error"><Text path={error} /></span>
+			{/if}
+		</div>
 		<span
 			class="ruler"
 			class:inline
@@ -128,9 +140,6 @@
 			bind:this={measure}>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n')}</span
 		>
 	</label>
-	{#if error !== undefined && wasFocused}
-		<Feedback error={error !== undefined && wasFocused} text={error!} />
-	{/if}
 	{#if note}
 		<Tip border={false}>{note}</Tip>
 	{/if}
@@ -144,13 +153,24 @@
 		flex-grow: 1;
 	}
 
+	.input-wrap {
+		display: flex;
+		flex-direction: column;
+		flex-grow: 1;
+	}
+
+	.input-wrap.inline {
+		display: inline-flex;
+		vertical-align: top;
+		flex-grow: 0;
+	}
+
 	input {
-		border: none;
-		border-bottom: var(--thick-border-width) solid var(--text-color);
+		border: var(--border-width) solid var(--border-color);
+		border-bottom: var(--thick-border-width) solid var(--salient-color);
 		padding: var(--spacing-half);
 		border-top-right-radius: var(--roundedness);
 		border-top-left-radius: var(--roundedness);
-		box-shadow: inset 3px 3px 3px rgba(0, 0, 0, 0.1);
 		font-family: inherit;
 		line-height: inherit;
 		font-size: inherit;
@@ -162,6 +182,10 @@
 		flex-grow: 1;
 		max-width: fit-content;
 		display: none;
+		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.15);
+		transition:
+			box-shadow 150ms ease-out,
+			transform 150ms ease-out;
 	}
 
 	input::placeholder {
@@ -177,11 +201,10 @@
 	}
 
 	textarea {
-		border: none;
+		border: var(--border-width) solid var(--border-color);
 		padding: var(--spacing-half);
 		border-top-right-radius: var(--roundedness);
 		border-bottom-right-radius: var(--roundedness);
-		box-shadow: inset 3px 3px 3px rgba(0, 0, 0, 0.1);
 		border-left: var(--thick-border-width) solid var(--text-color);
 		font-family: inherit;
 		line-height: inherit;
@@ -195,6 +218,27 @@
 		flex-grow: 1;
 		overflow: hidden;
 		display: none;
+		box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.15);
+		transition:
+			box-shadow 150ms ease-out,
+			transform 150ms ease-out;
+	}
+
+	input.active:not(:focus):hover,
+	textarea.active:not(:focus):hover {
+		box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.2);
+		transform: translate(-1px, -1.5px);
+	}
+
+	.field-error {
+		font-size: var(--small-font-size);
+		color: var(--error-color);
+		background: var(--error-color-faded);
+		padding: var(--spacing-half);
+		border: var(--border-width) solid var(--error-color);
+		border-top: none;
+		border-bottom-left-radius: var(--roundedness);
+		border-bottom-right-radius: var(--roundedness);
 	}
 
 	.ruler {
@@ -234,12 +278,22 @@
 	input.invalid,
 	textarea.invalid {
 		color: var(--error-color);
-		border-color: var(--error-color);
+	}
+
+	input.invalid {
+		border-bottom-color: var(--error-color);
+	}
+
+	textarea.invalid {
+		border-left-color: var(--error-color);
 	}
 
 	input:focus,
 	textarea:focus {
 		outline: none;
+		box-shadow: inset 1px 2px 4px rgba(0, 0, 0, 0.15);
+		transform: translate(1px, 1px);
+		transition-duration: 60ms;
 	}
 
 	input:not(.invalid):focus {

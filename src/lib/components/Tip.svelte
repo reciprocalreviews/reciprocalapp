@@ -7,7 +7,7 @@
 		children: Snippet;
 	}
 
-	let { border, children }: Props = $props();
+	let { border = true, children }: Props = $props();
 </script>
 
 <div class="tip" class:border>
@@ -23,16 +23,13 @@
 		gap: var(--spacing-half);
 		align-items: first baseline;
 		font-size: var(--small-font-size);
-		background: var(--salient-color-faded);
-		padding: var(--spacing);
-		border-radius: var(--roundedness);
 	}
 
 	.tip.border {
-		border-top: var(--border-width) solid var(--border-color);
-		border-bottom: var(--border-width) solid var(--border-color);
-		padding-top: var(--spacing);
-		padding-bottom: var(--spacing);
+		background: var(--salient-color-faded);
+		padding: var(--spacing-half);
+		border-radius: var(--roundedness);
+		border-left: var(--thick-border-width) solid var(--salient-color);
 	}
 
 	.bulb {

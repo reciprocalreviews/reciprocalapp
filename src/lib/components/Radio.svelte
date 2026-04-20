@@ -1,42 +1,31 @@
 <script lang="ts">
-	import type { Result } from '$lib/data/CRUD';
 	import type LocaleText from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
-	import { handle } from '../../routes/feedback.svelte';
 
 	let {
-		on = $bindable(),
-		change = undefined,
-		active = true,
+		group = $bindable(),
+		value,
 		label,
+		active = true,
 		testid = undefined
 	}: {
-		/** Whether the box is selected */
-		on: boolean;
-		/** Whether the checkbox is enabled */
-		active?: boolean;
-		change?: undefined | ((on: boolean) => Promise<Result>);
+		group: string;
+		value: string;
 		label: (l: LocaleText) => string;
-		testid?: string | undefined;
+		active?: boolean;
+		testid?: string;
 	} = $props();
 </script>
 
-<label
-	><input
-		type="checkbox"
-		data-testid={testid}
-		aria-checked={on}
-		aria-disabled={!active}
+<label>
+	<input
+		type="radio"
+		bind:group
+		{value}
 		disabled={!active}
-		checked={on}
-		onclick={async () => {
-			on = !on;
-			if (change) {
-				await handle(change(on));
-			}
-		}}
-	/><span class="text"><Text path={label} markdown /></span></label
->
+		data-testid={testid}
+	/><span class="text"><Text path={label} /></span>
+</label>
 
 <style>
 	label {
@@ -66,7 +55,6 @@
 	label:has(input:active),
 	label:has(input:focus) {
 		box-shadow: none;
-		accent-color: var(--salient-color);
 		transform: translate(2px, 3px);
 		transition-duration: 60ms;
 	}

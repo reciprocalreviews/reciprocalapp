@@ -7,6 +7,7 @@
 	import Dashboard from '$lib/components/Dashboard.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import Form from '$lib/components/Form.svelte';
 	import {
 		MinterLabel,
 		plural,
@@ -115,7 +116,7 @@
 		{#if user && isMinter && venues}
 			<Cards>
 				<Card subheader icon={TokenLabel} strings={(l) => l.page.currency.card.mint}>
-					<form>
+					<Form>
 						<Tip><Text path={(l) => l.page.currency.tip.mintWarning} /></Tip>
 						<Options
 							strings={(l) => l.page.currency.options.tokenOwner}
@@ -174,7 +175,7 @@
 								}
 							}}
 						/>
-					</form>
+					</Form>
 				</Card>
 			</Cards>
 		{/if}
@@ -205,7 +206,7 @@
 		{#if isMinter}
 			<Cards>
 				<Card subheader icon={MinterLabel} strings={(l) => l.page.currency.card.addMinter}>
-					<form>
+					<Form>
 						<TextField
 							strings={(l) => l.page.currency.field.minter}
 							bind:text={newMinter}
@@ -222,7 +223,7 @@
 								}
 							}}
 						/>
-					</form>
+					</Form>
 					<Note path={(l) => l.page.currency.note.minters} />
 				</Card>
 			</Cards>

@@ -35,7 +35,7 @@ export type OptionsText = {
 /** Text for the Slider component */
 export type SliderText = {
 	/** The label describing the slider's purpose */
-	label: string;
+	label?: string;
 	/** Optional suffix text to display after the current value */
 	suffix?: string;
 };
@@ -153,11 +153,6 @@ export type LocaleText = {
 				editors: string;
 			};
 			field: {
-				title: TextFieldText;
-				editors: TextFieldText;
-				minters: TextFieldText;
-				census: TextFieldText;
-				url: TextFieldText;
 				support: TextFieldText;
 			};
 			paragraph: {
@@ -207,6 +202,11 @@ export type LocaleText = {
 		};
 		newSubmission: {
 			title: string;
+			header: {
+				details: string;
+				payment: string;
+				submit: string;
+			};
 			paragraph: {
 				intro: string;
 			};
@@ -214,6 +214,8 @@ export type LocaleText = {
 				notLoaded: string;
 				duplicateScholars: string;
 				incompletePayment: string;
+				sufficientBalance: string;
+				onlyAuthors: string;
 			};
 			button: {
 				removeAuthor: ButtonText;
@@ -227,14 +229,16 @@ export type LocaleText = {
 				approve: string;
 			};
 			field: {
-				title: NotedTextFieldText;
-				expertise: NotedTextFieldText;
-				manuscriptId: NotedTextFieldText;
-				previousId: NotedTextFieldText;
-				authorOrcid: TextFieldText;
+				authorOrcid: TextFieldText & { unknownScholar: string };
 			};
 			slider: {
 				payment: SliderText;
+			};
+			table: {
+				orcid: string;
+				name: string;
+				payment: string;
+				removeAuthor: string;
 			};
 			options: {
 				submissionType: OptionsText;
@@ -328,7 +332,6 @@ export type LocaleText = {
 				approveBid: ButtonText;
 			};
 			field: {
-				scholar: TextFieldText;
 				newAssignment: TextFieldText & { invalid: string };
 			};
 			checkbox: {

@@ -7,6 +7,7 @@
 	import Date from '$lib/components/Date.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import Form from '$lib/components/Form.svelte';
 	import { ErrorLabel, SettingsLabel, VenueLabel } from '$lib/components/Labels';
 	import Link from '$lib/components/Link.svelte';
 	import Note from '$lib/components/Note.svelte';
@@ -171,7 +172,7 @@
 
 		{#if uid !== null}
 			{#if !approved && !supporters.some((supporter) => supporter.scholarid.id === uid)}
-				<form>
+				<Form>
 					<TextField
 						bind:text={message}
 						strings={(l) => l.page.proposal.field.support}
@@ -185,7 +186,7 @@
 						action={support}
 						active={message.length > 0 && !submitting}
 					/>
-				</form>
+				</Form>
 			{:else if !approved}
 				<Feedback text={(l) => l.page.proposal.feedback.alreadySupported}></Feedback>
 			{/if}

@@ -12,8 +12,8 @@
 </script>
 
 <h2 {id}>
-	<span>{icon}</span>
 	{#if typeof text === 'string'}{text}{:else}<Text path={text} />{/if}
+	<span>{icon}</span>
 </h2>
 
 <style>
@@ -26,5 +26,6 @@
 	span {
 		font-family: 'Noto Emoji', 'Josefin Sans', sans-serif;
 		color: var(--border-color);
+		font-size: var(--paragraph-font-size);
 	}
 </style>
