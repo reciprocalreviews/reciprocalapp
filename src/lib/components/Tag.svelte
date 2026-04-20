@@ -3,7 +3,7 @@
 <style>
 	.tag {
 		font-family: var(--font-face);
-		background: var(--salient-color);
+		background: var(--salient-color-faded);
 		color: var(--background-color);
 		padding: calc(var(--spacing) / 4) var(--spacing-half);
 		border-radius: 0.5em;

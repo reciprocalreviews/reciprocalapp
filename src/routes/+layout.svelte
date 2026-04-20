@@ -6,10 +6,11 @@
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
-	import { setDB } from '$lib/data/CRUD';
+	import { setDB, type Result } from '$lib/data/CRUD';
 	import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
+	import type LocaleText from '$lib/locales/Locale';
 	import type { AuthError, PostgrestError } from '@supabase/supabase-js';
-	import { onMount, setContext } from 'svelte';
+	import { onMount, setContext, type Snippet } from 'svelte';
 	import SupabaseAuth, { setAuth } from './Auth.svelte';
 	import { setLocaleContext } from './Contexts';
 	import { getFeedback, removeError, type Level } from './feedback.svelte';
@@ -49,6 +50,32 @@
 	let breadcrumbs = $state<{ breadcrumbs: [string, string][] }>({ breadcrumbs: [] });
 
 	setContext('breadcrumbs', breadcrumbs);
+
+	type PageHeader = {
+		icon: string;
+		title: string;
+		wobble: boolean;
+		subtitle: Snippet | undefined;
+		details: Snippet | undefined;
+		edit:
+			| {
+					valid: ((text: string) => ((l: LocaleText) => string) | undefined) | undefined;
+					update: (text: string) => Promise<Result>;
+					placeholder: (l: LocaleText) => string;
+			  }
+			| undefined;
+	};
+
+	let pageHeader = $state<PageHeader>({
+		icon: '',
+		title: '',
+		wobble: false,
+		subtitle: undefined,
+		details: undefined,
+		edit: undefined
+	});
+
+	setContext('pageHeader', pageHeader);
 </script>
 
 {#snippet MessageBox(
