@@ -134,8 +134,7 @@
 	}
 
 	.stat:focus-visible {
-		outline: 3px solid rgba(0,120,140,0.12);
-		outline-offset: 2px;
+		accent-color: var(--focus-color);
 	}
 
 	.content {
