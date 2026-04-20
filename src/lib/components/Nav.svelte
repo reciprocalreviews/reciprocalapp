@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { type Result } from '$lib/data/CRUD';
-	import type LocaleText from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
-	import { getContext, type Snippet } from 'svelte';
+	import type PageHeader from '$routes/PageHeader';
+	import { getContext } from 'svelte';
 	import { getAuth } from '../../routes/Auth.svelte';
 	import { getPendingActions } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
@@ -13,6 +12,7 @@
 	import { ScholarLabel, SubmissionLabel, VenueLabel } from './Labels';
 	import Lead from './Lead.svelte';
 	import Link from './Link.svelte';
+	import Loading from './Loading.svelte';
 
 	const locale = getLocaleContext();
 
@@ -26,21 +26,6 @@
 	let pending = $derived(getPendingActions());
 
 	const { breadcrumbs }: { breadcrumbs: [string, string][] } = $props();
-
-	type PageHeader = {
-		icon: string;
-		title: string;
-		wobble: boolean;
-		subtitle: Snippet | undefined;
-		details: Snippet | undefined;
-		edit:
-			| {
-					valid: ((text: string) => ((l: LocaleText) => string) | undefined) | undefined;
-					update: (text: string) => Promise<Result>;
-					placeholder: (l: LocaleText) => string;
-			  }
-			| undefined;
-	};
 
 	const pageHeader = getContext<PageHeader>('pageHeader');
 </script>
@@ -108,8 +93,10 @@
 						edit={pageHeader.edit.update}
 						strings={(l) => ({ placeholder: pageHeader.edit!.placeholder(l) })}
 					/>
-				{:else}
+				{:else if pageHeader.title.length > 0}
 					{pageHeader.title}
+				{:else}
+					<Loading />
 				{/if}
 			</h1>
 			{#if pageHeader.subtitle || pageHeader.details}
@@ -184,7 +171,7 @@
 	h1 {
 		display: flex;
 		gap: 0.5rem;
-		align-items: center;
+		align-items: baseline;
 		margin: 0;
 	}
 
