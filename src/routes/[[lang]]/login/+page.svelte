@@ -49,6 +49,7 @@
 			<Button
 				strings={(l) => l.page.login.button.sendPassword}
 				testid="email-submit"
+				type="submit"
 				action={async () => {
 					const authError = await auth().signIn(email, undefined);
 					if (authError) {
@@ -76,6 +77,7 @@
 				<Button
 					strings={(l) => l.page.login.button.signIn}
 					testid="otp-submit"
+					type="submit"
 					action={async () => {
 						const response = await auth().signIn(email, password);
 						if (typeof response === 'string') {

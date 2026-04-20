@@ -23,6 +23,7 @@
 	import { isntEmpty, validORCID } from '$lib/validation';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { handle } from '$routes/feedback.svelte';
+	import { goto } from '$app/navigation';
 
 	let { venue, submissionTypes }: { venue: VenueRow; submissionTypes: SubmissionType[] } = $props();
 
@@ -276,14 +277,9 @@
 					)
 				);
 
-				// Reset form if successful.
+				// Redirect to the submission page if successful.
 				if (result) {
-					title = '';
-					expertise = '';
-					externalID = '';
-					previousID = '';
-					charges = [];
-					affordable = undefined;
+					goto(`/venue/${venue.id}/submission/${result}`);
 				}
 
 				return result;
