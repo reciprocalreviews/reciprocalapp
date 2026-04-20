@@ -242,7 +242,7 @@
 			action={checkAffordability}
 		/>
 
-		{#if typeof affordable === 'string'}<Feedback error text={affordable} />{/if}
+		{#if typeof affordable === 'function'}<Feedback error text={affordable} />{/if}
 	{/if}
 
 	<h3><Text path={(l) => l.page.newSubmission.header.submit} /></h3>
