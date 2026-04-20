@@ -4,7 +4,7 @@
 	let { inline = false, children }: { inline?: boolean; children: Snippet } = $props();
 </script>
 
-<form class:inline>{@render children()}</form>
+<form class:inline onsubmit={(e) => e.preventDefault()}>{@render children()}</form>
 
 <style>
 	form {

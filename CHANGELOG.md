@@ -18,11 +18,13 @@ Dates should be in`YYYY-MM-DD` format.
 - Lowercased English labels for consistency.
 - Fixed invalid HTML caused by markdown wrapped in paragraphs.
 - Moved the header and details into the nav bar, to persist while scrolling.
+- Redirect to a submission's page after creating a submission.
 
 ### Fixed
 
 - Prevented non-authors from attempting to create a submission.
 - Fixed submission type on the submission page.
+- Submit forms on enter.
 
 ## 0.3.10 - 2026-04-05
 

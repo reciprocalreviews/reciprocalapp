@@ -82,7 +82,7 @@
 		if (done) {
 			done();
 			if (labelView) labelView.scrollLeft = 0;
-			event.stopPropagation();
+			event.preventDefault();
 		}
 	}
 </script>
