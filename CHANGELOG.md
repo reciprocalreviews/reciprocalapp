@@ -22,6 +22,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Fixed
 
 - Prevented non-authors from attempting to create a submission.
+- Fixed submission type on the submission page.
 
 ## 0.3.10 - 2026-04-05
 

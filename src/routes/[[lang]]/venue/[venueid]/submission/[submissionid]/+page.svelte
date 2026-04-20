@@ -188,9 +188,8 @@
 					onChange={(typeID) =>
 						typeID !== undefined ? db().updateSubmissionType(submission.id, typeID) : undefined}
 				></Options>
-			{:else if submissionType}{submissionType}{:else}<Text
-					path={(l) => l.page.submission.subtitle}
-				/>{/if}
+			{:else if submissionType}{submissionTypes.find((t) => t.id === submissionType)
+					?.name}{:else}<Text path={(l) => l.page.submission.subtitle} />{/if}
 		{/snippet}
 		{#snippet details()}
 			{#if previous}
