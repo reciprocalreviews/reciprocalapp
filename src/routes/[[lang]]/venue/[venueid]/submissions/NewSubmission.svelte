@@ -61,6 +61,12 @@
 		if (charges) affordable = undefined;
 	});
 
+	/** True if the authenticated user is not among the found authors */
+	let isNonAuthor = $derived(
+		scholarStates.some((s) => s.status === 'found') &&
+			!scholarStates.some((s) => s.status === 'found' && 'id' in s && s.id === user)
+	);
+
 	function validExternalID(id: string) {
 		return id.length > 0;
 	}
@@ -231,6 +237,8 @@
 					).toString()
 				)}
 		/>
+	{:else if isNonAuthor}
+		<Feedback error text={(l) => l.page.newSubmission.feedback.onlyAuthors} />
 	{:else}
 		<Note path={(l) => l.page.newSubmission.note.balance} />
 
@@ -242,7 +250,7 @@
 			action={checkAffordability}
 		/>
 
-		{#if typeof affordable === 'function'}<Feedback error text={affordable} />{/if}
+		{#if typeof affordable === 'function'}<Feedback error text={affordable} />{:else if affordable === true}<Feedback text={(l) => l.page.newSubmission.feedback.sufficientBalance} />{/if}
 	{/if}
 
 	<h3><Text path={(l) => l.page.newSubmission.header.submit} /></h3>

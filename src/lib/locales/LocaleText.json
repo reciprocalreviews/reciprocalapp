@@ -1201,12 +1201,20 @@
                     },
                     "notLoaded": {
                       "type": "string"
+                    },
+                    "onlyAuthors": {
+                      "type": "string"
+                    },
+                    "sufficientBalance": {
+                      "type": "string"
                     }
                   },
                   "required": [
                     "notLoaded",
                     "duplicateScholars",
-                    "incompletePayment"
+                    "incompletePayment",
+                    "sufficientBalance",
+                    "onlyAuthors"
                   ],
                   "type": "object"
                 },

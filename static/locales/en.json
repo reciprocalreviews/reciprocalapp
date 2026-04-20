@@ -309,7 +309,9 @@
 			"feedback": {
 				"notLoaded": "Unable to load the venue and/or submission types for this page.",
 				"duplicateScholars": "Authors must be unique.",
-				"incompletePayment": "{deficit} more tokens to add."
+				"incompletePayment": "{deficit} more tokens to add.",
+				"sufficientBalance": "The authors have sufficient tokens to pay for this submission.",
+				"onlyAuthors": "Only authors of a submission can create a submission."
 			},
 			"button": {
 				"removeAuthor": {

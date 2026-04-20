@@ -214,6 +214,8 @@ export type LocaleText = {
 				notLoaded: string;
 				duplicateScholars: string;
 				incompletePayment: string;
+				sufficientBalance: string;
+				onlyAuthors: string;
 			};
 			button: {
 				removeAuthor: ButtonText;
