@@ -158,7 +158,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-half);
-		padding: var(--spacing-half) 0;
+		padding-top: var(--spacing-half);
 		background: var(--background-color);
 		margin-bottom: var(--spacing);
 		overflow-x: clip;
