@@ -4,6 +4,7 @@
 
 <!-- svelte-ignore state_referenced_locally -->
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import type { SubmissionType, SubmissionTypeID, VenueRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
@@ -23,7 +24,6 @@
 	import { isntEmpty, validORCID } from '$lib/validation';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { handle } from '$routes/feedback.svelte';
-	import { goto } from '$app/navigation';
 
 	let { venue, submissionTypes }: { venue: VenueRow; submissionTypes: SubmissionType[] } = $props();
 
@@ -62,6 +62,7 @@
 
 	async function lookupScholar(index: number, orcid: string) {
 		if (!validORCID(orcid)) return;
+		if (scholarStates[index]?.status !== 'idle') return;
 		scholarStates[index] = { status: 'loading' };
 		const { data } = await db().findScholar(orcid);
 		scholarStates[index] = data ? { status: 'found', id: data } : { status: 'notfound' };
@@ -72,7 +73,10 @@
 
 	/** When any charge's payment or scholar changes, reset affordable */
 	$effect(() => {
-		charges.forEach((c) => { c.payment; c.scholar; });
+		charges.forEach((c) => {
+			c.payment;
+			c.scholar;
+		});
 		affordable = undefined;
 	});
 
@@ -148,171 +152,180 @@
 {#if !user}
 	<Feedback error text={(l) => l.page.newSubmission.feedback.notLoggedIn} />
 {:else}
+	<Paragraph text={(l) => l.page.newSubmission.paragraph.intro} />
 
-<Paragraph text={(l) => l.page.newSubmission.paragraph.intro} />
-
-<Form>
-	<h3><Text path={(l) => l.page.newSubmission.header.details} /></h3>
-	<TextField
-		strings={(l) => l.page.submissions.field.title}
-		size={40}
-		bind:text={title}
-		valid={(text) => (isntEmpty(text) ? undefined : (l) => l.page.submissions.field.title.invalid)}
-		testid="submission-title"
-	/>
-	<TextField strings={(l) => l.page.submissions.field.expertise} size={40} bind:text={expertise} />
-	<TextField
-		strings={(l) => l.page.submissions.field.manuscriptID}
-		size={40}
-		bind:text={externalID}
-		valid={(text) =>
-			validExternalID(text) ? undefined : (l) => l.page.submissions.field.manuscriptID.invalid}
-		testid="submission-manuscript-id"
-	/>
-	<TextField
-		strings={(l) => l.page.submissions.field.previousID}
-		size={40}
-		bind:text={previousID}
-	/>
-	<Options
-		strings={(l) => l.page.newSubmission.options.submissionType}
-		bind:value={submissionType}
-		options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
-	></Options>
-
-	<h3><Text path={(l) => l.page.newSubmission.header.payment} /></h3>
-	<Note path={(l) => l.page.newSubmission.note.payment} />
-	<Table>
-		{#snippet header()}
-			<th><Text path={(l) => l.page.newSubmission.table.orcid} /></th>
-			<th><Text path={(l) => l.page.newSubmission.table.name} /></th>
-			<th><Text path={(l) => l.page.newSubmission.table.payment} /></th>
-			<th><Text path={(l) => l.page.newSubmission.table.removeAuthor} /></th>
-		{/snippet}
-		{#each charges as charge, index}
-			<tr class="charge">
-				<td>
-					<TextField
-						strings={(l) => ({ ...l.page.newSubmission.field.authorOrcid, label: undefined })}
-						size={24}
-						bind:text={charge.scholar}
-						valid={(text) => {
-							if (!validORCID(text))
-								return (l) => l.page.newSubmission.field.authorOrcid.invalid ?? '';
-							if (scholarStates[index]?.status === 'notfound')
-								return (l) => l.page.newSubmission.field.authorOrcid.unknownScholar;
-							return undefined;
-						}}
-						done={() => lookupScholar(index, charge.scholar)}
-						testid="author-orcid-{index}"
-					/>
-				</td>
-				<td class="scholar-name">
-					{#if scholarStates[index]?.status === 'loading'}
-						<Loading />
-					{:else if scholarStates[index]?.status === 'found'}
-						<span data-testid="scholar-found-{index}"><ScholarLink id={scholarStates[index].id} /></span>
-					{:else}&mdash;
-					{/if}
-				</td>
-				<td
-					><Slider
-						strings={(l) => ({ ...l.page.newSubmission.slider.payment, label: undefined })}
-						bind:value={charge.payment}
-						min={0}
-						max={venue.submission_cost}
-						step={1}
-						testid="payment-slider-{index}"
-					/></td
-				>
-				<td
-					><Button
-						strings={(l) => l.page.newSubmission.button.removeAuthor}
-						active={charges.length > 1}
-						action={() => {
-							charges.splice(index, 1);
-							scholarStates.splice(index, 1);
-						}}
-					/>
-				</td>
-			</tr>
-		{/each}
-	</Table>
-
-	<Button
-		strings={(l) => l.page.newSubmission.button.addAuthor}
-		testid="add-author"
-		action={() => {
-			charges.push({ scholar: '', payment: 0 });
-			scholarStates.push({ status: 'idle' });
-		}}
-	/>
-
-	{#if duplicateScholars(charges)}
-		<Feedback error text={(l) => l.page.newSubmission.feedback.duplicateScholars}></Feedback>
-	{:else if charges.reduce((sum, charge) => sum + charge.payment, 0) < venue.submission_cost}
-		<Feedback
-			error
-			text={(l) =>
-				l.page.newSubmission.feedback.incompletePayment.replace(
-					'{deficit}',
-					(
-						venue.submission_cost - charges.reduce((sum, charge) => sum + charge.payment, 0)
-					).toString()
-				)}
+	<Form>
+		<h3><Text path={(l) => l.page.newSubmission.header.details} /></h3>
+		<TextField
+			strings={(l) => l.page.submissions.field.title}
+			size={40}
+			bind:text={title}
+			valid={(text) =>
+				isntEmpty(text) ? undefined : (l) => l.page.submissions.field.title.invalid}
+			testid="submission-title"
 		/>
-	{:else if isNonAuthor}
-		<Feedback error text={(l) => l.page.newSubmission.feedback.onlyAuthors} />
-	{:else}
-		<Note path={(l) => l.page.newSubmission.note.balance} />
+		<TextField
+			strings={(l) => l.page.submissions.field.expertise}
+			size={40}
+			bind:text={expertise}
+		/>
+		<TextField
+			strings={(l) => l.page.submissions.field.manuscriptID}
+			size={40}
+			bind:text={externalID}
+			valid={(text) =>
+				validExternalID(text) ? undefined : (l) => l.page.submissions.field.manuscriptID.invalid}
+			testid="submission-manuscript-id"
+		/>
+		<TextField
+			strings={(l) => l.page.submissions.field.previousID}
+			size={40}
+			bind:text={previousID}
+		/>
+		<Options
+			strings={(l) => l.page.newSubmission.options.submissionType}
+			bind:value={submissionType}
+			options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
+		></Options>
+
+		<h3><Text path={(l) => l.page.newSubmission.header.payment} /></h3>
+		<Note path={(l) => l.page.newSubmission.note.payment} />
+		<Table>
+			{#snippet header()}
+				<th><Text path={(l) => l.page.newSubmission.table.orcid} /></th>
+				<th><Text path={(l) => l.page.newSubmission.table.name} /></th>
+				<th><Text path={(l) => l.page.newSubmission.table.payment} /></th>
+				<th><Text path={(l) => l.page.newSubmission.table.removeAuthor} /></th>
+			{/snippet}
+			{#each charges as charge, index}
+				<tr class="charge">
+					<td>
+						<TextField
+							strings={(l) => ({ ...l.page.newSubmission.field.authorOrcid, label: undefined })}
+							size={24}
+							bind:text={charge.scholar}
+							valid={(text) => {
+								if (!validORCID(text))
+									return (l) => l.page.newSubmission.field.authorOrcid.invalid ?? '';
+								if (scholarStates[index]?.status === 'notfound')
+									return (l) => l.page.newSubmission.field.authorOrcid.unknownScholar;
+								return undefined;
+							}}
+							done={() => lookupScholar(index, charge.scholar)}
+							testid="author-orcid-{index}"
+						/>
+					</td>
+					<td class="scholar-name">
+						{#if scholarStates[index]?.status === 'loading'}
+							<Loading />
+						{:else if scholarStates[index]?.status === 'found'}
+							<span data-testid="scholar-found-{index}"
+								><ScholarLink id={scholarStates[index].id} /></span
+							>
+						{:else}&mdash;
+						{/if}
+					</td>
+					<td
+						><Slider
+							strings={(l) => ({ ...l.page.newSubmission.slider.payment, label: undefined })}
+							bind:value={charge.payment}
+							min={0}
+							max={venue.submission_cost}
+							step={1}
+							testid="payment-slider-{index}"
+						/></td
+					>
+					<td
+						><Button
+							strings={(l) => l.page.newSubmission.button.removeAuthor}
+							active={charges.length > 1}
+							action={() => {
+								charges.splice(index, 1);
+								scholarStates.splice(index, 1);
+							}}
+						/>
+					</td>
+				</tr>
+			{/each}
+		</Table>
 
 		<Button
-			strings={(l) => l.page.newSubmission.button.checkBalances}
-			testid="check-balances"
-			active={validChargeFormat(charges) &&
-				validCharge(charges, venue.submission_cost) &&
-				affordable !== true}
-			action={checkAffordability}
+			strings={(l) => l.page.newSubmission.button.addAuthor}
+			testid="add-author"
+			action={() => {
+				charges.push({ scholar: '', payment: 0 });
+				scholarStates.push({ status: 'idle' });
+			}}
 		/>
 
-		{#if typeof affordable === 'function'}<Feedback error text={affordable} />{:else if affordable === true}<Feedback text={(l) => l.page.newSubmission.feedback.sufficientBalance} />{/if}
-	{/if}
+		{#if duplicateScholars(charges)}
+			<Feedback error text={(l) => l.page.newSubmission.feedback.duplicateScholars}></Feedback>
+		{:else if charges.reduce((sum, charge) => sum + charge.payment, 0) < venue.submission_cost}
+			<Feedback
+				error
+				text={(l) =>
+					l.page.newSubmission.feedback.incompletePayment.replace(
+						'{deficit}',
+						(
+							venue.submission_cost - charges.reduce((sum, charge) => sum + charge.payment, 0)
+						).toString()
+					)}
+			/>
+		{:else if isNonAuthor}
+			<Feedback error text={(l) => l.page.newSubmission.feedback.onlyAuthors} />
+		{:else}
+			<Note path={(l) => l.page.newSubmission.note.balance} />
 
-	<h3><Text path={(l) => l.page.newSubmission.header.submit} /></h3>
+			<Button
+				strings={(l) => l.page.newSubmission.button.checkBalances}
+				testid="check-balances"
+				active={validChargeFormat(charges) &&
+					validCharge(charges, venue.submission_cost) &&
+					affordable !== true}
+				action={checkAffordability}
+			/>
 
-	<Note path={(l) => l.page.newSubmission.note.approve} />
+			{#if typeof affordable === 'function'}
+				<Feedback error text={affordable} />
+			{:else if affordable === true}
+				<Feedback text={(l) => l.page.newSubmission.feedback.sufficientBalance} />
+			{/if}
+		{/if}
 
-	<Button
-		strings={(l) => l.page.newSubmission.button.submit}
-		testid="submit-submission"
-		active={affordable === true &&
-			validSubmission(title, externalID, charges, venue.submission_cost)}
-		action={async () => {
-			if (user) {
-				const result = await handle(
-					db().createSubmission(
-						user,
-						title,
-						expertise,
-						venue.id,
-						externalID,
-						previousID,
-						submissionType,
-						charges
-					)
-				);
+		<h3><Text path={(l) => l.page.newSubmission.header.submit} /></h3>
 
-				// Redirect to the submission page if successful.
-				if (result) {
-					goto(`/venue/${venue.id}/submission/${result}`);
+		<Note path={(l) => l.page.newSubmission.note.approve} />
+
+		<Button
+			strings={(l) => l.page.newSubmission.button.submit}
+			testid="submit-submission"
+			active={affordable === true &&
+				validSubmission(title, externalID, charges, venue.submission_cost)}
+			action={async () => {
+				if (user) {
+					const result = await handle(
+						db().createSubmission(
+							user,
+							title,
+							expertise,
+							venue.id,
+							externalID,
+							previousID,
+							submissionType,
+							charges
+						)
+					);
+
+					// Redirect to the submission page if successful.
+					if (result) {
+						goto(`/venue/${venue.id}/submission/${result}`);
+					}
+
+					return result;
 				}
-
-				return result;
-			}
-		}}
-	/>
-</Form>
-
+			}}
+		/>
+	</Form>
 {/if}
 
 <style>
