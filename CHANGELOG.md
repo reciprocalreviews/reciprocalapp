@@ -21,6 +21,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed error in inactive venue localization string rendering (#92).
 - Corrected spacing below inactive feedback, before page content.
 - Fixed issue where transaction approval always mint tokens, instead of only doing so for venue sources.
+- Fixed bug preventing author submitting on behalf of co-authors.
 
 ## 0.3.11 - 2026-04-19
 
