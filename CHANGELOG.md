@@ -14,6 +14,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed text below volunteer header (#90).
 - Fixed re-ordering of roles in venue settings (#91).
 - Fixed error in inactive venue localization string rendering (#92).
+- Corrected spacing below inactive feedback, before page content.
 
 ## 0.3.11 - 2026-04-19
 
