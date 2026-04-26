@@ -3,6 +3,12 @@
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
 Dates should be in`YYYY-MM-DD` format.
 
+## 0.3.12 - 2026-04-26
+
+### Changed
+
+- Updated visual design of dashboard to improve navigation and accessibility (#84).
+
 ## 0.3.11 - 2026-04-19
 
 ### Added
