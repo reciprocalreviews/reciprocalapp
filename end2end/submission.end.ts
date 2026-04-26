@@ -9,6 +9,7 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 	await login('author1@uni.edu', page, context);
 
 	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	await page.waitForLoadState('networkidle');
 
 	// Fill in the required submission details.
 	await page.getByTestId('submission-title').fill('A Study of Reciprocal Review Incentives');

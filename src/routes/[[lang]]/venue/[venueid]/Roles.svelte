@@ -224,6 +224,7 @@
 				{#if scholar}
 					{#if !role.invited && scholarVolunteer === undefined}
 						<Button
+							testid="volunteer-for-role"
 							strings={(l) => l.view.roles.button.volunteer}
 							action={() =>
 								handle(

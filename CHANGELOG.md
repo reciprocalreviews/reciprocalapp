@@ -1,13 +1,13 @@
 # Changes
 
-Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates.
-Dates should be in`YYYY-MM-DD` format.
+Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
 ## 0.3.12 - 2026-04-26
 
 ### Added
 
 - End-to-end test for new multi-author submissions.
+- End-to-end test for volunteering for a reviewing role.
 - Included unapproved transactions in scholar task list.
 
 ### Changed

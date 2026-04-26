@@ -4,7 +4,9 @@
     "date": "2026-04-26",
     "changes": {
       "added": [
-        "End-to-end test for new multi-author submissions."
+        "End-to-end test for new multi-author submissions.",
+        "End-to-end test for volunteering for a reviewing role.",
+        "Included unapproved transactions in scholar task list."
       ],
       "fixed": [
         "Fixed text below volunteer header (#90).",

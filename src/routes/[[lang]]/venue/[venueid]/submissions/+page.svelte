@@ -301,7 +301,6 @@
 															})}
 															action={() => handle(db().deleteAssignment(scholarsBid.id))}
 														/>
-														>
 													{/if}
 												{:else}
 													<div><strong>{locale().page.submissions.cell.biddingClosed}</strong></div>
