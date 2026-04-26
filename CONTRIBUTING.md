@@ -10,7 +10,7 @@ Next, read the [design specification](DESIGN.md). This document attempts to arti
 
 Finally, read our [architecture guide](ARCHITECTURE.md), which discusses the key technologies, components, and concepts in the implementation, so you can navigate the implementation.
 
-Finally, if you have questions about anything, join our [Discord](https://discord.gg/GzdCGzWMrj) and ask away. There's almost certainly something important we've missed here, and your questions will help us know what to add.
+There's almost certainly something important we've missed here, and your questions will help us know what to add.
 
 ## Contributing
 
