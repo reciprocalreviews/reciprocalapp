@@ -234,7 +234,17 @@ export default class SupabaseCRUD extends CRUD {
 				return {
 					error: { message: this.locale.error.CreateTransaction, details: error.details }
 				};
-			} else if (proposedScholarTransactionID) transactions.push(proposedScholarTransactionID);
+			} else if (proposedScholarTransactionID) {
+				transactions.push(proposedScholarTransactionID);
+				// The creator doesn't need to approve their own transaction; process it immediately.
+				if (scholarID === creator) {
+					const { error: approvalError } = await this.approveTransaction(
+						creator,
+						proposedScholarTransactionID
+					);
+					if (approvalError) return { error: approvalError };
+				}
+			}
 		}
 
 		// Create the submission
@@ -720,10 +730,7 @@ export default class SupabaseCRUD extends CRUD {
 		[sorted[index], sorted[target]] = [sorted[target], sorted[index]];
 
 		for (const [i, r] of sorted.entries()) {
-			const { error } = await this.client
-				.from('roles')
-				.update({ priority: i })
-				.eq('id', r.id);
+			const { error } = await this.client.from('roles').update({ priority: i }).eq('id', r.id);
 			if (error) return this.error('ReorderRole', error);
 		}
 
@@ -1181,9 +1188,10 @@ export default class SupabaseCRUD extends CRUD {
 		if (from === null) return this.error('TransactionMissingFrom');
 		if (to === null) return this.error('TransactionMissingTo');
 
-		// Mint any tokens that still need to be created, assigning them to the sender first.
+		// Mint any tokens that still need to be created, but only when the sender is a venue.
+		// When a scholar pays, their tokens already exist; NullUUIDs are just placeholders for count.
 		const nullCount = transaction.tokens.filter((tokenId) => tokenId === NullUUID).length;
-		if (nullCount > 0) {
+		if (nullCount > 0 && transaction.from_venue !== null) {
 			const { error: mintingError } = await this.mintTokens(
 				creator,
 				transaction.currency,
@@ -1191,8 +1199,7 @@ export default class SupabaseCRUD extends CRUD {
 				from,
 				transaction.purpose
 			);
-			if (mintingError)
-				return this.error('MintTokens', mintingError.details, mintingError.message);
+			if (mintingError) return this.error('MintTokens', mintingError.details, mintingError.message);
 		}
 
 		// Transfer all tokens (existing and newly minted) to the recipient.
@@ -1210,7 +1217,7 @@ export default class SupabaseCRUD extends CRUD {
 		if (transferError)
 			return this.error('TransferVenueTokens', transferError.details, transferError.message);
 
-		return { data: undefined };
+		return { error: undefined, data: undefined };
 	}
 
 	async cancelTransaction(id: TransactionID, reason: string): Promise<Result> {

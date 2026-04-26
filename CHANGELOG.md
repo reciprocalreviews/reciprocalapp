@@ -11,6 +11,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Removed edge functions from Playwright tests for speed and less flakiness, as we do not have end-to-end tests for that functionality.
 - Added caching to Playwright tests for speed.
 - Added a minimal CLAUDE.md to specifiy architecture and stack for Claude Code use.
+- Approve new submission transaction for submitting author immediately.
 
 ### Fixed
 
@@ -18,6 +19,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Fixed re-ordering of roles in venue settings (#91).
 - Fixed error in inactive venue localization string rendering (#92).
 - Corrected spacing below inactive feedback, before page content.
+- Fixed issue where transaction approval always mint tokens, instead of only doing so for venue sources.
 
 ## 0.3.11 - 2026-04-19
 
