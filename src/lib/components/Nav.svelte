@@ -161,6 +161,7 @@
 		padding: var(--spacing-half) 0;
 		background: var(--background-color);
 		margin-bottom: var(--spacing);
+		overflow-x: clip;
 	}
 
 	.emoji {
