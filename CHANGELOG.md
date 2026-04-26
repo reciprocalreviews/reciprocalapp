@@ -9,6 +9,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 - Updated visual design of dashboard to improve navigation and accessibility (#84).
 
+### Fixed
+
+- Fixed text below volunteer header (#90).
+
 ## 0.3.11 - 2026-04-19
 
 ### Added

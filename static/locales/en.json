@@ -690,8 +690,8 @@
 				"commitmentsNotLoaded": "Unable to load editing volunteering commitments.",
 				"notVolunteeringFirst": "You are not volunteering for any roles yet.",
 				"notVolunteeringThird": "This scholar is not volunteering for any roles yet.",
-				"volunteeringFirst": "You are not volunteering for any roles yet.",
-				"volunteeringThird": "This scholar is not volunteering for any roles yet.",
+				"volunteeringFirst": "These are your volunteer roles.",
+				"volunteeringThird": "These are this scholar's volunteer roles.",
 				"noName": "Welcome! Edit your name above to set it, then share your reviewing status below so others know your availability."
 			},
 			"field": {
