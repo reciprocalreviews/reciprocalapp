@@ -47,6 +47,19 @@
 
 	let scholarStates = $state<ScholarState[]>([{ status: 'idle' }]);
 
+	// Reset the scholar state to idle whenever the ORCID text is edited.
+	let previousOrcids: string[] = charges.map((c) => c.scholar);
+	$effect(() => {
+		previousOrcids.length = charges.length;
+		for (let i = 0; i < charges.length; i++) {
+			const orcid = charges[i].scholar;
+			if (previousOrcids[i] !== orcid) {
+				previousOrcids[i] = orcid;
+				scholarStates[i] = { status: 'idle' };
+			}
+		}
+	});
+
 	async function lookupScholar(index: number, orcid: string) {
 		if (!validORCID(orcid)) return;
 		scholarStates[index] = { status: 'loading' };
