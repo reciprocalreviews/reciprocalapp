@@ -14,10 +14,12 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 	await page.getByTestId('submission-title').fill('A Study of Reciprocal Review Incentives');
 	await page.getByTestId('submission-manuscript-id').fill('TOK-2026-TEST-001');
 
+	// In case there's a failure, scroll down so we have a screenshot.
+	await page.getByTestId('add-author').scrollIntoViewIfNeeded();
+
 	// Enter author1's ORCID and Tab out to trigger the blur-based lookup.
-	// (Clicking add-author suppresses blur, so we trigger lookup via Tab first.)
 	await page.getByTestId('author-orcid-0').fill(AUTHOR1_ORCID);
-	await page.getByTestId('author-orcid-0').press('Tab');
+	await page.getByTestId('author-orcid-0').blur();
 	await expect(page.getByTestId('scholar-found-0')).toBeVisible();
 
 	// Add a second author row.
@@ -25,14 +27,15 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 
 	// Enter author2's ORCID and wait for the lookup the same way.
 	await page.getByTestId('author-orcid-1').fill(AUTHOR2_ORCID);
-	await page.getByTestId('author-orcid-1').press('Tab');
+	await page.getByTestId('author-orcid-1').blur();
+	await page.getByTestId('author-orcid-1').scrollIntoViewIfNeeded();
 	await expect(page.getByTestId('scholar-found-1')).toBeVisible();
 
 	// Set each author's payment to 5 tokens (total = 10 = submission cost).
 	await page.getByTestId('payment-slider-0').fill('5');
 	await page.getByTestId('payment-slider-1').fill('5');
 
-	// Check that both authors can afford the payment.
+	// Check that both authors can afford the payment. It should be enabled
 	await page.getByTestId('check-balances').click();
 	await expect(
 		page.locator('text=The authors have sufficient tokens to pay for this submission.')
