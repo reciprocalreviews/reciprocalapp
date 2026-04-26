@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Changed
 
 - Updated visual design of dashboard to improve navigation and accessibility (#84).
+- Removed edge functions from Playwright tests for speed and less flakiness, as we do not have end-to-end tests for that functionality.
 
 ### Fixed
 

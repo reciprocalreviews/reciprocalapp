@@ -3,7 +3,7 @@ import { type PlaywrightTestConfig, devices } from '@playwright/test';
 const config: PlaywrightTestConfig = {
 	webServer: {
 		// Sync types, build with vite, run the preview server, and start Supabase locally, without services we don't use.
-		command: 'npm run emu',
+		command: process.env.CI ? 'npm run emu:ci' : 'npm run emu',
 		name: 'dev',
 		reuseExistingServer: !process.env.CI,
 		port: 4173,
