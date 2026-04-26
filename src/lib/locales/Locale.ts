@@ -212,6 +212,7 @@ export type LocaleText = {
 			};
 			feedback: {
 				notLoaded: string;
+				notLoggedIn: string;
 				duplicateScholars: string;
 				incompletePayment: string;
 				sufficientBalance: string;

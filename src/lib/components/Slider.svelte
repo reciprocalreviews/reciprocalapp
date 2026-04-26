@@ -13,6 +13,7 @@
 		change?: undefined | ((value: number) => void);
 		/** If true, fires change event during drag. */
 		immediately?: boolean;
+		testid?: string;
 	}
 
 	let {
@@ -23,7 +24,8 @@
 		active = true,
 		strings,
 		change = undefined,
-		immediately = true
+		immediately = true,
+		testid = undefined
 	}: Props = $props();
 
 	const locale = getLocaleContext();
@@ -44,6 +46,7 @@
 	<div class="slider">
 		<input
 			bind:this={view}
+			data-testid={testid}
 			disabled={!active}
 			aria-disabled={!active}
 			type="range"

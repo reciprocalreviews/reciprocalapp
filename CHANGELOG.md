@@ -5,6 +5,10 @@ Dates should be in`YYYY-MM-DD` format.
 
 ## 0.3.12 - 2026-04-26
 
+### Added
+
+- End-to-end test for new multi-author submissions.
+
 ### Changed
 
 - Updated visual design of dashboard to improve navigation and accessibility (#84).
@@ -22,6 +26,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Corrected spacing below inactive feedback, before page content.
 - Fixed issue where transaction approval always mint tokens, instead of only doing so for venue sources.
 - Fixed bug preventing author submitting on behalf of co-authors.
+- Reset check balances button when payments change on new submission form.
 
 ## 0.3.11 - 2026-04-19
 

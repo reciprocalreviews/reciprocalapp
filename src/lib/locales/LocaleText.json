@@ -1202,6 +1202,9 @@
                     "notLoaded": {
                       "type": "string"
                     },
+                    "notLoggedIn": {
+                      "type": "string"
+                    },
                     "onlyAuthors": {
                       "type": "string"
                     },
@@ -1211,6 +1214,7 @@
                   },
                   "required": [
                     "notLoaded",
+                    "notLoggedIn",
                     "duplicateScholars",
                     "incompletePayment",
                     "sufficientBalance",

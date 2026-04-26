@@ -57,9 +57,10 @@
 	/** True if the specified charges can be afforded, undefined if checking, string describing the problem. */
 	let affordable = $state<((l: Locale) => string) | undefined | true>(undefined);
 
-	/** When charges change, reset affordable */
+	/** When any charge's payment or scholar changes, reset affordable */
 	$effect(() => {
-		if (charges) affordable = undefined;
+		charges.forEach((c) => { c.payment; c.scholar; });
+		affordable = undefined;
 	});
 
 	/** True if the authenticated user is not among the found authors */
@@ -131,6 +132,10 @@
 	}
 </script>
 
+{#if !user}
+	<Feedback error text={(l) => l.page.newSubmission.feedback.notLoggedIn} />
+{:else}
+
 <Paragraph text={(l) => l.page.newSubmission.paragraph.intro} />
 
 <Form>
@@ -140,6 +145,7 @@
 		size={40}
 		bind:text={title}
 		valid={(text) => (isntEmpty(text) ? undefined : (l) => l.page.submissions.field.title.invalid)}
+		testid="submission-title"
 	/>
 	<TextField strings={(l) => l.page.submissions.field.expertise} size={40} bind:text={expertise} />
 	<TextField
@@ -148,6 +154,7 @@
 		bind:text={externalID}
 		valid={(text) =>
 			validExternalID(text) ? undefined : (l) => l.page.submissions.field.manuscriptID.invalid}
+		testid="submission-manuscript-id"
 	/>
 	<TextField
 		strings={(l) => l.page.submissions.field.previousID}
@@ -184,13 +191,14 @@
 							return undefined;
 						}}
 						done={() => lookupScholar(index, charge.scholar)}
+						testid="author-orcid-{index}"
 					/>
 				</td>
 				<td class="scholar-name">
 					{#if scholarStates[index]?.status === 'loading'}
 						<Loading />
 					{:else if scholarStates[index]?.status === 'found'}
-						<ScholarLink id={scholarStates[index].id} />
+						<span data-testid="scholar-found-{index}"><ScholarLink id={scholarStates[index].id} /></span>
 					{:else}&mdash;
 					{/if}
 				</td>
@@ -201,6 +209,7 @@
 						min={0}
 						max={venue.submission_cost}
 						step={1}
+						testid="payment-slider-{index}"
 					/></td
 				>
 				<td
@@ -219,6 +228,7 @@
 
 	<Button
 		strings={(l) => l.page.newSubmission.button.addAuthor}
+		testid="add-author"
 		action={() => {
 			charges.push({ scholar: '', payment: 0 });
 			scholarStates.push({ status: 'idle' });
@@ -245,6 +255,7 @@
 
 		<Button
 			strings={(l) => l.page.newSubmission.button.checkBalances}
+			testid="check-balances"
 			active={validChargeFormat(charges) &&
 				validCharge(charges, venue.submission_cost) &&
 				affordable !== true}
@@ -260,6 +271,7 @@
 
 	<Button
 		strings={(l) => l.page.newSubmission.button.submit}
+		testid="submit-submission"
 		active={affordable === true &&
 			validSubmission(title, externalID, charges, venue.submission_cost)}
 		action={async () => {
@@ -287,6 +299,8 @@
 		}}
 	/>
 </Form>
+
+{/if}
 
 <style>
 	.charge td {
