@@ -12,6 +12,7 @@ Dates should be in`YYYY-MM-DD` format.
 - Added caching to Playwright tests for speed.
 - Added a minimal CLAUDE.md to specifiy architecture and stack for Claude Code use.
 - Approve new submission transaction for submitting author immediately.
+- Added another author with tokens in the seed.sql file for testing.
 
 ### Fixed
 

@@ -254,6 +254,42 @@ values
 		'false',
 		null,
 		'false'
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		'authenticated',
+		'authenticated',
+		'author2@uni.edu',
+		'$2a$10$4lVmpmDpZuRTwwtl82JmKOuMIsIUNbf6ygJYO9m7V808kSlOb0r5W',
+		'2025-10-19 22:01:42.35992+00',
+		null,
+		'',
+		null,
+		'',
+		'2025-10-19 22:15:01.192536+00',
+		'',
+		'',
+		null,
+		'2025-10-19 22:15:07.828069+00',
+		'{"provider": "email", "providers": ["email"]}',
+		'{"sub": "b8a805bf-0aae-4443-9185-de019a8715ec", "email": "author2@uni.edu", "email_verified": true, "phone_verified": false}',
+		null,
+		'2025-10-19 22:01:42.357405+00',
+		'2025-10-19 22:15:07.830042+00',
+		null,
+		null,
+		'',
+		'',
+		null,
+		'',
+		'0',
+		null,
+		'',
+		null,
+		'false',
+		null,
+		'false'
 	);
 
 insert into
@@ -297,6 +333,16 @@ values
 		'2025-10-19 21:59:30.449967+00',
 		'2025-10-19 21:59:30.449967+00',
 		'd03732ca-fa0b-409c-ac8f-5c0aaa035b14'
+	),
+	(
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		'{"sub": "b8a805bf-0aae-4443-9185-de019a8715ec", "email": "author2@uni.edu", "email_verified": false, "phone_verified": false}',
+		'email',
+		'2025-10-19 22:01:42.358867+00',
+		'2025-10-19 22:01:42.358883+00',
+		'2025-10-19 22:01:42.358883+00',
+		'e55976f2-2f15-4886-c0e5-2f1629ff8d37'
 	);
 
 insert into
@@ -370,6 +416,16 @@ set
 	"steward"='false'
 where
 	id='b8a805bf-0aae-4443-9185-de019a8715db';
+
+update public.scholars
+set
+	orcid='0000-0001-2345-6795',
+	"name"='Ann Thesis',
+	"email"='author2@uni.edu',
+	"available"='true',
+	"steward"='false'
+where
+	id='b8a805bf-0aae-4443-9185-de019a8715ec';
 
 insert into
 	public.venues (
@@ -705,6 +761,66 @@ values
 		'ec74e0e0-ad38-11f0-9803-cf3d40db77f3',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null
+	),
+	(
+		'fa74e000-ad38-11f0-a200-000000000001',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		null
+	),
+	(
+		'fa74e000-ad38-11f0-a200-000000000002',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		null
+	),
+	(
+		'fa74e000-ad38-11f0-a200-000000000003',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		null
+	),
+	(
+		'fa74e000-ad38-11f0-a200-000000000004',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		null
+	),
+	(
+		'fa74e000-ad38-11f0-a200-000000000005',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		null
+	),
+	(
+		'fa74e000-ad38-11f0-a200-000000000006',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		null
+	),
+	(
+		'fa74e000-ad38-11f0-a200-000000000007',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		null
+	),
+	(
+		'fa74e000-ad38-11f0-a200-000000000008',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		null
+	),
+	(
+		'fa74e000-ad38-11f0-a200-000000000009',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		null
+	),
+	(
+		'fa74e000-ad38-11f0-a200-00000000000a',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
 		null
 	);
 
