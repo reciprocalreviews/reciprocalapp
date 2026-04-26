@@ -124,8 +124,7 @@
 		transform: translate(-1px, -1.5px);
 	}
 
-	button:not([disabled]):active,
-	button:not([disabled]):focus {
+	button:not([disabled]):active {
 		box-shadow: none;
 		transform: translate(2px, 3px);
 		transition-duration: 60ms;
