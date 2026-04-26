@@ -11,6 +11,9 @@ const config: PlaywrightTestConfig = {
 		stdout: 'pipe',
 		timeout: 200000
 	},
+	use: {
+		screenshot: 'only-on-failure'
+	},
 	workers: 1,
 	testDir: 'end2end',
 	testMatch: /(.+\.)?(end)\.ts/,
