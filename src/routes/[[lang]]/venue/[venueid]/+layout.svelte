@@ -51,7 +51,7 @@
 		<Feedback
 			error
 			inline={false}
-			text={(l) => l.page.venue.feedback.inactive.replace('{venue}', venue.id)}
+			text={(l) => l.page.venue.feedback.inactivePrompt.replace('{venue}', venue.id)}
 		/>
 	{/if}
 	{@render children()}

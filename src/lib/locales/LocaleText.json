@@ -1982,13 +1982,17 @@
                     "setupIntro": {
                       "type": "string"
                     },
+                    "setupSteps": {
+                      "type": "string"
+                    },
                     "welcome": {
                       "type": "string"
                     }
                   },
                   "required": [
                     "welcome",
-                    "setupIntro"
+                    "setupIntro",
+                    "setupSteps"
                   ],
                   "type": "object"
                 },

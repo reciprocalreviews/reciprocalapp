@@ -435,6 +435,7 @@ export type LocaleText = {
 			paragraph: {
 				welcome: string;
 				setupIntro: string;
+				setupSteps: string;
 			};
 		};
 		scholar: {
