@@ -16,6 +16,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          cache: 'npm'
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
@@ -24,8 +25,18 @@ jobs:
         run: npm ci
       - name: Define environment variables for build.
         run: echo "${{ secrets.TEST_ENV }}" > .env
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
       - name: Run Playwright tests using the vite dev server and Supabase local development setup
         run: npx playwright test
       - uses: actions/upload-artifact@v5
