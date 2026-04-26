@@ -5,25 +5,70 @@ export async function login(email: string, page: Page, context: BrowserContext) 
 	// Visit the login page
 	await page.goto('/login');
 
-	// Fill in the email input and submit the form
-	await page.getByTestId('email-input').fill(email);
-	await page.getByTestId('email-submit').click();
+	// Request the OTP email. Retry up to 3 times in case the local Supabase auth
+	// service rate-limits the send (which can happen when the same email is used
+	// across multiple test files in rapid succession).
+	let otpSent = false;
+	for (let attempt = 1; attempt <= 3; attempt++) {
+		await page.getByTestId('email-input').fill(email);
+		await page.getByTestId('email-submit').click();
 
-	// Visit the mailpit server
+		// Wait up to 5 seconds for the OTP input to appear (meaning the send succeeded).
+		otpSent = await page
+			.getByTestId('otp-input')
+			.waitFor({ state: 'visible', timeout: 5000 })
+			.then(() => true)
+			.catch(() => false);
+
+		if (otpSent) break;
+
+		if (attempt < 3) {
+			// Wait before retrying — 1s is the configured max_frequency but some
+			// Supabase GoTrue versions enforce a longer internal window.
+			await page.waitForTimeout(3000);
+			await page.goto('/login');
+		}
+	}
+
+	if (!otpSent) throw new Error(`login: Supabase refused to send OTP to ${email} after 3 attempts`);
+
+	// Retrieve the OTP code from Mailpit via its REST API.  Using the API is
+	// more reliable than clicking through the web UI when multiple emails for
+	// the same address exist in the inbox.
 	const mailpit = await context.newPage();
-	await mailpit.goto('http://localhost:54324');
+	let code = '';
 
-	// Click the first message in the list
-	await mailpit.locator(`a.message:has-text("${email}")`).first().click();
+	for (let i = 0; i < 10; i++) {
+		const res = await mailpit.request.get('http://localhost:54324/api/v1/messages?limit=50');
+		const json = (await res.json()) as {
+			messages?: Array<{ ID: string; To: Array<{ Address: string }> }>;
+		};
+		// The list is newest-first; find the first message addressed to this email.
+		const message = (json.messages ?? []).find((m) =>
+			m.To.some((addr) => addr.Address === email)
+		);
+		if (message) {
+			const msgRes = await mailpit.request.get(
+				`http://localhost:54324/api/v1/message/${message.ID}`
+			);
+			const msg = (await msgRes.json()) as { Text?: string; HTML?: string };
+			// Prefer plain text to avoid matching digits in URLs; look for the
+			// "enter the code: XXXXXX" pattern Supabase uses in magic-link emails.
+			const body = msg.Text ?? msg.HTML ?? '';
+			const match = body.match(/code:\s*(\d{6})/);
+			if (match) {
+				code = match[1];
+				break;
+			}
+		}
+		await mailpit.waitForTimeout(1000);
+	}
 
-	// Get the third paragraph with the OTP code
-	const text = await mailpit.frameLocator('#preview-html').locator('p').nth(2).textContent();
+	await mailpit.close();
 
-	// Extract the code using a regular expression
-	const codeMatch = text?.match(/(\d{6})/);
-	const code = codeMatch ? codeMatch[1] : '';
+	if (!code) throw new Error(`login: could not find OTP email for ${email} in Mailpit`);
 
-	// Back on the login page, enter the code into the OTP input and submit the form.
+	// Enter the OTP code and submit.
 	await page.getByTestId('otp-input').fill(code);
 	await page.getByTestId('otp-submit').click();
 
