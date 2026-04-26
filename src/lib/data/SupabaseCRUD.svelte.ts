@@ -709,25 +709,21 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async reorderRole(role: RoleRow, roles: RoleRow[], direction: -1 | 1) {
-		// Sort the roles to ensure priority order
 		const sorted = roles.toSorted((a, b) => a.priority - b.priority);
-		// Find the index of the role
 		const index = sorted.findIndex((r) => r.id === role.id);
 
-		// Couldn't find the role? Bail.
 		if (index === -1) return this.error('ReorderRole');
 
-		// Swap the roles.
-		const swap = sorted[index + direction];
-		sorted[index + direction] = role;
-		sorted[index] = swap;
+		const target = index + direction;
+		if (target < 0 || target >= sorted.length) return {};
 
-		// Renumber the orders.
-		for (const [index, role] of sorted.entries()) {
+		[sorted[index], sorted[target]] = [sorted[target], sorted[index]];
+
+		for (const [i, r] of sorted.entries()) {
 			const { error } = await this.client
 				.from('roles')
-				.update({ priority: index })
-				.eq('id', role.id);
+				.update({ priority: i })
+				.eq('id', r.id);
 			if (error) return this.error('ReorderRole', error);
 		}
 

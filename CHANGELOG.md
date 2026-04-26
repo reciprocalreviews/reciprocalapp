@@ -12,6 +12,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Fixed
 
 - Fixed text below volunteer header (#90).
+- Fixed re-ordering of roles in venue settings (#91).
 
 ## 0.3.11 - 2026-04-19
 

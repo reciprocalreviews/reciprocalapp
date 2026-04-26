@@ -110,7 +110,7 @@
 	{@const admins = venue.admins}
 
 	<Cards>
-		{#each roles.toSorted((a, b) => b.priority - a.priority) as role, index (role.id)}
+		{#each roles.toSorted((a, b) => a.priority - b.priority) as role, index (role.id)}
 			{@const roleVolunteers = volunteers?.filter((v) => v.roleid === role.id) ?? []}
 			<Card
 				full
