@@ -92,7 +92,11 @@
 		{#if label}
 			<span class="label"><Text path={label} /></span>
 		{/if}
-		<div class="input-wrap" class:inline style:width={inline && inputWidth > 0 ? inputWidth + 'px' : undefined}>
+		<div
+			class="input-wrap"
+			class:inline
+			style:width={inline && inputWidth > 0 ? inputWidth + 'px' : undefined}
+		>
 			{#if inline}
 				<input
 					bind:value={text}
@@ -103,7 +107,9 @@
 					disabled={!active}
 					{size}
 					onfocus={() => (wasFocused = true)}
-					onblur={(e) => { if (!(e.relatedTarget instanceof HTMLButtonElement)) done?.(); }}
+					onblur={() => {
+						done?.();
+					}}
 					style:width={size === undefined ? (width === 0 ? 'auto' : width + 'px') : undefined}
 					class:invalid={!isValid}
 					{placeholder}
@@ -118,7 +124,9 @@
 					{placeholder}
 					data-testid={testid}
 					onfocus={() => (wasFocused = true)}
-					onblur={(e) => { if (!(e.relatedTarget instanceof HTMLButtonElement)) done?.(); }}
+					onblur={() => {
+						done?.();
+					}}
 					bind:value={text}
 					bind:this={view}
 					cols={size}
