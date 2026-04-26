@@ -19,6 +19,7 @@
 		currencies,
 		minting,
 		pending,
+		outgoingPending,
 		reviews,
 		approvals
 	} = $derived(data);
@@ -73,6 +74,7 @@
 		{currencies}
 		{minting}
 		{pending}
+		{outgoingPending}
 		{venues}
 		{reviews}
 		{approvals}

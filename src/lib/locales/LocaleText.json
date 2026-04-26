@@ -3748,6 +3748,9 @@
                         "invitation": {
                           "type": "string"
                         },
+                        "outgoingTransaction": {
+                          "type": "string"
+                        },
                         "pendingAssignment": {
                           "type": "string"
                         },
@@ -3762,7 +3765,8 @@
                         "invitation",
                         "transaction",
                         "review",
-                        "pendingAssignment"
+                        "pendingAssignment",
+                        "outgoingTransaction"
                       ],
                       "type": "object"
                     },

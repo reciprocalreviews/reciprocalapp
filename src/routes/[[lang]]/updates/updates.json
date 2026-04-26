@@ -3,14 +3,17 @@
     "version": "0.3.12",
     "date": "2026-04-26",
     "changes": {
-      "added": [],
+      "added": [
+        "End-to-end test for new multi-author submissions."
+      ],
       "fixed": [
         "Fixed text below volunteer header (#90).",
         "Fixed re-ordering of roles in venue settings (#91).",
         "Fixed error in inactive venue localization string rendering (#92).",
         "Corrected spacing below inactive feedback, before page content.",
         "Fixed issue where transaction approval always mint tokens, instead of only doing so for venue sources.",
-        "Fixed bug preventing author submitting on behalf of co-authors."
+        "Fixed bug preventing author submitting on behalf of co-authors.",
+        "Reset check balances button when payments change on new submission form."
       ],
       "changed": [
         "Updated visual design of dashboard to improve navigation and accessibility (#84).",

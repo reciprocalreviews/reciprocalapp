@@ -1129,7 +1129,8 @@
 					"invitation": "Invitation",
 					"transaction": "Transaction",
 					"review": "Review",
-					"pendingAssignment": "Pending assignment"
+					"pendingAssignment": "Pending assignment",
+					"outgoingTransaction": "Pending approval"
 				},
 				"pendingTransactionsAfter": "pending transactions to approve"
 			},

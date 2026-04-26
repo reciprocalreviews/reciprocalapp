@@ -61,6 +61,14 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.in('currency', minting ? minting.map((c) => c.id) : []);
 	if (pendingTransactionsError) console.log(pendingTransactionsError);
 
+	// Get proposed transactions where the scholar is the source
+	const { data: outgoingPending, error: outgoingPendingError } = await supabase
+		.from('transactions')
+		.select('*')
+		.eq('status', 'proposed')
+		.eq('from_scholar', scholarID);
+	if (outgoingPendingError) console.log(outgoingPendingError);
+
 	// Get the scholar's submissions
 	const { data: submissions, error: submissionsError } = await supabase
 		.from('submissions')
@@ -102,6 +110,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		currencies: currencies,
 		minting: minting,
 		pending: pending,
+		outgoingPending: outgoingPending,
 		reviews: reviews,
 		approvals: approvals
 	};

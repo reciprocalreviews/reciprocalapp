@@ -8,6 +8,7 @@ Dates should be in`YYYY-MM-DD` format.
 ### Added
 
 - End-to-end test for new multi-author submissions.
+- Included unapproved transactions in scholar task list.
 
 ### Changed
 

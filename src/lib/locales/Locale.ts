@@ -771,6 +771,7 @@ export type LocaleText = {
 					transaction: string;
 					review: string;
 					pendingAssignment: string;
+					outgoingTransaction: string;
 				};
 				pendingTransactionsAfter: string;
 			};

@@ -44,6 +44,7 @@
 		submissions,
 		currencies,
 		pending,
+		outgoingPending,
 		venues,
 		reviews,
 		approvals
@@ -57,6 +58,7 @@
 		currencies: CurrencyRow[] | null;
 		minting: CurrencyRow[] | null;
 		pending: TransactionRow[] | null;
+		outgoingPending: TransactionRow[] | null;
 		venues: VenueRow[] | null;
 		reviews: (AssignmentRow & { submissions: SubmissionRow })[] | null;
 		approvals: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
@@ -148,7 +150,7 @@
 	{/if}
 
 	{#if editable}
-		<Tasks scholar={scholar.getID()} {commitments} {minting} {pending} {reviews} {approvals}
+		<Tasks scholar={scholar.getID()} {commitments} {minting} {pending} {outgoingPending} {reviews} {approvals}
 		></Tasks>
 	{/if}
 
