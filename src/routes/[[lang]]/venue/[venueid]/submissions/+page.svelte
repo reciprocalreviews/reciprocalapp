@@ -238,7 +238,7 @@
 							<td>
 								<Column>
 									<SubmissionPreview {submission} />
-									{#if uid && conflicts !== null && !conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id) && assignments !== null && !assignments.some((a) => a.submission === submission.id && a.scholar === uid)}
+									{#if uid && conflicts !== null && !conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id) && !submission.authors.includes(uid) && assignments !== null && !assignments.some((a) => a.submission === submission.id && a.scholar === uid)}
 										<Button
 											strings={(l) => l.page.submissions.button.declareConflict}
 											action={() =>
