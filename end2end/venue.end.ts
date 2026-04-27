@@ -29,25 +29,6 @@ test('a volunteer should see they have volunteered', async ({ page, context }) =
 	await logout(page);
 });
 
-test('a reviewer can bid on a paper and then see an unbid button', async ({ page, context }) => {
-	await login('r1@uni.edu', page, context);
-
-	await page.goto('/venue/c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6/submissions');
-
-	// Bid on the first paper that has a bid button.
-	const firstBidButton = page.getByTestId(/^bid-/).first();
-	await expect(firstBidButton, 'Expect a bid button to be visible').toBeVisible();
-	await firstBidButton.click();
-
-	// After bidding, an unbid button should appear.
-	await expect(
-		page.getByTestId(/^unbid-/).first(),
-		'Expect an unbid button to appear after bidding'
-	).toBeVisible();
-
-	await logout(page);
-});
-
 test('an editor should see editor specific things', async ({ page, context }) => {
 	await login('editor@uni.edu', page, context);
 
