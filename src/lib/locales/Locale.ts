@@ -252,6 +252,9 @@ export type LocaleText = {
 		};
 		submissions: {
 			title: string;
+			tip: {
+				bid: string;
+			};
 			cell: {
 				you: string;
 				assigned: string;

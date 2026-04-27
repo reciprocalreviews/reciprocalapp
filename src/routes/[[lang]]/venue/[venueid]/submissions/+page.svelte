@@ -12,6 +12,8 @@
 	import SubmissionPreview from '$lib/components/SubmissionLink.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
+	import Tip from '$lib/components/Tip.svelte';
+	import Text from '$lib/locales/Text.svelte';
 	import { getDB, NullUUID } from '$lib/data/CRUD';
 	import isRoleApprover from '$lib/data/isRoleApprover';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
@@ -143,6 +145,14 @@
 		<!-- Provide a clear link to the new submission page. -->
 		<Paragraph text={(l) => l.page.submissions.paragraph.newSubmission} />
 
+		{#if uid}
+			{#each visibleRoles.filter((r) => r.biddable) as role}
+				<Tip>
+					<Text path={(l) => l.page.submissions.tip.bid} inputs={{ role: role.name }} />
+				</Tip>
+			{/each}
+		{/if}
+
 		<TextField strings={(l) => l.page.submissions.field.filter} bind:text={filter}></TextField>
 
 		{#if submissions === null}
@@ -228,7 +238,7 @@
 							<td>
 								<Column>
 									<SubmissionPreview {submission} />
-									{#if uid && conflicts !== null && !conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id) && assignments !== null && !assignments.some((a) => a.submission === submission.id && a.scholar === uid)}
+									{#if uid && conflicts !== null && !conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id) && !submission.authors.includes(uid) && assignments !== null && !assignments.some((a) => a.submission === submission.id && a.scholar === uid)}
 										<Button
 											strings={(l) => l.page.submissions.button.declareConflict}
 											action={() =>

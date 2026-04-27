@@ -369,6 +369,9 @@
 		},
 		"submissions": {
 			"title": "Submissions",
+			"tip": {
+				"bid": "You can bid on submissions below that you are interested in volunteering for. This information goes to the {role}, who will select volunteers."
+			},
 			"feedback": {
 				"notLoaded": "Unable to load submissions.",
 				"noSubmissions": "This venue has no submissions (or none visible to you).",
