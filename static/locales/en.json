@@ -368,6 +368,9 @@
 		},
 		"submissions": {
 			"title": "Submissions",
+			"tip": {
+				"bid": "You can bid on submissions below that you are interested in volunteering for. This information goes to the {role}, who will select volunteers."
+			},
 			"feedback": {
 				"notLoaded": "Unable to load submissions.",
 				"noSubmissions": "This venue has no submissions (or none visible to you).",
@@ -663,7 +666,8 @@
 			},
 			"paragraph": {
 				"welcome": "Welcome venue admin! You can manage this venue's settings here.",
-				"setupIntro": "Hello venue admin! Are you ready to integrate into your reviewing system? There are a few steps:"
+				"setupIntro": "Hello venue admin! Are you ready to integrate into your reviewing system? There are a few steps:",
+				"setupSteps": "1. Update the inactive message in the settings below, so your community knows you're busy configuring things.\n2. Run a community process to decide on all settings below.\n3. Include this venue's [payment link](/venue/{venueid}/submissions/new) in author instructions and submission confirmations, prompting authors to pay after submission. If you want the manuscript ID to be populated automatically and your reviewing platform supports it, you can use the URL `https://reciprocal.reviews/venue/{venueid}/submission/new?id=[ID]`, but replace `[ID]` with the variable your system uses for manuscript ID.\n4. Update your reviewing platform's **review submission** notification email to prompt the scholar receiving it with a link to the submission: `https://reciprocal.reviews/venue/{venueid}/submission/[id]`, but replace `[id]` with the variable your system uses for manuscript ID. In the email, prompt them to add the reviewer to the submission (if they haven't already), evaluate the review, and if it meets your venue's review quality requirements, press the **Complete** button to pay for their work.\n5. When you're ready to launch, set the venue to active in the **Status** section below, and the venue will be open for volunteering."
 			},
 			"subtitle": "Settings",
 			"tip": {
@@ -690,8 +694,8 @@
 				"commitmentsNotLoaded": "Unable to load editing volunteering commitments.",
 				"notVolunteeringFirst": "You are not volunteering for any roles yet.",
 				"notVolunteeringThird": "This scholar is not volunteering for any roles yet.",
-				"volunteeringFirst": "You are not volunteering for any roles yet.",
-				"volunteeringThird": "This scholar is not volunteering for any roles yet.",
+				"volunteeringFirst": "These are your volunteer roles.",
+				"volunteeringThird": "These are this scholar's volunteer roles.",
 				"noName": "Welcome! Edit your name above to set it, then share your reviewing status below so others know your availability."
 			},
 			"field": {

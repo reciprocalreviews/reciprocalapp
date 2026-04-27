@@ -251,6 +251,9 @@ export type LocaleText = {
 		};
 		submissions: {
 			title: string;
+			tip: {
+				bid: string;
+			};
 			cell: {
 				you: string;
 				assigned: string;
@@ -435,6 +438,7 @@ export type LocaleText = {
 			paragraph: {
 				welcome: string;
 				setupIntro: string;
+				setupSteps: string;
 			};
 		};
 		scholar: {

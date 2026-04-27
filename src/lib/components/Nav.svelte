@@ -161,6 +161,7 @@
 		padding: var(--spacing-half) 0;
 		background: var(--background-color);
 		margin-bottom: var(--spacing);
+		overflow-x: clip;
 	}
 
 	.emoji {
@@ -171,7 +172,7 @@
 	h1 {
 		display: flex;
 		gap: 0.5rem;
-		align-items: baseline;
+		align-items: center;
 		margin: 0;
 	}
 

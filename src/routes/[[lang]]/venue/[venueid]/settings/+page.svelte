@@ -1,16 +1,15 @@
 <script lang="ts">
 	import Card from '$lib/components/Card.svelte';
-	import Text from '$lib/locales/Text.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { ErrorLabel, ScholarLabel, SettingsLabel, VenueLabel } from '$lib/components/Labels.js';
-	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import { getDB } from '$lib/data/CRUD.js';
+	import Text from '$lib/locales/Text.svelte';
 	import { validInteger } from '$lib/validation.js';
 	import Roles from '../Roles.svelte';
 
@@ -56,35 +55,10 @@
 			testid="setup-card"
 		>
 			<Paragraph text={(l) => l.page.settings.paragraph.setupIntro} />
-			<ol>
-				<li>
-					Update the inactive message in the settings below, so your community know you're busy
-					configuring things.
-				</li>
-				<li>Run a community process to decide on all settings below.</li>
-				<li>
-					Include this venue's <Link to={`/venue/${venue.id}/submissions/new`}>payment link</Link> in
-					author instructions and submission confirmations, prompting authors to pay after submission.
-					If you want the manuscript ID to be populated automatically and your reviewing platform supports
-					it, you can use the URL
-					<code>https://reciprocal.reviews/venue/{venue.id}/submission/new?id=[ID]</code>, but
-					replace
-					<code>[ID]</code> with the variable your system uses for manuscript ID.
-				</li>
-				<li>
-					Update your reviewing platform's <strong>review submission</strong> notification email to
-					prompt the scholar receiving it with a link to the submission:
-					<code>https://reciprocal.reviews/venue/{venue.id}/submission/[id]</code>, but replace
-					<code>[id]</code> with the variable your system uses for manuscript ID. In the email,
-					prompt them to add the reviewer to the submission (if they haven't already), evaluate the
-					review, and if it meets your venue's review quality requirements, press the
-					<strong>Complete</strong> button to pay for their work.
-				</li>
-				<li>
-					When you're ready to launch, remove the <strong>inactive message</strong> in the settings below,
-					and the venue will be open for volunteering.
-				</li>
-			</ol>
+			<Paragraph
+				text={(l) => l.page.settings.paragraph.setupSteps}
+				inputs={{ venueid: venue.id }}
+			/>
 		</Card>
 
 		<Subheader icon={SettingsLabel} text={(l) => l.page.settings.header.status} />
@@ -99,17 +73,13 @@
 		/>
 
 		{#if venue.inactive !== null}
-			<div style="margin-left: var(--spacing)">
-				<EditableText
-					text={venue.inactive ?? ''}
-					strings={(l) => l.page.settings.field.inactiveMessage}
-					valid={(text) =>
-						text.length > 0
-							? undefined
-							: (l) => l.page.settings.field.inactiveMessage.invalid ?? ''}
-					edit={(text) => db().editVenueInactive(venue.id, text)}
-				/>
-			</div>
+			<EditableText
+				text={venue.inactive ?? ''}
+				strings={(l) => l.page.settings.field.inactiveMessage}
+				valid={(text) =>
+					text.length > 0 ? undefined : (l) => l.page.settings.field.inactiveMessage.invalid ?? ''}
+				edit={(text) => db().editVenueInactive(venue.id, text)}
+			/>
 		{/if}
 
 		<Subheader icon={SettingsLabel} text={(l) => l.page.settings.header.compensation} />
@@ -139,7 +109,10 @@
 		<Checkbox
 			on={venue.anonymous_assignments}
 			change={(on) => db().editVenueAnonymousAssignments(venue.id, on)}
-			label={(l) => venue.anonymous_assignments ? l.page.settings.checkbox.anonymousAssignments.on : l.page.settings.checkbox.anonymousAssignments.off}
+			label={(l) =>
+				venue.anonymous_assignments
+					? l.page.settings.checkbox.anonymousAssignments.on
+					: l.page.settings.checkbox.anonymousAssignments.off}
 		/>
 
 		<Roles
