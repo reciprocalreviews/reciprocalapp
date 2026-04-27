@@ -240,7 +240,7 @@
 							<td>{submission.expertise}</td>
 							<td>{submission.externalid}</td>
 							<!-- If we have all the information, show metadata about bidding. -->
-							{#each visibleRoles as role}
+							{#each visibleRoles as role, roleIndex}
 								<!-- This cell should show all actions available for this role and submission, based on the current scholar's role. -->
 								<td>
 									<Column>
@@ -279,6 +279,7 @@
 													{#if scholarsBid === undefined}
 														<!-- No assignments? Allow bidding -->
 														<Button
+															testid={`bid-${index}-${roleIndex}`}
 															strings={(l) => ({
 																tip: l.page.submissions.button.bid.tip.replace(
 																	'{role}',
@@ -292,6 +293,7 @@
 													{:else if scholarsBid !== undefined && !scholarsBid.approved}
 														<!-- Shown an unbid button if not yet approved -->
 														<Button
+															testid={`unbid-${index}-${roleIndex}`}
 															strings={(l) => ({
 																tip: l.page.submissions.button.unbid.tip.replace(
 																	'{role}',
