@@ -273,6 +273,9 @@
 												roleAssignments?.filter((a) => a.approved) ?? []}
 											{@const bids = roleAssignments?.filter((a) => a.bid) ?? []}
 											{@const scholarsBid = bids?.find((a) => a.scholar === uid)}
+											{@const scholarAlreadyAssigned = approvedAssignments.some(
+												(a) => a.scholar === uid
+											)}
 											<!-- If the current scholar is an approver, show the current assignemnts -->
 											{#if role.isApprover}
 												<!-- Approver? Show the people assigned. -->
@@ -285,7 +288,7 @@
 											{/if}
 
 											<!-- Show bidding if the role is biddable and there are fewer than the number of desired assignments-->
-											{#if role.biddable}
+											{#if role.biddable && !scholarAlreadyAssigned}
 												{#if submission.authors.includes(uid) || conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id)}
 													<!-- Can't bid if conflicted -->
 													<div><strong>{locale().page.submissions.cell.conflicted}</strong></div>

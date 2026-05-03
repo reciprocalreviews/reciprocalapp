@@ -13,6 +13,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Updated internal tooling for stability.
 - We encourage and account for non-paying authors to be listed (#98).
 
+### Fixed
+
+- Don't show bid buttons if a scholar already has the role (#99).
+
 ## 0.3.12 - 2026-04-26
 
 ### Added
