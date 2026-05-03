@@ -37,13 +37,17 @@ export async function handle<T>(
 	success?: string | undefined
 ): Promise<T | boolean> {
 	pendingActions++;
-	const { data, error } = await action;
+	const { data, error, notified } = await action;
 	pendingActions--;
 	if (error) {
 		addError(error);
 		return false;
 	} else {
 		if (success) addFeedback(success, 'success');
+		// Render one success banner per notification (e.g., one per email recipient).
+		if (notified) {
+			for (const note of notified) addFeedback(note.message, 'success');
+		}
 		invalidateAll();
 		if (data) return data;
 		else return true;

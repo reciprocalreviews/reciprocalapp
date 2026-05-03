@@ -30,6 +30,7 @@ import CRUD, {
 	type BulkImportResult,
 	type Charge,
 	type ImportedSubmission,
+	type Notification,
 	type Result
 } from './CRUD';
 import Scholar from './Scholar.svelte';
@@ -454,17 +455,21 @@ export default class SupabaseCRUD extends CRUD {
 		// Find the stewards to notify
 		const { data: stewards } = await this.client.from('scholars').select('id').eq('steward', true);
 
-		if (stewards)
-			await this.emailScholars(
+		const notified: Notification[] = [];
+		if (stewards) {
+			const stewardResult = await this.emailScholars(
 				stewards.map((s) => s.id),
 				'ProposalCreatedStewards',
 				[title, proposalid]
 			);
+			if (stewardResult.notified) notified.push(...stewardResult.notified);
+		}
 
 		// Notify editors
-		await this.sendEmail(editors, 'ProposalCreatedEditors', [title, proposalid]);
+		const editorResult = await this.sendEmail(editors, 'ProposalCreatedEditors', [title, proposalid]);
+		if (editorResult.notified) notified.push(...editorResult.notified);
 
-		return { data: proposalid };
+		return { data: proposalid, notified };
 	}
 
 	async editVenueProposalTitle(venue: ProposalID, title: string): Promise<Result> {
@@ -622,9 +627,12 @@ export default class SupabaseCRUD extends CRUD {
 		const scholarsToEmail = [...editors, ...supportersData.map((s) => s.scholarid)];
 
 		// Send a notification email to the scholars.
-		this.emailScholars(scholarsToEmail, 'VenueApproved', [proposalData.title, venueID]);
+		const emailResult = await this.emailScholars(scholarsToEmail, 'VenueApproved', [
+			proposalData.title,
+			venueID
+		]);
 
-		return { data: venueID };
+		return { data: venueID, notified: emailResult.notified };
 	}
 
 	async addVenueProposalSupporter(
@@ -989,6 +997,7 @@ export default class SupabaseCRUD extends CRUD {
 		if (missing.length > 0) return this.error('InviteToRoleMissing', null, missing.join(', '));
 
 		const ids: string[] = [];
+		const notified: Notification[] = [];
 		for (const scholar of scholars) {
 			const { data, error } = await this.createVolunteer(
 				inviter,
@@ -1000,15 +1009,16 @@ export default class SupabaseCRUD extends CRUD {
 			if (error) return { error };
 			if (data) {
 				ids.push(data);
-				this.emailScholars([scholar.id], 'RoleInvite', [
+				const inviteResult = await this.emailScholars([scholar.id], 'RoleInvite', [
 					role.name,
 					venue.id,
 					venue.title,
 					scholar.id
 				]);
+				if (inviteResult.notified) notified.push(...inviteResult.notified);
 			}
 		}
-		return { data: ids };
+		return { data: ids, notified };
 	}
 
 	async acceptRoleInvite(scholar: ScholarID, id: VolunteerID, response: Response) {
@@ -1335,25 +1345,27 @@ export default class SupabaseCRUD extends CRUD {
 			.update({ approved })
 			.eq('id', assignment.id);
 
+		if (assignmentError) return this.error('ApproveAssignment', assignmentError);
+
 		// Notify the assigned
-		if (assignmentError === null) {
-			const scholar = await this.getScholar(approver);
-			if (scholar) {
-				this.emailScholars(
-					[assignment.scholar],
-					approved ? 'AssignmentApproved' : 'AssignmentRemoved',
-					[
-						scholar.getName() ?? '',
-						scholar.getEmail() ?? '',
-						role.name,
-						assignment.venue,
-						assignment.submission
-					]
-				);
-			}
+		let notified: Notification[] | undefined;
+		const scholar = await this.getScholar(approver);
+		if (scholar) {
+			const emailResult = await this.emailScholars(
+				[assignment.scholar],
+				approved ? 'AssignmentApproved' : 'AssignmentRemoved',
+				[
+					scholar.getName() ?? '',
+					scholar.getEmail() ?? '',
+					role.name,
+					assignment.venue,
+					assignment.submission
+				]
+			);
+			notified = emailResult.notified;
 		}
 
-		return this.errorOrEmpty('ApproveAssignment', assignmentError);
+		return { data: undefined, notified };
 	}
 
 	async createAssignment(
@@ -1491,16 +1503,17 @@ export default class SupabaseCRUD extends CRUD {
 
 	/** Use the resend edge function to use the Resend API to send a message to the current user. */
 	async emailScholars(scholars: ScholarID[], template: EmailType, args: string[]): Promise<Result> {
-		// Get the email addresses of the specified scholars.
+		// Get the email addresses and names of the specified scholars. Names are
+		// used to produce per-recipient notification banners.
 		let { data: scholarData, error: scholarsError } = await this.client
 			.from('scholars')
-			.select('id, email')
+			.select('id, email, name')
 			.in('id', scholars);
 		if (scholarData === null) return this.error('EmailScholar', scholarsError);
 
 		// Ignore scholars without an email address.
 		const scholarsWithEmail = scholarData.filter(
-			(scholar): scholar is { id: string; email: string } => scholar.email !== null
+			(scholar): scholar is { id: string; email: string; name: string } => scholar.email !== null
 		);
 
 		return this.sendEmail(scholarsWithEmail, template, args);
@@ -1508,10 +1521,10 @@ export default class SupabaseCRUD extends CRUD {
 
 	/** Email some people who aren't scholars */
 	async sendEmail(
-		emails: string[] | { id: ScholarID; email: string }[],
+		emails: string[] | { id: ScholarID; email: string; name?: string }[],
 		template: EmailType,
 		args: string[]
-	) {
+	): Promise<Result> {
 		// Make sure all the scholar emails have the shape of an email address.
 		const missingEmails = emails.filter(
 			(email) => !/^.+@.+$/.test(typeof email === 'string' ? email : email.email)
@@ -1541,7 +1554,21 @@ export default class SupabaseCRUD extends CRUD {
 		// We rely on an database trigger to call the edge function to send the email after the row is inserted into the emails table.
 		// This is slower and less direct, but ensures that the email sending functionality only lives in one place.
 
-		return { data: undefined };
+		const notificationTemplate = this.locale.notification.emailed;
+		return {
+			data: undefined,
+			notified: emails.map((email) => {
+				const recipient =
+					typeof email === 'string'
+						? email
+						: ((email.name?.trim() ? email.name : email.email) ?? email.email);
+				return {
+					message: notificationTemplate
+						.replace('{recipient}', recipient)
+						.replace('{subject}', subject)
+				};
+			})
+		};
 	}
 
 	async declareConflict(

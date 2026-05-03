@@ -39,7 +39,20 @@ export function setDB(db: () => SupabaseCRUD) {
 }
 
 export type DBError = { message: string; details?: PostgrestError | AuthError };
-export type Result<Type = undefined> = { data?: Type; error?: DBError };
+
+/** A descriptor of a notification side effect. Carries a pre-localized
+ * message so the feedback layer can render it without needing locale
+ * access. The CRUD layer (which has locale via this.locale) is responsible
+ * for formatting. */
+export type Notification = { message: string };
+
+export type Result<Type = undefined> = {
+	data?: Type;
+	error?: DBError;
+	/** Optional notifications produced by the action — emails queued, etc.
+	 * The feedback layer renders one banner per entry. */
+	notified?: Notification[];
+};
 
 export type Charge = { scholar: string; payment: number | undefined };
 

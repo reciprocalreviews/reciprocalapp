@@ -30,6 +30,9 @@
 			"feedback": "Feedback"
 		}
 	},
+	"notification": {
+		"emailed": "{recipient} was emailed \"{subject}\""
+	},
 	"widget": {
 		"card": {
 			"expand": "Expand this card",

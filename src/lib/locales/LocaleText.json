@@ -638,6 +638,18 @@
         "lang": {
           "type": "string"
         },
+        "notification": {
+          "additionalProperties": false,
+          "properties": {
+            "emailed": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "emailed"
+          ],
+          "type": "object"
+        },
         "page": {
           "additionalProperties": false,
           "properties": {
@@ -4337,6 +4349,7 @@
         "shorthand",
         "header",
         "footer",
+        "notification",
         "widget",
         "page",
         "view",

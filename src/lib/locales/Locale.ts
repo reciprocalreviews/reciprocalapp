@@ -80,6 +80,9 @@ export type LocaleText = {
 			feedback: string;
 		};
 	};
+	notification: {
+		emailed: string;
+	};
 	widget: {
 		card: {
 			expand: string;

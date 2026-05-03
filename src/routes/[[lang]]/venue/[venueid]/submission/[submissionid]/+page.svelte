@@ -115,14 +115,7 @@
 	let rolesScholarCanApprove = $derived(
 		submission !== null && roles !== null
 			? roles.filter((r) =>
-					canApproveAssignment(
-						submission.id,
-						r,
-						roles,
-						scholar?.id ?? null,
-						isAdmin,
-						assignments
-					)
+					canApproveAssignment(submission.id, r, roles, scholar?.id ?? null, isAdmin, assignments)
 				)
 			: []
 	);
@@ -377,21 +370,19 @@
 				     directly admin-assigned (bid=false), or a bid that's been approved
 				     (bid=true, approved=true). Approving a bid only flips `approved`;
 				     `bid` stays true, so we can't filter on `!bid` alone. -->
-				{@const assigned = assignments.filter(
-					(a) => role.id === a.role && !(a.bid && !a.approved)
-				)}
+				{@const assigned = assignments.filter((a) => role.id === a.role && !(a.bid && !a.approved))}
 				<!-- The bidding assignments are those that match this role and aren't approved. We sort them by the balances of the corresponding scholar. -->
 				{@const bidded = assignments
 					.filter((a) => role.id === a.role && a.bid && !a.approved)
 					.toSorted((a, b) => getBalance(a.scholar) - getBalance(b.scholar))}
 				{@const isApprover = canApproveAssignment(
-						submission.id,
-						role,
-						roles,
-						scholar?.id ?? null,
-						isAdmin,
-						assignments
-					)}
+					submission.id,
+					role,
+					roles,
+					scholar?.id ?? null,
+					isAdmin,
+					assignments
+				)}
 				{#each assigned as assignment}
 					{@const volunteer = getVolunteer(role.id, assignment.scholar)}
 					<tr>
