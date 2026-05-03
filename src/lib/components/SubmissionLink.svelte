@@ -3,9 +3,11 @@
 	import { SubmissionLabel } from './Labels';
 	import Link from './Link.svelte';
 
-	export let submission: SubmissionRow;
+	export let submission: SubmissionRow | null;
 </script>
 
-<Link to="/venue/{submission.venue}/submission/{submission.id}" icon={SubmissionLabel}
-	>{submission.title}</Link
->
+{#if submission}
+	<Link to="/venue/{submission.venue}/submission/{submission.id}" icon={SubmissionLabel}
+		>{submission.title}</Link
+	>
+{/if}

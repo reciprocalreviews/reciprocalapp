@@ -115,6 +115,15 @@ select
 						auth.uid ()
 				)
 		)
+		or exists (
+			select
+				assignments.id
+			from
+				public.assignments
+			where
+				assignments.submission=submissions.id
+				and public.isapprover (assignments.role)
+		)
 	);
 
 -- 6. Bulk import RPC. Atomically inserts a batch of imported submissions

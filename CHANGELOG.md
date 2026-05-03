@@ -12,10 +12,12 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - Updated internal tooling for stability.
 - We encourage and account for non-paying authors to be listed (#98).
+- Expanded submission visibility in RLS rule to role approvers.
 
 ### Fixed
 
 - Don't show bid buttons if a scholar already has the role (#99).
+- Hardened `SubmissionLink` to missing submissions to avoid page crashes.
 
 ## 0.3.12 - 2026-04-26
 
