@@ -52,6 +52,6 @@
 	"dependencies": {
 		"@supabase/ssr": "^0",
 		"@supabase/supabase-js": "^2",
-		"marked": "^17"
+		"marked": "^18"
 	}
 }
