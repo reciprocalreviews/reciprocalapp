@@ -149,6 +149,78 @@ values
 	),
 	(
 		'00000000-0000-0000-0000-000000000000',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		'authenticated',
+		'authenticated',
+		'r4@uni.edu',
+		'$2a$10$Z1.OMhB4ppiHyIshPx7sz.3rfv1kywhjFWpHWso3DYlUB1D1TJjj.',
+		'2025-10-19 22:00:38.377967+00',
+		null,
+		'',
+		null,
+		'',
+		'2025-10-19 22:08:42.414842+00',
+		'',
+		'',
+		null,
+		'2025-10-19 22:08:47.45125+00',
+		'{"provider": "email", "providers": ["email"]}',
+		'{"sub": "7ff8621a-cbe0-4789-bbee-f008d38c4aca", "email": "r4@uni.edu", "email_verified": true, "phone_verified": false}',
+		null,
+		'2025-10-19 22:00:38.374+00',
+		'2025-10-19 22:08:47.453525+00',
+		null,
+		null,
+		'',
+		'',
+		null,
+		'',
+		'0',
+		null,
+		'',
+		null,
+		'false',
+		null,
+		'false'
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		'authenticated',
+		'authenticated',
+		'r5@uni.edu',
+		'$2a$10$Z1.OMhB4ppiHyIshPx7sz.3rfv1kywhjFWpHWso3DYlUB1D1TJjj.',
+		'2025-10-19 22:00:38.377967+00',
+		null,
+		'',
+		null,
+		'',
+		'2025-10-19 22:08:42.414842+00',
+		'',
+		'',
+		null,
+		'2025-10-19 22:08:47.45125+00',
+		'{"provider": "email", "providers": ["email"]}',
+		'{"sub": "7ff8621a-cbe0-4789-bbee-f008d38c4acb", "email": "r5@uni.edu", "email_verified": true, "phone_verified": false}',
+		null,
+		'2025-10-19 22:00:38.374+00',
+		'2025-10-19 22:08:47.453525+00',
+		null,
+		null,
+		'',
+		'',
+		null,
+		'',
+		'0',
+		null,
+		'',
+		null,
+		'false',
+		null,
+		'false'
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
 		'b8a805bf-0aae-4443-9185-de019a8715cb',
 		'authenticated',
 		'authenticated',
@@ -343,6 +415,26 @@ values
 		'2025-10-19 22:01:42.358883+00',
 		'2025-10-19 22:01:42.358883+00',
 		'e55976f2-2f15-4886-c0e5-2f1629ff8d37'
+	),
+	(
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		'{"sub": "7ff8621a-cbe0-4789-bbee-f008d38c4aca", "email": "r4@uni.edu", "email_verified": false, "phone_verified": false}',
+		'email',
+		'2025-10-19 22:00:38.375679+00',
+		'2025-10-19 22:00:38.375695+00',
+		'2025-10-19 22:00:38.375695+00',
+		'24f92ade-b454-4757-945e-cc7e3805390e'
+	),
+	(
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		'{"sub": "7ff8621a-cbe0-4789-bbee-f008d38c4acb", "email": "r5@uni.edu", "email_verified": false, "phone_verified": false}',
+		'email',
+		'2025-10-19 22:00:38.375679+00',
+		'2025-10-19 22:00:38.375695+00',
+		'2025-10-19 22:00:38.375695+00',
+		'24f92ade-b454-4757-945e-cc7e3805390f'
 	);
 
 insert into
@@ -426,6 +518,26 @@ set
 	"steward"='false'
 where
 	id='b8a805bf-0aae-4443-9185-de019a8715ec';
+
+update public.scholars
+set
+	orcid='0000-0001-2345-6796',
+	"name"='Manny Script',
+	"email"='r4@uni.edu',
+	"available"='true',
+	"steward"='false'
+where
+	id='7ff8621a-cbe0-4789-bbee-f008d38c4aca';
+
+update public.scholars
+set
+	orcid='0000-0001-2345-6797',
+	"name"='Anne Notation',
+	"email"='r5@uni.edu',
+	"available"='true',
+	"steward"='false'
+where
+	id='7ff8621a-cbe0-4789-bbee-f008d38c4acb';
 
 insert into
 	public.venues (
@@ -879,6 +991,24 @@ values
 		'Peer review',
 		'true',
 		'accepted'
+	),
+	(
+		'f9bfb99c-ad37-11f0-83e8-875a9c9887b8',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2025-10-19 22:07:17.336976+00',
+		'Manuscript drafting, peer review',
+		'true',
+		'accepted'
+	),
+	(
+		'f9bfb99c-ad37-11f0-83e8-875a9c9887b9',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2025-10-19 22:07:17.336976+00',
+		'Annotation, peer review, editorial process',
+		'true',
+		'accepted'
 	);
 
 insert into
@@ -1072,5 +1202,27 @@ values
 		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
 		false,
 		true,
+		false
+	),
+	-- r4 (Manny Script) and r5 (Anne Notation) bid as Reviewer on TOK-2025-001,
+	-- giving ae@uni.edu (Associate Editor / approver of Reviewer) bids to act on.
+	(
+		'fefed1e4-ad3a-11f0-9807-1f8d6e4b5c24',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		true,
+		false,
+		false
+	),
+	(
+		'fefed1e4-ad3a-11f0-9807-1f8d6e4b5c25',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		true,
+		false,
 		false
 	);
