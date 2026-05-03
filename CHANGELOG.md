@@ -23,6 +23,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Hardened `SubmissionLink` to missing submissions to avoid page crashes.
 - Consistent visibility of bids on submissions list and submission page.
 - Improved logic for "bidding closed" note on submissions page.
+- Bid counts now exclude approved bids.
 
 ## 0.3.12 - 2026-04-26
 

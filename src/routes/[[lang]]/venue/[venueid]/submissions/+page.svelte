@@ -277,7 +277,8 @@
 											)}
 											{@const approvedAssignments =
 												roleAssignments?.filter((a) => a.approved) ?? []}
-											{@const bids = roleAssignments?.filter((a) => a.bid) ?? []}
+											{@const bids =
+												roleAssignments?.filter((a) => a.bid && !a.approved) ?? []}
 											{@const scholarsBid = bids?.find((a) => a.scholar === uid)}
 											{@const scholarAlreadyAssigned = approvedAssignments.some(
 												(a) => a.scholar === uid
