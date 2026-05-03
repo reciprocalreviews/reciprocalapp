@@ -198,6 +198,9 @@
             "ApproveProposalNotFound": {
               "type": "string"
             },
+            "BulkImportSubmissions": {
+              "type": "string"
+            },
             "CompensationAssignmentCheck": {
               "type": "string"
             },
@@ -432,6 +435,9 @@
             "UpdateSubmissionExpertise": {
               "type": "string"
             },
+            "UpdateSubmissionNote": {
+              "type": "string"
+            },
             "UpdateSubmissionStatus": {
               "type": "string"
             },
@@ -534,9 +540,11 @@
             "NewSubmission",
             "UnknownVenue",
             "MissingSubmissionCharge",
+            "BulkImportSubmissions",
             "UpdateSubmissionExpertise",
             "UpdateSubmissionTitle",
             "UpdateSubmissionStatus",
+            "UpdateSubmissionNote",
             "ApproveAssignment",
             "CreateAssignment",
             "CompensationSubmissionNotFound",
@@ -705,6 +713,253 @@
                 "header",
                 "feedback",
                 "paragraph"
+              ],
+              "type": "object"
+            },
+            "bulkImport": {
+              "additionalProperties": false,
+              "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addRow": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "applyDefault": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "parseCSV": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "removeRow": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "submit": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "addRow",
+                    "removeRow",
+                    "applyDefault",
+                    "parseCSV",
+                    "submit"
+                  ],
+                  "type": "object"
+                },
+                "column": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "expertise": {
+                      "type": "string"
+                    },
+                    "externalID": {
+                      "type": "string"
+                    },
+                    "note": {
+                      "type": "string"
+                    },
+                    "previousID": {
+                      "type": "string"
+                    },
+                    "submissionType": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "externalID",
+                    "expertise",
+                    "submissionType",
+                    "previousID",
+                    "note"
+                  ],
+                  "type": "object"
+                },
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "notAdmin": {
+                      "type": "string"
+                    },
+                    "notLoaded": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "notLoaded",
+                    "notAdmin"
+                  ],
+                  "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "csvPaste": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    },
+                    "csvUpload": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "label": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "label"
+                      ],
+                      "type": "object"
+                    },
+                    "expertise": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "externalID": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "importNote": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    },
+                    "note": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "previousID": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "title": {
+                      "$ref": "#/definitions/TextFieldText"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "externalID",
+                    "expertise",
+                    "previousID",
+                    "note",
+                    "csvUpload",
+                    "csvPaste",
+                    "importNote"
+                  ],
+                  "type": "object"
+                },
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "csv": {
+                      "type": "string"
+                    },
+                    "defaults": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "string"
+                    },
+                    "submit": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "csv",
+                    "defaults",
+                    "rows",
+                    "submit"
+                  ],
+                  "type": "object"
+                },
+                "note": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "csv": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "csv"
+                  ],
+                  "type": "object"
+                },
+                "options": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "defaultSubmissionType": {
+                      "$ref": "#/definitions/OptionsText"
+                    },
+                    "submissionType": {
+                      "$ref": "#/definitions/OptionsText"
+                    }
+                  },
+                  "required": [
+                    "defaultSubmissionType",
+                    "submissionType"
+                  ],
+                  "type": "object"
+                },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "intro": {
+                      "type": "string"
+                    },
+                    "mintSummary": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "intro",
+                    "mintSummary"
+                  ],
+                  "type": "object"
+                },
+                "row": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "invalid": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "duplicateExisting": {
+                          "type": "string"
+                        },
+                        "duplicateRow": {
+                          "type": "string"
+                        },
+                        "externalID": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "externalID",
+                        "duplicateExisting",
+                        "duplicateRow"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "invalid"
+                  ],
+                  "type": "object"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "header",
+                "paragraph",
+                "note",
+                "feedback",
+                "field",
+                "options",
+                "button",
+                "column",
+                "row"
               ],
               "type": "object"
             },
@@ -2131,6 +2386,9 @@
                     "noExpertise": {
                       "type": "string"
                     },
+                    "noNote": {
+                      "type": "string"
+                    },
                     "notLoaded": {
                       "type": "string"
                     },
@@ -2144,6 +2402,7 @@
                     "missingAuthors",
                     "noAuthors",
                     "noExpertise",
+                    "noNote",
                     "invalidRole",
                     "scholarNotFound",
                     "alreadyAssigned"
@@ -2174,10 +2433,14 @@
                         "placeholder"
                       ],
                       "type": "object"
+                    },
+                    "note": {
+                      "$ref": "#/definitions/TextFieldText"
                     }
                   },
                   "required": [
-                    "newAssignment"
+                    "newAssignment",
+                    "note"
                   ],
                   "type": "object"
                 },
@@ -2193,6 +2456,9 @@
                     "expertise": {
                       "type": "string"
                     },
+                    "note": {
+                      "type": "string"
+                    },
                     "venue": {
                       "type": "string"
                     }
@@ -2201,7 +2467,8 @@
                     "authors",
                     "venue",
                     "assignments",
-                    "expertise"
+                    "expertise",
+                    "note"
                   ],
                   "type": "object"
                 },
@@ -2447,6 +2714,9 @@
                       ],
                       "type": "object"
                     },
+                    "note": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    },
                     "previousID": {
                       "$ref": "#/definitions/NotedTextFieldText"
                     },
@@ -2483,6 +2753,7 @@
                     "expertise",
                     "manuscriptID",
                     "previousID",
+                    "note",
                     "filter"
                   ],
                   "type": "object"
@@ -2514,12 +2785,16 @@
                 "paragraph": {
                   "additionalProperties": false,
                   "properties": {
+                    "bulkImport": {
+                      "type": "string"
+                    },
                     "newSubmission": {
                       "type": "string"
                     }
                   },
                   "required": [
-                    "newSubmission"
+                    "newSubmission",
+                    "bulkImport"
                   ],
                   "type": "object"
                 },
@@ -2539,12 +2814,25 @@
                   ],
                   "type": "object"
                 },
+                "tip": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "bid": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "bid"
+                  ],
+                  "type": "object"
+                },
                 "title": {
                   "type": "string"
                 }
               },
               "required": [
                 "title",
+                "tip",
                 "cell",
                 "feedback",
                 "button",
@@ -3218,6 +3506,7 @@
             "volunteers",
             "venueTransactions",
             "newSubmission",
+            "bulkImport",
             "submissions",
             "submission",
             "venue",

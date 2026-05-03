@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.3.13",
+    "date": "2026-05-03",
+    "changes": {
+      "added": [
+        "Added ability for admins to bulk import submissions without payment, to support pre-launch configuration (#97)."
+      ],
+      "fixed": [],
+      "changed": [
+        "Updated internal tooling for stability."
+      ],
+      "removed": []
+    }
+  },
+  {
     "version": "0.3.12",
     "date": "2026-04-26",
     "changes": {

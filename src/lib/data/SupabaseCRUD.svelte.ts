@@ -25,7 +25,13 @@ import type {
 } from '../../data/types';
 import { renderEmail, type EmailType } from '../../email/templates';
 import type Locale from '../locales/Locale';
-import CRUD, { NullUUID, type Charge, type Result } from './CRUD';
+import CRUD, {
+	NullUUID,
+	type BulkImportResult,
+	type Charge,
+	type ImportedSubmission,
+	type Result
+} from './CRUD';
 import Scholar from './Scholar.svelte';
 
 // A constant page size for paginated queries.
@@ -76,6 +82,17 @@ export default class SupabaseCRUD extends CRUD {
 			.update({ title })
 			.eq('id', submissionID);
 		return this.errorOrEmpty('UpdateSubmissionTitle', error);
+	}
+
+	async updateSubmissionNote(
+		submissionID: SubmissionID,
+		note: string | null
+	): Promise<Result> {
+		const { error } = await this.client
+			.from('submissions')
+			.update({ note })
+			.eq('id', submissionID);
+		return this.errorOrEmpty('UpdateSubmissionNote', error);
 	}
 
 	/** Toggle the submission stats */
@@ -174,7 +191,8 @@ export default class SupabaseCRUD extends CRUD {
 		externalID: string,
 		previousID: string | null,
 		submission_type: SubmissionTypeID,
-		charges: Charge[]
+		charges: Charge[],
+		note: string | null
 	): Promise<Result<SubmissionID>> {
 		// Verify that the charges are valid.
 		const chargeError = await this.verifyCharges(charges);
@@ -260,7 +278,8 @@ export default class SupabaseCRUD extends CRUD {
 				authors,
 				payments: charges.map((charge) => charge.payment ?? 0),
 				// Provide the list of proposed transactions
-				transactions: transactions
+				transactions: transactions,
+				note
 			})
 			.select()
 			.single();
@@ -271,6 +290,45 @@ export default class SupabaseCRUD extends CRUD {
 
 		// Return the transaction IDs.
 		return { data: submission.id };
+	}
+
+	async bulkImportSubmissions(
+		venue: VenueID,
+		submissions: ImportedSubmission[],
+		importNote: string | null
+	): Promise<Result<BulkImportResult>> {
+		const payload = submissions.map((s) => ({
+			title: s.title,
+			externalid: s.externalID,
+			previousid: s.previousID,
+			expertise: s.expertise,
+			submission_type: s.submission_type,
+			note: s.note
+		}));
+
+		const { data, error } = await this.client.rpc('bulk_import_submissions', {
+			_venueid: venue,
+			_submissions: payload,
+			_import_note: importNote ?? ''
+		});
+
+		if (error) {
+			return { error: { message: this.locale.error.BulkImportSubmissions, details: error } };
+		}
+
+		const result = data as {
+			submission_ids: SubmissionID[];
+			transaction_id: TransactionID | null;
+			mint_amount: number;
+		};
+
+		return {
+			data: {
+				submissionIDs: result.submission_ids ?? [],
+				transactionID: result.transaction_id,
+				mintAmount: result.mint_amount
+			}
+		};
 	}
 
 	async updateSubmissionType(
@@ -1185,8 +1243,39 @@ export default class SupabaseCRUD extends CRUD {
 
 		const from = transaction.from_scholar ?? transaction.from_venue;
 		const to = transaction.to_scholar ?? transaction.to_venue;
-		if (from === null) return this.error('TransactionMissingFrom');
 		if (to === null) return this.error('TransactionMissingTo');
+
+		// Pure mint: no source, all tokens are NullUUID placeholders, destination is a
+		// venue. Mint tokens directly to the destination and mark the transaction
+		// approved. Used by bulk submission imports to fund reviewer compensation.
+		if (from === null) {
+			if (transaction.to_venue === null) return this.error('TransactionMissingFrom');
+			const nullCount = transaction.tokens.filter((t) => t === NullUUID).length;
+			if (nullCount === 0 || nullCount !== transaction.tokens.length)
+				return this.error('TransactionMissingFrom');
+
+			const rows = Array(nullCount)
+				.fill(0)
+				.map(() => ({
+					currency: transaction.currency,
+					venue: transaction.to_venue,
+					scholar: null
+				}));
+			const { data: newTokens, error: tokenError } = await this.client
+				.from('tokens')
+				.insert(rows)
+				.select();
+			if (tokenError || newTokens === null) return this.error('MintTokens', tokenError);
+
+			const tokenIDs = newTokens.map((t) => t.id);
+			const { error: updateError } = await this.client
+				.from('transactions')
+				.update({ status: 'approved', tokens: tokenIDs })
+				.eq('id', transaction.id);
+			if (updateError) return this.error('TransactionApprovalUpdate', updateError);
+
+			return { error: undefined, data: undefined };
+		}
 
 		// Mint any tokens that still need to be created, but only when the sender is a venue.
 		// When a scholar pays, their tokens already exist; NullUUIDs are just placeholders for count.

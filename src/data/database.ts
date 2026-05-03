@@ -471,6 +471,8 @@ export type Database = {
           expertise: string | null
           externalid: string
           id: string
+          imported: boolean
+          note: string | null
           payments: number[]
           previousid: string | null
           status: Database["public"]["Enums"]["submission_status"]
@@ -484,6 +486,8 @@ export type Database = {
           expertise?: string | null
           externalid: string
           id?: string
+          imported?: boolean
+          note?: string | null
           payments: number[]
           previousid?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
@@ -497,6 +501,8 @@ export type Database = {
           expertise?: string | null
           externalid?: string
           id?: string
+          imported?: boolean
+          note?: string | null
           payments?: number[]
           previousid?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
@@ -786,6 +792,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bulk_import_submissions: {
+        Args: { _import_note: string; _submissions: Json; _venueid: string }
+        Returns: Json
+      }
       isadmin: { Args: { _venueid: string }; Returns: boolean }
       isapprover: { Args: { _roleid: string }; Returns: boolean }
       isassigned: { Args: { _submissionid: string }; Returns: boolean }

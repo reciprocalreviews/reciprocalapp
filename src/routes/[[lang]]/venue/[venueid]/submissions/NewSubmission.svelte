@@ -37,6 +37,7 @@
 	let externalID = $state('');
 	let previousID = $state('');
 	let submissionType = $state<SubmissionTypeID>(submissionTypes[0].id);
+	let note = $state('');
 	let charges = $state<Charge[]>([{ scholar: '', payment: 0 }]);
 
 	type ScholarState =
@@ -187,6 +188,11 @@
 			bind:value={submissionType}
 			options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
 		></Options>
+		<TextField
+			strings={(l) => l.page.submissions.field.note}
+			size={60}
+			bind:text={note}
+		/>
 
 		<h3><Text path={(l) => l.page.newSubmission.header.payment} /></h3>
 		<Note path={(l) => l.page.newSubmission.note.payment} />
@@ -312,7 +318,8 @@
 							externalID,
 							previousID,
 							submissionType,
-							charges
+							charges,
+							note.trim() === '' ? null : note.trim()
 						)
 					);
 

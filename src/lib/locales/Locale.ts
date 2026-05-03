@@ -250,6 +250,63 @@ export type LocaleText = {
 				insufficentFunds: string;
 			};
 		};
+		bulkImport: {
+			title: string;
+			header: {
+				csv: string;
+				defaults: string;
+				rows: string;
+				submit: string;
+			};
+			paragraph: {
+				intro: string;
+				mintSummary: string;
+			};
+			note: {
+				csv: string;
+			};
+			feedback: {
+				notLoaded: string;
+				notAdmin: string;
+			};
+			field: {
+				title: TextFieldText;
+				externalID: TextFieldText;
+				expertise: TextFieldText;
+				previousID: TextFieldText;
+				note: TextFieldText;
+				csvUpload: { label: string };
+				csvPaste: NotedTextFieldText;
+				importNote: NotedTextFieldText;
+			};
+			options: {
+				defaultSubmissionType: OptionsText;
+				submissionType: OptionsText;
+			};
+			button: {
+				addRow: ButtonText;
+				removeRow: ButtonText;
+				applyDefault: ButtonText;
+				parseCSV: ButtonText;
+				submit: ButtonText;
+			};
+			column: {
+				title: string;
+				externalID: string;
+				expertise: string;
+				submissionType: string;
+				previousID: string;
+				note: string;
+			};
+			row: {
+				invalid: {
+					title: string;
+					externalID: string;
+					duplicateExisting: string;
+					duplicateRow: string;
+				};
+			};
+		};
 		submissions: {
 			title: string;
 			tip: {
@@ -289,6 +346,7 @@ export type LocaleText = {
 				expertise: NotedTextFieldText;
 				manuscriptID: NotedTextFieldText & { invalid: string };
 				previousID: NotedTextFieldText;
+				note: NotedTextFieldText;
 				filter: TextFieldText;
 			};
 			status: {
@@ -297,6 +355,7 @@ export type LocaleText = {
 			};
 			paragraph: {
 				newSubmission: string;
+				bulkImport: string;
 			};
 		};
 		submission: {
@@ -317,6 +376,7 @@ export type LocaleText = {
 				venue: string;
 				assignments: string;
 				expertise: string;
+				note: string;
 			};
 			feedback: {
 				notLoaded: string;
@@ -324,6 +384,7 @@ export type LocaleText = {
 				missingAuthors: string;
 				noAuthors: string;
 				noExpertise: string;
+				noNote: string;
 				invalidRole: string;
 				scholarNotFound: string;
 				alreadyAssigned: string;
@@ -337,6 +398,7 @@ export type LocaleText = {
 			};
 			field: {
 				newAssignment: TextFieldText & { invalid: string };
+				note: TextFieldText;
 			};
 			checkbox: {
 				reviewComplete: string;
@@ -885,9 +947,11 @@ export type LocaleText = {
 		NewSubmission: string;
 		UnknownVenue: string;
 		MissingSubmissionCharge: string;
+		BulkImportSubmissions: string;
 		UpdateSubmissionExpertise: string;
 		UpdateSubmissionTitle: string;
 		UpdateSubmissionStatus: string;
+		UpdateSubmissionNote: string;
 		ApproveAssignment: string;
 		CreateAssignment: string;
 		CompensationSubmissionNotFound: string;

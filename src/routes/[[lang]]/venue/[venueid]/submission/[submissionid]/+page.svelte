@@ -269,6 +269,20 @@
 			<Feedback text={(l) => l.page.submission.feedback.noExpertise} />
 		{/if}
 
+		<Subheader icon={EditLabel} text={(l) => l.page.submission.header.note}></Subheader>
+		{#if isAuthor || isAdmin}
+			<EditableText
+				strings={(l) => l.page.submission.field.note}
+				text={submission.note ?? ''}
+				edit={(text) =>
+					db().updateSubmissionNote(submission.id, text.trim().length === 0 ? null : text)}
+			/>
+		{:else if submission.note}
+			{submission.note}
+		{:else}
+			<Feedback text={(l) => l.page.submission.feedback.noNote} />
+		{/if}
+
 		<Subheader icon={EditLabel} text={(l) => l.page.submission.header.assignments}></Subheader>
 
 		<!-- If the authenticated scholar is an editor or a role approver of one of the roles, then permit them to create new assignments -->

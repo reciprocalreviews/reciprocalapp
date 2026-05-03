@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.3.13 - 2026-05-03
 
+### Added
+
+- Added ability for admins to bulk import submissions without payment, to support pre-launch configuration (#97).
+
 ### Changed
 
 - Updated internal tooling for stability.

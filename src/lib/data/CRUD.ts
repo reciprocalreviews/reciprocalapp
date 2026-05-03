@@ -43,6 +43,21 @@ export type Result<Type = undefined> = { data?: Type; error?: DBError };
 
 export type Charge = { scholar: string; payment: number | undefined };
 
+export type ImportedSubmission = {
+	title: string;
+	externalID: string;
+	previousID: string | null;
+	expertise: string | null;
+	submission_type: SubmissionTypeID;
+	note: string | null;
+};
+
+export type BulkImportResult = {
+	submissionIDs: SubmissionID[];
+	transactionID: TransactionID | null;
+	mintAmount: number;
+};
+
 /** This abstract class defines an interface for database access. It's useful for defining mocks as well as enables us to change databases if necessary. */
 export default abstract class CRUD {
 	/** Insert a new submission in the database and return a list of transaction ids that paid for it. */
@@ -54,8 +69,18 @@ export default abstract class CRUD {
 		externalID: string,
 		previousID: string | null,
 		submission_type: SubmissionTypeID,
-		charges: Charge[]
+		charges: Charge[],
+		note: string | null
 	): Promise<Result<SubmissionID>>;
+
+	/** Atomically insert a batch of free imported submissions and a single proposed
+	 * mint transaction sized at venue.submission_cost * submissions.length. The
+	 * minter approves the transaction separately to fund reviewer compensation. */
+	abstract bulkImportSubmissions(
+		venue: VenueID,
+		submissions: ImportedSubmission[],
+		importNote: string | null
+	): Promise<Result<BulkImportResult>>;
 
 	abstract updateSubmissionType(
 		submissionID: SubmissionID,
@@ -69,6 +94,8 @@ export default abstract class CRUD {
 	): Promise<Result>;
 
 	abstract updateSubmissionTitle(submissionID: SubmissionID, title: string | null): Promise<Result>;
+
+	abstract updateSubmissionNote(submissionID: SubmissionID, note: string | null): Promise<Result>;
 
 	/** Toggle the submission stats */
 	abstract updateSubmissionStatus(

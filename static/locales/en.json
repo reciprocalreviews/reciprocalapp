@@ -367,6 +367,107 @@
 				"insufficentFunds": "These scholars do not have enough tokens: {short}."
 			}
 		},
+		"bulkImport": {
+			"title": "Import submissions",
+			"header": {
+				"csv": "Populate from CSV",
+				"defaults": "Defaults",
+				"rows": "Submissions",
+				"submit": "Submit"
+			},
+			"paragraph": {
+				"intro": "Import a batch of free submissions that pre-date this venue's launch on Reciprocal Reviews. These submissions will have no authors or payments, but reviewers can bid on them to earn tokens. Submitting this form will also propose a mint transaction sized to fund reviewer compensation, which a minter must approve before reviewers will receive tokens.",
+				"mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens (submission cost {cost} × {count} submissions)."
+			},
+			"note": {
+				"csv": "Upload or paste a CSV with header row. Columns: title, externalid, expertise, submission_type, previousid, note. Unknown or empty submission_type falls back to the default."
+			},
+			"feedback": {
+				"notLoaded": "Unable to load the venue or submission types.",
+				"notAdmin": "Only venue admins can import submissions."
+			},
+			"field": {
+				"title": {
+					"label": "title",
+					"placeholder": "title"
+				},
+				"externalID": {
+					"label": "external ID",
+					"placeholder": "ID"
+				},
+				"expertise": {
+					"label": "expertise",
+					"placeholder": "expertise"
+				},
+				"previousID": {
+					"label": "previous ID",
+					"placeholder": "ID"
+				},
+				"note": {
+					"label": "note",
+					"placeholder": "note"
+				},
+				"csvUpload": {
+					"label": "Upload CSV file"
+				},
+				"csvPaste": {
+					"label": "paste CSV",
+					"placeholder": "title,externalid,...",
+					"note": "Paste CSV content with a header row, then click Parse."
+				},
+				"importNote": {
+					"label": "import note (optional)",
+					"placeholder": "reason for free submission",
+					"note": "Anything to note about the reason for these free submissions?"
+				}
+			},
+			"options": {
+				"defaultSubmissionType": {
+					"label": "default submission type"
+				},
+				"submissionType": {
+					"label": "type"
+				}
+			},
+			"button": {
+				"addRow": {
+					"tip": "Add another row",
+					"label": "Add row"
+				},
+				"removeRow": {
+					"tip": "Remove this row",
+					"label": "x"
+				},
+				"applyDefault": {
+					"tip": "Set every row to the default submission type",
+					"label": "Apply default to all"
+				},
+				"parseCSV": {
+					"tip": "Parse the pasted CSV into rows",
+					"label": "Add"
+				},
+				"submit": {
+					"tip": "Create the imported submissions and propose the mint transaction",
+					"label": "Import submissions"
+				}
+			},
+			"column": {
+				"title": "Title",
+				"externalID": "External ID",
+				"expertise": "Expertise",
+				"submissionType": "Type",
+				"previousID": "Previous ID",
+				"note": "Note"
+			},
+			"row": {
+				"invalid": {
+					"title": "Title is required.",
+					"externalID": "External ID is required.",
+					"duplicateExisting": "A submission with this external ID already exists in this venue.",
+					"duplicateRow": "Duplicate external ID across rows."
+				}
+			}
+		},
 		"submissions": {
 			"title": "Submissions",
 			"tip": {
@@ -438,6 +539,11 @@
 					"placeholder": "ID",
 					"note": "The ID of the previous submission, if this is a revision and you want to track it."
 				},
+				"note": {
+					"label": "note (optional)",
+					"placeholder": "anything reviewers and editors should know",
+					"note": "Anything to note about this submission that should be visible to editors and reviewers?"
+				},
 				"filter": {
 					"label": "filter submissions $filter",
 					"placeholder": "title, id..."
@@ -461,7 +567,8 @@
 				"biddingClosed": "bidding closed"
 			},
 			"paragraph": {
-				"newSubmission": "Have a submission to pay for? Pay for a [new submission](submissions/new)."
+				"newSubmission": "Have a submission to pay for? Pay for a [new submission](submissions/new).",
+				"bulkImport": "Importing pre-launch submissions? [Import submissions in bulk](submissions/import)."
 			}
 		},
 		"submission": {
@@ -470,7 +577,8 @@
 				"authors": "Authors",
 				"venue": "Venue",
 				"assignments": "Assignments",
-				"expertise": "Expertise"
+				"expertise": "Expertise",
+				"note": "Note"
 			},
 			"feedback": {
 				"notLoaded": "This submission does not exist or is not visible to you.",
@@ -478,6 +586,7 @@
 				"missingAuthors": "Unable to find authors.",
 				"noAuthors": "No visible authors found.",
 				"noExpertise": "No expertise provided.",
+				"noNote": "No note provided.",
 				"invalidRole": "You must select a valid role.",
 				"scholarNotFound": "No scholar with that email or ORCID exists.",
 				"alreadyAssigned": "This scholar is already assigned to this role."
@@ -509,6 +618,10 @@
 					"label": "scholar",
 					"placeholder": "email or ORCID",
 					"invalid": "Must be an email or ORCID"
+				},
+				"note": {
+					"label": "Note",
+					"placeholder": "Anything for editors and reviewers to know"
 				}
 			},
 			"checkbox": {
@@ -1265,9 +1378,11 @@
 		"NewSubmission": "Unable to create a new submission",
 		"UnknownVenue": "Unable to find venue",
 		"MissingSubmissionCharge": "Didn't receive enough charge amounts for the authors given",
+		"BulkImportSubmissions": "Unable to import submissions",
 		"UpdateSubmissionExpertise": "Unable to update the submission expertise",
 		"UpdateSubmissionTitle": "Unable to update the submission's title",
 		"UpdateSubmissionStatus": "Unable to update the submission's status",
+		"UpdateSubmissionNote": "Unable to update the submission's note",
 		"ApproveAssignment": "Unable to approve the assignment",
 		"CreateAssignment": "Unable to create this assignment",
 		"CompensationSubmissionNotFound": "Unable to find the submission for compensation request",

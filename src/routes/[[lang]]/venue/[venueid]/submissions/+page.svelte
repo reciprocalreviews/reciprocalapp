@@ -145,6 +145,10 @@
 		<!-- Provide a clear link to the new submission page. -->
 		<Paragraph text={(l) => l.page.submissions.paragraph.newSubmission} />
 
+		{#if isAdmin}
+			<Paragraph text={(l) => l.page.submissions.paragraph.bulkImport} />
+		{/if}
+
 		{#if uid}
 			{#each visibleRoles.filter((r) => r.biddable) as role}
 				<Tip>
