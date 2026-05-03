@@ -11,13 +11,15 @@
         "Don't show bid buttons if a scholar already has the role (#99).",
         "Hardened `SubmissionLink` to missing submissions to avoid page crashes.",
         "Consistent visibility of bids on submissions list and submission page.",
-        "Improved logic for \"bidding closed\" note on submissions page."
+        "Improved logic for \"bidding closed\" note on submissions page.",
+        "Bid counts now exclude approved bids."
       ],
       "changed": [
         "Updated internal tooling for stability.",
         "We encourage and account for non-paying authors to be listed (#98).",
         "Expanded submission visibility in RLS rule to role approvers.",
-        "Improved rendering of emojis in scholar links."
+        "Improved rendering of emojis in scholar links.",
+        "Improved layout of the reviewer table on the submissions page."
       ],
       "removed": []
     }

@@ -635,8 +635,9 @@
 				"reviewing": "reviewing",
 				"unknownTransaction": "unknown transaction",
 				"completed": "Completed",
-				"incomplete": "Incomplete",
-				"unapproved": "Unapproved"
+				"assigned": "Assigned",
+				"unassigned": "Unassigned",
+				"bidder": "Bidder"
 			},
 			"subtitle": "Submission",
 			"options": {

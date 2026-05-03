@@ -38,8 +38,34 @@
 		/** All transctions for all submissions in this venue */
 		transactions,
 		/** The conflicts for the current scholar */
-		conflicts
+		conflicts,
+		/** Names of scholars referenced by assignments, for stable sorting */
+		assignmentScholars,
+		/** Token balances per scholar in the venue's currency, for stable sorting */
+		balances
 	} = $derived(data);
+
+	/** Family name = last whitespace-separated token of the scholar's name.
+	 * Heuristic but stable; falls back to the whole name or empty string. */
+	function familyName(scholarID: string): string {
+		const name = assignmentScholars.find((s) => s.id === scholarID)?.name?.trim() ?? '';
+		const idx = name.lastIndexOf(' ');
+		return idx === -1 ? name : name.slice(idx + 1);
+	}
+
+	function balanceOf(scholarID: string): number {
+		return balances.find((b) => b.scholar === scholarID)?.count ?? 0;
+	}
+
+	/** Sort approved assignments by token balance (ascending), then by family
+	 * name (ascending). Returns a new array; doesn't mutate the input. */
+	function sortAssignees<T extends { scholar: string }>(items: T[]): T[] {
+		return [...items].sort((a, b) => {
+			const balanceDiff = balanceOf(a.scholar) - balanceOf(b.scholar);
+			if (balanceDiff !== 0) return balanceDiff;
+			return familyName(a.scholar).localeCompare(familyName(b.scholar));
+		});
+	}
 
 	/** Get the current database connection */
 	const db = getDB();
@@ -293,8 +319,8 @@
 											)}
 											<!-- If the current scholar is an approver of this submission, show the current assignemnts -->
 											{#if isApproverHere}
-												<!-- Approver? Show the people assigned. -->
-												{#each approvedAssignments as assignment}
+												<!-- Approver? Show the people assigned, sorted by token balance then family name for stable order. -->
+												{#each sortAssignees(approvedAssignments) as assignment}
 													{#if assignment.scholar === uid}{locale().page.submissions.cell
 															.you}{:else}<ScholarLink id={assignment.scholar} />{/if}
 												{:else}

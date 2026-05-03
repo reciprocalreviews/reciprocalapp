@@ -412,8 +412,9 @@ export type LocaleText = {
 				reviewing: string;
 				unknownTransaction: string;
 				completed: string;
-				incomplete: string;
-				unapproved: string;
+				assigned: string;
+				unassigned: string;
+				bidder: string;
 			};
 			options: {
 				submissionType: OptionsText;

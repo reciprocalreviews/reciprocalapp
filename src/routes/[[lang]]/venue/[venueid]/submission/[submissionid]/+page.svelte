@@ -394,9 +394,9 @@
 								{#if assignment.completed}
 									<Status label={(l) => l.page.submission.status.completed} />
 								{:else if assignment.approved}
-									<Status good={false} label={(l) => l.page.submission.status.incomplete} />
+									<Status label={(l) => l.page.submission.status.assigned} />
 								{:else}
-									<Status good={false} label={(l) => l.page.submission.status.unapproved} />
+									<Status good={false} label={(l) => l.page.submission.status.unassigned} />
 								{/if}
 							</div>
 						</td>
@@ -446,7 +446,12 @@
 						{@const volunteer = getVolunteer(role.id, assignment.scholar)}
 						<tr>
 							<td>{role.name}</td>
-							<td><ScholarLink id={assignment.scholar} /></td>
+							<td>
+								<div class="scholar-cell">
+									<ScholarLink id={assignment.scholar} />
+									<Status good={false} label={(l) => l.page.submission.status.bidder} />
+								</div>
+							</td>
 							<td
 								>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 							>

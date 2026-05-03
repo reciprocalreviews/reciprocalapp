@@ -16,6 +16,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Expanded submission visibility in RLS rule to role approvers.
 - Improved rendering of emojis in scholar links.
 - Improved layout of the reviewer table on the submissions page.
+- Improved volunteer status labeling in submission page.
 
 ### Fixed
 

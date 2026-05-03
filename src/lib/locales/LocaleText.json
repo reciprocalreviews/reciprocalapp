@@ -2535,19 +2535,22 @@
                 "status": {
                   "additionalProperties": false,
                   "properties": {
+                    "assigned": {
+                      "type": "string"
+                    },
+                    "bidder": {
+                      "type": "string"
+                    },
                     "completed": {
                       "type": "string"
                     },
                     "done": {
                       "type": "string"
                     },
-                    "incomplete": {
-                      "type": "string"
-                    },
                     "reviewing": {
                       "type": "string"
                     },
-                    "unapproved": {
+                    "unassigned": {
                       "type": "string"
                     },
                     "unknownTransaction": {
@@ -2559,8 +2562,9 @@
                     "reviewing",
                     "unknownTransaction",
                     "completed",
-                    "incomplete",
-                    "unapproved"
+                    "assigned",
+                    "unassigned",
+                    "bidder"
                   ],
                   "type": "object"
                 },
