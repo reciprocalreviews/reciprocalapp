@@ -84,7 +84,7 @@
 	</div>
 	{#if pageHeader?.title}
 		<div class="page-header">
-			<h1 class:wobble={pageHeader.wobble} data-testid="page-header">
+			<h1 class="page-header-title" class:wobble={pageHeader.wobble} data-testid="page-header">
 				<span class="emoji">{pageHeader.icon}</span>
 				{#if pageHeader.edit}
 					<EditableText
@@ -162,6 +162,10 @@
 		background: var(--background-color);
 		margin-bottom: var(--spacing);
 		overflow-x: clip;
+	}
+
+	.page-header-title {
+		align-items: baseline;
 	}
 
 	.emoji {
