@@ -9,6 +9,7 @@
 		"preview": "vite preview",
 		"test": "npm run test:end && npm run test:unit",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"check:now": "svelte-check --tsconfig ./tsconfig.json",
 		"sync": "svelte-kit sync",
 		"test:end": "playwright test",
 		"test:unit": "vitest",

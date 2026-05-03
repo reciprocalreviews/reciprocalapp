@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run dev          # Start Vite dev server
-npm run check        # Run svelte-check for TypeScript/Svelte errors
+npm run check:now    # Run svelte-check for TypeScript/Svelte errors
 npm run test:unit    # Run Vitest unit tests (src/**/*.unit.ts)
 npm run test:end     # Run Playwright integration tests (end2end/)
 npm start            # Start Supabase locally + edge functions
