@@ -32,7 +32,7 @@ export const Emails = {
 		]
 	},
 	AssignmentApproved: {
-		subject: 'Your assignment has been approved',
+		subject: 'Your are assigned a submission',
 		paragraphs: [
 			'<a href="mailto:$2">$1</a> assigned you as $3 for this submission:',
 			'https://reciprocal.reviews/venue/$4/submission/$5',
@@ -58,7 +58,7 @@ export const Emails = {
 		paragraphs: [
 			"A scholar requested compensation for <a href='https://reciprocal.reviews/venue/$1/submission/$2'>this submission</a>. Here's the note they included:",
 			'"$3"',
-			"If this is a valid request, approve the assignment, evaluate their work, and if it meets your venue's standards, mark the work complete so they are compensated.",
+			"If this is a valid request, approve the assignment, evaluate their work, and if it meets your venue's standards, mark the work complete so they are compensated."
 		]
 	}
 } satisfies Record<string, Email>;

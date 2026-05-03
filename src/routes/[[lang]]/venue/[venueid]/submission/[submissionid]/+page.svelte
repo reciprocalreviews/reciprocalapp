@@ -373,7 +373,13 @@
 
 			<!-- Sort roles by priority -->
 			{#each roles.toSorted((a, b) => a.priority - b.priority) as role}
-				{@const assigned = assignments.filter((a) => role.id === a.role && !a.bid)}
+				<!-- An assignment is "assigned" if it's anything other than a pending bid:
+				     directly admin-assigned (bid=false), or a bid that's been approved
+				     (bid=true, approved=true). Approving a bid only flips `approved`;
+				     `bid` stays true, so we can't filter on `!bid` alone. -->
+				{@const assigned = assignments.filter(
+					(a) => role.id === a.role && !(a.bid && !a.approved)
+				)}
 				<!-- The bidding assignments are those that match this role and aren't approved. We sort them by the balances of the corresponding scholar. -->
 				{@const bidded = assignments
 					.filter((a) => role.id === a.role && a.bid && !a.approved)

@@ -9,7 +9,8 @@
       "fixed": [
         "Don't show bid buttons if a scholar already has the role (#99).",
         "Hardened `SubmissionLink` to missing submissions to avoid page crashes.",
-        "Consistent visibility of bids on submissions list and submission page."
+        "Consistent visibility of bids on submissions list and submission page.",
+        "Improved logic for \"bidding closed\" note on submissions page."
       ],
       "changed": [
         "Updated internal tooling for stability.",
