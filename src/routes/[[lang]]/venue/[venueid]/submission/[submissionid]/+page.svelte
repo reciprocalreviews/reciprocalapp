@@ -388,18 +388,18 @@
 					<tr>
 						<td>{role.name}</td>
 						<td class={!assignment.approved ? 'unapproved' : undefined}>
-							{#if assignment.scholar === scholar.id}{locale().page.submission.cell
-									.you}{:else}<ScholarLink id={assignment.scholar} />{/if}
-							{#if assignment.completed}<Status
-									label={(l) => l.page.submission.status.completed}
-								/>{:else if assignment.approved}<Status
-									good={false}
-									label={(l) => l.page.submission.status.incomplete}
-								/>{:else}<Status
-									good={false}
-									label={(l) => l.page.submission.status.unapproved}
-								/>{/if}</td
-						>
+							<div class="scholar-cell">
+								{#if assignment.scholar === scholar.id}{locale().page.submission.cell
+										.you}{:else}<ScholarLink id={assignment.scholar} />{/if}
+								{#if assignment.completed}
+									<Status label={(l) => l.page.submission.status.completed} />
+								{:else if assignment.approved}
+									<Status good={false} label={(l) => l.page.submission.status.incomplete} />
+								{:else}
+									<Status good={false} label={(l) => l.page.submission.status.unapproved} />
+								{/if}
+							</div>
+						</td>
 						<td
 							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 						>
@@ -475,5 +475,12 @@
 <style>
 	.unapproved {
 		font-style: italic;
+	}
+
+	.scholar-cell {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-half);
 	}
 </style>
