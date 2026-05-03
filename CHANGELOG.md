@@ -11,6 +11,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Changed
 
 - Updated internal tooling for stability.
+- We encourage and account for non-paying authors to be listed (#98).
 
 ## 0.3.12 - 2026-04-26
 

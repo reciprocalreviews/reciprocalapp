@@ -130,15 +130,14 @@
 	}
 
 	function getSubmissionPaymentStatus(submission: SubmissionRow): number | undefined {
-		const submissionTransactions =
-			transactions === null
-				? null
-				: submission.transactions
-						.filter((t) => t !== NullUUID)
-						.map((t) => transactions.find((tr) => tr.id === t))
-						.filter((t) => t !== undefined);
-		if (submissionTransactions === null) return undefined;
-		else return submission.transactions.length - submissionTransactions.length;
+		if (transactions === null) return undefined;
+		// NullUUID slots represent non-paying co-authors — no transaction is
+		// expected for them, so they don't count toward the pending tally.
+		const expected = submission.transactions.filter((t) => t !== NullUUID);
+		const visible = expected
+			.map((t) => transactions.find((tr) => tr.id === t))
+			.filter((t) => t !== undefined);
+		return expected.length - visible.length;
 	}
 </script>
 

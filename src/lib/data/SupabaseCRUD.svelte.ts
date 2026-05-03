@@ -230,11 +230,18 @@ export default class SupabaseCRUD extends CRUD {
 				error: { message: this.locale.error.UnknownVenue, details: venueError ?? undefined }
 			};
 
-		// Create proposed transactions for each charges.
+		// Create proposed transactions for each charge. Charges of zero tokens
+		// (non-paying co-authors listed for COI tracking) get a NullUUID
+		// placeholder instead of a transaction — there's nothing to transfer
+		// and the submitter can't approve a co-author's transaction anyway.
 		const transactions: string[] = [];
 		for (let scholarIndex = 0; scholarIndex < charges.length; scholarIndex++) {
 			const charge = charges[scholarIndex];
 			const scholarID = authors[scholarIndex];
+			if ((charge.payment ?? 0) === 0) {
+				transactions.push(NullUUID);
+				continue;
+			}
 			const { data: proposedScholarTransactionID, error } = await this.createTransaction(
 				creator,
 				// From this scholar to the given venue

@@ -368,6 +368,7 @@ export type LocaleText = {
 				proposesToPay: string;
 				paid: string;
 				declinedToPay: string;
+				nonPaying: string;
 				anonymized: string;
 				you: string;
 			};

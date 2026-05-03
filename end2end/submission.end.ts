@@ -11,9 +11,10 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
 	await page.waitForLoadState('networkidle');
 
-	// Fill in the required submission details.
+	// Fill in the required submission details. The external ID is unique per
+	// run because the venue+externalid pair is enforced unique in the DB.
 	await page.getByTestId('submission-title').fill('A Study of Reciprocal Review Incentives');
-	await page.getByTestId('submission-manuscript-id').fill('TOK-2026-TEST-001');
+	await page.getByTestId('submission-manuscript-id').fill(`TOK-2026-TEST-${Date.now()}`);
 
 	// In case there's a failure, scroll down so we have a screenshot.
 	await page.getByTestId('add-author').scrollIntoViewIfNeeded();

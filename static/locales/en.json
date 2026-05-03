@@ -300,11 +300,11 @@
 			"title": "New submission",
 			"header": {
 				"details": "Details",
-				"payment": "Payment",
+				"payment": "Authors and payment",
 				"submit": "Submit"
 			},
 			"paragraph": {
-				"intro": "Ready to create a new submission? Typically, this form is filled by one of the authors of a submission, to pay for a submission to be reviewed. After filling out this form:\n\n- The submission will be created in the system.\n- All scholars listed will need to confirm their payments.\n- Once everyone has paid, the editor will proceed with review."
+				"intro": "Ready to create a new submission? Typically, this form is filled by one of the authors of a submission, to pay for a submission to be reviewed.\n\n**List every co-author**, even those not contributing tokens — this lets editors and the platform identify conflicts of interest with potential reviewers. Non-paying co-authors should be listed with a payment of 0; the paying authors split the venue's submission cost between them.\n\nAfter filling out this form:\n\n- The submission will be created in the system.\n- Each paying author will need to confirm their payment.\n- Once everyone has paid, the editor will proceed with review."
 			},
 			"feedback": {
 				"notLoaded": "Unable to load the venue and/or submission types for this page.",
@@ -333,9 +333,9 @@
 				}
 			},
 			"note": {
-				"payment": "Specify the authors and how many tokens each will pay.",
+				"payment": "List every co-author. Set the payment for each, with non-paying co-authors at 0. The total must equal the venue's submission cost.",
 				"balance": "Verify the balance to enable submission.",
-				"approve": "Each author will need to approve payment."
+				"approve": "Each paying author will need to approve their payment. Non-paying co-authors don't owe anything, so no approval is needed from them."
 			},
 			"field": {
 				"authorOrcid": {
@@ -655,6 +655,7 @@
 				"proposesToPay": "proposes to pay",
 				"paid": "paid",
 				"declinedToPay": "declined to pay",
+				"nonPaying": "non-paying co-author",
 				"anonymized": "anonymized",
 				"you": "you"
 			},

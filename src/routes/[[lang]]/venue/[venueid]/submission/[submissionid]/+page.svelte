@@ -214,9 +214,10 @@
 
 		<Subheader icon={ScholarLabel} text={(l) => l.page.submission.header.authors}></Subheader>
 
-		{#each submission.authors as author}
+		{#each submission.authors as author, idx}
 			{@const authorIndex = authors.findIndex((a) => a.id === author)}
 			{@const payment = authorIndex > -1 ? submission.payments[authorIndex] : undefined}
+			{@const transactionId = submission.transactions[idx]}
 			{@const transaction =
 				authorTransactions === null || authorIndex === undefined
 					? undefined
@@ -228,7 +229,9 @@
 				{:else if isEditor || isAuthor || (isAssigned && !scholarAssignmentRoles.some((r) => r.anonymous_authors))}
 					<ScholarLink id={scholar ?? author}></ScholarLink>
 					{#if payment !== undefined}
-						{#if transaction === undefined}
+						{#if transactionId === NullUUID}
+							{locale().page.submission.cell.nonPaying}
+						{:else if transaction === undefined}
 							<Status good={false} label={(l) => l.page.submission.status.unknownTransaction} />
 						{:else}
 							{#if transaction.status === 'proposed'}
