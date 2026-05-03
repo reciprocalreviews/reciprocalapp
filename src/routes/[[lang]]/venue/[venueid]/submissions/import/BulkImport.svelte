@@ -4,6 +4,7 @@
 	import type { SubmissionType, SubmissionTypeID, VenueRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import FileInput from '$lib/components/FileInput.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import Options from '$lib/components/Options.svelte';
@@ -151,10 +152,11 @@
 <Note path={(l) => l.page.bulkImport.note.csv} />
 
 <Form>
-	<label>
-		<Text path={(l) => l.page.bulkImport.field.csvUpload.label} />
-		<input type="file" accept=".csv,text/csv" onchange={handleFileUpload} />
-	</label>
+	<FileInput
+		label={(l) => l.page.bulkImport.field.csvUpload.label}
+		accept=".csv,text/csv"
+		onChange={handleFileUpload}
+	/>
 
 	<TextField
 		strings={(l) => l.page.bulkImport.field.csvPaste}
@@ -203,40 +205,40 @@
 		<tr data-testid="import-row-{index}">
 			<td>
 				<TextField
-					strings={(l) => l.page.bulkImport.field.title}
+					strings={(l) => ({ ...l.page.bulkImport.field.title, label: '' })}
 					bind:text={row.title}
 					testid="import-row-{index}-title"
 				/>
 			</td>
 			<td>
 				<TextField
-					strings={(l) => l.page.bulkImport.field.externalID}
+					strings={(l) => ({ ...l.page.bulkImport.field.externalID, label: '' })}
 					bind:text={row.externalID}
 					testid="import-row-{index}-externalid"
 				/>
 			</td>
 			<td>
 				<TextField
-					strings={(l) => l.page.bulkImport.field.expertise}
+					strings={(l) => ({ ...l.page.bulkImport.field.expertise, label: '' })}
 					bind:text={row.expertise}
 				/>
 			</td>
 			<td>
 				<Options
-					strings={(l) => l.page.bulkImport.options.submissionType}
+					strings={(l) => ({ ...l.page.bulkImport.options.submissionType, label: '' })}
 					bind:value={row.submissionType}
 					options={submissionTypes.map((t) => ({ value: t.id, label: t.name }))}
 				/>
 			</td>
 			<td>
 				<TextField
-					strings={(l) => l.page.bulkImport.field.previousID}
+					strings={(l) => ({ ...l.page.bulkImport.field.previousID, label: '' })}
 					bind:text={row.previousID}
 				/>
 			</td>
 			<td>
 				<TextField
-					strings={(l) => l.page.bulkImport.field.note}
+					strings={(l) => ({ ...l.page.bulkImport.field.note, label: '' })}
 					bind:text={row.note}
 				/>
 			</td>

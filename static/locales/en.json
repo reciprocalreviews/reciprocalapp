@@ -408,7 +408,7 @@
 					"placeholder": "note"
 				},
 				"csvUpload": {
-					"label": "Upload CSV file"
+					"label": "upload CSV file"
 				},
 				"csvPaste": {
 					"label": "paste CSV",

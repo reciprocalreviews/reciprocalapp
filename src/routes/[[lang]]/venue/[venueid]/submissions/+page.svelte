@@ -85,7 +85,12 @@
 	let paymentSortPendingFirst = $state(true);
 	let titleSortIncreasing = $state(true);
 	let idSortIncreasing = $state(true);
-	let sortOrder = $state<('payment' | 'title' | 'id')[]>(['title', 'id', 'payment']);
+	let sortOrder = $state<('payment' | 'title' | 'id' | 'created')[]>([
+		'payment',
+		'title',
+		'id',
+		'created'
+	]);
 	let filter = $state('');
 	const locale = getLocaleContext();
 
@@ -115,6 +120,9 @@
 				case 'id':
 					subs.sort((a, b) => a.externalid.localeCompare(b.externalid));
 					if (!idSortIncreasing) subs.reverse();
+					break;
+				case 'created':
+					subs.sort((a, b) => b.created_at.localeCompare(a.created_at));
 					break;
 			}
 		}

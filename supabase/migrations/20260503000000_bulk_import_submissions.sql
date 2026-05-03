@@ -1,13 +1,15 @@
 -- Support bulk import of pre-launch submissions: free submissions with no
 -- authors or payments, accompanied by a single proposed mint transaction
 -- that a minter must approve to fund reviewer compensation.
-
--- 1. Add imported and note columns to submissions.
+-- 1. Add imported, note, and created_at columns to submissions.
 alter table "public"."submissions"
 add column "imported" boolean not null default false;
 
 alter table "public"."submissions"
 add column "note" text default null;
+
+alter table "public"."submissions"
+add column "created_at" timestamp with time zone not null default timezone ('utc'::text, now());
 
 -- 2. Allow empty author lists for imported submissions. The original check
 -- required at least one author; the new check exempts imported submissions.
@@ -15,47 +17,50 @@ alter table "public"."submissions"
 drop constraint "submissions_authors_check";
 
 alter table "public"."submissions"
-add constraint "submissions_authors_check"
-check (imported or cardinality(authors) > 0) not valid;
+add constraint "submissions_authors_check" check (
+	imported
+	or cardinality(authors)>0
+) not valid;
 
-alter table "public"."submissions"
-validate constraint "submissions_authors_check";
+alter table "public"."submissions" validate constraint "submissions_authors_check";
 
 -- 3. Mirror the same allowance for payments and transactions. The existing
 -- equality checks (cardinality(payments) = cardinality(authors), same for
 -- transactions) remain in force and naturally permit empty arrays when
 -- authors is empty.
 alter table "public"."submissions"
-add constraint "submissions_payments_nonempty_check"
-check (imported or cardinality(payments) > 0) not valid;
+add constraint "submissions_payments_nonempty_check" check (
+	imported
+	or cardinality(payments)>0
+) not valid;
+
+alter table "public"."submissions" validate constraint "submissions_payments_nonempty_check";
 
 alter table "public"."submissions"
-validate constraint "submissions_payments_nonempty_check";
+add constraint "submissions_transactions_nonempty_check" check (
+	imported
+	or cardinality(transactions)>0
+) not valid;
 
-alter table "public"."submissions"
-add constraint "submissions_transactions_nonempty_check"
-check (imported or cardinality(transactions) > 0) not valid;
-
-alter table "public"."submissions"
-validate constraint "submissions_transactions_nonempty_check";
+alter table "public"."submissions" validate constraint "submissions_transactions_nonempty_check";
 
 -- 4. Enforce externalid uniqueness within a venue. Replaces the prior
 -- non-unique lookup index.
 drop index if exists "public"."submissions_externalid_index";
 
-create unique index "submissions_venue_externalid_unique"
-on public.submissions(venue, externalid);
+create unique index "submissions_venue_externalid_unique" on public.submissions (venue, externalid);
 
 -- 5. Tighten the insert policy: non-imported submissions remain open
 -- (the application layer enforces author/payment validity), but imported
 -- submissions can only be inserted by venue admins.
 drop policy "anyone can create submissions" on "public"."submissions";
 
-create policy "anyone can create submissions, admins for imports"
-on "public"."submissions" as permissive for insert to authenticated
-with check (
-    (not imported) or public.isadmin(venue)
-);
+create policy "anyone can create submissions, admins for imports" on "public"."submissions" as permissive for insert to authenticated
+with
+	check (
+		(not imported)
+		or public.isadmin (venue)
+	);
 
 -- Extend the SELECT policy so admins can view all submissions in their
 -- venue. Without this, imported submissions (which have no authors and
@@ -63,28 +68,54 @@ with check (
 -- imported them.
 drop policy "authors, assigned, and bidders can view submissions" on "public"."submissions";
 
-create policy "admins, authors, assigned, and bidders can view submissions"
-on "public"."submissions" as permissive for select to anon, authenticated
-using (
-    public.isadmin(venue)
-    or ((select auth.uid()) = any(authors))
-    or exists (
-        select volunteers.id
-        from public.volunteers
-        where volunteers.scholarid = (select auth.uid())
-            and volunteers.accepted = 'accepted'::invited
-            and volunteers.roleid = any(
-                array(select roles.id from public.roles where roles.venueid = submissions.venue and roles.biddable = true)
-            )
-    )
-    or exists (
-        select assignments.id
-        from public.assignments
-        where assignments.submission = submissions.id
-            and assignments.approved = true
-            and assignments.scholar = (select auth.uid())
-    )
-);
+create policy "admins, authors, assigned, and bidders can view submissions" on "public"."submissions" as permissive for
+select
+	to anon,
+	authenticated using (
+		public.isadmin (venue)
+		or (
+			(
+				select
+					auth.uid ()
+			)=any (authors)
+		)
+		or exists (
+			select
+				volunteers.id
+			from
+				public.volunteers
+			where
+				volunteers.scholarid=(
+					select
+						auth.uid ()
+				)
+				and volunteers.accepted='accepted'::invited
+				and volunteers.roleid=any (
+					array(
+						select
+							roles.id
+						from
+							public.roles
+						where
+							roles.venueid=submissions.venue
+							and roles.biddable=true
+					)
+				)
+		)
+		or exists (
+			select
+				assignments.id
+			from
+				public.assignments
+			where
+				assignments.submission=submissions.id
+				and assignments.approved=true
+				and assignments.scholar=(
+					select
+						auth.uid ()
+				)
+		)
+	);
 
 -- 6. Bulk import RPC. Atomically inserts a batch of imported submissions
 -- and a single proposed mint transaction sized at submission_cost * N.
@@ -94,15 +125,14 @@ using (
 -- RLS even when the caller is an admin, so we elevate and check
 -- explicitly. The auth.uid() lookup still reflects the calling user
 -- because the JWT GUC propagates regardless of definer/invoker mode.
-create or replace function public.bulk_import_submissions(
-    _venueid uuid,
-    _submissions jsonb,
-    _import_note text
-) returns jsonb
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $function$
+create or replace function public.bulk_import_submissions (
+	_venueid uuid,
+	_submissions jsonb,
+	_import_note text
+) returns jsonb language plpgsql security definer
+set
+	search_path=public,
+	pg_temp as $function$
 declare
     _admin_id uuid;
     _submission_cost integer;
@@ -206,5 +236,10 @@ begin
 end;
 $function$;
 
-revoke execute on function public.bulk_import_submissions(uuid, jsonb, text) from public;
-grant execute on function public.bulk_import_submissions(uuid, jsonb, text) to authenticated;
+revoke
+execute on function public.bulk_import_submissions (uuid, jsonb, text)
+from
+	public;
+
+grant
+execute on function public.bulk_import_submissions (uuid, jsonb, text) to authenticated;

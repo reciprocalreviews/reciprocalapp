@@ -468,6 +468,7 @@ export type Database = {
       submissions: {
         Row: {
           authors: string[]
+          created_at: string
           expertise: string | null
           externalid: string
           id: string
@@ -483,6 +484,7 @@ export type Database = {
         }
         Insert: {
           authors: string[]
+          created_at?: string
           expertise?: string | null
           externalid: string
           id?: string
@@ -498,6 +500,7 @@ export type Database = {
         }
         Update: {
           authors?: string[]
+          created_at?: string
           expertise?: string | null
           externalid?: string
           id?: string
