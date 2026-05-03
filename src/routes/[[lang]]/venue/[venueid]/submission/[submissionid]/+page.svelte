@@ -25,6 +25,7 @@
 	import Tip from '$lib/components/Tip.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import VenueLink from '$lib/components/VenueLink.svelte';
+	import canApproveAssignment from '$lib/data/canApproveAssignment';
 	import { getDB, NullUUID } from '$lib/data/CRUD';
 	import Scholar from '$lib/data/Scholar.svelte';
 	import type LocaleText from '$lib/locales/Locale';
@@ -109,10 +110,20 @@
 	/** Whether the current scholar is assigned to this submission */
 	let isAssigned = $derived(scholarAssignments !== undefined);
 
-	/** What role does this assignment approve, if any */
+	/** Roles for which the current scholar can approve assignments on this
+	 * submission, computed via the shared canApproveAssignment helper. */
 	let rolesScholarCanApprove = $derived(
-		scholarAssignments !== undefined && roles !== null
-			? roles.filter((r) => scholarAssignments.some((a) => a.role === r.approver))
+		submission !== null && roles !== null
+			? roles.filter((r) =>
+					canApproveAssignment(
+						submission.id,
+						r,
+						roles,
+						scholar?.id ?? null,
+						isAdmin,
+						assignments
+					)
+				)
 			: []
 	);
 
@@ -288,8 +299,8 @@
 
 		<Subheader icon={EditLabel} text={(l) => l.page.submission.header.assignments}></Subheader>
 
-		<!-- If the authenticated scholar is an editor or a role approver of one of the roles, then permit them to create new assignments -->
-		{#if isEditor || rolesScholarCanApprove.length > 0}
+		<!-- If the authenticated scholar can approve any role on this submission, permit them to create new assignments. -->
+		{#if rolesScholarCanApprove.length > 0}
 			<Form>
 				<Tip><Text path={(l) => l.page.submission.tip.newAssignment} /></Tip>
 				<Options
@@ -367,8 +378,14 @@
 				{@const bidded = assignments
 					.filter((a) => role.id === a.role && a.bid && !a.approved)
 					.toSorted((a, b) => getBalance(a.scholar) - getBalance(b.scholar))}
-				{@const isApprover =
-					isEditor || (scholar !== null && rolesScholarCanApprove.some((r) => r.id === role.id))}
+				{@const isApprover = canApproveAssignment(
+						submission.id,
+						role,
+						roles,
+						scholar?.id ?? null,
+						isAdmin,
+						assignments
+					)}
 				{#each assigned as assignment}
 					{@const volunteer = getVolunteer(role.id, assignment.scholar)}
 					<tr>

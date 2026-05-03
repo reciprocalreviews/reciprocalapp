@@ -12,7 +12,6 @@
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { EmptyLabel, TaskLabel } from '$lib/components/Labels';
 	import Link from '$lib/components/Link.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Table from '$lib/components/Table.svelte';
@@ -128,7 +127,6 @@
 			<tr data-testid="assignment-{index}">
 				<td>{locale().view.tasks.cell.kind.pendingAssignment}</td>
 				<td>
-					<ScholarLink id={approval.scholars} />
 					<SubmissionLink submission={approval.submissions} />
 				</td>
 			</tr>

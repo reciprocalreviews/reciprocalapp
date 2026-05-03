@@ -18,6 +18,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - Don't show bid buttons if a scholar already has the role (#99).
 - Hardened `SubmissionLink` to missing submissions to avoid page crashes.
+- Consistent visibility of bids on submissions list and submission page.
 
 ## 0.3.12 - 2026-04-26
 

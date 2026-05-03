@@ -15,6 +15,7 @@
 	import Tip from '$lib/components/Tip.svelte';
 	import Text from '$lib/locales/Text.svelte';
 	import { getDB, NullUUID } from '$lib/data/CRUD';
+	import canApproveAssignment from '$lib/data/canApproveAssignment';
 	import isRoleApprover from '$lib/data/isRoleApprover';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
 	import { getAuth } from '$routes/Auth.svelte';
@@ -68,18 +69,23 @@
 						const hasRole = volunteering.some(
 							(v) => v.scholarid === uid && v.roleid === role.id && v.accepted === 'accepted'
 						);
-						// See if this scholar is an approver for this role.
-						const isApprover = uid !== null && (isAdmin || isRoleApprover(role, volunteering, uid));
+						// Venue-wide check: could this scholar approve assignments for this
+						// role on some submission? Used only for column visibility — the
+						// per-submission gate below decides whether bid counts and approve
+						// buttons actually render in each cell.
+						const couldApprove =
+							uid !== null && (isAdmin || isRoleApprover(role, volunteering, uid));
 
 						return {
 							...role,
-							isVisible: isAdmin || role.biddable || hasRole || isApprover,
+							isVisible: isAdmin || role.biddable || hasRole || couldApprove,
 							hasRole,
-							isApprover
+							couldApprove
 						};
 					})
 					.filter((r) => r.isVisible)
 	);
+
 
 	/** State of sorting and filtering */
 	let paymentSortPendingFirst = $state(true);
@@ -276,8 +282,16 @@
 											{@const scholarAlreadyAssigned = approvedAssignments.some(
 												(a) => a.scholar === uid
 											)}
-											<!-- If the current scholar is an approver, show the current assignemnts -->
-											{#if role.isApprover}
+											{@const isApproverHere = canApproveAssignment(
+												submission.id,
+												role,
+												roles,
+												uid,
+												isAdmin,
+												assignments
+											)}
+											<!-- If the current scholar is an approver of this submission, show the current assignemnts -->
+											{#if isApproverHere}
 												<!-- Approver? Show the people assigned. -->
 												{#each approvedAssignments as assignment}
 													{#if assignment.scholar === uid}{locale().page.submissions.cell
@@ -293,8 +307,8 @@
 													<!-- Can't bid if conflicted -->
 													<div><strong>{locale().page.submissions.cell.conflicted}</strong></div>
 												{:else if roleAssignments === undefined || roleAssignments.length < role.desired_assignments}
-													<!-- If the current scholar is an editor or approver for this role, show the number of bids. -->
-													{#if role.isApprover}
+													<!-- If the current scholar is an approver for this submission's role, show the number of bids. -->
+													{#if isApproverHere}
 														<div>
 															<strong>{bids.length}</strong>
 															{locale().page.submissions.cell.bids}
