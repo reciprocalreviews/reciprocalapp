@@ -301,19 +301,26 @@
 												{/each}
 											{/if}
 
-											<!-- Show bidding if the role is biddable and there are fewer than the number of desired assignments-->
+											<!-- Show bidding if the role is biddable. Bidding closes when the
+											     number of *approved* assignments reaches the role's desired count;
+											     pending bids don't count toward closure. -->
 											{#if role.biddable && !scholarAlreadyAssigned}
+												{@const biddingOpen =
+													approvedAssignments.length < role.desired_assignments}
+
+												<!-- Approvers always see the pending bid count, regardless of whether
+												     bidding is open or closed, so they can act on outstanding bids. -->
+												{#if isApproverHere}
+													<div>
+														<strong>{bids.length}</strong>
+														{locale().page.submissions.cell.bids}
+													</div>
+												{/if}
+
 												{#if submission.authors.includes(uid) || conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id)}
 													<!-- Can't bid if conflicted -->
 													<div><strong>{locale().page.submissions.cell.conflicted}</strong></div>
-												{:else if roleAssignments === undefined || roleAssignments.length < role.desired_assignments}
-													<!-- If the current scholar is an approver for this submission's role, show the number of bids. -->
-													{#if isApproverHere}
-														<div>
-															<strong>{bids.length}</strong>
-															{locale().page.submissions.cell.bids}
-														</div>
-													{/if}
+												{:else if biddingOpen}
 													{#if scholarsBid === undefined}
 														<!-- No assignments? Allow bidding -->
 														<Button
