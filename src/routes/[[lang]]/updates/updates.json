@@ -4,7 +4,8 @@
     "date": "2026-05-03",
     "changes": {
       "added": [
-        "Added ability for admins to bulk import submissions without payment, to support pre-launch configuration (#97)."
+        "Added ability for admins to bulk import submissions without payment, to support pre-launch configuration (#97).",
+        "Added feedback when emails are sent, so scholars know the effect of their actions."
       ],
       "fixed": [
         "Don't show bid buttons if a scholar already has the role (#99).",
@@ -15,7 +16,8 @@
       "changed": [
         "Updated internal tooling for stability.",
         "We encourage and account for non-paying authors to be listed (#98).",
-        "Expanded submission visibility in RLS rule to role approvers."
+        "Expanded submission visibility in RLS rule to role approvers.",
+        "Improved rendering of emojis in scholar links."
       ],
       "removed": []
     }

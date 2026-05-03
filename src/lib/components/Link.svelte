@@ -31,13 +31,22 @@
 	target={to.startsWith('http') ? '_blank' : null}
 	aria-current={inactive ? 'page' : null}
 	data-testid={testid}
-	><span class:underline>{@render children()}</span>{#if to.startsWith('http')}<sub>🌐</sub
-		>{/if}{#if icon}<sub>{icon}</sub>{/if}</a
+	><span class:underline>{@render children()}</span>{#if to.startsWith('http')}<sub class="cling"
+			>🌐</sub
+		>{/if}{#if icon}<sub class="cling">{icon}</sub>{/if}</a
 >
 
 <style>
 	a {
 		text-decoration: none;
+	}
+
+	/* A Word Joiner (U+2060) prepended via a pseudo-element is a zero-width
+	   character that prohibits line-breaking at its position. This keeps
+	   trailing icons glued to the preceding link text so the icon can never
+	   wrap to a line of its own. */
+	.cling::before {
+		content: '\2060';
 	}
 
 	a .underline {

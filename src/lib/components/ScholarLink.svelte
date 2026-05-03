@@ -30,12 +30,22 @@
 	{:catch}<em>Error {id}</em>{/await}
 {:else if id instanceof Scholar}
 	<div class="scholar">
-		<Link {size} to="/scholar/{id.getID()}">{id.getName()}</Link><sub style="text-decoration: none"
-			>{ScholarLabel}</sub
+		<Link {size} to="/scholar/{id.getID()}">{id.getName()}</Link><sub
+			class="cling"
+			style="text-decoration: none">{ScholarLabel}</sub
 		>
 	</div>
 {:else}
-	<Link {size} to="/scholar/{id.id}">{id.name}</Link><sub style="text-decoration: none"
-		>{ScholarLabel}</sub
+	<Link {size} to="/scholar/{id.id}">{id.name}</Link><sub
+		class="cling"
+		style="text-decoration: none">{ScholarLabel}</sub
 	>
 {/if}
+
+<style>
+	/* Same Word Joiner trick as Link.svelte for subs that live outside the
+	   anchor (e.g., the Scholar/ScholarRow branches above). */
+	.cling::before {
+		content: '\2060';
+	}
+</style>

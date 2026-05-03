@@ -14,6 +14,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Updated internal tooling for stability.
 - We encourage and account for non-paying authors to be listed (#98).
 - Expanded submission visibility in RLS rule to role approvers.
+- Improved rendering of emojis in scholar links.
 
 ### Fixed
 
