@@ -27,6 +27,7 @@
 	import VenueLink from '$lib/components/VenueLink.svelte';
 	import canApproveAssignment from '$lib/data/canApproveAssignment';
 	import { getDB, NullUUID } from '$lib/data/CRUD';
+	import familyName from '$lib/data/familyName';
 	import Scholar from '$lib/data/Scholar.svelte';
 	import type LocaleText from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
@@ -58,8 +59,24 @@
 		/** The current user */
 		scholar,
 		/** The submission types for this venue */
-		submissionTypes
+		submissionTypes,
+		/** Names of scholars referenced by assignments, for stable sorting */
+		assignmentScholars
 	} = $derived(data);
+
+	function nameOf(scholarID: string): string {
+		return assignmentScholars.find((s) => s.id === scholarID)?.name ?? '';
+	}
+
+	/** Sort assignments by token balance (descending), then by family name
+	 * (ascending). Returns a new array; doesn't mutate the input. */
+	function sortAssignees<T extends { scholar: string }>(items: T[]): T[] {
+		return [...items].sort((a, b) => {
+			const balanceDiff = getBalance(b.scholar) - getBalance(a.scholar);
+			if (balanceDiff !== 0) return balanceDiff;
+			return familyName(nameOf(a.scholar)).localeCompare(familyName(nameOf(b.scholar)));
+		});
+	}
 
 	/** Get the database connection */
 	const db = getDB();
@@ -370,11 +387,13 @@
 				     directly admin-assigned (bid=false), or a bid that's been approved
 				     (bid=true, approved=true). Approving a bid only flips `approved`;
 				     `bid` stays true, so we can't filter on `!bid` alone. -->
-				{@const assigned = assignments.filter((a) => role.id === a.role && !(a.bid && !a.approved))}
-				<!-- The bidding assignments are those that match this role and aren't approved. We sort them by the balances of the corresponding scholar. -->
-				{@const bidded = assignments
-					.filter((a) => role.id === a.role && a.bid && !a.approved)
-					.toSorted((a, b) => getBalance(a.scholar) - getBalance(b.scholar))}
+				{@const assigned = sortAssignees(
+						assignments.filter((a) => role.id === a.role && !(a.bid && !a.approved))
+					)}
+				<!-- The bidding assignments are those that match this role and aren't approved. -->
+				{@const bidded = sortAssignees(
+						assignments.filter((a) => role.id === a.role && a.bid && !a.approved)
+					)}
 				{@const isApprover = canApproveAssignment(
 					submission.id,
 					role,

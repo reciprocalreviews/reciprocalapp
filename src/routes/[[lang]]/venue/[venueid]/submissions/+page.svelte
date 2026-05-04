@@ -38,34 +38,9 @@
 		/** All transctions for all submissions in this venue */
 		transactions,
 		/** The conflicts for the current scholar */
-		conflicts,
-		/** Names of scholars referenced by assignments, for stable sorting */
-		assignmentScholars,
-		/** Token balances per scholar in the venue's currency, for stable sorting */
-		balances
+		conflicts
 	} = $derived(data);
 
-	/** Family name = last whitespace-separated token of the scholar's name.
-	 * Heuristic but stable; falls back to the whole name or empty string. */
-	function familyName(scholarID: string): string {
-		const name = assignmentScholars.find((s) => s.id === scholarID)?.name?.trim() ?? '';
-		const idx = name.lastIndexOf(' ');
-		return idx === -1 ? name : name.slice(idx + 1);
-	}
-
-	function balanceOf(scholarID: string): number {
-		return balances.find((b) => b.scholar === scholarID)?.count ?? 0;
-	}
-
-	/** Sort approved assignments by token balance (ascending), then by family
-	 * name (ascending). Returns a new array; doesn't mutate the input. */
-	function sortAssignees<T extends { scholar: string }>(items: T[]): T[] {
-		return [...items].sort((a, b) => {
-			const balanceDiff = balanceOf(a.scholar) - balanceOf(b.scholar);
-			if (balanceDiff !== 0) return balanceDiff;
-			return familyName(a.scholar).localeCompare(familyName(b.scholar));
-		});
-	}
 
 	/** Get the current database connection */
 	const db = getDB();
@@ -117,6 +92,8 @@
 	let paymentSortPendingFirst = $state(true);
 	let titleSortIncreasing = $state(true);
 	let idSortIncreasing = $state(true);
+	/** Default to newest-first (descending). */
+	let createdSortLatestFirst = $state(true);
 	let sortOrder = $state<('payment' | 'title' | 'id' | 'created')[]>([
 		'payment',
 		'title',
@@ -154,11 +131,16 @@
 					if (!idSortIncreasing) subs.reverse();
 					break;
 				case 'created':
-					subs.sort((a, b) => b.created_at.localeCompare(a.created_at));
+					subs.sort((a, b) => a.created_at.localeCompare(b.created_at));
+					if (createdSortLatestFirst) subs.reverse();
 					break;
 			}
 		}
 		return subs;
+	}
+
+	function formatDate(iso: string): string {
+		return new Date(iso).toLocaleDateString();
 	}
 
 	function getSubmissionPaymentStatus(submission: SubmissionRow): number | undefined {
@@ -256,6 +238,21 @@
 								}}>{idSortIncreasing ? DownLabel : UpLabel}</Button
 							></th
 						>
+						<th
+							>{locale().page.submissions.headers.created}
+							<Button
+								small
+								background={false}
+								strings={(l) =>
+									createdSortLatestFirst
+										? l.page.submissions.button.sortCreatedOldest
+										: l.page.submissions.button.sortCreatedNewest}
+								action={() => {
+									createdSortLatestFirst = !createdSortLatestFirst;
+									sortOrder = [...sortOrder.filter((o) => o !== 'created'), 'created'];
+								}}>{createdSortLatestFirst ? DownLabel : UpLabel}</Button
+							></th
+						>
 						<!-- If bidding is enabled, add column for each of the scholar's volunteer roles -->
 						{#each visibleRoles as role}
 							<th>{role.name}</th>
@@ -292,6 +289,7 @@
 							</td>
 							<td>{submission.expertise}</td>
 							<td>{submission.externalid}</td>
+							<td>{formatDate(submission.created_at)}</td>
 							<!-- If we have all the information, show metadata about bidding. -->
 							{#each visibleRoles as role, roleIndex}
 								<!-- This cell should show all actions available for this role and submission, based on the current scholar's role. -->
@@ -319,8 +317,8 @@
 											)}
 											<!-- If the current scholar is an approver of this submission, show the current assignemnts -->
 											{#if isApproverHere}
-												<!-- Approver? Show the people assigned, sorted by token balance then family name for stable order. -->
-												{#each sortAssignees(approvedAssignments) as assignment}
+												<!-- Approver? Show the people assigned. -->
+												{#each approvedAssignments as assignment}
 													{#if assignment.scholar === uid}{locale().page.submissions.cell
 															.you}{:else}<ScholarLink id={assignment.scholar} />{/if}
 												{:else}

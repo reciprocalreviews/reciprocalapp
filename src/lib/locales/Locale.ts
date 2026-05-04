@@ -334,6 +334,8 @@ export type LocaleText = {
 				sortTitleDesc: ButtonText;
 				sortIDAsc: ButtonText;
 				sortIDDesc: ButtonText;
+				sortCreatedNewest: ButtonText;
+				sortCreatedOldest: ButtonText;
 				declareConflict: ButtonText;
 				bid: ButtonText;
 				unbid: ButtonText;
@@ -343,6 +345,7 @@ export type LocaleText = {
 				title: string;
 				expertise: string;
 				id: string;
+				created: string;
 			};
 			field: {
 				title: NotedTextFieldText & { invalid: string };

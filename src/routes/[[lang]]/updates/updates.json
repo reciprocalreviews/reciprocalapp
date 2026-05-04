@@ -5,7 +5,8 @@
     "changes": {
       "added": [
         "Added ability for admins to bulk import submissions without payment, to support pre-launch configuration (#97).",
-        "Added feedback when emails are sent, so scholars know the effect of their actions."
+        "Added feedback when emails are sent, so scholars know the effect of their actions.",
+        "Added creation date to submissions table and made it sortable."
       ],
       "fixed": [
         "Don't show bid buttons if a scholar already has the role (#99).",
@@ -19,7 +20,8 @@
         "We encourage and account for non-paying authors to be listed (#98).",
         "Expanded submission visibility in RLS rule to role approvers.",
         "Improved rendering of emojis in scholar links.",
-        "Improved layout of the reviewer table on the submissions page."
+        "Improved layout of the reviewer table on the submissions page.",
+        "Improved volunteer status labeling in submission page."
       ],
       "removed": []
     }

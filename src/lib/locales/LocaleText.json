@@ -2615,6 +2615,12 @@
                     "declareConflict": {
                       "$ref": "#/definitions/ButtonText"
                     },
+                    "sortCreatedNewest": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "sortCreatedOldest": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
                     "sortIDAsc": {
                       "$ref": "#/definitions/ButtonText"
                     },
@@ -2644,6 +2650,8 @@
                     "sortTitleDesc",
                     "sortIDAsc",
                     "sortIDDesc",
+                    "sortCreatedNewest",
+                    "sortCreatedOldest",
                     "declareConflict",
                     "bid",
                     "unbid"
@@ -2781,6 +2789,9 @@
                 "headers": {
                   "additionalProperties": false,
                   "properties": {
+                    "created": {
+                      "type": "string"
+                    },
                     "expertise": {
                       "type": "string"
                     },
@@ -2798,7 +2809,8 @@
                     "payment",
                     "title",
                     "expertise",
-                    "id"
+                    "id",
+                    "created"
                   ],
                   "type": "object"
                 },

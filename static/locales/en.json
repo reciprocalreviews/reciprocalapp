@@ -506,6 +506,14 @@
 					"tip": "Reverse sort by ID",
 					"label": "↑"
 				},
+				"sortCreatedNewest": {
+					"tip": "Sort by newest first",
+					"label": "↓"
+				},
+				"sortCreatedOldest": {
+					"tip": "Sort by oldest first",
+					"label": "↑"
+				},
 				"declareConflict": {
 					"tip": "Declare a conflict with this submission. You will no longer see this submission in your bidding list.",
 					"label": "Declare conflict"
@@ -555,8 +563,9 @@
 			"headers": {
 				"payment": "Payment",
 				"title": "Title",
-				"expertise": "Expertise",
-				"id": "ID"
+				"expertise": "Expertise Required",
+				"id": "ID",
+				"created": "Created"
 			},
 			"status": {
 				"paid": "paid",

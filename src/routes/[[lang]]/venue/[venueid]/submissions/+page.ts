@@ -71,25 +71,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.eq('venue', venueid);
 	if (submissionTypesError) console.error(submissionTypesError);
 
-	// Names + token balances of scholars referenced by assignments, used to
-	// sort the per-role assignee lists deterministically (by balance, then by
-	// family name) so the order doesn't shuffle on assign/unassign.
-	const assignmentScholarIDs = Array.from(new Set(assignments?.map((a) => a.scholar) ?? []));
-
-	const { data: assignmentScholars } =
-		assignmentScholarIDs.length === 0
-			? { data: [] }
-			: await supabase.from('scholars').select('id, name').in('id', assignmentScholarIDs);
-
-	const { data: balances } =
-		assignmentScholarIDs.length === 0 || venue === null
-			? { data: [] }
-			: await supabase
-					.from('tokens')
-					.select('scholar, id.count()')
-					.eq('currency', venue.currency)
-					.in('scholar', assignmentScholarIDs);
-
 	return {
 		venue,
 		submissions,
@@ -98,8 +79,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 		assignments,
 		transactions,
 		conflicts,
-		submissionTypes,
-		assignmentScholars: assignmentScholars ?? [],
-		balances: balances ?? []
+		submissionTypes
 	};
 };

@@ -8,6 +8,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - Added ability for admins to bulk import submissions without payment, to support pre-launch configuration (#97).
 - Added feedback when emails are sent, so scholars know the effect of their actions.
+- Added creation date to submissions table and made it sortable.
 
 ### Changed
 

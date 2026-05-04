@@ -90,6 +90,13 @@ export const load: PageLoad = async ({ parent, params }) => {
 		.eq('venue', venueid);
 	if (submissionTypesError) console.error(submissionTypesError);
 
+	// Names of scholars referenced by assignments, for stable sorting by family name.
+	const assignmentScholarIDs = Array.from(new Set(assignments?.map((a) => a.scholar) ?? []));
+	const { data: assignmentScholars } =
+		assignmentScholarIDs.length === 0
+			? { data: [] }
+			: await supabase.from('scholars').select('id, name').in('id', assignmentScholarIDs);
+
 	return {
 		submission,
 		venue,
@@ -100,6 +107,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		volunteers,
 		roles,
 		balances,
-		submissionTypes
+		submissionTypes,
+		assignmentScholars: assignmentScholars ?? []
 	};
 };
