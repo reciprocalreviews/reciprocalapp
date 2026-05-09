@@ -51,7 +51,13 @@
 	}
 
 	beforeNavigate(({ from, to }) => {
-		if (from?.route.id === to?.route.id) return;
+		if (
+			from &&
+			to &&
+			from.url.pathname === to.url.pathname &&
+			from.url.search === to.url.search
+		)
+			return;
 		cleanupContext();
 	});
 
