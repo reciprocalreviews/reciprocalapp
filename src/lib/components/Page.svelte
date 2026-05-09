@@ -50,7 +50,8 @@
 		pageHeader.edit = undefined;
 	}
 
-	beforeNavigate(() => {
+	beforeNavigate(({ from, to }) => {
+		if (from?.route.id === to?.route.id) return;
 		cleanupContext();
 	});
 
