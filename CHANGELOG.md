@@ -8,6 +8,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - Updated DESIGN.md to be alignment with the current design and technical debt. Also updated CLAUDE.md to maintain DEISGN.md and ARCHITECTURE.md in response to changes in implementation.
 - Updated ARCHITECTURE.md to be a more complete onboarding document.
+- Gated Vercel deployments behind verifications and Supabase migrations in GitHub Actions workflows for dev and prod.
 - Updated internal tooling for stability.
 
 ### Fixed
