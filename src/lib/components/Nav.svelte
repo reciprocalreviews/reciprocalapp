@@ -54,15 +54,15 @@
 			</div>
 		{/each}
 		<div class="authenticated">
-			<div class="feedback">
-				{#if pending > 0}
+			{#if pending > 0}
+				<div class="feedback">
 					{#if pending > 1}{pending}{/if}
 					<Dots></Dots>
-				{:else}✔ {locale().header.saved}{/if}
-			</div>
+				</div>
+			{/if}
 			{#if auth().isAuthenticated()}
 				<div class="link">
-					<Link size="small" to="/scholar/{auth().getUserID()}">{auth().user?.email}</Link>
+					<Link size="small" to="/scholar/{auth().getUserID()}">Profile</Link>
 				</div>
 				<div class="link">
 					<Button
