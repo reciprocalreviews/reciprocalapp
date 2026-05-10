@@ -1514,7 +1514,9 @@ export default class SupabaseCRUD extends CRUD {
 		// The application layer only dispatches notifications based on the
 		// outcome.
 		const { data, error } = await this.client.rpc('complete_assignment', {
-			_assignment_id: assignment
+			_assignment_id: assignment,
+			_payment_purpose_template: this.locale.view.transactions.purposeTemplate.compensation,
+			_mint_purpose_template: this.locale.view.transactions.purposeTemplate.mint
 		});
 		if (error) return this.error('CompleteAssignmentRPC', error);
 

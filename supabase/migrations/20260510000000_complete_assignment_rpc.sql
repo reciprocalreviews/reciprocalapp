@@ -17,7 +17,16 @@
 -- lives in one place and so we can atomically check funds, move tokens,
 -- record the transaction, and mark the assignment complete.
 
-create or replace function public.complete_assignment (_assignment_id uuid) returns jsonb language plpgsql security definer
+-- Drop the previous single-argument signature so the replacement below
+-- doesn't collide with it. Safe because the function was introduced in
+-- this same migration; no other code paths bind to it.
+drop function if exists public.complete_assignment (uuid);
+
+create or replace function public.complete_assignment (
+    _assignment_id uuid,
+    _payment_purpose_template text,
+    _mint_purpose_template text
+) returns jsonb language plpgsql security definer
 set
 	search_path=public,
 	pg_temp as $function$
@@ -26,7 +35,7 @@ declare
     _assignment public.assignments;
     _role public.roles;
     _venue public.venues;
-    _submission_type uuid;
+    _submission public.submissions;
     _amount integer;
     _available integer;
     _token_ids uuid[];
@@ -89,19 +98,23 @@ begin
         raise exception 'Venue not found';
     end if;
 
-    select submission_type into _submission_type from public.submissions where id = _assignment.submission;
-    if _submission_type is null then
+    select * into _submission from public.submissions where id = _assignment.submission;
+    if not found then
         raise exception 'Submission not found';
     end if;
 
     select amount into _amount from public.compensation
-        where role = _assignment.role and submission_type = _submission_type;
+        where role = _assignment.role and submission_type = _submission.submission_type;
     if _amount is null then
         raise exception 'No compensation amount is configured for this role and submission type';
     end if;
 
-    _payment_purpose := 'Compensation for completing the ' || _role.name
-        || ' role for submission ' || _assignment.submission;
+    -- Substitute named placeholders in the localized purpose template.
+    -- Supported placeholders: {role}, {title}, {amount}, {shortfall}.
+    _payment_purpose := replace(
+        replace(_payment_purpose_template, '{role}', _role.name),
+        '{title}', _submission.title
+    );
 
     -- How many tokens does the venue actually hold in this currency?
     select count(*) into _available from public.tokens
@@ -109,9 +122,16 @@ begin
 
     if _available < _amount then
         _shortfall := _amount - _available;
-        _mint_purpose := 'Mint to cover ' || _amount || '-token compensation for '
-            || _role.name || ' work on submission ' || _assignment.submission
-            || ' (venue is short ' || _shortfall || ' tokens)';
+        _mint_purpose := replace(
+            replace(
+                replace(
+                    replace(_mint_purpose_template, '{amount}', _amount::text),
+                    '{role}', _role.name
+                ),
+                '{title}', _submission.title
+            ),
+            '{shortfall}', _shortfall::text
+        );
 
         -- Record a proposed mint so the minter has a pre-explained item to
         -- approve in the venue transactions page.
@@ -176,12 +196,12 @@ end;
 $function$;
 
 revoke
-execute on function public.complete_assignment (uuid)
+execute on function public.complete_assignment (uuid, text, text)
 from
 	public;
 
 grant
-execute on function public.complete_assignment (uuid) to authenticated;
+execute on function public.complete_assignment (uuid, text, text) to authenticated;
 
 -- Role approvers should be able to see the transactions they themselves
 -- create on behalf of the venue. The existing SELECT policy gates by

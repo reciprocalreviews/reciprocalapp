@@ -721,6 +721,13 @@ export type LocaleText = {
 				noTransactions: string;
 				notLoaded: string;
 			};
+			/** Templates for the purpose text recorded on transactions the
+			 * platform generates automatically. {role}, {title}, {amount},
+			 * and {shortfall} are substituted at runtime. */
+			purposeTemplate: {
+				compensation: string;
+				mint: string;
+			};
 			cell: {
 				minted: string;
 				pendingApproval: string;

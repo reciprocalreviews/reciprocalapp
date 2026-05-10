@@ -1032,6 +1032,10 @@
 				"noTransactions": "No transactions.",
 				"notLoaded": "Unable to load transactions."
 			},
+			"purposeTemplate": {
+				"compensation": "Compensation for completing the {role} role for \"{title}\"",
+				"mint": "Mint to cover {amount}-token compensation for {role} work on \"{title}\" (venue is short {shortfall} tokens)"
+			},
 			"button": {
 				"approve": {
 					"tip": "Approve this proposed transaction",

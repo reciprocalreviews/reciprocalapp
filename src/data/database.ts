@@ -799,7 +799,14 @@ export type Database = {
         Args: { _import_note: string; _submissions: Json; _venueid: string }
         Returns: Json
       }
-      complete_assignment: { Args: { _assignment_id: string }; Returns: Json }
+      complete_assignment: {
+        Args: {
+          _assignment_id: string
+          _mint_purpose_template: string
+          _payment_purpose_template: string
+        }
+        Returns: Json
+      }
       isadmin: { Args: { _venueid: string }; Returns: boolean }
       isapprover: { Args: { _roleid: string }; Returns: boolean }
       isassigned: { Args: { _submissionid: string }; Returns: boolean }
