@@ -1225,4 +1225,38 @@ values
 		true,
 		false,
 		false
+	),
+	-- Usability testing setup for ae@uni.edu reviewing the "completed review"
+	-- flows on TOK-2025-002:
+	--   1. ae@uni.edu is approved as the Associate Editor of TOK-2025-002, so
+	--      they have the approver gate for the Reviewer role on that submission.
+	--   2. r2 (Sue Pervisor) has an assignment shaped like one created by
+	--      `requestCompensation`: bid=false, approved=false, completed=false.
+	--      This simulates the scenario where a reviewer reported completing
+	--      work in an external system and asked for compensation, and the AE
+	--      now has to approve the assignment before they can mark it complete
+	--      and generate the compensation transaction.
+	--   Compare against TOK-2025-001, where r1 is already an approved Reviewer
+	--   (assignment fefed1e4-...c23) — that submission exercises the other
+	--   case, where the approver already knows the work was completed elsewhere
+	--   and can immediately click Complete to generate compensation.
+	(
+		'fefed1e4-ad3a-11f0-9807-1f8d6e4b5c26',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c13',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		false,
+		true,
+		false
+	),
+	(
+		'fefed1e4-ad3a-11f0-9807-1f8d6e4b5c27',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c13',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac8',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		false,
+		false
 	);
