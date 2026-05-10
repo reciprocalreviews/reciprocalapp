@@ -6,7 +6,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Added
 
-- End-to-end tests for venue administration.
+- End-to-end tests for venue administration (#121), currency minting and transaction approval (#120), role configuration and volunteering (#118).
 
 ### Changed
 

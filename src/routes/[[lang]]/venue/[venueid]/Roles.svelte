@@ -94,6 +94,7 @@
 					isntEmpty(text) ? undefined : (l) => l.view.roles.field.newRoleName.invalid ?? ''}
 			/><Button
 				strings={(l) => l.view.roles.button.createRole}
+				testid="create-role-button"
 				active={isntEmpty(newRole)}
 				action={async () => {
 					const result = await handle(db().createRole(venue.id, newRole));
@@ -264,12 +265,14 @@
 								text={scholarVolunteer.expertise}
 								strings={(l) => l.view.roles.field.expertise}
 								edit={(text) => db().updateVolunteerExpertise(scholarVolunteer.id, text)}
+								testid="volunteer-expertise"
 							/>
 						{:else}
 							<p>
 								{locale().view.roles.paragraph.stopped}
 								<Button
 									strings={(l) => l.view.roles.button.resume}
+									testid="volunteer-resume"
 									action={() => handle(db().updateVolunteerActive(scholarVolunteer.id, true))}
 									>Resume...</Button
 								>
@@ -292,9 +295,11 @@
 									? undefined
 									: (l) => l.view.roles.field.invite.invalid ?? ''}
 							bind:text={invites[role.id]}
+							testid="role-invite-field-{role.name}"
 						/>
 						<Button
 							strings={(l) => l.view.roles.button.invite}
+							testid="role-invite-button-{role.name}"
 							active={validEmailsOrORCIDs(invites[role.id])}
 							action={async () => {
 								if (
@@ -344,6 +349,7 @@
 							text={role.description}
 							strings={(l) => l.view.roles.field.roleDescription}
 							edit={(text) => db().editRoleDescription(role.id, text)}
+							testid="role-description-{role.name}"
 						/>
 						<Checkbox
 							on={role.invited}
@@ -396,6 +402,7 @@
 
 						<Button
 							strings={(l) => l.view.roles.button.deleteRole}
+							testid="role-delete-{role.name}"
 							active={roles.length > 1}
 							action={() => handle(db().deleteRole(role.id))}
 							>{#if roles.length > 1}Delete {DeleteLabel} …{:else}Can't delete the last role{/if}</Button

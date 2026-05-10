@@ -115,7 +115,12 @@
 
 		{#if user && isMinter && venues}
 			<Cards>
-				<Card subheader icon={TokenLabel} strings={(l) => l.page.currency.card.mint}>
+				<Card
+					subheader
+					icon={TokenLabel}
+					strings={(l) => l.page.currency.card.mint}
+					testid="mint-card"
+				>
 					<Form>
 						<Tip><Text path={(l) => l.page.currency.tip.mintWarning} /></Tip>
 						<Options
@@ -133,6 +138,7 @@
 							step={1}
 							strings={(l) => l.page.currency.slider.newTokenCount}
 							change={(val) => (newTokenCount = val)}
+							testid="mint-amount"
 						/>
 						<TextField
 							strings={(l) => l.page.currency.field.mintPurpose}
@@ -142,14 +148,17 @@
 								text.length === 0
 									? (l) => l.page.currency.field.mintPurpose.invalid ?? ''
 									: undefined}
+							testid="mint-purpose"
 						/>
 						<Checkbox
 							bind:on={newTokenConsent}
 							label={(l) => l.page.currency.checkbox.mintConsent}
+							testid="mint-consent"
 						/>
 
 						<Button
 							strings={(l) => l.page.currency.button.mint}
+							testid="mint-submit"
 							active={!newTokenCreating &&
 								newTokenConsent &&
 								newTokenCount > 0 &&
