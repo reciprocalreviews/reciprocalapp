@@ -83,3 +83,9 @@ Svelte 5 runes (`$state`, `$derived`, `$effect`) are used throughout. Class comp
 ### Email
 
 Emails are sent via Resend in production (triggered by Supabase Edge Functions watching an `emails` table). Locally they log to console. Templates are in `src/email/templates.ts`.
+
+## Documentation upkeep
+
+`DESIGN.md` describes the user-facing design and design rationale; `ARCHITECTURE.md` describes the implementation. Both are intended to stay in alignment with the design and the code.
+
+After making any change to this repository — code, schema, route structure, user-facing behavior, or anything else of consequence — audit both `DESIGN.md` and `ARCHITECTURE.md` against the change you made and ask the user whether either file should be updated to reflect it. Be specific in the prompt: name the section that may be affected and propose the edit, so the user can confirm or redirect quickly. Do not silently update either file without asking, and do not skip the audit even when the change feels small — drift is what these docs are designed to prevent.

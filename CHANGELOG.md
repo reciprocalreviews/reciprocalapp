@@ -6,6 +6,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Changed
 
+- Updated DESIGN.md to be alignment with the current design and technical debt. Also updated CLAUDE.md to maintain DEISGN.md and ARCHITECTURE.md in response to changes in implementation.
 - Updated internal tooling for stability.
 
 ## 0.3.13 - 2026-05-03
