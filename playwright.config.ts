@@ -14,6 +14,7 @@ const config: PlaywrightTestConfig = {
 	use: {
 		screenshot: 'only-on-failure'
 	},
+	reporter: [['html']],
 	workers: 1,
 	testDir: 'end2end',
 	testMatch: /(.+\.)?(end)\.ts/,
