@@ -30,7 +30,13 @@
 
 		{#if venue.admins.includes(scholar.id)}
 			<Cards>
-				<Card group="admin" icon="🎁" strings={(l) => l.page.venue.card.gift} full>
+				<Card
+					group="admin"
+					icon="🎁"
+					strings={(l) => l.page.venue.card.gift}
+					full
+					testid="venue-gift-card"
+				>
 					{#if scholar}
 						<Gift
 							{tokens}

@@ -191,6 +191,7 @@
 					{#if isMinter && currency.minters.length > 1}&nbsp;<Button
 							strings={(l) => l.page.currency.button.removeMinter}
 							active={currency.minters.length > 1}
+							testid="remove-minter-{index}"
 							action={() =>
 								handle(
 									db().editCurrencyMinters(
@@ -205,16 +206,23 @@
 
 		{#if isMinter}
 			<Cards>
-				<Card subheader icon={MinterLabel} strings={(l) => l.page.currency.card.addMinter}>
+				<Card
+					subheader
+					icon={MinterLabel}
+					strings={(l) => l.page.currency.card.addMinter}
+					testid="add-minter-card"
+				>
 					<Form>
 						<TextField
 							strings={(l) => l.page.currency.field.minter}
 							bind:text={newMinter}
 							size={19}
 							valid={isValidMinter}
+							testid="add-minter-field"
 						/><Button
 							strings={(l) => l.page.currency.button.addMinter}
 							active={isValidMinter(newMinter) === undefined}
+							testid="add-minter-button"
 							action={async () => {
 								if (
 									await handle(db().addCurrencyMinter(currency.id, currency.minters, newMinter))

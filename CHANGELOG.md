@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.3.14 - 2026-05-10
 
+### Added
+
+- End-to-end tests for venue administration.
+
 ### Changed
 
 - Volunteers can now approve and compensate the work of other volunteers when the are in an approving role. For example, rather than an Associate Editor marking a Reviewer's review approved, and then generating a proposed transaction that a minter must approve, the Associate Editor can directly approve the transfer from the venue. A transaction is still generated for transparency and auditing.

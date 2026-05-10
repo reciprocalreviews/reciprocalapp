@@ -92,6 +92,7 @@
 						valid={pageHeader.edit.valid}
 						edit={pageHeader.edit.update}
 						strings={(l) => ({ placeholder: pageHeader.edit!.placeholder(l) })}
+						testid="page-title-edit"
 					/>
 				{:else if pageHeader.title.length > 0}
 					{pageHeader.title}

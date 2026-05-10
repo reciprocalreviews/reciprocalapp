@@ -184,6 +184,7 @@
 											strings={(l) => l.view.roles.slider.compensation}
 											change={(value) =>
 												handle(db().editCompensation(type.id, role.id, value, comp.rationale))}
+											testid="compensation-{role.name}-{type.name}"
 										/>
 										<Button
 											small
@@ -319,6 +320,7 @@
 						strings={(l) => l.view.roles.card.settings}
 						subheader
 						group="admin"
+						testid="role-settings-{role.name}"
 					>
 						{#if roleVolunteers.length > 0}
 							<Feedback
@@ -366,6 +368,7 @@
 								role.biddable
 									? l.view.roles.checkbox.biddable.on
 									: l.view.roles.checkbox.biddable.off}
+							testid="role-biddable-{role.name}"
 						/>
 
 						<Slider
@@ -418,6 +421,7 @@
 						&nbsp;<Button
 							strings={(l) => l.view.roles.button.removeAdmin}
 							active={venue.admins.length > 1}
+							testid="remove-admin-{index}"
 							action={() =>
 								handle(
 									db().editVenueAdmins(
@@ -438,9 +442,11 @@
 						bind:text={newEditor}
 						size={19}
 						valid={(text) => validAdmin(text)}
+						testid="add-admin-field"
 					/><Button
 						strings={(l) => l.view.roles.button.addAdmin}
 						active={validAdmin(newEditor) === undefined}
+						testid="add-admin-button"
 						action={async () => {
 							if (await handle(db().addVenueAdmin(venue.id, newEditor))) newEditor = '';
 						}}

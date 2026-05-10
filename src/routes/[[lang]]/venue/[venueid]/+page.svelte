@@ -61,6 +61,7 @@
 					strings={(l) => l.page.venue.field.url}
 					valid={(text) => (validURL(text) ? undefined : (l) => l.page.venue.field.url.invalid)}
 					edit={(text) => db().editVenueURL(venue.id, text)}
+					testid="venue-url"
 				/>
 			{:else}
 				<Link to={venue.url}>{venue.url}</Link>
@@ -74,6 +75,7 @@
 				strings={(l) => l.page.venue.field.description}
 				inline={false}
 				edit={(text) => db().editVenueDescription(venue.id, text)}
+				testid="venue-description"
 			/>
 		{:else}
 			<Paragraph
