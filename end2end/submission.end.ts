@@ -6,6 +6,13 @@ const AUTHOR1_ORCID = '0000-0001-2345-6792'; // Foot Note (author1@uni.edu)
 const AUTHOR2_ORCID = '0000-0001-2345-6795'; // Ann Thesis (author2@uni.edu)
 
 test('author can create a two-author submission splitting the cost', async ({ page, context }) => {
+	// Submission creation does several sequential DB round-trips (verify
+	// balances, find scholars, fetch venue, create proposed transactions,
+	// approve the creator's transaction, insert the submission, then load the
+	// new submission page). The default 30s test budget is enough locally but
+	// flaky on CI runners.
+	test.setTimeout(90_000);
+
 	await login('author1@uni.edu', page, context);
 
 	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
@@ -43,9 +50,11 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 		page.locator('text=The authors have sufficient tokens to pay for this submission.')
 	).toBeVisible();
 
-	// Submit and verify redirect to the new submission page.
+	// Submit and verify redirect to the new submission page. We need a more
+	// generous URL-wait timeout than the action default because the underlying
+	// createSubmission does several sequential DB round-trips before goto().
 	await page.getByTestId('submit-submission').click();
-	await page.waitForURL(/\/venue\/.+\/submission\/.+/);
+	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 60_000 });
 
 	await logout(page);
 });
