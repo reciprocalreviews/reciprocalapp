@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import { login } from '../src/routes/login';
 
 const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
+const CURRENCY_ID = 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac';
 const SUBMISSION_ID = 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12';
 const REVIEWER_ROLE_ID = 'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81';
 
@@ -88,4 +89,12 @@ test('when the venue is out of tokens, Complete surfaces an error and queues a p
 		`select count(*) from public.assignments where submission = '${SUBMISSION_ID}' and role = '${REVIEWER_ROLE_ID}' and approved and not completed;`
 	);
 	expect(Number(stillIncomplete)).toBeGreaterThanOrEqual(1);
+
+	// Restore venue tokens so subsequent tests in the suite (e.g., the venue
+	// gift test) see a non-empty reserve. This intentionally mirrors the seed
+	// quantity (50) rather than tracking an exact pre-test count, since the
+	// happy-path test above already consumed some.
+	sql(
+		`insert into public.tokens (currency, scholar, venue) select '${CURRENCY_ID}', null, '${VENUE_ID}' from generate_series(1, 50);`
+	);
 });

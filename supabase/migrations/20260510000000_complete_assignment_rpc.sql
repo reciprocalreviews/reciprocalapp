@@ -17,11 +17,6 @@
 -- lives in one place and so we can atomically check funds, move tokens,
 -- record the transaction, and mark the assignment complete.
 
--- Drop the previous single-argument signature so the replacement below
--- doesn't collide with it. Safe because the function was introduced in
--- this same migration; no other code paths bind to it.
-drop function if exists public.complete_assignment (uuid);
-
 create or replace function public.complete_assignment (
     _assignment_id uuid,
     _payment_purpose_template text,
