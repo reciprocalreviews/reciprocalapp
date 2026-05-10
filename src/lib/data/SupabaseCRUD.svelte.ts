@@ -1425,7 +1425,51 @@ export default class SupabaseCRUD extends CRUD {
 			if (result.error) return result;
 		}
 
-		return this.emailScholars([scholarID], 'CompensationRequested', [venueID, submission.id, note]);
+		// Notify whoever can act on this request, not the requester themselves.
+		// "Can act on it" matches canApproveAssignment.ts: anyone approved on
+		// this submission for the role that approves the requested role, plus
+		// venue admins as a fallback when no approver is assigned yet.
+		const recipients = new Set<ScholarID>();
+
+		const { data: role, error: roleError } = await this.client
+			.from('roles')
+			.select('approver')
+			.eq('id', roleID)
+			.single();
+		if (roleError) return this.error('CompensationAssignmentCheck', roleError);
+
+		if (role.approver !== null) {
+			const { data: approverAssignments, error: approverError } = await this.client
+				.from('assignments')
+				.select('scholar')
+				.eq('submission', submission.id)
+				.eq('role', role.approver)
+				.eq('approved', true);
+			if (approverError) return this.error('CompensationAssignmentCheck', approverError);
+			for (const a of approverAssignments ?? []) recipients.add(a.scholar);
+		}
+
+		if (recipients.size === 0) {
+			const { data: venue, error: venueError } = await this.client
+				.from('venues')
+				.select('admins')
+				.eq('id', venueID)
+				.single();
+			if (venueError) return this.error('CompensationAssignmentCheck', venueError);
+			for (const admin of venue.admins) recipients.add(admin);
+		}
+
+		recipients.delete(scholarID);
+
+		// No one to notify (shouldn't happen given the admins fallback, but
+		// don't error if it does — the assignment was still created).
+		if (recipients.size === 0) return { data: undefined, error: undefined };
+
+		return this.emailScholars([...recipients], 'CompensationRequested', [
+			venueID,
+			submission.id,
+			note
+		]);
 	}
 
 	async completeAssignment(assignment: AssignmentID, completer: ScholarID): Promise<Result> {

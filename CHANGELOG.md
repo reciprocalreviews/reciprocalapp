@@ -15,6 +15,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Fixed
 
 - Locale validation now works instead of silently failing.
+- Request compensation emails now go to the correct recipients.
 
 ## 0.3.13 - 2026-05-03
 
