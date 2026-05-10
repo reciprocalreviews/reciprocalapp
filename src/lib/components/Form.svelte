@@ -1,10 +1,16 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	let { inline = false, children }: { inline?: boolean; children: Snippet } = $props();
+	let {
+		inline = false,
+		modern = false,
+		children
+	}: { inline?: boolean; modern?: boolean; children: Snippet } = $props();
 </script>
 
-<form class:inline onsubmit={(e) => e.preventDefault()}>{@render children()}</form>
+<form class:inline class:modern onsubmit={(e) => e.preventDefault()}>
+	{@render children()}
+</form>
 
 <style>
 	form {
@@ -23,5 +29,14 @@
 		align-items: baseline;
 		gap: var(--spacing);
 		row-gap: var(--spacing);
+	}
+
+	form.modern {
+		gap: 0;
+		align-items: stretch;
+		border: var(--border-width) solid var(--border-color);
+		border-radius: var(--roundedness);
+		padding: 0;
+		overflow: hidden;
 	}
 </style>

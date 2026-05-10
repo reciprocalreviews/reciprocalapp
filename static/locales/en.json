@@ -160,6 +160,11 @@
 					"label": "Propose venue"
 				}
 			},
+			"section": {
+				"venueInfo": "Venue info",
+				"team": "Team",
+				"rationale": "Rationale"
+			},
 			"field": {
 				"venueName": {
 					"label": "venue",

@@ -17,6 +17,8 @@
 		/** Given a string, return a message describing invalidity, or nothing */
 		valid?: undefined | ((text: string) => ((l: LocaleText) => string) | undefined);
 		inline?: boolean;
+		/** Makes the input fill its container width instead of auto-sizing to content */
+		stretch?: boolean;
 		password?: boolean;
 		view?: HTMLInputElement | HTMLTextAreaElement | undefined;
 		done?: ((() => void) | undefined) | undefined;
@@ -31,6 +33,7 @@
 		name = undefined,
 		valid = undefined,
 		inline = true,
+		stretch = false,
 		password = false,
 		view = $bindable(undefined),
 		done = undefined,
@@ -95,7 +98,8 @@
 		<div
 			class="input-wrap"
 			class:inline
-			style:width={inline && inputWidth > 0 ? inputWidth + 'px' : undefined}
+			class:stretch
+			style:width={!stretch && inline && inputWidth > 0 ? inputWidth + 'px' : undefined}
 		>
 			{#if inline}
 				<input
@@ -110,7 +114,7 @@
 					onblur={() => {
 						done?.();
 					}}
-					style:width={size === undefined ? (width === 0 ? 'auto' : width + 'px') : undefined}
+					style:width={!stretch && size === undefined ? (width === 0 ? 'auto' : width + 'px') : undefined}
 					class:invalid={!isValid}
 					{placeholder}
 					type={password ? 'password' : 'text'}
@@ -171,6 +175,18 @@
 		display: inline-flex;
 		vertical-align: top;
 		flex-grow: 0;
+	}
+
+	.input-wrap.stretch {
+		display: flex;
+		width: 100%;
+	}
+
+	.input-wrap.stretch input,
+	.input-wrap.stretch textarea {
+		max-width: 100%;
+		width: 100%;
+		box-sizing: border-box;
 	}
 
 	input {
