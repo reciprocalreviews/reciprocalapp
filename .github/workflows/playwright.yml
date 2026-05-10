@@ -21,6 +21,9 @@ jobs:
         uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Record Supabase CLI version
+        id: supabase-version
+        run: echo "version=$(supabase --version)" >> "$GITHUB_OUTPUT"
       - name: Install dependencies
         run: npm ci
       - name: Define environment variables for build.
@@ -37,8 +40,32 @@ jobs:
       - name: Install Playwright system dependencies
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
+      # Cache the Supabase Docker images. `supabase start` pulls ~6 images
+      # (~1GB) on a cold runner which dominates the run time. We cache the
+      # images as a tarball keyed on the CLI version + config.toml hash, so
+      # the cache busts automatically when either changes.
+      - name: Cache Supabase Docker images
+        uses: actions/cache@v4
+        id: supabase-cache
+        with:
+          path: /tmp/supabase-images.tar
+          key: supabase-images-v1-${{ steps.supabase-version.outputs.version }}-${{ hashFiles('supabase/config.toml') }}
+      - name: Load cached Supabase images
+        if: steps.supabase-cache.outputs.cache-hit == 'true'
+        run: docker load -i /tmp/supabase-images.tar
       - name: Run Playwright tests using the vite dev server and Supabase local development setup
         run: npx playwright test
+      # On a cache miss, snapshot the now-pulled images to the tarball that
+      # actions/cache will save in its post-job phase. On a cache hit, the
+      # tarball is already on disk and untouched, so the post-job save is a
+      # no-op.
+      - name: Save Supabase images to tarball for cache
+        if: steps.supabase-cache.outputs.cache-hit != 'true'
+        run: |
+          images=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v '^<none>:' | tr '\n' ' ')
+          if [ -n "$images" ]; then
+            docker save -o /tmp/supabase-images.tar $images
+          fi
       - uses: actions/upload-artifact@v5
         if: always()
         with:
