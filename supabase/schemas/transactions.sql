@@ -72,8 +72,15 @@ create policy "transactions are only visible to minters and those involved" on p
 select
 	to authenticated using (
 		(
-			-- Scholars giving can see their transactions
+			-- The transaction's creator
 			(
+				(
+					select
+						auth.uid () as uid
+				)=creator
+			)
+			-- Scholars giving can see their transactions
+			or (
 				(
 					select
 						auth.uid () as uid

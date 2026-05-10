@@ -207,7 +207,13 @@
             "CompensationSubmissionNotFound": {
               "type": "string"
             },
+            "CompleteAssignmentInsufficientTokens": {
+              "type": "string"
+            },
             "CompleteAssignmentNotFound": {
+              "type": "string"
+            },
+            "CompleteAssignmentRPC": {
               "type": "string"
             },
             "CompleteAssignmentRoleNotFound": {
@@ -552,6 +558,8 @@
             "CompleteAssignmentNotFound",
             "CompleteAssignmentRoleNotFound",
             "CompleteAssignmentVenueNotFound",
+            "CompleteAssignmentInsufficientTokens",
+            "CompleteAssignmentRPC",
             "DeleteAssignment",
             "EmailScholar",
             "ApproveProposalNoSupporters",
@@ -2319,7 +2327,7 @@
                       "$ref": "#/definitions/ButtonText"
                     },
                     "complete": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText"
                     },
                     "createAssignment": {
                       "$ref": "#/definitions/ButtonText"

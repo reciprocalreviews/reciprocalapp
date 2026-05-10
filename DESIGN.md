@@ -104,7 +104,7 @@ There are several key types of data in RR.
 - [x] Scholars can spend `Token`s to submit manuscripts for peer review.
 - [x] Scholars can also have _`admin`_ status on a `Venue`, which gives them the ability to manage the configuration of the venue `Venue`.
 - [x] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
-- [x] An individual scholar cannot be both an _`editor`_ and a _`minter`_, as this would allow editors to enrich themselves without oversight.
+- [x] An individual scholar cannot be both an _`editor`_ and a _`minter`_. However, editors and role approvers can spend a `Venue`'s token reserve directly (without minter approval). This separation prevents anyone with spending authority from also creating new tokens — the minter check is the only oversight on currency supply.
 - [x] Scholars can specify an email address for communication.
 - [x] Anyone can view a `Scholar`'s record, but only `Scholars` can create, update, or delete their record.
 - [ ] ([#87](https://github.com/reciprocalreviews/reciprocalapp/issues/87)) Resolve the design ambiguity between email-as-identifier and ORCID-as-identifier, including how RR should behave when a scholar's email collides with another scholar's username/ORCID record.
@@ -381,6 +381,7 @@ The purpose of this page is to allow for management of all `Transaction`s associ
 - [x] _`editor`_, _`minter`_: View all transactions
 - [x] _`minter`_: Approve pending transactions that do not involve the scholar approving
 - [x] _`minters`_: Send email reminders about unfinished transactions and work at a customizable frequency.
+- [x] _`scholar`_: Transfer tokens from the venue to a scholar directly (no minter approval required) when authorizing a payout the approver has the authority to grant, such as completing a reviewer's assignment. The transfer fails if the venue's reserve is short; in that case a proposed mint transaction sized at the shortfall is recorded automatically, the venue's _`minter`_(s) are notified by email, and the approver can retry once the minter approves. Role approvers can also see the transactions they themselves created, so they can audit their own activity.
 
 ### `/venue/[id]/submissions`
 
@@ -429,3 +430,5 @@ RR will also send transactional emails in response to user actions:
 
 - [ ] ([#114](https://github.com/reciprocalreviews/reciprocalapp/issues/114)) When a proposed `Transaction` is declined, an email is sent to the person who proposed it with an explanation for why.
 - [x] When `Venue`s become **approved**, send emails to the editor and all people who upvoted the venue, notifying them of their new tokens and the live process.
+- [x] When a role approver completes an assignment and tokens are paid out, email the compensated scholar with the role name and amount paid.
+- [x] When a role approver attempts to pay out but the venue's reserve is too small, email the venue's _`minter`_(s) with the shortfall and a link to the venue's transactions page where the auto-recorded proposed mint awaits approval.

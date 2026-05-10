@@ -411,7 +411,10 @@
 								{#if assignment.scholar === scholar.id}{locale().page.submission.cell
 										.you}{:else}<ScholarLink id={assignment.scholar} />{/if}
 								{#if assignment.completed}
-									<Status label={(l) => l.page.submission.status.completed} />
+									<Status
+										testid="assignment-completed"
+										label={(l) => l.page.submission.status.completed}
+									/>
 								{:else if assignment.approved}
 									<Status label={(l) => l.page.submission.status.assigned} />
 								{:else}
@@ -436,6 +439,7 @@
 											{#if !assignment.completed}
 												<Button
 													strings={(l) => l.page.submission.button.complete}
+													testid="complete-assignment"
 													action={() => handle(db().completeAssignment(assignment.id, scholar.id))}
 												/>
 											{/if}

@@ -38,6 +38,42 @@ import Scholar from './Scholar.svelte';
 // A constant page size for paginated queries.
 export const PAGE_SIZE = 10;
 
+/** Shape of the JSONB returned by the complete_assignment Postgres RPC.
+ * The two branches correspond to the two outcomes of an attempt to pay a
+ * completed assignment: either the venue had enough tokens and they moved
+ * to the scholar, or it didn't and a proposed mint transaction was queued
+ * for a minter to approve. */
+type CompleteAssignmentResult =
+	| {
+			status: 'transferred';
+			transaction_id: TransactionID;
+			amount: number;
+			role_name: string;
+			venue_id: VenueID;
+			scholar_id: ScholarID;
+			submission_id: SubmissionID;
+	  }
+	| {
+			status: 'insufficient';
+			shortfall: number;
+			amount: number;
+			mint_transaction_id: TransactionID;
+			venue_id: VenueID;
+			venue_title: string;
+			currency_id: CurrencyID;
+			scholar_id: ScholarID;
+			submission_id: SubmissionID;
+			role_name: string;
+	  };
+
+/** Runtime narrowing of the Json that Supabase returns from the
+ * complete_assignment RPC. Uses TypeScript's `in` narrowing so no
+ * `as` cast is needed. */
+function isCompleteAssignmentResult(value: unknown): value is CompleteAssignmentResult {
+	if (typeof value !== 'object' || value === null || !('status' in value)) return false;
+	return value.status === 'transferred' || value.status === 'insufficient';
+}
+
 export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
 	readonly client: SupabaseClient<Database>;
@@ -1472,72 +1508,51 @@ export default class SupabaseCRUD extends CRUD {
 		]);
 	}
 
-	async completeAssignment(assignment: AssignmentID, completer: ScholarID): Promise<Result> {
-		// Get the assignment data
-		const { data: assignmentData, error: assignmentError } = await this.client
-			.from('assignments')
-			.select()
-			.eq('id', assignment)
-			.single();
-		if (assignmentData === null) return this.error('CompleteAssignmentNotFound', assignmentError);
+	async completeAssignment(assignment: AssignmentID, _completer: ScholarID): Promise<Result> {
+		// Authorization, fund-check, token transfer, transaction insert, and
+		// assignment update are all atomic inside the complete_assignment RPC.
+		// The application layer only dispatches notifications based on the
+		// outcome.
+		const { data, error } = await this.client.rpc('complete_assignment', {
+			_assignment_id: assignment
+		});
+		if (error) return this.error('CompleteAssignmentRPC', error);
 
-		// Get the role data, so we can generate a message with its name.
-		const { data: roleData, error: roleError } = await this.client
-			.from('roles')
-			.select()
-			.eq('id', assignmentData.role)
-			.single();
-		if (roleData === null) return this.error('CompleteAssignmentRoleNotFound', roleError);
+		// Supabase types JSONB-returning RPCs as `Json`, so we narrow at the
+		// boundary with runtime-checked type predicates. That gives us a
+		// typed `data` without a TypeScript cast (no `as` keyword), and it
+		// would actually catch an RPC contract drift at runtime — unlike
+		// `as`, which trusts the call blindly.
+		if (!isCompleteAssignmentResult(data)) return this.error('CompleteAssignmentRPC');
 
-		// Get the submission type from the submission, so we can look up the compensation amount.
-		const { data: submissionData, error: submissionError } = await this.client
-			.from('submissions')
-			.select('submission_type')
-			.eq('id', assignmentData.submission)
-			.single();
-		if (submissionData === null)
-			return this.error('CompleteAssignmentRoleNotFound', submissionError);
+		if (data.status === 'insufficient') {
+			// The RPC already recorded a proposed mint transaction sized at
+			// the shortfall. Email the venue's minter(s) so they know to
+			// approve it.
+			const { data: currency } = await this.client
+				.from('currencies')
+				.select('minters')
+				.eq('id', data.currency_id)
+				.single();
+			if (currency !== null && currency.minters.length > 0) {
+				await this.emailScholars(currency.minters, 'VenueOutOfTokens', [
+					data.amount.toString(),
+					data.role_name,
+					data.shortfall.toString(),
+					data.venue_id,
+					data.venue_title
+				]);
+			}
+			return this.error('CompleteAssignmentInsufficientTokens');
+		}
 
-		// Get the compensation data for this role, so we know the compensation amount.
-		const { data: compensationData, error: compensationError } = await this.client
-			.from('compensation')
-			.select()
-			.eq('role', assignmentData.role)
-			.eq('submission_type', submissionData.submission_type)
-			.single();
-		if (compensationData === null)
-			return this.error('CompleteAssignmentRoleNotFound', compensationError);
-
-		// Get the venue data, so we can get the currency.
-		const { data: venueData, error: venueError } = await this.client
-			.from('venues')
-			.select()
-			.eq('id', assignmentData.venue)
-			.single();
-		if (venueData === null) return this.error('CompleteAssignmentVenueNotFound', venueError);
-
-		// Bail if no amount for this role/submission type.
-		if (compensationData.amount === null) return this.error('NoRoleCompensation');
-
-		// Create a transaction to pay the scholar.
-		const { error: transactionError } = await this.createTransaction(
-			completer,
-			null,
-			assignmentData.venue,
-			assignmentData.scholar,
-			null,
-			// Create a list of null UUIDs to represent that they don't exist yet.
-			new Array(compensationData.amount).fill(NullUUID),
-			venueData.currency,
-			`Compensation for completing the ${roleData.name} role for submission ${assignmentData.submission}.`,
-			'proposed'
-		);
-		if (transactionError) return this.error('CreateTransaction', transactionError.details);
-
-		// Mark the assignment as completed.
-		await this.client.from('assignments').update({ completed: true }).eq('id', assignmentData.id);
-
-		return { data: undefined, error: undefined };
+		// Tokens have moved. Tell the scholar.
+		return this.emailScholars([data.scholar_id], 'WorkCompensated', [
+			data.role_name,
+			data.amount.toString(),
+			data.venue_id,
+			data.submission_id
+		]);
 	}
 
 	async deleteAssignment(assignment: AssignmentID): Promise<Result> {

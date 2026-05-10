@@ -6,8 +6,9 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Changed
 
+- Volunteers can now approve and compensate the work of other volunteers when the are in an approving role. For example, rather than an Associate Editor marking a Reviewer's review approved, and then generating a proposed transaction that a minter must approve, the Associate Editor can directly approve the transfer from the venue. A transaction is still generated for transparency and auditing.
 - Updated DESIGN.md to be alignment with the current design and technical debt. Also updated CLAUDE.md to maintain DEISGN.md and ARCHITECTURE.md in response to changes in implementation.
-- Updated ARCHITECTURE.md to be a more complete onboarding document.
+- Updated ARCHITECTURE.md to be a more complete onboarding document for new contributors.
 - Gated Vercel deployments behind verifications and Supabase migrations in GitHub Actions workflows for dev and prod.
 - Cached Supabase Docker for Playwright speed in CI.
 - Updated internal tooling for stability.

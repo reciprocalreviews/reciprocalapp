@@ -60,6 +60,21 @@ export const Emails = {
 			'"$3"',
 			"If this is a valid request, approve the assignment, evaluate their work, and if it meets your venue's standards, mark the work complete so they are compensated."
 		]
+	},
+	WorkCompensated: {
+		subject: 'You were paid for your $1 work',
+		paragraphs: [
+			'The approver of your $1 assignment marked your work complete and paid you $2 tokens for it. The tokens have been transferred to your account.',
+			'You can view the submission here: https://reciprocal.reviews/venue/$3/submission/$4'
+		]
+	},
+	VenueOutOfTokens: {
+		subject: '$5 needs more tokens to pay its reviewers',
+		paragraphs: [
+			'An approver at $5 tried to pay $1 tokens for $2 work on a submission, but the venue is short $3 tokens.',
+			'A proposed mint transaction sized exactly to the shortfall has been recorded so if you decide to approve it, it is a one click approval. If you approve it, then approver can retry the payment:',
+			'https://reciprocal.reviews/venue/$4/transactions'
+		]
 	}
 } satisfies Record<string, Email>;
 

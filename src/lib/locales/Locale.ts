@@ -399,7 +399,7 @@ export type LocaleText = {
 			button: {
 				createAssignment: ButtonText;
 				unassign: ButtonText;
-				complete: ButtonText;
+				complete: ConfirmButtonText;
 				approve: ButtonText;
 				approveBid: ButtonText;
 			};
@@ -967,6 +967,8 @@ export type LocaleText = {
 		CompleteAssignmentNotFound: string;
 		CompleteAssignmentRoleNotFound: string;
 		CompleteAssignmentVenueNotFound: string;
+		CompleteAssignmentInsufficientTokens: string;
+		CompleteAssignmentRPC: string;
 		DeleteAssignment: string;
 		EmailScholar: string;
 		ApproveProposalNoSupporters: string;

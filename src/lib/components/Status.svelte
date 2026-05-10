@@ -4,14 +4,16 @@
 
 	let {
 		good = true,
-		label
+		label,
+		testid
 	}: {
 		good?: boolean;
 		label: (l: LocaleText) => string;
+		testid?: string;
 	} = $props();
 </script>
 
-<span class="status" class:good><Text path={label} /></span>
+<span class="status" class:good data-testid={testid}><Text path={label} /></span>
 
 <style>
 	.status {

@@ -936,6 +936,13 @@ values
 		null
 	);
 
+-- Seed the venue's token reserve so role approvers have something to pay
+-- out when they click Complete on an assignment. Sized for usability
+-- testing (50 tokens = 5 reviewer compensations at 10 tokens each).
+insert into public.tokens (currency, scholar, venue)
+select 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac', null, 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6'
+from generate_series(1, 50);
+
 insert into
 	public.volunteers (
 		"id",
