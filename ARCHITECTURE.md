@@ -184,8 +184,31 @@ Plus breadcrumbs and page-header state for the chrome.
 ## Build and release
 
 - `npm run build` runs `npm run updates` first. [scripts/updates.js](scripts/updates.js) parses [CHANGELOG.md](CHANGELOG.md) and emits `src/routes/[[lang]]/updates/updates.json`, which the `/updates` route renders as release notes.
-- `npm run deploy` merges `dev` → `main` and pushes; Vercel deploys from `main`.
+- `npm run deploy` merges `dev` → `main` and pushes both branches. The push triggers CI; CI does the actual deploy.
 - `package.json#version` is bumped manually as part of changelog updates.
+
+### Deployment pipeline
+
+Vercel's automatic git-deploys are **disabled** for `dev` and `main` (see [vercel.json](vercel.json)`#git.deploymentEnabled`). Deploys are driven by GitHub Actions instead, so a broken push never reaches hosting.
+
+Each branch push triggers a workflow that runs jobs in this order:
+
+```
+[unit-tests, playwright, locale-validation]   ── parallel
+              │
+              ▼ all pass
+           migrate         ── supabase db push
+              │
+              ▼ pass
+           vercel          ── vercel pull → build → deploy
+```
+
+If any test fails, neither the Supabase migration nor the Vercel deploy runs. Migrations are applied before the Vercel deploy so schema changes are in place before the code that depends on them goes live.
+
+- `dev` → [.github/workflows/staging.yml](.github/workflows/staging.yml) deploys to a Vercel **preview** environment against the staging Supabase project.
+- `main` → [.github/workflows/production.yml](.github/workflows/production.yml) deploys to Vercel **production** against the production Supabase project.
+
+Required GitHub secrets: `SUPABASE_ACCESS_TOKEN`, `STAGING_DB_PASSWORD`, `STAGING_PROJECT_ID`, `PRODUCTION_DB_PASSWORD`, `PRODUCTION_PROJECT_ID`, `TEST_ENV`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`. Per-environment runtime config (Supabase URL, anon key, Resend key, etc.) lives in Vercel's environment variable settings and is pulled at build time by `vercel pull`.
 
 ## Testing
 
