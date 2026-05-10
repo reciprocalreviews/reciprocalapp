@@ -11,6 +11,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Gated Vercel deployments behind verifications and Supabase migrations in GitHub Actions workflows for dev and prod.
 - Cached Supabase Docker for Playwright speed in CI.
 - Updated internal tooling for stability.
+- Only generate updates in CI.
 
 ### Fixed
 

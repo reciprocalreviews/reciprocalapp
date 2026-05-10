@@ -183,7 +183,7 @@ Plus breadcrumbs and page-header state for the chrome.
 
 ## Build and release
 
-- `npm run build` runs `npm run updates` first. [scripts/updates.js](scripts/updates.js) parses [CHANGELOG.md](CHANGELOG.md) and emits `src/routes/[[lang]]/updates/updates.json`, which the `/updates` route renders as release notes.
+- `npm run build` runs [scripts/maybe-updates.js](scripts/maybe-updates.js) first, which invokes `npm run updates` only when `$CI` is set. CI builds regenerate `src/routes/[[lang]]/updates/updates.json` from [CHANGELOG.md](CHANGELOG.md) via [scripts/updates.js](scripts/updates.js); local builds reuse whatever was last committed, so the file doesn't churn on every dev rebuild. Run `npm run updates` manually if you want to regenerate it locally.
 - `npm run deploy` merges `dev` → `main` and pushes both branches. The push triggers CI; CI does the actual deploy.
 - `package.json#version` is bumped manually as part of changelog updates.
 
