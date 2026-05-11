@@ -53,7 +53,16 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 	// Submit and verify redirect to the new submission page. We need a more
 	// generous URL-wait timeout than the action default because the underlying
 	// createSubmission does several sequential DB round-trips before goto().
-	await page.getByTestId('submit-submission').click();
+	//
+	// NewSubmission.svelte runs a $effect that resets the affordable state
+	// (and therefore disables the submit button) whenever any charge field
+	// touches. Under CI's slower JS scheduler the button can briefly flicker
+	// disabled between Playwright's auto-wait and the click, so we explicitly
+	// wait for it to be enabled and let reactive state settle before clicking.
+	const submitButton = page.getByTestId('submit-submission');
+	await expect(submitButton).toBeEnabled({ timeout: 5_000 });
+	await page.waitForTimeout(200);
+	await submitButton.click();
 	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 60_000 });
 
 	await logout(page);

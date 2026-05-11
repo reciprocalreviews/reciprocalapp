@@ -1,4 +1,5 @@
 import { type PlaywrightTestConfig, devices } from '@playwright/test';
+import process from 'node:process';
 
 const config: PlaywrightTestConfig = {
 	webServer: {
@@ -16,6 +17,9 @@ const config: PlaywrightTestConfig = {
 	},
 	reporter: [['html']],
 	workers: 1,
+	// One retry in CI absorbs intermittent flakes. Locally we
+	// keep retries=0 so flakes are caught and investigated.
+	retries: process.env.CI ? 1 : 0,
 	testDir: 'end2end',
 	testMatch: /(.+\.)?(end)\.ts/,
 	projects: [
