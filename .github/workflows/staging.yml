@@ -29,7 +29,7 @@ jobs:
     needs: [unit-tests, playwright, locale-validation]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: supabase/setup-cli@v2
         with:
@@ -49,9 +49,9 @@ jobs:
     needs: [unit-tests, playwright, locale-validation, migrate]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: 'npm'
