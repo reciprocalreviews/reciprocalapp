@@ -42,11 +42,17 @@ test('editor creates a role, edits its description, and deletes it', async ({ pa
 	await page.getByTestId(`role-${roleName}`).waitFor();
 	await page.getByTestId(`role-settings-${roleName}`).click();
 
-	// Edit description.
+	// Edit description. Wait for the toggle to be ready before clicking, then
+	// fill and press Enter to commit (equivalent to clicking save again, but
+	// avoids a class of timing issues where the second toggle click races
+	// the bind:text propagation).
 	const description = `Built by e2e at ${Date.now()}`;
-	await page.getByTestId(`role-description-${roleName}-toggle`).click();
-	await page.getByTestId(`role-description-${roleName}`).fill(description);
-	await page.getByTestId(`role-description-${roleName}-toggle`).click();
+	const descriptionToggle = page.getByTestId(`role-description-${roleName}-toggle`);
+	await descriptionToggle.waitFor();
+	await descriptionToggle.click();
+	const descriptionField = page.getByTestId(`role-description-${roleName}`);
+	await descriptionField.fill(description);
+	await descriptionField.press('Enter');
 	await expect
 		.poll(() =>
 			sql(
