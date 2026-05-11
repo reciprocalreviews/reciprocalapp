@@ -93,6 +93,7 @@
 				strings={(l) => l.page.proposeVenue.field.venueName}
 				valid={(text) =>
 					text.length > 0 ? undefined : (l) => l.page.proposeVenue.field.venueName.invalid ?? ''}
+				testid="propose-venue-name"
 			/>
 			<TextField
 				bind:text={editors}
@@ -102,6 +103,7 @@
 					!validEmails(text, 1)
 						? (l) => l.page.proposeVenue.field.editors.invalid ?? ''
 						: undefined}
+				testid="propose-venue-editors"
 			/>
 			<Options
 				strings={(l) => l.page.proposeVenue.options.currency}
@@ -125,6 +127,7 @@
 							: !editorsArentMinters()
 								? (l) => l.page.proposeVenue.field.mintersConflict
 								: undefined}
+					testid="propose-venue-minters"
 				/>
 			{/if}
 			<TextField
@@ -133,6 +136,7 @@
 				active={!proposing}
 				valid={(text) =>
 					validURL(text) ? undefined : (l) => l.page.proposeVenue.field.url.invalid}
+				testid="propose-venue-url"
 			/>
 			<TextField
 				bind:text={size}
@@ -140,6 +144,7 @@
 				active={!proposing}
 				valid={(text) =>
 					validSize(text) ? undefined : (l) => l.page.proposeVenue.field.size.invalid ?? ''}
+				testid="propose-venue-size"
 			/>
 			<TextField
 				bind:text={message}
@@ -148,10 +153,12 @@
 				active={!proposing}
 				valid={(text) =>
 					validMessage(text) ? undefined : (l) => l.page.proposeVenue.field.rationale.invalid ?? ''}
+				testid="propose-venue-rationale"
 			/>
 			<Button
 				strings={(l) => l.page.proposeVenue.button.propose}
 				action={propose}
+				testid="propose-venue-submit"
 				active={!proposing &&
 					isntEmpty(venue) &&
 					validEmails(editors, 1) &&
