@@ -230,6 +230,7 @@
 				on={done}
 				change={(on) => db().updateSubmissionStatus(submission.id, on ? 'done' : 'reviewing')}
 				label={(l) => l.page.submission.checkbox.reviewComplete}
+				testid="submission-review-complete"
 			/>
 		{/if}
 
