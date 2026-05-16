@@ -42,6 +42,7 @@
 	}
 
 	function editorsArentMinters() {
+		if (currency !== undefined) return true;
 		const editorsList = editors.split(',').map((e) => e.trim());
 		const mintersList = minters.split(',').map((m) => m.trim());
 		return editorsList.filter((value) => mintersList.includes(value)).length === 0;
@@ -51,6 +52,7 @@
 		const uid = auth().getUserID();
 		if (
 			!isntEmpty(venue) ||
+			!validURL(url) ||
 			!validEmails(editors, 1) ||
 			(currency === undefined && !validEmails(minters, 1)) ||
 			!validSize(size) ||
@@ -68,7 +70,7 @@
 			url,
 			editors.split(',').map((editor) => editor.trim()),
 			currency ?? null,
-			minters.split(',').map((minter) => minter.trim()),
+			currency !== undefined ? [] : minters.split(',').map((minter) => minter.trim()),
 			parseInt(size),
 			message
 		);
@@ -183,6 +185,7 @@
 					action={propose}
 					active={!proposing &&
 						isntEmpty(venue) &&
+						validURL(url) &&
 						validEmails(editors, 1) &&
 						(currency !== undefined || validEmails(minters, 1)) &&
 						validSize(size) &&
