@@ -88,7 +88,7 @@
 	<Paragraph text={(l) => l.page.proposeVenue.paragraph.howToPropose} />
 
 	{#if auth().getUserID()}
-		<Form modern>
+		<Form>
 			<section class="form-section">
 				<p class="section-label"><Text path={(l) => l.page.proposeVenue.section.venueInfo} /></p>
 				<TextField
@@ -115,6 +115,8 @@
 					validSize(text) ? undefined : (l) => l.page.proposeVenue.field.size.invalid}
 				/>
 			</section>
+
+			<hr />
 
 			<section class="form-section">
 				<p class="section-label"><Text path={(l) => l.page.proposeVenue.section.team} /></p>
@@ -156,6 +158,8 @@
 				{/if}
 			</section>
 
+			<hr />
+
 			<section class="form-section">
 				<p class="section-label"><Text path={(l) => l.page.proposeVenue.section.rationale} /></p>
 				<TextField
@@ -170,6 +174,8 @@
 						: (l) => l.page.proposeVenue.field.rationale.invalid}
 				/>
 			</section>
+
+			<hr />
 
 			<div class="form-footer">
 				<Button
@@ -195,11 +201,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing);
-		padding: var(--spacing) var(--spacing-twice);
-	}
-
-	.form-section + .form-section {
-		border-top: var(--border-width) solid var(--border-color);
+		width: 100%;
 	}
 
 	.section-label {
@@ -212,10 +214,8 @@
 	}
 
 	.form-footer {
-		padding: var(--spacing) var(--spacing-twice);
-		border-top: var(--border-width) solid var(--border-color);
-		background: var(--alternating-color);
 		display: flex;
 		justify-content: flex-end;
+		width: 100%;
 	}
 </style>
