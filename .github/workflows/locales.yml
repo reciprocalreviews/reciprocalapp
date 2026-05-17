@@ -26,5 +26,5 @@ jobs:
         name: Install dependencies
       - run: npm run sync
         name: Sync SvelteKit
-      - run: npm run locale-validate
-        name: Run locale validation
+      - run: npm run locale
+        name: Regenerate schema and run locale validation
