@@ -106,13 +106,19 @@
 		{/if}
 		<Cards>
 			{#if steward && !approved}
-				<Card group="steward" icon={SettingsLabel} strings={(l) => l.page.venues.card.settings}>
+				<Card
+					group="steward"
+					icon={SettingsLabel}
+					strings={(l) => l.page.venues.card.settings}
+					testid="proposal-steward-card"
+				>
 					<EditableText
 						strings={(l) => l.page.venues.field.title}
 						text={proposal.title}
 						valid={(text) =>
 							text.length > 0 ? undefined : (l) => l.page.venues.field.title.invalid}
 						edit={(text) => db().editVenueProposalTitle(proposal.id, text)}
+						testid="proposal-title"
 					/>
 					<EditableText
 						strings={(l) => l.page.venues.field.editors}
@@ -124,6 +130,7 @@
 								proposal.id,
 								text.split(',').map((editor) => editor.trim())
 							)}
+						testid="proposal-editors"
 					/>
 					<EditableText
 						strings={(l) => l.page.venues.field.minters}
@@ -135,6 +142,7 @@
 								proposal.id,
 								text.split(',').map((editor) => editor.trim())
 							)}
+						testid="proposal-minters"
 					/>
 					<EditableText
 						text={'' + proposal.census}
@@ -142,16 +150,19 @@
 						valid={(text) =>
 							!isNaN(parseInt(text)) ? undefined : (l) => l.page.venues.field.census.invalid}
 						edit={(text) => db().editVenueProposalCensus(proposal.id, parseInt(text))}
+						testid="proposal-census"
 					/>
 					<EditableText
 						strings={(l) => l.page.venues.field.url}
 						text={proposal.url}
 						valid={(text) => (validURL(text) ? undefined : (l) => l.page.venues.field.url.invalid)}
 						edit={(text) => db().editVenueProposalURL(proposal.id, text)}
+						testid="proposal-url"
 					/>
 
 					<Button
 						strings={(l) => l.page.proposal.button.deleteProposal}
+						testid="proposal-delete"
 						action={async () => {
 							if (await handle(db().deleteVenueProposal(proposal.id))) goto('/venues');
 						}}
@@ -160,6 +171,7 @@
 
 					<Button
 						strings={(l) => l.page.proposal.button.approve}
+						testid="proposal-approve"
 						action={async () => {
 							if (await handle(db().approveVenueProposal(proposal.id))) goto('/venues');
 						}}
@@ -180,9 +192,11 @@
 						active={!submitting}
 						valid={(text) =>
 							text.length > 0 ? undefined : (l) => l.page.proposal.field.support.invalid ?? ''}
+						testid="proposal-support-message"
 					/>
 					<Button
 						strings={(l) => l.page.proposal.button.submitSupport}
+						testid="proposal-support-submit"
 						action={support}
 						active={message.length > 0 && !submitting}
 					/>

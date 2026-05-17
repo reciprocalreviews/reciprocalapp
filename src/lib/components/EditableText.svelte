@@ -13,9 +13,17 @@
 		inline?: boolean;
 		valid?: undefined | ((text: string) => undefined | ((l: LocaleText) => string));
 		edit: (text: string) => Promise<Result>;
+		testid?: string;
 	};
 
-	let { text, strings, edit, valid = undefined, inline = true }: Props = $props();
+	let {
+		text,
+		strings,
+		edit,
+		valid = undefined,
+		inline = true,
+		testid = undefined
+	}: Props = $props();
 
 	// svelte-ignore state_referenced_locally
 	const original = $state(text);
@@ -66,6 +74,7 @@
 				: (l) => l.component.text.save
 			: (l) => l.component.text.edit}
 		type="submit"
+		testid={testid ? `${testid}-toggle` : undefined}
 		action={(event) => (editing ? saveEdit(event) : startEditing(event))}
 	></Button>
 	<TextField
@@ -76,6 +85,7 @@
 		active={editing}
 		bind:view={field}
 		done={() => (editing ? saveAndFocus() : undefined)}
+		{testid}
 	/>
 </div>
 
