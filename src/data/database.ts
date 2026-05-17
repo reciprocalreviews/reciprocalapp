@@ -712,6 +712,8 @@ export type Database = {
           inactive: string | null
           submission_cost: number
           title: string
+          transaction_reminder_frequency_days: number
+          transaction_reminder_time: string | null
           url: string
           welcome_amount: number
         }
@@ -725,6 +727,8 @@ export type Database = {
           inactive?: string | null
           submission_cost?: number
           title?: string
+          transaction_reminder_frequency_days?: number
+          transaction_reminder_time?: string | null
           url?: string
           welcome_amount: number
         }
@@ -738,6 +742,8 @@ export type Database = {
           inactive?: string | null
           submission_cost?: number
           title?: string
+          transaction_reminder_frequency_days?: number
+          transaction_reminder_time?: string | null
           url?: string
           welcome_amount?: number
         }

@@ -7,10 +7,13 @@
 	import { ErrorLabel, VenueLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
+	import Slider from '$lib/components/Slider.svelte';
+	import Tip from '$lib/components/Tip.svelte';
 	import Transactions from '$lib/components/Transactions.svelte';
 	import { getDB } from '$lib/data/CRUD.js';
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts.js';
+	import { handle } from '$routes/feedback.svelte';
 
 	let { data } = $props();
 	let { venue, transactions, count, venues, currencies, scholar, tokens } = $derived(data);
@@ -65,6 +68,28 @@
 										)
 									: undefined}
 						/>
+					{/if}
+				</Card>
+				<Card
+					group="admin"
+					icon="⏰"
+					strings={(l) => l.page.venueTransactions.card.reminders}
+					full
+					testid="venue-reminder-card"
+				>
+					<Slider
+						min={0}
+						max={90}
+						step={1}
+						value={venue.transaction_reminder_frequency_days}
+						strings={(l) => l.page.venueTransactions.slider.frequency}
+						change={(days) =>
+							handle(db().editVenueTransactionReminderFrequency(venue.id, days))}
+						immediately={false}
+						testid="venue-reminder-frequency"
+					/>
+					{#if venue.transaction_reminder_frequency_days === 0}
+						<Tip><Text path={(l) => l.page.venueTransactions.tip.remindersOff} /></Tip>
 					{/if}
 				</Card>
 			</Cards>

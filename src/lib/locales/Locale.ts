@@ -206,6 +206,15 @@ export type LocaleText = {
 			paragraph: {
 				count: string;
 			};
+			card: {
+				reminders: CardText;
+			};
+			slider: {
+				frequency: SliderText;
+			};
+			tip: {
+				remindersOff: string;
+			};
 		};
 		newSubmission: {
 			title: string;
@@ -990,6 +999,7 @@ export type LocaleText = {
 		EditVenueWelcomeAmount: string;
 		EditVenueSubmissionCost: string;
 		EditVenueDoneVisibilityDays: string;
+		EditVenueTransactionReminderFrequency: string;
 		EditRoleBidding: string;
 		EditRoleDesiredAssignments: string;
 		EditRoleAnonymousAuthors: string;

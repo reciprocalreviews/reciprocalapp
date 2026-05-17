@@ -306,6 +306,21 @@
 			"subtitle": "Transactions",
 			"paragraph": {
 				"count": "There are **{count}** transactions involving this venue visible to you."
+			},
+			"card": {
+				"reminders": {
+					"header": "Reminders",
+					"note": "Email this venue's admins and minters about unapproved proposed transactions on a fixed interval. The cron service checks once a day; this setting controls how many days must pass between batches for this venue."
+				}
+			},
+			"slider": {
+				"frequency": {
+					"label": "How often, in days, should we email reminders about unapproved transactions? Set to 0 to disable.",
+					"suffix": " days"
+				}
+			},
+			"tip": {
+				"remindersOff": "Reminders are off for this venue. Drag the slider above 0 to enable them."
 			}
 		},
 		"newSubmission": {
@@ -1422,6 +1437,7 @@
 		"EditVenueWelcomeAmount": "Unable to edit the welcome amount",
 		"EditVenueSubmissionCost": "Unable to edit the submission cost",
 		"EditVenueDoneVisibilityDays": "Unable to update the recently-done visibility window",
+		"EditVenueTransactionReminderFrequency": "Unable to update the transaction reminder frequency",
 		"EditRoleBidding": "Unable to toggle bidding",
 		"EditRoleDesiredAssignments": "Unable to set desired assignments",
 		"EditRoleAnonymousAuthors": "Unable to toggle anonymous authors",

@@ -327,6 +327,9 @@
             "EditVenueTitle": {
               "type": "string"
             },
+            "EditVenueTransactionReminderFrequency": {
+              "type": "string"
+            },
             "EditVenueURL": {
               "type": "string"
             },
@@ -504,6 +507,7 @@
             "EditVenueWelcomeAmount",
             "EditVenueSubmissionCost",
             "EditVenueDoneVisibilityDays",
+            "EditVenueTransactionReminderFrequency",
             "EditRoleBidding",
             "EditRoleDesiredAssignments",
             "EditRoleAnonymousAuthors",
@@ -3538,6 +3542,18 @@
             "venueTransactions": {
               "additionalProperties": false,
               "properties": {
+                "card": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "reminders": {
+                      "$ref": "#/definitions/CardText"
+                    }
+                  },
+                  "required": [
+                    "reminders"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -3562,8 +3578,32 @@
                   ],
                   "type": "object"
                 },
+                "slider": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "frequency": {
+                      "$ref": "#/definitions/SliderText"
+                    }
+                  },
+                  "required": [
+                    "frequency"
+                  ],
+                  "type": "object"
+                },
                 "subtitle": {
                   "type": "string"
+                },
+                "tip": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "remindersOff": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "remindersOff"
+                  ],
+                  "type": "object"
                 },
                 "title": {
                   "type": "string"
@@ -3573,7 +3613,10 @@
                 "title",
                 "subtitle",
                 "feedback",
-                "paragraph"
+                "paragraph",
+                "card",
+                "slider",
+                "tip"
               ],
               "type": "object"
             },

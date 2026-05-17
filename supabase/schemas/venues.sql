@@ -24,10 +24,19 @@ create table if not exists public.venues (
 	-- How many days after a submission is marked done it remains visible
 	-- in the submissions list (sorted to the bottom). 0 hides immediately.
 	done_visibility_days integer default 30 not null,
+	-- How often, in days, to email admins and minters about this venue's
+	-- unapproved proposed transactions. 0 disables reminders for this venue.
+	-- The remind edge function gates by this column daily.
+	transaction_reminder_frequency_days integer default 0 not null,
+	-- When the most recent transaction reminder batch was sent for this venue.
+	-- Null means no reminders have been sent yet.
+	transaction_reminder_time timestamp with time zone,
 	-- There must be at least one admin
 	constraint venues_admins_check check (cardinality(admins)>0),
 	-- Bound the visibility window to a year
-	constraint venues_done_visibility_days_check check (done_visibility_days >= 0 and done_visibility_days <= 365)
+	constraint venues_done_visibility_days_check check (done_visibility_days >= 0 and done_visibility_days <= 365),
+	-- Bound reminder frequency to once-a-day through every-90-days
+	constraint venues_transaction_reminder_frequency_days_check check (transaction_reminder_frequency_days >= 0 and transaction_reminder_frequency_days <= 90)
 );
 
 alter table only public.venues

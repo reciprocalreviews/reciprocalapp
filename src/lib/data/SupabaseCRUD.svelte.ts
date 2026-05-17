@@ -877,6 +877,14 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditVenueDoneVisibilityDays', error);
 	}
 
+	async editVenueTransactionReminderFrequency(id: VenueID, days: number) {
+		const { error } = await this.client
+			.from('venues')
+			.update({ transaction_reminder_frequency_days: days })
+			.eq('id', id);
+		return this.errorOrEmpty('EditVenueTransactionReminderFrequency', error);
+	}
+
 	async createRole(id: VenueID, name: string, description: string = ''): Promise<Result<RoleRow>> {
 		const { data, error } = await this.client
 			.from('roles')

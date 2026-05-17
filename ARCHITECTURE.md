@@ -119,7 +119,7 @@ Server code never calls Resend directly. The producer / consumer split is:
 
 1. **Producer.** Application code (CRUD methods, edge functions) inserts a row into the `emails` table via `emailScholars(scholars, templateKey, args)`.
 2. **Consumer — `resend` function.** [supabase/functions/resend/](supabase/functions/resend/) reads the row, looks up the template in [src/email/templates.ts](src/email/templates.ts), substitutes `$1`/`$2`/... placeholders, and posts to the Resend API. In local dev (when `PUBLIC_SUPABASE_URL` points at 127.0.0.1) it logs to the console instead.
-3. **Reminder cron — `remind` function.** [supabase/functions/remind/](supabase/functions/remind/) runs on a schedule and enqueues reminder emails (e.g. stale availability, unapproved transactions). It is the only producer that runs outside the SvelteKit process.
+3. **Reminder cron — `remind` function.** [supabase/functions/remind/](supabase/functions/remind/) is invoked daily at 22:00 UTC by a `pg_cron` job (`remind-daily`) defined in `supabase/migrations/`. It emails scholars with stale availability (fixed 90-day staleness, 30-day dedupe) and emails admins + minters about unapproved proposed transactions, gated per venue by `venues.transaction_reminder_frequency_days` and stamped to `venues.transaction_reminder_time`. It is the only producer that runs outside the SvelteKit process.
 
 To add a new email: add a key to the `Emails` map in `templates.ts`, then call `emailScholars(...)` from the appropriate CRUD method.
 

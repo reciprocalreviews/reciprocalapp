@@ -61,69 +61,118 @@ async function getStaleStatusReminder(supabase: SupabaseClient<Database>): Promi
 }
 
 async function getTransactionReminders(supabase: SupabaseClient<Database>): Promise<Email[]> {
-	// Remind admins and minters of non-null from_venues of unapproved proposed transactions.
+	const emails: Email[] = [];
+	const now = new Date();
+
+	// Find venues that have opted into reminders and are due based on their
+	// per-venue frequency. The cron runs daily; gating happens here.
+	const { data: venues, error: venuesError } = await supabase
+		.from('venues')
+		.select(
+			'id, admins, currency, transaction_reminder_frequency_days, transaction_reminder_time, currencies!currency(minters)'
+		)
+		.gt('transaction_reminder_frequency_days', 0);
+
+	if (venues === null) {
+		console.error('Error fetching venues for reminders', venuesError);
+		return emails;
+	}
+
+	const dueVenues = venues.filter((venue) => {
+		if (!venue.transaction_reminder_time) return true;
+		const last = new Date(venue.transaction_reminder_time).getTime();
+		const intervalMs = venue.transaction_reminder_frequency_days * 24 * 60 * 60 * 1000;
+		return now.getTime() - last >= intervalMs;
+	});
+
+	if (dueVenues.length === 0) return emails;
+
+	const dueVenueIds = dueVenues.map((v) => v.id);
+
+	// Fetch unapproved proposed transactions for those venues only.
 	const { data: unapprovedTransactions, error: unapprovedTransactionsError } = await supabase
 		.from('transactions')
-		.select('id, status, venues!from_venue(admins), currencies!currency(minters)')
+		.select('id, from_venue')
 		.eq('status', 'proposed')
-		.not('from_venue', 'is', null);
-
-	console.log(unapprovedTransactions?.length);
-
-	const emails: Email[] = [];
+		.in('from_venue', dueVenueIds);
 
 	if (unapprovedTransactions === null) {
 		console.error('Error fetching unapproved transactions', unapprovedTransactionsError);
 		return emails;
 	}
 
-	// Convert the transactions to a list of scholars to remind, with their associated transactions to approve.
-	const scholarsToRemind = new Map<string, string[]>();
-
+	// Group transaction IDs by venue so each recipient is told how many
+	// transactions are outstanding in venues they're responsible for.
+	const transactionsByVenue = new Map<string, string[]>();
 	for (const transaction of unapprovedTransactions) {
-		const admins = transaction.venues?.admins ?? [];
-		const minters = transaction.currencies.minters;
+		if (!transaction.from_venue) continue;
+		if (!transactionsByVenue.has(transaction.from_venue)) {
+			transactionsByVenue.set(transaction.from_venue, []);
+		}
+		transactionsByVenue.get(transaction.from_venue)!.push(transaction.id);
+	}
 
-		for (const admin of admins) {
-			if (!scholarsToRemind.has(admin)) {
-				scholarsToRemind.set(admin, []);
-			}
-			scholarsToRemind.get(admin)?.push(transaction.id);
+	// Fan out to admins + minters per venue. A scholar that serves both roles
+	// across multiple venues gets one entry per venue's transaction list.
+	const scholarsToRemind = new Map<string, string[]>();
+	const venuesWithRecipients: string[] = [];
+
+	for (const venue of dueVenues) {
+		const txs = transactionsByVenue.get(venue.id) ?? [];
+		// Even when there are no outstanding transactions, stamp the venue
+		// below so we don't immediately re-check on the next cron tick.
+		if (txs.length === 0) {
+			venuesWithRecipients.push(venue.id);
+			continue;
 		}
 
-		for (const minter of minters) {
-			if (!scholarsToRemind.has(minter)) {
-				scholarsToRemind.set(minter, []);
+		const minters = venue.currencies?.minters ?? [];
+		const recipients = new Set<string>([...venue.admins, ...minters]);
+
+		for (const recipient of recipients) {
+			if (!scholarsToRemind.has(recipient)) scholarsToRemind.set(recipient, []);
+			scholarsToRemind.get(recipient)!.push(...txs);
+		}
+		venuesWithRecipients.push(venue.id);
+	}
+
+	const recipientIds = Array.from(scholarsToRemind.keys());
+
+	if (recipientIds.length > 0) {
+		const { data: scholarsWithTasks } = await supabase
+			.from('scholars')
+			.select('id, email')
+			.in('id', recipientIds);
+
+		if (scholarsWithTasks) {
+			for (const recipient of scholarsWithTasks) {
+				const transactions = scholarsToRemind.get(recipient.id);
+				if (!recipient.email) continue;
+				if (!transactions || transactions.length === 0) continue;
+				emails.push({
+					to: recipient.email,
+					subject: 'Approve proposed transactions',
+					message: [
+						'Hello,',
+						`You have ${transactions.length} proposed transaction(s) that require your approval.`,
+						`Please review and approve it here: https://reciprocal.reviews/scholar/${recipient.id}`,
+						'(This is an automated message.)'
+					].join('\n\n')
+				});
 			}
-			scholarsToRemind.get(minter)?.push(transaction.id);
 		}
 	}
 
-	const recipients = Array.from(scholarsToRemind.keys());
-
-	// Get emails of all of the scholars
-	const { data: scholarsWithTasks } = await supabase
-		.from('scholars')
-		.select('id, email')
-		.in('id', recipients);
-
-	if (scholarsWithTasks) {
-		for (const recipient of scholarsWithTasks) {
-			const transactions = scholarsToRemind.get(recipient.id);
-			if (!recipient.email) continue;
-			if (!transactions || transactions.length === 0) continue;
-			emails.push({
-				to: recipient.email,
-				subject: 'Approve proposed transactions',
-				message: [
-					'Hello,',
-					`You have ${transactions.length} proposed transaction(s) that require your approval.`,
-					`Please review and approve it here: https://reciprocal.reviews/scholar/${recipient.id}`,
-					'(This is an automated message.)'
-				].join('\n\n')
-			});
-		}
+	// Stamp every due venue, including those with zero outstanding transactions,
+	// so the next eligible check honors the configured frequency.
+	if (venuesWithRecipients.length > 0) {
+		const { error: stampError } = await supabase
+			.from('venues')
+			.update({ transaction_reminder_time: now.toISOString() })
+			.in('id', venuesWithRecipients);
+		if (stampError) console.error('Error stamping transaction_reminder_time', stampError);
 	}
+
 	return emails;
 }
 
