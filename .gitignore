@@ -12,3 +12,4 @@ vite.config.ts.timestamp-*
 /test-results
 /src/routes/updates/updates.json
 /src/routes/updates/date.json
+/playwright-report
