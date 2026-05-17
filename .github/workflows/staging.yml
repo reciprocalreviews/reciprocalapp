@@ -1,4 +1,4 @@
-name: Deploy Supabase Migrations to Staging
+name: Deploy to Staging
 
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
     secrets:
       TEST_ENV: ${{ secrets.TEST_ENV }}
 
-  deploy:
+  migrate:
     runs-on: ubuntu-latest
 
     env:
@@ -31,9 +31,39 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v2
         with:
           version: latest
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       - run: supabase db push
+
+  vercel:
+    runs-on: ubuntu-latest
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    # Only deploy after tests pass and migrations are applied
+    needs: [unit-tests, playwright, locale-validation, migrate]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - run: npm install --global vercel@latest
+        name: Install Vercel CLI
+
+      - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        name: Pull Vercel environment
+
+      - run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        name: Build project
+
+      - run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+        name: Deploy to Vercel preview

@@ -79,6 +79,7 @@
 				valid={(text) =>
 					text.length > 0 ? undefined : (l) => l.page.settings.field.inactiveMessage.invalid ?? ''}
 				edit={(text) => db().editVenueInactive(venue.id, text)}
+				testid="venue-inactive-message"
 			/>
 		{/if}
 
@@ -92,6 +93,7 @@
 			valid={(text) =>
 				validInteger(text) ? undefined : (l) => l.page.settings.field.welcomeTokens.invalid ?? ''}
 			edit={(text) => db().editVenueWelcomeAmount(venue.id, parseInt(text))}
+			testid="venue-welcome-amount"
 		/>
 
 		<EditableText
@@ -100,6 +102,7 @@
 			valid={(text) =>
 				validInteger(text) ? undefined : (l) => l.page.settings.field.submissionCost.invalid ?? ''}
 			edit={(text) => db().editVenueSubmissionCost(venue.id, parseInt(text))}
+			testid="venue-submission-cost"
 		/>
 
 		<Subheader id="roles" icon={ScholarLabel} text={(l) => l.page.settings.header.roles} />

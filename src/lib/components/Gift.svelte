@@ -78,6 +78,7 @@
 					validEmail(text) || validORCID(text)
 						? undefined
 						: (l) => l.view.gift.field.recipient.invalid}
+				testid="gift-recipient"
 			/>
 		{:else}
 			<Options
@@ -104,11 +105,22 @@
 			bind:value={giftAmount}
 			step={1}
 			strings={(l) => l.view.gift.slider.tokenAmount}
+			testid="gift-amount"
 		/>
-		<TextField bind:text={giftPurpose} strings={(l) => l.view.gift.field.purpose} size={20} />
-		<Checkbox bind:on={giftConsent} label={(l) => l.view.gift.checkbox.consent} />
+		<TextField
+			bind:text={giftPurpose}
+			strings={(l) => l.view.gift.field.purpose}
+			size={20}
+			testid="gift-purpose"
+		/>
+		<Checkbox
+			bind:on={giftConsent}
+			label={(l) => l.view.gift.checkbox.consent}
+			testid="gift-consent"
+		/>
 		<Button
 			strings={(l) => l.view.gift.button.giftTokens}
+			testid="gift-submit"
 			active={(currency !== undefined &&
 				giftConsent &&
 				kind === 'scholar' &&

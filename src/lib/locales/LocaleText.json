@@ -207,7 +207,13 @@
             "CompensationSubmissionNotFound": {
               "type": "string"
             },
+            "CompleteAssignmentInsufficientTokens": {
+              "type": "string"
+            },
             "CompleteAssignmentNotFound": {
+              "type": "string"
+            },
+            "CompleteAssignmentRPC": {
               "type": "string"
             },
             "CompleteAssignmentRoleNotFound": {
@@ -552,6 +558,8 @@
             "CompleteAssignmentNotFound",
             "CompleteAssignmentRoleNotFound",
             "CompleteAssignmentVenueNotFound",
+            "CompleteAssignmentInsufficientTokens",
+            "CompleteAssignmentRPC",
             "DeleteAssignment",
             "EmailScholar",
             "ApproveProposalNoSupporters",
@@ -2319,7 +2327,7 @@
                       "$ref": "#/definitions/ButtonText"
                     },
                     "complete": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText"
                     },
                     "createAssignment": {
                       "$ref": "#/definitions/ButtonText"
@@ -4273,6 +4281,23 @@
                   ],
                   "type": "object"
                 },
+                "purposeTemplate": {
+                  "additionalProperties": false,
+                  "description": "Templates for the purpose text recorded on transactions the platform generates automatically. {role}, {title}, {amount}, and {shortfall} are substituted at runtime.",
+                  "properties": {
+                    "compensation": {
+                      "type": "string"
+                    },
+                    "mint": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "compensation",
+                    "mint"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -4296,6 +4321,7 @@
               },
               "required": [
                 "feedback",
+                "purposeTemplate",
                 "cell",
                 "button",
                 "field",

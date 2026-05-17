@@ -65,9 +65,17 @@
 		{#snippet subtitle()}<Text path={(l) => l.page.volunteers.subtitle} />{/snippet}
 		<Paragraph text={(l) => l.page.volunteers.paragraph.intro} />
 
-		<TextField strings={(l) => l.page.volunteers.field.filter} bind:text={filter}></TextField>
+		<TextField
+			strings={(l) => l.page.volunteers.field.filter}
+			bind:text={filter}
+			testid="volunteer-filter"
+		></TextField>
 
-		<Button strings={(l) => l.page.volunteers.button.exportCSV} action={exportCSV} />
+		<Button
+			strings={(l) => l.page.volunteers.button.exportCSV}
+			testid="volunteer-export-csv"
+			action={exportCSV}
+		/>
 
 		{@const rolesIDs = [...new Set(commitments.map((c) => c.roleid))].toSorted(
 			(a, b) =>

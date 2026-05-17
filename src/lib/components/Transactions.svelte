@@ -132,6 +132,7 @@
 					<!-- If the authenticated scholar is a minter of the given currency, or the giver, then show an approve button -->
 					<Button
 						strings={(l) => l.view.transactions.button.approve}
+						testid={testid + '-' + index + '-approve'}
 						action={() => handle(db().approveTransaction(userid, transaction.id))}
 					/>
 					<Button

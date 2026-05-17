@@ -75,7 +75,9 @@
 		class:end
 		class:small
 		onclick={async (event) => await act(event)}
-		>{#if children}{@render children()}{:else}<Text path={(l) => strings(l).label} />{/if}</button
+		>{#if children}{@render children()}{:else}<Text
+				path={(l) => strings(l).label}
+			/>{#if warn}…{/if}{/if}</button
 	>
 {:else}
 	<div class="row">

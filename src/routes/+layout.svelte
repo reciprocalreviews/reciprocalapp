@@ -69,7 +69,7 @@
 	index: number,
 	error: PostgrestError | AuthError | undefined
 )}
-	<div class="feedback {level}">
+	<div class="feedback {level}" data-testid="feedback-{level}">
 		<div>
 			<span>{message}</span>
 			{#if error}

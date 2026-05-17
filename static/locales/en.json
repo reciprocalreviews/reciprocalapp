@@ -231,7 +231,7 @@
 				},
 				"approve": {
 					"tip": "Approve this proposal",
-					"label": "Approve…",
+					"label": "Approve",
 					"warn": "Approve and create this venue?"
 				},
 				"submitSupport": {
@@ -619,7 +619,8 @@
 				},
 				"complete": {
 					"tip": "Mark this assignment complete and compensate the scholar for their work",
-					"label": "Complete"
+					"label": "Complete",
+					"warn": "Mark complete and pay"
 				},
 				"approve": {
 					"tip": "Assign this scholar to this role",
@@ -1036,6 +1037,10 @@
 				"noTransactions": "No transactions.",
 				"notLoaded": "Unable to load transactions."
 			},
+			"purposeTemplate": {
+				"compensation": "Compensation for completing the {role} role for \"{title}\"",
+				"mint": "Mint to cover {amount}-token compensation for {role} work on \"{title}\" (venue is short {shortfall} tokens)"
+			},
 			"button": {
 				"approve": {
 					"tip": "Approve this proposed transaction",
@@ -1069,7 +1074,7 @@
 			"headers": {
 				"status": "Status",
 				"tokens": "Tokens",
-				"scholar": "Scholar",
+				"scholar": "Creator",
 				"from": "From",
 				"to": "To",
 				"purpose": "Purpose",
@@ -1146,7 +1151,7 @@
 				},
 				"deleteRole": {
 					"tip": "Delete this role",
-					"label": "Delete $delete…",
+					"label": "Delete $delete",
 					"warn": "Delete this role and all volunteers?"
 				}
 			},
@@ -1409,6 +1414,8 @@
 		"CompleteAssignmentNotFound": "Unable to find this assignment",
 		"CompleteAssignmentRoleNotFound": "Unable to find this assignment's role",
 		"CompleteAssignmentVenueNotFound": "Unable to find this assignment's venue",
+		"CompleteAssignmentInsufficientTokens": "The venue doesn't have enough tokens to pay this compensation. A proposed mint transaction has been recorded and the venue's minter has been notified.",
+		"CompleteAssignmentRPC": "Unable to complete this assignment.",
 		"DeleteAssignment": "Unable to delete this assignment",
 		"EmailScholar": "Unable to email this scholar",
 		"ApproveProposalNoSupporters": "Unable to retrieve supports of proposal for notification.",

@@ -399,7 +399,7 @@ export type LocaleText = {
 			button: {
 				createAssignment: ButtonText;
 				unassign: ButtonText;
-				complete: ButtonText;
+				complete: ConfirmButtonText;
 				approve: ButtonText;
 				approveBid: ButtonText;
 			};
@@ -726,6 +726,13 @@ export type LocaleText = {
 				noTransactions: string;
 				notLoaded: string;
 			};
+			/** Templates for the purpose text recorded on transactions the
+			 * platform generates automatically. {role}, {title}, {amount},
+			 * and {shortfall} are substituted at runtime. */
+			purposeTemplate: {
+				compensation: string;
+				mint: string;
+			};
 			cell: {
 				minted: string;
 				pendingApproval: string;
@@ -972,6 +979,8 @@ export type LocaleText = {
 		CompleteAssignmentNotFound: string;
 		CompleteAssignmentRoleNotFound: string;
 		CompleteAssignmentVenueNotFound: string;
+		CompleteAssignmentInsufficientTokens: string;
+		CompleteAssignmentRPC: string;
 		DeleteAssignment: string;
 		EmailScholar: string;
 		ApproveProposalNoSupporters: string;

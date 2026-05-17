@@ -1,4 +1,5 @@
 import { type PlaywrightTestConfig, devices } from '@playwright/test';
+import process from 'node:process';
 
 const config: PlaywrightTestConfig = {
 	webServer: {
@@ -14,7 +15,17 @@ const config: PlaywrightTestConfig = {
 	use: {
 		screenshot: 'only-on-failure'
 	},
+	// `list` prints each test name with its pass/fail status as it runs, so
+	// CI logs show progress instead of jumping from "Running N tests" to the
+	// final summary. `html` keeps producing the rich report artifact, and
+	// `github` adds inline annotations on the PR/run page when tests fail.
+	reporter: process.env.CI
+		? [['list'], ['github'], ['html', { open: 'never' }]]
+		: [['list'], ['html', { open: 'never' }]],
 	workers: 1,
+	// One retry in CI absorbs intermittent flakes. Locally we
+	// keep retries=0 so flakes are caught and investigated.
+	retries: process.env.CI ? 1 : 0,
 	testDir: 'end2end',
 	testMatch: /(.+\.)?(end)\.ts/,
 	projects: [

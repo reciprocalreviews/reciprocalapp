@@ -6,6 +6,13 @@ const AUTHOR1_ORCID = '0000-0001-2345-6792'; // Foot Note (author1@uni.edu)
 const AUTHOR2_ORCID = '0000-0001-2345-6795'; // Ann Thesis (author2@uni.edu)
 
 test('author can create a two-author submission splitting the cost', async ({ page, context }) => {
+	// Submission creation does several sequential DB round-trips (verify
+	// balances, find scholars, fetch venue, create proposed transactions,
+	// approve the creator's transaction, insert the submission, then load the
+	// new submission page). The default 30s test budget is enough locally but
+	// flaky on CI runners.
+	test.setTimeout(90_000);
+
 	await login('author1@uni.edu', page, context);
 
 	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
@@ -43,9 +50,20 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 		page.locator('text=The authors have sufficient tokens to pay for this submission.')
 	).toBeVisible();
 
-	// Submit and verify redirect to the new submission page.
-	await page.getByTestId('submit-submission').click();
-	await page.waitForURL(/\/venue\/.+\/submission\/.+/);
+	// Submit and verify redirect to the new submission page. We need a more
+	// generous URL-wait timeout than the action default because the underlying
+	// createSubmission does several sequential DB round-trips before goto().
+	//
+	// NewSubmission.svelte runs a $effect that resets the affordable state
+	// (and therefore disables the submit button) whenever any charge field
+	// touches. Under CI's slower JS scheduler the button can briefly flicker
+	// disabled between Playwright's auto-wait and the click, so we explicitly
+	// wait for it to be enabled and let reactive state settle before clicking.
+	const submitButton = page.getByTestId('submit-submission');
+	await expect(submitButton).toBeEnabled({ timeout: 5_000 });
+	await page.waitForTimeout(200);
+	await submitButton.click();
+	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 60_000 });
 
 	await logout(page);
 });

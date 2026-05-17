@@ -44,6 +44,7 @@
 			error
 			inline={false}
 			text={(l) => l.page.venue.feedback.inactive.replace('{message}', venue.inactive!)}
+			testid="venue-inactive-notice"
 		/>
 	</Page>
 {:else}
