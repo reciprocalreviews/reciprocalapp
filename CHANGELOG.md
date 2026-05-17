@@ -10,6 +10,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Submissions list now shows a per-submission **Progress** column (in review / done). Done submissions sort to the bottom of the list regardless of other sort order, and are hidden from the list after a venue-configurable window.
 - New venue setting: how long do fininshed submissions remain visible? They remain accessible by direct link.
 - Made subheaders linkable.
+- Wrote and wired up terms of service and privacy. Thanks to Andrew Petersen for the writing and research!
 
 ### Changed
 

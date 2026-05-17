@@ -76,6 +76,7 @@ export type LocaleText = {
 	footer: {
 		link: {
 			about: string;
+			terms: string;
 			updates: string;
 			feedback: string;
 		};
@@ -715,6 +716,53 @@ export type LocaleText = {
 			title: string;
 			paragraph: {
 				intro: string;
+			};
+		};
+		terms: {
+			title: string;
+			header: {
+				terms: string;
+				what: string;
+				account: string;
+				email: string;
+				data: string;
+				venues: string;
+				openSource: string;
+				delete: string;
+				changes: string;
+				privacy: string;
+				definitions: string;
+				legalBasis: string;
+				collect: string;
+				retention: string;
+				security: string;
+				privacyEmail: string;
+				rights: string;
+				international: string;
+				contact: string;
+				privacyChanges: string;
+			};
+			paragraph: {
+				intro: string;
+				what: string;
+				account: string;
+				email: string;
+				data: string;
+				venues: string;
+				openSource: string;
+				delete: string;
+				changes: string;
+				privacyIntro: string;
+				definitions: string;
+				legalBasis: string;
+				collect: string;
+				retention: string;
+				security: string;
+				privacyEmail: string;
+				rights: string;
+				international: string;
+				contact: string;
+				privacyChanges: string;
 			};
 		};
 	};

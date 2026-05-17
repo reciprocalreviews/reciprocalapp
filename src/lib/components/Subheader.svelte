@@ -8,9 +8,11 @@
 		icon: string;
 		text: string | ((locale: LocaleText) => string | string[]);
 		id?: string;
+		/** When true, render as an h3 (a sub-subheader) instead of an h2. */
+		sub?: boolean;
 	}
 
-	let { icon, id, text }: Props = $props();
+	let { icon, id, text, sub = false }: Props = $props();
 
 	const locale = getLocaleContext();
 
@@ -33,7 +35,7 @@
 	}
 </script>
 
-<h2 id={headerId}>
+<svelte:element this={sub ? 'h3' : 'h2'} id={headerId} class="header">
 	<span class="anchor-slot">
 		<a
 			class="anchor"
@@ -44,10 +46,10 @@
 	</span>
 	{#if typeof text === 'string'}{text}{:else}<Text path={text} />{/if}
 	<span class="icon">{icon}</span>
-</h2>
+</svelte:element>
 
 <style>
-	h2 {
+	.header {
 		display: flex;
 		gap: 0.25rem;
 		align-items: baseline;

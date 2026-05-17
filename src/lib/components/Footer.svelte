@@ -5,6 +5,7 @@
 
 <footer>
 	<Link size="extra-small" to="/about"><Text path={(l) => l.footer.link.about} /></Link>
+	<Link size="extra-small" to="/terms"><Text path={(l) => l.footer.link.terms} /></Link>
 	<Link size="extra-small" to="/updates"><Text path={(l) => l.footer.link.updates} /></Link>
 	<Link size="extra-small" to="https://github.com/reciprocalreviews/reciprocalapp/issues/"
 		><Text path={(l) => l.footer.link.feedback} /></Link

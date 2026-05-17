@@ -584,12 +584,16 @@
                 "feedback": {
                   "type": "string"
                 },
+                "terms": {
+                  "type": "string"
+                },
                 "updates": {
                   "type": "string"
                 }
               },
               "required": [
                 "about",
+                "terms",
                 "updates",
                 "feedback"
               ],
@@ -3051,6 +3055,196 @@
               ],
               "type": "object"
             },
+            "terms": {
+              "additionalProperties": false,
+              "properties": {
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "account": {
+                      "type": "string"
+                    },
+                    "changes": {
+                      "type": "string"
+                    },
+                    "collect": {
+                      "type": "string"
+                    },
+                    "contact": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string"
+                    },
+                    "definitions": {
+                      "type": "string"
+                    },
+                    "delete": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "international": {
+                      "type": "string"
+                    },
+                    "legalBasis": {
+                      "type": "string"
+                    },
+                    "openSource": {
+                      "type": "string"
+                    },
+                    "privacy": {
+                      "type": "string"
+                    },
+                    "privacyChanges": {
+                      "type": "string"
+                    },
+                    "privacyEmail": {
+                      "type": "string"
+                    },
+                    "retention": {
+                      "type": "string"
+                    },
+                    "rights": {
+                      "type": "string"
+                    },
+                    "security": {
+                      "type": "string"
+                    },
+                    "terms": {
+                      "type": "string"
+                    },
+                    "venues": {
+                      "type": "string"
+                    },
+                    "what": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "terms",
+                    "what",
+                    "account",
+                    "email",
+                    "data",
+                    "venues",
+                    "openSource",
+                    "delete",
+                    "changes",
+                    "privacy",
+                    "definitions",
+                    "legalBasis",
+                    "collect",
+                    "retention",
+                    "security",
+                    "privacyEmail",
+                    "rights",
+                    "international",
+                    "contact",
+                    "privacyChanges"
+                  ],
+                  "type": "object"
+                },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "account": {
+                      "type": "string"
+                    },
+                    "changes": {
+                      "type": "string"
+                    },
+                    "collect": {
+                      "type": "string"
+                    },
+                    "contact": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string"
+                    },
+                    "definitions": {
+                      "type": "string"
+                    },
+                    "delete": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "international": {
+                      "type": "string"
+                    },
+                    "intro": {
+                      "type": "string"
+                    },
+                    "legalBasis": {
+                      "type": "string"
+                    },
+                    "openSource": {
+                      "type": "string"
+                    },
+                    "privacyChanges": {
+                      "type": "string"
+                    },
+                    "privacyEmail": {
+                      "type": "string"
+                    },
+                    "privacyIntro": {
+                      "type": "string"
+                    },
+                    "retention": {
+                      "type": "string"
+                    },
+                    "rights": {
+                      "type": "string"
+                    },
+                    "security": {
+                      "type": "string"
+                    },
+                    "venues": {
+                      "type": "string"
+                    },
+                    "what": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "intro",
+                    "what",
+                    "account",
+                    "email",
+                    "data",
+                    "venues",
+                    "openSource",
+                    "delete",
+                    "changes",
+                    "privacyIntro",
+                    "definitions",
+                    "legalBasis",
+                    "collect",
+                    "retention",
+                    "security",
+                    "privacyEmail",
+                    "rights",
+                    "international",
+                    "contact",
+                    "privacyChanges"
+                  ],
+                  "type": "object"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "header",
+                "paragraph"
+              ],
+              "type": "object"
+            },
             "updates": {
               "additionalProperties": false,
               "properties": {
@@ -3726,7 +3920,8 @@
             "login",
             "proposeVenue",
             "about",
-            "updates"
+            "updates",
+            "terms"
           ],
           "type": "object"
         },
@@ -4529,6 +4724,18 @@
               ],
               "type": "object"
             },
+            "subheader": {
+              "additionalProperties": false,
+              "properties": {
+                "link": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "link"
+              ],
+              "type": "object"
+            },
             "tokens": {
               "additionalProperties": false,
               "properties": {
@@ -4548,7 +4755,8 @@
           },
           "required": [
             "card",
-            "tokens"
+            "tokens",
+            "subheader"
           ],
           "type": "object"
         }

@@ -26,6 +26,7 @@
 	"footer": {
 		"link": {
 			"about": "About",
+			"terms": "Terms",
 			"updates": "Updates",
 			"feedback": "Feedback"
 		}
@@ -995,6 +996,53 @@
 			"title": "Updates",
 			"paragraph": {
 				"intro": "Here are the updates to Reciprocal Reviews. Have a [defect](https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=1-defect.yml) to report or [improvement](https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=2-improvement.yml) to suggest?"
+			}
+		},
+		"terms": {
+			"title": "Terms & Privacy",
+			"header": {
+				"terms": "Terms",
+				"what": "What this is",
+				"account": "Your account",
+				"email": "How we use your email",
+				"data": "How we use your data",
+				"venues": "Venues you join",
+				"openSource": "Open source",
+				"delete": "Deleting your account",
+				"changes": "Changes",
+				"privacy": "Privacy",
+				"definitions": "Definitions",
+				"legalBasis": "Legal basis",
+				"collect": "What we collect and why",
+				"retention": "Data retention",
+				"security": "Data security",
+				"privacyEmail": "Email communication",
+				"rights": "Your rights",
+				"international": "International transfers",
+				"contact": "Contact and complaints",
+				"privacyChanges": "Changes to this policy"
+			},
+			"paragraph": {
+				"intro": "By using Reciprocal Reviews, you agree to the terms below. The first section is short and plain. The second section explains in detail how we handle your personal data. If anything is unclear, please [open an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/).",
+				"what": "Reciprocal Reviews tracks peer-review labor as a currency, so that submitting an article costs tokens earned by reviewing. The platform exists to support sustainable, equitable peer review. It is governed by a community of stewards listed on the [About](/about) page.",
+				"account": "You sign in with [ORCID](https://orcid.org), which authenticates you and provides your scholar identity. We create a local account tied to your ORCID iD, along with a preferred email address you give us for communication. You are responsible for keeping access to your ORCID account secure.",
+				"email": "We only use your email to contact you about activity on the platform — submissions, review assignments, token transactions, and venue communications. We will not email you for marketing, and we will not share your address with anyone outside the platform.",
+				"data": "We collect only what we need to credit reviewing labor and run the site. We use that data to compensate scholars for their work. We do not sell it, and we do not disclose it to any other party. Full details are in the Privacy section below.",
+				"venues": "When you join a venue, that venue's editors and coordinators can see what they need to assign you work and credit your reviews. This only happens for venues you have chosen to join.",
+				"openSource": "Reciprocal Reviews is open source. The code, issues, and discussions live on [GitHub](https://github.com/reciprocalreviews).",
+				"delete": "You can ask us to delete your account at any time. Your token transactions remain in the historical record so venues can verify past reviews, but they will no longer be linked to you or your ORCID iD.",
+				"changes": "We may update these terms. Material changes will be noted on the [Updates](/updates) page.",
+				"privacyIntro": "This section explains in detail what personal data we collect, why we collect it, how we use it, and your rights regarding it. It applies to anyone using Reciprocal Reviews.",
+				"definitions": "- **Personal data** is any information that identifies you — for example, your name, ORCID iD, or email address.\n- **Processing** means anything we do with that data: collecting, storing, using, or sharing it.\n- **Token** is a unit of reviewing credit earned by reviewing or editing, and spent on submissions.\n- **Venue** is a third-party publication site you have explicitly joined to review for or submit to.",
+				"legalBasis": "We process your personal data under three grounds from the General Data Protection Regulation (GDPR) and similar laws:\n\n- **Legitimate interest** — to run the site, credit reviewing labor, and communicate with venues about reviews and submissions.\n- **Consent** — to improve the site and review processes, where you have given explicit consent. You can revoke consent at any time.\n- **Legal compliance** — where applicable laws require it.",
+				"collect": "**Registration.** We create a local account from your ORCID sign-in. We store your ORCID iD, preferred email, site preferences, venues you have joined, and the transactions affecting your tokens.\n\n**Reviewing.** We store your reviewing availability and preferences. If a venue you have joined asks for available reviewers in your area, we share your contact information and expertise with that venue. When a venue reports a completed review, we update your token balance.\n\n**Submissions.** When you submit through a venue you have joined, the venue can confirm with us whether you have tokens available. Once the venue reports the submission, we update your token balance.\n\n**Process improvement.** We may review aggregated activity — name, affiliation, expertise from ORCID, reviewing and submission patterns — to understand how the platform is used and to improve it.\n\n**Cookies and technical data.** We use only the cookies needed to keep you signed in, provided by our authentication service. We do not use cookies for analytics or advertising. We also store local preferences (such as dark mode) on your device for your convenience.",
+				"retention": "We keep your personal data for as long as you have a Reciprocal Reviews account. If you delete your account, we delete your preferences and venue links. Your token transactions stay in the record so venues can verify past reviews, but they are no longer linked to you.\n\nVenues you have joined may keep their own records of you and your past reviews. Deleting your Reciprocal Reviews account does not affect what those venues store, but it does stop them from updating or querying your token balance.",
+				"security": "We use reasonable physical, technical, and administrative safeguards to protect your data, and we require any service providers we use to do the same. Transmission over the internet is never fully secure, so we cannot guarantee data is safe in transit.",
+				"privacyEmail": "We email you only in response to legitimate activity: actions you take on the site, submissions you make, or reviewing and editing you have agreed to.",
+				"rights": "Under GDPR and similar laws, you have the right to:\n\n1. **Access** your personal data and information about how we process it.\n2. **Correct** inaccurate or incomplete data.\n3. **Delete** your data.\n4. **Restrict** how we process your data.\n5. **Receive** your data in a portable, machine-readable format.\n6. **Object** to processing, including for any direct marketing.\n7. **Not be subject** to decisions made solely by automated processing.\n\nTo exercise any of these rights, [open an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/) and we will respond.",
+				"international": "Venues you have joined may operate outside your country of residence, where data protection standards differ. By joining a venue, you accept that your data may be shared with that venue as needed to support peer review.",
+				"contact": "For privacy questions or requests, [open an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/). Please include enough information for us to identify you and answer your request. If you believe we have handled your data improperly, contact us first so we can address it. You also have the right to complain to a data protection authority — see [edpb.europa.eu](https://edpb.europa.eu/about-edpb/board/members_en) for EU authorities or [ico.org.uk](https://ico.org.uk) for the UK.",
+				"privacyChanges": "We may update this privacy section to reflect new practices or legal requirements. Material changes will be noted on the [Updates](/updates) page."
 			}
 		},
 		"currencyTransactions": {
