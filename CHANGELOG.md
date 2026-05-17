@@ -11,6 +11,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - New venue setting: how long do fininshed submissions remain visible? They remain accessible by direct link.
 - Made subheaders linkable.
 - Wrote and wired up terms of service and privacy. Thanks to Andrew Petersen for the writing and research!
+- Added customizable reminder frequency for minting and transaction reminders.
 
 ### Changed
 
