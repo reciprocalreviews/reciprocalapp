@@ -17,7 +17,7 @@
 	};
 
 	let {
-		text,
+		text: propText,
 		strings,
 		edit,
 		valid = undefined,
@@ -25,13 +25,24 @@
 		testid = undefined
 	}: Props = $props();
 
-	// svelte-ignore state_referenced_locally
-	const original = $state(text);
-
 	// Whether the text is being edited.
 	let editing = $state<boolean | undefined>(false);
 	let field = $state<HTMLInputElement | HTMLTextAreaElement | undefined>(undefined);
 	let button = $state<HTMLButtonElement | undefined>(undefined);
+
+	// Local working copy so that a prop change mid-edit (e.g. a realtime
+	// invalidateAll() triggered by another field's save) doesn't clobber the
+	// user's in-progress input. Sync from the prop only when not editing.
+	// svelte-ignore state_referenced_locally
+	let text = $state(propText);
+	// svelte-ignore state_referenced_locally
+	let original = $state(propText);
+	$effect(() => {
+		if (editing === false) {
+			text = propText;
+			original = propText;
+		}
+	});
 
 	let invalid = $derived(valid !== undefined && valid(text) !== undefined);
 
