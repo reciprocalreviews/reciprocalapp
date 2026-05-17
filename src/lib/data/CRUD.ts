@@ -11,7 +11,6 @@ import {
 	type TokenID,
 	type TransactionStatus,
 	type AssignmentID,
-	type SubmissionStatus,
 	type RoleRow,
 	type AssignmentRow,
 	type VenueRow,
@@ -71,6 +70,21 @@ export type BulkImportResult = {
 	mintAmount: number;
 };
 
+/** A non-editor assignment that is approved but not yet completed, returned
+ * by markSubmissionDone when the submission can't be completed yet. */
+export type SubmissionBlocker = {
+	assignment_id: AssignmentID;
+	role_id: RoleID;
+	role_name: string;
+	scholar_id: ScholarID;
+};
+
+/** The three branches of the mark_submission_done RPC outcome. */
+export type MarkSubmissionDoneOutcome =
+	| { status: 'completed'; total_amount: number; recipients: ScholarID[] }
+	| { status: 'blocked'; blockers: SubmissionBlocker[] }
+	| { status: 'insufficient'; shortfall: number; total_amount: number };
+
 /** This abstract class defines an interface for database access. It's useful for defining mocks as well as enables us to change databases if necessary. */
 export default abstract class CRUD {
 	/** Insert a new submission in the database and return a list of transaction ids that paid for it. */
@@ -110,11 +124,13 @@ export default abstract class CRUD {
 
 	abstract updateSubmissionNote(submissionID: SubmissionID, note: string | null): Promise<Result>;
 
-	/** Toggle the submission stats */
-	abstract updateSubmissionStatus(
-		submissionID: SubmissionID,
-		status: SubmissionStatus
-	): Promise<Result>;
+	/** Mark a submission as done. Authorized for priority-0 editors only.
+	 * Validates that every non-editor approved assignment is already
+	 * compensated, then atomically compensates every uncompleted priority-0
+	 * editor assignment on the submission and flips the status. Returns
+	 * structured information about blockers, insufficient funds, or success
+	 * via the notification facility. Reopening is forbidden by design. */
+	abstract markSubmissionDone(submissionID: SubmissionID): Promise<Result<MarkSubmissionDoneOutcome>>;
 
 	/** Check whether the given scholars have enough tokens for the given payments. True if so, and a list of remaining balances by scholar if not. */
 	abstract verifyCharges(charges: Charge[]): Promise<Result<true | Charge[] | undefined>>;
@@ -183,6 +199,7 @@ export default abstract class CRUD {
 	abstract editVenueAnonymousAssignments(id: VenueID, anonymous: boolean): Promise<Result>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<Result>;
 	abstract editVenueSubmissionCost(id: VenueID, amount: number): Promise<Result>;
+	abstract editVenueDoneVisibilityDays(id: VenueID, days: number): Promise<Result>;
 
 	abstract createRole(id: VenueID, name: string): Promise<Result<RoleRow>>;
 	abstract editRoleName(id: RoleID, name: string): Promise<Result>;

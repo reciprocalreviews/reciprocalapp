@@ -192,6 +192,10 @@ A `Submission` represents a manuscript undergoing peer review.
 - [x] Bids on submissions can be approved by approvers
 - [x] Bids on submissions can be approved by roles that are set to be approving roles for another role (e.g., Associate Editors can approve bids from Reviewers)
 - [x] Scholars can declare conflicts on submissions visible to them, preventing them from seeing those submissions' assignments if a venue is set to preserve reviewer anonymity
+- [x] A `Submission` can only be marked **done** once every approved non-editor assignment on it has been compensated, ensuring all levels of review are finished and paid before the submission is considered complete.
+- [x] Marking a submission done is the act by which the top-level editor (priority-0 role) self-compensates. It is one action, not two — the editor cannot compensate themselves in isolation, and the submission cannot move to done without that compensation happening.
+- [x] **Done is terminal.** A submission marked done cannot be reopened; this preserves the integrity of the completion record and the editor's self-compensation transaction.
+- [x] Done submissions remain visible in a venue's submissions list for a venue-configurable window (default 30 days, range 0–365, 7-day steps), sorted to the bottom of the list. After the window expires they're hidden from the list but still reachable by direct link.
 - [ ] ([#27](https://github.com/reciprocalreviews/reciprocalapp/issues/27)) When a submission's author scholars update their email address after submission, the updated address should propagate to the submission record so editor correspondence reaches the right inbox.
 - [ ] ([#124](https://github.com/reciprocalreviews/reciprocalapp/issues/124)) `Submission`s can reference a previous submission by internal UUID (in addition to the existing external-ID `previousid`), giving revise-and-resubmit chains within RR true referential integrity. The external-ID field is retained for cross-venue or pre-RR ancestors.
 

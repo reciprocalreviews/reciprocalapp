@@ -6,11 +6,13 @@
 	import { ErrorLabel, ScholarLabel, SettingsLabel, VenueLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
+	import Slider from '$lib/components/Slider.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import { getDB } from '$lib/data/CRUD.js';
 	import Text from '$lib/locales/Text.svelte';
 	import { validInteger } from '$lib/validation.js';
+	import { handle } from '$routes/feedback.svelte';
 	import Roles from '../Roles.svelte';
 
 	let { data } = $props();
@@ -103,6 +105,21 @@
 				validInteger(text) ? undefined : (l) => l.page.settings.field.submissionCost.invalid ?? ''}
 			edit={(text) => db().editVenueSubmissionCost(venue.id, parseInt(text))}
 			testid="venue-submission-cost"
+		/>
+
+		<Subheader icon={SettingsLabel} text={(l) => l.page.settings.header.visibility} />
+
+		<Tip><Text path={(l) => l.page.settings.tip.doneVisibility} /></Tip>
+
+		<Slider
+			min={0}
+			max={365}
+			step={7}
+			value={venue.done_visibility_days}
+			strings={(l) => l.page.settings.slider.doneVisibility}
+			change={(days) => handle(db().editVenueDoneVisibilityDays(venue.id, days))}
+			immediately={false}
+			testid="done-visibility-days"
 		/>
 
 		<Subheader id="roles" icon={ScholarLabel} text={(l) => l.page.settings.header.roles} />

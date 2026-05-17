@@ -1167,6 +1167,25 @@ values
 		'A Reverse Engineering of Authorship from Reference Counts',
 		'Peer review, academic publishing, log analysis',
 		'reviewing'
+	),
+	-- TOK-2025-004 is pre-staged for manually testing the mark-submission-done
+	-- flow. As editor@uni.edu, visiting this submission shows the Mark done
+	-- button already ENABLED: the AE and Reviewer assignments are approved AND
+	-- completed, leaving only the editor's own priority-0 assignment to be
+	-- compensated as part of the mark-done action itself. Clicking it
+	-- compensates the editor (1 token) and flips status to done.
+	(
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c15',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-004',
+		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		array['b8a805bf-0aae-4443-9185-de019a8715cb']::uuid[],
+		array[15]::integer[],
+		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
+		'Ready-to-Complete Submission (manual test for mark-done)',
+		'Peer review, completion flow',
+		'reviewing'
 	);
 
 insert into
@@ -1266,4 +1285,39 @@ values
 		false,
 		false,
 		false
+	),
+	-- TOK-2025-004: ready-to-complete fixture for manually testing
+	-- mark-submission-done. All non-editor assignments are already approved
+	-- AND completed, so the Mark done button is enabled on first load.
+	-- editor@uni.edu (priority-0) is approved but uncompleted — clicking
+	-- the button compensates them and flips status to done in one action.
+	(
+		'fefed1e4-ad3a-11f0-9807-1f8d6e4b5c28',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c15',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		false,
+		true,
+		false
+	),
+	(
+		'fefed1e4-ad3a-11f0-9807-1f8d6e4b5c29',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c15',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		false,
+		true,
+		true
+	),
+	(
+		'fefed1e4-ad3a-11f0-9807-1f8d6e4b5c2a',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c15',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		true
 	);

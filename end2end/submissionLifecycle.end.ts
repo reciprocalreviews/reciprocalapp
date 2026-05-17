@@ -107,28 +107,69 @@ test('scholar declares a conflict on a submission and it disappears from their s
 	await expect(page.locator('text=TOK-2025-001')).toHaveCount(0);
 });
 
-test('editor toggles a submission as review-complete and its status flips reviewing → done', async ({
+test('mark-done is blocked until non-editor assignments are compensated, then flips status', async ({
 	page,
 	context
 }) => {
-	// Start from a known reviewing state so the toggle has work to do.
-	sql(`update public.submissions set status = 'reviewing' where id = '${SUBMISSION_ID}';`);
+	// Force a known starting state. Direct UPDATEs on status/completed_at
+	// are revoked from authenticated, but the seed's psql role is the
+	// superuser so this is allowed at the DB level for test setup/teardown.
+	sql(
+		`update public.submissions set status = 'reviewing', completed_at = null where id = '${SUBMISSION_ID}';`
+	);
+	// Leave the editor's own priority-0 assignment uncompleted (the
+	// mark-done action will compensate it). Reset every non-editor
+	// approved assignment to uncompleted so the button starts inactive.
+	sql(
+		`update public.assignments set completed = false where submission = '${SUBMISSION_ID}' and approved;`
+	);
 
 	await login(EDITOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
 	await page.waitForLoadState('networkidle');
 
-	await page.getByTestId('submission-review-complete').click();
+	// Button exists but is disabled while non-editor assignments are
+	// pending, and the blockers list is visible.
+	await expect(page.getByTestId('mark-submission-done')).toBeDisabled();
+
+	// Mark every non-editor approved assignment as completed in the DB
+	// (simulates the editor working through each Complete button). Kept on
+	// one line because `sql()` passes the string through `psql -c`, which
+	// receives literal `\n` if newlines survive JSON.stringify.
+	sql(
+		`update public.assignments a set completed = true from public.roles r where a.role = r.id and a.submission = '${SUBMISSION_ID}' and a.approved and r.priority > 0;`
+	);
+
+	await page.reload();
+	await page.waitForLoadState('networkidle');
+
+	await expect(page.getByTestId('mark-submission-done')).toBeEnabled();
+
+	// Confirm-style button: first click reveals the warn variant, second confirms.
+	await page.getByTestId('mark-submission-done').click();
+	await page.getByTestId('mark-submission-done').click();
 
 	await expect
 		.poll(() => sql(`select status::text from public.submissions where id = '${SUBMISSION_ID}';`))
 		.toBe('done');
 
-	// Toggle off again to restore state for other tests.
-	await page.getByTestId('submission-review-complete').click();
+	// The editor's own assignment is now completed as part of the action.
 	await expect
-		.poll(() => sql(`select status::text from public.submissions where id = '${SUBMISSION_ID}';`))
-		.toBe('reviewing');
+		.poll(() =>
+			sql(
+				`select completed from public.assignments where submission = '${SUBMISSION_ID}' and scholar = '${EDITOR_ID}';`
+			)
+		)
+		.toBe('t');
+
+	// Reopening is forbidden by design — restore state for downstream
+	// tests via SQL only (the UI cannot revert).
+	sql(
+		`update public.submissions set status = 'reviewing', completed_at = null where id = '${SUBMISSION_ID}';`
+	);
+	sql(
+		`update public.assignments set completed = false where submission = '${SUBMISSION_ID}' and approved;`
+	);
 });
 
 test('reviewer-anonymity flag actually hides assignees from authors', async ({ page, context }) => {

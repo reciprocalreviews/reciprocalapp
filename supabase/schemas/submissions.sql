@@ -26,7 +26,10 @@ create table submissions (
 	-- An optional description of expertise required for public bidding
 	expertise text default null,
 	-- The status of the submission in relation to payments.
-	status submission_status not null default 'reviewing'
+	status submission_status not null default 'reviewing',
+	-- When the submission was marked done (null while still under review).
+	-- Set by the mark_submission_done RPC; cannot be reverted.
+	completed_at timestamp with time zone default null
 );
 
 alter table public.submissions OWNER to "postgres";
@@ -36,6 +39,10 @@ grant all on table public.submissions to "anon";
 grant all on table public.submissions to "authenticated";
 
 grant all on table public.submissions to "service_role";
+
+-- Lock the completion state from direct UPDATEs. Only the
+-- mark_submission_done RPC (SECURITY DEFINER) may write these columns.
+revoke update (status, completed_at) on public.submissions from authenticated;
 
 --------------------------------------
 -- Indexes

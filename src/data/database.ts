@@ -468,6 +468,7 @@ export type Database = {
       submissions: {
         Row: {
           authors: string[]
+          completed_at: string | null
           created_at: string
           expertise: string | null
           externalid: string
@@ -484,6 +485,7 @@ export type Database = {
         }
         Insert: {
           authors: string[]
+          completed_at?: string | null
           created_at?: string
           expertise?: string | null
           externalid: string
@@ -500,6 +502,7 @@ export type Database = {
         }
         Update: {
           authors?: string[]
+          completed_at?: string | null
           created_at?: string
           expertise?: string | null
           externalid?: string
@@ -704,6 +707,7 @@ export type Database = {
           anonymous_assignments: boolean
           currency: string
           description: string
+          done_visibility_days: number
           id: string
           inactive: string | null
           submission_cost: number
@@ -716,6 +720,7 @@ export type Database = {
           anonymous_assignments?: boolean
           currency: string
           description?: string
+          done_visibility_days?: number
           id?: string
           inactive?: string | null
           submission_cost?: number
@@ -728,6 +733,7 @@ export type Database = {
           anonymous_assignments?: boolean
           currency?: string
           description?: string
+          done_visibility_days?: number
           id?: string
           inactive?: string | null
           submission_cost?: number
@@ -815,6 +821,14 @@ export type Database = {
         Returns: boolean
       }
       issteward: { Args: never; Returns: boolean }
+      mark_submission_done: {
+        Args: {
+          _mint_purpose_template: string
+          _payment_purpose_template: string
+          _submission_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       exchange_proposal_kind: "create" | "modify" | "merge"

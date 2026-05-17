@@ -103,16 +103,27 @@
 	let filter = $state('');
 	const locale = getLocaleContext();
 
-	/** Sort and filter submissions based on the configuration */
+	/** Sort and filter submissions based on the configuration. Done
+	 * submissions older than the venue's done_visibility_days window are
+	 * hidden from the list (they remain accessible by direct link). What
+	 * remains is partitioned so that done submissions always sort to the
+	 * bottom regardless of the active sort column. */
 	function sortedAndFiltered(submissions: SubmissionRow[]): SubmissionRow[] {
 		const trimmedFilter = filter.trim().toLowerCase();
+		const cutoffMs =
+			venue === null ? 0 : Date.now() - venue.done_visibility_days * 24 * 60 * 60 * 1000;
 		const subs = submissions
 			.filter(
 				(sub) =>
 					sub.title.toLowerCase().includes(trimmedFilter) ||
 					sub.externalid.toLowerCase().includes(trimmedFilter)
 			)
-			.filter((sub) => conflicts !== null && !conflicts.some((c) => c.submissionid === sub.id));
+			.filter((sub) => conflicts !== null && !conflicts.some((c) => c.submissionid === sub.id))
+			.filter((sub) => {
+				if (sub.status !== 'done') return true;
+				if (sub.completed_at === null) return true;
+				return new Date(sub.completed_at).getTime() >= cutoffMs;
+			});
 
 		for (const column of sortOrder) {
 			switch (column) {
@@ -136,7 +147,12 @@
 					break;
 			}
 		}
-		return subs;
+
+		// Partition: reviewing first, then done. Within each group the
+		// active sort order is preserved.
+		const reviewing = subs.filter((s) => s.status !== 'done');
+		const finished = subs.filter((s) => s.status === 'done');
+		return [...reviewing, ...finished];
 	}
 
 	function formatDate(iso: string): string {
@@ -253,6 +269,7 @@
 								}}>{createdSortLatestFirst ? DownLabel : UpLabel}</Button
 							></th
 						>
+						<th>{locale().page.submissions.headers.progress}</th>
 						<!-- If bidding is enabled, add column for each of the scholar's volunteer roles -->
 						{#each visibleRoles as role}
 							<th>{role.name}</th>
@@ -291,6 +308,13 @@
 							<td>{submission.expertise}</td>
 							<td>{submission.externalid}</td>
 							<td>{formatDate(submission.created_at)}</td>
+							<td>
+								{#if submission.status === 'done'}
+									<Status label={(l) => l.page.submissions.status.done} />
+								{:else}
+									<Status good={false} label={(l) => l.page.submissions.status.reviewing} />
+								{/if}
+							</td>
 							<!-- If we have all the information, show metadata about bidding. -->
 							{#each visibleRoles as role, roleIndex}
 								<!-- This cell should show all actions available for this role and submission, based on the current scholar's role. -->

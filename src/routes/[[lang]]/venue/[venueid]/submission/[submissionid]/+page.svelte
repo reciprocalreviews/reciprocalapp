@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { RoleID, RoleRow, ScholarID } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -112,6 +111,20 @@
 	/** Whether this submission is no longer in review */
 	const done = $derived(submission?.status === 'done');
 
+	/** Non-editor assignments that are approved but not yet compensated.
+	 * These block marking the submission done, since every level of review
+	 * must be evaluated and paid before completion. The editor's own
+	 * priority-0 assignment is excluded: it is compensated as part of the
+	 * mark-done action itself. */
+	let completionBlockers = $derived(
+		assignments !== null && roles !== null
+			? assignments.filter((a) => {
+					const role = roles.find((r) => r.id === a.role);
+					return role !== undefined && role.priority > 0 && a.approved && !a.completed;
+				})
+			: []
+	);
+
 	/** Whether the current scholar is an author of the submission */
 	let isAuthor = $derived(
 		submission !== null && scholar !== null && submission.authors.includes(scholar.id)
@@ -150,6 +163,10 @@
 	let newAssignmentScholar = $state<string>('');
 	let newAssignmentSubmitting = $state(false);
 	let newAssignmentError: ((l: LocaleText) => string) | undefined = $state(undefined);
+
+	/** Surface feedback for the mark-done action that isn't already
+	 * delivered by the notification facility (e.g., insufficient tokens). */
+	let completionFeedback: ((l: LocaleText) => string) | undefined = $state(undefined);
 
 	function getVolunteer(role: RoleID, scholar: ScholarID) {
 		return volunteers?.find((v) => v.roleid === role && v.scholarid === scholar);
@@ -224,14 +241,50 @@
 			{/if}
 		{/snippet}
 
-		<!-- Only editors can update the status of a submission -->
-		{#if isEditor}
-			<Checkbox
-				on={done}
-				change={(on) => db().updateSubmissionStatus(submission.id, on ? 'done' : 'reviewing')}
-				label={(l) => l.page.submission.checkbox.reviewComplete}
-				testid="submission-review-complete"
+		<!-- Only editors (priority-0) see the mark-done flow. The button
+		     compensates every editor on this submission and flips the
+		     status to done in one atomic action; reopening is forbidden.
+		     The button is inactive until every non-editor assignment is
+		     compensated, with an explanation of what's left. -->
+		{#if isEditor && !done}
+			{#if completionBlockers.length > 0}
+				<Feedback
+					text={(l) =>
+						l.page.submission.feedback.completionBlocked.replace(
+							'{count}',
+							completionBlockers.length.toString()
+						)}
+				/>
+				<ul class="blockers">
+					{#each completionBlockers as blocker}
+						{@const role = roles.find((r) => r.id === blocker.role)}
+						<li>
+							<strong>{role?.name ?? '?'}</strong>: <ScholarLink id={blocker.scholar} />
+						</li>
+					{/each}
+				</ul>
+			{/if}
+			<Button
+				strings={(l) => l.page.submission.button.markDone}
+				testid="mark-submission-done"
+				active={completionBlockers.length === 0}
+				action={async () => {
+					const outcome = await handle(db().markSubmissionDone(submission.id));
+					if (
+						typeof outcome === 'object' &&
+						outcome !== null &&
+						'status' in outcome &&
+						outcome.status === 'insufficient'
+					) {
+						completionFeedback = (l) => l.page.submission.feedback.completionInsufficient;
+					} else {
+						completionFeedback = undefined;
+					}
+				}}
 			/>
+			{#if completionFeedback}
+				<Feedback error text={completionFeedback} />
+			{/if}
 		{/if}
 
 		<Subheader icon={ScholarLabel} text={(l) => l.page.submission.header.authors}></Subheader>
@@ -511,5 +564,10 @@
 		flex-direction: column;
 		align-items: flex-start;
 		gap: var(--spacing-half);
+	}
+
+	.blockers {
+		margin-block: var(--spacing-half);
+		padding-inline-start: var(--spacing);
 	}
 </style>

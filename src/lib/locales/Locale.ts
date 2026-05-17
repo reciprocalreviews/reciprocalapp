@@ -92,6 +92,9 @@ export type LocaleText = {
 			single: string;
 			plural: string;
 		};
+		subheader: {
+			link: string;
+		};
 	};
 	page: {
 		error: {
@@ -346,6 +349,7 @@ export type LocaleText = {
 				expertise: string;
 				id: string;
 				created: string;
+				progress: string;
 			};
 			field: {
 				title: NotedTextFieldText & { invalid: string };
@@ -358,6 +362,10 @@ export type LocaleText = {
 			status: {
 				paid: string;
 				pending: string;
+				/** Submission is still in review. */
+				reviewing: string;
+				/** Submission has been marked done. */
+				done: string;
 			};
 			paragraph: {
 				newSubmission: string;
@@ -395,6 +403,15 @@ export type LocaleText = {
 				invalidRole: string;
 				scholarNotFound: string;
 				alreadyAssigned: string;
+				/** Shown when the editor can't yet mark done — lists what's
+				 * still pending. {count} is substituted. */
+				completionBlocked: string;
+				/** Shown when the venue lacks tokens to pay all editors. */
+				completionInsufficient: string;
+				/** Shown when the caller isn't an approved priority-0 editor. */
+				completionNotEditor: string;
+				/** Shown after a successful completion before notifications. */
+				completionSucceeded: string;
 			};
 			button: {
 				createAssignment: ButtonText;
@@ -402,13 +419,13 @@ export type LocaleText = {
 				complete: ConfirmButtonText;
 				approve: ButtonText;
 				approveBid: ButtonText;
+				/** Editor button that compensates the editor(s) and marks the
+				 * submission done in one atomic action. */
+				markDone: ConfirmButtonText;
 			};
 			field: {
 				newAssignment: TextFieldText & { invalid: string };
 				note: TextFieldText;
-			};
-			checkbox: {
-				reviewComplete: string;
 			};
 			status: {
 				done: string;
@@ -486,11 +503,14 @@ export type LocaleText = {
 				inactive: string;
 				compensation: string;
 				roles: string;
+				/** Explains how done_visibility_days controls the list. */
+				doneVisibility: string;
 			};
 			header: {
 				status: string;
 				roles: string;
 				compensation: string;
+				visibility: string;
 			};
 			feedback: {
 				unknownVenue: string;
@@ -505,6 +525,9 @@ export type LocaleText = {
 			checkbox: {
 				inactive: string;
 				anonymousAssignments: CheckboxOnOff;
+			};
+			slider: {
+				doneVisibility: SliderText;
 			};
 			paragraph: {
 				welcome: string;
@@ -918,6 +941,7 @@ export type LocaleText = {
 		EditVenueAnonymousAssignments: string;
 		EditVenueWelcomeAmount: string;
 		EditVenueSubmissionCost: string;
+		EditVenueDoneVisibilityDays: string;
 		EditRoleBidding: string;
 		EditRoleDesiredAssignments: string;
 		EditRoleAnonymousAuthors: string;
@@ -970,8 +994,8 @@ export type LocaleText = {
 		BulkImportSubmissions: string;
 		UpdateSubmissionExpertise: string;
 		UpdateSubmissionTitle: string;
-		UpdateSubmissionStatus: string;
 		UpdateSubmissionNote: string;
+		MarkSubmissionDoneRPC: string;
 		ApproveAssignment: string;
 		CreateAssignment: string;
 		CompensationSubmissionNotFound: string;

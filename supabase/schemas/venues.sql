@@ -21,8 +21,13 @@ create table if not exists public.venues (
 	inactive text default 'This venue is being configured.'::text,
 	-- Whether assignments are visible to conflicted scholars (open reviewing)
 	anonymous_assignments boolean default true not null,
+	-- How many days after a submission is marked done it remains visible
+	-- in the submissions list (sorted to the bottom). 0 hides immediately.
+	done_visibility_days integer default 30 not null,
 	-- There must be at least one admin
-	constraint venues_admins_check check (cardinality(admins)>0)
+	constraint venues_admins_check check (cardinality(admins)>0),
+	-- Bound the visibility window to a year
+	constraint venues_done_visibility_days_check check (done_visibility_days >= 0 and done_visibility_days <= 365)
 );
 
 alter table only public.venues

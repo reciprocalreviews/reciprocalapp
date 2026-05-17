@@ -41,6 +41,9 @@
 		"tokens": {
 			"single": "token",
 			"plural": "tokens"
+		},
+		"subheader": {
+			"link": "Link to this section"
 		}
 	},
 	"page": {
@@ -570,11 +573,14 @@
 				"title": "Title",
 				"expertise": "Expertise Required",
 				"id": "ID",
-				"created": "Created"
+				"created": "Created",
+				"progress": "Progress"
 			},
 			"status": {
 				"paid": "paid",
-				"pending": "{count} pending"
+				"pending": "{count} pending",
+				"reviewing": "in review",
+				"done": "done"
 			},
 			"cell": {
 				"you": "you",
@@ -606,7 +612,11 @@
 				"noNote": "No note provided.",
 				"invalidRole": "You must select a valid role.",
 				"scholarNotFound": "No scholar with that email or ORCID exists.",
-				"alreadyAssigned": "This scholar is already assigned to this role."
+				"alreadyAssigned": "This scholar is already assigned to this role.",
+				"completionBlocked": "Cannot mark done: {count} assignment(s) are approved but not yet compensated. Complete them first.",
+				"completionInsufficient": "The venue does not have enough tokens to compensate every editor. A mint transaction has been proposed; once a minter approves it, retry.",
+				"completionNotEditor": "Only an approved editor (priority-0 role) can mark this submission done.",
+				"completionSucceeded": "Submission marked done and editor(s) compensated."
 			},
 			"button": {
 				"createAssignment": {
@@ -629,6 +639,11 @@
 				"approveBid": {
 					"tip": "Accept this bid, assigning this scholar to this role for this submission",
 					"label": "Assign"
+				},
+				"markDone": {
+					"tip": "Compensate every editor on this submission and mark it done. This cannot be undone.",
+					"label": "Mark done",
+					"warn": "Compensate editor(s) and finalize"
 				}
 			},
 			"field": {
@@ -641,9 +656,6 @@
 					"label": "Note",
 					"placeholder": "Anything for editors and reviewers to know"
 				}
-			},
-			"checkbox": {
-				"reviewComplete": "This submission's review is complete."
 			},
 			"status": {
 				"done": "done",
@@ -767,7 +779,8 @@
 			"header": {
 				"status": "Status",
 				"roles": "Roles",
-				"compensation": "Compensation"
+				"compensation": "Compensation",
+				"visibility": "Visibility"
 			},
 			"feedback": {
 				"unknownVenue": "Unable to load this venue.",
@@ -798,6 +811,12 @@
 					"off": "**Visible assignments**: Authors and conflicted scholars can see who is assigned to review their submissions. This is open reviewing."
 				}
 			},
+			"slider": {
+				"doneVisibility": {
+					"label": "How long after a submission is marked done should it remain visible in the submissions list?",
+					"suffix": " days"
+				}
+			},
 			"paragraph": {
 				"welcome": "Welcome venue admin! You can manage this venue's settings here.",
 				"setupIntro": "Hello venue admin! Are you ready to integrate into your reviewing system? There are a few steps:",
@@ -807,7 +826,8 @@
 			"tip": {
 				"inactive": "Check the inactive message in the settings below, so your community knows you're busy configuring things.",
 				"compensation": "It is critical that you think carefully about the compensation structure for your venue. Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter newcomers from contributring.",
-				"roles": "Configure your venue's volunteer roles below, create roles such as **reviewer**, **program commitee**, **associate editor** to represent the different kinds of contributions volunteers can make to this venue. Ensure you set total compensation levels for each role to not be higher than the cost of a submission."
+				"roles": "Configure your venue's volunteer roles below, create roles such as **reviewer**, **program commitee**, **associate editor** to represent the different kinds of contributions volunteers can make to this venue. Ensure you set total compensation levels for each role to not be higher than the cost of a submission.",
+				"doneVisibility": "Done submissions still appear in the submissions list for this many days after completion (and are sorted to the bottom). After that, they're hidden from the list but still accessible by direct link. Set to 0 to hide them as soon as they're done."
 			}
 		},
 		"scholar": {
@@ -1353,6 +1373,7 @@
 		"EditVenueAnonymousAssignments": "Unable to edit anonymous assignments setting",
 		"EditVenueWelcomeAmount": "Unable to edit the welcome amount",
 		"EditVenueSubmissionCost": "Unable to edit the submission cost",
+		"EditVenueDoneVisibilityDays": "Unable to update the recently-done visibility window",
 		"EditRoleBidding": "Unable to toggle bidding",
 		"EditRoleDesiredAssignments": "Unable to set desired assignments",
 		"EditRoleAnonymousAuthors": "Unable to toggle anonymous authors",
@@ -1405,8 +1426,8 @@
 		"BulkImportSubmissions": "Unable to import submissions",
 		"UpdateSubmissionExpertise": "Unable to update the submission expertise",
 		"UpdateSubmissionTitle": "Unable to update the submission's title",
-		"UpdateSubmissionStatus": "Unable to update the submission's status",
 		"UpdateSubmissionNote": "Unable to update the submission's note",
+		"MarkSubmissionDoneRPC": "Unable to mark this submission done.",
 		"ApproveAssignment": "Unable to approve the assignment",
 		"CreateAssignment": "Unable to create this assignment",
 		"CompensationSubmissionNotFound": "Unable to find the submission for compensation request",

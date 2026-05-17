@@ -315,6 +315,9 @@
             "EditVenueDescription": {
               "type": "string"
             },
+            "EditVenueDoneVisibilityDays": {
+              "type": "string"
+            },
             "EditVenueInactive": {
               "type": "string"
             },
@@ -346,6 +349,9 @@
               "type": "string"
             },
             "InviteToRoleSuccess": {
+              "type": "string"
+            },
+            "MarkSubmissionDoneRPC": {
               "type": "string"
             },
             "MintTokens": {
@@ -444,9 +450,6 @@
             "UpdateSubmissionNote": {
               "type": "string"
             },
-            "UpdateSubmissionStatus": {
-              "type": "string"
-            },
             "UpdateSubmissionTitle": {
               "type": "string"
             },
@@ -497,6 +500,7 @@
             "EditVenueAnonymousAssignments",
             "EditVenueWelcomeAmount",
             "EditVenueSubmissionCost",
+            "EditVenueDoneVisibilityDays",
             "EditRoleBidding",
             "EditRoleDesiredAssignments",
             "EditRoleAnonymousAuthors",
@@ -549,8 +553,8 @@
             "BulkImportSubmissions",
             "UpdateSubmissionExpertise",
             "UpdateSubmissionTitle",
-            "UpdateSubmissionStatus",
             "UpdateSubmissionNote",
+            "MarkSubmissionDoneRPC",
             "ApproveAssignment",
             "CreateAssignment",
             "CompensationSubmissionNotFound",
@@ -2362,12 +2366,16 @@
                     },
                     "status": {
                       "type": "string"
+                    },
+                    "visibility": {
+                      "type": "string"
                     }
                   },
                   "required": [
                     "status",
                     "roles",
-                    "compensation"
+                    "compensation",
+                    "visibility"
                   ],
                   "type": "object"
                 },
@@ -2391,6 +2399,18 @@
                   ],
                   "type": "object"
                 },
+                "slider": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "doneVisibility": {
+                      "$ref": "#/definitions/SliderText"
+                    }
+                  },
+                  "required": [
+                    "doneVisibility"
+                  ],
+                  "type": "object"
+                },
                 "subtitle": {
                   "type": "string"
                 },
@@ -2398,6 +2418,10 @@
                   "additionalProperties": false,
                   "properties": {
                     "compensation": {
+                      "type": "string"
+                    },
+                    "doneVisibility": {
+                      "description": "Explains how done_visibility_days controls the list.",
                       "type": "string"
                     },
                     "inactive": {
@@ -2410,7 +2434,8 @@
                   "required": [
                     "inactive",
                     "compensation",
-                    "roles"
+                    "roles",
+                    "doneVisibility"
                   ],
                   "type": "object"
                 },
@@ -2426,6 +2451,7 @@
                 "feedback",
                 "field",
                 "checkbox",
+                "slider",
                 "paragraph"
               ],
               "type": "object"
@@ -2448,6 +2474,10 @@
                     "createAssignment": {
                       "$ref": "#/definitions/ButtonText"
                     },
+                    "markDone": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Editor button that compensates the editor(s) and marks the submission done in one atomic action."
+                    },
                     "unassign": {
                       "$ref": "#/definitions/ButtonText"
                     }
@@ -2457,7 +2487,8 @@
                     "unassign",
                     "complete",
                     "approve",
-                    "approveBid"
+                    "approveBid",
+                    "markDone"
                   ],
                   "type": "object"
                 },
@@ -2493,22 +2524,26 @@
                   ],
                   "type": "object"
                 },
-                "checkbox": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "reviewComplete": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "reviewComplete"
-                  ],
-                  "type": "object"
-                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
                     "alreadyAssigned": {
+                      "type": "string"
+                    },
+                    "completionBlocked": {
+                      "description": "Shown when the editor can't yet mark done — lists what's still pending. {count} is substituted.",
+                      "type": "string"
+                    },
+                    "completionInsufficient": {
+                      "description": "Shown when the venue lacks tokens to pay all editors.",
+                      "type": "string"
+                    },
+                    "completionNotEditor": {
+                      "description": "Shown when the caller isn't an approved priority-0 editor.",
+                      "type": "string"
+                    },
+                    "completionSucceeded": {
+                      "description": "Shown after a successful completion before notifications.",
                       "type": "string"
                     },
                     "confidential": {
@@ -2545,7 +2580,11 @@
                     "noNote",
                     "invalidRole",
                     "scholarNotFound",
-                    "alreadyAssigned"
+                    "alreadyAssigned",
+                    "completionBlocked",
+                    "completionInsufficient",
+                    "completionNotEditor",
+                    "completionSucceeded"
                   ],
                   "type": "object"
                 },
@@ -2720,7 +2759,6 @@
                 "feedback",
                 "button",
                 "field",
-                "checkbox",
                 "status",
                 "options",
                 "headers"
@@ -2925,6 +2963,9 @@
                     "payment": {
                       "type": "string"
                     },
+                    "progress": {
+                      "type": "string"
+                    },
                     "title": {
                       "type": "string"
                     }
@@ -2934,7 +2975,8 @@
                     "title",
                     "expertise",
                     "id",
-                    "created"
+                    "created",
+                    "progress"
                   ],
                   "type": "object"
                 },
@@ -2957,16 +2999,26 @@
                 "status": {
                   "additionalProperties": false,
                   "properties": {
+                    "done": {
+                      "description": "Submission has been marked done.",
+                      "type": "string"
+                    },
                     "paid": {
                       "type": "string"
                     },
                     "pending": {
                       "type": "string"
+                    },
+                    "reviewing": {
+                      "description": "Submission is still in review.",
+                      "type": "string"
                     }
                   },
                   "required": [
                     "paid",
-                    "pending"
+                    "pending",
+                    "reviewing",
+                    "done"
                   ],
                   "type": "object"
                 },

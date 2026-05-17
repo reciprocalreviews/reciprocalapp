@@ -12,7 +12,6 @@ import type {
 	ScholarID,
 	ScholarRow,
 	SubmissionID,
-	SubmissionStatus,
 	SubmissionType,
 	SubmissionTypeID,
 	SupporterID,
@@ -30,8 +29,10 @@ import CRUD, {
 	type BulkImportResult,
 	type Charge,
 	type ImportedSubmission,
+	type MarkSubmissionDoneOutcome,
 	type Notification,
-	type Result
+	type Result,
+	type SubmissionBlocker
 } from './CRUD';
 import Scholar from './Scholar.svelte';
 
@@ -72,6 +73,43 @@ type CompleteAssignmentResult =
 function isCompleteAssignmentResult(value: unknown): value is CompleteAssignmentResult {
 	if (typeof value !== 'object' || value === null || !('status' in value)) return false;
 	return value.status === 'transferred' || value.status === 'insufficient';
+}
+
+/** Shape of the JSONB returned by the mark_submission_done Postgres RPC. */
+type MarkSubmissionDonePayout = {
+	transaction_id: TransactionID;
+	scholar_id: ScholarID;
+	role_name: string;
+	amount: number;
+};
+
+type MarkSubmissionDoneResult =
+	| {
+			status: 'completed';
+			submission_id: SubmissionID;
+			venue_id: VenueID;
+			currency_id: CurrencyID;
+			total_amount: number;
+			payouts: MarkSubmissionDonePayout[];
+	  }
+	| {
+			status: 'blocked';
+			blockers: SubmissionBlocker[];
+	  }
+	| {
+			status: 'insufficient';
+			shortfall: number;
+			total_amount: number;
+			mint_transaction_id: TransactionID;
+			venue_id: VenueID;
+			venue_title: string;
+			currency_id: CurrencyID;
+			submission_id: SubmissionID;
+	  };
+
+function isMarkSubmissionDoneResult(value: unknown): value is MarkSubmissionDoneResult {
+	if (typeof value !== 'object' || value === null || !('status' in value)) return false;
+	return value.status === 'completed' || value.status === 'blocked' || value.status === 'insufficient';
 }
 
 export default class SupabaseCRUD extends CRUD {
@@ -132,16 +170,72 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('UpdateSubmissionNote', error);
 	}
 
-	/** Toggle the submission stats */
-	async updateSubmissionStatus(
-		submissionID: SubmissionID,
-		status: SubmissionStatus
-	): Promise<Result> {
-		const { error } = await this.client
-			.from('submissions')
-			.update({ status })
-			.eq('id', submissionID);
-		return this.errorOrEmpty('UpdateSubmissionStatus', error);
+	async markSubmissionDone(submissionID: SubmissionID): Promise<Result<MarkSubmissionDoneOutcome>> {
+		// Authorization, blocker validation, atomic compensation of every
+		// uncompleted priority-0 editor assignment, and the status flip all
+		// happen inside the mark_submission_done RPC. The application layer
+		// surfaces the structured outcome and dispatches notifications.
+		const { data, error } = await this.client.rpc('mark_submission_done', {
+			_submission_id: submissionID,
+			_payment_purpose_template: this.locale.view.transactions.purposeTemplate.compensation,
+			_mint_purpose_template: this.locale.view.transactions.purposeTemplate.mint
+		});
+		if (error) return this.error('MarkSubmissionDoneRPC', error);
+		if (!isMarkSubmissionDoneResult(data)) return this.error('MarkSubmissionDoneRPC');
+
+		if (data.status === 'blocked') {
+			return { data: { status: 'blocked', blockers: data.blockers } };
+		}
+
+		if (data.status === 'insufficient') {
+			// The RPC recorded a single proposed mint covering the total
+			// shortfall across all editor payouts. Email the venue's
+			// minter(s) so they can approve it; the editor must then retry.
+			const { data: currency } = await this.client
+				.from('currencies')
+				.select('minters')
+				.eq('id', data.currency_id)
+				.single();
+			if (currency !== null && currency.minters.length > 0) {
+				await this.emailScholars(currency.minters, 'VenueOutOfTokens', [
+					data.total_amount.toString(),
+					'editor',
+					data.shortfall.toString(),
+					data.venue_id,
+					data.venue_title
+				]);
+			}
+			return {
+				data: {
+					status: 'insufficient',
+					shortfall: data.shortfall,
+					total_amount: data.total_amount
+				}
+			};
+		}
+
+		// Tokens have moved and the submission is done. Email each editor
+		// individually with their actual payout amount and role, so each
+		// gets a per-recipient banner via handle().
+		const notifications: Notification[] = [];
+		for (const payout of data.payouts) {
+			const result = await this.emailScholars([payout.scholar_id], 'WorkCompensated', [
+				payout.role_name,
+				payout.amount.toString(),
+				data.venue_id,
+				data.submission_id
+			]);
+			if (result.notified) notifications.push(...result.notified);
+		}
+
+		return {
+			data: {
+				status: 'completed',
+				total_amount: data.total_amount,
+				recipients: data.payouts.map((p) => p.scholar_id)
+			},
+			notified: notifications
+		};
 	}
 
 	async convertORCIDsToScholars(
@@ -774,6 +868,14 @@ export default class SupabaseCRUD extends CRUD {
 			.update({ submission_cost: amount })
 			.eq('id', id);
 		return this.errorOrEmpty('EditVenueSubmissionCost', error);
+	}
+
+	async editVenueDoneVisibilityDays(id: VenueID, days: number) {
+		const { error } = await this.client
+			.from('venues')
+			.update({ done_visibility_days: days })
+			.eq('id', id);
+		return this.errorOrEmpty('EditVenueDoneVisibilityDays', error);
 	}
 
 	async createRole(id: VenueID, name: string, description: string = ''): Promise<Result<RoleRow>> {
