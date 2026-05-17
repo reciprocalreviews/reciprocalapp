@@ -4,7 +4,7 @@
 	import type LocaleText from '$lib/locales/Locale';
 	import { getLocaleContext } from '$routes/Contexts';
 	import type PageHeader from '$routes/PageHeader';
-	import { getContext, type Snippet } from 'svelte';
+	import { getContext, onMount, type Snippet } from 'svelte';
 
 	let {
 		icon,
@@ -75,6 +75,24 @@
 				cleanupContext();
 			};
 		}
+	});
+
+	// Smoothly scroll the URL's hash target into the center of the viewport,
+	// both on initial load and whenever the hash changes (e.g., a Subheader
+	// anchor is clicked).
+	function scrollToHash() {
+		const hash = window.location.hash.slice(1);
+		if (!hash) return;
+		const el = document.getElementById(decodeURIComponent(hash));
+		if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+	}
+
+	onMount(() => {
+		// Defer the initial scroll a frame so child Subheaders are mounted
+		// and laid out before we measure their position.
+		requestAnimationFrame(scrollToHash);
+		window.addEventListener('hashchange', scrollToHash);
+		return () => window.removeEventListener('hashchange', scrollToHash);
 	});
 </script>
 

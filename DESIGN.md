@@ -209,6 +209,8 @@ The authoritative schemas live in:
 
 The RR web application includes serveral web application screens, each corresponding to one of the kinds of data above, and providing access to functionality to manipulate each. We'll list URL routes routes for each to clarify the browsing experience.
 
+- [x] Every subsection heading on a page is independently linkable. A small chain-link icon next to each subheading copies a URL fragment to that subsection into the address bar, and following such a link smoothly scrolls the heading into the center of the viewport — making it easy to share a pointer to a specific part of a long, multi-section page.
+
 ### Landing `/`
 
 The goal of the landing page is to 1) explain the value proposition of RR to editors, reviewers, and authors and 2) help newcomers orient to the application's key interaction points.
