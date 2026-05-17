@@ -36,10 +36,10 @@ test('editor edits venue title, description, and URL', async ({ page, context })
 	await page.getByTestId('venue-url-toggle').click();
 	await page.getByTestId('venue-url').fill(newUrl);
 	await page.getByTestId('venue-url-toggle').click();
-	// Reload to confirm persistence.
-	await page.reload();
-	await page.waitForLoadState('networkidle');
-	expect(sql(`select url from public.venues where id = '${VENUE_ID}';`)).toBe(newUrl);
+	// Poll the DB so we don't race the in-flight save when reloading.
+	await expect
+		.poll(() => sql(`select url from public.venues where id = '${VENUE_ID}';`))
+		.toBe(newUrl);
 
 	// Title lives in the page header (Nav.svelte) on any venue route. Edit it
 	// from /venue/[id]/settings.
