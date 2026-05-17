@@ -10,6 +10,7 @@
 	import Status from '$lib/components/Status.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { getDB } from '$lib/data/CRUD';
+	import Text from '$lib/locales/Text.svelte';
 	import { isntEmpty, validEmails, validURL } from '$lib/validation';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
@@ -41,6 +42,7 @@
 	}
 
 	function editorsArentMinters() {
+		if (currency !== undefined) return true;
 		const editorsList = editors.split(',').map((e) => e.trim());
 		const mintersList = minters.split(',').map((m) => m.trim());
 		return editorsList.filter((value) => mintersList.includes(value)).length === 0;
@@ -50,7 +52,9 @@
 		const uid = auth().getUserID();
 		if (
 			!isntEmpty(venue) ||
-			!validEmails(editors) ||
+			!validURL(url) ||
+			!validEmails(editors, 1) ||
+			(currency === undefined && !validEmails(minters, 1)) ||
 			!validSize(size) ||
 			!validMessage(message) ||
 			!editorsArentMinters() ||
@@ -66,7 +70,7 @@
 			url,
 			editors.split(',').map((editor) => editor.trim()),
 			currency ?? null,
-			minters.split(',').map((minter) => minter.trim()),
+			currency !== undefined ? [] : minters.split(',').map((minter) => minter.trim()),
 			parseInt(size),
 			message
 		);
@@ -83,92 +87,145 @@
 
 <Page icon={VenueLabel} title={(l) => l.page.proposeVenue.title} breadcrumbs={[]}>
 	<Paragraph text={(l) => l.page.proposeVenue.paragraph.reviewedBy} />
-
 	<Paragraph text={(l) => l.page.proposeVenue.paragraph.howToPropose} />
 
 	{#if auth().getUserID()}
 		<Form>
-			<TextField
-				bind:text={venue}
-				strings={(l) => l.page.proposeVenue.field.venueName}
-				valid={(text) =>
-					text.length > 0 ? undefined : (l) => l.page.proposeVenue.field.venueName.invalid ?? ''}
-				testid="propose-venue-name"
-			/>
-			<TextField
-				bind:text={editors}
-				strings={(l) => l.page.proposeVenue.field.editors}
-				active={!proposing}
-				valid={(text) =>
-					!validEmails(text, 1)
-						? (l) => l.page.proposeVenue.field.editors.invalid ?? ''
-						: undefined}
-				testid="propose-venue-editors"
-			/>
-			<Options
-				strings={(l) => l.page.proposeVenue.options.currency}
-				bind:value={currency}
-				options={[
-					{ label: locale().page.proposeVenue.options.currency.createNew, value: undefined },
-					...(currencies ?? []).map((currency) => ({
-						label: currency.name,
-						value: currency.id
-					}))
-				]}
-			/>
-			{#if currency === undefined}
+			<section class="form-section">
+				<p class="section-label"><Text path={(l) => l.page.proposeVenue.section.venueInfo} /></p>
 				<TextField
-					bind:text={minters}
-					strings={(l) => l.page.proposeVenue.field.minters}
+					bind:text={venue}
+					strings={(l) => l.page.proposeVenue.field.venueName}
+					stretch
+					valid={(text) =>
+					text.length > 0 ? undefined : (l) => l.page.proposeVenue.field.venueName.invalid}
+					testid="propose-venue-name"
+				/>
+				<TextField
+					bind:text={url}
+					strings={(l) => l.page.proposeVenue.field.url}
 					active={!proposing}
+					stretch
+					valid={(text) =>
+						validURL(text) ? undefined : (l) => l.page.proposeVenue.field.url.invalid}
+					testid="propose-venue-url"
+				/>
+				<TextField
+					bind:text={size}
+					strings={(l) => l.page.proposeVenue.field.size}
+					active={!proposing}
+					stretch
+					valid={(text) =>
+					validSize(text) ? undefined : (l) => l.page.proposeVenue.field.size.invalid}
+					testid="propose-venue-size"
+				/>
+			</section>
+
+			<hr />
+
+			<section class="form-section">
+				<p class="section-label"><Text path={(l) => l.page.proposeVenue.section.team} /></p>
+				<TextField
+					bind:text={editors}
+					strings={(l) => l.page.proposeVenue.field.editors}
+					active={!proposing}
+					stretch
 					valid={(text) =>
 						!validEmails(text, 1)
-							? (l) => l.page.proposeVenue.field.minters.invalid ?? ''
-							: !editorsArentMinters()
-								? (l) => l.page.proposeVenue.field.mintersConflict
-								: undefined}
-					testid="propose-venue-minters"
+						? (l) => l.page.proposeVenue.field.editors.invalid
+							: undefined}
+					testid="propose-venue-editors"
 				/>
-			{/if}
-			<TextField
-				bind:text={url}
-				strings={(l) => l.page.proposeVenue.field.url}
-				active={!proposing}
-				valid={(text) =>
-					validURL(text) ? undefined : (l) => l.page.proposeVenue.field.url.invalid}
-				testid="propose-venue-url"
-			/>
-			<TextField
-				bind:text={size}
-				strings={(l) => l.page.proposeVenue.field.size}
-				active={!proposing}
-				valid={(text) =>
-					validSize(text) ? undefined : (l) => l.page.proposeVenue.field.size.invalid ?? ''}
-				testid="propose-venue-size"
-			/>
-			<TextField
-				bind:text={message}
-				strings={(l) => l.page.proposeVenue.field.rationale}
-				inline={false}
-				active={!proposing}
-				valid={(text) =>
-					validMessage(text) ? undefined : (l) => l.page.proposeVenue.field.rationale.invalid ?? ''}
-				testid="propose-venue-rationale"
-			/>
-			<Button
-				strings={(l) => l.page.proposeVenue.button.propose}
-				action={propose}
-				testid="propose-venue-submit"
-				active={!proposing &&
-					isntEmpty(venue) &&
-					validEmails(editors, 1) &&
-					(currency !== undefined || validEmails(minters, 1)) &&
-					validSize(size) &&
-					validMessage(message) &&
-					editorsArentMinters()}
-			/>
+				<Options
+					strings={(l) => l.page.proposeVenue.options.currency}
+					bind:value={currency}
+					stretch
+					options={[
+						{ label: locale().page.proposeVenue.options.currency.createNew, value: undefined },
+						...(currencies ?? []).map((currency) => ({
+							label: currency.name,
+							value: currency.id
+						}))
+					]}
+				/>
+				{#if currency === undefined}
+					<TextField
+						bind:text={minters}
+						strings={(l) => l.page.proposeVenue.field.minters}
+						active={!proposing}
+						stretch
+						valid={(text) =>
+							!validEmails(text, 1)
+							? (l) => l.page.proposeVenue.field.minters.invalid
+								: !editorsArentMinters()
+									? (l) => l.page.proposeVenue.field.mintersConflict
+									: undefined}
+						testid="propose-venue-minters"
+					/>
+				{/if}
+			</section>
+
+			<hr />
+
+			<section class="form-section">
+				<p class="section-label"><Text path={(l) => l.page.proposeVenue.section.rationale} /></p>
+				<TextField
+					bind:text={message}
+					strings={(l) => l.page.proposeVenue.field.rationale}
+					inline={false}
+					active={!proposing}
+					stretch
+					valid={(text) =>
+						validMessage(text)
+							? undefined
+						: (l) => l.page.proposeVenue.field.rationale.invalid}
+					testid="propose-venue-rationale"
+				/>
+			</section>
+
+			<hr />
+
+			<div class="form-footer">
+				<Button
+					strings={(l) => l.page.proposeVenue.button.propose}
+					action={propose}
+					active={!proposing &&
+						isntEmpty(venue) &&
+						validURL(url) &&
+						validEmails(editors, 1) &&
+						(currency !== undefined || validEmails(minters, 1)) &&
+						validSize(size) &&
+						validMessage(message) &&
+						editorsArentMinters()}
+					testid="propose-venue-submit"
+				/>
+			</div>
 		</Form>
 	{:else}
 		<Status good={false} label={(l) => l.page.proposeVenue.status.notLoggedIn} />
 	{/if}
 </Page>
+
+<style>
+	.form-section {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing);
+		width: 100%;
+	}
+
+	.section-label {
+		font-size: var(--extra-small-font-size);
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--inactive-color);
+		margin: 0 0 var(--spacing-half);
+	}
+
+	.form-footer {
+		display: flex;
+		justify-content: flex-end;
+		width: 100%;
+	}
+</style>

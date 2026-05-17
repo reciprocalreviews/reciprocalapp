@@ -7,11 +7,12 @@
 		options: { label: string; value: string | undefined }[];
 		value: string | undefined;
 		disabled?: boolean;
+		stretch?: boolean;
 		onChange?: ((value: string | undefined) => void) | undefined;
 		strings?: (l: LocaleText) => OptionsText;
 	};
 
-	let { options, value = $bindable(), onChange, disabled = false, strings }: Props = $props();
+	let { options, value = $bindable(), onChange, disabled = false, stretch = false, strings }: Props = $props();
 
 	const locale = getLocaleContext();
 	const text = $derived(strings ? strings(locale()) : undefined);
@@ -26,7 +27,7 @@
 	{#if text?.label}
 		<span class="label">{text.label}</span>
 	{/if}
-	<select bind:value onchange={handleChange} {disabled}>
+	<select bind:value onchange={handleChange} {disabled} class:stretch>
 		{#each options as option}
 			<option value={option.value}>{option.label}</option>
 		{/each}
@@ -46,6 +47,11 @@
 		transition:
 			box-shadow 150ms ease-out,
 			transform 150ms ease-out;
+	}
+
+	select.stretch {
+		width: 100%;
+		box-sizing: border-box;
 	}
 
 	select:not(:focus):hover {

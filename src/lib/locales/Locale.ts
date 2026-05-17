@@ -648,14 +648,19 @@ export type LocaleText = {
 			button: {
 				propose: ButtonText;
 			};
+			section: {
+				venueInfo: string;
+				team: string;
+				rationale: string;
+			};
 			field: {
-				venueName: TextFieldText;
-				editors: TextFieldText;
-				minters: TextFieldText;
+				venueName: TextFieldText & { invalid: string };
+				editors: TextFieldText & { invalid: string };
+				minters: TextFieldText & { invalid: string };
 				mintersConflict: string;
 				url: TextFieldText & { invalid: string };
-				size: TextFieldText;
-				rationale: TextFieldText;
+				size: TextFieldText & { invalid: string };
+				rationale: TextFieldText & { invalid: string };
 			};
 			options: {
 				currency: OptionsText & { createNew: string };
@@ -985,3 +990,4 @@ export type LocaleText = {
 };
 
 export { type LocaleText as default };
+
