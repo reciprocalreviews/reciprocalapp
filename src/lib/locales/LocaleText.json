@@ -384,6 +384,9 @@
             "ScholarNotFound": {
               "type": "string"
             },
+            "SelfDealingApproval": {
+              "type": "string"
+            },
             "TransactionApprovalUpdate": {
               "type": "string"
             },
@@ -542,6 +545,7 @@
             "UnknownTransaction",
             "TransactionNotCanceled",
             "AlreadyApproved",
+            "SelfDealingApproval",
             "TransactionApprovalUpdate",
             "MissingApprovalVenue",
             "MissingRecipient",

@@ -1031,6 +1031,7 @@ export type LocaleText = {
 		UnknownTransaction: string;
 		TransactionNotCanceled: string;
 		AlreadyApproved: string;
+		SelfDealingApproval: string;
 		TransactionApprovalUpdate: string;
 		MissingApprovalVenue: string;
 		MissingRecipient: string;

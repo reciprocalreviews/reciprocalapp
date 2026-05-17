@@ -109,7 +109,9 @@ type MarkSubmissionDoneResult =
 
 function isMarkSubmissionDoneResult(value: unknown): value is MarkSubmissionDoneResult {
 	if (typeof value !== 'object' || value === null || !('status' in value)) return false;
-	return value.status === 'completed' || value.status === 'blocked' || value.status === 'insufficient';
+	return (
+		value.status === 'completed' || value.status === 'blocked' || value.status === 'insufficient'
+	);
 }
 
 export default class SupabaseCRUD extends CRUD {
@@ -159,14 +161,8 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('UpdateSubmissionTitle', error);
 	}
 
-	async updateSubmissionNote(
-		submissionID: SubmissionID,
-		note: string | null
-	): Promise<Result> {
-		const { error } = await this.client
-			.from('submissions')
-			.update({ note })
-			.eq('id', submissionID);
+	async updateSubmissionNote(submissionID: SubmissionID, note: string | null): Promise<Result> {
+		const { error } = await this.client.from('submissions').update({ note }).eq('id', submissionID);
 		return this.errorOrEmpty('UpdateSubmissionNote', error);
 	}
 
@@ -596,7 +592,10 @@ export default class SupabaseCRUD extends CRUD {
 		}
 
 		// Notify editors
-		const editorResult = await this.sendEmail(editors, 'ProposalCreatedEditors', [title, proposalid]);
+		const editorResult = await this.sendEmail(editors, 'ProposalCreatedEditors', [
+			title,
+			proposalid
+		]);
 		if (editorResult.notified) notified.push(...editorResult.notified);
 
 		return { data: proposalid, notified };
@@ -1395,6 +1394,21 @@ export default class SupabaseCRUD extends CRUD {
 
 		// Verify that the transaction is pending. If it's not, bail.
 		if (transaction.status !== 'proposed') return this.error('AlreadyApproved');
+
+		// Anti-self-dealing: the approver must not be the recipient.
+		// RLS enforces this in the database; this pre-check produces a clear localized
+		// error instead of a generic RLS denial.
+		if (transaction.to_scholar !== null && transaction.to_scholar === creator)
+			return this.error('SelfDealingApproval');
+		if (transaction.to_venue !== null) {
+			const { data: toVenue, error: toVenueError } = await this.client
+				.from('venues')
+				.select('admins')
+				.eq('id', transaction.to_venue)
+				.single();
+			if (toVenueError) return this.error('UnknownVenue', toVenueError);
+			if (toVenue.admins.includes(creator)) return this.error('SelfDealingApproval');
+		}
 
 		const from = transaction.from_scholar ?? transaction.from_venue;
 		const to = transaction.to_scholar ?? transaction.to_venue;

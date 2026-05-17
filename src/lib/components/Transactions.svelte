@@ -86,7 +86,13 @@
 		(transaction.from_scholar === userid ||
 			(transaction.from_venue !== null &&
 				venues.find((v) => v.id === transaction.from_venue)?.admins.includes(userid)) ||
-			currency?.minters.includes(userid))}
+			currency?.minters.includes(userid)) &&
+		// Anti-self-dealing: hide approval from recipients.
+		transaction.to_scholar !== userid &&
+		!(
+			transaction.to_venue !== null &&
+			venues.find((v) => v.id === transaction.to_venue)?.admins.includes(userid)
+		)}
 	<tr data-testid={testid + '-' + index}>
 		<td>
 			<Status

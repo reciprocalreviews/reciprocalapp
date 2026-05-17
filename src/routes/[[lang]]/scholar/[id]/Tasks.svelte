@@ -112,7 +112,7 @@
 				<td>{locale().view.tasks.cell.kind.outgoingTransaction}</td>
 				<td>
 					<Link to="/scholar/{scholar}/transactions">{transaction.purpose}</Link>
-					{#if userid !== null}
+					{#if userid !== null && transaction.to_scholar !== userid}
 						<Button
 							strings={(l) => l.view.transactions.button.approve}
 							action={() => handle(db().approveTransaction(userid!, transaction.id))}

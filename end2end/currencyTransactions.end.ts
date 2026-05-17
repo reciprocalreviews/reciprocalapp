@@ -154,3 +154,59 @@ test('a gift transaction is visible in venue transactions, scholar history, and 
 	);
 	expect(balanceAfter).toBe(balanceBefore + 2);
 });
+
+test('minter cannot approve a venue→minter transaction (anti-self-dealing UPDATE)', async ({
+	page,
+	context
+}) => {
+	// DESIGN.md L388: a minter must not approve transactions in which they
+	// are the recipient. Seed a proposed venue→minter row and verify (1) the
+	// UI hides the approve button when the recipient views it and (2) the RLS
+	// UPDATE policy refuses to flip the status when the minter tries directly.
+	const minterID = sql(`select id from public.scholars where email = '${MINTER_EMAIL}';`);
+
+	const purpose = `e2e self-deal update test ${Date.now()}`;
+	const txnID = sql(
+		`insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${minterID}', null, array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[1]), '${CURRENCY_ID}', '${purpose}', 'proposed') returning id;`
+	);
+	expect(txnID).toMatch(/^[0-9a-f-]+$/);
+
+	await login(MINTER_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_ID}/transactions`);
+	await page.waitForLoadState('networkidle');
+
+	// The row is visible (minter can SELECT transactions for their currency)…
+	await expect(page.getByRole('cell', { name: purpose })).toBeVisible();
+	// …but the approve button is not rendered for the recipient.
+	const approveButton = page.locator(
+		`tr:has(td:has-text(${JSON.stringify(purpose)})) [data-testid$="-approve"]`
+	);
+	await expect(approveButton).toHaveCount(0);
+
+	// Bypass the UI and attempt the UPDATE under the minter's auth context.
+	// The with-check on the RLS policy either raises or silently rejects;
+	// either way the row stays 'proposed'.
+	try {
+		sql(
+			`begin; set local role authenticated; set local request.jwt.claims to '{"sub":"${minterID}","role":"authenticated"}'; update public.transactions set status = 'approved' where id = '${txnID}'; commit;`
+		);
+	} catch {
+		// Expected: RLS with-check raises and the transaction rolls back.
+	}
+	expect(sql(`select status from public.transactions where id = '${txnID}';`)).toBe('proposed');
+});
+
+test('editor cannot insert an already-approved venue→editor transaction (anti-self-dealing INSERT)', async () => {
+	// Gift flow: a venue admin inserts a status='approved' transaction
+	// directly (see Gift.svelte). The new INSERT-side check must reject the
+	// case where the editor names themselves as recipient.
+	const purpose = `e2e self-deal insert test ${Date.now()}`;
+	try {
+		sql(
+			`begin; set local role authenticated; set local request.jwt.claims to '{"sub":"${EDITOR_ID}","role":"authenticated"}'; insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${EDITOR_ID}', null, array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[1]), '${CURRENCY_ID}', '${purpose}', 'approved'); commit;`
+		);
+	} catch {
+		// Expected: RLS check raises and the transaction rolls back.
+	}
+	expect(sql(`select count(*) from public.transactions where purpose = '${purpose}';`)).toBe('0');
+});

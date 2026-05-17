@@ -192,6 +192,34 @@ with
 						and from_venue is null
 					)
 				)
+				-- Anti-self-dealing: the inserter must not also be the recipient.
+				-- Blocks a venue admin from gifting tokens to themselves, and a
+				-- scholar from inserting an already-approved self-transfer.
+				and (
+					to_scholar is null
+					or (
+						select
+							auth.uid () as uid
+					)<>to_scholar
+				)
+				and (
+					to_venue is null
+					or not (
+						(
+							select
+								auth.uid () as uid
+						)=any (
+							(
+								select
+									venues.admins
+								from
+									public.venues
+								where
+									(venues.id=transactions.to_venue)
+							)::uuid[]
+						)
+					)
+				)
 			)
 		)
 	);
@@ -239,6 +267,86 @@ for update
 							where
 								(venues.id=transactions.from_venue)
 						)::uuid[]
+					)
+				)
+			)
+		)
+	)
+with
+	check (
+		-- Post-update: the updater must still be a giver, minter, or from-venue admin.
+		-- Mirrors the using clause so adding `with check` does not widen post-update behavior
+		-- (Postgres would otherwise stop reusing using as the post-update check).
+		(
+			(
+				(
+					select
+						auth.uid () as uid
+				)=from_scholar
+			)
+			or (
+				(
+					select
+						auth.uid () as uid
+				)=any (
+					(
+						select
+							currencies.minters
+						from
+							public.currencies
+						where
+							(currencies.id=transactions.currency)
+					)::uuid[]
+				)
+			)
+			or (
+				(from_venue is not null)
+				and (
+					(
+						select
+							auth.uid () as uid
+					)=any (
+						(
+							select
+								venues.admins
+							from
+								public.venues
+							where
+								(venues.id=transactions.from_venue)
+						)::uuid[]
+					)
+				)
+			)
+		)
+		-- Anti-self-dealing (DESIGN.md L388): when the new row is `approved`, the
+		-- approver must not be the recipient. Other transitions (e.g. flipping to
+		-- `canceled`) are not restricted by this check.
+		and (
+			status<>'approved'::transaction_status
+			or (
+				(
+					to_scholar is null
+					or (
+						select
+							auth.uid () as uid
+					)<>to_scholar
+				)
+				and (
+					to_venue is null
+					or not (
+						(
+							select
+								auth.uid () as uid
+						)=any (
+							(
+								select
+									venues.admins
+								from
+									public.venues
+								where
+									(venues.id=transactions.to_venue)
+							)::uuid[]
+						)
 					)
 				)
 			)

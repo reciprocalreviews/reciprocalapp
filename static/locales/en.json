@@ -1463,6 +1463,7 @@
 		"UnknownTransaction": "Unable to find this transaction",
 		"TransactionNotCanceled": "Unable to cancel this transaction",
 		"AlreadyApproved": "This transaction is already approved",
+		"SelfDealingApproval": "You can't approve a transaction in which you are the recipient",
 		"TransactionApprovalUpdate": "Unable to update the proposed transaction",
 		"MissingApprovalVenue": "The proposed transaction has no venue to transfer from.",
 		"MissingRecipient": "The proposed transaction has no scholar recipient.",
