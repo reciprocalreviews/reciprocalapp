@@ -31,10 +31,7 @@
 	const locale = getLocaleContext();
 	const text = $derived(strings(locale()));
 
-	let view: HTMLInputElement | undefined = $state();
-
-	function handleInput() {
-		if (view) value = parseFloat(view.value);
+	function handleChange() {
 		if (change) change(value);
 	}
 </script>
@@ -45,17 +42,16 @@
 	{/if}
 	<div class="slider">
 		<input
-			bind:this={view}
 			data-testid={testid}
 			disabled={!active}
 			aria-disabled={!active}
 			type="range"
 			{min}
 			{max}
-			{value}
 			{step}
-			oninput={immediately ? handleInput : undefined}
-			onchange={handleInput}
+			bind:value={() => value, (v) => (value = +v)}
+			oninput={immediately ? handleChange : undefined}
+			onchange={handleChange}
 		/>
 		<span class="value">{value}{text.suffix ?? ''}</span>
 	</div>
