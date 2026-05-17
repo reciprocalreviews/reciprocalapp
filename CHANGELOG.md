@@ -6,9 +6,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Changed
 
-## 0.3.14 - 2026-05-10
-
+- Improved form design.
 - Updated internal tooling for stability.
+
+## 0.3.14 - 2026-05-10
 
 ### Added
 
