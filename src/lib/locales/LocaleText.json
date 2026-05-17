@@ -1799,19 +1799,95 @@
                   "additionalProperties": false,
                   "properties": {
                     "editors": {
-                      "$ref": "#/definitions/TextFieldText"
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
                     },
                     "minters": {
-                      "$ref": "#/definitions/TextFieldText"
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
                     },
                     "mintersConflict": {
                       "type": "string"
                     },
                     "rationale": {
-                      "$ref": "#/definitions/TextFieldText"
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
                     },
                     "size": {
-                      "$ref": "#/definitions/TextFieldText"
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
                     },
                     "url": {
                       "additionalProperties": false,
@@ -1836,7 +1912,26 @@
                       "type": "object"
                     },
                     "venueName": {
-                      "$ref": "#/definitions/TextFieldText"
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
                     }
                   },
                   "required": [
@@ -1891,6 +1986,26 @@
                   ],
                   "type": "object"
                 },
+                "section": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "rationale": {
+                      "type": "string"
+                    },
+                    "team": {
+                      "type": "string"
+                    },
+                    "venueInfo": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "venueInfo",
+                    "team",
+                    "rationale"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -1911,6 +2026,7 @@
                 "title",
                 "status",
                 "button",
+                "section",
                 "field",
                 "options",
                 "paragraph"

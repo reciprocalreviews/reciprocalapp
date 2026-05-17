@@ -61,7 +61,7 @@ Patterns in use:
 valid={(text) => (isNotEmpty(text) ? undefined : (l) => l.page.x.form.y.validation)}
 ```
 
-After changing `Locale.ts`, run `npm run locale` to regenerate the schema and validate `en.json`.
+After changing `Locale.ts` — or after any merge/rebase that touches `Locale.ts` — run `npm run locale` to regenerate `src/lib/locales/LocaleText.json` and validate `en.json`. `LocaleText.json` is a generated artifact that is also checked in; CI runs `npm run locale-validate` only (it does not regenerate the schema), so if `LocaleText.json` is out of sync with `Locale.ts` the locale-validation job will fail in CI even though `npm run locale` passes locally. Commit the regenerated `LocaleText.json` alongside any `Locale.ts` change.
 
 ### Auth
 
