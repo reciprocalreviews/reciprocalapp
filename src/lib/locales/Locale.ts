@@ -30,6 +30,8 @@ export type CheckboxOnOff = { on: string; off: string };
 export type OptionsText = {
 	/** The optional label to show above the select */
 	label?: string;
+	/** An optional note to show below the select */
+	note?: string;
 };
 
 /** Text for the Slider component */
@@ -710,7 +712,7 @@ export type LocaleText = {
 				rationale: TextFieldText & { invalid: string };
 			};
 			options: {
-				currency: OptionsText & { createNew: string };
+				currency: OptionsText & { createNew: string; note: string };
 			};
 			paragraph: {
 				reviewedBy: string;

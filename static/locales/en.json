@@ -208,7 +208,8 @@
 			"options": {
 				"currency": {
 					"label": "currency",
-					"createNew": "Create a new currency"
+					"createNew": "Create a new currency",
+					"note": "A currency is a shared token economy. Choose an existing currency to join another venue's economy (e.g., a related conference or journal in the same research community). Create a new one if your venue's economy should be independent."
 				}
 			},
 			"paragraph": {
