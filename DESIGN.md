@@ -385,7 +385,7 @@ The purpose of this page is to allow for management of all `Transaction`s associ
 **FUNCTIONALITY**. The transactions page for a venue should allow for:
 
 - [x] _`editor`_, _`minter`_: View all transactions
-- [x] _`minter`_: Approve pending transactions that do not involve the scholar approving
+- [x] _`minter`_: Approve pending transactions, subject to the no-self-enrichment principle: an approver cannot approve a transaction that enriches them. They can freely approve transactions that spend their own balance (whatever the recipient), but they cannot approve transactions that move someone else's tokens — venue reserves, mints, or another scholar's balance — to themselves or to a venue they administer.
 - [x] _`minters`_: Send email reminders about unfinished transactions and work at a customizable frequency.
 - [x] _`scholar`_: Transfer tokens from the venue to a scholar directly (no minter approval required) when authorizing a payout the approver has the authority to grant, such as completing a reviewer's assignment. The transfer fails if the venue's reserve is short; in that case a proposed mint transaction sized at the shortfall is recorded automatically, the venue's _`minter`_(s) are notified by email, and the approver can retry once the minter approves. Role approvers can also see the transactions they themselves created, so they can audit their own activity.
 

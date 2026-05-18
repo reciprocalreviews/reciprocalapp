@@ -154,12 +154,13 @@ create policy "only owners can transfer their tokens if approved" on public.tran
 with
 	check (
 		(
-			-- Transactions can be proposed by anyone
+			-- Transactions can be proposed by anyone.
 			(status='proposed'::transaction_status)
 			or (
-				-- Transactions can be approved by the giver, if there is one
 				(status='approved'::transaction_status)
 				and (
+					-- No-self-enrichment (DESIGN.md L388). Spending one's own
+					-- balance is not enrichment — no recipient restriction.
 					(
 						(from_scholar is not null)
 						and (
@@ -169,54 +170,58 @@ with
 							)=from_scholar
 						)
 					)
+					-- Moving someone else's tokens (venue reserve or mint):
+					-- the approver must not be the recipient or a venue they
+					-- admin, since that would be self-enrichment.
 					or (
-						(from_venue is not null)
-						and (
+						(
 							(
-								select
-									auth.uid () as uid
-							)=any (
-								(
-									select
-										venues.admins
-									from
-										venues
-									where
-										(venues.id=transactions.from_venue)
-								)::uuid[]
+								(from_venue is not null)
+								and (
+									(
+										select
+											auth.uid () as uid
+									)=any (
+										(
+											select
+												venues.admins
+											from
+												venues
+											where
+												(venues.id=transactions.from_venue)
+										)::uuid[]
+									)
+								)
+							)
+							or (
+								from_scholar is null
+								and from_venue is null
 							)
 						)
-					)
-					or (
-						from_scholar is null
-						and from_venue is null
-					)
-				)
-				-- Anti-self-dealing: the inserter must not also be the recipient.
-				-- Blocks a venue admin from gifting tokens to themselves, and a
-				-- scholar from inserting an already-approved self-transfer.
-				and (
-					to_scholar is null
-					or (
-						select
-							auth.uid () as uid
-					)<>to_scholar
-				)
-				and (
-					to_venue is null
-					or not (
-						(
-							select
-								auth.uid () as uid
-						)=any (
-							(
+						and (
+							to_scholar is null
+							or (
 								select
-									venues.admins
-								from
-									public.venues
-								where
-									(venues.id=transactions.to_venue)
-							)::uuid[]
+									auth.uid () as uid
+							)<>to_scholar
+						)
+						and (
+							to_venue is null
+							or not (
+								(
+									select
+										auth.uid () as uid
+								)=any (
+									(
+										select
+											venues.admins
+										from
+											public.venues
+										where
+											(venues.id=transactions.to_venue)
+									)::uuid[]
+								)
+							)
 						)
 					)
 				)
@@ -318,11 +323,23 @@ with
 				)
 			)
 		)
-		-- Anti-self-dealing (DESIGN.md L388): when the new row is `approved`, the
-		-- approver must not be the recipient. Other transitions (e.g. flipping to
-		-- `canceled`) are not restricted by this check.
+		-- No-self-enrichment (DESIGN.md L388). On approval: spending one's
+		-- own balance (from_scholar = auth.uid()) imposes no recipient
+		-- restriction; otherwise the approver must not be the recipient or
+		-- a venue they admin (which would enrich them from someone else's
+		-- tokens). Other status transitions (e.g. flipping to `canceled`)
+		-- are not restricted by this check.
 		and (
 			status<>'approved'::transaction_status
+			or (
+				(from_scholar is not null)
+				and (
+					(
+						select
+							auth.uid () as uid
+					)=from_scholar
+				)
+			)
 			or (
 				(
 					to_scholar is null

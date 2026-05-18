@@ -1127,10 +1127,7 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('UpdateVolunteerPapers', error);
 	}
 
-	async createPreferenceLevel(
-		venue: VenueID,
-		label: string
-	): Promise<Result<PreferenceLevelRow>> {
+	async createPreferenceLevel(venue: VenueID, label: string): Promise<Result<PreferenceLevelRow>> {
 		// New levels go at the end of the current rank order.
 		const { data: existing, error: existingError } = await this.client
 			.from('preference_levels')
@@ -1151,10 +1148,7 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async editPreferenceLevelLabel(id: PreferenceLevelID, label: string): Promise<Result> {
-		const { error } = await this.client
-			.from('preference_levels')
-			.update({ label })
-			.eq('id', id);
+		const { error } = await this.client.from('preference_levels').update({ label }).eq('id', id);
 		return this.errorOrEmpty('EditPreferenceLevel', error);
 	}
 
@@ -1482,19 +1476,25 @@ export default class SupabaseCRUD extends CRUD {
 		// Verify that the transaction is pending. If it's not, bail.
 		if (transaction.status !== 'proposed') return this.error('AlreadyApproved');
 
-		// Anti-self-dealing: the approver must not be the recipient.
-		// RLS enforces this in the database; this pre-check produces a clear localized
+		// No-self-enrichment (see DESIGN.md). Spending one's own balance
+		// is not enrichment regardless of recipient; otherwise the approver
+		// can't be the recipient or a venue admin of the recipient. RLS
+		// enforces the same rule; this pre-check produces a clear localized
 		// error instead of a generic RLS denial.
-		if (transaction.to_scholar !== null && transaction.to_scholar === creator)
-			return this.error('SelfDealingApproval');
-		if (transaction.to_venue !== null) {
-			const { data: toVenue, error: toVenueError } = await this.client
-				.from('venues')
-				.select('admins')
-				.eq('id', transaction.to_venue)
-				.single();
-			if (toVenueError) return this.error('UnknownVenue', toVenueError);
-			if (toVenue.admins.includes(creator)) return this.error('SelfDealingApproval');
+		const spendingOwnBalance =
+			transaction.from_scholar !== null && transaction.from_scholar === creator;
+		if (!spendingOwnBalance) {
+			if (transaction.to_scholar !== null && transaction.to_scholar === creator)
+				return this.error('SelfDealingApproval');
+			if (transaction.to_venue !== null) {
+				const { data: toVenue, error: toVenueError } = await this.client
+					.from('venues')
+					.select('admins')
+					.eq('id', transaction.to_venue)
+					.single();
+				if (toVenueError) return this.error('UnknownVenue', toVenueError);
+				if (toVenue.admins.includes(creator)) return this.error('SelfDealingApproval');
+			}
 		}
 
 		const from = transaction.from_scholar ?? transaction.from_venue;
@@ -1641,10 +1641,7 @@ export default class SupabaseCRUD extends CRUD {
 		id: AssignmentID,
 		preferenceid: PreferenceLevelID | null
 	): Promise<Result> {
-		const { error } = await this.client
-			.from('assignments')
-			.update({ preferenceid })
-			.eq('id', id);
+		const { error } = await this.client.from('assignments').update({ preferenceid }).eq('id', id);
 		return this.errorOrEmpty('UpdateAssignmentPreference', error);
 	}
 
