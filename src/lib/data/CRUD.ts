@@ -18,7 +18,9 @@ import {
 	type TransactionID,
 	type SubmissionTypeID,
 	type SubmissionType,
-	type CompensationRow
+	type CompensationRow,
+	type PreferenceLevelID,
+	type PreferenceLevelRow
 } from '../../data/types';
 import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
@@ -248,7 +250,8 @@ export default abstract class CRUD {
 		scholarid: ScholarID,
 		roleid: RoleID,
 		accepted: boolean,
-		compensate: boolean
+		compensate: boolean,
+		papers: number | null
 	): Promise<Result<string>>;
 
 	abstract welcomeVolunteer(
@@ -260,6 +263,22 @@ export default abstract class CRUD {
 
 	abstract updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result>;
 	abstract updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result>;
+	abstract updateVolunteerPapers(id: VolunteerID, papers: number | null): Promise<Result>;
+
+	/** Create a new preference level for a venue. New levels are appended after the
+	 * highest current rank. */
+	abstract createPreferenceLevel(
+		venue: VenueID,
+		label: string
+	): Promise<Result<PreferenceLevelRow>>;
+	abstract editPreferenceLevelLabel(id: PreferenceLevelID, label: string): Promise<Result>;
+	/** Swap the ranks of the level and its neighbor in the given direction. */
+	abstract reorderPreferenceLevel(
+		level: PreferenceLevelRow,
+		levels: PreferenceLevelRow[],
+		direction: -1 | 1
+	): Promise<Result>;
+	abstract deletePreferenceLevel(id: PreferenceLevelID): Promise<Result>;
 	abstract inviteToRole(
 		inviter: ScholarID,
 		role: RoleRow,
@@ -331,13 +350,21 @@ export default abstract class CRUD {
 		approver: ScholarID
 	): Promise<Result>;
 
-	/** Create a new assignment record */
+	/** Create a new assignment record. `preferenceid` is meaningful only on bids
+	 * and only when the venue has defined preference levels. */
 	abstract createAssignment(
 		submission: SubmissionID,
 		scholar: ScholarID,
 		role: RoleID,
 		bid: boolean,
-		approved?: boolean
+		approved?: boolean,
+		preferenceid?: PreferenceLevelID | null
+	): Promise<Result>;
+
+	/** Update the bidder's preference level on an existing bid assignment. */
+	abstract updateAssignmentPreference(
+		id: AssignmentID,
+		preferenceid: PreferenceLevelID | null
 	): Promise<Result>;
 
 	/** Request compensation for a manuscript the scholar has volunteered for */

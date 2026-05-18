@@ -291,7 +291,8 @@
 			"headers": {
 				"active": "Active",
 				"name": "Name",
-				"expertise": "Expertise"
+				"expertise": "Expertise",
+				"papers": "Papers cap"
 			},
 			"subtitle": "Volunteers",
 			"paragraph": {
@@ -796,12 +797,14 @@
 				"status": "Status",
 				"roles": "Roles",
 				"compensation": "Compensation",
-				"visibility": "Visibility"
+				"visibility": "Visibility",
+				"preferenceLevels": "Bid preference levels"
 			},
 			"feedback": {
 				"unknownVenue": "Unable to load this venue.",
 				"logIn": "[Log in](/login) to view this venue's settings.",
-				"adminsOnly": "Only admins of this venue can view this page."
+				"adminsOnly": "Only admins of this venue can view this page.",
+				"noPreferenceLevels": "No preference levels defined. Bidders will see a simple yes/no bid."
 			},
 			"field": {
 				"inactiveMessage": {
@@ -818,6 +821,34 @@
 					"label": "submission cost (price to submit a manuscript to the venue)",
 					"placeholder": "e.g., 40",
 					"invalid": "Must be a whole number"
+				},
+				"preferenceLevelLabel": {
+					"label": "label",
+					"placeholder": "e.g., Preferred",
+					"invalid": "Label must not be empty"
+				},
+				"newPreferenceLevel": {
+					"label": "new preference level",
+					"placeholder": "e.g., If necessary",
+					"invalid": "Label must not be empty"
+				}
+			},
+			"button": {
+				"addPreferenceLevel": {
+					"label": "Add level",
+					"tip": "Add a new preference level after the lowest-ranked existing one."
+				},
+				"deletePreferenceLevel": {
+					"label": "Delete",
+					"tip": "Delete this preference level. Existing bids that referenced it will become unset."
+				},
+				"movePreferenceLevelUp": {
+					"label": "Up",
+					"tip": "Move this level up (toward more preferred)."
+				},
+				"movePreferenceLevelDown": {
+					"label": "Down",
+					"tip": "Move this level down (toward less preferred)."
 				}
 			},
 			"checkbox": {
@@ -843,7 +874,8 @@
 				"inactive": "Check the inactive message in the settings below, so your community knows you're busy configuring things.",
 				"compensation": "It is critical that you think carefully about the compensation structure for your venue. Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter newcomers from contributring.",
 				"roles": "Configure your venue's volunteer roles below, create roles such as **reviewer**, **program commitee**, **associate editor** to represent the different kinds of contributions volunteers can make to this venue. Ensure you set total compensation levels for each role to not be higher than the cost of a submission.",
-				"doneVisibility": "Done submissions still appear in the submissions list for this many days after completion (and are sorted to the bottom). After that, they're hidden from the list but still accessible by direct link. Set to 0 to hide them as soon as they're done."
+				"doneVisibility": "Done submissions still appear in the submissions list for this many days after completion (and are sorted to the bottom). After that, they're hidden from the list but still accessible by direct link. Set to 0 to hide them as soon as they're done.",
+				"preferenceLevels": "Bidders pick from these labels when bidding on submissions to signal how interested they are. The order matters: the top label is the most preferred. Leave this empty for a plain yes/no bid."
 			}
 		},
 		"scholar": {
@@ -1268,6 +1300,11 @@
 				"expertise": {
 					"label": "share your expertise as phrases, separated by commas (public)",
 					"placeholder": "topic, area, method, theory, etc."
+				},
+				"papers": {
+					"label": "papers willing to review (optional cap)",
+					"placeholder": "e.g., 4",
+					"invalid": "Must be a whole number, or empty for no cap"
 				}
 			},
 			"card": {
@@ -1460,6 +1497,12 @@
 		"AlreadyVolunteered": "Already created a volunteer commitment for this role.",
 		"UpdateVolunteerActive": "Unable to update volunteer commitment",
 		"UpdateVolunteerExpertise": "Unable to update your expertise",
+		"UpdateVolunteerPapers": "Unable to update paper count",
+		"UpdateAssignmentPreference": "Unable to update bid preference",
+		"CreatePreferenceLevel": "Unable to create preference level",
+		"EditPreferenceLevel": "Unable to update preference level",
+		"ReorderPreferenceLevel": "Unable to reorder preference levels",
+		"DeletePreferenceLevel": "Unable to delete preference level",
 		"InviteToRole": "Unable to invite to role",
 		"InviteToRoleMissing": "Unknown scholars",
 		"InviteToRoleSuccess": "Successfully invited scholars to role.",

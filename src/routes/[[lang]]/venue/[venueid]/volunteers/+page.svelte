@@ -22,13 +22,14 @@
 	function exportCSV() {
 		if (commitments === null) return;
 
-		const headers = ['Name', 'Email', 'ORCID', 'Role', 'Expertise', 'Active'];
+		const headers = ['Name', 'Email', 'ORCID', 'Role', 'Expertise', 'Papers cap', 'Active'];
 		const rows = commitments.map((c) => [
 			c.scholars.name ?? '',
 			c.scholars.email ?? '',
 			c.scholars.orcid ?? '',
 			c.roles.name ?? '',
 			c.expertise,
+			c.papers === null ? '' : c.papers.toString(),
 			c.active ? 'Yes' : 'No'
 		]);
 
@@ -91,6 +92,7 @@
 					<th>{locale().page.volunteers.headers.active}</th>
 					<th>{locale().page.volunteers.headers.name}</th>
 					<th>{locale().page.volunteers.headers.expertise}</th>
+					<th>{locale().page.volunteers.headers.papers}</th>
 				{/snippet}
 				{#each rolesIDs as role, roleIndex}
 					{@const roleCommitments = commitments.filter((c) => c.roleid === role)}
@@ -127,6 +129,7 @@
 											>{/each}</Tags
 									></td
 								>
+								<td>{volunteer.papers === null ? EmptyLabel : volunteer.papers}</td>
 							</tr>
 						{/each}
 					{/if}

@@ -18,6 +18,9 @@ create table if not exists public.assignments (
 	approved boolean default false not null,
 	-- True if the assignment has been completed
 	completed boolean default false not null,
+	-- The bidder's chosen preference level for this submission. Only meaningful
+	-- when bid=true and the venue has defined preference levels; null otherwise.
+	preferenceid uuid,
 	-- Timestamp when the assignment was created
 	created_at timestamp with time zone default timezone ('utc'::text, now()) not null
 );
@@ -38,6 +41,9 @@ add constraint "assignments_submission_fkey" foreign KEY (submission) references
 
 alter table only public.assignments
 add constraint "assignments_venue_fkey" foreign KEY (venue) references public.venues (id) on delete cascade;
+
+alter table only public.assignments
+add constraint "assignments_preferenceid_fkey" foreign KEY (preferenceid) references public.preference_levels (id) on delete set null;
 
 --------------------------------------
 -- Indexes

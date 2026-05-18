@@ -71,6 +71,14 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: venues, error: venuesError } = await supabase.from('venues').select('*');
 	if (venuesError) console.error(venuesError);
 
+	// Get the venue's preference levels (may be empty if not configured).
+	const { data: preferenceLevels, error: preferenceLevelsError } = await supabase
+		.from('preference_levels')
+		.select('*')
+		.eq('venueid', venueid)
+		.order('rank', { ascending: true });
+	if (preferenceLevelsError) console.error(preferenceLevelsError);
+
 	return {
 		venue,
 		currency,
@@ -82,6 +90,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		submissionCount,
 		venues,
 		types,
-		compensation
+		compensation,
+		preferenceLevels
 	};
 };

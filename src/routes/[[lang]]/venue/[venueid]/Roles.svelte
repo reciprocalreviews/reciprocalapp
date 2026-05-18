@@ -230,7 +230,7 @@
 							strings={(l) => l.view.roles.button.volunteer}
 							action={() =>
 								handle(
-									db().createVolunteer(scholar, scholar, role.id, true, true),
+									db().createVolunteer(scholar, scholar, role.id, true, true, null),
 									"Thank you for volunteering! You'll receive your welcome tokens once the minter approves them."
 								)}>Volunteer …</Button
 						>
@@ -266,6 +266,20 @@
 								strings={(l) => l.view.roles.field.expertise}
 								edit={(text) => db().updateVolunteerExpertise(scholarVolunteer.id, text)}
 								testid="volunteer-expertise"
+							/>
+							<EditableText
+								text={scholarVolunteer.papers === null ? '' : scholarVolunteer.papers.toString()}
+								strings={(l) => l.view.roles.field.papers}
+								valid={(text) =>
+									text === '' || /^\d+$/.test(text)
+										? undefined
+										: (l) => l.view.roles.field.papers.invalid}
+								edit={(text) =>
+									db().updateVolunteerPapers(
+										scholarVolunteer.id,
+										text === '' ? null : parseInt(text, 10)
+									)}
+								testid="volunteer-papers"
 							/>
 						{:else}
 							<p>

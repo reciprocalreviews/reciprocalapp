@@ -97,6 +97,28 @@ export const load: PageLoad = async ({ parent, params }) => {
 			? { data: [] }
 			: await supabase.from('scholars').select('id, name').in('id', assignmentScholarIDs);
 
+	// Get the venue's preference levels (may be empty) for rendering bid labels.
+	const { data: preferenceLevels, error: preferenceLevelsError } = await supabase
+		.from('preference_levels')
+		.select('*')
+		.eq('venueid', venueid)
+		.order('rank', { ascending: true });
+	if (preferenceLevelsError) console.error(preferenceLevelsError);
+
+	// Count active (uncompleted) approved assignments per candidate scholar on
+	// this venue, so the cap-vs-load indicator can render "n / cap".
+	const { data: venueAssignments, error: venueAssignmentsError } = await supabase
+		.from('assignments')
+		.select('scholar')
+		.eq('venue', venueid)
+		.eq('approved', true)
+		.eq('completed', false);
+	if (venueAssignmentsError) console.error(venueAssignmentsError);
+	const venueActiveCounts: Record<string, number> = {};
+	for (const row of venueAssignments ?? []) {
+		venueActiveCounts[row.scholar] = (venueActiveCounts[row.scholar] ?? 0) + 1;
+	}
+
 	return {
 		submission,
 		venue,
@@ -108,6 +130,8 @@ export const load: PageLoad = async ({ parent, params }) => {
 		roles,
 		balances,
 		submissionTypes,
-		assignmentScholars: assignmentScholars ?? []
+		assignmentScholars: assignmentScholars ?? [],
+		preferenceLevels,
+		venueActiveCounts
 	};
 };

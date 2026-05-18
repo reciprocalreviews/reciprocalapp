@@ -29,3 +29,5 @@ export type AssignmentID = AssignmentRow['id'];
 export type SubmissionType = Tables['submission_types']['Row'];
 export type SubmissionTypeID = SubmissionType['id'];
 export type CompensationRow = Tables['compensation']['Row'];
+export type PreferenceLevelRow = Tables['preference_levels']['Row'];
+export type PreferenceLevelID = PreferenceLevelRow['id'];

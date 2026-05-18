@@ -228,6 +228,9 @@
             "CreateCompensation": {
               "type": "string"
             },
+            "CreatePreferenceLevel": {
+              "type": "string"
+            },
             "CreateProposal": {
               "type": "string"
             },
@@ -252,6 +255,9 @@
             "DeleteAssignment": {
               "type": "string"
             },
+            "DeletePreferenceLevel": {
+              "type": "string"
+            },
             "DeleteProposal": {
               "type": "string"
             },
@@ -265,6 +271,9 @@
               "type": "string"
             },
             "EditCurrencyMinters": {
+              "type": "string"
+            },
+            "EditPreferenceLevel": {
               "type": "string"
             },
             "EditProposalCensus": {
@@ -381,6 +390,9 @@
             "RemoveSupport": {
               "type": "string"
             },
+            "ReorderPreferenceLevel": {
+              "type": "string"
+            },
             "ReorderRole": {
               "type": "string"
             },
@@ -418,6 +430,9 @@
               "type": "string"
             },
             "UnknownVenue": {
+              "type": "string"
+            },
+            "UpdateAssignmentPreference": {
               "type": "string"
             },
             "UpdateCurrencyDescription": {
@@ -466,6 +481,9 @@
               "type": "string"
             },
             "UpdateVolunteerExpertise": {
+              "type": "string"
+            },
+            "UpdateVolunteerPapers": {
               "type": "string"
             },
             "WelcomeVolunteer": {
@@ -530,6 +548,12 @@
             "AlreadyVolunteered",
             "UpdateVolunteerActive",
             "UpdateVolunteerExpertise",
+            "UpdateVolunteerPapers",
+            "UpdateAssignmentPreference",
+            "CreatePreferenceLevel",
+            "EditPreferenceLevel",
+            "ReorderPreferenceLevel",
+            "DeletePreferenceLevel",
             "InviteToRole",
             "InviteToRoleMissing",
             "InviteToRoleSuccess",
@@ -2311,6 +2335,30 @@
             "settings": {
               "additionalProperties": false,
               "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addPreferenceLevel": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "deletePreferenceLevel": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "movePreferenceLevelDown": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "movePreferenceLevelUp": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "addPreferenceLevel",
+                    "deletePreferenceLevel",
+                    "movePreferenceLevelUp",
+                    "movePreferenceLevelDown"
+                  ],
+                  "type": "object"
+                },
                 "checkbox": {
                   "additionalProperties": false,
                   "properties": {
@@ -2336,6 +2384,9 @@
                     "logIn": {
                       "type": "string"
                     },
+                    "noPreferenceLevels": {
+                      "type": "string"
+                    },
                     "unknownVenue": {
                       "type": "string"
                     }
@@ -2343,7 +2394,8 @@
                   "required": [
                     "unknownVenue",
                     "logIn",
-                    "adminsOnly"
+                    "adminsOnly",
+                    "noPreferenceLevels"
                   ],
                   "type": "object"
                 },
@@ -2352,6 +2404,50 @@
                   "properties": {
                     "inactiveMessage": {
                       "$ref": "#/definitions/TextFieldText"
+                    },
+                    "newPreferenceLevel": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
+                    "preferenceLevelLabel": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
                     },
                     "submissionCost": {
                       "$ref": "#/definitions/TextFieldText"
@@ -2363,7 +2459,9 @@
                   "required": [
                     "inactiveMessage",
                     "welcomeTokens",
-                    "submissionCost"
+                    "submissionCost",
+                    "preferenceLevelLabel",
+                    "newPreferenceLevel"
                   ],
                   "type": "object"
                 },
@@ -2371,6 +2469,9 @@
                   "additionalProperties": false,
                   "properties": {
                     "compensation": {
+                      "type": "string"
+                    },
+                    "preferenceLevels": {
                       "type": "string"
                     },
                     "roles": {
@@ -2387,7 +2488,8 @@
                     "status",
                     "roles",
                     "compensation",
-                    "visibility"
+                    "visibility",
+                    "preferenceLevels"
                   ],
                   "type": "object"
                 },
@@ -2439,6 +2541,10 @@
                     "inactive": {
                       "type": "string"
                     },
+                    "preferenceLevels": {
+                      "description": "Explains what preference levels are for and how the binary default works when no levels are defined.",
+                      "type": "string"
+                    },
                     "roles": {
                       "type": "string"
                     }
@@ -2447,7 +2553,8 @@
                     "inactive",
                     "compensation",
                     "roles",
-                    "doneVisibility"
+                    "doneVisibility",
+                    "preferenceLevels"
                   ],
                   "type": "object"
                 },
@@ -2462,6 +2569,7 @@
                 "header",
                 "feedback",
                 "field",
+                "button",
                 "checkbox",
                 "slider",
                 "paragraph"
@@ -3886,12 +3994,16 @@
                     },
                     "name": {
                       "type": "string"
+                    },
+                    "papers": {
+                      "type": "string"
                     }
                   },
                   "required": [
                     "active",
                     "name",
-                    "expertise"
+                    "expertise",
+                    "papers"
                   ],
                   "type": "object"
                 },
@@ -4314,6 +4426,29 @@
                     "newRoleName": {
                       "$ref": "#/definitions/TextFieldText"
                     },
+                    "papers": {
+                      "additionalProperties": false,
+                      "description": "Per-volunteer soft cap on the number of papers the volunteer is willing to review for this role. Empty = unspecified.",
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
                     "roleDescription": {
                       "$ref": "#/definitions/TextFieldText"
                     },
@@ -4328,7 +4463,8 @@
                     "roleName",
                     "roleDescription",
                     "compensationRationale",
-                    "expertise"
+                    "expertise",
+                    "papers"
                   ],
                   "type": "object"
                 },

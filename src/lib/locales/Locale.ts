@@ -192,6 +192,7 @@ export type LocaleText = {
 				active: string;
 				name: string;
 				expertise: string;
+				papers: string;
 			};
 			paragraph: {
 				intro: string;
@@ -515,22 +516,35 @@ export type LocaleText = {
 				roles: string;
 				/** Explains how done_visibility_days controls the list. */
 				doneVisibility: string;
+				/** Explains what preference levels are for and how the binary
+				 * default works when no levels are defined. */
+				preferenceLevels: string;
 			};
 			header: {
 				status: string;
 				roles: string;
 				compensation: string;
 				visibility: string;
+				preferenceLevels: string;
 			};
 			feedback: {
 				unknownVenue: string;
 				logIn: string;
 				adminsOnly: string;
+				noPreferenceLevels: string;
 			};
 			field: {
 				inactiveMessage: TextFieldText;
 				welcomeTokens: TextFieldText;
 				submissionCost: TextFieldText;
+				preferenceLevelLabel: TextFieldText & { invalid: string };
+				newPreferenceLevel: TextFieldText & { invalid: string };
+			};
+			button: {
+				addPreferenceLevel: ButtonText;
+				deletePreferenceLevel: ButtonText;
+				movePreferenceLevelUp: ButtonText;
+				movePreferenceLevelDown: ButtonText;
 			};
 			checkbox: {
 				inactive: string;
@@ -881,6 +895,9 @@ export type LocaleText = {
 				roleDescription: TextFieldText;
 				compensationRationale: TextFieldText;
 				expertise: TextFieldText;
+				/** Per-volunteer soft cap on the number of papers the volunteer
+				 * is willing to review for this role. Empty = unspecified. */
+				papers: TextFieldText & { invalid: string };
 			};
 			card: {
 				settings: CardText;
@@ -1022,6 +1039,12 @@ export type LocaleText = {
 		AlreadyVolunteered: string;
 		UpdateVolunteerActive: string;
 		UpdateVolunteerExpertise: string;
+		UpdateVolunteerPapers: string;
+		UpdateAssignmentPreference: string;
+		CreatePreferenceLevel: string;
+		EditPreferenceLevel: string;
+		ReorderPreferenceLevel: string;
+		DeletePreferenceLevel: string;
 		InviteToRole: string;
 		InviteToRoleMissing: string;
 		InviteToRoleSuccess: string;

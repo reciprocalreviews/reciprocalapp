@@ -6,12 +6,14 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Added
 
-- A submission can now be marked **done**, finalizing review and compensating its editor(s) in one action. The button is only available to priority-0 editors and is inactive until every approved non-editor assignment has been compensated, with the list of pending work shown inline. Marking done atomically compensates every uncompleted priority-0 editor on the submission (multi-editor venues supported) and is terminal — submissions cannot be reopened. If the venue lacks tokens to cover all editor payouts, a single proposed mint sized to the shortfall is recorded and minters are notified.
+- A submission can now be marked **done**, finalizing review and compensating its editor(s) in one action.
 - Submissions list now shows a per-submission **Progress** column (in review / done). Done submissions sort to the bottom of the list regardless of other sort order, and are hidden from the list after a venue-configurable window.
 - New venue setting: how long do fininshed submissions remain visible? They remain accessible by direct link.
 - Made subheaders linkable.
-- Wrote and wired up terms of service and privacy. Thanks to Andrew Petersen for the writing and research!
+- Wrote and wired up terms of service and privacy. Thanks to Andrew Petersen for the writing and research! (#13)
 - Added customizable reminder frequency for minting and transaction reminders.
+- Added preference levels to bidding (#122).
+- Added paper count limits to assignments (#129).
 
 ### Changed
 

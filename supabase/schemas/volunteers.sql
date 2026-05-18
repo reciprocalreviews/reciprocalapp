@@ -19,7 +19,9 @@ create table if not exists public.volunteers (
 	-- Allows us to keep the record of volunteering without granting newcomer tokens more than once.
 	active boolean default true not null,
 	-- Whether this role as been accepted by the scholar
-	accepted public.invited default 'accepted'::public.invited not null
+	accepted public.invited default 'accepted'::public.invited not null,
+	-- The number of papers the volunteer is committing to review (soft cap; null = unspecified)
+	papers integer
 );
 
 grant all on table public.volunteers to anon;
@@ -36,6 +38,9 @@ add constraint volunteers_roleid_fkey foreign KEY (roleid) references public.rol
 
 alter table only public.volunteers
 add constraint volunteers_scholarid_fkey foreign KEY (scholarid) references public.scholars (id) on delete cascade;
+
+alter table only public.volunteers
+add constraint volunteers_papers_check check (papers is null or papers >= 0);
 
 --------------------------------------
 -- Indexes

@@ -119,7 +119,7 @@ A `Venue` is a named and curated collection of manuscripts undergoing peer revie
 - [x] `Venue`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
 - [x] `Venue`s can be proposed, but aren't created until approved.
 - [x] `Venue`s can have one or more volunteer roles, which are helpful for distinguishing between different types of volunteering for a venue (e.g., reviewer, reviewer for track A, meta-reviewer for track B)
-- [x] When a `Scholar` volunteers for a `Venue`, they do so for a particular role, with a particular commitment, and optionally with a number of papers they are committing to review. Volunteering for a venue can also include a statement of expertise relevant to the role.
+- [x] When a `Scholar` volunteers for a `Venue`, they do so for a particular role, optionally with an expertise statement and a soft cap on the number of papers they are willing to review for that role.
 - [x] Venues can be set to keep reviewer assignments hidden or visible to authors
 - [x] Venues have one or more submission types to represent submission categories, and resubmission types
 - [x] Venues have compensation rates by submission type, to allow for different levels of compensation for different tasks
@@ -134,7 +134,7 @@ The authoritative schemas live in:
 
 ### Roles and volunteers
 
-- [ ] ([#122](https://github.com/reciprocalreviews/reciprocalapp/issues/122)) Volunteers can express ranked preferences for a role (e.g., `preferred`, `if necessary`, `no`), enabling editors to make better assignments without forcing a binary opt-in.
+- [x] _`scholar`_ ([#122](https://github.com/reciprocalreviews/reciprocalapp/issues/122)): When bidding on a submission, the scholar selects from venue-defined preference levels (e.g. "Preferred" / "If necessary"). Editors see the chosen label on each bid and bids are sorted by preference rank. Venues with no levels defined fall back to the legacy binary bid.
 
 The authoritative schemas live in:
 
@@ -318,14 +318,14 @@ When a venue is **approved** state:
 - [x] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue `welcome_amount` should be minted and given to the scholar, welcoming them to the community.
 - [x] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
 - [x] _`scholar`_: Change expertise keywords for a role for the venue
-- [x] _`scholar`_: Change commitment for a role for the venue
 - [x] _`scholar`_: Change paper count for a role for the venue
 
 - [x] _`editor`_: Modify the venue name, description
 - [x] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one
 - [x] _`editor`_: Set the state to inactive
 
-- [x] _`editor`_: Export the list of reviewers as a CSV file for use on other plaforms, including ORCID, name, email, expertise, role, commitment, and paper count.
+- [x] _`editor`_: Export the list of reviewers as a CSV file for use on other plaforms, including ORCID, name, email, expertise, role, papers cap, and active status.
+- [x] _`editor`_ ([#122](https://github.com/reciprocalreviews/reciprocalapp/issues/122)): Define ordered, custom-labeled preference levels for the venue (e.g. "Preferred" / "If necessary") that bidders pick from when expressing interest. Optional — leaving them empty falls back to a binary bid.
 - [x] _`editor`_: Create roles for the venue.
 - [x] _`editor`_: Edit the descriptions of roles.
 - [x] _`editor`_: Delete a role, confirming they understand that all volunteers will be removed from the role.
@@ -420,6 +420,7 @@ The purpose of a submission page is to allow assigned reviewers and authors to s
 It should also support assignment decisions:
 
 - [ ] _`editor`_ ([#126](https://github.com/reciprocalreviews/reciprocalapp/issues/126)): When approving bids or creating assignments, show each candidate scholar's other current volunteer commitments alongside their token balance — both their active assignment count on this venue against their stated paper-count cap, and their active assignment count across other venues in RR. This implements scenario 4's "paying attention to reviewers paper limits and other commitments" guidance and prevents editors from silently overloading reviewers past the limits they accepted when volunteering.
+- [x] _`editor`_: On the submission detail page, each pending bid shows the bidder's chosen preference level and a `used / cap` indicator against their per-role papers cap. Approving a bid that would push the bidder past their cap surfaces a confirmation prompt (soft cap — editors retain discretion).
 
 ## Notifications
 

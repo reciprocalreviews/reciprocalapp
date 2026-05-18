@@ -5,6 +5,8 @@ import type {
 	AssignmentRow,
 	CompensationRow,
 	CurrencyID,
+	PreferenceLevelID,
+	PreferenceLevelRow,
 	ProposalID,
 	Response,
 	RoleID,
@@ -726,7 +728,7 @@ export default class SupabaseCRUD extends CRUD {
 
 		// Volunteer all editors for this role.
 		for (const editorsID of editors)
-			await this.createVolunteer(editorsID, editorsID, roleData.id, true, false);
+			await this.createVolunteer(editorsID, editorsID, roleData.id, true, false, null);
 
 		// Create a submission type for the venue.
 		const { data: submissionType } = await this.createSubmissionType(
@@ -1033,7 +1035,8 @@ export default class SupabaseCRUD extends CRUD {
 		scholarid: ScholarID,
 		roleid: RoleID,
 		accepted: boolean,
-		compensate: boolean
+		compensate: boolean,
+		papers: number | null
 	): Promise<Result<string>> {
 		// First, get all of the volunteer records for this scholar.
 		const { data: volunteer, error: volunteerError } = await this.client
@@ -1054,7 +1057,8 @@ export default class SupabaseCRUD extends CRUD {
 				roleid,
 				active: accepted,
 				accepted: accepted ? 'accepted' : 'invited',
-				expertise: ''
+				expertise: '',
+				papers
 			})
 			.select()
 			.single();
@@ -1118,6 +1122,80 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('UpdateVolunteerExpertise', error);
 	}
 
+	async updateVolunteerPapers(id: VolunteerID, papers: number | null): Promise<Result> {
+		const { error } = await this.client.from('volunteers').update({ papers }).eq('id', id);
+		return this.errorOrEmpty('UpdateVolunteerPapers', error);
+	}
+
+	async createPreferenceLevel(
+		venue: VenueID,
+		label: string
+	): Promise<Result<PreferenceLevelRow>> {
+		// New levels go at the end of the current rank order.
+		const { data: existing, error: existingError } = await this.client
+			.from('preference_levels')
+			.select('rank')
+			.eq('venueid', venue)
+			.order('rank', { ascending: false })
+			.limit(1);
+		if (existingError) return this.error('CreatePreferenceLevel', existingError);
+		const rank = existing.length === 0 ? 0 : existing[0].rank + 1;
+
+		const { data, error } = await this.client
+			.from('preference_levels')
+			.insert({ venueid: venue, label, rank })
+			.select()
+			.single();
+		if (error) return this.error('CreatePreferenceLevel', error);
+		return { data };
+	}
+
+	async editPreferenceLevelLabel(id: PreferenceLevelID, label: string): Promise<Result> {
+		const { error } = await this.client
+			.from('preference_levels')
+			.update({ label })
+			.eq('id', id);
+		return this.errorOrEmpty('EditPreferenceLevel', error);
+	}
+
+	async reorderPreferenceLevel(
+		level: PreferenceLevelRow,
+		levels: PreferenceLevelRow[],
+		direction: -1 | 1
+	): Promise<Result> {
+		// Find the neighbor we're swapping with by sorted-rank position.
+		const sorted = [...levels].sort((a, b) => a.rank - b.rank);
+		const index = sorted.findIndex((l) => l.id === level.id);
+		const neighborIndex = index + direction;
+		if (index < 0 || neighborIndex < 0 || neighborIndex >= sorted.length) return {};
+		const neighbor = sorted[neighborIndex];
+
+		// Two-step swap through a sentinel rank to avoid violating the
+		// (venueid, rank) unique constraint mid-update.
+		const sentinel = Math.max(...sorted.map((l) => l.rank)) + 1;
+		const { error: e1 } = await this.client
+			.from('preference_levels')
+			.update({ rank: sentinel })
+			.eq('id', level.id);
+		if (e1) return this.error('ReorderPreferenceLevel', e1);
+		const { error: e2 } = await this.client
+			.from('preference_levels')
+			.update({ rank: level.rank })
+			.eq('id', neighbor.id);
+		if (e2) return this.error('ReorderPreferenceLevel', e2);
+		const { error: e3 } = await this.client
+			.from('preference_levels')
+			.update({ rank: neighbor.rank })
+			.eq('id', level.id);
+		if (e3) return this.error('ReorderPreferenceLevel', e3);
+		return {};
+	}
+
+	async deletePreferenceLevel(id: PreferenceLevelID): Promise<Result> {
+		const { error } = await this.client.from('preference_levels').delete().eq('id', id);
+		return this.errorOrEmpty('DeletePreferenceLevel', error);
+	}
+
 	async inviteToRole(
 		inviter: ScholarID,
 		role: RoleRow,
@@ -1149,7 +1227,8 @@ export default class SupabaseCRUD extends CRUD {
 				scholar.id,
 				role.id,
 				false,
-				false
+				false,
+				null
 			);
 			if (error) return { error };
 			if (data) {
@@ -1533,7 +1612,8 @@ export default class SupabaseCRUD extends CRUD {
 		scholar: ScholarID,
 		roleid: RoleID,
 		bid: boolean,
-		approved: boolean = false
+		approved: boolean = false,
+		preferenceid: PreferenceLevelID | null = null
 	): Promise<Result> {
 		const { data: role, error: roleError } = await this.client
 			.from('roles')
@@ -1545,10 +1625,27 @@ export default class SupabaseCRUD extends CRUD {
 			return this.error('CreateAssignment', roleError);
 		}
 
+		const { error } = await this.client.from('assignments').insert({
+			submission,
+			scholar,
+			role: roleid,
+			bid,
+			venue: role.venueid,
+			approved,
+			preferenceid
+		});
+		return this.errorOrEmpty('CreateAssignment', error);
+	}
+
+	async updateAssignmentPreference(
+		id: AssignmentID,
+		preferenceid: PreferenceLevelID | null
+	): Promise<Result> {
 		const { error } = await this.client
 			.from('assignments')
-			.insert({ submission, scholar, role: roleid, bid, venue: role.venueid, approved });
-		return this.errorOrEmpty('CreateAssignment', error);
+			.update({ preferenceid })
+			.eq('id', id);
+		return this.errorOrEmpty('UpdateAssignmentPreference', error);
 	}
 
 	async requestCompensation(

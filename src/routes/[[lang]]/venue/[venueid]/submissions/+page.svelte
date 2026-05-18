@@ -38,8 +38,14 @@
 		/** All transctions for all submissions in this venue */
 		transactions,
 		/** The conflicts for the current scholar */
-		conflicts
+		conflicts,
+		/** Venue-defined preference levels (empty if not configured) */
+		preferenceLevels
 	} = $derived(data);
+
+	const sortedLevels = $derived(
+		[...(preferenceLevels ?? [])].sort((a, b) => a.rank - b.rank)
+	);
 
 
 	/** Get the current database connection */
@@ -372,21 +378,60 @@
 													<div><strong>{locale().page.submissions.cell.conflicted}</strong></div>
 												{:else if biddingOpen}
 													{#if scholarsBid === undefined}
-														<!-- No assignments? Allow bidding -->
-														<Button
-															testid={`bid-${index}-${roleIndex}`}
-															strings={(l) => ({
-																tip: l.page.submissions.button.bid.tip.replace(
-																	'{role}',
-																	role?.description ?? 'in this role'
-																),
-																label: l.page.submissions.button.bid.label
-															})}
-															action={() =>
-																handle(db().createAssignment(submission.id, uid, role.id, true))}
-														/>
+														{#if sortedLevels.length === 0}
+															<!-- No preference levels: legacy yes/no bid -->
+															<Button
+																testid={`bid-${index}-${roleIndex}`}
+																strings={(l) => ({
+																	tip: l.page.submissions.button.bid.tip.replace(
+																		'{role}',
+																		role?.description ?? 'in this role'
+																	),
+																	label: l.page.submissions.button.bid.label
+																})}
+																action={() =>
+																	handle(
+																		db().createAssignment(submission.id, uid, role.id, true)
+																	)}
+															/>
+														{:else}
+															<!-- Preference levels defined: one bid button per level -->
+															{#each sortedLevels as level}
+																<Button
+																	testid={`bid-${index}-${roleIndex}-${level.rank}`}
+																	strings={(l) => ({
+																		tip: l.page.submissions.button.bid.tip.replace(
+																			'{role}',
+																			role?.description ?? 'in this role'
+																		),
+																		label: level.label
+																	})}
+																	action={() =>
+																		handle(
+																			db().createAssignment(
+																				submission.id,
+																				uid,
+																				role.id,
+																				true,
+																				false,
+																				level.id
+																			)
+																		)}
+																/>
+															{/each}
+														{/if}
 													{:else if scholarsBid !== undefined && !scholarsBid.approved}
-														<!-- Shown an unbid button if not yet approved -->
+														<!-- Show preference change buttons + unbid -->
+														{#if sortedLevels.length > 0}
+															{@const currentLabel = sortedLevels.find(
+																(l) => l.id === scholarsBid.preferenceid
+															)?.label}
+															{#if currentLabel !== undefined}
+																<div
+																	data-testid={`bid-preference-${index}-${roleIndex}`}
+																><em>{currentLabel}</em></div>
+															{/if}
+														{/if}
 														<Button
 															testid={`unbid-${index}-${roleIndex}`}
 															strings={(l) => ({

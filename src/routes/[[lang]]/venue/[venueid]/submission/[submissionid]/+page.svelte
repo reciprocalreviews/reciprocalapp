@@ -60,7 +60,11 @@
 		/** The submission types for this venue */
 		submissionTypes,
 		/** Names of scholars referenced by assignments, for stable sorting */
-		assignmentScholars
+		assignmentScholars,
+		/** Venue-defined preference levels, ordered by rank */
+		preferenceLevels,
+		/** Per-scholar count of active (approved, uncompleted) assignments in this venue */
+		venueActiveCounts
 	} = $derived(data);
 
 	function nameOf(scholarID: string): string {
@@ -75,6 +79,31 @@
 			if (balanceDiff !== 0) return balanceDiff;
 			return familyName(nameOf(a.scholar)).localeCompare(familyName(nameOf(b.scholar)));
 		});
+	}
+
+	/** Sort bids: lowest-rank preference (most preferred) first, then by
+	 * balance descending, then by family name. Unset preferences sort last. */
+	function sortBids<T extends { scholar: string; preferenceid: string | null }>(items: T[]): T[] {
+		const rankFor = (preferenceid: string | null): number => {
+			if (preferenceid === null) return Number.POSITIVE_INFINITY;
+			return preferenceLevels?.find((l) => l.id === preferenceid)?.rank ?? Number.POSITIVE_INFINITY;
+		};
+		return [...items].sort((a, b) => {
+			const rankDiff = rankFor(a.preferenceid) - rankFor(b.preferenceid);
+			if (rankDiff !== 0) return rankDiff;
+			const balanceDiff = getBalance(b.scholar) - getBalance(a.scholar);
+			if (balanceDiff !== 0) return balanceDiff;
+			return familyName(nameOf(a.scholar)).localeCompare(familyName(nameOf(b.scholar)));
+		});
+	}
+
+	function preferenceLabelFor(preferenceid: string | null): string | undefined {
+		if (preferenceid === null) return undefined;
+		return preferenceLevels?.find((l) => l.id === preferenceid)?.label;
+	}
+
+	function papersCapFor(scholarID: string, roleID: string): number | null {
+		return volunteers?.find((v) => v.scholarid === scholarID && v.roleid === roleID)?.papers ?? null;
 	}
 
 	/** Get the database connection */
@@ -445,7 +474,7 @@
 						assignments.filter((a) => role.id === a.role && !(a.bid && !a.approved))
 					)}
 				<!-- The bidding assignments are those that match this role and aren't approved. -->
-				{@const bidded = sortAssignees(
+				{@const bidded = sortBids(
 						assignments.filter((a) => role.id === a.role && a.bid && !a.approved)
 					)}
 				{@const isApprover = canApproveAssignment(
@@ -521,27 +550,50 @@
 				{#if bidded.length > 0 && isApprover}
 					{#each bidded as assignment}
 						{@const volunteer = getVolunteer(role.id, assignment.scholar)}
+						{@const bidLabel = preferenceLabelFor(assignment.preferenceid)}
+						{@const cap = papersCapFor(assignment.scholar, role.id)}
+						{@const used = venueActiveCounts?.[assignment.scholar] ?? 0}
+						{@const overCap = cap !== null && used >= cap}
 						<tr>
 							<td>{role.name}</td>
 							<td>
 								<div class="scholar-cell">
 									<ScholarLink id={assignment.scholar} />
 									<Status good={false} label={(l) => l.page.submission.status.bidder} />
+									{#if bidLabel !== undefined}
+										<em data-testid="bid-preference-label">{bidLabel}</em>
+									{/if}
 								</div>
 							</td>
 							<td
 								>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 							>
-							<td><Tokens amount={getBalance(assignment.scholar)} /></td>
+							<td>
+								<Tokens amount={getBalance(assignment.scholar)} />
+								{#if cap !== null}
+									<div
+										class:over-cap={overCap}
+										data-testid="bid-papers-load"
+									>{used} / {cap}</div>
+								{/if}
+							</td>
 							<td>
 								<Row>
 									{#if assignment.bid}
 										<Button
 											strings={(l) => l.page.submission.button.approveBid}
-											action={() =>
-												scholar
-													? handle(db().approveAssignment(assignment, true, role, scholar.id))
-													: null}
+											action={() => {
+												if (!scholar) return null;
+												if (overCap) {
+													const ok = confirm(
+														`This scholar has ${used} active assignment${used === 1 ? '' : 's'} and a stated cap of ${cap}. Approve anyway?`
+													);
+													if (!ok) return null;
+												}
+												return handle(
+													db().approveAssignment(assignment, true, role, scholar.id)
+												);
+											}}
 										/>
 									{/if}
 								</Row>
@@ -569,5 +621,10 @@
 	.blockers {
 		margin-block: var(--spacing-half);
 		padding-inline-start: var(--spacing);
+	}
+
+	.over-cap {
+		color: var(--color-error);
+		font-weight: var(--bold);
 	}
 </style>

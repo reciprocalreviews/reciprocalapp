@@ -41,6 +41,7 @@ export type Database = {
           completed: boolean
           created_at: string
           id: string
+          preferenceid: string | null
           role: string
           scholar: string
           submission: string
@@ -52,6 +53,7 @@ export type Database = {
           completed?: boolean
           created_at?: string
           id?: string
+          preferenceid?: string | null
           role: string
           scholar: string
           submission: string
@@ -63,12 +65,20 @@ export type Database = {
           completed?: boolean
           created_at?: string
           id?: string
+          preferenceid?: string | null
           role?: string
           scholar?: string
           submission?: string
           venue?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "assignments_preferenceid_fkey"
+            columns: ["preferenceid"]
+            isOneToOne: false
+            referencedRelation: "preference_levels"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "assignments_role_fkey"
             columns: ["role"]
@@ -281,6 +291,38 @@ export type Database = {
             columns: ["currency_to"]
             isOneToOne: false
             referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      preference_levels: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          rank: number
+          venueid: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          rank: number
+          venueid: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          rank?: number
+          venueid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preference_levels_venueid_fkey"
+            columns: ["venueid"]
+            isOneToOne: false
+            referencedRelation: "venues"
             referencedColumns: ["id"]
           },
         ]
@@ -764,6 +806,7 @@ export type Database = {
           created_at: string
           expertise: string
           id: string
+          papers: number | null
           roleid: string
           scholarid: string
         }
@@ -773,6 +816,7 @@ export type Database = {
           created_at?: string
           expertise: string
           id?: string
+          papers?: number | null
           roleid: string
           scholarid: string
         }
@@ -782,6 +826,7 @@ export type Database = {
           created_at?: string
           expertise?: string
           id?: string
+          papers?: number | null
           roleid?: string
           scholarid?: string
         }

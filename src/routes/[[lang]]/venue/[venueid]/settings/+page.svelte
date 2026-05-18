@@ -13,11 +13,21 @@
 	import Text from '$lib/locales/Text.svelte';
 	import { validInteger } from '$lib/validation.js';
 	import { handle } from '$routes/feedback.svelte';
+	import PreferenceLevels from '../PreferenceLevels.svelte';
 	import Roles from '../Roles.svelte';
 
 	let { data } = $props();
-	let { venue, scholar, roles, volunteers, currency, minters, types, compensation } =
-		$derived(data);
+	let {
+		venue,
+		scholar,
+		roles,
+		volunteers,
+		currency,
+		minters,
+		types,
+		compensation,
+		preferenceLevels
+	} = $derived(data);
 
 	const db = getDB();
 </script>
@@ -121,6 +131,16 @@
 			immediately={false}
 			testid="done-visibility-days"
 		/>
+
+		<Subheader
+			id="preference-levels"
+			icon={SettingsLabel}
+			text={(l) => l.page.settings.header.preferenceLevels}
+		/>
+
+		<Tip><Text path={(l) => l.page.settings.tip.preferenceLevels} /></Tip>
+
+		<PreferenceLevels {venue} levels={preferenceLevels ?? []} />
 
 		<Subheader id="roles" icon={ScholarLabel} text={(l) => l.page.settings.header.roles} />
 
