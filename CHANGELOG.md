@@ -16,6 +16,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Renamed the "Cancel" action on proposed transactions to **Decline** throughout the UI (button labels, status badge, error messages), to better match its meaning as an active, accountable decision. (#114)
 - Updated internal tooling for stability.
 
+### Fixed
+
+- Fixed an issue where scholars who accepted an invitation to a role kept their volunteer status as "invited" instead of advancing to "accepted," so editors filtering for confirmed volunteers wouldn't see them. (#127)
+
 ## 0.3.15 - 2026-05-17
 
 ### Added
