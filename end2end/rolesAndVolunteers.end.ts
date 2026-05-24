@@ -188,6 +188,77 @@ test('an invited scholar declines the invitation from the role card', async ({
 		.toBe('declined');
 });
 
+test('an invited scholar accepts the invitation from the role card', async ({
+	page,
+	context
+}) => {
+	const inviteeID = sql(`select id from public.scholars where email = '${INVITEE_EMAIL}';`);
+
+	// Reset prior state so this test can re-run cleanly. Clear ALL of the
+	// invitee's volunteer rows (not just Editor) so the welcome-tokens guard
+	// in acceptRoleInvite — which fires only when the scholar has exactly one
+	// volunteer row total — actually triggers. Also clear any prior
+	// welcome-token transaction so the "minted exactly once" assertion below
+	// isn't poisoned by earlier runs.
+	sql(`delete from public.volunteers where scholarid = '${inviteeID}';`);
+	sql(
+		`delete from public.transactions where to_scholar = '${inviteeID}' and purpose = 'Welcome tokens for accepting role invite';`
+	);
+
+	// Editor invites the scholar to the invite-only Editor role.
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.waitForLoadState('networkidle');
+	await page.getByTestId('role-Editor').click();
+	await page.getByTestId('role-invite-field-Editor').fill(INVITEE_EMAIL);
+	await page.getByTestId('role-invite-button-Editor').click();
+	await expect
+		.poll(() =>
+			sql(
+				`select accepted::text from public.volunteers v join public.roles r on r.id = v.roleid where v.scholarid = '${inviteeID}' and r.venueid = '${VENUE_ID}' and r.name = 'Editor';`
+			)
+		)
+		.toBe('invited');
+
+	// Swap to the invitee. Dismiss success toasts first — they intercept the
+	// logout button click.
+	const dismissButtons = page.locator('[data-testid="feedback-success"] button');
+	while ((await dismissButtons.count()) > 0) {
+		await dismissButtons.first().click();
+	}
+	await logout(page);
+	await login(INVITEE_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_ID}`);
+	await page.waitForLoadState('networkidle');
+
+	// Accept is a confirm button: first click enters confirm mode, second
+	// commits. Scope to the Editor card — earlier tests in this file may have
+	// left author2 with a pending invite on Associate Editor too.
+	const accept = page.getByTestId('role-Editor').getByTestId('volunteer-accept-invite');
+	await accept.click();
+	await accept.click();
+
+	// The volunteer row should now read accepted='accepted', active=true.
+	await expect
+		.poll(() =>
+			sql(
+				`select accepted::text || ',' || active::text from public.volunteers v join public.roles r on r.id = v.roleid where v.scholarid = '${inviteeID}' and r.venueid = '${VENUE_ID}' and r.name = 'Editor';`
+			)
+		)
+		.toBe('accepted,true');
+
+	// Welcome tokens minted exactly once for the accept-invite path.
+	await expect
+		.poll(() =>
+			Number(
+				sql(
+					`select count(*) from public.transactions where to_scholar = '${inviteeID}' and purpose = 'Welcome tokens for accepting role invite';`
+				)
+			)
+		)
+		.toBe(1);
+});
+
 test('an active volunteer updates their expertise', async ({ page, context }) => {
 	await login(VOLUNTEER_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_ID}`);
