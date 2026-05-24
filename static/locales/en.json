@@ -659,6 +659,11 @@
 					"tip": "Accept this bid, assigning this scholar to this role for this submission",
 					"label": "Assign"
 				},
+				"approveAnyway": {
+					"tip": "Assign this scholar despite the load warning",
+					"label": "Assign",
+					"warn": "Assign over cap?"
+				},
 				"markDone": {
 					"tip": "Compensate every editor on this submission and mark it done. This cannot be undone.",
 					"label": "Mark done",
@@ -699,6 +704,7 @@
 				"scholar": "Scholar",
 				"expertise": "Expertise",
 				"balance": "Balance",
+				"load": "Assignments / Limit",
 				"action": "Action"
 			},
 			"cell": {

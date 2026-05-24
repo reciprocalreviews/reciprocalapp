@@ -1322,11 +1322,14 @@ values
 		false,
 		false
 	),
-	-- TOK-2025-004: ready-to-complete fixture for manually testing
-	-- mark-submission-done. All non-editor assignments are already approved
-	-- AND completed, so the Mark done button is enabled on first load.
-	-- editor@uni.edu (priority-0) is approved but uncompleted — clicking
-	-- the button compensates them and flips status to done in one action.
+	-- TOK-2025-004: assignment fixture used by both the manual mark-done flow
+	-- and the over-cap demo (#126). The AE assignment is already approved AND
+	-- completed; r1's Reviewer assignment is approved but UNCOMPLETED so r1
+	-- counts as 2 active (with -001 too) against their cap of 1 → shows
+	-- "2 / 1" in red. The editor's own priority-0 assignment is approved but
+	-- uncompleted. To exercise mark-done manually: click Complete on r1's
+	-- reviewer row first, then Mark done becomes enabled and compensates the
+	-- editor in one action.
 	(
 		'fefed1e4-ad3a-11f0-9807-1f8d6e4b5c28',
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
@@ -1355,5 +1358,43 @@ values
 		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
 		false,
 		true,
-		true
+		false
+	),
+	-- Pre-staged for manually testing the over-cap load indicator (#126).
+	-- Sai Entist (r3) is approved as Reviewer on TOK-2025-003 and ALSO has a
+	-- pending bid as Reviewer on TOK-2025-002. With papers cap = 1 (set
+	-- below), the bid row on TOK-2025-002 renders as "1 / 1" in over-cap red,
+	-- and approving it triggers the warn-style confirm.
+	(
+		'00000000-0000-0000-0000-000000000126',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c14',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac9',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000226',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c13',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac9',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		true,
+		false,
+		false
+	);
+
+-- Cap r1 and r3 on the Reviewer role at 1 paper, so the load indicator on the
+-- submission detail page renders over-cap warnings against their existing
+-- approved assignments. r1 (2 active Reviewer assignments) reads "2 / 1" red
+-- on TOK-2025-001 and TOK-2025-004; r3 (1 active + 1 bid) reads "1 / 1" red
+-- on TOK-2025-002's bid row. See #126.
+update public.volunteers
+set papers = 1
+where roleid = 'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81'
+	and scholarid in (
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac9'
 	);

@@ -64,7 +64,9 @@
 		/** Venue-defined preference levels, ordered by rank */
 		preferenceLevels,
 		/** Per-scholar count of active (approved, uncompleted) assignments in this venue */
-		venueActiveCounts
+		venueActiveCounts,
+		/** Per-scholar count of active assignments on OTHER venues (RLS-gated) */
+		elsewhereActiveCounts
 	} = $derived(data);
 
 	function nameOf(scholarID: string): string {
@@ -207,6 +209,19 @@
 		return balances?.find((balance) => balance.scholar === scholar)?.count ?? 0;
 	}
 </script>
+
+{#snippet loadIndicator(scholarID: string, roleID: string)}
+	{@const cap = papersCapFor(scholarID, roleID)}
+	{@const used = venueActiveCounts?.[scholarID] ?? 0}
+	{@const elsewhere = elsewhereActiveCounts?.[scholarID] ?? 0}
+	{@const overCap = cap !== null && used >= cap}
+	{#if cap !== null}
+		<div class:over-cap={overCap} data-testid="papers-load">{used} / {cap}</div>
+	{/if}
+	{#if elsewhere > 0}
+		<div class="elsewhere" data-testid="elsewhere-load">+{elsewhere} elsewhere</div>
+	{/if}
+{/snippet}
 
 {#if submission === null || venue === null || roles === null || scholar === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
 	<Page
@@ -463,6 +478,7 @@
 				<th>{locale().page.submission.headers.scholar}</th>
 				<th>{locale().page.submission.headers.expertise}</th>
 				<th>{locale().page.submission.headers.balance}</th>
+				<th>{locale().page.submission.headers.load}</th>
 				<th>{locale().page.submission.headers.action}</th>
 			{/snippet}
 
@@ -489,6 +505,9 @@
 				)}
 				{#each assigned as assignment}
 					{@const volunteer = getVolunteer(role.id, assignment.scholar)}
+					{@const cap = papersCapFor(assignment.scholar, role.id)}
+					{@const used = venueActiveCounts?.[assignment.scholar] ?? 0}
+					{@const overCap = cap !== null && used >= cap}
 					<tr>
 						<td>{role.name}</td>
 						<td class={!assignment.approved ? 'unapproved' : undefined}>
@@ -511,6 +530,7 @@
 							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 						>
 						<td><Tokens amount={getBalance(assignment.scholar)} /></td>
+						<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 						<td>
 							<Row>
 								{#if isApprover}
@@ -530,7 +550,9 @@
 											{/if}
 										{:else}
 											<Button
-												strings={(l) => l.page.submission.button.approve}
+												strings={overCap
+													? (l) => l.page.submission.button.approveAnyway
+													: (l) => l.page.submission.button.approve}
 												action={() =>
 													handle(db().approveAssignment(assignment, true, role, scholar.id))}
 											/>
@@ -544,7 +566,7 @@
 					</tr>
 				{:else}
 					{#if bidded.length === 0}
-						<tr><td>{role.name}</td><td colspan="4">{EmptyLabel}</td></tr>
+						<tr><td>{role.name}</td><td colspan="5">{EmptyLabel}</td></tr>
 					{/if}
 				{/each}
 
@@ -570,25 +592,17 @@
 							<td
 								>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 							>
-							<td>
-								<Tokens amount={getBalance(assignment.scholar)} />
-								{#if cap !== null}
-									<div class:over-cap={overCap} data-testid="bid-papers-load">{used} / {cap}</div>
-								{/if}
-							</td>
+							<td><Tokens amount={getBalance(assignment.scholar)} /></td>
+							<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 							<td>
 								<Row>
 									{#if assignment.bid}
 										<Button
-											strings={(l) => l.page.submission.button.approveBid}
+											strings={overCap
+												? (l) => l.page.submission.button.approveAnyway
+												: (l) => l.page.submission.button.approveBid}
 											action={() => {
 												if (!scholar) return null;
-												if (overCap) {
-													const ok = confirm(
-														`This scholar has ${used} active assignment${used === 1 ? '' : 's'} and a stated cap of ${cap}. Approve anyway?`
-													);
-													if (!ok) return null;
-												}
 												return handle(db().approveAssignment(assignment, true, role, scholar.id));
 											}}
 										/>
@@ -621,7 +635,12 @@
 	}
 
 	.over-cap {
-		color: var(--color-error);
-		font-weight: var(--bold);
+		color: var(--error-color);
+		font-weight: bold;
+	}
+
+	.elsewhere {
+		font-size: var(--extra-small-font-size);
+		color: var(--inactive-color);
 	}
 </style>

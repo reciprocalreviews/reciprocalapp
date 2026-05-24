@@ -419,7 +419,7 @@ The purpose of a submission page is to allow assigned reviewers and authors to s
 
 It should also support assignment decisions:
 
-- [ ] _`editor`_ ([#126](https://github.com/reciprocalreviews/reciprocalapp/issues/126)): When approving bids or creating assignments, show each candidate scholar's other current volunteer commitments alongside their token balance — both their active assignment count on this venue against their stated paper-count cap, and their active assignment count across other venues in RR. This implements scenario 4's "paying attention to reviewers paper limits and other commitments" guidance and prevents editors from silently overloading reviewers past the limits they accepted when volunteering.
+- [x] _`editor`_ ([#126](https://github.com/reciprocalreviews/reciprocalapp/issues/126)): When approving bids or creating assignments, show each candidate scholar's other current volunteer commitments alongside their token balance — both their active assignment count on this venue against their stated paper-count cap, and their active assignment count across other venues in RR. This implements scenario 4's "paying attention to reviewers paper limits and other commitments" guidance and prevents editors from silently overloading reviewers past the limits they accepted when volunteering.
 - [x] _`editor`_: On the submission detail page, each pending bid shows the bidder's chosen preference level and a `used / cap` indicator against their per-role papers cap. Approving a bid that would push the bidder past their cap surfaces a confirmation prompt (soft cap — editors retain discretion).
 
 ## Notifications

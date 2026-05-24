@@ -119,6 +119,26 @@ export const load: PageLoad = async ({ parent, params }) => {
 		venueActiveCounts[row.scholar] = (venueActiveCounts[row.scholar] ?? 0) + 1;
 	}
 
+	// Count active assignments per candidate scholar on OTHER venues (the
+	// viewer can see; RLS gates anonymous venues outside their scope). Lets
+	// the load indicator show overall workload alongside the cap-vs-load.
+	const candidateIDs = [...new Set((assignments ?? []).map((a) => a.scholar))];
+	const { data: allActive, error: allActiveError } =
+		candidateIDs.length === 0
+			? { data: [], error: null }
+			: await supabase
+					.from('assignments')
+					.select('scholar, venue')
+					.in('scholar', candidateIDs)
+					.eq('approved', true)
+					.eq('completed', false);
+	if (allActiveError) console.error(allActiveError);
+	const elsewhereActiveCounts: Record<string, number> = {};
+	for (const row of allActive ?? []) {
+		if (row.venue === venueid) continue;
+		elsewhereActiveCounts[row.scholar] = (elsewhereActiveCounts[row.scholar] ?? 0) + 1;
+	}
+
 	return {
 		submission,
 		venue,
@@ -132,6 +152,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		submissionTypes,
 		assignmentScholars: assignmentScholars ?? [],
 		preferenceLevels,
-		venueActiveCounts
+		venueActiveCounts,
+		elsewhereActiveCounts
 	};
 };

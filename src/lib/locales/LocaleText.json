@@ -2590,6 +2590,10 @@
                     "approve": {
                       "$ref": "#/definitions/ButtonText"
                     },
+                    "approveAnyway": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Confirm-style variant used in place of `approve` / `approveBid` when assigning would push the scholar past their stated paper-count cap. Button's built-in warn pattern turns this into a two-click confirmation."
+                    },
                     "approveBid": {
                       "$ref": "#/definitions/ButtonText"
                     },
@@ -2613,6 +2617,7 @@
                     "complete",
                     "approve",
                     "approveBid",
+                    "approveAnyway",
                     "markDone"
                   ],
                   "type": "object"
@@ -2788,6 +2793,10 @@
                     "expertise": {
                       "type": "string"
                     },
+                    "load": {
+                      "description": "Per-candidate active assignment count vs. their stated paper-count cap.",
+                      "type": "string"
+                    },
                     "role": {
                       "type": "string"
                     },
@@ -2800,6 +2809,7 @@
                     "scholar",
                     "expertise",
                     "balance",
+                    "load",
                     "action"
                   ],
                   "type": "object"

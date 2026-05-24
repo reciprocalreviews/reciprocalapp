@@ -433,6 +433,11 @@ export type LocaleText = {
 				complete: ConfirmButtonText;
 				approve: ButtonText;
 				approveBid: ButtonText;
+				/** Confirm-style variant used in place of `approve` / `approveBid`
+				 * when assigning would push the scholar past their stated
+				 * paper-count cap. Button's built-in warn pattern turns this into
+				 * a two-click confirmation. */
+				approveAnyway: ConfirmButtonText;
 				/** Editor button that compensates the editor(s) and marks the
 				 * submission done in one atomic action. */
 				markDone: ConfirmButtonText;
@@ -459,6 +464,8 @@ export type LocaleText = {
 				scholar: string;
 				expertise: string;
 				balance: string;
+				/** Per-candidate active assignment count vs. their stated paper-count cap. */
+				load: string;
 				action: string;
 			};
 		};
