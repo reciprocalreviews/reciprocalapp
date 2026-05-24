@@ -3076,6 +3076,9 @@
                 "headers": {
                   "additionalProperties": false,
                   "properties": {
+                    "authors": {
+                      "type": "string"
+                    },
                     "created": {
                       "type": "string"
                     },
@@ -3098,6 +3101,7 @@
                   "required": [
                     "payment",
                     "title",
+                    "authors",
                     "expertise",
                     "id",
                     "created",

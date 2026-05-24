@@ -64,6 +64,23 @@ export const load: PageLoad = async ({ parent, params }) => {
 			: await supabase.from('conflicts').select('*').eq('scholarid', uid);
 	if (conflictsError) console.error(conflictsError);
 
+	// Fetch names of scholars referenced as authors or assigned reviewers so
+	// the submissions filter can match against them. Assignment rows are
+	// already RLS-gated, so reviewer-name visibility follows the same rules
+	// as the rest of the page; author-name visibility is enforced client-side
+	// per role.anonymous_authors.
+	const scholarIDs = [
+		...new Set([
+			...(submissions ?? []).flatMap((s) => s.authors),
+			...(assignments ?? []).map((a) => a.scholar)
+		])
+	];
+	const { data: scholars, error: scholarsError } =
+		scholarIDs.length === 0
+			? { data: [], error: null }
+			: await supabase.from('scholars').select('id, name').in('id', scholarIDs);
+	if (scholarsError) console.error(scholarsError);
+
 	// Find all of the submissions types for the venue.
 	const { data: submissionTypes, error: submissionTypesError } = await supabase
 		.from('submission_types')
@@ -88,6 +105,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		transactions,
 		conflicts,
 		submissionTypes,
-		preferenceLevels
+		preferenceLevels,
+		scholars
 	};
 };

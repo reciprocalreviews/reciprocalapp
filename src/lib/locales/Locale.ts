@@ -359,6 +359,7 @@ export type LocaleText = {
 			headers: {
 				payment: string;
 				title: string;
+				authors: string;
 				expertise: string;
 				id: string;
 				created: string;

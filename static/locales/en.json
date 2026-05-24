@@ -583,12 +583,13 @@
 				},
 				"filter": {
 					"label": "filter submissions $filter",
-					"placeholder": "title, id..."
+					"placeholder": "title, id, author, reviewer..."
 				}
 			},
 			"headers": {
 				"payment": "Payment",
 				"title": "Title",
+				"authors": "Authors",
 				"expertise": "Expertise Required",
 				"id": "ID",
 				"created": "Created",

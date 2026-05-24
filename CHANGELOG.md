@@ -7,6 +7,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Added
 
 - Invited scholars can now **accept** or **decline** an invitation directly from the role card or their task list, with both actions requiring a confirm. Pending invitations also surface in the scholar's task list and the relevant role card auto-expands on the venue page. (#128)
+- The submissions filter on a venue's submissions page now matches **author** and **assigned reviewer** names in addition to title and external ID, respecting reviewer- and author-anonymity flags. The list also shows authors in a new column (where visible to the viewer) and highlights cells whose content matches the filter. (#125)
 
 ### Changed
 
