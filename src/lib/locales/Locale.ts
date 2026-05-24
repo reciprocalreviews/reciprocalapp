@@ -521,6 +521,8 @@ export type LocaleText = {
 			title: string;
 			subtitle: string;
 			tip: {
+				/** Frames Step 1 ("Decide policies") as a critical prerequisite. */
+				policies: string;
 				inactive: string;
 				compensation: string;
 				roles: string;
@@ -529,13 +531,24 @@ export type LocaleText = {
 				/** Explains what preference levels are for and how the binary
 				 * default works when no levels are defined. */
 				preferenceLevels: string;
+				/** Explains the email-templates section (#113): pick the reviewing
+				 * platform first, then paste each snippet into its email template. */
+				templates: string;
+				/** Explains the bulk-import step. */
+				bulkImport: string;
 			};
 			header: {
+				/** Step 1: community-policy checklist before configuring anything. */
+				policies: string;
 				status: string;
 				roles: string;
 				compensation: string;
 				visibility: string;
 				preferenceLevels: string;
+				/** Section header for the email-templates editor (#113). */
+				templates: string;
+				/** Section header for the bulk-import setup step. */
+				bulkImport: string;
 			};
 			feedback: {
 				unknownVenue: string;
@@ -549,6 +562,11 @@ export type LocaleText = {
 				submissionCost: TextFieldText;
 				preferenceLevelLabel: TextFieldText & { invalid: string };
 				newPreferenceLevel: TextFieldText & { invalid: string };
+			};
+			options: {
+				/** Label for the reviewing-platform selector above the email
+				 * templates (#113). */
+				platform: OptionsText;
 			};
 			button: {
 				addPreferenceLevel: ButtonText;
@@ -564,9 +582,21 @@ export type LocaleText = {
 				doneVisibility: SliderText;
 			};
 			paragraph: {
+				/** Top-of-page blurb framing the page as a series of numbered
+				 * setup steps the admin works through in order. */
 				welcome: string;
-				setupIntro: string;
-				setupSteps: string;
+				/** Bulleted markdown list of policies the community should
+				 * decide on before encoding them in the settings below. */
+				policies: string;
+			};
+			/** Email-template snippets editors copy into their reviewing platform
+			 * (#113). Each entry's `body` is interpolated with `{venue}`,
+			 * `{role}`, and `{manuscriptVar}` (the selected platform's
+			 * submission-id syntax). */
+			template: {
+				payment: { title: string; body: string };
+				acknowledgement: { title: string; body: string };
+				compensation: { title: string; body: string };
 			};
 		};
 		scholar: {
@@ -992,6 +1022,10 @@ export type LocaleText = {
 		};
 		notification: {
 			dismiss: ButtonText;
+		};
+		copyButton: {
+			copy: ButtonText;
+			copied: ButtonText;
 		};
 	};
 	error: {

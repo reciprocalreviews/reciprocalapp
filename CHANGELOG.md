@@ -2,7 +2,7 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
-## 0.3.16 - 2026-05-24
+## 0.4.0 - 2026-05-24
 
 ### Added
 
@@ -10,10 +10,12 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - The submissions filter on a venue's submissions page now matches **author** and **assigned reviewer** names in addition to title and external ID, respecting reviewer- and author-anonymity flags. The list also shows authors in a new column (where visible to the viewer) and highlights cells whose content matches the filter. (#125)
 - The proposer of a transaction is now emailed when a minter or editor **declines** it, with the decliner's name (and contact link), the reason, and a link back to follow up. The transactions page also shows the decliner and reason inline on declined rows, and the original purpose is preserved alongside the new audit columns. (#114)
 - The submission detail page now shows each candidate scholar's **active assignment count against their stated paper-count cap** in a new "Assignments / Limit" column (with cross-venue load shown as a secondary indicator), and approving an assignment that would push the scholar over their cap now requires a second click to confirm. (#126)
+- Venue editors can now copy ready-to-paste **email-template snippets** for author submission payment, assignment acknowledgement, and compensation requests from the venue's settings page, with the manuscript-ID variable rendered in the syntax of the chosen reviewing platform (HotCRP, EasyChair, ScholarOne, Editorial Manager, OJS, OpenReview, PCS, or plain text). The deep-link URLs in those snippets pre-fill the manuscript ID on the destination page so recipients land in the right form, ready to submit. (#113)
 
 ### Changed
 
 - Renamed the "Cancel" action on proposed transactions to **Decline** throughout the UI (button labels, status badge, error messages), to better match its meaning as an active, accountable decision. (#114)
+- Reworked the venue settings page as a **numbered setup workflow**: a "Decide policies" primer at the top lists the community decisions to make first, then each section is a numbered step (Activate is always the last one). Sections renumber automatically when one is hidden (e.g. Bid preference levels disappears if no role allows bidding), and per-role cards start collapsed so the page stays scannable.
 - Updated internal tooling for stability.
 
 ### Fixed

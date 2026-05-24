@@ -19,39 +19,57 @@ function sql(statement: string): string {
 }
 
 test('editor edits venue title, description, and URL', async ({ page, context }) => {
-	await login(EDITOR_EMAIL, page, context);
+	// Snapshot the original values so we can restore them at the end — keeps
+	// manual exploration after an e2e run from finding a venue with the
+	// rename/description gibberish still applied.
+	const originalTitle = sql(`select title from public.venues where id = '${VENUE_ID}';`);
+	const originalDescription = sql(
+		`select description from public.venues where id = '${VENUE_ID}';`
+	);
+	const originalUrl = sql(`select url from public.venues where id = '${VENUE_ID}';`);
 
-	// Description and URL live on /venue/[id].
-	await page.goto(`/venue/${VENUE_ID}`);
-	await page.waitForLoadState('networkidle');
+	try {
+		await login(EDITOR_EMAIL, page, context);
 
-	const newDescription = `Description updated by e2e at ${Date.now()}`;
-	const newUrl = `https://example.com/e2e-${Date.now()}`;
+		// Description and URL live on /venue/[id].
+		await page.goto(`/venue/${VENUE_ID}`);
+		await page.waitForLoadState('networkidle');
 
-	await page.getByTestId('venue-description-toggle').click();
-	await page.getByTestId('venue-description').fill(newDescription);
-	await page.getByTestId('venue-description-toggle').click();
-	await expect(page.getByText(newDescription)).toBeVisible();
+		const newDescription = `Description updated by e2e at ${Date.now()}`;
+		const newUrl = `https://example.com/e2e-${Date.now()}`;
 
-	await page.getByTestId('venue-url-toggle').click();
-	await page.getByTestId('venue-url').fill(newUrl);
-	await page.getByTestId('venue-url-toggle').click();
-	// Poll the DB so we don't race the in-flight save when reloading.
-	await expect
-		.poll(() => sql(`select url from public.venues where id = '${VENUE_ID}';`))
-		.toBe(newUrl);
+		await page.getByTestId('venue-description-toggle').click();
+		await page.getByTestId('venue-description').fill(newDescription);
+		await page.getByTestId('venue-description-toggle').click();
+		await expect(page.getByText(newDescription)).toBeVisible();
 
-	// Title lives in the page header (Nav.svelte) on any venue route. Edit it
-	// from /venue/[id]/settings.
-	await page.goto(`/venue/${VENUE_ID}/settings`);
-	await page.waitForLoadState('networkidle');
+		await page.getByTestId('venue-url-toggle').click();
+		await page.getByTestId('venue-url').fill(newUrl);
+		await page.getByTestId('venue-url-toggle').click();
+		// Poll the DB so we don't race the in-flight save when reloading.
+		await expect
+			.poll(() => sql(`select url from public.venues where id = '${VENUE_ID}';`))
+			.toBe(newUrl);
 
-	const newTitle = `Renamed by e2e ${Date.now()}`;
-	await page.getByTestId('page-title-edit-toggle').click();
-	await page.getByTestId('page-title-edit').fill(newTitle);
-	await page.getByTestId('page-title-edit-toggle').click();
-	await page.waitForTimeout(500);
-	expect(sql(`select title from public.venues where id = '${VENUE_ID}';`)).toBe(newTitle);
+		// Title lives in the page header (Nav.svelte) on any venue route. Edit it
+		// from /venue/[id]/settings.
+		await page.goto(`/venue/${VENUE_ID}/settings`);
+		await page.waitForLoadState('networkidle');
+
+		const newTitle = `Renamed by e2e ${Date.now()}`;
+		await page.getByTestId('page-title-edit-toggle').click();
+		await page.getByTestId('page-title-edit').fill(newTitle);
+		await page.getByTestId('page-title-edit-toggle').click();
+		await page.waitForTimeout(500);
+		expect(sql(`select title from public.venues where id = '${VENUE_ID}';`)).toBe(newTitle);
+	} finally {
+		// Restore the originals so subsequent manual testing finds the seeded
+		// venue intact. Pg-escape single quotes by doubling them.
+		const esc = (s: string) => s.replaceAll("'", "''");
+		sql(
+			`update public.venues set title = '${esc(originalTitle)}', description = '${esc(originalDescription)}', url = '${esc(originalUrl)}' where id = '${VENUE_ID}';`
+		);
+	}
 });
 
 test('editor adds and removes another editor; last-editor constraint blocks removing the only one', async ({
@@ -216,7 +234,9 @@ test('editor edits welcome amount, submission cost, and per-role compensation', 
 		.toBe('12');
 
 	// Change Reviewer×Research Article compensation. The slider exposes a
-	// stable testid `compensation-{role.name}-{type.name}`.
+	// stable testid `compensation-{role.name}-{type.name}`. Role cards on the
+	// settings page now start collapsed, so expand the Reviewer card first.
+	await page.getByTestId('role-Reviewer').click();
 	const slider = page.getByTestId('compensation-Reviewer-Research Article');
 	await expect(slider).toBeVisible();
 	await slider.fill('7');
@@ -306,4 +326,59 @@ test('editor gifts tokens from the venue reserve to a scholar', async ({ page, c
 		)
 	);
 	expect(newTxnCount).toBeGreaterThanOrEqual(1);
+});
+
+test('editor sees reviewing-platform email-template snippets and can copy them', async ({
+	page,
+	context
+}) => {
+	// Clipboard write needs an explicit grant on Chromium in CI environments;
+	// granting both read and write so the assertion below can read it back.
+	await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
+	// Earlier tests in this file may have renamed the venue; query the live
+	// title so assertions match what's actually rendered.
+	const venueTitle = sql(`select title from public.venues where id = '${VENUE_ID}';`);
+
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.waitForLoadState('networkidle');
+
+	// Default platform is HotCRP → its submission variable is {{PID}}.
+	const paymentBody = page.getByTestId('template-payment');
+	await expect(paymentBody).toContainText(venueTitle);
+	await expect(paymentBody).toContainText('{{PID}}');
+	await expect(paymentBody).toContainText(
+		`https://reciprocal.reviews/venue/${VENUE_ID}/submissions/new?manuscript={{PID}}`
+	);
+
+	// Switch the platform selector to OJS; the snippet body should re-render
+	// with OJS's {$submissionId} syntax.
+	await page.locator('select').selectOption('ojs');
+	await expect(paymentBody).toContainText('{$submissionId}');
+	await expect(paymentBody).not.toContainText('{{PID}}');
+
+	// Copy the snippet and verify the clipboard contains it.
+	await page.getByTestId('template-payment-copy').click();
+	const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+	expect(clipboard).toContain(venueTitle);
+	expect(clipboard).toContain('{$submissionId}');
+
+	// All three template cards render (acknowledgement + compensation also
+	// present and update with the platform switch).
+	await expect(page.getByTestId('template-acknowledgement')).toContainText('{$submissionId}');
+	await expect(page.getByTestId('template-compensation')).toContainText('{$submissionId}');
+});
+
+test('deep-link pre-fill populates the new-submission form from a ?manuscript query', async ({
+	page,
+	context
+}) => {
+	// Editor visits the new-submission page with a manuscript ID query param,
+	// as if they followed the link from a reviewing-platform-generated email.
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_ID}/submissions/new?manuscript=TEST-001`);
+	await page.waitForLoadState('networkidle');
+
+	await expect(page.getByTestId('submission-manuscript-id')).toHaveValue('TEST-001');
 });

@@ -91,6 +91,22 @@
         "component": {
           "additionalProperties": false,
           "properties": {
+            "copyButton": {
+              "additionalProperties": false,
+              "properties": {
+                "copied": {
+                  "$ref": "#/definitions/ButtonText"
+                },
+                "copy": {
+                  "$ref": "#/definitions/ButtonText"
+                }
+              },
+              "required": [
+                "copy",
+                "copied"
+              ],
+              "type": "object"
+            },
             "dialog": {
               "additionalProperties": false,
               "properties": {
@@ -152,7 +168,8 @@
             "dialog",
             "text",
             "header",
-            "notification"
+            "notification",
+            "copyButton"
           ],
           "type": "object"
         },
@@ -2473,7 +2490,15 @@
                 "header": {
                   "additionalProperties": false,
                   "properties": {
+                    "bulkImport": {
+                      "description": "Section header for the bulk-import setup step.",
+                      "type": "string"
+                    },
                     "compensation": {
+                      "type": "string"
+                    },
+                    "policies": {
+                      "description": "Step 1: community-policy checklist before configuring anything.",
                       "type": "string"
                     },
                     "preferenceLevels": {
@@ -2485,36 +2510,54 @@
                     "status": {
                       "type": "string"
                     },
+                    "templates": {
+                      "description": "Section header for the email-templates editor (#113).",
+                      "type": "string"
+                    },
                     "visibility": {
                       "type": "string"
                     }
                   },
                   "required": [
+                    "policies",
                     "status",
                     "roles",
                     "compensation",
                     "visibility",
-                    "preferenceLevels"
+                    "preferenceLevels",
+                    "templates",
+                    "bulkImport"
+                  ],
+                  "type": "object"
+                },
+                "options": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "platform": {
+                      "$ref": "#/definitions/OptionsText",
+                      "description": "Label for the reviewing-platform selector above the email templates (#113)."
+                    }
+                  },
+                  "required": [
+                    "platform"
                   ],
                   "type": "object"
                 },
                 "paragraph": {
                   "additionalProperties": false,
                   "properties": {
-                    "setupIntro": {
-                      "type": "string"
-                    },
-                    "setupSteps": {
+                    "policies": {
+                      "description": "Bulleted markdown list of policies the community should decide on before encoding them in the settings below.",
                       "type": "string"
                     },
                     "welcome": {
+                      "description": "Top-of-page blurb framing the page as a series of numbered setup steps the admin works through in order.",
                       "type": "string"
                     }
                   },
                   "required": [
                     "welcome",
-                    "setupIntro",
-                    "setupSteps"
+                    "policies"
                   ],
                   "type": "object"
                 },
@@ -2533,9 +2576,73 @@
                 "subtitle": {
                   "type": "string"
                 },
+                "template": {
+                  "additionalProperties": false,
+                  "description": "Email-template snippets editors copy into their reviewing platform (#113). Each entry's `body` is interpolated with `{venue}`, `{role}`, and `{manuscriptVar}` (the selected platform's submission-id syntax).",
+                  "properties": {
+                    "acknowledgement": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "body": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "body"
+                      ],
+                      "type": "object"
+                    },
+                    "compensation": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "body": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "body"
+                      ],
+                      "type": "object"
+                    },
+                    "payment": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "body": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "body"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "payment",
+                    "acknowledgement",
+                    "compensation"
+                  ],
+                  "type": "object"
+                },
                 "tip": {
                   "additionalProperties": false,
                   "properties": {
+                    "bulkImport": {
+                      "description": "Explains the bulk-import step.",
+                      "type": "string"
+                    },
                     "compensation": {
                       "type": "string"
                     },
@@ -2546,20 +2653,31 @@
                     "inactive": {
                       "type": "string"
                     },
+                    "policies": {
+                      "description": "Frames Step 1 (\"Decide policies\") as a critical prerequisite.",
+                      "type": "string"
+                    },
                     "preferenceLevels": {
                       "description": "Explains what preference levels are for and how the binary default works when no levels are defined.",
                       "type": "string"
                     },
                     "roles": {
                       "type": "string"
+                    },
+                    "templates": {
+                      "description": "Explains the email-templates section (#113): pick the reviewing platform first, then paste each snippet into its email template.",
+                      "type": "string"
                     }
                   },
                   "required": [
+                    "policies",
                     "inactive",
                     "compensation",
                     "roles",
                     "doneVisibility",
-                    "preferenceLevels"
+                    "preferenceLevels",
+                    "templates",
+                    "bulkImport"
                   ],
                   "type": "object"
                 },
@@ -2574,10 +2692,12 @@
                 "header",
                 "feedback",
                 "field",
+                "options",
                 "button",
                 "checkbox",
                 "slider",
-                "paragraph"
+                "paragraph",
+                "template"
               ],
               "type": "object"
             },

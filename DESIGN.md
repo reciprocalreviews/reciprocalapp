@@ -403,7 +403,7 @@ It should should:
 - [x] _`editor`_: Manually add a new submission, including all of the transactions, the manuscript ID specific to the venue, the scholar authors of the submission, and how much each author is contributing. (This is to overcome integration failures, or submisions managed outside of normal reviewing platform flows.)
 - [x] _`editor`_: Resolve a specific submission, generating transactions to compensate scholars for their reviewing labor
 - [x] _`editor`_: Submit bulk `Submission`s to the system, allowing more than one at a time
-- [ ] _`editor`_ ([#113](https://github.com/reciprocalreviews/reciprocalapp/issues/113)): View transaction templates for each transaction type to copy into the venue's reviewing platform email templates. These templates contain the RR links that authors and volunteers follow to explicitly submit payment or request compensation, per the pull-based model described in the User Stories section.
+- [x] _`editor`_ ([#113](https://github.com/reciprocalreviews/reciprocalapp/issues/113)): View transaction templates for each transaction type to copy into the venue's reviewing platform email templates. These templates contain the RR links that authors and volunteers follow to explicitly submit payment or request compensation, per the pull-based model described in the User Stories section.
 
 If the `Venue` is set to be public:
 

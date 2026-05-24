@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import NewSubmission from '../NewSubmission.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import { type PageData } from './$types';
@@ -9,6 +10,8 @@
 
 	let venue = $derived(data.venue);
 	let submissionTypes = $derived(data.submissionTypes);
+	/** Deep-link pre-fill from a reviewing-platform email (#113). */
+	let initialManuscript = $derived(page.url.searchParams.get('manuscript') ?? '');
 </script>
 
 {#if venue === null || submissionTypes === null}
@@ -24,6 +27,6 @@
 			[`/venue/${venue.id}/submissions`, 'Submissions']
 		]}
 	>
-		<NewSubmission {venue} {submissionTypes}></NewSubmission>
+		<NewSubmission {venue} {submissionTypes} {initialManuscript}></NewSubmission>
 	</Page>
 {/if}

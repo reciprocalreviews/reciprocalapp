@@ -25,7 +25,17 @@
 	import { getAuth } from '$routes/Auth.svelte';
 	import { handle } from '$routes/feedback.svelte';
 
-	let { venue, submissionTypes }: { venue: VenueRow; submissionTypes: SubmissionType[] } = $props();
+	let {
+		venue,
+		submissionTypes,
+		initialManuscript = ''
+	}: {
+		venue: VenueRow;
+		submissionTypes: SubmissionType[];
+		/** Optional manuscript ID to pre-fill, e.g. from a `?manuscript=` query
+		 * param when an editor's reviewing platform deep-links here. */
+		initialManuscript?: string;
+	} = $props();
 
 	const db = getDB();
 	const auth = getAuth();
@@ -34,7 +44,8 @@
 	/** The title of the submission we're adding */
 	let title = $state('');
 	let expertise = $state('');
-	let externalID = $state('');
+	// svelte-ignore state_referenced_locally
+	let externalID = $state(initialManuscript);
 	let previousID = $state('');
 	let submissionType = $state<SubmissionTypeID>(submissionTypes[0].id);
 	let note = $state('');

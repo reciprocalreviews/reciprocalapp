@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import Button from '$lib/components/Button.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import Dashboard from '$lib/components/Dashboard.svelte';
@@ -42,7 +43,8 @@
 		scholar && venue && volunteers && volunteers.some((v) => v.scholarid === scholar.id)
 	);
 
-	let compensationManuscript = $state('');
+	// svelte-ignore state_referenced_locally
+	let compensationManuscript = $state(page.url.searchParams.get('compensate') ?? '');
 	let compensationRole = $state('');
 	let compensationNote = $state('');
 </script>

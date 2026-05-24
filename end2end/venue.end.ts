@@ -80,7 +80,6 @@ test('an editor should see editor specific things', async ({ page, context }) =>
 
 	// Expect various controls for editing settings.
 	await expect(page.getByTestId('new-role-name'), 'Expect a new role name field').toBeVisible();
-	await expect(page.getByTestId('setup-card'), 'Expect a setup card').toBeVisible();
 	await expect(page.getByTestId('inactive-checkbox'), 'Expect an inactive checkbox').toBeVisible();
 
 	// Visit submissions

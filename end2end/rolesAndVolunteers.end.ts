@@ -36,10 +36,11 @@ test('editor creates a role, edits its description, and deletes it', async ({ pa
 		)
 		.toBe(1);
 
-	// Wait for the new role's card to appear, then expand the inner admin
-	// settings card; the description editor and delete button live inside it.
-	// (The outer role card auto-expands for admins, so we don't click it.)
+	// Wait for the new role's card to appear, expand the outer card (the
+	// settings page now starts role cards collapsed), then expand the inner
+	// admin settings card where the description editor and delete button live.
 	await page.getByTestId(`role-${roleName}`).waitFor();
+	await page.getByTestId(`role-${roleName}`).click();
 	await page.getByTestId(`role-settings-${roleName}`).click();
 
 	// Edit description. Wait for the toggle to be ready before clicking, then

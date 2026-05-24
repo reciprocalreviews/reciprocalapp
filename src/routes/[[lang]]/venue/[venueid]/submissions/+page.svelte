@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import type { SubmissionRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
@@ -113,7 +114,8 @@
 		'id',
 		'created'
 	]);
-	let filter = $state('');
+	// svelte-ignore state_referenced_locally
+	let filter = $state(page.url.searchParams.get('filter') ?? '');
 	const locale = getLocaleContext();
 
 	/** Lowercase filter term, or '' when nothing's been typed. Cells use this

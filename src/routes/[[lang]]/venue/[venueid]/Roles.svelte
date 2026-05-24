@@ -40,7 +40,8 @@
 		currency,
 		minters,
 		compensation,
-		types
+		types,
+		startCollapsed = false
 	}: {
 		venue: VenueRow;
 		scholar: ScholarID | undefined;
@@ -51,6 +52,9 @@
 		minters: ScholarRow[] | null;
 		types: SubmissionType[] | null;
 		compensation: CompensationRow[] | null;
+		/** When true, per-role cards start collapsed regardless of viewer role.
+		 * Pending-invite cards still auto-expand so invitees see them. */
+		startCollapsed?: boolean;
 	} = $props();
 
 	const db = getDB();
@@ -108,7 +112,7 @@
 						note: role.description.length === 0 ? l.view.roles.card.unnamed : role.description
 					};
 				}}
-				expand={isAdmin || !role.invited || scholarInvited}
+				expand={scholarInvited || (!startCollapsed && (isAdmin || !role.invited))}
 				testid="role-{role.name}"
 			>
 				{#snippet controls()}

@@ -10,9 +10,13 @@
 		id?: string;
 		/** When true, render as an h3 (a sub-subheader) instead of an h2. */
 		sub?: boolean;
+		/** Optional sequence number prepended to the heading (e.g. "3.").
+		 * Used by pages that frame their sections as a numbered series of
+		 * steps; omit for plain headings. */
+		number?: number;
 	}
 
-	let { icon, id, text, sub = false }: Props = $props();
+	let { icon, id, text, sub = false, number }: Props = $props();
 
 	const locale = getLocaleContext();
 
@@ -41,6 +45,7 @@
 			>{LinkLabel}</a
 		>
 	</span>
+	{#if number !== undefined}<span class="number">{number}.</span>{/if}
 	{#if typeof text === 'string'}{text}{:else}<Text path={text} />{/if}
 	<span class="icon">{icon}</span>
 </svelte:element>

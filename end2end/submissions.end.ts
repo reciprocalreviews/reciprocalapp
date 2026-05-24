@@ -1,26 +1,55 @@
+import { execSync } from 'child_process';
 import { test, expect } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
 
 const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
+// r4 (Manny Script) — has a Reviewer volunteer record and is neither author
+// of nor approved-Reviewer on any seeded submission, so they always have
+// biddable papers in the venue's submissions list.
+const BIDDER_EMAIL = 'r4@uni.edu';
+const BIDDER_ID = '7ff8621a-cbe0-4789-bbee-f008d38c4aca';
+
+function sql(statement: string): string {
+	return execSync(
+		`docker exec supabase_db_reciprocalapp psql -U postgres -d postgres -t -A -q -c ${JSON.stringify(statement)}`,
+		{ encoding: 'utf-8' }
+	).trim();
+}
 
 test('a reviewer can bid on a paper and then see an unbid button', async ({ page, context }) => {
-	await login('r1@uni.edu', page, context);
+	// Reset state: drop any of Manny's pending Reviewer bids so the page
+	// loads with no unbid buttons, and the post-click assertion is unambiguous.
+	sql(
+		`delete from public.assignments where scholar = '${BIDDER_ID}' and venue = '${VENUE_ID}' and bid = true and approved = false;`
+	);
 
-	await page.goto(`/venue/${VENUE_ID}/submissions`);
-	await page.waitForLoadState('networkidle');
+	try {
+		await login(BIDDER_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_ID}/submissions`);
+		await page.waitForLoadState('networkidle');
 
-	// Bid on the first paper that has a bid button.
-	const firstBidButton = page.getByTestId(/^bid-/).first();
-	await expect(firstBidButton, 'Expect a bid button to be visible').toBeVisible();
-	await firstBidButton.click();
+		// No bids placed yet → no unbid buttons.
+		await expect(page.getByTestId(/^unbid-/)).toHaveCount(0);
 
-	// After bidding, an unbid button should appear.
-	await expect(
-		page.getByTestId(/^unbid-/).first(),
-		'Expect an unbid button to appear after bidding'
-	).toBeVisible();
+		// Bid on the first paper that has a bid button.
+		const firstBidButton = page.getByTestId(/^bid-/).first();
+		await expect(firstBidButton, 'Expect a bid button to be visible').toBeVisible();
+		await firstBidButton.click();
 
-	await logout(page);
+		// After bidding, an unbid button should appear.
+		await expect(
+			page.getByTestId(/^unbid-/).first(),
+			'Expect an unbid button to appear after bidding'
+		).toBeVisible();
+
+		await logout(page);
+	} finally {
+		// Cleanup: drop the bid this test created so subsequent runs and other
+		// tests aren't perturbed.
+		sql(
+			`delete from public.assignments where scholar = '${BIDDER_ID}' and venue = '${VENUE_ID}' and bid = true and approved = false;`
+		);
+	}
 });
 
 test('editor filters submissions by author name, reviewer name, title, and external ID', async ({
