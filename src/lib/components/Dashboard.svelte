@@ -38,7 +38,6 @@
 		step();
 	});
 
-	
 	function navigate(href?: string) {
 		if (!href) return;
 		goto(href);
@@ -73,7 +72,10 @@
 			<a
 				class="stat"
 				href={stat.link}
-				onclick={(e) => { e.preventDefault(); navigate(stat.link); }}
+				onclick={(e) => {
+					e.preventDefault();
+					navigate(stat.link);
+				}}
 				onkeydown={(e) => handleKeyNavigate(e, stat.link)}
 				data-testid="stat-{index}"
 			>
@@ -114,8 +116,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-		transition: background 0.2s, box-shadow 0.2s;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+		transition:
+			background 0.2s,
+			box-shadow 0.2s;
 		text-decoration: none;
 		color: inherit;
 		cursor: default;
@@ -129,7 +133,7 @@
 	a.stat:hover,
 	a.stat:focus-visible {
 		background: var(--salient-color-faded);
-		box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 		filter: brightness(0.97);
 	}
 
@@ -159,5 +163,4 @@
 		margin-top: 0.5em;
 		word-break: break-word;
 	}
-
 </style>

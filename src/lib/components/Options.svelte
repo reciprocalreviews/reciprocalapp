@@ -12,7 +12,14 @@
 		strings?: (l: LocaleText) => OptionsText;
 	};
 
-	let { options, value = $bindable(), onChange, disabled = false, stretch = false, strings }: Props = $props();
+	let {
+		options,
+		value = $bindable(),
+		onChange,
+		disabled = false,
+		stretch = false,
+		strings
+	}: Props = $props();
 
 	const locale = getLocaleContext();
 	const text = $derived(strings ? strings(locale()) : undefined);

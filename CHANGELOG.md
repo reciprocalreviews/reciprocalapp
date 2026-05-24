@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.3.16 - 2026-05-24
 
+### Changed
+
+- Updated internal tooling for stability.
+
 ## 0.3.15 - 2026-05-17
 
 ### Added

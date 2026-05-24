@@ -18,13 +18,9 @@
 </script>
 
 <label>
-	<input
-		type="radio"
-		bind:group
-		{value}
-		disabled={!active}
-		data-testid={testid}
-	/><span class="text"><Text path={label} /></span>
+	<input type="radio" bind:group {value} disabled={!active} data-testid={testid} /><span
+		class="text"><Text path={label} /></span
+	>
 </label>
 
 <style>

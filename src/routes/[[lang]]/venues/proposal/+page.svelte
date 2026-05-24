@@ -98,7 +98,7 @@
 					strings={(l) => l.page.proposeVenue.field.venueName}
 					stretch
 					valid={(text) =>
-					text.length > 0 ? undefined : (l) => l.page.proposeVenue.field.venueName.invalid}
+						text.length > 0 ? undefined : (l) => l.page.proposeVenue.field.venueName.invalid}
 					testid="propose-venue-name"
 				/>
 				<TextField
@@ -116,7 +116,7 @@
 					active={!proposing}
 					stretch
 					valid={(text) =>
-					validSize(text) ? undefined : (l) => l.page.proposeVenue.field.size.invalid}
+						validSize(text) ? undefined : (l) => l.page.proposeVenue.field.size.invalid}
 					testid="propose-venue-size"
 				/>
 			</section>
@@ -131,9 +131,7 @@
 					active={!proposing}
 					stretch
 					valid={(text) =>
-						!validEmails(text, 1)
-						? (l) => l.page.proposeVenue.field.editors.invalid
-							: undefined}
+						!validEmails(text, 1) ? (l) => l.page.proposeVenue.field.editors.invalid : undefined}
 					testid="propose-venue-editors"
 				/>
 				<Options
@@ -156,7 +154,7 @@
 						stretch
 						valid={(text) =>
 							!validEmails(text, 1)
-							? (l) => l.page.proposeVenue.field.minters.invalid
+								? (l) => l.page.proposeVenue.field.minters.invalid
 								: !editorsArentMinters()
 									? (l) => l.page.proposeVenue.field.mintersConflict
 									: undefined}
@@ -176,9 +174,7 @@
 					active={!proposing}
 					stretch
 					valid={(text) =>
-						validMessage(text)
-							? undefined
-						: (l) => l.page.proposeVenue.field.rationale.invalid}
+						validMessage(text) ? undefined : (l) => l.page.proposeVenue.field.rationale.invalid}
 					testid="propose-venue-rationale"
 				/>
 			</section>

@@ -36,27 +36,25 @@
 					text={level.label}
 					strings={(l) => l.page.settings.field.preferenceLevelLabel}
 					valid={(text) =>
-						isntEmpty(text)
-							? undefined
-							: (l) => l.page.settings.field.preferenceLevelLabel.invalid}
+						isntEmpty(text) ? undefined : (l) => l.page.settings.field.preferenceLevelLabel.invalid}
 					edit={(text) => db().editPreferenceLevelLabel(level.id, text)}
 				/>
 				<Button
 					active={index > 0}
 					strings={(l) => l.page.settings.button.movePreferenceLevelUp}
-					action={() =>
-						handle(db().reorderPreferenceLevel(level, $state.snapshot(sorted), -1))}
-				>↑</Button>
+					action={() => handle(db().reorderPreferenceLevel(level, $state.snapshot(sorted), -1))}
+					>↑</Button
+				>
 				<Button
 					active={index < sorted.length - 1}
 					strings={(l) => l.page.settings.button.movePreferenceLevelDown}
-					action={() =>
-						handle(db().reorderPreferenceLevel(level, $state.snapshot(sorted), 1))}
-				>↓</Button>
+					action={() => handle(db().reorderPreferenceLevel(level, $state.snapshot(sorted), 1))}
+					>↓</Button
+				>
 				<Button
 					strings={(l) => l.page.settings.button.deletePreferenceLevel}
-					action={() => handle(db().deletePreferenceLevel(level.id))}
-				>{DeleteLabel}</Button>
+					action={() => handle(db().deletePreferenceLevel(level.id))}>{DeleteLabel}</Button
+				>
 			</li>
 		{/each}
 	</ol>

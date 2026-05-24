@@ -103,7 +103,9 @@
 	}
 
 	function papersCapFor(scholarID: string, roleID: string): number | null {
-		return volunteers?.find((v) => v.scholarid === scholarID && v.roleid === roleID)?.papers ?? null;
+		return (
+			volunteers?.find((v) => v.scholarid === scholarID && v.roleid === roleID)?.papers ?? null
+		);
 	}
 
 	/** Get the database connection */
@@ -471,12 +473,12 @@
 				     (bid=true, approved=true). Approving a bid only flips `approved`;
 				     `bid` stays true, so we can't filter on `!bid` alone. -->
 				{@const assigned = sortAssignees(
-						assignments.filter((a) => role.id === a.role && !(a.bid && !a.approved))
-					)}
+					assignments.filter((a) => role.id === a.role && !(a.bid && !a.approved))
+				)}
 				<!-- The bidding assignments are those that match this role and aren't approved. -->
 				{@const bidded = sortBids(
-						assignments.filter((a) => role.id === a.role && a.bid && !a.approved)
-					)}
+					assignments.filter((a) => role.id === a.role && a.bid && !a.approved)
+				)}
 				{@const isApprover = canApproveAssignment(
 					submission.id,
 					role,
@@ -571,10 +573,7 @@
 							<td>
 								<Tokens amount={getBalance(assignment.scholar)} />
 								{#if cap !== null}
-									<div
-										class:over-cap={overCap}
-										data-testid="bid-papers-load"
-									>{used} / {cap}</div>
+									<div class:over-cap={overCap} data-testid="bid-papers-load">{used} / {cap}</div>
 								{/if}
 							</td>
 							<td>
@@ -590,9 +589,7 @@
 													);
 													if (!ok) return null;
 												}
-												return handle(
-													db().approveAssignment(assignment, true, role, scholar.id)
-												);
+												return handle(db().approveAssignment(assignment, true, role, scholar.id));
 											}}
 										/>
 									{/if}

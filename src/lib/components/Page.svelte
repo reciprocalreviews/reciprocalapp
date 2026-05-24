@@ -51,12 +51,7 @@
 	}
 
 	beforeNavigate(({ from, to }) => {
-		if (
-			from &&
-			to &&
-			from.url.pathname === to.url.pathname &&
-			from.url.search === to.url.search
-		)
+		if (from && to && from.url.pathname === to.url.pathname && from.url.search === to.url.search)
 			return;
 		cleanupContext();
 	});

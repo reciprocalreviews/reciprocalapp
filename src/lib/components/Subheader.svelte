@@ -37,11 +37,8 @@
 
 <svelte:element this={sub ? 'h3' : 'h2'} id={headerId} class="header">
 	<span class="anchor-slot">
-		<a
-			class="anchor"
-			href="#{headerId}"
-			title={locale().widget.subheader.link}
-			onclick={copyLink}>{LinkLabel}</a
+		<a class="anchor" href="#{headerId}" title={locale().widget.subheader.link} onclick={copyLink}
+			>{LinkLabel}</a
 		>
 	</span>
 	{#if typeof text === 'string'}{text}{:else}<Text path={text} />{/if}

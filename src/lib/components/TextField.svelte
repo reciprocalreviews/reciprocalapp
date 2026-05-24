@@ -114,7 +114,11 @@
 					onblur={() => {
 						done?.();
 					}}
-					style:width={!stretch && size === undefined ? (width === 0 ? 'auto' : width + 'px') : undefined}
+					style:width={!stretch && size === undefined
+						? width === 0
+							? 'auto'
+							: width + 'px'
+						: undefined}
 					class:invalid={!isValid}
 					{placeholder}
 					type={password ? 'password' : 'text'}

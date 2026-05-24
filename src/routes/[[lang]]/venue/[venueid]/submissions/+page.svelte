@@ -43,10 +43,7 @@
 		preferenceLevels
 	} = $derived(data);
 
-	const sortedLevels = $derived(
-		[...(preferenceLevels ?? [])].sort((a, b) => a.rank - b.rank)
-	);
-
+	const sortedLevels = $derived([...(preferenceLevels ?? [])].sort((a, b) => a.rank - b.rank));
 
 	/** Get the current database connection */
 	const db = getDB();
@@ -92,7 +89,6 @@
 					})
 					.filter((r) => r.isVisible)
 	);
-
 
 	/** State of sorting and filtering */
 	let paymentSortPendingFirst = $state(true);
@@ -332,8 +328,7 @@
 											)}
 											{@const approvedAssignments =
 												roleAssignments?.filter((a) => a.approved) ?? []}
-											{@const bids =
-												roleAssignments?.filter((a) => a.bid && !a.approved) ?? []}
+											{@const bids = roleAssignments?.filter((a) => a.bid && !a.approved) ?? []}
 											{@const scholarsBid = bids?.find((a) => a.scholar === uid)}
 											{@const scholarAlreadyAssigned = approvedAssignments.some(
 												(a) => a.scholar === uid
@@ -361,8 +356,7 @@
 											     number of *approved* assignments reaches the role's desired count;
 											     pending bids don't count toward closure. -->
 											{#if role.biddable && !scholarAlreadyAssigned}
-												{@const biddingOpen =
-													approvedAssignments.length < role.desired_assignments}
+												{@const biddingOpen = approvedAssignments.length < role.desired_assignments}
 
 												<!-- Approvers always see the pending bid count, regardless of whether
 												     bidding is open or closed, so they can act on outstanding bids. -->
@@ -390,9 +384,7 @@
 																	label: l.page.submissions.button.bid.label
 																})}
 																action={() =>
-																	handle(
-																		db().createAssignment(submission.id, uid, role.id, true)
-																	)}
+																	handle(db().createAssignment(submission.id, uid, role.id, true))}
 															/>
 														{:else}
 															<!-- Preference levels defined: one bid button per level -->
@@ -427,9 +419,9 @@
 																(l) => l.id === scholarsBid.preferenceid
 															)?.label}
 															{#if currentLabel !== undefined}
-																<div
-																	data-testid={`bid-preference-${index}-${roleIndex}`}
-																><em>{currentLabel}</em></div>
+																<div data-testid={`bid-preference-${index}-${roleIndex}`}>
+																	<em>{currentLabel}</em>
+																</div>
 															{/if}
 														{/if}
 														<Button

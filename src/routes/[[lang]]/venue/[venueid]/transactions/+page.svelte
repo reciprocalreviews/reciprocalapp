@@ -83,8 +83,7 @@
 						step={1}
 						value={venue.transaction_reminder_frequency_days}
 						strings={(l) => l.page.venueTransactions.slider.frequency}
-						change={(days) =>
-							handle(db().editVenueTransactionReminderFrequency(venue.id, days))}
+						change={(days) => handle(db().editVenueTransactionReminderFrequency(venue.id, days))}
 						immediately={false}
 						testid="venue-reminder-frequency"
 					/>

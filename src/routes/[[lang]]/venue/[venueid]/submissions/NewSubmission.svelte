@@ -188,11 +188,7 @@
 			bind:value={submissionType}
 			options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
 		></Options>
-		<TextField
-			strings={(l) => l.page.submissions.field.note}
-			size={60}
-			bind:text={note}
-		/>
+		<TextField strings={(l) => l.page.submissions.field.note} size={60} bind:text={note} />
 
 		<h3><Text path={(l) => l.page.newSubmission.header.payment} /></h3>
 		<Note path={(l) => l.page.newSubmission.note.payment} />

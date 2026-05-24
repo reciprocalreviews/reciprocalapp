@@ -71,7 +71,10 @@
 		return dupes;
 	});
 
-	function rowError(row: Row, index: number): ((l: import('$lib/locales/Locale').default) => string) | null {
+	function rowError(
+		row: Row,
+		index: number
+	): ((l: import('$lib/locales/Locale').default) => string) | null {
 		if (row.title.trim().length === 0) return (l) => l.page.bulkImport.row.invalid.title;
 		if (row.externalID.trim().length === 0) return (l) => l.page.bulkImport.row.invalid.externalID;
 		if (existingIDSet.has(row.externalID.trim()))
@@ -158,11 +161,7 @@
 		onChange={handleFileUpload}
 	/>
 
-	<TextField
-		strings={(l) => l.page.bulkImport.field.csvPaste}
-		size={60}
-		bind:text={csvText}
-	/>
+	<TextField strings={(l) => l.page.bulkImport.field.csvPaste} size={60} bind:text={csvText} />
 	<Button
 		strings={(l) => l.page.bulkImport.button.parseCSV}
 		active={csvText.trim().length > 0}
@@ -182,10 +181,7 @@
 		bind:value={defaultSubmissionType}
 		options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
 	/>
-	<Button
-		strings={(l) => l.page.bulkImport.button.applyDefault}
-		action={applyDefaultType}
-	/>
+	<Button strings={(l) => l.page.bulkImport.button.applyDefault} action={applyDefaultType} />
 </Form>
 
 <h3><Text path={(l) => l.page.bulkImport.header.rows} /></h3>
@@ -261,7 +257,11 @@
 </Table>
 
 <Form>
-	<Button strings={(l) => l.page.bulkImport.button.addRow} testid="bulk-import-add-row" action={addRow} />
+	<Button
+		strings={(l) => l.page.bulkImport.button.addRow}
+		testid="bulk-import-add-row"
+		action={addRow}
+	/>
 </Form>
 
 <h3><Text path={(l) => l.page.bulkImport.header.submit} /></h3>
@@ -275,11 +275,7 @@
 />
 
 <Form>
-	<TextField
-		strings={(l) => l.page.bulkImport.field.importNote}
-		size={60}
-		bind:text={importNote}
-	/>
+	<TextField strings={(l) => l.page.bulkImport.field.importNote} size={60} bind:text={importNote} />
 
 	<Button
 		strings={(l) => l.page.bulkImport.button.submit}
