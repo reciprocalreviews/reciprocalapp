@@ -70,13 +70,15 @@
 					<strong>{invite.name ?? EmptyLabel}</strong>
 					<VenueLink id={invite.venueid} name={invite.venue} />
 					<Button
+						testid="invitation-accept-{index}"
 						strings={(l) => l.view.tasks.button.accept}
 						action={() => handle(db().acceptRoleInvite(scholar, invite.id, 'accepted'))}
 					/>
 					<Button
+						testid="invitation-decline-{index}"
 						strings={(l) => l.view.tasks.button.decline}
 						action={() => handle(db().acceptRoleInvite(scholar, invite.id, 'declined'))}
-					/>?
+					/>
 				</td>
 			</tr>
 		{/each}

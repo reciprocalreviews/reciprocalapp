@@ -23,13 +23,16 @@
 	} = $props();
 
 	const locale = getLocaleContext();
+
+	// Exclude pending invitations — those are tasks, not commitments yet.
+	const acceptedCommitments = $derived(commitments.filter((c) => !c.invited));
 </script>
 
 <Subheader icon={ScholarLabel} text={(l) => l.page.scholar.header.volunteering}></Subheader>
 
 {#if admins === null}
 	<Feedback text={(l) => l.page.scholar.feedback.commitmentsNotLoaded}></Feedback>
-{:else if admins.length === 0 && (minting === null || minting.length === 0) && (commitments === null || commitments.length === 0)}
+{:else if admins.length === 0 && (minting === null || minting.length === 0) && acceptedCommitments.length === 0}
 	<Feedback
 		text={(l) =>
 			self
@@ -68,8 +71,8 @@
 		{/each}
 
 		<!-- Any volunteering commitments -->
-		{#if commitments && commitments.length > 0}
-			{#each commitments as commitment, index}
+		{#if acceptedCommitments.length > 0}
+			{#each acceptedCommitments as commitment, index}
 				<tr data-testid="commitment-{index}">
 					<td><VenueLink id={commitment.venueid} name={commitment.venue} /></td>
 					<td><Tag>{commitment.name}</Tag></td>

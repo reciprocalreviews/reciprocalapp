@@ -13,24 +13,23 @@
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
-	import { DeleteLabel, ScholarLabel, SettingsLabel } from '$lib/components/Labels';
-	import Options from '$lib/components/Options.svelte';
+	import { DeleteLabel, ScholarLabel } from '$lib/components/Labels';
 	import Paragraph from '$lib/components/Paragraph.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import type { LocaleText } from '$lib/locales/Locale';
-	import { isntEmpty, validEmail, validEmailsOrORCIDs, validORCID } from '$lib/validation';
+	import { isntEmpty, validEmailsOrORCIDs } from '$lib/validation';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
+	import AdminsCard from './AdminsCard.svelte';
+	import RoleSettings from './RoleSettings.svelte';
+	import VolunteerStatus from './VolunteerStatus.svelte';
 
 	let {
 		venue,
@@ -62,21 +61,6 @@
 		// svelte-ignore state_referenced_locally
 		Object.fromEntries((roles ?? []).map((role) => [role.id, '']))
 	);
-
-	let newEditor: string = $state('');
-
-	function validAdmin(scholar: string | ScholarID): ((l: LocaleText) => string) | undefined {
-		if (validEmail(scholar)) {
-			if (!(minters ?? []).some((m) => m.email === scholar)) return undefined;
-			else return (_l) => "Admins can't be minters of the venue's currency.";
-		}
-		if (validORCID(scholar)) {
-			if (currency.minters.includes(scholar))
-				return (_l) => "Admins can't be minters of the venue's currency.";
-			else return undefined;
-		}
-		return (_l) => 'Must be a valid email or ORCID.';
-	}
 </script>
 
 {#if roles === null}
@@ -108,11 +92,12 @@
 		</Form>
 	{/if}
 
-	{@const admins = venue.admins}
-
 	<Cards>
 		{#each roles.toSorted((a, b) => a.priority - b.priority) as role, index (role.id)}
 			{@const roleVolunteers = volunteers?.filter((v) => v.roleid === role.id) ?? []}
+			{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}
+			{@const scholarInvited =
+				scholarVolunteer?.accepted === 'invited' && !scholarVolunteer.active}
 			<Card
 				full
 				subheader
@@ -123,7 +108,7 @@
 						note: role.description.length === 0 ? l.view.roles.card.unnamed : role.description
 					};
 				}}
-				expand={isAdmin || !role.invited}
+				expand={isAdmin || !role.invited || scholarInvited}
 				testid="role-{role.name}"
 			>
 				{#snippet controls()}
@@ -144,8 +129,6 @@
 				{#if isAdmin && role.priority === 0}
 					<Tip>{locale().view.roles.tip.highestPriority}</Tip>
 				{/if}
-
-				{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}
 
 				<Paragraph
 					text={role.invited
@@ -224,75 +207,7 @@
 				/>
 
 				{#if scholar}
-					{#if !role.invited && scholarVolunteer === undefined}
-						<Button
-							testid="volunteer-for-role"
-							strings={(l) => l.view.roles.button.volunteer}
-							action={() =>
-								handle(
-									db().createVolunteer(scholar, scholar, role.id, true, true, null),
-									"Thank you for volunteering! You'll receive your welcome tokens once the minter approves them."
-								)}>Volunteer …</Button
-						>
-					{/if}
-					{#if scholarVolunteer !== undefined}
-						{#if scholarVolunteer.accepted === 'declined'}
-							<p>
-								{locale().view.roles.paragraph.declined}
-								<Button
-									strings={(l) => l.view.roles.button.accept}
-									action={() =>
-										handle(
-											db().acceptRoleInvite(
-												scholarVolunteer.scholarid,
-												scholarVolunteer.id,
-												'accepted'
-											)
-										)}>Accept</Button
-								>
-							</p>
-						{:else if scholarVolunteer.active}
-							<p>
-								{locale().view.roles.paragraph.volunteering}
-								<Button
-									testid="volunteered-for-role"
-									strings={(l) => l.view.roles.button.stop}
-									action={() => handle(db().updateVolunteerActive(scholarVolunteer.id, false))}
-									>Stop...</Button
-								>
-							</p>
-							<EditableText
-								text={scholarVolunteer.expertise}
-								strings={(l) => l.view.roles.field.expertise}
-								edit={(text) => db().updateVolunteerExpertise(scholarVolunteer.id, text)}
-								testid="volunteer-expertise"
-							/>
-							<EditableText
-								text={scholarVolunteer.papers === null ? '' : scholarVolunteer.papers.toString()}
-								strings={(l) => l.view.roles.field.papers}
-								valid={(text) =>
-									text === '' || /^\d+$/.test(text)
-										? undefined
-										: (l) => l.view.roles.field.papers.invalid}
-								edit={(text) =>
-									db().updateVolunteerPapers(
-										scholarVolunteer.id,
-										text === '' ? null : parseInt(text, 10)
-									)}
-								testid="volunteer-papers"
-							/>
-						{:else}
-							<p>
-								{locale().view.roles.paragraph.stopped}
-								<Button
-									strings={(l) => l.view.roles.button.resume}
-									testid="volunteer-resume"
-									action={() => handle(db().updateVolunteerActive(scholarVolunteer.id, true))}
-									>Resume...</Button
-								>
-							</p>
-						{/if}
-					{/if}
+					<VolunteerStatus {role} {scholar} volunteer={scholarVolunteer} />
 				{:else if !role.invited}
 					<Feedback error inline text={(l) => l.view.roles.feedback.notInvited}></Feedback>
 				{/if}
@@ -334,146 +249,12 @@
 				{/if}
 
 				{#if isAdmin}
-					<Card
-						icon={SettingsLabel}
-						strings={(l) => l.view.roles.card.settings}
-						subheader
-						group="admin"
-						testid="role-settings-{role.name}"
-					>
-						{#if roleVolunteers.length > 0}
-							<Feedback
-								error
-								text={(l) =>
-									l.view.roles.feedback.consult.replace(
-										'{count}',
-										roleVolunteers.length.toString()
-									)}
-							/>
-						{/if}
-
-						<EditableText
-							text={role.name}
-							strings={(l) => l.view.roles.field.roleName}
-							valid={(text) =>
-								isntEmpty(text) ? undefined : (l) => l.view.roles.field.roleName.invalid ?? ''}
-							edit={(text) => db().editRoleName(role.id, text)}
-						/>
-						<EditableText
-							text={role.description}
-							strings={(l) => l.view.roles.field.roleDescription}
-							edit={(text) => db().editRoleDescription(role.id, text)}
-							testid="role-description-{role.name}"
-						/>
-						<Checkbox
-							on={role.invited}
-							change={(on) => db().editRoleInvited(role.id, on)}
-							label={(l) =>
-								role.invited ? l.view.roles.checkbox.invited.on : l.view.roles.checkbox.invited.off}
-						/>
-
-						<Checkbox
-							on={role.anonymous_authors}
-							change={(on) => db().editRoleAnonymousAuthors(role.id, on)}
-							label={(l) =>
-								role.anonymous_authors
-									? l.view.roles.checkbox.anonymousAuthors.on
-									: l.view.roles.checkbox.anonymousAuthors.off}
-						/>
-
-						<Checkbox
-							on={role.biddable}
-							change={(on) => db().editRoleBidding(role.id, on)}
-							label={(l) =>
-								role.biddable
-									? l.view.roles.checkbox.biddable.on
-									: l.view.roles.checkbox.biddable.off}
-							testid="role-biddable-{role.name}"
-						/>
-
-						<Slider
-							min={1}
-							max={10}
-							value={role.desired_assignments}
-							step={1}
-							strings={(l) => l.view.roles.slider.desiredAssignments}
-							immediately={false}
-							change={(value) => handle(db().editRoleDesiredAssignments(role.id, value))}
-						/>
-
-						<Options
-							strings={(l) => l.view.roles.options.approver}
-							value={role.approver ?? undefined}
-							options={[
-								{ label: locale().shorthand.empty, value: undefined },
-								...roles
-									.filter((r) => r.id !== role.id)
-									.map((r) => ({ label: r.name, value: r.id }))
-							]}
-							onChange={(value) =>
-								db().editRoleApprover(role.id, value === null ? null : (value as RoleID))}
-						/>
-
-						<Button
-							strings={(l) => l.view.roles.button.deleteRole}
-							testid="role-delete-{role.name}"
-							active={roles.length > 1}
-							action={() => handle(db().deleteRole(role.id))}
-							>{#if roles.length > 1}Delete {DeleteLabel} …{:else}Can't delete the last role{/if}</Button
-						>
-					</Card>
+					<RoleSettings {role} {roles} volunteerCount={roleVolunteers.length} />
 				{/if}
 			</Card>
 		{:else}
 			<Feedback text={(l) => l.view.roles.feedback.noRoles}></Feedback>
 		{/each}
-		<Card
-			icon={venue.admins.length}
-			subheader
-			strings={(l) => l.view.roles.card.admins}
-			expand={isAdmin}
-		>
-			<p>
-				{locale().view.roles.paragraph.administeredBy}
-				{#each admins as adminID, index}
-					{#if index > 0 && admins.length > 2},{/if}
-					{#if index === admins.length - 1 && admins.length > 1}and{/if}
-					<ScholarLink id={adminID} />{#if isAdmin && admins.length > 1}
-						&nbsp;<Button
-							strings={(l) => l.view.roles.button.removeAdmin}
-							active={venue.admins.length > 1}
-							testid="remove-admin-{index}"
-							action={() =>
-								handle(
-									db().editVenueAdmins(
-										venue.id,
-										venue.admins.filter((ad) => ad !== adminID)
-									)
-								)}>{DeleteLabel}</Button
-						>{/if}
-				{/each}.
-			</p>
-			<Paragraph text={(l) => l.view.roles.paragraph.adminsDescription} />
-
-			{#if isAdmin}
-				<Form>
-					<Paragraph text={(l) => l.view.roles.paragraph.addAdmin} />
-					<TextField
-						strings={(l) => l.view.roles.field.adminScholar}
-						bind:text={newEditor}
-						size={19}
-						valid={(text) => validAdmin(text)}
-						testid="add-admin-field"
-					/><Button
-						strings={(l) => l.view.roles.button.addAdmin}
-						active={validAdmin(newEditor) === undefined}
-						testid="add-admin-button"
-						action={async () => {
-							if (await handle(db().addVenueAdmin(venue.id, newEditor))) newEditor = '';
-						}}
-					/>
-				</Form>
-			{/if}
-		</Card>
+		<AdminsCard {venue} {isAdmin} {minters} {currency} />
 	</Cards>
 {/if}

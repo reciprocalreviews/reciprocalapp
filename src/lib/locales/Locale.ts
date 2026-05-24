@@ -884,6 +884,8 @@ export type LocaleText = {
 				removeCompensation: ButtonText;
 				volunteer: ButtonText;
 				accept: ButtonText;
+				acceptInvite: ConfirmButtonText;
+				decline: ConfirmButtonText;
 				stop: ButtonText;
 				resume: ButtonText;
 				invite: ButtonText;
@@ -932,6 +934,7 @@ export type LocaleText = {
 				roleOpen: string;
 				roleInvited: string;
 				volunteersCount: string;
+				invited: string;
 				declined: string;
 				volunteering: string;
 				stopped: string;
@@ -939,8 +942,8 @@ export type LocaleText = {
 		};
 		tasks: {
 			button: {
-				accept: ButtonText;
-				decline: ButtonText;
+				accept: ConfirmButtonText;
+				decline: ConfirmButtonText;
 			};
 			headers: {
 				kind: string;

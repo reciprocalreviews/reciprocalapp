@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.3.16 - 2026-05-24
 
+### Added
+
+- Invited scholars can now **accept** or **decline** an invitation directly from the role card or their task list, with both actions requiring a confirm. Pending invitations also surface in the scholar's task list and the relevant role card auto-expands on the venue page. (#128)
+
 ### Changed
 
 - Updated internal tooling for stability.

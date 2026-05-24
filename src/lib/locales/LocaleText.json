@@ -4295,6 +4295,9 @@
                     "accept": {
                       "$ref": "#/definitions/ButtonText"
                     },
+                    "acceptInvite": {
+                      "$ref": "#/definitions/ConfirmButtonText"
+                    },
                     "addAdmin": {
                       "$ref": "#/definitions/ButtonText"
                     },
@@ -4303,6 +4306,9 @@
                     },
                     "createRole": {
                       "$ref": "#/definitions/ButtonText"
+                    },
+                    "decline": {
+                      "$ref": "#/definitions/ConfirmButtonText"
                     },
                     "deleteRole": {
                       "$ref": "#/definitions/ConfirmButtonText"
@@ -4342,6 +4348,8 @@
                     "removeCompensation",
                     "volunteer",
                     "accept",
+                    "acceptInvite",
+                    "decline",
                     "stop",
                     "resume",
                     "invite",
@@ -4526,6 +4534,9 @@
                     "inviteDescription": {
                       "type": "string"
                     },
+                    "invited": {
+                      "type": "string"
+                    },
                     "roleInvited": {
                       "type": "string"
                     },
@@ -4551,6 +4562,7 @@
                     "roleOpen",
                     "roleInvited",
                     "volunteersCount",
+                    "invited",
                     "declined",
                     "volunteering",
                     "stopped"
@@ -4607,10 +4619,10 @@
                   "additionalProperties": false,
                   "properties": {
                     "accept": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText"
                     },
                     "decline": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText"
                     }
                   },
                   "required": [

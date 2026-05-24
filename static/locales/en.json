@@ -1253,6 +1253,16 @@
 					"tip": "Accept this invitation",
 					"label": "Accept"
 				},
+				"acceptInvite": {
+					"tip": "Accept this invitation",
+					"label": "Accept",
+					"warn": "Accept this invitation?"
+				},
+				"decline": {
+					"tip": "Decline this invitation",
+					"label": "Decline",
+					"warn": "Decline this invitation?"
+				},
 				"stop": {
 					"tip": "If clicked, you will be shown as inactive in the reviewer list. You will need to resume to be considered for assignments to this role.",
 					"label": "Pause volunteering"
@@ -1365,6 +1375,7 @@
 				"roleOpen": "This role is open to **volunteers**.",
 				"roleInvited": "This role is **invite-only**.",
 				"volunteersCount": "[{count} scholars](/venue/{venueid}/volunteers) have volunteered for this role.",
+				"invited": "You've been invited to this role. Accept to start volunteering, or decline to let the venue know you're not available.",
 				"declined": "You declined this role. Would you like to accept it?",
 				"volunteering": "Thanks for volunteering for this role!",
 				"stopped": "You stopped volunteering for this role."
@@ -1374,11 +1385,13 @@
 			"button": {
 				"accept": {
 					"tip": "Accept this invitation",
-					"label": "Accept"
+					"label": "Accept",
+					"warn": "Accept this invitation?"
 				},
 				"decline": {
 					"tip": "Decline this invitation",
-					"label": "Decline"
+					"label": "Decline",
+					"warn": "Decline this invitation?"
 				}
 			},
 			"headers": {

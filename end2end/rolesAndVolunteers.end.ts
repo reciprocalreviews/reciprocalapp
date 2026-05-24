@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import { expect, test } from '@playwright/test';
-import { login } from '../src/routes/login';
+import { login, logout } from '../src/routes/login';
 
 const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
 const EDITOR_EMAIL = 'editor@uni.edu';
@@ -131,6 +131,61 @@ test('editor invites a scholar to an invite-only role by email', async ({ page, 
 			)
 		)
 		.toBe('invited');
+});
+
+test('an invited scholar declines the invitation from the role card', async ({
+	page,
+	context
+}) => {
+	const inviteeID = sql(`select id from public.scholars where email = '${INVITEE_EMAIL}';`);
+
+	// Reset prior state so this test can re-run cleanly.
+	sql(
+		`delete from public.volunteers where scholarid = '${inviteeID}' and roleid in (select id from public.roles where venueid = '${VENUE_ID}' and name = 'Editor');`
+	);
+
+	// Editor invites the scholar to the invite-only Editor role.
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.waitForLoadState('networkidle');
+	await page.getByTestId('role-Editor').click();
+	await page.getByTestId('role-invite-field-Editor').fill(INVITEE_EMAIL);
+	await page.getByTestId('role-invite-button-Editor').click();
+	await expect
+		.poll(() =>
+			sql(
+				`select accepted::text from public.volunteers v join public.roles r on r.id = v.roleid where v.scholarid = '${inviteeID}' and r.venueid = '${VENUE_ID}' and r.name = 'Editor';`
+			)
+		)
+		.toBe('invited');
+
+	// Swap to the invitee and visit the venue page. Invite-only role cards with
+	// a pending invitation for the viewer auto-expand, so the decline button is
+	// directly clickable without first expanding. Dismiss the invite success
+	// toast(s) first — they intercept clicks on the logout button.
+	const dismissButtons = page.locator('[data-testid="feedback-success"] button');
+	while ((await dismissButtons.count()) > 0) {
+		await dismissButtons.first().click();
+	}
+	await logout(page);
+	await login(INVITEE_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_ID}`);
+	await page.waitForLoadState('networkidle');
+
+	// Decline is a confirm button: first click enters confirm mode, second
+	// commits. Scope to the Editor card — earlier tests in this file may have
+	// left author2 with a pending invite on Associate Editor too.
+	const decline = page.getByTestId('role-Editor').getByTestId('volunteer-decline-invite');
+	await decline.click();
+	await decline.click();
+
+	await expect
+		.poll(() =>
+			sql(
+				`select accepted::text from public.volunteers v join public.roles r on r.id = v.roleid where v.scholarid = '${inviteeID}' and r.venueid = '${VENUE_ID}' and r.name = 'Editor';`
+			)
+		)
+		.toBe('declined');
 });
 
 test('an active volunteer updates their expertise', async ({ page, context }) => {

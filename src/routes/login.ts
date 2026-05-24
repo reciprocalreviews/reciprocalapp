@@ -78,6 +78,14 @@ export async function login(email: string, page: Page, context: BrowserContext) 
 
 /** A reusable function for logging out */
 export async function logout(page: Page) {
-	// Click the logout button
+	// Click the logout button so the in-app sign-out flow runs (clears
+	// Supabase state + triggers the auth-change listener that invalidates the
+	// layout). The nav handler fires signOut() without awaiting it, so we
+	// also clear cookies directly — that guarantees the session is gone even
+	// if the in-flight signOut request is racing with our next navigation —
+	// then navigate to /login and wait for the form to render.
 	await page.getByTestId('logout-button').click();
+	await page.context().clearCookies();
+	await page.goto('/login');
+	await page.getByTestId('email-input').waitFor({ state: 'visible' });
 }

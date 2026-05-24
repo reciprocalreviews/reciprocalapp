@@ -1016,6 +1016,24 @@ values
 		'Annotation, peer review, editorial process',
 		'true',
 		'accepted'
+	),
+	(
+		'f9bfb99c-ad37-11f0-83e8-875a9c9887ba',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		'2025-10-19 22:07:17.336976+00',
+		'',
+		'false',
+		'invited'
+	),
+	(
+		'f9bfb99c-ad37-11f0-83e8-875a9c9887bb',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		'2025-10-19 22:07:17.336976+00',
+		'',
+		'false',
+		'invited'
 	);
 
 insert into

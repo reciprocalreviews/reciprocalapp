@@ -5,12 +5,15 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	const scholarID = params.id;
 
-	// Get the scholar's active commitments
+	// Get the scholar's active commitments and pending invitations. Pending
+	// invitations are active=false but accepted='invited', so we OR the filters
+	// to include them; declined rows (active=false, accepted='declined') stay
+	// excluded.
 	const { data: volunteers } = await supabase
 		.from('volunteers')
 		.select('*, roles(name, venueid, approver)')
 		.eq('scholarid', scholarID)
-		.eq('active', true);
+		.or('active.eq.true,accepted.eq.invited');
 
 	const venueids = volunteers
 		? volunteers.map((c) => c.roles?.venueid).filter((v) => v !== undefined)
