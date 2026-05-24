@@ -75,6 +75,22 @@ export const Emails = {
 			'A proposed mint transaction sized exactly to the shortfall has been recorded so if you decide to approve it, it is a one click approval. If you approve it, then approver can retry the payment:',
 			'https://reciprocal.reviews/venue/$4/transactions'
 		]
+	},
+	TransactionDeclinedVenue: {
+		subject: 'Your transaction was declined',
+		paragraphs: [
+			'Your proposed transaction for <strong>$2</strong> $3 tokens at <strong>$4</strong> — "$1" — was declined by <a href="mailto:$6">$5</a>.',
+			'Reason given: $7',
+			'You can review and follow up on this here: $8'
+		]
+	},
+	TransactionDeclined: {
+		subject: 'Your transaction was declined',
+		paragraphs: [
+			'Your proposed transaction for <strong>$2</strong> $3 tokens — "$1" — was declined by <a href="mailto:$5">$4</a>.',
+			'Reason given: $6',
+			'You can review and follow up on this here: $7'
+		]
 	}
 } satisfies Record<string, Email>;
 

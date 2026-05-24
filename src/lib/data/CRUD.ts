@@ -339,8 +339,15 @@ export default abstract class CRUD {
 	 * */
 	abstract approveTransaction(creator: ScholarID, id: TransactionID): Promise<Result<undefined>>;
 
-	/** Mark the transaction canceled */
-	abstract cancelTransaction(id: TransactionID, reason: string): Promise<Result>;
+	/** Mark the transaction declined. The original `purpose` is preserved;
+	 * `decliner` records the scholar who declined and `decline_reason`
+	 * captures their explanation. If `decliner` differs from the transaction's
+	 * `creator`, emails the creator with the reason and decliner identity. */
+	abstract declineTransaction(
+		decliner: ScholarID,
+		id: TransactionID,
+		reason: string
+	): Promise<Result>;
 
 	/** Update an assignment for a submission */
 	abstract approveAssignment(

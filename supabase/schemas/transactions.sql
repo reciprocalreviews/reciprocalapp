@@ -1,6 +1,6 @@
 --------------------------------------
 -- Schema
-create type public."transaction_status" as enum('proposed', 'approved', 'canceled');
+create type public."transaction_status" as enum('proposed', 'approved', 'declined');
 
 alter type public."transaction_status" OWNER to "postgres";
 
@@ -24,11 +24,15 @@ create table if not exists public.transactions (
 	tokens uuid[] not null,
 	-- The currency the amount is in
 	currency uuid not null,
-	-- The purpose of the transaction, containing any information necessary for approval of the transaction by the from source
-	-- Can also be used to specify the reason for cancelation.
+	-- The purpose of the transaction, containing any information necessary for
+	-- approval of the transaction by the from source.
 	purpose text not null,
 	-- The status of the transaction
 	status public.transaction_status not null,
+	-- The scholar who declined the transaction (null when status != 'declined').
+	decliner uuid,
+	-- The reason the decliner gave when declining (null when status != 'declined').
+	decline_reason text,
 	-- Require that there is either a scholar or venue source but not both
 	constraint check_from check ((num_nonnulls (from_scholar, from_venue)<=1)),
 	-- Require that there is either a scholar or venue destination but not both
@@ -63,6 +67,9 @@ add constraint transactions_to_scholar_fkey foreign KEY (to_scholar) references 
 
 alter table only public.transactions
 add constraint transactions_to_venue_fkey foreign KEY (to_venue) references public.venues (id);
+
+alter table only public.transactions
+add constraint transactions_decliner_fkey foreign KEY (decliner) references public.scholars (id);
 
 --------------------------------------
 -- Security
@@ -327,7 +334,7 @@ with
 		-- own balance (from_scholar = auth.uid()) imposes no recipient
 		-- restriction; otherwise the approver must not be the recipient or
 		-- a venue they admin (which would enrich them from someone else's
-		-- tokens). Other status transitions (e.g. flipping to `canceled`)
+		-- tokens). Other status transitions (e.g. flipping to `declined`)
 		-- are not restricted by this check.
 		and (
 			status<>'approved'::transaction_status

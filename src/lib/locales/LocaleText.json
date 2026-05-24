@@ -411,7 +411,7 @@
             "TransactionMissingTo": {
               "type": "string"
             },
-            "TransactionNotCanceled": {
+            "TransactionNotDeclined": {
               "type": "string"
             },
             "TransferScholarTokens": {
@@ -571,7 +571,7 @@
             "TransactionMissingTo",
             "PendingTransactionHasTokens",
             "UnknownTransaction",
-            "TransactionNotCanceled",
+            "TransactionNotDeclined",
             "AlreadyApproved",
             "SelfDealingApproval",
             "TransactionApprovalUpdate",
@@ -4722,10 +4722,10 @@
                     "approve": {
                       "$ref": "#/definitions/ButtonText"
                     },
-                    "cancelConfirm": {
+                    "declineConfirm": {
                       "$ref": "#/definitions/ConfirmButtonText"
                     },
-                    "cancelInitiate": {
+                    "declineInitiate": {
                       "$ref": "#/definitions/ButtonText"
                     },
                     "loadMore": {
@@ -4734,8 +4734,8 @@
                   },
                   "required": [
                     "approve",
-                    "cancelInitiate",
-                    "cancelConfirm",
+                    "declineInitiate",
+                    "declineConfirm",
                     "loadMore"
                   ],
                   "type": "object"
@@ -4791,12 +4791,12 @@
                 "field": {
                   "additionalProperties": false,
                   "properties": {
-                    "cancelReason": {
+                    "declineReason": {
                       "$ref": "#/definitions/TextFieldText"
                     }
                   },
                   "required": [
-                    "cancelReason"
+                    "declineReason"
                   ],
                   "type": "object"
                 },
@@ -4839,12 +4839,12 @@
                 "paragraph": {
                   "additionalProperties": false,
                   "properties": {
-                    "cancelReason": {
+                    "declineReason": {
                       "type": "string"
                     }
                   },
                   "required": [
-                    "cancelReason"
+                    "declineReason"
                   ],
                   "type": "object"
                 },
@@ -4871,7 +4871,7 @@
                     "approved": {
                       "type": "string"
                     },
-                    "canceled": {
+                    "declined": {
                       "type": "string"
                     },
                     "proposed": {
@@ -4881,7 +4881,7 @@
                   "required": [
                     "proposed",
                     "approved",
-                    "canceled"
+                    "declined"
                   ],
                   "type": "object"
                 }

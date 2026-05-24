@@ -1128,6 +1128,24 @@ values
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'Venue gift',
 		'approved'
+	),
+	-- Pre-staged for manually testing the decline-transaction flow (#114).
+	-- r1 (creator) requested compensation; visit as editor@uni.edu, go to
+	-- /venue/c60d7d0a-…/transactions, click Decline on this row, enter a
+	-- reason, confirm twice. Mailpit should then show a "Your transaction
+	-- was declined" email to r1@uni.edu naming editor@uni.edu as decliner.
+	(
+		'00000000-0000-0000-0000-000000000114',
+		'2026-03-01 23:08:30.000000+00',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
+		null,
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
+		null,
+		'{"00000000-0000-0000-0000-000000000000"}',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'Compensation for reviewing TOK-2025-001',
+		'proposed'
 	);
 
 ;

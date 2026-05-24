@@ -344,7 +344,7 @@
 								{locale().page.submission.cell.proposesToPay}
 							{:else if transaction.status === 'approved'}
 								{locale().page.submission.cell.paid}
-							{:else if transaction.status === 'canceled'}
+							{:else if transaction.status === 'declined'}
 								{locale().page.submission.cell.declinedToPay}
 							{/if}
 							<Tokens amount={payment} />

@@ -837,17 +837,17 @@ export type LocaleText = {
 			};
 			button: {
 				approve: ButtonText;
-				cancelInitiate: ButtonText;
-				cancelConfirm: ConfirmButtonText;
+				declineInitiate: ButtonText;
+				declineConfirm: ConfirmButtonText;
 				loadMore: ButtonText;
 			};
 			field: {
-				cancelReason: TextFieldText;
+				declineReason: TextFieldText;
 			};
 			status: {
 				proposed: string;
 				approved: string;
-				canceled: string;
+				declined: string;
 			};
 			headers: {
 				status: string;
@@ -862,7 +862,7 @@ export type LocaleText = {
 				unknownVenue: string;
 			};
 			paragraph: {
-				cancelReason: string;
+				declineReason: string;
 			};
 		};
 		roles: {
@@ -1068,7 +1068,7 @@ export type LocaleText = {
 		TransactionMissingTo: string;
 		PendingTransactionHasTokens: string;
 		UnknownTransaction: string;
-		TransactionNotCanceled: string;
+		TransactionNotDeclined: string;
 		AlreadyApproved: string;
 		SelfDealingApproval: string;
 		TransactionApprovalUpdate: string;

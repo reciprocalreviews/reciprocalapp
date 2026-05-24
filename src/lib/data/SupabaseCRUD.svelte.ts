@@ -1565,12 +1565,73 @@ export default class SupabaseCRUD extends CRUD {
 		return { error: undefined, data: undefined };
 	}
 
-	async cancelTransaction(id: TransactionID, reason: string): Promise<Result> {
-		const { error } = await this.client
+	async declineTransaction(
+		decliner: ScholarID,
+		id: TransactionID,
+		reason: string
+	): Promise<Result> {
+		// Read the transaction first so we know the proposer, original purpose,
+		// venue and currency before we update.
+		const { data: transaction, error: readError } = await this.client
 			.from('transactions')
-			.update({ status: 'canceled', purpose: reason })
+			.select('creator, purpose, currency, from_venue, to_venue, tokens')
+			.eq('id', id)
+			.single();
+		if (readError || !transaction) return this.error('TransactionNotDeclined', readError);
+
+		// Apply the decline — purpose stays untouched, audit columns capture
+		// who declined and why.
+		const { error: updateError } = await this.client
+			.from('transactions')
+			.update({ status: 'declined', decliner, decline_reason: reason })
 			.eq('id', id);
-		return this.errorOrEmpty('TransactionNotCanceled', error);
+		if (updateError) return this.errorOrEmpty('TransactionNotDeclined', updateError);
+
+		// Don't email proposers who declined their own transaction.
+		if (transaction.creator === decliner) return { error: undefined, data: undefined };
+
+		// Resolve the decliner and currency names + optional venue title for the
+		// email body. A transaction always has a from/to side; venue title is
+		// only included if either side is a venue.
+		const venueID = transaction.from_venue ?? transaction.to_venue;
+		const [declinerRow, currencyRow, venueRow] = await Promise.all([
+			this.client.from('scholars').select('name, email').eq('id', decliner).single(),
+			this.client.from('currencies').select('name').eq('id', transaction.currency).single(),
+			venueID
+				? this.client.from('venues').select('title').eq('id', venueID).single()
+				: Promise.resolve({ data: null, error: null })
+		]);
+
+		const declinerName = declinerRow.data?.name ?? '';
+		const declinerEmail = declinerRow.data?.email ?? '';
+		const currencyName = currencyRow.data?.name ?? '';
+		const venueTitle = venueRow.data?.title ?? '';
+		const amount = transaction.tokens.length.toString();
+		const link = venueID
+			? `https://reciprocal.reviews/venue/${venueID}/transactions`
+			: `https://reciprocal.reviews/scholar/${transaction.creator}/transactions`;
+
+		// Pick the template variant: with vs without a venue title slot.
+		const args = venueID
+			? [
+					transaction.purpose,
+					amount,
+					currencyName,
+					venueTitle,
+					declinerName,
+					declinerEmail,
+					reason,
+					link
+				]
+			: [transaction.purpose, amount, currencyName, declinerName, declinerEmail, reason, link];
+
+		await this.emailScholars(
+			[transaction.creator],
+			venueID ? 'TransactionDeclinedVenue' : 'TransactionDeclined',
+			args
+		);
+
+		return { error: undefined, data: undefined };
 	}
 
 	async approveAssignment(

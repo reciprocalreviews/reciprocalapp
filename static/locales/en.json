@@ -970,7 +970,7 @@
 				}
 			},
 			"note": {
-				"minters": "Minters can see, approve, and cancel transactions, and most importantly, mint new tokens in this currency. They can also propose and improve currency exchanges and mergers."
+				"minters": "Minters can see, approve, and decline transactions, and most importantly, mint new tokens in this currency. They can also propose and improve currency exchanges and mergers."
 			},
 			"field": {
 				"name": {
@@ -1163,14 +1163,14 @@
 					"tip": "Approve this proposed transaction",
 					"label": "Approve"
 				},
-				"cancelInitiate": {
-					"tip": "Cancel this proposed transaction",
-					"label": "Cancel…"
+				"declineInitiate": {
+					"tip": "Decline this proposed transaction",
+					"label": "Decline…"
 				},
-				"cancelConfirm": {
-					"tip": "Cancel this proposed transaction",
-					"label": "Cancel this transaction",
-					"warn": "Cancel"
+				"declineConfirm": {
+					"tip": "Decline this proposed transaction",
+					"label": "Decline this transaction",
+					"warn": "Decline"
 				},
 				"loadMore": {
 					"tip": "Load more transactions",
@@ -1178,15 +1178,15 @@
 				}
 			},
 			"field": {
-				"cancelReason": {
+				"declineReason": {
 					"label": "reason",
-					"placeholder": "Reason for cancellation"
+					"placeholder": "Reason for declining"
 				}
 			},
 			"status": {
 				"proposed": "proposed",
 				"approved": "approved",
-				"canceled": "canceled"
+				"declined": "declined"
 			},
 			"headers": {
 				"status": "Status",
@@ -1203,7 +1203,7 @@
 				"allLoaded": "All transactions loaded."
 			},
 			"paragraph": {
-				"cancelReason": "Indicate a reason and we'll append it to the transaction message."
+				"declineReason": "Indicate a reason and we'll record it with the transaction so the proposer knows why."
 			},
 			"error": {
 				"unknownVenue": "Unknown venue"
@@ -1535,7 +1535,7 @@
 		"TransactionMissingTo": "No destination provided for transaction",
 		"PendingTransactionHasTokens": "This pending transaction already has tokens that were transferred.",
 		"UnknownTransaction": "Unable to find this transaction",
-		"TransactionNotCanceled": "Unable to cancel this transaction",
+		"TransactionNotDeclined": "Unable to decline this transaction",
 		"AlreadyApproved": "This transaction is already approved",
 		"SelfDealingApproval": "You can't approve a transaction in which you are the recipient",
 		"TransactionApprovalUpdate": "Unable to update the proposed transaction",

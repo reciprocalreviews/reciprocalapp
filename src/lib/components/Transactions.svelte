@@ -1,20 +1,17 @@
 <script lang="ts">
 	import type { CurrencyRow, TransactionRow, VenueRow } from '$data/types';
-	import { getDB } from '$lib/data/CRUD';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { getAuth } from '../../routes/Auth.svelte';
 	import { handle } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
-	import Dialog from './Dialog.svelte';
 	import Feedback from './Feedback.svelte';
 	import Note from './Note.svelte';
-	import Paragraph from './Paragraph.svelte';
 	import ScholarLink from './ScholarLink.svelte';
 	import Status from './Status.svelte';
 	import Table from './Table.svelte';
-	import TextField from './TextField.svelte';
 	import Tokens from './Tokens.svelte';
+	import TransactionActions from './TransactionActions.svelte';
 	import VenueLink from './VenueLink.svelte';
 
 	let {
@@ -37,15 +34,12 @@
 	} = $props();
 
 	// Get the current user
-	const db = getDB();
 	const auth = getAuth();
 	const locale = getLocaleContext();
 
 	// Editable if the user is the scholar being viewed.
 	let userid = $derived(auth().getUserID());
 
-	let showCancel = $state(false);
-	let cancelReason = $state('');
 
 	// The loaded transactions, starting with the ones passed in as props.
 	// svelte-ignore state_referenced_locally
@@ -100,8 +94,8 @@
 				label={(l) =>
 					transaction.status === 'approved'
 						? l.view.transactions.status.approved
-						: transaction.status === 'canceled'
-							? l.view.transactions.status.canceled
+						: transaction.status === 'declined'
+							? l.view.transactions.status.declined
 							: l.view.transactions.status.proposed}
 			/>
 		</td>
@@ -131,42 +125,20 @@
 						locale().view.transactions.error.unknownVenue}
 				></VenueLink>{/if}</td
 		>
-		<td><Note path={() => transaction.purpose} /></td>
 		<td>
-			{#if editable}
-				<div class="column">
-					<!-- If the authenticated scholar is a minter of the given currency, or the giver, then show an approve button -->
-					<Button
-						strings={(l) => l.view.transactions.button.approve}
-						testid={testid + '-' + index + '-approve'}
-						action={() => handle(db().approveTransaction(userid, transaction.id))}
-					/>
-					<Button
-						strings={(l) => l.view.transactions.button.cancelInitiate}
-						active={!showCancel}
-						action={() => (showCancel = true)}
-					/>
-					<Dialog bind:show={showCancel}>
-						<Paragraph text={(l) => l.view.transactions.paragraph.cancelReason} />
-						<TextField
-							strings={(l) => l.view.transactions.field.cancelReason}
-							bind:text={cancelReason}
-						/>
-						<Button
-							strings={(l) => l.view.transactions.button.cancelConfirm}
-							active={cancelReason.length > 0}
-							action={async () => {
-								await handle(
-									db().cancelTransaction(
-										transaction.id,
-										transaction.purpose.trim() + ' - ' + cancelReason
-									)
-								);
-								showCancel = false;
-							}}
-						/>
-					</Dialog>
+			<Note path={() => transaction.purpose} />
+			{#if transaction.status === 'declined' && transaction.decline_reason !== null}
+				<div class="decline">
+					<em>Declined{#if transaction.decliner}
+							by <ScholarLink id={transaction.decliner} />{/if}:</em
+					>
+					<Note path={() => transaction.decline_reason ?? ''} />
 				</div>
+			{/if}
+		</td>
+		<td>
+			{#if editable && userid !== null}
+				<TransactionActions {transaction} {index} {userid} testid={testid ?? ''} />
 			{:else if proposed}
 				<em>{locale().view.transactions.cell.pendingApproval}</em>
 			{:else}
@@ -215,9 +187,8 @@
 		font-size: var(--small-font-size);
 	}
 
-	.column {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing);
+	.decline {
+		margin-top: var(--spacing-half);
+		font-size: var(--extra-small-font-size);
 	}
 </style>

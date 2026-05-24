@@ -82,7 +82,7 @@ test('minter approves a pending transaction; status moves to approved and tokens
 
 	// Find the row for the new proposed transaction. Match the table cell
 	// by accessible name (Playwright's getByText also matches the hidden
-	// TextField rulers used by the cancel-reason input on each row).
+	// TextField rulers used by the decline-reason input on each row).
 	await expect(page.getByRole('cell', { name: purpose })).toBeVisible();
 
 	// Click the approve button on whichever row index hosts our purpose.
@@ -194,6 +194,76 @@ test('minter cannot approve a venue→minter transaction (anti-self-dealing UPDA
 		// Expected: RLS with-check raises and the transaction rolls back.
 	}
 	expect(sql(`select status from public.transactions where id = '${txnID}';`)).toBe('proposed');
+});
+
+test('minter declining a proposed transaction emails the proposer and records the decliner', async ({
+	page,
+	context
+}) => {
+	// Set up: the editor proposes a venue → author2 transaction. The minter
+	// (r1) declines it, which should:
+	//   1. flip status to 'declined', preserving the original purpose
+	//   2. record decliner = r1 and decline_reason = the typed text
+	//   3. queue a TransactionDeclinedVenue email row addressed to the editor
+	const recipientID = sql(`select id from public.scholars where email = '${RECIPIENT_EMAIL}';`);
+	const minterID = sql(`select id from public.scholars where email = '${MINTER_EMAIL}';`);
+
+	// Clear any prior decline emails to the editor so the count assertion is
+	// deterministic across re-runs.
+	sql(
+		`delete from public.emails where event in ('TransactionDeclined','TransactionDeclinedVenue') and scholar = '${EDITOR_ID}';`
+	);
+
+	const purpose = `e2e decline test ${Date.now()}`;
+	const reason = 'Insufficient justification';
+	const txnID = sql(
+		`insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${recipientID}', null, array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[2]), '${CURRENCY_ID}', '${purpose}', 'proposed') returning id;`
+	);
+	expect(txnID).toMatch(/^[0-9a-f-]+$/);
+
+	await login(MINTER_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_ID}/transactions`);
+	await page.waitForLoadState('networkidle');
+
+	// Open the decline dialog on our row, fill the reason, confirm. Each row
+	// owns its own Dialog state, so scoping all three actions to this row's
+	// <tr> targets the right dialog. The decline-confirm is itself a confirm
+	// button (warn pattern) — first click enters confirm mode, second commits.
+	const row = page.locator(`tr:has(td:has-text(${JSON.stringify(purpose)}))`);
+	await row.locator('[data-testid$="-decline-initiate"]').click();
+	await row.locator('[data-testid$="-decline-reason"]').fill(reason);
+	await row.locator('[data-testid$="-decline-confirm"]').click();
+	await row.locator('[data-testid$="-decline-confirm"]').click();
+
+	// Audit columns reflect who declined and why; purpose is untouched.
+	await expect
+		.poll(() =>
+			sql(
+				`select status || '|' || coalesce(decliner::text,'') || '|' || coalesce(decline_reason,'') || '|' || purpose from public.transactions where id = '${txnID}';`
+			)
+		)
+		.toBe(`declined|${minterID}|${reason}|${purpose}`);
+
+	// Exactly one decline email queued for the editor (the proposer).
+	await expect
+		.poll(() =>
+			Number(
+				sql(
+					`select count(*) from public.emails where event in ('TransactionDeclined','TransactionDeclinedVenue') and scholar = '${EDITOR_ID}';`
+				)
+			)
+		)
+		.toBe(1);
+
+	// Sanity: subject says "declined" and the body mentions the reason and the
+	// decliner's name (so the proposer can follow up).
+	const minterName = sql(`select name from public.scholars where id = '${minterID}';`);
+	const emailContent = sql(
+		`select subject || '||' || message from public.emails where event in ('TransactionDeclined','TransactionDeclinedVenue') and scholar = '${EDITOR_ID}' order by time_sent desc limit 1;`
+	);
+	expect(emailContent.toLowerCase()).toContain('declined');
+	expect(emailContent).toContain(reason);
+	expect(emailContent).toContain(minterName);
 });
 
 test('editor cannot insert an already-approved venue→editor transaction (anti-self-dealing INSERT)', async () => {

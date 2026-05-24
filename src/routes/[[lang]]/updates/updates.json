@@ -787,7 +787,7 @@
         "Added a toggleable submission status to each submission, to mark when it is no longer in review.",
         "Show submissions on scholar page.",
         "Transaction approval by giver or minter.",
-        "Transaction cancelation by giver, editor, or minter."
+        "Transaction declining by giver, editor, or minter."
       ],
       "fixed": [
         "Use Noto Emoji instead of system default to guarantee monochrome, consistent emojis.",

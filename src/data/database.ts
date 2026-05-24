@@ -663,6 +663,8 @@ export type Database = {
           created_at: string
           creator: string
           currency: string
+          decline_reason: string | null
+          decliner: string | null
           from_scholar: string | null
           from_venue: string | null
           id: string
@@ -676,6 +678,8 @@ export type Database = {
           created_at?: string
           creator: string
           currency: string
+          decline_reason?: string | null
+          decliner?: string | null
           from_scholar?: string | null
           from_venue?: string | null
           id?: string
@@ -689,6 +693,8 @@ export type Database = {
           created_at?: string
           creator?: string
           currency?: string
+          decline_reason?: string | null
+          decliner?: string | null
           from_scholar?: string | null
           from_venue?: string | null
           id?: string
@@ -711,6 +717,13 @@ export type Database = {
             columns: ["currency"]
             isOneToOne: false
             referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_decliner_fkey"
+            columns: ["decliner"]
+            isOneToOne: false
+            referencedRelation: "scholars"
             referencedColumns: ["id"]
           },
           {
@@ -885,7 +898,7 @@ export type Database = {
       exchange_proposal_kind: "create" | "modify" | "merge"
       invited: "invited" | "accepted" | "declined"
       submission_status: "reviewing" | "done"
-      transaction_status: "proposed" | "approved" | "canceled"
+      transaction_status: "proposed" | "approved" | "declined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1019,7 +1032,7 @@ export const Constants = {
       exchange_proposal_kind: ["create", "modify", "merge"],
       invited: ["invited", "accepted", "declined"],
       submission_status: ["reviewing", "done"],
-      transaction_status: ["proposed", "approved", "canceled"],
+      transaction_status: ["proposed", "approved", "declined"],
     },
   },
 } as const

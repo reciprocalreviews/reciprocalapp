@@ -8,9 +8,11 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - Invited scholars can now **accept** or **decline** an invitation directly from the role card or their task list, with both actions requiring a confirm. Pending invitations also surface in the scholar's task list and the relevant role card auto-expands on the venue page. (#128)
 - The submissions filter on a venue's submissions page now matches **author** and **assigned reviewer** names in addition to title and external ID, respecting reviewer- and author-anonymity flags. The list also shows authors in a new column (where visible to the viewer) and highlights cells whose content matches the filter. (#125)
+- The proposer of a transaction is now emailed when a minter or editor **declines** it, with the decliner's name (and contact link), the reason, and a link back to follow up. The transactions page also shows the decliner and reason inline on declined rows, and the original purpose is preserved alongside the new audit columns. (#114)
 
 ### Changed
 
+- Renamed the "Cancel" action on proposed transactions to **Decline** throughout the UI (button labels, status badge, error messages), to better match its meaning as an active, accountable decision. (#114)
 - Updated internal tooling for stability.
 
 ## 0.3.15 - 2026-05-17

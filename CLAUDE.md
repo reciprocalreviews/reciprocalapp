@@ -39,6 +39,8 @@ All routes live under `src/routes/[[lang]]/` — `[[lang]]` is an optional local
 
 The database layer is abstracted: `src/lib/data/CRUD.ts` defines the interface; `src/lib/data/SupabaseCRUD.svelte.ts` implements it. The instance is set in the root layout via `setDB(() => crud)` and accessed anywhere via `getDB()`. All operations return `Result<T> = {data?: T, error?: DBError}`. Use the `handle()` helper from `feedback.svelte.ts` to wrap DB calls — it posts error notifications automatically.
 
+The database schema is declarative in `supabase/schemas`. Any changes should happen there first in the appropriate schema file; migrations should follow. You may use Supabase's diff support to generate a migration, or just synthesize directly to avoid some of it's limitations.
+
 ### Localization
 
 The locale system works as follows:
