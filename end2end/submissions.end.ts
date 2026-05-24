@@ -56,6 +56,30 @@ test('editor filters submissions by author name, reviewer name, title, and exter
 	page,
 	context
 }) => {
+	// Query expected counts from the DB rather than hard-coding them, because
+	// earlier tests in the full suite may have created additional submissions
+	// (e.g. submission.end.ts creates one authored by author1@uni.edu = Foot
+	// Note). Reviewer counts are likewise computed live.
+	const FOOT_ID = sql(`select id from public.scholars where email = 'author1@uni.edu';`);
+	const RIGOR_ID = sql(`select id from public.scholars where email = 'r1@uni.edu';`);
+	const MANNY_ID = sql(`select id from public.scholars where email = 'r4@uni.edu';`);
+	const footAuthoredCount = Number(
+		sql(
+			`select count(*) from public.submissions where venue = '${VENUE_ID}' and '${FOOT_ID}' = any(authors);`
+		)
+	);
+	// "Rigor" matches submissions where r1 is author OR a visible assignee.
+	const rigorMatchCount = Number(
+		sql(
+			`select count(distinct s.id) from public.submissions s left join public.assignments a on a.submission = s.id and a.scholar = '${RIGOR_ID}' where s.venue = '${VENUE_ID}' and ('${RIGOR_ID}' = any(s.authors) or a.id is not null);`
+		)
+	);
+	const mannyMatchCount = Number(
+		sql(
+			`select count(distinct s.id) from public.submissions s left join public.assignments a on a.submission = s.id and a.scholar = '${MANNY_ID}' where s.venue = '${VENUE_ID}' and ('${MANNY_ID}' = any(s.authors) or a.id is not null);`
+		)
+	);
+
 	await login('editor@uni.edu', page, context);
 	await page.goto(`/venue/${VENUE_ID}/submissions`);
 	await page.waitForLoadState('networkidle');
@@ -63,25 +87,25 @@ test('editor filters submissions by author name, reviewer name, title, and exter
 	const rows = page.locator('tr[data-testid^="submission-"]');
 	const filter = page.getByTestId('submissions-filter');
 
-	// Baseline: at least 4 seeded submissions for this venue.
+	// Baseline: the seed has 4 submissions; later tests may add more.
 	const baseline = await rows.count();
 	expect(baseline).toBeGreaterThanOrEqual(4);
 
-	// Filter by author name "Foot" (Foot Note authors TOK-2025-001 and -004).
+	// Filter by author name "Foot" (Foot Note authors TOK-2025-001 and -004 in
+	// the seed; other tests may add more authored by them).
 	await filter.fill('Foot');
-	await expect.poll(async () => rows.count()).toBe(2);
+	await expect.poll(async () => rows.count()).toBe(footAuthoredCount);
 
-	// Filter by reviewer-only name "Manny" (Manny Script has bid as Reviewer
-	// on TOK-2025-001 and is not an author of anything) — proves the new
-	// reviewer branch matches. The editor is the Editor on TOK-2025-001, so
-	// RLS lets them see the bid assignment.
+	// Filter by reviewer-only name "Manny" — Manny Script bids on TOK-2025-001
+	// in the seed and isn't an author. Proves the reviewer-match branch works.
 	await filter.fill('Manny');
-	await expect.poll(async () => rows.count()).toBe(1);
+	await expect.poll(async () => rows.count()).toBe(mannyMatchCount);
 
-	// Filter by "Rigor" — Rigor Russ authors -002 and -003 AND is the seeded
-	// Reviewer on -001 and -004, so 4 rows should match (covers both paths).
+	// Filter by "Rigor" — Rigor Russ authors TOK-2025-002 and -003 AND is the
+	// seeded Reviewer on -001 and -004 (covers both the author and reviewer
+	// match paths).
 	await filter.fill('Rigor');
-	await expect.poll(async () => rows.count()).toBe(4);
+	await expect.poll(async () => rows.count()).toBe(rigorMatchCount);
 
 	// Title-fragment match still works (regression).
 	await filter.fill('Windmill');

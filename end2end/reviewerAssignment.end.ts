@@ -78,46 +78,60 @@ test('over-cap bidder shows load indicator and requires confirm to assign', asyn
 		`insert into public.assignments (venue, submission, scholar, role, bid, approved, completed) values ('${VENUE_ID}', '${SUBMISSION_002}', '${MANNY_ID}', '${REVIEWER_ROLE}', false, true, false);`
 	);
 
-	await login('ae@uni.edu', page, context);
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
-	await page.waitForLoadState('networkidle');
+	try {
+		await login('ae@uni.edu', page, context);
+		await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
 
-	// Manny's bid row exists; the load indicator on it reads "1 / 1" and is
-	// over-cap (CSS class flags it red/bold).
-	const mannyRow = page.locator('tr:has-text("Manny")');
-	const load = mannyRow.locator('[data-testid="papers-load"]');
-	await expect(load).toHaveText('1 / 1');
-	await expect(load).toHaveClass(/over-cap/);
+		// Manny's bid row exists; the load indicator on it reads "1 / 1" and is
+		// over-cap (CSS class flags it red/bold).
+		const mannyRow = page.locator('tr:has-text("Manny")');
+		const load = mannyRow.locator('[data-testid="papers-load"]');
+		await expect(load).toHaveText('1 / 1');
+		await expect(load).toHaveClass(/over-cap/);
 
-	// The approve button on the over-cap bid is now Button's warn-style
-	// confirm — its accessible name comes from the approveAnyway tip, not the
-	// regular approveBid tip.
-	const approveAnyway = mannyRow.getByRole('button', { name: APPROVE_ANYWAY_TIP });
-	await expect(approveAnyway).toBeVisible();
+		// The approve button on the over-cap bid is now Button's warn-style
+		// confirm — its accessible name comes from the approveAnyway tip, not
+		// the regular approveBid tip.
+		const approveAnyway = mannyRow.getByRole('button', { name: APPROVE_ANYWAY_TIP });
+		await expect(approveAnyway).toBeVisible();
 
-	// First click enters confirm mode; the assignment should NOT yet be approved.
-	await approveAnyway.click();
-	expect(
-		sql(
-			`select approved::text from public.assignments where scholar = '${MANNY_ID}' and submission = '${SUBMISSION_ID}';`
-		)
-	).toBe('false');
-
-	// Second click commits — assignment flips to approved.
-	await mannyRow.getByRole('button', { name: 'Assign over cap?' }).click();
-	await expect
-		.poll(() =>
+		// First click enters confirm mode; the assignment should NOT yet be approved.
+		await approveAnyway.click();
+		expect(
 			sql(
 				`select approved::text from public.assignments where scholar = '${MANNY_ID}' and submission = '${SUBMISSION_ID}';`
 			)
-		)
-		.toBe('true');
+		).toBe('false');
 
-	// Dismiss the success toasts that approval queues (one per email recipient)
-	// so they don't intercept the logout click.
-	const dismissButtons = page.locator('[data-testid="feedback-success"] button');
-	while ((await dismissButtons.count()) > 0) {
-		await dismissButtons.first().click();
+		// Second click commits — assignment flips to approved.
+		await mannyRow.getByRole('button', { name: 'Assign over cap?' }).click();
+		await expect
+			.poll(() =>
+				sql(
+					`select approved::text from public.assignments where scholar = '${MANNY_ID}' and submission = '${SUBMISSION_ID}';`
+				)
+			)
+			.toBe('true');
+
+		// Dismiss the success toasts that approval queues (one per email recipient)
+		// so they don't intercept the logout click.
+		const dismissButtons = page.locator('[data-testid="feedback-success"] button');
+		while ((await dismissButtons.count()) > 0) {
+			await dismissButtons.first().click();
+		}
+		await logout(page);
+	} finally {
+		// Restore Manny to a seed-equivalent state so downstream tests in the
+		// full suite don't see leftover approvals or an unexpected papers cap.
+		sql(
+			`update public.volunteers set papers = null where scholarid = '${MANNY_ID}' and roleid = '${REVIEWER_ROLE}';`
+		);
+		sql(
+			`update public.assignments set bid = true, approved = false where scholar = '${MANNY_ID}' and submission = '${SUBMISSION_ID}';`
+		);
+		sql(
+			`delete from public.assignments where scholar = '${MANNY_ID}' and submission = '${SUBMISSION_002}';`
+		);
 	}
-	await logout(page);
 });

@@ -178,7 +178,7 @@ test('editor sees bid preference label and used/cap on submission detail', async
 
 	// The bid's preference label and used/cap indicator render.
 	await expect(page.getByTestId('bid-preference-label').first()).toHaveText('Preferred');
-	await expect(page.getByTestId('bid-papers-load').first()).toBeVisible();
+	await expect(page.getByTestId('papers-load').first()).toBeVisible();
 
 	// Clean up so we don't leave the bid behind for other tests.
 	sql(
