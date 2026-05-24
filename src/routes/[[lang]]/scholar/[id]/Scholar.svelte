@@ -17,7 +17,6 @@
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Gift from '$lib/components/Gift.svelte';
 	import { ScholarLabel, SettingsLabel, SubmissionLabel, TokenLabel } from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Status from '$lib/components/Status.svelte';
@@ -97,10 +96,6 @@
 			label={(l) =>
 				scholar.isAvailable() ? l.page.scholar.status.available : l.page.scholar.status.unavailable}
 		/>
-		<Link to="mailto:{scholar.getEmail()}">{scholar.getEmail()}</Link>
-		{#if scholar.getORCID()}
-			ORCID <Link to="https://orcid.org/{scholar.getORCID()}">{scholar.getORCID()}</Link>
-		{/if}
 	{/snippet}
 
 	{#if editable}

@@ -1997,10 +1997,15 @@
                         "label": {
                           "description": "The optional label to show above the select",
                           "type": "string"
+                        },
+                        "note": {
+                          "description": "An optional note to show below the select",
+                          "type": "string"
                         }
                       },
                       "required": [
-                        "createNew"
+                        "createNew",
+                        "note"
                       ],
                       "type": "object"
                     }
@@ -4991,6 +4996,10 @@
       "properties": {
         "label": {
           "description": "The optional label to show above the select",
+          "type": "string"
+        },
+        "note": {
+          "description": "An optional note to show below the select",
           "type": "string"
         }
       },

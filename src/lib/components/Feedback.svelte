@@ -26,11 +26,11 @@
 		>{@render content()}</span
 	>
 {:else}
-	<p class={['feedback', { error, round }]} data-testid={testid}>{@render content()}</p>
+	<div class={['feedback', { error, round }]} data-testid={testid}>{@render content()}</div>
 {/if}
 
 <style>
-	p,
+	div,
 	span {
 		border-left: var(--thick-border-width) solid var(--salient-color);
 		background: var(--salient-color-faded);
@@ -40,7 +40,7 @@
 		font-size: var(--small-font-size);
 	}
 
-	p {
+	div {
 		margin-top: 0;
 	}
 

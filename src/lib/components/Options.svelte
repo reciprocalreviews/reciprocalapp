@@ -2,6 +2,7 @@
 	import type LocaleText from '$lib/locales/Locale';
 	import type { OptionsText } from '$lib/locales/Locale';
 	import { getLocaleContext } from '$routes/Contexts';
+	import Tip from './Tip.svelte';
 
 	type Props = {
 		options: { label: string; value: string | undefined }[];
@@ -40,6 +41,9 @@
 		{/each}
 	</select>
 </label>
+{#if text?.note}
+	<Tip border={false}>{text.note}</Tip>
+{/if}
 
 <style>
 	select {
