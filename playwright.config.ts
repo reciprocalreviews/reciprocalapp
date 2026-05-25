@@ -10,7 +10,11 @@ const config: PlaywrightTestConfig = {
 		port: 4173,
 		stderr: 'pipe',
 		stdout: 'pipe',
-		timeout: 200000
+		// 10 minutes. CI runners with a cold Docker cache need ~3-5 min just to
+		// pull Supabase's images before `start` returns; locally with a warm
+		// cache this finishes in seconds, so the higher ceiling is only ever
+		// consumed when CI actually needs it.
+		timeout: 600_000
 	},
 	use: {
 		screenshot: 'only-on-failure'
