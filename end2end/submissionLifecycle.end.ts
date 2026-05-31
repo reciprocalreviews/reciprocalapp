@@ -32,6 +32,10 @@ test('editor manually adds a single submission with themselves as the sole autho
 	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
 	await page.waitForLoadState('networkidle');
 
+	// Submit as a "Research Article" (cost 10).
+	await page
+		.getByRole('combobox', { name: 'submission type' })
+		.selectOption({ label: 'Research Article' });
 	await page.getByTestId('submission-title').fill('Editor-authored single submission');
 	await page.getByTestId('submission-manuscript-id').fill(externalID);
 
@@ -39,7 +43,7 @@ test('editor manually adds a single submission with themselves as the sole autho
 	await page.getByTestId('author-orcid-0').blur();
 	await expect(page.getByTestId('scholar-found-0')).toBeVisible();
 
-	// Pay the venue's full submission cost (10) as the sole author.
+	// Pay the submission type's full cost (10) as the sole author.
 	await page.getByTestId('payment-slider-0').fill('10');
 
 	await page.getByTestId('check-balances').click();

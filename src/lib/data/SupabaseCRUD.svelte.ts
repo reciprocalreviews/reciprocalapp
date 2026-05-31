@@ -319,6 +319,7 @@ export default class SupabaseCRUD extends CRUD {
 		venue: VenueID,
 		externalID: string,
 		previousID: string | null,
+		previous: SubmissionID | null,
 		submission_type: SubmissionTypeID,
 		charges: Charge[],
 		note: string | null
@@ -410,6 +411,7 @@ export default class SupabaseCRUD extends CRUD {
 				venue,
 				externalid: externalID,
 				previousid: previousID,
+				previous,
 				submission_type,
 				authors,
 				payments: charges.map((charge) => charge.payment ?? 0),
@@ -700,7 +702,6 @@ export default class SupabaseCRUD extends CRUD {
 				url: proposalData.url,
 				admins: editors,
 				welcome_amount: 10,
-				submission_cost: 10,
 				currency: currencyID
 			})
 			.select()
@@ -730,12 +731,13 @@ export default class SupabaseCRUD extends CRUD {
 		for (const editorsID of editors)
 			await this.createVolunteer(editorsID, editorsID, roleData.id, true, false, null);
 
-		// Create a submission type for the venue.
+		// Create a default submission type for the venue, with a starting cost.
 		const { data: submissionType } = await this.createSubmissionType(
 			venueID,
 			'Research Article',
 			'The default submission type for this venue.',
-			null
+			null,
+			10
 		);
 
 		if (submissionType === undefined) return this.error('CreateSubmissionType');
@@ -863,14 +865,6 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('EditVenueWelcomeAmount', error);
 	}
 
-	async editVenueSubmissionCost(id: VenueID, amount: number) {
-		const { error } = await this.client
-			.from('venues')
-			.update({ submission_cost: amount })
-			.eq('id', id);
-		return this.errorOrEmpty('EditVenueSubmissionCost', error);
-	}
-
 	async editVenueDoneVisibilityDays(id: VenueID, days: number) {
 		const { error } = await this.client
 			.from('venues')
@@ -966,11 +960,12 @@ export default class SupabaseCRUD extends CRUD {
 		venue: VenueID,
 		name: string,
 		description: string,
-		revision_of: SubmissionTypeID | null
+		revision_of: SubmissionTypeID | null,
+		cost: number = 0
 	): Promise<Result<SubmissionType>> {
 		const { data, error } = await this.client
 			.from('submission_types')
-			.insert({ venue, name, description, revision_of })
+			.insert({ venue, name, description, revision_of, submission_cost: cost })
 			.select()
 			.single();
 
@@ -990,6 +985,16 @@ export default class SupabaseCRUD extends CRUD {
 			.eq('id', id);
 
 		if (error) return this.error('EditSubmissionType', error);
+		return { data: undefined };
+	}
+
+	async editSubmissionTypeCost(id: SubmissionTypeID, cost: number): Promise<Result> {
+		const { error } = await this.client
+			.from('submission_types')
+			.update({ submission_cost: cost })
+			.eq('id', id);
+
+		if (error) return this.error('EditSubmissionTypeCost', error);
 		return { data: undefined };
 	}
 

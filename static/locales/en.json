@@ -388,8 +388,13 @@
 			"options": {
 				"submissionType": {
 					"label": "submission type"
+				},
+				"previous": {
+					"label": "previous submission",
+					"note": "If this revises one of your earlier submissions to this venue, link it here. The matching resubmission type is selected automatically."
 				}
 			},
+			"cost": "Submitting a **{type}** costs **{cost}** tokens, split among the paying authors below.",
 			"error": {
 				"balanceCheck": "An error occurred while checking balances.",
 				"notFound": "These scholars were not found: {scholars}.",
@@ -406,7 +411,7 @@
 			},
 			"paragraph": {
 				"intro": "Import a batch of free submissions that pre-date this venue's launch on Reciprocal Reviews. These submissions will have no authors or payments, but reviewers can bid on them to earn tokens. Submitting this form will also propose a mint transaction sized to fund reviewer compensation, which a minter must approve before reviewers will receive tokens.",
-				"mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens (submission cost {cost} × {count} submissions)."
+				"mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens, summed from each submission's type cost."
 			},
 			"note": {
 				"csv": "Upload or paste a CSV with header row. Columns: title, externalid, expertise, submission_type, previousid, note. Unknown or empty submission_type falls back to the default."
@@ -572,9 +577,9 @@
 					"invalid": "ID must be non-empty."
 				},
 				"previousID": {
-					"label": "previous manuscript ID",
+					"label": "previous external manuscript ID",
 					"placeholder": "ID",
-					"note": "The ID of the previous submission, if this is a revision and you want to track it."
+					"note": "The external ID of the previous submission, if this is a revision and you want to track it, but the previous submission isn't available above."
 				},
 				"note": {
 					"label": "note (optional)",
@@ -742,6 +747,11 @@
 				},
 				"typeDescription": {
 					"placeholder": "description"
+				},
+				"cost": {
+					"label": "cost",
+					"placeholder": "e.g., 10",
+					"invalid": "Must be a whole number"
 				}
 			},
 			"button": {
@@ -788,7 +798,8 @@
 			"headers": {
 				"type": "Type",
 				"description": "Description",
-				"revisionOf": "Revision of"
+				"revisionOf": "Revision of",
+				"cost": "Cost"
 			},
 			"paragraph": {
 				"notFound": "Unable to find this venue.",
@@ -825,11 +836,6 @@
 				},
 				"welcomeTokens": {
 					"label": "welcome tokens (received when first volunteering)",
-					"placeholder": "e.g., 40",
-					"invalid": "Must be a whole number"
-				},
-				"submissionCost": {
-					"label": "submission cost (price to submit a manuscript to the venue)",
 					"placeholder": "e.g., 40",
 					"invalid": "Must be a whole number"
 				},
@@ -1527,7 +1533,6 @@
 		"EditVenueInactive": "Unable to edit the inactive message",
 		"EditVenueAnonymousAssignments": "Unable to edit anonymous assignments setting",
 		"EditVenueWelcomeAmount": "Unable to edit the welcome amount",
-		"EditVenueSubmissionCost": "Unable to edit the submission cost",
 		"EditVenueDoneVisibilityDays": "Unable to update the recently-done visibility window",
 		"EditVenueTransactionReminderFrequency": "Unable to update the transaction reminder frequency",
 		"EditRoleBidding": "Unable to toggle bidding",
@@ -1544,6 +1549,7 @@
 		"UpdateSubmissionType": "Unable to update submission type",
 		"CreateSubmissionType": "Unable to create submission type",
 		"EditSubmissionType": "Unable to edit submission type",
+		"EditSubmissionTypeCost": "Unable to edit the submission cost",
 		"DeleteSubmissionType": "Unable to delete submission type",
 		"CreateCompensation": "Unable to create compensation for role",
 		"EditCompensation": "Unable to create compensation for role",

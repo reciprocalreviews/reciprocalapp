@@ -225,13 +225,24 @@ test('editor edits welcome amount, submission cost, and per-role compensation', 
 		.poll(() => sql(`select welcome_amount from public.venues where id = '${VENUE_ID}';`))
 		.toBe('25');
 
-	// Change submission cost.
-	await page.getByTestId('venue-submission-cost-toggle').click();
-	await page.getByTestId('venue-submission-cost').fill('12');
-	await page.getByTestId('venue-submission-cost-toggle').click();
+	// Change a submission type's cost. Cost is now per submission type, edited in
+	// the submission types table on the venue dashboard (not venue-wide settings).
+	await page.goto(`/venue/${VENUE_ID}`);
+	await page.waitForLoadState('networkidle');
+	await page.getByTestId('submission-cost-0-toggle').click();
+	await page.getByTestId('submission-cost-0').fill('12');
+	await page.getByTestId('submission-cost-0-toggle').click();
 	await expect
-		.poll(() => sql(`select submission_cost from public.venues where id = '${VENUE_ID}';`))
-		.toBe('12');
+		.poll(() =>
+			sql(
+				`select count(*) from public.submission_types where venue = '${VENUE_ID}' and submission_cost = 12;`
+			)
+		)
+		.toBe('1');
+
+	// Return to the settings page for the remaining edits.
+	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.waitForLoadState('networkidle');
 
 	// Change Reviewer×Research Article compensation. The slider exposes a
 	// stable testid `compensation-{role.name}-{type.name}`. Role cards on the

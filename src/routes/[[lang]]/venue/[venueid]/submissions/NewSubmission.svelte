@@ -23,15 +23,26 @@
 	import Text from '$lib/locales/Text.svelte';
 	import { isntEmpty, validORCID } from '$lib/validation';
 	import { getAuth } from '$routes/Auth.svelte';
+	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 
 	let {
 		venue,
 		submissionTypes,
+		priorSubmissions = [],
 		initialManuscript = ''
 	}: {
 		venue: VenueRow;
 		submissionTypes: SubmissionType[];
+		/** Submissions in this venue the authenticated scholar authored, offered
+		 * as on-platform predecessors to link a resubmission to (#124). The
+		 * submission_type lets us auto-select the matching revision type. */
+		priorSubmissions?: {
+			id: string;
+			externalid: string;
+			title: string;
+			submission_type: string;
+		}[];
 		/** Optional manuscript ID to pre-fill, e.g. from a `?manuscript=` query
 		 * param when an editor's reviewing platform deep-links here. */
 		initialManuscript?: string;
@@ -39,6 +50,7 @@
 
 	const db = getDB();
 	const auth = getAuth();
+	const locale = getLocaleContext();
 	const user = $derived(auth().getUserID());
 
 	/** The title of the submission we're adding */
@@ -47,9 +59,23 @@
 	// svelte-ignore state_referenced_locally
 	let externalID = $state(initialManuscript);
 	let previousID = $state('');
+	/** The on-platform predecessor selected from the picker, if any. */
+	let previous = $state<string | null>(null);
 	let submissionType = $state<SubmissionTypeID>(submissionTypes[0].id);
 	let note = $state('');
 	let charges = $state<Charge[]>([{ scholar: '', payment: 0 }]);
+
+	/** The selected submission type, whose cost the author pays. */
+	let selectedType = $derived(submissionTypes.find((t) => t.id === submissionType));
+
+	/** The cost to submit is the selected submission type's cost. */
+	let cost = $derived(selectedType?.submission_cost ?? 0);
+
+	/** The revision type whose `revision_of` points at the given type, if any.
+	 * Used to auto-select the right type when linking a predecessor. */
+	function revisionTypeFor(typeID: SubmissionTypeID): SubmissionTypeID | undefined {
+		return submissionTypes.find((t) => t.revision_of === typeID)?.id;
+	}
 
 	type ScholarState =
 		| { status: 'idle' }
@@ -189,10 +215,47 @@
 				validExternalID(text) ? undefined : (l) => l.page.submissions.field.manuscriptID.invalid}
 			testid="submission-manuscript-id"
 		/>
+		{#if priorSubmissions.length > 0}
+			<Options
+				strings={(l) => l.page.newSubmission.options.previous}
+				options={[
+					{ label: locale().shorthand.empty, value: undefined },
+					...priorSubmissions.map((s) => ({
+						label: s.title.trim().length > 0 ? `${s.externalid} — ${s.title}` : s.externalid,
+						value: s.id
+					}))
+				]}
+				value={previous ?? undefined}
+				onChange={(value) => {
+					previous = value ?? null;
+					const chosen = value ? priorSubmissions.find((s) => s.id === value) : undefined;
+					// Mirror the chosen predecessor's external ID into the (now
+					// locked) free-text field; clear it when deselected.
+					previousID = chosen?.externalid ?? '';
+					// Auto-select the revision type of the predecessor's type, so
+					// the right cost and compensation apply.
+					if (chosen) {
+						const revision = revisionTypeFor(chosen.submission_type);
+						if (revision) submissionType = revision;
+					}
+				}}
+			></Options>
+		{/if}
 		<TextField
 			strings={(l) => l.page.submissions.field.previousID}
 			size={40}
+			active={previous === null}
 			bind:text={previousID}
+			done={() => {
+				// Best-effort: if a typed external ID matches one of the author's
+				// own prior submissions, auto-select that type's revision type.
+				const match = priorSubmissions.find((s) => s.externalid === previousID.trim());
+				if (match) {
+					const revision = revisionTypeFor(match.submission_type);
+					if (revision) submissionType = revision;
+				}
+			}}
+			testid="submission-previous-id"
 		/>
 		<Options
 			strings={(l) => l.page.newSubmission.options.submissionType}
@@ -203,6 +266,12 @@
 
 		<h3><Text path={(l) => l.page.newSubmission.header.payment} /></h3>
 		<Note path={(l) => l.page.newSubmission.note.payment} />
+		<Feedback
+			text={(l) =>
+				l.page.newSubmission.cost
+					.replaceAll('{type}', selectedType?.name ?? '')
+					.replaceAll('{cost}', cost.toString())}
+		/>
 		<Table>
 			{#snippet header()}
 				<th><Text path={(l) => l.page.newSubmission.table.orcid} /></th>
@@ -243,7 +312,7 @@
 							strings={(l) => ({ ...l.page.newSubmission.slider.payment, label: undefined })}
 							bind:value={charge.payment}
 							min={0}
-							max={venue.submission_cost}
+							max={cost}
 							step={1}
 							testid="payment-slider-{index}"
 						/></td
@@ -273,15 +342,13 @@
 
 		{#if duplicateScholars(charges)}
 			<Feedback error text={(l) => l.page.newSubmission.feedback.duplicateScholars}></Feedback>
-		{:else if charges.reduce((sum, charge) => sum + charge.payment, 0) < venue.submission_cost}
+		{:else if charges.reduce((sum, charge) => sum + charge.payment, 0) < cost}
 			<Feedback
 				error
 				text={(l) =>
 					l.page.newSubmission.feedback.incompletePayment.replace(
 						'{deficit}',
-						(
-							venue.submission_cost - charges.reduce((sum, charge) => sum + charge.payment, 0)
-						).toString()
+						(cost - charges.reduce((sum, charge) => sum + charge.payment, 0)).toString()
 					)}
 			/>
 		{:else if isNonAuthor}
@@ -293,7 +360,7 @@
 				strings={(l) => l.page.newSubmission.button.checkBalances}
 				testid="check-balances"
 				active={validChargeFormat(charges) &&
-					validCharge(charges, venue.submission_cost) &&
+					validCharge(charges, cost) &&
 					affordable !== true}
 				action={checkAffordability}
 			/>
@@ -312,8 +379,7 @@
 		<Button
 			strings={(l) => l.page.newSubmission.button.submit}
 			testid="submit-submission"
-			active={affordable === true &&
-				validSubmission(title, externalID, charges, venue.submission_cost)}
+			active={affordable === true && validSubmission(title, externalID, charges, cost)}
 			action={async () => {
 				if (user) {
 					const result = await handle(
@@ -323,7 +389,8 @@
 							expertise,
 							venue.id,
 							externalID,
-							previousID,
+							previousID.trim() === '' ? null : previousID.trim(),
+							previous,
 							submissionType,
 							charges,
 							note.trim() === '' ? null : note.trim()

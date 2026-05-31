@@ -11,8 +11,12 @@ create table submissions (
 	venue uuid not null references venues (id),
 	-- The external unique identifier of the submission, such as a submission number or manuscript number
 	externalid text not null,
-	-- An optional link to a previous external submission id
+	-- An optional free-text link to a previous external submission id, for a predecessor that is not (yet)
+	-- on this platform. Retained for bulk import and the multi-year transition period.
 	previousid text default null,
+	-- An optional explicit foreign key to a previous submission on this platform (a resubmission chain).
+	-- Null if there is no on-platform predecessor.
+	previous uuid default null references submissions (id) on delete set null,
 	-- The submission type of the paper
 	submission_type uuid not null references submission_types (id),
 	-- The scholars associated with the submission
@@ -47,6 +51,8 @@ revoke update (status, completed_at) on public.submissions from authenticated;
 --------------------------------------
 -- Indexes
 create index submissions_externalid_index on public.submissions using btree (externalid);
+
+create index submissions_previous_index on public.submissions using btree (previous);
 
 create index submissions_scholar_index on public.submissions using btree (authors);
 

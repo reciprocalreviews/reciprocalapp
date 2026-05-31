@@ -2,6 +2,18 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.4.1 - 2026-05-31
+
+### Added
+
+- Submissions can now be **explicitly linked to a prior submission** to represent revise-and-resubmit chains. When creating a submission, authors pick one of their earlier submissions to the same venue from a dropdown (an internal link with true referential integrity); doing so fills and locks the external manuscript ID field and **auto-selects the matching revision submission type**. The free-text external manuscript ID stays available for predecessors that aren't on the platform. Bulk imports best-effort resolve their external `previousid` to an on-platform link. (#124)
+
+### Changed
+
+- **Submission cost is now set per submission type** instead of venue-wide, since each type is a different amount of work. Admins edit each type's cost in the submission types table on the venue dashboard (the venue-wide submission-cost setting is gone). Because a resubmission is its own revision type, it simply carries its own cost. (#124)
+
+- Updated internal tooling for stability.
+
 ## 0.4.0 - 2026-05-24
 
 ### Added

@@ -16,7 +16,7 @@
 	import TextField from '$lib/components/TextField.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import Text from '$lib/locales/Text.svelte';
-	import { validURL } from '$lib/validation';
+	import { validInteger, validURL } from '$lib/validation';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { addFeedback, handle } from '$routes/feedback.svelte';
 	import type { PageData } from './$types';
@@ -122,11 +122,6 @@
 					title: 'tokens for new volunteers'
 				},
 				{
-					number: venue.submission_cost ?? undefined,
-					icon: TokenLabel,
-					title: 'tokens for new submissions'
-				},
-				{
 					number: volunteers?.length ?? undefined,
 					title: 'volunteers',
 					link: `/venue/${venue.id}/volunteers`
@@ -156,11 +151,12 @@
 		{#if types === null}
 			<Feedback error text={(l) => l.page.venue.feedback.typesNotLoaded}></Feedback>
 		{:else}
-			<Table>
+			<Table full>
 				{#snippet header()}
 					<th>{locale().page.venue.headers.type}</th>
 					<th>{locale().page.venue.headers.description}</th>
 					<th>{locale().page.venue.headers.revisionOf}</th>
+					<th>{locale().page.venue.headers.cost}</th>
 					{#if isAdmin && types.length > 1}<th></th>{/if}
 				{/snippet}
 				{#each types as type, index}
@@ -206,6 +202,22 @@
 								></Options>
 							{:else}
 								{types.find((t) => t.id === type.revision_of)?.name ?? '—'}
+							{/if}
+						</td>
+						<td>
+							{#if isAdmin}
+								<EditableText
+									text={type.submission_cost.toString()}
+									strings={(l) => l.page.venue.field.cost}
+									valid={(text) =>
+										validInteger(text)
+											? undefined
+											: (l) => l.page.venue.field.cost.invalid ?? ''}
+									edit={(text) => db().editSubmissionTypeCost(type.id, parseInt(text))}
+									testid="submission-cost-{index}"
+								/>
+							{:else}
+								{type.submission_cost}
 							{/if}
 						</td>
 						{#if isAdmin && types.length > 1}

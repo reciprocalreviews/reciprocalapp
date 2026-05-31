@@ -143,15 +143,6 @@
 			testid="venue-welcome-amount"
 		/>
 
-		<EditableText
-			text={venue.submission_cost.toString()}
-			strings={(l) => l.page.settings.field.submissionCost}
-			valid={(text) =>
-				validInteger(text) ? undefined : (l) => l.page.settings.field.submissionCost.invalid ?? ''}
-			edit={(text) => db().editVenueSubmissionCost(venue.id, parseInt(text))}
-			testid="venue-submission-cost"
-		/>
-
 		<!-- Step 3: Roles -->
 		<Subheader
 			id="roles"

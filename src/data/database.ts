@@ -474,6 +474,7 @@ export type Database = {
           id: string
           name: string
           revision_of: string | null
+          submission_cost: number
           venue: string
         }
         Insert: {
@@ -481,6 +482,7 @@ export type Database = {
           id?: string
           name?: string
           revision_of?: string | null
+          submission_cost?: number
           venue: string
         }
         Update: {
@@ -488,6 +490,7 @@ export type Database = {
           id?: string
           name?: string
           revision_of?: string | null
+          submission_cost?: number
           venue?: string
         }
         Relationships: [
@@ -518,6 +521,7 @@ export type Database = {
           imported: boolean
           note: string | null
           payments: number[]
+          previous: string | null
           previousid: string | null
           status: Database["public"]["Enums"]["submission_status"]
           submission_type: string
@@ -535,6 +539,7 @@ export type Database = {
           imported?: boolean
           note?: string | null
           payments: number[]
+          previous?: string | null
           previousid?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
           submission_type: string
@@ -552,6 +557,7 @@ export type Database = {
           imported?: boolean
           note?: string | null
           payments?: number[]
+          previous?: string | null
           previousid?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
           submission_type?: string
@@ -560,6 +566,13 @@ export type Database = {
           venue?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "submissions_previous_fkey"
+            columns: ["previous"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "submissions_submission_type_fkey"
             columns: ["submission_type"]
@@ -765,7 +778,6 @@ export type Database = {
           done_visibility_days: number
           id: string
           inactive: string | null
-          submission_cost: number
           title: string
           transaction_reminder_frequency_days: number
           transaction_reminder_time: string | null
@@ -780,7 +792,6 @@ export type Database = {
           done_visibility_days?: number
           id?: string
           inactive?: string | null
-          submission_cost?: number
           title?: string
           transaction_reminder_frequency_days?: number
           transaction_reminder_time?: string | null
@@ -795,7 +806,6 @@ export type Database = {
           done_visibility_days?: number
           id?: string
           inactive?: string | null
-          submission_cost?: number
           title?: string
           transaction_reminder_frequency_days?: number
           transaction_reminder_time?: string | null

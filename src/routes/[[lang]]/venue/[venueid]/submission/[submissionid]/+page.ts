@@ -29,11 +29,19 @@ export const load: PageLoad = async ({ parent, params }) => {
 			: await supabase.from('scholars').select('*').in('id', submission.authors);
 	if (authorsError) console.error(authorsError);
 
-	// Get the previous submission
+	// Get the previous submission. Prefer the explicit on-platform link
+	// (submission.previous FK); fall back to the legacy/bulk free-text match of
+	// previousid against an externalid in the same venue (#124).
 	const { data: previous, error: previousError } =
-		submission !== null && submission.previousid !== null && submission.previousid.length > 0
-			? await supabase.from('submissions').select('*').eq('externalid', submission.previousid)
-			: { data: null, error: null };
+		submission !== null && submission.previous !== null
+			? await supabase.from('submissions').select('*').eq('id', submission.previous)
+			: submission !== null && submission.previousid !== null && submission.previousid.length > 0
+				? await supabase
+						.from('submissions')
+						.select('*')
+						.eq('venue', venueid)
+						.eq('externalid', submission.previousid)
+				: { data: null, error: null };
 	if (previousError) console.error(previousError);
 
 	// Get the transactions for the submission

@@ -7,6 +7,9 @@ create table if not exists submission_types (
 	venue uuid not null references venues (id) on delete cascade,
 	-- The submission type that this type is a resubmission of, if applicable
 	revision_of uuid default null references submission_types (id) on delete cascade,
+	-- The cost, in the venue's currency, to submit a manuscript of this type. Each type can be a
+	-- different amount of work (e.g. a resubmission type may cost less than a fresh submission).
+	submission_cost integer not null default 0,
 	-- The type of the submission, such as "research paper", "research - resubmssion"
 	name text not null default ''::text,
 	-- A longer description of the submission type, such as "a new research paper submission"

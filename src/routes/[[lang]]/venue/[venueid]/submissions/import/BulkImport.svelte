@@ -85,7 +85,13 @@
 
 	const allRowsValid = $derived(rows.every((r, i) => rowError(r, i) === null));
 
-	const mintAmount = $derived(venue.submission_cost * rows.length);
+	const mintAmount = $derived(
+		rows.reduce(
+			(sum, r) =>
+				sum + (submissionTypes.find((t) => t.id === r.submissionType)?.submission_cost ?? 0),
+			0
+		)
+	);
 
 	function addRow() {
 		rows = [...rows, emptyRow()];
@@ -270,7 +276,6 @@
 	text={(l) =>
 		l.page.bulkImport.paragraph.mintSummary
 			.replaceAll('{count}', rows.length.toString())
-			.replaceAll('{cost}', venue.submission_cost.toString())
 			.replaceAll('{total}', mintAmount.toString())}
 />
 

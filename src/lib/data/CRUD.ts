@@ -97,13 +97,14 @@ export default abstract class CRUD {
 		venue: VenueID,
 		externalID: string,
 		previousID: string | null,
+		previous: SubmissionID | null,
 		submission_type: SubmissionTypeID,
 		charges: Charge[],
 		note: string | null
 	): Promise<Result<SubmissionID>>;
 
 	/** Atomically insert a batch of free imported submissions and a single proposed
-	 * mint transaction sized at venue.submission_cost * submissions.length. The
+	 * mint transaction sized to the sum of each submission's type cost. The
 	 * minter approves the transaction separately to fund reviewer compensation. */
 	abstract bulkImportSubmissions(
 		venue: VenueID,
@@ -200,7 +201,6 @@ export default abstract class CRUD {
 	abstract editVenueInactive(id: VenueID, inactive: string | null): Promise<Result>;
 	abstract editVenueAnonymousAssignments(id: VenueID, anonymous: boolean): Promise<Result>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<Result>;
-	abstract editVenueSubmissionCost(id: VenueID, amount: number): Promise<Result>;
 	abstract editVenueDoneVisibilityDays(id: VenueID, days: number): Promise<Result>;
 	abstract editVenueTransactionReminderFrequency(id: VenueID, days: number): Promise<Result>;
 
@@ -219,7 +219,8 @@ export default abstract class CRUD {
 		venue: VenueID,
 		name: string,
 		description: string,
-		revision: SubmissionTypeID | null
+		revision: SubmissionTypeID | null,
+		cost?: number
 	): Promise<Result<SubmissionType>>;
 
 	abstract editSubmissionType(
@@ -228,6 +229,9 @@ export default abstract class CRUD {
 		description: string,
 		revision: SubmissionTypeID | null
 	): Promise<Result>;
+
+	/** Set the cost, in the venue's currency, to submit a manuscript of this type. */
+	abstract editSubmissionTypeCost(id: SubmissionTypeID, cost: number): Promise<Result>;
 
 	abstract deleteSubmissionType(id: SubmissionTypeID): Promise<Result>;
 

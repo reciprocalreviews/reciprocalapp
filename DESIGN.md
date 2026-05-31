@@ -197,7 +197,7 @@ A `Submission` represents a manuscript undergoing peer review.
 - [x] **Done is terminal.** A submission marked done cannot be reopened; this preserves the integrity of the completion record and the editor's self-compensation transaction.
 - [x] Done submissions remain visible in a venue's submissions list for a venue-configurable window (default 30 days, range 0–365, 7-day steps), sorted to the bottom of the list. After the window expires they're hidden from the list but still reachable by direct link.
 - [ ] ([#27](https://github.com/reciprocalreviews/reciprocalapp/issues/27)) When a submission's author scholars update their email address after submission, the updated address should propagate to the submission record so editor correspondence reaches the right inbox.
-- [ ] ([#124](https://github.com/reciprocalreviews/reciprocalapp/issues/124)) `Submission`s can reference a previous submission by internal UUID (in addition to the existing external-ID `previousid`), giving revise-and-resubmit chains within RR true referential integrity. The external-ID field is retained for cross-venue or pre-RR ancestors.
+- [x] ([#124](https://github.com/reciprocalreviews/reciprocalapp/issues/124)) `Submission`s can reference a previous submission by internal UUID (`submissions.previous`), in addition to the existing external-ID `previousid`, giving revise-and-resubmit chains within RR true referential integrity. When creating a submission, authors pick one of their earlier submissions to the same venue from a dropdown (which fills and locks the external-ID field, and auto-selects the matching revision submission type); the free-text external-ID field remains available for cross-venue or pre-RR ancestors. Because a resubmission is simply its own (revision) submission type, its cost follows from that type — no separate resubmission cost is needed. Bulk imports best-effort resolve their external `previousid` to an on-platform link.
 
 The authoritative schemas live in:
 
@@ -338,7 +338,7 @@ When a venue is **approved** state:
 > The functionality below is specific to compensation
 
 - [x] _`editor`_: Modify the newcomer gift in tokens
-- [x] _`editor`_: Modify submission costs in tokens, reviewing compensation in tokens. Submission cost must equal to total compensation for a submission.
+- [x] _`editor`_: Modify submission costs in tokens, reviewing compensation in tokens. Submission cost is set **per submission type** (each type is a different amount of work, e.g. a resubmission type may cost less than a fresh submission), and must equal the total compensation for a submission of that type.
 - [x] _`editor`_: View the total number of tokens in the venue and who posses them, to gauge the health of the community.
 - [ ] _`editor`_ ([#93](https://github.com/reciprocalreviews/reciprocalapp/issues/93)): On the volunteers list, show each volunteer's current token balance in the venue's currency, so editors can see at a glance who is undercompensated and prioritize assignments accordingly.
 - [x] _`editor`_: Change the _`minter`_(s) of the venue, ensuring there is always one

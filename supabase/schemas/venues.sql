@@ -13,8 +13,6 @@ create table if not exists public.venues (
 	currency uuid not null,
 	-- The optional amount of newly minted tokens granted to new volunteers
 	welcome_amount integer not null,
-	-- Submission cost in the venue's currency
-	submission_cost integer default 0 not null,
 	-- One or more scholars who serve as admins of the venue
 	admins uuid[] default '{}'::uuid[] not null,
 	-- Whether the venue is active; null if so, text if not, explaining why.

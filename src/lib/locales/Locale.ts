@@ -262,7 +262,10 @@ export type LocaleText = {
 			};
 			options: {
 				submissionType: OptionsText;
+				previous: OptionsText;
 			};
+			/** Cost message above the authors form; "{type}" and "{cost}" are substituted. */
+			cost: string;
 			error: {
 				balanceCheck: string;
 				notFound: string;
@@ -495,6 +498,7 @@ export type LocaleText = {
 				description: TextFieldText;
 				typeName: TextFieldText;
 				typeDescription: TextFieldText;
+				cost: TextFieldText;
 			};
 			card: {
 				setup: CardText;
@@ -507,6 +511,7 @@ export type LocaleText = {
 				type: string;
 				description: string;
 				revisionOf: string;
+				cost: string;
 			};
 			paragraph: {
 				notFound: string;
@@ -559,7 +564,6 @@ export type LocaleText = {
 			field: {
 				inactiveMessage: TextFieldText;
 				welcomeTokens: TextFieldText;
-				submissionCost: TextFieldText;
 				preferenceLevelLabel: TextFieldText & { invalid: string };
 				newPreferenceLevel: TextFieldText & { invalid: string };
 			};
@@ -1061,7 +1065,6 @@ export type LocaleText = {
 		EditVenueInactive: string;
 		EditVenueAnonymousAssignments: string;
 		EditVenueWelcomeAmount: string;
-		EditVenueSubmissionCost: string;
 		EditVenueDoneVisibilityDays: string;
 		EditVenueTransactionReminderFrequency: string;
 		EditRoleBidding: string;
@@ -1078,6 +1081,7 @@ export type LocaleText = {
 		UpdateSubmissionType: string;
 		CreateSubmissionType: string;
 		EditSubmissionType: string;
+		EditSubmissionTypeCost: string;
 		DeleteSubmissionType: string;
 		CreateCompensation: string;
 		EditCompensation: string;

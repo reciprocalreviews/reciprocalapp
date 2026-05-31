@@ -547,7 +547,6 @@ insert into
 		"url",
 		"currency",
 		"welcome_amount",
-		"submission_cost",
 		"admins",
 		"inactive"
 	)
@@ -559,7 +558,6 @@ values
 		'https://tok.science.org',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'20',
-		'10',
 		'{"d181d165-8b6a-4d79-ad28-a9aece21d813"}',
 		null
 	);
@@ -631,13 +629,23 @@ values
 	);
 
 insert into
-	public.submission_types (id, venue, name, description)
+	public.submission_types (id, venue, name, description, revision_of, submission_cost)
 values
 	(
 		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'Research Article',
-		'This is a new submission of a research article.'
+		'This is a new submission of a research article.',
+		null,
+		10
+	),
+	(
+		'2b7f9c3a-1d4e-4f6a-8b2c-3e5a7d9f1c00',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'Research Article - Revision',
+		'This is a resubmission of a research article that was previously reviewed.',
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		4
 	);
 
 insert into
@@ -942,6 +950,13 @@ values
 insert into public.tokens (currency, scholar, venue)
 select 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac', null, 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6'
 from generate_series(1, 50);
+
+-- Give author1 generous headroom so the submission end-to-end tests (which
+-- spend a submission cost plus a resubmission cost, and may re-run on CI) have
+-- plenty to pay with across a suite run.
+insert into public.tokens (currency, scholar, venue)
+select 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac', 'b8a805bf-0aae-4443-9185-de019a8715cb', null
+from generate_series(1, 100);
 
 insert into
 	public.volunteers (

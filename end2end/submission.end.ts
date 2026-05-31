@@ -18,6 +18,11 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
 	await page.waitForLoadState('networkidle');
 
+	// Submit as a "Research Article" (cost 10, split 5+5 below).
+	await page
+		.getByRole('combobox', { name: 'submission type' })
+		.selectOption({ label: 'Research Article' });
+
 	// Fill in the required submission details. The external ID is unique per
 	// run because the venue+externalid pair is enforced unique in the DB.
 	await page.getByTestId('submission-title').fill('A Study of Reciprocal Review Incentives');
@@ -64,6 +69,96 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 	await page.waitForTimeout(200);
 	await submitButton.click();
 	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 60_000 });
+
+	await logout(page);
+});
+
+test('author can link a resubmission to a prior submission and is charged the resubmission cost', async ({
+	page,
+	context
+}) => {
+	// Two full submission flows back to back, each with several sequential DB
+	// round-trips, so we extend the budget the same way the single-submission
+	// test above does.
+	test.setTimeout(120_000);
+
+	await login('author1@uni.edu', page, context);
+
+	const originalTitle = 'Resubmission Test Original';
+	const originalID = `TOK-ORIG-${Date.now()}`;
+
+	// 1. Create the original submission as the sole author, paying the venue's
+	// regular submission cost of 10 tokens.
+	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	await page.waitForLoadState('networkidle');
+
+	// Submit as a "Research Article" (cost 10).
+	await page
+		.getByRole('combobox', { name: 'submission type' })
+		.selectOption({ label: 'Research Article' });
+	await page.getByTestId('submission-title').fill(originalTitle);
+	await page.getByTestId('submission-manuscript-id').fill(originalID);
+	await page.getByTestId('author-orcid-0').fill(AUTHOR1_ORCID);
+	await page.getByTestId('author-orcid-0').blur();
+	await expect(page.getByTestId('scholar-found-0')).toBeVisible();
+	await page.getByTestId('payment-slider-0').fill('10');
+
+	await page.getByTestId('check-balances').click();
+	await expect(
+		page.locator('text=The authors have sufficient tokens to pay for this submission.')
+	).toBeVisible();
+
+	const submitOriginal = page.getByTestId('submit-submission');
+	await expect(submitOriginal).toBeEnabled({ timeout: 5_000 });
+	await page.waitForTimeout(200);
+	await submitOriginal.click();
+	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 60_000 });
+
+	// 2. Create a resubmission linking the original. Start from the plain
+	// "Research Article" type (cost 10), then let the predecessor pick the type.
+	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	await page.waitForLoadState('networkidle');
+
+	const typePicker = page.getByRole('combobox', { name: 'submission type' });
+	await typePicker.selectOption({ label: 'Research Article' });
+	await expect(page.getByTestId('payment-slider-0')).toHaveAttribute('max', '10');
+
+	// The picker lists the author's prior submissions to this venue. Select the
+	// one we just created (labeled "<external id> — <title>").
+	const picker = page.getByRole('combobox', { name: 'previous submission' });
+	await expect(picker).toBeVisible();
+	await picker.selectOption({ label: `${originalID} — ${originalTitle}` });
+
+	// Linking a predecessor mirrors its external ID into the (now locked)
+	// previous-manuscript-ID field, auto-selects the matching revision type, and
+	// so switches the cost to that type's cost (4).
+	const previousIDField = page.getByTestId('submission-previous-id');
+	await expect(previousIDField).toHaveValue(originalID);
+	await expect(previousIDField).toBeDisabled();
+	await expect(typePicker.locator('option:checked')).toHaveText('Research Article - Revision');
+	await expect(page.getByTestId('payment-slider-0')).toHaveAttribute('max', '4');
+
+	const resubmissionID = `TOK-RESUB-${Date.now()}`;
+	await page.getByTestId('submission-title').fill('Resubmission Test Revised');
+	await page.getByTestId('submission-manuscript-id').fill(resubmissionID);
+	await page.getByTestId('author-orcid-0').fill(AUTHOR1_ORCID);
+	await page.getByTestId('author-orcid-0').blur();
+	await expect(page.getByTestId('scholar-found-0')).toBeVisible();
+	await page.getByTestId('payment-slider-0').fill('4');
+
+	await page.getByTestId('check-balances').click();
+	await expect(
+		page.locator('text=The authors have sufficient tokens to pay for this submission.')
+	).toBeVisible();
+
+	const submitResubmission = page.getByTestId('submit-submission');
+	await expect(submitResubmission).toBeEnabled({ timeout: 5_000 });
+	await page.waitForTimeout(200);
+	await submitResubmission.click();
+	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 60_000 });
+
+	// 3. The resubmission detail page links back to its predecessor by external ID.
+	await expect(page.getByRole('link', { name: originalID })).toBeVisible();
 
 	await logout(page);
 });
