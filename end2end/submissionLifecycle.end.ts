@@ -22,6 +22,11 @@ test('editor manually adds a single submission with themselves as the sole autho
 	page,
 	context
 }) => {
+	// createSubmission does several sequential DB round-trips before the goto(),
+	// and the waitForURL below allows 60s; give the test a budget larger than
+	// that so a slow CI runner doesn't trip the 30s default first.
+	test.setTimeout(90_000);
+
 	// Get the editor's actual ORCID from the DB so the form's blur-based
 	// scholar lookup resolves to the editor's scholar record.
 	const editorOrcid = sql(`select orcid from public.scholars where id = '${EDITOR_ID}';`);

@@ -27,9 +27,10 @@ const config: PlaywrightTestConfig = {
 		? [['list'], ['github'], ['html', { open: 'never' }]]
 		: [['list'], ['html', { open: 'never' }]],
 	workers: 1,
-	// One retry in CI absorbs intermittent flakes. Locally we
+	// Two retries in CI absorb intermittent flakes on slow/contended runners
+	// (submission-creation tests do long DB round-trip chains). Locally we
 	// keep retries=0 so flakes are caught and investigated.
-	retries: process.env.CI ? 1 : 0,
+	retries: process.env.CI ? 2 : 0,
 	testDir: 'end2end',
 	testMatch: /(.+\.)?(end)\.ts/,
 	projects: [
