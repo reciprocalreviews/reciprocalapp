@@ -20,6 +20,12 @@ select plan(10);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
+-- Inserting an email fires the send_on_email_insert trigger, which posts to the
+-- Resend edge function via net.http_post using the `supabase_url` vault secret
+-- (from PUBLIC_SUPABASE_URL). The RLS CI job doesn't set that env, so the URL is
+-- null and net.http_post raises. RLS visibility doesn't depend on the email
+-- actually being dispatched, so disable the trigger for this rolled-back test.
+alter table public.emails disable trigger send_on_email_insert;
 select tests.create_scholar('email_recipient@test.local') as recipient \gset
 select tests.create_scholar('email_sender@test.local')    as sender    \gset
 select tests.create_scholar('email_vadmin@test.local')    as vadmin    \gset
