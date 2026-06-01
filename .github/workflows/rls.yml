@@ -1,0 +1,27 @@
+name: RLS Tests
+
+on:
+  # Run as its own check on pull requests,
+  pull_request:
+  # allow the deploy workflows to call it,
+  workflow_call:
+  # and allow manual runs.
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: supabase/setup-cli@v2
+        with:
+          version: latest
+
+      - name: Start Supabase local development setup
+        run: supabase start --exclude storage-api,imgproxy,logflare,supavisor,vector,edge-runtime
+
+      - name: Run pgTAP RLS tests
+        run: supabase test db

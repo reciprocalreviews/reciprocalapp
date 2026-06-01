@@ -40,10 +40,9 @@ create index tokens_venue_index on public.tokens using btree (venue);
 -- Security
 alter table public.tokens ENABLE row LEVEL SECURITY;
 
-create policy "tokens are public" on public.tokens for
+create policy "tokens are visible to authenticated scholars" on public.tokens for
 select
-	to authenticated,
-	anon using (true);
+	to authenticated using (true);
 
 create policy "only minters can create tokens" on public.tokens for INSERT to authenticated
 with
@@ -65,15 +64,14 @@ with
 		)
 	);
 
-create policy "only token owners, venue admins, and minters can update a token" on public.tokens
+-- Token ownership may only be changed by the owning scholar, the owning venue's
+-- admins, or a priority-0 role holder at the owning venue. Currency minters
+-- mint tokens (INSERT) but must not move ownership of existing tokens.
+create policy "owners, admins, and priority-0 roles can update tokens" on public.tokens
 for update
 	to authenticated using (
 		(
 			(
-				(venue is not null)
-				and public.isAdmin (venue)
-			)
-			or (
 				(scholar is not null)
 				and (
 					(
@@ -83,18 +81,10 @@ for update
 				)
 			)
 			or (
-				(
-					select
-						auth.uid () as uid
-				)=any (
-					(
-						select
-							currencies.minters
-						from
-							public.currencies
-						where
-							(currencies.id=tokens.currency)
-					)::uuid[]
+				(venue is not null)
+				and (
+					public.isAdmin (venue)
+					or public.isPriorityZero (venue)
 				)
 			)
 		)

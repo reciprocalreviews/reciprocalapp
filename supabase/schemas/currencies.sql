@@ -27,7 +27,7 @@ add constraint "currencies_pkey" primary key ("id");
 -- Security
 alter table "public"."currencies" ENABLE row LEVEL SECURITY;
 
-create policy "anyone can create currencies" on "public"."currencies" for INSERT to authenticated
+create policy "only stewards can create currencies" on "public"."currencies" for INSERT to authenticated
 with
 	check ("public"."issteward" ());
 

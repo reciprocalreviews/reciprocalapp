@@ -41,11 +41,10 @@ with
 		)
 	);
 
--- Anyone can see compensation.
-create policy "anyone can read compensation" on public.compensation for
+-- Authenticated scholars can see compensation (not exposed to anonymous visitors).
+create policy "authenticated scholars can read compensation" on public.compensation for
 select
-	to anon,
-	authenticated using (true);
+	to authenticated using (true);
 
 -- Venue admins can update compensation for their venue.
 create policy "venue admins can update compensation" on public.compensation

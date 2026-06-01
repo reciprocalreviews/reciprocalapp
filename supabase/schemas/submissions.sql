@@ -44,9 +44,17 @@ grant all on table public.submissions to "authenticated";
 
 grant all on table public.submissions to "service_role";
 
--- Lock the completion state from direct UPDATEs. Only the
--- mark_submission_done RPC (SECURITY DEFINER) may write these columns.
-revoke update (status, completed_at) on public.submissions from authenticated;
+-- Lock the completion state (status, completed_at) from direct UPDATEs: only the
+-- mark_submission_done RPC (SECURITY DEFINER) may write them. A column-level
+-- revoke is ineffective while authenticated holds the TABLE-level UPDATE granted
+-- by `grant all` above, so remove the table-level UPDATE and re-grant only the
+-- editable columns. (The author list among these is further gated to priority-0
+-- assigned scholars by the enforce_submission_author_edits trigger.)
+revoke update on public.submissions from authenticated;
+
+grant update (
+	venue, externalid, previousid, previous, submission_type, authors, payments, transactions, title, expertise
+) on public.submissions to authenticated;
 
 --------------------------------------
 -- Indexes

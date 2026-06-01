@@ -49,6 +49,32 @@ create index role_volunteer_index on public.volunteers using btree (roleid);
 create index scholar_volunteer_index on public.volunteers using btree (scholarid);
 
 --------------------------------------
+-- Functions
+-- True if the current scholar holds an accepted priority-0 role at the given venue.
+-- Used by the tokens UPDATE policy to grant token-management authority.
+create or replace function public.isPriorityZero (_venueid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
+set
+	"search_path" to '' as $$
+	select exists (
+		select 1
+		from public.volunteers v
+		join public.roles r on r.id = v.roleid
+		where v.scholarid = (select auth.uid())
+			and v.accepted = 'accepted'
+			and r.venueid = _venueid
+			and r.priority = 0
+	);
+$$;
+
+alter function public.isPriorityZero (_venueid uuid) OWNER to postgres;
+
+grant all on FUNCTION public.isPriorityZero (_venueid uuid) to anon;
+
+grant all on FUNCTION public.isPriorityZero (_venueid uuid) to authenticated;
+
+grant all on FUNCTION public.isPriorityZero (_venueid uuid) to service_role;
+
+--------------------------------------
 -- Security
 alter table public.volunteers OWNER to postgres;
 

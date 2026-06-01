@@ -9,6 +9,8 @@ create table if not exists public.emails (
 	event text not null,
 	-- The optional scholar to whom the email was sent
 	scholar uuid,
+	-- The optional scholar whose action sent the email (null for system-generated emails)
+	sender uuid,
 	-- The optional venue for which the email was sent
 	venue uuid,
 	-- When the email was sent
@@ -36,6 +38,9 @@ alter table only public.emails
 add constraint "emails_scholar_fkey" foreign KEY (scholar) references public.scholars (id);
 
 alter table only public.emails
+add constraint "emails_sender_fkey" foreign KEY (sender) references public.scholars (id);
+
+alter table only public.emails
 add constraint "emails_venue_fkey" foreign KEY (venue) references public.venues (id);
 
 --------------------------------------
@@ -50,7 +55,7 @@ create index emails_venue_index on public.emails using btree (venue);
 --
 alter table public.emails ENABLE row LEVEL SECURITY;
 
-create policy "recipients and venue admins can see the emails sent" on public.emails for
+create policy "senders, recipients, and venue admins can see the emails sent" on public.emails for
 select
 	to authenticated using (
 		(
@@ -59,6 +64,12 @@ select
 					select
 						auth.uid () as uid
 				)=scholar
+			)
+			or (
+				(
+					select
+						auth.uid () as uid
+				)=sender
 			)
 			or (
 				(venue is not null)

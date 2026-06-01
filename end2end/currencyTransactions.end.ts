@@ -6,6 +6,7 @@ const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
 const CURRENCY_ID = 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac';
 const MINTER_EMAIL = 'r1@uni.edu';
 const EDITOR_ID = 'd181d165-8b6a-4d79-ad28-a9aece21d813';
+const EDITOR_EMAIL = 'editor@uni.edu';
 const RECIPIENT_EMAIL = 'author2@uni.edu';
 
 function sql(statement: string): string {
@@ -57,12 +58,14 @@ test('minter mints new tokens; the venue reserve increases', async ({ page, cont
 	expect(mintTxnCount).toBeGreaterThanOrEqual(1);
 });
 
-test('minter approves a pending transaction; status moves to approved and tokens transfer', async ({
+test('an editor approves a pending venue transfer; status moves to approved and tokens transfer', async ({
 	page,
 	context
 }) => {
-	// Seed a proposed venue→scholar transaction created by the EDITOR (not
-	// the minter), so the minter is a third party performing the approval.
+	// Seed a proposed venue→scholar transfer. Venue reserve payouts are spent
+	// and approved by the venue's editors/admins (DESIGN.md L107/L390); currency
+	// minters only mint and approve mints, and may not move token ownership
+	// (supabase/schemas/tokens.sql), so the editor performs the approval here.
 	const recipientID = sql(`select id from public.scholars where email = '${RECIPIENT_EMAIL}';`);
 	const recipientBalanceBefore = Number(
 		sql(
@@ -70,13 +73,25 @@ test('minter approves a pending transaction; status moves to approved and tokens
 		)
 	);
 
+	// Seed three real tokens into the venue reserve and reference them directly,
+	// so approval is a pure transfer of existing reserve tokens. (Approving a
+	// placeholder-token transfer would force a mint, which is a minter-only
+	// action — and minting into a venue you administer is self-dealing.)
+	const reserveTokenIds = sql(
+		`insert into public.tokens (currency, venue) values ('${CURRENCY_ID}','${VENUE_ID}'),('${CURRENCY_ID}','${VENUE_ID}'),('${CURRENCY_ID}','${VENUE_ID}') returning id;`
+	)
+		.split('\n')
+		.map((s) => s.trim())
+		.filter(Boolean);
+	const tokensLiteral = `array[${reserveTokenIds.map((id) => `'${id}'`).join(',')}]::uuid[]`;
+
 	const purpose = `e2e approve test ${Date.now()}`;
 	const txnID = sql(
-		`insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${recipientID}', null, array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[3]), '${CURRENCY_ID}', '${purpose}', 'proposed') returning id;`
+		`insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${recipientID}', null, ${tokensLiteral}, '${CURRENCY_ID}', '${purpose}', 'proposed') returning id;`
 	);
 	expect(txnID).toMatch(/^[0-9a-f-]+$/);
 
-	await login(MINTER_EMAIL, page, context);
+	await login(EDITOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_ID}/transactions`);
 	await page.waitForLoadState('networkidle');
 

@@ -47,6 +47,19 @@ grant all on table public.transactions to "authenticated";
 
 grant all on table public.transactions to "service_role";
 
+-- A transaction is an immutable record of history. Only its status, the
+-- accompanying decline fields, and `tokens` (the null-UUID placeholder until the
+-- tokens are assigned on approval) may change after creation. `grant all` above
+-- confers a TABLE-level UPDATE that a column-level revoke cannot subtract, so
+-- remove the table-level UPDATE and re-grant only the mutable columns.
+revoke
+update on public.transactions
+from
+	authenticated;
+
+grant
+update (status, tokens, decliner, decline_reason) on public.transactions to authenticated;
+
 alter table only public.transactions
 add constraint transactions_pkey primary key (id);
 

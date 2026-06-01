@@ -1883,10 +1883,18 @@ export default class SupabaseCRUD extends CRUD {
 
 		const { subject, message } = renderEmail(template, args);
 
+		// The scholar whose action is sending these emails, so they can later see
+		// what they sent (null when sent without an authenticated user).
+		const {
+			data: { user }
+		} = await this.client.auth.getUser();
+		const sender = user?.id ?? null;
+
 		// Insert the emails into the database, which will trigger the edge function to send the email via Resend.
 		const { error: emailInsertError } = await this.client.from('emails').insert(
 			emails.map((email) => ({
 				scholar: typeof email === 'string' ? null : email.id,
+				sender,
 				email: typeof email === 'string' ? email : email.email,
 				event: template,
 				venue: null,

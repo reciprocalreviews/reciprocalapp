@@ -104,7 +104,7 @@ There are several key types of data in RR.
 - [x] Scholars can spend `Token`s to submit manuscripts for peer review.
 - [x] Scholars can also have _`admin`_ status on a `Venue`, which gives them the ability to manage the configuration of the venue `Venue`.
 - [x] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
-- [x] An individual scholar cannot be both an _`editor`_ and a _`minter`_. However, editors and role approvers can spend a `Venue`'s token reserve directly (without minter approval). This separation prevents anyone with spending authority from also creating new tokens — the minter check is the only oversight on currency supply.
+- [x] An individual scholar cannot be both an _`editor`_ and a _`minter`_. However, editors and role approvers can spend a `Venue`'s token reserve directly (without minter approval). This separation prevents anyone with spending authority from also creating new tokens — the minter check is the only oversight on currency supply. Correspondingly, _`minter`_s mint new tokens and approve mints, but cannot move the ownership of existing tokens; reserve payouts are executed by a `Venue`'s editors/admins and priority-0 role holders.
 - [x] Scholars can specify an email address for communication.
 - [x] Anyone can view a `Scholar`'s record, but only `Scholars` can create, update, or delete their record.
 - [ ] ([#87](https://github.com/reciprocalreviews/reciprocalapp/issues/87)) Resolve the design ambiguity between email-as-identifier and ORCID-as-identifier, including how RR should behave when a scholar's email collides with another scholar's username/ORCID record.
@@ -175,7 +175,7 @@ The authoritative schema lives in [`supabase/schemas/tokens.sql`](supabase/schem
 A `Transaction` represents an exchange of tokens for some purpose, such as submitting something for review, compensation for a review, or a gift.
 
 - [x] `Transaction`s cannot be deleted; they are a permanent record
-- [x] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable.
+- [x] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable. They are also immutable once recorded: only the status and the accompanying approval/decline fields may change, so a transaction remains a faithful record of history.
 
 The authoritative schema lives in [`supabase/schemas/transactions.sql`](supabase/schemas/transactions.sql).
 
@@ -191,7 +191,7 @@ A `Submission` represents a manuscript undergoing peer review.
 - [x] `Submission`s can be added manually by \_`editor`\_s.
 - [x] Bids on submissions can be approved by approvers
 - [x] Bids on submissions can be approved by roles that are set to be approving roles for another role (e.g., Associate Editors can approve bids from Reviewers)
-- [x] Scholars can declare conflicts on submissions visible to them, preventing them from seeing those submissions' assignments if a venue is set to preserve reviewer anonymity
+- [x] A submission's assignments are visible only to the assigned scholar, the role's approver chain (and venue admins), and — when a venue runs open (non-anonymous) review — the submission's authors. Scholars can declare conflicts on submissions; a declared conflict always hides that submission's assignments from the conflicted scholar, including in open review.
 - [x] A `Submission` can only be marked **done** once every approved non-editor assignment on it has been compensated, ensuring all levels of review are finished and paid before the submission is considered complete.
 - [x] Marking a submission done is the act by which the top-level editor (priority-0 role) self-compensates. It is one action, not two — the editor cannot compensate themselves in isolation, and the submission cannot move to done without that compensation happening.
 - [x] **Done is terminal.** A submission marked done cannot be reopened; this preserves the integrity of the completion record and the editor's self-compensation transaction.

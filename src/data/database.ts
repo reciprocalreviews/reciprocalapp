@@ -206,6 +206,7 @@ export type Database = {
           id: string
           message: string
           scholar: string | null
+          sender: string | null
           subject: string
           time_sent: string
           venue: string | null
@@ -216,6 +217,7 @@ export type Database = {
           id?: string
           message: string
           scholar?: string | null
+          sender?: string | null
           subject: string
           time_sent?: string
           venue?: string | null
@@ -226,6 +228,7 @@ export type Database = {
           id?: string
           message?: string
           scholar?: string | null
+          sender?: string | null
           subject?: string
           time_sent?: string
           venue?: string | null
@@ -234,6 +237,13 @@ export type Database = {
           {
             foreignKeyName: "emails_scholar_fkey"
             columns: ["scholar"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emails_sender_fkey"
+            columns: ["sender"]
             isOneToOne: false
             referencedRelation: "scholars"
             referencedColumns: ["id"]
@@ -890,10 +900,14 @@ export type Database = {
       isadmin: { Args: { _venueid: string }; Returns: boolean }
       isapprover: { Args: { _roleid: string }; Returns: boolean }
       isassigned: { Args: { _submissionid: string }; Returns: boolean }
+      isauthor: { Args: { _submissionid: string }; Returns: boolean }
+      isconflicted: { Args: { _submissionid: string }; Returns: boolean }
+      isinapproverchain: { Args: { _roleid: string }; Returns: boolean }
       isminter: {
         Args: { _currencyid: string; _scholarid: string }
         Returns: boolean
       }
+      ispriorityzero: { Args: { _venueid: string }; Returns: boolean }
       issteward: { Args: never; Returns: boolean }
       mark_submission_done: {
         Args: {

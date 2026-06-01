@@ -17,6 +17,9 @@ jobs:
     secrets:
       TEST_ENV: ${{ secrets.TEST_ENV }}
 
+  rls-tests:
+    uses: ./.github/workflows/rls.yml
+
   migrate:
     runs-on: ubuntu-latest
 
@@ -26,7 +29,7 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ secrets.STAGING_PROJECT_ID }}
 
     # Only run this if tests were successful
-    needs: [unit-tests, playwright, locale-validation]
+    needs: [unit-tests, playwright, locale-validation, rls-tests]
 
     steps:
       - uses: actions/checkout@v5
@@ -46,7 +49,7 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     # Only deploy after tests pass and migrations are applied
-    needs: [unit-tests, playwright, locale-validation, migrate]
+    needs: [unit-tests, playwright, locale-validation, rls-tests, migrate]
 
     steps:
       - uses: actions/checkout@v5

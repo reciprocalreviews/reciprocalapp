@@ -45,10 +45,9 @@ grant all on table public.preference_levels to authenticated;
 
 grant all on table public.preference_levels to service_role;
 
-create policy "anyone can view preference levels" on public.preference_levels for
+create policy "authenticated scholars can view preference levels" on public.preference_levels for
 select
-	to authenticated,
-	anon using (true);
+	to authenticated using (true);
 
 create policy "only admins can create preference levels" on public.preference_levels for INSERT to authenticated
 with

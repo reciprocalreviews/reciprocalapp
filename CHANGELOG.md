@@ -12,7 +12,15 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - **Submission cost is now set per submission type** instead of venue-wide, since each type is a different amount of work. Admins edit each type's cost in the submission types table on the venue dashboard (the venue-wide submission-cost setting is gone). Because a resubmission is its own revision type, it simply carries its own cost. (#124)
 
+- Tightened access control across the database. A submission's assigned reviewers are now visible only to the assignee, the role's approver chain, and venue admins — plus the submission's authors when a venue runs **open (non-anonymous) review** — and a declared conflict always hides that submission's assignments. Currency **minters can now only mint tokens, not move existing ones** (reserve payouts are made by editors), and token balances, compensation amounts, and bid-preference levels are no longer visible to signed-out visitors.
+
+- Added a full-coverage test suite of all table's RLS rules (#79).
+
 - Updated internal tooling for stability.
+
+### Fixed
+
+- Completed submissions and recorded transactions are now genuinely immutable: a submission's `status`/`completed_at` and a transaction's identity fields can no longer be edited directly through the API (a previous column-permission lock was silently ineffective). (#79)
 
 ## 0.4.0 - 2026-05-24
 

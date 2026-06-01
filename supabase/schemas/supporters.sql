@@ -37,7 +37,7 @@ create policy "anyone can support proposals" on "public"."supporters" for INSERT
 with
 	check (true);
 
-create policy "admins can update proposals" on "public"."supporters"
+create policy "supporters can update their own support" on "public"."supporters"
 for update
 	to authenticated using (
 		(
