@@ -20,8 +20,13 @@ jobs:
         with:
           version: latest
 
-      - name: Start Supabase local development setup
-        run: supabase start --exclude storage-api,imgproxy,logflare,supavisor,vector,edge-runtime
+      # The RLS tests (pg_prove via `supabase test db`) connect straight to
+      # Postgres on 54322, so we boot only the db and the auth container. Auth
+      # (gotrue) is kept because its startup migrations create the auth.users
+      # table that the test fixtures and seed.sql insert into; everything else
+      # (PostgREST, Kong, Realtime, Studio, edge runtime, etc.) is unused here.
+      - name: Start Supabase (Postgres + auth only)
+        run: supabase start --exclude storage-api,imgproxy,logflare,supavisor,vector,edge-runtime,kong,postgrest,realtime,studio,postgres-meta,mailpit
 
       - name: Run pgTAP RLS tests
         run: supabase test db
