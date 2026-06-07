@@ -210,19 +210,19 @@ Vercel's automatic git-deploys are **disabled** for `dev` and `main` (see [verce
 Each branch push triggers a workflow that runs jobs in this order:
 
 ```
-[unit-tests, playwright, locale-validation]   ── parallel
+[unit-tests, playwright, locale-validation, rls-tests]   ── parallel
               │
-              ▼ all pass
+              ▼ (prod: all pass · staging: not gated)
            migrate         ── supabase db push
               │
-              ▼ pass
+              ▼
            vercel          ── vercel pull → build → deploy
 ```
 
-If any test fails, neither the Supabase migration nor the Vercel deploy runs. Migrations are applied before the Vercel deploy so schema changes are in place before the code that depends on them goes live.
+Migrations are applied before the Vercel deploy so schema changes are in place before the code that depends on them goes live.
 
-- `dev` → [.github/workflows/staging.yml](.github/workflows/staging.yml) deploys to a Vercel **preview** environment against the staging Supabase project.
-- `main` → [.github/workflows/production.yml](.github/workflows/production.yml) deploys to Vercel **production** against the production Supabase project.
+- `main` → [.github/workflows/production.yml](.github/workflows/production.yml) deploys to Vercel **production** against the production Supabase project. Here `migrate`/`vercel` **gate on the tests** — if any test fails, neither the migration nor the deploy runs.
+- `dev` → [.github/workflows/staging.yml](.github/workflows/staging.yml) deploys to a Vercel **preview** environment against the staging Supabase project. Staging is a throwaway test target, so its deploy is **not gated** on the tests: they still run in parallel for signal, but a red e2e/unit/rls run won't block the preview (it keeps deploys fast and lets the slow e2e suite finish out-of-band). The gate is what keeps a broken change from reaching `main`/production.
 
 Required GitHub secrets: `SUPABASE_ACCESS_TOKEN`, `STAGING_DB_PASSWORD`, `STAGING_PROJECT_ID`, `PRODUCTION_DB_PASSWORD`, `PRODUCTION_PROJECT_ID`, `TEST_ENV`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`. Per-environment runtime config (Supabase URL, anon key, Resend key, etc.) lives in Vercel's environment variable settings and is pulled at build time by `vercel pull`.
 
@@ -232,21 +232,12 @@ Required GitHub secrets: `SUPABASE_ACCESS_TOKEN`, `STAGING_DB_PASSWORD`, `STAGIN
 - **Integration.** Playwright, Chromium only. Files in `end2end/`. Run with `npm run test:end`. Needs a local Supabase running (`npm start`).
 - **Combined.** `npm test` runs end2end then unit.
 
-### E2E conventions and infrastructure
+E2E specifics:
 
-- **Shared seed state.** Every spec runs against the one local Supabase DB seeded by [supabase/seed.sql](supabase/seed.sql). Tests reference seeded rows through the typed `SEED` constants and the single `sql()` helper in [end2end/test-utils.ts](end2end/test-utils.ts) — don't redeclare raw seed UUIDs or `docker exec psql` wrappers per file. A test that mutates shared seed rows (venue settings, the seed submissions, the venue token reserve, scholar balances) must restore them, typically in a `finally`.
-- **Local reset.** [end2end/global-setup.ts](end2end/global-setup.ts) runs `supabase db reset` once before each local `test:end` invocation, so runs are independent of accumulated state from prior runs. Skipped in CI (which already starts a fresh DB). This is why you don't need to `npm run reset` by hand before testing.
-- **Hydration barriers.** This is an SSR app: `waitForLoadState('networkidle')` after a navigation doubles as a hydration barrier. Keep it before Svelte **interactions** (clicks that expand cards, bound `fill`s) — removing it makes the page interactive-looking (SSR) before handlers are wired, which silently drops the action. It's only safe to drop before a pure **assertion**.
-- **Auth.** `login()`/`logout()` in [src/routes/login.ts](src/routes/login.ts) drive the real email-OTP flow via Mailpit, with jittered-backoff retries so concurrent/repeated logins don't trip GoTrue's send rate limit.
-- **Slow flows.** Submission-creation tests do several sequential DB round-trips before the client redirect; they poll the DB for the created row before `waitForURL` (clear failure signal) and carry larger `test.setTimeout` budgets.
-
-### CI execution ([.github/workflows/playwright.yml](.github/workflows/playwright.yml))
-
-Playwright is a reusable workflow called by the staging/production pipelines. It is **sharded** across a runner matrix (`SHARD_TOTAL` shards, `--shard=i/N`): each shard is its own runner with its own fresh Supabase, so shards never contend for the DB and there are no port collisions. Sharding splits by whole file (`fullyParallel` is off), so the wall-clock floor is per-runner setup plus the single slowest spec file — past that, more shards only add runner-minutes. To resize, edit `SHARD_TOTAL`, the `matrix.shard` list, and keep them in sync.
-
-- **Image cache.** The Supabase Docker images are cached (keyed on `config.toml`) so a cold `supabase start` doesn't re-pull ~3–5 min of images on every shard.
-- **Reports.** Each shard emits a `blob` report; a dependent `merge-reports` job stitches them into one `playwright-report` HTML artifact.
-- CI keeps `retries: 2` to absorb the occasional slow-runner flake.
+- **Shared seed, shared helpers.** All specs share the one Supabase DB seeded by [supabase/seed.sql](supabase/seed.sql); use the `SEED` constants and `sql()` helper from [end2end/test-utils.ts](end2end/test-utils.ts) rather than re-declaring UUIDs or `psql` wrappers. Restore any shared row you mutate (usually in a `finally`). [end2end/global-setup.ts](end2end/global-setup.ts) resets the DB before each local run, so no manual `npm run reset` is needed.
+- **Hydration barrier.** Keep `waitForLoadState('networkidle')` before a Svelte interaction (card-expand click, bound `fill`) — on this SSR app the page looks ready before handlers are wired, so an early click is silently dropped. Only safe to drop before a pure assertion.
+- **Auth** is the real email-OTP flow via Mailpit (`login()`/`logout()` in [src/routes/login.ts](src/routes/login.ts)), with backoff retries against GoTrue's rate limit.
+- **CI** ([.github/workflows/playwright.yml](.github/workflows/playwright.yml)) shards across a runner matrix (`--shard`), each shard its own fresh Supabase. Resize via `SHARD_TOTAL` + the `matrix.shard` list (keep in sync); floor is per-runner setup + the slowest single file. Supabase images are cached; `merge-reports` stitches shard blobs into one HTML report on failure; `retries: 2`.
 
 ## Local development
 
