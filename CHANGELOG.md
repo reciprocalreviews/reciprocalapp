@@ -7,6 +7,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Changed
 
 - Updated internal tooling for stability.
+- Reduced end-to-end test and deploy time to ~5 minutes, while also increasing reliability.
 
 ## 0.4.1 - 2026-05-31
 
