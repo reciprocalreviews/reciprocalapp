@@ -2,17 +2,13 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { PUBLIC_ENV } from '$env/static/public';
-	import Button from '$lib/components/Button.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import { setDB } from '$lib/data/CRUD';
 	import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
-	import type { AuthError, PostgrestError } from '@supabase/supabase-js';
 	import { onMount, setContext } from 'svelte';
 	import SupabaseAuth, { setAuth } from './Auth.svelte';
 	import { setLocaleContext } from './Contexts';
-	import { getFeedback, removeError, type Level } from './feedback.svelte';
 	import type PageHeader from './PageHeader';
 
 	let { data, children } = $props();
@@ -28,8 +24,6 @@
 
 	// Set client side database cache.
 	setDB(() => crud);
-
-	let feedback = $derived(getFeedback());
 
 	const inProd = PUBLIC_ENV === 'prod';
 
@@ -63,37 +57,10 @@
 	setContext('pageHeader', pageHeader);
 </script>
 
-{#snippet MessageBox(
-	message: string,
-	level: Level,
-	index: number,
-	error: PostgrestError | AuthError | undefined
-)}
-	<div class="feedback {level}" data-testid="feedback-{level}">
-		<div>
-			<span>{message}</span>
-			{#if error}
-				<div class="detail">{error.message}</div>
-			{/if}
-		</div>
-		<Button action={() => removeError(index)} strings={(l) => l.component.notification.dismiss} />
-	</div>
-{/snippet}
-
-{#if PUBLIC_ENV === 'test'}
-	<Feedback error round={false} inline={false} text={(l) => l.header.feedback.testWarning}
-	></Feedback>
-{/if}
-
 {#if !inProd}
 	<Nav breadcrumbs={breadcrumbs.breadcrumbs}></Nav>
 {/if}
 <main>
-	<section class="notifications" aria-live="assertive">
-		{#each feedback as item, index}
-			{@render MessageBox(item.message, item.level, index, item.error)}
-		{/each}
-	</section>
 	{@render children()}
 </main>
 <Footer />
@@ -106,42 +73,5 @@
 		gap: var(--spacing);
 		margin: auto;
 		max-width: var(--page-width);
-	}
-
-	.notifications {
-		z-index: 2;
-		position: fixed;
-		top: var(--spacing);
-		left: var(--spacing);
-		right: var(--spacing);
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing);
-	}
-
-	.feedback {
-		display: flex;
-		flex-direction: row;
-		align-items: baseline;
-		justify-content: space-between;
-		color: var(--background-color);
-		padding: var(--spacing);
-		border: var(--border-width) solid var(--border-color);
-		border-radius: var(--roundedness);
-		background: var(--error-color);
-		box-shadow: var(--spacing) var(--spacing) var(--spacing) var(--border-color);
-	}
-
-	.success {
-		background: var(--salient-color);
-	}
-
-	.warning {
-		background: var(--focus-color);
-	}
-
-	.detail {
-		font-family: monospace;
-		font-size: var(--small-font-size);
 	}
 </style>

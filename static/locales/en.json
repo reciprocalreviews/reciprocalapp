@@ -31,6 +31,19 @@
 			"feedback": "Feedback"
 		}
 	},
+	"banner": {
+		"beta": {
+			"lead": "We're in **beta** and need your feedback. [Report an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose) or [learn more](https://github.com/reciprocalreviews)."
+		},
+		"update": {
+			"message": "A new version is available.",
+			"updates": "See what changed",
+			"refresh": {
+				"tip": "Reload the page to load the latest version",
+				"label": "Refresh"
+			}
+		}
+	},
 	"notification": {
 		"emailed": "{recipient} was emailed \"{subject}\""
 	},

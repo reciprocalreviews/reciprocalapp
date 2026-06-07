@@ -88,6 +88,52 @@
         "$schema": {
           "type": "string"
         },
+        "banner": {
+          "additionalProperties": false,
+          "properties": {
+            "beta": {
+              "additionalProperties": false,
+              "properties": {
+                "lead": {
+                  "description": "Lead text explaining that the platform is in beta and wants feedback.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "lead"
+              ],
+              "type": "object"
+            },
+            "update": {
+              "additionalProperties": false,
+              "properties": {
+                "message": {
+                  "description": "Message shown when a new version has been deployed.",
+                  "type": "string"
+                },
+                "refresh": {
+                  "$ref": "#/definitions/ButtonText",
+                  "description": "Button to reload the page and load the new version."
+                },
+                "updates": {
+                  "description": "Label for the link to the updates page.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message",
+                "updates",
+                "refresh"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "beta",
+            "update"
+          ],
+          "type": "object"
+        },
         "component": {
           "additionalProperties": false,
           "properties": {
@@ -5114,6 +5160,7 @@
         "shorthand",
         "header",
         "footer",
+        "banner",
         "notification",
         "widget",
         "page",

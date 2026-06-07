@@ -83,6 +83,20 @@ export type LocaleText = {
 			feedback: string;
 		};
 	};
+	banner: {
+		beta: {
+			/** Lead text explaining that the platform is in beta and wants feedback. */
+			lead: string;
+		};
+		update: {
+			/** Message shown when a new version has been deployed. */
+			message: string;
+			/** Label for the link to the updates page. */
+			updates: string;
+			/** Button to reload the page and load the new version. */
+			refresh: ButtonText;
+		};
+	};
 	notification: {
 		emailed: string;
 	};
@@ -1147,4 +1161,3 @@ export type LocaleText = {
 };
 
 export { type LocaleText as default };
-

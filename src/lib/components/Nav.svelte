@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import Banners from '$lib/components/Banners.svelte';
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 	import type PageHeader from '$routes/PageHeader';
@@ -82,6 +83,7 @@
 			{/if}
 		</div>
 	</div>
+	<Banners />
 	{#if pageHeader?.title}
 		<div class="page-header">
 			<h1 class="page-header-title" class:wobble={pageHeader.wobble} data-testid="page-header">
@@ -125,6 +127,7 @@
 		padding-left: calc(var(--spacing) / 2);
 		padding-right: var(--spacing);
 		padding-top: calc(var(--spacing) / 2);
+		padding-bottom: calc(var(--spacing) / 2);
 		display: flex;
 		flex-direction: row;
 		flex-wrap: wrap;
@@ -159,7 +162,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-half);
-		padding-top: var(--spacing-half);
+		padding-top: 0;
 		background: var(--background-color);
 		margin-bottom: var(--spacing);
 		overflow-x: clip;

@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.4.2 - 2026-06-07
 
+### Added
+
+- Beta mode (#135).
+
 ### Changed
 
 - Updated internal tooling for stability.
