@@ -1,18 +1,11 @@
-import { execSync } from 'child_process';
 import { expect, test } from '@playwright/test';
 import { login } from '../src/routes/login';
+import { SEED, sql } from './test-utils';
 
-const STEWARD_EMAIL = 'editor@uni.edu'; // editor@uni.edu has steward=true in seed
-const PROPOSER_EMAIL = 'r2@uni.edu';
-const SUPPORTER_EMAIL = 'r3@uni.edu';
-const APPROVAL_MINTER_EMAIL = 'author2@uni.edu';
-
-function sql(statement: string): string {
-	return execSync(
-		`docker exec supabase_db_reciprocalapp psql -U postgres -d postgres -t -A -q -c ${JSON.stringify(statement)}`,
-		{ encoding: 'utf-8' }
-	).trim();
-}
+const STEWARD_EMAIL = SEED.scholars.editor.email; // editor@uni.edu has steward=true in seed
+const PROPOSER_EMAIL = SEED.scholars.r2.email;
+const SUPPORTER_EMAIL = SEED.scholars.r3.email;
+const APPROVAL_MINTER_EMAIL = SEED.scholars.author2.email;
 
 /** Insert a fresh pending proposal via SQL and return its ID. Used by
  * tests that operate on a proposal but don't need to test the propose-form
@@ -30,7 +23,6 @@ test('anonymous visitor sees proposed venues on /venues', async ({ page }) => {
 	seedPendingProposal(title, [STEWARD_EMAIL], [APPROVAL_MINTER_EMAIL]);
 
 	await page.goto('/venues');
-	await page.waitForLoadState('networkidle');
 
 	// The proposal title appears in the proposals section.
 	await expect(page.getByText(title).first()).toBeVisible();
@@ -178,7 +170,6 @@ test('steward approves a proposal; the live venue becomes reachable at /venue/[i
 
 	// The live venue is reachable.
 	await page.goto(`/venue/${venueID}`);
-	await page.waitForLoadState('networkidle');
 	await expect(page.getByText(title).first()).toBeVisible();
 });
 

@@ -25,11 +25,16 @@ const config: PlaywrightTestConfig = {
 	},
 	// `list` prints each test name with its pass/fail status as it runs, so
 	// CI logs show progress instead of jumping from "Running N tests" to the
-	// final summary. `html` keeps producing the rich report artifact, and
-	// `github` adds inline annotations on the PR/run page when tests fail.
+	// final summary. In CI we shard across runners (see playwright.yml), so each
+	// shard emits a `blob` report; a downstream merge-reports job stitches the
+	// shards into one HTML report. `github` adds inline PR annotations on failure.
+	// Locally we keep the self-contained HTML report.
 	reporter: process.env.CI
-		? [['list'], ['github'], ['html', { open: 'never' }]]
+		? [['list'], ['github'], ['blob']]
 		: [['list'], ['html', { open: 'never' }]],
+	// One worker per process. Parallelism comes from sharding across runners in
+	// CI (each shard = its own Supabase). `fullyParallel` is intentionally left
+	// off so sharding splits by whole file, preserving intra-file ordering.
 	workers: 1,
 	// Two retries in CI absorb intermittent flakes on slow/contended runners
 	// (submission-creation tests do long DB round-trip chains). Locally we

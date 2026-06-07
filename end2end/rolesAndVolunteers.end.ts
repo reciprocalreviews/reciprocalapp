@@ -1,20 +1,13 @@
-import { execSync } from 'child_process';
 import { expect, test } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
+import { SEED, sql } from './test-utils';
 
-const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
-const EDITOR_EMAIL = 'editor@uni.edu';
-const VOLUNTEER_EMAIL = 'r1@uni.edu'; // already a Reviewer in the seed
-const FRESH_SCHOLAR_EMAIL = 'author1@uni.edu'; // no volunteer records in the seed
-const INVITEE_EMAIL = 'author2@uni.edu';
-const INVITEE_ORCID = '0000-0001-2345-6795';
-
-function sql(statement: string): string {
-	return execSync(
-		`docker exec supabase_db_reciprocalapp psql -U postgres -d postgres -t -A -q -c ${JSON.stringify(statement)}`,
-		{ encoding: 'utf-8' }
-	).trim();
-}
+const VENUE_ID = SEED.venue;
+const EDITOR_EMAIL = SEED.scholars.editor.email;
+const VOLUNTEER_EMAIL = SEED.scholars.r1.email; // already a Reviewer in the seed
+const FRESH_SCHOLAR_EMAIL = SEED.scholars.author1.email; // no volunteer records in the seed
+const INVITEE_EMAIL = SEED.scholars.author2.email;
+const INVITEE_ORCID = SEED.scholars.author2.orcid;
 
 test('editor creates a role, edits its description, and deletes it', async ({ page, context }) => {
 	await login(EDITOR_EMAIL, page, context);

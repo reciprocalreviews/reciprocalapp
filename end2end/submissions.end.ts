@@ -1,20 +1,13 @@
-import { execSync } from 'child_process';
 import { test, expect } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
+import { SEED, sql } from './test-utils';
 
-const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
+const VENUE_ID = SEED.venue;
 // r4 (Manny Script) — has a Reviewer volunteer record and is neither author
 // of nor approved-Reviewer on any seeded submission, so they always have
 // biddable papers in the venue's submissions list.
-const BIDDER_EMAIL = 'r4@uni.edu';
-const BIDDER_ID = '7ff8621a-cbe0-4789-bbee-f008d38c4aca';
-
-function sql(statement: string): string {
-	return execSync(
-		`docker exec supabase_db_reciprocalapp psql -U postgres -d postgres -t -A -q -c ${JSON.stringify(statement)}`,
-		{ encoding: 'utf-8' }
-	).trim();
-}
+const BIDDER_EMAIL = SEED.scholars.r4.email;
+const BIDDER_ID = SEED.scholars.r4.id;
 
 test('a reviewer can bid on a paper and then see an unbid button', async ({ page, context }) => {
 	// Reset state: drop any of Manny's pending Reviewer bids so the page

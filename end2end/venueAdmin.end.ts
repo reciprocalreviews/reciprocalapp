@@ -1,22 +1,15 @@
-import { execSync } from 'child_process';
 import { expect, test } from '@playwright/test';
 import { login } from '../src/routes/login';
+import { SEED, sql } from './test-utils';
 
-const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
-const CURRENCY_ID = 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac';
-const EDITOR_EMAIL = 'editor@uni.edu';
-const MINTER_EMAIL = 'r1@uni.edu';
-const RECIPIENT_EMAIL_FOR_GIFT = 'author2@uni.edu';
-const SECOND_EDITOR_EMAIL = 'author2@uni.edu';
-const SECOND_MINTER_EMAIL = 'r2@uni.edu';
-const NON_EDITOR_EMAIL = 'r3@uni.edu';
-
-function sql(statement: string): string {
-	return execSync(
-		`docker exec supabase_db_reciprocalapp psql -U postgres -d postgres -t -A -c ${JSON.stringify(statement)}`,
-		{ encoding: 'utf-8' }
-	).trim();
-}
+const VENUE_ID = SEED.venue;
+const CURRENCY_ID = SEED.currency;
+const EDITOR_EMAIL = SEED.scholars.editor.email;
+const MINTER_EMAIL = SEED.scholars.r1.email;
+const RECIPIENT_EMAIL_FOR_GIFT = SEED.scholars.author2.email;
+const SECOND_EDITOR_EMAIL = SEED.scholars.author2.email;
+const SECOND_MINTER_EMAIL = SEED.scholars.r2.email;
+const NON_EDITOR_EMAIL = SEED.scholars.r3.email;
 
 test('editor edits venue title, description, and URL', async ({ page, context }) => {
 	// Snapshot the original values so we can restore them at the end — keeps

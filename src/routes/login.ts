@@ -5,11 +5,14 @@ export async function login(email: string, page: Page, context: BrowserContext) 
 	// Visit the login page
 	await page.goto('/login');
 
-	// Request the OTP email. Retry up to 3 times in case the local Supabase auth
-	// service rate-limits the send (which can happen when the same email is used
-	// across multiple test files in rapid succession).
+	// Request the OTP email. Retry in case the local Supabase auth service
+	// rate-limits the send — which happens when the same email is reused across
+	// test files in rapid succession, and more so when multiple Playwright
+	// workers send concurrently. We use jittered exponential backoff so retries
+	// don't stampede in lockstep across workers.
+	const MAX_ATTEMPTS = 5;
 	let otpSent = false;
-	for (let attempt = 1; attempt <= 3; attempt++) {
+	for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
 		await page.getByTestId('email-input').fill(email);
 		await page.getByTestId('email-submit').click();
 
@@ -22,15 +25,18 @@ export async function login(email: string, page: Page, context: BrowserContext) 
 
 		if (otpSent) break;
 
-		if (attempt < 3) {
-			// Wait before retrying — 1s is the configured max_frequency but some
-			// Supabase GoTrue versions enforce a longer internal window.
-			await page.waitForTimeout(3000);
+		if (attempt < MAX_ATTEMPTS) {
+			// Backoff grows with each attempt (1s is the configured max_frequency,
+			// but some GoTrue versions enforce a longer window), plus up to ~1s of
+			// random jitter to desynchronize concurrent workers.
+			const backoff = 1500 * attempt + Math.floor(Math.random() * 1000);
+			await page.waitForTimeout(backoff);
 			await page.goto('/login');
 		}
 	}
 
-	if (!otpSent) throw new Error(`login: Supabase refused to send OTP to ${email} after 3 attempts`);
+	if (!otpSent)
+		throw new Error(`login: Supabase refused to send OTP to ${email} after ${MAX_ATTEMPTS} attempts`);
 
 	// Retrieve the OTP code from Mailpit via its REST API.  Using the API is
 	// more reliable than clicking through the web UI when multiple emails for
@@ -38,7 +44,10 @@ export async function login(email: string, page: Page, context: BrowserContext) 
 	const mailpit = await context.newPage();
 	let code = '';
 
-	for (let i = 0; i < 10; i++) {
+	// Poll for up to ~20s. The search is scoped to the exact recipient and takes
+	// the newest matching message, so concurrent workers using distinct emails
+	// never read each other's codes.
+	for (let i = 0; i < 20; i++) {
 		const res = await mailpit.request.get('http://localhost:54324/api/v1/messages?limit=50');
 		const json = (await res.json()) as {
 			messages?: Array<{ ID: string; To: Array<{ Address: string }> }>;

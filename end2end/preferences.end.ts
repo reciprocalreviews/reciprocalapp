@@ -1,18 +1,11 @@
-import { execSync } from 'child_process';
 import { expect, test } from '@playwright/test';
 import { login } from '../src/routes/login';
+import { SEED, sql } from './test-utils';
 
-const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
-const EDITOR_EMAIL = 'editor@uni.edu';
-const VOLUNTEER_EMAIL = 'r1@uni.edu'; // already a Reviewer in the seed
-const SUBMISSION_ID = 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12';
-
-function sql(statement: string): string {
-	return execSync(
-		`docker exec supabase_db_reciprocalapp psql -U postgres -d postgres -t -A -q -c ${JSON.stringify(statement)}`,
-		{ encoding: 'utf-8' }
-	).trim();
-}
+const VENUE_ID = SEED.venue;
+const EDITOR_EMAIL = SEED.scholars.editor.email;
+const VOLUNTEER_EMAIL = SEED.scholars.r1.email; // already a Reviewer in the seed
+const SUBMISSION_ID = SEED.submissions.tok001;
 
 function cleanupPreferenceLevels() {
 	sql(`delete from public.preference_levels where venueid = '${VENUE_ID}';`);
@@ -174,7 +167,6 @@ test('editor sees bid preference label and used/cap on submission detail', async
 	// Editor (ae@uni.edu is the AE for this submission per the seed) views the page.
 	await login('ae@uni.edu', page, context);
 	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
-	await page.waitForLoadState('networkidle');
 
 	// The bid's preference label and used/cap indicator render.
 	await expect(page.getByTestId('bid-preference-label').first()).toHaveText('Preferred');

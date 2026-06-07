@@ -1,22 +1,13 @@
 import { expect, test } from '@playwright/test';
-import { execSync } from 'child_process';
 import { login } from '../src/routes/login';
+import { SEED, sql } from './test-utils';
 
-const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
-const CURRENCY_ID = 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac';
-const MINTER_EMAIL = 'r1@uni.edu';
-const EDITOR_ID = 'd181d165-8b6a-4d79-ad28-a9aece21d813';
-const EDITOR_EMAIL = 'editor@uni.edu';
-const RECIPIENT_EMAIL = 'author2@uni.edu';
-
-function sql(statement: string): string {
-	// `-q` suppresses the trailing command tag (e.g. "INSERT 0 1") so callers
-	// using statements with RETURNING get back only the value.
-	return execSync(
-		`docker exec supabase_db_reciprocalapp psql -U postgres -d postgres -t -A -q -c ${JSON.stringify(statement)}`,
-		{ encoding: 'utf-8' }
-	).trim();
-}
+const VENUE_ID = SEED.venue;
+const CURRENCY_ID = SEED.currency;
+const MINTER_EMAIL = SEED.scholars.r1.email;
+const EDITOR_ID = SEED.scholars.editor.id;
+const EDITOR_EMAIL = SEED.scholars.editor.email;
+const RECIPIENT_EMAIL = SEED.scholars.author2.email;
 
 test('minter mints new tokens; the venue reserve increases', async ({ page, context }) => {
 	await login(MINTER_EMAIL, page, context);
@@ -28,6 +19,8 @@ test('minter mints new tokens; the venue reserve increases', async ({ page, cont
 	);
 
 	await page.goto(`/currency/${CURRENCY_ID}`);
+	// networkidle = hydration barrier: the mint card's expand handler must be
+	// wired before we click, or Svelte drops the click.
 	await page.waitForLoadState('networkidle');
 
 	// Expand the mint card to reveal its form.
@@ -158,7 +151,6 @@ test('a gift transaction is visible in venue transactions, scholar history, and 
 	await context.clearCookies();
 	await login(RECIPIENT_EMAIL, page, context);
 	await page.goto(`/scholar/${recipientID}/transactions`);
-	await page.waitForLoadState('networkidle');
 	await expect(page.getByRole('cell', { name: purpose })).toBeVisible();
 
 	// (3) The recipient's balance reflects the gift.
@@ -188,7 +180,6 @@ test('minter cannot approve a venue→minter transaction (anti-self-dealing UPDA
 
 	await login(MINTER_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_ID}/transactions`);
-	await page.waitForLoadState('networkidle');
 
 	// The row is visible (minter can SELECT transactions for their currency)…
 	await expect(page.getByRole('cell', { name: purpose })).toBeVisible();

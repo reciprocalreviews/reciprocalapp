@@ -1,22 +1,15 @@
-import { execSync } from 'child_process';
 import { expect, test } from '@playwright/test';
 import { login } from '../src/routes/login';
+import { SEED, sql } from './test-utils';
 
-const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
-const SUBMISSION_ID = 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12'; // TOK-2025-001
-const EDITOR_EMAIL = 'editor@uni.edu';
-const EDITOR_ID = 'd181d165-8b6a-4d79-ad28-a9aece21d813';
-const AUTHOR_EMAIL = 'author1@uni.edu'; // author of TOK-2025-001
-const CONFLICT_DECLARER_EMAIL = 'r3@uni.edu'; // Reviewer volunteer with no assignments
-const ASSIGNED_REVIEWER_NAME = 'Rigor Russ'; // r1, the approved Reviewer on TOK-2025-001
-const REVIEWER_ROLE_ID = 'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81';
-
-function sql(statement: string): string {
-	return execSync(
-		`docker exec supabase_db_reciprocalapp psql -U postgres -d postgres -t -A -q -c ${JSON.stringify(statement)}`,
-		{ encoding: 'utf-8' }
-	).trim();
-}
+const VENUE_ID = SEED.venue;
+const SUBMISSION_ID = SEED.submissions.tok001; // TOK-2025-001
+const EDITOR_EMAIL = SEED.scholars.editor.email;
+const EDITOR_ID = SEED.scholars.editor.id;
+const AUTHOR_EMAIL = SEED.scholars.author1.email; // author of TOK-2025-001
+const CONFLICT_DECLARER_EMAIL = SEED.scholars.r3.email; // Reviewer volunteer with no assignments
+const ASSIGNED_REVIEWER_NAME = SEED.scholars.r1.name; // r1, the approved Reviewer on TOK-2025-001
+const REVIEWER_ROLE_ID = SEED.roles.reviewer;
 
 test('editor manually adds a single submission with themselves as the sole author', async ({
 	page,
@@ -35,6 +28,8 @@ test('editor manually adds a single submission with themselves as the sole autho
 
 	await login(EDITOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	// Keep networkidle here: the submission form's bound <select>/inputs must be
+	// hydrated before we selectOption/fill, or Svelte drops the change.
 	await page.waitForLoadState('networkidle');
 
 	// Submit as a "Research Article" (cost 10).
@@ -112,7 +107,6 @@ test('scholar declares a conflict on a submission and it disappears from their s
 	// The submission is no longer present in the scholar's submissions list
 	// (the page filters out conflicted submissions for them).
 	await page.reload();
-	await page.waitForLoadState('networkidle');
 	await expect(page.locator('text=TOK-2025-001')).toHaveCount(0);
 });
 
@@ -135,7 +129,6 @@ test('mark-done is blocked until non-editor assignments are compensated, then fl
 
 	await login(EDITOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
-	await page.waitForLoadState('networkidle');
 
 	// Button exists but is disabled while non-editor assignments are
 	// pending, and the blockers list is visible.
@@ -187,7 +180,6 @@ test('reviewer-anonymity flag actually hides assignees from authors', async ({ p
 
 	await login(AUTHOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
-	await page.waitForLoadState('networkidle');
 
 	// As the author, with anonymity on, the assigned reviewer's name (r1,
 	// Rigor Russ) is NOT visible on the page — RLS at
@@ -197,7 +189,6 @@ test('reviewer-anonymity flag actually hides assignees from authors', async ({ p
 	// Flip anonymity off and reload; now the reviewer's name is visible.
 	sql(`update public.venues set anonymous_assignments = false where id = '${VENUE_ID}';`);
 	await page.reload();
-	await page.waitForLoadState('networkidle');
 	await expect(page.getByText(ASSIGNED_REVIEWER_NAME).first()).toBeVisible();
 
 	// Restore the default for other tests.
@@ -219,7 +210,6 @@ test('approver-role hierarchy: AE approves a Reviewer bid; a non-approver does n
 	// isn't a venue admin. So r2 should not see the bid-approve button.
 	await login('r2@uni.edu', page, context);
 	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
-	await page.waitForLoadState('networkidle');
 	await expect(
 		page.getByRole('button', {
 			name: 'Accept this bid, assigning this scholar to this role for this submission'

@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
+import { SEED } from './test-utils';
 
-const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
+const VENUE_ID = SEED.venue;
 
 test('admin can bulk import free submissions and a proposed mint transaction', async ({
 	page,
@@ -29,7 +30,6 @@ test('admin can bulk import free submissions and a proposed mint transaction', a
 
 	// Should redirect back to the submissions index.
 	await page.waitForURL(`**/venue/${VENUE_ID}/submissions`);
-	await page.waitForLoadState('networkidle');
 
 	// Verify both imported submissions show up.
 	await expect(page.getByText(externalA)).toBeVisible();

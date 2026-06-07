@@ -1,22 +1,13 @@
 import { test, expect } from '@playwright/test';
-import { execSync } from 'child_process';
 import { login, logout } from '../src/routes/login';
+import { SEED, sql } from './test-utils';
 
-const CURRENCY_ID = 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac'; // Epistemology
-const AUTHOR1_EMAIL = 'author1@uni.edu';
-const AUTHOR1_ID = 'b8a805bf-0aae-4443-9185-de019a8715cb'; // holds 100 Epistemology tokens (seed)
-const AUTHOR2_EMAIL = 'author2@uni.edu';
-const AUTHOR2_ID = 'b8a805bf-0aae-4443-9185-de019a8715ec';
-const AUTHOR2_ORCID = '0000-0001-2345-6795';
-
-function sql(statement: string): string {
-	// `-q` suppresses the trailing command tag so callers using RETURNING get
-	// back only the value.
-	return execSync(
-		`docker exec supabase_db_reciprocalapp psql -U postgres -d postgres -t -A -q -c ${JSON.stringify(statement)}`,
-		{ encoding: 'utf-8' }
-	).trim();
-}
+const CURRENCY_ID = SEED.currency; // Epistemology
+const AUTHOR1_EMAIL = SEED.scholars.author1.email;
+const AUTHOR1_ID = SEED.scholars.author1.id; // holds 100 Epistemology tokens (seed)
+const AUTHOR2_EMAIL = SEED.scholars.author2.email;
+const AUTHOR2_ID = SEED.scholars.author2.id;
+const AUTHOR2_ORCID = SEED.scholars.author2.orcid;
 
 test('the read-only scholar profile page should show volunteering roles', async ({ page }) => {
 	await page.goto('/scholar/d181d165-8b6a-4d79-ad28-a9aece21d813');
@@ -90,7 +81,8 @@ test('scholar edits their availability and status, persisting on reload', async 
 		.poll(() => sql(`select available from public.scholars where id = '${AUTHOR1_ID}';`))
 		.toBe(expectedAvailable);
 
-	// The new state survives a reload.
+	// The new state survives a reload. networkidle here because the status edit
+	// below interacts with the (hydration-gated) EditableText after this reload.
 	await page.reload();
 	await page.waitForLoadState('networkidle');
 	if (expectedAvailable === 't')
@@ -115,7 +107,6 @@ test('scholar edits their availability and status, persisting on reload', async 
 
 	// The status survives a reload.
 	await page.reload();
-	await page.waitForLoadState('networkidle');
 	await expect(page.getByTestId('status')).toHaveValue(status);
 
 	await logout(page);
@@ -170,7 +161,6 @@ async function giftToAuthor2(
 	await logout(page);
 	await login(AUTHOR2_EMAIL, page, context);
 	await page.goto(`/scholar/${AUTHOR2_ID}/transactions`);
-	await page.waitForLoadState('networkidle');
 	await expect(page.getByRole('cell', { name: purpose })).toBeVisible();
 
 	// The recipient's balance reflects the gift.

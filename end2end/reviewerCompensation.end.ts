@@ -1,28 +1,11 @@
-import { execSync } from 'child_process';
 import { expect, test } from '@playwright/test';
 import { login } from '../src/routes/login';
+import { SEED, sql } from './test-utils';
 
-const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
-const CURRENCY_ID = 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac';
-const SUBMISSION_ID = 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12';
-const REVIEWER_ROLE_ID = 'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81';
-
-/** Run a SQL statement against the local Supabase DB via the postgres
- * container. Used to set up test states (e.g., drain venue tokens) that
- * can't be reached through the UI without elaborate multi-step flows. */
-function sql(statement: string): void {
-	execSync(
-		`docker exec supabase_db_reciprocalapp psql -U postgres -d postgres -c ${JSON.stringify(statement)}`,
-		{ stdio: 'pipe' }
-	);
-}
-
-function sqlScalar(statement: string): string {
-	return execSync(
-		`docker exec supabase_db_reciprocalapp psql -U postgres -d postgres -t -A -c ${JSON.stringify(statement)}`,
-		{ encoding: 'utf-8' }
-	).trim();
-}
+const VENUE_ID = SEED.venue;
+const CURRENCY_ID = SEED.currency;
+const SUBMISSION_ID = SEED.submissions.tok001;
+const REVIEWER_ROLE_ID = SEED.roles.reviewer;
 
 test('AE compensates a reviewer and tokens transfer immediately', async ({ page, context }) => {
 	await login('ae@uni.edu', page, context);
@@ -79,13 +62,13 @@ test('when the venue is out of tokens, Complete surfaces an error and queues a p
 
 	// The RPC should have inserted a proposed mint transaction (from=null,
 	// to_venue=the venue, status=proposed) sized at the shortfall.
-	const proposedMintCount = sqlScalar(
+	const proposedMintCount = sql(
 		`select count(*) from public.transactions where to_venue = '${VENUE_ID}' and from_venue is null and from_scholar is null and status = 'proposed';`
 	);
 	expect(Number(proposedMintCount)).toBeGreaterThanOrEqual(1);
 
 	// The assignment must NOT have been marked completed.
-	const stillIncomplete = sqlScalar(
+	const stillIncomplete = sql(
 		`select count(*) from public.assignments where submission = '${SUBMISSION_ID}' and role = '${REVIEWER_ROLE_ID}' and approved and not completed;`
 	);
 	expect(Number(stillIncomplete)).toBeGreaterThanOrEqual(1);

@@ -7,10 +7,21 @@ on:
         required: true
         description: 'Environment variables for testing, in the format of KEY=VALUE pairs, separated by newlines.'
 
+# The number of shards the suite is split across. Keep the matrix below and the
+# `--shard=i/N` denominator in sync with this by editing both. Each shard runs on
+# its own runner with its own fresh Supabase, so shards never contend for the DB.
+env:
+  SHARD_TOTAL: 3
+
 jobs:
   test:
-    timeout-minutes: 60
+    timeout-minutes: 30
     runs-on: ubuntu-latest
+    strategy:
+      # Don't cancel the other shards if one fails — we want the full picture.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -37,10 +48,71 @@ jobs:
       - name: Install Playwright system dependencies
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
-      - name: Run Playwright tests using the vite dev server and Supabase local development setup
-        run: npx playwright test
-      - uses: actions/upload-artifact@v5
+      # Cache the Supabase Docker images. A cold `supabase start` pulls ~3-5 min
+      # of images before the suite can run; restoring them from cache removes
+      # that from every shard's critical path. Keyed by config.toml (which pins
+      # the service image versions) so a version bump busts the cache.
+      - name: Cache Supabase Docker images
+        uses: actions/cache@v4
+        id: supabase-images
+        with:
+          path: ~/supabase-images
+          key: supabase-images-${{ hashFiles('supabase/config.toml') }}
+      - name: Load cached Supabase images
+        if: steps.supabase-images.outputs.cache-hit == 'true'
+        run: |
+          if [ -f ~/supabase-images/images.tar ]; then docker load -i ~/supabase-images/images.tar; fi
+      - name: Snapshot baseline Docker images
+        if: steps.supabase-images.outputs.cache-hit != 'true'
+        # Record repo:tag (not image IDs) — `docker save`/`load` only round-trips
+        # the tags that `supabase start` looks images up by.
+        run: docker images --format '{{.Repository}}:{{.Tag}}' | grep -v '<none>' | sort -u > /tmp/baseline-images.txt
+      - name: Run Playwright tests (sharded)
+        run: npx playwright test --shard=${{ matrix.shard }}/${{ env.SHARD_TOTAL }}
+      # On a cache miss, save just the images `supabase start` pulled during the
+      # test run (diff against the baseline) so the cache action persists them.
+      - name: Save Supabase images for cache
+        if: ${{ always() && steps.supabase-images.outputs.cache-hit != 'true' }}
+        run: |
+          mkdir -p ~/supabase-images
+          docker images --format '{{.Repository}}:{{.Tag}}' | grep -v '<none>' | sort -u > /tmp/after-images.txt
+          comm -13 /tmp/baseline-images.txt /tmp/after-images.txt > /tmp/new-images.txt || true
+          if [ -s /tmp/new-images.txt ]; then
+            docker save $(cat /tmp/new-images.txt) -o ~/supabase-images/images.tar
+          fi
+      - name: Upload blob report
         if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 7
+
+  merge-reports:
+    # Always run so we get a report even when some shards fail (but not if the
+    # whole workflow was cancelled).
+    if: ${{ !cancelled() }}
+    needs: [test]
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Download blob reports from all shards
+        uses: actions/download-artifact@v5
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+      - name: Merge blobs into a single HTML report
+        run: npx playwright merge-reports --reporter html ./all-blob-reports
+      - name: Upload merged HTML report
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: playwright-report/

@@ -1,32 +1,24 @@
 import { test, expect } from '@playwright/test';
-import { execSync } from 'child_process';
 import { login, logout } from '../src/routes/login';
+import { SEED, sql } from './test-utils';
 
-const VENUE_ID = 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6';
+const VENUE_ID = SEED.venue;
 const SUBMISSION_EXTERNAL_ID = 'TOK-2025-001';
-const SUBMISSION_ID = 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12';
-const SUBMISSION_002 = 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c13';
-const REVIEWER_ROLE = 'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81';
-const MANNY_ID = '7ff8621a-cbe0-4789-bbee-f008d38c4aca';
+const SUBMISSION_ID = SEED.submissions.tok001;
+const SUBMISSION_002 = 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c13'; // TOK-2025-002
+const REVIEWER_ROLE = SEED.roles.reviewer;
+const MANNY_ID = SEED.scholars.r4.id;
 
 const APPROVE_BID_TIP =
 	'Accept this bid, assigning this scholar to this role for this submission';
 const APPROVE_ANYWAY_TIP = 'Assign this scholar despite the load warning';
 const UNASSIGN_TIP = 'Remove this assignment';
 
-function sql(statement: string): string {
-	return execSync(
-		`docker exec supabase_db_reciprocalapp psql -U postgres -d postgres -t -A -q -c ${JSON.stringify(statement)}`,
-		{ encoding: 'utf-8' }
-	).trim();
-}
-
 test('AE assigns two reviewer bids and bidding closes', async ({ page, context }) => {
 	await login('ae@uni.edu', page, context);
 
 	// Submissions list shows TOK-2025-001.
 	await page.goto(`/venue/${VENUE_ID}/submissions`);
-	await page.waitForLoadState('networkidle');
 	await expect(page.getByText(SUBMISSION_EXTERNAL_ID)).toBeVisible();
 
 	// Open the submission detail page.
@@ -51,7 +43,6 @@ test('AE assigns two reviewer bids and bidding closes', async ({ page, context }
 	// Back on the submissions list, bidding for that submission's Reviewer role
 	// should now be closed (3 approved Reviewer assignments meets desired=3).
 	await page.goto(`/venue/${VENUE_ID}/submissions`);
-	await page.waitForLoadState('networkidle');
 	await expect(page.getByText('bidding closed')).toBeVisible();
 
 	await logout(page);
