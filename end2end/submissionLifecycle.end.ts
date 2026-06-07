@@ -18,7 +18,7 @@ test('editor manually adds a single submission with themselves as the sole autho
 	// createSubmission does several sequential DB round-trips before the goto(),
 	// and the waitForURL below allows 60s; give the test a budget larger than
 	// that so a slow CI runner doesn't trip the 30s default first.
-	test.setTimeout(90_000);
+	test.setTimeout(120_000);
 
 	// Get the editor's actual ORCID from the DB so the form's blur-based
 	// scholar lookup resolves to the editor's scholar record.
@@ -51,8 +51,25 @@ test('editor manually adds a single submission with themselves as the sole autho
 		page.locator('text=The authors have sufficient tokens to pay for this submission.')
 	).toBeVisible();
 
-	await page.getByTestId('submit-submission').click();
-	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 60_000 });
+	// The submit button briefly re-disables whenever a charge field changes
+	// (NewSubmission resets affordability in a $effect), so wait for it to settle
+	// enabled before clicking rather than firing a no-op click.
+	const submit = page.getByTestId('submit-submission');
+	await expect(submit).toBeEnabled({ timeout: 5_000 });
+	await page.waitForTimeout(200);
+	await submit.click();
+
+	// createSubmission runs several sequential DB round-trips before it navigates.
+	// Confirm the row landed (generous poll) before waiting on the redirect, so a
+	// slow server round-trip surfaces as a clear "row not created" failure instead
+	// of an opaque navigation timeout, and the redirect wait only covers the nav.
+	await expect
+		.poll(
+			() => sql(`select count(*) from public.submissions where externalid = '${externalID}';`),
+			{ timeout: 90_000 }
+		)
+		.toBe('1');
+	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 30_000 });
 
 	// The submission lands in the DB with the editor as sole author.
 	const row = sql(

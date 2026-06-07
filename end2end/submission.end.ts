@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
-import { SEED } from './test-utils';
+import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
 const AUTHOR1_ORCID = SEED.scholars.author1.orcid; // Foot Note (author1@uni.edu)
@@ -12,9 +12,11 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 	// approve the creator's transaction, insert the submission, then load the
 	// new submission page). The default 30s test budget is enough locally but
 	// flaky on CI runners.
-	test.setTimeout(90_000);
+	test.setTimeout(120_000);
 
 	await login('author1@uni.edu', page, context);
+
+	const externalID = `TOK-2026-TEST-${Date.now()}`;
 
 	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
 	// Keep networkidle here: the submission form's bound <select>/inputs must be
@@ -30,7 +32,7 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 	// Fill in the required submission details. The external ID is unique per
 	// run because the venue+externalid pair is enforced unique in the DB.
 	await page.getByTestId('submission-title').fill('A Study of Reciprocal Review Incentives');
-	await page.getByTestId('submission-manuscript-id').fill(`TOK-2026-TEST-${Date.now()}`);
+	await page.getByTestId('submission-manuscript-id').fill(externalID);
 
 	// In case there's a failure, scroll down so we have a screenshot.
 	await page.getByTestId('add-author').scrollIntoViewIfNeeded();
@@ -72,7 +74,17 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 	await expect(submitButton).toBeEnabled({ timeout: 5_000 });
 	await page.waitForTimeout(200);
 	await submitButton.click();
-	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 60_000 });
+
+	// Confirm the submission landed server-side (generous poll) before waiting on
+	// the redirect, so a slow createSubmission round-trip surfaces as a clear
+	// failure instead of an opaque navigation timeout.
+	await expect
+		.poll(
+			() => sql(`select count(*) from public.submissions where externalid = '${externalID}';`),
+			{ timeout: 90_000 }
+		)
+		.toBe('1');
+	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 30_000 });
 
 	await logout(page);
 });
@@ -84,7 +96,7 @@ test('author can link a resubmission to a prior submission and is charged the re
 	// Two full submission flows back to back, each with several sequential DB
 	// round-trips, so we extend the budget the same way the single-submission
 	// test above does.
-	test.setTimeout(120_000);
+	test.setTimeout(150_000);
 
 	await login('author1@uni.edu', page, context);
 
@@ -119,7 +131,12 @@ test('author can link a resubmission to a prior submission and is charged the re
 	await expect(submitOriginal).toBeEnabled({ timeout: 5_000 });
 	await page.waitForTimeout(200);
 	await submitOriginal.click();
-	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 60_000 });
+	await expect
+		.poll(() => sql(`select count(*) from public.submissions where externalid = '${originalID}';`), {
+			timeout: 90_000
+		})
+		.toBe('1');
+	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 30_000 });
 
 	// 2. Create a resubmission linking the original. Start from the plain
 	// "Research Article" type (cost 10), then let the predecessor pick the type.
@@ -165,7 +182,13 @@ test('author can link a resubmission to a prior submission and is charged the re
 	await expect(submitResubmission).toBeEnabled({ timeout: 5_000 });
 	await page.waitForTimeout(200);
 	await submitResubmission.click();
-	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 60_000 });
+	await expect
+		.poll(
+			() => sql(`select count(*) from public.submissions where externalid = '${resubmissionID}';`),
+			{ timeout: 90_000 }
+		)
+		.toBe('1');
+	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 30_000 });
 
 	// 3. The resubmission detail page links back to its predecessor by external ID.
 	await expect(page.getByRole('link', { name: originalID })).toBeVisible();
