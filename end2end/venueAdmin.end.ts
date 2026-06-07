@@ -227,6 +227,13 @@ test('editor edits welcome amount, submission cost, and per-role compensation', 
 
 	// Change a submission type's cost. Cost is now per submission type, edited in
 	// the submission types table on the venue dashboard (not venue-wide settings).
+	// Snapshot the original cost first so we can restore it — other suites
+	// (submission.end.ts, submissionLifecycle.end.ts) hardcode the seeded cost of
+	// 10, and locally the DB is not reset between runs, so leaving it at 12 would
+	// break them on the next run.
+	const originalCost = sql(
+		`select submission_cost from public.submission_types where venue = '${VENUE_ID}' and name = 'Research Article';`
+	);
 	await page.goto(`/venue/${VENUE_ID}`);
 	await page.waitForLoadState('networkidle');
 	await page.getByTestId('submission-cost-0-toggle').click();
@@ -247,6 +254,11 @@ test('editor edits welcome amount, submission cost, and per-role compensation', 
 	// Change Reviewer×Research Article compensation. The slider exposes a
 	// stable testid `compensation-{role.name}-{type.name}`. Role cards on the
 	// settings page now start collapsed, so expand the Reviewer card first.
+	// Snapshot the original amount first so we can restore it (same shared-DB
+	// reasoning as the submission cost above).
+	const originalReviewerComp = sql(
+		`select amount from public.compensation c join public.roles r on r.id = c.role join public.submission_types t on t.id = c.submission_type where t.venue = '${VENUE_ID}' and r.name = 'Reviewer' and t.name = 'Research Article';`
+	);
 	await page.getByTestId('role-Reviewer').click();
 	const slider = page.getByTestId('compensation-Reviewer-Research Article');
 	await expect(slider).toBeVisible();
@@ -266,6 +278,16 @@ test('editor edits welcome amount, submission cost, and per-role compensation', 
 	await page.getByTestId('venue-welcome-amount-toggle').click();
 	await page.getByTestId('venue-welcome-amount').fill(originalWelcome);
 	await page.getByTestId('venue-welcome-amount-toggle').click();
+
+	// Restore the submission cost and Reviewer compensation to their original
+	// values via SQL. These feed other suites that assume the seed values, and
+	// the local DB persists between runs.
+	sql(
+		`update public.submission_types set submission_cost = ${originalCost} where venue = '${VENUE_ID}' and name = 'Research Article';`
+	);
+	sql(
+		`update public.compensation set amount = ${originalReviewerComp} where role = (select id from public.roles where venueid = '${VENUE_ID}' and name = 'Reviewer') and submission_type = (select id from public.submission_types where venue = '${VENUE_ID}' and name = 'Research Article');`
+	);
 });
 
 test('editor toggles bidding off and back on for a role', async ({ page, context }) => {

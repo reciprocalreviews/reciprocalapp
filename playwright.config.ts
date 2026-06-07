@@ -2,6 +2,10 @@ import { type PlaywrightTestConfig, devices } from '@playwright/test';
 import process from 'node:process';
 
 const config: PlaywrightTestConfig = {
+	// Locally, reset the DB to the seed state before the suite so accumulated
+	// mutations from previous runs don't break tests (CI gets a fresh DB per run
+	// and skips this — see end2end/global-setup.ts).
+	globalSetup: './end2end/global-setup.ts',
 	webServer: {
 		// Sync types, build with vite, run the preview server, and start Supabase locally, without services we don't use.
 		command: process.env.CI ? 'npm run emu:ci' : 'npm run emu',
