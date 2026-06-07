@@ -95,9 +95,12 @@ jobs:
           retention-days: 7
 
   merge-reports:
-    # Always run so we get a report even when some shards fail (but not if the
-    # whole workflow was cancelled).
-    if: ${{ !cancelled() }}
+    # Only stitch the shard blobs into one HTML report when a shard actually
+    # failed — that's the only time anyone opens it. Each shard already uploads
+    # its raw blob-report-* artifact unconditionally, so a green run loses
+    # nothing (run `npx playwright merge-reports ./blob-report-*` locally if
+    # ever needed), and the ~17s stops taxing every successful deploy.
+    if: ${{ failure() }}
     needs: [test]
     timeout-minutes: 10
     runs-on: ubuntu-latest
