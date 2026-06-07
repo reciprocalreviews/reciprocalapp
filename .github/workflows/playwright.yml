@@ -12,9 +12,10 @@ on:
 # its own runner with its own fresh Supabase, so shards never contend for the DB.
 # The practical floor is ~(per-runner setup) + (the single slowest test file),
 # since sharding splits by whole file — beyond that, more shards just burn runner
-# minutes. 6 keeps each shard at ~3 files.
+# minutes. With tests at ~70s/shard the per-runner setup dominates, so 4 shards
+# lands at ~the same wall-clock as 6 for two fewer runners.
 env:
-  SHARD_TOTAL: 6
+  SHARD_TOTAL: 4
 
 jobs:
   test:
@@ -24,7 +25,7 @@ jobs:
       # Don't cancel the other shards if one fails — we want the full picture.
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -60,7 +61,9 @@ jobs:
         id: supabase-images
         with:
           path: ~/supabase-images
-          key: supabase-images-${{ hashFiles('supabase/config.toml') }}
+          # `-v2` salt: the excluded-service set changed (studio, postgres-meta),
+          # so bust the old cache and re-save the smaller image tarball.
+          key: supabase-images-v2-${{ hashFiles('supabase/config.toml') }}
       - name: Load cached Supabase images
         if: steps.supabase-images.outputs.cache-hit == 'true'
         run: |
