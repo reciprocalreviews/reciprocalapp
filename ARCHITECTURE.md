@@ -229,8 +229,24 @@ Required GitHub secrets: `SUPABASE_ACCESS_TOKEN`, `STAGING_DB_PASSWORD`, `STAGIN
 ## Testing
 
 - **Unit.** Vitest. Files matching `src/**/*.unit.ts`. Run with `npm run test:unit`.
-- **Integration.** Playwright, Chromium only. Files in `end2end/`. Run with `npm run test:end`. The suite expects a local Supabase running with seed data; see `npm start` and `npm run reset`.
+- **Integration.** Playwright, Chromium only. Files in `end2end/`. Run with `npm run test:end`. Needs a local Supabase running (`npm start`).
 - **Combined.** `npm test` runs end2end then unit.
+
+### E2E conventions and infrastructure
+
+- **Shared seed state.** Every spec runs against the one local Supabase DB seeded by [supabase/seed.sql](supabase/seed.sql). Tests reference seeded rows through the typed `SEED` constants and the single `sql()` helper in [end2end/test-utils.ts](end2end/test-utils.ts) — don't redeclare raw seed UUIDs or `docker exec psql` wrappers per file. A test that mutates shared seed rows (venue settings, the seed submissions, the venue token reserve, scholar balances) must restore them, typically in a `finally`.
+- **Local reset.** [end2end/global-setup.ts](end2end/global-setup.ts) runs `supabase db reset` once before each local `test:end` invocation, so runs are independent of accumulated state from prior runs. Skipped in CI (which already starts a fresh DB). This is why you don't need to `npm run reset` by hand before testing.
+- **Hydration barriers.** This is an SSR app: `waitForLoadState('networkidle')` after a navigation doubles as a hydration barrier. Keep it before Svelte **interactions** (clicks that expand cards, bound `fill`s) — removing it makes the page interactive-looking (SSR) before handlers are wired, which silently drops the action. It's only safe to drop before a pure **assertion**.
+- **Auth.** `login()`/`logout()` in [src/routes/login.ts](src/routes/login.ts) drive the real email-OTP flow via Mailpit, with jittered-backoff retries so concurrent/repeated logins don't trip GoTrue's send rate limit.
+- **Slow flows.** Submission-creation tests do several sequential DB round-trips before the client redirect; they poll the DB for the created row before `waitForURL` (clear failure signal) and carry larger `test.setTimeout` budgets.
+
+### CI execution ([.github/workflows/playwright.yml](.github/workflows/playwright.yml))
+
+Playwright is a reusable workflow called by the staging/production pipelines. It is **sharded** across a runner matrix (`SHARD_TOTAL` shards, `--shard=i/N`): each shard is its own runner with its own fresh Supabase, so shards never contend for the DB and there are no port collisions. Sharding splits by whole file (`fullyParallel` is off), so the wall-clock floor is per-runner setup plus the single slowest spec file — past that, more shards only add runner-minutes. To resize, edit `SHARD_TOTAL`, the `matrix.shard` list, and keep them in sync.
+
+- **Image cache.** The Supabase Docker images are cached (keyed on `config.toml`) so a cold `supabase start` doesn't re-pull ~3–5 min of images on every shard.
+- **Reports.** Each shard emits a `blob` report; a dependent `merge-reports` job stitches them into one `playwright-report` HTML artifact.
+- CI keeps `retries: 2` to absorb the occasional slow-runner flake.
 
 ## Local development
 
