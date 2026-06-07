@@ -108,6 +108,7 @@
 			on={scholar.isAvailable()}
 			change={(on) => db().updateScholarAvailability(scholar.getID(), on)}
 			label={(l) => l.page.scholar.checkbox.available}
+			testid="available-checkbox"
 		/>
 
 		<EditableText
@@ -115,6 +116,7 @@
 			text={scholar.getStatus()}
 			strings={(l) => l.page.scholar.field.status}
 			edit={(text) => db().updateScholarStatus(scholar.getID(), text)}
+			testid="status"
 		/>
 	{:else if scholar.getStatus().trim().length === 0}
 		<Feedback text={(l) => l.page.scholar.feedback.noStatus}></Feedback>
@@ -197,7 +199,12 @@
 	{#if editable}
 		<Cards>
 			{#if tokens !== null && currencies !== null}
-				<Card subheader icon={TokenLabel} strings={(l) => l.page.scholar.card.gift}>
+				<Card
+					subheader
+					icon={TokenLabel}
+					strings={(l) => l.page.scholar.card.gift}
+					testid="scholar-gift-card"
+				>
 					<Gift
 						{tokens}
 						purpose={locale().page.scholar.card.gift.purpose}
