@@ -28,9 +28,9 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.STAGING_PROJECT_ID }}
 
-    # Only run this if tests were successful
-    needs: [unit-tests, playwright, locale-validation, rls-tests]
-
+    # Staging is a throwaway test target, so deploy is intentionally NOT gated on
+    # the tests — they still run (in parallel, for signal) but a red e2e/unit/rls
+    # run won't block the preview. Production (production.yml) keeps the full gate.
     steps:
       - uses: actions/checkout@v5
 
@@ -48,8 +48,9 @@ jobs:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-    # Only deploy after tests pass and migrations are applied
-    needs: [unit-tests, playwright, locale-validation, rls-tests, migrate]
+    # Deploy after migrations are applied. Not gated on tests (see migrate above);
+    # we still order after migrate so schema changes land before the code.
+    needs: [migrate]
 
     steps:
       - uses: actions/checkout@v5
