@@ -41,7 +41,7 @@ jobs:
       - name: Define environment variables for build.
         run: echo "${{ secrets.TEST_ENV }}" > .env
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -57,7 +57,7 @@ jobs:
       # that from every shard's critical path. Keyed by config.toml (which pins
       # the service image versions) so a version bump busts the cache.
       - name: Cache Supabase Docker images
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: supabase-images
         with:
           path: ~/supabase-images
@@ -88,7 +88,7 @@ jobs:
           fi
       - name: Upload blob report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: blob-report-${{ matrix.shard }}
           path: blob-report/
@@ -113,7 +113,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Download blob reports from all shards
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           path: all-blob-reports
           pattern: blob-report-*
@@ -121,7 +121,7 @@ jobs:
       - name: Merge blobs into a single HTML report
         run: npx playwright merge-reports --reporter html ./all-blob-reports
       - name: Upload merged HTML report
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-report
           path: playwright-report/
