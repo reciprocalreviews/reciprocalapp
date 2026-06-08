@@ -16,6 +16,9 @@ create table if not exists "public"."proposals" (
 	currency uuid,
 	-- The estimated size of the research community,
 	census integer not null,
+	-- Whether the proposed venue should operate without payment. When true,
+	-- approval skips the minter requirement and auto-creates a hidden currency.
+	payment_free boolean default false not null,
 	-- If set, corresponds to the venue created upon approval.
 	venue uuid
 );

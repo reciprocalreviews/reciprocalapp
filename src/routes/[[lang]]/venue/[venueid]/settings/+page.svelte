@@ -4,6 +4,7 @@
 	import CopyButton from '$lib/components/CopyButton.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import Note from '$lib/components/Note.svelte';
 	import { ErrorLabel, ScholarLabel, SettingsLabel, VenueLabel } from '$lib/components/Labels.js';
 	import Options from '$lib/components/Options.svelte';
 	import Page from '$lib/components/Page.svelte';
@@ -39,9 +40,7 @@
 	/** Selected reviewing-platform id for the email-templates section (#113).
 	 * Local state only — not persisted to the venue yet. */
 	let platformId = $state<string | undefined>('hotcrp');
-	const selectedPlatform = $derived(
-		PLATFORMS.find((p) => p.id === platformId) ?? PLATFORMS[0]
-	);
+	const selectedPlatform = $derived(PLATFORMS.find((p) => p.id === platformId) ?? PLATFORMS[0]);
 
 	/** Substitute the template body's placeholders. */
 	function renderTemplate(body: string, venueTitle: string, venueId: string): string {
@@ -134,14 +133,27 @@
 
 		<Tip><Text path={(l) => l.page.settings.tip.compensation} /></Tip>
 
-		<EditableText
-			text={venue.welcome_amount.toString()}
-			strings={(l) => l.page.settings.field.welcomeTokens}
-			valid={(text) =>
-				validInteger(text) ? undefined : (l) => l.page.settings.field.welcomeTokens.invalid ?? ''}
-			edit={(text) => db().editVenueWelcomeAmount(venue.id, parseInt(text))}
-			testid="venue-welcome-amount"
+		<Checkbox
+			testid="payment-free-checkbox"
+			on={!venue.payment_free}
+			change={(on) => db().editVenuePaymentFree(venue.id, !on)}
+			label={(l) => l.page.settings.checkbox.paymentFree.label}
 		/>
+
+		{#if venue.payment_free}
+			<Note path={(l) => l.page.settings.checkbox.paymentFree.note} />
+		{/if}
+
+		{#if !venue.payment_free}
+			<EditableText
+				text={venue.welcome_amount.toString()}
+				strings={(l) => l.page.settings.field.welcomeTokens}
+				valid={(text) =>
+					validInteger(text) ? undefined : (l) => l.page.settings.field.welcomeTokens.invalid ?? ''}
+				edit={(text) => db().editVenueWelcomeAmount(venue.id, parseInt(text))}
+				testid="venue-welcome-amount"
+			/>
+		{/if}
 
 		<!-- Step 3: Roles -->
 		<Subheader
@@ -227,7 +239,7 @@
 			onChange={(value) => (platformId = value)}
 		/>
 
-		{#each ['payment', 'acknowledgement', 'compensation'] as kind (kind)}
+		{#each venue.payment_free ? ['acknowledgement'] : ['payment', 'acknowledgement', 'compensation'] as kind (kind)}
 			{@const tpl =
 				kind === 'payment'
 					? locale().page.settings.template.payment
@@ -255,11 +267,7 @@
 		/>
 
 		<Tip>
-			<Text
-				markdown
-				path={(l) => l.page.settings.tip.bulkImport}
-				inputs={{ venueid: venue.id }}
-			/>
+			<Text markdown path={(l) => l.page.settings.tip.bulkImport} inputs={{ venueid: venue.id }} />
 		</Tip>
 
 		<!-- Step 8: Activate (the last thing you do) -->

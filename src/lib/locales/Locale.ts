@@ -238,6 +238,7 @@ export type LocaleText = {
 			header: {
 				details: string;
 				payment: string;
+				authors: string;
 				submit: string;
 			};
 			paragraph: {
@@ -259,6 +260,7 @@ export type LocaleText = {
 			};
 			note: {
 				payment: string;
+				authors: string;
 				balance: string;
 				approve: string;
 			};
@@ -595,6 +597,9 @@ export type LocaleText = {
 			checkbox: {
 				inactive: string;
 				anonymousAssignments: CheckboxOnOff;
+				/** `label` is the always-visible checkbox label (checked = payments
+				 * on); `note` describes the payment-free state shown when unchecked. */
+				paymentFree: { label: string; note: string };
 			};
 			slider: {
 				doneVisibility: SliderText;
@@ -752,6 +757,9 @@ export type LocaleText = {
 			};
 			button: {
 				propose: ButtonText;
+			};
+			checkbox: {
+				paymentFree: CheckboxOnOff;
 			};
 			section: {
 				venueInfo: string;
@@ -1079,6 +1087,7 @@ export type LocaleText = {
 		EditVenueInactive: string;
 		EditVenueAnonymousAssignments: string;
 		EditVenueWelcomeAmount: string;
+		EditVenuePaymentFree: string;
 		EditVenueDoneVisibilityDays: string;
 		EditVenueTransactionReminderFrequency: string;
 		EditRoleBidding: string;

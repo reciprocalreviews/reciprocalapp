@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import Button from '$lib/components/Button.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
-	import Dashboard from '$lib/components/Dashboard.svelte';
+	import Dashboard, { type Stat } from '$lib/components/Dashboard.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -39,6 +39,8 @@
 	const db = getDB();
 	const locale = getLocaleContext();
 	let isAdmin = $derived(scholar && venue && venue.admins.includes(scholar.id));
+	// When false, the venue is payment-free: hide all token/currency/cost/compensation UI.
+	let showPayment = $derived(venue ? !venue.payment_free : true);
 	let isVolunteer = $derived(
 		scholar && venue && volunteers && volunteers.some((v) => v.scholarid === scholar.id)
 	);
@@ -90,21 +92,32 @@
 		{/if}
 
 		<ul>
-			<!-- Prompt to pay -->
-			<li>
-				Submitted a manuscript? <Link to={`${venue.id}/submissions/new`}>Pay</Link> to start peer review.
-			</li>
-			<!-- Prompt to volunteer -->
-			<li>
-				Need tokens to pay? <Link to="#roles">Volunteer to review</Link>.
-			</li>
-			<!-- Key details about costs. -->
-			<li>
-				This venue uses {#if currency}the <CurrencyLink {currency}>
-						{TokenLabel} {currency.name}</CurrencyLink
-					>{:else}an unknown{/if}
-				currency.
-			</li>
+			{#if showPayment}
+				<!-- Prompt to pay -->
+				<li>
+					Submitted a manuscript? <Link to={`${venue.id}/submissions/new`}>Pay</Link> to start peer review.
+				</li>
+				<!-- Prompt to volunteer -->
+				<li>
+					Need tokens to pay? <Link to="#roles">Volunteer to review</Link>.
+				</li>
+				<!-- Key details about costs. -->
+				<li>
+					This venue uses {#if currency}the <CurrencyLink {currency}>
+							{TokenLabel} {currency.name}</CurrencyLink
+						>{:else}an unknown{/if}
+					currency.
+				</li>
+			{:else}
+				<!-- Payment-free venue: just submit and volunteer, no tokens. -->
+				<li>
+					Submitted a manuscript? <Link to={`${venue.id}/submissions/new`}>Register it</Link> to start
+					peer review.
+				</li>
+				<li>
+					Want to help? <Link to="#roles">Volunteer to review</Link>.
+				</li>
+			{/if}
 		</ul>
 
 		{#if isAdmin}
@@ -116,11 +129,15 @@
 
 		<Dashboard
 			stats={[
-				{
-					number: venue.welcome_amount ?? undefined,
-					icon: TokenLabel,
-					title: 'tokens for new volunteers'
-				},
+				...(showPayment
+					? [
+							{
+								number: venue.welcome_amount ?? undefined,
+								icon: TokenLabel,
+								title: 'tokens for new volunteers'
+							}
+						]
+					: []),
 				{
 					number: volunteers?.length ?? undefined,
 					title: 'volunteers',
@@ -131,8 +148,10 @@
 					title: 'submissions visible to you',
 					link: `/venue/${venue.id}/submissions`
 				},
-				{ number: tokens?.length, title: 'tokens', link: `/venue/${venue.id}/transactions` }
-			]}
+				...(showPayment
+					? [{ number: tokens?.length, title: 'tokens', link: `/venue/${venue.id}/transactions` }]
+					: [])
+			] as [Stat, ...Stat[]]}
 		></Dashboard>
 
 		<Subheader icon={ScholarLabel} text={(l) => l.page.venue.header.submissionTypes} />
@@ -156,7 +175,7 @@
 					<th>{locale().page.venue.headers.type}</th>
 					<th>{locale().page.venue.headers.description}</th>
 					<th>{locale().page.venue.headers.revisionOf}</th>
-					<th>{locale().page.venue.headers.cost}</th>
+					{#if showPayment}<th>{locale().page.venue.headers.cost}</th>{/if}
 					{#if isAdmin && types.length > 1}<th></th>{/if}
 				{/snippet}
 				{#each types as type, index}
@@ -204,22 +223,22 @@
 								{types.find((t) => t.id === type.revision_of)?.name ?? '—'}
 							{/if}
 						</td>
-						<td>
-							{#if isAdmin}
-								<EditableText
-									text={type.submission_cost.toString()}
-									strings={(l) => l.page.venue.field.cost}
-									valid={(text) =>
-										validInteger(text)
-											? undefined
-											: (l) => l.page.venue.field.cost.invalid ?? ''}
-									edit={(text) => db().editSubmissionTypeCost(type.id, parseInt(text))}
-									testid="submission-cost-{index}"
-								/>
-							{:else}
-								{type.submission_cost}
-							{/if}
-						</td>
+						{#if showPayment}
+							<td>
+								{#if isAdmin}
+									<EditableText
+										text={type.submission_cost.toString()}
+										strings={(l) => l.page.venue.field.cost}
+										valid={(text) =>
+											validInteger(text) ? undefined : (l) => l.page.venue.field.cost.invalid ?? ''}
+										edit={(text) => db().editSubmissionTypeCost(type.id, parseInt(text))}
+										testid="submission-cost-{index}"
+									/>
+								{:else}
+									{type.submission_cost}
+								{/if}
+							</td>
+						{/if}
 						{#if isAdmin && types.length > 1}
 							<td>
 								<Button
@@ -255,7 +274,7 @@
 				{types}
 			/>
 
-			{#if isVolunteer && scholar}
+			{#if isVolunteer && scholar && showPayment}
 				<Form>
 					<Paragraph text={(l) => l.page.venue.paragraph.missingCompensation} />
 

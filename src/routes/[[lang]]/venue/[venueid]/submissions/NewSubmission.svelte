@@ -71,6 +71,10 @@
 	/** The cost to submit is the selected submission type's cost. */
 	let cost = $derived(selectedType?.submission_cost ?? 0);
 
+	/** When false, the venue is payment-free: hide cost/payment/balance UI and
+	 * skip the balance check. Authors may still be listed (payment forced to 0). */
+	let showPayment = $derived(!venue.payment_free);
+
 	/** The revision type whose `revision_of` points at the given type, if any.
 	 * Used to auto-select the right type when linking a predecessor. */
 	function revisionTypeFor(typeID: SubmissionTypeID): SubmissionTypeID | undefined {
@@ -185,6 +189,18 @@
 			validCharges(charges, cost)
 		);
 	}
+
+	/** Whether the submission can be created. In a payment-free venue there is
+	 * no balance to verify, so only the manuscript fields and any listed authors'
+	 * ORCID formats are required. */
+	let canSubmit = $derived(
+		venue.payment_free
+			? isntEmpty(title) &&
+					validExternalID(externalID) &&
+					(previousID.length === 0 || validExternalID(previousID)) &&
+					charges.every((c) => c.scholar.trim() === '' || validORCID(c.scholar))
+			: affordable === true && validSubmission(title, externalID, charges, cost)
+	);
 </script>
 
 {#if !user}
@@ -264,19 +280,24 @@
 		></Options>
 		<TextField strings={(l) => l.page.submissions.field.note} size={60} bind:text={note} />
 
-		<h3><Text path={(l) => l.page.newSubmission.header.payment} /></h3>
-		<Note path={(l) => l.page.newSubmission.note.payment} />
-		<Feedback
-			text={(l) =>
-				l.page.newSubmission.cost
-					.replaceAll('{type}', selectedType?.name ?? '')
-					.replaceAll('{cost}', cost.toString())}
-		/>
+		{#if showPayment}
+			<h3><Text path={(l) => l.page.newSubmission.header.payment} /></h3>
+			<Note path={(l) => l.page.newSubmission.note.payment} />
+			<Feedback
+				text={(l) =>
+					l.page.newSubmission.cost
+						.replaceAll('{type}', selectedType?.name ?? '')
+						.replaceAll('{cost}', cost.toString())}
+			/>
+		{:else}
+			<h3><Text path={(l) => l.page.newSubmission.header.authors} /></h3>
+			<Note path={(l) => l.page.newSubmission.note.authors} />
+		{/if}
 		<Table>
 			{#snippet header()}
 				<th><Text path={(l) => l.page.newSubmission.table.orcid} /></th>
 				<th><Text path={(l) => l.page.newSubmission.table.name} /></th>
-				<th><Text path={(l) => l.page.newSubmission.table.payment} /></th>
+				{#if showPayment}<th><Text path={(l) => l.page.newSubmission.table.payment} /></th>{/if}
 				<th><Text path={(l) => l.page.newSubmission.table.removeAuthor} /></th>
 			{/snippet}
 			{#each charges as charge, index}
@@ -307,16 +328,18 @@
 						{:else}&mdash;
 						{/if}
 					</td>
-					<td
-						><Slider
-							strings={(l) => ({ ...l.page.newSubmission.slider.payment, label: undefined })}
-							bind:value={charge.payment}
-							min={0}
-							max={cost}
-							step={1}
-							testid="payment-slider-{index}"
-						/></td
-					>
+					{#if showPayment}
+						<td
+							><Slider
+								strings={(l) => ({ ...l.page.newSubmission.slider.payment, label: undefined })}
+								bind:value={charge.payment}
+								min={0}
+								max={cost}
+								step={1}
+								testid="payment-slider-{index}"
+							/></td
+						>
+					{/if}
 					<td
 						><Button
 							strings={(l) => l.page.newSubmission.button.removeAuthor}
@@ -342,6 +365,8 @@
 
 		{#if duplicateScholars(charges)}
 			<Feedback error text={(l) => l.page.newSubmission.feedback.duplicateScholars}></Feedback>
+		{:else if !showPayment}
+			<!-- Payment-free venue: no balance to verify. -->
 		{:else if charges.reduce((sum, charge) => sum + charge.payment, 0) < cost}
 			<Feedback
 				error
@@ -359,9 +384,7 @@
 			<Button
 				strings={(l) => l.page.newSubmission.button.checkBalances}
 				testid="check-balances"
-				active={validChargeFormat(charges) &&
-					validCharge(charges, cost) &&
-					affordable !== true}
+				active={validChargeFormat(charges) && validCharge(charges, cost) && affordable !== true}
 				action={checkAffordability}
 			/>
 
@@ -374,14 +397,21 @@
 
 		<h3><Text path={(l) => l.page.newSubmission.header.submit} /></h3>
 
-		<Note path={(l) => l.page.newSubmission.note.approve} />
+		{#if showPayment}
+			<Note path={(l) => l.page.newSubmission.note.approve} />
+		{/if}
 
 		<Button
 			strings={(l) => l.page.newSubmission.button.submit}
 			testid="submit-submission"
-			active={affordable === true && validSubmission(title, externalID, charges, cost)}
+			active={canSubmit}
 			action={async () => {
 				if (user) {
+					// In a payment-free venue, drop any blank author rows so an
+					// authorless submission is allowed (verifyCharges needs no charges).
+					const submitCharges = venue.payment_free
+						? charges.filter((c) => c.scholar.trim() !== '')
+						: charges;
 					const result = await handle(
 						db().createSubmission(
 							user,
@@ -392,7 +422,7 @@
 							previousID.trim() === '' ? null : previousID.trim(),
 							previous,
 							submissionType,
-							charges,
+							submitCharges,
 							note.trim() === '' ? null : note.trim()
 						)
 					);

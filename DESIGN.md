@@ -332,7 +332,7 @@ When a venue is **approved** state:
 - [x] _`editor`_ ([#32](https://github.com/reciprocalreviews/reciprocalapp/issues/32)): Invite one or more `Scholar`s by ORCID to a particular role.
 - [x] _`editor`_: Invite one or more `Scholar`s by email to a particular role.
 - [x] _`editor`_: Gift tokens from the venue to a scholar
-- [ ] _`editor`_ ([#123](https://github.com/reciprocalreviews/reciprocalapp/issues/123)): Mark the venue as compensation-free, hiding all token, transaction, and currency UI for the venue. This supports communities like scenario 3 (TSE) that want a reviewer pool without requiring tokens to submit.
+- [x] _`editor`_ ([#123](https://github.com/reciprocalreviews/reciprocalapp/issues/123)): Mark the venue as payment-free, hiding all token, transaction, cost, compensation, and currency UI for the venue. This is choosable when proposing the venue (skipping the currency and minter requirement) and toggleable later in venue settings. A payment-free venue still keeps a hidden currency to satisfy the data model — minted by the approving steward — but never mints or charges. This supports communities like scenario 3 (TSE) that want a reviewer pool without requiring tokens to submit.
 
 > [!IMPORTANT]
 > The functionality below is specific to compensation

@@ -565,12 +565,13 @@ export default class SupabaseCRUD extends CRUD {
 		currency: CurrencyID | null,
 		minters: string[],
 		census: number,
-		message: string
+		message: string,
+		paymentFree: boolean = false
 	): Promise<Result<string>> {
 		// Make a proposal
 		const { data, error: insertError } = await this.client
 			.from('proposals')
-			.insert({ title, url, editors, census, currency, minters })
+			.insert({ title, url, editors, census, currency, minters, payment_free: paymentFree })
 			.select()
 			.single();
 
@@ -667,24 +668,40 @@ export default class SupabaseCRUD extends CRUD {
 		// Didn't find a editor? Bail.
 		if (editors.length === 0) return this.error('ApproveProposalNoScholars');
 
+		const paymentFree = proposalData.payment_free;
+
 		// Determine the currency to use for the venue. If none was proposed, create a new currency.
 		let currencyID = proposalData.currency;
 		if (currencyID === null) {
-			// Verify all minters have accounts
-			const { data: mintersData, error: mintersError } = await this.client
-				.from('scholars')
-				.select()
-				.in('email', proposalData.minters);
+			let minterIDs: ScholarID[];
+			if (paymentFree) {
+				// A payment-free venue still needs a (hidden) currency, but no minters
+				// were proposed. The approving steward becomes the sole minter — stewards
+				// are never venue admins, so the no_admin_minters trigger passes.
+				const {
+					data: { user }
+				} = await this.client.auth.getUser();
+				if (user === null) return this.error('ApproveProposalNoMinters');
+				minterIDs = [user.id];
+			} else {
+				// Verify all minters have accounts
+				const { data: mintersData, error: mintersError } = await this.client
+					.from('scholars')
+					.select()
+					.in('email', proposalData.minters);
 
-			if (mintersData === null || mintersData.length < proposalData.minters.length)
-				return this.error('ApproveProposalNoMinters', mintersError);
+				if (mintersData === null || mintersData.length < proposalData.minters.length)
+					return this.error('ApproveProposalNoMinters', mintersError);
+
+				minterIDs = mintersData.map((minter) => minter.id);
+			}
 
 			// Is there a currency proposed for the venue? If not, create a currency for the venue
 			const { data: currencyData, error: currencyError } = await this.client
 				.from('currencies')
 				.insert({
 					name: proposalData.title + ' currency',
-					minters: mintersData.map((minter) => minter.id)
+					minters: minterIDs
 				})
 				.select()
 				.single();
@@ -701,8 +718,9 @@ export default class SupabaseCRUD extends CRUD {
 				title: proposalData.title,
 				url: proposalData.url,
 				admins: editors,
-				welcome_amount: 10,
-				currency: currencyID
+				welcome_amount: paymentFree ? 0 : 10,
+				currency: currencyID,
+				payment_free: paymentFree
 			})
 			.select()
 			.single();
@@ -731,24 +749,27 @@ export default class SupabaseCRUD extends CRUD {
 		for (const editorsID of editors)
 			await this.createVolunteer(editorsID, editorsID, roleData.id, true, false, null);
 
-		// Create a default submission type for the venue, with a starting cost.
+		// Create a default submission type for the venue. Payment-free venues
+		// start at zero cost; paying venues start with a cost of 10.
 		const { data: submissionType } = await this.createSubmissionType(
 			venueID,
 			'Research Article',
 			'The default submission type for this venue.',
 			null,
-			10
+			paymentFree ? 0 : 10
 		);
 
 		if (submissionType === undefined) return this.error('CreateSubmissionType');
 
-		// Create compensation for the default role.
-		await this.createCompensation(
-			submissionType.id,
-			roleData.id,
-			1,
-			'It takes some time to triage a new submission and make a decision.'
-		);
+		// Create compensation for the default role. Payment-free venues have no
+		// token compensation, so skip this entirely.
+		if (!paymentFree)
+			await this.createCompensation(
+				submissionType.id,
+				roleData.id,
+				1,
+				'It takes some time to triage a new submission and make a decision.'
+			);
 
 		// Finally, trigger an email to the editors and supporters notifying them that the venue was approved.
 		// First, we get all of the supporters and their emails.
@@ -863,6 +884,14 @@ export default class SupabaseCRUD extends CRUD {
 			.update({ welcome_amount: amount })
 			.eq('id', id);
 		return this.errorOrEmpty('EditVenueWelcomeAmount', error);
+	}
+
+	async editVenuePaymentFree(id: VenueID, paymentFree: boolean) {
+		const { error } = await this.client
+			.from('venues')
+			.update({ payment_free: paymentFree })
+			.eq('id', id);
+		return this.errorOrEmpty('EditVenuePaymentFree', error);
 	}
 
 	async editVenueDoneVisibilityDays(id: VenueID, days: number) {
@@ -1096,6 +1125,9 @@ export default class SupabaseCRUD extends CRUD {
 			.eq('id', venueid)
 			.single();
 		if (venue === null) return this.error('WelcomeVolunteer', venueError);
+
+		// Payment-free venues have no tokens, so there is nothing to welcome with.
+		if (venue.payment_free) return {};
 
 		const welcome = venue.welcome_amount;
 

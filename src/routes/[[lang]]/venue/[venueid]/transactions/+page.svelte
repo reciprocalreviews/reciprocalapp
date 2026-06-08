@@ -31,7 +31,7 @@
 			inputs={{ count: count.toString() }}
 		/>
 
-		{#if venue.admins.includes(scholar.id)}
+		{#if venue.admins.includes(scholar.id) && !venue.payment_free}
 			<Cards>
 				<Card
 					group="admin"

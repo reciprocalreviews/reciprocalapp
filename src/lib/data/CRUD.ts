@@ -133,7 +133,9 @@ export default abstract class CRUD {
 	 * editor assignment on the submission and flips the status. Returns
 	 * structured information about blockers, insufficient funds, or success
 	 * via the notification facility. Reopening is forbidden by design. */
-	abstract markSubmissionDone(submissionID: SubmissionID): Promise<Result<MarkSubmissionDoneOutcome>>;
+	abstract markSubmissionDone(
+		submissionID: SubmissionID
+	): Promise<Result<MarkSubmissionDoneOutcome>>;
 
 	/** Check whether the given scholars have enough tokens for the given payments. True if so, and a list of remaining balances by scholar if not. */
 	abstract verifyCharges(charges: Charge[]): Promise<Result<true | Charge[] | undefined>>;
@@ -166,7 +168,8 @@ export default abstract class CRUD {
 		currency: CurrencyID | null,
 		minters: string[],
 		size: number,
-		message: string
+		message: string,
+		paymentFree?: boolean
 	): Promise<Result<ProposalID>>;
 
 	abstract editVenueProposalTitle(venue: ProposalID, title: string): Promise<Result>;
@@ -201,6 +204,7 @@ export default abstract class CRUD {
 	abstract editVenueInactive(id: VenueID, inactive: string | null): Promise<Result>;
 	abstract editVenueAnonymousAssignments(id: VenueID, anonymous: boolean): Promise<Result>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<Result>;
+	abstract editVenuePaymentFree(id: VenueID, paymentFree: boolean): Promise<Result>;
 	abstract editVenueDoneVisibilityDays(id: VenueID, days: number): Promise<Result>;
 	abstract editVenueTransactionReminderFrequency(id: VenueID, days: number): Promise<Result>;
 

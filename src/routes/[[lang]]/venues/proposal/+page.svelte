@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import type { CurrencyID } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
+	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import { VenueLabel } from '$lib/components/Labels';
 	import Options from '$lib/components/Options.svelte';
@@ -27,6 +28,7 @@
 	let url = $state('');
 	let size = $state('');
 	let message = $state('');
+	let paymentFree = $state(false);
 	let proposing = $state(false);
 
 	const db = getDB();
@@ -54,10 +56,10 @@
 			!isntEmpty(venue) ||
 			!validURL(url) ||
 			!validEmails(editors, 1) ||
-			(currency === undefined && !validEmails(minters, 1)) ||
+			(!paymentFree && currency === undefined && !validEmails(minters, 1)) ||
 			!validSize(size) ||
 			!validMessage(message) ||
-			!editorsArentMinters() ||
+			(!paymentFree && !editorsArentMinters()) ||
 			uid === null
 		)
 			return;
@@ -69,10 +71,13 @@
 			venue,
 			url,
 			editors.split(',').map((editor) => editor.trim()),
-			currency ?? null,
-			currency !== undefined ? [] : minters.split(',').map((minter) => minter.trim()),
+			paymentFree ? null : (currency ?? null),
+			paymentFree || currency !== undefined
+				? []
+				: minters.split(',').map((minter) => minter.trim()),
 			parseInt(size),
-			message
+			message,
+			paymentFree
 		);
 
 		if (proposalError) {
@@ -134,32 +139,46 @@
 						!validEmails(text, 1) ? (l) => l.page.proposeVenue.field.editors.invalid : undefined}
 					testid="propose-venue-editors"
 				/>
-				<Options
-					strings={(l) => l.page.proposeVenue.options.currency}
-					bind:value={currency}
-					stretch
-					options={[
-						{ label: locale().page.proposeVenue.options.currency.createNew, value: undefined },
-						...(currencies ?? []).map((currency) => ({
-							label: currency.name,
-							value: currency.id
-						}))
-					]}
+				<Checkbox
+					testid="propose-venue-payment-free"
+					on={paymentFree}
+					change={async (on) => {
+						paymentFree = on;
+						return {};
+					}}
+					label={(l) =>
+						paymentFree
+							? l.page.proposeVenue.checkbox.paymentFree.on
+							: l.page.proposeVenue.checkbox.paymentFree.off}
 				/>
-				{#if currency === undefined}
-					<TextField
-						bind:text={minters}
-						strings={(l) => l.page.proposeVenue.field.minters}
-						active={!proposing}
+				{#if !paymentFree}
+					<Options
+						strings={(l) => l.page.proposeVenue.options.currency}
+						bind:value={currency}
 						stretch
-						valid={(text) =>
-							!validEmails(text, 1)
-								? (l) => l.page.proposeVenue.field.minters.invalid
-								: !editorsArentMinters()
-									? (l) => l.page.proposeVenue.field.mintersConflict
-									: undefined}
-						testid="propose-venue-minters"
+						options={[
+							{ label: locale().page.proposeVenue.options.currency.createNew, value: undefined },
+							...(currencies ?? []).map((currency) => ({
+								label: currency.name,
+								value: currency.id
+							}))
+						]}
 					/>
+					{#if currency === undefined}
+						<TextField
+							bind:text={minters}
+							strings={(l) => l.page.proposeVenue.field.minters}
+							active={!proposing}
+							stretch
+							valid={(text) =>
+								!validEmails(text, 1)
+									? (l) => l.page.proposeVenue.field.minters.invalid
+									: !editorsArentMinters()
+										? (l) => l.page.proposeVenue.field.mintersConflict
+										: undefined}
+							testid="propose-venue-minters"
+						/>
+					{/if}
 				{/if}
 			</section>
 
@@ -189,10 +208,10 @@
 						isntEmpty(venue) &&
 						validURL(url) &&
 						validEmails(editors, 1) &&
-						(currency !== undefined || validEmails(minters, 1)) &&
+						(paymentFree || currency !== undefined || validEmails(minters, 1)) &&
 						validSize(size) &&
 						validMessage(message) &&
-						editorsArentMinters()}
+						(paymentFree || editorsArentMinters())}
 					testid="propose-venue-submit"
 				/>
 			</div>

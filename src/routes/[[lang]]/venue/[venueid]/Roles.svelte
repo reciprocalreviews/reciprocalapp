@@ -60,6 +60,9 @@
 	const db = getDB();
 	const locale = getLocaleContext();
 
+	// Payment-free venues have no token compensation, so hide the compensation table.
+	let showPayment = $derived(!venue.payment_free);
+
 	let newRole: string = $state('');
 	let invites = $state<Record<RoleID, string>>(
 		// svelte-ignore state_referenced_locally
@@ -100,8 +103,7 @@
 		{#each roles.toSorted((a, b) => a.priority - b.priority) as role, index (role.id)}
 			{@const roleVolunteers = volunteers?.filter((v) => v.roleid === role.id) ?? []}
 			{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}
-			{@const scholarInvited =
-				scholarVolunteer?.accepted === 'invited' && !scholarVolunteer.active}
+			{@const scholarInvited = scholarVolunteer?.accepted === 'invited' && !scholarVolunteer.active}
 			<Card
 				full
 				subheader
@@ -140,70 +142,72 @@
 						: (l) => l.view.roles.paragraph.roleOpen}
 				/>
 
-				<Table>
-					{#snippet header()}
-						<th style="width: 20%">{locale().view.roles.headers.type}</th>
-						<th style="width: 40%">{locale().view.roles.headers.compensation}</th>
-						<th style="width: 40%">{locale().view.roles.headers.rationale}</th>
-					{/snippet}
-					{#each types as type}
-						{@const comp = compensation?.find(
-							(c) => c.role === role.id && c.submission_type === type.id
-						)}
-						<tr>
-							<td style="width: 20%">{type.name}</td>
-							<td style="width: 40%">
-								{#if isAdmin}
-									{#if comp === undefined || comp.amount === null}
-										<Button
-											small
-											strings={(l) => l.view.roles.button.addCompensation}
-											action={async () =>
-												handle(db().editCompensation(type.id, role.id, 1, comp?.rationale ?? ''))}
-											>Add compensation</Button
-										>
-									{:else}
-										<Slider
-											min={1}
-											max={venue.welcome_amount}
-											value={comp.amount}
-											step={1}
-											immediately={false}
-											strings={(l) => l.view.roles.slider.compensation}
-											change={(value) =>
-												handle(db().editCompensation(type.id, role.id, value, comp.rationale))}
-											testid="compensation-{role.name}-{type.name}"
-										/>
-										<Button
-											small
-											strings={(l) => l.view.roles.button.removeCompensation}
-											action={async () =>
-												handle(db().editCompensation(type.id, role.id, null, comp.rationale))}
-											>{DeleteLabel}</Button
-										>
-									{/if}
-								{:else if comp === undefined || comp.amount === null}
-									no role
-								{:else}
-									<Tokens amount={comp.amount} />
-								{/if}
-							</td>
-							<td style="width: 40%">
-								{#if comp && comp.amount !== null}
+				{#if showPayment}
+					<Table>
+						{#snippet header()}
+							<th style="width: 20%">{locale().view.roles.headers.type}</th>
+							<th style="width: 40%">{locale().view.roles.headers.compensation}</th>
+							<th style="width: 40%">{locale().view.roles.headers.rationale}</th>
+						{/snippet}
+						{#each types as type}
+							{@const comp = compensation?.find(
+								(c) => c.role === role.id && c.submission_type === type.id
+							)}
+							<tr>
+								<td style="width: 20%">{type.name}</td>
+								<td style="width: 40%">
 									{#if isAdmin}
-										<EditableText
-											text={comp.rationale}
-											strings={(l) => l.view.roles.field.compensationRationale}
-											edit={(text) => db().editCompensation(type.id, role.id, comp.amount, text)}
-										/>
+										{#if comp === undefined || comp.amount === null}
+											<Button
+												small
+												strings={(l) => l.view.roles.button.addCompensation}
+												action={async () =>
+													handle(db().editCompensation(type.id, role.id, 1, comp?.rationale ?? ''))}
+												>Add compensation</Button
+											>
+										{:else}
+											<Slider
+												min={1}
+												max={venue.welcome_amount}
+												value={comp.amount}
+												step={1}
+												immediately={false}
+												strings={(l) => l.view.roles.slider.compensation}
+												change={(value) =>
+													handle(db().editCompensation(type.id, role.id, value, comp.rationale))}
+												testid="compensation-{role.name}-{type.name}"
+											/>
+											<Button
+												small
+												strings={(l) => l.view.roles.button.removeCompensation}
+												action={async () =>
+													handle(db().editCompensation(type.id, role.id, null, comp.rationale))}
+												>{DeleteLabel}</Button
+											>
+										{/if}
+									{:else if comp === undefined || comp.amount === null}
+										no role
 									{:else}
-										{comp.rationale}
+										<Tokens amount={comp.amount} />
 									{/if}
-								{:else}—{/if}
-							</td>
-						</tr>
-					{/each}
-				</Table>
+								</td>
+								<td style="width: 40%">
+									{#if comp && comp.amount !== null}
+										{#if isAdmin}
+											<EditableText
+												text={comp.rationale}
+												strings={(l) => l.view.roles.field.compensationRationale}
+												edit={(text) => db().editCompensation(type.id, role.id, comp.amount, text)}
+											/>
+										{:else}
+											{comp.rationale}
+										{/if}
+									{:else}—{/if}
+								</td>
+							</tr>
+						{/each}
+					</Table>
+				{/if}
 
 				<Paragraph
 					text={(l) => l.view.roles.paragraph.volunteersCount}

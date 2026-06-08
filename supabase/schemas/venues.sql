@@ -13,6 +13,9 @@ create table if not exists public.venues (
 	currency uuid not null,
 	-- The optional amount of newly minted tokens granted to new volunteers
 	welcome_amount integer not null,
+	-- Whether the venue operates without payment, hiding all token, currency,
+	-- cost, and compensation UI. The venue still has a (hidden) currency.
+	payment_free boolean default false not null,
 	-- One or more scholars who serve as admins of the venue
 	admins uuid[] default '{}'::uuid[] not null,
 	-- Whether the venue is active; null if so, text if not, explaining why.
@@ -65,6 +68,11 @@ create or replace function public.no_minter_admins () RETURNS trigger LANGUAGE p
 set
 	"search_path" to '' as $$
 begin
+    -- Payment-free venues never mint or pay, so the anti-self-dealing rule
+    -- does not apply; their hidden currency may be minted by an admin.
+    if new.payment_free then
+        return new;
+    end if;
     -- If the admin of this venue is a minter of its currency, raise an exception
     if new.admins && (select minters from public.currencies where id = new.currency) then
         raise exception 'A venue admin cannot be the minter of the venue currency';

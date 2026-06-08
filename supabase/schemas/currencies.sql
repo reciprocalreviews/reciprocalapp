@@ -62,8 +62,9 @@ create or replace function "public"."no_admin_minters" () RETURNS "trigger" LANG
 set
 	"search_path" to '' as $$
 begin
-    -- If the admin of this venue is a minter of its currency, raise an exception
-    if exists (select * from public.venues where public.venues.currency = new.id and (public.venues.admins && new.minters)) then
+    -- Payment-free venues never mint or pay, so the anti-self-dealing rule
+    -- does not apply; their hidden currency may be minted by an admin.
+    if exists (select * from public.venues where public.venues.currency = new.id and (public.venues.admins && new.minters) and not public.venues.payment_free) then
         raise exception 'A venue minter cannot be the admin of the venue currency';
     end if;
     return new;

@@ -344,6 +344,7 @@ export type Database = {
           editors: string[]
           id: string
           minters: string[]
+          payment_free: boolean
           title: string
           url: string
           venue: string | null
@@ -354,6 +355,7 @@ export type Database = {
           editors?: string[]
           id?: string
           minters?: string[]
+          payment_free?: boolean
           title?: string
           url?: string
           venue?: string | null
@@ -364,6 +366,7 @@ export type Database = {
           editors?: string[]
           id?: string
           minters?: string[]
+          payment_free?: boolean
           title?: string
           url?: string
           venue?: string | null
@@ -788,6 +791,7 @@ export type Database = {
           done_visibility_days: number
           id: string
           inactive: string | null
+          payment_free: boolean
           title: string
           transaction_reminder_frequency_days: number
           transaction_reminder_time: string | null
@@ -802,6 +806,7 @@ export type Database = {
           done_visibility_days?: number
           id?: string
           inactive?: string | null
+          payment_free?: boolean
           title?: string
           transaction_reminder_frequency_days?: number
           transaction_reminder_time?: string | null
@@ -816,6 +821,7 @@ export type Database = {
           done_visibility_days?: number
           id?: string
           inactive?: string | null
+          payment_free?: boolean
           title?: string
           transaction_reminder_frequency_days?: number
           transaction_reminder_time?: string | null

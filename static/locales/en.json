@@ -177,6 +177,12 @@
 					"label": "Propose venue"
 				}
 			},
+			"checkbox": {
+				"paymentFree": {
+					"on": "**Payment-free venue**: just volunteering and bidding, with no currency, costs, or compensation.",
+					"off": "**Token-based venue**: authors pay tokens to submit and reviewers are compensated."
+				}
+			},
 			"section": {
 				"venueInfo": "Venue info",
 				"team": "Team",
@@ -343,6 +349,7 @@
 			"header": {
 				"details": "Details",
 				"payment": "Authors and payment",
+				"authors": "Authors",
 				"submit": "Submit"
 			},
 			"paragraph": {
@@ -376,6 +383,7 @@
 			},
 			"note": {
 				"payment": "List every co-author. Set the payment for each, with non-paying co-authors at 0. The total must equal the venue's submission cost.",
+				"authors": "List every co-author, even those not contributing — this lets editors and the platform identify conflicts of interest with potential reviewers.",
 				"balance": "Verify the balance to enable submission.",
 				"approve": "Each paying author will need to approve their payment. Non-paying co-authors don't owe anything, so no approval is needed from them."
 			},
@@ -886,6 +894,10 @@
 				"anonymousAssignments": {
 					"on": "**Anonymous assignments**: Authors and conflicted scholars cannot see who is assigned to review their submissions.",
 					"off": "**Visible assignments**: Authors and conflicted scholars can see who is assigned to review their submissions. This is open reviewing."
+				},
+				"paymentFree": {
+					"label": "**Token-based venue**: Authors pay tokens to submit and reviewers are compensated with tokens. Uncheck to make this venue payment-free.",
+					"note": "**Payment-free venue**: Scholars submit and review without tokens. No currency, costs, or compensation are shown."
 				}
 			},
 			"slider": {
@@ -1546,6 +1558,7 @@
 		"EditVenueInactive": "Unable to edit the inactive message",
 		"EditVenueAnonymousAssignments": "Unable to edit anonymous assignments setting",
 		"EditVenueWelcomeAmount": "Unable to edit the welcome amount",
+		"EditVenuePaymentFree": "Unable to change the payment mode",
 		"EditVenueDoneVisibilityDays": "Unable to update the recently-done visibility window",
 		"EditVenueTransactionReminderFrequency": "Unable to update the transaction reminder frequency",
 		"EditRoleBidding": "Unable to toggle bidding",

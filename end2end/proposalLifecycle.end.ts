@@ -173,6 +173,98 @@ test('steward approves a proposal; the live venue becomes reachable at /venue/[i
 	await expect(page.getByText(title).first()).toBeVisible();
 });
 
+test('proposing a payment-free venue hides the currency fields and persists the flag', async ({
+	page,
+	context
+}) => {
+	const title = `PaymentFree-form-test ${Date.now()}`;
+	const url = 'https://example.com/free';
+	const rationale = `e2e payment-free ${Date.now()}`;
+
+	await login(PROPOSER_EMAIL, page, context);
+	await page.goto('/venues/proposal');
+	await page.waitForLoadState('networkidle');
+
+	const fillField = async (testid: string, value: string) => {
+		const field = page.getByTestId(testid);
+		await field.click();
+		await field.fill(value);
+		await field.blur();
+	};
+
+	await fillField('propose-venue-name', title);
+	await fillField('propose-venue-editors', STEWARD_EMAIL);
+
+	// Turn on payment-free mode; the currency/minters fields should disappear
+	// and no currency input is required to submit.
+	await page.getByTestId('propose-venue-payment-free').click();
+	await expect(page.getByTestId('propose-venue-minters')).toHaveCount(0);
+
+	await fillField('propose-venue-url', url);
+	await fillField('propose-venue-size', '250');
+	await fillField('propose-venue-rationale', rationale);
+
+	const submitButton = page.getByTestId('propose-venue-submit');
+	await expect(submitButton).toBeEnabled({ timeout: 5_000 });
+	await submitButton.click();
+
+	await page.waitForURL(/\/venues\/proposal\/[0-9a-f-]+$/);
+
+	// The proposal persisted payment_free = true with no minters.
+	const row = sql(
+		`select payment_free, cardinality(minters) from public.proposals where title = '${title}';`
+	);
+	expect(row).toBe('t|0');
+});
+
+test('approving a payment-free proposal creates a venue with payment_free, zero welcome, and zero-cost type', async ({
+	page,
+	context
+}) => {
+	const title = `PaymentFree-approve-test ${Date.now()}`;
+	// Seed a payment-free proposal directly (no minters), as the propose form would.
+	const proposalID = sql(
+		`insert into public.proposals (title, url, editors, minters, census, venue, payment_free) values ('${title}', 'https://example.com', ARRAY['${STEWARD_EMAIL}']::text[], ARRAY[]::text[], 100, null, true) returning id;`
+	);
+
+	await login(STEWARD_EMAIL, page, context);
+	await page.goto(`/venues/proposal/${proposalID}`);
+	await page.waitForLoadState('networkidle');
+
+	await page.getByTestId('proposal-steward-card').click();
+	await page.getByTestId('proposal-approve').click();
+	await page.getByTestId('proposal-approve').click();
+
+	await page.waitForURL(/\/venues$/);
+
+	const venueID = sql(`select venue from public.proposals where id = '${proposalID}';`);
+	expect(venueID).toMatch(/^[0-9a-f-]+$/);
+
+	// The venue is payment-free with a zero welcome amount.
+	const venueRow = sql(
+		`select payment_free, welcome_amount from public.venues where id = '${venueID}';`
+	);
+	expect(venueRow).toBe('t|0');
+
+	// A hidden currency was created with the approving steward as the sole minter.
+	const stewardID = sql(`select id from public.scholars where email = '${STEWARD_EMAIL}';`);
+	const minterRow = sql(
+		`select minters from public.currencies where id = (select currency from public.venues where id = '${venueID}');`
+	);
+	expect(minterRow).toBe(`{${stewardID}}`);
+
+	// The default submission type costs nothing.
+	const cost = sql(
+		`select submission_cost from public.submission_types where venue = '${venueID}';`
+	);
+	expect(cost).toBe('0');
+
+	// On the live venue page, the submission-type cost column is hidden.
+	await page.goto(`/venue/${venueID}`);
+	await expect(page.getByText(title).first()).toBeVisible();
+	await expect(page.getByTestId('submission-cost-0')).toHaveCount(0);
+});
+
 test('steward deletes a proposal; it disappears from /venues', async ({ page, context }) => {
 	const title = `Delete-test ${Date.now()}`;
 	const proposalID = seedPendingProposal(title, [STEWARD_EMAIL], [APPROVAL_MINTER_EMAIL]);
