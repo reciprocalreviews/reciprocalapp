@@ -261,6 +261,9 @@
             "ApproveProposalNotFound": {
               "type": "string"
             },
+            "ApproveTransaction": {
+              "type": "string"
+            },
             "BulkImportSubmissions": {
               "type": "string"
             },
@@ -641,6 +644,7 @@
             "TransactionNotDeclined",
             "AlreadyApproved",
             "SelfDealingApproval",
+            "ApproveTransaction",
             "TransactionApprovalUpdate",
             "MissingApprovalVenue",
             "MissingRecipient",

@@ -116,6 +116,39 @@ function isMarkSubmissionDoneResult(value: unknown): value is MarkSubmissionDone
 	);
 }
 
+/** Read a string field from a jsonb object returned by an RPC, or null if
+ * absent or the wrong type. The atomic-CRUD RPCs return jsonb_build_object
+ * payloads (see migration 20260608000000_atomic_crud.sql). */
+function stringField(value: unknown, key: string): string | null {
+	if (typeof value !== 'object' || value === null || !(key in value)) return null;
+	const field = (value as Record<string, unknown>)[key];
+	return typeof field === 'string' ? field : null;
+}
+
+/** Read a string[] field from a jsonb object returned by an RPC, or null if
+ * absent or not an array of strings. */
+function stringArrayField(value: unknown, key: string): string[] | null {
+	if (typeof value !== 'object' || value === null || !(key in value)) return null;
+	const field = (value as Record<string, unknown>)[key];
+	if (!Array.isArray(field) || field.some((v) => typeof v !== 'string')) return null;
+	return field as string[];
+}
+
+/** Map an atomic-CRUD RPC's custom SQLSTATE (the `RRxxx` codes set via
+ * `raise ... using errcode` in migration 20260608000000_atomic_crud.sql) to a
+ * specific localized error key, falling back to a generic one. This keeps the
+ * user-facing headline specific and localized for the user-actionable failures
+ * (insufficient tokens, self-dealing, already approved, already volunteered)
+ * instead of collapsing every failure to one generic message per RPC. */
+function rpcErrorKey(
+	error: PostgrestError | null,
+	fallback: keyof Locale['error'],
+	map: Record<string, keyof Locale['error']>
+): keyof Locale['error'] {
+	const code = error?.code;
+	return (code !== undefined && map[code]) || fallback;
+}
+
 export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
 	readonly client: SupabaseClient<Database>;
@@ -324,110 +357,53 @@ export default class SupabaseCRUD extends CRUD {
 		charges: Charge[],
 		note: string | null
 	): Promise<Result<SubmissionID>> {
-		// Verify that the charges are valid.
+		// Verify charges (reads) and resolve author ORCIDs to scholar ids before
+		// the atomic write. The create_submission RPC then records every proposed
+		// payment, immediately approves the submitter's own charge (moving their
+		// tokens to the venue), and inserts the submission in a single
+		// transaction — so a connectivity loss can't orphan proposed
+		// transactions or violate the submission's array-cardinality constraints.
 		const chargeError = await this.verifyCharges(charges);
 		if (chargeError.error) return { error: chargeError.error };
 		if (chargeError.data !== true) return { error: { message: this.locale.error.InvalidCharges } };
 
-		// First, find the scholars with the specified ORCIDs.
 		const { data: scholars, error: scholarsError } = await this.convertORCIDsToScholars(
 			charges.map((charge) => charge.scholar)
 		);
-
-		// Couldn't find them? Bail.
 		if (scholarsError || scholars === undefined)
 			return {
 				error: { message: this.locale.error.ScholarNotFound, details: scholarsError?.details }
 			};
 
-		// Verify that we found a scholar for all charges.
+		// Resolve the author id for each charge, preserving order.
 		const authors = charges
 			.map((charge) => scholars.find((s) => s.orcid === charge.scholar)?.id)
-			.filter((a) => a !== undefined);
-
-		// Verify that the number of authors find is the number of charges specified.
+			.filter((a): a is ScholarID => a !== undefined);
 		if (authors.length < charges.length)
 			return { error: { message: this.locale.error.MissingSubmissionCharge } };
 
-		// Get the requested venue
-		const { data: venueData, error: venueError } = await this.client
-			.from('venues')
-			.select()
-			.eq('id', venue)
-			.single();
-		if (venueError || venue === null)
-			return {
-				error: { message: this.locale.error.UnknownVenue, details: venueError ?? undefined }
-			};
+		// Supabase's type generator types every function argument as non-null,
+		// but these columns are genuinely nullable (no predecessor, no note) and
+		// Postgres accepts NULL at runtime — so cast the nullable args through.
+		const { data, error } = await this.client.rpc('create_submission', {
+			_venue: venue,
+			_external_id: externalID,
+			_previous_id: previousID as string,
+			_previous: previous as string,
+			_submission_type: submission_type,
+			_authors: authors,
+			_payments: charges.map((charge) => charge.payment ?? 0),
+			_title: title,
+			_expertise: expertise,
+			_note: note as string,
+			_purpose: `Payment for submission ${externalID}`
+		});
+		if (error)
+			return this.error(rpcErrorKey(error, 'NewSubmission', { RR003: 'TransferTokensInsufficient' }), error);
 
-		// Create proposed transactions for each charge. Charges of zero tokens
-		// (non-paying co-authors listed for COI tracking) get a NullUUID
-		// placeholder instead of a transaction — there's nothing to transfer
-		// and the submitter can't approve a co-author's transaction anyway.
-		const transactions: string[] = [];
-		for (let scholarIndex = 0; scholarIndex < charges.length; scholarIndex++) {
-			const charge = charges[scholarIndex];
-			const scholarID = authors[scholarIndex];
-			if ((charge.payment ?? 0) === 0) {
-				transactions.push(NullUUID);
-				continue;
-			}
-			const { data: proposedScholarTransactionID, error } = await this.createTransaction(
-				creator,
-				// From this scholar to the given venue
-				scholarID,
-				null,
-				null,
-				venue,
-				// Represent hypothetical tokens with a list of null UUIDs
-				Array.from(new Array(charge.payment ?? 0), () => NullUUID),
-				venueData.currency,
-				`Payment for submission ${externalID}`,
-				'proposed'
-			);
-			if (error) {
-				return {
-					error: { message: this.locale.error.CreateTransaction, details: error.details }
-				};
-			} else if (proposedScholarTransactionID) {
-				transactions.push(proposedScholarTransactionID);
-				// The creator doesn't need to approve their own transaction; process it immediately.
-				if (scholarID === creator) {
-					const { error: approvalError } = await this.approveTransaction(
-						creator,
-						proposedScholarTransactionID
-					);
-					if (approvalError) return { error: approvalError };
-				}
-			}
-		}
-
-		// Create the submission
-		const { data: submission, error } = await this.client
-			.from('submissions')
-			.insert({
-				title,
-				expertise,
-				venue,
-				externalid: externalID,
-				previousid: previousID,
-				previous,
-				submission_type,
-				authors,
-				payments: charges.map((charge) => charge.payment ?? 0),
-				// Provide the list of proposed transactions
-				transactions: transactions,
-				note
-			})
-			.select()
-			.single();
-		if (error) {
-			console.error(error);
-			return { error: { message: this.locale.error.NewSubmission, details: error } };
-		}
-
-		// Return the transaction IDs.
-		return { data: submission.id };
+		const submissionID = stringField(data, 'submission_id');
+		if (submissionID === null) return { error: { message: this.locale.error.NewSubmission } };
+		return { data: submissionID };
 	}
 
 	async bulkImportSubmissions(
@@ -643,146 +619,27 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async approveVenueProposal(proposal: ProposalID): Promise<Result<string>> {
-		// Get the latest proposal data
-		const { data: proposalData, error: proposalError } = await this.client
-			.from('proposals')
-			.select()
-			.eq('id', proposal)
-			.single();
+		// Provisioning the venue — its currency (if none was proposed), the venue
+		// itself, the editor role, the editor volunteers, the default submission
+		// type, and the default compensation — plus linking the proposal to the
+		// new venue, all happen atomically inside the approve_venue_proposal RPC.
+		// A partial failure can no longer orphan any of those records. The
+		// notification emails are dispatched here from the ids the RPC returns.
+		const { data, error } = await this.client.rpc('approve_venue_proposal', {
+			_proposal_id: proposal
+		});
+		if (error) return this.error('ApproveProposalNoVenue', error);
 
-		// Couldn't get proposal data? Return an error.
-		if (proposalData === null) return this.error('ApproveProposalNotFound', proposalError);
+		const venueID = stringField(data, 'venue_id');
+		const editorIDs = stringArrayField(data, 'editor_ids');
+		const supporterIDs = stringArrayField(data, 'supporter_ids');
+		const title = stringField(data, 'title');
+		if (venueID === null || editorIDs === null || supporterIDs === null || title === null)
+			return this.error('ApproveProposalNoVenue');
 
-		// Find the scholars with the corresponding emails.
-		const { data: scholarsData, error: scholarsError } = await this.client
-			.from('scholars')
-			.select()
-			.in('email', proposalData.editors);
-
-		if (scholarsData === null || scholarsData.length < proposalData.editors.length)
-			return this.error('ApproveProposalNoScholars', scholarsError);
-
-		// Build the editor scholar ID list from the editors found.
-		let editors: ScholarID[] = scholarsData.map((scholar) => scholar.id);
-
-		// Didn't find a editor? Bail.
-		if (editors.length === 0) return this.error('ApproveProposalNoScholars');
-
-		const paymentFree = proposalData.payment_free;
-
-		// Determine the currency to use for the venue. If none was proposed, create a new currency.
-		let currencyID = proposalData.currency;
-		if (currencyID === null) {
-			let minterIDs: ScholarID[];
-			if (paymentFree) {
-				// A payment-free venue still needs a (hidden) currency, but no minters
-				// were proposed. The approving steward becomes the sole minter — stewards
-				// are never venue admins, so the no_admin_minters trigger passes.
-				const {
-					data: { user }
-				} = await this.client.auth.getUser();
-				if (user === null) return this.error('ApproveProposalNoMinters');
-				minterIDs = [user.id];
-			} else {
-				// Verify all minters have accounts
-				const { data: mintersData, error: mintersError } = await this.client
-					.from('scholars')
-					.select()
-					.in('email', proposalData.minters);
-
-				if (mintersData === null || mintersData.length < proposalData.minters.length)
-					return this.error('ApproveProposalNoMinters', mintersError);
-
-				minterIDs = mintersData.map((minter) => minter.id);
-			}
-
-			// Is there a currency proposed for the venue? If not, create a currency for the venue
-			const { data: currencyData, error: currencyError } = await this.client
-				.from('currencies')
-				.insert({
-					name: proposalData.title + ' currency',
-					minters: minterIDs
-				})
-				.select()
-				.single();
-
-			if (currencyError) return this.error('ApproveProposalNoCurrency', currencyError);
-
-			currencyID = currencyData.id;
-		}
-
-		// Create the venue with the proposal's title, URL, and scholars.
-		const { data: venueData, error: venueError } = await this.client
-			.from('venues')
-			.insert({
-				title: proposalData.title,
-				url: proposalData.url,
-				admins: editors,
-				welcome_amount: paymentFree ? 0 : 10,
-				currency: currencyID,
-				payment_free: paymentFree
-			})
-			.select()
-			.single();
-		if (venueData === null || venueError !== null)
-			return this.error('ApproveProposalNoVenue', venueError);
-
-		const venueID = venueData.id;
-
-		// Update the proposal to link to the venue.
-		const { error } = await this.client
-			.from('proposals')
-			.update({ venue: venueID })
-			.eq('id', proposal);
-		if (error) return this.error('ApproveProposalCannotUpdateVenue', error);
-
-		// Create an editor role for the venue, and assign all editors to it.
-		const { data: roleData, error: roleError } = await this.createRole(
-			venueID,
-			'Editor',
-			'Triages submissions, assigns meta-reviewers, and makes final decisions on submissions.'
-		);
-		if (roleError || roleData === undefined)
-			return this.error('ApproveProposalCannotUpdateVenue', roleError?.details);
-
-		// Volunteer all editors for this role.
-		for (const editorsID of editors)
-			await this.createVolunteer(editorsID, editorsID, roleData.id, true, false, null);
-
-		// Create a default submission type for the venue. Payment-free venues
-		// start at zero cost; paying venues start with a cost of 10.
-		const { data: submissionType } = await this.createSubmissionType(
-			venueID,
-			'Research Article',
-			'The default submission type for this venue.',
-			null,
-			paymentFree ? 0 : 10
-		);
-
-		if (submissionType === undefined) return this.error('CreateSubmissionType');
-
-		// Create compensation for the default role. Payment-free venues have no
-		// token compensation, so skip this entirely.
-		if (!paymentFree)
-			await this.createCompensation(
-				submissionType.id,
-				roleData.id,
-				1,
-				'It takes some time to triage a new submission and make a decision.'
-			);
-
-		// Finally, trigger an email to the editors and supporters notifying them that the venue was approved.
-		// First, we get all of the supporters and their emails.
-		const { data: supportersData, error: supportersError } = await this.client
-			.from('supporters')
-			.select('scholarid')
-			.eq('proposalid', proposal);
-		if (supportersData === null) return this.error('ApproveProposalNoSupporters', supportersError);
-		const scholarsToEmail = [...editors, ...supportersData.map((s) => s.scholarid)];
-
-		// Send a notification email to the scholars.
+		const scholarsToEmail = [...editorIDs, ...supporterIDs];
 		const emailResult = await this.emailScholars(scholarsToEmail, 'VenueApproved', [
-			proposalData.title,
+			title,
 			venueID
 		]);
 
@@ -1072,37 +929,24 @@ export default class SupabaseCRUD extends CRUD {
 		compensate: boolean,
 		papers: number | null
 	): Promise<Result<string>> {
-		// First, get all of the volunteer records for this scholar.
-		const { data: volunteer, error: volunteerError } = await this.client
-			.from('volunteers')
-			.select()
-			.eq('scholarid', scholarid);
-		// Couldn't get the volunteer records? Bail.
-		if (volunteer === null) return this.error('CreateVolunteer', volunteerError);
+		// Creating the volunteer record and, when this is the scholar's first
+		// role and compensation is requested, recording the proposed welcome
+		// grant both happen atomically inside the create_volunteer RPC, so the
+		// volunteer can never exist without its welcome grant (or vice versa).
+		const { data, error } = await this.client.rpc('create_volunteer', {
+			_scholarid: scholarid,
+			_roleid: roleid,
+			_accepted: accepted,
+			_compensate: compensate,
+			// Nullable in Postgres ("unspecified"), but typed non-null by the generator.
+			_papers: papers as number
+		});
+		if (error)
+			return this.error(rpcErrorKey(error, 'CreateVolunteer', { RR004: 'AlreadyVolunteered' }), error);
 
-		// Already volunteered for this venue? Bail.
-		if (volunteer.some((v) => v.roleid === roleid)) return this.error('AlreadyVolunteered');
-
-		// Create the volunteer record.
-		const { data: newVolunteer, error: newVolunteerError } = await this.client
-			.from('volunteers')
-			.insert({
-				scholarid,
-				roleid,
-				active: accepted,
-				accepted: accepted ? 'accepted' : 'invited',
-				expertise: '',
-				papers
-			})
-			.select()
-			.single();
-		if (newVolunteerError) return this.error('CreateVolunteer', newVolunteerError);
-
-		// If this is their first volunteer role for the venue, grant the number of welcome tokens for the venue.
-		if (volunteer.length === 0 && compensate)
-			await this.welcomeVolunteer(inviter, scholarid, roleid, 'Welcome tokens for volunteering');
-
-		return { data: newVolunteer.id };
+		const volunteerID = stringField(data, 'volunteer_id');
+		if (volunteerID === null) return this.error('CreateVolunteer');
+		return { data: volunteerID };
 	}
 
 	async welcomeVolunteer(
@@ -1277,32 +1121,13 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async acceptRoleInvite(scholar: ScholarID, id: VolunteerID, response: Response) {
-		const { data: volunteer, error: volunteerError } = await this.client
-			.from('volunteers')
-			.select()
-			.eq('scholarid', scholar);
-		if (volunteerError) return this.error('AcceptRoleInvite', volunteerError);
-
-		// Mark the volunteer status as
-		const { error } = await this.client
-			.from('volunteers')
-			.update({ active: true, accepted: response })
-			.eq('id', id);
-
-		// If the scholar is accepting the role and this is their first role, grant welcome tokens.
-		if (
-			volunteer &&
-			volunteer.length === 1 &&
-			volunteer[0].accepted === 'invited' &&
-			response === 'accepted'
-		)
-			await this.welcomeVolunteer(
-				scholar,
-				scholar,
-				volunteer[0].roleid,
-				'Welcome tokens for accepting role invite'
-			);
-
+		// Updating the volunteer response and, when accepting a first role,
+		// recording the proposed welcome grant happen atomically inside the
+		// accept_role_invite RPC.
+		const { error } = await this.client.rpc('accept_role_invite', {
+			_volunteer_id: id,
+			_response: response
+		});
 		return this.errorOrEmpty('AcceptRoleInvite', error);
 	}
 
@@ -1332,29 +1157,19 @@ export default class SupabaseCRUD extends CRUD {
 		/** Why are these tokens being minted? */
 		purpose: string
 	): Promise<Result<TokenID[]>> {
-		const rows = Array(amount)
-			.fill(0)
-			.map(() => ({ currency: currencyID, venue: to, scholar: null }));
+		// Minting the tokens into the venue reserve and recording the approved
+		// mint transaction happen atomically inside the mint_tokens RPC.
+		const { data, error } = await this.client.rpc('mint_tokens', {
+			_currency: currencyID,
+			_amount: amount,
+			_to_venue: to,
+			_purpose: purpose
+		});
+		if (error) return this.error('MintTokens', error);
 
-		const { data: tokens, error } = await this.client.from('tokens').insert(rows).select();
-
-		if (error || tokens === null) return this.error('MintTokens', error);
-
-		// Note the transaction for minting these tokens.
-		const { error: transactionError } = await this.createTransaction(
-			creator,
-			null,
-			null,
-			null,
-			to,
-			tokens.map((t) => t.id),
-			currencyID,
-			purpose,
-			'approved'
-		);
-		if (transactionError) return this.error('MintTokens', transactionError.details);
-
-		return { data: tokens.map((t) => t.id) };
+		const tokenIDs = stringArrayField(data, 'token_ids');
+		if (tokenIDs === null) return this.error('MintTokens');
+		return { data: tokenIDs };
 	}
 
 	async resolveEntityID(
@@ -1378,68 +1193,37 @@ export default class SupabaseCRUD extends CRUD {
 		purpose: string,
 		transaction: TransactionID | undefined
 	): Promise<Result<{ transaction: TransactionID; tokens: TokenID[] }>> {
-		// Find the approriate ID for the from and to entities.
-		let fromEntity = await this.resolveEntityID(fromKind, from);
-		let toEntity = await this.resolveEntityID(toKind, to);
+		// Resolve the from/to entity ids (reads). The atomic token movement and
+		// the transaction create/finalize then happen in a single statement
+		// inside the transfer_tokens RPC, so a connectivity loss can no longer
+		// leave a partial transfer (some tokens moved, no transaction recorded).
+		const fromEntity = await this.resolveEntityID(fromKind, from);
+		const toEntity = await this.resolveEntityID(toKind, to);
 
 		if (fromEntity === null) return this.error('ScholarNotFound');
 		if (toEntity === null) return this.error('ScholarNotFound');
 
-		// Find tokens owned by the from entity
-		const { data: tokens, error: tokensError } = await this.client
-			.from('tokens')
-			.select()
-			.eq(fromKind === 'venueid' ? 'venue' : 'scholar', fromEntity)
-			.eq('currency', currency);
-		if (tokensError) return this.error('TransferScholarTokens', tokensError);
+		const { data, error } = await this.client.rpc('transfer_tokens', {
+			_currency: currency,
+			_from: fromEntity,
+			_from_kind: fromKind === 'venueid' ? 'venueid' : 'scholarid',
+			_to: toEntity,
+			_to_kind: toKind === 'venueid' ? 'venueid' : 'scholarid',
+			_amount: amount,
+			_purpose: purpose,
+			// Null when recording a brand-new transfer; typed non-null by the generator.
+			_transaction: (transaction ?? null) as string
+		});
+		if (error)
+			return this.error(
+				rpcErrorKey(error, 'TransferVenueTokens', { RR003: 'TransferTokensInsufficient' }),
+				error
+			);
 
-		// If there aren't enough tokens, bail.
-		if (tokens.length < amount) return this.error('TransferTokensInsufficient');
-
-		// Get the list of token IDs to transfer
-		const tokenIDs = tokens.slice(0, amount).map((token) => token.id);
-
-		// Transfer each token
-		for (const tokenID of tokenIDs) {
-			const { error } = await this.client
-				.from('tokens')
-				.update({
-					venue: toKind === 'venueid' ? toEntity : null,
-					scholar: toKind === 'venueid' ? null : toEntity
-				})
-				.eq('id', tokenID);
-			if (error) return this.error('TransferVenueTokens', error);
-		}
-
-		// Update the existing transaction
-		if (transaction) {
-			const { error } = await this.client
-				.from('transactions')
-				.update({ status: 'approved', tokens: tokenIDs })
-				.eq('id', transaction);
-			if (error) return this.error('TransactionApprovalUpdate', error);
-			return { data: { transaction, tokens: tokenIDs } };
-		}
-		// Record an approved transaction to log the gift.
-		else {
-			const { data: transactionID, error: transactionError } = transaction
-				? { data: transaction, error: null }
-				: await this.createTransaction(
-						creator,
-						fromKind === 'venueid' ? null : fromEntity,
-						fromKind === 'venueid' ? fromEntity : null,
-						toKind === 'venueid' ? null : toEntity,
-						toKind === 'venueid' ? toEntity : null,
-						tokenIDs,
-						tokens[0].currency,
-						purpose,
-						'approved'
-					);
-			if (transactionID === undefined || transactionError)
-				return this.error('CreateTransaction', transactionError?.details);
-
-			return { data: { transaction: transactionID, tokens: tokenIDs } };
-		}
+		const transactionID = stringField(data, 'transaction_id');
+		const tokenIDs = stringArrayField(data, 'token_ids');
+		if (transactionID === null || tokenIDs === null) return this.error('TransferVenueTokens');
+		return { data: { transaction: transactionID, tokens: tokenIDs } };
 	}
 
 	async createTransaction(
@@ -1502,103 +1286,21 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async approveTransaction(creator: ScholarID, id: TransactionID) {
-		// First, get the transaction.
-		const { data: transaction, error: transactionError } = await this.client
-			.from('transactions')
-			.select()
-			.eq('id', id)
-			.single();
-		if (transactionError) return this.error('UnknownTransaction', transactionError);
-
-		// Verify that the transaction is pending. If it's not, bail.
-		if (transaction.status !== 'proposed') return this.error('AlreadyApproved');
-
-		// No-self-enrichment (see DESIGN.md). Spending one's own balance
-		// is not enrichment regardless of recipient; otherwise the approver
-		// can't be the recipient or a venue admin of the recipient. RLS
-		// enforces the same rule; this pre-check produces a clear localized
-		// error instead of a generic RLS denial.
-		const spendingOwnBalance =
-			transaction.from_scholar !== null && transaction.from_scholar === creator;
-		if (!spendingOwnBalance) {
-			if (transaction.to_scholar !== null && transaction.to_scholar === creator)
-				return this.error('SelfDealingApproval');
-			if (transaction.to_venue !== null) {
-				const { data: toVenue, error: toVenueError } = await this.client
-					.from('venues')
-					.select('admins')
-					.eq('id', transaction.to_venue)
-					.single();
-				if (toVenueError) return this.error('UnknownVenue', toVenueError);
-				if (toVenue.admins.includes(creator)) return this.error('SelfDealingApproval');
-			}
-		}
-
-		const from = transaction.from_scholar ?? transaction.from_venue;
-		const to = transaction.to_scholar ?? transaction.to_venue;
-		if (to === null) return this.error('TransactionMissingTo');
-
-		// Pure mint: no source, all tokens are NullUUID placeholders, destination is a
-		// venue. Mint tokens directly to the destination and mark the transaction
-		// approved. Used by bulk submission imports to fund reviewer compensation.
-		if (from === null) {
-			if (transaction.to_venue === null) return this.error('TransactionMissingFrom');
-			const nullCount = transaction.tokens.filter((t) => t === NullUUID).length;
-			if (nullCount === 0 || nullCount !== transaction.tokens.length)
-				return this.error('TransactionMissingFrom');
-
-			const rows = Array(nullCount)
-				.fill(0)
-				.map(() => ({
-					currency: transaction.currency,
-					venue: transaction.to_venue,
-					scholar: null
-				}));
-			const { data: newTokens, error: tokenError } = await this.client
-				.from('tokens')
-				.insert(rows)
-				.select();
-			if (tokenError || newTokens === null) return this.error('MintTokens', tokenError);
-
-			const tokenIDs = newTokens.map((t) => t.id);
-			const { error: updateError } = await this.client
-				.from('transactions')
-				.update({ status: 'approved', tokens: tokenIDs })
-				.eq('id', transaction.id);
-			if (updateError) return this.error('TransactionApprovalUpdate', updateError);
-
-			return { error: undefined, data: undefined };
-		}
-
-		// Mint any tokens that still need to be created, but only when the sender is a venue.
-		// When a scholar pays, their tokens already exist; NullUUIDs are just placeholders for count.
-		const nullCount = transaction.tokens.filter((tokenId) => tokenId === NullUUID).length;
-		if (nullCount > 0 && transaction.from_venue !== null) {
-			const { error: mintingError } = await this.mintTokens(
-				creator,
-				transaction.currency,
-				nullCount,
-				from,
-				transaction.purpose
+		// Authorization (giver / minter, no self-enrichment), any required token
+		// minting, the token movement, and the status flip all happen atomically
+		// inside the approve_transaction RPC. Previously these were several
+		// separate client writes that a connectivity loss could split, moving
+		// tokens without finalizing the transaction (or vice versa).
+		const { error } = await this.client.rpc('approve_transaction', { _transaction_id: id });
+		if (error)
+			return this.error(
+				rpcErrorKey(error, 'ApproveTransaction', {
+					RR001: 'AlreadyApproved',
+					RR002: 'SelfDealingApproval',
+					RR003: 'TransferTokensInsufficient'
+				}),
+				error
 			);
-			if (mintingError) return this.error('MintTokens', mintingError.details, mintingError.message);
-		}
-
-		// Transfer all tokens (existing and newly minted) to the recipient.
-		const { error: transferError } = await this.transferTokens(
-			creator,
-			transaction.currency,
-			from,
-			from === transaction.from_scholar ? 'scholarid' : 'venueid',
-			to,
-			to === transaction.to_scholar ? 'scholarid' : 'venueid',
-			transaction.tokens.length,
-			transaction.purpose,
-			transaction.id
-		);
-		if (transferError)
-			return this.error('TransferVenueTokens', transferError.details, transferError.message);
-
 		return { error: undefined, data: undefined };
 	}
 

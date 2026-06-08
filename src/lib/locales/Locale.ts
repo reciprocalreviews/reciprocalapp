@@ -1139,6 +1139,7 @@ export type LocaleText = {
 		TransactionNotDeclined: string;
 		AlreadyApproved: string;
 		SelfDealingApproval: string;
+		ApproveTransaction: string;
 		TransactionApprovalUpdate: string;
 		MissingApprovalVenue: string;
 		MissingRecipient: string;

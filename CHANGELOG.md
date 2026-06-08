@@ -8,6 +8,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - Beta mode (#135).
 - Payment-free mode, to support volunteer tracking value proposition (#123).
+- Migrated non-atomic CRUD operations to RPCs for data integrity guarantees (#136).
 
 ### Changed
 

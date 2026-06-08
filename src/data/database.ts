@@ -891,6 +891,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _welcome_volunteer: {
+        Args: {
+          _reason: string
+          _roleid: string
+          _scholar: string
+          _welcomer: string
+        }
+        Returns: undefined
+      }
+      accept_role_invite: {
+        Args: {
+          _response: Database["public"]["Enums"]["invited"]
+          _volunteer_id: string
+        }
+        Returns: Json
+      }
+      approve_transaction: { Args: { _transaction_id: string }; Returns: Json }
+      approve_venue_proposal: { Args: { _proposal_id: string }; Returns: Json }
       bulk_import_submissions: {
         Args: { _import_note: string; _submissions: Json; _venueid: string }
         Returns: Json
@@ -900,6 +918,32 @@ export type Database = {
           _assignment_id: string
           _mint_purpose_template: string
           _payment_purpose_template: string
+        }
+        Returns: Json
+      }
+      create_submission: {
+        Args: {
+          _authors: string[]
+          _expertise: string
+          _external_id: string
+          _note: string
+          _payments: number[]
+          _previous: string
+          _previous_id: string
+          _purpose: string
+          _submission_type: string
+          _title: string
+          _venue: string
+        }
+        Returns: Json
+      }
+      create_volunteer: {
+        Args: {
+          _accepted: boolean
+          _compensate: boolean
+          _papers: number
+          _roleid: string
+          _scholarid: string
         }
         Returns: Json
       }
@@ -920,6 +964,28 @@ export type Database = {
           _mint_purpose_template: string
           _payment_purpose_template: string
           _submission_id: string
+        }
+        Returns: Json
+      }
+      mint_tokens: {
+        Args: {
+          _amount: number
+          _currency: string
+          _purpose: string
+          _to_venue: string
+        }
+        Returns: Json
+      }
+      transfer_tokens: {
+        Args: {
+          _amount: number
+          _currency: string
+          _from: string
+          _from_kind: string
+          _purpose: string
+          _to: string
+          _to_kind: string
+          _transaction: string
         }
         Returns: Json
       }
