@@ -57,9 +57,7 @@
 	setContext('pageHeader', pageHeader);
 </script>
 
-{#if !inProd}
-	<Nav breadcrumbs={breadcrumbs.breadcrumbs}></Nav>
-{/if}
+<Nav {inProd} breadcrumbs={breadcrumbs.breadcrumbs}></Nav>
 <main>
 	{@render children()}
 </main>

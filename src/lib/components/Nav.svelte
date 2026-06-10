@@ -17,16 +17,26 @@
 
 	const locale = getLocaleContext();
 
-	const routes = [
-		{ path: '/', label: locale().header.home },
-		{ path: '/venues', label: locale().header.venues }
-	];
-
 	let auth = getAuth();
 
 	let pending = $derived(getPendingActions());
 
-	const { breadcrumbs }: { breadcrumbs: [string, string][] } = $props();
+	const { breadcrumbs, inProd }: { breadcrumbs: [string, string][]; inProd: boolean } = $props();
+
+	// In production only /updates and /about are reachable (everything else redirects home),
+	// so the header offers just those plus Home; otherwise it shows the full navigation.
+	const routes = $derived(
+		inProd
+			? [
+					{ path: '/', label: locale().header.home },
+					{ path: '/updates', label: locale().footer.link.updates },
+					{ path: '/about', label: locale().footer.link.about }
+				]
+			: [
+					{ path: '/', label: locale().header.home },
+					{ path: '/venues', label: locale().header.venues }
+				]
+	);
 
 	const pageHeader = getContext<PageHeader>('pageHeader');
 </script>
@@ -38,50 +48,52 @@
 				<Link size="small" to={route.path}>{route.label}</Link>
 			</div>
 		{/each}
-		{#each breadcrumbs as [url, label]}
-			<small>&gt;</small>
-			<div class="link">
-				<Link
-					size="small"
-					to={url}
-					icon={url.startsWith('/venue')
-						? VenueLabel
-						: url.startsWith('/scholar')
-							? ScholarLabel
-							: url.startsWith('/submission')
-								? SubmissionLabel
-								: null}>{label}</Link
-				>
+		{#if !inProd}
+			{#each breadcrumbs as [url, label]}
+				<small>&gt;</small>
+				<div class="link">
+					<Link
+						size="small"
+						to={url}
+						icon={url.startsWith('/venue')
+							? VenueLabel
+							: url.startsWith('/scholar')
+								? ScholarLabel
+								: url.startsWith('/submission')
+									? SubmissionLabel
+									: null}>{label}</Link
+					>
+				</div>
+			{/each}
+			<div class="authenticated">
+				{#if pending > 0}
+					<div class="feedback">
+						{#if pending > 1}{pending}{/if}
+						<Dots></Dots>
+					</div>
+				{/if}
+				{#if auth().isAuthenticated()}
+					<div class="link">
+						<Link size="small" to="/scholar/{auth().getUserID()}">Profile</Link>
+					</div>
+					<div class="link">
+						<Button
+							small
+							testid="logout-button"
+							strings={(l) => l.component.header.logout}
+							action={() => {
+								auth().signOut();
+								goto('/login');
+							}}
+						/>
+					</div>
+				{:else}
+					<div class="link">
+						<Link size="small" to="/login"><Text path={(l) => l.header.link.login} /></Link>
+					</div>
+				{/if}
 			</div>
-		{/each}
-		<div class="authenticated">
-			{#if pending > 0}
-				<div class="feedback">
-					{#if pending > 1}{pending}{/if}
-					<Dots></Dots>
-				</div>
-			{/if}
-			{#if auth().isAuthenticated()}
-				<div class="link">
-					<Link size="small" to="/scholar/{auth().getUserID()}">Profile</Link>
-				</div>
-				<div class="link">
-					<Button
-						small
-						testid="logout-button"
-						strings={(l) => l.component.header.logout}
-						action={() => {
-							auth().signOut();
-							goto('/login');
-						}}
-					/>
-				</div>
-			{:else}
-				<div class="link">
-					<Link size="small" to="/login"><Text path={(l) => l.header.link.login} /></Link>
-				</div>
-			{/if}
-		</div>
+		{/if}
 	</div>
 	<Banners />
 	{#if pageHeader?.title}
