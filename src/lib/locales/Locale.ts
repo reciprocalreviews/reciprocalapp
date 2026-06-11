@@ -778,10 +778,12 @@ export type LocaleText = {
 			options: {
 				currency: OptionsText & { createNew: string; note: string };
 			};
-			paragraph: {
-				reviewedBy: string;
-				howToPropose: string;
-			};
+		paragraph: {
+			reviewedBy: string;
+			howToPropose: string;
+			communitySupport: string;
+			emailNotice: string;
+		};
 		};
 		about: {
 			title: string;
@@ -1171,3 +1173,4 @@ export type LocaleText = {
 };
 
 export { type LocaleText as default };
+
