@@ -33,7 +33,7 @@
 	},
 	"banner": {
 		"beta": {
-			"lead": "We're in **beta** and need your feedback. [Report an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose) or [learn more](https://github.com/reciprocalreviews)."
+			"lead": "We're in **beta** and want your feedback. [Report an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose) or [learn more](https://github.com/reciprocalreviews)."
 		},
 		"update": {
 			"message": "A new version is available.",
