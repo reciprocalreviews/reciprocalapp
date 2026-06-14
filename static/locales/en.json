@@ -235,7 +235,7 @@
 				"reviewedBy": "Venues are reviewed and approved by the [stewards](/about#managers), to ensure that only official editors and conference steering committees create venues.",
 				"howToPropose": "To propose a venue, share a few details about the venue. Your proposal serves two purposes: it requests steward approval to create a venue, and it invites the community to support adopting Reciprocal Reviews.",
 				"communitySupport": "Once submitted, your proposal will appear publicly on the venues page for the community to see and support. The stewards won't reach out to the editors until there is sufficient community interest.",
-"emailNotice": "**Note:** When you submit this proposal, an email will be sent to the editors you list below, notifying them of this proposal."
+				"emailNotice": "**Note:** When you submit this proposal, an email will be sent to the editors you list below, notifying them of this proposal."
 			}
 		},
 		"proposal": {
