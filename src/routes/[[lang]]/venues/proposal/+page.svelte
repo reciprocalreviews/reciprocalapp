@@ -93,6 +93,8 @@
 <Page icon={VenueLabel} title={(l) => l.page.proposeVenue.title} breadcrumbs={[]}>
 	<Paragraph text={(l) => l.page.proposeVenue.paragraph.reviewedBy} />
 	<Paragraph text={(l) => l.page.proposeVenue.paragraph.howToPropose} />
+	<Paragraph text={(l) => l.page.proposeVenue.paragraph.communitySupport} />
+	<Paragraph text={(l) => l.page.proposeVenue.paragraph.emailNotice} />
 
 	{#if auth().getUserID()}
 		<Form>

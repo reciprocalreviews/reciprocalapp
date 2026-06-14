@@ -2118,6 +2118,12 @@
                 "paragraph": {
                   "additionalProperties": false,
                   "properties": {
+                    "communitySupport": {
+                      "type": "string"
+                    },
+                    "emailNotice": {
+                      "type": "string"
+                    },
                     "howToPropose": {
                       "type": "string"
                     },
@@ -2127,7 +2133,9 @@
                   },
                   "required": [
                     "reviewedBy",
-                    "howToPropose"
+                    "howToPropose",
+                    "communitySupport",
+                    "emailNotice"
                   ],
                   "type": "object"
                 },
