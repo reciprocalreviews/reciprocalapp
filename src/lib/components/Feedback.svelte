@@ -6,12 +6,14 @@
 		error = false,
 		inline = true,
 		round = true,
+		size = 'small',
 		testid,
 		text
 	}: {
 		error?: boolean;
 		inline?: boolean;
 		round?: boolean;
+		size?: 'small' | 'normal';
 		testid?: string;
 		text: (locale: LocaleText) => string | string[];
 	} = $props();
@@ -22,11 +24,11 @@
 {/snippet}
 
 {#if inline}
-	<span class={['feedback', 'inline', { error, round }]} data-testid={testid}
+	<span class={['feedback', 'inline', size, { error, round }]} data-testid={testid}
 		>{@render content()}</span
 	>
 {:else}
-	<div class={['feedback', { error, round }]} data-testid={testid}>{@render content()}</div>
+	<div class={['feedback', size, { error, round }]} data-testid={testid}>{@render content()}</div>
 {/if}
 
 <style>
@@ -37,7 +39,14 @@
 		color: var(--text-color);
 		padding: var(--spacing-half);
 		padding-left: var(--spacing);
+	}
+
+	.small {
 		font-size: var(--small-font-size);
+	}
+
+	.normal {
+		font-size: var(--paragraph-font-size);
 	}
 
 	div {

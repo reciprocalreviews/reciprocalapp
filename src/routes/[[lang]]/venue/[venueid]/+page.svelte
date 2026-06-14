@@ -91,34 +91,34 @@
 			/>
 		{/if}
 
-		<ul>
-			{#if showPayment}
-				<!-- Prompt to pay -->
-				<li>
-					Submitted a manuscript? <Link to={`${venue.id}/submissions/new`}>Pay</Link> to start peer review.
-				</li>
-				<!-- Prompt to volunteer -->
-				<li>
-					Need tokens to pay? <Link to="#roles">Volunteer to review</Link>.
-				</li>
-				<!-- Key details about costs. -->
-				<li>
-					This venue uses {#if currency}the <CurrencyLink {currency}>
-							{TokenLabel} {currency.name}</CurrencyLink
-						>{:else}an unknown{/if}
-					currency.
-				</li>
-			{:else}
-				<!-- Payment-free venue: just submit and volunteer, no tokens. -->
-				<li>
-					Submitted a manuscript? <Link to={`${venue.id}/submissions/new`}>Register it</Link> to start
-					peer review.
-				</li>
-				<li>
-					Want to help? <Link to="#roles">Volunteer to review</Link>.
-				</li>
-			{/if}
-		</ul>
+		{#if showPayment}
+			<!-- Currency context before the central prompt. -->
+			<p>
+				This venue uses {#if currency}the <CurrencyLink {currency}>
+						{TokenLabel} {currency.name}</CurrencyLink
+					>{:else}an unknown{/if}
+				currency.
+			</p>
+		{/if}
+
+		<!-- Prominent prompt to start peer review: this is the central task on this page. -->
+		<Feedback
+			inline={false}
+			size="normal"
+			text={(l) =>
+				(showPayment
+					? l.page.venue.feedback.startReview
+					: l.page.venue.feedback.startReviewFree
+				).replace('{venue}', venue.id)}
+		/>
+
+		<!-- Secondary prompt to earn tokens by volunteering. -->
+		<Feedback
+			inline={false}
+			size="normal"
+			text={(l) =>
+				showPayment ? l.page.venue.feedback.volunteer : l.page.venue.feedback.volunteerFree}
+		/>
 
 		{#if isAdmin}
 			<Feedback

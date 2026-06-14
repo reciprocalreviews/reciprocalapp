@@ -502,6 +502,10 @@ export type LocaleText = {
 				requestCompensation: ButtonText;
 			};
 			feedback: {
+				startReview: string;
+				startReviewFree: string;
+				volunteer: string;
+				volunteerFree: string;
 				viewSettings: string;
 				typesNotLoaded: string;
 				rolesNotLoaded: string;

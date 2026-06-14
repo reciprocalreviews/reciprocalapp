@@ -3705,14 +3705,30 @@
                     "rolesNotLoaded": {
                       "type": "string"
                     },
+                    "startReview": {
+                      "type": "string"
+                    },
+                    "startReviewFree": {
+                      "type": "string"
+                    },
                     "typesNotLoaded": {
                       "type": "string"
                     },
                     "viewSettings": {
                       "type": "string"
+                    },
+                    "volunteer": {
+                      "type": "string"
+                    },
+                    "volunteerFree": {
+                      "type": "string"
                     }
                   },
                   "required": [
+                    "startReview",
+                    "startReviewFree",
+                    "volunteer",
+                    "volunteerFree",
                     "viewSettings",
                     "typesNotLoaded",
                     "rolesNotLoaded",

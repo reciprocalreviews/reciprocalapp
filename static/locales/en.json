@@ -793,6 +793,10 @@
 				}
 			},
 			"feedback": {
+				"startReview": "🤝 [Pay](/venue/{venue}/submissions/new) tokens for a submitted manuscript",
+				"startReviewFree": "🤝 [Register](/venue/{venue}/submissions/new) a submitted manuscript",
+				"volunteer": "🤝 [Earn](#roles) tokens by volunteering.",
+				"volunteerFree": "Help out by [volunteering](#roles).",
 				"viewSettings": "Welcome admin! Check the [settings](/venue/{venue}/settings) page to edit venue compensation, roles, and anonymity.",
 				"typesNotLoaded": "Couldn't load venue's submission types.",
 				"rolesNotLoaded": "Couldn't load venue's roles.",
