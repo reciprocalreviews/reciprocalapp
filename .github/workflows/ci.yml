@@ -20,9 +20,9 @@ jobs:
 
       - name: Verify generated types are checked in
         run: |
-          supabase gen types typescript --local > types.gen.ts
-          if ! git diff --ignore-space-at-eol --exit-code --quiet types.gen.ts; then
-            echo "Detected uncommitted changes after build. See status below:"
-            git diff
+          supabase gen types typescript --db-url "postgresql://postgres:postgres@127.0.0.1:54322/postgres" > src/data/database.ts
+          if ! git diff --ignore-space-at-eol --exit-code --quiet src/data/database.ts; then
+            echo "Detected uncommitted changes to generated types. Run 'npm run types' and commit:"
+            git diff src/data/database.ts
             exit 1
           fi
