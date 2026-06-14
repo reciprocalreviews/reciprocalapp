@@ -1,57 +1,32 @@
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase, scholar, venue } = await parent();
+	const { db, scholar, venue } = await parent();
 
 	const venueid = params.venueid;
 
 	// Get the matching venue's currency.
-	const { data: currency, error: currencyError } = venue
-		? await supabase.from('currencies').select().eq('id', venue.currency).single()
-		: { data: null };
-	if (currencyError) console.error(currencyError);
+	const { data: currency } = venue ? await db.getCurrency(venue.currency) : { data: null };
 
 	// Get the current's minter's emails.
-	const { data: minters, error: mintersError } = currency
-		? await supabase.from('scholars').select().in('id', currency.minters)
-		: { data: null };
-	if (mintersError) console.error(mintersError);
+	const { data: minters } = currency ? await db.getScholarsByIDs(currency.minters) : { data: null };
 
 	// Get the matching venue's roles.
-	const { data: roles, error: rolesError } = await supabase
-		.from('roles')
-		.select()
-		.eq('venueid', venueid);
-
-	if (rolesError) console.error(rolesError);
+	const { data: roles } = await db.getVenueRoles(venueid);
 
 	// Get all volunteers for the venue.
-	const { data: volunteers, error: volunteersError } = scholar
-		? await supabase.from('volunteers').select('*, roles (venueid)').eq('roles.venueid', venueid)
+	const { data: volunteers } = scholar
+		? await db.getVenueSettingsVolunteers(venueid)
 		: { data: null };
-	if (volunteersError) console.error(volunteersError);
 
 	// Get all the submission types
-	const { data: types, error: typesError } = await supabase
-		.from('submission_types')
-		.select('*')
-		.eq('venue', venueid);
-	if (typesError) console.error(typesError);
+	const { data: types } = await db.getVenueSubmissionTypes(venueid);
 
 	// Get all the compensation
-	const { data: compensation, error: compensationError } = await supabase
-		.from('compensation')
-		.select('*')
-		.in('submission_type', types?.map((s) => s.id) ?? []);
-	if (compensationError) console.error(compensationError);
+	const { data: compensation } = await db.getCompensationByTypes(types?.map((s) => s.id) ?? []);
 
 	// Get the venue's preference levels (may be empty if not configured).
-	const { data: preferenceLevels, error: preferenceLevelsError } = await supabase
-		.from('preference_levels')
-		.select('*')
-		.eq('venueid', venueid)
-		.order('rank', { ascending: true });
-	if (preferenceLevelsError) console.error(preferenceLevelsError);
+	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
 	return {
 		venue,

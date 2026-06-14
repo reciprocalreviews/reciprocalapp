@@ -1,35 +1,19 @@
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase } = await parent();
+	const { db } = await parent();
 
-	const { data: currency, error: currencyError } = await supabase
-		.from('currencies')
-		.select()
-		.eq('id', params.id)
-		.single();
-	if (currencyError) console.error(currencyError.message);
+	const { data: currency } = await db.getCurrency(params.id);
 
-	const { data: venues, error: venuesError } = await supabase
-		.from('venues')
-		.select()
-		.eq('currency', params.id);
-	if (venuesError) console.error(venuesError.message);
+	const { data: venues } = await db.getCurrencyVenues(params.id);
 
 	const adminScholarIDs = (
 		venues?.map((venue) => venue.admins).filter((id) => id !== null) ?? []
 	).flat();
 
-	const { data: admins, error: adminsError } = await supabase
-		.from('scholars')
-		.select()
-		.in('id', adminScholarIDs);
-	if (adminsError) console.error(adminsError.message);
-	const { data: tokens, error: tokensError } = await supabase
-		.from('tokens')
-		.select()
-		.eq('currency', params.id);
-	if (tokensError) console.error(tokensError.message);
+	const { data: admins } = await db.getScholarsByIDs(adminScholarIDs);
+
+	const { data: tokens } = await db.getCurrencyTokens(params.id);
 
 	const scholarCount = tokens
 		? new Set(tokens.filter((token) => token.scholar !== null).map((token) => token.scholar)).size

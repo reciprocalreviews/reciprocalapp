@@ -1,127 +1,74 @@
-import getVenueRoles from '$lib/data/getVenueRoles.js';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase } = await parent();
+	const { db } = await parent();
 
 	const venueid = params.venueid;
 	const submissionid = params.submissionid;
 
 	// Get the submission.
-	const { data: submission, error: submissionsError } = await supabase
-		.from('submissions')
-		.select('*')
-		.eq('id', submissionid)
-		.single();
-	if (submissionsError) console.error(submissionsError);
+	const { data: submission } = await db.getSubmission(submissionid);
 
 	// Get the corresponding venue.
-	const { data: venue, error: venueError } =
-		submission === null
-			? { data: null, error: null }
-			: await supabase.from('venues').select('*').eq('id', venueid).single();
-	if (venueError) console.error(venueError);
+	const { data: venue } = submission === null ? { data: null } : await db.getVenue(venueid);
 
 	// Get the authors
-	const { data: authors, error: authorsError } =
-		submission === null
-			? { data: null, error: null }
-			: await supabase.from('scholars').select('*').in('id', submission.authors);
-	if (authorsError) console.error(authorsError);
+	const { data: authors } =
+		submission === null ? { data: null } : await db.getScholarsByIDs(submission.authors);
 
 	// Get the previous submission. Prefer the explicit on-platform link
 	// (submission.previous FK); fall back to the legacy/bulk free-text match of
 	// previousid against an externalid in the same venue (#124).
-	const { data: previous, error: previousError } =
+	const { data: previous } =
 		submission !== null && submission.previous !== null
-			? await supabase.from('submissions').select('*').eq('id', submission.previous)
+			? await db.getPreviousSubmissionByID(submission.previous)
 			: submission !== null && submission.previousid !== null && submission.previousid.length > 0
-				? await supabase
-						.from('submissions')
-						.select('*')
-						.eq('venue', venueid)
-						.eq('externalid', submission.previousid)
-				: { data: null, error: null };
-	if (previousError) console.error(previousError);
+				? await db.getPreviousSubmissionByExternalID(venueid, submission.previousid)
+				: { data: null };
 
 	// Get the transactions for the submission
-	const { data: transactions, error: transactionsError } =
-		submission === null
-			? { data: null, error: null }
-			: await supabase.from('transactions').select('*').in('id', submission.transactions);
-	if (transactionsError) console.error(transactionsError);
+	const { data: transactions } =
+		submission === null ? { data: null } : await db.getTransactionsByIDs(submission.transactions);
 
 	// Get all of the roles for this venue.
-	const { data: roles, error: rolesError } =
-		venue === null ? { data: null, error: null } : await getVenueRoles(supabase, venue.id);
-	if (rolesError) console.error(rolesError);
+	const { data: roles } = venue === null ? { data: null } : await db.getVenueRoles(venue.id);
 
 	// Get the assignments associated with the submission and either the role of the
 	// authenticated user or in a venue for which this is the editor.
-	const { data: assignments, error: assignmentsError } =
-		submission === null
-			? { data: null, error: null }
-			: await supabase.from('assignments').select('*').eq('submission', submission.id);
-	if (assignmentsError) console.error(assignmentsError);
+	const { data: assignments } =
+		submission === null ? { data: null } : await db.getSubmissionAssignments(submission.id);
 
 	// Get the volunteer records of those assigned so we can render their expertise.
-	const { data: volunteers, error: volunteersError } =
+	const { data: volunteers } =
 		assignments === null
-			? { data: null, error: null }
-			: await supabase
-					.from('volunteers')
-					.select('*')
-					.in(
-						'roleid',
-						assignments.map((a) => a.role)
-					);
-	if (volunteersError) console.error(volunteersError);
+			? { data: null }
+			: await db.getVolunteersByRoles(assignments.map((a) => a.role));
 
 	// Get the token balances of each volunteer in the venue's currency, so we can sort by them.
-	const { data: balances, error: balancesError } =
+	const { data: balances } =
 		volunteers === null || venue === null
-			? { data: null, error: null }
-			: await supabase
-					.from('tokens')
-					.select('scholar, id.count()')
-					.eq('currency', venue.currency)
-					.in(
-						'scholar',
-						volunteers.map((v) => v.scholarid)
-					);
-	if (balancesError) console.error(balancesError);
+			? { data: null }
+			: await db.getTokenBalances(
+					venue.currency,
+					volunteers.map((v) => v.scholarid)
+				);
 
 	// Get the submission types in case we need to change it.
-	const { data: submissionTypes, error: submissionTypesError } = await supabase
-		.from('submission_types')
-		.select('*')
-		.eq('venue', venueid);
-	if (submissionTypesError) console.error(submissionTypesError);
+	const { data: submissionTypes } = await db.getVenueSubmissionTypes(venueid);
 
 	// Names of scholars referenced by assignments, for stable sorting by family name.
 	const assignmentScholarIDs = Array.from(new Set(assignments?.map((a) => a.scholar) ?? []));
 	const { data: assignmentScholars } =
 		assignmentScholarIDs.length === 0
 			? { data: [] }
-			: await supabase.from('scholars').select('id, name').in('id', assignmentScholarIDs);
+			: await db.getScholarNames(assignmentScholarIDs);
 
 	// Get the venue's preference levels (may be empty) for rendering bid labels.
-	const { data: preferenceLevels, error: preferenceLevelsError } = await supabase
-		.from('preference_levels')
-		.select('*')
-		.eq('venueid', venueid)
-		.order('rank', { ascending: true });
-	if (preferenceLevelsError) console.error(preferenceLevelsError);
+	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
 	// Count active (uncompleted) approved assignments per candidate scholar on
 	// this venue, so the cap-vs-load indicator can render "n / cap".
-	const { data: venueAssignments, error: venueAssignmentsError } = await supabase
-		.from('assignments')
-		.select('scholar')
-		.eq('venue', venueid)
-		.eq('approved', true)
-		.eq('completed', false);
-	if (venueAssignmentsError) console.error(venueAssignmentsError);
+	const { data: venueAssignments } = await db.getVenueActiveAssignmentScholars(venueid);
 	const venueActiveCounts: Record<string, number> = {};
 	for (const row of venueAssignments ?? []) {
 		venueActiveCounts[row.scholar] = (venueActiveCounts[row.scholar] ?? 0) + 1;
@@ -131,16 +78,10 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// viewer can see; RLS gates anonymous venues outside their scope). Lets
 	// the load indicator show overall workload alongside the cap-vs-load.
 	const candidateIDs = [...new Set((assignments ?? []).map((a) => a.scholar))];
-	const { data: allActive, error: allActiveError } =
+	const { data: allActive } =
 		candidateIDs.length === 0
-			? { data: [], error: null }
-			: await supabase
-					.from('assignments')
-					.select('scholar, venue')
-					.in('scholar', candidateIDs)
-					.eq('approved', true)
-					.eq('completed', false);
-	if (allActiveError) console.error(allActiveError);
+			? { data: [] }
+			: await db.getActiveAssignmentsForScholars(candidateIDs);
 	const elsewhereActiveCounts: Record<string, number> = {};
 	for (const row of allActive ?? []) {
 		if (row.venue === venueid) continue;

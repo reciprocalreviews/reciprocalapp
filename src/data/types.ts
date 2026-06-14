@@ -31,3 +31,4 @@ export type SubmissionTypeID = SubmissionType['id'];
 export type CompensationRow = Tables['compensation']['Row'];
 export type PreferenceLevelRow = Tables['preference_levels']['Row'];
 export type PreferenceLevelID = PreferenceLevelRow['id'];
+export type ConflictRow = Tables['conflicts']['Row'];

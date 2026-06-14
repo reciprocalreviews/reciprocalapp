@@ -1,83 +1,42 @@
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase, venue } = await parent();
+	const { db, venue } = await parent();
 
 	const venueid = params.venueid;
 
 	// Get the matching venue's currency.
-	const { data: currency, error: currencyError } = venue
-		? await supabase.from('currencies').select().eq('id', venue.currency).single()
-		: { data: null };
-	if (currencyError) console.error(currencyError);
+	const { data: currency } = venue ? await db.getCurrency(venue.currency) : { data: null };
 
 	// Get the current's minter's emails.
-	const { data: minters, error: mintersError } = currency
-		? await supabase.from('scholars').select().in('id', currency.minters)
-		: { data: null };
-	if (mintersError) console.error(mintersError);
+	const { data: minters } = currency ? await db.getScholarsByIDs(currency.minters) : { data: null };
 
 	// Get the matching venue's roles.
-	const { data: roles, error: rolesError } = await supabase
-		.from('roles')
-		.select()
-		.eq('venueid', venueid);
-
-	if (rolesError) console.error(rolesError);
+	const { data: roles } = await db.getVenueRoles(venueid);
 
 	// Get all volunteers for the venue.
-	const { data: volunteers, error: volunteersError } = await supabase
-		.from('volunteers')
-		.select('*, roles!inner(venueid)')
-		.eq('roles.venueid', venueid);
-	if (volunteersError) console.error(volunteersError);
+	const { data: volunteers } = await db.getVenueVolunteers(venueid);
 
 	// See how many tokens the venue posseses.
-	const { data: tokens, error: tokensError } = await supabase
-		.from('tokens')
-		.select('*')
-		.eq('venue', venueid);
-	if (tokensError) console.error(tokensError);
+	const { data: tokens } = await db.getVenueTokens(venueid);
 
 	// See how many transactions the venue is part of.
-	const { count: transactionCount, error: transactionsError } = await supabase
-		.from('transactions')
-		.select('*', { count: 'exact' })
-		.or(`from_venue.eq.${venueid},to_venue.eq.${venueid}`);
-	if (transactionsError) console.error(transactionsError);
+	const { data: transactionCount } = await db.getVenueTransactionCount(venueid);
 
 	// See how many submissions are in the venue, for display.
-	const { count: submissionCount, error: submissionsError } = await supabase
-		.from('submissions')
-		.select('*', { count: 'exact' })
-		.eq('venue', venueid);
-	if (submissionsError) console.error(submissionsError);
+	const { data: submissionCount } = await db.getVenueSubmissionCount(venueid);
 
 	// Get all the submission types
-	const { data: types, error: typesError } = await supabase
-		.from('submission_types')
-		.select('*')
-		.eq('venue', venueid);
-	if (typesError) console.error(typesError);
+	const { data: types } = await db.getVenueSubmissionTypes(venueid);
 
 	// Get all the compensation
-	const { data: compensation, error: compensationError } = await supabase
-		.from('compensation')
-		.select('*')
-		.in('submission_type', types?.map((s) => s.id) ?? []);
-	if (compensationError) console.error(compensationError);
+	const { data: compensation } = await db.getCompensationByTypes(types?.map((s) => s.id) ?? []);
 
 	// Get all the venues one can gift to.
-	const { data: venues, error: venuesError } = await supabase.from('venues').select('*');
-	if (venuesError) console.error(venuesError);
+	const { data: venues } = await db.getVenues();
 
 	// Get the venue's preference levels (may be empty if not configured).
-	const { data: preferenceLevels, error: preferenceLevelsError } = await supabase
-		.from('preference_levels')
-		.select('*')
-		.eq('venueid', venueid)
-		.order('rank', { ascending: true });
-	if (preferenceLevelsError) console.error(preferenceLevelsError);
+	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
 	return {
 		venue,

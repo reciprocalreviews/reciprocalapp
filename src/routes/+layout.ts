@@ -1,5 +1,6 @@
 import type { Database } from '$data/database';
 import type { ScholarRow } from '$data/types';
+import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr';
 import type { LayoutLoad } from './$types';
@@ -31,6 +32,12 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
 				}
 			});
 
+	// The single CRUD instance through which all reads and writes flow. The raw
+	// `supabase` client is intentionally not returned as load data — it is only
+	// reachable via `db.client`, the sanctioned escape hatch for auth and
+	// realtime (#137).
+	const db = new SupabaseCRUD(supabase, data.locale);
+
 	let scholar: ScholarRow | null = null;
 
 	/**
@@ -46,11 +53,9 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
 
 	// If there's a user, return scholar
 	if (userID) {
-		const { data, error } = await supabase.from('scholars').select().eq('id', userID).single();
-		if (data && error === null) {
-			scholar = data;
-		}
+		const { data: scholarData } = await db.getScholarRow(userID);
+		scholar = scholarData ?? null;
 	} else scholar = null;
 
-	return { claims, supabase, scholar, locale: data.locale };
+	return { claims, db, scholar, locale: data.locale };
 };

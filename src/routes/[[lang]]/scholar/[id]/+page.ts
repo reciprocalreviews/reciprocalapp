@@ -1,7 +1,7 @@
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase } = await parent();
+	const { db } = await parent();
 
 	const scholarID = params.id;
 
@@ -9,99 +9,49 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// invitations are active=false but accepted='invited', so we OR the filters
 	// to include them; declined rows (active=false, accepted='declined') stay
 	// excluded.
-	const { data: volunteers } = await supabase
-		.from('volunteers')
-		.select('*, roles(name, venueid, approver)')
-		.eq('scholarid', scholarID)
-		.or('active.eq.true,accepted.eq.invited');
+	const { data: volunteers } = await db.getScholarVolunteering(scholarID);
 
 	const venueids = volunteers
 		? volunteers.map((c) => c.roles?.venueid).filter((v) => v !== undefined)
 		: [];
 
-	const { data: venues } =
-		venueids.length > 0 ? await supabase.from('venues').select().in('id', venueids) : { data: [] };
+	const { data: venues } = venueids.length > 0 ? await db.getVenuesByIDs(venueids) : { data: [] };
 
 	// Get the currencies for which the scholar is a minter
-	const { data: minting } = await supabase
-		.from('currencies')
-		.select('*')
-		.contains('minters', [scholarID]);
+	const { data: minting } = await db.getScholarMintingCurrencies(scholarID);
 
 	// Get the scholar's administered venues
-	const { data: admins } = await supabase
-		.from('venues')
-		.select('id, title')
-		.contains('admins', [scholarID]);
+	const { data: admins } = await db.getScholarAdminVenues(scholarID);
 
 	// Get the scholar's current tokens.
-	const { data: tokens, error: tokensError } = await supabase
-		.from('tokens')
-		.select('*')
-		.eq('scholar', scholarID);
-	if (tokensError) console.log(tokensError);
+	const { data: tokens } = await db.getScholarTokens(scholarID);
 
 	// Get the currencies that the tokens use
 	const currencyIDs = tokens ? tokens.map((t) => t.currency) : [];
-	const { data: currencies, error: currenciesError } = await supabase
-		.from('currencies')
-		.select('*')
-		.in('id', currencyIDs);
-	if (currenciesError) console.log(currenciesError);
+	const { data: currencies } = await db.getCurrenciesByIDs(currencyIDs);
 
 	// Get the scholar's most recent transactions.
-	const { count: transactions, error: transactionsError } = await supabase
-		.from('transactions')
-		.select('*', { count: 'exact' })
-		.or(`from_scholar.eq.${scholarID},to_scholar.eq.${scholarID}`);
-	if (transactionsError) console.log(transactionsError);
+	const { data: transactions } = await db.getScholarTransactionCount(scholarID);
 
 	// Get pending transactions on currencies for which the scholar is a minter
-	const { data: pending, error: pendingTransactionsError } = await supabase
-		.from('transactions')
-		.select('*')
-		.eq('status', 'proposed')
-		.in('currency', minting ? minting.map((c) => c.id) : []);
-	if (pendingTransactionsError) console.log(pendingTransactionsError);
+	const { data: pending } = await db.getPendingTransactionsByCurrencies(
+		minting ? minting.map((c) => c.id) : []
+	);
 
 	// Get proposed transactions where the scholar is the source
-	const { data: outgoingPending, error: outgoingPendingError } = await supabase
-		.from('transactions')
-		.select('*')
-		.eq('status', 'proposed')
-		.eq('from_scholar', scholarID);
-	if (outgoingPendingError) console.log(outgoingPendingError);
+	const { data: outgoingPending } = await db.getOutgoingPendingTransactions(scholarID);
 
 	// Get the scholar's submissions
-	const { data: submissions, error: submissionsError } = await supabase
-		.from('submissions')
-		.select('*')
-		.contains('authors', [scholarID]);
-	if (submissionsError) console.log(submissionsError);
+	const { data: submissions } = await db.getScholarSubmissions(scholarID);
 
 	// Get the scholar's approved reviewing assignments
-	const { data: reviews, error: reviewsError } = await supabase
-		.from('assignments')
-		.select('*, submissions(*)')
-		.eq('scholar', scholarID)
-		.eq('completed', false)
-		.eq('approved', true);
-	if (reviewsError) console.log(reviewsError);
+	const { data: reviews } = await db.getScholarReviews(scholarID);
 
 	// Get the roles for which the scholar is the role approver.
-	const { data: approver, error: approverError } = await supabase
-		.from('roles')
-		.select('*')
-		.in('approver', reviews?.map((c) => c.role) || []);
-	if (approverError) console.log(approverError);
+	const { data: approver } = await db.getRolesByApprover(reviews?.map((c) => c.role) || []);
 
 	// Get the assignments for which the scholar is the role approver, to show in the scholar's dashboard.
-	const { data: approvals, error: approvalsError } = await supabase
-		.from('assignments')
-		.select('*, scholars(*), submissions(*)')
-		.in('role', approver?.map((r) => r.id) || [])
-		.eq('approved', false);
-	if (approvalsError) console.log(approvalsError);
+	const { data: approvals } = await db.getAssignmentsForApproval(approver?.map((r) => r.id) || []);
 
 	return {
 		commitments: volunteers,

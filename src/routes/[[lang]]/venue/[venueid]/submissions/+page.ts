@@ -1,68 +1,45 @@
-import getVenueRoles from '$lib/data/getVenueRoles.js';
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase, venue, scholar } = await parent();
+	const { db, venue, scholar } = await parent();
 
 	const uid = scholar?.id ?? null;
 
 	const venueid = params.venueid;
 
 	// Get the venue's submissions.
-	const { data: submissions, error: submissionsError } = await supabase
-		.from('submissions')
-		.select('*')
-		.eq('venue', venueid);
-	if (submissionsError) console.error(submissionsError);
+	const { data: submissions } = await db.getVenueSubmissions(venueid);
 
 	const admin = venue !== null && uid !== null && venue.admins.includes(uid);
 
 	// Get all roles.
-	const { data: roles, error: rolesError } =
+	const { data: roles } =
 		// Missing data? Return nothing.
-		uid === null ? { data: [], error: null } : await getVenueRoles(supabase, venueid);
-	if (rolesError) console.error(rolesError);
+		uid === null ? { data: [] } : await db.getVenueRoles(venueid);
 
 	const roleids = roles?.map((role) => role.id) ?? [];
 
 	// Admin? Get all the volunteers. Non-admin? Get all commitments that are active, approved, and a role for this venue.
-	const { data: volunteering, error: volunteeringError } =
+	const { data: volunteering } =
 		uid === null
-			? { data: [], error: null }
+			? { data: [] }
 			: admin
-				? await supabase.from('volunteers').select('*').in('roleid', roleids)
-				: await supabase
-						.from('volunteers')
-						.select('*')
-						.eq('scholarid', uid)
-						.eq('active', true)
-						.eq('accepted', 'accepted')
-						.in('roleid', roleids);
-	if (volunteeringError) console.error(volunteeringError);
+				? await db.getVolunteersByRoles(roleids)
+				: await db.getScholarActiveVolunteering(uid, roleids);
 
 	// Get all selectable assignments for the venue, according to the RLS policy.
-	const { data: assignments, error: assignmentsError } =
-		uid === null
-			? { data: [], error: null }
-			: await supabase.from('assignments').select('*').eq('venue', venueid);
-	if (assignmentsError) console.error(assignmentsError);
+	const { data: assignments } = uid === null ? { data: [] } : await db.getVenueAssignments(venueid);
 
 	// Transactions in the submissions. Only retrieve IDs to preserve confidentiality.
-	const { data: transactions, error: transactionsError } =
+	const { data: transactions } =
 		submissions === null
-			? { data: null, error: null }
-			: await supabase
-					.from('transactions')
-					.select('id')
-					.in('id', submissions.map((submission) => submission.transactions).flat());
-	if (transactionsError) console.error(transactionsError);
+			? { data: null }
+			: await db.getSubmissionTransactionIDs(
+					submissions.map((submission) => submission.transactions).flat()
+				);
 
 	// Find all conflicts for the current user.
-	const { data: conflicts, error: conflictsError } =
-		uid === null
-			? { data: [], error: null }
-			: await supabase.from('conflicts').select('*').eq('scholarid', uid);
-	if (conflictsError) console.error(conflictsError);
+	const { data: conflicts } = uid === null ? { data: [] } : await db.getScholarConflicts(uid);
 
 	// Fetch names of scholars referenced as authors or assigned reviewers so
 	// the submissions filter can match against them. Assignment rows are
@@ -75,26 +52,14 @@ export const load: PageLoad = async ({ parent, params }) => {
 			...(assignments ?? []).map((a) => a.scholar)
 		])
 	];
-	const { data: scholars, error: scholarsError } =
-		scholarIDs.length === 0
-			? { data: [], error: null }
-			: await supabase.from('scholars').select('id, name').in('id', scholarIDs);
-	if (scholarsError) console.error(scholarsError);
+	const { data: scholars } =
+		scholarIDs.length === 0 ? { data: [] } : await db.getScholarNames(scholarIDs);
 
 	// Find all of the submissions types for the venue.
-	const { data: submissionTypes, error: submissionTypesError } = await supabase
-		.from('submission_types')
-		.select('*')
-		.eq('venue', venueid);
-	if (submissionTypesError) console.error(submissionTypesError);
+	const { data: submissionTypes } = await db.getVenueSubmissionTypes(venueid);
 
 	// Get the venue's preference levels (may be empty).
-	const { data: preferenceLevels, error: preferenceLevelsError } = await supabase
-		.from('preference_levels')
-		.select('*')
-		.eq('venueid', venueid)
-		.order('rank', { ascending: true });
-	if (preferenceLevelsError) console.error(preferenceLevelsError);
+	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
 	return {
 		venue,

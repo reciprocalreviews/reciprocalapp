@@ -5,25 +5,25 @@
 	import Footer from '$lib/components/Footer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import { setDB } from '$lib/data/CRUD';
-	import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
 	import { onMount, setContext } from 'svelte';
 	import SupabaseAuth, { setAuth } from './Auth.svelte';
 	import { setLocaleContext } from './Contexts';
 	import type PageHeader from './PageHeader';
 
 	let { data, children } = $props();
-	let { supabase, scholar, claims, locale } = $derived(data);
+	let { db, scholar, claims, locale } = $derived(data);
 
-	let auth = $derived(new SupabaseAuth(supabase, scholar));
+	// The raw Supabase client is reached only through the CRUD instance's
+	// sanctioned `client` escape hatch (auth + realtime); see #137.
+	let auth = $derived(new SupabaseAuth(db.client, scholar));
 
 	setAuth(() => auth);
 
 	setLocaleContext(() => locale);
 
-	let crud = $derived(new SupabaseCRUD(supabase, locale));
-
-	// Set client side database cache.
-	setDB(() => crud);
+	// Set client side database cache. The layout load already built the single
+	// CRUD instance, so reuse it rather than constructing another.
+	setDB(() => db);
 
 	const inProd = PUBLIC_ENV === 'prod';
 
@@ -32,7 +32,7 @@
 		if (inProd && !['/updates', '/about'].some((p) => page.url.pathname.startsWith(p))) goto('/');
 
 		// Listen to auth stage changes and invalidate the auth context when they happen.
-		const { data } = supabase.auth.onAuthStateChange((_, _session) => {
+		const { data } = db.client.auth.onAuthStateChange((_, _session) => {
 			if (_session?.expires_at !== claims?.exp) {
 				invalidate('supabase:auth');
 			}

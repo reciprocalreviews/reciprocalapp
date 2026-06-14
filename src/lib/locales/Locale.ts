@@ -782,12 +782,12 @@ export type LocaleText = {
 			options: {
 				currency: OptionsText & { createNew: string; note: string };
 			};
-		paragraph: {
-			reviewedBy: string;
-			howToPropose: string;
-			communitySupport: string;
-			emailNotice: string;
-		};
+			paragraph: {
+				reviewedBy: string;
+				howToPropose: string;
+				communitySupport: string;
+				emailNotice: string;
+			};
 		};
 		about: {
 			title: string;
@@ -1173,8 +1173,21 @@ export type LocaleText = {
 		ApproveProposalNoSupporters: string;
 		DeclareConflict: string;
 		NoRoleCompensation: string;
+		LoadVenue: string;
+		LoadCurrency: string;
+		LoadScholar: string;
+		LoadSubmission: string;
+		LoadTransaction: string;
+		LoadRole: string;
+		LoadAssignment: string;
+		LoadVolunteer: string;
+		LoadToken: string;
+		LoadProposal: string;
+		LoadCompensation: string;
+		LoadPreferenceLevel: string;
+		LoadSubmissionType: string;
+		LoadConflict: string;
 	};
 };
 
 export { type LocaleText as default };
-

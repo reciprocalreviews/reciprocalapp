@@ -9,6 +9,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Updated internal tooling for stability.
 - Made the pay prompt on the venue page much more prominent, since it is the central functionality of the platform.
 - Clarified on venue proposal that editors will be emailed (#138).
+- Extracted all Supabase reads from page load functions to CRUD interface for better encapsulation (#137).
 
 ## 0.4.2 - 2026-06-07
 

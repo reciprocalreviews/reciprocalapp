@@ -1,25 +1,17 @@
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase } = await parent();
+	const { db } = await parent();
 
 	const venueid = params.venueid;
 
 	// Get the matching venue.
-	const { data: venue } = await supabase.from('venues').select().eq('id', venueid).single();
+	const { data: venue } = await db.getVenue(venueid);
 
 	// The commitments to the venue's roles.
-	const { data: commitments, error: commitmentsError } = await supabase
-		.from('volunteers')
-		.select('*, scholars (name, email, orcid), roles!inner(name, venueid)')
-		.eq('roles.venueid', venueid);
-	if (commitmentsError) console.error('Failed to load commitments:', commitmentsError);
+	const { data: commitments } = await db.getVenueCommitments(venueid);
 
-	const { data: roles, error: rolesError } = await supabase
-		.from('roles')
-		.select()
-		.eq('venueid', venueid);
-	if (rolesError) console.error('Failed to load roles:', rolesError);
+	const { data: roles } = await db.getVenueRoles(venueid);
 
 	return {
 		venue,

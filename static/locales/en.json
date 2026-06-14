@@ -1643,6 +1643,20 @@
 		"EmailScholar": "Unable to email this scholar",
 		"ApproveProposalNoSupporters": "Unable to retrieve supports of proposal for notification.",
 		"DeclareConflict": "Unable to declare a conflict with this submission.",
-		"NoRoleCompensation": "The role being compensated doesn't have a compensation amount for this submission type."
+		"NoRoleCompensation": "The role being compensated doesn't have a compensation amount for this submission type.",
+		"LoadVenue": "Unable to load venue data.",
+		"LoadCurrency": "Unable to load currency data.",
+		"LoadScholar": "Unable to load scholar data.",
+		"LoadSubmission": "Unable to load submission data.",
+		"LoadTransaction": "Unable to load transaction data.",
+		"LoadRole": "Unable to load role data.",
+		"LoadAssignment": "Unable to load assignment data.",
+		"LoadVolunteer": "Unable to load volunteer data.",
+		"LoadToken": "Unable to load token data.",
+		"LoadProposal": "Unable to load proposal data.",
+		"LoadCompensation": "Unable to load compensation data.",
+		"LoadPreferenceLevel": "Unable to load preference level data.",
+		"LoadSubmissionType": "Unable to load submission type data.",
+		"LoadConflict": "Unable to load conflict data."
 	}
 }

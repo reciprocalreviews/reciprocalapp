@@ -1,39 +1,19 @@
-import getTransactionCurrencies from '$lib/data/getTransactionCurrencies';
-import getTransactionVenues from '$lib/data/getTransactionVenues';
-import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase, locale } = await parent();
+	const { db } = await parent();
 
-	const CRUD = new SupabaseCRUD(supabase, locale);
+	// Get the venue's most recent transactions.
+	const { data: transactions, count } = await db.getVenueTransactions(params.venueid);
 
-	// Get the scholar's most recent transactions.
-	const {
-		data: transactions,
-		count,
-		error: transactionsError
-	} = await CRUD.getVenueTransactions(params.venueid);
-	if (transactionsError) console.log(transactionsError);
+	const { data: venues } =
+		transactions === null ? { data: null } : await db.getTransactionVenues(transactions);
 
-	const { data: venues, error: venueError } =
-		transactions === null
-			? { data: null, error: null }
-			: await getTransactionVenues(supabase, transactions);
-	if (venueError) console.log(venueError);
-
-	const { data: currencies, error: currencyError } =
-		transactions === null
-			? { data: null, error: null }
-			: await getTransactionCurrencies(supabase, transactions);
-	if (currencyError) console.log(currencyError);
+	const { data: currencies } =
+		transactions === null ? { data: null } : await db.getTransactionCurrencies(transactions);
 
 	// Get the venue's tokens.
-	const { data: tokens, error: tokensError } = await supabase
-		.from('tokens')
-		.select('*')
-		.eq('venue', params.venueid);
-	if (tokensError) console.error(tokensError);
+	const { data: tokens } = await db.getVenueTokens(params.venueid);
 
 	return {
 		transactions,

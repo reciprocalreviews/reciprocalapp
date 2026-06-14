@@ -1,32 +1,16 @@
-import getTransactionCurrencies from '$lib/data/getTransactionCurrencies';
-import getTransactionVenues from '$lib/data/getTransactionVenues';
-import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { supabase, locale } = await parent();
-
-	const CRUD = new SupabaseCRUD(supabase, locale);
+	const { db } = await parent();
 
 	// Get the scholar's most recent transactions.
-	const {
-		data: transactions,
-		count,
-		error: transactionsError
-	} = await CRUD.getScholarTransactions(params.id);
-	if (transactionsError) console.log(transactionsError);
+	const { data: transactions, count } = await db.getScholarTransactions(params.id);
 
-	const { data: venues, error: venueError } =
-		transactions === null
-			? { data: null, error: null }
-			: await getTransactionVenues(supabase, transactions);
-	if (venueError) console.log(venueError);
+	const { data: venues } =
+		transactions === null ? { data: null } : await db.getTransactionVenues(transactions);
 
-	const { data: currencies, error: currencyError } =
-		transactions === null
-			? { data: null, error: null }
-			: await getTransactionCurrencies(supabase, transactions);
-	if (currencyError) console.log(currencyError);
+	const { data: currencies } =
+		transactions === null ? { data: null } : await db.getTransactionCurrencies(transactions);
 
 	return {
 		transactions,

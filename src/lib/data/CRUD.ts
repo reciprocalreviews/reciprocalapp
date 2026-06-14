@@ -1,20 +1,27 @@
 import {
 	type CurrencyID,
+	type CurrencyRow,
+	type ConflictRow,
 	type ProposalID,
+	type ProposalRow,
 	type RoleID,
 	type ScholarID,
 	type ScholarRow,
 	type SupporterID,
 	type VenueID,
 	type VolunteerID,
+	type VolunteerRow,
 	type Response,
 	type TokenID,
+	type TokenRow,
 	type TransactionStatus,
+	type TransactionRow,
 	type AssignmentID,
 	type RoleRow,
 	type AssignmentRow,
 	type VenueRow,
 	type SubmissionID,
+	type SubmissionRow,
 	type TransactionID,
 	type SubmissionTypeID,
 	type SubmissionType,
@@ -24,9 +31,19 @@ import {
 } from '../../data/types';
 import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
-import type { AuthError, PostgrestError } from '@supabase/supabase-js';
+import type { AuthError, PostgrestError, PostgrestResponse } from '@supabase/supabase-js';
 import type { EmailType } from '../../email/templates';
 import type SupabaseCRUD from './SupabaseCRUD.svelte';
+import type {
+	AssignmentForApproval,
+	ProposalSupporter,
+	ScholarReview,
+	ScholarVolunteering,
+	TokenBalance,
+	VenueCommitment,
+	VenueSettingsVolunteer,
+	VenueVolunteer
+} from './SupabaseCRUD.svelte';
 
 export const DatabaseSymbol = Symbol('database');
 export const NullUUID = '00000000-0000-0000-0000-000000000000';
@@ -54,6 +71,13 @@ export type Result<Type = undefined> = {
 	 * The feedback layer renders one banner per entry. */
 	notified?: Notification[];
 };
+
+/** The result of a read method used by page load functions (#137). Unlike
+ * {@link Result}, `data` is always present (it carries the rows, or null when
+ * the row is missing or the query failed) so callers can destructure `data`
+ * with the same nullability the raw query builder used to give them. Read
+ * failures are logged by the implementation rather than surfaced here. */
+export type ReadResult<Type> = { data: Type; error?: DBError };
 
 export type Charge = { scholar: string; payment: number | undefined };
 
@@ -412,4 +436,141 @@ export default abstract class CRUD {
 		submission: SubmissionID,
 		reason: string
 	): Promise<Result>;
+
+	// --- Read methods for page load functions (#137) ---
+	// Load functions read through these so the raw query builder never escapes
+	// the data layer. Each resolves with `data` (null on error or missing single
+	// rows); failures are logged by the implementation rather than surfaced.
+
+	/** Paginated transactions a scholar is the source or destination of. */
+	abstract getScholarTransactions(
+		scholar: ScholarID,
+		page?: number
+	): Promise<PostgrestResponse<TransactionRow>>;
+	/** Paginated transactions a venue is the source or destination of. */
+	abstract getVenueTransactions(
+		venue: VenueID,
+		page?: number
+	): Promise<PostgrestResponse<TransactionRow>>;
+	/** Paginated transactions in a currency. */
+	abstract getCurrencyTransactions(
+		currency: CurrencyID,
+		page?: number
+	): Promise<PostgrestResponse<TransactionRow>>;
+
+	abstract getScholarRow(id: ScholarID): Promise<ReadResult<ScholarRow | null>>;
+	abstract getScholarsByIDs(ids: ScholarID[]): Promise<ReadResult<ScholarRow[] | null>>;
+	abstract getScholarNames(
+		ids: ScholarID[]
+	): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>>;
+	abstract getStewards(): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>>;
+
+	abstract getVenue(id: VenueID): Promise<ReadResult<VenueRow | null>>;
+	abstract getVenues(): Promise<ReadResult<VenueRow[] | null>>;
+	abstract getVenuesByIDs(ids: VenueID[]): Promise<ReadResult<VenueRow[] | null>>;
+	abstract getCurrencyVenues(currency: CurrencyID): Promise<ReadResult<VenueRow[] | null>>;
+	abstract getScholarAdminVenues(
+		scholar: ScholarID
+	): Promise<ReadResult<Pick<VenueRow, 'id' | 'title'>[] | null>>;
+
+	abstract getCurrency(id: CurrencyID): Promise<ReadResult<CurrencyRow | null>>;
+	abstract getCurrencies(): Promise<ReadResult<CurrencyRow[] | null>>;
+	abstract getCurrenciesByIDs(ids: CurrencyID[]): Promise<ReadResult<CurrencyRow[] | null>>;
+	abstract getScholarMintingCurrencies(
+		scholar: ScholarID
+	): Promise<ReadResult<CurrencyRow[] | null>>;
+
+	abstract getVenueRoles(venue: VenueID): Promise<ReadResult<RoleRow[] | null>>;
+	abstract getRolesByApprover(roleIDs: RoleID[]): Promise<ReadResult<RoleRow[] | null>>;
+
+	abstract getVenueTokens(venue: VenueID): Promise<ReadResult<TokenRow[] | null>>;
+	abstract getCurrencyTokens(currency: CurrencyID): Promise<ReadResult<TokenRow[] | null>>;
+	abstract getScholarTokens(scholar: ScholarID): Promise<ReadResult<TokenRow[] | null>>;
+	abstract getTokenBalances(
+		currency: CurrencyID,
+		scholarIDs: ScholarID[]
+	): Promise<ReadResult<TokenBalance[] | null>>;
+
+	abstract getVenueTransactionCount(venue: VenueID): Promise<ReadResult<number | null>>;
+	abstract getScholarTransactionCount(scholar: ScholarID): Promise<ReadResult<number | null>>;
+	abstract getTransactionsByIDs(ids: TransactionID[]): Promise<ReadResult<TransactionRow[] | null>>;
+	abstract getSubmissionTransactionIDs(
+		ids: TransactionID[]
+	): Promise<ReadResult<Pick<TransactionRow, 'id'>[] | null>>;
+	abstract getPendingTransactionsByCurrencies(
+		currencyIDs: CurrencyID[]
+	): Promise<ReadResult<TransactionRow[] | null>>;
+	abstract getOutgoingPendingTransactions(
+		scholar: ScholarID
+	): Promise<ReadResult<TransactionRow[] | null>>;
+	abstract getTransactionVenues(
+		transactions: TransactionRow[]
+	): Promise<ReadResult<VenueRow[] | null>>;
+	abstract getTransactionCurrencies(
+		transactions: TransactionRow[]
+	): Promise<ReadResult<CurrencyRow[] | null>>;
+
+	abstract getVenueSubmissions(venue: VenueID): Promise<ReadResult<SubmissionRow[] | null>>;
+	abstract getScholarSubmissions(scholar: ScholarID): Promise<ReadResult<SubmissionRow[] | null>>;
+	abstract getSubmission(id: SubmissionID): Promise<ReadResult<SubmissionRow | null>>;
+	abstract getPreviousSubmissionByID(id: SubmissionID): Promise<ReadResult<SubmissionRow[] | null>>;
+	abstract getPreviousSubmissionByExternalID(
+		venue: VenueID,
+		externalID: string
+	): Promise<ReadResult<SubmissionRow[] | null>>;
+	abstract getScholarPriorSubmissions(
+		venue: VenueID,
+		scholar: ScholarID
+	): Promise<
+		ReadResult<Pick<SubmissionRow, 'id' | 'externalid' | 'title' | 'submission_type'>[] | null>
+	>;
+	abstract getVenueSubmissionExternalIDs(
+		venue: VenueID
+	): Promise<ReadResult<Pick<SubmissionRow, 'externalid'>[] | null>>;
+	abstract getVenueSubmissionCount(venue: VenueID): Promise<ReadResult<number | null>>;
+
+	abstract getVenueSubmissionTypes(venue: VenueID): Promise<ReadResult<SubmissionType[] | null>>;
+	abstract getCompensationByTypes(
+		typeIDs: SubmissionTypeID[]
+	): Promise<ReadResult<CompensationRow[] | null>>;
+	abstract getVenuePreferenceLevels(
+		venue: VenueID
+	): Promise<ReadResult<PreferenceLevelRow[] | null>>;
+
+	abstract getVenueVolunteers(venue: VenueID): Promise<ReadResult<VenueVolunteer[] | null>>;
+	abstract getVenueSettingsVolunteers(
+		venue: VenueID
+	): Promise<ReadResult<VenueSettingsVolunteer[] | null>>;
+	abstract getVenueCommitments(venue: VenueID): Promise<ReadResult<VenueCommitment[] | null>>;
+	abstract getScholarVolunteering(
+		scholar: ScholarID
+	): Promise<ReadResult<ScholarVolunteering[] | null>>;
+	abstract getVolunteersByRoles(roleIDs: RoleID[]): Promise<ReadResult<VolunteerRow[] | null>>;
+	abstract getScholarActiveVolunteering(
+		scholar: ScholarID,
+		roleIDs: RoleID[]
+	): Promise<ReadResult<VolunteerRow[] | null>>;
+
+	abstract getVenueAssignments(venue: VenueID): Promise<ReadResult<AssignmentRow[] | null>>;
+	abstract getSubmissionAssignments(
+		submission: SubmissionID
+	): Promise<ReadResult<AssignmentRow[] | null>>;
+	abstract getVenueActiveAssignmentScholars(
+		venue: VenueID
+	): Promise<ReadResult<Pick<AssignmentRow, 'scholar'>[] | null>>;
+	abstract getActiveAssignmentsForScholars(
+		scholarIDs: ScholarID[]
+	): Promise<ReadResult<Pick<AssignmentRow, 'scholar' | 'venue'>[] | null>>;
+	abstract getScholarReviews(scholar: ScholarID): Promise<ReadResult<ScholarReview[] | null>>;
+	abstract getAssignmentsForApproval(
+		roleIDs: RoleID[]
+	): Promise<ReadResult<AssignmentForApproval[] | null>>;
+
+	abstract getScholarConflicts(scholar: ScholarID): Promise<ReadResult<ConflictRow[] | null>>;
+
+	abstract getProposal(id: ProposalID): Promise<ReadResult<ProposalRow | null>>;
+	abstract getUnassignedProposals(): Promise<ReadResult<ProposalRow[] | null>>;
+	abstract getProposalSupporters(
+		proposal: ProposalID
+	): Promise<ReadResult<ProposalSupporter[] | null>>;
 }

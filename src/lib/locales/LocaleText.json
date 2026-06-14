@@ -432,6 +432,48 @@
             "InviteToRoleSuccess": {
               "type": "string"
             },
+            "LoadAssignment": {
+              "type": "string"
+            },
+            "LoadCompensation": {
+              "type": "string"
+            },
+            "LoadConflict": {
+              "type": "string"
+            },
+            "LoadCurrency": {
+              "type": "string"
+            },
+            "LoadPreferenceLevel": {
+              "type": "string"
+            },
+            "LoadProposal": {
+              "type": "string"
+            },
+            "LoadRole": {
+              "type": "string"
+            },
+            "LoadScholar": {
+              "type": "string"
+            },
+            "LoadSubmission": {
+              "type": "string"
+            },
+            "LoadSubmissionType": {
+              "type": "string"
+            },
+            "LoadToken": {
+              "type": "string"
+            },
+            "LoadTransaction": {
+              "type": "string"
+            },
+            "LoadVenue": {
+              "type": "string"
+            },
+            "LoadVolunteer": {
+              "type": "string"
+            },
             "MarkSubmissionDoneRPC": {
               "type": "string"
             },
@@ -671,7 +713,21 @@
             "EmailScholar",
             "ApproveProposalNoSupporters",
             "DeclareConflict",
-            "NoRoleCompensation"
+            "NoRoleCompensation",
+            "LoadVenue",
+            "LoadCurrency",
+            "LoadScholar",
+            "LoadSubmission",
+            "LoadTransaction",
+            "LoadRole",
+            "LoadAssignment",
+            "LoadVolunteer",
+            "LoadToken",
+            "LoadProposal",
+            "LoadCompensation",
+            "LoadPreferenceLevel",
+            "LoadSubmissionType",
+            "LoadConflict"
           ],
           "type": "object"
         },

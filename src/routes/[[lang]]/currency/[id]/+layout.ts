@@ -1,14 +1,9 @@
 import type { LayoutLoad } from './$types';
 
 export const load: LayoutLoad = async ({ parent, params }) => {
-	const { supabase } = await parent();
+	const { db } = await parent();
 
-	const { data: currency, error: currencyError } = await supabase
-		.from('currencies')
-		.select()
-		.eq('id', params.id)
-		.single();
-	if (currencyError) console.log(currencyError.message);
+	const { data: currency } = await db.getCurrency(params.id);
 
 	return {
 		currency: currency
