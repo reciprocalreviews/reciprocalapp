@@ -11,6 +11,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Changed
 
 - Gave all platform emails a consistent branded look — both sign-in/authentication emails and notification emails — and routed authentication email through the same provider (#56).
+- Improved onboarding guidance (#65).
 - Updated internal tooling for stability.
 
 ## 0.4.3 - 2026-06-14
