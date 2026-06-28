@@ -487,6 +487,35 @@ export type LocaleText = {
 				load: string;
 				action: string;
 			};
+			/** Author thank-you notes to reviewers (#22). */
+			thanks: {
+				/** Subheader for the thanks section */
+				header: string;
+				/** Author panel intro, framed as gratitude (not a rebuttal) */
+				intro: string;
+				/** Shown to the author after sending, when the venue vets notes */
+				pending: string;
+				/** Shown to the author after sending, when delivered immediately */
+				delivered: string;
+				/** Label preceding the reason an editor gave for declining */
+				declinedReason: string;
+				/** Vetter panel intro */
+				review: string;
+				/** Prompt above the decline reason field */
+				declineReasonPrompt: string;
+				/** Heading above notes shown to a recipient reviewer */
+				received: string;
+				field: {
+					message: NotedTextFieldText & { invalid: string };
+					declineReason: TextFieldText;
+				};
+				button: {
+					send: ButtonText;
+					approve: ButtonText;
+					declineInitiate: ButtonText;
+					declineConfirm: ButtonText;
+				};
+			};
 		};
 		venue: {
 			title: string;
@@ -601,6 +630,7 @@ export type LocaleText = {
 			checkbox: {
 				inactive: string;
 				anonymousAssignments: CheckboxOnOff;
+				vetThanks: CheckboxOnOff;
 				/** `label` is the always-visible checkbox label (checked = payments
 				 * on); `note` describes the payment-free state shown when unchecked. */
 				paymentFree: { label: string; note: string };
@@ -1092,6 +1122,7 @@ export type LocaleText = {
 		EditVenueURL: string;
 		EditVenueInactive: string;
 		EditVenueAnonymousAssignments: string;
+		EditVenueVetThanks: string;
 		EditVenueWelcomeAmount: string;
 		EditVenuePaymentFree: string;
 		EditVenueDoneVisibilityDays: string;
@@ -1187,6 +1218,10 @@ export type LocaleText = {
 		LoadPreferenceLevel: string;
 		LoadSubmissionType: string;
 		LoadConflict: string;
+		ProposeThanks: string;
+		ApproveThanks: string;
+		DeclineThanks: string;
+		LoadThanks: string;
 	};
 };
 

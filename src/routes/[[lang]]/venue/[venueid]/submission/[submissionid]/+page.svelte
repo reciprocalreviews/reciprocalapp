@@ -4,6 +4,7 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
+	import Thanks from './Thanks.svelte';
 	import {
 		EditLabel,
 		EmptyLabel,
@@ -66,7 +67,9 @@
 		/** Per-scholar count of active (approved, uncompleted) assignments in this venue */
 		venueActiveCounts,
 		/** Per-scholar count of active assignments on OTHER venues (RLS-gated) */
-		elsewhereActiveCounts
+		elsewhereActiveCounts,
+		/** Thank-you notes for this submission, filtered by RLS to the viewer */
+		thanks
 	} = $derived(data);
 
 	function nameOf(scholarID: string): string {
@@ -614,6 +617,19 @@
 				{/if}
 			{/each}
 		</Table>
+
+		<!-- Author thanks to reviewers (#22). Encapsulated in its own component so
+		     the page stays lean; it renders the author / vetter / recipient views
+		     off the RLS-filtered thanks list. -->
+		<Thanks
+			{submission}
+			{thanks}
+			scholarID={scholar.id}
+			{isAuthor}
+			{isAssigned}
+			isVetter={isAdmin || (isEditor ?? false)}
+			{done}
+		/>
 	</Page>
 {/if}
 

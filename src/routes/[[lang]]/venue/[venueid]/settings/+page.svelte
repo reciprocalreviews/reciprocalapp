@@ -197,6 +197,15 @@
 					: l.page.settings.checkbox.anonymousAssignments.off}
 		/>
 
+		<Checkbox
+			on={venue.vet_thanks}
+			change={(on) => db().editVenueVetThanks(venue.id, on)}
+			label={(l) =>
+				venue.vet_thanks
+					? l.page.settings.checkbox.vetThanks.on
+					: l.page.settings.checkbox.vetThanks.off}
+		/>
+
 		<Slider
 			min={0}
 			max={365}

@@ -91,6 +91,35 @@ export const Emails = {
 			'Reason given: $6',
 			'You can review and follow up on this here: $7'
 		]
+	},
+	// Author thank-you notes to reviewers (#22). These are rendered in the app
+	// layer like every other template, then fanned out to recipients by the
+	// queue_thanks_emails RPC (which resolves recipients server-side to preserve
+	// reviewer anonymity). $-args: see each method in SupabaseCRUD.
+	ThanksPendingReview: {
+		subject: 'A thank-you note awaits your review',
+		paragraphs: [
+			'An author submitted a thank-you note to share with the reviewers of a submission. Please review it before it is shared:',
+			'https://reciprocal.reviews/venue/$1/submission/$2'
+		]
+	},
+	ThanksReceived: {
+		subject: 'You received thanks for your reviewing',
+		paragraphs: [
+			'An author of a submission you reviewed sent their thanks:',
+			'"$1"',
+			'Thank you for your reviewing work. You can view the submission here:',
+			'https://reciprocal.reviews/venue/$2/submission/$3'
+		]
+	},
+	ThanksDeclined: {
+		subject: 'Your thank-you note was not shared',
+		paragraphs: [
+			'The thank-you note you submitted for a submission was reviewed and not approved for sharing.',
+			'Reason given: $1',
+			'You can review and revise it here:',
+			'https://reciprocal.reviews/venue/$2/submission/$3'
+		]
 	}
 } satisfies Record<string, Email>;
 

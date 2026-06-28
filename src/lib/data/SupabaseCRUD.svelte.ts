@@ -29,7 +29,10 @@ import type {
 	VenueID,
 	VenueRow,
 	VolunteerID,
-	VolunteerRow
+	VolunteerRow,
+	ThanksID,
+	ThanksRow,
+	ThanksStatus
 } from '../../data/types';
 import { renderEmail, type EmailType } from '../../email/templates';
 import type Locale from '../locales/Locale';
@@ -624,6 +627,10 @@ export default class SupabaseCRUD extends CRUD {
 
 	async editVenueAnonymousAssignments(id: VenueID, anonymous_assignments: boolean) {
 		return this.updateVenue(id, { anonymous_assignments }, 'EditVenueAnonymousAssignments');
+	}
+
+	async editVenueVetThanks(id: VenueID, vet_thanks: boolean) {
+		return this.updateVenue(id, { vet_thanks }, 'EditVenueVetThanks');
 	}
 
 	async editVenueWelcomeAmount(id: VenueID, amount: number) {
@@ -1361,6 +1368,98 @@ export default class SupabaseCRUD extends CRUD {
 
 	async getPreviousSubmissionByID(id: SubmissionID): Promise<ReadResult<SubmissionRow[] | null>> {
 		return this.rows('LoadSubmission', this.client.from('submissions').select('*').eq('id', id));
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// Thanks (#22): author thank-you notes to reviewers
+	// ─────────────────────────────────────────────────────────────────────────
+
+	/** Fan a rendered thank-you email out to an audience the caller may not be
+	 * able to see (queue_thanks_emails resolves recipients server-side to keep
+	 * reviewers anonymous). Best-effort: a failure here doesn't undo the note's
+	 * state change, matching the rest of the email pipeline. */
+	private async queueThanksEmails(
+		thanksID: ThanksID,
+		audience: 'recipients' | 'vetters' | 'author',
+		template: EmailType,
+		args: string[]
+	) {
+		const { subject, message } = renderEmail(template, args);
+		await this.client.rpc('queue_thanks_emails', {
+			_thanks_id: thanksID,
+			_audience: audience,
+			_subject: subject,
+			_message: message
+		});
+	}
+
+	async proposeThanks(
+		submission: SubmissionID,
+		message: string
+	): Promise<Result<{ status: ThanksStatus }>> {
+		// The RPC validates (author + done submission) and records the note,
+		// returning the resolved status (proposed, or approved when the venue has
+		// vetting off). Notification copy is rendered here from the shared
+		// template registry, then fanned out server-side to preserve anonymity.
+		const { data, error } = await this.client.rpc('propose_thanks', {
+			_submission: submission,
+			_message: message
+		});
+		if (error) return this.error('ProposeThanks', error);
+		const status = (stringField(data, 'status') as ThanksStatus | null) ?? 'proposed';
+		const thanksID = stringField(data, 'thanks_id');
+		const venue = stringField(data, 'venue');
+		if (thanksID && venue) {
+			if (status === 'approved')
+				await this.queueThanksEmails(thanksID, 'recipients', 'ThanksReceived', [
+					message,
+					venue,
+					submission
+				]);
+			else
+				await this.queueThanksEmails(thanksID, 'vetters', 'ThanksPendingReview', [
+					venue,
+					submission
+				]);
+		}
+		return { error: undefined, data: { status } };
+	}
+
+	async approveThanks(id: ThanksID): Promise<Result<undefined>> {
+		// The RPC authorizes (venue admin / editor) and flips the note to approved,
+		// returning the venue, submission, and note text so we can render and
+		// deliver the note to its (server-resolved) reviewers.
+		const { data, error } = await this.client.rpc('approve_thanks', { _id: id });
+		if (error) return this.error('ApproveThanks', error);
+		const venue = stringField(data, 'venue');
+		const submission = stringField(data, 'submission');
+		const note = stringField(data, 'message');
+		if (venue && submission && note !== null)
+			await this.queueThanksEmails(id, 'recipients', 'ThanksReceived', [note, venue, submission]);
+		return { error: undefined, data: undefined };
+	}
+
+	async declineThanks(id: ThanksID, reason: string): Promise<Result<undefined>> {
+		const { data, error } = await this.client.rpc('decline_thanks', { _id: id, _reason: reason });
+		if (error) return this.error('DeclineThanks', error);
+		const venue = stringField(data, 'venue');
+		const submission = stringField(data, 'submission');
+		if (venue && submission)
+			await this.queueThanksEmails(id, 'author', 'ThanksDeclined', [reason, venue, submission]);
+		return { error: undefined, data: undefined };
+	}
+
+	async getSubmissionThanks(submission: SubmissionID): Promise<ReadResult<ThanksRow[] | null>> {
+		// RLS returns only what the viewer may see: the author's own notes, all
+		// notes for a vetter, and approved notes for a recipient reviewer.
+		return this.rows(
+			'LoadThanks',
+			this.client
+				.from('thanks')
+				.select('*')
+				.eq('submission', submission)
+				.order('created_at', { ascending: true })
+		);
 	}
 
 	async getPreviousSubmissionByExternalID(

@@ -18,6 +18,7 @@ export const MinterLabel = monoEmoji('💰');
 export const VenueLabel = monoEmoji('📚');
 export const ScholarLabel = monoEmoji('👤');
 export const IdeaLabel = monoEmoji('💡');
+export const ThanksLabel = monoEmoji('🙏');
 export const ErrorLabel = monoEmoji('⚠️');
 
 export function plural(text: string, count: number | undefined | null) {

@@ -261,6 +261,9 @@
             "ApproveProposalNotFound": {
               "type": "string"
             },
+            "ApproveThanks": {
+              "type": "string"
+            },
             "ApproveTransaction": {
               "type": "string"
             },
@@ -316,6 +319,9 @@
               "type": "string"
             },
             "DeclareConflict": {
+              "type": "string"
+            },
+            "DeclineThanks": {
               "type": "string"
             },
             "DeleteAssignment": {
@@ -411,6 +417,9 @@
             "EditVenueURL": {
               "type": "string"
             },
+            "EditVenueVetThanks": {
+              "type": "string"
+            },
             "EditVenueWelcomeAmount": {
               "type": "string"
             },
@@ -462,6 +471,9 @@
             "LoadSubmissionType": {
               "type": "string"
             },
+            "LoadThanks": {
+              "type": "string"
+            },
             "LoadToken": {
               "type": "string"
             },
@@ -496,6 +508,9 @@
               "type": "string"
             },
             "PendingTransactionHasTokens": {
+              "type": "string"
+            },
+            "ProposeThanks": {
               "type": "string"
             },
             "RemoveSupport": {
@@ -633,6 +648,7 @@
             "EditVenueURL",
             "EditVenueInactive",
             "EditVenueAnonymousAssignments",
+            "EditVenueVetThanks",
             "EditVenueWelcomeAmount",
             "EditVenuePaymentFree",
             "EditVenueDoneVisibilityDays",
@@ -727,7 +743,11 @@
             "LoadCompensation",
             "LoadPreferenceLevel",
             "LoadSubmissionType",
-            "LoadConflict"
+            "LoadConflict",
+            "ProposeThanks",
+            "ApproveThanks",
+            "DeclineThanks",
+            "LoadThanks"
           ],
           "type": "object"
         },
@@ -2554,11 +2574,15 @@
                         "note"
                       ],
                       "type": "object"
+                    },
+                    "vetThanks": {
+                      "$ref": "#/definitions/CheckboxOnOff"
                     }
                   },
                   "required": [
                     "inactive",
                     "anonymousAssignments",
+                    "vetThanks",
                     "paymentFree"
                   ],
                   "type": "object"
@@ -3151,6 +3175,121 @@
                 "subtitle": {
                   "type": "string"
                 },
+                "thanks": {
+                  "additionalProperties": false,
+                  "description": "Author thank-you notes to reviewers (#22).",
+                  "properties": {
+                    "button": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "approve": {
+                          "$ref": "#/definitions/ButtonText"
+                        },
+                        "declineConfirm": {
+                          "$ref": "#/definitions/ButtonText"
+                        },
+                        "declineInitiate": {
+                          "$ref": "#/definitions/ButtonText"
+                        },
+                        "send": {
+                          "$ref": "#/definitions/ButtonText"
+                        }
+                      },
+                      "required": [
+                        "send",
+                        "approve",
+                        "declineInitiate",
+                        "declineConfirm"
+                      ],
+                      "type": "object"
+                    },
+                    "declineReasonPrompt": {
+                      "description": "Prompt above the decline reason field",
+                      "type": "string"
+                    },
+                    "declinedReason": {
+                      "description": "Label preceding the reason an editor gave for declining",
+                      "type": "string"
+                    },
+                    "delivered": {
+                      "description": "Shown to the author after sending, when delivered immediately",
+                      "type": "string"
+                    },
+                    "field": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "declineReason": {
+                          "$ref": "#/definitions/TextFieldText"
+                        },
+                        "message": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "invalid": {
+                              "description": "The optional validation error message",
+                              "type": "string"
+                            },
+                            "label": {
+                              "description": "The optional label to show above the text feild",
+                              "type": "string"
+                            },
+                            "note": {
+                              "description": "The note to show below the text field",
+                              "type": "string"
+                            },
+                            "placeholder": {
+                              "description": "The placeholder to show in the text field",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "invalid",
+                            "note",
+                            "placeholder"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "message",
+                        "declineReason"
+                      ],
+                      "type": "object"
+                    },
+                    "header": {
+                      "description": "Subheader for the thanks section",
+                      "type": "string"
+                    },
+                    "intro": {
+                      "description": "Author panel intro, framed as gratitude (not a rebuttal)",
+                      "type": "string"
+                    },
+                    "pending": {
+                      "description": "Shown to the author after sending, when the venue vets notes",
+                      "type": "string"
+                    },
+                    "received": {
+                      "description": "Heading above notes shown to a recipient reviewer",
+                      "type": "string"
+                    },
+                    "review": {
+                      "description": "Vetter panel intro",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "header",
+                    "intro",
+                    "pending",
+                    "delivered",
+                    "declinedReason",
+                    "review",
+                    "declineReasonPrompt",
+                    "received",
+                    "field",
+                    "button"
+                  ],
+                  "type": "object"
+                },
                 "tip": {
                   "additionalProperties": false,
                   "properties": {
@@ -3178,7 +3317,8 @@
                 "field",
                 "status",
                 "options",
-                "headers"
+                "headers",
+                "thanks"
               ],
               "type": "object"
             },

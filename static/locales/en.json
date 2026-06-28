@@ -735,6 +735,33 @@
 				"load": "Assignments / Limit",
 				"action": "Action"
 			},
+			"thanks": {
+				"header": "Thank your reviewers",
+				"intro": "Send a short note of thanks to everyone who reviewed this submission. This is a thank-you, not a rebuttal — it may be reviewed by an editor before it is shared, and reviewers stay anonymous to you.",
+				"pending": "Your thanks have been submitted and will be shared with your reviewers once an editor approves them.",
+				"delivered": "Your thanks have been shared with your reviewers.",
+				"declinedReason": "An editor did not approve your note for sharing. Reason given:",
+				"review": "An author submitted a thank-you note for this submission. Approve it to share it with the reviewers, or decline it with a reason.",
+				"declineReasonPrompt": "Let the author know why this note wasn't approved for sharing.",
+				"received": "Thanks from the authors",
+				"field": {
+					"message": {
+						"label": "Your thanks",
+						"placeholder": "Thank you for the time and care you put into reviewing our work…",
+						"note": "Up to 1000 characters.",
+						"invalid": "Please write a note of at most 1000 characters."
+					},
+					"declineReason": {
+						"placeholder": "Why isn't this note approved for sharing?"
+					}
+				},
+				"button": {
+					"send": { "label": "Send thanks", "tip": "Share your thanks with this submission's reviewers." },
+					"approve": { "label": "Approve", "tip": "Share this note with the reviewers." },
+					"declineInitiate": { "label": "Decline", "tip": "Decline this note with a reason." },
+					"declineConfirm": { "label": "Confirm decline", "tip": "Decline this note and notify the author." }
+				}
+			},
 			"cell": {
 				"proposesToPay": "proposes to pay",
 				"paid": "paid",
@@ -900,6 +927,10 @@
 				"anonymousAssignments": {
 					"on": "**Anonymous assignments**: Authors and conflicted scholars cannot see who is assigned to review their submissions.",
 					"off": "**Visible assignments**: Authors and conflicted scholars can see who is assigned to review their submissions. This is open reviewing."
+				},
+				"vetThanks": {
+					"on": "**Vet thank-you notes**: An admin or editor must approve an author's thank-you note before it is shared with reviewers.",
+					"off": "**Share thank-you notes immediately**: Author thank-you notes are shared with reviewers without review."
 				},
 				"paymentFree": {
 					"label": "**Token-based venue**: Authors pay tokens to submit and reviewers are compensated with tokens. Uncheck to make this venue payment-free.",
@@ -1563,6 +1594,7 @@
 		"EditVenueURL": "Unable to edit the venue URL",
 		"EditVenueInactive": "Unable to edit the inactive message",
 		"EditVenueAnonymousAssignments": "Unable to edit anonymous assignments setting",
+		"EditVenueVetThanks": "Unable to update the thank-you vetting setting",
 		"EditVenueWelcomeAmount": "Unable to edit the welcome amount",
 		"EditVenuePaymentFree": "Unable to change the payment mode",
 		"EditVenueDoneVisibilityDays": "Unable to update the recently-done visibility window",
@@ -1657,6 +1689,10 @@
 		"LoadCompensation": "Unable to load compensation data.",
 		"LoadPreferenceLevel": "Unable to load preference level data.",
 		"LoadSubmissionType": "Unable to load submission type data.",
-		"LoadConflict": "Unable to load conflict data."
+		"LoadConflict": "Unable to load conflict data.",
+		"ProposeThanks": "Unable to send your thanks.",
+		"ApproveThanks": "Unable to approve the thank-you note.",
+		"DeclineThanks": "Unable to decline the thank-you note.",
+		"LoadThanks": "Unable to load thank-you notes."
 	}
 }

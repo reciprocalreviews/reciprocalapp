@@ -13,19 +13,19 @@ Production runtime dependencies are deliberately small. Only three libraries shi
 
 Everything else is build- or test-time tooling. The full set:
 
-| Concern              | Tool                                          |
-| -------------------- | --------------------------------------------- |
-| Frontend framework   | Svelte 5 (runes) + SvelteKit 2                |
-| Language             | TypeScript (strict)                           |
-| Hosting              | Vercel via `@sveltejs/adapter-vercel`         |
-| Database, auth, realtime | Supabase (Postgres + GoTrue + Realtime)   |
-| Edge functions       | Supabase Functions (Deno)                     |
-| Outbound email       | Resend, fronted by an Edge Function           |
-| Unit tests           | Vitest (`src/**/*.unit.ts`)                   |
-| Integration tests    | Playwright, Chromium only (`end2end/`)        |
-| Locale validation    | `ts-json-schema-generator` + `ajv`            |
-| Build runtime        | Node ≥ 22                                     |
-| Code style           | Prettier (tabs, single quotes, 100-char lines)|
+| Concern                  | Tool                                           |
+| ------------------------ | ---------------------------------------------- |
+| Frontend framework       | Svelte 5 (runes) + SvelteKit 2                 |
+| Language                 | TypeScript (strict)                            |
+| Hosting                  | Vercel via `@sveltejs/adapter-vercel`          |
+| Database, auth, realtime | Supabase (Postgres + GoTrue + Realtime)        |
+| Edge functions           | Supabase Functions (Deno)                      |
+| Outbound email           | Resend, fronted by an Edge Function            |
+| Unit tests               | Vitest (`src/**/*.unit.ts`)                    |
+| Integration tests        | Playwright, Chromium only (`end2end/`)         |
+| Locale validation        | `ts-json-schema-generator` + `ajv`             |
+| Build runtime            | Node ≥ 22                                      |
+| Code style               | Prettier (tabs, single quotes, 100-char lines) |
 
 ## Request flow
 
@@ -131,8 +131,9 @@ Server code never calls Resend directly. The producer / consumer split is:
 1. **Producer.** Application code inserts a row into the `emails` table via `emailScholars(scholars, templateKey, args)` (in [SupabaseCRUD](src/lib/data/SupabaseCRUD.svelte.ts)). The template is looked up in [src/email/templates.ts](src/email/templates.ts) and its `$1`/`$2`/... placeholders are substituted here by `renderEmail`; argument values are HTML-escaped (the body is rendered as HTML downstream). The stored `emails.message` stays plain text and is an audit log only — it is never displayed in the UI.
 2. **Consumer — `resend` function.** [supabase/functions/resend/](supabase/functions/resend/) reads the row and posts to the Resend API. At send time it wraps the body in the shared branded HTML shell ([supabase/functions/\_shared/emailShell.ts](supabase/functions/_shared/emailShell.ts)) and sends both an HTML version and a text/plain alternative. In local dev (when `PUBLIC_SUPABASE_URL` points at 127.0.0.1) it logs the plain message to the console instead.
 3. **Reminder cron — `remind` function.** [supabase/functions/remind/](supabase/functions/remind/) is invoked daily at 22:00 UTC by a `pg_cron` job (`remind-daily`) defined in `supabase/migrations/`. It emails scholars with stale availability (fixed 90-day staleness, 30-day dedupe) and emails admins + minters about unapproved proposed transactions, gated per venue by `venues.transaction_reminder_frequency_days` and stamped to `venues.transaction_reminder_time`. It builds plain-text bodies, wraps them in the same shared shell, and posts directly to Resend. It is the only producer that runs outside the SvelteKit process.
+4. **Server-side fan-out — thank-you notes.** Author thank-you notes to reviewers (#22; the `thanks` table, vetting toggled by `venues.vet_thanks`) need privileged recipient resolution: the author may not see who reviewed their submission. The note bodies are still rendered from the `Emails` registry in `templates.ts` like every other email (`ThanksPendingReview` / `ThanksReceived` / `ThanksDeclined`), but the fan-out goes through the `queue_thanks_emails` RPC (`SECURITY DEFINER`) instead of `emailScholars`. The CRUD layer renders the copy and passes it in; the RPC resolves the audience (the submission's approved assignees / the venue's vetters / the author) and inserts rows into `emails` with `sender = null` so a recipient can't read the author's id off the email row. Its per-audience authorization is also what stops an author from bypassing vetting to message reviewers directly. The `resend` consumer brands and delivers these rows like any other.
 
-To add a new email: add a key to the `Emails` map in `templates.ts`, then call `emailScholars(...)` from the appropriate CRUD method.
+To add a new email: add a key to the `Emails` map in `templates.ts`, then send it — from application code via `emailScholars(...)`, or (when recipients must be resolved with elevated privileges, as for thank-you notes) by rendering with `renderEmail` and passing the result to a `SECURITY DEFINER` fan-out RPC.
 
 ### Auth emails
 

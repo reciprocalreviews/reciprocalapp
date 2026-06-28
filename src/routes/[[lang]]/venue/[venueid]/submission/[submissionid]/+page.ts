@@ -66,6 +66,11 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get the venue's preference levels (may be empty) for rendering bid labels.
 	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
+	// Get thank-you notes for this submission. RLS returns only what the viewer
+	// may see (their own as author, all as a vetter, approved as a recipient).
+	const { data: thanks } =
+		submission === null ? { data: null } : await db.getSubmissionThanks(submission.id);
+
 	// Count active (uncompleted) approved assignments per candidate scholar on
 	// this venue, so the cap-vs-load indicator can render "n / cap".
 	const { data: venueAssignments } = await db.getVenueActiveAssignmentScholars(venueid);
@@ -102,6 +107,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		assignmentScholars: assignmentScholars ?? [],
 		preferenceLevels,
 		venueActiveCounts,
-		elsewhereActiveCounts
+		elsewhereActiveCounts,
+		thanks
 	};
 };

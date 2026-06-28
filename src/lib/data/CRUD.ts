@@ -27,7 +27,10 @@ import {
 	type SubmissionType,
 	type CompensationRow,
 	type PreferenceLevelID,
-	type PreferenceLevelRow
+	type PreferenceLevelRow,
+	type ThanksRow,
+	type ThanksID,
+	type ThanksStatus
 } from '../../data/types';
 import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
@@ -227,6 +230,8 @@ export default abstract class CRUD {
 	abstract editVenueURL(id: VenueID, url: string): Promise<Result>;
 	abstract editVenueInactive(id: VenueID, inactive: string | null): Promise<Result>;
 	abstract editVenueAnonymousAssignments(id: VenueID, anonymous: boolean): Promise<Result>;
+	/** Toggle whether author thank-you notes to reviewers require vetting. */
+	abstract editVenueVetThanks(id: VenueID, vet: boolean): Promise<Result>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<Result>;
 	abstract editVenuePaymentFree(id: VenueID, paymentFree: boolean): Promise<Result>;
 	abstract editVenueDoneVisibilityDays(id: VenueID, days: number): Promise<Result>;
@@ -513,6 +518,23 @@ export default abstract class CRUD {
 	abstract getVenueSubmissions(venue: VenueID): Promise<ReadResult<SubmissionRow[] | null>>;
 	abstract getScholarSubmissions(scholar: ScholarID): Promise<ReadResult<SubmissionRow[] | null>>;
 	abstract getSubmission(id: SubmissionID): Promise<ReadResult<SubmissionRow | null>>;
+
+	/** An author sends a single thank-you note to the reviewers of one of their
+	 * (done) submissions. The note is held for venue vetting unless the venue has
+	 * vetting off, in which case it is delivered immediately. Returns the
+	 * resulting status so the UI can message "pending review" vs "sent".
+	 * Delivery to reviewers happens server-side to preserve their anonymity. */
+	abstract proposeThanks(
+		submission: SubmissionID,
+		message: string
+	): Promise<Result<{ status: ThanksStatus }>>;
+	/** A venue admin / editor approves a proposed thank-you note, delivering it. */
+	abstract approveThanks(id: ThanksID): Promise<Result<undefined>>;
+	/** A venue admin / editor declines a proposed thank-you note, with a reason. */
+	abstract declineThanks(id: ThanksID, reason: string): Promise<Result<undefined>>;
+	/** Thank-you notes for a submission, filtered by RLS to what the viewer may
+	 * see (their own as author; all as a vetter; approved ones as a recipient). */
+	abstract getSubmissionThanks(submission: SubmissionID): Promise<ReadResult<ThanksRow[] | null>>;
 	abstract getPreviousSubmissionByID(id: SubmissionID): Promise<ReadResult<SubmissionRow[] | null>>;
 	abstract getPreviousSubmissionByExternalID(
 		venue: VenueID,

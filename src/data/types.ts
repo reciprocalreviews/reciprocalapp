@@ -32,3 +32,6 @@ export type CompensationRow = Tables['compensation']['Row'];
 export type PreferenceLevelRow = Tables['preference_levels']['Row'];
 export type PreferenceLevelID = PreferenceLevelRow['id'];
 export type ConflictRow = Tables['conflicts']['Row'];
+export type ThanksRow = Tables['thanks']['Row'];
+export type ThanksID = ThanksRow['id'];
+export type ThanksStatus = Database['public']['Enums']['thanks_status'];

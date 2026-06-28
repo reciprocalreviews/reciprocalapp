@@ -22,6 +22,9 @@ create table if not exists public.venues (
 	inactive text default 'This venue is being configured.'::text,
 	-- Whether assignments are visible to conflicted scholars (open reviewing)
 	anonymous_assignments boolean default true not null,
+	-- Whether author thank-you notes to reviewers (#22) must be approved by a
+	-- venue admin / editor before reviewers see them. Default on.
+	vet_thanks boolean default true not null,
 	-- How many days after a submission is marked done it remains visible
 	-- in the submissions list (sorted to the bottom). 0 hides immediately.
 	done_visibility_days integer default 30 not null,

@@ -641,6 +641,71 @@ export type Database = {
           },
         ]
       }
+      thanks: {
+        Row: {
+          approver: string | null
+          author: string
+          created_at: string
+          decline_reason: string | null
+          id: string
+          message: string
+          status: Database["public"]["Enums"]["thanks_status"]
+          submission: string
+          venue: string
+        }
+        Insert: {
+          approver?: string | null
+          author: string
+          created_at?: string
+          decline_reason?: string | null
+          id?: string
+          message: string
+          status?: Database["public"]["Enums"]["thanks_status"]
+          submission: string
+          venue: string
+        }
+        Update: {
+          approver?: string | null
+          author?: string
+          created_at?: string
+          decline_reason?: string | null
+          id?: string
+          message?: string
+          status?: Database["public"]["Enums"]["thanks_status"]
+          submission?: string
+          venue?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thanks_approver_fkey"
+            columns: ["approver"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thanks_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thanks_submission_fkey"
+            columns: ["submission"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thanks_venue_fkey"
+            columns: ["venue"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tokens: {
         Row: {
           currency: string
@@ -796,6 +861,7 @@ export type Database = {
           transaction_reminder_frequency_days: number
           transaction_reminder_time: string | null
           url: string
+          vet_thanks: boolean
           welcome_amount: number
         }
         Insert: {
@@ -811,6 +877,7 @@ export type Database = {
           transaction_reminder_frequency_days?: number
           transaction_reminder_time?: string | null
           url?: string
+          vet_thanks?: boolean
           welcome_amount: number
         }
         Update: {
@@ -826,6 +893,7 @@ export type Database = {
           transaction_reminder_frequency_days?: number
           transaction_reminder_time?: string | null
           url?: string
+          vet_thanks?: boolean
           welcome_amount?: number
         }
         Relationships: [
@@ -907,6 +975,7 @@ export type Database = {
         }
         Returns: Json
       }
+      approve_thanks: { Args: { _id: string }; Returns: Json }
       approve_transaction: { Args: { _transaction_id: string }; Returns: Json }
       approve_venue_proposal: { Args: { _proposal_id: string }; Returns: Json }
       bulk_import_submissions: {
@@ -947,6 +1016,7 @@ export type Database = {
         }
         Returns: Json
       }
+      decline_thanks: { Args: { _id: string; _reason: string }; Returns: Json }
       isadmin: { Args: { _venueid: string }; Returns: boolean }
       isapprover: { Args: { _roleid: string }; Returns: boolean }
       isassigned: { Args: { _submissionid: string }; Returns: boolean }
@@ -976,6 +1046,19 @@ export type Database = {
         }
         Returns: Json
       }
+      propose_thanks: {
+        Args: { _message: string; _submission: string }
+        Returns: Json
+      }
+      queue_thanks_emails: {
+        Args: {
+          _audience: string
+          _message: string
+          _subject: string
+          _thanks_id: string
+        }
+        Returns: number
+      }
       transfer_tokens: {
         Args: {
           _amount: number
@@ -994,6 +1077,7 @@ export type Database = {
       exchange_proposal_kind: "create" | "modify" | "merge"
       invited: "invited" | "accepted" | "declined"
       submission_status: "reviewing" | "done"
+      thanks_status: "proposed" | "approved" | "declined"
       transaction_status: "proposed" | "approved" | "declined"
     }
     CompositeTypes: {
@@ -1128,6 +1212,7 @@ export const Constants = {
       exchange_proposal_kind: ["create", "modify", "merge"],
       invited: ["invited", "accepted", "declined"],
       submission_status: ["reviewing", "done"],
+      thanks_status: ["proposed", "approved", "declined"],
       transaction_status: ["proposed", "approved", "declined"],
     },
   },
