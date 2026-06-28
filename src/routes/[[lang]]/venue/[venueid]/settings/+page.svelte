@@ -5,7 +5,15 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Note from '$lib/components/Note.svelte';
-	import { ErrorLabel, ScholarLabel, SettingsLabel, VenueLabel } from '$lib/components/Labels.js';
+	import {
+		ErrorLabel,
+		MinterLabel,
+		ScholarLabel,
+		SettingsLabel,
+		TaskLabel,
+		TokenLabel,
+		VenueLabel
+	} from '$lib/components/Labels.js';
 	import Options from '$lib/components/Options.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
@@ -122,6 +130,21 @@
 		<Tip><Text path={(l) => l.page.settings.tip.policies} /></Tip>
 
 		<Paragraph text={(l) => l.page.settings.paragraph.policies} />
+
+		<!-- Deeper launch-planning guidance for the most consequential
+		     decisions (#65), collapsed so the checklist above stays scannable. -->
+		<Card icon={TokenLabel} subheader strings={(l) => l.page.settings.card.economics}>
+			<Paragraph text={(l) => l.page.settings.paragraph.economics} />
+		</Card>
+		<Card icon="🎭" subheader strings={(l) => l.page.settings.card.anonymityAssignment}>
+			<Paragraph text={(l) => l.page.settings.paragraph.anonymityAssignment} />
+		</Card>
+		<Card icon={TaskLabel} subheader strings={(l) => l.page.settings.card.reviewQuality}>
+			<Paragraph text={(l) => l.page.settings.paragraph.reviewQuality} />
+		</Card>
+		<Card icon={MinterLabel} subheader strings={(l) => l.page.settings.card.minters}>
+			<Paragraph text={(l) => l.page.settings.paragraph.minters} />
+		</Card>
 
 		<!-- Step 2: Compensation -->
 		<Subheader

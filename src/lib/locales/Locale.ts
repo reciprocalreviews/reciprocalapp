@@ -591,6 +591,20 @@ export type LocaleText = {
 				/** Explains the bulk-import step. */
 				bulkImport: string;
 			};
+			/** Expandable launch-planning guidance cards under Step 1 (#65):
+			 * deeper "why/how" for the most consequential decisions. */
+			card: {
+				/** How to set welcome/compensation without collapsing the economy. */
+				economics: CardText;
+				/** How reviewing is organized: anonymity model + bidding vs.
+				 * central assignment and preference labels. */
+				anonymityAssignment: CardText;
+				/** How to decide what counts as a creditable review. */
+				reviewQuality: CardText;
+				/** Whether to join an existing currency or start one, and how to
+				 * choose good minters (only needed for a new currency). */
+				minters: CardText;
+			};
 			header: {
 				/** Step 1: community-policy checklist before configuring anything. */
 				policies: string;
@@ -645,6 +659,19 @@ export type LocaleText = {
 				/** Bulleted markdown list of policies the community should
 				 * decide on before encoding them in the settings below. */
 				policies: string;
+				/** Body of the Step 1 "economics" card (#65): how welcome and
+				 * compensation levels keep the token economy in balance, with a
+				 * worked example. */
+				economics: string;
+				/** Body of the Step 1 "anonymity & assignment" card (#65): the
+				 * anonymity model and bidding-vs-central-assignment tradeoffs. */
+				anonymityAssignment: string;
+				/** Body of the Step 1 "minters" card (#65): criteria for choosing
+				 * good minters. */
+				minters: string;
+				/** Body of the Step 1 "review quality" card (#65): deciding what
+				 * counts as a creditable review and which controls enforce it. */
+				reviewQuality: string;
 			};
 			/** Email-template snippets editors copy into their reviewing platform
 			 * (#113). Each entry's `body` is interpolated with `{venue}`,

@@ -2549,6 +2549,35 @@
                   ],
                   "type": "object"
                 },
+                "card": {
+                  "additionalProperties": false,
+                  "description": "Expandable launch-planning guidance cards under Step 1 (#65): deeper \"why/how\" for the most consequential decisions.",
+                  "properties": {
+                    "anonymityAssignment": {
+                      "$ref": "#/definitions/CardText",
+                      "description": "How reviewing is organized: anonymity model + bidding vs. central assignment and preference labels."
+                    },
+                    "economics": {
+                      "$ref": "#/definitions/CardText",
+                      "description": "How to set welcome/compensation without collapsing the economy."
+                    },
+                    "minters": {
+                      "$ref": "#/definitions/CardText",
+                      "description": "Whether to join an existing currency or start one, and how to choose good minters (only needed for a new currency)."
+                    },
+                    "reviewQuality": {
+                      "$ref": "#/definitions/CardText",
+                      "description": "How to decide what counts as a creditable review."
+                    }
+                  },
+                  "required": [
+                    "economics",
+                    "anonymityAssignment",
+                    "reviewQuality",
+                    "minters"
+                  ],
+                  "type": "object"
+                },
                 "checkbox": {
                   "additionalProperties": false,
                   "properties": {
@@ -2732,8 +2761,24 @@
                 "paragraph": {
                   "additionalProperties": false,
                   "properties": {
+                    "anonymityAssignment": {
+                      "description": "Body of the Step 1 \"anonymity & assignment\" card (#65): the anonymity model and bidding-vs-central-assignment tradeoffs.",
+                      "type": "string"
+                    },
+                    "economics": {
+                      "description": "Body of the Step 1 \"economics\" card (#65): how welcome and compensation levels keep the token economy in balance, with a worked example.",
+                      "type": "string"
+                    },
+                    "minters": {
+                      "description": "Body of the Step 1 \"minters\" card (#65): criteria for choosing good minters.",
+                      "type": "string"
+                    },
                     "policies": {
                       "description": "Bulleted markdown list of policies the community should decide on before encoding them in the settings below.",
+                      "type": "string"
+                    },
+                    "reviewQuality": {
+                      "description": "Body of the Step 1 \"review quality\" card (#65): deciding what counts as a creditable review and which controls enforce it.",
                       "type": "string"
                     },
                     "welcome": {
@@ -2743,7 +2788,11 @@
                   },
                   "required": [
                     "welcome",
-                    "policies"
+                    "policies",
+                    "economics",
+                    "anonymityAssignment",
+                    "minters",
+                    "reviewQuality"
                   ],
                   "type": "object"
                 },
@@ -2875,6 +2924,7 @@
                 "title",
                 "subtitle",
                 "tip",
+                "card",
                 "header",
                 "feedback",
                 "field",
