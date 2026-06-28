@@ -1,5 +1,6 @@
 import z from 'zod';
 import { corsHeaders } from '../_shared/cors.ts';
+import { renderBrandedEmail } from '../_shared/emailShell.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const isLocal = Deno.env.get('PUBLIC_SUPABASE_URL')?.includes('127.0.0.1') ?? false;
@@ -35,6 +36,10 @@ const handler = async (request: Request): Promise<Response> => {
 
 			returnData = null;
 		} else {
+			// Wrap the stored plain-text body in the shared branded shell, sending
+			// both an HTML version and a text/plain alternative.
+			const { html, text } = renderBrandedEmail(subject, message);
+
 			// Post to the resend API using the API key
 			const res = await fetch('https://api.resend.com/emails', {
 				method: 'POST',
@@ -46,7 +51,8 @@ const handler = async (request: Request): Promise<Response> => {
 					from: 'notifications@reciprocal.reviews',
 					to: to,
 					subject: subject,
-					text: message
+					html,
+					text
 				})
 			});
 

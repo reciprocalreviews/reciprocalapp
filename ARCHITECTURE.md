@@ -122,13 +122,21 @@ A consequence to be aware of: `handle()` also calls `invalidateAll()` after ever
 
 ## Email pipeline
 
+There are two kinds of email — **application emails** (transactional/reminder) and **auth emails** (Supabase GoTrue) — and both share one branded visual identity. Templates are English only: there is no mechanism yet to solicit a scholar's language preference.
+
+### Application emails
+
 Server code never calls Resend directly. The producer / consumer split is:
 
-1. **Producer.** Application code (CRUD methods, edge functions) inserts a row into the `emails` table via `emailScholars(scholars, templateKey, args)`.
-2. **Consumer — `resend` function.** [supabase/functions/resend/](supabase/functions/resend/) reads the row, looks up the template in [src/email/templates.ts](src/email/templates.ts), substitutes `$1`/`$2`/... placeholders, and posts to the Resend API. In local dev (when `PUBLIC_SUPABASE_URL` points at 127.0.0.1) it logs to the console instead.
-3. **Reminder cron — `remind` function.** [supabase/functions/remind/](supabase/functions/remind/) is invoked daily at 22:00 UTC by a `pg_cron` job (`remind-daily`) defined in `supabase/migrations/`. It emails scholars with stale availability (fixed 90-day staleness, 30-day dedupe) and emails admins + minters about unapproved proposed transactions, gated per venue by `venues.transaction_reminder_frequency_days` and stamped to `venues.transaction_reminder_time`. It is the only producer that runs outside the SvelteKit process.
+1. **Producer.** Application code inserts a row into the `emails` table via `emailScholars(scholars, templateKey, args)` (in [SupabaseCRUD](src/lib/data/SupabaseCRUD.svelte.ts)). The template is looked up in [src/email/templates.ts](src/email/templates.ts) and its `$1`/`$2`/... placeholders are substituted here by `renderEmail`; argument values are HTML-escaped (the body is rendered as HTML downstream). The stored `emails.message` stays plain text and is an audit log only — it is never displayed in the UI.
+2. **Consumer — `resend` function.** [supabase/functions/resend/](supabase/functions/resend/) reads the row and posts to the Resend API. At send time it wraps the body in the shared branded HTML shell ([supabase/functions/\_shared/emailShell.ts](supabase/functions/_shared/emailShell.ts)) and sends both an HTML version and a text/plain alternative. In local dev (when `PUBLIC_SUPABASE_URL` points at 127.0.0.1) it logs the plain message to the console instead.
+3. **Reminder cron — `remind` function.** [supabase/functions/remind/](supabase/functions/remind/) is invoked daily at 22:00 UTC by a `pg_cron` job (`remind-daily`) defined in `supabase/migrations/`. It emails scholars with stale availability (fixed 90-day staleness, 30-day dedupe) and emails admins + minters about unapproved proposed transactions, gated per venue by `venues.transaction_reminder_frequency_days` and stamped to `venues.transaction_reminder_time`. It builds plain-text bodies, wraps them in the same shared shell, and posts directly to Resend. It is the only producer that runs outside the SvelteKit process.
 
 To add a new email: add a key to the `Emails` map in `templates.ts`, then call `emailScholars(...)` from the appropriate CRUD method.
+
+### Auth emails
+
+Supabase GoTrue sends auth emails (sign-in OTP/magic link, confirmation, recovery, email change, invite, reauthentication). These use branded static HTML templates in [supabase/templates/](supabase/templates/), hand-authored to mirror the shared shell, and wired up under `[auth.email.template.*]` in [supabase/config.toml](supabase/config.toml). The `magic_link` and `confirmation` templates must keep a contiguous `code: {{ .Token }}` so the OTP login flow and the Playwright suite can extract the code (see [src/routes/login.ts](src/routes/login.ts)). In production, auth email is routed through Resend's SMTP so auth and application email share one provider and sender (`notifications@reciprocal.reviews`); this SMTP is configured in the Supabase Dashboard (Auth → SMTP) for the staging/prod projects. The `[auth.email.smtp]` block in `config.toml` mirrors it as documentation but is `enabled = false`, because a custom SMTP host would otherwise make the local stack send real mail instead of capturing it in Mailpit (which would break local login and the Playwright tests). Note also that for the hosted project the branded templates must be pasted into the Dashboard (Auth → Email Templates) — `config.toml` template settings apply to local development only. When ORCID auth + email verification lands, `enable_confirmations` flips to true and the `confirmation` template becomes the primary auth email.
 
 ## Database management
 

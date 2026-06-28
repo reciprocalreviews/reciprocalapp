@@ -110,20 +110,55 @@ double_confirm_changes = true
 enable_confirmations = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"
+# NOTE: when ORCID auth + email verification lands, flip enable_confirmations to
+# true above so email is verified. The confirmation template below then becomes
+# the primary auth email; keep its "code: {{ .Token }}" anchor (see templates).
 
-# Use a production-ready SMTP server
-# [auth.email.smtp]
-# host = "smtp.sendgrid.net"
-# port = 587
-# user = "apikey"
-# pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# Production SMTP. We route auth emails through Resend so they use the same
+# provider and sender (notifications@reciprocal.reviews) as our application
+# emails (see supabase/functions/resend). This is configured for the hosted
+# staging/prod projects in the Supabase Dashboard (Auth → SMTP). It is kept here
+# as documentation but DISABLED (enabled = false) so local development keeps
+# routing auth email to Mailpit ([local_smtp] above) — a custom SMTP host would
+# otherwise make the local stack send real mail through Resend, breaking local
+# login and the Playwright tests.
+[auth.email.smtp]
+enabled = false
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+admin_email = "notifications@reciprocal.reviews"
+sender_name = "Reciprocal Reviews"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# Branded auth email templates (English only; we can't yet solicit a scholar's
+# language preference). These are mirrored from the shared shell in
+# supabase/functions/_shared/emailShell.ts. NOTE: for the hosted project, these
+# customizations must be copied into the Supabase Dashboard (Auth → Email
+# Templates) — config.toml templates apply to local development only.
+[auth.email.template.magic_link]
+subject = "Your Reciprocal Reviews sign-in code"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.confirmation]
+subject = "Confirm your email for Reciprocal Reviews"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Reset your Reciprocal Reviews password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new email for Reciprocal Reviews"
+content_path = "./supabase/templates/email_change.html"
+
+[auth.email.template.invite]
+subject = "You've been invited to Reciprocal Reviews"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.reauthentication]
+subject = "Your Reciprocal Reviews verification code"
+content_path = "./supabase/templates/reauthentication.html"
 
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.

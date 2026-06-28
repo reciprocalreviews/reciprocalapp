@@ -424,6 +424,8 @@ It should also support assignment decisions:
 
 ## Notifications
 
+All emails RR sends — both authentication emails (sign-in, confirmation, recovery, email change, invitation) and the transactional and reminder emails below — share one simple branded visual identity so they read as coming from the same platform. These templates are English only for now: RR has no mechanism yet to solicit a scholar's language preference. ([#56](https://github.com/reciprocalreviews/reciprocalapp/issues/56))
+
 RR will also send periodic reminders based on time-based events:
 
 - [x] ([#46](https://github.com/reciprocalreviews/reciprocalapp/issues/46)): Send `scholar`s periodic reminders to update their availability

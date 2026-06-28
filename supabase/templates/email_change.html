@@ -1,0 +1,43 @@
+<!doctype html>
+<!--
+  Supabase auth template: email address change confirmation.
+  Hand-authored to mirror supabase/functions/_shared/emailShell.ts.
+  With double_confirm_changes enabled, this is sent to both the old and new
+  addresses; {{ .Email }} is the current address and {{ .NewEmail }} the new one.
+-->
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="color-scheme" content="light only" />
+		<title>Confirm your new email for Reciprocal Reviews</title>
+	</head>
+	<body style="margin: 0; padding: 0; background-color: #e1eff2;">
+		<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #e1eff2; padding: 24px 0;">
+			<tr>
+				<td align="center">
+					<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; background-color: #ffffff; border: 1px solid #bbbbbb; border-radius: 8px; overflow: hidden; font-family: 'Quicksand', 'Josefin Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+						<tr>
+							<td style="background-color: #007284; padding: 20px 32px;">
+								<a href="https://reciprocal.reviews" style="color: #ffffff; font-size: 20px; font-weight: 700; text-decoration: none;">Reciprocal Reviews</a>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 32px; color: #111111; font-size: 15px; line-height: 1.5;">
+								<p style="margin: 0 0 16px 0;">We received a request to change the email address on your Reciprocal Reviews account from {{ .Email }} to {{ .NewEmail }}.</p>
+								<p style="margin: 0 0 16px 0;">Confirm the change to keep your account secure:</p>
+								<p style="margin: 0 0 16px 0;"><a href="{{ .ConfirmationURL }}" style="color: #007284;">Confirm email change</a></p>
+								<p style="margin: 0;">If you didn't request this, you can safely ignore this email.</p>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 20px 32px; border-top: 1px solid #bbbbbb; color: #888888; font-size: 12px; line-height: 1.5;">
+								This is an automated email sent by Reciprocal Reviews.
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>

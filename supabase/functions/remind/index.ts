@@ -1,6 +1,7 @@
 import 'edge-runtime';
 import { createClient, SupabaseClient } from 'supabase';
 import type { Database } from '../../../src/data/database.ts';
+import { escapeHtml, renderBrandedEmail } from '../_shared/emailShell.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const isLocal = Deno.env.get('PUBLIC_SUPABASE_URL')?.includes('127.0.0.1') ?? false;
@@ -44,9 +45,8 @@ async function getStaleStatusReminder(supabase: SupabaseClient<Database>): Promi
 				message: [
 					'Hello,',
 					"This is a friendly reminder to update your reviewing status on Reciprocal Reviews. Here's the last thing you wrote:",
-					`"${scholar.status}"`,
-					`You can update it here: https://reciprocal.reviews/scholar/${scholar.id}`,
-					'(This is an automated message.)'
+					`"${escapeHtml(scholar.status ?? '')}"`,
+					`You can update it here: https://reciprocal.reviews/scholar/${scholar.id}`
 				].join('\n\n')
 			});
 
@@ -155,8 +155,7 @@ async function getTransactionReminders(supabase: SupabaseClient<Database>): Prom
 					message: [
 						'Hello,',
 						`You have ${transactions.length} proposed transaction(s) that require your approval.`,
-						`Please review and approve it here: https://reciprocal.reviews/scholar/${recipient.id}`,
-						'(This is an automated message.)'
+						`Please review and approve it here: https://reciprocal.reviews/scholar/${recipient.id}`
 					].join('\n\n')
 				});
 			}
@@ -202,6 +201,10 @@ const handler = async (): Promise<Response> => {
 				console.log('message:', message);
 				console.log('---');
 			} else {
+				// Wrap the plain-text reminder in the shared branded shell, sending
+				// both an HTML version and a text/plain alternative.
+				const { html, text } = renderBrandedEmail(subject, message);
+
 				// Post to the resend API using the API key
 				const res = await fetch('https://api.resend.com/emails', {
 					method: 'POST',
@@ -213,7 +216,8 @@ const handler = async (): Promise<Response> => {
 						from: 'notifications@reciprocal.reviews',
 						to,
 						subject,
-						text: message
+						html,
+						text
 					})
 				});
 				// Wait for the email to sent.

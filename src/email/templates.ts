@@ -96,6 +96,23 @@ export const Emails = {
 
 export type EmailType = keyof typeof Emails;
 
+/**
+ * Escape a value for safe inclusion in HTML. The message bodies are later
+ * wrapped in a branded HTML shell (supabase/functions/_shared/emailShell.ts)
+ * before being sent, and the templates themselves embed intentional markup
+ * (<a>, <strong>). Argument values, however, can carry user-supplied content
+ * (venue titles, decline reasons, etc.), so we escape them at substitution time
+ * so they render as text rather than markup.
+ */
+function escapeArg(value: string): string {
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
+}
+
 export function renderEmail(
 	template: EmailType,
 	args: string[]
@@ -106,14 +123,17 @@ export function renderEmail(
 	let message = email.paragraphs.join('\n\n');
 
 	// Go through each provided arg and replace it in the email subject and message.
+	// The message is rendered as branded HTML at send time, so its args are
+	// HTML-escaped; the subject is a plain-text email header, so its args are
+	// substituted raw.
 	for (let argIndex = 0; argIndex < args.length; argIndex++) {
-		subject = subject.replace(`$${argIndex + 1}`, args[argIndex]);
-		message = message.replace(`$${argIndex + 1}`, args[argIndex]);
+		const placeholder = `$${argIndex + 1}`;
+		subject = subject.replace(placeholder, args[argIndex]);
+		message = message.replace(placeholder, escapeArg(args[argIndex]));
 	}
 
-	// Append a footer to the message.
-
-	message += `\n\n---\n\nThis is an automated email sent by Reciprocal Reviews.`;
+	// The "automated email" footer is added by the branded shell at send time
+	// (supabase/functions/_shared/emailShell.ts), so it isn't appended here.
 
 	return { subject, message };
 }
