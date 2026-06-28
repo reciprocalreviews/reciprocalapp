@@ -19,6 +19,13 @@ select plan(22);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
+-- queue_thanks_emails inserts into public.emails, which fires the
+-- send_on_email_insert AFTER trigger (net.http_post to the Resend edge function)
+-- using the `supabase_url` vault secret. The RLS CI job doesn't set that env, so
+-- the URL is null and net.http_post raises. These tests assert that the right
+-- rows land in public.emails, not that they're actually dispatched, so disable
+-- the trigger for this rolled-back test (mirrors emails_rls.sql).
+alter table public.emails disable trigger send_on_email_insert;
 select tests.create_scholar('th_minter@test.local') as minter \gset
 select tests.create_scholar('th_admin@test.local') as admin \gset
 select tests.create_scholar('th_author@test.local') as author \gset
