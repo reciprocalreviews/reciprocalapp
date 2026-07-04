@@ -47,6 +47,30 @@ export default class SupabaseAuth extends Authentication<ScholarRow, AuthError> 
 		const { data, error } = await this.client.auth.signInWithPassword({ email, password });
 		return error ? error : (data.user?.id ?? null);
 	}
+
+	async signInWithMockORCID(orcid: string, name: string) {
+		// LOCAL/STAGING dev-only mock of an ORCID sign-in, so the new-account onboarding
+		// flow can be seen without a real custom-OIDC round-trip (which can't run against
+		// local Supabase). Never reachable in production — the login UI only offers this
+		// off-prod. Locally, enable_signup is on and enable_confirmations is off, so a plain
+		// signUp returns a live session immediately and fires the handle_new_scholar trigger,
+		// which reads the ORCID iD/name from user metadata (`sub`/`orcid`/`name`) and creates
+		// the scholar row with a null contact email — exactly like a real first sign-in. The
+		// throwaway email is only the auth identity; handle_new_scholar ignores it.
+		const email = `${orcid.replace(/-/g, '')}@orcid.example`;
+		const password = 'password';
+		const { data, error } = await this.client.auth.signUp({
+			email,
+			password,
+			options: { data: { sub: orcid, orcid, name } }
+		});
+		if (data.session && data.user) return data.user.id;
+		// A reused iD is an existing mock user (signUp returns no session): sign in to it,
+		// exercising the returning-scholar path instead of onboarding.
+		const signIn = await this.client.auth.signInWithPassword({ email, password });
+		if (signIn.error) return error ?? signIn.error;
+		return signIn.data.user?.id ?? null;
+	}
 }
 
 const AuthSymbol = Symbol('auth');

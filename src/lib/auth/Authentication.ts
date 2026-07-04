@@ -14,6 +14,13 @@ export default abstract class Authentication<UserKind, ErrorKind> {
 		email: string,
 		password: string
 	): Promise<ErrorKind | ScholarID | null>;
+	/** LOCAL/STAGING dev-only mock of an ORCID sign-in (custom OIDC can't run locally).
+	 * Creates or re-enters a scholar identified by `orcid`, so the new-account onboarding
+	 * flow is visible without a real ORCID round-trip. Never reachable in prod. */
+	abstract signInWithMockORCID(
+		orcid: string,
+		name: string
+	): Promise<ErrorKind | ScholarID | null>;
 	abstract isAuthenticated(): boolean;
 	abstract signOut(): Promise<ErrorKind | null>;
 }

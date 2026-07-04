@@ -1537,6 +1537,9 @@
                 "button": {
                   "additionalProperties": false,
                   "properties": {
+                    "mockOrcid": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
                     "orcid": {
                       "$ref": "#/definitions/ButtonText"
                     },
@@ -1546,6 +1549,7 @@
                   },
                   "required": [
                     "orcid",
+                    "mockOrcid",
                     "signIn"
                   ],
                   "type": "object"
@@ -1553,6 +1557,9 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "mockOrcidError": {
+                      "type": "string"
+                    },
                     "orcidError": {
                       "type": "string"
                     },
@@ -1562,6 +1569,7 @@
                   },
                   "required": [
                     "orcidError",
+                    "mockOrcidError",
                     "signInError"
                   ],
                   "type": "object"
@@ -1572,13 +1580,21 @@
                     "email": {
                       "$ref": "#/definitions/TextFieldText"
                     },
+                    "name": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "orcidId": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
                     "password": {
                       "$ref": "#/definitions/TextFieldText"
                     }
                   },
                   "required": [
                     "email",
-                    "password"
+                    "password",
+                    "orcidId",
+                    "name"
                   ],
                   "type": "object"
                 },

@@ -145,6 +145,10 @@
 					"tip": "Sign in with your ORCID account",
 					"label": "Sign in with ORCID"
 				},
+				"mockOrcid": {
+					"tip": "Simulate an ORCID sign-in locally (development only)",
+					"label": "Sign in with ORCID (mock)"
+				},
 				"signIn": {
 					"tip": "Sign in",
 					"label": "Login"
@@ -162,10 +166,19 @@
 				"password": {
 					"label": "password",
 					"placeholder": ""
+				},
+				"orcidId": {
+					"label": "ORCID iD (optional)",
+					"placeholder": "blank = new scholar"
+				},
+				"name": {
+					"label": "name (optional)",
+					"placeholder": "Test Scholar"
 				}
 			},
 			"feedback": {
 				"orcidError": "Unable to start ORCID sign-in.",
+				"mockOrcidError": "Unable to create a mock ORCID session.",
 				"signInError": "Unable to sign in."
 			},
 			"paragraph": {

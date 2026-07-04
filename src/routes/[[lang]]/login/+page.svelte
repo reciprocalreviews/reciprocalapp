@@ -10,6 +10,7 @@
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import TextField from '$lib/components/TextField.svelte';
+	import { generateORCID } from '$lib/data/ORCID';
 	import type LocaleText from '$lib/locales/Locale';
 	import { getAuth } from '../../Auth.svelte';
 
@@ -17,10 +18,12 @@
 
 	let error = $state<undefined | ((l: LocaleText) => string)>(undefined);
 
-	// The dev-only email/password form is the seam the Playwright suite uses to sign in
-	// without a real ORCID round-trip. It is never rendered in production; ORCID is the
-	// sole authentication path there (#19).
+	// The dev-only controls (mock ORCID sign-in + seeded-user password grant) let us
+	// exercise auth locally, where the real ORCID custom-OIDC provider does not exist.
+	// Never rendered in production; ORCID is the sole authentication path there (#19).
 	const devLogin = PUBLIC_ENV !== 'prod';
+	let mockOrcidId = $state('');
+	let mockOrcidName = $state('');
 	let email = $state('');
 	let password = $state('');
 
@@ -30,6 +33,33 @@
 			goto(`/scholar/${auth().getUserID()}`);
 		}
 	});
+
+	/** Real ORCID sign-in (production): redirect to the custom-OIDC provider. */
+	async function signInWithORCID() {
+		const authError = await auth().signInWithORCID(`${page.url.origin}/auth/callback`);
+		if (authError) {
+			console.error(authError);
+			error = (l) => l.page.login.feedback.orcidError;
+		} else {
+			error = undefined;
+		}
+	}
+
+	/** Local dev-only mock: create (or re-enter) a scholar to see the onboarding flow.
+	 * A blank iD mints a fresh scholar (new-account onboarding); a reused iD returns to
+	 * that account. */
+	async function signInWithMockORCID() {
+		const id = mockOrcidId.trim() || generateORCID();
+		const name = mockOrcidName.trim() || 'Test Scholar';
+		const response = await auth().signInWithMockORCID(id, name);
+		if (typeof response === 'string') {
+			error = undefined;
+			goto(`/scholar/${response}`);
+		} else {
+			console.error(response);
+			error = (l) => l.page.login.feedback.mockOrcidError;
+		}
+	}
 </script>
 
 <Page icon={ScholarLabel} title={(l) => l.page.login.title} breadcrumbs={[]}>
@@ -37,19 +67,27 @@
 		<Paragraph text={(l) => l.page.login.paragraph.loggedIn} />
 	{:else}
 		<Form>
+			{#if devLogin}
+				<TextField
+					strings={(l) => l.page.login.field.orcidId}
+					name="mock-orcid-id"
+					size={19}
+					bind:text={mockOrcidId}
+					testid="mock-orcid-id"
+				/>
+				<TextField
+					strings={(l) => l.page.login.field.name}
+					name="mock-orcid-name"
+					size={19}
+					bind:text={mockOrcidName}
+					testid="mock-orcid-name"
+				/>
+			{/if}
 			<Button
-				strings={(l) => l.page.login.button.orcid}
+				strings={devLogin ? (l) => l.page.login.button.mockOrcid : (l) => l.page.login.button.orcid}
 				testid="orcid-signin"
 				type="submit"
-				action={async () => {
-					const authError = await auth().signInWithORCID(`${page.url.origin}/auth/callback`);
-					if (authError) {
-						console.error(authError);
-						error = (l) => l.page.login.feedback.orcidError;
-					} else {
-						error = undefined;
-					}
-				}}
+				action={devLogin ? signInWithMockORCID : signInWithORCID}
 			/>
 		</Form>
 

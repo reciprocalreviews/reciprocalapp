@@ -798,6 +798,7 @@ export type LocaleText = {
 			title: string;
 			button: {
 				orcid: ButtonText;
+				mockOrcid: ButtonText;
 				signIn: ButtonText;
 			};
 			note: {
@@ -807,9 +808,12 @@ export type LocaleText = {
 			field: {
 				email: TextFieldText;
 				password: TextFieldText;
+				orcidId: TextFieldText;
+				name: TextFieldText;
 			};
 			feedback: {
 				orcidError: string;
+				mockOrcidError: string;
 				signInError: string;
 			};
 			paragraph: {
