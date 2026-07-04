@@ -1,11 +1,13 @@
 import type { Database } from '$data/database';
 import type { ScholarRow } from '$data/types';
+import { requiresAuth } from '$lib/auth/requiresAuth';
 import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr';
+import { redirect } from '@sveltejs/kit';
 import type { LayoutLoad } from './$types';
 
-export const load: LayoutLoad = async ({ data, depends, fetch }) => {
+export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
 	/**
 	 * Declare a dependency so the layout can be invalidated, for example, on
 	 * session refresh.
@@ -50,6 +52,18 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
 	const { data: claimsData, error } = await supabase.auth.getClaims();
 	const claims = error ? null : claimsData?.claims;
 	const userID = claims?.sub;
+
+	// A Supabase auth cookie that's present but no longer validates (expired, or its refresh
+	// token was revoked — e.g. after a local DB reset) means the session died. On a page that
+	// requires authentication, send the scholar to login rather than rendering an
+	// authenticated page where every write fails with a cryptic RLS/permission error. A
+	// genuinely anonymous visitor has no auth cookie, so public browsing is unaffected. The
+	// live case (token dying while the page is open) is handled by the SIGNED_OUT listener in
+	// +layout.svelte.
+	const hasAuthCookie = data.cookies.some((cookie) => /^sb-.*-auth-token/.test(cookie.name));
+	if (!userID && hasAuthCookie && requiresAuth(url.pathname)) {
+		redirect(302, '/login');
+	}
 
 	// If there's a user, return scholar
 	if (userID) {

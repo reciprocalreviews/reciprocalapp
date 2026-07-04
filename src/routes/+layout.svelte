@@ -2,6 +2,7 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { PUBLIC_ENV } from '$env/static/public';
+	import { requiresAuth } from '$lib/auth/requiresAuth';
 	import Footer from '$lib/components/Footer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import { setDB } from '$lib/data/CRUD';
@@ -31,10 +32,18 @@
 	onMount(() => {
 		if (inProd && !['/updates', '/about'].some((p) => page.url.pathname.startsWith(p))) goto('/');
 
-		// Listen to auth stage changes and invalidate the auth context when they happen.
-		const { data } = db.client.auth.onAuthStateChange((_, _session) => {
+		// Listen to auth state changes and invalidate the auth context when they happen.
+		const { data } = db.client.auth.onAuthStateChange((event, _session) => {
 			if (_session?.expires_at !== claims?.exp) {
 				invalidate('supabase:auth');
+			}
+			// When the session ends — token expiry, a failed refresh (e.g. the refresh token
+			// was revoked or the local DB was reset), or sign-out — don't strand the scholar on
+			// an authenticated page where every action fails with a cryptic RLS/permission
+			// error. Send them to login instead. Public pages are exempt so anonymous browsing
+			// and the marketing pages aren't disrupted.
+			if (event === 'SIGNED_OUT' && requiresAuth(page.url.pathname)) {
+				goto('/login');
 			}
 		});
 		return () => data.subscription.unsubscribe();
