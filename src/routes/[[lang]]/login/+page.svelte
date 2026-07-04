@@ -66,6 +66,9 @@
 	{#if auth().isAuthenticated()}
 		<Paragraph text={(l) => l.page.login.paragraph.loggedIn} />
 	{:else}
+		{#if devLogin}
+			<Feedback text={(l) => l.page.login.feedback.mockOrcidDev} testid="mock-orcid-dev" />
+		{/if}
 		<Form>
 			{#if devLogin}
 				<TextField
@@ -91,10 +94,12 @@
 			/>
 		</Form>
 
-		<Note path={(l) => l.page.login.note.orcid} />
+		{#if !devLogin}
+			<Note path={(l) => l.page.login.note.orcid} />
+		{/if}
 
 		{#if devLogin}
-			<Note path={(l) => l.page.login.note.dev} />
+			<Feedback text={(l) => l.page.login.feedback.passwordDev} testid="password-dev" />
 			<Form>
 				<TextField
 					strings={(l) => l.page.login.field.email}

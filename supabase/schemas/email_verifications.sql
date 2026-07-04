@@ -119,8 +119,14 @@ begin
 		return jsonb_build_object('status', 'expired');
 	end if;
 
+	-- Commit the candidate. This is IDEMPOTENT: we deliberately do NOT delete the token
+	-- here, so a repeat visit within the 15-minute window still returns 'verified' rather
+	-- than a misleading 'invalid'. Single-use-with-delete breaks whenever the link is
+	-- fetched more than once before the user acts — an email security scanner (SafeLinks,
+	-- antivirus) prefetching it, or SvelteKit's hover-preload of the in-app dev link. A
+	-- later verification request replaces this row (upsert on the scholar PK), and an
+	-- expired revisit clears it.
 	update public.scholars set email = _row.candidate_email where id = _row.scholar;
-	delete from public.email_verifications where scholar = _row.scholar;
 
 	return jsonb_build_object(
 		'status', 'verified',

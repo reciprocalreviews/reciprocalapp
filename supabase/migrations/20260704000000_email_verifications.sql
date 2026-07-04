@@ -119,8 +119,11 @@ begin
 		return jsonb_build_object('status', 'expired');
 	end if;
 
+	-- Idempotent commit: do NOT delete the token, so a repeat fetch within the validity
+	-- window (email link scanner prefetch, or SvelteKit hover-preload) still returns
+	-- 'verified' rather than a misleading 'invalid'. A later request replaces this row
+	-- (upsert on the scholar PK); an expired revisit clears it.
 	update public.scholars set email = _row.candidate_email where id = _row.scholar;
-	delete from public.email_verifications where scholar = _row.scholar;
 
 	return jsonb_build_object(
 		'status', 'verified',

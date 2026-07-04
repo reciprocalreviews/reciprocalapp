@@ -155,8 +155,7 @@
 				}
 			},
 			"note": {
-				"orcid": "[ORCID](https://orcid.org/) is the de facto way to manage scholar identity. Sign in with ORCID to get started.",
-				"dev": "Developer sign-in (not available in production)."
+				"orcid": "[ORCID](https://orcid.org/) is the de facto way to manage scholar identity. Sign in with ORCID to get started."
 			},
 			"field": {
 				"email": {
@@ -168,17 +167,19 @@
 					"placeholder": ""
 				},
 				"orcidId": {
-					"label": "ORCID iD (optional)",
-					"placeholder": "blank = new scholar"
+					"label": "ORCID iD",
+					"placeholder": "0000-0000-0000-0000"
 				},
 				"name": {
-					"label": "name (optional)",
+					"label": "name",
 					"placeholder": "Test Scholar"
 				}
 			},
 			"feedback": {
 				"orcidError": "Unable to start ORCID sign-in.",
 				"mockOrcidError": "Unable to create a mock ORCID session.",
+				"mockOrcidDev": "Development only — this stands in for real ORCID sign-in, which can't run locally. Leave both fields blank to onboard a brand-new scholar, or enter a previously used ORCID iD to sign back in as that scholar.",
+				"passwordDev": "Development only — sign in as one of the seeded scholars using their email and the shared test password (\"password\").",
 				"signInError": "Unable to sign in."
 			},
 			"paragraph": {
@@ -1051,7 +1052,8 @@
 				"notVolunteeringThird": "This scholar is not volunteering for any roles yet.",
 				"volunteeringFirst": "These are your volunteer roles.",
 				"volunteeringThird": "These are this scholar's volunteer roles.",
-				"noName": "Welcome! Edit your name above to set it, then share your reviewing status below so others know your availability."
+				"noName": "Welcome! Edit your name above to set it, then share your reviewing status below so others know your availability.",
+		"addEmail": "Add a contact email so editors can reach you and you can receive notifications. We'll send a link to verify it, and won't email you anything else until you do."
 			},
 			"field": {
 				"name": {
@@ -1613,6 +1615,27 @@
 				"tip": "Copied to clipboard",
 				"label": "Copied"
 			}
+		},
+		"verifyEmail": {
+			"field": {
+				"email": {
+					"label": "contact email",
+					"placeholder": "you@university.edu",
+					"invalid": "Must be a valid email"
+				}
+			},
+			"button": {
+				"send": {
+					"tip": "Send a verification link to this address",
+					"label": "Send verification email"
+				}
+			},
+			"feedback": {
+				"sent": "We sent a verification link to {email} (valid 15 minutes). It becomes your contact email once you verify it.",
+				"error": "Unable to send a verification email.",
+				"unchanged": "That's already your contact email — nothing to verify."
+			},
+			"devLink": "Open verification link"
 		}
 	},
 	"error": {

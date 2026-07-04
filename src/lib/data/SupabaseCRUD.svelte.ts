@@ -479,13 +479,20 @@ export default class SupabaseCRUD extends CRUD {
 	 * the raw token; we build the link and send it through the branded email pipeline to
 	 * the (as-yet unverified) candidate address — the one send allowed to an unverified
 	 * email. `origin` is the request origin the caller is on (e.g. page.url.origin), used
-	 * to build an absolute verification URL. */
-	async requestEmailVerification(email: string, origin: string): Promise<Result> {
+	 * to build an absolute verification URL. Returns that URL in `data` so a dev build can
+	 * surface a clickable link locally (production delivers it by email instead). */
+	async requestEmailVerification(
+		email: string,
+		origin: string
+	): Promise<Result<{ url: string }>> {
 		const { data: token, error } = await this.client.rpc('request_email_verification', {
 			_email: email
 		});
 		if (error || typeof token !== 'string') return this.error('UpdateScholarEmail', error);
-		return this.sendEmail([email], 'VerifyEmail', [`${origin}/verify/${token}`]);
+		const url = `${origin}/verify/${token}`;
+		const sent = await this.sendEmail([email], 'VerifyEmail', [url]);
+		if (sent.error) return { error: sent.error };
+		return { data: { url } };
 	}
 
 	async getScholarRow(id: ScholarID): Promise<ReadResult<ScholarRow | null>> {

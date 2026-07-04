@@ -227,6 +227,85 @@
                 "cancel"
               ],
               "type": "object"
+            },
+            "verifyEmail": {
+              "additionalProperties": false,
+              "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "send": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "send"
+                  ],
+                  "type": "object"
+                },
+                "devLink": {
+                  "description": "Dev-only clickable verification link label (markdown link to the URL).",
+                  "type": "string"
+                },
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "sent": {
+                      "type": "string"
+                    },
+                    "unchanged": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "sent",
+                    "error",
+                    "unchanged"
+                  ],
+                  "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "email": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "email"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "field",
+                "button",
+                "feedback",
+                "devLink"
+              ],
+              "type": "object"
             }
           },
           "required": [
@@ -234,7 +313,8 @@
             "text",
             "header",
             "notification",
-            "copyButton"
+            "copyButton",
+            "verifyEmail"
           ],
           "type": "object"
         },
@@ -1557,10 +1637,16 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "mockOrcidDev": {
+                      "type": "string"
+                    },
                     "mockOrcidError": {
                       "type": "string"
                     },
                     "orcidError": {
+                      "type": "string"
+                    },
+                    "passwordDev": {
                       "type": "string"
                     },
                     "signInError": {
@@ -1570,6 +1656,8 @@
                   "required": [
                     "orcidError",
                     "mockOrcidError",
+                    "mockOrcidDev",
+                    "passwordDev",
                     "signInError"
                   ],
                   "type": "object"
@@ -1601,16 +1689,12 @@
                 "note": {
                   "additionalProperties": false,
                   "properties": {
-                    "dev": {
-                      "type": "string"
-                    },
                     "orcid": {
                       "type": "string"
                     }
                   },
                   "required": [
-                    "orcid",
-                    "dev"
+                    "orcid"
                   ],
                   "type": "object"
                 },
@@ -2351,6 +2435,9 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "addEmail": {
+                      "type": "string"
+                    },
                     "commitmentsNotLoaded": {
                       "type": "string"
                     },
@@ -2388,6 +2475,7 @@
                   "required": [
                     "notLoaded",
                     "noName",
+                    "addEmail",
                     "noStatus",
                     "submissionsNotLoaded",
                     "tokensNotLoaded",

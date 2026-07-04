@@ -705,6 +705,7 @@ export type LocaleText = {
 			feedback: {
 				notLoaded: string;
 				noName: string;
+				addEmail: string;
 				noStatus: string;
 				submissionsNotLoaded: string;
 				tokensNotLoaded: string;
@@ -803,7 +804,6 @@ export type LocaleText = {
 			};
 			note: {
 				orcid: string;
-				dev: string;
 			};
 			field: {
 				email: TextFieldText;
@@ -814,6 +814,8 @@ export type LocaleText = {
 			feedback: {
 				orcidError: string;
 				mockOrcidError: string;
+				mockOrcidDev: string;
+				passwordDev: string;
 				signInError: string;
 			};
 			paragraph: {
@@ -1139,6 +1141,21 @@ export type LocaleText = {
 		copyButton: {
 			copy: ButtonText;
 			copied: ButtonText;
+		};
+		verifyEmail: {
+			field: {
+				email: TextFieldText & { invalid: string };
+			};
+			button: {
+				send: ButtonText;
+			};
+			feedback: {
+				sent: string;
+				error: string;
+				unchanged: string;
+			};
+			/** Dev-only clickable verification link label (markdown link to the URL). */
+			devLink: string;
 		};
 	};
 	error: {

@@ -24,11 +24,10 @@
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
-	import { page } from '$app/state';
+	import VerifyEmail from '$lib/components/VerifyEmail.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import type Scholar from '$lib/data/Scholar.svelte';
 	import Text from '$lib/locales/Text.svelte';
-	import { validEmail } from '$lib/validation';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 	import Commitments from './Commitments.svelte';
@@ -123,6 +122,15 @@
 		<Feedback text={(l) => l.page.scholar.feedback.noStatus}></Feedback>
 	{:else}
 		<Paragraph text={() => scholar.getStatus()} />
+	{/if}
+
+	{#if editable && scholar.getEmail() === null}
+		<Feedback
+			inline={false}
+			testid="email-onboarding"
+			text={(l) => l.page.scholar.feedback.addEmail}
+		/>
+		<VerifyEmail />
 	{/if}
 
 	{#if editable}
@@ -237,15 +245,9 @@
 			{/if}
 		</Cards>
 
-		<Subheader icon={SettingsLabel} text={(l) => l.page.scholar.header.settings}></Subheader>
-		<EditableText
-			text={scholar.getEmail() ?? ''}
-			strings={(l) => l.page.scholar.field.email}
-			inline={false}
-			testid="scholar-email"
-			valid={(text) =>
-				validEmail(text) ? undefined : (l) => l.page.scholar.field.email.invalid ?? ''}
-			edit={(text) => db().requestEmailVerification(text, page.url.origin)}
-		/>
+		{#if scholar.getEmail() !== null}
+			<Subheader icon={SettingsLabel} text={(l) => l.page.scholar.header.settings}></Subheader>
+			<VerifyEmail current={scholar.getEmail()} />
+		{/if}
 	{/if}
 </Page>
