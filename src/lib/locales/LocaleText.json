@@ -104,6 +104,24 @@
               ],
               "type": "object"
             },
+            "email": {
+              "additionalProperties": false,
+              "properties": {
+                "message": {
+                  "description": "Warning shown when a logged-in scholar has no verified contact email.",
+                  "type": "string"
+                },
+                "settings": {
+                  "description": "Label for the link to the scholar's profile where they can add one.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message",
+                "settings"
+              ],
+              "type": "object"
+            },
             "update": {
               "additionalProperties": false,
               "properties": {
@@ -130,7 +148,8 @@
           },
           "required": [
             "beta",
-            "update"
+            "update",
+            "email"
           ],
           "type": "object"
         },
@@ -612,6 +631,9 @@
             "UpdateVolunteerPapers": {
               "type": "string"
             },
+            "VerifyEmail": {
+              "type": "string"
+            },
             "WelcomeVolunteer": {
               "type": "string"
             }
@@ -620,6 +642,7 @@
             "UpdateScholarStatus",
             "UpdateScholarName",
             "UpdateScholarEmail",
+            "VerifyEmail",
             "UpdateScholarAvailability",
             "CreateProposal",
             "EditProposalTitle",
@@ -1514,7 +1537,7 @@
                 "button": {
                   "additionalProperties": false,
                   "properties": {
-                    "sendPassword": {
+                    "orcid": {
                       "$ref": "#/definitions/ButtonText"
                     },
                     "signIn": {
@@ -1522,7 +1545,7 @@
                     }
                   },
                   "required": [
-                    "sendPassword",
+                    "orcid",
                     "signIn"
                   ],
                   "type": "object"
@@ -1530,13 +1553,7 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
-                    "checkEmail": {
-                      "type": "string"
-                    },
-                    "orcidNote": {
-                      "type": "string"
-                    },
-                    "sendPasswordError": {
+                    "orcidError": {
                       "type": "string"
                     },
                     "signInError": {
@@ -1544,9 +1561,7 @@
                     }
                   },
                   "required": [
-                    "orcidNote",
-                    "checkEmail",
-                    "sendPasswordError",
+                    "orcidError",
                     "signInError"
                   ],
                   "type": "object"
@@ -1570,12 +1585,16 @@
                 "note": {
                   "additionalProperties": false,
                   "properties": {
+                    "dev": {
+                      "type": "string"
+                    },
                     "orcid": {
                       "type": "string"
                     }
                   },
                   "required": [
-                    "orcid"
+                    "orcid",
+                    "dev"
                   ],
                   "type": "object"
                 },
@@ -4451,6 +4470,48 @@
               ],
               "type": "object"
             },
+            "verify": {
+              "additionalProperties": false,
+              "properties": {
+                "error": {
+                  "description": "Shown when the verification RPC itself failed.",
+                  "type": "string"
+                },
+                "expired": {
+                  "description": "Shown when the token has expired (15-minute window elapsed).",
+                  "type": "string"
+                },
+                "invalid": {
+                  "description": "Shown when the token is unknown or already used.",
+                  "type": "string"
+                },
+                "login": {
+                  "description": "Link label prompting sign-in (unauthenticated).",
+                  "type": "string"
+                },
+                "profile": {
+                  "description": "Link label to the scholar's profile (authenticated).",
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "verified": {
+                  "description": "Shown when the token was valid and the email is now verified.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "verified",
+                "expired",
+                "invalid",
+                "error",
+                "profile",
+                "login"
+              ],
+              "type": "object"
+            },
             "volunteers": {
               "additionalProperties": false,
               "properties": {
@@ -4592,6 +4653,7 @@
             "currencyTransactions",
             "scholarTransactions",
             "login",
+            "verify",
             "proposeVenue",
             "about",
             "updates",

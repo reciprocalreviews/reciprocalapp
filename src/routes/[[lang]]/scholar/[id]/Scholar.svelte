@@ -24,6 +24,7 @@
 	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
+	import { page } from '$app/state';
 	import { getDB } from '$lib/data/CRUD';
 	import type Scholar from '$lib/data/Scholar.svelte';
 	import Text from '$lib/locales/Text.svelte';
@@ -241,9 +242,10 @@
 			text={scholar.getEmail() ?? ''}
 			strings={(l) => l.page.scholar.field.email}
 			inline={false}
+			testid="scholar-email"
 			valid={(text) =>
 				validEmail(text) ? undefined : (l) => l.page.scholar.field.email.invalid ?? ''}
-			edit={(text) => db().updateScholarEmail(scholar.getID(), text)}
+			edit={(text) => db().requestEmailVerification(text, page.url.origin)}
 		/>
 	{/if}
 </Page>

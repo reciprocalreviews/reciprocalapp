@@ -120,6 +120,17 @@ export const Emails = {
 			'You can review and revise it here:',
 			'https://reciprocal.reviews/venue/$2/submission/$3'
 		]
+	},
+	// Contact-email ownership verification (#27). Sent through the normal branded pipeline
+	// directly to the (still unverified) candidate address — the one message we're allowed
+	// to send to an unverified email. $1 is the verification URL.
+	VerifyEmail: {
+		subject: 'Verify your Reciprocal Reviews contact email',
+		paragraphs: [
+			'Confirm this address to receive Reciprocal Reviews notifications. This link expires in 15 minutes:',
+			'$1',
+			'If you did not request this, you can safely ignore this email.'
+		]
 	}
 } satisfies Record<string, Email>;
 

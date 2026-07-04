@@ -183,8 +183,11 @@ export default abstract class CRUD {
 	/** Update scholar's reviewing status. */
 	abstract updateScholarStatus(id: ScholarID, status: string): Promise<Result>;
 
-	/** Update scholar's reviewing status. */
-	abstract updateScholarEmail(id: ScholarID, email: string): Promise<Result>;
+	/** Begin/resend/change contact-email verification for the current scholar (#27).
+	 * Records a pending candidate + token and emails a verification link to `email`.
+	 * Token consumption happens in the verify route's server load (see
+	 * src/routes/[[lang]]/verify/[token]) via the anon-callable verify_email RPC. */
+	abstract requestEmailVerification(email: string, origin: string): Promise<Result>;
 
 	/** Propose a venue */
 	abstract proposeVenue(

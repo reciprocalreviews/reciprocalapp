@@ -105,9 +105,9 @@ There are several key types of data in RR.
 - [x] Scholars can also have _`admin`_ status on a `Venue`, which gives them the ability to manage the configuration of the venue `Venue`.
 - [x] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
 - [x] An individual scholar cannot be both an _`editor`_ and a _`minter`_. However, editors and role approvers can spend a `Venue`'s token reserve directly (without minter approval). This separation prevents anyone with spending authority from also creating new tokens — the minter check is the only oversight on currency supply. Correspondingly, _`minter`_s mint new tokens and approve mints, but cannot move the ownership of existing tokens; reserve payouts are executed by a `Venue`'s editors/admins and priority-0 role holders.
-- [x] Scholars can specify an email address for communication.
+- [x] Scholars can specify a contact email address, verified via a link before RR sends to it (see the Login section and [#27](https://github.com/reciprocalreviews/reciprocalapp/issues/27)). The stored address is always a verified one.
 - [x] Anyone can view a `Scholar`'s record, but only `Scholars` can create, update, or delete their record.
-- [ ] ([#87](https://github.com/reciprocalreviews/reciprocalapp/issues/87)) Resolve the design ambiguity between email-as-identifier and ORCID-as-identifier, including how RR should behave when a scholar's email collides with another scholar's username/ORCID record.
+- [x] ([#87](https://github.com/reciprocalreviews/reciprocalapp/issues/87)) Identity is ORCID, not email: a scholar is identified by their ORCID iD (the auth identity), and email is only a verified contact address. This removes the email-vs-ORCID identifier ambiguity — email is never an identity key, so a shared or changed email cannot collide with another scholar's record.
 
 The authoritative schema lives in [`supabase/schemas/scholars.sql`](supabase/schemas/scholars.sql).
 
@@ -237,11 +237,12 @@ It has no functionalty.
 
 ### Login `/login`
 
-The purpose of the login page is to authenticate a person into the application using ORCID OAuth.
+The purpose of the login page is to authenticate a person into the application using ORCID OAuth, the exclusive and mandatory sign-in method.
 
 It should:
 
-- [ ] ([#19](https://github.com/reciprocalreviews/reciprocalapp/issues/19)): Allow a visitor to initiate and complete an ORCID OAuth authentication, landing them at their `/scholar/[id]` dashboard
+- [x] ([#19](https://github.com/reciprocalreviews/reciprocalapp/issues/19)): Allow a visitor to initiate and complete an ORCID OAuth authentication, landing them at their `/scholar/[id]` dashboard
+- [x] ([#27](https://github.com/reciprocalreviews/reciprocalapp/issues/27)): Because ORCID does not provide an email, prompt a newly signed-in scholar to add a contact email and verify ownership via a link (valid 15 minutes) before RR will send them any notifications. Until an email is verified, a persistent banner warns that no notifications will be sent, and RR sends nothing to an unverified address except the verification email itself. The same verification flow is used to change an email later.
 
 ### Scholar `/scholar/[scholarid]`
 
@@ -424,7 +425,7 @@ It should also support assignment decisions:
 
 ## Notifications
 
-All emails RR sends — both authentication emails (sign-in, confirmation, recovery, email change, invitation) and the transactional and reminder emails below — share one simple branded visual identity so they read as coming from the same platform. These templates are English only for now: RR has no mechanism yet to solicit a scholar's language preference. ([#56](https://github.com/reciprocalreviews/reciprocalapp/issues/56))
+All emails RR sends — contact-email verification and the transactional and reminder emails below — share one simple branded visual identity so they read as coming from the same platform. (Sign-in is ORCID, so RR no longer sends authentication emails.) These templates are English only for now: RR has no mechanism yet to solicit a scholar's language preference. ([#56](https://github.com/reciprocalreviews/reciprocalapp/issues/56))
 
 RR will also send periodic reminders based on time-based events:
 

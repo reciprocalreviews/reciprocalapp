@@ -96,6 +96,12 @@ export type LocaleText = {
 			/** Button to reload the page and load the new version. */
 			refresh: ButtonText;
 		};
+		email: {
+			/** Warning shown when a logged-in scholar has no verified contact email. */
+			message: string;
+			/** Label for the link to the scholar's profile where they can add one. */
+			settings: string;
+		};
 	};
 	notification: {
 		emailed: string;
@@ -791,25 +797,39 @@ export type LocaleText = {
 		login: {
 			title: string;
 			button: {
-				sendPassword: ButtonText;
+				orcid: ButtonText;
 				signIn: ButtonText;
 			};
 			note: {
 				orcid: string;
+				dev: string;
 			};
 			field: {
 				email: TextFieldText;
 				password: TextFieldText;
 			};
 			feedback: {
-				orcidNote: string;
-				checkEmail: string;
-				sendPasswordError: string;
+				orcidError: string;
 				signInError: string;
 			};
 			paragraph: {
 				loggedIn: string;
 			};
+		};
+		verify: {
+			title: string;
+			/** Shown when the token was valid and the email is now verified. */
+			verified: string;
+			/** Shown when the token has expired (15-minute window elapsed). */
+			expired: string;
+			/** Shown when the token is unknown or already used. */
+			invalid: string;
+			/** Shown when the verification RPC itself failed. */
+			error: string;
+			/** Link label to the scholar's profile (authenticated). */
+			profile: string;
+			/** Link label prompting sign-in (unauthenticated). */
+			login: string;
 		};
 		proposeVenue: {
 			title: string;
@@ -1121,6 +1141,7 @@ export type LocaleText = {
 		UpdateScholarStatus: string;
 		UpdateScholarName: string;
 		UpdateScholarEmail: string;
+		VerifyEmail: string;
 		UpdateScholarAvailability: string;
 		CreateProposal: string;
 		EditProposalTitle: string;

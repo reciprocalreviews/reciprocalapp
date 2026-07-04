@@ -83,12 +83,14 @@ scripts/
 
 ## Authentication
 
-Auth is Supabase email/OTP. The integration is centralized so route code never touches Supabase Auth directly.
+Auth is **ORCID**, via Supabase's custom OIDC provider ([#19](https://github.com/reciprocalreviews/reciprocalapp/issues/19)) — the exclusive, mandatory sign-in. The integration is centralized so route code never touches Supabase Auth directly.
 
-- [src/hooks.server.ts](src/hooks.server.ts) creates a per-request Supabase server client from cookies and exposes it on `event.locals.supabase`. It also validates the JWT locally via `getClaims()` before any database query, so unauthenticated traffic never reaches the DB.
+- [src/routes/[[lang]]/login/+page.svelte](src/routes/[[lang]]/login/+page.svelte) offers a single "Sign in with ORCID" button. `SupabaseAuth.signInWithORCID()` ([src/routes/Auth.svelte.ts](src/routes/Auth.svelte.ts)) calls `signInWithOAuth({ provider: 'orcid', scopes: 'openid' })`; ORCID returns to [src/routes/auth/callback/+server.ts](src/routes/auth/callback/+server.ts), which does the PKCE `exchangeCodeForSession` and lands the scholar at `/scholar/[id]`. The `orcid` provider (discovery `https://orcid.org/.well-known/openid-configuration`, `email_optional = true`) is configured in the hosted Supabase Dashboard — custom OIDC cannot be expressed in `config.toml`.
+- On first sign-in the `handle_new_scholar` trigger creates the scholar row from the OIDC metadata (`orcid`/`name`); it does **not** set an email (ORCID does not release one).
+- [src/hooks.server.ts](src/hooks.server.ts) creates a per-request Supabase server client from cookies and exposes it on `event.locals.supabase`. The JWT is validated locally via `getClaims()` in [src/routes/+layout.ts](src/routes/+layout.ts) before scholar data is loaded.
 - [src/lib/auth/Authentication.ts](src/lib/auth/Authentication.ts) and `src/routes/Auth.svelte` wrap session state for client code. Routes consume auth via `getAuth()`.
 
-ORCID-based login is planned (see DESIGN.md and [#19](https://github.com/reciprocalreviews/reciprocalapp/issues/19)) but not yet implemented.
+**Contact email + verification (app-level, #27).** Because ORCID carries no email, a scholar's contact email is collected separately and its ownership verified in-app — independent of Supabase auth. `scholars.email` holds only a **verified** address (or null); it is written solely by the `verify_email` RPC. A logged-in scholar with no verified email sees a persistent banner ([Banners.svelte](src/lib/components/Banners.svelte)) and receives no notifications. Requesting or changing an email (`requestEmailVerification` in [SupabaseCRUD](src/lib/data/SupabaseCRUD.svelte.ts)) calls the `request_email_verification` RPC, which stores a pending candidate + a sha256 token hash in `email_verifications` (deny-all RLS, 15-minute expiry) and returns the raw token; the app emails a `/verify/[token]` link through the branded pipeline. The anon-callable `verify_email` RPC ([src/routes/[[lang]]/verify/[token]/+page.server.ts](src/routes/[[lang]]/verify/[token]/+page.server.ts)) validates the token, commits the candidate into `scholars.email`, and clears the request. Because `emailScholars` already skips null emails, this invariant is also what enforces "never notify an unverified address."
 
 ## Data access
 
@@ -122,7 +124,7 @@ A consequence to be aware of: `handle()` also calls `invalidateAll()` after ever
 
 ## Email pipeline
 
-There are two kinds of email — **application emails** (transactional/reminder) and **auth emails** (Supabase GoTrue) — and both share one branded visual identity. Templates are English only: there is no mechanism yet to solicit a scholar's language preference.
+Email is **application email** — transactional, reminder, and contact-email verification — all sharing one branded visual identity. (Supabase GoTrue no longer sends auth email: sign-in is ORCID and email verification is app-level, so the auth-email path is dormant — see below.) Templates are English only: there is no mechanism yet to solicit a scholar's language preference.
 
 ### Application emails
 
@@ -135,9 +137,9 @@ Server code never calls Resend directly. The producer / consumer split is:
 
 To add a new email: add a key to the `Emails` map in `templates.ts`, then send it — from application code via `emailScholars(...)`, or (when recipients must be resolved with elevated privileges, as for thank-you notes) by rendering with `renderEmail` and passing the result to a `SECURITY DEFINER` fan-out RPC.
 
-### Auth emails
+### Auth emails (dormant)
 
-Supabase GoTrue sends auth emails (sign-in OTP/magic link, confirmation, recovery, email change, invite, reauthentication). These use branded static HTML templates in [supabase/templates/](supabase/templates/), hand-authored to mirror the shared shell, and wired up under `[auth.email.template.*]` in [supabase/config.toml](supabase/config.toml). The `magic_link` and `confirmation` templates must keep a contiguous `code: {{ .Token }}` so the OTP login flow and the Playwright suite can extract the code (see [src/routes/login.ts](src/routes/login.ts)). In production, auth email is routed through Resend's SMTP so auth and application email share one provider and sender (`notifications@reciprocal.reviews`); this SMTP is configured in the Supabase Dashboard (Auth → SMTP) for the staging/prod projects. The `[auth.email.smtp]` block in `config.toml` mirrors it as documentation but is `enabled = false`, because a custom SMTP host would otherwise make the local stack send real mail instead of capturing it in Mailpit (which would break local login and the Playwright tests). Note also that for the hosted project the branded templates must be pasted into the Dashboard (Auth → Email Templates) — `config.toml` template settings apply to local development only. When ORCID auth + email verification lands, `enable_confirmations` flips to true and the `confirmation` template becomes the primary auth email.
+With ORCID-only sign-in and `enable_confirmations = false`, Supabase GoTrue sends **no** auth email in normal operation — contact-email verification is handled by the application (see Authentication above), not GoTrue. The branded static templates in [supabase/templates/](supabase/templates/) and the `[auth.email.template.*]` / `[auth.email.smtp]` blocks in [supabase/config.toml](supabase/config.toml) are retained as scaffolding (and to cover any residual GoTrue-initiated mail), but are not part of the active email path. Verification and all other mail flow through the application `emails` pipeline and the `resend` function above.
 
 ## Database management
 
@@ -252,7 +254,7 @@ E2E specifics:
 
 - **Shared seed, shared helpers.** All specs share the one Supabase DB seeded by [supabase/seed.sql](supabase/seed.sql); use the `SEED` constants and `sql()` helper from [end2end/test-utils.ts](end2end/test-utils.ts) rather than re-declaring UUIDs or `psql` wrappers. Restore any shared row you mutate (usually in a `finally`). [end2end/global-setup.ts](end2end/global-setup.ts) resets the DB before each local run, so no manual `npm run reset` is needed.
 - **Hydration barrier.** Keep `waitForLoadState('networkidle')` before a Svelte interaction (card-expand click, bound `fill`) — on this SSR app the page looks ready before handlers are wired, so an early click is silently dropped. Only safe to drop before a pure assertion.
-- **Auth** is the real email-OTP flow via Mailpit (`login()`/`logout()` in [src/routes/login.ts](src/routes/login.ts)), with backoff retries against GoTrue's rate limit.
+- **Auth** in tests uses a local-only email+password grant against the seeded users (`login()`/`logout()` in [src/routes/login.ts](src/routes/login.ts)); the login page renders a dev password form off-production (`PUBLIC_ENV !== 'prod'`) and the seed gives every user a known password. ORCID custom OIDC can't run in local Supabase, so the real ORCID redirect/callback is exercised only in hosted staging (against the ORCID sandbox), not locally.
 - **CI** ([.github/workflows/playwright.yml](.github/workflows/playwright.yml)) shards across a runner matrix (`--shard`), each shard its own fresh Supabase. Resize via `SHARD_TOTAL` + the `matrix.shard` list (keep in sync); floor is per-runner setup + the slowest single file. Supabase images are cached; `merge-reports` stitches shard blobs into one HTML report on failure; `retries: 2`.
 
 ## Local development

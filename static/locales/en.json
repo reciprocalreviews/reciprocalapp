@@ -42,6 +42,10 @@
 				"tip": "Reload the page to load the latest version",
 				"label": "Refresh"
 			}
+		},
+		"email": {
+			"message": "You won't receive any notifications until you add and verify a contact email.",
+			"settings": "Add your email"
 		}
 	},
 	"notification": {
@@ -137,9 +141,9 @@
 		"login": {
 			"title": "Login",
 			"button": {
-				"sendPassword": {
-					"tip": "Send one-time password",
-					"label": "Login"
+				"orcid": {
+					"tip": "Sign in with your ORCID account",
+					"label": "Sign in with ORCID"
 				},
 				"signIn": {
 					"tip": "Sign in",
@@ -147,7 +151,8 @@
 				}
 			},
 			"note": {
-				"orcid": "[ORCID](https://orcid.org/) is the de facto way to manage scholar identity."
+				"orcid": "[ORCID](https://orcid.org/) is the de facto way to manage scholar identity. Sign in with ORCID to get started.",
+				"dev": "Developer sign-in (not available in production)."
 			},
 			"field": {
 				"email": {
@@ -156,18 +161,25 @@
 				},
 				"password": {
 					"label": "password",
-					"placeholder": "6 digits"
+					"placeholder": ""
 				}
 			},
 			"feedback": {
-				"orcidNote": "We're still implementing ORCID authentication. For now, enter your email for a one time password.",
-				"checkEmail": "Check your email for a sign in code.",
-				"sendPasswordError": "Unable to send one-time password.",
+				"orcidError": "Unable to start ORCID sign-in.",
 				"signInError": "Unable to sign in."
 			},
 			"paragraph": {
 				"loggedIn": "You are logged in."
 			}
+		},
+		"verify": {
+			"title": "Verify email",
+			"verified": "Your email is verified. You'll now receive Reciprocal Reviews notifications.",
+			"expired": "This verification link has expired. Request a new one from your profile.",
+			"invalid": "This verification link is invalid or has already been used.",
+			"error": "Something went wrong verifying your email. Please try again.",
+			"profile": "Go to your profile",
+			"login": "Sign in to add your email"
 		},
 		"proposeVenue": {
 			"title": "Propose a venue",
@@ -1040,7 +1052,7 @@
 				"email": {
 					"label": "email",
 					"placeholder": "email",
-					"note": "Your email will be public and only used to send notifications.",
+					"note": "Your email is private and used only to send notifications. Saving a new address sends a verification link (valid 15 minutes); you'll receive notifications only after you verify it.",
 					"invalid": "Must be a valid email"
 				}
 			},
@@ -1593,7 +1605,8 @@
 	"error": {
 		"UpdateScholarStatus": "Unable to update your status",
 		"UpdateScholarName": "Unable to update your name",
-		"UpdateScholarEmail": "Unable to update your email",
+		"UpdateScholarEmail": "Unable to send a verification email",
+		"VerifyEmail": "Unable to verify your email",
 		"UpdateScholarAvailability": "Unable to update your availability",
 		"CreateProposal": "Unable to create a venue proposal",
 		"EditProposalTitle": "Unable to edit the proposal title",

@@ -473,14 +473,19 @@ export default class SupabaseCRUD extends CRUD {
 		}
 	}
 
-	async updateScholarEmail(id: ScholarID, email: string): Promise<Result> {
-		const { error } = await this.client.from('scholars').update({ email }).eq('id', id);
-		if (error) return this.error('UpdateScholarName', error);
-		else {
-			const state = this.scholars.get(id);
-			if (state) state.setEmail(email);
-			return {};
-		}
+	/** Begin (or resend, or change to) contact-email verification for the current
+	 * scholar (#27). We never write scholars.email directly — that column holds only a
+	 * verified address. The RPC records the pending candidate + a token hash and returns
+	 * the raw token; we build the link and send it through the branded email pipeline to
+	 * the (as-yet unverified) candidate address — the one send allowed to an unverified
+	 * email. `origin` is the request origin the caller is on (e.g. page.url.origin), used
+	 * to build an absolute verification URL. */
+	async requestEmailVerification(email: string, origin: string): Promise<Result> {
+		const { data: token, error } = await this.client.rpc('request_email_verification', {
+			_email: email
+		});
+		if (error || typeof token !== 'string') return this.error('UpdateScholarEmail', error);
+		return this.sendEmail([email], 'VerifyEmail', [`${origin}/verify/${token}`]);
 	}
 
 	async getScholarRow(id: ScholarID): Promise<ReadResult<ScholarRow | null>> {
@@ -2283,7 +2288,10 @@ export default class SupabaseCRUD extends CRUD {
 			.in('id', scholars);
 		if (scholarData === null) return this.error('EmailScholar', scholarsError);
 
-		// Ignore scholars without an email address.
+		// Ignore scholars without an email address. Because scholars.email holds ONLY a
+		// verified address (it is written solely by public.verify_email — see
+		// requestEmailVerification), this null-filter is also what enforces "never notify
+		// an unverified email" (#27): unverified scholars simply have a null email here.
 		const scholarsWithEmail = scholarData.filter(
 			(scholar): scholar is { id: string; email: string; name: string } => scholar.email !== null
 		);

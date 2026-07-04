@@ -58,9 +58,21 @@ create or replace function public.handle_new_scholar () RETURNS "trigger" LANGUA
 set
 	"search_path" to '' as $$
 begin
-  -- Insert the new user into the scholars table.
-  insert into public.scholars (id, email)
-  values (new.id, new.email);
+  -- Seed the scholar row from the ORCID OIDC metadata. We deliberately do NOT copy
+  -- an email: scholars authenticate with ORCID (which does not release an email), and
+  -- public.scholars.email holds only a VERIFIED contact address, set later by
+  -- public.verify_email (#19, #27). The ORCID iD arrives as the OIDC 'sub' claim;
+  -- coalesce covers whichever key the provider's attribute mapping emits.
+  insert into public.scholars (id, orcid, name)
+  values (
+    new.id,
+    coalesce(
+      new.raw_user_meta_data->>'orcid',
+      new.raw_user_meta_data->>'provider_id',
+      new.raw_user_meta_data->>'sub'
+    ),
+    new.raw_user_meta_data->>'name'
+  );
   -- Return the new row.
   return new;
 end;

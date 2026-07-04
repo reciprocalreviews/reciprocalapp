@@ -1,6 +1,6 @@
 import type { ScholarRow } from '$data/types';
 import Authentication from '$lib/auth/Authentication';
-import type { AuthError, SupabaseClient } from '@supabase/supabase-js';
+import type { AuthError, Provider, SupabaseClient } from '@supabase/supabase-js';
 import { getContext, setContext } from 'svelte';
 
 /** Represents the current authenatication state from Supabase. */
@@ -31,20 +31,21 @@ export default class SupabaseAuth extends Authentication<ScholarRow, AuthError> 
 		return error;
 	}
 
-	async signIn(email: string, password: string | undefined) {
-		if (password === undefined) {
-			const { error } = await this.client.auth.signInWithOtp({
-				email
-			});
-			return error;
-		} else {
-			const { data, error } = await this.client.auth.verifyOtp({
-				email,
-				token: password,
-				type: 'email'
-			});
-			return error ? error : (data.user?.id ?? null);
-		}
+	async signInWithORCID(redirectTo: string) {
+		// 'orcid' is the custom OIDC provider slug configured in the hosted Supabase
+		// Dashboard (Auth → Providers → Custom OIDC). We only request the `openid`
+		// scope — ORCID does not release an email without a paid membership, so contact
+		// email is collected and verified separately in-app (#27).
+		const { error } = await this.client.auth.signInWithOAuth({
+			provider: 'orcid' as Provider,
+			options: { redirectTo, scopes: 'openid' }
+		});
+		return error;
+	}
+
+	async signInWithPassword(email: string, password: string) {
+		const { data, error } = await this.client.auth.signInWithPassword({ email, password });
+		return error ? error : (data.user?.id ?? null);
 	}
 }
 

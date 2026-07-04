@@ -85,7 +85,9 @@ enabled = true
 # in emails.
 site_url = "http://localhost:5173"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["http://localhost:5173"]
+# /auth/callback is where the app exchanges the ORCID OIDC code for a session (see
+# src/routes/auth/callback/+server.ts).
+additional_redirect_urls = ["http://localhost:5173", "http://localhost:5173/auth/callback"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # If disabled, the refresh token will never expire.
@@ -106,13 +108,13 @@ enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
-# If enabled, users need to confirm their email address before signing in.
+# If enabled, users need to confirm their email address before signing in. Kept OFF:
+# scholars authenticate with ORCID (which carries no email), and contact-email
+# verification is handled entirely in the app (#27, public.verify_email) — GoTrue's
+# email confirmation is never used, so with ORCID-only sign-in GoTrue sends no auth mail.
 enable_confirmations = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"
-# NOTE: when ORCID auth + email verification lands, flip enable_confirmations to
-# true above so email is verified. The confirmation template below then becomes
-# the primary auth email; keep its "code: {{ .Token }}" anchor (see templates).
 
 # Production SMTP. We route auth emails through Resend so they use the same
 # provider and sender (notifications@reciprocal.reviews) as our application
@@ -194,6 +196,14 @@ message_service_sid = ""
 # DO NOT commit your Twilio auth token to git. Use environment variable substitution instead:
 auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
 
+# ORCID sign-in (#19) uses Supabase's CUSTOM OIDC provider (slug "orcid"), which can only
+# be configured in the hosted Dashboard (Auth → Providers → Custom OIDC: discovery URL
+# https://orcid.org/.well-known/openid-configuration — sandbox uses https://sandbox.orcid.org —
+# scope "openid", email_optional = true). config.toml cannot express a custom OIDC provider,
+# so local dev + CI do NOT use ORCID: they sign in with a local-only email/password grant
+# against seeded users (see the dev form in src/routes/[[lang]]/login/+page.svelte and
+# src/routes/login.ts). Real ORCID auth is verified in hosted staging against the sandbox.
+
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `slack`, `spotify`, `workos`, `zoom`.
@@ -268,5 +278,6 @@ schema_paths = [
     "./schemas/assignments.sql",
     "./schemas/conflicts.sql",
     "./schemas/emails.sql",
+    "./schemas/email_verifications.sql",
     "./schemas/*.sql"
 ]

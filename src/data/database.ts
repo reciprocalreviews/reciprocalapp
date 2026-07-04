@@ -199,6 +199,38 @@ export type Database = {
         }
         Relationships: []
       }
+      email_verifications: {
+        Row: {
+          candidate_email: string
+          created_at: string
+          expires_at: string
+          scholar: string
+          token_hash: string
+        }
+        Insert: {
+          candidate_email: string
+          created_at?: string
+          expires_at?: string
+          scholar: string
+          token_hash: string
+        }
+        Update: {
+          candidate_email?: string
+          created_at?: string
+          expires_at?: string
+          scholar?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_verifications_scholar_fkey"
+            columns: ["scholar"]
+            isOneToOne: true
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emails: {
         Row: {
           email: string
@@ -1059,6 +1091,7 @@ export type Database = {
         }
         Returns: number
       }
+      request_email_verification: { Args: { _email: string }; Returns: string }
       transfer_tokens: {
         Args: {
           _amount: number
@@ -1072,6 +1105,7 @@ export type Database = {
         }
         Returns: Json
       }
+      verify_email: { Args: { _token: string }; Returns: Json }
     }
     Enums: {
       exchange_proposal_kind: "create" | "modify" | "merge"
