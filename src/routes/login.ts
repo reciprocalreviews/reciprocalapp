@@ -1,86 +1,21 @@
 import { type BrowserContext, type Page } from '@playwright/test';
 
-/** A reusable function for logging in using the email OTP method */
-export async function login(email: string, page: Page, context: BrowserContext) {
-	// Visit the login page
+/** The shared password every seeded user has locally (see supabase/seed.sql). */
+const SEED_PASSWORD = 'password';
+
+/**
+ * Log in for tests using the local-only email+password grant.
+ *
+ * Production authenticates exclusively with ORCID (custom OIDC), which cannot be
+ * configured in local Supabase, so the login page renders a dev-only password form
+ * off-production (see src/routes/[[lang]]/login/+page.svelte). Tests drive that form.
+ * `context` is accepted for signature compatibility with callers but is unused.
+ */
+export async function login(email: string, page: Page, _context?: BrowserContext) {
 	await page.goto('/login');
-
-	// Request the OTP email. Retry in case the local Supabase auth service
-	// rate-limits the send — which happens when the same email is reused across
-	// test files in rapid succession, and more so when multiple Playwright
-	// workers send concurrently. We use jittered exponential backoff so retries
-	// don't stampede in lockstep across workers.
-	const MAX_ATTEMPTS = 5;
-	let otpSent = false;
-	for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-		await page.getByTestId('email-input').fill(email);
-		await page.getByTestId('email-submit').click();
-
-		// Wait up to 5 seconds for the OTP input to appear (meaning the send succeeded).
-		otpSent = await page
-			.getByTestId('otp-input')
-			.waitFor({ state: 'visible', timeout: 5000 })
-			.then(() => true)
-			.catch(() => false);
-
-		if (otpSent) break;
-
-		if (attempt < MAX_ATTEMPTS) {
-			// Backoff grows with each attempt (1s is the configured max_frequency,
-			// but some GoTrue versions enforce a longer window), plus up to ~1s of
-			// random jitter to desynchronize concurrent workers.
-			const backoff = 1500 * attempt + Math.floor(Math.random() * 1000);
-			await page.waitForTimeout(backoff);
-			await page.goto('/login');
-		}
-	}
-
-	if (!otpSent)
-		throw new Error(`login: Supabase refused to send OTP to ${email} after ${MAX_ATTEMPTS} attempts`);
-
-	// Retrieve the OTP code from Mailpit via its REST API.  Using the API is
-	// more reliable than clicking through the web UI when multiple emails for
-	// the same address exist in the inbox.
-	const mailpit = await context.newPage();
-	let code = '';
-
-	// Poll for up to ~20s. The search is scoped to the exact recipient and takes
-	// the newest matching message, so concurrent workers using distinct emails
-	// never read each other's codes.
-	for (let i = 0; i < 20; i++) {
-		const res = await mailpit.request.get('http://localhost:54324/api/v1/messages?limit=50');
-		const json = (await res.json()) as {
-			messages?: Array<{ ID: string; To: Array<{ Address: string }> }>;
-		};
-		// The list is newest-first; find the first message addressed to this email.
-		const message = (json.messages ?? []).find((m) =>
-			m.To.some((addr) => addr.Address === email)
-		);
-		if (message) {
-			const msgRes = await mailpit.request.get(
-				`http://localhost:54324/api/v1/message/${message.ID}`
-			);
-			const msg = (await msgRes.json()) as { Text?: string; HTML?: string };
-			// Prefer plain text to avoid matching digits in URLs; look for the
-			// "enter the code: XXXXXX" pattern Supabase uses in magic-link emails.
-			const body = msg.Text ?? msg.HTML ?? '';
-			const match = body.match(/code:\s*(\d{6})/);
-			if (match) {
-				code = match[1];
-				break;
-			}
-		}
-		await mailpit.waitForTimeout(1000);
-	}
-
-	await mailpit.close();
-
-	if (!code) throw new Error(`login: could not find OTP email for ${email} in Mailpit`);
-
-	// Enter the OTP code and submit.
-	await page.getByTestId('otp-input').fill(code);
-	await page.getByTestId('otp-submit').click();
-
+	await page.getByTestId('email-input').fill(email);
+	await page.getByTestId('password-input').fill(SEED_PASSWORD);
+	await page.getByTestId('password-submit').click();
 	// Wait for the scholar page to be reached.
 	await page.waitForURL(/\/scholar\/.+/);
 }

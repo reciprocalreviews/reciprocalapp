@@ -40,6 +40,12 @@ jobs:
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       - run: supabase db push
+      # Edge functions are NOT deployed by `db push`. Without this step a schema change
+      # that depends on new function behavior lands while the deployed function is stale —
+      # which fails quietly, since pg_net swallows the resulting error and mail simply
+      # stops arriving. Deploy them in the same job so schema and functions never drift.
+      - run: supabase functions deploy resend
+      - run: supabase functions deploy remind
 
   vercel:
     runs-on: ubuntu-latest

@@ -42,6 +42,10 @@
 				"tip": "Reload the page to load the latest version",
 				"label": "Refresh"
 			}
+		},
+		"email": {
+			"message": "You won't receive any notifications until you add and verify a contact email.",
+			"settings": "Add your email"
 		}
 	},
 	"notification": {
@@ -137,9 +141,13 @@
 		"login": {
 			"title": "Login",
 			"button": {
-				"sendPassword": {
-					"tip": "Send one-time password",
-					"label": "Login"
+				"orcid": {
+					"tip": "Sign in with your ORCID account",
+					"label": "Sign in with ORCID"
+				},
+				"mockOrcid": {
+					"tip": "Simulate an ORCID sign-in locally (development only)",
+					"label": "Sign in with ORCID (mock)"
 				},
 				"signIn": {
 					"tip": "Sign in",
@@ -147,7 +155,7 @@
 				}
 			},
 			"note": {
-				"orcid": "[ORCID](https://orcid.org/) is the de facto way to manage scholar identity."
+				"orcid": "[ORCID](https://orcid.org/) is the de facto way to manage scholar identity. Sign in with ORCID to get started."
 			},
 			"field": {
 				"email": {
@@ -156,18 +164,36 @@
 				},
 				"password": {
 					"label": "password",
-					"placeholder": "6 digits"
+					"placeholder": ""
+				},
+				"orcidId": {
+					"label": "ORCID iD",
+					"placeholder": "0000-0000-0000-0000"
+				},
+				"name": {
+					"label": "name",
+					"placeholder": "Test Scholar"
 				}
 			},
 			"feedback": {
-				"orcidNote": "We're still implementing ORCID authentication. For now, enter your email for a one time password.",
-				"checkEmail": "Check your email for a sign in code.",
-				"sendPasswordError": "Unable to send one-time password.",
+				"orcidError": "Unable to start ORCID sign-in.",
+				"mockOrcidError": "Unable to create a mock ORCID session.",
+				"mockOrcidDev": "Development only — this stands in for real ORCID sign-in, which can't run locally. Leave both fields blank to onboard a brand-new scholar, or enter a previously used ORCID iD to sign back in as that scholar.",
+				"passwordDev": "Development only — sign in as one of the seeded scholars using their email and the shared test password (\"password\").",
 				"signInError": "Unable to sign in."
 			},
 			"paragraph": {
 				"loggedIn": "You are logged in."
 			}
+		},
+		"verify": {
+			"title": "Verify email",
+			"verified": "Your email is verified. You'll now receive Reciprocal Reviews notifications.",
+			"expired": "This verification link has expired. Request a new one from your profile.",
+			"invalid": "This verification link is invalid or has already been used.",
+			"error": "Something went wrong verifying your email. Please try again.",
+			"profile": "Go to your profile",
+			"login": "Sign in to add your email"
 		},
 		"proposeVenue": {
 			"title": "Propose a venue",
@@ -1026,7 +1052,8 @@
 				"notVolunteeringThird": "This scholar is not volunteering for any roles yet.",
 				"volunteeringFirst": "These are your volunteer roles.",
 				"volunteeringThird": "These are this scholar's volunteer roles.",
-				"noName": "Welcome! Edit your name above to set it, then share your reviewing status below so others know your availability."
+				"noName": "Welcome! Edit your name above to set it, then share your reviewing status below so others know your availability.",
+		"addEmail": "Add a contact email so editors can reach you and you can receive notifications. We'll send a link to verify it, and won't email you anything else until you do."
 			},
 			"field": {
 				"name": {
@@ -1040,7 +1067,7 @@
 				"email": {
 					"label": "email",
 					"placeholder": "email",
-					"note": "Your email will be public and only used to send notifications.",
+					"note": "Your email is private and used only to send notifications. Saving a new address sends a verification link (valid 15 minutes); you'll receive notifications only after you verify it.",
 					"invalid": "Must be a valid email"
 				}
 			},
@@ -1588,12 +1615,33 @@
 				"tip": "Copied to clipboard",
 				"label": "Copied"
 			}
+		},
+		"verifyEmail": {
+			"field": {
+				"email": {
+					"label": "contact email",
+					"placeholder": "you@university.edu",
+					"invalid": "Must be a valid email"
+				}
+			},
+			"button": {
+				"send": {
+					"tip": "Send a verification link to this address",
+					"label": "Send verification email"
+				}
+			},
+			"feedback": {
+				"sent": "We sent a verification link to {email} (valid 15 minutes). It becomes your contact email once you verify it.",
+				"error": "Unable to send a verification email.",
+				"unchanged": "That's already your contact email — nothing to verify."
+			}
 		}
 	},
 	"error": {
 		"UpdateScholarStatus": "Unable to update your status",
 		"UpdateScholarName": "Unable to update your name",
-		"UpdateScholarEmail": "Unable to update your email",
+		"UpdateScholarEmail": "Unable to send a verification email",
+		"VerifyEmail": "Unable to verify your email",
 		"UpdateScholarAvailability": "Unable to update your availability",
 		"CreateProposal": "Unable to create a venue proposal",
 		"EditProposalTitle": "Unable to edit the proposal title",

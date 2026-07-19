@@ -473,14 +473,20 @@ export default class SupabaseCRUD extends CRUD {
 		}
 	}
 
-	async updateScholarEmail(id: ScholarID, email: string): Promise<Result> {
-		const { error } = await this.client.from('scholars').update({ email }).eq('id', id);
-		if (error) return this.error('UpdateScholarName', error);
-		else {
-			const state = this.scholars.get(id);
-			if (state) state.setEmail(email);
-			return {};
-		}
+	/** Begin (or resend, or change to) contact-email verification for the current
+	 * scholar (#27). We never write scholars.email directly — that column holds only a
+	 * verified address, and the column privilege to write it was revoked besides.
+	 *
+	 * Everything happens inside the RPC: it records the pending candidate and a token
+	 * hash, builds the link from the server's own configured origin, and queues the
+	 * branded email. Nothing comes back. That is deliberate — an earlier version returned
+	 * the raw token to this client, which let anyone read it out of the network tab and
+	 * verify an address they did not control. For the same reason the caller supplies
+	 * neither the message body nor the origin. */
+	async requestEmailVerification(email: string): Promise<Result> {
+		const { error } = await this.client.rpc('request_email_verification', { _email: email });
+		if (error) return this.error('UpdateScholarEmail', error);
+		return {};
 	}
 
 	async getScholarRow(id: ScholarID): Promise<ReadResult<ScholarRow | null>> {
@@ -792,11 +798,12 @@ export default class SupabaseCRUD extends CRUD {
 			if (stewardResult.notified) notified.push(...stewardResult.notified);
 		}
 
-		// Notify editors
-		const editorResult = await this.sendEmail(editors, 'ProposalCreatedEditors', [
-			title,
-			proposalid
-		]);
+		// Notify the proposal's editors. They are plain addresses rather than scholars, so
+		// the RPC reads them back off the proposal row we just wrote instead of accepting
+		// them here.
+		const editorResult = await this.queueEmail('ProposalCreatedEditors', [title, proposalid], {
+			proposal: proposalid
+		});
 		if (editorResult.notified) notified.push(...editorResult.notified);
 
 		return { data: proposalid, notified };
@@ -2274,80 +2281,48 @@ export default class SupabaseCRUD extends CRUD {
 	// ─────────────────────────────────────────────────────────────────────────
 
 	/** Use the resend edge function to use the Resend API to send a message to the current user. */
+	/** Email scholars by id. Recipient resolution — including skipping scholars with no
+	 * verified contact email, which is what enforces "never notify an unverified
+	 * address" (#27) — happens inside the RPC, not here. */
 	async emailScholars(scholars: ScholarID[], template: EmailType, args: string[]): Promise<Result> {
-		// Get the email addresses and names of the specified scholars. Names are
-		// used to produce per-recipient notification banners.
-		let { data: scholarData, error: scholarsError } = await this.client
-			.from('scholars')
-			.select('id, email, name')
-			.in('id', scholars);
-		if (scholarData === null) return this.error('EmailScholar', scholarsError);
-
-		// Ignore scholars without an email address.
-		const scholarsWithEmail = scholarData.filter(
-			(scholar): scholar is { id: string; email: string; name: string } => scholar.email !== null
-		);
-
-		return this.sendEmail(scholarsWithEmail, template, args);
+		return this.queueEmail(template, args, { scholars });
 	}
 
-	/** Email some people who aren't scholars */
-	async sendEmail(
-		emails: string[] | { id: ScholarID; email: string; name?: string }[],
+	/**
+	 * Queue a template email through the `queue_email` RPC.
+	 *
+	 * Direct INSERT into `emails` is revoked: the table's AFTER INSERT trigger sends
+	 * branded mail, so accepting a recipient and body from the client made the pipeline an
+	 * open relay. The RPC resolves recipients server-side — scholars by id (skipping any
+	 * without a verified contact email) or a proposal's editor addresses — and the body is
+	 * rendered at send time from the template registry, so no prose crosses the API.
+	 *
+	 * We still render locally, but only to label the "emailed X about Y" notification; that
+	 * copy is display-only and is never what gets delivered.
+	 */
+	private async queueEmail(
 		template: EmailType,
-		args: string[]
+		args: string[],
+		target: { scholars?: ScholarID[]; proposal?: ProposalID }
 	): Promise<Result> {
-		// Make sure all the scholar emails have the shape of an email address.
-		const missingEmails = emails.filter(
-			(email) => !/^.+@.+$/.test(typeof email === 'string' ? email : email.email)
-		);
-		if (!emails.every((email) => /^.+@.+$/.test(typeof email === 'string' ? email : email.email)))
-			return this.error(
-				'EmailScholar',
-				null,
-				`Invalid email addresses: ${missingEmails.map((email) => email).join(', ')}`
-			);
+		const { data, error } = await this.client.rpc('queue_email', {
+			_event: template,
+			_args: args,
+			_scholars: target.scholars ?? undefined,
+			_proposal: target.proposal ?? undefined
+		});
+		if (error) return this.error('EmailScholar', error);
 
-		const { subject, message } = renderEmail(template, args);
-
-		// The scholar whose action is sending these emails, so they can later see
-		// what they sent (null when sent without an authenticated user).
-		const {
-			data: { user }
-		} = await this.client.auth.getUser();
-		const sender = user?.id ?? null;
-
-		// Insert the emails into the database, which will trigger the edge function to send the email via Resend.
-		const { error: emailInsertError } = await this.client.from('emails').insert(
-			emails.map((email) => ({
-				scholar: typeof email === 'string' ? null : email.id,
-				sender,
-				email: typeof email === 'string' ? email : email.email,
-				event: template,
-				venue: null,
-				subject: subject,
-				message
-			}))
-		);
-		if (emailInsertError) return this.error('EmailScholar', emailInsertError);
-
-		// We rely on an database trigger to call the edge function to send the email after the row is inserted into the emails table.
-		// This is slower and less direct, but ensures that the email sending functionality only lives in one place.
-
+		const { subject } = renderEmail(template, args);
+		const recipients = Array.isArray(data) ? (data as { name?: string; email: string }[]) : [];
 		const notificationTemplate = this.locale.notification.emailed;
 		return {
 			data: undefined,
-			notified: emails.map((email) => {
-				const recipient =
-					typeof email === 'string'
-						? email
-						: ((email.name?.trim() ? email.name : email.email) ?? email.email);
-				return {
-					message: notificationTemplate
-						.replace('{recipient}', recipient)
-						.replace('{subject}', subject)
-				};
-			})
+			notified: recipients.map((recipient) => ({
+				message: notificationTemplate
+					.replace('{recipient}', recipient.name?.trim() ? recipient.name : recipient.email)
+					.replace('{subject}', subject)
+			}))
 		};
 	}
 
