@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.4.5 - 2026-07-19
+
+### Changed
+
+- Updated internal tooling for stability.
+
 ## 0.4.4 - 2026-06-28
 
 ### Added

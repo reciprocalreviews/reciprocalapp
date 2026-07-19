@@ -1,6 +1,6 @@
 {
 	"name": "reciprocalapp",
-	"version": "0.4.2",
+	"version": "0.4.5",
 	"private": true,
 	"prepare": "svelte-kit sync",
 	"scripts": {
@@ -37,7 +37,7 @@
 		"@sveltejs/adapter-vercel": "^6",
 		"@sveltejs/kit": "^2",
 		"@sveltejs/vite-plugin-svelte": "^7",
-		"@types/node": "^25",
+		"@types/node": "^26",
 		"ajv-cli": "^5",
 		"prettier": "^3",
 		"prettier-plugin-sql": "^0",
