@@ -2,9 +2,12 @@ import type { PageServerLoad } from './$types';
 
 // Consume the contact-email verification token (#27). Done in a SERVER load, called
 // through the anon-callable verify_email RPC on the per-request Supabase client, so the
-// single-use token is consumed exactly once on the initial visit — a universal load
-// would re-run on hydration and on invalidate('supabase:auth') and burn the token. The
-// RPC commits the candidate into scholars.email on success and deletes the request.
+// token is redeemed on the initial visit rather than again on every client-side
+// re-run — a universal load would re-run on hydration and on invalidate('supabase:auth').
+// The RPC commits the candidate into scholars.email on success. It deliberately does NOT
+// delete the request: verification is idempotent within the 15-minute window, so a link
+// that gets fetched more than once (an email security scanner, a prefetch) still reports
+// 'verified' rather than a misleading 'invalid'.
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const { data, error } = await locals.supabase.rpc('verify_email', { _token: params.token });
 	if (error) {

@@ -40,9 +40,12 @@ test('an unverified scholar sees the banner and can verify a new contact email',
 		.toBe('1');
 	expect(sql(`select coalesce(email, '') from public.scholars where id = '${R5.id}';`)).toBe('');
 
-	// Pull the single-use token out of the queued email's body and visit the link.
+	// Pull the token out of the queued email and visit the link. It lives in `args` (the
+	// email is rendered at send time, so `message` is null): the token is generated inside
+	// request_email_verification and never reaches the client, so reading the queued row as
+	// the service role is the only way to obtain it — which is the point of the design.
 	const token = sql(
-		`select substring(message from '/verify/([a-f0-9]+)') from public.emails where event = 'VerifyEmail' and email = '${newEmail}' limit 1;`
+		`select substring(args->>0 from '/verify/([a-f0-9]+)') from public.emails where event = 'VerifyEmail' and email = '${newEmail}' limit 1;`
 	);
 	expect(token).toMatch(/^[a-f0-9]{64}$/);
 

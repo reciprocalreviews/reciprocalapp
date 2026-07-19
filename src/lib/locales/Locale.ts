@@ -1154,8 +1154,6 @@ export type LocaleText = {
 				error: string;
 				unchanged: string;
 			};
-			/** Dev-only clickable verification link label (markdown link to the URL). */
-			devLink: string;
 		};
 	};
 	error: {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { PUBLIC_ENV } from '$env/static/public';
+	import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -18,10 +18,29 @@
 
 	let error = $state<undefined | ((l: LocaleText) => string)>(undefined);
 
+	// The ORCID callback bounces back here with ?error=orcid when the PKCE code exchange
+	// fails (see src/routes/auth/callback/+server.ts). Without this the scholar lands on a
+	// login page that looks like nothing happened. $derived rather than a one-time read so
+	// it still resolves after a client-side navigation.
+	let callbackError = $derived(
+		page.url.searchParams.get('error') === 'orcid'
+			? (l: LocaleText) => l.page.login.feedback.orcidError
+			: undefined
+	);
+
+	// An error raised by an action on this page takes precedence over one carried in the
+	// URL, so a fresh failure replaces the stale query-param message.
+	let shownError = $derived(error ?? callbackError);
+
 	// The dev-only controls (mock ORCID sign-in + seeded-user password grant) let us
-	// exercise auth locally, where the real ORCID custom-OIDC provider does not exist.
-	// Never rendered in production; ORCID is the sole authentication path there (#19).
-	const devLogin = PUBLIC_ENV !== 'prod';
+	// exercise auth locally, where the real ORCID custom-OIDC provider cannot be
+	// configured. Gated on the Supabase URL being local rather than on PUBLIC_ENV !==
+	// 'prod': staging is a non-prod environment pointed at a hosted project, and it must
+	// exercise the real ORCID path — otherwise the one environment that can validate
+	// custom OIDC before production would be testing a mock instead, and would accumulate
+	// throwaway @orcid.example auth users. Mirrors the same check in VerifyEmail.svelte.
+	const devLogin =
+		PUBLIC_SUPABASE_URL.includes('127.0.0.1') || PUBLIC_SUPABASE_URL.includes('localhost');
 	let mockOrcidId = $state('');
 	let mockOrcidName = $state('');
 	let email = $state('');
@@ -135,7 +154,7 @@
 		{/if}
 	{/if}
 
-	{#if error}
-		<Feedback error text={error} />
+	{#if shownError}
+		<Feedback error text={shownError} testid="login-error" />
 	{/if}
 </Page>

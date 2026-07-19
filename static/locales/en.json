@@ -1634,8 +1634,7 @@
 				"sent": "We sent a verification link to {email} (valid 15 minutes). It becomes your contact email once you verify it.",
 				"error": "Unable to send a verification email.",
 				"unchanged": "That's already your contact email — nothing to verify."
-			},
-			"devLink": "Open verification link"
+			}
 		}
 	},
 	"error": {

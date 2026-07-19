@@ -233,35 +233,38 @@ export type Database = {
       }
       emails: {
         Row: {
+          args: Json
           email: string
           event: string
           id: string
-          message: string
+          message: string | null
           scholar: string | null
           sender: string | null
-          subject: string
+          subject: string | null
           time_sent: string
           venue: string | null
         }
         Insert: {
+          args?: Json
           email: string
           event: string
           id?: string
-          message: string
+          message?: string | null
           scholar?: string | null
           sender?: string | null
-          subject: string
+          subject?: string | null
           time_sent?: string
           venue?: string | null
         }
         Update: {
+          args?: Json
           email?: string
           event?: string
           id?: string
-          message?: string
+          message?: string | null
           scholar?: string | null
           sender?: string | null
-          subject?: string
+          subject?: string | null
           time_sent?: string
           venue?: string | null
         }
@@ -1082,6 +1085,15 @@ export type Database = {
         Args: { _message: string; _submission: string }
         Returns: Json
       }
+      queue_email: {
+        Args: {
+          _args?: string[]
+          _event: string
+          _proposal?: string
+          _scholars?: string[]
+        }
+        Returns: Json
+      }
       queue_thanks_emails: {
         Args: {
           _audience: string
@@ -1091,7 +1103,10 @@ export type Database = {
         }
         Returns: number
       }
-      request_email_verification: { Args: { _email: string }; Returns: string }
+      request_email_verification: {
+        Args: { _email: string }
+        Returns: undefined
+      }
       transfer_tokens: {
         Args: {
           _amount: number

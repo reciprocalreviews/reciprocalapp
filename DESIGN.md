@@ -241,7 +241,7 @@ The purpose of the login page is to authenticate a person into the application u
 It should:
 
 - [x] ([#19](https://github.com/reciprocalreviews/reciprocalapp/issues/19)): Allow a visitor to initiate and complete an ORCID OAuth authentication, landing them at their `/scholar/[id]` dashboard
-- [x] ([#27](https://github.com/reciprocalreviews/reciprocalapp/issues/27)): Because ORCID does not provide an email, prompt a newly signed-in scholar to add a contact email and verify ownership via a link (valid 15 minutes) before RR will send them any notifications. Until an email is verified, a persistent banner warns that no notifications will be sent, and RR sends nothing to an unverified address except the verification email itself. The same verification flow is used to change an email later.
+- [x] ([#27](https://github.com/reciprocalreviews/reciprocalapp/issues/27)): Because ORCID does not provide an email, prompt a newly signed-in scholar to add a contact email and verify ownership via a link (valid 15 minutes) before RR will send them any notifications. Until an email is verified, a persistent banner warns that no notifications will be sent, and RR sends nothing to an unverified address except the verification email itself. The same verification flow is used to change an email later. The link is delivered **only by email** and is never shown in the interface — a verification the requester could read on screen would confirm nothing about who controls the address. Re-visiting a link within its window is safe and still reports success, so a mail scanner or link preview cannot consume it before the scholar clicks.
 
 ### Scholar `/scholar/[scholarid]`
 

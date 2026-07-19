@@ -243,10 +243,6 @@
                   ],
                   "type": "object"
                 },
-                "devLink": {
-                  "description": "Dev-only clickable verification link label (markdown link to the URL).",
-                  "type": "string"
-                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
@@ -302,8 +298,7 @@
               "required": [
                 "field",
                 "button",
-                "feedback",
-                "devLink"
+                "feedback"
               ],
               "type": "object"
             }

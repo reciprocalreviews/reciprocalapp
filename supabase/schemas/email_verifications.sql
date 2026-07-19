@@ -53,22 +53,40 @@ alter table public.email_verifications ENABLE row LEVEL SECURITY;
 -- FUNCTIONS
 --
 -- request_email_verification: create (or replace) a pending verification for the
--- authenticated scholar and return the raw token so the app can build the URL and send
--- the branded email. Does NOT touch scholars.email — the old verified value is kept
--- until the new address is confirmed. Doubles as the "resend" and "change email" entry
--- point (upsert on the scholar primary key resets the token and the 15-minute clock).
-create or replace function public.request_email_verification (_email text) RETURNS text LANGUAGE "plpgsql" SECURITY DEFINER
+-- authenticated scholar and QUEUE the branded email. Returns nothing: the raw token never
+-- leaves the database. An earlier version returned it to the browser, which let anyone
+-- read it from the network tab and confirm an address they did not control — defeating the
+-- entire purpose of verifying. For the same reason the caller supplies neither the message
+-- body nor the link's origin: this email's recipient is whatever address the caller typed,
+-- so letting them choose the content too would make the pipeline an open relay.
+--
+-- Does NOT touch scholars.email — the old verified value is kept until the new address is
+-- confirmed. Doubles as the "resend" and "change email" entry point (upsert on the scholar
+-- primary key resets the token and the 15-minute clock).
+create or replace function public.request_email_verification (_email text) RETURNS void LANGUAGE "plpgsql" SECURITY DEFINER
 set
 	"search_path" to 'public', 'pg_temp' as $$
 declare
 	_caller uuid := (select auth.uid());
 	_token text;
+	_origin text := private.get_secret('site_url');
+	_previous timestamptz;
 begin
 	if _caller is null then
 		raise exception 'Authentication required';
 	end if;
 	if _email is null or _email !~ '^.+@.+\..+$' then
 		raise exception 'A valid email address is required';
+	end if;
+	if _origin is null or _origin = '' then
+		raise exception 'The site_url vault secret is not configured';
+	end if;
+
+	-- Rate limit. Each call emails an address the caller chose, so without a cooldown this
+	-- RPC is a mail amplifier. One per minute is well below any legitimate resend cadence.
+	select created_at into _previous from public.email_verifications where scholar = _caller;
+	if _previous is not null and _previous > now() - interval '1 minute' then
+		raise exception 'Please wait a moment before requesting another verification email';
 	end if;
 
 	_token := encode(extensions.gen_random_bytes(32), 'hex');
@@ -87,7 +105,21 @@ begin
 			created_at = excluded.created_at,
 			expires_at = excluded.expires_at;
 
-	return _token;
+	-- scholar AND sender are deliberately null: the emails SELECT policy grants reads to
+	-- both the recipient and the sender, so attributing this row to the requester would let
+	-- them read the token back out of the args — the very leak this design closes. With
+	-- both null no policy branch matches and the row is unreadable by anyone.
+	insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
+	values (
+		'VerifyEmail',
+		null,
+		null,
+		null,
+		lower(btrim(_email)),
+		null,
+		null,
+		jsonb_build_array(rtrim(_origin, '/') || '/verify/' || _token)
+	);
 end;
 $$;
 

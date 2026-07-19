@@ -17,10 +17,17 @@ create table if not exists public.emails (
 	time_sent timestamp with time zone default now() not null,
 	-- The email to whom the email was sent
 	email text not null,
-	-- The subject of the email
-	subject text not null,
-	-- The body of the email
-	message text not null
+	-- The subject of the email. Null when the row was queued by the database as an
+	-- event + args to be rendered at send time (see `args` below).
+	subject text,
+	-- The body of the email. Null for the same reason as `subject`.
+	message text,
+	-- Template arguments for `event`, used when subject/message are null. Mail whose
+	-- recipient is chosen by a caller must not also have its body chosen by that caller,
+	-- so those rows carry structured args and the `resend` edge function renders them from
+	-- supabase/functions/_shared/templates.ts at send time. event + args is a complete,
+	-- re-renderable record of what was sent.
+	args jsonb default '[]'::jsonb not null
 );
 
 alter table public.emails OWNER to "postgres";
@@ -78,9 +85,16 @@ select
 		)
 	);
 
-create policy "authenticated scholars can send email" on public.emails for INSERT to authenticated
-with
-	check (true);
+-- There is deliberately NO insert policy. The AFTER INSERT trigger below sends branded
+-- mail, so a policy allowing authenticated inserts made this an open relay: any signed-in
+-- user could name any recipient with any subject and body. Sending now goes through
+-- public.queue_email (and public.request_email_verification), which resolve recipients
+-- server-side and render the body from the template registry at send time. The privilege
+-- is revoked too, so a direct attempt fails cleanly with 42501 rather than an empty result.
+revoke insert on table public.emails
+from
+	authenticated,
+	anon;
 
 create policy "emails can't be edited" on public.emails
 for update
@@ -108,18 +122,40 @@ $$;
 
 alter function private.get_secret (secret_name text) OWNER to "postgres";
 
+-- Calls the `resend` edge function, authenticating as service_role. It must NOT use the
+-- anon key: that key is public (it ships in the browser bundle), and verify_jwt accepts
+-- any valid project JWT, so authenticating with it would leave `resend` — which takes
+-- its recipient, subject, and body from the request — callable by anyone as an open
+-- relay for branded mail. The function rejects callers whose `role` claim isn't
+-- service_role (supabase/functions/_shared/auth.ts). Hosted projects must have the
+-- `service_role_key` vault secret set by hand; local dev seeds it from
+-- SUPABASE_SERVICE_ROLE_KEY via [db.vault] in supabase/config.toml.
 create or replace function public.send_email () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
 set
 	"search_path" to '' as $$
+declare
+  _key text := private.get_secret('service_role_key');
 begin
+  -- Surface a misconfigured deployment in the Postgres logs. pg_net posts
+  -- asynchronously and swallows failures, so without this a missing secret would look
+  -- exactly like mail silently not arriving.
+  if _key is null or _key = '' then
+    raise warning 'send_email: the service_role_key vault secret is missing, so email % cannot be delivered', new.id;
+  end if;
   -- Post to the Resend edge function. If the supabase URL is set to localhost, replace it with host.docker.internal so we hit the host machine, not the container.
   perform net.http_post(
     url:=replace(private.get_secret('supabase_url'), '127.0.0.1', 'host.docker.internal') || '/functions/v1/resend',
     headers:=jsonb_build_object(
-        'Content-Type', 'application/json', 
-        'Authorization', 'Bearer ' || private.get_secret('anon_key')
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || _key
     )::jsonb,
-    body:=jsonb_build_object('to', new.email, 'subject', new.subject, 'message', new.message)
+    body:=jsonb_build_object(
+      'to', new.email,
+      'subject', new.subject,
+      'message', new.message,
+      'event', new.event,
+      'args', new.args
+    )
   );
   return new;
 end;

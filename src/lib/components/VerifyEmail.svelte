@@ -1,9 +1,6 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import { getDB, type Result } from '$lib/data/CRUD';
 	import type LocaleText from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
 	import { validEmail } from '$lib/validation';
 	import Button from './Button.svelte';
 	import EditableText from './EditableText.svelte';
@@ -17,22 +14,11 @@
 
 	const db = getDB();
 
-	// True only against the LOCAL Supabase stack — never staging or production, which point
-	// at hosted supabase.co URLs and deliver the email for real. This mirrors the `resend`
-	// edge function's own local check (supabase/functions/resend/index.ts). We gate the
-	// clickable link on this (not merely non-prod) so a real verification token is never
-	// surfaced in a hosted environment.
-	const isLocal =
-		PUBLIC_SUPABASE_URL.includes('127.0.0.1') || PUBLIC_SUPABASE_URL.includes('localhost');
-
 	let email = $state('');
 	let sent = $state(false);
 	let unchanged = $state(false);
 	let pending = $state('');
 	let error = $state<undefined | ((l: LocaleText) => string)>(undefined);
-	// Local-only convenience: we can't deliver the email locally (no Resend; the edge
-	// function just logs), so we surface the verification link to make the flow testable.
-	let devLink = $state<string | undefined>(undefined);
 
 	let valid = $derived(validEmail(email));
 
@@ -48,23 +34,20 @@
 		if (current !== null && trimmed.toLowerCase() === current.trim().toLowerCase()) {
 			error = undefined;
 			sent = false;
-			devLink = undefined;
 			unchanged = true;
 			return {};
 		}
 
 		unchanged = false;
-		const result = await db().requestEmailVerification(trimmed, page.url.origin);
+		const result = await db().requestEmailVerification(trimmed);
 		if (result.error) {
 			error = (l) => l.component.verifyEmail.feedback.error;
 			sent = false;
-			devLink = undefined;
 			return { error: result.error };
 		}
 		error = undefined;
 		sent = true;
 		pending = trimmed;
-		devLink = isLocal ? result.data?.url : undefined;
 		return {};
 	}
 </script>
@@ -113,27 +96,8 @@
 		testid="verify-email-sent"
 		text={(l) => l.component.verifyEmail.feedback.sent.replace('{email}', pending)}
 	/>
-	{#if devLink}
-		<!-- Dev-only convenience: production/staging deliver this link by email. It is a plain
-		     anchor with SvelteKit preloading disabled — otherwise hover/viewport preload would
-		     run the verify load and confirm the email before the link is clicked. -->
-		<p class="devlink">
-			<a
-				href={devLink}
-				data-sveltekit-preload-data="off"
-				data-sveltekit-preload-code="off"
-				data-testid="verify-email-devlink"><Text path={(l) => l.component.verifyEmail.devLink} /></a
-			>
-		</p>
-	{/if}
 {/if}
 
 {#if error}
 	<Feedback error text={error} />
 {/if}
-
-<style>
-	.devlink {
-		font-size: var(--small-font-size);
-	}
-</style>

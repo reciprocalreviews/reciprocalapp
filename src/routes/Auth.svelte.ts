@@ -1,6 +1,6 @@
 import type { ScholarRow } from '$data/types';
 import Authentication from '$lib/auth/Authentication';
-import type { AuthError, Provider, SupabaseClient } from '@supabase/supabase-js';
+import type { AuthError, SupabaseClient } from '@supabase/supabase-js';
 import { getContext, setContext } from 'svelte';
 
 /** Represents the current authenatication state from Supabase. */
@@ -32,12 +32,19 @@ export default class SupabaseAuth extends Authentication<ScholarRow, AuthError> 
 	}
 
 	async signInWithORCID(redirectTo: string) {
-		// 'orcid' is the custom OIDC provider slug configured in the hosted Supabase
-		// Dashboard (Auth → Providers → Custom OIDC). We only request the `openid`
-		// scope — ORCID does not release an email without a paid membership, so contact
-		// email is collected and verified separately in-app (#27).
+		// `custom:orcid` is the custom OIDC provider configured in the hosted Supabase
+		// Dashboard (Authentication → Providers → New Provider → Auto-discovery (OIDC),
+		// with the bare issuer URL https://orcid.org — or https://sandbox.orcid.org in
+		// staging — and email_optional = true). Supabase requires custom provider
+		// identifiers to carry the `custom:` prefix; a bare 'orcid' is rejected at
+		// /auth/v1/authorize. Do not cast this string: `Provider` already admits
+		// `custom:${string}`, so an unprefixed value is a type error rather than a
+		// runtime failure that only appears in a hosted environment.
+		//
+		// We request only the `openid` scope — ORCID releases no email through OIDC on
+		// any membership tier, so contact email is collected and verified in-app (#27).
 		const { error } = await this.client.auth.signInWithOAuth({
-			provider: 'orcid' as Provider,
+			provider: 'custom:orcid',
 			options: { redirectTo, scopes: 'openid' }
 		});
 		return error;

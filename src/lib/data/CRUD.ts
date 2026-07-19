@@ -184,14 +184,12 @@ export default abstract class CRUD {
 	abstract updateScholarStatus(id: ScholarID, status: string): Promise<Result>;
 
 	/** Begin/resend/change contact-email verification for the current scholar (#27).
-	 * Records a pending candidate + token and emails a verification link to `email`;
-	 * returns that link in `data.url` so a dev build can surface it locally. Token
+	 * Records a pending candidate + token and queues a verification link to `email`,
+	 * entirely inside the database — the raw token is never returned to the client, and
+	 * the caller supplies neither the message body nor the link's origin. Token
 	 * consumption happens in the verify route's server load (see
 	 * src/routes/[[lang]]/verify/[token]) via the anon-callable verify_email RPC. */
-	abstract requestEmailVerification(
-		email: string,
-		origin: string
-	): Promise<Result<{ url: string }>>;
+	abstract requestEmailVerification(email: string): Promise<Result>;
 
 	/** Propose a venue */
 	abstract proposeVenue(
@@ -432,15 +430,11 @@ export default abstract class CRUD {
 
 	abstract deleteAssignment(assignment: AssignmentID): Promise<Result>;
 
-	/** Send an email with the given subject and message to the authenticated scholar. */
+	/** Queue a template email to the given scholars. Recipients are resolved server-side
+	 * from these ids; scholars with no verified contact email are skipped (#27). There is
+	 * deliberately no way to email an arbitrary address, and no way to supply a body —
+	 * both would make the branded pipeline an open relay. */
 	abstract emailScholars(scholars: ScholarID[], event: EmailType, args: string[]): Promise<Result>;
-
-	/** Send an email to people without scholar accounts */
-	abstract sendEmail(
-		emails: string[] | { id: ScholarID; email: string }[],
-		template: EmailType,
-		args: string[]
-	): Promise<Result>;
 
 	/** Add a conflict */
 	abstract declareConflict(

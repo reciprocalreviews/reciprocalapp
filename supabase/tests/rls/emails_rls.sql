@@ -3,8 +3,12 @@
 -- Authorization model under test:
 --   SELECT  the recipient (scholar = auth.uid()), the sender (sender = auth.uid()),
 --           and admins of the email's venue (isAdmin(venue)). Nobody else.
---   INSERT  any authenticated scholar may send an email (with check true); anon
---           has no insert policy and is denied.
+--   INSERT  nobody. There is no insert policy and the privilege is revoked from both
+--           authenticated and anon: inserting a row sends branded mail, so allowing it
+--           made the pipeline an open relay (any signed-in user, any recipient, any
+--           body). Sending goes through public.queue_email and
+--           public.request_email_verification instead, which resolve recipients
+--           server-side and render the body at send time.
 --   UPDATE  blocked for everyone (using false → row filtered, no rows affected).
 --   DELETE  blocked for everyone (using false → row filtered, no rows affected).
 --
@@ -16,7 +20,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(12);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -46,7 +50,6 @@ select policies_are(
 	'public', 'emails',
 	array[
 		'senders, recipients, and venue admins can see the emails sent',
-		'authenticated scholars can send email',
 		'emails can''t be edited',
 		'emails can''t be deleted'
 	]
@@ -84,14 +87,36 @@ select is_empty(
 );
 
 -- ---- INSERT -------------------------------------------------------------------
--- Any authenticated scholar may send an email (with check true). The AFTER
--- trigger's net.http_post queues asynchronously and does not fail synchronously.
+-- Nobody may insert directly. This assertion was previously inverted — it asserted that
+-- "any authenticated scholar can send an email" was correct behavior, which is exactly the
+-- open relay: an insert here names an arbitrary recipient and an arbitrary body, and the
+-- AFTER trigger delivers it branded from notifications@reciprocal.reviews.
 select tests.authenticate_as(:'outsider');
-select lives_ok(
+select throws_ok(
 	$$ insert into public.emails (event, sender, email, subject, message)
 	   values ('sent event', $$ || quote_literal(:'outsider') || $$,
 	           'someone@test.local', 'Hi', 'Body') $$,
-	'any authenticated scholar can send an email'
+	'42501',
+	null,
+	'an authenticated scholar cannot insert an email directly'
+);
+
+-- The sanctioned path resolves recipients server-side and takes no message body.
+select is(
+	(select jsonb_array_length(
+		public.queue_email('VenueApproved', array['A Venue','venue-id'], array[:'recipient'::uuid], null)
+	)),
+	1,
+	'queue_email queues to a scholar with a verified contact email'
+);
+
+-- VerifyEmail renders an argument as a clickable link, so it must not be queueable by a
+-- caller — only by request_email_verification, which builds the URL itself.
+select throws_ok(
+	$$ select public.queue_email('VerifyEmail', array['https://evil.invalid/verify/x'], null, null) $$,
+	'P0001',
+	null,
+	'a caller cannot forge a verification email with a link of their choosing'
 );
 
 -- Anonymous visitors have no insert policy and are denied.
