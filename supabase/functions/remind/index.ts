@@ -1,7 +1,7 @@
 import 'edge-runtime';
 import { createClient, SupabaseClient } from 'supabase';
 import type { Database } from '../../../src/data/database.ts';
-import { requireServiceRole } from '../_shared/auth.ts';
+import { requireSecretKey } from '../_shared/auth.ts';
 import { escapeHtml, renderBrandedEmail } from '../_shared/emailShell.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
@@ -180,7 +180,7 @@ const handler = async (request: Request): Promise<Response> => {
 	// Only the cron job may trigger reminders. Without this check anyone holding the
 	// (public) anon key could fire the daily run repeatedly, spamming scholars with
 	// reminder mail and advancing the reminder timestamps that suppress the real run.
-	const forbidden = requireServiceRole(request);
+	const forbidden = await requireSecretKey(request);
 	if (forbidden) return forbidden;
 
 	try {

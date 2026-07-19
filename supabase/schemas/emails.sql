@@ -122,32 +122,38 @@ $$;
 
 alter function private.get_secret (secret_name text) OWNER to "postgres";
 
--- Calls the `resend` edge function, authenticating as service_role. It must NOT use the
--- anon key: that key is public (it ships in the browser bundle), and verify_jwt accepts
--- any valid project JWT, so authenticating with it would leave `resend` — which takes
--- its recipient, subject, and body from the request — callable by anyone as an open
--- relay for branded mail. The function rejects callers whose `role` claim isn't
--- service_role (supabase/functions/_shared/auth.ts). Hosted projects must have the
--- `service_role_key` vault secret set by hand; local dev seeds it from
--- SUPABASE_SERVICE_ROLE_KEY via [db.vault] in supabase/config.toml.
+-- Calls the `resend` edge function, presenting one of the project's SECRET keys. It must
+-- NOT use the publishable/anon key: that key is public (it ships in the browser bundle),
+-- so authenticating with it would leave `resend` — which takes its recipient and template
+-- arguments from the request — callable by anyone as an open relay for branded mail. The
+-- function authorizes by comparing the presented key against the project's secret keys
+-- (supabase/functions/_shared/auth.ts), which works for both a legacy `service_role` JWT
+-- and a newer opaque `sb_secret_...` key.
+--
+-- The key goes on the `apikey` header: `Authorization: Bearer` is reserved for JWTs, and a
+-- new-format key sent there is rejected as an invalid JWT. Hosted projects must have the
+-- `secret_key` vault secret set by hand; local dev seeds it from SUPABASE_SECRET_KEY via
+-- [db.vault] in supabase/config.toml.
 create or replace function public.send_email () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
 set
 	"search_path" to '' as $$
 declare
-  _key text := private.get_secret('service_role_key');
+  -- Prefer the new name, falling back to the pre-rename one so this is safe to deploy
+  -- before a hosted project's vault secret is renamed.
+  _key text := coalesce(private.get_secret('secret_key'), private.get_secret('service_role_key'));
 begin
   -- Surface a misconfigured deployment in the Postgres logs. pg_net posts
   -- asynchronously and swallows failures, so without this a missing secret would look
   -- exactly like mail silently not arriving.
   if _key is null or _key = '' then
-    raise warning 'send_email: the service_role_key vault secret is missing, so email % cannot be delivered', new.id;
+    raise warning 'send_email: no secret_key vault secret is configured, so email % cannot be delivered', new.id;
   end if;
   -- Post to the Resend edge function. If the supabase URL is set to localhost, replace it with host.docker.internal so we hit the host machine, not the container.
   perform net.http_post(
     url:=replace(private.get_secret('supabase_url'), '127.0.0.1', 'host.docker.internal') || '/functions/v1/resend',
     headers:=jsonb_build_object(
         'Content-Type', 'application/json',
-        'Authorization', 'Bearer ' || _key
+        'apikey', _key
     )::jsonb,
     body:=jsonb_build_object(
       'to', new.email,

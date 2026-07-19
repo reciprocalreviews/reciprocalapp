@@ -1,5 +1,5 @@
 import z from 'zod';
-import { requireServiceRole } from '../_shared/auth.ts';
+import { requireSecretKey } from '../_shared/auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { renderBrandedEmail } from '../_shared/emailShell.ts';
 import { Emails, renderEmail, type EmailType } from '../_shared/templates.ts';
@@ -27,10 +27,10 @@ const handler = async (request: Request): Promise<Response> => {
 		return new Response('ok', { headers: corsHeaders });
 	}
 
-	// Only the database may send mail. This function takes the recipient, subject, and
-	// body straight from its caller, so without this check anyone holding the (public)
-	// anon key could send arbitrary content branded as notifications@reciprocal.reviews.
-	const forbidden = requireServiceRole(request, corsHeaders);
+	// Only the database may send mail. This function takes the recipient, and optionally
+	// the template arguments, straight from its caller, so without this check anyone
+	// holding a public key could send branded mail from notifications@reciprocal.reviews.
+	const forbidden = await requireSecretKey(request, corsHeaders);
 	if (forbidden) return forbidden;
 
 	try {

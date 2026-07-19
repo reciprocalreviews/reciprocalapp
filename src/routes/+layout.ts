@@ -2,7 +2,7 @@ import type { Database } from '$data/database';
 import type { ScholarRow } from '$data/types';
 import { requiresAuth } from '$lib/auth/requiresAuth';
 import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
-import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
+import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr';
 import { redirect } from '@sveltejs/kit';
 import type { LayoutLoad } from './$types';
@@ -15,12 +15,12 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
 	depends('supabase:auth');
 
 	const supabase = isBrowser()
-		? createBrowserClient<Database, 'public'>(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+		? createBrowserClient<Database, 'public'>(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
 				global: {
 					fetch
 				}
 			})
-		: createServerClient<Database, 'public'>(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+		: createServerClient<Database, 'public'>(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
 				global: {
 					fetch
 				},

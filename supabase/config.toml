@@ -250,14 +250,15 @@ s3_access_key = "env(S3_ACCESS_KEY)"
 s3_secret_key = "env(S3_SECRET_KEY)"
 
 [db.vault]
-anon_key = "env(PUBLIC_SUPABASE_ANON_KEY)"
 supabase_url = "env(PUBLIC_SUPABASE_URL)"
 # Used by public.send_email() and the remind-daily cron job to call the edge functions
-# below. It must be the SERVICE ROLE key, not the anon key: both functions require a
-# `service_role` caller (supabase/functions/_shared/auth.ts), because verify_jwt alone
-# accepts the anon key, which is public. In hosted projects this vault secret has to be
-# added by hand — this block seeds local development only.
-service_role_key = "env(SUPABASE_SERVICE_ROLE_KEY)"
+# below. It must be a SECRET key, never the publishable/anon key: those are public, and the
+# functions authorize by checking that the caller presented one of the project's secret
+# keys (supabase/functions/_shared/auth.ts). Either key format works — a legacy
+# `service_role` JWT or a newer `sb_secret_...` — so this can be migrated without a flag
+# day. In hosted projects this vault secret has to be added by hand; this block seeds local
+# development only.
+secret_key = "env(EDGE_SECRET_KEY)"
 # The app origin, used by public.request_email_verification to build verification links
 # (#27). Deliberately NOT taken from the caller: a caller-supplied origin would let anyone
 # send a genuine-looking branded email pointing at a host they control. Hosted projects set
@@ -265,17 +266,22 @@ service_role_key = "env(SUPABASE_SERVICE_ROLE_KEY)"
 # the value is the dev server in supabase/config.toml's [auth] site_url.
 site_url = "http://localhost:5173"
 
-# Both functions are called only by the database (a trigger and a cron job). verify_jwt
-# checks that the caller presented a valid project JWT; the handlers additionally require
-# the `role` claim to be `service_role`.
+# Both functions are called only by the database (a trigger and a cron job), never from a
+# browser. verify_jwt is OFF deliberately: the platform gate only understands JWT-shaped
+# credentials, so it REJECTS the newer `sb_secret_...` API keys outright — leaving it on
+# would break these callers the moment the project migrates key formats. Authorization is
+# therefore done in the handlers, which require the caller to present one of the project's
+# secret keys (supabase/functions/_shared/auth.ts) and fail closed if none is configured.
+# That check is strictly narrower than verify_jwt was: verify_jwt accepted ANY valid
+# project JWT, including the public anon key.
 [functions.resend]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 entrypoint = "./functions/resend/index.ts"
 
 [functions.remind]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/remind/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
