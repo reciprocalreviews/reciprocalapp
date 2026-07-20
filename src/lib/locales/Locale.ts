@@ -1151,8 +1151,16 @@ export type LocaleText = {
 			};
 			feedback: {
 				sent: string;
+				/** Fallback when the server gave no recognizable reason. */
 				error: string;
 				unchanged: string;
+				/** The one-minute rate limit was hit; a link is already on its way. */
+				cooldown: string;
+				/** This deployment has no `site_url` vault secret, so no link can be built.
+				 * A configuration fault, not something the scholar can retry into working. */
+				notConfigured: string;
+				/** The session ended between loading the page and submitting. */
+				signedOut: string;
 			};
 		};
 	};

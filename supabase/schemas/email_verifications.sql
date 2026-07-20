@@ -63,6 +63,11 @@ alter table public.email_verifications ENABLE row LEVEL SECURITY;
 -- Does NOT touch scholars.email — the old verified value is kept until the new address is
 -- confirmed. Doubles as the "resend" and "change email" entry point (upsert on the scholar
 -- primary key resets the token and the 15-minute clock).
+--
+-- Each failure carries a machine-readable `hint` so the interface can say which of the four
+-- things went wrong. Without it every case collapsed into one generic "unable to send",
+-- which told a rate-limited scholar nothing and made a missing vault secret look like a
+-- transient delivery fault.
 create or replace function public.request_email_verification (_email text) RETURNS void LANGUAGE "plpgsql" SECURITY DEFINER
 set
 	"search_path" to 'public', 'pg_temp' as $$
@@ -73,20 +78,20 @@ declare
 	_previous timestamptz;
 begin
 	if _caller is null then
-		raise exception 'Authentication required';
+		raise exception 'Authentication required' using hint = 'auth_required';
 	end if;
 	if _email is null or _email !~ '^.+@.+\..+$' then
-		raise exception 'A valid email address is required';
+		raise exception 'A valid email address is required' using hint = 'invalid_email';
 	end if;
 	if _origin is null or _origin = '' then
-		raise exception 'The site_url vault secret is not configured';
+		raise exception 'The site_url vault secret is not configured' using hint = 'not_configured';
 	end if;
 
 	-- Rate limit. Each call emails an address the caller chose, so without a cooldown this
 	-- RPC is a mail amplifier. One per minute is well below any legitimate resend cadence.
 	select created_at into _previous from public.email_verifications where scholar = _caller;
 	if _previous is not null and _previous > now() - interval '1 minute' then
-		raise exception 'Please wait a moment before requesting another verification email';
+		raise exception 'Please wait a moment before requesting another verification email' using hint = 'cooldown';
 	end if;
 
 	_token := encode(extensions.gen_random_bytes(32), 'hex');

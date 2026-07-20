@@ -786,8 +786,14 @@
 						"label": "Send thanks",
 						"tip": "Share your thanks with this submission's reviewers."
 					},
-					"approve": { "label": "Approve", "tip": "Share this note with the reviewers." },
-					"declineInitiate": { "label": "Decline", "tip": "Decline this note with a reason." },
+					"approve": {
+						"label": "Approve",
+						"tip": "Share this note with the reviewers."
+					},
+					"declineInitiate": {
+						"label": "Decline",
+						"tip": "Decline this note with a reason."
+					},
 					"declineConfirm": {
 						"label": "Confirm decline",
 						"tip": "Decline this note and notify the author."
@@ -997,7 +1003,7 @@
 				"welcome": "Welcome, venue admin! This page walks you through configuring your venue as a sequence of numbered steps. Work through each section in order. Start with **Step 1** below to align on the policies that the rest of the settings encode, then move down the page recording each decision. The last step is always **Activate** — flip the venue on to open it for volunteering.",
 				"policies": "Before changing any settings below, get community alignment on each of these decisions. The settings on this page just encode them; getting them wrong is hard to walk back once volunteers start participating.\n\n- The venue's **purpose and scope** — what topics, what kinds of submissions you accept\n- The **submission types** you'll accept (e.g., full papers, posters, revisions)\n- The **roles** scholars take on (Editor, Associate Editor, Reviewer, …) and how many people each submission needs in each role\n- The other **editors / admins** who can configure this venue with you\n- Which **external reviewing platform** (HotCRP, OJS, ScholarOne, etc.) handles your peer review, so the email-template snippets in Step 6 use the right syntax\n\nThe most consequential choices — the token economy, how reviewing is organized, what counts as a creditable review, and who can mint — are expanded in the cards below.",
 				"economics": "Tokens only work if they stay scarce enough to be worth earning. The economy has two failure modes:\n\n- **Too many tokens** — if welcome gifts are generous and submission costs are low, everyone already has enough to submit, so no one needs to review. Reviewing stalls and quality and timeliness suffer.\n- **Too few tokens** — if costs are high and tokens are hard to earn, authors can't accumulate enough to submit, and publishing slows down.\n\nTwo rules keep you in balance:\n\n1. **Per-role compensation for a submission must sum to no more than its submission cost.** Otherwise every reviewed submission injects net-new tokens and the supply inflates until reviewing has no value.\n2. **Mint tokens roughly in proportion to the number of active scholars**, topping up only as the community grows — not in large speculative batches.\n\n**For example.** A journal pays **10** tokens for a review, **10** for an associate-editor recommendation, and **1** for an editor-in-chief decision: **21** tokens paid out per submission. It sets the **submission cost to 40** (comfortably above the 21 paid out, so the venue reserve grows slightly) and the **welcome gift to 30**, so a newcomer can submit after reviewing just once (30 + 10 = 40). Tune these numbers to your community's reviewing load, but always check the two rules above before you change them.",
-					"anonymityAssignment": "How your community reviews is as consequential as how it pays. Two linked decisions:\n\n- **Anonymity model** — *open* (authors and reviewers see each other), *single-anonymous* (reviewers see authors but not the reverse), or *double-anonymous* (neither sees the other). More anonymity reduces bias but makes conflicts of interest harder to spot; open review increases accountability but can chill candid feedback. You set this per role — Step 4 controls whether authors can see who's assigned, and each role's settings control whether that role sees author identities.\n- **Bidding vs. central assignment** — let reviewers **bid** on what they want to review, or assign work **centrally**. Bidding scales well and surfaces genuine interest; central assignment gives editors tighter control over load and expertise matching. If you enable bidding for a role (Step 3), define the **preference labels** bidders choose from (Step 5), e.g. \"Preferred\" / \"If necessary\".",
+				"anonymityAssignment": "How your community reviews is as consequential as how it pays. Two linked decisions:\n\n- **Anonymity model** — *open* (authors and reviewers see each other), *single-anonymous* (reviewers see authors but not the reverse), or *double-anonymous* (neither sees the other). More anonymity reduces bias but makes conflicts of interest harder to spot; open review increases accountability but can chill candid feedback. You set this per role — Step 4 controls whether authors can see who's assigned, and each role's settings control whether that role sees author identities.\n- **Bidding vs. central assignment** — let reviewers **bid** on what they want to review, or assign work **centrally**. Bidding scales well and surfaces genuine interest; central assignment gives editors tighter control over load and expertise matching. If you enable bidding for a role (Step 3), define the **preference labels** bidders choose from (Step 5), e.g. \"Preferred\" / \"If necessary\".",
 				"minters": "First decide on a **currency** — the shared token economy your venue runs on:\n\n- **Join an existing currency** to share an economy with a related venue (e.g. a sibling conference or journal in the same community). Tokens earned in one venue can then be spent in the other. The existing currency already has its own **minters**, so you don't appoint any — you inherit theirs.\n- **Start your own currency** if your venue's economy should stand alone. Only then do you choose minters.\n\n**Minters** can create new tokens, so choose them as carefully as you choose editors:\n\n- Pick **trusted, long-tenured members** of the community who understand its reviewing economy.\n- Appoint **more than one** so minting doesn't stall if someone steps away (avoid a single point of failure).\n- Choose people **willing to monitor the token supply** and mint gradually as the community grows, rather than in large batches.\n- Make sure they understand the **balance rules** in *Setting welcome & compensation* above — over-minting collapses the same way over-generous welcome gifts do.\n\nMinting happens on the currency page, where the mint form shows a warning about creating too many tokens.",
 				"reviewQuality": "The platform releases compensation when an assignment is marked complete — it does **not** judge whether a review was actually good. That editorial bar is yours to define. Before launch, agree on **what counts as a creditable review** (depth, timeliness, constructiveness) and **who signs off** before tokens are released.\n\nThree existing controls let you enforce that policy:\n\n- **Approver role** (Step 3, per role) — designate which role approves assignments to another role, so a human checks the work before it's credited.\n- **Compensation approval** — compensation transactions are approved before tokens move, giving editors a checkpoint to withhold credit for inadequate reviews.\n- **Vet thank-you notes** (Step 4) — optionally require an admin or editor to approve author thank-you notes before reviewers see them."
 			},
@@ -1053,7 +1059,7 @@
 				"volunteeringFirst": "These are your volunteer roles.",
 				"volunteeringThird": "These are this scholar's volunteer roles.",
 				"noName": "Welcome! Edit your name above to set it, then share your reviewing status below so others know your availability.",
-		"addEmail": "Add a contact email so editors can reach you and you can receive notifications. We'll send a link to verify it, and won't email you anything else until you do."
+				"addEmail": "Add a contact email so editors can reach you and you can receive notifications. We'll send a link to verify it, and won't email you anything else until you do."
 			},
 			"field": {
 				"name": {
@@ -1633,7 +1639,10 @@
 			"feedback": {
 				"sent": "We sent a verification link to {email} (valid 15 minutes). It becomes your contact email once you verify it.",
 				"error": "Unable to send a verification email.",
-				"unchanged": "That's already your contact email — nothing to verify."
+				"unchanged": "That's already your contact email — nothing to verify.",
+				"cooldown": "You just requested a link — check your inbox, or try again in a minute.",
+				"notConfigured": "This site isn't set up to send email yet. Please report this to an administrator.",
+				"signedOut": "You've been signed out. Sign in again to verify your email."
 			}
 		}
 	},

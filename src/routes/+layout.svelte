@@ -80,5 +80,10 @@
 		gap: var(--spacing);
 		margin: auto;
 		max-width: var(--page-width);
+		/* Keep the last of the page's content clear of the sticky footer, which would
+		   otherwise sit directly on top of it. Pairs with the scroll-padding on `html`
+		   in app.html: that governs where scrolling stops, this guarantees there is
+		   somewhere to stop. */
+		padding-block-end: 5rem;
 	}
 </style>

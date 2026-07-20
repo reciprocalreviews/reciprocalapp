@@ -22,6 +22,34 @@
 
 	let valid = $derived(validEmail(email));
 
+	/**
+	 * Map the failure the database reported onto something the scholar can act on.
+	 *
+	 * `request_email_verification` distinguishes four causes and tags each with a `hint`
+	 * (see supabase/schemas/email_verifications.sql), which PostgREST returns in the error
+	 * body. We key off that rather than the message text so wording and localization stay
+	 * free to change. Anything unrecognized falls back to the generic message — a new
+	 * failure mode should read as a generic fault, never as the wrong specific one.
+	 */
+	function errorFor(result: Result): (l: LocaleText) => string {
+		const details = result.error?.details as { hint?: string; code?: string } | undefined;
+		switch (details?.hint) {
+			case 'cooldown':
+				return (l) => l.component.verifyEmail.feedback.cooldown;
+			case 'not_configured':
+				return (l) => l.component.verifyEmail.feedback.notConfigured;
+			case 'auth_required':
+				return (l) => l.component.verifyEmail.feedback.signedOut;
+			case 'invalid_email':
+				return (l) => l.component.verifyEmail.field.email.invalid;
+		}
+		// A caller with no valid session never reaches the function's own auth check: EXECUTE
+		// is revoked from anon, so Postgres refuses first and returns 42501 with no hint. That
+		// is the same situation as `auth_required` from the scholar's point of view.
+		if (details?.code === '42501') return (l) => l.component.verifyEmail.feedback.signedOut;
+		return (l) => l.component.verifyEmail.feedback.error;
+	}
+
 	/** Request verification for `target`, recording UI state for the feedback + dev link.
 	 * Returns a plain Result so it can also drive EditableText's `edit`. */
 	async function request(target: string): Promise<Result> {
@@ -41,7 +69,7 @@
 		unchanged = false;
 		const result = await db().requestEmailVerification(trimmed);
 		if (result.error) {
-			error = (l) => l.component.verifyEmail.feedback.error;
+			error = errorFor(result);
 			sent = false;
 			return { error: result.error };
 		}
