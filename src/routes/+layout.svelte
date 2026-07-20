@@ -28,9 +28,39 @@
 
 	const inProd = PUBLIC_ENV === 'prod';
 
-	/** Always go home in production, pre-release */
+	/**
+	 * Pre-release, production sends every page back to the landing page. Two exceptions,
+	 * both needed to exercise the ORCID and email-verification flow against production
+	 * before launch (#19, #27):
+	 *
+	 * - Visiting any page with `?test` unlocks the rest of the app in this browser until
+	 *   local storage is cleared. A query string cannot survive the redirects the flow
+	 *   performs — /auth/callback sends you to /scholar/[id] — so the unlock is remembered
+	 *   rather than re-checked per page. `/login?test` is the intended entry point. Local
+	 *   rather than session storage because sessionStorage is per-tab, so opening any link
+	 *   in a new tab would silently re-lock the site mid-test.
+	 * - /verify is always reachable. That link arrives by email and is routinely opened on a
+	 *   different device from the one that requested it, where no unlock could exist.
+	 *
+	 * This is a curtain, not a control. `?test` is guessable, and anyone past it can sign in
+	 * with their own ORCID iD and create a real scholar record in production. What actually
+	 * protects data is ORCID authentication and RLS; this only keeps the unlaunched site from
+	 * being wandered into. Remove the whole block at launch.
+	 *
+	 * /auth/callback needs no exception: it is a +server.ts endpoint, so this layout never
+	 * mounts for it.
+	 */
+	const PREVIEW_UNLOCK = 'rr-preview-unlock';
+
 	onMount(() => {
-		if (inProd && !['/updates', '/about'].some((p) => page.url.pathname.startsWith(p))) goto('/');
+		if (inProd) {
+			if (page.url.searchParams.has('test')) localStorage.setItem(PREVIEW_UNLOCK, 'yes');
+			const unlocked = localStorage.getItem(PREVIEW_UNLOCK) === 'yes';
+			// Ignore a leading locale prefix, so /en/updates is treated like /updates.
+			const path = page.url.pathname.replace(/^\/[a-z]{2}(?=\/|$)/, '') || '/';
+			const alwaysOpen = ['/updates', '/about', '/verify'].some((p) => path.startsWith(p));
+			if (!alwaysOpen && !unlocked) goto('/');
+		}
 
 		// Listen to auth state changes and invalidate the auth context when they happen.
 		const { data } = db.client.auth.onAuthStateChange((event, _session) => {
