@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.4.5 - 2026-07-19
 
+### Added
+
+- ORCID authentication as the sole means of login (#19, #27).
+
 ### Changed
 
 - Updated internal tooling for stability.
