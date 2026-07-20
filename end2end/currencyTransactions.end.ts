@@ -261,15 +261,17 @@ test('minter declining a proposed transaction emails the proposer and records th
 		)
 		.toBe(1);
 
-	// Sanity: subject says "declined" and the body mentions the reason and the
-	// decliner's name (so the proposer can follow up).
+	// Sanity: the queued row carries the reason and the decliner's name, so the proposer
+	// can follow up. Assert on `args` rather than `subject`/`message`: those are null
+	// until the `resend` edge function renders the row at send time — the body is no
+	// longer supplied by the caller, which is what stops the pipeline being an open relay.
+	// The event name (asserted above) is what selects the "declined" template.
 	const minterName = sql(`select name from public.scholars where id = '${minterID}';`);
-	const emailContent = sql(
-		`select subject || '||' || message from public.emails where event in ('TransactionDeclined','TransactionDeclinedVenue') and scholar = '${EDITOR_ID}' order by time_sent desc limit 1;`
+	const emailArgs = sql(
+		`select args::text from public.emails where event in ('TransactionDeclined','TransactionDeclinedVenue') and scholar = '${EDITOR_ID}' order by time_sent desc limit 1;`
 	);
-	expect(emailContent.toLowerCase()).toContain('declined');
-	expect(emailContent).toContain(reason);
-	expect(emailContent).toContain(minterName);
+	expect(emailArgs).toContain(reason);
+	expect(emailArgs).toContain(minterName);
 });
 
 test('editor cannot insert an already-approved venue→editor transaction (anti-self-dealing INSERT)', async () => {

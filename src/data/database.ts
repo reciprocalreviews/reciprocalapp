@@ -199,37 +199,72 @@ export type Database = {
         }
         Relationships: []
       }
+      email_verifications: {
+        Row: {
+          candidate_email: string
+          created_at: string
+          expires_at: string
+          scholar: string
+          token_hash: string
+        }
+        Insert: {
+          candidate_email: string
+          created_at?: string
+          expires_at?: string
+          scholar: string
+          token_hash: string
+        }
+        Update: {
+          candidate_email?: string
+          created_at?: string
+          expires_at?: string
+          scholar?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_verifications_scholar_fkey"
+            columns: ["scholar"]
+            isOneToOne: true
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emails: {
         Row: {
+          args: Json
           email: string
           event: string
           id: string
-          message: string
+          message: string | null
           scholar: string | null
           sender: string | null
-          subject: string
+          subject: string | null
           time_sent: string
           venue: string | null
         }
         Insert: {
+          args?: Json
           email: string
           event: string
           id?: string
-          message: string
+          message?: string | null
           scholar?: string | null
           sender?: string | null
-          subject: string
+          subject?: string | null
           time_sent?: string
           venue?: string | null
         }
         Update: {
+          args?: Json
           email?: string
           event?: string
           id?: string
-          message?: string
+          message?: string | null
           scholar?: string | null
           sender?: string | null
-          subject?: string
+          subject?: string | null
           time_sent?: string
           venue?: string | null
         }
@@ -1050,6 +1085,15 @@ export type Database = {
         Args: { _message: string; _submission: string }
         Returns: Json
       }
+      queue_email: {
+        Args: {
+          _args?: string[]
+          _event: string
+          _proposal?: string
+          _scholars?: string[]
+        }
+        Returns: Json
+      }
       queue_thanks_emails: {
         Args: {
           _audience: string
@@ -1058,6 +1102,10 @@ export type Database = {
           _thanks_id: string
         }
         Returns: number
+      }
+      request_email_verification: {
+        Args: { _email: string }
+        Returns: undefined
       }
       transfer_tokens: {
         Args: {
@@ -1072,6 +1120,7 @@ export type Database = {
         }
         Returns: Json
       }
+      verify_email: { Args: { _token: string }; Returns: Json }
     }
     Enums: {
       exchange_proposal_kind: "create" | "modify" | "merge"

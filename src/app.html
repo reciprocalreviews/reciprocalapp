@@ -91,6 +91,22 @@
 				--page-width: 45rem;
 			}
 
+			/*
+			 * The nav header and the footer are both `position: sticky`, so they overlay
+			 * whatever the page scrolls under them. Reserve that space on the scrollport so
+			 * anything scrolled to — an anchor link beside a heading, or an element a test
+			 * or the browser scrolls into view — lands in the visible band between them
+			 * rather than underneath. Without this, a control near the end of a long page
+			 * can sit permanently beneath the footer: visible, but impossible to click.
+			 *
+			 * The start value covers the nav plus up to three stacked banners (beta, test
+			 * environment, unverified email), which is the tallest the header gets.
+			 */
+			html {
+				scroll-padding-block-start: 14rem;
+				scroll-padding-block-end: 5rem;
+			}
+
 			body {
 				background: var(--background-color);
 				color: var(--text-color);

@@ -104,6 +104,24 @@
               ],
               "type": "object"
             },
+            "email": {
+              "additionalProperties": false,
+              "properties": {
+                "message": {
+                  "description": "Warning shown when a logged-in scholar has no verified contact email.",
+                  "type": "string"
+                },
+                "settings": {
+                  "description": "Label for the link to the scholar's profile where they can add one.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message",
+                "settings"
+              ],
+              "type": "object"
+            },
             "update": {
               "additionalProperties": false,
               "properties": {
@@ -130,7 +148,8 @@
           },
           "required": [
             "beta",
-            "update"
+            "update",
+            "email"
           ],
           "type": "object"
         },
@@ -208,6 +227,96 @@
                 "cancel"
               ],
               "type": "object"
+            },
+            "verifyEmail": {
+              "additionalProperties": false,
+              "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "send": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "send"
+                  ],
+                  "type": "object"
+                },
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "cooldown": {
+                      "description": "The one-minute rate limit was hit; a link is already on its way.",
+                      "type": "string"
+                    },
+                    "error": {
+                      "description": "Fallback when the server gave no recognizable reason.",
+                      "type": "string"
+                    },
+                    "notConfigured": {
+                      "description": "This deployment has no `site_url` vault secret, so no link can be built. A configuration fault, not something the scholar can retry into working.",
+                      "type": "string"
+                    },
+                    "sent": {
+                      "type": "string"
+                    },
+                    "signedOut": {
+                      "description": "The session ended between loading the page and submitting.",
+                      "type": "string"
+                    },
+                    "unchanged": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "sent",
+                    "error",
+                    "unchanged",
+                    "cooldown",
+                    "notConfigured",
+                    "signedOut"
+                  ],
+                  "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "email": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "email"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "field",
+                "button",
+                "feedback"
+              ],
+              "type": "object"
             }
           },
           "required": [
@@ -215,7 +324,8 @@
             "text",
             "header",
             "notification",
-            "copyButton"
+            "copyButton",
+            "verifyEmail"
           ],
           "type": "object"
         },
@@ -612,6 +722,9 @@
             "UpdateVolunteerPapers": {
               "type": "string"
             },
+            "VerifyEmail": {
+              "type": "string"
+            },
             "WelcomeVolunteer": {
               "type": "string"
             }
@@ -620,6 +733,7 @@
             "UpdateScholarStatus",
             "UpdateScholarName",
             "UpdateScholarEmail",
+            "VerifyEmail",
             "UpdateScholarAvailability",
             "CreateProposal",
             "EditProposalTitle",
@@ -1514,7 +1628,10 @@
                 "button": {
                   "additionalProperties": false,
                   "properties": {
-                    "sendPassword": {
+                    "mockOrcid": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "orcid": {
                       "$ref": "#/definitions/ButtonText"
                     },
                     "signIn": {
@@ -1522,7 +1639,8 @@
                     }
                   },
                   "required": [
-                    "sendPassword",
+                    "orcid",
+                    "mockOrcid",
                     "signIn"
                   ],
                   "type": "object"
@@ -1530,13 +1648,16 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
-                    "checkEmail": {
+                    "mockOrcidDev": {
                       "type": "string"
                     },
-                    "orcidNote": {
+                    "mockOrcidError": {
                       "type": "string"
                     },
-                    "sendPasswordError": {
+                    "orcidError": {
+                      "type": "string"
+                    },
+                    "passwordDev": {
                       "type": "string"
                     },
                     "signInError": {
@@ -1544,9 +1665,10 @@
                     }
                   },
                   "required": [
-                    "orcidNote",
-                    "checkEmail",
-                    "sendPasswordError",
+                    "orcidError",
+                    "mockOrcidError",
+                    "mockOrcidDev",
+                    "passwordDev",
                     "signInError"
                   ],
                   "type": "object"
@@ -1557,13 +1679,21 @@
                     "email": {
                       "$ref": "#/definitions/TextFieldText"
                     },
+                    "name": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
+                    "orcidId": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
                     "password": {
                       "$ref": "#/definitions/TextFieldText"
                     }
                   },
                   "required": [
                     "email",
-                    "password"
+                    "password",
+                    "orcidId",
+                    "name"
                   ],
                   "type": "object"
                 },
@@ -2316,6 +2446,9 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "addEmail": {
+                      "type": "string"
+                    },
                     "commitmentsNotLoaded": {
                       "type": "string"
                     },
@@ -2353,6 +2486,7 @@
                   "required": [
                     "notLoaded",
                     "noName",
+                    "addEmail",
                     "noStatus",
                     "submissionsNotLoaded",
                     "tokensNotLoaded",
@@ -4451,6 +4585,48 @@
               ],
               "type": "object"
             },
+            "verify": {
+              "additionalProperties": false,
+              "properties": {
+                "error": {
+                  "description": "Shown when the verification RPC itself failed.",
+                  "type": "string"
+                },
+                "expired": {
+                  "description": "Shown when the token has expired (15-minute window elapsed).",
+                  "type": "string"
+                },
+                "invalid": {
+                  "description": "Shown when the token is unknown or already used.",
+                  "type": "string"
+                },
+                "login": {
+                  "description": "Link label prompting sign-in (unauthenticated).",
+                  "type": "string"
+                },
+                "profile": {
+                  "description": "Link label to the scholar's profile (authenticated).",
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "verified": {
+                  "description": "Shown when the token was valid and the email is now verified.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "verified",
+                "expired",
+                "invalid",
+                "error",
+                "profile",
+                "login"
+              ],
+              "type": "object"
+            },
             "volunteers": {
               "additionalProperties": false,
               "properties": {
@@ -4592,6 +4768,7 @@
             "currencyTransactions",
             "scholarTransactions",
             "login",
+            "verify",
             "proposeVenue",
             "about",
             "updates",
