@@ -83,8 +83,20 @@ const handler = async (request: Request): Promise<Response> => {
 				})
 			});
 
-			// Wait for the email to sent.
-			const data = await res.json();
+			// Resend answers 4xx/5xx with a JSON body explaining why — an unverified sender
+			// domain, a rejected recipient, a rate limit, a bad key. `fetch` does not throw
+			// for those, so without this check the rejection was parsed, stringified, and
+			// returned as a 200: the caller saw success and the mail silently never arrived.
+			// Fail loudly instead. pg_net records the status, so a refused send is visible in
+			// net._http_response rather than being indistinguishable from a delivered one.
+			const data = await res.json().catch(() => null);
+			if (!res.ok) {
+				console.error('Resend rejected the message', res.status, data);
+				return new Response(
+					JSON.stringify({ error: 'Resend rejected the message', status: res.status, data }),
+					{ status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+				);
+			}
 			returnData = JSON.stringify(data);
 		}
 

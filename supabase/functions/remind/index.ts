@@ -198,6 +198,11 @@ const handler = async (request: Request): Promise<Response> => {
 		const statusReminders = await getStaleStatusReminder(supabase);
 		const transactionsReminders = await getTransactionReminders(supabase);
 
+		// Reminders are sent one per recipient, so one rejection should not abandon the rest
+		// of the run. Count them instead and report at the end — a cron job that reports
+		// success while silently delivering nothing is the failure mode worth avoiding.
+		let rejected = 0;
+
 		for (const email of [...statusReminders, ...transactionsReminders]) {
 			const { to, subject, message } = email;
 
@@ -227,9 +232,22 @@ const handler = async (request: Request): Promise<Response> => {
 						text
 					})
 				});
-				// Wait for the email to sent.
-				await res.json();
+				// `fetch` does not throw on 4xx/5xx, so an unverified sender domain or a
+				// rejected recipient would otherwise pass silently.
+				const data = await res.json().catch(() => null);
+				if (!res.ok) {
+					rejected++;
+					console.error('Resend rejected a reminder', res.status, to, data);
+				}
 			}
+		}
+
+		const attempted = statusReminders.length + transactionsReminders.length;
+		if (rejected > 0) {
+			return new Response(
+				JSON.stringify({ error: 'Resend rejected reminders', rejected, attempted }),
+				{ status: 502, headers: { 'Content-Type': 'application/json' } }
+			);
 		}
 
 		// Respond with success.
