@@ -25,6 +25,23 @@ select
 alter table public.emails
 disable trigger send_on_email_insert;
 
+-- request_email_verification builds its link from the `site_url` vault secret and refuses
+-- to run without one. Seed a value if the environment has not, so these tests exercise
+-- behavior rather than deployment configuration: supabase/config.toml seeds it locally from
+-- LOCAL_SITE_URL, but the RLS job runs `supabase start` with no env file, so there is none.
+-- Rolled back with the rest of the transaction.
+select
+	vault.create_secret ('http://localhost:5173', 'site_url')
+where
+	not exists (
+		select
+			1
+		from
+			vault.secrets
+		where
+			name = 'site_url'
+	);
+
 select
 	tests.create_scholar ('verify_self@test.local') as self \gset
 
