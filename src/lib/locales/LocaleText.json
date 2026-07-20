@@ -246,10 +246,23 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "cooldown": {
+                      "description": "The one-minute rate limit was hit; a link is already on its way.",
+                      "type": "string"
+                    },
                     "error": {
+                      "description": "Fallback when the server gave no recognizable reason.",
+                      "type": "string"
+                    },
+                    "notConfigured": {
+                      "description": "This deployment has no `site_url` vault secret, so no link can be built. A configuration fault, not something the scholar can retry into working.",
                       "type": "string"
                     },
                     "sent": {
+                      "type": "string"
+                    },
+                    "signedOut": {
+                      "description": "The session ended between loading the page and submitting.",
                       "type": "string"
                     },
                     "unchanged": {
@@ -259,7 +272,10 @@
                   "required": [
                     "sent",
                     "error",
-                    "unchanged"
+                    "unchanged",
+                    "cooldown",
+                    "notConfigured",
+                    "signedOut"
                   ],
                   "type": "object"
                 },
