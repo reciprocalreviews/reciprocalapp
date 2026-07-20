@@ -250,6 +250,19 @@ s3_access_key = "env(S3_ACCESS_KEY)"
 s3_secret_key = "env(S3_SECRET_KEY)"
 
 [db.vault]
+# WARNING: `supabase db push` COPIES THESE SECRETS TO THE REMOTE PROJECT, and there is no
+# flag to disable it (supabase/cli#3815). Anything given a LITERAL value here silently
+# overwrites the hosted project's real secret on every deploy. That is not hypothetical: a
+# literal `site_url` here reset staging to localhost after each deploy, so verification
+# links were built pointing at a machine nobody else can reach.
+#
+# Every entry must therefore use env(...), and those variables must be unset in deploy
+# environments. The migrate job has no .env, so these resolve to empty and the CLI leaves
+# the hosted values alone. Hosted projects set their own values by hand in the Dashboard
+# (Project Settings → Vault); nothing in this file manages them.
+#
+# Corollary: never run `supabase db push` against a hosted project from a shell where these
+# variables are set — it would push your local values over theirs.
 supabase_url = "env(PUBLIC_SUPABASE_URL)"
 # Used by public.send_email() and the remind-daily cron job to call the edge functions
 # below. It must be a SECRET key, never the publishable/anon key: those are public, and the
@@ -262,9 +275,9 @@ secret_key = "env(EDGE_SECRET_KEY)"
 # The app origin, used by public.request_email_verification to build verification links
 # (#27). Deliberately NOT taken from the caller: a caller-supplied origin would let anyone
 # send a genuine-looking branded email pointing at a host they control. Hosted projects set
-# this vault secret by hand to their own origin; this literal seeds local development, and
-# the value is the dev server in supabase/config.toml's [auth] site_url.
-site_url = "http://localhost:5173"
+# this vault secret by hand to their own origin; LOCAL_SITE_URL seeds local development
+# only (see the warning above about literals).
+site_url = "env(LOCAL_SITE_URL)"
 
 # Both functions are called only by the database (a trigger and a cron job), never from a
 # browser. verify_jwt is OFF deliberately: the platform gate only understands JWT-shaped
