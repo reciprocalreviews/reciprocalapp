@@ -94,7 +94,15 @@ begin
       new.raw_user_meta_data->>'provider_id',
       new.raw_user_meta_data->>'sub'
     ),
-    new.raw_user_meta_data->>'name'
+    -- ORCID sends given_name/family_name and no `name`. Prefer `name` for providers that
+    -- do send it; fall back to the composed form. Left null when neither is present.
+    coalesce(
+      nullif(btrim(new.raw_user_meta_data->>'name'), ''),
+      nullif(btrim(concat_ws(' ',
+        new.raw_user_meta_data->>'given_name',
+        new.raw_user_meta_data->>'family_name'
+      )), '')
+    )
   );
   -- Return the new row.
   return new;

@@ -128,41 +128,52 @@ alter function private.get_secret (secret_name text) OWNER to "postgres";
 -- arguments from the request — callable by anyone as an open relay for branded mail. The
 -- function authorizes by comparing the presented key against the project's secret keys
 -- (supabase/functions/_shared/auth.ts), which works for both a legacy `service_role` JWT
--- and a newer opaque `sb_secret_...` key.
---
--- The key goes on the `apikey` header: `Authorization: Bearer` is reserved for JWTs, and a
--- new-format key sent there is rejected as an invalid JWT. Hosted projects must have the
--- `secret_key` vault secret set by hand; local dev seeds it from SUPABASE_SECRET_KEY via
--- [db.vault] in supabase/config.toml.
+-- and a newer opaque `sb_secret_...` key. Hosted projects must have the `secret_key` and
+-- `supabase_url` vault secrets set by hand; local dev seeds them from [db.vault] in
+-- supabase/config.toml.
 create or replace function public.send_email () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
 set
 	"search_path" to '' as $$
 declare
-  -- Prefer the new name, falling back to the pre-rename one so this is safe to deploy
-  -- before a hosted project's vault secret is renamed.
-  _key text := coalesce(private.get_secret('secret_key'), private.get_secret('service_role_key'));
+  -- btrim so a secret pasted with a stray newline or space still works.
+  _key text := btrim(coalesce(private.get_secret('secret_key'), private.get_secret('service_role_key'), ''));
+  _url text := btrim(coalesce(private.get_secret('supabase_url'), ''));
 begin
-  -- Surface a misconfigured deployment in the Postgres logs. pg_net posts
-  -- asynchronously and swallows failures, so without this a missing secret would look
-  -- exactly like mail silently not arriving.
-  if _key is null or _key = '' then
-    raise warning 'send_email: no secret_key vault secret is configured, so email % cannot be delivered', new.id;
+  -- Delivery is BEST EFFORT. The row in public.emails is the durable record that a message
+  -- was meant to go out; whether the edge function can be reached is a deployment concern
+  -- and must never roll back the caller's transaction. Before this, a missing or malformed
+  -- supabase_url raised here and failed whatever action had queued the mail — volunteering,
+  -- proposing a venue, verifying an email — on a project whose only fault was a bad secret.
+  if _key = '' or _url = '' then
+    raise warning 'send_email: % is not configured, so email % was recorded but not delivered',
+      case when _url = '' then 'the supabase_url vault secret' else 'the secret_key vault secret' end,
+      new.id;
+    return new;
   end if;
-  -- Post to the Resend edge function. If the supabase URL is set to localhost, replace it with host.docker.internal so we hit the host machine, not the container.
-  perform net.http_post(
-    url:=replace(private.get_secret('supabase_url'), '127.0.0.1', 'host.docker.internal') || '/functions/v1/resend',
-    headers:=jsonb_build_object(
-        'Content-Type', 'application/json',
-        'apikey', _key
-    )::jsonb,
-    body:=jsonb_build_object(
-      'to', new.email,
-      'subject', new.subject,
-      'message', new.message,
-      'event', new.event,
-      'args', new.args
-    )
-  );
+  begin
+    -- Post to the Resend edge function. If the supabase URL is set to localhost, replace it with host.docker.internal so we hit the host machine, not the container.
+    -- The key goes on `apikey`: `Authorization: Bearer` is reserved for JWTs, and the newer
+    -- opaque `sb_secret_...` keys are rejected there.
+    perform net.http_post(
+      url:=replace(_url, '127.0.0.1', 'host.docker.internal') || '/functions/v1/resend',
+      headers:=jsonb_build_object(
+          'Content-Type', 'application/json',
+          'apikey', _key
+      )::jsonb,
+      body:=jsonb_build_object(
+        'to', new.email,
+        'subject', new.subject,
+        'message', new.message,
+        'event', new.event,
+        'args', new.args
+      )
+    );
+  exception when others then
+    -- pg_net validates the URL synchronously, so a malformed value raises here rather than
+    -- in the background worker. Warn and carry on.
+    raise warning 'send_email: email % was recorded but could not be queued for delivery: % (%)',
+      new.id, sqlerrm, sqlstate;
+  end;
   return new;
 end;
 $$;
