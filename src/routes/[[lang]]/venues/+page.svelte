@@ -12,6 +12,7 @@
 
 	let proposals = $derived(data.proposals);
 	let venues = $derived(data.venues);
+	let inactiveVenues = $derived(data.inactiveVenues);
 
 	const auth = getAuth();
 </script>
@@ -39,6 +40,24 @@
 		{/if}
 	{:else}
 		<Feedback error text={(l) => l.page.venues.feedback.venuesNotLoaded} />
+	{/if}
+
+	<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.inactive} />
+
+	{#if inactiveVenues}
+    	{#if inactiveVenues.length > 0}
+        	<ul>
+            	{#each inactiveVenues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue, index}
+                	<li>
+                    	<VenueLink id={venue.id} name={venue.title} testid={'inactive-venue-' + index}/>
+                	</li>
+            	{/each}
+        	</ul>
+    	{:else}
+        	<Feedback text={(l) => l.page.venues.feedback.noInactiveVenues} />
+    	{/if}
+	{:else}
+    	<Feedback error text={(l) => l.page.venues.feedback.venuesNotLoaded} />
 	{/if}
 
 	<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.proposed} />

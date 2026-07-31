@@ -4264,6 +4264,9 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "noInactiveVenues": {
+                      "type": "string"
+                    },
                     "noProposals": {
                       "type": "string"
                     },
@@ -4281,7 +4284,8 @@
                     "noVenues",
                     "venuesNotLoaded",
                     "noProposals",
-                    "proposalsNotLoaded"
+                    "proposalsNotLoaded",
+                    "noInactiveVenues"
                   ],
                   "type": "object"
                 },
@@ -4414,13 +4418,17 @@
                     "active": {
                       "type": "string"
                     },
+                    "inactive": {
+                      "type": "string"
+                    },
                     "proposed": {
                       "type": "string"
                     }
                   },
                   "required": [
                     "proposed",
-                    "active"
+                    "active",
+                    "inactive"
                   ],
                   "type": "object"
                 },

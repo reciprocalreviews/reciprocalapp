@@ -88,8 +88,9 @@
 			"title": "Venues",
 			"description": "These are journals and conferences using Reciprocal Reviews to track and incentivize peer review. Choose one to see it's policies or volunteer to review for it, or propose a new one.",
 			"header": {
-				"proposed": "Proposed venues",
-				"active": "Active venues"
+				"proposed": "Proposed Venues",
+				"active": "Active Venues",
+				"inactive": "Inactive Venues"
 			},
 			"link": {
 				"propose": "Propose a new venue"
@@ -98,7 +99,8 @@
 				"noVenues": "There are no active venues.",
 				"venuesNotLoaded": "We couldn't load the venues.",
 				"noProposals": "No venues have been proposed yet.",
-				"proposalsNotLoaded": "We couldn't load the venue proposals."
+				"proposalsNotLoaded": "We couldn't load the venue proposals.",
+				"noInactiveVenues": "There are no inactive venues."
 			},
 			"field": {
 				"title": {
