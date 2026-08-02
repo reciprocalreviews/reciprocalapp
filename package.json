@@ -1,6 +1,6 @@
 {
 	"name": "reciprocalapp",
-	"version": "0.4.5",
+	"version": "0.4.6",
 	"private": true,
 	"prepare": "svelte-kit sync",
 	"scripts": {
@@ -48,7 +48,7 @@
 		"ts-json-schema-generator": "^2",
 		"tslib": "^2",
 		"typescript": "^6",
-		"vercel": "^56.3.2",
+		"vercel": "^58",
 		"vite": "^8",
 		"vitest": "^4"
 	},
