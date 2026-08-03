@@ -7,8 +7,24 @@ const config: PlaywrightTestConfig = {
 	// and skips this — see end2end/global-setup.ts).
 	globalSetup: './end2end/global-setup.ts',
 	webServer: {
-		// Sync types, build with vite, run the preview server, and start Supabase locally, without services we don't use.
-		command: process.env.CI ? 'npm run emu:ci' : 'npm run emu',
+		// Sync types, build with vite, start Supabase locally without the services
+		// the suite doesn't use, then run the preview server.
+		//
+		// One command for both CI and local, deliberately. This used to branch —
+		// local ran `emu`, which chained `npm start`, which ends in
+		// `supabase functions serve`: a blocking foreground process, so
+		// `npm run preview` never ran and Playwright sat here until the timeout
+		// below expired. CI was unaffected because its variant excluded the edge
+		// runtime, which meant the local suite was broken for ten minutes at a time
+		// while CI stayed green. `start:test` therefore excludes edge-runtime
+		// everywhere, and nothing in end2end/ needs it: every email assertion reads
+		// the `emails` table directly with the `sql()` helper (the verification
+		// token is pulled out of `emails.args`), never a delivered message, and
+		// `send_email()`'s pg_net POST is best-effort and swallows its own failure.
+		//
+		// If you want mail logged to the console while developing, run `npm start`
+		// in another terminal — that path still serves functions.
+		command: 'npm run emu',
 		name: 'dev',
 		reuseExistingServer: !process.env.CI,
 		port: 4173,

@@ -279,7 +279,7 @@ Required GitHub secrets: `SUPABASE_ACCESS_TOKEN`, `STAGING_DB_PASSWORD`, `STAGIN
 ## Testing
 
 - **Unit.** Vitest. Files matching `src/**/*.unit.ts`. Run with `npm run test:unit`.
-- **Integration.** Playwright, Chromium only. Files in `end2end/`. Run with `npm run test:end`. Needs a local Supabase running (`npm start`).
+- **Integration.** Playwright, Chromium only. Files in `end2end/`. Run with `npm run test:end` — it brings up its own stack via `emu` (`sync` → `build` → `start:test` → `preview`), so no manual setup is needed. `start:test` deliberately excludes the edge runtime: nothing in `end2end/` needs it, because every email assertion reads the `emails` table directly with the `sql()` helper (the verification token is pulled out of `emails.args`) rather than a delivered message, and `send_email()`'s pg_net POST is best-effort and swallows its own failure. **CI and local run the identical command**, which is what stops the two from drifting — they used to differ, and the local variant chained `npm start`, whose trailing `supabase functions serve` blocks forever, so `vite preview` never started and the suite timed out after ten minutes while CI stayed green. If you want mail logged to the console while developing, run `npm start` in a separate terminal.
 - **Combined.** `npm test` runs end2end then unit.
 
 E2E specifics:
