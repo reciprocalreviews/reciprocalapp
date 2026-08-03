@@ -130,13 +130,14 @@ alter function private.get_secret (secret_name text) OWNER to "postgres";
 -- (supabase/functions/_shared/auth.ts), which works for both a legacy `service_role` JWT
 -- and a newer opaque `sb_secret_...` key. Hosted projects must have the `secret_key` and
 -- `supabase_url` vault secrets set by hand; local dev seeds them from [db.vault] in
--- supabase/config.toml.
+-- supabase/config.toml. There is no fallback to the older `service_role_key` secret name:
+-- that transition finished, and the retired secret was dropped in 20260802000000.
 create or replace function public.send_email () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
 set
 	"search_path" to '' as $$
 declare
   -- btrim so a secret pasted with a stray newline or space still works.
-  _key text := btrim(coalesce(private.get_secret('secret_key'), private.get_secret('service_role_key'), ''));
+  _key text := btrim(coalesce(private.get_secret('secret_key'), ''));
   _url text := btrim(coalesce(private.get_secret('supabase_url'), ''));
 begin
   -- Delivery is BEST EFFORT. The row in public.emails is the durable record that a message
