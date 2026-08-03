@@ -164,6 +164,7 @@ A `Token` represents an indivisible unit of peer review labor in a particular `C
 - [x] `Token`s are typically earned for reviewing labor, but there may be many other creative uses for them (e.g., gifts, incentives, etc.).
 - [x] `Token`s should generally be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few `Token`s would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many `Token`s means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review.
 - [x] `Token`s are possessed by individual scholar or in a `Venue`'s reserve (meaning they are posessed by no one) and `Transaction`s can change who posses them. They cannot be possessed by neither a scholar or a venue.
+- [x] **Only a `Transaction` can change who possesses a `Token`.** This is enforced by the database, not by convention: direct writes to tokens are revoked, so every movement of value necessarily leaves a record of why it moved and who authorized it.
 
 The authoritative schema lives in [`supabase/schemas/tokens.sql`](supabase/schemas/tokens.sql).
 
@@ -174,8 +175,8 @@ The authoritative schema lives in [`supabase/schemas/tokens.sql`](supabase/schem
 
 A `Transaction` represents an exchange of tokens for some purpose, such as submitting something for review, compensation for a review, or a gift.
 
-- [x] `Transaction`s cannot be deleted; they are a permanent record
-- [x] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable. They are also immutable once recorded: only the status and the accompanying approval/decline fields may change, so a transaction remains a faithful record of history.
+- [x] `Transaction`s cannot be deleted by anyone — not the giver, not a venue admin, not a currency minter. They are a permanent record.
+- [x] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable. They are also immutable once recorded: only the status and the accompanying approval/decline fields may change, so a transaction remains a faithful record of history. A caller cannot choose a transaction's identity or backdate it either; its place in history is set by the database, not by whoever proposed it.
 
 The authoritative schema lives in [`supabase/schemas/transactions.sql`](supabase/schemas/transactions.sql).
 

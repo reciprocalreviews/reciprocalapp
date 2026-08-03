@@ -60,6 +60,39 @@ from
 grant
 update (status, tokens, decliner, decline_reason) on public.transactions to authenticated;
 
+-- The same reasoning applies to INSERT: `grant all` confers it on every column,
+-- which let a client supply its own `id` or backdate `created_at`. A caller may
+-- propose a transaction, but may not choose its identity or its place in history.
+revoke insert on public.transactions
+from
+	authenticated;
+
+grant insert (
+	creator,
+	from_scholar,
+	from_venue,
+	to_scholar,
+	to_venue,
+	tokens,
+	currency,
+	purpose,
+	status
+) on public.transactions to authenticated;
+
+-- History is never deleted. See the DELETE policy below.
+revoke delete on public.transactions
+from
+	authenticated,
+	anon;
+
+-- anon is never a writer here. No policy admits it, so RLS already denies these,
+-- but holding the privilege means a future policy written `to public` would
+-- silently open a write path for unauthenticated callers.
+revoke insert,
+update on public.transactions
+from
+	anon;
+
 alter table only public.transactions
 add constraint transactions_pkey primary key (id);
 
@@ -390,23 +423,13 @@ with
 		)
 	);
 
-create policy "transactions cannot be deleted" on public.transactions for DELETE to authenticated using (
-	(
-		(
-			select
-				auth.uid () as uid
-		)=any (
-			(
-				select
-					currencies.minters
-				from
-					currencies
-				where
-					(currencies.id=transactions.currency)
-			)::uuid[]
-		)
-	)
-);
+-- A transaction is the durable record that value moved. Nobody deletes one --
+-- not the giver, not a venue admin, not a currency minter. This policy's USING
+-- clause previously matched the currency's minters, which meant its name said
+-- one thing and its body did the opposite: a minter could permanently erase
+-- approved transfer history while the tokens those rows described stayed put,
+-- leaving the tokens with no explanation of how they got where they are.
+create policy "transactions cannot be deleted" on public.transactions for DELETE to authenticated using (false);
 
 --------------------------------------
 -- RPCs (defined in migration 20260608000000_atomic_crud.sql)

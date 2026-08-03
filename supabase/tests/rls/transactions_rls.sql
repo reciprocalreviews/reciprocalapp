@@ -5,15 +5,21 @@
 --   INSERT  anyone may propose; an approved row must be a legitimate transfer
 --           (giver spending own balance, from-venue admin paying out, or a mint
 --           with no source) AND must not enrich the approver (no-self-dealing).
+--           The column grant omits `id` and `created_at`, so a caller may propose
+--           a transaction but may not choose its identity or backdate it.
 --   UPDATE  givers, currency minters, from-venue admins — but only status/decline
 --           (and tokens); identity columns are revoked (immutable record).
---   DELETE  currency minters only.
+--   DELETE  nobody. This policy's USING clause used to match the currency's
+--           minters, so its name said one thing and its body did the opposite: a
+--           minter could erase approved transfer history while the tokens those
+--           rows described stayed put, leaving tokens with no account of how they
+--           got where they are.
 
 \ir ../_helpers/helpers.sql.inc
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(17);
+select plan(20);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -169,22 +175,58 @@ select throws_ok(
 	'a scholar cannot insert an approved mint that enriches themselves'
 );
 
--- ---- DELETE -------------------------------------------------------------------
--- An unrelated scholar cannot delete (using = minters only → 0 rows, no error).
+-- ---- INSERT (identity columns) ------------------------------------------------
+-- The column grant omits `id`, so a caller cannot choose a transaction's identity
+-- (which would let them collide with, or squat on, an id another write expects).
 select tests.authenticate_as(:'outsider');
-delete from public.transactions where id = :'txn_del';
+select throws_ok(
+	$$ insert into public.transactions (id, creator, to_scholar, tokens, currency, purpose, status)
+	   values ( gen_random_uuid(), $$ || quote_literal(:'outsider') || $$, $$
+	            || quote_literal(:'recipient') || $$,
+	            array['00000000-0000-0000-0000-000000000000'::uuid], $$ || quote_literal(:'cur') || $$,
+	            'chosen id', 'proposed') $$,
+	'42501',
+	null,
+	'a caller cannot choose a transaction id'
+);
+
+-- ...and omits `created_at`, so history cannot be backdated.
+select throws_ok(
+	$$ insert into public.transactions (created_at, creator, to_scholar, tokens, currency, purpose, status)
+	   values ( '2000-01-01T00:00:00Z', $$ || quote_literal(:'outsider') || $$, $$
+	            || quote_literal(:'recipient') || $$,
+	            array['00000000-0000-0000-0000-000000000000'::uuid], $$ || quote_literal(:'cur') || $$,
+	            'backdated', 'proposed') $$,
+	'42501',
+	null,
+	'a caller cannot backdate a transaction'
+);
+
+-- ---- DELETE -------------------------------------------------------------------
+-- Nobody deletes history. The privilege is revoked, not merely denied by policy,
+-- so an attempt raises rather than quietly affecting 0 rows.
+select tests.authenticate_as(:'outsider');
+select throws_ok(
+	$$ delete from public.transactions where id = $$ || quote_literal(:'txn_del'),
+	'42501',
+	null,
+	'a non-minter cannot delete a transaction'
+);
+
+-- A currency minter is likewise blocked — this is the case that used to succeed.
+select tests.authenticate_as(:'minter');
+select throws_ok(
+	$$ delete from public.transactions where id = $$ || quote_literal(:'txn_del'),
+	'42501',
+	null,
+	'a currency minter cannot delete a transaction'
+);
+
 select tests.clear_authentication();
 select is(
 	(select count(*)::int from public.transactions where id = :'txn_del'),
 	1,
-	'a non-minter cannot delete a transaction'
-);
-
--- A minter can delete a transaction in their currency.
-select tests.authenticate_as(:'minter');
-select lives_ok(
-	$$ delete from public.transactions where id = $$ || quote_literal(:'txn_del'),
-	'a currency minter can delete a transaction'
+	'the transaction survives every deletion attempt'
 );
 
 select * from finish();

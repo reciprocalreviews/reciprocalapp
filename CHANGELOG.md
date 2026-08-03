@@ -2,11 +2,16 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
-## 0.4.6 - 2037-08-02
+## 0.4.6 - 2026-08-02
 
 ### Changed
 
 - Updated internal tooling for stability.
+
+### Fixed
+
+- Token ownership can now only change through a **recorded transaction**. Previously a scholar could transfer their own tokens directly with no record of the transfer, or relabel a token into a currency no one had granted them.
+- Transactions are now permanent for everyone: they can no longer be deleted by currency minters, and a transaction's identity and timestamp are set by the platform rather than by whoever proposed it.
 
 ## 0.4.5 - 2026-07-19
 
