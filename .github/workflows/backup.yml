@@ -1,0 +1,139 @@
+name: Backup
+
+# Nightly encrypted logical backup of the production database, pushed to object
+# storage we control.
+#
+# This is the only recovery artifact that can actually be rehearsed. Supabase's
+# own daily backups are a real safety net, but they are restored through the
+# vendor, cannot be drilled on demand, and disappear along with the account if
+# the account is what you lost. This job is the independent copy.
+#
+# Without the PITR add-on, this fixes the recovery point objective at 24h for
+# anything not covered by an append-only log. The ledger phase narrows that to
+# roughly an hour by exporting the log tail more frequently; until then, 24h is
+# the honest number and it is written down in RECOVERY.md.
+
+on:
+  schedule:
+    # 08:00 UTC — after the 22:00 UTC reminder cron has finished, and outside the
+    # hours when a deploy is likely to be running against the same database.
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which project to back up
+        type: choice
+        options: [production, staging]
+        default: production
+        required: true
+
+# Never let two dumps run against the same database at once.
+concurrency:
+  group: backup-${{ github.event.inputs.target || 'production' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  dump:
+    name: Dump and upload
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve target and prefixes
+        id: plan
+        env:
+          TARGET: ${{ github.event.inputs.target || 'production' }}
+        run: |
+          set -euo pipefail
+          stamp="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
+          # Grandfather-father-son promotion. Retention itself is enforced by
+          # bucket lifecycle rules (see RECOVERY.md) rather than by deleting from
+          # here: this job holds a write-only credential and must not be able to
+          # remove anything, which is exactly what protects the backups when the
+          # credential is what gets stolen.
+          if [ "$(date -u +%u)" = '7' ]; then weekly=true; else weekly=false; fi
+          if [ "$(date -u +%d)" = '01' ]; then monthly=true; else monthly=false; fi
+          {
+            echo "target=$TARGET"
+            echo "prefix=$TARGET/daily/$stamp"
+            echo "stamp=$stamp"
+            echo "weekly=$weekly"
+            echo "monthly=$monthly"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check the required secrets are present
+        env:
+          DB_URL: ${{ github.event.inputs.target == 'staging' && secrets.STAGING_DB_URL || secrets.PRODUCTION_DB_URL }}
+          ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          KEY: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          SECRET: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "$DB_URL" ]   || missing+=("${{ steps.plan.outputs.target }} DB URL (PRODUCTION_DB_URL / STAGING_DB_URL)")
+          [ -n "$ENDPOINT" ] || missing+=("BACKUP_S3_ENDPOINT")
+          [ -n "$BUCKET" ]   || missing+=("BACKUP_S3_BUCKET")
+          [ -n "$KEY" ]      || missing+=("BACKUP_S3_ACCESS_KEY_ID")
+          [ -n "$SECRET" ]   || missing+=("BACKUP_S3_SECRET_ACCESS_KEY")
+          if [ ${#missing[@]} -gt 0 ]; then
+            printf 'Missing repository secret: %s\n' "${missing[@]}" >&2
+            echo >&2
+            echo 'See RECOVERY.md § Provisioning for how to create each of these.' >&2
+            exit 1
+          fi
+
+      - name: Dump, encrypt, upload
+        uses: ./.github/actions/dump
+        with:
+          db-url: ${{ github.event.inputs.target == 'staging' && secrets.STAGING_DB_URL || secrets.PRODUCTION_DB_URL }}
+          prefix: ${{ steps.plan.outputs.prefix }}
+          label: nightly-${{ steps.plan.outputs.target }}
+          s3-endpoint: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          s3-bucket: ${{ secrets.BACKUP_S3_BUCKET }}
+          s3-access-key-id: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          s3-secret-access-key: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+
+      - name: Promote to weekly / monthly
+        if: steps.plan.outputs.weekly == 'true' || steps.plan.outputs.monthly == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+          BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          TARGET: ${{ steps.plan.outputs.target }}
+          STAMP: ${{ steps.plan.outputs.stamp }}
+          SRC: ${{ steps.plan.outputs.prefix }}
+        run: |
+          set -euo pipefail
+          # Server-side copy: the bytes never come back down to the runner, and
+          # the runner never needs to be able to decrypt them.
+          for tier in weekly monthly; do
+            case "$tier" in
+              weekly)  [ '${{ steps.plan.outputs.weekly }}'  = 'true' ] || continue ;;
+              monthly) [ '${{ steps.plan.outputs.monthly }}' = 'true' ] || continue ;;
+            esac
+            aws s3 cp "s3://$BUCKET/$SRC/" "s3://$BUCKET/$TARGET/$tier/$STAMP/" \
+              --recursive --endpoint-url "$ENDPOINT" --only-show-errors
+            echo "promoted to $tier"
+          done
+
+      - name: Report failure loudly
+        if: failure()
+        run: |
+          {
+            echo '### :rotating_light: Backup failed'
+            echo
+            echo "Target: \`${{ steps.plan.outputs.target }}\`"
+            echo
+            echo 'A silent backup failure is the worst outcome here: it looks'
+            echo 'identical to success until the day you need a restore. Check that'
+            echo 'the pooler URL still resolves and the bucket credential has not'
+            echo 'expired, then re-run with **Run workflow**.'
+          } >> "$GITHUB_STEP_SUMMARY"

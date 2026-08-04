@@ -75,6 +75,7 @@ supabase/
   schemas/                  Authoritative declarative table schemas (one file per table)
   migrations/               Timestamped migration history
   functions/                Edge functions (Deno)
+  dr/                       Disaster recovery: dump.sh, manifest.sql
   config.toml               Local Supabase config
 end2end/                    Playwright integration tests
 scripts/
@@ -275,6 +276,19 @@ Migrations are applied before the Vercel deploy so schema changes are in place b
 - `dev` → [.github/workflows/staging.yml](.github/workflows/staging.yml) deploys to a Vercel **preview** environment against the staging Supabase project. Staging is a throwaway test target, so its deploy is **not gated** on the tests: they still run in parallel for signal, but a red e2e/unit/rls run won't block the preview (it keeps deploys fast and lets the slow e2e suite finish out-of-band). The gate is what keeps a broken change from reaching `main`/production.
 
 Required GitHub secrets: `SUPABASE_ACCESS_TOKEN`, `STAGING_DB_PASSWORD`, `STAGING_PROJECT_ID`, `PRODUCTION_DB_PASSWORD`, `PRODUCTION_PROJECT_ID`, `TEST_ENV`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`. Per-environment runtime config (Supabase URL, anon key, Resend key, etc.) lives in Vercel's environment variable settings and is pulled at build time by `vercel pull`.
+
+## Backups
+
+The database is dumped nightly at 08:00 UTC by [.github/workflows/backup.yml](.github/workflows/backup.yml) to S3-compatible object storage we control, independent of Supabase. [RECOVERY.md](RECOVERY.md) is the operational document — provisioning, verification, and (from the next phase) the restore runbook. The mechanics live in [supabase/dr/dump.sh](supabase/dr/dump.sh), which is a standalone script rather than inline workflow steps so the nightly job, the pre-migration snapshot, and the rehearsal drill all capture byte-identical artifacts, and so it can be run from a laptop during an incident.
+
+Four decisions worth knowing before touching any of it:
+
+- **`pg_dump`, not `supabase db dump`.** The latter is scoped to the schemas it knows about, and this database is not restorable without `auth`: `public.scholars.id` references `auth.users(id) ON DELETE CASCADE`, so a `public`-only dump restores into a project with zero scholars. Custom-format archives are used throughout so a restore can be surgical (`pg_restore -t submissions`) instead of all-or-nothing.
+- **Encryption is `age` in public-key mode.** Only the recipient's public key is in the repo; the private identity is held offline. The property that matters is that **CI can write backups but cannot read any backup, including the one it just made** — a compromised `GITHUB_TOKEN` yields nothing. `dump.sh` deletes its whole output directory if it fails before encryption completes, and the workflow independently refuses to upload anything that isn't `.age`.
+- **Two pieces of state live outside every schema dump** and are captured on purpose: `cron.job` (exactly how `remind-daily` was silently lost once — see `supabase/migrations/20260517230819_restore_remind_cron.sql`) and the *names* of the vault secrets. Vault **values** are never captured; they are set by hand on hosted projects and belong in a password manager, not in an artifact CI can write.
+- **The manifest is what makes a restore checkable.** It records exact per-table row counts, the `auth.users` count, append-only watermarks, the applied migration list, extensions, the realtime publication membership, the RLS policy count, and a SHA-256 of every artifact. A restore that doesn't match it is a failed restore. It is written defensively, so the columns the ledger phase adds appear automatically and their absence today is not an error.
+
+Point-in-time recovery is **not** enabled, so the recovery point objective is currently **up to 24 hours**. Narrowing that is what the append-only ledger is for: restore the nightly dump, then replay the log forward. Until a restore has actually been rehearsed, recovery time is an estimate rather than a measurement.
 
 ## Testing
 

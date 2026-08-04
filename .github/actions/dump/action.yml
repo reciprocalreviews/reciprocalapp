@@ -1,0 +1,153 @@
+name: Encrypted database dump
+description: >-
+  Take an encrypted logical backup of a Supabase project with supabase/dr/dump.sh
+  and upload it to S3-compatible object storage.
+
+# Shared by the nightly backup, the pre-migration snapshot, and the restore
+# drill, so all three capture byte-identical artifacts. If they diverged, the
+# thing the drill proves restorable would not be the thing the backup wrote.
+
+inputs:
+  db-url:
+    description: Session-mode pooler URI (port 5432). NOT the transaction pooler on 6543 — pg_dump cannot use it.
+    required: true
+  prefix:
+    description: Destination key prefix within the bucket, e.g. daily/2026-08-03T08-00-00Z
+    required: true
+  label:
+    description: Free text recorded in the manifest (nightly, pre-migration, drill).
+    required: false
+    default: nightly
+  s3-endpoint:
+    description: S3-compatible endpoint URL (for R2, https://<account>.r2.cloudflarestorage.com).
+    required: true
+  s3-bucket:
+    description: Destination bucket name.
+    required: true
+  s3-access-key-id:
+    description: >-
+      Access key scoped to the backup bucket only, with the narrowest permission the
+      provider offers that can upload (R2: Object Read & Write). Confidentiality rests
+      on age encryption, not on this scoping — the credential cannot decrypt anything.
+    required: true
+  s3-secret-access-key:
+    description: Secret key for the bucket.
+    required: true
+  age-recipient-file:
+    description: Path to the committed age public key.
+    required: false
+    default: supabase/dr/backup-recipient.age.pub
+  pg-image:
+    description: Postgres client image. Must be >= the server's major version.
+    required: false
+    default: postgres:17
+
+outputs:
+  prefix:
+    description: The prefix the backup was written to.
+    value: ${{ inputs.prefix }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve the age recipient
+      id: age
+      shell: bash
+      run: |
+        set -euo pipefail
+        f='${{ inputs.age-recipient-file }}'
+        if [ ! -s "$f" ]; then
+          cat >&2 <<EOF
+        No age recipient at $f, so there is nowhere to encrypt this backup to.
+
+        Create the keypair on a trusted machine (NOT in CI — the private half must
+        never exist here, which is the whole point):
+
+            age-keygen -o backup-identity.txt
+            grep 'public key' backup-identity.txt
+
+        Commit the public key to $f. Store backup-identity.txt in a password
+        manager and offline. Without it no backup can ever be read again.
+        EOF
+          exit 1
+        fi
+        # Tolerate the comment lines age-keygen emits above the key itself.
+        rec="$(grep -oE 'age1[0-9a-z]+' "$f" | head -1)"
+        [ -n "$rec" ] || { echo "no age1... recipient found in $f" >&2; exit 1; }
+        echo "recipient=$rec" >> "$GITHUB_OUTPUT"
+
+    - name: Dump and encrypt
+      shell: bash
+      env:
+        DB_URL: ${{ inputs.db-url }}
+        AGE_RECIPIENT: ${{ steps.age.outputs.recipient }}
+        OUT_DIR: dr-out
+        PG_IMAGE: ${{ inputs.pg-image }}
+        LABEL: ${{ inputs.label }}
+        GIT_SHA: ${{ github.sha }}
+        # TLS is not optional for a dump that carries contact emails, ORCID iDs,
+        # and the whole transaction history across the public internet.
+        PGSSLMODE: require
+      run: |
+        set -euo pipefail
+        rm -rf dr-out
+        ./supabase/dr/dump.sh
+
+    - name: Refuse to upload anything unencrypted
+      shell: bash
+      run: |
+        set -euo pipefail
+        # dump.sh already removes plaintext on failure and exits non-zero, so this
+        # is belt and braces. It is cheap, and the failure it guards against —
+        # shipping a plaintext copy of every scholar's data to object storage — is
+        # not one you get to take back.
+        if find dr-out -type f ! -name '*.age' | grep -q .; then
+          echo "unencrypted files present in dr-out; refusing to upload" >&2
+          find dr-out -type f ! -name '*.age' >&2
+          exit 1
+        fi
+        echo "all $(find dr-out -type f -name '*.age' | wc -l) artifacts encrypted"
+
+    - name: Upload
+      shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.s3-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.s3-secret-access-key }}
+        # R2 ignores regions but the CLI insists on one.
+        AWS_DEFAULT_REGION: auto
+        # aws-cli v2.23+ sends additional integrity headers that S3-compatible
+        # providers do not all implement. Ask for them only where the protocol
+        # requires them, which keeps this working across R2, B2, and S3 alike.
+        AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+        AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      run: |
+        set -euo pipefail
+        dest='s3://${{ inputs.s3-bucket }}/${{ inputs.prefix }}/'
+        aws s3 cp dr-out/ "$dest" \
+          --recursive \
+          --endpoint-url '${{ inputs.s3-endpoint }}' \
+          --only-show-errors
+        echo "uploaded to $dest"
+
+    - name: Summarize
+      shell: bash
+      if: always()
+      run: |
+        set -euo pipefail
+        {
+          echo "### Backup \`${{ inputs.label }}\`"
+          echo
+          echo "- prefix: \`${{ inputs.prefix }}\`"
+          if [ -d dr-out ]; then
+            echo "- artifacts:"
+            echo
+            echo '```'
+            ls -lh dr-out | tail -n +2 | awk '{printf "%-24s %s\n", $9, $5}'
+            echo '```'
+          fi
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Shred the local copy
+      shell: bash
+      if: always()
+      run: rm -rf dr-out
