@@ -323,5 +323,11 @@ schema_paths = [
     "./schemas/conflicts.sql",
     "./schemas/emails.sql",
     "./schemas/email_verifications.sql",
+    "./schemas/preference_levels.sql",
+    "./schemas/thanks.sql",
+    # Last: its triggers attach to every audited table above, so they must
+    # already exist. Previously preference_levels and thanks were reached only
+    # through the trailing glob, which would have ordered them after this.
+    "./schemas/audit_log.sql",
     "./schemas/*.sql"
 ]

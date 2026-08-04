@@ -109,6 +109,42 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          actor: string | null
+          after: Json | null
+          at: string
+          before: Json | null
+          op: string
+          row_id: string | null
+          seq: number
+          tbl: string
+          xid: unknown
+        }
+        Insert: {
+          actor?: string | null
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          op: string
+          row_id?: string | null
+          seq?: never
+          tbl: string
+          xid?: unknown
+        }
+        Update: {
+          actor?: string | null
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          op?: string
+          row_id?: string | null
+          seq?: never
+          tbl?: string
+          xid?: unknown
+        }
+        Relationships: []
+      }
       compensation: {
         Row: {
           amount: number | null

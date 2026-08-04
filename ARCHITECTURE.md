@@ -281,9 +281,13 @@ Migrations are applied before the Vercel deploy so schema changes are in place b
 
 Required GitHub secrets: `SUPABASE_ACCESS_TOKEN`, `STAGING_DB_PASSWORD`, `STAGING_PROJECT_ID`, `PRODUCTION_DB_PASSWORD`, `PRODUCTION_PROJECT_ID`, `TEST_ENV`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`. Per-environment runtime config (Supabase URL, anon key, Resend key, etc.) lives in Vercel's environment variable settings and is pulled at build time by `vercel pull`.
 
-## Token ledger
+## Change history
 
-[supabase/schemas/token_events.sql](supabase/schemas/token_events.sql) is an append-only record of every change of token ownership. It exists because neither of the two tables that look like they should provide one actually does.
+Two append-only logs record what changed and why: [token_events](supabase/schemas/token_events.sql) for the token economy, and [audit_log](supabase/schemas/audit_log.sql) for everything else. They share their design — trigger-captured, foreign-key-free, append-only by trigger, invisible to the API, absent from realtime — and differ only in shape.
+
+### token_events
+
+An append-only record of every change of token ownership. It exists because neither of the two tables that look like they should provide one actually does.
 
 `public.tokens` is the **state**: one row per token, and a transfer is an in-place `UPDATE` of its `scholar`/`venue` columns. It has no `created_at`, no history, no versioning — so once ownership is overwritten the previous owner is gone from the database entirely. Balances are `count(*)` over that table, which means the current balance is the only thing the schema knows.
 
@@ -302,6 +306,19 @@ The table is **not** in the `supabase_realtime` publication — a 500-token mint
 
 Behaviour is covered by [supabase/tests/invariants/token_events.sql](supabase/tests/invariants/token_events.sql), which asserts the properties the design rests on against real RPC calls: capture, attribution, that a deliberate out-of-band write shows up unattributed, that `tokens_as_of()` reproduces `tokens` exactly, and that each token's chain of previous owners is unbroken.
 
+### audit_log
+
+The general counterpart, covering the 15 mutable state tables plus `transactions`. Each row holds the whole `before` and `after` as `jsonb`, the acting scholar, and the transaction id that wrote it. Two things motivate it:
+
+- **Forensics.** `venues.admins`, `currencies.minters`, and `scholars.steward` are privilege-bearing columns edited by read-modify-write on an array — lossy under concurrency and invisible afterward. Nothing else can say when someone gained admin on a venue, or who granted it. `transactions` is included for the same reason: the row records who *declined* a transaction but never who approved it.
+- **Recovery point.** Without PITR, a nightly dump means up to 24h of loss. Replaying `after` in `seq` order lets a restore catch up from the dump instead, and ordering by `seq` respects foreign-key causality for free, because the original writes did.
+
+Four tables are excluded deliberately: `tokens` (covered by `token_events` in a shape ~4× smaller, and it is the highest-volume table in the schema), `emails` (already immutable, and auditing it would store every rendered message body twice), `email_verifications` (holds a sha256 token hash — copying a credential-like value into a longer-lived table widens its exposure for nothing), and the two logs themselves.
+
+Whole-row payloads rather than deltas, because replay is then an upsert rather than a merge, and correctness matters more than storage at this volume. **No-op updates are skipped** — the app calls `invalidateAll()` after every write and several components re-save unchanged values, which is the difference between a usable log and noise.
+
+One consequence worth holding onto: because the payloads are whole rows, this table contains scholars' contact emails and the bodies of author thank-you notes, making it strictly more sensitive than any single table it records. `forget_scholar()` will have to scrub here as well as in `token_events` and `transactions`.
+
 ## Backups
 
 The database is dumped nightly at 08:00 UTC by [.github/workflows/backup.yml](.github/workflows/backup.yml) to S3-compatible object storage we control, independent of Supabase. [RECOVERY.md](RECOVERY.md) is the operational document — provisioning, verification, and (from the next phase) the restore runbook. The mechanics live in [supabase/dr/dump.sh](supabase/dr/dump.sh), which is a standalone script rather than inline workflow steps so the nightly job, the pre-migration snapshot, and the rehearsal drill all capture byte-identical artifacts, and so it can be run from a laptop during an incident.
@@ -311,7 +328,7 @@ Four decisions worth knowing before touching any of it:
 - **`pg_dump`, not `supabase db dump`.** The latter is scoped to the schemas it knows about, and this database is not restorable without `auth`: `public.scholars.id` references `auth.users(id) ON DELETE CASCADE`, so a `public`-only dump restores into a project with zero scholars. Custom-format archives are used throughout so a restore can be surgical (`pg_restore -t submissions`) instead of all-or-nothing.
 - **Encryption is `age` in public-key mode.** Only the recipient's public key is in the repo; the private identity is held offline. The property that matters is that **CI can write backups but cannot read any backup, including the one it just made** — a compromised `GITHUB_TOKEN` yields nothing. `dump.sh` deletes its whole output directory if it fails before encryption completes, and the workflow independently refuses to upload anything that isn't `.age`.
 - **Two pieces of state live outside every schema dump** and are captured on purpose: `cron.job` (exactly how `remind-daily` was silently lost once — see `supabase/migrations/20260517230819_restore_remind_cron.sql`) and the *names* of the vault secrets. Vault **values** are never captured; they are set by hand on hosted projects and belong in a password manager, not in an artifact CI can write.
-- **The manifest is what makes a restore checkable.** It records exact per-table row counts, the `auth.users` count, append-only watermarks — which now populate for `token_events` and `transactions.seq`, so a backup states exactly how far the ledger had advanced, the value a future replay-forward restore keys off — the applied migration list, extensions, the realtime publication membership, the RLS policy count, and a SHA-256 of every artifact. A restore that doesn't match it is a failed restore. It is written defensively, so the columns the ledger phase adds appear automatically and their absence today is not an error.
+- **The manifest is what makes a restore checkable.** It records exact per-table row counts, the `auth.users` count, append-only watermarks — which populate for `token_events`, `audit_log`, and `transactions.seq`, so a backup states exactly how far each log had advanced, the value a replay-forward restore keys off — the applied migration list, extensions, the realtime publication membership, the RLS policy count, and a SHA-256 of every artifact. A restore that doesn't match it is a failed restore. It is written defensively, so the columns the ledger phase adds appear automatically and their absence today is not an error.
 
 Point-in-time recovery is **not** enabled, so the recovery point objective is currently **up to 24 hours**. Narrowing that is what the append-only ledger is for: restore the nightly dump, then replay the log forward. Until a restore has actually been rehearsed, recovery time is an estimate rather than a measurement.
 
