@@ -199,24 +199,16 @@ The script has two safety behaviors worth knowing:
 
 ### Verifying a backup by hand
 
-```sh
-# Decrypt
-for f in *.age; do age -d -i backup-identity.txt -o "${f%.age}" "$f"; done
+The full procedure — including the tools you need, why it must be run outside the
+repository, and cleaning up the decrypted copy afterward — is
+**[PROVISIONING.md § 5c](supabase/dr/PROVISIONING.md#5c-prove-you-can-read-it-back)**.
+It is kept in one place on purpose: a verification procedure that exists in two
+places drifts, and the copy you follow during an incident will be the stale one.
 
-# Check the artifacts against the manifest's own checksums
-jq -r '.sha256 | to_entries[] | select(.key != "manifest.json") | "\(.value)  \(.key)"' \
-  manifest.json | sha256sum -c
-
-# What did it capture?
-jq '{taken_at, label, server: .db.server_version,
-     scholars: .db.row_counts.scholars, auth_users: .db.auth_user_count,
-     policies: .db.rls_policy_count, vault: .db.vault_secret_names}' manifest.json
-
-# Is the archive intact and readable?
-pg_restore --list public.dump | head -30
-```
-
----
+In short: download the prefix, `age -d` each artifact, check every file against
+the `sha256` map inside `manifest.json`, and confirm `auth_user_count` equals the
+`scholars` row count. Do it at least once per quarter — an untested backup is a
+hypothesis.
 
 ## Restoring
 

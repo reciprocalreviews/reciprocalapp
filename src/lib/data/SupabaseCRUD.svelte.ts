@@ -2156,12 +2156,20 @@ export default class SupabaseCRUD extends CRUD {
 		return { error: undefined, data: undefined };
 	}
 
+	// The three paginated transaction lists all sort by created_at and then by
+	// seq. The tiebreaker is not optional: created_at defaults to now(), which is
+	// transaction START time, so every row a single RPC writes carries an
+	// identical timestamp — create_submission inserts one charge per author that
+	// way. Sorting on created_at alone leaves those rows in an order the planner
+	// may choose differently per query, and a LIMIT/OFFSET over an unstable sort
+	// can return one row on two pages while skipping another entirely.
 	async getScholarTransactions(scholar: ScholarID, page: number = 0) {
 		return await this.client
 			.from('transactions')
 			.select('*', { count: 'exact' })
 			.or(`from_scholar.eq.${scholar},to_scholar.eq.${scholar}`)
 			.order('created_at', { ascending: false })
+			.order('seq', { ascending: false })
 			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 	}
 
@@ -2171,6 +2179,7 @@ export default class SupabaseCRUD extends CRUD {
 			.select('*', { count: 'exact' })
 			.or(`from_venue.eq.${venue},to_venue.eq.${venue}`)
 			.order('created_at', { ascending: false })
+			.order('seq', { ascending: false })
 			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 	}
 
@@ -2180,6 +2189,7 @@ export default class SupabaseCRUD extends CRUD {
 			.select('*', { count: 'exact' })
 			.eq('currency', currency)
 			.order('created_at', { ascending: false })
+			.order('seq', { ascending: false })
 			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 	}
 

@@ -4,6 +4,10 @@ create type public."transaction_status" as enum('proposed', 'approved', 'decline
 
 alter type public."transaction_status" OWNER to "postgres";
 
+-- Backs transactions.seq. Declared before the table so the column default can
+-- reference it; `owned by` is attached after the table exists.
+create sequence if not exists public.transactions_seq_seq;
+
 -- A table of transactions, recording a history of token transfers
 create table if not exists public.transactions (
 	-- The unique ID of the transaction
@@ -33,6 +37,13 @@ create table if not exists public.transactions (
 	decliner uuid,
 	-- The reason the decliner gave when declining (null when status != 'declined').
 	decline_reason text,
+	-- A monotonic ordering column. `created_at` defaults to now(), which is
+	-- transaction START time, so every row a single function writes shares a
+	-- timestamp exactly — create_submission inserts one charge per author that
+	-- way. Without a tiebreaker, paginating with ORDER BY created_at + OFFSET can
+	-- return a row twice and skip another. Not client-settable: the INSERT and
+	-- UPDATE column allowlists below omit it.
+	seq bigint not null default nextval('public.transactions_seq_seq'),
 	-- Require that there is either a scholar or venue source but not both
 	constraint check_from check ((num_nonnulls (from_scholar, from_venue)<=1)),
 	-- Require that there is either a scholar or venue destination but not both
@@ -93,8 +104,52 @@ update on public.transactions
 from
 	anon;
 
+alter sequence public.transactions_seq_seq owned by public.transactions.seq;
+
+-- A column DEFAULT calling nextval() needs USAGE on the sequence for the
+-- INSERTing role, or every client-side insert fails with "permission denied for
+-- sequence". anon is omitted: its INSERT was revoked above.
+grant
+usage on sequence public.transactions_seq_seq to authenticated,
+service_role;
+
 alter table only public.transactions
 add constraint transactions_pkey primary key (id);
+
+alter table only public.transactions
+add constraint transactions_seq_key unique (seq);
+
+--------------------------------------
+-- Indexes
+-- Chosen from the predicates the application and the remind edge function
+-- actually issue. Before these, every transaction list was a sequential scan
+-- plus a sort.
+--
+-- currency + created_at covers getCurrencyTransactions' filter AND its sort, so
+-- an ordered Index Scan can satisfy the ORDER BY with no Sort node; seq makes the
+-- pagination stable. On a near-empty table the planner still prefers a bitmap
+-- scan plus a sort, which is correct at that size — check the ordered path with
+-- `set enable_bitmapscan = off` before concluding the index is unused.
+create index transactions_currency_created_index on public.transactions using btree (currency, created_at desc, seq desc);
+
+-- The scholar and venue lists filter `from_x = $1 OR to_x = $1`, satisfied as a
+-- BitmapOr over these. Partial because the from/to columns are mutually
+-- exclusive by CHECK, so roughly half the table is null in each.
+create index transactions_from_scholar_index on public.transactions using btree (from_scholar)
+where
+	from_scholar is not null;
+
+create index transactions_to_scholar_index on public.transactions using btree (to_scholar)
+where
+	to_scholar is not null;
+
+create index transactions_from_venue_index on public.transactions using btree (from_venue)
+where
+	from_venue is not null;
+
+create index transactions_to_venue_index on public.transactions using btree (to_venue)
+where
+	to_venue is not null;
 
 alter table only public.transactions
 add constraint transactions_creator_fkey foreign KEY (creator) references public.scholars (id);

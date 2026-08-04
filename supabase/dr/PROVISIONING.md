@@ -269,14 +269,24 @@ mistyped secret.
 
 ### 5b. Confirm the objects landed
 
+Two tools are needed for 5b and 5c and are not installed by default on macOS:
+
+```sh
+brew install age awscli
+```
+
+Then set the shared environment for both steps:
+
 ```sh
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 export AWS_DEFAULT_REGION=auto
 export EP=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+export BUCKET=reciprocal-backups
+export PREFIX=staging/daily/<timestamp>
 
-aws s3 ls s3://reciprocal-backups/staging/daily/ --endpoint-url $EP
-aws s3 ls s3://reciprocal-backups/staging/daily/<timestamp>/ --endpoint-url $EP
+aws s3 ls "s3://$BUCKET/staging/daily/" --endpoint-url "$EP"
+aws s3 ls "s3://$BUCKET/$PREFIX/" --endpoint-url "$EP"
 ```
 
 Five objects, every one ending in `.age`.
@@ -288,14 +298,29 @@ Five objects, every one ending in `.age`.
 ### 5c. Prove you can read it back
 
 This is the step people skip, and the one that matters. An untested backup is a
-hypothesis, not a backup.
+hypothesis, not a backup. It is also the only thing that proves the private key
+you filed away is the matching half of the public key CI encrypts to — a mismatch
+stays silent until the moment you need it.
+
+> **Run this from `/tmp`, never from the repository.** It writes decrypted copies
+> of contact emails, ORCID iDs, names, and the full transaction history to disk.
+> Inside the working tree that is one stray `git add -A` from being committed.
+> Retrieve the private key to a temp path too, and delete it afterward rather
+> than leaving it in your home directory.
+>
+> Pasting the block below into an interactive **zsh** prompt prints
+> `command not found: #` for each comment line — zsh only honours `#` as a comment
+> when `interactive_comments` is set. It is noise, not a skipped step; `setopt
+> interactive_comments` silences it.
 
 ```sh
-mkdir -p /tmp/restore-test && cd /tmp/restore-test
-aws s3 cp s3://reciprocal-backups/staging/daily/<timestamp>/ . --recursive --endpoint-url $EP
+# Save the private key from your password manager to /tmp/backup-identity.txt first.
 
-# Decrypt with the private key from your password manager
-for f in *.age; do age -d -i ~/backup-identity.txt -o "${f%.age}" "$f"; done
+mkdir -p /tmp/restore-test && cd /tmp/restore-test
+aws s3 cp "s3://$BUCKET/$PREFIX/" . --recursive --endpoint-url "$EP"
+
+# Decrypt
+for f in *.age; do age -d -i /tmp/backup-identity.txt -o "${f%.age}" "$f"; done
 
 # Checksums must all report OK
 jq -r '.sha256 | to_entries[] | select(.key != "manifest.json") | "\(.value)  \(.key)"' \
@@ -305,7 +330,8 @@ jq -r '.sha256 | to_entries[] | select(.key != "manifest.json") | "\(.value)  \(
 jq '{taken_at, server: .db.server_version, scholars: .db.row_counts.scholars,
      auth_users: .db.auth_user_count, policies: .db.rls_policy_count}' manifest.json
 
-cd / && rm -rf /tmp/restore-test
+# Clean up both the plaintext and the key
+cd / && rm -rf /tmp/restore-test && rm -f /tmp/backup-identity.txt
 ```
 
 `auth_users` should equal `scholars`. If it does not, the auth dump did not land

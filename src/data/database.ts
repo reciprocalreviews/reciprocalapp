@@ -795,6 +795,7 @@ export type Database = {
           from_venue: string | null
           id: string
           purpose: string
+          seq: number
           status: Database["public"]["Enums"]["transaction_status"]
           to_scholar: string | null
           to_venue: string | null
@@ -810,6 +811,7 @@ export type Database = {
           from_venue?: string | null
           id?: string
           purpose: string
+          seq?: number
           status: Database["public"]["Enums"]["transaction_status"]
           to_scholar?: string | null
           to_venue?: string | null
@@ -825,6 +827,7 @@ export type Database = {
           from_venue?: string | null
           id?: string
           purpose?: string
+          seq?: number
           status?: Database["public"]["Enums"]["transaction_status"]
           to_scholar?: string | null
           to_venue?: string | null
