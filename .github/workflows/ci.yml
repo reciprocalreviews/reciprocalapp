@@ -11,9 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Pinned rather than `latest`. With `latest`, setup-cli resolves the release
+      # through the GitHub API on every job; a dev push and a main merge fire ~10
+      # of those within seconds, exhausting the shared rate limit and failing a job
+      # before any test runs. Pinning also stops CI drifting ahead of local.
       - uses: supabase/setup-cli@v2
         with:
-          version: latest
+          version: 2.111.0
 
       - name: Start Supabase local development setup
         run: supabase start --exclude storage-api,imgproxy,logflare,supavisor,vector
