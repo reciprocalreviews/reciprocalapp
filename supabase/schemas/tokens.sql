@@ -105,6 +105,12 @@ begin
 		raise exception 'A minter cannot mint into a venue they administer';
 	end if;
 
+	-- Attribute the mint to the transaction it belongs to. The id is generated up
+	-- front because the tokens are written before the transaction row exists, and
+	-- the token_events trigger reads app.txn at the moment of the write.
+	_txn_id := gen_random_uuid();
+	perform set_config('app.txn', _txn_id::text, true);
+
 	-- Create the tokens, owned by the destination venue, and capture their ids.
 	with inserted as (
 		insert into public.tokens (currency, venue, scholar)
@@ -115,12 +121,17 @@ begin
 
 	-- Record the matching approved mint transaction (no source, to the venue).
 	insert into public.transactions (
-		creator, from_scholar, from_venue, to_scholar, to_venue,
+		id, creator, from_scholar, from_venue, to_scholar, to_venue,
 		tokens, currency, purpose, status
 	) values (
-		_caller, null, null, null, _to_venue,
+		_txn_id, _caller, null, null, null, _to_venue,
 		_token_ids, _currency, _purpose, 'approved'
-	) returning id into _txn_id;
+	);
+
+	-- Clear it, so a later token write in this same database transaction that is
+	-- NOT part of this mint is recorded as unattributed rather than borrowing this
+	-- transaction's id. That is what keeps "txn is null" a trustworthy alarm.
+	perform set_config('app.txn', '', true);
 
 	-- Hand the new token ids and transaction id back to the caller.
 	return jsonb_build_object('token_ids', to_jsonb(_token_ids), 'transaction_id', _txn_id);

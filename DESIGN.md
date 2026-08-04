@@ -165,6 +165,7 @@ A `Token` represents an indivisible unit of peer review labor in a particular `C
 - [x] `Token`s should generally be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few `Token`s would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many `Token`s means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review.
 - [x] `Token`s are possessed by individual scholar or in a `Venue`'s reserve (meaning they are posessed by no one) and `Transaction`s can change who posses them. They cannot be possessed by neither a scholar or a venue.
 - [x] **Only a `Transaction` can change who possesses a `Token`.** This is enforced by the database, not by convention: direct writes to tokens are revoked, so every movement of value necessarily leaves a record of why it moved and who authorized it.
+- [x] **Every change of possession is recorded permanently.** The platform can account for where any token has been, and can reconstruct who held what at any past moment — so a bug that miscounted balances can be found and repaired precisely, rather than by discarding everything that happened since. That history is deliberately *not* visible to scholars: knowing which tokens moved when would reveal reviewing activity that a venue's anonymity settings exist to protect.
 
 The authoritative schema lives in [`supabase/schemas/tokens.sql`](supabase/schemas/tokens.sql).
 

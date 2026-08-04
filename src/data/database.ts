@@ -741,6 +741,51 @@ export type Database = {
           },
         ]
       }
+      token_events: {
+        Row: {
+          actor: string | null
+          at: string
+          currency: string
+          op: Database["public"]["Enums"]["token_op"]
+          prev_scholar: string | null
+          prev_venue: string | null
+          scholar: string | null
+          seq: number
+          token: string
+          txn: string | null
+          venue: string | null
+          xid: unknown
+        }
+        Insert: {
+          actor?: string | null
+          at?: string
+          currency: string
+          op: Database["public"]["Enums"]["token_op"]
+          prev_scholar?: string | null
+          prev_venue?: string | null
+          scholar?: string | null
+          seq?: never
+          token: string
+          txn?: string | null
+          venue?: string | null
+          xid?: unknown
+        }
+        Update: {
+          actor?: string | null
+          at?: string
+          currency?: string
+          op?: Database["public"]["Enums"]["token_op"]
+          prev_scholar?: string | null
+          prev_venue?: string | null
+          scholar?: string | null
+          seq?: never
+          token?: string
+          txn?: string | null
+          venue?: string | null
+          xid?: unknown
+        }
+        Relationships: []
+      }
       tokens: {
         Row: {
           currency: string
@@ -1110,6 +1155,15 @@ export type Database = {
         Args: { _email: string }
         Returns: undefined
       }
+      tokens_as_of: {
+        Args: { _at?: string }
+        Returns: {
+          currency: string
+          scholar: string
+          token: string
+          venue: string
+        }[]
+      }
       transfer_tokens: {
         Args: {
           _amount: number
@@ -1130,6 +1184,7 @@ export type Database = {
       invited: "invited" | "accepted" | "declined"
       submission_status: "reviewing" | "done"
       thanks_status: "proposed" | "approved" | "declined"
+      token_op: "mint" | "move" | "burn"
       transaction_status: "proposed" | "approved" | "declined"
     }
     CompositeTypes: {
@@ -1265,6 +1320,7 @@ export const Constants = {
       invited: ["invited", "accepted", "declined"],
       submission_status: ["reviewing", "done"],
       thanks_status: ["proposed", "approved", "declined"],
+      token_op: ["mint", "move", "burn"],
       transaction_status: ["proposed", "approved", "declined"],
     },
   },

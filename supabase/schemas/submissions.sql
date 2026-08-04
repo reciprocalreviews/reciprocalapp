@@ -153,6 +153,11 @@ begin
 			_currency, _purpose, 'proposed'
 		) returning id into _txn_id;
 
+		-- Attribute this author's token movement to this author's charge. Set inside
+		-- the loop, not once for the function: each author is a separate transaction,
+		-- and one GUC for the whole call would file every movement under the last id.
+		perform set_config('app.txn', _txn_id::text, true);
+
 		-- The submitter's own charge is settled now: move their tokens to the
 		-- venue and approve the transaction. Co-authors approve theirs later.
 		if _author = _caller then
@@ -171,6 +176,8 @@ begin
 			update public.tokens set scholar = null, venue = _venue where id = any(_token_ids);
 			update public.transactions set status = 'approved', tokens = _token_ids where id = _txn_id;
 		end if;
+
+		perform set_config('app.txn', '', true);
 
 		_transactions := _transactions || _txn_id;
 	end loop;

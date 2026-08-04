@@ -569,6 +569,12 @@ begin
 		raise exception 'Insufficient tokens to transfer' using errcode = 'RR003';
 	end if;
 
+	-- Attribute the movement to its transaction. coalesce because finalizing a
+	-- proposed transfer reuses that transaction's id, while a fresh transfer needs
+	-- one generated up front: the tokens move before its row is written.
+	_txn_id := coalesce(_transaction, gen_random_uuid());
+	perform set_config('app.txn', _txn_id::text, true);
+
 	-- Reassign all chosen tokens to the destination in one statement.
 	update public.tokens set scholar = _to_scholar, venue = _to_venue where id = any(_token_ids);
 
@@ -580,13 +586,15 @@ begin
 	else
 		-- A fresh transfer (e.g. a gift): record a new approved transaction.
 		insert into public.transactions (
-			creator, from_scholar, from_venue, to_scholar, to_venue,
+			id, creator, from_scholar, from_venue, to_scholar, to_venue,
 			tokens, currency, purpose, status
 		) values (
-			_caller, _from_scholar, _from_venue, _to_scholar, _to_venue,
+			_txn_id, _caller, _from_scholar, _from_venue, _to_scholar, _to_venue,
 			_token_ids, _currency, _purpose, 'approved'
-		) returning id into _txn_id;
+		);
 	end if;
+
+	perform set_config('app.txn', '', true);
 
 	-- Return the transaction id and the tokens that moved.
 	return jsonb_build_object('transaction_id', _txn_id, 'token_ids', to_jsonb(_token_ids));
@@ -632,6 +640,12 @@ begin
 	if _txn.status <> 'proposed' then
 		raise exception 'Transaction is not proposed' using errcode = 'RR001';
 	end if;
+
+	-- Every token write below — the pure mint, the shortfall mint, and the
+	-- transfer — belongs to this one transaction, so attribute once here. Cleared
+	-- before each return so a later write in the same database transaction cannot
+	-- inherit it.
+	perform set_config('app.txn', _transaction_id::text, true);
 
 	-- Collapse the from/to scholar-or-venue pairs into single endpoints; every
 	-- transaction has a recipient.
@@ -682,6 +696,7 @@ begin
 
 		-- Finalize the transaction with the real token ids.
 		update public.transactions set status = 'approved', tokens = _token_ids where id = _transaction_id;
+		perform set_config('app.txn', '', true);
 		return jsonb_build_object('transaction_id', _transaction_id, 'token_ids', to_jsonb(_token_ids));
 	end if;
 
@@ -732,6 +747,7 @@ begin
 	update public.tokens set scholar = _txn.to_scholar, venue = _txn.to_venue where id = any(_token_ids);
 	update public.transactions set status = 'approved', tokens = _token_ids where id = _transaction_id;
 
+	perform set_config('app.txn', '', true);
 	return jsonb_build_object('transaction_id', _transaction_id, 'token_ids', to_jsonb(_token_ids));
 end;
 $function$;
