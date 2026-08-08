@@ -24,14 +24,22 @@ that outcome.
 
 | | Covers | Recovery point |
 |---|---|---|
-| **Nightly encrypted dump** (this repo) | Project loss, account loss, bad migration, logical corruption, malicious deletion | up to **24h** of data loss |
+| **Nightly encrypted dump** (this repo) | Project loss, account loss, bad migration, logical corruption, malicious deletion | up to **24h** on its own |
+| **Hourly tail + replay** | Everything above, with far less loss | **~1h** |
 | **Supabase's own backups** | Infrastructure failure | plan-dependent; see below |
 
 **Point-in-time recovery is not enabled.** Supabase offers PITR as a paid add-on
-(~$100/mo/project) giving roughly 2-minute granularity; without it, the nightly
-dump's 24h window is the real recovery point objective for everything. The
-ledger phase narrows this to about an hour for the token economy by exporting
-the append-only log more frequently — that is the whole reason the ledger exists.
+(~$100/mo/project) giving roughly 2-minute granularity. Instead, the append-only
+logs do the same job more cheaply: [tail.sh](supabase/dr/tail.sh) exports
+`audit_log` and `token_events` every hour — a few kilobytes, since they are the
+only tables that change in a way a restore needs — and
+[replay.sql](supabase/dr/replay.sql) applies them over a restored dump. That is
+the whole reason the ledger exists, and it brings the recovery point from 24
+hours to about one.
+
+Demonstrated rather than assumed: restoring a nightly dump alone loses the
+changes made after it, and replaying the tail brings them back to exactly the
+state before the failure.
 
 **Check what your Supabase plan actually provides**, because it is currently an
 unexamined assumption:
@@ -61,6 +69,7 @@ rehearsed whenever you like, and are the only copy you hold the keys to.
 | `extensions.sql` | `create extension` DDL. **Not carried by `pg_dump`** — extensions are cluster state, not schema state |
 | *(privileges)* | Carried inside `public.dump`. `--no-privileges` is deliberately **not** used — see below |
 | `cron.json` | The `cron.job` table |
+| *(hourly)* `token_events.csv`, `audit_log.csv`, `auth_users.csv`, `auth_identities.csv`, `tail.json` | Written by [tail.sh](supabase/dr/tail.sh) every hour to `<target>/tail/<date>/<time>Z/`, and applied by [replay.sh](supabase/dr/replay.sh). `emails` is deliberately absent: re-inserting its rows would re-send them |
 | `manifest.json` | Row counts, watermarks, migration list, extensions, realtime table list, RLS policy count, vault secret *names*, and a SHA-256 of every other artifact |
 | *(vault secret names live in the manifest)* | So a restore knows which secrets must be re-entered by hand |
 
@@ -311,10 +320,25 @@ Two notes on the `set session_replication_role = replica`:
   may well fail against hosted Supabase. **Confirm which of the two your role can
   actually do during a drill, not during an incident.**
 
-**6. Replay forward, if you have a tail.** Apply `audit_log` rows with `seq`
-greater than the manifest's watermark, in `seq` order, upserting `after` (or
-deleting on `DELETE`). Ordering by `seq` respects foreign-key causality for free,
+**6. Replay forward, if you have a tail.**
+
+```sh
+TAIL_DIR=/tmp/tail \
+FROM_SEQ=<db.watermarks.audit_log from the restored manifest> \
+TARGET_DB_URL=... ./supabase/dr/replay.sh
+```
+
+This loads the tail's rows and applies every `audit_log` entry past the
+watermark, in `seq` order — which respects foreign-key causality for free,
 because the original writes did.
+
+> **Replay before anything else writes, including before re-arming.** `seq` is an
+> identity column, so after a restore it resumes from the restored maximum and any
+> write in between takes the very numbers the tail is carrying. `rearm.sql` stamps
+> every scholar's reminder timestamp, which is enough to collide — that is exactly
+> what happened the first time this was tested, and the replay reported success
+> having quietly applied the wrong rows. `replay.sh` now refuses to run if
+> `audit_log` has moved past the watermark, and says so.
 
 **Here the trigger suppression is not optional.** Replay issues ordinary
 `INSERT`/`UPDATE` statements against a schema whose triggers are live, so without

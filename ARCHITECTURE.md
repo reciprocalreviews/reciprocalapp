@@ -289,6 +289,8 @@ Each branch push triggers a workflow that runs jobs in this order:
 
 Migrations are applied before the Vercel deploy so schema changes are in place before the code that depends on them goes live.
 
+Two steps run immediately before `supabase db push`, because a bad migration is the likeliest cause of data loss and the one moment you know is coming. The first records the append-only watermarks into the job summary, which makes "restore to just before the deploy" a precise instruction — wall-clock cannot express it when a deploy and user activity interleave. The second refuses to push when production carries migrations this repository does not, so a hand-applied change is reconciled rather than silently overwritten.
+
 - `main` → [.github/workflows/production.yml](.github/workflows/production.yml) deploys to Vercel **production** against the production Supabase project. Here `migrate`/`vercel` **gate on the tests** — if any test fails, neither the migration nor the deploy runs.
 - `dev` → [.github/workflows/staging.yml](.github/workflows/staging.yml) deploys to a Vercel **preview** environment against the staging Supabase project. Staging is a throwaway test target, so its deploy is **not gated** on the tests: they still run in parallel for signal, but a red e2e/unit/rls run won't block the preview (it keeps deploys fast and lets the slow e2e suite finish out-of-band). The gate is what keeps a broken change from reaching `main`/production.
 
@@ -370,7 +372,9 @@ Restores are scripted rather than improvised. [supabase/dr/quarantine.sql](supab
 
 The first drill found something worth knowing: **a bare Postgres database is not a valid restore target.** Restoring into one succeeded, matched every row count, and silently produced a database with 29 of 71 RLS policies missing, because every policy calls `auth.uid()` and the `auth` schema did not exist. Row counts alone would have called that a success. `drill.sh` now refuses such a target up front. The operational consequence is in [RECOVERY.md](RECOVERY.md); the architectural one is that this schema is not portable to plain Postgres — it depends on Supabase's `auth` schema at the policy level, not merely at the application level.
 
-Point-in-time recovery is **not** enabled, so the recovery point objective is currently **up to 24 hours**. Narrowing that is what the append-only ledger is for: restore the nightly dump, then replay the log forward. Until a restore has actually been rehearsed, recovery time is an estimate rather than a measurement.
+Point-in-time recovery is **not** enabled. Instead the append-only logs do the same job for a fraction of the cost, which is what they were built for: [tail.sh](supabase/dr/tail.sh) exports `audit_log` and `token_events` hourly — a few kilobytes, because they are the only tables a restore needs to catch up on — and [replay.sql](supabase/dr/replay.sql) applies them over a restored dump via `replay_audit_log()`. That takes the recovery point from **24 hours to roughly one**, and it is demonstrated rather than assumed: restoring a nightly dump alone loses the changes made after it, and replaying the tail brings them back to exactly the prior state.
+
+One ordering rule matters enough to state here. **Replay must happen before anything else writes, including before re-arming.** `seq` is an identity column, so after a restore it resumes from the restored maximum and any intervening write takes the very numbers the tail is carrying; deduplicating on `seq` would then discard the tail's real rows as duplicates. `rearm.sql`'s reminder stamping is enough to trigger this, and did on the first test — the replay reported success having applied the wrong rows. `replay.sql` now refuses to run when `audit_log` has moved past the watermark.
 
 ## Testing
 

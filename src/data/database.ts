@@ -1209,6 +1209,10 @@ export type Database = {
         Returns: number
       }
       reconcile_ledger: { Args: never; Returns: Json }
+      replay_audit_log: {
+        Args: { _dry_run?: boolean; _from_seq?: number }
+        Returns: Json
+      }
       request_email_verification: {
         Args: { _email: string }
         Returns: undefined
