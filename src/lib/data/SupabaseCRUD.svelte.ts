@@ -2103,11 +2103,28 @@ export default class SupabaseCRUD extends CRUD {
 
 		// Apply the decline — purpose stays untouched, audit columns capture
 		// who declined and why.
-		const { error: updateError } = await this.client
+		//
+		// The `status` predicate is what makes this safe against a concurrent
+		// approval. Without it the update matched on `id` alone, so an approval
+		// landing between the read above and this write would be overwritten: the
+		// tokens had already moved and been recorded in token_events, while the
+		// transaction ended up saying `declined`. The database now refuses that
+		// outright (RR005, see 20260808030000), and matching on status as well turns
+		// what would be a raw error into a clean zero-row result we can report.
+		const { data: declined, error: updateError } = await this.client
 			.from('transactions')
 			.update({ status: 'declined', decliner, decline_reason: reason })
-			.eq('id', id);
-		if (updateError) return this.errorOrEmpty('TransactionNotDeclined', updateError);
+			.eq('id', id)
+			.eq('status', 'proposed')
+			.select('id');
+		if (updateError)
+			return this.error(
+				rpcErrorKey(updateError, 'TransactionNotDeclined', { RR005: 'AlreadyApproved' }),
+				updateError
+			);
+		// Zero rows means someone decided it first — the realistic case being an
+		// approval that won the race.
+		if (!declined || declined.length === 0) return this.error('AlreadyApproved');
 
 		// Don't email proposers who declined their own transaction.
 		if (transaction.creator === decliner) return { error: undefined, data: undefined };

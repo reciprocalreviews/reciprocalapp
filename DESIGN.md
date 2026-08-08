@@ -178,7 +178,7 @@ A `Transaction` represents an exchange of tokens for some purpose, such as submi
 
 - [x] `Transaction`s cannot be deleted by anyone — not the giver, not a venue admin, not a currency minter. They are a permanent record.
 - [x] `Transaction`s have a definite order that the platform assigns, not one inferred from timestamps. A scholar's history therefore reads the same way every time, and paging through a long list cannot show the same entry twice or skip one — which matters because several transactions are often recorded in the same instant, as when a submission charges each of its authors.
-- [x] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable. They are also immutable once recorded: only the status and the accompanying approval/decline fields may change, so a transaction remains a faithful record of history. A caller cannot choose a transaction's identity or backdate it either; its place in history is set by the database, not by whoever proposed it.
+- [x] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable. They are also immutable once recorded: a proposed transaction may be approved or declined, and **that decision is then final** — an approved transfer cannot later be turned into a refusal, nor a refusal into a transfer. The **amount cannot change after the fact** either, so no one can rewrite how much a completed transfer moved. A caller cannot choose a transaction's identity or backdate it; its place in history is set by the platform, not by whoever proposed it.
 
 The authoritative schema lives in [`supabase/schemas/transactions.sql`](supabase/schemas/transactions.sql).
 
