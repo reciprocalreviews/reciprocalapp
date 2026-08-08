@@ -459,6 +459,27 @@ export type Database = {
           },
         ]
       }
+      reconciliations: {
+        Row: {
+          id: string
+          ok: boolean
+          ran_at: string
+          result: Json
+        }
+        Insert: {
+          id?: string
+          ok: boolean
+          ran_at?: string
+          result: Json
+        }
+        Update: {
+          id?: string
+          ok?: boolean
+          ran_at?: string
+          result?: Json
+        }
+        Relationships: []
+      }
       roles: {
         Row: {
           anonymous_authors: boolean
@@ -1187,6 +1208,7 @@ export type Database = {
         }
         Returns: number
       }
+      reconcile_ledger: { Args: never; Returns: Json }
       request_email_verification: {
         Args: { _email: string }
         Returns: undefined

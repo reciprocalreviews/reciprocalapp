@@ -30,3 +30,39 @@ jobs:
             git diff src/data/database.ts
             exit 1
           fi
+
+      # ARCHITECTURE.md calls supabase/schemas/ authoritative, and DESIGN.md links
+      # readers there. That claim has to be enforced or it decays: four RPCs, three
+      # submissions columns, two check constraints, a unique index and the trigger
+      # that creates scholars at all had each been added by migration and never
+      # mirrored, so the "authoritative" description of the schema was materially
+      # wrong for months.
+      #
+      # It is not only a documentation problem. A restore applies the schema from
+      # migrations and RECOVERY.md points at schemas/ to explain what should be
+      # there — a schema file that lies is a restore that goes wrong under pressure.
+      #
+      # `supabase db diff` reports the DDL needed to make the migrations match the
+      # declarative files. Agreement means empty output.
+      - name: Verify declarative schemas match the migrations
+        run: |
+          set -euo pipefail
+          supabase db diff --schema public > /tmp/drift.out 2>/tmp/drift.err || {
+            echo "::error::supabase db diff failed — schemas/ may not be applicable at all"
+            cat /tmp/drift.err; exit 1;
+          }
+          # The CLI emits a JSON object on stdout whose `diff` key holds the DDL.
+          # Grepping the raw output for '^create|^alter' finds nothing, because the
+          # statements are escaped inside a single JSON line — which is exactly how
+          # a first version of this check reported "no drift" against a schema that
+          # had plainly drifted. Parse it.
+          grep -o '{"diff".*}' /tmp/drift.out | jq -r '.diff // ""' > /tmp/drift.sql
+          if [ -n "$(tr -d '[:space:]' < /tmp/drift.sql)" ]; then
+            echo "::error::supabase/schemas/ has drifted from supabase/migrations/."
+            echo "The statements below are what the migrations contain and the schema files do not."
+            echo "Update the matching file in supabase/schemas/ so it describes the real schema."
+            echo
+            cat /tmp/drift.sql
+            exit 1
+          fi
+          echo "schemas/ and migrations/ agree"

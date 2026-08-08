@@ -67,16 +67,12 @@ grant all on FUNCTION public.isAdmin (_venueid uuid) to authenticated;
 
 grant all on FUNCTION public.isAdmin (_venueid uuid) to service_role;
 
-create or replace function public.no_minter_admins () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
-set
-	"search_path" to '' as $$
+create or replace function public.no_minter_admins () returns trigger language plpgsql security definer
+set "search_path" to '' as $$
 begin
-    -- Payment-free venues never mint or pay, so the anti-self-dealing rule
-    -- does not apply; their hidden currency may be minted by an admin.
     if new.payment_free then
         return new;
     end if;
-    -- If the admin of this venue is a minter of its currency, raise an exception
     if new.admins && (select minters from public.currencies where id = new.currency) then
         raise exception 'A venue admin cannot be the minter of the venue currency';
     end if;

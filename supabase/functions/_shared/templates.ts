@@ -33,6 +33,15 @@ export const Emails = {
 			'Consider reachnig out to the proposals to discuss the proposal further.'
 		]
 	},
+	ReconciliationFailed: {
+		subject: 'Token ledger reconciliation failed',
+		paragraphs: [
+			'The nightly integrity check on the token ledger found problems at $1.',
+			'$2',
+			'This means the record of how tokens moved no longer agrees with the tokens themselves, so balances may be wrong. The cause is almost certainly a bug or a direct change to the database rather than anything a scholar did — no scholar can move tokens except through a recorded transaction.',
+			'The full result is stored in the reconciliations table; the most recent row names which checks failed. supabase/dr/ has the tools for investigating, including tokens_as_of() for comparing current balances against any past moment.'
+		]
+	},
 	ProposalCreatedEditors: {
 		subject: 'Proposal created for your academic venue',
 		paragraphs: [

@@ -305,11 +305,16 @@ entrypoint = "./functions/remind/index.ts"
 
 [db.migrations]
 schema_paths = [
+    # Dependency order: a file may only reference tables declared above it.
+    # preference_levels precedes assignments (which has an FK to it), and
+    # audit_log/reconciliations come last because their triggers attach to
+    # every table above. The trailing glob catches anything not listed.
     "./schemas/scholars.sql",
     "./schemas/currencies.sql",
     "./schemas/exchanges.sql",
     "./schemas/venues.sql",
     "./schemas/roles.sql",
+    "./schemas/preference_levels.sql",
     "./schemas/volunteers.sql",
     "./schemas/proposals.sql",
     "./schemas/supporters.sql",
@@ -321,13 +326,10 @@ schema_paths = [
     "./schemas/submissions.sql",
     "./schemas/assignments.sql",
     "./schemas/conflicts.sql",
+    "./schemas/thanks.sql",
     "./schemas/emails.sql",
     "./schemas/email_verifications.sql",
-    "./schemas/preference_levels.sql",
-    "./schemas/thanks.sql",
-    # Last: its triggers attach to every audited table above, so they must
-    # already exist. Previously preference_levels and thanks were reached only
-    # through the trailing glob, which would have ordered them after this.
     "./schemas/audit_log.sql",
+    "./schemas/reconciliations.sql",
     "./schemas/*.sql"
 ]

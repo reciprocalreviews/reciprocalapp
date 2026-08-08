@@ -68,7 +68,7 @@ alter table public.email_verifications ENABLE row LEVEL SECURITY;
 -- things went wrong. Without it every case collapsed into one generic "unable to send",
 -- which told a rate-limited scholar nothing and made a missing vault secret look like a
 -- transient delivery fault.
-create or replace function public.request_email_verification (_email text) RETURNS void LANGUAGE "plpgsql" SECURITY DEFINER
+create or replace function public.request_email_verification (_email text) returns void language "plpgsql" security definer
 set
 	"search_path" to 'public', 'pg_temp' as $$
 declare
@@ -83,6 +83,8 @@ begin
 	if _email is null or _email !~ '^.+@.+\..+$' then
 		raise exception 'A valid email address is required' using hint = 'invalid_email';
 	end if;
+	-- A deployment that has not had its `site_url` vault secret set cannot build a
+	-- verification link. Say so, rather than letting it look like a delivery failure.
 	if _origin is null or _origin = '' then
 		raise exception 'The site_url vault secret is not configured' using hint = 'not_configured';
 	end if;
@@ -156,13 +158,10 @@ begin
 		return jsonb_build_object('status', 'expired');
 	end if;
 
-	-- Commit the candidate. This is IDEMPOTENT: we deliberately do NOT delete the token
-	-- here, so a repeat visit within the 15-minute window still returns 'verified' rather
-	-- than a misleading 'invalid'. Single-use-with-delete breaks whenever the link is
-	-- fetched more than once before the user acts — an email security scanner (SafeLinks,
-	-- antivirus) prefetching it, or SvelteKit's hover-preload of the in-app dev link. A
-	-- later verification request replaces this row (upsert on the scholar PK), and an
-	-- expired revisit clears it.
+	-- Idempotent commit: do NOT delete the token, so a repeat fetch within the validity
+	-- window (email link scanner prefetch, or SvelteKit hover-preload) still returns
+	-- 'verified' rather than a misleading 'invalid'. A later request replaces this row
+	-- (upsert on the scholar PK); an expired revisit clears it.
 	update public.scholars set email = _row.candidate_email where id = _row.scholar;
 
 	return jsonb_build_object(

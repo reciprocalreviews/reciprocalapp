@@ -132,7 +132,7 @@ alter function private.get_secret (secret_name text) OWNER to "postgres";
 -- `supabase_url` vault secrets set by hand; local dev seeds them from [db.vault] in
 -- supabase/config.toml. There is no fallback to the older `service_role_key` secret name:
 -- that transition finished, and the retired secret was dropped in 20260802000000.
-create or replace function public.send_email () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+create or replace function public.send_email () returns trigger language plpgsql security definer
 set
 	"search_path" to '' as $$
 declare
@@ -142,9 +142,7 @@ declare
 begin
   -- Delivery is BEST EFFORT. The row in public.emails is the durable record that a message
   -- was meant to go out; whether the edge function can be reached is a deployment concern
-  -- and must never roll back the caller's transaction. Before this, a missing or malformed
-  -- supabase_url raised here and failed whatever action had queued the mail — volunteering,
-  -- proposing a venue, verifying an email — on a project whose only fault was a bad secret.
+  -- and must never roll back the caller's transaction.
   if _key = '' or _url = '' then
     raise warning 'send_email: % is not configured, so email % was recorded but not delivered',
       case when _url = '' then 'the supabase_url vault secret' else 'the secret_key vault secret' end,
@@ -193,3 +191,71 @@ grant all on FUNCTION public.send_email () to "service_role";
 create or replace trigger send_on_email_insert
 after INSERT on public.emails for EACH row
 execute FUNCTION public.send_email ();
+
+--------------------------------------
+-- RPC (authoritative definition from migration 20260719030000_queue_email_rpc)
+create or replace function public.queue_email (
+	_event text,
+	_args text[] default '{}',
+	_scholars uuid[] default null,
+	_proposal uuid default null
+) returns jsonb language plpgsql security definer
+set
+	"search_path" to 'public', 'pg_temp' as $$
+declare
+	_caller uuid := (select auth.uid());
+	_recipients jsonb := '[]'::jsonb;
+begin
+	if _caller is null then
+		raise exception 'Authentication required';
+	end if;
+	if _event is null or _event = '' then
+		raise exception 'An event is required';
+	end if;
+	-- VerifyEmail is the one template that renders an ARGUMENT as a clickable link
+	-- (templates.ts `urlArgs`), so allowing it here would let a caller send branded mail
+	-- containing a link of their choosing. It is queued only by
+	-- public.request_email_verification, which builds the URL itself.
+	if _event = 'VerifyEmail' then
+		raise exception 'VerifyEmail is queued only by request_email_verification';
+	end if;
+
+	-- Resolve scholar recipients. Scholars with no verified contact email are skipped:
+	-- scholars.email holds only verified addresses, so a null here means "not verified".
+	if _scholars is not null then
+		insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
+		select _event, s.id, _caller, null, s.email, null, null, to_jsonb(_args)
+		from public.scholars s
+		where s.id = any(_scholars) and s.email is not null;
+
+		select coalesce(jsonb_agg(jsonb_build_object('name', s.name, 'email', s.email)), '[]'::jsonb)
+		into _recipients
+		from public.scholars s
+		where s.id = any(_scholars) and s.email is not null;
+	end if;
+
+	-- Resolve a proposal's editor addresses.
+	if _proposal is not null then
+		insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
+		select _event, null, _caller, null, e, null, null, to_jsonb(_args)
+		from public.proposals p, unnest(p.editors) as e
+		where p.id = _proposal and e is not null and e <> '';
+
+		select _recipients || coalesce(jsonb_agg(jsonb_build_object('name', e, 'email', e)), '[]'::jsonb)
+		into _recipients
+		from public.proposals p, unnest(p.editors) as e
+		where p.id = _proposal and e is not null and e <> '';
+	end if;
+
+	return _recipients;
+end;
+$$;
+
+alter function public.queue_email (text, text[], uuid[], uuid) OWNER to "postgres";
+
+revoke execute on function public.queue_email (text, text[], uuid[], uuid)
+from
+	public,
+	anon;
+
+grant execute on function public.queue_email (text, text[], uuid[], uuid) to authenticated;

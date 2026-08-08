@@ -27,12 +27,11 @@ create policy "anyone can see conflicts" on public.conflicts for
 select
 	to authenticated using (true);
 
-create policy "admins and volunteers can create conflicts" on public.conflicts for INSERT to "authenticated"
+create policy "admins and volunteers can create conflicts" on "public"."conflicts" as permissive for insert to authenticated
 with
 	check (
 		(
-			-- Scholar is editor of the submission's venue
-			public.isAdmin (
+			public.isadmin (
 				(
 					select
 						submissions.venue
@@ -42,35 +41,42 @@ with
 						(submissions.id=conflicts.submissionid)
 				)
 			)
-		)
-		or (
-			-- Scholar is a volunteer for the submission's venue
-			exists (
-				select
-					*
-				from
-					public.volunteers
-				where
-					(
-						volunteers.scholarid=conflicts.scholarid
-						and volunteers.roleid in (
-							select
-								roles.id
-							from
-								public.roles
-							where
-								(
-									roles.venueid=(
-										select
-											submissions.venue
-										from
-											public.submissions
-										where
-											(submissions.id=conflicts.submissionid)
-									)
+			or (
+				exists (
+					select
+						volunteers.id,
+						volunteers.scholarid,
+						volunteers.roleid,
+						volunteers.created_at,
+						volunteers.expertise,
+						volunteers.active,
+						volunteers.accepted
+					from
+						public.volunteers
+					where
+						(
+							(volunteers.scholarid=conflicts.scholarid)
+							and (
+								volunteers.roleid in (
+									select
+										roles.id
+									from
+										public.roles
+									where
+										(
+											roles.venueid=(
+												select
+													submissions.venue
+												from
+													public.submissions
+												where
+													(submissions.id=conflicts.submissionid)
+											)
+										)
 								)
+							)
 						)
-					)
+				)
 			)
 		)
 	);

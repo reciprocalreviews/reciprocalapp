@@ -77,15 +77,10 @@ grant all on FUNCTION public.isSteward () to "authenticated";
 
 grant all on FUNCTION public.isSteward () to "service_role";
 
-create or replace function public.handle_new_scholar () RETURNS "trigger" LANGUAGE "plpgsql" SECURITY DEFINER
+create or replace function public.handle_new_scholar () returns "trigger" language "plpgsql" security definer
 set
 	"search_path" to '' as $$
 begin
-  -- Seed the scholar row from the ORCID OIDC metadata. We deliberately do NOT copy
-  -- an email: scholars authenticate with ORCID (which does not release an email), and
-  -- public.scholars.email holds only a VERIFIED contact address, set later by
-  -- public.verify_email (#19, #27). The ORCID iD arrives as the OIDC 'sub' claim;
-  -- coalesce covers whichever key the provider's attribute mapping emits.
   insert into public.scholars (id, orcid, name)
   values (
     new.id,
@@ -94,8 +89,9 @@ begin
       new.raw_user_meta_data->>'provider_id',
       new.raw_user_meta_data->>'sub'
     ),
-    -- ORCID sends given_name/family_name and no `name`. Prefer `name` for providers that
-    -- do send it; fall back to the composed form. Left null when neither is present.
+    -- ORCID sends given_name/family_name and no `name`. Prefer `name` for providers that do
+    -- send it; fall back to the composed form. Left null when the provider sends neither,
+    -- so the scholar can supply one rather than being given a placeholder.
     coalesce(
       nullif(btrim(new.raw_user_meta_data->>'name'), ''),
       nullif(btrim(concat_ws(' ',
@@ -104,7 +100,6 @@ begin
       )), '')
     )
   );
-  -- Return the new row.
   return new;
 end;
 $$;
@@ -155,3 +150,12 @@ create policy "Scholars can remove themselves" on public.scholars for DELETE to 
 
 alter publication supabase_realtime
 add table scholars;
+
+--------------------------------------
+-- The trigger that makes a scholar exist at all. Defined in migration
+-- 20240901174833_scholars.sql and long absent from this file, which is how a
+-- reader could conclude scholars were created by the application: they are not —
+-- inserting one is forbidden by policy, and this is the only path.
+create or replace trigger on_auth_user_created
+after insert on auth.users for each row
+execute procedure public.handle_new_scholar ();

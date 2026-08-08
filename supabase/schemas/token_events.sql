@@ -189,6 +189,16 @@ from
 	anon,
 	authenticated;
 
+-- Explicitly revoked, not merely un-granted: Supabase's default privileges give
+-- service_role ALL on every new table in `public` before this file's grant runs,
+-- so `grant select` alone left INSERT, UPDATE and DELETE in place and the line
+-- below described a restriction that did not exist.
+revoke insert,
+update,
+delete on table public.token_events
+from
+	service_role;
+
 grant
 select
 	on table public.token_events to service_role;
