@@ -71,9 +71,12 @@ runs:
         EOF
           exit 1
         fi
-        # Tolerate the comment lines age-keygen emits above the key itself.
-        rec="$(grep -oE 'age1[0-9a-z]+' "$f" | head -1)"
+        # ALL recipients in the file, not just the first: a second key lets the
+        # automated drill decrypt without ever being handed the offline one.
+        # Tolerates the comment lines age-keygen emits above each key.
+        rec="$(grep -oE 'age1[0-9a-z]+' "$f" | paste -sd' ' -)"
         [ -n "$rec" ] || { echo "no age1... recipient found in $f" >&2; exit 1; }
+        echo "recipients: $rec"
         echo "recipient=$rec" >> "$GITHUB_OUTPUT"
 
     - name: Dump and encrypt

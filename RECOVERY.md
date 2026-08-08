@@ -440,16 +440,32 @@ records a `grant_fingerprint` covering table *and* column grants — the column 
 carry the INSERT/UPDATE allowlists that `20260802010000` relies on — and
 `drill.sh` asserts it, plus a direct `has_table_privilege('anon', …)` check.
 
-### The drill needs a private key, which the backup job must not have
+### The drill needs a private key — use a second recipient
 
-The whole point of encrypting to an age *public* key is that CI can write backups
-but never read one. A drill has to decrypt, so giving it the primary identity
-would undo that.
+The automated drill has to decrypt, so CI needs an identity. Giving it the offline
+one would be wrong; giving it nothing means the drill never runs.
 
-Use a **separate age recipient** for a parallel `drill/` copy with short
-retention, and give CI only that identity as `BACKUP_AGE_IDENTITY`. The primary
-backups stay readable only from the offline key. Automation you skip is worse
-than a slightly larger key surface — but the split keeps the surface small.
+The answer is a **second recipient on the same artifacts**. `age` encrypts a file
+once and wraps the key for each recipient, so adding one costs a few dozen bytes
+rather than a second copy, and either key opens the file independently.
+
+- Your **offline** key stays the primary and is never in CI.
+- A **drill** key lives in CI as `BACKUP_AGE_IDENTITY`, and can be rotated on its
+  own by removing its public key from `backup-recipient.age.pub`. Old backups stay
+  readable with the offline key.
+
+Both public keys go in `supabase/dr/backup-recipient.age.pub`, one per line; the
+dump action passes every `age1…` it finds.
+
+> **On the "CI can write but not read" property.** Handing CI a decryption key
+> does weaken it — but less than it appears, because CI already holds
+> `PRODUCTION_DB_URL`. Anyone who compromises Actions can dump the database
+> directly, so withholding a key protects little that is not already reachable.
+> What the encryption genuinely protects is the artifacts **at rest in R2**,
+> against a leaked bucket credential or a storage-provider compromise, and that is
+> unaffected by who holds a key. The earlier design here called for a separate
+> short-retention `drill/` copy; a second recipient achieves the same isolation
+> with none of the machinery.
 
 ### Quarterly, by hand
 

@@ -11,8 +11,11 @@
 #
 # Environment:
 #   DB_URL         required. See "the IPv6 trap" below.
-#   AGE_RECIPIENT  age public key. If unset, output is left UNENCRYPTED and the
-#                  script says so loudly — only appropriate for a local drill.
+#   AGE_RECIPIENT  age public key(s), whitespace- or comma-separated. Every
+#                  recipient listed can decrypt the result independently, which is
+#                  how the automated drill gets a key of its own without ever being
+#                  handed the offline one. If unset, output is left UNENCRYPTED and
+#                  the script says so loudly — only appropriate for a local drill.
 #   OUT_DIR        where to write (default ./dr-out). Must not already exist.
 #   PG_IMAGE       client image (default postgres:17).
 #   PGSSLMODE      default `require`. Set `disable` for a local stack.
@@ -211,7 +214,13 @@ if [ -z "$AGE_RECIPIENT" ]; then
 	WARN
 	ENCRYPTED=1
 else
-	echo "==> Encrypting to $AGE_RECIPIENT"
+	# One -r per recipient. age encrypts the file once and wraps the key for each,
+	# so a second recipient costs a few dozen bytes rather than a second copy.
+	AGE_ARGS=""
+	for _r in $(printf '%s' "$AGE_RECIPIENT" | tr ',' ' '); do
+		AGE_ARGS="$AGE_ARGS -r $_r"
+	done
+	echo "==> Encrypting to $(printf '%s' "$AGE_RECIPIENT" | tr ',' ' ' | wc -w | tr -d ' ') recipient(s)"
 	# age is the one non-Postgres dependency. Prefer a local binary, and
 	# otherwise borrow one from a throwaway container, so this script still runs
 	# during an incident on a machine that has nothing installed but Docker. One
@@ -219,7 +228,7 @@ else
 	if command -v age >/dev/null 2>&1; then
 		for f in "$OUT_ABS"/*; do
 			case "$f" in *.age) continue ;; esac
-			age -r "$AGE_RECIPIENT" -o "$f.age" "$f" && rm -f "$f"
+			age $AGE_ARGS -o "$f.age" "$f" && rm -f "$f"
 		done
 	else
 		say "(no local age binary; borrowing one from a container)"
@@ -230,14 +239,14 @@ else
 		# chown is a harmless no-op; on Linux it is essential.)
 		docker run --rm \
 			-v "$OUT_ABS:/out" \
-			-e REC="$AGE_RECIPIENT" \
+			-e AGE_ARGS="$AGE_ARGS" \
 			-e UIDGID="$(id -u):$(id -g)" \
 			alpine:3 sh -c '
 				set -e
 				apk add --no-cache age >/dev/null
 				for f in /out/*; do
 					case "$f" in *.age) continue ;; esac
-					age -r "$REC" -o "$f.age" "$f"
+					age $AGE_ARGS -o "$f.age" "$f"
 					rm -f "$f"
 				done
 				chown -R "$UIDGID" /out'
