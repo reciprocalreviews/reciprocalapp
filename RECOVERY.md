@@ -7,11 +7,16 @@ actually performed, and there is no upstream system it can be re-derived from �
 if it's gone, it's gone. This document is what stands between an incident and
 that outcome.
 
-> **Status.** The nightly off-platform backup described here is in place. The
-> restore runbook — per-scenario procedures, the quarantine and re-arm scripts,
-> and the rehearsal drill — lands with the next phase. Until then, **a restore
-> has never been rehearsed**, so treat the recovery time below as an estimate
-> rather than a measurement.
+> **Status.** The nightly off-platform backup is in place, and the restore
+> procedure below is written and its scripts tested — `quarantine.sql` and
+> `rearm.sql` have been exercised against a live database and verified to
+> neutralize and restore every control they touch. A backup has now been
+> **restored end to end and verified against its manifest** — see
+> [Drills](#drills) for the measured time and, importantly, what that number does
+> and does not cover. What has **not** happened yet is a rehearsal against a
+> *hosted* project, which is where provisioning, the vault, and edge function
+> deploys get exercised. See [Scenarios](#scenarios) for which situations need a
+> restore at all — several do not.
 
 ---
 
@@ -53,6 +58,8 @@ rehearsed whenever you like, and are the only copy you hold the keys to.
 | `public.dump` | Application schema **and** data, custom format (so a restore can be surgical: `pg_restore -t submissions`) |
 | `auth.dump` | `auth.users` + `auth.identities`, data only |
 | `roles.sql` | Cluster roles via `pg_dumpall --globals-only --no-role-passwords` |
+| `extensions.sql` | `create extension` DDL. **Not carried by `pg_dump`** — extensions are cluster state, not schema state |
+| *(privileges)* | Carried inside `public.dump`. `--no-privileges` is deliberately **not** used — see below |
 | `cron.json` | The `cron.job` table |
 | `manifest.json` | Row counts, watermarks, migration list, extensions, realtime table list, RLS policy count, vault secret *names*, and a SHA-256 of every other artifact |
 | *(vault secret names live in the manifest)* | So a restore knows which secrets must be re-entered by hand |
@@ -67,6 +74,14 @@ Three of these exist because of things that are easy to get wrong:
 - **`cron.json` is captured separately** because `cron.job` lives outside every
   schema dump. That is exactly how the `remind-daily` job was silently lost once
   before — see `supabase/migrations/20260517230819_restore_remind_cron.sql`.
+- **`extensions.sql` exists because a rehearsal lost `pg_net`.** It was created
+  without a schema override, so on that project it lived in `public` and
+  `drop schema public cascade` took it; nothing in the dump brought it back.
+  `send_email()` then called a `net.http_post` that no longer existed — the row
+  recorded, delivery best-effort, **not one email leaving**. That is the same
+  failure mode migration `20260720020000` was written to fix, found again from the
+  other direction. `drill.sh` now applies this file and asserts every recorded
+  extension.
 - **Vault *values* are deliberately never captured.** They are set by hand on
   hosted projects and belong in a password manager, not in an artifact CI can
   write. The manifest records the *names* so a restore knows what is missing.
@@ -212,29 +227,237 @@ hypothesis.
 
 ## Restoring
 
-The full runbook — total project loss, bad migration, malicious deletion,
-single-row surgery, accidental cascade delete, and ledger divergence — arrives
-with the next phase, together with the `quarantine.sql` / `rearm.sql` scripts
-that make a restore safe to perform at all.
+Every restore follows the same shape. Deviating from it is how a recovery turns
+into a second incident.
 
-**Do not attempt a restore from these artifacts without those scripts.** Four
-hazards fire on a naive restore, and each one reaches real people:
+### The procedure
 
-1. **Restoring the `emails` table re-sends every historical email.** The
-   `send_on_email_insert` trigger POSTs the `resend` edge function per row.
-2. **A restored clone starts mailing scholars**, because `cron.job` comes back
-   with the `remind-daily` schedule intact.
-3. **Reminder de-duplication is stamped in the data**
-   (`scholars.status_reminder_time`, `venues.transaction_reminder_time`), so
-   rolling back past those stamps re-arms reminders that already went out.
-4. **Realtime fans every restored row at every connected client**, and each one
-   triggers `invalidateAll()`.
+> **You do not need Postgres installed.** [supabase/dr/psql.sh](supabase/dr/psql.sh)
+> runs psql through a container and takes any argument psql does — `-c`, `-f`
+> (paths resolve from the repository root), or nothing for an interactive shell.
+> `dump.sh` and `drill.sh` already work this way; this exposes it for the manual
+> steps, so a recovery never stalls on `psql: command not found`.
+>
+> ```sh
+> DB_URL="postgresql://postgres.<ref>:<pw>@aws-0-<region>.pooler.supabase.com:5432/postgres" \
+>   ./supabase/dr/psql.sh -c "select 1"
+> ```
+>
+> The Supabase dashboard's SQL editor is **not** a substitute for the scripts:
+> `quarantine.sql` and `rearm.sql` use psql meta-commands (`\echo`,
+> `\set ON_ERROR_STOP`) that it cannot run.
 
-The short version of the safe procedure: quarantine the target first (disable the
-email trigger, blank the vault secrets, unschedule cron, drop the realtime
-publication), then load, then re-arm deliberately.
 
----
+**0. Decide the target.** Restoring *over* a live database is almost never right.
+Restore into a fresh project, or into a scratch schema, and move the rows you
+need. The one exception is a total loss, where there is nothing to protect.
+
+**1. Fetch and verify before touching anything.** Check the artifacts against the
+manifest's own SHA-256 map, then read the manifest: `db.migrations` tells you
+which schema this data belongs to. Restoring a dump into a tree at a different
+migration state is a mismatch worth catching now.
+
+**2. Quarantine — BEFORE you destroy anything.**
+
+```sh
+DB_URL=... ./supabase/dr/psql.sh -f supabase/dr/quarantine.sql
+```
+
+Order matters more than it looks. `quarantine.sql` records the realtime
+publication's membership, and **the dump does not carry it** — publications are
+database-level objects, so `pg_dump --schema=public` emits nothing for them. Drop
+`public` first and the publication empties, quarantine records zero tables, and
+you finish with a restore where every row and every policy is present and
+realtime is silently dead on all 14 tables. The app loads and simply stops
+updating.
+
+Its record lives in a `dr` schema, not `public`, so it survives the drop. Re-runs
+keep the first capture rather than overwriting it, for the same reason.
+
+**3. Apply the schema** — `supabase db push`, or `pg_restore --section=pre-data`.
+
+**4. Quarantine (again, harmless).**
+
+```sh
+DB_URL=... ./supabase/dr/psql.sh -f supabase/dr/quarantine.sql
+```
+
+Disables the email trigger, unschedules cron, drops the realtime publication, and
+records exactly what it changed so step 7 can reverse it.
+
+**5. Load the data.**
+
+```sh
+# Portable shape: pg_restore writes SQL to stdout, psql applies it in one session.
+{ echo "set session_replication_role = replica;"
+  pg_restore --data-only --no-owner --no-privileges -f - public.dump
+} | DB_URL=... ./supabase/dr/psql.sh -v ON_ERROR_STOP=1 --single-transaction
+```
+
+Load `auth.dump` the same way. A `public`-only restore is not restorable:
+`scholars.id` references `auth.users(id) ON DELETE CASCADE`, so without it every
+scholar orphans.
+
+Two notes on the `set session_replication_role = replica`:
+
+- It suppresses every user trigger for the session — verified directly against
+  this schema. It is cheap insurance rather than a strict requirement here: in a
+  full `pg_restore`, triggers live in the post-data section and are created
+  *after* the data lands, so they do not fire on restored rows. Tested both with
+  and without, restoring into a schema that already had all 16 audit triggers:
+  neither produced a single manufactured row.
+- Prefer it over `pg_restore --disable-triggers`, which emits
+  `ALTER TABLE … DISABLE TRIGGER ALL` and needs more than table ownership — it
+  may well fail against hosted Supabase. **Confirm which of the two your role can
+  actually do during a drill, not during an incident.**
+
+**6. Replay forward, if you have a tail.** Apply `audit_log` rows with `seq`
+greater than the manifest's watermark, in `seq` order, upserting `after` (or
+deleting on `DELETE`). Ordering by `seq` respects foreign-key causality for free,
+because the original writes did.
+
+**Here the trigger suppression is not optional.** Replay issues ordinary
+`INSERT`/`UPDATE` statements against a schema whose triggers are live, so without
+`session_replication_role = replica` every replayed row manufactures a fresh
+`audit_log` and `token_events` entry dated today — fabricating a history in which
+the whole economy moved at the moment of the restore. It is also what stops the
+transaction immutability trigger from rejecting perfectly good historical rows.
+
+**7. Verify before re-arming.** Every table count and `auth_user_count` against
+the manifest, `npm run test:rls` to prove policies and grants survived, and
+`tokens_as_of()` against `tokens` to prove the ledger agrees with state.
+
+**8. Re-arm.**
+
+```sh
+DB_URL=... ./supabase/dr/psql.sh -f supabase/dr/rearm.sql
+```
+
+Rebuilds the publication from what quarantine recorded, reschedules cron,
+re-enables mail last, and stamps the reminder timestamps to suppress one cycle —
+see below. It then prints what only a human can do: re-enter the vault secrets,
+deploy the edge functions, and repoint the app.
+
+**9. Re-apply erasures.** Any scholar who exercised their right to be forgotten
+is alive again in restored data. This is mandatory, not optional. (The `erasures`
+ledger arrives with the GDPR work; until then, keep the list by hand.)
+
+### Why reminders get suppressed
+
+Reminder de-duplication is stamped in the data — `scholars.status_reminder_time`
+and `venues.transaction_reminder_time`. Restoring to a point before those stamps
+re-arms reminders that already went out, so the next cycle mails real people a
+second time. `rearm.sql` stamps everything to now, costing at most one skipped
+cycle. The asymmetry is the argument: a skipped reminder is a minor annoyance,
+duplicate mail to every scholar is not.
+
+### Scenarios
+
+| # | Situation | Approach |
+|---|---|---|
+| 1 | Total project or account loss | The full procedure into a fresh project. This is the only case where "restore everything" is the right answer. |
+| 2 | Bad migration | Restore the pre-migration snapshot, then replay `audit_log` past the watermark the deploy recorded. Revert the migration in the repo before redeploying, or the next deploy repeats it. |
+| 3 | Malicious or erroneous privileged actor | The Object-Locked daily copy is the one a stolen credential cannot have deleted. Restore it to a **scratch** project, diff against live, and re-insert only what is missing. |
+| 4 | One venue, one submission, one row | `pg_restore --data-only -t <table>` into a `restore` schema, then `insert … select` the specific rows. Never restore over a live table. |
+| 5 | Accidental cascade delete of a scholar | Re-create the `auth.users` row with the same uuid; the FKs and `on_auth_user_created` re-link. `token_events` is FK-free by design, so the token history was never lost. |
+| 6 | Balances look wrong after a deploy | **No restore.** Diff `tokens` against `tokens_as_of('<before the deploy>')` and repair only the difference. This keeps every legitimate transaction that happened since. |
+| 7 | A scholar's data must stay deleted | `public.erasures`, re-applied at step 8 of every restore. |
+
+Scenario 6 is the common one in practice, and the only one that costs nothing:
+it is a query and a targeted update, not a recovery.
+
+## Drills
+
+[supabase/dr/drill.sh](supabase/dr/drill.sh) restores a backup into a throwaway
+database and **asserts the result against the manifest** — every table's row
+count, `auth.users` against `scholars`, the append-only watermarks, the RLS
+policy count, and whether `tokens_as_of()` still agrees with `tokens`. "The
+restore finished" is a feeling; these are facts.
+
+```sh
+BACKUP_DIR=/tmp/backup \
+TARGET_DB_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres \
+AGE_IDENTITY=/tmp/backup-identity.txt \
+./supabase/dr/drill.sh
+```
+
+[.github/workflows/backup-drill.yml](.github/workflows/backup-drill.yml) runs it
+monthly at 09:00 UTC on the 1st against the newest real backup in object storage,
+into a fresh Supabase stack on the runner, and finishes with `npm run test:rls` —
+because row counts prove the data came back, and only the policy tests prove the
+*security* came back.
+
+### Measured restore time
+
+| Date | Target | Time | Notes |
+|---|---|---|---|
+| 2026-08-04 | local stack | 8s | first drill |
+| 2026-08-08 | **hosted production** | **33s** | first hosted rehearsal; 1 scholar |
+
+Update after each run.
+
+Read it narrowly. It covers decrypt, checksum verification, quarantine, and the
+restore of schema, data, and auth into an already-provisioned stack. It does
+**not** include provisioning a Supabase project, applying migrations, re-entering
+vault secrets, deploying edge functions, or repointing the app — which is most of
+the wall-clock time in scenario 1. It is also measured against a near-empty
+database; it will grow with the data.
+
+### What the drills found
+
+Both findings below were invisible to every test in the repository, and each
+would have produced a restore that looked completely successful.
+
+**A bare Postgres database is not a valid restore target.** Restoring into one
+completed successfully, matched every single row count, and silently produced a
+database with **29 of 71 RLS policies missing** — because every policy calls
+`auth.uid()` and the `auth` schema did not exist. Row counts alone would have
+called that restore a success.
+
+`drill.sh` now refuses such a target up front rather than reporting a puzzling
+policy-count mismatch later. The practical consequence: drill into a provisioned
+Supabase project or a local `supabase start` stack, never a plain database.
+
+**The realtime publication and the extensions are not in the dump.** Both are
+database-level objects, so `pg_dump --schema=public` emits nothing for either. A
+restore brings back every row and every policy while leaving realtime dead on all
+14 tables and `pg_net` absent — the app loads, stops updating live, and silently
+sends no mail. `quarantine.sql` captures the publication (into a `dr` schema, so
+it survives `drop schema public cascade`), `dump.sh` captures the extensions, and
+`drill.sh` asserts both. **Quarantine must run before anything is dropped**, or it
+records an empty publication.
+
+**Grants are not policies, and losing them is invisible.** The dump was taken
+with `--no-privileges`, which strips every `GRANT`. A rehearsal restore therefore
+produced production with all 71 RLS policies, every row, correct watermarks, an
+intact ledger — and **no table privileges for `anon` or `authenticated`**.
+PostgREST connects as exactly those roles, so the database was complete and served
+nothing; the app rendered "Unable to load" on every page. Every assertion in the
+drill passed, because none of them looked at privileges.
+
+`dump.sh` no longer passes `--no-privileges` (nor does the restore), the manifest
+records a `grant_fingerprint` covering table *and* column grants — the column ones
+carry the INSERT/UPDATE allowlists that `20260802010000` relies on — and
+`drill.sh` asserts it, plus a direct `has_table_privilege('anon', …)` check.
+
+### The drill needs a private key, which the backup job must not have
+
+The whole point of encrypting to an age *public* key is that CI can write backups
+but never read one. A drill has to decrypt, so giving it the primary identity
+would undo that.
+
+Use a **separate age recipient** for a parallel `drill/` copy with short
+retention, and give CI only that identity as `BACKUP_AGE_IDENTITY`. The primary
+backups stay readable only from the offline key. Automation you skip is worse
+than a slightly larger key surface — but the split keeps the surface small.
+
+### Quarterly, by hand
+
+The automated drill cannot exercise everything: `roles.sql` against a real hosted
+auth stack, extension availability, the vault, `pg_cron`, `pg_net`, edge function
+deploys, or the Vercel repoint. Once a quarter, walk this document by hand into a
+throwaway hosted project and record how long it took. Don't automate that one —
+the value is a human finding the step that has gone stale.
 
 ## Related
 

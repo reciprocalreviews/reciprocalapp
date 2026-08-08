@@ -115,8 +115,14 @@ fi
 # ------------------------------------------------------------------- dumps ---
 # Application schemas, structure and data, in custom format so a restore can
 # pick out a single table.
+# NOT --no-privileges. That flag cost a production outage during a rehearsal: RLS
+# policies and table GRANTs are different things, and dropping the grants produced
+# a restore where all 71 policies were present and every row count matched, while
+# PostgREST — which connects as `anon`/`authenticated` — could read nothing at all.
+# The database was complete and entirely unusable, and every assertion passed.
+# --no-owner stays: ownership is the platform's business, privileges are ours.
 echo "==> Dumping public + private"
-pgrun 'pg_dump "$PGURL" --format=custom --compress=9 --no-owner --no-privileges \
+pgrun 'pg_dump "$PGURL" --format=custom --compress=9 --no-owner \
 	--schema=public --schema=private --file=/out/public.dump'
 
 # Auth identities, data only: the schema itself belongs to the platform and is
@@ -132,6 +138,26 @@ echo "==> Dumping roles"
 pgrun 'pg_dumpall --globals-only --no-role-passwords -d "$PGURL" --file=/out/roles.sql'
 
 # ------------------------------------------------- state outside any schema --
+# Extensions are cluster state, not schema state, so pg_dump emits nothing for
+# them under --schema=public. That gap has already bitten once: a rehearsal
+# restore dropped pg_net (created without a schema override, so it lived in
+# `public`) and nothing brought it back — leaving send_email() calling a
+# net.http_post that no longer existed, with mail silently never sent. That is the
+# exact failure migration 20260720020000 was written to fix.
+#
+# chr(10) rather than E'\n' to keep this readable through two layers of shell
+# quoting. pg_catalog gets no schema clause; you cannot create into it.
+echo "==> Capturing extensions"
+pgrun 'psql "$PGURL" -X -tAc "
+	select coalesce(string_agg(
+		case when n.nspname = '"'"'pg_catalog'"'"'
+			then format('"'"'create extension if not exists %I;'"'"', e.extname)
+			else format('"'"'create extension if not exists %I with schema %I;'"'"', e.extname, n.nspname)
+		end, chr(10) order by e.extname), '"'"''"'"')
+	from pg_extension e join pg_namespace n on n.oid = e.extnamespace
+	where e.extname <> '"'"'plpgsql'"'"'
+" > /out/extensions.sql'
+
 echo "==> Capturing cron jobs and vault secret names"
 pgrun 'psql "$PGURL" -X -tAc "
 	select case when to_regclass('"'"'cron.job'"'"') is null then '"'"'[]'"'"'

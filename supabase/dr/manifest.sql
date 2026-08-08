@@ -159,6 +159,41 @@ select
 				where
 					pubname='supabase_realtime'
 			),
+			-- Table and column GRANTs, as an exact fingerprint.
+			--
+			-- Recorded because policies and privileges are INDEPENDENT, and confusing
+			-- them cost a production outage: a dump taken with --no-privileges restored
+			-- all 71 policies and every row, while `anon` and `authenticated` held no
+			-- privileges at all. PostgREST connects as those roles, so the database was
+			-- complete and served nothing — and every other check in this manifest
+			-- passed. Column grants are included because the INSERT/UPDATE allowlists
+			-- on transactions, scholars and submissions live there, and losing them
+			-- would quietly re-open what 20260802010000 closed.
+			--
+			-- drill.sh recomputes this identically; keep the two definitions in step.
+			'grant_fingerprint',
+			(
+				select
+					md5(string_agg(t, '|' order by t))
+				from
+					(
+						select
+							grantee||':'||table_name||':'||privilege_type as t
+						from
+							information_schema.role_table_grants
+						where
+							table_schema='public'
+							and grantee in ('anon', 'authenticated')
+						union all
+						select
+							grantee||':'||table_name||':'||column_name||':'||privilege_type
+						from
+							information_schema.role_column_grants
+						where
+							table_schema='public'
+							and grantee in ('anon', 'authenticated')
+					) x
+			),
 			-- A blunt but effective check that RLS survived the round trip: policies
 			-- are carried by the schema dump, and a count mismatch means it did not.
 			'rls_policy_count',
