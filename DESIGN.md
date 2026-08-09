@@ -169,6 +169,17 @@ A `Token` represents an indivisible unit of peer review labor in a particular `C
 
 The authoritative schema lives in [`supabase/schemas/tokens.sql`](supabase/schemas/tokens.sql).
 
+### Data rights
+
+> [!IMPORTANT]
+> The data below is specific to compliance with the platform's terms
+
+- [x] A `Scholar` can **download everything** the platform holds about them, as a single file: their profile, volunteering, submissions, assignments, conflicts, transactions, and the history of where their tokens have been.
+- [x] A `Scholar` can **erase their account**. Their name, email address, and ORCID iD are permanently removed and they can no longer sign in.
+- [x] Erasure does **not** delete their reviewing and payment records, and this is deliberate rather than a limitation. Those records are part of other scholars' histories too — the venue that paid for a review, the co-authors on a submission, the reviewer who received a thank-you note — so they remain, with no name attached to them. The tokens a scholar earned stay valid currency for the venues that issued them, because destroying them would quietly change what those venues hold.
+- [x] A steward can act on either request for a scholar who asks out of band, since not everyone who wants their data removed still has an account they can sign into.
+- [x] An erasure is remembered, so that recovering the platform from a backup cannot bring someone back who asked to be forgotten.
+
 ### Transactions
 
 > [!IMPORTANT]

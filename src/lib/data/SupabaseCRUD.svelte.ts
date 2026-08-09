@@ -759,6 +759,23 @@ export default class SupabaseCRUD extends CRUD {
 	// Proposals & supporters
 	// ─────────────────────────────────────────────────────────────────────────
 
+	async exportScholarData(scholar: ScholarID): Promise<Result<unknown>> {
+		const { data, error } = await this.client.rpc('export_scholar_data', { _scholar: scholar });
+		if (error)
+			return this.error(rpcErrorKey(error, 'ExportScholarData', { RR006: 'NotYourAccount' }), error);
+		return { data, error: undefined };
+	}
+
+	async eraseScholar(scholar: ScholarID): Promise<Result> {
+		// Irreversible by design: the point is that the data is gone. The caller is
+		// responsible for confirming intent and for signing the scholar out
+		// afterwards — their session outlives the identity behind it.
+		const { error } = await this.client.rpc('erase_scholar', { _scholar: scholar });
+		if (error)
+			return this.error(rpcErrorKey(error, 'EraseScholar', { RR006: 'NotYourAccount' }), error);
+		return { error: undefined, data: undefined };
+	}
+
 	async proposeVenue(
 		scholarid: ScholarID,
 		title: string,

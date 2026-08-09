@@ -328,6 +328,30 @@ export type Database = {
           },
         ]
       }
+      erasures: {
+        Row: {
+          completed_at: string | null
+          id: string
+          note: string | null
+          requested_at: string
+          subject: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          note?: string | null
+          requested_at?: string
+          subject: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          note?: string | null
+          requested_at?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       exchanges: {
         Row: {
           approved: string | null
@@ -1157,6 +1181,12 @@ export type Database = {
         Returns: Json
       }
       decline_thanks: { Args: { _id: string; _reason: string }; Returns: Json }
+      erase_scholar: {
+        Args: { _note?: string; _scholar?: string }
+        Returns: Json
+      }
+      export_scholar_data: { Args: { _scholar?: string }; Returns: Json }
+      forget_scholar: { Args: { _scholar: string }; Returns: Json }
       isadmin: { Args: { _venueid: string }; Returns: boolean }
       isapprover: { Args: { _roleid: string }; Returns: boolean }
       isassigned: { Args: { _submissionid: string }; Returns: boolean }

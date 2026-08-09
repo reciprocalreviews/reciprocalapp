@@ -56,6 +56,25 @@ GIT_SHA="${GIT_SHA:-$(git -C "$DR_DIR" rev-parse HEAD 2>/dev/null || echo unknow
 
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 1; }
 
+# Check the recipients BEFORE dumping. age itself would catch a malformed key,
+# but only at the encryption step — after a full dump of production has already
+# been pulled down and written to disk as plaintext. A paste error in the
+# recipient file has happened once already (a doubled `age1` prefix, which the
+# action's grep matched happily), so it is worth twelve lines to fail in the
+# first second instead of the last. An X25519 age public key is bech32:
+# `age1` plus exactly 58 characters of the bech32 alphabet.
+for _r in $(printf '%s' "$AGE_RECIPIENT" | tr ',' ' '); do
+	case "$_r" in
+		age1*) ;;
+		*) echo "recipient '$_r' does not start with age1" >&2; exit 1 ;;
+	esac
+	if ! printf '%s' "$_r" | grep -qE '^age1[02-9ac-hj-np-z]{58}$'; then
+		echo "recipient '$_r' is not a well-formed age public key" >&2
+		echo "(expected age1 + 58 bech32 chars; got ${#_r} chars total)" >&2
+		exit 1
+	fi
+done
+
 # Refuse to write into an existing directory: a half-populated OUT_DIR from an
 # earlier failed run would otherwise be uploaded as if it were complete.
 [ -e "$OUT_DIR" ] && { echo "OUT_DIR '$OUT_DIR' already exists; remove it first" >&2; exit 1; }

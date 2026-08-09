@@ -8,6 +8,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - Updated internal tooling for stability.
 
+### Added
+
+- Scholars can now **download everything** Reciprocal Reviews holds about them, and **erase their account**. Erasing permanently removes your name, email address, and ORCID iD; your reviewing and payment records remain without your name attached, because they are part of other scholars' histories too, and the tokens you earned stay valid currency for the venues that issued them. (#13)
+
 ### Fixed
 
 - Token ownership can now only change through a **recorded transaction**. Previously a scholar could transfer their own tokens directly with no record of the transfer, or relabel a token into a currency no one had granted them.

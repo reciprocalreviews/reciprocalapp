@@ -9,6 +9,7 @@
 		TransactionRow,
 		VenueRow
 	} from '$data/types';
+	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
@@ -26,6 +27,7 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import VerifyEmail from '$lib/components/VerifyEmail.svelte';
 	import { getDB } from '$lib/data/CRUD';
+	import { handle } from '$routes/feedback.svelte';
 	import type Scholar from '$lib/data/Scholar.svelte';
 	import Text from '$lib/locales/Text.svelte';
 	import { getAuth } from '$routes/Auth.svelte';
@@ -249,5 +251,45 @@
 			<Subheader icon={SettingsLabel} text={(l) => l.page.scholar.header.settings}></Subheader>
 			<VerifyEmail current={scholar.getEmail()} />
 		{/if}
+
+		{#if editable}
+			<!-- The data rights the terms page promises (page.terms.paragraph.rights),
+			     shown only to the scholar themselves. Erasure is deliberately placed
+			     below everything else and behind the Button's confirm step: it cannot
+			     be undone, and the ORCID identity behind the account goes with it. -->
+			<Subheader icon={SettingsLabel} text={(l) => l.page.scholar.privacy.header}></Subheader>
+			<Paragraph text={(l) => l.page.scholar.privacy.about}></Paragraph>
+			<div class="privacy">
+				<Button
+					strings={(l) => l.page.scholar.privacy.export}
+					action={() => {
+						// A plain navigation rather than a fetch: the endpoint answers with
+						// Content-Disposition: attachment, so the browser saves the file
+						// without this page having to hold a copy of it in memory.
+						window.location.href = `/scholar/${scholar.getID()}/export`;
+					}}
+				/>
+				<Button
+					strings={(l) => l.page.scholar.privacy.erase}
+					action={async () => {
+						// handle() returns false when the action failed, having already
+						// posted the error to the feedback bus.
+						const erased = await handle(db().eraseScholar(scholar.getID()));
+						// The session outlives the identity behind it, so sign out rather
+						// than leaving them on a page for an account that no longer exists.
+						if (erased !== false) await auth().signOut();
+					}}
+				/>
+			</div>
+		{/if}
 	{/if}
 </Page>
+
+<style>
+	.privacy {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing);
+		align-items: center;
+	}
+</style>

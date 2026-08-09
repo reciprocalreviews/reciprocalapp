@@ -191,6 +191,19 @@ export default abstract class CRUD {
 	 * src/routes/[[lang]]/verify/[token]) via the anon-callable verify_email RPC. */
 	abstract requestEmailVerification(email: string): Promise<Result>;
 
+	/** Export everything the platform holds about a scholar, as one JSON document.
+	 * A scholar may export themselves; a steward may export on their behalf for a
+	 * request that arrives out of band. Fulfils the portability half of the terms
+	 * (page.terms.paragraph.rights). */
+	abstract exportScholarData(scholar: ScholarID): Promise<Result<unknown>>;
+
+	/** Erase a scholar: destroy every field that identifies them, keeping the row
+	 * as an anonymous tombstone. Deletion is not possible — fourteen tables
+	 * reference scholars(id), including transactions.creator, which is NOT NULL —
+	 * and would in any case destroy records belonging to other people. The erasure
+	 * is recorded in `erasures` so it can be re-applied after a restore. */
+	abstract eraseScholar(scholar: ScholarID): Promise<Result>;
+
 	/** Propose a venue */
 	abstract proposeVenue(
 		scholar: ScholarID,

@@ -536,6 +536,14 @@
             "EmailScholar": {
               "type": "string"
             },
+            "EraseScholar": {
+              "description": "Erasing a scholar's account failed.",
+              "type": "string"
+            },
+            "ExportScholarData": {
+              "description": "Exporting a scholar's data failed.",
+              "type": "string"
+            },
             "GetScholarTransactions": {
               "type": "string"
             },
@@ -615,6 +623,10 @@
               "type": "string"
             },
             "NoRoleCompensation": {
+              "type": "string"
+            },
+            "NotYourAccount": {
+              "description": "The caller tried to export or erase an account that is not theirs.",
               "type": "string"
             },
             "PendingTransactionHasTokens": {
@@ -814,6 +826,9 @@
             "PendingTransactionHasTokens",
             "UnknownTransaction",
             "TransactionNotDeclined",
+            "NotYourAccount",
+            "ExportScholarData",
+            "EraseScholar",
             "AlreadyApproved",
             "SelfDealingApproval",
             "ApproveTransaction",
@@ -2582,6 +2597,43 @@
                   ],
                   "type": "object"
                 },
+                "privacy": {
+                  "additionalProperties": false,
+                  "description": "The scholar's own data-rights controls: export and erasure. Only ever shown to the scholar themselves.",
+                  "properties": {
+                    "about": {
+                      "type": "string"
+                    },
+                    "erase": {
+                      "$ref": "#/definitions/ConfirmButtonText"
+                    },
+                    "erased": {
+                      "type": "string"
+                    },
+                    "erasing": {
+                      "type": "string"
+                    },
+                    "export": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "exporting": {
+                      "type": "string"
+                    },
+                    "header": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "header",
+                    "about",
+                    "export",
+                    "exporting",
+                    "erase",
+                    "erasing",
+                    "erased"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -2627,7 +2679,8 @@
                 "card",
                 "checkbox",
                 "status",
-                "paragraph"
+                "paragraph",
+                "privacy"
               ],
               "type": "object"
             },

@@ -331,5 +331,6 @@ schema_paths = [
     "./schemas/email_verifications.sql",
     "./schemas/audit_log.sql",
     "./schemas/reconciliations.sql",
+    "./schemas/erasures.sql",
     "./schemas/*.sql"
 ]

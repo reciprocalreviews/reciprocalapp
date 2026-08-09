@@ -735,6 +735,17 @@ export type LocaleText = {
 				youHave: string;
 				thisScholarHas: string;
 			};
+			/** The scholar's own data-rights controls: export and erasure. Only ever
+			 * shown to the scholar themselves. */
+			privacy: {
+				header: string;
+				about: string;
+				export: ButtonText;
+				exporting: string;
+				erase: ConfirmButtonText;
+				erasing: string;
+				erased: string;
+			};
 		};
 		currency: {
 			title: string;
@@ -1249,6 +1260,12 @@ export type LocaleText = {
 		PendingTransactionHasTokens: string;
 		UnknownTransaction: string;
 		TransactionNotDeclined: string;
+		/** The caller tried to export or erase an account that is not theirs. */
+		NotYourAccount: string;
+		/** Exporting a scholar's data failed. */
+		ExportScholarData: string;
+		/** Erasing a scholar's account failed. */
+		EraseScholar: string;
 		AlreadyApproved: string;
 		SelfDealingApproval: string;
 		ApproveTransaction: string;

@@ -363,8 +363,19 @@ see below. It then prints what only a human can do: re-enter the vault secrets,
 deploy the edge functions, and repoint the app.
 
 **9. Re-apply erasures.** Any scholar who exercised their right to be forgotten
-is alive again in restored data. This is mandatory, not optional. (The `erasures`
-ledger arrives with the GDPR work; until then, keep the list by hand.)
+is alive again in restored data. **This step is mandatory.** A backup taken before
+someone asked to be forgotten still contains them, so a restore quietly recreates
+data the platform said it had destroyed — a broken promise caused by the recovery
+itself, and one nobody would notice.
+
+```sh
+DB_URL=... ./supabase/dr/psql.sh -f supabase/dr/reapply-erasures.sql
+```
+
+`public.erasures` exists precisely so that list survives the restore. It has no
+foreign key to `scholars`, so it stays valid even against a restore predating the
+accounts it names, and re-running it is harmless: `forget_scholar` only ever
+removes.
 
 ### Why reminders get suppressed
 

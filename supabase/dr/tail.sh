@@ -50,6 +50,17 @@ PGSSLMODE="${PGSSLMODE:-require}"
 WINDOW_HOURS="${WINDOW_HOURS:-3}"
 
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 1; }
+
+# Same preflight as dump.sh: a malformed recipient must fail now, not after the
+# export has been written to disk in plaintext. See the longer note there.
+for _r in $(printf '%s' "$AGE_RECIPIENT" | tr ',' ' '); do
+	if ! printf '%s' "$_r" | grep -qE '^age1[02-9ac-hj-np-z]{58}$'; then
+		echo "recipient '$_r' is not a well-formed age public key" >&2
+		echo "(expected age1 + 58 bech32 chars; got ${#_r} chars total)" >&2
+		exit 1
+	fi
+done
+
 [ -e "$OUT_DIR" ] && { echo "OUT_DIR '$OUT_DIR' already exists; remove it first" >&2; exit 1; }
 mkdir -p "$OUT_DIR"
 OUT_ABS="$(cd "$OUT_DIR" && pwd)"
