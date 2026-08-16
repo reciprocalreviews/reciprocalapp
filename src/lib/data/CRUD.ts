@@ -506,6 +506,8 @@ export default abstract class CRUD {
 	abstract getVenueTokens(venue: VenueID): Promise<ReadResult<TokenRow[] | null>>;
 	abstract getCurrencyTokens(currency: CurrencyID): Promise<ReadResult<TokenRow[] | null>>;
 	abstract getScholarTokens(scholar: ScholarID): Promise<ReadResult<TokenRow[] | null>>;
+	/** The scholar's total token count across every currency, for the header balance. */
+	abstract getScholarTokenCount(scholar: ScholarID): Promise<ReadResult<number>>;
 	abstract getTokenBalances(
 		currency: CurrencyID,
 		scholarIDs: ScholarID[]

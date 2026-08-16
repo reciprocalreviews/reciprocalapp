@@ -1,173 +1,21 @@
---------------------------------------
--- Schema
-create type public.invited as enum('invited', 'accepted', 'declined');
-
-alter type public.invited OWNER to postgres;
-
-create table if not exists public.volunteers (
-	-- The unique id of the role
-	id uuid default gen_random_uuid() not null,
-	-- The id of the scholar who volunteered
-	scholarid uuid not null,
-	-- The role they volunteered for
-	roleid uuid not null,
-	-- When this record was last updated
-	created_at timestamp with time zone default now() not null,
-	-- Relevant expertise provided by the scholar for the role
-	expertise text not null,
-	-- If the volunteer role is active or inactive, allowing scholars to unvolunteer, then revolunteer.
-	-- Allows us to keep the record of volunteering without granting newcomer tokens more than once.
-	active boolean default true not null,
-	-- Whether this role as been accepted by the scholar
-	accepted public.invited default 'accepted'::public.invited not null,
-	-- The number of papers the volunteer is committing to review (soft cap; null = unspecified)
-	papers integer
-);
-
-grant all on table public.volunteers to anon;
-
-grant all on table public.volunteers to authenticated;
-
-grant all on table public.volunteers to service_role;
-
-alter table only public.volunteers
-add constraint volunteers_pkey primary key (id);
-
-alter table only public.volunteers
-add constraint volunteers_roleid_fkey foreign KEY (roleid) references public.roles (id) on delete cascade;
-
-alter table only public.volunteers
-add constraint volunteers_scholarid_fkey foreign KEY (scholarid) references public.scholars (id) on delete cascade;
-
-alter table only public.volunteers
-add constraint volunteers_papers_check check (papers is null or papers >= 0);
-
---------------------------------------
--- Indexes
-create index role_volunteer_index on public.volunteers using btree (roleid);
-
-create index scholar_volunteer_index on public.volunteers using btree (scholarid);
-
---------------------------------------
--- Functions
--- True if the current scholar holds an accepted priority-0 role at the given venue.
--- Used by the tokens UPDATE policy to grant token-management authority.
-create or replace function public.isPriorityZero (_venueid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
-set
-	"search_path" to '' as $$
-	select exists (
-		select 1
-		from public.volunteers v
-		join public.roles r on r.id = v.roleid
-		where v.scholarid = (select auth.uid())
-			and v.accepted = 'accepted'
-			and r.venueid = _venueid
-			and r.priority = 0
-	);
-$$;
-
-alter function public.isPriorityZero (_venueid uuid) OWNER to postgres;
-
-grant all on FUNCTION public.isPriorityZero (_venueid uuid) to anon;
-
-grant all on FUNCTION public.isPriorityZero (_venueid uuid) to authenticated;
-
-grant all on FUNCTION public.isPriorityZero (_venueid uuid) to service_role;
-
---------------------------------------
--- Security
-alter table public.volunteers OWNER to postgres;
-
-alter table public.volunteers ENABLE row LEVEL SECURITY;
-
-create policy "anyone can view volunteers" on public.volunteers for
-select
-	to authenticated,
-	anon using (true);
-
-create policy "admins can invite and volunteers if not invite only" on public.volunteers for INSERT to authenticated
-with
-	check (
-		(
-			public.isAdmin (
-				(
-					select
-						roles.venueid
-					from
-						public.roles
-					where
-						(roles.id=volunteers.roleid)
-				)
-			)
-			or (
-				(
-					(
-						select
-							auth.uid () as uid
-					)=scholarid
-				)
-				and (
-					not (
-						select
-							roles.invited
-						from
-							public.roles
-						where
-							(roles.id=volunteers.roleid)
-					)
-				)
-			)
-		)
-	);
-
-create policy "volunteers can update" on public.volunteers
-for update
-	to authenticated using (
-		(
-			(
-				select
-					auth.uid () as uid
-			)=scholarid
-		)
-	);
-
-create policy "admins and volunteers can delete" on public.volunteers for DELETE to authenticated using (
-	(
-		public.isAdmin (
-			(
-				select
-					roles.venueid
-				from
-					public.roles
-				where
-					(roles.id=volunteers.roleid)
-			)
-		)
-		or (
-			(
-				select
-					auth.uid () as uid
-			)=scholarid
-		)
-	)
-);
-
---------------------------------------
--- RPCs (defined in migration 20260608000000_atomic_crud.sql)
--- Internal helper: settle the welcome grant for a volunteer. Not granted to
--- any role — only reachable from the SECURITY DEFINER functions below. The
--- grant settles immediately (DESIGN: welcome tokens "should be minted and
--- given" on first volunteering): it draws from the venue's reserve, minting
--- only any shortfall, and records one approved venue->scholar transaction.
--- The amount is standing venue policy (venues.welcome_amount, granted at most
--- once per scholar), so no per-grant minter approval is required; minters
--- still approve every other mint. No-op for payment-free venues.
+-- Report how many welcome tokens a volunteer actually received.
 --
--- Returns the number of tokens granted (0 on every no-op path), so the caller
--- can tell the scholar what they actually received. Whether a grant happens
--- turns on three conditions the client cannot evaluate reliably, and
--- re-deriving them there would put the rule in two places.
-create or replace function public._welcome_volunteer (
+-- The volunteer confirmation told every scholar they would "receive welcome
+-- tokens once the minter approves them" — wrong twice over now: grants settle
+-- immediately, and three conditions decide whether a grant happens at all
+-- (this must be the scholar's first role, the venue must not be payment-free,
+-- and welcome_amount must be positive). The client cannot evaluate those
+-- reliably, and re-deriving them there would put the rule in two places, so
+-- the RPCs report the outcome instead.
+--
+-- _welcome_volunteer returns the number of tokens granted, 0 on each of its
+-- no-op paths. Postgres refuses a return-type change through
+-- `create or replace`, so the function is dropped first; both callers are
+-- recreated below to capture the value into their result.
+
+drop function if exists public._welcome_volunteer (uuid, uuid, uuid, text);
+
+create function public._welcome_volunteer (
 	_welcomer uuid,
 	_scholar uuid,
 	_roleid uuid,
@@ -247,10 +95,7 @@ $function$;
 
 revoke execute on function public._welcome_volunteer (uuid, uuid, uuid, text) from public;
 
--- create_volunteer: insert a volunteer record and, when this is the scholar's
--- first role and compensation is requested, settle the welcome grant —
--- atomically. SECURITY DEFINER, re-implementing the volunteers INSERT policy
--- (venue admin, or self for a non-invite-only role).
+-- create_volunteer: now reports the welcome grant alongside the volunteer id.
 create or replace function public.create_volunteer (
 	_scholarid uuid,
 	_roleid uuid,
@@ -318,9 +163,8 @@ $function$;
 revoke execute on function public.create_volunteer (uuid, uuid, boolean, boolean, integer) from public;
 grant execute on function public.create_volunteer (uuid, uuid, boolean, boolean, integer) to authenticated;
 
--- accept_role_invite: respond to a role invitation and, when accepting a first
--- role, settle the welcome grant — atomically. SECURITY DEFINER,
--- re-implementing the volunteers UPDATE policy (only the volunteering scholar).
+-- accept_role_invite: likewise reports the grant, so accepting an invitation
+-- can finally say something (it was silent before).
 create or replace function public.accept_role_invite (
 	_volunteer_id uuid,
 	_response public.invited
@@ -366,6 +210,3 @@ $function$;
 
 revoke execute on function public.accept_role_invite (uuid, public.invited) from public;
 grant execute on function public.accept_role_invite (uuid, public.invited) to authenticated;
-
-alter publication supabase_realtime
-add table volunteers;

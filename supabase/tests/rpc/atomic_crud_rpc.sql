@@ -13,7 +13,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(41);
+select plan(44);
 
 -- ---- Shared fixtures (owner context) -----------------------------------------
 select tests.clear_authentication();
@@ -333,6 +333,45 @@ select is(
 	5,
 	'the welcome grant moved welcome_amount real tokens to the scholar'
 );
+
+-- The RPC reports what it granted, so the confirmation can say so precisely
+-- instead of promising tokens that may never have been granted. Whether a
+-- grant happens turns on the scholar's first-role status, the venue's
+-- payment_free flag, and its welcome_amount — none of which the client can
+-- evaluate without re-deriving the rule.
+select tests.authenticate_as(:'admin');
+select is(
+	(select (public.create_volunteer(
+		(select tests.create_scholar('rpc_welcomed@test.local')), :'open_role', true, true, null
+	) ->> 'welcome_granted')::int),
+	5,
+	'create_volunteer reports the granted amount on a first role'
+);
+
+-- A second role for the same scholar grants nothing, and says so.
+select is(
+	(select (public.create_volunteer(:'alice', :'open_role', true, true, null)
+		->> 'welcome_granted')::int),
+	0,
+	'create_volunteer reports zero when this is not the scholar''s first role'
+);
+
+-- A payment-free venue has no tokens to grant, and likewise reports zero.
+select tests.clear_authentication();
+select tests.create_scholar('rpc_freevenue_admin@test.local') as free_admin \gset
+select tests.create_currency(array[(select tests.create_scholar('rpc_freeminter@test.local'))]::uuid[]) as free_cur \gset
+select tests.create_venue(:'free_cur', array[:'free_admin']::uuid[], 5) as free_ven \gset
+update public.venues set payment_free = true where id = :'free_ven';
+select tests.create_role(:'free_ven', 1, null, false, false) as free_role \gset
+select tests.authenticate_as(:'free_admin');
+select is(
+	(select (public.create_volunteer(
+		(select tests.create_scholar('rpc_freescholar@test.local')), :'free_role', true, true, null
+	) ->> 'welcome_granted')::int),
+	0,
+	'create_volunteer reports zero for a payment-free venue'
+);
+select tests.clear_authentication();
 
 -- Volunteering for the same role twice is rejected (RR004 -> the app's
 -- AlreadyVolunteered message).

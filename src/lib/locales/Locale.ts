@@ -68,8 +68,11 @@ export type LocaleText = {
 		home: string;
 		venues: string;
 		saved: string;
+		/** Accessible name for the header's total token balance. */
+		balance: string;
 		link: {
 			login: string;
+			profile: string;
 		};
 		feedback: {
 			testWarning: string;
@@ -105,6 +108,15 @@ export type LocaleText = {
 	};
 	notification: {
 		emailed: string;
+		/** Shown after volunteering or accepting a role invitation. Which one
+		 * applies depends on whether a welcome grant actually happened, which
+		 * only the database can say — so the RPC reports the amount and the
+		 * data layer picks. {amount} is the number of tokens granted. */
+		volunteered: string;
+		volunteeredWithTokens: string;
+		inviteAccepted: string;
+		inviteAcceptedWithTokens: string;
+		inviteDeclined: string;
 	};
 	widget: {
 		card: {

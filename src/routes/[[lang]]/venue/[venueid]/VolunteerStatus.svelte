@@ -25,11 +25,8 @@
 	<Button
 		testid="volunteer-for-role"
 		strings={(l) => l.view.roles.button.volunteer}
-		action={() =>
-			handle(
-				db().createVolunteer(scholar, scholar, role.id, true, true, null),
-				"Thank you for volunteering! You'll receive your welcome tokens once the minter approves them."
-			)}>Volunteer …</Button
+		action={() => handle(db().createVolunteer(scholar, scholar, role.id, true, true, null))}
+		>Volunteer …</Button
 	>
 {/if}
 {#if volunteer !== undefined}

@@ -1133,7 +1133,7 @@ export type Database = {
           _scholar: string
           _welcomer: string
         }
-        Returns: undefined
+        Returns: number
       }
       accept_role_invite: {
         Args: {

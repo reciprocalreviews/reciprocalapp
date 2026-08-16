@@ -135,6 +135,14 @@ export function stringField(value: unknown, key: string): string | null {
 	return typeof field === 'string' ? field : null;
 }
 
+/** Read a number field from a jsonb object returned by an RPC, or null if
+ * absent or the wrong type. */
+export function numberField(value: unknown, key: string): number | null {
+	if (typeof value !== 'object' || value === null || !(key in value)) return null;
+	const field = (value as Record<string, unknown>)[key];
+	return typeof field === 'number' ? field : null;
+}
+
 /** Read a string[] field from a jsonb object returned by an RPC, or null if
  * absent or not an array of strings. */
 export function stringArrayField(value: unknown, key: string): string[] | null {
@@ -593,6 +601,21 @@ export default class SupabaseCRUD extends CRUD {
 
 	async getScholarTokens(scholar: ScholarID): Promise<ReadResult<TokenRow[] | null>> {
 		return this.rows('LoadToken', this.client.from('tokens').select('*').eq('scholar', scholar));
+	}
+
+	async getScholarTokenCount(scholar: ScholarID): Promise<ReadResult<number>> {
+		// A count rather than the rows: this runs in the root layout load, so on
+		// every navigation, and a scholar can hold hundreds of individual token
+		// rows. `head: true` asks Postgres for the count without the payload.
+		const { count, error } = await this.client
+			.from('tokens')
+			.select('id', { count: 'exact', head: true })
+			.eq('scholar', scholar);
+		if (error) {
+			console.error(error);
+			return { data: 0, error: { message: this.locale.error.LoadToken, details: error } };
+		}
+		return { data: count ?? 0 };
 	}
 
 	async getScholarConflicts(scholar: ScholarID): Promise<ReadResult<ConflictRow[] | null>> {
@@ -1731,9 +1754,9 @@ export default class SupabaseCRUD extends CRUD {
 		papers: number | null
 	): Promise<Result<string>> {
 		// Creating the volunteer record and, when this is the scholar's first
-		// role and compensation is requested, recording the proposed welcome
-		// grant both happen atomically inside the create_volunteer RPC, so the
-		// volunteer can never exist without its welcome grant (or vice versa).
+		// role and compensation is requested, settling the welcome grant both
+		// happen atomically inside the create_volunteer RPC, so the volunteer
+		// can never exist without its welcome grant (or vice versa).
 		const { data, error } = await this.client.rpc('create_volunteer', {
 			_scholarid: scholarid,
 			_roleid: roleid,
@@ -1750,7 +1773,26 @@ export default class SupabaseCRUD extends CRUD {
 
 		const volunteerID = stringField(data, 'volunteer_id');
 		if (volunteerID === null) return this.error('CreateVolunteer');
-		return { data: volunteerID };
+
+		// Report the welcome grant the RPC actually made. Whether one happened
+		// depends on the scholar's first-role status, the venue's payment_free
+		// flag, and its welcome_amount — so the amount comes back from the
+		// database rather than being guessed here.
+		const granted = numberField(data, 'welcome_granted') ?? 0;
+		return {
+			data: volunteerID,
+			notified: [
+				{
+					message:
+						granted > 0
+							? this.locale.notification.volunteeredWithTokens.replace(
+									'{amount}',
+									granted.toString()
+								)
+							: this.locale.notification.volunteered
+				}
+			]
+		};
 	}
 
 	async updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result> {
@@ -1816,13 +1858,27 @@ export default class SupabaseCRUD extends CRUD {
 
 	async acceptRoleInvite(scholar: ScholarID, id: VolunteerID, response: Response) {
 		// Updating the volunteer response and, when accepting a first role,
-		// recording the proposed welcome grant happen atomically inside the
+		// settling the welcome grant happen atomically inside the
 		// accept_role_invite RPC.
-		const { error } = await this.client.rpc('accept_role_invite', {
+		const { data, error } = await this.client.rpc('accept_role_invite', {
 			_volunteer_id: id,
 			_response: response
 		});
-		return this.errorOrEmpty('AcceptRoleInvite', error);
+		if (error) return this.error('AcceptRoleInvite', error);
+
+		// Accepting used to be silent, which left a scholar who had just earned
+		// welcome tokens with no indication anything had happened.
+		const granted = numberField(data, 'welcome_granted') ?? 0;
+		const message =
+			response !== 'accepted'
+				? this.locale.notification.inviteDeclined
+				: granted > 0
+					? this.locale.notification.inviteAcceptedWithTokens.replace(
+							'{amount}',
+							granted.toString()
+						)
+					: this.locale.notification.inviteAccepted;
+		return { data: undefined, notified: [{ message }] };
 	}
 
 	async getVolunteersByRoles(roleIDs: RoleID[]): Promise<ReadResult<VolunteerRow[] | null>> {
