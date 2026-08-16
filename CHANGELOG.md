@@ -7,6 +7,17 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Changed
 
 - Updated internal tooling for stability.
+- Submission charges are now checked by the database as well as the form: the amounts must add up to the submission type's cost, and the same author can't be listed twice. Previously these rules held only for people submitting through the form.
+
+### Fixed
+
+- Bulk CSV imports now warn when a row's columns don't line up with the header. An unquoted comma in a title used to shift every column and silently drop the last field, so an import could land with the wrong manuscript IDs and still look successful.
+- The balance check when paying for a submission now counts only the venue's own currency. It previously counted tokens from every venue, so the check could pass and the payment then be refused.
+- Reviewer bids now sort predictably in venues that haven't set up preference levels; their order was previously arbitrary.
+- The submissions list now breaks ties correctly when several submissions share a date.
+- Exporting volunteers as CSV no longer truncates the file at the first #, so an expertise like "C#" no longer cuts the download short.
+- Number, web address, and email fields now reject malformed input instead of accepting text that merely contains a number or a link. A venue's welcome amount could previously be set to a value that failed to save.
+- Links in emails that end a sentence no longer include the trailing punctuation in the link, and escaped text no longer reappears as markup in the plain-text version.
 
 ## 0.4.6 - 2026-08-08
 

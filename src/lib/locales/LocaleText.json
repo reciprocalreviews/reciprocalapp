@@ -736,9 +736,6 @@
             },
             "VerifyEmail": {
               "type": "string"
-            },
-            "WelcomeVolunteer": {
-              "type": "string"
             }
           },
           "required": [
@@ -798,7 +795,6 @@
             "CreateCompensation",
             "EditCompensation",
             "CreateVolunteer",
-            "WelcomeVolunteer",
             "AlreadyVolunteered",
             "UpdateVolunteerActive",
             "UpdateVolunteerExpertise",
@@ -1123,11 +1119,16 @@
                     },
                     "notLoaded": {
                       "type": "string"
+                    },
+                    "raggedRows": {
+                      "description": "Shown when parsed rows had a different number of cells than the header, which means columns shifted and data was dropped. `{lines}` is the list of affected line numbers.",
+                      "type": "string"
                     }
                   },
                   "required": [
                     "notLoaded",
-                    "notAdmin"
+                    "notAdmin",
+                    "raggedRows"
                   ],
                   "type": "object"
                 },

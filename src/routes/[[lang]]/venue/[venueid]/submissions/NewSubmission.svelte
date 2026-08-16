@@ -18,7 +18,12 @@
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import { ORCIDRegex } from '$lib/data/ORCID';
+	import {
+		duplicateScholars,
+		validCharge,
+		validCharges,
+		validChargeFormat
+	} from '$lib/data/charges';
 	import type Locale from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
 	import { isntEmpty, validORCID } from '$lib/validation';
@@ -132,33 +137,9 @@
 		return id.length > 0;
 	}
 
-	function validCharges(charges: Charge[], cost: number) {
-		return cost === 0 || (validChargeFormat(charges) && validCharge(charges, cost));
-	}
-
-	function validChargeFormat(charges: Charge[]) {
-		return (
-			charges.length === 0 ||
-			charges.every((charge) => {
-				return ORCIDRegex.test(charge.scholar) && !isNaN(charge.payment);
-			})
-		);
-	}
-
-	function duplicateScholars(charges: Charge[]) {
-		const scholars = charges.map((charge) => charge.scholar);
-		return new Set(scholars).size !== scholars.length;
-	}
-
-	function validCharge(charges: Charge[], cost: number) {
-		return (
-			charges.length === 0 || charges.reduce((sum, charge) => sum + charge.payment, 0) === cost
-		);
-	}
-
 	async function checkAffordability() {
 		affordable = undefined;
-		const { data, error } = await db().verifyCharges(charges);
+		const { data, error } = await db().verifyCharges(charges, venue.currency);
 
 		if (error) affordable = () => error.message;
 		else if (data === undefined) {
@@ -191,14 +172,15 @@
 	}
 
 	/** Whether the submission can be created. In a payment-free venue there is
-	 * no balance to verify, so only the manuscript fields and any listed authors'
-	 * ORCID formats are required. */
+	 * no balance to verify, so the charges are checked against a cost of zero —
+	 * which still rejects a malformed ORCID or the same author listed twice, both
+	 * of which the database now refuses (RR008). */
 	let canSubmit = $derived(
 		venue.payment_free
 			? isntEmpty(title) &&
 					validExternalID(externalID) &&
 					(previousID.length === 0 || validExternalID(previousID)) &&
-					charges.every((c) => c.scholar.trim() === '' || validORCID(c.scholar))
+					validCharges(charges, 0)
 			: affordable === true && validSubmission(title, externalID, charges, cost)
 	);
 </script>

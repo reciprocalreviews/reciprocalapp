@@ -164,8 +164,15 @@ export default abstract class CRUD {
 		submissionID: SubmissionID
 	): Promise<Result<MarkSubmissionDoneOutcome>>;
 
-	/** Check whether the given scholars have enough tokens for the given payments. True if so, and a list of remaining balances by scholar if not. */
-	abstract verifyCharges(charges: Charge[]): Promise<Result<true | Charge[] | undefined>>;
+	/** Check whether the given scholars have enough tokens for the given payments,
+	 * denominated in the given currency. True if so, and a list of remaining balances
+	 * by scholar if not. The currency is required: a balance is only meaningful within
+	 * one, and counting a scholar's holdings across all of them makes this disagree
+	 * with the create_submission RPC that ultimately decides. */
+	abstract verifyCharges(
+		charges: Charge[],
+		currency: CurrencyID
+	): Promise<Result<true | Charge[] | undefined>>;
 
 	abstract registerScholar(scholar: ScholarRow): Scholar;
 
@@ -308,13 +315,6 @@ export default abstract class CRUD {
 		compensate: boolean,
 		papers: number | null
 	): Promise<Result<string>>;
-
-	abstract welcomeVolunteer(
-		welcomer: ScholarID,
-		scholar: ScholarID,
-		roleid: RoleID,
-		reason: string
-	): Promise<Result>;
 
 	abstract updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result>;
 	abstract updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result>;
@@ -583,6 +583,14 @@ export default abstract class CRUD {
 	): Promise<ReadResult<ScholarVolunteering[] | null>>;
 	abstract getVolunteersByRoles(roleIDs: RoleID[]): Promise<ReadResult<VolunteerRow[] | null>>;
 	abstract getScholarActiveVolunteering(
+		scholar: ScholarID,
+		roleIDs: RoleID[]
+	): Promise<ReadResult<VolunteerRow[] | null>>;
+	/** A scholar's ACCEPTED volunteer records among the given roles, regardless of
+	 * whether they are currently active. Distinct from getScholarActiveVolunteering
+	 * on purpose: the submissions SELECT policy's bidder branch tests `accepted`
+	 * only, so a check that mirrors that policy must not also require `active`. */
+	abstract getScholarAcceptedVolunteering(
 		scholar: ScholarID,
 		roleIDs: RoleID[]
 	): Promise<ReadResult<VolunteerRow[] | null>>;
