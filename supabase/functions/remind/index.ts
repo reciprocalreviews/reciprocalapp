@@ -3,6 +3,7 @@ import { createClient, SupabaseClient } from 'supabase';
 import type { Database } from '../../../src/data/database.ts';
 import { requireSecretKey } from '../_shared/auth.ts';
 import { escapeHtml, renderBrandedEmail } from '../_shared/emailShell.ts';
+import { DEFAULT_ORIGIN } from '../_shared/templates.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const isLocal = Deno.env.get('PUBLIC_SUPABASE_URL')?.includes('127.0.0.1') ?? false;
@@ -13,7 +14,10 @@ type Email = {
 	message: string;
 };
 
-async function getStaleStatusReminder(supabase: SupabaseClient<Database>): Promise<Email[]> {
+async function getStaleStatusReminder(
+	supabase: SupabaseClient<Database>,
+	origin: string
+): Promise<Email[]> {
 	// Let's see which scholars have not updated their status in the last three months, and who haven't been sent a reminder in a month.
 	const threeMonthsAgo = new Date();
 	threeMonthsAgo.setDate(threeMonthsAgo.getDate() - 90);
@@ -47,7 +51,7 @@ async function getStaleStatusReminder(supabase: SupabaseClient<Database>): Promi
 					'Hello,',
 					"This is a friendly reminder to update your reviewing status on Reciprocal Reviews. Here's the last thing you wrote:",
 					`"${escapeHtml(scholar.status ?? '')}"`,
-					`You can update it here: https://reciprocal.reviews/scholar/${scholar.id}`
+					`You can update it here: ${origin}/scholar/${scholar.id}`
 				].join('\n\n')
 			});
 
@@ -69,7 +73,10 @@ type PendingReminder = {
 	paragraphs: string[];
 };
 
-async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Email[]> {
+async function getVenueReminders(
+	supabase: SupabaseClient<Database>,
+	origin: string
+): Promise<Email[]> {
 	const emails: Email[] = [];
 	const now = new Date();
 
@@ -143,7 +150,7 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Em
 			subject: 'Approve proposed transactions',
 			paragraphs: [
 				`You have ${transactions.length} proposed transaction(s) that require your approval.`,
-				`Please review and approve it here: https://reciprocal.reviews/scholar/${scholar}`
+				`Please review and approve it here: ${origin}/scholar/${scholar}`
 			]
 		});
 	}
@@ -177,7 +184,7 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Em
 				subject: 'Approve your submission charge',
 				paragraphs: [
 					`You have ${count} proposed charge(s) awaiting your approval — typically your share of a submission's cost. The submission may not proceed to review until every author has paid.`,
-					`Review and approve here: https://reciprocal.reviews/scholar/${scholar}`
+					`Review and approve here: ${origin}/scholar/${scholar}`
 				]
 			});
 		}
@@ -228,7 +235,7 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Em
 		);
 		const compensationLinks = new Map<string, Set<string>>();
 		for (const assignment of pendingCompensation) {
-			const link = `https://reciprocal.reviews/venue/${assignment.venue}/submission/${assignment.submission}`;
+			const link = `${origin}/venue/${assignment.venue}/submission/${assignment.submission}`;
 			for (const approver of approversOf(assignment)) {
 				if (!compensationLinks.has(approver)) compensationLinks.set(approver, new Set());
 				compensationLinks.get(approver)!.add(link);
@@ -273,7 +280,7 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Em
 					(a) => a.roles?.priority === 0 && a.approved && !a.completed
 				);
 				if (!hasCompensatedWork || hasBlockers || editors.length === 0) continue;
-				const link = `https://reciprocal.reviews/venue/${submission.venue}/submission/${submission.id}`;
+				const link = `${origin}/venue/${submission.venue}/submission/${submission.id}`;
 				for (const editor of editors) {
 					if (!doneLinks.has(editor.scholar)) doneLinks.set(editor.scholar, new Set());
 					doneLinks.get(editor.scholar)!.add(link);
@@ -342,8 +349,15 @@ const handler = async (request: Request): Promise<Response> => {
 			}
 		);
 
-		const statusReminders = await getStaleStatusReminder(supabase);
-		const venueReminders = await getVenueReminders(supabase);
+		// Links point at the environment that sent them. This function never
+		// touches the emails table, so it asks the database for the origin
+		// directly rather than receiving it the way send_email() supplies it to
+		// the resend function.
+		const { data: originData } = await supabase.rpc('site_origin');
+		const origin = originData ?? DEFAULT_ORIGIN;
+
+		const statusReminders = await getStaleStatusReminder(supabase, origin);
+		const venueReminders = await getVenueReminders(supabase, origin);
 
 		// Reminders are sent one per recipient, so one rejection should not abandon the rest
 		// of the run. Count them instead and report at the end — a cron job that reports
@@ -362,7 +376,7 @@ const handler = async (request: Request): Promise<Response> => {
 			} else {
 				// Wrap the plain-text reminder in the shared branded shell, sending
 				// both an HTML version and a text/plain alternative.
-				const { html, text } = renderBrandedEmail(subject, message);
+				const { html, text } = renderBrandedEmail(subject, message, origin);
 
 				// Post to the resend API using the API key
 				const res = await fetch('https://api.resend.com/emails', {

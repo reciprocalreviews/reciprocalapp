@@ -7,7 +7,7 @@ export type Email = {
 	 * defanged at substitution time (see `escapeArg`).
 	 *
 	 * Nearly all templates own their URLs in the prose itself and interpolate only path
-	 * segments (`https://reciprocal.reviews/venue/$2`), so they need no entry here. The
+	 * segments (`{origin}/venue/$2`), so they need no entry here. The
 	 * exception is a template whose whole link is an argument — and such an argument must
 	 * be built by the database or the server, never accepted from a caller.
 	 */
@@ -20,7 +20,7 @@ export const Emails = {
 		paragraphs: [
 			'The venue "$1" has been approved and is now live on Reciprocal Reviews!',
 			'If you are an editor, you can configure it with your reviewing platform:',
-			'https://reciprocal.reviews/venue/$2',
+			'{origin}/venue/$2',
 			"If you're a supporter, the editors will likely communicate the timeline for launch separately."
 		]
 	},
@@ -29,7 +29,7 @@ export const Emails = {
 		paragraphs: [
 			'A proposal was created for "$1".',
 			'Review it and discuss it with the other stewards:',
-			'https://reciprocal.reviews/venues/proposal/$2',
+			'{origin}/venues/proposal/$2',
 			'Consider reachnig out to the proposals to discuss the proposal further.'
 		]
 	},
@@ -46,16 +46,16 @@ export const Emails = {
 		subject: 'Proposal created for your academic venue',
 		paragraphs: [
 			'A proposal was created for your academic venue "$1" to help make its peer review more sustainable:',
-			'https://reciprocal.reviews/venues/proposal/$2',
+			'{origin}/venues/proposal/$2',
 			"Learn more about Reciprocal Reviews to see if it's a good fit for your academic community.",
-			'https://reciprocal.reviews'
+			'{origin}'
 		]
 	},
 	AssignmentApproved: {
 		subject: 'Your are assigned a submission',
 		paragraphs: [
 			'<a href="mailto:$2">$1</a> assigned you as $3 for this submission:',
-			'https://reciprocal.reviews/venue/$4/submission/$5',
+			'{origin}/venue/$4/submission/$5',
 			'Complete your assignment and you will receive compensation.'
 		]
 	},
@@ -63,20 +63,20 @@ export const Emails = {
 		subject: 'You were removed from a submission',
 		paragraphs: [
 			'<a href="mailto:$2">$1</a> removed you as $3 for this submission:',
-			'https://reciprocal.reviews/venue/$4/submission/$5'
+			'{origin}/venue/$4/submission/$5'
 		]
 	},
 	RoleInvite: {
 		subject: 'You were invited to a reviewing role',
 		paragraphs: [
-			'You have been invited to the $1 role for <a href="https://reciprocal.reviews/venue/$2">$3</a>. You can accept or decline on your profile:',
-			'https://reciprocal.reviews/scholar/$4'
+			'You have been invited to the $1 role for <a href="{origin}/venue/$2">$3</a>. You can accept or decline on your profile:',
+			'{origin}/scholar/$4'
 		]
 	},
 	CompensationRequested: {
 		subject: 'Compensation requested for volunteer work',
 		paragraphs: [
-			"A scholar requested compensation for <a href='https://reciprocal.reviews/venue/$1/submission/$2'>this submission</a>. Here's the note they included:",
+			"A scholar requested compensation for <a href='{origin}/venue/$1/submission/$2'>this submission</a>. Here's the note they included:",
 			'"$3"',
 			"If this is a valid request, approve the assignment, evaluate their work, and if it meets your venue's standards, mark the work complete so they are compensated."
 		]
@@ -86,14 +86,14 @@ export const Emails = {
 		paragraphs: [
 			'You were listed as a paying author on the submission "$1" to $2, with a charge of $3 tokens.',
 			'The charge is only proposed — nothing moves until you approve it, and the editor may wait for every author to pay before proceeding with review. Review and approve it here:',
-			'https://reciprocal.reviews/scholar/$4'
+			'{origin}/scholar/$4'
 		]
 	},
 	WorkCompensated: {
 		subject: 'You were paid for your $1 work',
 		paragraphs: [
 			'The approver of your $1 assignment marked your work complete and paid you $2 tokens for it. The tokens have been transferred to your account.',
-			'You can view the submission here: https://reciprocal.reviews/venue/$3/submission/$4'
+			'You can view the submission here: {origin}/venue/$3/submission/$4'
 		]
 	},
 	VenueOutOfTokens: {
@@ -101,7 +101,7 @@ export const Emails = {
 		paragraphs: [
 			'An approver at $5 tried to pay $1 tokens for $2 work on a submission, but the venue is short $3 tokens.',
 			'A proposed mint transaction sized exactly to the shortfall has been recorded so if you decide to approve it, it is a one click approval. If you approve it, then approver can retry the payment:',
-			'https://reciprocal.reviews/venue/$4/transactions'
+			'{origin}/venue/$4/transactions'
 		]
 	},
 	TransactionDeclinedVenue: {
@@ -110,7 +110,13 @@ export const Emails = {
 			'Your proposed transaction for <strong>$2</strong> $3 tokens at <strong>$4</strong> — "$1" — was declined by <a href="mailto:$6">$5</a>.',
 			'Reason given: $7',
 			'You can review and follow up on this here: $8'
-		]
+		],
+		// $8 is the whole link, so it must stay clickable. Without this the
+		// defanging meant for caller-supplied values mangled it to `https[:]//…`
+		// and these emails shipped a dead link. Safe to trust: the application
+		// builds it from the page's own origin and the transaction's ids — no
+		// part of it is authored by whoever proposed the transaction.
+		urlArgs: [8]
 	},
 	TransactionDeclined: {
 		subject: 'Your transaction was declined',
@@ -118,7 +124,9 @@ export const Emails = {
 			'Your proposed transaction for <strong>$2</strong> $3 tokens — "$1" — was declined by <a href="mailto:$5">$4</a>.',
 			'Reason given: $6',
 			'You can review and follow up on this here: $7'
-		]
+		],
+		// $7 is the whole link — see TransactionDeclinedVenue above.
+		urlArgs: [7]
 	},
 	// Author thank-you notes to reviewers (#22). These are rendered in the app
 	// layer like every other template, then fanned out to recipients by the
@@ -128,7 +136,7 @@ export const Emails = {
 		subject: 'A thank-you note awaits your review',
 		paragraphs: [
 			'An author submitted a thank-you note to share with the reviewers of a submission. Please review it before it is shared:',
-			'https://reciprocal.reviews/venue/$1/submission/$2'
+			'{origin}/venue/$1/submission/$2'
 		]
 	},
 	ThanksReceived: {
@@ -137,7 +145,7 @@ export const Emails = {
 			'An author of a submission you reviewed sent their thanks:',
 			'"$1"',
 			'Thank you for your reviewing work. You can view the submission here:',
-			'https://reciprocal.reviews/venue/$2/submission/$3'
+			'{origin}/venue/$2/submission/$3'
 		]
 	},
 	ThanksDeclined: {
@@ -146,7 +154,7 @@ export const Emails = {
 			'The thank-you note you submitted for a submission was reviewed and not approved for sharing.',
 			'Reason given: $1',
 			'You can review and revise it here:',
-			'https://reciprocal.reviews/venue/$2/submission/$3'
+			'{origin}/venue/$2/submission/$3'
 		]
 	},
 	// Contact-email ownership verification (#27). Sent through the normal branded pipeline
@@ -205,13 +213,27 @@ function defangURLs(value: string): string {
 	return value.replace(/\b(https?|ftp):\/\//gi, '$1[:]//');
 }
 
+/** Where the application lives, when the caller doesn't say. Production, so a
+ * project that never configured the `site_url` vault secret keeps sending the
+ * links it always sent. */
+export const DEFAULT_ORIGIN = 'https://reciprocal.reviews';
+
 export function renderEmail(
 	template: EmailType,
-	args: string[]
+	args: string[],
+	origin: string = DEFAULT_ORIGIN
 ): { subject: string; message: string } {
 	// Get the email template.
 	const email = Emails[template];
 	const urlArgs = new Set<number>((email as Email).urlArgs ?? []);
+
+	// The origin is substituted into the template text, NOT passed through the
+	// argument path: every argument has its URL scheme defanged unless the
+	// template declares that position trusted, so an origin arriving as an
+	// argument would render as `https[:]//…` and the links would all be dead.
+	// It comes from the database (the `site_url` vault secret), never from a
+	// caller, which is what makes putting it directly into the prose safe.
+	const base = (origin || DEFAULT_ORIGIN).replace(/\/+$/, '');
 
 	// Substitute every `$n` in one pass. A single pass (rather than one `replace` per
 	// argument) matters twice over: `String.replace` with a string needle replaces only
@@ -230,9 +252,12 @@ export function renderEmail(
 	// and have their URL schemes defanged unless the template declares that position as a
 	// trusted link. The subject is a plain-text email header — never linkified — so its
 	// args are substituted raw.
-	const subject = substitute(email.subject, (value) => value);
-	const message = substitute(email.paragraphs.join('\n\n'), (value, position) =>
-		urlArgs.has(position) ? escapeArg(value) : defangURLs(escapeArg(value))
+	// Resolve {origin} in the template BEFORE arguments are substituted, so an
+	// argument value that happens to contain the literal text isn't expanded.
+	const subject = substitute(email.subject.replaceAll('{origin}', base), (value) => value);
+	const message = substitute(
+		email.paragraphs.join('\n\n').replaceAll('{origin}', base),
+		(value, position) => (urlArgs.has(position) ? escapeArg(value) : defangURLs(escapeArg(value)))
 	);
 
 	// The "automated email" footer is added by the branded shell at send time

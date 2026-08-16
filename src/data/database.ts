@@ -1254,6 +1254,7 @@ export type Database = {
         Args: { _email: string }
         Returns: undefined
       }
+      site_origin: { Args: never; Returns: string }
       tokens_as_of: {
         Args: { _at?: string }
         Returns: {

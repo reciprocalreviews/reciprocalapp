@@ -16,7 +16,13 @@ const ResendBodySchema = z.object({
 	subject: z.string().nullish(),
 	message: z.string().nullish(),
 	event: z.string().nullish(),
-	args: z.array(z.string()).nullish()
+	args: z.array(z.string()).nullish(),
+	// The application origin the rendered links should point at, from the
+	// `site_url` vault secret via send_email(). Only the database can set it —
+	// this function refuses callers without a project secret key — so it is
+	// trusted enough to appear in link positions. Absent, links go to
+	// production, which is what they always did.
+	origin: z.string().nullish()
 });
 
 export type ResendBody = z.infer<typeof ResendBodySchema>;
@@ -47,7 +53,11 @@ const handler = async (request: Request): Promise<Response> => {
 		if (subject === undefined || message === undefined) {
 			if (!parsed.event || !(parsed.event in Emails))
 				throw new Error(`Cannot render email: unknown event ${parsed.event}`);
-			const rendered = renderEmail(parsed.event as EmailType, parsed.args ?? []);
+			const rendered = renderEmail(
+				parsed.event as EmailType,
+				parsed.args ?? [],
+				parsed.origin ?? undefined
+			);
 			subject = rendered.subject;
 			message = rendered.message;
 		}
@@ -65,7 +75,7 @@ const handler = async (request: Request): Promise<Response> => {
 		} else {
 			// Wrap the stored plain-text body in the shared branded shell, sending
 			// both an HTML version and a text/plain alternative.
-			const { html, text } = renderBrandedEmail(subject, message);
+			const { html, text } = renderBrandedEmail(subject, message, parsed.origin ?? undefined);
 
 			// Post to the resend API using the API key
 			const res = await fetch('https://api.resend.com/emails', {

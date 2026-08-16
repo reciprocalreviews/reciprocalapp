@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import Card from '$lib/components/Card.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import CopyButton from '$lib/components/CopyButton.svelte';
@@ -50,9 +51,14 @@
 	let platformId = $state<string | undefined>('hotcrp');
 	const selectedPlatform = $derived(PLATFORMS.find((p) => p.id === platformId) ?? PLATFORMS[0]);
 
-	/** Substitute the template body's placeholders. */
+	/** Substitute the template body's placeholders. `{role}` is deliberately
+	 * left in place for the editor to fill — see the tip above the snippets, and
+	 * the note on the locale type. `{origin}` resolves to the environment the
+	 * editor is looking at, so a snippet copied from a local or staging venue
+	 * links back to that venue rather than to production. */
 	function renderTemplate(body: string, venueTitle: string, venueId: string): string {
 		return body
+			.replaceAll('{origin}', page.url.origin)
 			.replaceAll('{venue}', venueTitle)
 			.replaceAll('{venueid}', venueId)
 			.replaceAll('{manuscriptVar}', selectedPlatform.submissionVar);

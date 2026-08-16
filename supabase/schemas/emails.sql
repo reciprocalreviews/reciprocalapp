@@ -122,6 +122,27 @@ $$;
 
 alter function private.get_secret (secret_name text) OWNER to "postgres";
 
+-- The application origin that email links should point at, from the `site_url`
+-- vault secret that already exists per environment. Templates used to hardcode
+-- the production host, which made anything arriving by email untestable
+-- anywhere else — following a link left the environment under test. Falls back
+-- to production so an unconfigured project keeps its previous behaviour.
+--
+-- send_email() reads the secret directly and passes the value to the `resend`
+-- function; this wrapper exists for the `remind` cron, which never touches the
+-- emails table and so has nothing to carry the value to it. service_role only:
+-- the value is a public URL, but only that one caller needs it.
+create or replace function public.site_origin () returns text language sql security definer
+set
+	search_path = '' as $$
+	select coalesce(nullif(btrim(coalesce(private.get_secret('site_url'), '')), ''),
+	                'https://reciprocal.reviews');
+$$;
+
+revoke execute on function public.site_origin () from public, anon, authenticated;
+
+grant execute on function public.site_origin () to service_role;
+
 -- Calls the `resend` edge function, presenting one of the project's SECRET keys. It must
 -- NOT use the publishable/anon key: that key is public (it ships in the browser bundle),
 -- so authenticating with it would leave `resend` — which takes its recipient and template
@@ -139,6 +160,9 @@ declare
   -- btrim so a secret pasted with a stray newline or space still works.
   _key text := btrim(coalesce(private.get_secret('secret_key'), ''));
   _url text := btrim(coalesce(private.get_secret('supabase_url'), ''));
+  -- The application origin the rendered links should point at. Falls back to
+  -- production, so an unconfigured project behaves as it did before.
+  _origin text := public.site_origin();
 begin
   -- Delivery is BEST EFFORT. The row in public.emails is the durable record that a message
   -- was meant to go out; whether the edge function can be reached is a deployment concern
@@ -164,7 +188,8 @@ begin
         'subject', new.subject,
         'message', new.message,
         'event', new.event,
-        'args', new.args
+        'args', new.args,
+        'origin', _origin
       )
     );
   exception when others then

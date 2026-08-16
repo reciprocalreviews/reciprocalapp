@@ -717,9 +717,15 @@ export type LocaleText = {
 				reviewQuality: string;
 			};
 			/** Email-template snippets editors copy into their reviewing platform
-			 * (#113). Each entry's `body` is interpolated with `{venue}`,
-			 * `{role}`, and `{manuscriptVar}` (the selected platform's
-			 * submission-id syntax). */
+			 * (#113). Each entry's `body` is interpolated with `{origin}` (the
+			 * environment's own base URL, so a snippet copied from a local or
+			 * staging venue links back to it), `{venue}`, `{venueid}`, and
+			 * `{manuscriptVar}` (the selected platform's submission-id syntax).
+			 *
+			 * `{role}` is deliberately NOT interpolated: an editor pastes these
+			 * once per role, and reviewing platforms differ too much in how they
+			 * expose role names for us to guess. The tip above the snippets says
+			 * so — this list previously claimed otherwise, which read as a bug. */
 			template: {
 				payment: { title: string; body: string };
 				acknowledgement: { title: string; body: string };
@@ -849,6 +855,8 @@ export type LocaleText = {
 				orcid: ButtonText;
 				mockOrcid: ButtonText;
 				signIn: ButtonText;
+				/** A seeded scholar on the local sign-in list; its label is their name. */
+				signInAs: ButtonText;
 			};
 			note: {
 				orcid: string;
@@ -864,6 +872,8 @@ export type LocaleText = {
 				mockOrcidError: string;
 				mockOrcidDev: string;
 				passwordDev: string;
+				/** Introduces the local-only list of seeded scholars. */
+				seededDev: string;
 				signInError: string;
 			};
 			paragraph: {

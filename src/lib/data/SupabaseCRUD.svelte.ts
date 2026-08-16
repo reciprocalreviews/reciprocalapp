@@ -274,6 +274,9 @@ function scholarsByNameQuery(client: SupabaseClient<Database>, pattern: string) 
 }
 export type ScholarMatch = QueryData<ReturnType<typeof scholarsByNameQuery>>[number];
 
+/** A seeded scholar offered on the local-only sign-in list. */
+export type DevScholar = Pick<ScholarRow, 'id' | 'name' | 'email' | 'steward'>;
+
 export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
 	readonly client: SupabaseClient<Database>;
@@ -432,6 +435,18 @@ export default class SupabaseCRUD extends CRUD {
 			this.scholars.set(row.id, scholar);
 		}
 		return scholar;
+	}
+
+	async getScholarsForDevSignIn(): Promise<ReadResult<DevScholar[] | null>> {
+		// Backs the local-only sign-in list on /login, so testing a flow as a
+		// particular seeded scholar doesn't mean opening seed.sql to look up an
+		// address. Reads nothing the scholars policy doesn't already make public,
+		// and the page only renders the list against a local Supabase — but the
+		// name says what it is for, so it isn't reached for casually.
+		return this.rows(
+			'LoadScholar',
+			this.client.from('scholars').select('id, name, email, steward').order('name')
+		);
 	}
 
 	async findScholarsByName(query: string): Promise<ReadResult<ScholarMatch[]>> {
@@ -2307,9 +2322,15 @@ export default class SupabaseCRUD extends CRUD {
 		const currencyName = currencyRow.data?.name ?? '';
 		const venueTitle = venueRow.data?.title ?? '';
 		const amount = transaction.tokens.length.toString();
+		// Point back at whichever environment the decline happened in. This runs
+		// in the browser, so the page's own origin is the right answer and is
+		// already to hand; the templates' other links are resolved server-side
+		// from the site_url vault secret.
+		const origin =
+			typeof window !== 'undefined' ? window.location.origin : 'https://reciprocal.reviews';
 		const link = venueID
-			? `https://reciprocal.reviews/venue/${venueID}/transactions`
-			: `https://reciprocal.reviews/scholar/${transaction.creator}/transactions`;
+			? `${origin}/venue/${venueID}/transactions`
+			: `${origin}/scholar/${transaction.creator}/transactions`;
 
 		// Pick the template variant: with vs without a venue title slot.
 		const args = venueID

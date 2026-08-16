@@ -40,6 +40,7 @@ import type SupabaseCRUD from './SupabaseCRUD.svelte';
 import type {
 	AssignmentAwaitingCompensation,
 	AssignmentForApproval,
+	DevScholar,
 	ProposalSupporter,
 	ScholarMatch,
 	ScholarReview,
@@ -182,6 +183,8 @@ export default abstract class CRUD {
 	/** Up to three scholars whose name contains the query, for picking a
 	 * co-author whose ORCID the submitter doesn't know. */
 	abstract findScholarsByName(query: string): Promise<ReadResult<ScholarMatch[]>>;
+	/** Every scholar, for the local-only sign-in list on /login. */
+	abstract getScholarsForDevSignIn(): Promise<ReadResult<DevScholar[] | null>>;
 
 	/** Given a scholar ID, get information about the scholar, except the scholar's transactions */
 	abstract getScholar(scholarID: ScholarID): Promise<Scholar | null>;

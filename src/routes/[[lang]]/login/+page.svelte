@@ -10,11 +10,15 @@
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import TextField from '$lib/components/TextField.svelte';
+	import { getDB } from '$lib/data/CRUD';
 	import { generateORCID } from '$lib/data/ORCID';
+	import type { DevScholar } from '$lib/data/SupabaseCRUD.svelte';
 	import type LocaleText from '$lib/locales/Locale';
+	import { SEED_PASSWORD } from '$lib/auth/devPassword';
 	import { getAuth } from '../../Auth.svelte';
 
 	let auth = getAuth();
+	const db = getDB();
 
 	let error = $state<undefined | ((l: LocaleText) => string)>(undefined);
 
@@ -45,6 +49,59 @@
 	let mockOrcidName = $state('');
 	let email = $state('');
 	let password = $state('');
+
+	/** The seeded scholars, offered as one-click sign-ins. Testing a flow as a
+	 * particular scholar otherwise meant opening seed.sql to find their address
+	 * and recalling the shared password. Local stacks only — the same gate as
+	 * the password form itself, so this never renders against staging or
+	 * production, where these accounts don't exist and the password wouldn't
+	 * work if they did. */
+	let devScholars = $state<DevScholar[]>([]);
+	let devLabels = $state<Map<string, string[]>>(new Map());
+
+	$effect(() => {
+		if (!devLogin) return;
+		(async () => {
+			const [{ data: scholars }, { data: venues }, { data: currencies }] = await Promise.all([
+				db().getScholarsForDevSignIn(),
+				db().getVenues(),
+				db().getCurrencies()
+			]);
+			devScholars = scholars ?? [];
+			// Label the accounts by what they can do, since that's what decides
+			// which one you want to be for the flow you're testing.
+			const labels = new Map<string, string[]>();
+			const add = (id: string, label: string) => labels.set(id, [...(labels.get(id) ?? []), label]);
+			for (const scholar of devScholars) if (scholar.steward) add(scholar.id, 'steward');
+			for (const venue of venues ?? [])
+				for (const admin of venue.admins) add(admin, `admin of ${venue.title}`);
+			for (const currency of currencies ?? [])
+				for (const minter of currency.minters) add(minter, `minter of ${currency.name}`);
+			devLabels = labels;
+		})();
+	});
+
+	/** Sign in as a seeded scholar using the password every seeded user shares
+	 * (supabase/seed.sql sets it for all of them).
+	 *
+	 * Note this signs in with `scholars.email`, which is a *contact* address,
+	 * not the auth identity — identity is ORCID (see ARCHITECTURE). The seed
+	 * sets both to the same value, so this works for seeded accounts; if one has
+	 * since verified a different contact address, the grant fails and the error
+	 * below says so. The address is shown next to each name for exactly that
+	 * reason. The auth email is deliberately not readable from the browser, so
+	 * there is nothing better to key on here without exposing it. */
+	async function signInAs(scholar: DevScholar) {
+		if (scholar.email === null) return;
+		const response = await auth().signInWithPassword(scholar.email, SEED_PASSWORD);
+		if (typeof response === 'string') {
+			error = undefined;
+			goto(`/scholar/${response}`);
+		} else {
+			console.error(response);
+			error = (l) => l.page.login.feedback.signInError;
+		}
+	}
 
 	// When the user is authenticated, redirect to their home page.
 	$effect(() => {
@@ -117,6 +174,30 @@
 			<Note path={(l) => l.page.login.note.orcid} />
 		{/if}
 
+		{#if devLogin && devScholars.length > 0}
+			<Feedback text={(l) => l.page.login.feedback.seededDev} testid="seeded-dev" />
+			<ul class="seeded">
+				{#each devScholars as scholar, index}
+					{@const address = scholar.email}
+					{#if address !== null}
+						{@const label = scholar.name ?? address}
+						{@const roles = devLabels.get(scholar.id) ?? []}
+						<li>
+							<Button
+								testid="seeded-signin-{index}"
+								strings={(l) => ({ ...l.page.login.button.signInAs, label })}
+								action={() => signInAs(scholar)}>{label}</Button
+							>
+							<span class="who">
+								{address}{#if roles.length > 0}
+									&middot; {roles.join(', ')}{/if}
+							</span>
+						</li>
+					{/if}
+				{/each}
+			</ul>
+		{/if}
+
 		{#if devLogin}
 			<Feedback text={(l) => l.page.login.feedback.passwordDev} testid="password-dev" />
 			<Form>
@@ -158,3 +239,27 @@
 		<Feedback error text={shownError} testid="login-error" />
 	{/if}
 </Page>
+
+<style>
+	.seeded {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-half);
+	}
+
+	.seeded li {
+		display: flex;
+		flex-direction: row;
+		align-items: baseline;
+		gap: var(--spacing-half);
+		flex-wrap: wrap;
+	}
+
+	.who {
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
+	}
+</style>

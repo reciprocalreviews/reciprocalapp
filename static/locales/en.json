@@ -159,6 +159,10 @@
 				"signIn": {
 					"tip": "Sign in",
 					"label": "Login"
+				},
+				"signInAs": {
+					"tip": "Sign in as this seeded scholar",
+					"label": "Sign in as"
 				}
 			},
 			"note": {
@@ -187,6 +191,7 @@
 				"mockOrcidError": "Unable to create a mock ORCID session.",
 				"mockOrcidDev": "Development only — this stands in for real ORCID sign-in, which can't run locally. Leave both fields blank to onboard a brand-new scholar, or enter a previously used ORCID iD to sign back in as that scholar.",
 				"passwordDev": "Development only — sign in as one of the seeded scholars using their email and the shared test password (\"password\").",
+				"seededDev": "Local development only: sign in as any seeded scholar with one click. Each is labelled with what they can do, so you can pick the account whose view you want to test.",
 				"signInError": "Unable to sign in."
 			},
 			"paragraph": {
@@ -1063,15 +1068,15 @@
 			"template": {
 				"payment": {
 					"title": "Author submission payment",
-					"body": "Thanks for submitting to **{venue}**. To complete your submission, please pay for it on Reciprocal Reviews:\n\nhttps://reciprocal.reviews/venue/{venueid}/submissions/new?manuscript={manuscriptVar}"
+					"body": "Thanks for submitting to **{venue}**. To complete your submission, please pay for it on Reciprocal Reviews:\n\n{origin}/venue/{venueid}/submissions/new?manuscript={manuscriptVar}"
 				},
 				"acknowledgement": {
 					"title": "Assignment acknowledgement (reviewer / AE / meta-reviewer)",
-					"body": "You've been assigned as **{role}** for a submission to **{venue}**. View it on Reciprocal Reviews:\n\nhttps://reciprocal.reviews/venue/{venueid}/submissions?filter={manuscriptVar}"
+					"body": "You've been assigned as **{role}** for a submission to **{venue}**. View it on Reciprocal Reviews:\n\n{origin}/venue/{venueid}/submissions?filter={manuscriptVar}"
 				},
 				"compensation": {
 					"title": "Compensation request (reviewer / AE / meta-reviewer / EiC)",
-					"body": "You've completed **{role}** work for **{venue}**. Request compensation on Reciprocal Reviews:\n\nhttps://reciprocal.reviews/venue/{venueid}?compensate={manuscriptVar}"
+					"body": "You've completed **{role}** work for **{venue}**. Request compensation on Reciprocal Reviews:\n\n{origin}/venue/{venueid}?compensate={manuscriptVar}"
 				}
 			}
 		},
