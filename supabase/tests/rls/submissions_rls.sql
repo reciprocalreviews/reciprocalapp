@@ -5,7 +5,8 @@
 --           scholars with an approved assignment to the submission.
 --   INSERT  anyone authenticated may create a submission.
 --   UPDATE  authors, or scholars with an approved priority-0 role assignment.
---   DELETE  venue admins only.
+--   DELETE  no one (denied by policy AND the table privilege is revoked, since
+--           deletion would destroy the submission's assignment history).
 --   IMMUTABILITY  status/completed_at are revoked from authenticated at the
 --           column level: even a permitted updater (an author) gets 42501.
 --   AUTHOR-LIST LOCK  the enforce_submission_author_edits trigger forbids any
@@ -60,7 +61,7 @@ select policies_are(
 		'admins, authors, assigned, and bidders can view submissions',
 		'anyone can create submissions, admins for imports',
 		'authors and editors can update submissions',
-		'admins can delete submissions'
+		'submissions cannot be deleted'
 	]
 );
 
@@ -193,21 +194,22 @@ select throws_ok(
 );
 
 -- ---- DELETE -------------------------------------------------------------------
--- A non-admin's DELETE is filtered by the using clause (0 rows, no error).
+-- The table privilege is revoked, so every client DELETE fails with 42501 —
+-- outsiders and venue admins alike.
 select tests.authenticate_as(:'outsider');
-delete from public.submissions where id = :'sub_del';
-select tests.clear_authentication();
-select is(
-	(select count(*)::int from public.submissions where id = :'sub_del'),
-	1,
+select throws_ok(
+	$$ delete from public.submissions where id = $$ || quote_literal(:'sub_del'),
+	'42501',
+	null,
 	'a non-admin cannot delete a submission'
 );
 
--- A venue admin can delete a submission at their venue.
 select tests.authenticate_as(:'admin');
-select lives_ok(
+select throws_ok(
 	$$ delete from public.submissions where id = $$ || quote_literal(:'sub_del'),
-	'a venue admin can delete a submission'
+	'42501',
+	null,
+	'a venue admin cannot delete a submission'
 );
 
 select * from finish();

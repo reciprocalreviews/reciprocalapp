@@ -372,6 +372,12 @@
 
 			{#if typeof affordable === 'function'}
 				<Feedback error text={affordable} />
+				<!-- A failed balance check is a dead end without this: volunteering
+				     to review is how a scholar earns the tokens to submit. -->
+				<Paragraph
+					text={(l) => l.page.newSubmission.note.earnTokens}
+					inputs={{ venue: `/venue/${venue.id}` }}
+				/>
 			{:else if affordable === true}
 				<Feedback text={(l) => l.page.newSubmission.feedback.sufficientBalance} />
 			{/if}

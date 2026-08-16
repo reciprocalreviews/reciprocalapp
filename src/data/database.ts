@@ -38,6 +38,7 @@ export type Database = {
         Row: {
           approved: boolean
           bid: boolean
+          compensation_requested_at: string | null
           completed: boolean
           created_at: string
           id: string
@@ -50,6 +51,7 @@ export type Database = {
         Insert: {
           approved?: boolean
           bid?: boolean
+          compensation_requested_at?: string | null
           completed?: boolean
           created_at?: string
           id?: string
@@ -62,6 +64,7 @@ export type Database = {
         Update: {
           approved?: boolean
           bid?: boolean
+          compensation_requested_at?: string | null
           completed?: boolean
           created_at?: string
           id?: string

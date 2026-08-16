@@ -38,6 +38,7 @@ import type { AuthError, PostgrestError, PostgrestResponse } from '@supabase/sup
 import type { EmailType } from '../../email/templates';
 import type SupabaseCRUD from './SupabaseCRUD.svelte';
 import type {
+	AssignmentAwaitingCompensation,
 	AssignmentForApproval,
 	ProposalSupporter,
 	ScholarReview,
@@ -609,6 +610,9 @@ export default abstract class CRUD {
 	abstract getAssignmentsForApproval(
 		roleIDs: RoleID[]
 	): Promise<ReadResult<AssignmentForApproval[] | null>>;
+	abstract getAssignmentsAwaitingCompensation(
+		roleIDs: RoleID[]
+	): Promise<ReadResult<AssignmentAwaitingCompensation[] | null>>;
 
 	abstract getScholarConflicts(scholar: ScholarID): Promise<ReadResult<ConflictRow[] | null>>;
 

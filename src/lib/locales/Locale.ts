@@ -269,6 +269,9 @@ export type LocaleText = {
 				authors: string;
 				balance: string;
 				approve: string;
+				/** Shown when a balance check fails: how to earn the tokens.
+				 * {venue} is the venue's URL. */
+				earnTokens: string;
 			};
 			field: {
 				authorOrcid: TextFieldText & { unknownScholar: string };
@@ -359,6 +362,8 @@ export type LocaleText = {
 			title: string;
 			tip: {
 				bid: string;
+				/** Explains the batch assignment form above the submissions table. */
+				batchAssign: string;
 			};
 			cell: {
 				you: string;
@@ -371,8 +376,17 @@ export type LocaleText = {
 				notLoaded: string;
 				noSubmissions: string;
 				noneFiltered: string;
+				/** No scholar matched the email or ORCID typed into the batch form. */
+				scholarNotFound: string;
+				/** A scholar and role are resolved; per-row assign buttons are live. */
+				batchReady: string;
+			};
+			options: {
+				batchRole: OptionsText;
 			};
 			button: {
+				batchFind: ButtonText;
+				batchAssign: ButtonText;
 				sortPaymentFirst: ButtonText;
 				sortPaymentLast: ButtonText;
 				sortTitleAsc: ButtonText;
@@ -401,6 +415,7 @@ export type LocaleText = {
 				previousID: NotedTextFieldText;
 				note: NotedTextFieldText;
 				filter: TextFieldText;
+				batchAssign: TextFieldText & { invalid: string };
 			};
 			status: {
 				paid: string;
@@ -458,7 +473,7 @@ export type LocaleText = {
 			};
 			button: {
 				createAssignment: ButtonText;
-				unassign: ButtonText;
+				unassign: ConfirmButtonText;
 				complete: ConfirmButtonText;
 				approve: ButtonText;
 				approveBid: ButtonText;
@@ -647,7 +662,7 @@ export type LocaleText = {
 			};
 			button: {
 				addPreferenceLevel: ButtonText;
-				deletePreferenceLevel: ButtonText;
+				deletePreferenceLevel: ConfirmButtonText;
 				movePreferenceLevelUp: ButtonText;
 				movePreferenceLevelDown: ButtonText;
 			};
@@ -767,7 +782,7 @@ export type LocaleText = {
 			};
 			button: {
 				mint: ButtonText;
-				removeMinter: ButtonText;
+				removeMinter: ConfirmButtonText;
 				addMinter: ButtonText;
 			};
 			note: {
@@ -1003,7 +1018,9 @@ export type LocaleText = {
 				allLoaded: string;
 			};
 			button: {
-				approve: ButtonText;
+				/** Confirm-style: approval moves tokens and is permanent (RR005),
+				 * so it must not be a single click. */
+				approve: ConfirmButtonText;
 				declineInitiate: ButtonText;
 				declineConfirm: ConfirmButtonText;
 				loadMore: ButtonText;
@@ -1049,7 +1066,7 @@ export type LocaleText = {
 				priorityUp: ButtonText;
 				priorityDown: ButtonText;
 				addCompensation: ButtonText;
-				removeCompensation: ButtonText;
+				removeCompensation: ConfirmButtonText;
 				volunteer: ButtonText;
 				accept: ButtonText;
 				acceptInvite: ConfirmButtonText;
@@ -1126,6 +1143,8 @@ export type LocaleText = {
 					transaction: string;
 					review: string;
 					pendingAssignment: string;
+					/** Completed work whose compensation awaits this approver. */
+					pendingCompensation: string;
 					outgoingTransaction: string;
 				};
 				pendingTransactionsAfter: string;
@@ -1278,6 +1297,8 @@ export type LocaleText = {
 		UndeletedTransaction: string;
 		InvalidCharges: string;
 		NewSubmission: string;
+		/** RR009: the caller is neither a listed author nor a venue admin. */
+		SubmissionNotAuthor: string;
 		UnknownVenue: string;
 		MissingSubmissionCharge: string;
 		BulkImportSubmissions: string;

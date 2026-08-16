@@ -121,11 +121,10 @@
 		<Button
 			strings={(l) => l.view.gift.button.giftTokens}
 			testid="gift-submit"
-			active={(currency !== undefined &&
+			active={currency !== undefined &&
 				giftConsent &&
-				kind === 'scholar' &&
-				(validEmail(giftRecipient) || ORCIDRegex.test(giftRecipient))) ||
-				(kind === 'venue' && venue !== undefined)}
+				((kind === 'scholar' && (validEmail(giftRecipient) || ORCIDRegex.test(giftRecipient))) ||
+					(kind === 'venue' && venue !== undefined))}
 			action={async () => {
 				if (currency === undefined) return;
 				const recipient = kind === 'venue' ? venue : giftRecipient;

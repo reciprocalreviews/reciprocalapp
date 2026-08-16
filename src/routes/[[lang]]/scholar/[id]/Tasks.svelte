@@ -30,7 +30,8 @@
 		minting,
 		scholar,
 		reviews,
-		approvals
+		approvals,
+		compensating
 	}: {
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
 		minting: CurrencyRow[] | null;
@@ -39,6 +40,7 @@
 		scholar: ScholarID;
 		reviews: (AssignmentRow & { submissions: SubmissionRow })[] | null;
 		approvals: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
+		compensating: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -52,7 +54,7 @@
 
 <Subheader icon={TaskLabel} text={(l) => l.page.scholar.header.tasks}></Subheader>
 
-{#if invitedCommitments.length === 0 && (pending === null || pending.length === 0) && (outgoingPending === null || outgoingPending.length === 0) && (reviews === null || reviews.length === 0) && (approvals === null || approvals.length === 0)}
+{#if invitedCommitments.length === 0 && (pending === null || pending.length === 0) && (outgoingPending === null || outgoingPending.length === 0) && (reviews === null || reviews.length === 0) && (approvals === null || approvals.length === 0) && (compensating === null || compensating.length === 0)}
 	<Feedback text={(l) => l.page.scholar.feedback.noTasks}></Feedback>
 {:else}
 	<Tip><Text path={(l) => l.view.tasks.tip.tasks} /></Tip>
@@ -130,6 +132,16 @@
 				<td>{locale().view.tasks.cell.kind.pendingAssignment}</td>
 				<td>
 					<SubmissionLink submission={approval.submissions} />
+				</td>
+			</tr>
+		{/each}
+
+		<!-- Show completed work awaiting this approver's compensation decision -->
+		{#each compensating ?? [] as assignment, index}
+			<tr data-testid="compensation-{index}">
+				<td>{locale().view.tasks.cell.kind.pendingCompensation}</td>
+				<td>
+					<SubmissionLink submission={assignment.submissions} />
 				</td>
 			</tr>
 		{/each}

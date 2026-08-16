@@ -37,8 +37,15 @@ export async function handle<T>(
 	success?: string | undefined
 ): Promise<T | boolean> {
 	pendingActions++;
-	const { data, error, notified } = await action;
-	pendingActions--;
+	let result: Result<T>;
+	try {
+		result = await action;
+	} finally {
+		// Always decrement, even if the action throws, so the global saving
+		// indicator can't be pinned on by a failed action.
+		pendingActions--;
+	}
+	const { data, error, notified } = result;
 	if (error) {
 		addError(error);
 		return false;

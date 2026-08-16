@@ -4,10 +4,19 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.4.7 - 2026-08-16
 
+### Added
+
+- Editors can now assign one scholar across several submissions from the submissions list — pick the role and person once, then assign per submission — instead of opening each submission in turn.
+- Reciprocal Reviews now follows up on work that stalls: co-authors are emailed when a submission charge awaits their payment, approvers are reminded when a reviewer has requested compensation, and editors are reminded when a submission has all its reviewing paid and is ready to be marked done. Each follows the venue's existing reminder frequency, and pending compensation now also appears in your task list.
+
 ### Changed
 
 - Updated internal tooling for stability.
 - Submission charges are now checked by the database as well as the form: the amounts must add up to the submission type's cost, and the same author can't be listed twice. Previously these rules held only for people submitting through the form.
+- Welcome tokens now arrive the moment you volunteer, instead of waiting for a currency minter to approve them — the wait previously fell on newcomers volunteering in order to afford their own submission.
+- Reviewer bids and candidate assignees are now listed with the **lowest token balance first**, surfacing the scholars most in need of paid reviewing work.
+- Approving a transaction now asks for confirmation, since it moves tokens permanently and cannot be undone. Removing a minter, a compensation rate, a preference level, or an assignment now confirm too, and the warnings for deleting a role or submission type now say what else will be deleted.
+- Paying for a submission now explains that every author listed must have a Reciprocal Reviews account, and links to volunteering when an author is short of tokens.
 
 ### Fixed
 
@@ -18,6 +27,9 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Exporting volunteers as CSV no longer truncates the file at the first #, so an expertise like "C#" no longer cuts the download short.
 - Number, web address, and email fields now reject malformed input instead of accepting text that merely contains a number or a link. A venue's welcome amount could previously be set to a value that failed to save.
 - Links in emails that end a sentence no longer include the trailing punctuation in the link, and escaped text no longer reappears as markup in the plain-text version.
+- Only a listed author, or an admin of the venue, can create a submission. Any signed-in scholar could previously create one at any venue and leave payment demands against people who had never heard of it.
+- Gifting tokens to a venue now requires the same acknowledgement as gifting to a scholar; that confirmation was skipped for venues.
+- Venues, currencies, and submissions can no longer be deleted through the API. Nothing in the app offered this, but the permission existed — and deleting a venue would have taken its roles, volunteers, assignments, and compensation rates with it.
 
 ## 0.4.6 - 2026-08-08
 

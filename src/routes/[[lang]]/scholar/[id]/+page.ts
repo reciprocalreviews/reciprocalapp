@@ -53,6 +53,12 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get the assignments for which the scholar is the role approver, to show in the scholar's dashboard.
 	const { data: approvals } = await db.getAssignmentsForApproval(approver?.map((r) => r.id) || []);
 
+	// Get completed work awaiting this approver's compensation decision. Without
+	// this, the only notice was the one-shot CompensationRequested email.
+	const { data: compensating } = await db.getAssignmentsAwaitingCompensation(
+		approver?.map((r) => r.id) || []
+	);
+
 	return {
 		commitments: volunteers,
 		venues,
@@ -65,6 +71,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		pending: pending,
 		outgoingPending: outgoingPending,
 		reviews: reviews,
-		approvals: approvals
+		approvals: approvals,
+		compensating: compensating
 	};
 };

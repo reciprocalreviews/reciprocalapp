@@ -650,6 +650,10 @@
             "SelfDealingApproval": {
               "type": "string"
             },
+            "SubmissionNotAuthor": {
+              "description": "RR009: the caller is neither a listed author nor a venue admin.",
+              "type": "string"
+            },
             "TransactionApprovalUpdate": {
               "type": "string"
             },
@@ -834,6 +838,7 @@
             "UndeletedTransaction",
             "InvalidCharges",
             "NewSubmission",
+            "SubmissionNotAuthor",
             "UnknownVenue",
             "MissingSubmissionCharge",
             "BulkImportSubmissions",
@@ -1313,7 +1318,7 @@
                       "$ref": "#/definitions/ButtonText"
                     },
                     "removeMinter": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText"
                     }
                   },
                   "required": [
@@ -1904,6 +1909,10 @@
                     "balance": {
                       "type": "string"
                     },
+                    "earnTokens": {
+                      "description": "Shown when a balance check fails: how to earn the tokens. {venue} is the venue's URL.",
+                      "type": "string"
+                    },
                     "payment": {
                       "type": "string"
                     }
@@ -1912,7 +1921,8 @@
                     "payment",
                     "authors",
                     "balance",
-                    "approve"
+                    "approve",
+                    "earnTokens"
                   ],
                   "type": "object"
                 },
@@ -2720,7 +2730,7 @@
                       "$ref": "#/definitions/ButtonText"
                     },
                     "deletePreferenceLevel": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText"
                     },
                     "movePreferenceLevelDown": {
                       "$ref": "#/definitions/ButtonText"
@@ -3152,7 +3162,7 @@
                       "description": "Editor button that compensates the editor(s) and marks the submission done in one atomic action."
                     },
                     "unassign": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText"
                     }
                   },
                   "required": [
@@ -3566,6 +3576,12 @@
                 "button": {
                   "additionalProperties": false,
                   "properties": {
+                    "batchAssign": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "batchFind": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
                     "bid": {
                       "$ref": "#/definitions/ButtonText"
                     },
@@ -3601,6 +3617,8 @@
                     }
                   },
                   "required": [
+                    "batchFind",
+                    "batchAssign",
                     "sortPaymentFirst",
                     "sortPaymentLast",
                     "sortTitleAsc",
@@ -3646,6 +3664,10 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "batchReady": {
+                      "description": "A scholar and role are resolved; per-row assign buttons are live.",
+                      "type": "string"
+                    },
                     "noSubmissions": {
                       "type": "string"
                     },
@@ -3654,18 +3676,46 @@
                     },
                     "notLoaded": {
                       "type": "string"
+                    },
+                    "scholarNotFound": {
+                      "description": "No scholar matched the email or ORCID typed into the batch form.",
+                      "type": "string"
                     }
                   },
                   "required": [
                     "notLoaded",
                     "noSubmissions",
-                    "noneFiltered"
+                    "noneFiltered",
+                    "scholarNotFound",
+                    "batchReady"
                   ],
                   "type": "object"
                 },
                 "field": {
                   "additionalProperties": false,
                   "properties": {
+                    "batchAssign": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
                     "expertise": {
                       "$ref": "#/definitions/NotedTextFieldText"
                     },
@@ -3739,7 +3789,8 @@
                     "manuscriptID",
                     "previousID",
                     "note",
-                    "filter"
+                    "filter",
+                    "batchAssign"
                   ],
                   "type": "object"
                 },
@@ -3776,6 +3827,18 @@
                     "id",
                     "created",
                     "progress"
+                  ],
+                  "type": "object"
+                },
+                "options": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "batchRole": {
+                      "$ref": "#/definitions/OptionsText"
+                    }
+                  },
+                  "required": [
+                    "batchRole"
                   ],
                   "type": "object"
                 },
@@ -3824,12 +3887,17 @@
                 "tip": {
                   "additionalProperties": false,
                   "properties": {
+                    "batchAssign": {
+                      "description": "Explains the batch assignment form above the submissions table.",
+                      "type": "string"
+                    },
                     "bid": {
                       "type": "string"
                     }
                   },
                   "required": [
-                    "bid"
+                    "bid",
+                    "batchAssign"
                   ],
                   "type": "object"
                 },
@@ -3842,6 +3910,7 @@
                 "tip",
                 "cell",
                 "feedback",
+                "options",
                 "button",
                 "headers",
                 "field",
@@ -5067,7 +5136,7 @@
                       "$ref": "#/definitions/ConfirmButtonText"
                     },
                     "removeCompensation": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText"
                     },
                     "resume": {
                       "$ref": "#/definitions/ButtonText"
@@ -5387,6 +5456,10 @@
                         "pendingAssignment": {
                           "type": "string"
                         },
+                        "pendingCompensation": {
+                          "description": "Completed work whose compensation awaits this approver.",
+                          "type": "string"
+                        },
                         "review": {
                           "type": "string"
                         },
@@ -5399,6 +5472,7 @@
                         "transaction",
                         "review",
                         "pendingAssignment",
+                        "pendingCompensation",
                         "outgoingTransaction"
                       ],
                       "type": "object"
@@ -5457,7 +5531,8 @@
                   "additionalProperties": false,
                   "properties": {
                     "approve": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Confirm-style: approval moves tokens and is permanent (RR005), so it must not be a single click."
                     },
                     "declineConfirm": {
                       "$ref": "#/definitions/ConfirmButtonText"

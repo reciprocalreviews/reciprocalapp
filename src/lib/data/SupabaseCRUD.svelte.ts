@@ -224,6 +224,21 @@ export type AssignmentForApproval = QueryData<
 	ReturnType<typeof assignmentsForApprovalQuery>
 >[number];
 
+/** Assignments on the given roles whose scholar has requested compensation but
+ * hasn't been paid — the approver's "work awaiting your approval" task list. */
+function assignmentsAwaitingCompensationQuery(client: SupabaseClient<Database>, roleIDs: RoleID[]) {
+	return client
+		.from('assignments')
+		.select('*, scholars(*), submissions(*)')
+		.in('role', roleIDs)
+		.eq('approved', true)
+		.eq('completed', false)
+		.not('compensation_requested_at', 'is', null);
+}
+export type AssignmentAwaitingCompensation = QueryData<
+	ReturnType<typeof assignmentsAwaitingCompensationQuery>
+>[number];
+
 function tokenBalancesQuery(
 	client: SupabaseClient<Database>,
 	currency: CurrencyID,
@@ -1189,7 +1204,7 @@ export default class SupabaseCRUD extends CRUD {
 		// to, which is the same currency create_submission will use.
 		const { data: venueRow, error: venueError } = await this.client
 			.from('venues')
-			.select('currency')
+			.select('currency, title')
 			.eq('id', venue)
 			.single();
 		if (venueError) return this.error('LoadVenue', venueError);
@@ -1231,13 +1246,34 @@ export default class SupabaseCRUD extends CRUD {
 		});
 		if (error)
 			return this.error(
-				rpcErrorKey(error, 'NewSubmission', { RR003: 'TransferTokensInsufficient' }),
+				rpcErrorKey(error, 'NewSubmission', {
+					RR003: 'TransferTokensInsufficient',
+					RR009: 'SubmissionNotAuthor'
+				}),
 				error
 			);
 
 		const submissionID = stringField(data, 'submission_id');
 		if (submissionID === null) return { error: { message: this.locale.error.NewSubmission } };
-		return { data: submissionID };
+
+		// Tell each charged co-author that a proposed charge awaits their
+		// approval — the submitter's own charge already settled in the RPC, and
+		// without this email a co-author would only discover the charge by
+		// visiting their dashboard. Per-recipient, since each charge differs.
+		const notifications: Notification[] = [];
+		for (const [index, author] of authors.entries()) {
+			const payment = charges[index]?.payment ?? 0;
+			if (author === creator || payment === 0) continue;
+			const emailResult = await this.emailScholars([author], 'SubmissionCharged', [
+				title.trim() ? title : externalID,
+				venueRow.title,
+				payment.toString(),
+				author
+			]);
+			if (emailResult.notified) notifications.push(...emailResult.notified);
+		}
+
+		return { data: submissionID, notified: notifications };
 	}
 
 	async bulkImportSubmissions(
@@ -1602,6 +1638,19 @@ export default class SupabaseCRUD extends CRUD {
 			const result = await this.createAssignment(submission.id, scholarID, roleID, false, false);
 			if (result.error) return result;
 		}
+
+		// Stamp the request on the assignment (the scholar's own row, which the
+		// assignments UPDATE policy permits). The stamp is what lets the daily
+		// remind function nag approvers about finished work awaiting compensation
+		// without nagging them about reviews still in progress.
+		const { error: stampError } = await this.client
+			.from('assignments')
+			.update({ compensation_requested_at: new Date().toISOString() })
+			.eq('scholar', scholarID)
+			.eq('venue', venueID)
+			.eq('role', roleID)
+			.eq('submission', submission.id);
+		if (stampError) return this.error('CompensationAssignmentCheck', stampError);
 
 		// Notify whoever can act on this request, not the requester themselves.
 		// "Can act on it" is exactly canApproveAssignment.ts — the same three
@@ -2006,6 +2055,12 @@ export default class SupabaseCRUD extends CRUD {
 		roleIDs: RoleID[]
 	): Promise<ReadResult<AssignmentForApproval[] | null>> {
 		return this.rows('LoadAssignment', assignmentsForApprovalQuery(this.client, roleIDs));
+	}
+
+	async getAssignmentsAwaitingCompensation(
+		roleIDs: RoleID[]
+	): Promise<ReadResult<AssignmentAwaitingCompensation[] | null>> {
+		return this.rows('LoadAssignment', assignmentsAwaitingCompensationQuery(this.client, roleIDs));
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────

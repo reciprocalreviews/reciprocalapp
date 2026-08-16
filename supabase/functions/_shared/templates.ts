@@ -81,6 +81,14 @@ export const Emails = {
 			"If this is a valid request, approve the assignment, evaluate their work, and if it meets your venue's standards, mark the work complete so they are compensated."
 		]
 	},
+	SubmissionCharged: {
+		subject: 'A submission charge awaits your approval',
+		paragraphs: [
+			'You were listed as a paying author on the submission "$1" to $2, with a charge of $3 tokens.',
+			'The charge is only proposed — nothing moves until you approve it, and the editor may wait for every author to pay before proceeding with review. Review and approve it here:',
+			'https://reciprocal.reviews/scholar/$4'
+		]
+	},
 	WorkCompensated: {
 		subject: 'You were paid for your $1 work',
 		paragraphs: [

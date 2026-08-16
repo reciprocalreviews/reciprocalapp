@@ -381,7 +381,7 @@
                 "submit": "Submit"
             },
             "paragraph": {
-                "intro": "Ready to create a new submission? Typically, this form is filled by one of the authors of a submission, to pay for a submission to be reviewed.\n\n**List every co-author**, even those not contributing tokens — this lets editors and the platform identify conflicts of interest with potential reviewers. Non-paying co-authors should be listed with a payment of 0; the paying authors split the venue's submission cost between them.\n\nAfter filling out this form:\n\n- The submission will be created in the system.\n- Each paying author will need to confirm their payment.\n- Once everyone has paid, the editor will proceed with review."
+                "intro": "Ready to create a new submission? This form is filled by one of the authors of a submission, to pay for a submission to be reviewed.\n\n**List every co-author who has a Reciprocal Reviews account**, even those not contributing tokens — this lets editors and the platform identify conflicts of interest with potential reviewers. Non-paying co-authors should be listed with a payment of 0; the paying authors split the venue's submission cost between them.\n\nEvery author you list must already have an account, since authors are identified by ORCID. A co-author without one simply can't be listed — leave them off and submit with the rest. They won't be charged, and the platform won't be able to detect conflicts of interest involving them.\n\nAfter filling out this form:\n\n- The submission will be created in the system.\n- Each paying author will need to confirm their payment, and will be emailed about it.\n- Once everyone has paid, the editor will proceed with review."
             },
             "feedback": {
                 "notLoaded": "Unable to load the venue and/or submission types for this page.",
@@ -411,9 +411,10 @@
             },
             "note": {
                 "payment": "List every co-author. Set the payment for each, with non-paying co-authors at 0. The total must equal the venue's submission cost.",
-                "authors": "List every co-author, even those not contributing — this lets editors and the platform identify conflicts of interest with potential reviewers.",
+                "authors": "List every co-author who has an account, even those not contributing — this lets editors and the platform identify conflicts of interest with potential reviewers. Co-authors without a Reciprocal Reviews account can't be listed; leave them off.",
                 "balance": "Verify the balance to enable submission.",
-                "approve": "Each paying author will need to approve their payment. Non-paying co-authors don't owe anything, so no approval is needed from them."
+                "approve": "Each paying author will need to approve their payment. Non-paying co-authors don't owe anything, so no approval is needed from them.",
+                "earnTokens": "Short on tokens? [Volunteer to review for this venue]({venue}) to earn them — reviewing is how tokens enter the community."
             },
             "field": {
                 "authorOrcid": {
@@ -555,14 +556,30 @@
         "submissions": {
             "title": "Submissions",
             "tip": {
-                "bid": "You can bid on submissions below that you are interested in volunteering for. This information goes to the {role}, who will select volunteers."
+                "bid": "You can bid on submissions below that you are interested in volunteering for. This information goes to the {role}, who will select volunteers.",
+                "batchAssign": "Assigning one person to several submissions? Choose a role and find the scholar here, then use the assign buttons that appear in that role's column."
             },
             "feedback": {
                 "notLoaded": "Unable to load submissions.",
                 "noSubmissions": "This venue has no submissions (or none visible to you).",
-                "noneFiltered": "All submissions filtered."
+                "noneFiltered": "All submissions filtered.",
+                "scholarNotFound": "No scholar found with that email or ORCID.",
+                "batchReady": "Found them. Use the assign buttons in that role's column below."
+            },
+            "options": {
+                "batchRole": {
+                    "label": "role to assign"
+                }
             },
             "button": {
+                "batchFind": {
+                    "tip": "Find this scholar so you can assign them to submissions below",
+                    "label": "Find scholar"
+                },
+                "batchAssign": {
+                    "tip": "Assign the scholar you found to this submission in this role",
+                    "label": "+ assign"
+                },
                 "sortPaymentFirst": {
                     "tip": "Sort by pending first",
                     "label": "↓"
@@ -639,6 +656,11 @@
                 "filter": {
                     "label": "filter submissions $filter",
                     "placeholder": "title, id, author, reviewer..."
+                },
+                "batchAssign": {
+                    "label": "scholar to assign",
+                    "placeholder": "email or ORCID",
+                    "invalid": "Must be a valid email or ORCID."
                 }
             },
             "headers": {
@@ -699,7 +721,8 @@
                 },
                 "unassign": {
                     "tip": "Remove this assignment",
-                    "label": "Unassign"
+                    "label": "Unassign",
+                    "warn": "Unassign this scholar?"
                 },
                 "complete": {
                     "tip": "Mark this assignment complete and compensate the scholar for their work",
@@ -851,7 +874,7 @@
                 "deleteSubmissionType": {
                     "tip": "Remove this submission type",
                     "label": "$delete",
-                    "warn": "Delete?"
+                    "warn": "Delete this type and its compensation rates?"
                 },
                 "requestCompensation": {
                     "tip": "Request compensation",
@@ -968,7 +991,8 @@
                 },
                 "deletePreferenceLevel": {
                     "label": "Delete",
-                    "tip": "Delete this preference level. Existing bids that referenced it will become unset."
+                    "tip": "Delete this preference level. Existing bids that referenced it will become unset.",
+                    "warn": "Delete, unsetting existing bids?"
                 },
                 "movePreferenceLevelUp": {
                     "label": "Up",
@@ -1138,7 +1162,8 @@
                 },
                 "removeMinter": {
                     "tip": "Remove yourself as minter",
-                    "label": "$delete"
+                    "label": "$delete",
+                    "warn": "Remove this minter?"
                 },
                 "addMinter": {
                     "tip": "Add minter",
@@ -1336,8 +1361,9 @@
             },
             "button": {
                 "approve": {
-                    "tip": "Approve this proposed transaction",
-                    "label": "Approve"
+                    "tip": "Approve this proposed transaction, permanently transferring the tokens",
+                    "label": "Approve",
+                    "warn": "Approve permanently"
                 },
                 "declineInitiate": {
                     "tip": "Decline this proposed transaction",
@@ -1420,7 +1446,8 @@
                 },
                 "removeCompensation": {
                     "tip": "Remove compensation for this submission role",
-                    "label": "$delete"
+                    "label": "$delete",
+                    "warn": "Remove this compensation rate?"
                 },
                 "volunteer": {
                     "tip": "Volunteer for this role",
@@ -1455,7 +1482,7 @@
                 "deleteRole": {
                     "tip": "Delete this role",
                     "label": "Delete $delete",
-                    "warn": "Delete this role and all volunteers?"
+                    "warn": "Delete this role, its volunteers, assignments, and compensation?"
                 }
             },
             "field": {
@@ -1581,6 +1608,7 @@
                     "transaction": "Transaction",
                     "review": "Review",
                     "pendingAssignment": "Pending assignment",
+                    "pendingCompensation": "Compensation to approve",
                     "outgoingTransaction": "Pending approval"
                 },
                 "pendingTransactionsAfter": "pending transactions to approve"
@@ -1759,6 +1787,7 @@
         "UndeletedTransaction": "The proposed transaction couldn't be deleted.",
         "InvalidCharges": "The proposed transaction's charges are invalid.",
         "NewSubmission": "Unable to create a new submission",
+        "SubmissionNotAuthor": "Only a listed author or a venue admin can create a submission",
         "UnknownVenue": "Unable to find venue",
         "MissingSubmissionCharge": "Didn't receive enough charge amounts for the authors given",
         "BulkImportSubmissions": "Unable to import submissions",

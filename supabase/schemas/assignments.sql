@@ -22,7 +22,13 @@ create table if not exists public.assignments (
 	-- when bid=true and the venue has defined preference levels; null otherwise.
 	preferenceid uuid,
 	-- Timestamp when the assignment was created
-	created_at timestamp with time zone default timezone ('utc'::text, now()) not null
+	created_at timestamp with time zone default timezone ('utc'::text, now()) not null,
+	-- When the scholar requested compensation for this assignment (null until
+	-- they do). Distinguishes finished work awaiting an approver from a review
+	-- still in progress, so the daily remind function can nag approvers about
+	-- the former without nagging them about the latter. Stamped by the scholar
+	-- themselves (their own-row UPDATE policy permits it).
+	compensation_requested_at timestamp with time zone default null
 );
 
 alter table public.assignments OWNER to "postgres";

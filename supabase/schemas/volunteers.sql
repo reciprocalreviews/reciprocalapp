@@ -154,10 +154,14 @@ create policy "admins and volunteers can delete" on public.volunteers for DELETE
 
 --------------------------------------
 -- RPCs (defined in migration 20260608000000_atomic_crud.sql)
--- Internal helper: record the proposed welcome grant for a volunteer. Not
--- granted to any role — only reachable from the SECURITY DEFINER functions
--- below. Creates a proposed venue->scholar transaction sized to welcome_amount;
--- a minter approves it later. No-op for payment-free venues.
+-- Internal helper: settle the welcome grant for a volunteer. Not granted to
+-- any role — only reachable from the SECURITY DEFINER functions below. The
+-- grant settles immediately (DESIGN: welcome tokens "should be minted and
+-- given" on first volunteering): it draws from the venue's reserve, minting
+-- only any shortfall, and records one approved venue->scholar transaction.
+-- The amount is standing venue policy (venues.welcome_amount, granted at most
+-- once per scholar), so no per-grant minter approval is required; minters
+-- still approve every other mint. No-op for payment-free venues.
 create or replace function public._welcome_volunteer (
 	_welcomer uuid,
 	_scholar uuid,
@@ -168,6 +172,10 @@ set
 	search_path = public, pg_temp as $function$
 declare
 	_venue public.venues;
+	_txn_id uuid;
+	_available integer;
+	_shortfall integer;
+	_token_ids uuid[];
 begin
 	-- Find the venue that owns the role being volunteered for.
 	select v.* into _venue
@@ -185,24 +193,54 @@ begin
 		return;
 	end if;
 
-	-- Record the grant as a *proposed* venue->scholar transaction. The tokens
-	-- are placeholders (null UUIDs) until a minter approves it via
-	-- approve_transaction, which mints and transfers the real tokens.
+	-- Attribute both token writes below (the shortfall mint and the transfer) to
+	-- the transaction recorded at the end. The id is generated up front because
+	-- the tokens are written before the transaction row exists, and the
+	-- token_events trigger reads app.txn at the moment of the write.
+	_txn_id := gen_random_uuid();
+	perform set_config('app.txn', _txn_id::text, true);
+
+	-- Draw from the venue's reserve, minting only the shortfall into it first —
+	-- the same shape approve_transaction gives a venue-sourced transfer.
+	select count(*) into _available
+	from public.tokens
+	where currency = _venue.currency and venue = _venue.id;
+	_shortfall := greatest(0, _venue.welcome_amount - _available);
+	if _shortfall > 0 then
+		insert into public.tokens (currency, venue, scholar)
+		select _venue.currency, _venue.id, null from generate_series(1, _shortfall);
+	end if;
+
+	-- Choose the granted tokens and move them to the scholar.
+	select array_agg(id) into _token_ids
+	from (
+		select id from public.tokens
+		where currency = _venue.currency and venue = _venue.id
+		order by id
+		limit _venue.welcome_amount
+	) sub;
+	update public.tokens set venue = null, scholar = _scholar where id = any(_token_ids);
+
+	-- Record the settled grant as one approved venue->scholar transaction.
 	insert into public.transactions (
-		creator, from_scholar, from_venue, to_scholar, to_venue,
+		id, creator, from_scholar, from_venue, to_scholar, to_venue,
 		tokens, currency, purpose, status
 	) values (
-		_welcomer, null, _venue.id, _scholar, null,
-		array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[_venue.welcome_amount]),
-		_venue.currency, _reason, 'proposed'
+		_txn_id, _welcomer, null, _venue.id, _scholar, null,
+		_token_ids, _venue.currency, _reason, 'approved'
 	);
+
+	-- Clear the attribution, so a later token write in this same database
+	-- transaction that is NOT part of this grant is recorded as unattributed
+	-- rather than borrowing this transaction's id.
+	perform set_config('app.txn', '', true);
 end;
 $function$;
 
 revoke execute on function public._welcome_volunteer (uuid, uuid, uuid, text) from public;
 
 -- create_volunteer: insert a volunteer record and, when this is the scholar's
--- first role and compensation is requested, record the proposed welcome grant —
+-- first role and compensation is requested, settle the welcome grant —
 -- atomically. SECURITY DEFINER, re-implementing the volunteers INSERT policy
 -- (venue admin, or self for a non-invite-only role).
 create or replace function public.create_volunteer (
@@ -272,7 +310,7 @@ revoke execute on function public.create_volunteer (uuid, uuid, boolean, boolean
 grant execute on function public.create_volunteer (uuid, uuid, boolean, boolean, integer) to authenticated;
 
 -- accept_role_invite: respond to a role invitation and, when accepting a first
--- role, record the proposed welcome grant — atomically. SECURITY DEFINER,
+-- role, settle the welcome grant — atomically. SECURITY DEFINER,
 -- re-implementing the volunteers UPDATE policy (only the volunteering scholar).
 create or replace function public.accept_role_invite (
 	_volunteer_id uuid,

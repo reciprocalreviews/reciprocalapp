@@ -75,6 +75,13 @@ grant update (
 	venue, externalid, previousid, previous, submission_type, authors, payments, transactions, title, expertise
 ) on public.submissions to authenticated;
 
+-- `grant all` above also confers TABLE-level DELETE; deletion is denied to
+-- clients (see the deny policy above), so remove the privilege as well.
+revoke delete on public.submissions
+from
+	authenticated,
+	anon;
+
 --------------------------------------
 -- Indexes
 
@@ -96,7 +103,9 @@ with
 		or public.isadmin (venue)
 	);
 
-create policy "admins can delete submissions" on public.submissions for DELETE to authenticated using (public.isAdmin (venue));
+-- No client path deletes a submission: deletion would destroy its assignment
+-- history. service_role keeps its grant for administrative and recovery work.
+create policy "submissions cannot be deleted" on public.submissions for DELETE to authenticated using (false);
 
 --------------------------------------
 -- RPCs (defined in migration 20260608000000_atomic_crud.sql)
@@ -146,6 +155,13 @@ begin
 	end if;
 	if cardinality(_authors) = 0 then
 		raise exception 'A submission needs at least one author';
+	end if;
+
+	-- Only a listed author may create a submission, unless the caller is a venue
+	-- admin adding one manually. RR009 surfaces the specific message.
+	if not (_caller = any(_authors) or public.isadmin(_venue)) then
+		raise exception 'Only a listed author or a venue admin can create a submission'
+			using errcode = 'RR009';
 	end if;
 
 	-- No author may be listed twice. The loop below indexes _authors positionally,
