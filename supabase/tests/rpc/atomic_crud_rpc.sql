@@ -13,7 +13,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(33);
+select plan(38);
 
 -- ---- Shared fixtures (owner context) -----------------------------------------
 select tests.clear_authentication();
@@ -179,7 +179,11 @@ select throws_ok(
 -- create_submission
 --------------------------------------------------------------------------------
 select tests.clear_authentication();
-select tests.create_submission_type(:'ven') as stype \gset
+-- Cost 1, so a single author paying 1 satisfies the sum-equals-cost rule.
+select tests.create_submission_type(:'ven', 1) as stype \gset
+-- A dearer type, for the can't-afford case: the charge has to match the cost
+-- before the balance is even consulted, or RR007 would mask RR003.
+select tests.create_submission_type(:'ven', 999) as stype_dear \gset
 -- Ensure :alice can cover a charge of 1 (she has tokens from earlier transfers).
 insert into public.tokens (currency, scholar) select :'cur', :'alice' from generate_series(1, 3);
 
@@ -203,7 +207,7 @@ select is(
 select tests.authenticate_as(:'bob');
 select throws_ok(
 	$$ select public.create_submission( $$ || quote_literal(:'ven') || $$, 'EXT-2', null, null, $$
-		|| quote_literal(:'stype') || $$, array[ $$ || quote_literal(:'bob') || $$ ]::uuid[],
+		|| quote_literal(:'stype_dear') || $$, array[ $$ || quote_literal(:'bob') || $$ ]::uuid[],
 		array[999]::integer[], 'B title', 'expertise', null, 'Payment for EXT-2' ) $$,
 	'RR003', null,
 	'a submission whose author cannot pay is rejected'
@@ -214,6 +218,58 @@ select is(
 	0,
 	'the rejected submission left no partial state'
 );
+
+-- The cost rule, which until now lived only in the new-submission form. A caller
+-- reaching the RPC directly could otherwise name its own price.
+select tests.authenticate_as(:'alice');
+select throws_ok(
+	$$ select public.create_submission( $$ || quote_literal(:'ven') || $$, 'EXT-3', null, null, $$
+		|| quote_literal(:'stype') || $$, array[ $$ || quote_literal(:'alice') || $$ ]::uuid[],
+		array[0]::integer[], 'C title', 'expertise', null, 'Payment for EXT-3' ) $$,
+	'RR007', null,
+	'a submission whose payments fall short of the type cost is rejected'
+);
+select throws_ok(
+	$$ select public.create_submission( $$ || quote_literal(:'ven') || $$, 'EXT-4', null, null, $$
+		|| quote_literal(:'stype') || $$, array[ $$ || quote_literal(:'alice') || $$ ]::uuid[],
+		array[2]::integer[], 'D title', 'expertise', null, 'Payment for EXT-4' ) $$,
+	'RR007', null,
+	'a submission that overpays the type cost is rejected too'
+);
+
+-- Split charges are fine as long as they add up.
+select lives_ok(
+	$$ select public.create_submission( $$ || quote_literal(:'ven') || $$, 'EXT-5', null, null, $$
+		|| quote_literal(:'stype') || $$, array[ $$ || quote_literal(:'alice') || $$ , $$
+		|| quote_literal(:'bob') || $$ ]::uuid[],
+		array[1, 0]::integer[], 'E title', 'expertise', null, 'Payment for EXT-5' ) $$,
+	'co-authors may split a charge as long as it sums to the cost'
+);
+
+-- The same author twice would be charged twice for one manuscript, and the
+-- positional loop would settle the submitter's charge on both passes.
+select throws_ok(
+	$$ select public.create_submission( $$ || quote_literal(:'ven') || $$, 'EXT-6', null, null, $$
+		|| quote_literal(:'stype') || $$, array[ $$ || quote_literal(:'alice') || $$ , $$
+		|| quote_literal(:'alice') || $$ ]::uuid[],
+		array[1, 0]::integer[], 'F title', 'expertise', null, 'Payment for EXT-6' ) $$,
+	'RR008', null,
+	'a submission listing the same author twice is rejected'
+);
+
+-- The type must belong to the venue it is being submitted to.
+select tests.clear_authentication();
+select tests.create_venue(:'cur', array[:'admin']::uuid[], 5) as ven_other \gset
+select tests.create_submission_type(:'ven_other', 1) as stype_other \gset
+select tests.authenticate_as(:'alice');
+select throws_ok(
+	$$ select public.create_submission( $$ || quote_literal(:'ven') || $$, 'EXT-7', null, null, $$
+		|| quote_literal(:'stype_other') || $$, array[ $$ || quote_literal(:'alice') || $$ ]::uuid[],
+		array[1]::integer[], 'G title', 'expertise', null, 'Payment for EXT-7' ) $$,
+	'P0001', null,
+	'a submission type from another venue is rejected'
+);
+select tests.clear_authentication();
 
 --------------------------------------------------------------------------------
 -- create_volunteer

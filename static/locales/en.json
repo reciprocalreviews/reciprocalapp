@@ -467,7 +467,8 @@
             },
             "feedback": {
                 "notLoaded": "Unable to load the venue or submission types.",
-                "notAdmin": "Only venue admins can import submissions."
+                "notAdmin": "Only venue admins can import submissions.",
+                "raggedRows": "Some rows had a different number of columns than the header, so columns may be misaligned and data dropped. Check line {lines} — a comma inside a field must be wrapped in double quotes."
             },
             "field": {
                 "title": {
@@ -1719,7 +1720,6 @@
         "CreateCompensation": "Unable to create compensation for role",
         "EditCompensation": "Unable to create compensation for role",
         "CreateVolunteer": "Unable to add volunteer commitment",
-        "WelcomeVolunteer": "Unable to grant welcome tokens for first volunteer commitment",
         "AlreadyVolunteered": "Already created a volunteer commitment for this role.",
         "UpdateVolunteerActive": "Unable to update volunteer commitment",
         "UpdateVolunteerExpertise": "Unable to update your expertise",

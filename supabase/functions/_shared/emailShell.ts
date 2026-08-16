@@ -44,9 +44,11 @@ export function paragraphsToHtml(body: string): string {
 		.map((block) => block.trim())
 		.filter((block) => block.length > 0)
 		.map((block) => {
-			// Auto-link bare URLs that aren't already inside an href attribute.
+			// Auto-link bare URLs that aren't already inside an href attribute. The
+			// URL stops short of trailing sentence punctuation: `[^\s<]+` is greedy,
+			// so "visit https://x.com." used to link to "https://x.com." and 404.
 			const linked = block.replace(
-				/(^|[^"'>])(https?:\/\/[^\s<]+)/g,
+				/(^|[^"'>])(https?:\/\/[^\s<]*[^\s<.,;:!?)])/g,
 				(_match, prefix, url) =>
 					`${prefix}<a href="${url}" style="color: ${BRAND_COLOR};">${url}</a>`
 			);
@@ -64,11 +66,15 @@ export function htmlToText(html: string): string {
 		.replace(/<br\s*\/?>/gi, '\n')
 		.replace(/<[^>]+>/g, '')
 		.replace(/&nbsp;/g, ' ')
-		.replace(/&amp;/g, '&')
+		// The ampersand is decoded LAST, mirroring escapeHtml where it is escaped
+		// first. Decoding it first turned "&amp;lt;" into "&lt;", which the next
+		// pass decoded again into "<" — resurrecting markup that had been
+		// deliberately escaped twice.
 		.replace(/&lt;/g, '<')
 		.replace(/&gt;/g, '>')
 		.replace(/&quot;/g, '"')
 		.replace(/&#39;/g, "'")
+		.replace(/&amp;/g, '&')
 		.replace(/\n{3,}/g, '\n\n')
 		.split('\n')
 		.map((line) => line.trim())

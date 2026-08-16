@@ -4,8 +4,15 @@
 name: Unit Tests
 
 on:
-  # Allow this workflow to be called.
+  # Run as its own check on pull requests. Neither this suite nor the locale
+  # check needs Supabase or a browser, so gating PRs on them costs a minute and
+  # is what makes a new test actually able to block a regression — before this,
+  # vitest ran only on the push to dev, i.e. after review had already passed.
+  pull_request:
+  # Allow the deploy workflows to call it,
   workflow_call:
+  # and allow manual runs.
+  workflow_dispatch:
 
 jobs:
   build:

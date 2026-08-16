@@ -203,6 +203,7 @@ A `Submission` represents a manuscript undergoing peer review.
 - [x] Depending on the venue, `Scholar`s may be able to bid on submissions, simplifying an editor's ability to find qualified reviewers.
 - [x] `Submission`s can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
 - [x] `Submission`s can be added manually by \_`editor`\_s.
+- [x] A `Submission`'s charges must add up to exactly its submission type's cost, and no author may be listed on it twice. Both are enforced by the database, not only by the submission form — a rule that lives only in a form is a rule that holds for people who use the form. Splitting a charge unevenly between co-authors is fine, including charging a co-author nothing; what is refused is a total that doesn't match the price.
 - [x] Bids on submissions can be approved by approvers
 - [x] Bids on submissions can be approved by roles that are set to be approving roles for another role (e.g., Associate Editors can approve bids from Reviewers)
 - [x] A submission's assignments are visible only to the assigned scholar, the role's approver chain (and venue admins), and — when a venue runs open (non-anonymous) review — the submission's authors. Scholars can declare conflicts on submissions; a declared conflict always hides that submission's assignments from the conflicted scholar, including in open review.

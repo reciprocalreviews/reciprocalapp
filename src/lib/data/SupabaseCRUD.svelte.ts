@@ -37,7 +37,6 @@ import type {
 import { renderEmail, type EmailType } from '../../email/templates';
 import type Locale from '../locales/Locale';
 import CRUD, {
-	NullUUID,
 	type BulkImportResult,
 	type Charge,
 	type ImportedSubmission,
@@ -83,7 +82,7 @@ type CompleteAssignmentResult =
 /** Runtime narrowing of the Json that Supabase returns from the
  * complete_assignment RPC. Uses TypeScript's `in` narrowing so no
  * `as` cast is needed. */
-function isCompleteAssignmentResult(value: unknown): value is CompleteAssignmentResult {
+export function isCompleteAssignmentResult(value: unknown): value is CompleteAssignmentResult {
 	if (typeof value !== 'object' || value === null || !('status' in value)) return false;
 	return value.status === 'transferred' || value.status === 'insufficient';
 }
@@ -120,7 +119,7 @@ type MarkSubmissionDoneResult =
 			submission_id: SubmissionID;
 	  };
 
-function isMarkSubmissionDoneResult(value: unknown): value is MarkSubmissionDoneResult {
+export function isMarkSubmissionDoneResult(value: unknown): value is MarkSubmissionDoneResult {
 	if (typeof value !== 'object' || value === null || !('status' in value)) return false;
 	return (
 		value.status === 'completed' || value.status === 'blocked' || value.status === 'insufficient'
@@ -130,7 +129,7 @@ function isMarkSubmissionDoneResult(value: unknown): value is MarkSubmissionDone
 /** Read a string field from a jsonb object returned by an RPC, or null if
  * absent or the wrong type. The atomic-CRUD RPCs return jsonb_build_object
  * payloads (see migration 20260608000000_atomic_crud.sql). */
-function stringField(value: unknown, key: string): string | null {
+export function stringField(value: unknown, key: string): string | null {
 	if (typeof value !== 'object' || value === null || !(key in value)) return null;
 	const field = (value as Record<string, unknown>)[key];
 	return typeof field === 'string' ? field : null;
@@ -138,7 +137,7 @@ function stringField(value: unknown, key: string): string | null {
 
 /** Read a string[] field from a jsonb object returned by an RPC, or null if
  * absent or not an array of strings. */
-function stringArrayField(value: unknown, key: string): string[] | null {
+export function stringArrayField(value: unknown, key: string): string[] | null {
 	if (typeof value !== 'object' || value === null || !(key in value)) return null;
 	const field = (value as Record<string, unknown>)[key];
 	if (!Array.isArray(field) || field.some((v) => typeof v !== 'string')) return null;
@@ -151,7 +150,7 @@ function stringArrayField(value: unknown, key: string): string[] | null {
  * user-facing headline specific and localized for the user-actionable failures
  * (insufficient tokens, self-dealing, already approved, already volunteered)
  * instead of collapsing every failure to one generic message per RPC. */
-function rpcErrorKey(
+export function rpcErrorKey(
 	error: PostgrestError | null,
 	fallback: keyof Locale['error'],
 	map: Record<string, keyof Locale['error']>
@@ -551,6 +550,21 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
+	async getScholarAcceptedVolunteering(
+		scholar: ScholarID,
+		roleIDs: RoleID[]
+	): Promise<ReadResult<VolunteerRow[] | null>> {
+		return this.rows(
+			'LoadVolunteer',
+			this.client
+				.from('volunteers')
+				.select('*')
+				.eq('scholarid', scholar)
+				.eq('accepted', 'accepted')
+				.in('roleid', roleIDs)
+		);
+	}
+
 	async getScholarSubmissions(scholar: ScholarID): Promise<ReadResult<SubmissionRow[] | null>> {
 		return this.rows(
 			'LoadSubmission',
@@ -762,7 +776,10 @@ export default class SupabaseCRUD extends CRUD {
 	async exportScholarData(scholar: ScholarID): Promise<Result<unknown>> {
 		const { data, error } = await this.client.rpc('export_scholar_data', { _scholar: scholar });
 		if (error)
-			return this.error(rpcErrorKey(error, 'ExportScholarData', { RR006: 'NotYourAccount' }), error);
+			return this.error(
+				rpcErrorKey(error, 'ExportScholarData', { RR006: 'NotYourAccount' }),
+				error
+			);
 		return { data, error: undefined };
 	}
 
@@ -1082,7 +1099,10 @@ export default class SupabaseCRUD extends CRUD {
 	// Submissions & submission types
 	// ─────────────────────────────────────────────────────────────────────────
 
-	async verifyCharges(charges: Charge[]): Promise<Result<true | Charge[] | undefined>> {
+	async verifyCharges(
+		charges: Charge[],
+		currency: CurrencyID
+	): Promise<Result<true | Charge[] | undefined>> {
 		// First, find the scholars with the specified ORCIDs.
 		const { data: scholars, error: scholarsError } = await this.convertORCIDsToScholars(
 			charges.map((charge) => charge.scholar)
@@ -1102,10 +1122,16 @@ export default class SupabaseCRUD extends CRUD {
 
 		const scholarIDs = scholars.map((scholar) => scholar.id);
 
-		// Find all of the tokens owned by the set
+		// Find all of the tokens owned by the set, IN THIS VENUE'S CURRENCY. A
+		// balance is meaningless without the currency: without this filter a
+		// scholar's holdings in every other venue's currency counted toward the
+		// charge, so the check passed and create_submission then rejected the
+		// submission with RR003 — or left a co-author charge that could never be
+		// approved. Both create_submission and tokenBalancesQuery filter the same way.
 		const { data: tokens, error: tokenError } = await this.client
 			.from('tokens')
 			.select('scholar')
+			.eq('currency', currency)
 			.in('scholar', scholarIDs);
 		if (tokenError) {
 			return { error: { message: 'Missing token', details: tokenError } };
@@ -1157,7 +1183,18 @@ export default class SupabaseCRUD extends CRUD {
 		// tokens to the venue), and inserts the submission in a single
 		// transaction — so a connectivity loss can't orphan proposed
 		// transactions or violate the submission's array-cardinality constraints.
-		const chargeError = await this.verifyCharges(charges);
+		// Charges are denominated in the venue's currency, so read it from the venue
+		// rather than accepting it as an argument — that way the currency the
+		// balances are checked against cannot drift from the venue being submitted
+		// to, which is the same currency create_submission will use.
+		const { data: venueRow, error: venueError } = await this.client
+			.from('venues')
+			.select('currency')
+			.eq('id', venue)
+			.single();
+		if (venueError) return this.error('LoadVenue', venueError);
+
+		const chargeError = await this.verifyCharges(charges, venueRow.currency);
 		if (chargeError.error) return { error: chargeError.error };
 		if (chargeError.data !== true) return { error: { message: this.locale.error.InvalidCharges } };
 
@@ -1567,43 +1604,53 @@ export default class SupabaseCRUD extends CRUD {
 		}
 
 		// Notify whoever can act on this request, not the requester themselves.
-		// "Can act on it" matches canApproveAssignment.ts: anyone approved on
-		// this submission for the role that approves the requested role, plus
-		// venue admins as a fallback when no approver is assigned yet.
+		// "Can act on it" is exactly canApproveAssignment.ts — the same three
+		// branches, unioned, rather than the near-miss this used to be. It
+		// previously omitted the priority-0 editor branch entirely, and treated
+		// admins as a fallback consulted only when no approver was assigned, so
+		// the two people most able to act on a request were often the two who
+		// never heard about it.
 		const recipients = new Set<ScholarID>();
 
-		const { data: role, error: roleError } = await this.client
+		const { data: roles, error: rolesError } = await this.client
 			.from('roles')
-			.select('approver')
-			.eq('id', roleID)
+			.select('id, priority, approver')
+			.eq('venueid', venueID);
+		if (rolesError) return this.error('CompensationAssignmentCheck', rolesError);
+
+		const { data: submissionAssignments, error: approverError } = await this.client
+			.from('assignments')
+			.select('scholar, role')
+			.eq('submission', submission.id)
+			.eq('approved', true);
+		if (approverError) return this.error('CompensationAssignmentCheck', approverError);
+
+		const requestedRole = roles?.find((r) => r.id === roleID) ?? null;
+		const editorRoleIDs = new Set((roles ?? []).filter((r) => r.priority === 0).map((r) => r.id));
+
+		for (const a of submissionAssignments ?? []) {
+			// Branch 2: the priority-0 editor of this submission approves any role.
+			if (editorRoleIDs.has(a.role)) recipients.add(a.scholar);
+			// Branch 3: whoever holds the role that approves the requested role.
+			if (requestedRole?.approver !== null && a.role === requestedRole?.approver)
+				recipients.add(a.scholar);
+		}
+
+		// Branch 1: venue admins can always approve, so they are always notified —
+		// a union member, not a fallback.
+		const { data: adminVenue, error: adminVenueError } = await this.client
+			.from('venues')
+			.select('admins')
+			.eq('id', venueID)
 			.single();
-		if (roleError) return this.error('CompensationAssignmentCheck', roleError);
+		if (adminVenueError) return this.error('CompensationAssignmentCheck', adminVenueError);
+		for (const admin of adminVenue.admins) recipients.add(admin);
 
-		if (role.approver !== null) {
-			const { data: approverAssignments, error: approverError } = await this.client
-				.from('assignments')
-				.select('scholar')
-				.eq('submission', submission.id)
-				.eq('role', role.approver)
-				.eq('approved', true);
-			if (approverError) return this.error('CompensationAssignmentCheck', approverError);
-			for (const a of approverAssignments ?? []) recipients.add(a.scholar);
-		}
-
-		if (recipients.size === 0) {
-			const { data: venue, error: venueError } = await this.client
-				.from('venues')
-				.select('admins')
-				.eq('id', venueID)
-				.single();
-			if (venueError) return this.error('CompensationAssignmentCheck', venueError);
-			for (const admin of venue.admins) recipients.add(admin);
-		}
-
+		// A scholar cannot action their own request, so never mail it to them.
 		recipients.delete(scholarID);
 
-		// No one to notify (shouldn't happen given the admins fallback, but
-		// don't error if it does — the assignment was still created).
+		// No one left to notify — possible when the requester is the venue's only
+		// admin. Don't error: the assignment was still created.
 		if (recipients.size === 0) return { data: undefined, error: undefined };
 
 		return this.emailScholars([...recipients], 'CompensationRequested', [
@@ -1655,50 +1702,6 @@ export default class SupabaseCRUD extends CRUD {
 		const volunteerID = stringField(data, 'volunteer_id');
 		if (volunteerID === null) return this.error('CreateVolunteer');
 		return { data: volunteerID };
-	}
-
-	async welcomeVolunteer(
-		welcomer: ScholarID,
-		scholar: ScholarID,
-		roleid: RoleID,
-		reason: string
-	): Promise<Result> {
-		// Get the role and the venue.
-		const { data: role, error: roleError } = await this.client
-			.from('roles')
-			.select()
-			.eq('id', roleid)
-			.single();
-		if (role === null) return this.error('WelcomeVolunteer', roleError);
-		const venueid = role.venueid;
-		const { data: venue, error: venueError } = await this.client
-			.from('venues')
-			.select()
-			.eq('id', venueid)
-			.single();
-		if (venue === null) return this.error('WelcomeVolunteer', venueError);
-
-		// Payment-free venues have no tokens, so there is nothing to welcome with.
-		if (venue.payment_free) return {};
-
-		const welcome = venue.welcome_amount;
-
-		// Record an approved transaction to log the gift.
-		const { data: transaction, error } = await this.createTransaction(
-			welcomer,
-			null,
-			venueid,
-			scholar,
-			null,
-			// Create a list of null UUIDs to represent that they don't exist yet.
-			new Array(welcome).fill(NullUUID),
-			venue.currency,
-			reason,
-			'proposed'
-		);
-		if (error) return this.error('WelcomeVolunteer', error.details);
-
-		return transaction ? {} : this.error('WelcomeVolunteer');
 	}
 
 	async updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result> {

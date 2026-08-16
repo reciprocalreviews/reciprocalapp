@@ -312,6 +312,10 @@ export type LocaleText = {
 			feedback: {
 				notLoaded: string;
 				notAdmin: string;
+				/** Shown when parsed rows had a different number of cells than the
+				 * header, which means columns shifted and data was dropped. `{lines}`
+				 * is the list of affected line numbers. */
+				raggedRows: string;
 			};
 			field: {
 				title: TextFieldText;
@@ -1232,7 +1236,6 @@ export type LocaleText = {
 		CreateCompensation: string;
 		EditCompensation: string;
 		CreateVolunteer: string;
-		WelcomeVolunteer: string;
 		AlreadyVolunteered: string;
 		UpdateVolunteerActive: string;
 		UpdateVolunteerExpertise: string;
