@@ -260,6 +260,20 @@ function tokenBalancesQuery(
 }
 export type TokenBalance = QueryData<ReturnType<typeof tokenBalancesQuery>>[number];
 
+/** Candidate co-authors matched by name. The columns are listed explicitly
+ * because the scholars SELECT policy is public — a wildcard here would hand
+ * out contact emails to anyone who can type into the author field. */
+function scholarsByNameQuery(client: SupabaseClient<Database>, pattern: string) {
+	return client
+		.from('scholars')
+		.select('id, name, orcid')
+		.ilike('name', pattern)
+		.not('name', 'is', null)
+		.not('orcid', 'is', null)
+		.limit(3);
+}
+export type ScholarMatch = QueryData<ReturnType<typeof scholarsByNameQuery>>[number];
+
 export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
 	readonly client: SupabaseClient<Database>;
@@ -418,6 +432,22 @@ export default class SupabaseCRUD extends CRUD {
 			this.scholars.set(row.id, scholar);
 		}
 		return scholar;
+	}
+
+	async findScholarsByName(query: string): Promise<ReadResult<ScholarMatch[]>> {
+		// Name search for the new-submission form, where an author may know a
+		// co-author's name but not their ORCID. Scholars with no name are skipped
+		// — that covers erased accounts, whose name is nulled — and so are those
+		// with no ORCID, since an ORCID is what the form needs back. The wildcards
+		// in the caller's text are escaped so a stray % doesn't match everyone.
+		const escaped = query.trim().replaceAll('%', '\\%').replaceAll('_', '\\_');
+		if (escaped.length === 0) return { data: [] };
+		const { data, error } = await scholarsByNameQuery(this.client, `%${escaped}%`);
+		if (error) {
+			console.error(error);
+			return { data: [], error: { message: this.locale.error.ScholarNotFound, details: error } };
+		}
+		return { data: data ?? [] };
 	}
 
 	async findScholar(emailOrORCID: string): Promise<Result<string>> {

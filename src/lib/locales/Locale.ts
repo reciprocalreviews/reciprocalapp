@@ -273,6 +273,8 @@ export type LocaleText = {
 			button: {
 				removeAuthor: ButtonText;
 				addAuthor: ButtonText;
+				/** A name-search result; its label is the scholar's name. */
+				chooseAuthor: ButtonText;
 				checkBalances: ButtonText;
 				submit: ButtonText;
 			};
@@ -286,7 +288,11 @@ export type LocaleText = {
 				earnTokens: string;
 			};
 			field: {
-				authorOrcid: TextFieldText & { unknownScholar: string };
+				authorOrcid: TextFieldText & {
+					unknownScholar: string;
+					/** Shown on the row that repeats an author named above it. */
+					duplicate: string;
+				};
 			};
 			slider: {
 				payment: SliderText;

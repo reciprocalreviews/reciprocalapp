@@ -18,6 +18,7 @@
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { getDB } from '$lib/data/CRUD';
+	import type { ScholarMatch } from '$lib/data/SupabaseCRUD.svelte';
 	import {
 		duplicateScholars,
 		validCharge,
@@ -35,7 +36,8 @@
 		venue,
 		submissionTypes,
 		priorSubmissions = [],
-		initialManuscript = ''
+		initialManuscript = '',
+		scholarORCID = null
 	}: {
 		venue: VenueRow;
 		submissionTypes: SubmissionType[];
@@ -51,6 +53,8 @@
 		/** Optional manuscript ID to pre-fill, e.g. from a `?manuscript=` query
 		 * param when an editor's reviewing platform deep-links here. */
 		initialManuscript?: string;
+		/** The submitter's own ORCID, used to list them as the first author. */
+		scholarORCID?: string | null;
 	} = $props();
 
 	const db = getDB();
@@ -68,7 +72,12 @@
 	let previous = $state<string | null>(null);
 	let submissionType = $state<SubmissionTypeID>(submissionTypes[0].id);
 	let note = $state('');
-	let charges = $state<Charge[]>([{ scholar: '', payment: 0 }]);
+	/** The submitter is listed as the first author, since a submission they are
+	 * not an author of is refused anyway (RR009) and leaving the row blank made
+	 * them type an identifier they may not have memorized. Removable, because a
+	 * venue admin may be filing this on someone else's behalf. */
+	// svelte-ignore state_referenced_locally
+	let charges = $state<Charge[]>([{ scholar: scholarORCID ?? '', payment: 0 }]);
 
 	/** The selected submission type, whose cost the author pays. */
 	let selectedType = $derived(submissionTypes.find((t) => t.id === submissionType));
@@ -92,7 +101,57 @@
 		| { status: 'found'; id: string }
 		| { status: 'notfound' };
 
-	let scholarStates = $state<ScholarState[]>([{ status: 'idle' }]);
+	// The pre-filled first row is the authenticated scholar, so it starts
+	// resolved rather than making them blur the field to see their own name.
+	// svelte-ignore state_referenced_locally
+	const initialUser = auth().getUserID();
+	let scholarStates = $state<ScholarState[]>([
+		scholarORCID !== null && initialUser !== null
+			? { status: 'found', id: initialUser }
+			: { status: 'idle' }
+	]);
+
+	/** Per-row name-search results, shown in that row's Name cell. */
+	let nameMatches = $state<ScholarMatch[][]>([[]]);
+	const searchTimers: (ReturnType<typeof setTimeout> | undefined)[] = [];
+
+	/** Search scholars by name as the author types, when what they've typed
+	 * plainly isn't an ORCID. Debounced so a name isn't a query per keystroke. */
+	function searchByName(index: number, text: string) {
+		clearTimeout(searchTimers[index]);
+		const query = text.trim();
+		if (validORCID(query) || query.length < 2) {
+			nameMatches[index] = [];
+			return;
+		}
+		searchTimers[index] = setTimeout(async () => {
+			const { data } = await db().findScholarsByName(query);
+			nameMatches[index] = data;
+		}, 250);
+	}
+
+	/** Adopt a searched-for scholar: their ORCID becomes the row's value, and
+	 * the row is already resolved, so no lookup round trip is needed. */
+	function chooseMatch(index: number, match: ScholarMatch) {
+		if (match.orcid === null) return;
+		charges[index].scholar = match.orcid;
+		// Record the new text as already seen, so the effect below — which clears
+		// a row's resolved scholar whenever its text is edited — doesn't undo the
+		// resolution we just made from the match itself.
+		previousOrcids[index] = match.orcid;
+		nameMatches[index] = [];
+		scholarStates[index] = { status: 'found', id: match.id };
+	}
+
+	/** True when this row names a scholar an earlier row already named. The
+	 * global "Authors must be unique" feedback says that it happened; this says
+	 * which row, which matters more now that row one is pre-filled and adding
+	 * yourself again is the easy mistake. */
+	function isDuplicateRow(index: number): boolean {
+		const mine = charges[index].scholar.trim().toLowerCase();
+		if (mine === '') return false;
+		return charges.some((c, i) => i < index && c.scholar.trim().toLowerCase() === mine);
+	}
 
 	// Reset the scholar state to idle whenever the ORCID text is edited.
 	let previousOrcids: string[] = charges.map((c) => c.scholar);
@@ -292,11 +351,14 @@
 							valid={(text) => {
 								if (!validORCID(text))
 									return (l) => l.page.newSubmission.field.authorOrcid.invalid ?? '';
+								if (isDuplicateRow(index))
+									return (l) => l.page.newSubmission.field.authorOrcid.duplicate;
 								if (scholarStates[index]?.status === 'notfound')
 									return (l) => l.page.newSubmission.field.authorOrcid.unknownScholar;
 								return undefined;
 							}}
 							done={() => lookupScholar(index, charge.scholar)}
+							change={(text) => searchByName(index, text)}
 							testid="author-orcid-{index}"
 						/>
 					</td>
@@ -307,6 +369,22 @@
 							<span data-testid="scholar-found-{index}"
 								><ScholarLink id={scholarStates[index].id} /></span
 							>
+						{:else if (nameMatches[index] ?? []).length > 0}
+							<!-- Typed a name rather than an ORCID: offer the matches, and let
+							     a click fill in the ORCID the form actually needs. -->
+							<div class="matches">
+								{#each nameMatches[index] as match, matchIndex}
+									<Button
+										small
+										strings={(l) => ({
+											...l.page.newSubmission.button.chooseAuthor,
+											label: match.name ?? ''
+										})}
+										testid="author-match-{index}-{matchIndex}"
+										action={() => chooseMatch(index, match)}>{match.name}</Button
+									>
+								{/each}
+							</div>
 						{:else}&mdash;
 						{/if}
 					</td>
@@ -329,6 +407,7 @@
 							action={() => {
 								charges.splice(index, 1);
 								scholarStates.splice(index, 1);
+								nameMatches.splice(index, 1);
 							}}
 						/>
 					</td>
@@ -342,6 +421,7 @@
 			action={() => {
 				charges.push({ scholar: '', payment: 0 });
 				scholarStates.push({ status: 'idle' });
+				nameMatches.push([]);
 			}}
 		/>
 
@@ -430,5 +510,13 @@
 <style>
 	.charge td {
 		vertical-align: baseline;
+	}
+
+	/* Name-search results stack, so three long names don't stretch the column. */
+	.matches {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-half);
 	}
 </style>

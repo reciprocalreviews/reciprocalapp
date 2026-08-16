@@ -17,6 +17,9 @@ export const load: PageLoad = async ({ parent, params }) => {
 	return {
 		venue,
 		submissionTypes,
-		priorSubmissions: priorSubmissions ?? []
+		priorSubmissions: priorSubmissions ?? [],
+		// The submitter's own ORCID, so the form can list them as an author
+		// rather than making them type an identifier they may not have memorized.
+		scholarORCID: scholar?.orcid ?? null
 	};
 };

@@ -1602,6 +1602,10 @@
 										"checkBalances": {
 											"$ref": "#/definitions/ButtonText"
 										},
+										"chooseAuthor": {
+											"$ref": "#/definitions/ButtonText",
+											"description": "A name-search result; its label is the scholar's name."
+										},
 										"removeAuthor": {
 											"$ref": "#/definitions/ButtonText"
 										},
@@ -1609,7 +1613,13 @@
 											"$ref": "#/definitions/ButtonText"
 										}
 									},
-									"required": ["removeAuthor", "addAuthor", "checkBalances", "submit"],
+									"required": [
+										"removeAuthor",
+										"addAuthor",
+										"chooseAuthor",
+										"checkBalances",
+										"submit"
+									],
 									"type": "object"
 								},
 								"cost": {
@@ -1670,6 +1680,10 @@
 										"authorOrcid": {
 											"additionalProperties": false,
 											"properties": {
+												"duplicate": {
+													"description": "Shown on the row that repeats an author named above it.",
+													"type": "string"
+												},
 												"invalid": {
 													"description": "The optional validation error message",
 													"type": "string"
@@ -1686,7 +1700,7 @@
 													"type": "string"
 												}
 											},
-											"required": ["placeholder", "unknownScholar"],
+											"required": ["duplicate", "placeholder", "unknownScholar"],
 											"type": "object"
 										}
 									},

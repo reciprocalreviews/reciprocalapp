@@ -407,6 +407,10 @@
 					"tip": "Add another author to the submission",
 					"label": "Add author"
 				},
+				"chooseAuthor": {
+					"tip": "Use this scholar as the author, filling in their ORCID",
+					"label": "Choose"
+				},
 				"checkBalances": {
 					"tip": "Check if authors have enough tokens",
 					"label": "Check author balances"
@@ -426,9 +430,10 @@
 			"field": {
 				"authorOrcid": {
 					"label": "author",
-					"placeholder": "ORCID",
-					"invalid": "Invalid ORCID",
-					"unknownScholar": "Unknown scholar"
+					"placeholder": "ORCID or name",
+					"invalid": "Enter an ORCID, or type a name to search",
+					"unknownScholar": "Unknown scholar",
+					"duplicate": "This author is already listed above"
 				}
 			},
 			"slider": {

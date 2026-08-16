@@ -41,6 +41,7 @@ import type {
 	AssignmentAwaitingCompensation,
 	AssignmentForApproval,
 	ProposalSupporter,
+	ScholarMatch,
 	ScholarReview,
 	ScholarVolunteering,
 	TokenBalance,
@@ -178,6 +179,9 @@ export default abstract class CRUD {
 	abstract registerScholar(scholar: ScholarRow): Scholar;
 
 	abstract findScholar(emailOrORCID: string): Promise<Result<ScholarID | undefined>>;
+	/** Up to three scholars whose name contains the query, for picking a
+	 * co-author whose ORCID the submitter doesn't know. */
+	abstract findScholarsByName(query: string): Promise<ReadResult<ScholarMatch[]>>;
 
 	/** Given a scholar ID, get information about the scholar, except the scholar's transactions */
 	abstract getScholar(scholarID: ScholarID): Promise<Scholar | null>;
