@@ -8,8 +8,14 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - Editors can now assign one scholar across several submissions from the submissions list — pick the role and person once, then assign per submission — instead of opening each submission in turn.
 - Reciprocal Reviews now follows up on work that stalls: co-authors are emailed when a submission charge awaits their payment, approvers are reminded when a reviewer has requested compensation, and editors are reminded when a submission has all its reviewing paid and is ready to be marked done. Each follows the venue's existing reminder frequency, and pending compensation now also appears in your task list.
+- Your **token balance** now appears in the header while you're signed in, counting up or down when it changes, so earning or spending tokens is visible where it happens rather than only on your profile.
+- You can now find a co-author by **name** on the new submission form, instead of needing their ORCID to hand. The top three matches appear beside the field; picking one fills in their ORCID.
 
 ### Changed
+
+- The new submission form now lists you as the first author, so it's clear you're included and where to set your own payment.
+- Email links now lead back to the site that sent them, so test and staging deployments no longer send people to the live site.
+- The volunteer confirmation now says how many welcome tokens you actually received — and says nothing about tokens when none were granted. It previously promised tokens "once the minter approves them", which stopped being true when welcome tokens started arriving immediately. Accepting a role invitation, which also grants them, now confirms as well.
 
 - Updated internal tooling for stability.
 - Submission charges are now checked by the database as well as the form: the amounts must add up to the submission type's cost, and the same author can't be listed twice. Previously these rules held only for people submitting through the form.
@@ -30,6 +36,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Only a listed author, or an admin of the venue, can create a submission. Any signed-in scholar could previously create one at any venue and leave payment demands against people who had never heard of it.
 - Gifting tokens to a venue now requires the same acknowledgement as gifting to a scholar; that confirmation was skipped for venues.
 - Venues, currencies, and submissions can no longer be deleted through the API. Nothing in the app offered this, but the permission existed — and deleting a venue would have taken its roles, volunteers, assignments, and compensation rates with it.
+- Emails telling you a transaction was declined now carry a working link. The link was arriving mangled and unclickable.
+- Listing the same author twice on a submission is now flagged on that author's own row, rather than only in a message at the bottom of the form. Two spellings of the same ORCID that differ only in capitalization are also caught, as the database always did.
 
 ## 0.4.6 - 2026-08-08
 
