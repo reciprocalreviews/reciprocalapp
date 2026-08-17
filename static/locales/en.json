@@ -401,7 +401,8 @@
 				"duplicateScholars": "Authors must be unique.",
 				"incompletePayment": "{deficit} more tokens to add.",
 				"sufficientBalance": "The authors have sufficient tokens to pay for this submission.",
-				"onlyAuthors": "Only authors of a submission can create a submission."
+				"onlyAuthors": "Only authors of a submission can create a submission.",
+				"noMatches": "No matches"
 			},
 			"button": {
 				"removeAuthor": {

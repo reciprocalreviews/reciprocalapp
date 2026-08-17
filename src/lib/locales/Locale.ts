@@ -269,6 +269,10 @@ export type LocaleText = {
 				incompletePayment: string;
 				sufficientBalance: string;
 				onlyAuthors: string;
+				/** Shown in an author row's name column when a name search returned
+				 * nothing, so "we looked and found nobody" doesn't read as "you
+				 * haven't typed a name yet". */
+				noMatches: string;
 			};
 			button: {
 				removeAuthor: ButtonText;

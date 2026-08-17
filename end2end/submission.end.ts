@@ -21,10 +21,17 @@ test('the author form lists the submitter, finds co-authors by name, and flags a
 	await expect(page.getByTestId('author-orcid-0')).toHaveValue(AUTHOR1_ORCID);
 	await expect(page.getByTestId('scholar-found-0')).toBeVisible();
 
+	// A name nobody matches says so. Without this the cell showed the same em
+	// dash as an untouched row, so "we looked and found nobody" was
+	// indistinguishable from "you haven't typed a name yet".
+	await page.getByTestId('add-author').click();
+	await page.getByTestId('author-orcid-1').fill('Zzzznobodyhere');
+	await expect(page.getByTestId('author-no-matches-1')).toBeVisible();
+
 	// A co-author can be found by name, for the common case where the submitter
 	// knows who they wrote the paper with but not their ORCID.
-	await page.getByTestId('add-author').click();
 	await page.getByTestId('author-orcid-1').fill('Ann');
+	await expect(page.getByTestId('author-no-matches-1')).toHaveCount(0);
 	const match = page.getByTestId('author-match-1-0');
 	await expect(match).toBeVisible();
 	await match.click();

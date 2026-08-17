@@ -111,22 +111,38 @@
 			: { status: 'idle' }
 	]);
 
-	/** Per-row name-search results, shown in that row's Name cell. */
-	let nameMatches = $state<ScholarMatch[][]>([[]]);
+	/** A row's name search. `done` with no matches is a distinct state from
+	 * `none`: "we looked and found nobody" has to read differently from "you
+	 * haven't typed a name yet", which is otherwise the same empty cell. */
+	type NameSearch =
+		{ status: 'none' } | { status: 'searching' } | { status: 'done'; matches: ScholarMatch[] };
+
+	/** Per-row name-search state, shown in that row's Name cell. */
+	let nameSearches = $state<NameSearch[]>([{ status: 'none' }]);
 	const searchTimers: (ReturnType<typeof setTimeout> | undefined)[] = [];
+	/** Per-row request counter, so a slow earlier search can't overwrite the
+	 * results of a later one when it finally lands. */
+	const searchSequence: number[] = [];
 
 	/** Search scholars by name as the author types, when what they've typed
 	 * plainly isn't an ORCID. Debounced so a name isn't a query per keystroke. */
 	function searchByName(index: number, text: string) {
 		clearTimeout(searchTimers[index]);
 		const query = text.trim();
+		// Too short, or already an ORCID: nothing to search for, and no result to
+		// report either way.
 		if (validORCID(query) || query.length < 2) {
-			nameMatches[index] = [];
+			searchSequence[index] = (searchSequence[index] ?? 0) + 1;
+			nameSearches[index] = { status: 'none' };
 			return;
 		}
 		searchTimers[index] = setTimeout(async () => {
+			const sequence = (searchSequence[index] = (searchSequence[index] ?? 0) + 1);
+			nameSearches[index] = { status: 'searching' };
 			const { data } = await db().findScholarsByName(query);
-			nameMatches[index] = data;
+			// Ignore a response the author has already typed past.
+			if (searchSequence[index] !== sequence) return;
+			nameSearches[index] = { status: 'done', matches: data };
 		}, 250);
 	}
 
@@ -139,7 +155,10 @@
 		// a row's resolved scholar whenever its text is edited — doesn't undo the
 		// resolution we just made from the match itself.
 		previousOrcids[index] = match.orcid;
-		nameMatches[index] = [];
+		// Retire any search still in flight for this row along with its results.
+		clearTimeout(searchTimers[index]);
+		searchSequence[index] = (searchSequence[index] ?? 0) + 1;
+		nameSearches[index] = { status: 'none' };
 		scholarStates[index] = { status: 'found', id: match.id };
 	}
 
@@ -369,22 +388,35 @@
 							<span data-testid="scholar-found-{index}"
 								><ScholarLink id={scholarStates[index].id} /></span
 							>
-						{:else if (nameMatches[index] ?? []).length > 0}
-							<!-- Typed a name rather than an ORCID: offer the matches, and let
-							     a click fill in the ORCID the form actually needs. -->
-							<div class="matches">
-								{#each nameMatches[index] as match, matchIndex}
-									<Button
-										small
-										strings={(l) => ({
-											...l.page.newSubmission.button.chooseAuthor,
-											label: match.name ?? ''
-										})}
-										testid="author-match-{index}-{matchIndex}"
-										action={() => chooseMatch(index, match)}>{match.name}</Button
-									>
-								{/each}
-							</div>
+						{:else if nameSearches[index]?.status === 'searching'}
+							<Loading />
+						{:else if nameSearches[index]?.status === 'done'}
+							{@const matches = nameSearches[index].matches}
+							{#if matches.length > 0}
+								<!-- Typed a name rather than an ORCID: offer the matches, and let
+								     a click fill in the ORCID the form actually needs. -->
+								<div class="matches">
+									{#each matches as match, matchIndex}
+										<Button
+											small
+											strings={(l) => ({
+												...l.page.newSubmission.button.chooseAuthor,
+												label: match.name ?? ''
+											})}
+											testid="author-match-{index}-{matchIndex}"
+											action={() => chooseMatch(index, match)}>{match.name}</Button
+										>
+									{/each}
+								</div>
+							{:else}
+								<!-- Searched and found nobody. Distinct from the empty cell below,
+								     which only means no name has been typed yet. -->
+								<Feedback
+									error
+									text={(l) => l.page.newSubmission.feedback.noMatches}
+									testid="author-no-matches-{index}"
+								/>
+							{/if}
 						{:else}&mdash;
 						{/if}
 					</td>
@@ -407,7 +439,7 @@
 							action={() => {
 								charges.splice(index, 1);
 								scholarStates.splice(index, 1);
-								nameMatches.splice(index, 1);
+								nameSearches.splice(index, 1);
 							}}
 						/>
 					</td>
@@ -421,7 +453,7 @@
 			action={() => {
 				charges.push({ scholar: '', payment: 0 });
 				scholarStates.push({ status: 'idle' });
-				nameMatches.push([]);
+				nameSearches.push({ status: 'none' });
 			}}
 		/>
 
