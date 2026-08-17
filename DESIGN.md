@@ -249,7 +249,11 @@ The purpose of the about page is to give context about the project. It should:
 - [x] How others can get involved in maintaining and evolving it
 - [ ] How RR is governed and funded ([#13](https://github.com/reciprocalreviews/reciprocalapp/issues/13))
 
-It has no functionalty.
+It also lists the current stewards, and is where stewardship is managed:
+
+- [x] List the current stewards, saying so when there are none rather than showing an empty list.
+- [x] _`steward`_: Appoint another scholar as a steward, finding them by name as well as by ORCID iD or email address.
+- [x] _`steward`_: Remove another scholar as a steward. A steward may not remove themselves — stepping down is an act another steward performs, so nobody resigns by accident — and the last steward cannot be removed at all, since a platform with no stewards could never appoint one again.
 
 ### Login `/login`
 

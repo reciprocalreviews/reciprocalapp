@@ -1254,6 +1254,10 @@ export type Database = {
         Args: { _email: string }
         Returns: undefined
       }
+      set_steward: {
+        Args: { _scholar: string; _steward: boolean }
+        Returns: Json
+      }
       site_origin: { Args: never; Returns: string }
       tokens_as_of: {
         Args: { _at?: string }

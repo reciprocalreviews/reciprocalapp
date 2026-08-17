@@ -10,6 +10,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Reciprocal Reviews now follows up on work that stalls: co-authors are emailed when a submission charge awaits their payment, approvers are reminded when a reviewer has requested compensation, and editors are reminded when a submission has all its reviewing paid and is ready to be marked done. Each follows the venue's existing reminder frequency, and pending compensation now also appears in your task list.
 - Your **token balance** now appears in the header while you're signed in, counting up or down when it changes, so earning or spending tokens is visible where it happens rather than only on your profile.
 - You can now find a co-author by **name** on the new submission form, instead of needing their ORCID to hand. The top three matches appear beside the field; picking one fills in their ORCID.
+- Stewards can now **appoint and remove other stewards** from the About page, where the steward list already lived. Previously stewardship could only be granted by editing the database directly. A steward can't remove themselves — stepping down is something another steward does for you, so it can't happen by accident — and the last steward can't be removed at all.
 
 ### Changed
 
@@ -23,6 +24,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Reviewer bids and candidate assignees are now listed with the **lowest token balance first**, surfacing the scholars most in need of paid reviewing work.
 - Approving a transaction now asks for confirmation, since it moves tokens permanently and cannot be undone. Removing a minter, a compensation rate, a preference level, or an assignment now confirm too, and the warnings for deleting a role or submission type now say what else will be deleted.
 - Paying for a submission now explains that every author listed must have a Reciprocal Reviews account, and links to volunteering when an author is short of tokens.
+- Finding a scholar by **name** now works everywhere you name one, not just on the new submission form: adding a venue admin, adding a currency minter, and inviting someone to a role all offer matches as you type, instead of requiring an exact ORCID iD or email address.
 
 ### Fixed
 
@@ -38,6 +40,11 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Venues, currencies, and submissions can no longer be deleted through the API. Nothing in the app offered this, but the permission existed — and deleting a venue would have taken its roles, volunteers, assignments, and compensation rates with it.
 - Emails telling you a transaction was declined now carry a working link. The link was arriving mangled and unclickable.
 - Listing the same author twice on a submission is now flagged on that author's own row, rather than only in a message at the bottom of the form. Two spellings of the same ORCID that differ only in capitalization are also caught, as the database always did.
+- The About page now says so when there are no stewards, instead of showing an empty space between "Current stewards are:" and the invitation to become one. The message when the list fails to load is now marked as an error.
+- Erasing an account now also removes any stewardship it held. An erased steward previously stayed on the public steward list as "anonymous" and kept the permissions that go with it.
+- Scholar name searches now return the same people in the same order each time. Results were previously in whatever order the database happened to return, which shifted whenever anyone's profile was edited — so searching the same name twice could offer different scholars, and only three are ever shown. The steward list is likewise ordered by name now.
+- Each name-search result now identifies the scholar to screen readers. Every match previously announced the same generic label, making a column of them impossible to tell apart.
+- Adding a venue admin now reports validation problems in the page's language, rather than in hardcoded English.
 
 ## 0.4.6 - 2026-08-08
 

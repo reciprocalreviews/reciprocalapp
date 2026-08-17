@@ -130,6 +130,20 @@ export type LocaleText = {
 		subheader: {
 			link: string;
 		};
+		/** The field that resolves typed text to a scholar, by ORCID iD, email
+		 * address, or a search of names. Shared by every place one scholar names
+		 * another: authors on a submission, venue admins, currency minters, and
+		 * role invitations. */
+		scholarSearch: {
+			/** Searched, and matched nobody. Distinct from having typed nothing. */
+			noMatches: string;
+			/** Looked up an ORCID iD or email address that belongs to no one here. */
+			unknown: string;
+			/** Picks one of the offered matches. The scholar's name becomes the label,
+			 * and `{name}` in the tip is replaced with it — the tip is the button's
+			 * aria-label, and a column of identically-named buttons is unusable. */
+			choose: ButtonText;
+		};
 	};
 	page: {
 		error: {
@@ -269,16 +283,10 @@ export type LocaleText = {
 				incompletePayment: string;
 				sufficientBalance: string;
 				onlyAuthors: string;
-				/** Shown in an author row's name column when a name search returned
-				 * nothing, so "we looked and found nobody" doesn't read as "you
-				 * haven't typed a name yet". */
-				noMatches: string;
 			};
 			button: {
 				removeAuthor: ButtonText;
 				addAuthor: ButtonText;
-				/** A name-search result; its label is the scholar's name. */
-				chooseAuthor: ButtonText;
 				checkBalances: ButtonText;
 				submit: ButtonText;
 			};
@@ -952,6 +960,21 @@ export type LocaleText = {
 			};
 			feedback: {
 				stewardsNotLoaded: string;
+				/** Shown when the platform has no stewards at all, which is distinct
+				 * from failing to load the list. */
+				noStewards: string;
+			};
+			/** Stands in for the name of a steward who has erased their account. */
+			anonymous: string;
+			card: {
+				addSteward: CardText;
+			};
+			field: {
+				steward: TextFieldText;
+			};
+			button: {
+				addSteward: ButtonText;
+				removeSteward: ConfirmButtonText;
 			};
 			paragraph: {
 				community: string;
@@ -1120,7 +1143,10 @@ export type LocaleText = {
 			};
 			field: {
 				newRoleName: TextFieldText;
-				adminScholar: TextFieldText;
+				/** `invalid` when the text is neither an email nor an ORCID iD;
+				 * `minter` when it names someone who mints the venue's currency,
+				 * which the database forbids an admin from also doing. */
+				adminScholar: TextFieldText & { invalid: string; minter: string };
 				invite: TextFieldText;
 				roleName: TextFieldText;
 				roleDescription: TextFieldText;
@@ -1330,6 +1356,18 @@ export type LocaleText = {
 		ExportScholarData: string;
 		/** Erasing a scholar's account failed. */
 		EraseScholar: string;
+		/** RR010: the caller is not a steward, so cannot change who is one. */
+		NotSteward: string;
+		/** RR012: there must always be one steward, or nobody can appoint another. */
+		LastSteward: string;
+		/** RR013: stepping down is an act another steward performs. */
+		CannotDemoteSelf: string;
+		/** The scholar being promoted is already a steward. */
+		AlreadySteward: string;
+		/** Promoting a scholar to steward failed. */
+		PromoteSteward: string;
+		/** Removing a scholar as a steward failed. */
+		DemoteSteward: string;
 		AlreadyApproved: string;
 		SelfDealingApproval: string;
 		ApproveTransaction: string;

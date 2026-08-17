@@ -69,6 +69,14 @@
 		},
 		"subheader": {
 			"link": "Link to this section"
+		},
+		"scholarSearch": {
+			"noMatches": "No matches",
+			"unknown": "No scholar here has that ORCID iD or email address.",
+			"choose": {
+				"tip": "Choose {name}",
+				"label": "Choose"
+			}
 		}
 	},
 	"page": {
@@ -411,8 +419,7 @@
 				"duplicateScholars": "Authors must be unique.",
 				"incompletePayment": "{deficit} more tokens to add.",
 				"sufficientBalance": "The authors have sufficient tokens to pay for this submission.",
-				"onlyAuthors": "Only authors of a submission can create a submission.",
-				"noMatches": "No matches"
+				"onlyAuthors": "Only authors of a submission can create a submission."
 			},
 			"button": {
 				"removeAuthor": {
@@ -422,10 +429,6 @@
 				"addAuthor": {
 					"tip": "Add another author to the submission",
 					"label": "Add author"
-				},
-				"chooseAuthor": {
-					"tip": "Use this scholar as the author, filling in their ORCID",
-					"label": "Choose"
 				},
 				"checkBalances": {
 					"tip": "Check if authors have enough tokens",
@@ -1259,7 +1262,33 @@
 				"change": "Theory of change"
 			},
 			"feedback": {
-				"stewardsNotLoaded": "Unable to load active stewards."
+				"stewardsNotLoaded": "Unable to load active stewards.",
+				"noStewards": "No one is currently stewarding the platform."
+			},
+			"anonymous": "anonymous",
+			"card": {
+				"addSteward": {
+					"header": "Add a steward",
+					"note": "Search by name, or enter an ORCID iD or email address. Stewards can approve venues, create currencies, and appoint other stewards."
+				}
+			},
+			"field": {
+				"steward": {
+					"label": "Scholar",
+					"placeholder": "name, ORCID, or email",
+					"invalid": "Must be a valid ORCID iD or email address."
+				}
+			},
+			"button": {
+				"addSteward": {
+					"tip": "Make this scholar a steward",
+					"label": "Add steward"
+				},
+				"removeSteward": {
+					"tip": "Remove this scholar as a steward",
+					"label": "$delete",
+					"warn": "Remove this steward?"
+				}
 			},
 			"paragraph": {
 				"community": "We are a volunteer community of academics interested in keeping peer review sustainable, for ourselves and our communities. You can learn more about who's contributing and how to contribute yourself on [GitHub](https://github.com/reciprocalreviews).",
@@ -1521,7 +1550,9 @@
 				},
 				"adminScholar": {
 					"label": "scholar",
-					"placeholder": "ORCID or email"
+					"placeholder": "name, ORCID, or email",
+					"invalid": "Must be a valid ORCID iD or email address.",
+					"minter": "Admins can't be minters of the venue's currency."
 				},
 				"invite": {
 					"label": "email or orcid",
@@ -1806,6 +1837,12 @@
 		"NotYourAccount": "That account is not yours, so it cannot be exported or erased.",
 		"ExportScholarData": "We were unable to prepare your data for download.",
 		"EraseScholar": "We were unable to erase this account.",
+		"NotSteward": "Only stewards can change who is a steward.",
+		"LastSteward": "There must always be at least one steward, so the last one can't be removed. Appoint someone else first.",
+		"CannotDemoteSelf": "You can't remove yourself as a steward. Ask another steward to do it.",
+		"AlreadySteward": "This scholar is already a steward",
+		"PromoteSteward": "Unable to make this scholar a steward",
+		"DemoteSteward": "Unable to remove this scholar as a steward",
 		"AlreadyApproved": "This transaction is already approved",
 		"SelfDealingApproval": "You can't approve a transaction in which you are the recipient",
 		"ApproveTransaction": "Unable to approve this transaction",

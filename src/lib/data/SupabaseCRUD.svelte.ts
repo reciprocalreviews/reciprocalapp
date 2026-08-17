@@ -143,6 +143,14 @@ export function numberField(value: unknown, key: string): number | null {
 	return typeof field === 'number' ? field : null;
 }
 
+/** Read a boolean field from a jsonb object returned by an RPC, or null if
+ * absent or the wrong type. */
+export function booleanField(value: unknown, key: string): boolean | null {
+	if (typeof value !== 'object' || value === null || !(key in value)) return null;
+	const field = (value as Record<string, unknown>)[key];
+	return typeof field === 'boolean' ? field : null;
+}
+
 /** Read a string[] field from a jsonb object returned by an RPC, or null if
  * absent or not an array of strings. */
 export function stringArrayField(value: unknown, key: string): string[] | null {
@@ -264,13 +272,21 @@ export type TokenBalance = QueryData<ReturnType<typeof tokenBalancesQuery>>[numb
  * because the scholars SELECT policy is public — a wildcard here would hand
  * out contact emails to anyone who can type into the author field. */
 function scholarsByNameQuery(client: SupabaseClient<Database>, pattern: string) {
-	return client
-		.from('scholars')
-		.select('id, name, orcid')
-		.ilike('name', pattern)
-		.not('name', 'is', null)
-		.not('orcid', 'is', null)
-		.limit(3);
+	return (
+		client
+			.from('scholars')
+			.select('id, name, orcid')
+			.ilike('name', pattern)
+			.not('name', 'is', null)
+			.not('orcid', 'is', null)
+			// Ordered, because `limit` makes the order decide WHICH matches are offered,
+			// not just their sequence. Without it the three shown are whichever three
+			// Postgres happens to reach first in heap order — which shifts every time any
+			// scholar's row is updated, so searching the same name twice can offer
+			// different people.
+			.order('name')
+			.limit(3)
+	);
 }
 export type ScholarMatch = QueryData<ReturnType<typeof scholarsByNameQuery>>[number];
 
@@ -574,9 +590,12 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async getStewards(): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>> {
+		// Ordered, because this list is public (/about) and heap order is not stable:
+		// Postgres moves a row's physical position on every UPDATE, so an unordered
+		// list reshuffles whenever any steward edits their name or status.
 		return this.rows(
 			'LoadScholar',
-			this.client.from('scholars').select('id, name').eq('steward', true)
+			this.client.from('scholars').select('id, name').eq('steward', true).order('name')
 		);
 	}
 
@@ -874,6 +893,39 @@ export default class SupabaseCRUD extends CRUD {
 		if (error)
 			return this.error(rpcErrorKey(error, 'EraseScholar', { RR006: 'NotYourAccount' }), error);
 		return { error: undefined, data: undefined };
+	}
+
+	async setSteward(scholar: ScholarID, steward: boolean): Promise<Result<boolean>> {
+		const { data, error } = await this.client.rpc('set_steward', {
+			_scholar: scholar,
+			_steward: steward
+		});
+		if (error)
+			return this.error(
+				rpcErrorKey(error, steward ? 'PromoteSteward' : 'DemoteSteward', {
+					RR010: 'NotSteward',
+					RR011: 'ScholarNotFound',
+					RR012: 'LastSteward',
+					RR013: 'CannotDemoteSelf'
+				}),
+				error
+			);
+		// `changed` distinguishes "we promoted them" from "they already were one",
+		// which the RPC reports rather than raising.
+		return { data: booleanField(data, 'changed') ?? false, error: undefined };
+	}
+
+	async addSteward(emailOrORCID: string): Promise<Result<ScholarID>> {
+		const { data: id, error: findError } = await this.findScholar(emailOrORCID);
+		if (id === undefined) return this.error('ScholarNotFound', findError?.details);
+
+		// No client-side "are they already a steward?" test: addCurrencyMinter can
+		// afford one because its caller already holds the array, but here the answer
+		// comes back from the RPC, which is free of the check-then-write race.
+		const { data: changed, error } = await this.setSteward(id, true);
+		if (error) return { error };
+		if (changed !== true) return this.error('AlreadySteward');
+		return { data: id, error: undefined };
 	}
 
 	async proposeVenue(

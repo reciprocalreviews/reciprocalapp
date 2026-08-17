@@ -219,6 +219,21 @@ export default abstract class CRUD {
 	 * is recorded in `erasures` so it can be re-applied after a restore. */
 	abstract eraseScholar(scholar: ScholarID): Promise<Result>;
 
+	/** Promote or demote a steward. `steward` is privilege-bearing and no client role
+	 * may write it — the UPDATE grant on `scholars` omits the column — so this goes
+	 * through the set_steward RPC, which is SECURITY DEFINER and gated on isSteward().
+	 * Resolves to `false` when the scholar already had the requested status, which is
+	 * reported rather than raised. Nobody may demote themselves, and the last steward
+	 * may not be demoted at all: with the RPC as the only path to the column, a
+	 * platform with no stewards could never appoint one again. */
+	abstract setSteward(scholar: ScholarID, steward: boolean): Promise<Result<boolean>>;
+
+	/** Promote whoever holds this email address or ORCID iD, resolving them first so a
+	 * steward can type an address rather than a uuid — the same shape as adding a
+	 * currency minter. There is no `removeSteward(emailOrORCID)` twin: demotion
+	 * happens from a list that already carries the scholar's id. */
+	abstract addSteward(emailOrORCID: string): Promise<Result<ScholarID>>;
+
 	/** Propose a venue */
 	abstract proposeVenue(
 		scholar: ScholarID,

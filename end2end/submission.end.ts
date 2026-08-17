@@ -32,8 +32,11 @@ test('the author form lists the submitter, finds co-authors by name, and flags a
 	// knows who they wrote the paper with but not their ORCID.
 	await page.getByTestId('author-orcid-1').fill('Ann');
 	await expect(page.getByTestId('author-no-matches-1')).toHaveCount(0);
-	const match = page.getByTestId('author-match-1-0');
-	await expect(match).toBeVisible();
+	// Several seeded scholars contain "Ann" — Ann Thesis, Anne Notation, and
+	// Manny Script — so pick the intended one by name rather than by position.
+	// Which one sorts first is a collation detail, not something this test is about.
+	await expect(page.getByTestId('author-match-1-0')).toBeVisible();
+	const match = page.getByRole('button', { name: 'Ann Thesis' });
 	await match.click();
 	await expect(page.getByTestId('author-orcid-1')).toHaveValue(AUTHOR2_ORCID);
 	// Choosing a match resolves the row outright — no second lookup round trip,

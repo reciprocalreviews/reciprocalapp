@@ -287,6 +287,10 @@
 						"AlreadyMinter": {
 							"type": "string"
 						},
+						"AlreadySteward": {
+							"description": "The scholar being promoted is already a steward.",
+							"type": "string"
+						},
 						"AlreadyVolunteered": {
 							"type": "string"
 						},
@@ -321,6 +325,10 @@
 							"type": "string"
 						},
 						"BulkImportSubmissions": {
+							"type": "string"
+						},
+						"CannotDemoteSelf": {
+							"description": "RR013: stepping down is an act another steward performs.",
 							"type": "string"
 						},
 						"CompensationAssignmentCheck": {
@@ -390,6 +398,10 @@
 							"type": "string"
 						},
 						"DeleteSubmissionType": {
+							"type": "string"
+						},
+						"DemoteSteward": {
+							"description": "Removing a scholar as a steward failed.",
 							"type": "string"
 						},
 						"EditCompensation": {
@@ -502,6 +514,10 @@
 						"InviteToRoleSuccess": {
 							"type": "string"
 						},
+						"LastSteward": {
+							"description": "RR012: there must always be one steward, or nobody can appoint another.",
+							"type": "string"
+						},
 						"LoadAssignment": {
 							"type": "string"
 						},
@@ -568,11 +584,19 @@
 						"NoRoleCompensation": {
 							"type": "string"
 						},
+						"NotSteward": {
+							"description": "RR010: the caller is not a steward, so cannot change who is one.",
+							"type": "string"
+						},
 						"NotYourAccount": {
 							"description": "The caller tried to export or erase an account that is not theirs.",
 							"type": "string"
 						},
 						"PendingTransactionHasTokens": {
+							"type": "string"
+						},
+						"PromoteSteward": {
+							"description": "Promoting a scholar to steward failed.",
 							"type": "string"
 						},
 						"ProposeThanks": {
@@ -772,6 +796,12 @@
 						"NotYourAccount",
 						"ExportScholarData",
 						"EraseScholar",
+						"NotSteward",
+						"LastSteward",
+						"CannotDemoteSelf",
+						"AlreadySteward",
+						"PromoteSteward",
+						"DemoteSteward",
 						"AlreadyApproved",
 						"SelfDealingApproval",
 						"ApproveTransaction",
@@ -935,14 +965,55 @@
 						"about": {
 							"additionalProperties": false,
 							"properties": {
+								"anonymous": {
+									"description": "Stands in for the name of a steward who has erased their account.",
+									"type": "string"
+								},
+								"button": {
+									"additionalProperties": false,
+									"properties": {
+										"addSteward": {
+											"$ref": "#/definitions/ButtonText"
+										},
+										"removeSteward": {
+											"$ref": "#/definitions/ConfirmButtonText"
+										}
+									},
+									"required": ["addSteward", "removeSteward"],
+									"type": "object"
+								},
+								"card": {
+									"additionalProperties": false,
+									"properties": {
+										"addSteward": {
+											"$ref": "#/definitions/CardText"
+										}
+									},
+									"required": ["addSteward"],
+									"type": "object"
+								},
 								"feedback": {
 									"additionalProperties": false,
 									"properties": {
+										"noStewards": {
+											"description": "Shown when the platform has no stewards at all, which is distinct from failing to load the list.",
+											"type": "string"
+										},
 										"stewardsNotLoaded": {
 											"type": "string"
 										}
 									},
-									"required": ["stewardsNotLoaded"],
+									"required": ["stewardsNotLoaded", "noStewards"],
+									"type": "object"
+								},
+								"field": {
+									"additionalProperties": false,
+									"properties": {
+										"steward": {
+											"$ref": "#/definitions/TextFieldText"
+										}
+									},
+									"required": ["steward"],
 									"type": "object"
 								},
 								"header": {
@@ -994,7 +1065,16 @@
 									"type": "string"
 								}
 							},
-							"required": ["title", "header", "feedback", "paragraph"],
+							"required": [
+								"title",
+								"header",
+								"feedback",
+								"anonymous",
+								"card",
+								"field",
+								"button",
+								"paragraph"
+							],
 							"type": "object"
 						},
 						"bulkImport": {
@@ -1644,10 +1724,6 @@
 										"checkBalances": {
 											"$ref": "#/definitions/ButtonText"
 										},
-										"chooseAuthor": {
-											"$ref": "#/definitions/ButtonText",
-											"description": "A name-search result; its label is the scholar's name."
-										},
 										"removeAuthor": {
 											"$ref": "#/definitions/ButtonText"
 										},
@@ -1655,13 +1731,7 @@
 											"$ref": "#/definitions/ButtonText"
 										}
 									},
-									"required": [
-										"removeAuthor",
-										"addAuthor",
-										"chooseAuthor",
-										"checkBalances",
-										"submit"
-									],
+									"required": ["removeAuthor", "addAuthor", "checkBalances", "submit"],
 									"type": "object"
 								},
 								"cost": {
@@ -1693,10 +1763,6 @@
 										"incompletePayment": {
 											"type": "string"
 										},
-										"noMatches": {
-											"description": "Shown in an author row's name column when a name search returned nothing, so \"we looked and found nobody\" doesn't read as \"you haven't typed a name yet\".",
-											"type": "string"
-										},
 										"notLoaded": {
 											"type": "string"
 										},
@@ -1716,8 +1782,7 @@
 										"duplicateScholars",
 										"incompletePayment",
 										"sufficientBalance",
-										"onlyAuthors",
-										"noMatches"
+										"onlyAuthors"
 									],
 									"type": "object"
 								},
@@ -4717,7 +4782,27 @@
 									"additionalProperties": false,
 									"properties": {
 										"adminScholar": {
-											"$ref": "#/definitions/TextFieldText"
+											"additionalProperties": false,
+											"description": "`invalid` when the text is neither an email nor an ORCID iD; `minter` when it names someone who mints the venue's currency, which the database forbids an admin from also doing.",
+											"properties": {
+												"invalid": {
+													"description": "The optional validation error message",
+													"type": "string"
+												},
+												"label": {
+													"description": "The optional label to show above the text feild",
+													"type": "string"
+												},
+												"minter": {
+													"type": "string"
+												},
+												"placeholder": {
+													"description": "The placeholder to show in the text field",
+													"type": "string"
+												}
+											},
+											"required": ["invalid", "minter", "placeholder"],
+											"type": "object"
 										},
 										"compensationRationale": {
 											"$ref": "#/definitions/TextFieldText"
@@ -5150,6 +5235,26 @@
 							"required": ["expand", "collapse"],
 							"type": "object"
 						},
+						"scholarSearch": {
+							"additionalProperties": false,
+							"description": "The field that resolves typed text to a scholar, by ORCID iD, email address, or a search of names. Shared by every place one scholar names another: authors on a submission, venue admins, currency minters, and role invitations.",
+							"properties": {
+								"choose": {
+									"$ref": "#/definitions/ButtonText",
+									"description": "Picks one of the offered matches. The scholar's name becomes the label, and `{name}` in the tip is replaced with it — the tip is the button's aria-label, and a column of identically-named buttons is unusable."
+								},
+								"noMatches": {
+									"description": "Searched, and matched nobody. Distinct from having typed nothing.",
+									"type": "string"
+								},
+								"unknown": {
+									"description": "Looked up an ORCID iD or email address that belongs to no one here.",
+									"type": "string"
+								}
+							},
+							"required": ["noMatches", "unknown", "choose"],
+							"type": "object"
+						},
 						"subheader": {
 							"additionalProperties": false,
 							"properties": {
@@ -5174,7 +5279,7 @@
 							"type": "object"
 						}
 					},
-					"required": ["card", "tokens", "subheader"],
+					"required": ["card", "tokens", "subheader", "scholarSearch"],
 					"type": "object"
 				}
 			},

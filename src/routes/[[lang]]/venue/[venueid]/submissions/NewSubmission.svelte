@@ -9,11 +9,11 @@
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
-	import Loading from '$lib/components/Loading.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import Options from '$lib/components/Options.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
+	import ScholarMatches from '$lib/components/ScholarMatches.svelte';
+	import { ScholarSearch } from '$lib/components/ScholarSearch.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
@@ -95,71 +95,23 @@
 		return submissionTypes.find((t) => t.revision_of === typeID)?.id;
 	}
 
-	type ScholarState =
-		| { status: 'idle' }
-		| { status: 'loading' }
-		| { status: 'found'; id: string }
-		| { status: 'notfound' };
-
 	// The pre-filled first row is the authenticated scholar, so it starts
 	// resolved rather than making them blur the field to see their own name.
 	// svelte-ignore state_referenced_locally
 	const initialUser = auth().getUserID();
-	let scholarStates = $state<ScholarState[]>([
-		scholarORCID !== null && initialUser !== null
-			? { status: 'found', id: initialUser }
-			: { status: 'idle' }
+	/** Per-row ORCID lookup and name search. One instance per author row; see
+	 * ScholarSearch.svelte.ts for why the behaviour is a class rather than a
+	 * component (the field and its matches live in different table cells). */
+	let searches = $state<ScholarSearch[]>([
+		new ScholarSearch(db, scholarORCID !== null && initialUser !== null ? initialUser : undefined)
 	]);
-
-	/** A row's name search. `done` with no matches is a distinct state from
-	 * `none`: "we looked and found nobody" has to read differently from "you
-	 * haven't typed a name yet", which is otherwise the same empty cell. */
-	type NameSearch =
-		{ status: 'none' } | { status: 'searching' } | { status: 'done'; matches: ScholarMatch[] };
-
-	/** Per-row name-search state, shown in that row's Name cell. */
-	let nameSearches = $state<NameSearch[]>([{ status: 'none' }]);
-	const searchTimers: (ReturnType<typeof setTimeout> | undefined)[] = [];
-	/** Per-row request counter, so a slow earlier search can't overwrite the
-	 * results of a later one when it finally lands. */
-	const searchSequence: number[] = [];
-
-	/** Search scholars by name as the author types, when what they've typed
-	 * plainly isn't an ORCID. Debounced so a name isn't a query per keystroke. */
-	function searchByName(index: number, text: string) {
-		clearTimeout(searchTimers[index]);
-		const query = text.trim();
-		// Too short, or already an ORCID: nothing to search for, and no result to
-		// report either way.
-		if (validORCID(query) || query.length < 2) {
-			searchSequence[index] = (searchSequence[index] ?? 0) + 1;
-			nameSearches[index] = { status: 'none' };
-			return;
-		}
-		searchTimers[index] = setTimeout(async () => {
-			const sequence = (searchSequence[index] = (searchSequence[index] ?? 0) + 1);
-			nameSearches[index] = { status: 'searching' };
-			const { data } = await db().findScholarsByName(query);
-			// Ignore a response the author has already typed past.
-			if (searchSequence[index] !== sequence) return;
-			nameSearches[index] = { status: 'done', matches: data };
-		}, 250);
-	}
 
 	/** Adopt a searched-for scholar: their ORCID becomes the row's value, and
 	 * the row is already resolved, so no lookup round trip is needed. */
 	function chooseMatch(index: number, match: ScholarMatch) {
 		if (match.orcid === null) return;
 		charges[index].scholar = match.orcid;
-		// Record the new text as already seen, so the effect below — which clears
-		// a row's resolved scholar whenever its text is edited — doesn't undo the
-		// resolution we just made from the match itself.
-		previousOrcids[index] = match.orcid;
-		// Retire any search still in flight for this row along with its results.
-		clearTimeout(searchTimers[index]);
-		searchSequence[index] = (searchSequence[index] ?? 0) + 1;
-		nameSearches[index] = { status: 'none' };
-		scholarStates[index] = { status: 'found', id: match.id };
+		searches[index].choose(match);
 	}
 
 	/** True when this row names a scholar an earlier row already named. The
@@ -170,27 +122,6 @@
 		const mine = charges[index].scholar.trim().toLowerCase();
 		if (mine === '') return false;
 		return charges.some((c, i) => i < index && c.scholar.trim().toLowerCase() === mine);
-	}
-
-	// Reset the scholar state to idle whenever the ORCID text is edited.
-	let previousOrcids: string[] = charges.map((c) => c.scholar);
-	$effect(() => {
-		previousOrcids.length = charges.length;
-		for (let i = 0; i < charges.length; i++) {
-			const orcid = charges[i].scholar;
-			if (previousOrcids[i] !== orcid) {
-				previousOrcids[i] = orcid;
-				scholarStates[i] = { status: 'idle' };
-			}
-		}
-	});
-
-	async function lookupScholar(index: number, orcid: string) {
-		if (!validORCID(orcid)) return;
-		if (scholarStates[index]?.status !== 'idle') return;
-		scholarStates[index] = { status: 'loading' };
-		const { data } = await db().findScholar(orcid);
-		scholarStates[index] = data ? { status: 'found', id: data } : { status: 'notfound' };
 	}
 
 	/** True if the specified charges can be afforded, undefined if checking, string describing the problem. */
@@ -207,8 +138,7 @@
 
 	/** True if the authenticated user is not among the found authors */
 	let isNonAuthor = $derived(
-		scholarStates.some((s) => s.status === 'found') &&
-			!scholarStates.some((s) => s.status === 'found' && 'id' in s && s.id === user)
+		searches.some((s) => s.id !== undefined) && !searches.some((s) => s.id === user)
 	);
 
 	function validExternalID(id: string) {
@@ -372,53 +302,24 @@
 									return (l) => l.page.newSubmission.field.authorOrcid.invalid ?? '';
 								if (isDuplicateRow(index))
 									return (l) => l.page.newSubmission.field.authorOrcid.duplicate;
-								if (scholarStates[index]?.status === 'notfound')
+								if (searches[index]?.notFound)
 									return (l) => l.page.newSubmission.field.authorOrcid.unknownScholar;
 								return undefined;
 							}}
-							done={() => lookupScholar(index, charge.scholar)}
-							change={(text) => searchByName(index, text)}
+							done={() => searches[index].done(charge.scholar)}
+							change={(text) => searches[index].change(text)}
 							testid="author-orcid-{index}"
 						/>
 					</td>
 					<td class="scholar-name">
-						{#if scholarStates[index]?.status === 'loading'}
-							<Loading />
-						{:else if scholarStates[index]?.status === 'found'}
-							<span data-testid="scholar-found-{index}"
-								><ScholarLink id={scholarStates[index].id} /></span
-							>
-						{:else if nameSearches[index]?.status === 'searching'}
-							<Loading />
-						{:else if nameSearches[index]?.status === 'done'}
-							{@const matches = nameSearches[index].matches}
-							{#if matches.length > 0}
-								<!-- Typed a name rather than an ORCID: offer the matches, and let
-								     a click fill in the ORCID the form actually needs. -->
-								<div class="matches">
-									{#each matches as match, matchIndex}
-										<Button
-											small
-											strings={(l) => ({
-												...l.page.newSubmission.button.chooseAuthor,
-												label: match.name ?? ''
-											})}
-											testid="author-match-{index}-{matchIndex}"
-											action={() => chooseMatch(index, match)}>{match.name}</Button
-										>
-									{/each}
-								</div>
-							{:else}
-								<!-- Searched and found nobody. Distinct from the empty cell below,
-								     which only means no name has been typed yet. -->
-								<Feedback
-									error
-									text={(l) => l.page.newSubmission.feedback.noMatches}
-									testid="author-no-matches-{index}"
-								/>
-							{/if}
-						{:else}&mdash;
-						{/if}
+						<ScholarMatches
+							search={searches[index]}
+							choose={(match) => chooseMatch(index, match)}
+							placeholder="—"
+							foundTestid="scholar-found-{index}"
+							matchTestid="author-match-{index}"
+							noMatchesTestid="author-no-matches-{index}"
+						/>
 					</td>
 					{#if showPayment}
 						<td
@@ -438,8 +339,7 @@
 							active={charges.length > 1}
 							action={() => {
 								charges.splice(index, 1);
-								scholarStates.splice(index, 1);
-								nameSearches.splice(index, 1);
+								searches.splice(index, 1)[0]?.dispose();
 							}}
 						/>
 					</td>
@@ -452,8 +352,7 @@
 			testid="add-author"
 			action={() => {
 				charges.push({ scholar: '', payment: 0 });
-				scholarStates.push({ status: 'idle' });
-				nameSearches.push({ status: 'none' });
+				searches.push(new ScholarSearch(db));
 			}}
 		/>
 
@@ -542,13 +441,5 @@
 <style>
 	.charge td {
 		vertical-align: baseline;
-	}
-
-	/* Name-search results stack, so three long names don't stretch the column. */
-	.matches {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: var(--spacing-half);
 	}
 </style>
