@@ -1,11 +1,32 @@
 name: Playwright
 on:
-  # Allow this workflow to be called.
+  # Run as its own check on pull requests. This suite is the expensive one — four
+  # runners, a Supabase stack and a browser each — which is why it long ran only
+  # on the push that deploys, unlike vitest, the locale check and the RLS tests.
+  # That gap is not free either: it makes the deploy the first execution of any
+  # end-to-end change, so a regression surfaces after review, on main, at the
+  # moment it blocks a release. It did exactly that when a `$lib` import in the
+  # Playwright helper — which no local run could fail on, because every developer
+  # machine has a warm `.svelte-kit/` — collected zero tests on all four shards
+  # and stopped the production deploy. A check that only runs after merge cannot
+  # block the merge, and this suite is the one that had the most to say.
+  pull_request:
+  # Allow the deploy workflows to call it,
   workflow_call:
     secrets:
       TEST_ENV:
         required: true
         description: 'Environment variables for testing, in the format of KEY=VALUE pairs, separated by newlines.'
+  # and allow manual runs.
+  workflow_dispatch:
+
+# Supersede a PR's own in-flight run when it is pushed to again: at four runners
+# a shard, stacking revisions is the difference between this being affordable and
+# not. Deliberately scoped to pull requests — a deploy run must never be cancelled
+# by a later push, because `migrate` and `vercel` are gated on it finishing.
+concurrency:
+  group: playwright-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # The number of shards the suite is split across. Keep the matrix below and the
 # `--shard=i/N` denominator in sync with this by editing both. Each shard runs on
@@ -19,6 +40,23 @@ env:
 
 jobs:
   test:
+    # Skipped on pull requests from forks, which CONTRIBUTING.md asks outside
+    # contributors to open. GitHub withholds secrets from a fork's
+    # `pull_request` run, so `TEST_ENV` would arrive empty, the build would go up
+    # without a Supabase URL or key, and every test would fail for a reason that
+    # has nothing to do with the change — a red check the contributor has no way
+    # to fix. Skipping says nothing rather than something false; the suite still
+    # covers the code when the PR is merged to `dev` and staging.yml calls this
+    # workflow. `pull_request_target` would supply the secrets, and is exactly
+    # the wrong tool: it would hand them to unreviewed code from a stranger.
+    #
+    # Closing the gap properly means not needing the secret at all. The suite
+    # runs entirely against a local Supabase, whose URL and publishable key are
+    # the same well-known local-stack values on every machine — nothing secret.
+    # Committing those as a test-only default, and keeping TEST_ENV for the
+    # deploy path, would let forks run the suite too. Worth doing; it needs
+    # someone to confirm what TEST_ENV actually holds first.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
