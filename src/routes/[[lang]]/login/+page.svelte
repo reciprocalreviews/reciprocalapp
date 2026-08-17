@@ -2,23 +2,30 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { PUBLIC_SUPABASE_URL } from '$env/static/public';
+	import { SEED_PASSWORD } from '$lib/auth/devPassword';
 	import Button from '$lib/components/Button.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import Cards from '$lib/components/Cards.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
-	import { ScholarLabel } from '$lib/components/Labels';
+	import { EmptyLabel, ScholarLabel } from '$lib/components/Labels';
 	import Note from '$lib/components/Note.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
+	import Row from '$lib/components/Row.svelte';
+	import Table from '$lib/components/Table.svelte';
+	import Tag from '$lib/components/Tag.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { generateORCID } from '$lib/data/ORCID';
 	import type { DevScholar } from '$lib/data/SupabaseCRUD.svelte';
 	import type LocaleText from '$lib/locales/Locale';
-	import { SEED_PASSWORD } from '$lib/auth/devPassword';
+	import { getLocaleContext } from '$routes/Contexts';
 	import { getAuth } from '../../Auth.svelte';
 
 	let auth = getAuth();
 	const db = getDB();
+	const locale = getLocaleContext();
 
 	let error = $state<undefined | ((l: LocaleText) => string)>(undefined);
 
@@ -141,125 +148,130 @@
 <Page icon={ScholarLabel} title={(l) => l.page.login.title} breadcrumbs={[]}>
 	{#if auth().isAuthenticated()}
 		<Paragraph text={(l) => l.page.login.paragraph.loggedIn} />
-	{:else}
-		{#if devLogin}
-			<Feedback text={(l) => l.page.login.feedback.mockOrcidDev} testid="mock-orcid-dev" />
-		{/if}
+	{:else if !devLogin}
+		<!-- The real thing: ORCID is the only way in outside local development. -->
 		<Form>
-			{#if devLogin}
-				<TextField
-					strings={(l) => l.page.login.field.orcidId}
-					name="mock-orcid-id"
-					size={19}
-					bind:text={mockOrcidId}
-					testid="mock-orcid-id"
-				/>
-				<TextField
-					strings={(l) => l.page.login.field.name}
-					name="mock-orcid-name"
-					size={19}
-					bind:text={mockOrcidName}
-					testid="mock-orcid-name"
-				/>
-			{/if}
 			<Button
-				strings={devLogin ? (l) => l.page.login.button.mockOrcid : (l) => l.page.login.button.orcid}
+				strings={(l) => l.page.login.button.orcid}
 				testid="orcid-signin"
 				type="submit"
-				action={devLogin ? signInWithMockORCID : signInWithORCID}
+				action={signInWithORCID}
 			/>
 		</Form>
+		<Note path={(l) => l.page.login.note.orcid} />
+	{:else}
+		<!-- Local development. One warning for the whole page, then the thing you
+		     almost always want (sign in as a seeded scholar), then the two
+		     fallbacks it can't cover. -->
+		<Feedback warning text={(l) => l.page.login.feedback.seededDev} testid="seeded-dev" />
 
-		{#if !devLogin}
-			<Note path={(l) => l.page.login.note.orcid} />
-		{/if}
-
-		{#if devLogin && devScholars.length > 0}
-			<Feedback text={(l) => l.page.login.feedback.seededDev} testid="seeded-dev" />
-			<ul class="seeded">
+		{#if devScholars.length > 0}
+			<Table>
+				{#snippet header()}
+					<th>{locale().page.login.table.scholar}</th>
+					<th>{locale().page.login.table.email}</th>
+					<th>{locale().page.login.table.roles}</th>
+				{/snippet}
 				{#each devScholars as scholar, index}
 					{@const address = scholar.email}
 					{#if address !== null}
 						{@const label = scholar.name ?? address}
 						{@const roles = devLabels.get(scholar.id) ?? []}
-						<li>
-							<Button
-								testid="seeded-signin-{index}"
-								strings={(l) => ({ ...l.page.login.button.signInAs, label })}
-								action={() => signInAs(scholar)}>{label}</Button
-							>
-							<span class="who">
-								{address}{#if roles.length > 0}
-									&middot; {roles.join(', ')}{/if}
-							</span>
-						</li>
+						<tr data-testid="seeded-{index}">
+							<td>
+								<Button
+									testid="seeded-signin-{index}"
+									strings={(l) => ({ ...l.page.login.button.signInAs, label })}
+									action={() => signInAs(scholar)}>{label}</Button
+								>
+							</td>
+							<td>{address}</td>
+							<td>
+								<Row>
+									{#each roles as role}<Tag>{role}</Tag>{:else}{EmptyLabel}{/each}
+								</Row>
+							</td>
+						</tr>
 					{/if}
 				{/each}
-			</ul>
+			</Table>
 		{/if}
 
-		{#if devLogin}
-			<Feedback text={(l) => l.page.login.feedback.passwordDev} testid="password-dev" />
-			<Form>
-				<TextField
-					strings={(l) => l.page.login.field.email}
-					name="email"
-					size={19}
-					bind:text={email}
-					testid="email-input"
-				/>
-				<TextField
-					strings={(l) => l.page.login.field.password}
-					name="password"
-					size={19}
-					bind:text={password}
-					testid="password-input"
-				/>
-				<Button
-					strings={(l) => l.page.login.button.signIn}
-					testid="password-submit"
-					type="submit"
-					action={async () => {
-						const response = await auth().signInWithPassword(email, password);
-						if (typeof response === 'string') {
-							error = undefined;
-							goto(`/scholar/${response}`);
-						} else {
-							console.error(response);
-							error = (l) => l.page.login.feedback.signInError;
-						}
-					}}
-					active={email.length > 0 && password.length > 0}
-				/>
-			</Form>
-		{/if}
+		<!-- Kept, and kept visible, for the accounts the table can't offer: one
+		     created below (no contact email, so it never appears there), or one
+		     whose contact address has diverged from its auth identity. It is also
+		     what the Playwright helper drives, and its hydration barrier. -->
+		<Feedback text={(l) => l.page.login.feedback.passwordDev} testid="password-dev" />
+		<Form>
+			<TextField
+				strings={(l) => l.page.login.field.email}
+				name="email"
+				size={19}
+				bind:text={email}
+				testid="email-input"
+			/>
+			<TextField
+				strings={(l) => l.page.login.field.password}
+				name="password"
+				size={19}
+				bind:text={password}
+				testid="password-input"
+			/>
+			<Button
+				strings={(l) => l.page.login.button.signIn}
+				testid="password-submit"
+				type="submit"
+				action={async () => {
+					const response = await auth().signInWithPassword(email, password);
+					if (typeof response === 'string') {
+						error = undefined;
+						goto(`/scholar/${response}`);
+					} else {
+						console.error(response);
+						error = (l) => l.page.login.feedback.signInError;
+					}
+				}}
+				active={email.length > 0 && password.length > 0}
+			/>
+		</Form>
+
+		<!-- Not a sign-in at all: this mints a brand-new scholar, which is the
+		     only way to see the first-run experience (no contact email, the
+		     verification banner) that signing in as a seeded scholar can't reach. -->
+		<Cards>
+			<Card
+				icon={ScholarLabel}
+				subheader
+				strings={(l) => l.page.login.card.newScholar}
+				testid="mock-orcid-card"
+			>
+				<Form>
+					<TextField
+						strings={(l) => l.page.login.field.orcidId}
+						name="mock-orcid-id"
+						size={19}
+						bind:text={mockOrcidId}
+						testid="mock-orcid-id"
+					/>
+					<TextField
+						strings={(l) => l.page.login.field.name}
+						name="mock-orcid-name"
+						size={19}
+						bind:text={mockOrcidName}
+						testid="mock-orcid-name"
+					/>
+					<Button
+						strings={(l) => l.page.login.button.mockOrcid}
+						testid="orcid-signin"
+						type="submit"
+						action={signInWithMockORCID}
+					/>
+				</Form>
+			</Card>
+		</Cards>
 	{/if}
 
 	{#if shownError}
 		<Feedback error text={shownError} testid="login-error" />
 	{/if}
 </Page>
-
-<style>
-	.seeded {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-half);
-	}
-
-	.seeded li {
-		display: flex;
-		flex-direction: row;
-		align-items: baseline;
-		gap: var(--spacing-half);
-		flex-wrap: wrap;
-	}
-
-	.who {
-		font-size: var(--small-font-size);
-		color: var(--inactive-color);
-	}
-</style>

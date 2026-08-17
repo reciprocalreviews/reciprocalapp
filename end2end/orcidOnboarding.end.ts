@@ -11,7 +11,10 @@ test('mock ORCID sign-in onboards a new scholar with no email and shows the bann
 	test.setTimeout(60_000);
 
 	await page.goto('/login');
-	// The mock ORCID fields render only off-production (the dev login form).
+	// The mock ORCID fields render only off-production, and now live in a
+	// collapsed card — it mints a new scholar rather than signing anyone in, so
+	// it sits below the sign-in table rather than above it.
+	await page.getByTestId('mock-orcid-card').click();
 	await page.getByTestId('mock-orcid-id').fill(MOCK_ORCID);
 	await page.getByTestId('mock-orcid-name').fill('Onboarding Tester');
 	await page.getByTestId('orcid-signin').click();
@@ -42,21 +45,17 @@ test('the local sign-in list signs in a seeded scholar in one click', async ({ p
 
 	await expect(page.getByTestId('seeded-dev')).toBeVisible();
 
-	// Each entry says what the account can do, which is what decides which one
-	// you want for the flow under test.
+	// Each row says what the account can do, which is what decides which one you
+	// want for the flow under test.
 	await expect(page.getByText(/steward/)).toBeVisible();
 	await expect(page.getByText(/admin of Transactions on Knowledge/)).toBeVisible();
 	await expect(page.getByText(/minter of Epistemology/)).toBeVisible();
 
-	// Pick the editor by name rather than by position. The sign-in uses the
+	// Pick the editor by address rather than by position. Sign-in uses the
 	// scholar's *contact* email, which the email-verification spec changes for
 	// another scholar — and a contact address that has diverged from the auth
-	// identity can no longer be signed in with, which is what the address beside
-	// each name is there to reveal.
-	await page
-		.getByRole('listitem')
-		.filter({ hasText: 'editor@uni.edu' })
-		.getByRole('button')
-		.click();
+	// identity can no longer be signed in with, which is what showing the address
+	// in its own column is there to reveal.
+	await page.getByRole('row').filter({ hasText: 'editor@uni.edu' }).getByRole('button').click();
 	await page.waitForURL(/\/scholar\/.+/, { timeout: 20_000 });
 });

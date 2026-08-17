@@ -865,6 +865,17 @@ export type LocaleText = {
 			note: {
 				orcid: string;
 			};
+			/** Column headers for the local-only table of seeded scholars. */
+			table: {
+				scholar: string;
+				email: string;
+				roles: string;
+			};
+			card: {
+				/** The local-only control that mints a brand-new scholar. Not a
+				 * sign-in — it exists to reach the first-run experience. */
+				newScholar: CardText;
+			};
 			field: {
 				email: TextFieldText;
 				password: TextFieldText;
@@ -874,9 +885,8 @@ export type LocaleText = {
 			feedback: {
 				orcidError: string;
 				mockOrcidError: string;
-				mockOrcidDev: string;
 				passwordDev: string;
-				/** Introduces the local-only list of seeded scholars. */
+				/** The page's single warning that these controls are local-only. */
 				seededDev: string;
 				signInError: string;
 			};

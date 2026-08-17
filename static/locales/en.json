@@ -153,20 +153,31 @@
 					"label": "Sign in with ORCID"
 				},
 				"mockOrcid": {
-					"tip": "Simulate an ORCID sign-in locally (development only)",
-					"label": "Sign in with ORCID (mock)"
+					"tip": "Create a brand-new scholar and sign in as them",
+					"label": "Create scholar"
 				},
 				"signIn": {
 					"tip": "Sign in",
 					"label": "Login"
 				},
 				"signInAs": {
-					"tip": "Sign in as this seeded scholar",
+					"tip": "Sign in as this scholar",
 					"label": "Sign in as"
 				}
 			},
 			"note": {
 				"orcid": "[ORCID](https://orcid.org/) is the de facto way to manage scholar identity. Sign in with ORCID to get started."
+			},
+			"table": {
+				"scholar": "Scholar",
+				"email": "Email",
+				"roles": "Roles"
+			},
+			"card": {
+				"newScholar": {
+					"header": "Create a new scholar",
+					"note": "Not a sign-in: this mints a new account, the only way to see what a scholar meets on their first visit — no contact email yet, and the banner asking for one. Leave both fields blank for a fresh scholar, or reuse an ORCID iD to return to one you made earlier."
+				}
 			},
 			"field": {
 				"email": {
@@ -189,9 +200,8 @@
 			"feedback": {
 				"orcidError": "Unable to start ORCID sign-in.",
 				"mockOrcidError": "Unable to create a mock ORCID session.",
-				"mockOrcidDev": "Development only — this stands in for real ORCID sign-in, which can't run locally. Leave both fields blank to onboard a brand-new scholar, or enter a previously used ORCID iD to sign back in as that scholar.",
-				"passwordDev": "Development only — sign in as one of the seeded scholars using their email and the shared test password (\"password\").",
-				"seededDev": "Local development only: sign in as any seeded scholar with one click. Each is labelled with what they can do, so you can pick the account whose view you want to test.",
+				"passwordDev": "Sign in by address, for an account the table can't offer — one created below, which has no contact email yet, or one whose contact address no longer matches the address it signs in with. The password for every seeded scholar is \"password\".",
+				"seededDev": "Local development only. None of this is reachable in production, where ORCID is the only way in.",
 				"signInError": "Unable to sign in."
 			},
 			"paragraph": {

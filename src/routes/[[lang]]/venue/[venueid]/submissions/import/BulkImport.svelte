@@ -157,7 +157,7 @@
 	{/if}
 
 	{#if csvWarning}
-		<Feedback error text={csvWarning} testid="csv-ragged-warning" />
+		<Feedback warning text={csvWarning} testid="csv-ragged-warning" />
 	{/if}
 </Form>
 

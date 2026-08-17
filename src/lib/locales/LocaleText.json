@@ -1520,12 +1520,20 @@
 									"required": ["orcid", "mockOrcid", "signIn", "signInAs"],
 									"type": "object"
 								},
+								"card": {
+									"additionalProperties": false,
+									"properties": {
+										"newScholar": {
+											"$ref": "#/definitions/CardText",
+											"description": "The local-only control that mints a brand-new scholar. Not a sign-in — it exists to reach the first-run experience."
+										}
+									},
+									"required": ["newScholar"],
+									"type": "object"
+								},
 								"feedback": {
 									"additionalProperties": false,
 									"properties": {
-										"mockOrcidDev": {
-											"type": "string"
-										},
 										"mockOrcidError": {
 											"type": "string"
 										},
@@ -1536,7 +1544,7 @@
 											"type": "string"
 										},
 										"seededDev": {
-											"description": "Introduces the local-only list of seeded scholars.",
+											"description": "The page's single warning that these controls are local-only.",
 											"type": "string"
 										},
 										"signInError": {
@@ -1546,7 +1554,6 @@
 									"required": [
 										"orcidError",
 										"mockOrcidError",
-										"mockOrcidDev",
 										"passwordDev",
 										"seededDev",
 										"signInError"
@@ -1592,11 +1599,37 @@
 									"required": ["loggedIn"],
 									"type": "object"
 								},
+								"table": {
+									"additionalProperties": false,
+									"description": "Column headers for the local-only table of seeded scholars.",
+									"properties": {
+										"email": {
+											"type": "string"
+										},
+										"roles": {
+											"type": "string"
+										},
+										"scholar": {
+											"type": "string"
+										}
+									},
+									"required": ["scholar", "email", "roles"],
+									"type": "object"
+								},
 								"title": {
 									"type": "string"
 								}
 							},
-							"required": ["title", "button", "note", "field", "feedback", "paragraph"],
+							"required": [
+								"title",
+								"button",
+								"note",
+								"table",
+								"card",
+								"field",
+								"feedback",
+								"paragraph"
+							],
 							"type": "object"
 						},
 						"newSubmission": {
