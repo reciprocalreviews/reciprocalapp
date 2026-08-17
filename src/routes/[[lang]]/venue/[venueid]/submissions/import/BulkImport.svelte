@@ -12,7 +12,14 @@
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { getDB } from '$lib/data/CRUD';
+	import {
+		duplicateAcrossRows,
+		mintAmount as mintTotal,
+		rowError as rowProblem,
+		rowsFromParsed
+	} from '$lib/data/bulkImportRows';
 	import parseCSV from '$lib/data/parseCSV';
+	import type LocaleText from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
 	import { handle } from '$routes/feedback.svelte';
 
@@ -53,45 +60,24 @@
 	let importNote = $state('');
 	let csvText = $state('');
 	let csvError = $state<string | null>(null);
+	/** A non-fatal parse problem: the rows loaded, but something about them
+	 * needs the editor's eye before importing. */
+	let csvWarning = $state<((l: LocaleText) => string) | null>(null);
 
 	const existingIDSet = $derived(new Set(existingExternalIDs));
 
-	const duplicateAcrossRows = $derived.by(() => {
-		const seen = new Map<string, number[]>();
-		rows.forEach((r, i) => {
-			const id = r.externalID.trim();
-			if (id.length === 0) return;
-			if (!seen.has(id)) seen.set(id, []);
-			seen.get(id)!.push(i);
-		});
-		const dupes = new Set<number>();
-		for (const indices of seen.values()) {
-			if (indices.length > 1) indices.forEach((i) => dupes.add(i));
-		}
-		return dupes;
-	});
+	const duplicates = $derived(duplicateAcrossRows(rows));
 
-	function rowError(
-		row: Row,
-		index: number
-	): ((l: import('$lib/locales/Locale').default) => string) | null {
-		if (row.title.trim().length === 0) return (l) => l.page.bulkImport.row.invalid.title;
-		if (row.externalID.trim().length === 0) return (l) => l.page.bulkImport.row.invalid.externalID;
-		if (existingIDSet.has(row.externalID.trim()))
-			return (l) => l.page.bulkImport.row.invalid.duplicateExisting;
-		if (duplicateAcrossRows.has(index)) return (l) => l.page.bulkImport.row.invalid.duplicateRow;
-		return null;
+	/** The row rules live in $lib/data/bulkImportRows; this maps the problem they
+	 * report onto the locale text for it. */
+	function rowError(row: Row, index: number): ((l: LocaleText) => string) | null {
+		const problem = rowProblem(row, index, { existingExternalIDs: existingIDSet, duplicates });
+		return problem === null ? null : (l) => l.page.bulkImport.row.invalid[problem];
 	}
 
 	const allRowsValid = $derived(rows.every((r, i) => rowError(r, i) === null));
 
-	const mintAmount = $derived(
-		rows.reduce(
-			(sum, r) =>
-				sum + (submissionTypes.find((t) => t.id === r.submissionType)?.submission_cost ?? 0),
-			0
-		)
-	);
+	const mintAmount = $derived(mintTotal(rows, submissionTypes));
 
 	function addRow() {
 		rows = [...rows, emptyRow()];
@@ -106,32 +92,24 @@
 		rows = rows.map((r) => ({ ...r, submissionType: defaultSubmissionType }));
 	}
 
-	function rowsFromParsed(parsed: Record<string, string>[]): Row[] {
-		return parsed.map((p) => {
-			const typeName = (p.submission_type ?? '').trim().toLowerCase();
-			const matched = typeName
-				? submissionTypes.find((t) => t.name.toLowerCase() === typeName)
-				: null;
-			return {
-				title: p.title ?? '',
-				externalID: p.externalid ?? p.externalID ?? '',
-				expertise: p.expertise ?? '',
-				submissionType: matched ? matched.id : defaultSubmissionType,
-				previousID: p.previousid ?? p.previousID ?? '',
-				note: p.note ?? ''
-			};
-		});
-	}
-
 	function ingestCSV(text: string) {
 		csvError = null;
+		csvWarning = null;
 		try {
-			const parsed = parseCSV(text);
+			const { rows: parsed, ragged } = parseCSV(text);
 			if (parsed.length === 0) {
 				csvError = 'No rows found in CSV';
 				return;
 			}
-			rows = rowsFromParsed(parsed);
+			rows = rowsFromParsed(parsed, submissionTypes, defaultSubmissionType);
+			// A misaligned row still imports — the editor may want to fix it in the
+			// table below rather than re-export — but it must not do so quietly.
+			// An unquoted comma shifts every column and pushes the last field off
+			// the end, which otherwise looked like a clean import.
+			if (ragged.length > 0) {
+				const lines = ragged.map((r) => r.line).join(', ');
+				csvWarning = (l) => l.page.bulkImport.feedback.raggedRows.replace('{lines}', lines);
+			}
 		} catch (e) {
 			csvError = e instanceof Error ? e.message : 'Failed to parse CSV';
 		}
@@ -176,6 +154,10 @@
 
 	{#if csvError}
 		<Feedback error text={() => csvError ?? ''} />
+	{/if}
+
+	{#if csvWarning}
+		<Feedback warning text={csvWarning} testid="csv-ragged-warning" />
 	{/if}
 </Form>
 

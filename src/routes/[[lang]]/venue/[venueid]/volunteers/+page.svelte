@@ -10,6 +10,7 @@
 	import Tag from '$lib/components/Tag.svelte';
 	import Tags from '$lib/components/Tags.svelte';
 	import TextField from '$lib/components/TextField.svelte';
+	import toCSV from '$lib/data/toCSV';
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 
@@ -33,19 +34,19 @@
 			c.active ? 'Yes' : 'No'
 		]);
 
-		const csvContent =
-			'data:text/csv;charset=utf-8,' +
-			[headers, ...rows]
-				.map((e) => e.map((v) => `"${v.replace(/"/g, '""')}"`).join(','))
-				.join('\n');
-
-		const encodedUri = encodeURI(csvContent);
+		// A Blob URL rather than a `data:` URI: encodeURI does not escape `#`, so
+		// the old data URI truncated the file at the first one — a volunteer whose
+		// expertise said "C#" silently lost every row after them.
+		const url = URL.createObjectURL(
+			new Blob([toCSV(headers, rows)], { type: 'text/csv;charset=utf-8' })
+		);
 		const link = document.createElement('a');
-		link.setAttribute('href', encodedUri);
+		link.setAttribute('href', url);
 		link.setAttribute('download', `${venue?.title ?? 'volunteers'}.csv`);
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
 	}
 </script>
 

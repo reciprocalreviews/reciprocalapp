@@ -1,6 +1,6 @@
 {
 	"name": "reciprocalapp",
-	"version": "0.4.6",
+	"version": "0.4.7",
 	"private": true,
 	"prepare": "svelte-kit sync",
 	"scripts": {
@@ -24,7 +24,7 @@
 		"outdated": "npx check-outdated --ignore-pre-releases --columns name,type,current,latest,changes",
 		"emu": "npm run sync && npm run build && npm run start:test && npm run preview",
 		"updates": "node scripts/updates.js",
-		"locale-schema": "npx ts-json-schema-generator --no-type-check --tsconfig tsconfig.json --path 'src/lib/locales/Locale.ts' --type 'LocaleText' --out src/lib/locales/LocaleText.json",
+		"locale-schema": "npx ts-json-schema-generator --no-type-check --tsconfig tsconfig.json --path 'src/lib/locales/Locale.ts' --type 'LocaleText' --out src/lib/locales/LocaleText.json && npx prettier --write src/lib/locales/LocaleText.json",
 		"locale-validate": "ajv validate -s src/lib/locales/LocaleText.json -d \"static/locales/*.json\" --all-errors --errors=text",
 		"locale": "npm run locale-schema && npm run locale-validate"
 	},
@@ -47,7 +47,7 @@
 		"ts-json-schema-generator": "^2",
 		"tslib": "^2",
 		"typescript": "^6",
-		"vercel": "^58",
+		"vercel": "^59",
 		"vite": "^8",
 		"vitest": "^4"
 	},

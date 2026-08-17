@@ -1,7 +1,7 @@
 import { type BrowserContext, type Page } from '@playwright/test';
 
-/** The shared password every seeded user has locally (see supabase/seed.sql). */
-const SEED_PASSWORD = 'password';
+export { SEED_PASSWORD } from '$lib/auth/devPassword';
+import { SEED_PASSWORD } from '$lib/auth/devPassword';
 
 /**
  * Navigate to the login page and wait until its form is actually usable.

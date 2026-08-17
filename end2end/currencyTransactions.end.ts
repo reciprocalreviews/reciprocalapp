@@ -94,9 +94,12 @@ test('an editor approves a pending venue transfer; status moves to approved and 
 	await expect(page.getByRole('cell', { name: purpose })).toBeVisible();
 
 	// Click the approve button on whichever row index hosts our purpose.
+	// Approving moves tokens permanently, so it is a confirm button: the first
+	// click swaps in the confirm/cancel pair and only the second commits.
 	const approveButton = page
 		.locator(`tr:has(td:has-text(${JSON.stringify(purpose)})) [data-testid$="-approve"]`)
 		.first();
+	await approveButton.click();
 	await approveButton.click();
 
 	// The transaction's status flips to 'approved'.

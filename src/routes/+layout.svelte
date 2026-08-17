@@ -1,18 +1,19 @@
 <script lang="ts">
-	import { goto, invalidate } from '$app/navigation';
+	import { goto, invalidate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { PUBLIC_ENV } from '$env/static/public';
 	import { requiresAuth } from '$lib/auth/requiresAuth';
 	import Footer from '$lib/components/Footer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import { setDB } from '$lib/data/CRUD';
+	import getRealtimeChannel from '$lib/data/SupabaseRealtime';
 	import { onMount, setContext } from 'svelte';
 	import SupabaseAuth, { setAuth } from './Auth.svelte';
 	import { setLocaleContext } from './Contexts';
 	import type PageHeader from './PageHeader';
 
 	let { data, children } = $props();
-	let { db, scholar, claims, locale } = $derived(data);
+	let { db, scholar, claims, locale, tokens } = $derived(data);
 
 	// The raw Supabase client is reached only through the CRUD instance's
 	// sanctioned `client` escape hatch (auth + realtime); see #137.
@@ -49,6 +50,25 @@
 		return () => data.subscription.unsubscribe();
 	});
 
+	// Keep the header's token balance live for changes made elsewhere — a minter
+	// approving a mint, an editor completing your assignment — not just for the
+	// scholar's own writes (which handle() already covers with invalidateAll).
+	// An $effect rather than reloadOnChanges' onMount, because the layout never
+	// remounts: signing in mid-session has to (re)subscribe for the new scholar.
+	$effect(() => {
+		const id = scholar?.id;
+		if (id === undefined) return;
+		const channel = getRealtimeChannel(
+			`header-balance-${id}`,
+			db.client,
+			[{ table: 'tokens', filter: `scholar=eq.${id}` }],
+			() => invalidateAll()
+		).subscribe();
+		return () => {
+			channel.unsubscribe();
+		};
+	});
+
 	// This global state stores breadcrumb data. The Page component sets it.
 	let breadcrumbs = $state<{ breadcrumbs: [string, string][] }>({ breadcrumbs: [] });
 
@@ -66,7 +86,7 @@
 	setContext('pageHeader', pageHeader);
 </script>
 
-<Nav {inProd} breadcrumbs={breadcrumbs.breadcrumbs}></Nav>
+<Nav {inProd} {tokens} breadcrumbs={breadcrumbs.breadcrumbs}></Nav>
 <main>
 	{@render children()}
 </main>

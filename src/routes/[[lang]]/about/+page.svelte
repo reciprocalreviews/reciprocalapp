@@ -1,13 +1,38 @@
-<script>
+<script lang="ts">
+	import Button from '$lib/components/Button.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import Cards from '$lib/components/Cards.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
+	import Form from '$lib/components/Form.svelte';
 	import { IdeaLabel, ScholarLabel } from '$lib/components/Labels.js';
 	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
+	import ScholarField from '$lib/components/ScholarField.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
+	import { getDB } from '$lib/data/CRUD';
+	import type { LocaleText } from '$lib/locales/Locale';
+	import { validEmail, validORCID } from '$lib/validation';
+	import { getLocaleContext } from '$routes/Contexts';
+	import { handle } from '$routes/feedback.svelte';
 
 	let { data } = $props();
 	let { stewards } = $derived(data);
+
+	const db = getDB();
+	const locale = getLocaleContext();
+
+	/** Only a steward sees the controls. The database refuses anyone else anyway
+	 * (set_steward raises RR010), but there is no point offering what will fail. */
+	let isSteward = $derived(data.scholar?.steward === true);
+
+	let newSteward = $state('');
+
+	function validSteward(text: string): ((l: LocaleText) => string) | undefined {
+		return validEmail(text) || validORCID(text)
+			? undefined
+			: (l) => l.page.about.field.steward.invalid ?? '';
+	}
 </script>
 
 <Page icon={IdeaLabel} title={(l) => l.page.about.title} breadcrumbs={[]}>
@@ -19,18 +44,56 @@
 
 	<Paragraph text={(l) => l.page.about.paragraph.currentStewards} />
 
-	{#if stewards}
+	{#if stewards === null}
+		<Feedback error text={(l) => l.page.about.feedback.stewardsNotLoaded} />
+	{:else if stewards.length === 0}
+		<!-- Distinct from failing to load: the list came back, and it was empty. -->
+		<Feedback text={(l) => l.page.about.feedback.noStewards} testid="no-stewards" />
+	{:else}
 		<ul>
 			{#each stewards as steward, index}
 				<li>
 					<Link to="/scholar/{steward.id}" testid={'steward-' + index}
-						>{steward.name ?? 'anonymous'}</Link
-					>
+						>{steward.name ?? locale().page.about.anonymous}</Link
+					>{#if isSteward && steward.id !== data.scholar?.id && stewards.length > 1}
+						&nbsp;<Button
+							strings={(l) => l.page.about.button.removeSteward}
+							testid="remove-steward-{index}"
+							action={() => handle(db().setSteward(steward.id, false))}
+						/>{/if}
 				</li>
 			{/each}
 		</ul>
-	{:else}
-		<Feedback text={(l) => l.page.about.feedback.stewardsNotLoaded} />
+	{/if}
+
+	{#if isSteward}
+		<Cards>
+			<Card
+				subheader
+				group="steward"
+				icon={ScholarLabel}
+				strings={(l) => l.page.about.card.addSteward}
+				testid="add-steward-card"
+			>
+				<Form>
+					<ScholarField
+						strings={(l) => l.page.about.field.steward}
+						bind:text={newSteward}
+						size={19}
+						valid={validSteward}
+						showResolved={false}
+						testid="add-steward-field"
+					/><Button
+						strings={(l) => l.page.about.button.addSteward}
+						active={validSteward(newSteward) === undefined}
+						testid="add-steward-button"
+						action={async () => {
+							if (await handle(db().addSteward(newSteward))) newSteward = '';
+						}}
+					/>
+				</Form>
+			</Card>
+		</Cards>
 	{/if}
 
 	<Paragraph text={(l) => l.page.about.paragraph.joinStewards} />

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import type { SubmissionRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { DownLabel, PrivateLabel, SubmissionLabel, UpLabel } from '$lib/components/Labels';
@@ -14,10 +13,16 @@
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Tip from '$lib/components/Tip.svelte';
+	import Form from '$lib/components/Form.svelte';
+	import Options from '$lib/components/Options.svelte';
+	import type Locale from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
-	import { getDB, NullUUID } from '$lib/data/CRUD';
+	import { validEmail, validORCID } from '$lib/validation';
+	import { getDB } from '$lib/data/CRUD';
+	import { alreadyAssigned } from '$lib/data/assignees';
 	import canApproveAssignment from '$lib/data/canApproveAssignment';
 	import isRoleApprover from '$lib/data/isRoleApprover';
+	import { submissionsView } from '$lib/data/sortSubmissions';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
@@ -118,125 +123,65 @@
 	let filter = $state(page.url.searchParams.get('filter') ?? '');
 	const locale = getLocaleContext();
 
-	/** Lowercase filter term, or '' when nothing's been typed. Cells use this
-	 * to decide whether to highlight themselves. */
-	const trimmedFilter = $derived(filter.trim().toLowerCase());
-
-	/** Whether the current viewer can see the authors of a given submission,
-	 * mirroring the role.anonymous_authors gate on the submission detail
-	 * page. Used both by the filter (to decide whether to match author names)
-	 * and by the Authors column (to decide whether to render them). */
-	function canSeeAuthors(sub: SubmissionRow): boolean {
-		if (isAdmin) return true;
-		if (uid !== null && sub.authors.includes(uid)) return true;
-		const viewerAssignmentsHere = assignments?.filter(
-			(a) => a.submission === sub.id && a.scholar === uid
-		);
-		return (
-			!!viewerAssignmentsHere &&
-			viewerAssignmentsHere.length > 0 &&
-			!viewerAssignmentsHere.some((a) => rolesById.get(a.role)?.anonymous_authors)
-		);
-	}
-
-	/** True if the given text contains the active filter term (case-insensitive). */
-	function matches(text: string | undefined | null): boolean {
-		return trimmedFilter !== '' && text !== undefined && text !== null
-			? text.toLowerCase().includes(trimmedFilter)
-			: false;
-	}
-
-	/** True if any of the given scholar IDs has a name matching the filter. */
-	function anyScholarMatches(ids: string[]): boolean {
-		if (trimmedFilter === '') return false;
-		for (const id of ids) {
-			const name = scholarName.get(id);
-			if (name && name.includes(trimmedFilter)) return true;
-		}
-		return false;
-	}
-
-	/** True if the search term matches the submission's title, external ID,
-	 * any visible author name, or any visible assigned-reviewer name.
-	 *
-	 * Reviewer-name matches honor `venue.anonymous_assignments` automatically:
-	 * RLS already filters which assignment rows arrive in `assignments`, so
-	 * we just match against whatever is here. Author-name matches honor
-	 * `role.anonymous_authors` explicitly: a reviewer in an anonymous-authors
-	 * role can see the submission but should not be able to discover author
-	 * names via search. */
-	function matchesFilter(sub: SubmissionRow): boolean {
-		if (matches(sub.title)) return true;
-		if (matches(sub.externalid)) return true;
-
-		const subAssignments = assignments?.filter((a) => a.submission === sub.id) ?? [];
-		if (anyScholarMatches(subAssignments.map((a) => a.scholar))) return true;
-
-		if (canSeeAuthors(sub) && anyScholarMatches(sub.authors)) return true;
-
-		return false;
-	}
-
-	/** Sort and filter submissions based on the configuration. Done
-	 * submissions older than the venue's done_visibility_days window are
-	 * hidden from the list (they remain accessible by direct link). What
-	 * remains is partitioned so that done submissions always sort to the
-	 * bottom regardless of the active sort column. */
-	function sortedAndFiltered(submissions: SubmissionRow[]): SubmissionRow[] {
-		const cutoffMs =
-			venue === null ? 0 : Date.now() - venue.done_visibility_days * 24 * 60 * 60 * 1000;
-		const subs = submissions
-			.filter((sub) => trimmedFilter === '' || matchesFilter(sub))
-			.filter((sub) => conflicts !== null && !conflicts.some((c) => c.submissionid === sub.id))
-			.filter((sub) => {
-				if (sub.status !== 'done') return true;
-				if (sub.completed_at === null) return true;
-				return new Date(sub.completed_at).getTime() >= cutoffMs;
-			});
-
-		for (const column of sortOrder) {
-			switch (column) {
-				case 'payment':
-					subs.sort(
-						(a, b) => (getSubmissionPaymentStatus(a) ?? -1) - (getSubmissionPaymentStatus(b) ?? -1)
-					);
-					if (!paymentSortPendingFirst) subs.reverse();
-					break;
-				case 'title':
-					subs.sort((a, b) => a.title.localeCompare(b.title));
-					if (!titleSortIncreasing) subs.reverse();
-					break;
-				case 'id':
-					subs.sort((a, b) => a.externalid.localeCompare(b.externalid));
-					if (!idSortIncreasing) subs.reverse();
-					break;
-				case 'created':
-					subs.sort((a, b) => a.created_at.localeCompare(b.created_at));
-					if (createdSortLatestFirst) subs.reverse();
-					break;
-			}
-		}
-
-		// Partition: reviewing first, then done. Within each group the
-		// active sort order is preserved.
-		const reviewing = subs.filter((s) => s.status !== 'done');
-		const finished = subs.filter((s) => s.status === 'done');
-		return [...reviewing, ...finished];
-	}
+	/** The submissions-list view logic — search matching, the author-visibility
+	 * gate, payment status, and the sort/filter pipeline — lives in
+	 * $lib/data/sortSubmissions so its ordering and privacy rules are testable.
+	 * `now` is read here so the done-visibility window follows the clock. */
+	const view = $derived(
+		submissionsView({
+			uid,
+			isAdmin,
+			assignments,
+			rolesById,
+			scholarName,
+			conflicts,
+			transactions,
+			doneVisibilityDays: venue?.done_visibility_days ?? null,
+			filter,
+			now: Date.now(),
+			sortOrder,
+			paymentSortPendingFirst,
+			titleSortIncreasing,
+			idSortIncreasing,
+			createdSortLatestFirst
+		})
+	);
 
 	function formatDate(iso: string): string {
 		return new Date(iso).toLocaleDateString();
 	}
 
-	function getSubmissionPaymentStatus(submission: SubmissionRow): number | undefined {
-		if (transactions === null) return undefined;
-		// NullUUID slots represent non-paying co-authors — no transaction is
-		// expected for them, so they don't count toward the pending tally.
-		const expected = submission.transactions.filter((t) => t !== NullUUID);
-		const visible = expected
-			.map((t) => transactions.find((tr) => tr.id === t))
-			.filter((t) => t !== undefined);
-		return expected.length - visible.length;
+	// ---- Batch assignment ----------------------------------------------------
+	// Assigning one scholar to several submissions (the monthly AE round, or an
+	// editor self-assigning) otherwise meant opening each submission in turn.
+	// Resolve the scholar and role once here, then assign per row below.
+
+	/** The roles this scholar could assign someone to somewhere in this venue. */
+	const assignableRoles = $derived(
+		isAdmin ? visibleRoles : visibleRoles.filter((role) => role.couldApprove)
+	);
+
+	let batchRole = $state<string | undefined>(undefined);
+	let batchScholar = $state('');
+	/** The resolved scholar id; null until the text above is looked up. */
+	let batchScholarID = $state<string | null>(null);
+	let batchResolving = $state(false);
+	let batchError = $state<((l: Locale) => string) | undefined>(undefined);
+
+	/** Re-resolving is required whenever the text changes, so a stale id can't
+	 * be assigned to someone the editor no longer has on screen. */
+	$effect(() => {
+		batchScholar;
+		batchScholarID = null;
+	});
+
+	async function resolveBatchScholar() {
+		batchResolving = true;
+		batchError = undefined;
+		const { data } = await db().findScholar(batchScholar);
+		if (data === undefined) batchError = (l) => l.page.submissions.feedback.scholarNotFound;
+		else batchScholarID = data;
+		batchResolving = false;
 	}
 </script>
 
@@ -269,12 +214,47 @@
 			bind:text={filter}
 		></TextField>
 
+		<!-- Assign one scholar across many submissions without opening each one. -->
+		{#if uid && assignableRoles.length > 0}
+			<Form>
+				<Tip><Text path={(l) => l.page.submissions.tip.batchAssign} /></Tip>
+				<Options
+					strings={(l) => l.page.submissions.options.batchRole}
+					bind:value={batchRole}
+					options={assignableRoles.map((role) => ({ label: role.name, value: role.id }))}
+				/>
+				<TextField
+					testid="batch-assign-scholar"
+					strings={(l) => l.page.submissions.field.batchAssign}
+					bind:text={batchScholar}
+					valid={(emailOrORCID) =>
+						emailOrORCID.length > 0 && !validEmail(emailOrORCID) && !validORCID(emailOrORCID)
+							? (l) => l.page.submissions.field.batchAssign.invalid
+							: undefined}
+				/>
+				<Button
+					testid="batch-assign-find"
+					strings={(l) => l.page.submissions.button.batchFind}
+					active={!batchResolving &&
+						batchScholarID === null &&
+						batchRole !== undefined &&
+						(validEmail(batchScholar) || validORCID(batchScholar))}
+					action={resolveBatchScholar}
+				/>
+				{#if batchError !== undefined}
+					<Feedback error text={batchError} />
+				{:else if batchScholarID !== null}
+					<Feedback text={(l) => l.page.submissions.feedback.batchReady} />
+				{/if}
+			</Form>
+		{/if}
+
 		{#if submissions === null}
 			<Feedback error text={(l) => l.page.submissions.feedback.notLoaded}></Feedback>
 		{:else if submissions.length === 0}
 			<Feedback text={(l) => l.page.submissions.feedback.noSubmissions}></Feedback>
 		{:else}
-			{@const sorted = sortedAndFiltered(submissions)}
+			{@const sorted = view.sortedAndFiltered(submissions)}
 			{#if sorted.length === 0}
 				<Feedback text={(l) => l.page.submissions.feedback.noneFiltered}></Feedback>
 			{:else}
@@ -350,7 +330,7 @@
 						{/each}
 					{/snippet}
 					{#each sorted as submission, index}
-						{@const status = getSubmissionPaymentStatus(submission)}
+						{@const status = view.paymentStatus(submission)}
 						<tr data-testid="submission-{index}">
 							<td>
 								<!-- Couldn't load transactions? -->
@@ -366,7 +346,7 @@
 									/>
 								{/if}
 							</td>
-							<td class:highlight={matches(submission.title)}>
+							<td class:highlight={view.matches(submission.title)}>
 								<Column>
 									<SubmissionPreview {submission} />
 									{#if uid && conflicts !== null && !conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id) && !submission.authors.includes(uid) && assignments !== null && !assignments.some((a) => a.submission === submission.id && a.scholar === uid)}
@@ -379,8 +359,11 @@
 									{/if}
 								</Column>
 							</td>
-							<td class:highlight={canSeeAuthors(submission) && anyScholarMatches(submission.authors)}>
-								{#if canSeeAuthors(submission)}
+							<td
+								class:highlight={view.canSeeAuthors(submission) &&
+									view.anyScholarMatches(submission.authors)}
+							>
+								{#if view.canSeeAuthors(submission)}
 									{#each submission.authors as authorID, i}
 										{#if i > 0},
 										{/if}<ScholarLink id={authorID} />
@@ -390,7 +373,7 @@
 								{/if}
 							</td>
 							<td>{submission.expertise}</td>
-							<td class:highlight={matches(submission.externalid)}>{submission.externalid}</td>
+							<td class:highlight={view.matches(submission.externalid)}>{submission.externalid}</td>
 							<td>{formatDate(submission.created_at)}</td>
 							<td>
 								{#if submission.status === 'done'}
@@ -406,7 +389,7 @@
 									assignments
 										?.filter((a) => a.submission === submission.id && a.role === role.id)
 										.map((a) => a.scholar) ?? []}
-								<td class:highlight={anyScholarMatches(roleScholarIDs)}>
+								<td class:highlight={view.anyScholarMatches(roleScholarIDs)}>
 									<Column>
 										{#if uid}
 											{@const roleAssignments = assignments?.filter(
@@ -436,6 +419,26 @@
 												{:else}
 													<span><strong>0</strong> {locale().page.submissions.cell.assigned}</span>
 												{/each}
+
+												<!-- Batch assign: one click per submission once the scholar and
+												     role are resolved above. Hidden where they already hold this
+												     role, since a duplicate would just add a second row. -->
+												{#if batchScholarID !== null && batchRole === role.id && !alreadyAssigned(assignments, submission.id, batchScholarID, role.id)}
+													<Button
+														testid={`batch-assign-${index}-${roleIndex}`}
+														strings={(l) => l.page.submissions.button.batchAssign}
+														action={() =>
+															handle(
+																db().createAssignment(
+																	submission.id,
+																	batchScholarID!,
+																	role.id,
+																	false,
+																	true
+																)
+															)}
+													/>
+												{/if}
 											{/if}
 
 											<!-- Show bidding if the role is biddable. Bidding closes when the

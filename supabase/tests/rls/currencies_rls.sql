@@ -4,7 +4,8 @@
 --   SELECT  public — any authenticated scholar or anonymous visitor.
 --   INSERT  stewards only (the issteward() WITH CHECK).
 --   UPDATE  minters of the currency only (USING auth.uid() = any(minters)).
---   DELETE  minters of the currency only (USING auth.uid() = any(minters)).
+--   DELETE  no one (denied by policy AND the table privilege is revoked — a
+--           currency's tokens and transactions must outlive any deletion).
 --   TRIGGER no_admin_minters (BEFORE UPDATE): a minter of a currency may not be
 --           an admin of any venue that uses the currency.
 
@@ -37,7 +38,7 @@ select policies_are(
 	array[
 		'only stewards can create currencies',
 		'anyone can view currencies',
-		'minters can delete currencies',
+		'currencies cannot be deleted',
 		'minters can update currencies'
 	]
 );
@@ -117,22 +118,23 @@ select throws_ok(
 	'a venue admin cannot be added as a minter of the venue currency'
 );
 
--- ---- DELETE (minters only) ----------------------------------------------------
--- A non-minter's DELETE is filtered by the USING clause (0 rows, no error).
+-- ---- DELETE (no one) -----------------------------------------------------------
+-- The table privilege is revoked, so every client DELETE fails with 42501 —
+-- non-minters and minters alike.
 select tests.authenticate_as(:'outsider');
-delete from public.currencies where id = :'cur_del';
-select tests.clear_authentication();
-select is(
-	(select count(*)::int from public.currencies where id = :'cur_del'),
-	1,
+select throws_ok(
+	$$ delete from public.currencies where id = $$ || quote_literal(:'cur_del'),
+	'42501',
+	null,
 	'a non-minter cannot delete the currency'
 );
 
--- A minter can delete their currency.
 select tests.authenticate_as(:'minter');
-select lives_ok(
+select throws_ok(
 	$$ delete from public.currencies where id = $$ || quote_literal(:'cur_del'),
-	'a minter can delete their currency'
+	'42501',
+	null,
+	'a minter cannot delete their currency'
 );
 
 select * from finish();

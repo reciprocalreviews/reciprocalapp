@@ -3,6 +3,7 @@
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
+	import markdownToSegments from '$lib/data/markdownSegments';
 	import updates from './updates.json';
 
 	// Get the dated updates in reverse chronological order.
@@ -16,40 +17,6 @@
 		.toSorted((a, b) => {
 			return new Date(b.date).getTime() - new Date(a.date).getTime();
 		});
-
-	function markdownToSegments(text: string) {
-		const segments: (
-			| string
-			| { type: 'issue' | 'code' | 'bold' | 'italic' | 'link'; text: string; link?: string }
-		)[] = [];
-		let currentIndex = 0;
-		const regex = /\(#([0-9]+)\)|`([^`]+)`|\*\*([^*]+)\*\*|\*([^*]+)\*|\[([^\]]+)\]\(([^)]+)\)/g;
-		let match;
-
-		while ((match = regex.exec(text)) !== null) {
-			if (match.index > currentIndex) {
-				segments.push(text.substring(currentIndex, match.index));
-			}
-			if (match[1]) {
-				segments.push({ type: 'issue', text: match[1] });
-			} else if (match[2]) {
-				segments.push({ type: 'code', text: match[2] });
-			} else if (match[3]) {
-				segments.push({ type: 'bold', text: match[3] });
-			} else if (match[4]) {
-				segments.push({ type: 'italic', text: match[4] });
-			} else if (match[6]) {
-				segments.push({ type: 'link', link: match[6], text: match[5] });
-			}
-			currentIndex = regex.lastIndex;
-		}
-
-		if (currentIndex < text.length) {
-			segments.push(text.substring(currentIndex));
-		}
-
-		return segments;
-	}
 </script>
 
 {#snippet note(text: string)}

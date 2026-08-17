@@ -75,6 +75,13 @@ grant update (
 	venue, externalid, previousid, previous, submission_type, authors, payments, transactions, title, expertise
 ) on public.submissions to authenticated;
 
+-- `grant all` above also confers TABLE-level DELETE; deletion is denied to
+-- clients (see the deny policy above), so remove the privilege as well.
+revoke delete on public.submissions
+from
+	authenticated,
+	anon;
+
 --------------------------------------
 -- Indexes
 
@@ -96,7 +103,9 @@ with
 		or public.isadmin (venue)
 	);
 
-create policy "admins can delete submissions" on public.submissions for DELETE to authenticated using (public.isAdmin (venue));
+-- No client path deletes a submission: deletion would destroy its assignment
+-- history. service_role keeps its grant for administrative and recovery work.
+create policy "submissions cannot be deleted" on public.submissions for DELETE to authenticated using (false);
 
 --------------------------------------
 -- RPCs (defined in migration 20260608000000_atomic_crud.sql)
@@ -121,10 +130,12 @@ create or replace function public.create_submission (
 	_purpose text
 ) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_currency uuid;
+	_cost integer;
 	_transactions uuid[] := array[]::uuid[];
 	_i integer;
 	_author uuid;
@@ -144,6 +155,35 @@ begin
 	end if;
 	if cardinality(_authors) = 0 then
 		raise exception 'A submission needs at least one author';
+	end if;
+
+	-- Only a listed author may create a submission, unless the caller is a venue
+	-- admin adding one manually. RR009 surfaces the specific message.
+	if not (_caller = any(_authors) or public.isadmin(_venue)) then
+		raise exception 'Only a listed author or a venue admin can create a submission'
+			using errcode = 'RR009';
+	end if;
+
+	-- No author may be listed twice. The loop below indexes _authors positionally,
+	-- so a repeat would be charged twice for one manuscript.
+	if cardinality(_authors) <> (select count(distinct a) from unnest(_authors) a) then
+		raise exception 'A submission cannot list the same author more than once'
+			using errcode = 'RR008';
+	end if;
+
+	-- The type must belong to this venue, and the charges must add up to its cost.
+	select submission_cost into _cost
+	from public.submission_types
+	where id = _submission_type and venue = _venue;
+	if _cost is null then
+		raise exception 'Submission type not found for this venue';
+	end if;
+	-- sum() ignores NULLs and returns NULL over an empty set; the loop below reads
+	-- a NULL payment as 0, so coalesce here to agree with it. Payment-free venues
+	-- have zero-cost types and zero payments, so this holds as 0 = 0.
+	if coalesce((select sum(p) from unnest(_payments) p), 0) <> _cost then
+		raise exception 'Author payments must add up to the submission cost of %', _cost
+			using errcode = 'RR007';
 	end if;
 
 	-- Charges are denominated in the venue's currency.

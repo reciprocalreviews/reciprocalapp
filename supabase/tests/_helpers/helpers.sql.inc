@@ -141,13 +141,16 @@ begin
 end;
 $$;
 
--- Create a submission type at a venue.
-create or replace function tests.create_submission_type (p_venue uuid)
+-- Create a submission type at a venue. The cost defaults to 0, matching the
+-- column default, so the many fixtures that don't care about money are
+-- unaffected; pass one when exercising create_submission, which now requires the
+-- author payments to add up to exactly this amount.
+create or replace function tests.create_submission_type (p_venue uuid, p_cost integer default 0)
 returns uuid language plpgsql security definer set search_path to '' as $$
 declare new_id uuid := gen_random_uuid();
 begin
-	insert into public.submission_types (id, venue, name)
-	values (new_id, p_venue, 'Test Type');
+	insert into public.submission_types (id, venue, name, submission_cost)
+	values (new_id, p_venue, 'Test Type', p_cost);
 	return new_id;
 end;
 $$;

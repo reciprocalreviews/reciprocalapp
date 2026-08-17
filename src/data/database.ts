@@ -38,6 +38,7 @@ export type Database = {
         Row: {
           approved: boolean
           bid: boolean
+          compensation_requested_at: string | null
           completed: boolean
           created_at: string
           id: string
@@ -50,6 +51,7 @@ export type Database = {
         Insert: {
           approved?: boolean
           bid?: boolean
+          compensation_requested_at?: string | null
           completed?: boolean
           created_at?: string
           id?: string
@@ -62,6 +64,7 @@ export type Database = {
         Update: {
           approved?: boolean
           bid?: boolean
+          compensation_requested_at?: string | null
           completed?: boolean
           created_at?: string
           id?: string
@@ -1130,7 +1133,7 @@ export type Database = {
           _scholar: string
           _welcomer: string
         }
-        Returns: undefined
+        Returns: number
       }
       accept_role_invite: {
         Args: {
@@ -1145,6 +1148,10 @@ export type Database = {
       bulk_import_submissions: {
         Args: { _import_note: string; _submissions: Json; _venueid: string }
         Returns: Json
+      }
+      can_approve_assignment: {
+        Args: { _role: string; _submission: string }
+        Returns: boolean
       }
       complete_assignment: {
         Args: {
@@ -1188,7 +1195,6 @@ export type Database = {
       export_scholar_data: { Args: { _scholar?: string }; Returns: Json }
       forget_scholar: { Args: { _scholar: string }; Returns: Json }
       isadmin: { Args: { _venueid: string }; Returns: boolean }
-      isapprover: { Args: { _roleid: string }; Returns: boolean }
       isassigned: { Args: { _submissionid: string }; Returns: boolean }
       isauthor: { Args: { _submissionid: string }; Returns: boolean }
       isconflicted: { Args: { _submissionid: string }; Returns: boolean }
@@ -1198,6 +1204,7 @@ export type Database = {
         Returns: boolean
       }
       ispriorityzero: { Args: { _venueid: string }; Returns: boolean }
+      isroleapprovervolunteer: { Args: { _roleid: string }; Returns: boolean }
       issteward: { Args: never; Returns: boolean }
       mark_submission_done: {
         Args: {
@@ -1247,6 +1254,11 @@ export type Database = {
         Args: { _email: string }
         Returns: undefined
       }
+      set_steward: {
+        Args: { _scholar: string; _steward: boolean }
+        Returns: Json
+      }
+      site_origin: { Args: never; Returns: string }
       tokens_as_of: {
         Args: { _at?: string }
         Returns: {

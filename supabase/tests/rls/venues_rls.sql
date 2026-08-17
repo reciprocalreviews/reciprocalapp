@@ -4,7 +4,9 @@
 --   SELECT  anyone (authenticated + anon).
 --   INSERT  stewards only.
 --   UPDATE  stewards or the venue's own admins.
---   DELETE  stewards or the venue's own admins.
+--   DELETE  no one (denied by policy AND the table privilege is revoked, since
+--           deletion would cascade away roles, volunteers, assignments,
+--           compensation, preference levels, and thanks).
 --   TRIGGER no_minter_admins: a venue admin may not be a minter of the venue's
 --           currency; the trigger raises on both INSERT and UPDATE.
 
@@ -34,7 +36,7 @@ select policies_are(
 		'anyone can view venues',
 		'only stewards can create venues',
 		'stewards and admins can update venues',
-		'stewards and admins can delete venues'
+		'venues cannot be deleted'
 	]
 );
 
@@ -98,28 +100,30 @@ select is(
 );
 
 -- ---- DELETE -------------------------------------------------------------------
--- An unrelated scholar's DELETE is filtered by the using clause (0 rows, no error).
+-- The table privilege is revoked, so every client DELETE fails with 42501 —
+-- an unrelated scholar, the venue's own admin, and a steward alike.
 select tests.authenticate_as(:'outsider');
-delete from public.venues where id = :'ven_del';
-select tests.clear_authentication();
-select is(
-	(select count(*)::int from public.venues where id = :'ven_del'),
-	1,
+select throws_ok(
+	$$ delete from public.venues where id = $$ || quote_literal(:'ven_del'),
+	'42501',
+	null,
 	'a non-steward non-admin cannot delete a venue'
 );
 
--- The venue's own admin may delete it.
 select tests.authenticate_as(:'admin');
-select lives_ok(
+select throws_ok(
 	$$ delete from public.venues where id = $$ || quote_literal(:'ven_del'),
-	'a venue admin can delete their venue'
+	'42501',
+	null,
+	'a venue admin cannot delete their venue'
 );
 
--- A steward may delete any venue.
 select tests.authenticate_as(:'steward');
-select lives_ok(
+select throws_ok(
 	$$ delete from public.venues where id = $$ || quote_literal(:'ven'),
-	'a steward can delete a venue'
+	'42501',
+	null,
+	'a steward cannot delete a venue'
 );
 
 -- ---- TRIGGER: no_minter_admins ------------------------------------------------

@@ -48,7 +48,8 @@
 		outgoingPending,
 		venues,
 		reviews,
-		approvals
+		approvals,
+		compensating
 	}: {
 		scholar: Scholar;
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
@@ -63,6 +64,7 @@
 		venues: VenueRow[] | null;
 		reviews: (AssignmentRow & { submissions: SubmissionRow })[] | null;
 		approvals: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
+		compensating: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -166,6 +168,7 @@
 			{outgoingPending}
 			{reviews}
 			{approvals}
+			{compensating}
 		></Tasks>
 	{/if}
 

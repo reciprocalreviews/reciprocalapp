@@ -68,8 +68,11 @@ export type LocaleText = {
 		home: string;
 		venues: string;
 		saved: string;
+		/** Accessible name for the header's total token balance. */
+		balance: string;
 		link: {
 			login: string;
+			profile: string;
 		};
 		feedback: {
 			testWarning: string;
@@ -105,6 +108,15 @@ export type LocaleText = {
 	};
 	notification: {
 		emailed: string;
+		/** Shown after volunteering or accepting a role invitation. Which one
+		 * applies depends on whether a welcome grant actually happened, which
+		 * only the database can say — so the RPC reports the amount and the
+		 * data layer picks. {amount} is the number of tokens granted. */
+		volunteered: string;
+		volunteeredWithTokens: string;
+		inviteAccepted: string;
+		inviteAcceptedWithTokens: string;
+		inviteDeclined: string;
 	};
 	widget: {
 		card: {
@@ -117,6 +129,20 @@ export type LocaleText = {
 		};
 		subheader: {
 			link: string;
+		};
+		/** The field that resolves typed text to a scholar, by ORCID iD, email
+		 * address, or a search of names. Shared by every place one scholar names
+		 * another: authors on a submission, venue admins, currency minters, and
+		 * role invitations. */
+		scholarSearch: {
+			/** Searched, and matched nobody. Distinct from having typed nothing. */
+			noMatches: string;
+			/** Looked up an ORCID iD or email address that belongs to no one here. */
+			unknown: string;
+			/** Picks one of the offered matches. The scholar's name becomes the label,
+			 * and `{name}` in the tip is replaced with it — the tip is the button's
+			 * aria-label, and a column of identically-named buttons is unusable. */
+			choose: ButtonText;
 		};
 	};
 	page: {
@@ -269,9 +295,16 @@ export type LocaleText = {
 				authors: string;
 				balance: string;
 				approve: string;
+				/** Shown when a balance check fails: how to earn the tokens.
+				 * {venue} is the venue's URL. */
+				earnTokens: string;
 			};
 			field: {
-				authorOrcid: TextFieldText & { unknownScholar: string };
+				authorOrcid: TextFieldText & {
+					unknownScholar: string;
+					/** Shown on the row that repeats an author named above it. */
+					duplicate: string;
+				};
 			};
 			slider: {
 				payment: SliderText;
@@ -312,6 +345,10 @@ export type LocaleText = {
 			feedback: {
 				notLoaded: string;
 				notAdmin: string;
+				/** Shown when parsed rows had a different number of cells than the
+				 * header, which means columns shifted and data was dropped. `{lines}`
+				 * is the list of affected line numbers. */
+				raggedRows: string;
 			};
 			field: {
 				title: TextFieldText;
@@ -355,6 +392,8 @@ export type LocaleText = {
 			title: string;
 			tip: {
 				bid: string;
+				/** Explains the batch assignment form above the submissions table. */
+				batchAssign: string;
 			};
 			cell: {
 				you: string;
@@ -367,8 +406,17 @@ export type LocaleText = {
 				notLoaded: string;
 				noSubmissions: string;
 				noneFiltered: string;
+				/** No scholar matched the email or ORCID typed into the batch form. */
+				scholarNotFound: string;
+				/** A scholar and role are resolved; per-row assign buttons are live. */
+				batchReady: string;
+			};
+			options: {
+				batchRole: OptionsText;
 			};
 			button: {
+				batchFind: ButtonText;
+				batchAssign: ButtonText;
 				sortPaymentFirst: ButtonText;
 				sortPaymentLast: ButtonText;
 				sortTitleAsc: ButtonText;
@@ -397,6 +445,7 @@ export type LocaleText = {
 				previousID: NotedTextFieldText;
 				note: NotedTextFieldText;
 				filter: TextFieldText;
+				batchAssign: TextFieldText & { invalid: string };
 			};
 			status: {
 				paid: string;
@@ -454,7 +503,7 @@ export type LocaleText = {
 			};
 			button: {
 				createAssignment: ButtonText;
-				unassign: ButtonText;
+				unassign: ConfirmButtonText;
 				complete: ConfirmButtonText;
 				approve: ButtonText;
 				approveBid: ButtonText;
@@ -643,7 +692,7 @@ export type LocaleText = {
 			};
 			button: {
 				addPreferenceLevel: ButtonText;
-				deletePreferenceLevel: ButtonText;
+				deletePreferenceLevel: ConfirmButtonText;
 				movePreferenceLevelUp: ButtonText;
 				movePreferenceLevelDown: ButtonText;
 			};
@@ -680,9 +729,15 @@ export type LocaleText = {
 				reviewQuality: string;
 			};
 			/** Email-template snippets editors copy into their reviewing platform
-			 * (#113). Each entry's `body` is interpolated with `{venue}`,
-			 * `{role}`, and `{manuscriptVar}` (the selected platform's
-			 * submission-id syntax). */
+			 * (#113). Each entry's `body` is interpolated with `{origin}` (the
+			 * environment's own base URL, so a snippet copied from a local or
+			 * staging venue links back to it), `{venue}`, `{venueid}`, and
+			 * `{manuscriptVar}` (the selected platform's submission-id syntax).
+			 *
+			 * `{role}` is deliberately NOT interpolated: an editor pastes these
+			 * once per role, and reviewing platforms differ too much in how they
+			 * expose role names for us to guess. The tip above the snippets says
+			 * so — this list previously claimed otherwise, which read as a bug. */
 			template: {
 				payment: { title: string; body: string };
 				acknowledgement: { title: string; body: string };
@@ -763,7 +818,7 @@ export type LocaleText = {
 			};
 			button: {
 				mint: ButtonText;
-				removeMinter: ButtonText;
+				removeMinter: ConfirmButtonText;
 				addMinter: ButtonText;
 			};
 			note: {
@@ -812,9 +867,22 @@ export type LocaleText = {
 				orcid: ButtonText;
 				mockOrcid: ButtonText;
 				signIn: ButtonText;
+				/** A seeded scholar on the local sign-in list; its label is their name. */
+				signInAs: ButtonText;
 			};
 			note: {
 				orcid: string;
+			};
+			/** Column headers for the local-only table of seeded scholars. */
+			table: {
+				scholar: string;
+				email: string;
+				roles: string;
+			};
+			card: {
+				/** The local-only control that mints a brand-new scholar. Not a
+				 * sign-in — it exists to reach the first-run experience. */
+				newScholar: CardText;
 			};
 			field: {
 				email: TextFieldText;
@@ -825,8 +893,9 @@ export type LocaleText = {
 			feedback: {
 				orcidError: string;
 				mockOrcidError: string;
-				mockOrcidDev: string;
 				passwordDev: string;
+				/** The page's single warning that these controls are local-only. */
+				seededDev: string;
 				signInError: string;
 			};
 			paragraph: {
@@ -891,6 +960,21 @@ export type LocaleText = {
 			};
 			feedback: {
 				stewardsNotLoaded: string;
+				/** Shown when the platform has no stewards at all, which is distinct
+				 * from failing to load the list. */
+				noStewards: string;
+			};
+			/** Stands in for the name of a steward who has erased their account. */
+			anonymous: string;
+			card: {
+				addSteward: CardText;
+			};
+			field: {
+				steward: TextFieldText;
+			};
+			button: {
+				addSteward: ButtonText;
+				removeSteward: ConfirmButtonText;
 			};
 			paragraph: {
 				community: string;
@@ -999,7 +1083,9 @@ export type LocaleText = {
 				allLoaded: string;
 			};
 			button: {
-				approve: ButtonText;
+				/** Confirm-style: approval moves tokens and is permanent (RR005),
+				 * so it must not be a single click. */
+				approve: ConfirmButtonText;
 				declineInitiate: ButtonText;
 				declineConfirm: ConfirmButtonText;
 				loadMore: ButtonText;
@@ -1045,7 +1131,7 @@ export type LocaleText = {
 				priorityUp: ButtonText;
 				priorityDown: ButtonText;
 				addCompensation: ButtonText;
-				removeCompensation: ButtonText;
+				removeCompensation: ConfirmButtonText;
 				volunteer: ButtonText;
 				accept: ButtonText;
 				acceptInvite: ConfirmButtonText;
@@ -1057,7 +1143,10 @@ export type LocaleText = {
 			};
 			field: {
 				newRoleName: TextFieldText;
-				adminScholar: TextFieldText;
+				/** `invalid` when the text is neither an email nor an ORCID iD;
+				 * `minter` when it names someone who mints the venue's currency,
+				 * which the database forbids an admin from also doing. */
+				adminScholar: TextFieldText & { invalid: string; minter: string };
 				invite: TextFieldText;
 				roleName: TextFieldText;
 				roleDescription: TextFieldText;
@@ -1122,6 +1211,8 @@ export type LocaleText = {
 					transaction: string;
 					review: string;
 					pendingAssignment: string;
+					/** Completed work whose compensation awaits this approver. */
+					pendingCompensation: string;
 					outgoingTransaction: string;
 				};
 				pendingTransactionsAfter: string;
@@ -1232,7 +1323,6 @@ export type LocaleText = {
 		CreateCompensation: string;
 		EditCompensation: string;
 		CreateVolunteer: string;
-		WelcomeVolunteer: string;
 		AlreadyVolunteered: string;
 		UpdateVolunteerActive: string;
 		UpdateVolunteerExpertise: string;
@@ -1266,6 +1356,18 @@ export type LocaleText = {
 		ExportScholarData: string;
 		/** Erasing a scholar's account failed. */
 		EraseScholar: string;
+		/** RR010: the caller is not a steward, so cannot change who is one. */
+		NotSteward: string;
+		/** RR012: there must always be one steward, or nobody can appoint another. */
+		LastSteward: string;
+		/** RR013: stepping down is an act another steward performs. */
+		CannotDemoteSelf: string;
+		/** The scholar being promoted is already a steward. */
+		AlreadySteward: string;
+		/** Promoting a scholar to steward failed. */
+		PromoteSteward: string;
+		/** Removing a scholar as a steward failed. */
+		DemoteSteward: string;
 		AlreadyApproved: string;
 		SelfDealingApproval: string;
 		ApproveTransaction: string;
@@ -1275,6 +1377,8 @@ export type LocaleText = {
 		UndeletedTransaction: string;
 		InvalidCharges: string;
 		NewSubmission: string;
+		/** RR009: the caller is neither a listed author nor a venue admin. */
+		SubmissionNotAuthor: string;
 		UnknownVenue: string;
 		MissingSubmissionCharge: string;
 		BulkImportSubmissions: string;

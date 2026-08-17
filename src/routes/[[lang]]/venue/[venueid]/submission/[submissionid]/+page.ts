@@ -1,7 +1,7 @@
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { db } = await parent();
+	const { db, scholar } = await parent();
 
 	const venueid = params.venueid;
 	const submissionid = params.submissionid;
@@ -43,6 +43,19 @@ export const load: PageLoad = async ({ parent, params }) => {
 		assignments === null
 			? { data: null }
 			: await db.getVolunteersByRoles(assignments.map((a) => a.role));
+
+	// The viewer's OWN accepted volunteer records among this venue's roles. Needed
+	// by canViewSubmission's bidder branch: an accepted volunteer on any biddable
+	// role may read every submission in the venue, whether or not they are assigned
+	// to this one. `volunteers` above cannot answer this — it covers only the roles
+	// that have assignments here.
+	const { data: viewerVolunteering } =
+		scholar === null || roles === null || roles.length === 0
+			? { data: null }
+			: await db.getScholarAcceptedVolunteering(
+					scholar.id,
+					roles.map((r) => r.id)
+				);
 
 	// Get the token balances of each volunteer in the venue's currency, so we can sort by them.
 	const { data: balances } =
@@ -108,6 +121,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		preferenceLevels,
 		venueActiveCounts,
 		elsewhereActiveCounts,
+		viewerVolunteering,
 		thanks
 	};
 };

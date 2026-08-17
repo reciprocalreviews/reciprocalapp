@@ -51,12 +51,31 @@ jobs:
             echo "::error::supabase db diff failed — schemas/ may not be applicable at all"
             cat /tmp/drift.err; exit 1;
           }
-          # The CLI emits a JSON object on stdout whose `diff` key holds the DDL.
-          # Grepping the raw output for '^create|^alter' finds nothing, because the
-          # statements are escaped inside a single JSON line — which is exactly how
-          # a first version of this check reported "no drift" against a schema that
-          # had plainly drifted. Parse it.
-          grep -o '{"diff".*}' /tmp/drift.out | jq -r '.diff // ""' > /tmp/drift.sql
+          # `supabase db diff` has two output shapes, and this check has to read both.
+          #
+          # The npm-installed CLI wraps the DDL in a JSON object on stdout
+          # (`{"diff":"...","engine":"migra",...}`), with the statements escaped
+          # inside a single line — grepping that raw for '^create|^alter' finds
+          # nothing, which is how a first version of this check reported "no drift"
+          # against a schema that had plainly drifted.
+          #
+          # The binary that supabase/setup-cli installs — the one CI actually runs —
+          # prints the DDL to stdout as plain SQL, and prints NOTHING to stdout when
+          # the schemas agree, saying "No schema changes found" on stderr instead.
+          # Assuming the JSON shape therefore made this step fail on every run,
+          # drift or no drift: the grep matched nothing, `set -o pipefail` failed the
+          # pipeline, and `set -e` ended the step before any reporting line could
+          # run, so it exited 1 having printed nothing at all. That is how it failed
+          # the first time it ever ran, on the PR that added these very lines.
+          #
+          # So: parse the JSON when it is there, and otherwise take stdout at face
+          # value — for the binary, empty stdout means agreement and any content is
+          # the DDL that differs.
+          if grep -h -o '{"diff".*}' /tmp/drift.out /tmp/drift.err > /tmp/drift.json; then
+            jq -r '.diff // ""' /tmp/drift.json > /tmp/drift.sql
+          else
+            cp /tmp/drift.out /tmp/drift.sql
+          fi
           if [ -n "$(tr -d '[:space:]' < /tmp/drift.sql)" ]; then
             echo "::error::supabase/schemas/ has drifted from supabase/migrations/."
             echo "The statements below are what the migrations contain and the schema files do not."
