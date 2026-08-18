@@ -13,6 +13,7 @@
 	let proposals = $derived(data.proposals);
 	let venues = $derived(data.venues);
 	let inactiveVenues = $derived(data.inactiveVenues);
+	let venuesFailedToLoad = $derived(venues === null || inactiveVenues === null);
 
 	const auth = getAuth();
 </script>
@@ -24,9 +25,12 @@
 			><Text path={(l) => l.page.venues.link.propose} /></Link
 		>{/if}
 
-	<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.active} />
+	{#if venuesFailedToLoad}
+		<Feedback error text={(l) => l.page.venues.feedback.venuesNotLoaded} />
+	{:else}
 
-	{#if venues}
+		<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.active} />
+
 		{#if venues.length > 0}
 			<ul>
 				{#each venues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue, index}
@@ -38,26 +42,20 @@
 		{:else}
 			<Feedback text={(l) => l.page.venues.feedback.noVenues} />
 		{/if}
-	{:else}
-		<Feedback error text={(l) => l.page.venues.feedback.venuesNotLoaded} />
-	{/if}
 
-	<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.inactive} />
+		<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.inactive} />
 
-	{#if inactiveVenues}
     	{#if inactiveVenues.length > 0}
-        	<ul>
-            	{#each inactiveVenues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue, index}
-                	<li>
-                    	<VenueLink id={venue.id} name={venue.title} testid={'inactive-venue-' + index}/>
-                	</li>
-            	{/each}
-        	</ul>
+    		<ul>
+        		{#each inactiveVenues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue, index}
+            		<li>
+                		<VenueLink id={venue.id} name={venue.title} testid={'inactive-venue-' + index}/>
+            		</li>
+        		{/each}
+    		</ul>
     	{:else}
-        	<Feedback text={(l) => l.page.venues.feedback.noInactiveVenues} />
+    		<Feedback text={(l) => l.page.venues.feedback.noInactiveVenues} />
     	{/if}
-	{:else}
-    	<Feedback error text={(l) => l.page.venues.feedback.venuesNotLoaded} />
 	{/if}
 
 	<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.proposed} />
