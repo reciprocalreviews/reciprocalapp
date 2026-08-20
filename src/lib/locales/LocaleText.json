@@ -4281,11 +4281,11 @@
                     }
                   },
                   "required": [
+                    "noInactiveVenues",
                     "noVenues",
                     "venuesNotLoaded",
                     "noProposals",
-                    "proposalsNotLoaded",
-                    "noInactiveVenues"
+                    "proposalsNotLoaded"
                   ],
                   "type": "object"
                 },
@@ -4426,9 +4426,9 @@
                     }
                   },
                   "required": [
+                    "inactive",
                     "proposed",
-                    "active",
-                    "inactive"
+                    "active"
                   ],
                   "type": "object"
                 },
