@@ -55,28 +55,80 @@ create index "idx_assignments_completed" on public.assignments using "btree" (co
 
 --------------------------------------
 -- Functions
-create or replace function public.isApprover (_roleid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
+-- True if the current scholar is an ACCEPTED VOLUNTEER on the role that approves
+-- the given role, anywhere in the venue. This is NOT the same rule as
+-- public.can_approve_assignment below, and the name says so on purpose: this one
+-- is venue-wide and volunteer-based, with no admin branch, no priority-0 editor
+-- branch, and no submission. It is the USING clause of the assignments UPDATE
+-- policy, where an AE must be able to approve a bid on a submission they hold no
+-- assignment on — so it cannot be narrowed to match the other rule without
+-- revoking that. See migration 20260816010000 for the full reasoning.
+create or replace function public.isRoleApproverVolunteer (_roleid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
 set
 	"search_path" to '' as $$
-    select (
+	select (
 		exists (
-			select id 
-			from public.volunteers 
-			where 
-				scholarid = (select auth.uid()) and 
-				roleid=(select approver from public.roles where id=_roleid) and 
+			select id
+			from public.volunteers
+			where
+				scholarid = (select auth.uid()) and
+				roleid=(select approver from public.roles where id=_roleid) and
 				accepted = 'accepted'
 		)
 	)
 $$;
 
-alter function public.isApprover (_roleid uuid) OWNER to "postgres";
+alter function public.isRoleApproverVolunteer (uuid) OWNER to "postgres";
 
-grant all on FUNCTION public.isApprover (_roleid uuid) to "anon";
+grant all on FUNCTION public.isRoleApproverVolunteer (uuid) to "anon";
 
-grant all on FUNCTION public.isApprover (_roleid uuid) to "authenticated";
+grant all on FUNCTION public.isRoleApproverVolunteer (uuid) to "authenticated";
 
-grant all on FUNCTION public.isApprover (_roleid uuid) to "service_role";
+grant all on FUNCTION public.isRoleApproverVolunteer (uuid) to "service_role";
+
+-- The single definition of "may this scholar approve an assignment for this role
+-- on this submission" — a venue admin, the submission's priority-0 editor, or the
+-- holder of the approving role, each requiring an APPROVED ASSIGNMENT on this
+-- submission. Mirrored in TypeScript by src/lib/data/canApproveAssignment.ts.
+create or replace function public.can_approve_assignment (_submission uuid, _role uuid) returns boolean language sql security definer
+set
+	search_path to '' as $$
+	select exists (
+		-- A venue admin can approve anything in their venue.
+		select 1
+		from public.submissions s
+		where s.id = _submission and public.isAdmin(s.venue)
+	) or exists (
+		-- The priority-0 editor OF THIS SUBMISSION can approve any role on it.
+		select 1
+		from public.assignments a
+		join public.roles r on r.id = a.role
+		where a.submission = _submission
+		  and a.scholar = (select auth.uid())
+		  and a.approved
+		  and r.priority = 0
+	) or exists (
+		-- Whoever holds the role that approves the role in question, on this submission.
+		select 1
+		from public.assignments a
+		join public.roles target on target.id = _role
+		where a.submission = _submission
+		  and a.scholar = (select auth.uid())
+		  and a.approved
+		  and target.approver is not null
+		  and a.role = target.approver
+	);
+$$;
+
+alter function public.can_approve_assignment (uuid, uuid) OWNER to "postgres";
+
+revoke
+execute on function public.can_approve_assignment (uuid, uuid)
+from
+	public;
+
+grant
+execute on function public.can_approve_assignment (uuid, uuid) to authenticated;
 
 create or replace function public.isAssigned (_submissionid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
 set
@@ -153,12 +205,10 @@ grant all on FUNCTION public.isConflicted (_submissionid uuid) to "service_role"
 -- DEFINER so the assignments SELECT policy can read submissions.authors without
 -- triggering the submissions RLS policy (which itself reads assignments — that
 -- mutual reference would otherwise be infinite recursion).
-create or replace function public.isAuthor (_submissionid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
-set
-	"search_path" to '' as $$
+create or replace function public.isAuthor (_submissionid uuid) returns boolean language sql security definer
+set "search_path" to '' as $$
 	select exists (
-		select 1
-		from public.submissions
+		select 1 from public.submissions
 		where id = _submissionid and (select auth.uid()) = any (authors)
 	);
 $$;
@@ -176,69 +226,61 @@ grant all on FUNCTION public.isAuthor (_submissionid uuid) to "service_role";
 alter table public.assignments enable row level security;
 
 -- We declare the select policy for submissions after the assigments table is created.
-create policy "authors, assigned, and bidders can view submissions" on public.submissions for
+create policy "admins, authors, assigned, and bidders can view submissions" on "public"."submissions" as permissive for
 select
-	to authenticated using (
-		(
-			-- Authors can see their own submissions
+	to anon,
+	authenticated using (
+		public.isadmin (venue)
+		or (
 			(
-				(
+				select
+					auth.uid ()
+			)=any (authors)
+		)
+		or exists (
+			select
+				volunteers.id
+			from
+				public.volunteers
+			where
+				volunteers.scholarid=(
 					select
-						auth.uid () as uid
-				)=any (authors)
-			)
-			-- Volunteers with accepted biddable roles for the submission's venue
-			or (
-				exists (
-					select
-						volunteers.id
-					from
-						public.volunteers
-					where
-						(
-							(
-								volunteers.scholarid=(
-									select
-										auth.uid () as uid
-								)
-							)
-							and (volunteers.accepted='accepted'::public.invited)
-							and (
-								volunteers.roleid=any (
-									array(
-										select
-											roles.id
-										from
-											public.roles
-										where
-											(roles.venueid=submissions.venue)
-											and roles.biddable=true
-									)
-								)
-							)
-						)
+						auth.uid ()
 				)
-			)
-			-- Scholars assigned to the submission
-			or (
-				exists (
-					select
-						assignments.id
-					from
-						public.assignments
-					where
-						(
-							(assignments.submission=submissions.id)
-							and (assignments.approved=true)
-							and (
-								assignments.scholar=(
-									select
-										auth.uid () as uid
-								)
-							)
-						)
+				and volunteers.accepted='accepted'::invited
+				and volunteers.roleid=any (
+					array(
+						select
+							roles.id
+						from
+							public.roles
+						where
+							roles.venueid=submissions.venue
+							and roles.biddable=true
+					)
 				)
-			)
+		)
+		or exists (
+			select
+				assignments.id
+			from
+				public.assignments
+			where
+				assignments.submission=submissions.id
+				and assignments.approved=true
+				and assignments.scholar=(
+					select
+						auth.uid ()
+				)
+		)
+		or exists (
+			select
+				assignments.id
+			from
+				public.assignments
+			where
+				assignments.submission=submissions.id
+				and public.isRoleApproverVolunteer (assignments.role)
 		)
 	);
 
@@ -331,7 +373,7 @@ for update
 						auth.uid () as "uid"
 				)
 			)
-			or public.isApprover (role)
+			or public.isRoleApproverVolunteer (role)
 		)
 	);
 
@@ -352,7 +394,7 @@ with
 			public.isAdmin (venue)
 			-- If the current scholar has an assigment to the role that is the approver for the new assignment's role.
 			or (
-				isApprover (role)
+				public.isRoleApproverVolunteer (role)
 				and isAssigned (submission)
 			)
 			-- If the venue permits bidding and the volunteer has the role for which this assignment is being created.
@@ -423,3 +465,166 @@ grant all on table public.assignments to "service_role";
 
 alter publication supabase_realtime
 add table assignments;
+
+--------------------------------------
+-- RPC (authoritative definition from migration 20260804020000_token_event_attribution)
+create or replace function public.complete_assignment (
+	_assignment_id uuid,
+	_payment_purpose_template text,
+	_mint_purpose_template text
+) returns jsonb language plpgsql security definer
+set
+	search_path=public,
+	pg_temp as $function$
+declare
+    _caller uuid;
+    _assignment public.assignments;
+    _role public.roles;
+    _venue public.venues;
+    _submission public.submissions;
+    _amount integer;
+    _available integer;
+    _token_ids uuid[];
+    _txn_id uuid;
+    _mint_txn_id uuid;
+    _shortfall integer;
+    _mint_purpose text;
+    _payment_purpose text;
+begin
+    _caller := (select auth.uid());
+    if _caller is null then
+        raise exception 'Authentication required';
+    end if;
+
+    select * into _assignment from public.assignments where id = _assignment_id;
+    if not found then
+        raise exception 'Assignment not found';
+    end if;
+    if _assignment.completed then
+        raise exception 'Assignment is already completed';
+    end if;
+    if not _assignment.approved then
+        raise exception 'Assignment must be approved before it can be completed';
+    end if;
+
+    select * into _role from public.roles where id = _assignment.role;
+    if not found then
+        raise exception 'Role not found';
+    end if;
+
+    -- Authorize the caller against the single definition of the rule. The same
+    -- three branches are asserted in TypeScript by canApproveAssignment.unit.ts
+    -- and in SQL by atomic_crud_rpc.sql, over the same table of cases.
+    if not public.can_approve_assignment(_assignment.submission, _assignment.role) then
+        raise exception 'You are not authorized to compensate this assignment';
+    end if;
+
+    select * into _venue from public.venues where id = _assignment.venue;
+    if not found then
+        raise exception 'Venue not found';
+    end if;
+
+    select * into _submission from public.submissions where id = _assignment.submission;
+    if not found then
+        raise exception 'Submission not found';
+    end if;
+
+    select amount into _amount from public.compensation
+        where role = _assignment.role and submission_type = _submission.submission_type;
+    if _amount is null then
+        raise exception 'No compensation amount is configured for this role and submission type';
+    end if;
+
+    -- Substitute named placeholders in the localized purpose template.
+    -- Supported placeholders: {role}, {title}, {amount}, {shortfall}.
+    _payment_purpose := replace(
+        replace(_payment_purpose_template, '{role}', _role.name),
+        '{title}', _submission.title
+    );
+
+    -- How many tokens does the venue actually hold in this currency?
+    select count(*) into _available from public.tokens
+        where venue = _assignment.venue and currency = _venue.currency;
+
+    if _available < _amount then
+        _shortfall := _amount - _available;
+        _mint_purpose := replace(
+            replace(
+                replace(
+                    replace(_mint_purpose_template, '{amount}', _amount::text),
+                    '{role}', _role.name
+                ),
+                '{title}', _submission.title
+            ),
+            '{shortfall}', _shortfall::text
+        );
+
+        -- Record a proposed mint so the minter has a pre-explained item to
+        -- approve in the venue transactions page.
+        insert into public.transactions (
+            creator, from_scholar, from_venue, to_scholar, to_venue,
+            tokens, currency, purpose, status
+        ) values (
+            _caller, null, null, null, _assignment.venue,
+            array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[_shortfall]),
+            _venue.currency, _mint_purpose, 'proposed'
+        ) returning id into _mint_txn_id;
+
+        return jsonb_build_object(
+            'status', 'insufficient',
+            'shortfall', _shortfall,
+            'amount', _amount,
+            'mint_transaction_id', _mint_txn_id,
+            'venue_id', _assignment.venue,
+            'venue_title', _venue.title,
+            'currency_id', _venue.currency,
+            'scholar_id', _assignment.scholar,
+            'submission_id', _assignment.submission,
+            'role_name', _role.name
+        );
+    end if;
+
+    -- Pick the tokens to move. Order is stable but arbitrary.
+    select array_agg(id) into _token_ids from (
+        select id from public.tokens
+            where venue = _assignment.venue and currency = _venue.currency
+            order by id
+            limit _amount
+    ) sub;
+
+    -- Attribute the payout to its transaction. Generated up front: the tokens
+    -- move before the transaction row exists, and the token_events trigger reads
+    -- app.txn at the moment of the write.
+    _txn_id := gen_random_uuid();
+    perform set_config('app.txn', _txn_id::text, true);
+
+    -- Reassign the tokens to the scholar.
+    update public.tokens
+        set venue = null, scholar = _assignment.scholar
+        where id = any(_token_ids);
+
+    -- Record the approved transaction.
+    insert into public.transactions (
+        id, creator, from_scholar, from_venue, to_scholar, to_venue,
+        tokens, currency, purpose, status
+    ) values (
+        _txn_id, _caller, null, _assignment.venue, _assignment.scholar, null,
+        _token_ids, _venue.currency, _payment_purpose, 'approved'
+    );
+
+    perform set_config('app.txn', '', true);
+
+    -- Mark the assignment completed.
+    update public.assignments set completed = true where id = _assignment_id;
+
+    return jsonb_build_object(
+        'status', 'transferred',
+        'transaction_id', _txn_id,
+        'amount', _amount,
+        'role_name', _role.name,
+        'venue_id', _assignment.venue,
+        'scholar_id', _assignment.scholar,
+        'submission_id', _assignment.submission
+    );
+end;
+$function$;

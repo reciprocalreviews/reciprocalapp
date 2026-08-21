@@ -1,0 +1,22 @@
+-- Enable pg_net, which the email pipeline has always assumed and never declared.
+--
+-- public.send_email() and the remind-daily cron job both call net.http_post to reach the
+-- edge functions. Nothing in this repository ever created the extension: the local stack
+-- enables pg_net on its own, so every developer machine and every CI run had it, and the
+-- omission was invisible. Hosted projects do not enable it automatically.
+--
+-- Consequence on staging: `net.http_post` did not exist, so the AFTER INSERT trigger on
+-- public.emails raised, the INSERT rolled back, and the RPC that queued the mail failed.
+-- That is the real origin of "Unable to send a verification email" — not the vault secrets
+-- that were investigated first. Not one email had ever left that project.
+--
+-- 20260720010000 made delivery best effort, which turned the hard failure into a warning:
+-- the row is now recorded and the caller succeeds, but with pg_net absent no request is
+-- ever made. Both changes are wanted. This one restores delivery; that one keeps a
+-- deployment fault from destroying the user's work.
+--
+-- pg_net owns the `net` schema, which is where send_email() and the cron command look for
+-- http_post, so it is created without a schema override. `if not exists` makes this a
+-- no-op wherever the extension is already present, including local development and CI.
+
+create extension if not exists pg_net;

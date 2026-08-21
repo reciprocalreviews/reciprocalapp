@@ -437,6 +437,14 @@ values
 		'24f92ade-b454-4757-945e-cc7e3805390f'
 	);
 
+-- Local dev/CI sign-in uses an email+password grant (see src/routes/login.ts and the
+-- dev form in the login page): ORCID custom OIDC can't be configured in local Supabase,
+-- so every seeded user gets the same known password to sign in with. NEVER in production
+-- (this whole file is local-only — see the warning at the top).
+update auth.users
+set
+	encrypted_password = extensions.crypt('password', extensions.gen_salt('bf'));
+
 insert into
 	public.currencies (id, name, description, minters)
 values

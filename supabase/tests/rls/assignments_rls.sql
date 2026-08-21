@@ -5,10 +5,10 @@
 --           only the approver CHAIN for the role (isInApproverChain, walks
 --           roles.approver upward) or venue admins (isAdmin) may see it, and
 --           NEVER if that viewer is conflicted on the submission (isConflicted).
---   INSERT  venue admins; OR an approver (isApprover) who is also assigned to the
+--   INSERT  venue admins; OR an approver (isRoleApproverVolunteer) who is also assigned to the
 --           submission (isAssigned); OR a bidder (bid=true) who is an active,
 --           accepted volunteer on the assignment's role.
---   UPDATE  the assigned scholar or an approver (isApprover).
+--   UPDATE  the assigned scholar or an approver (isRoleApproverVolunteer).
 --   DELETE  the assigned scholar only.
 
 \ir ../_helpers/helpers.sql.inc
@@ -39,7 +39,7 @@ select tests.create_role(:'ven', 0, null, false, false) as roleapprover \gset
 select tests.create_role(:'ven', 1, :'roleapprover', true, false) as rolechild \gset
 
 -- The approver and the conflicted viewer are accepted volunteers on roleapprover,
--- placing them in rolechild's approver chain (isInApproverChain / isApprover).
+-- placing them in rolechild's approver chain (isInApproverChain / isRoleApproverVolunteer).
 select tests.create_volunteer(:'approver', :'roleapprover', 'accepted') as v_approver \gset
 select tests.create_volunteer(:'conflicted', :'roleapprover', 'accepted') as v_conflicted \gset
 
@@ -168,7 +168,7 @@ select throws_ok(
 );
 
 -- The bidder is an approver-chain member of nothing and is NOT assigned to the
--- submission, so the isApprover+isAssigned branch does not apply to a non-bid
+-- submission, so the isRoleApproverVolunteer+isAssigned branch does not apply to a non-bid
 -- insert: a non-bid insert by the bidder is denied.
 select tests.authenticate_as(:'bidder');
 select throws_ok(
@@ -188,7 +188,7 @@ select lives_ok(
 	'the assigned scholar can update their own assignment'
 );
 
--- An approver (isApprover on the role) can update the assignment.
+-- An approver (isRoleApproverVolunteer on the role) can update the assignment.
 select tests.authenticate_as(:'approver');
 select lives_ok(
 	$$ update public.assignments set approved = true where id = $$ || quote_literal(:'asg'),

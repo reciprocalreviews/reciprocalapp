@@ -96,6 +96,12 @@ export type LocaleText = {
 			/** Button to reload the page and load the new version. */
 			refresh: ButtonText;
 		};
+		email: {
+			/** Warning shown when a logged-in scholar has no verified contact email. */
+			message: string;
+			/** Label for the link to the scholar's profile where they can add one. */
+			settings: string;
+		};
 	};
 	notification: {
 		emailed: string;
@@ -308,6 +314,10 @@ export type LocaleText = {
 			feedback: {
 				notLoaded: string;
 				notAdmin: string;
+				/** Shown when parsed rows had a different number of cells than the
+				 * header, which means columns shifted and data was dropped. `{lines}`
+				 * is the list of affected line numbers. */
+				raggedRows: string;
 			};
 			field: {
 				title: TextFieldText;
@@ -701,6 +711,7 @@ export type LocaleText = {
 			feedback: {
 				notLoaded: string;
 				noName: string;
+				addEmail: string;
 				noStatus: string;
 				submissionsNotLoaded: string;
 				tokensNotLoaded: string;
@@ -729,6 +740,17 @@ export type LocaleText = {
 			paragraph: {
 				youHave: string;
 				thisScholarHas: string;
+			};
+			/** The scholar's own data-rights controls: export and erasure. Only ever
+			 * shown to the scholar themselves. */
+			privacy: {
+				header: string;
+				about: string;
+				export: ButtonText;
+				exporting: string;
+				erase: ConfirmButtonText;
+				erasing: string;
+				erased: string;
 			};
 		};
 		currency: {
@@ -793,7 +815,8 @@ export type LocaleText = {
 		login: {
 			title: string;
 			button: {
-				sendPassword: ButtonText;
+				orcid: ButtonText;
+				mockOrcid: ButtonText;
 				signIn: ButtonText;
 			};
 			note: {
@@ -802,16 +825,34 @@ export type LocaleText = {
 			field: {
 				email: TextFieldText;
 				password: TextFieldText;
+				orcidId: TextFieldText;
+				name: TextFieldText;
 			};
 			feedback: {
-				orcidNote: string;
-				checkEmail: string;
-				sendPasswordError: string;
+				orcidError: string;
+				mockOrcidError: string;
+				mockOrcidDev: string;
+				passwordDev: string;
 				signInError: string;
 			};
 			paragraph: {
 				loggedIn: string;
 			};
+		};
+		verify: {
+			title: string;
+			/** Shown when the token was valid and the email is now verified. */
+			verified: string;
+			/** Shown when the token has expired (15-minute window elapsed). */
+			expired: string;
+			/** Shown when the token is unknown or already used. */
+			invalid: string;
+			/** Shown when the verification RPC itself failed. */
+			error: string;
+			/** Link label to the scholar's profile (authenticated). */
+			profile: string;
+			/** Link label prompting sign-in (unauthenticated). */
+			login: string;
 		};
 		proposeVenue: {
 			title: string;
@@ -1118,11 +1159,33 @@ export type LocaleText = {
 			copy: ButtonText;
 			copied: ButtonText;
 		};
+		verifyEmail: {
+			field: {
+				email: TextFieldText & { invalid: string };
+			};
+			button: {
+				send: ButtonText;
+			};
+			feedback: {
+				sent: string;
+				/** Fallback when the server gave no recognizable reason. */
+				error: string;
+				unchanged: string;
+				/** The one-minute rate limit was hit; a link is already on its way. */
+				cooldown: string;
+				/** This deployment has no `site_url` vault secret, so no link can be built.
+				 * A configuration fault, not something the scholar can retry into working. */
+				notConfigured: string;
+				/** The session ended between loading the page and submitting. */
+				signedOut: string;
+			};
+		};
 	};
 	error: {
 		UpdateScholarStatus: string;
 		UpdateScholarName: string;
 		UpdateScholarEmail: string;
+		VerifyEmail: string;
 		UpdateScholarAvailability: string;
 		CreateProposal: string;
 		EditProposalTitle: string;
@@ -1175,7 +1238,6 @@ export type LocaleText = {
 		CreateCompensation: string;
 		EditCompensation: string;
 		CreateVolunteer: string;
-		WelcomeVolunteer: string;
 		AlreadyVolunteered: string;
 		UpdateVolunteerActive: string;
 		UpdateVolunteerExpertise: string;
@@ -1203,6 +1265,12 @@ export type LocaleText = {
 		PendingTransactionHasTokens: string;
 		UnknownTransaction: string;
 		TransactionNotDeclined: string;
+		/** The caller tried to export or erase an account that is not theirs. */
+		NotYourAccount: string;
+		/** Exporting a scholar's data failed. */
+		ExportScholarData: string;
+		/** Erasing a scholar's account failed. */
+		EraseScholar: string;
 		AlreadyApproved: string;
 		SelfDealingApproval: string;
 		ApproveTransaction: string;

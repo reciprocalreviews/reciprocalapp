@@ -26,8 +26,12 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import VenueLink from '$lib/components/VenueLink.svelte';
 	import canApproveAssignment from '$lib/data/canApproveAssignment';
+	import canViewSubmission from '$lib/data/canViewSubmission';
 	import { getDB, NullUUID } from '$lib/data/CRUD';
-	import familyName from '$lib/data/familyName';
+	import {
+		sortAssignees as sortAssigneesBy,
+		sortBids as sortBidsBy
+	} from '$lib/data/sortAssignees';
 	import Scholar from '$lib/data/Scholar.svelte';
 	import type LocaleText from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
@@ -68,6 +72,8 @@
 		venueActiveCounts,
 		/** Per-scholar count of active assignments on OTHER venues (RLS-gated) */
 		elsewhereActiveCounts,
+		/** The viewer's own accepted volunteer records in this venue */
+		viewerVolunteering,
 		/** Thank-you notes for this submission, filtered by RLS to the viewer */
 		thanks
 	} = $derived(data);
@@ -76,30 +82,19 @@
 		return assignmentScholars.find((s) => s.id === scholarID)?.name ?? '';
 	}
 
-	/** Sort assignments by token balance (descending), then by family name
-	 * (ascending). Returns a new array; doesn't mutate the input. */
+	/** The lookups the assignee/bid sorts need. Declared once so both call sites
+	 * agree; the ordering rules themselves live in $lib/data/sortAssignees. */
+	const assigneeContext = $derived({
+		getBalance,
+		nameOf
+	});
+
 	function sortAssignees<T extends { scholar: string }>(items: T[]): T[] {
-		return [...items].sort((a, b) => {
-			const balanceDiff = getBalance(b.scholar) - getBalance(a.scholar);
-			if (balanceDiff !== 0) return balanceDiff;
-			return familyName(nameOf(a.scholar)).localeCompare(familyName(nameOf(b.scholar)));
-		});
+		return sortAssigneesBy(items, assigneeContext);
 	}
 
-	/** Sort bids: lowest-rank preference (most preferred) first, then by
-	 * balance descending, then by family name. Unset preferences sort last. */
 	function sortBids<T extends { scholar: string; preferenceid: string | null }>(items: T[]): T[] {
-		const rankFor = (preferenceid: string | null): number => {
-			if (preferenceid === null) return Number.POSITIVE_INFINITY;
-			return preferenceLevels?.find((l) => l.id === preferenceid)?.rank ?? Number.POSITIVE_INFINITY;
-		};
-		return [...items].sort((a, b) => {
-			const rankDiff = rankFor(a.preferenceid) - rankFor(b.preferenceid);
-			if (rankDiff !== 0) return rankDiff;
-			const balanceDiff = getBalance(b.scholar) - getBalance(a.scholar);
-			if (balanceDiff !== 0) return balanceDiff;
-			return familyName(nameOf(a.scholar)).localeCompare(familyName(nameOf(b.scholar)));
-		});
+		return sortBidsBy(items, { ...assigneeContext, preferenceLevels });
 	}
 
 	function preferenceLabelFor(preferenceid: string | null): string | undefined {
@@ -173,8 +168,38 @@
 			: undefined
 	);
 
-	/** Whether the current scholar is assigned to this submission */
-	let isAssigned = $derived(scholarAssignments !== undefined);
+	/** Whether the current scholar holds an approved assignment on this
+	 * submission. This asks whether the list has anything in it — it used to ask
+	 * only whether the list EXISTED, which is true for any signed-in scholar once
+	 * the page's data has loaded, so every check built on it was vacuous. */
+	let isAssigned = $derived(scholarAssignments !== undefined && scholarAssignments.length > 0);
+
+	/** Whether the current scholar may see this submission at all, mirroring the
+	 * submissions SELECT policy. RLS is the enforcing layer — a row the viewer
+	 * may not see never arrives — and this is the second layer, so an unexpected
+	 * row produces the confidentiality notice rather than a half-rendered page. */
+	let canView = $derived(
+		submission !== null &&
+			venue !== null &&
+			canViewSubmission(submission, {
+				uid: scholar?.id ?? null,
+				venueAdmins: venue.admins,
+				roles,
+				viewerVolunteering,
+				assignments,
+				// Mirrors the isApprover() SQL helper: an accepted volunteer on the
+				// approver OF this role, venue-wide rather than submission-scoped.
+				approvesRole: (roleID) => {
+					const approver = roles?.find((r) => r.id === roleID)?.approver ?? null;
+					return (
+						approver !== null &&
+						(viewerVolunteering ?? []).some(
+							(v) => v.accepted === 'accepted' && v.roleid === approver
+						)
+					);
+				}
+			})
+	);
 
 	/** Roles for which the current scholar can approve assignments on this
 	 * submission, computed via the shared canApproveAssignment helper. */
@@ -237,7 +262,7 @@
 	>
 		<Feedback error text={(l) => l.page.submission.feedback.notLoaded}></Feedback>
 	</Page>
-{:else if !isAuthor && !isAssigned}
+{:else if !canView}
 	<Page
 		icon={ErrorLabel}
 		title={(l) => l.page.submission.title}

@@ -1,1728 +1,1802 @@
 {
-	"$schema": "../../src/lib/locales/LocaleText.json",
-	"lang": "en",
-	"shorthand": {
-		"delete": "✖",
-		"confirm": "✓",
-		"edit": "✎",
-		"filter": "🔎",
-		"admin": "Admin",
-		"minter": "Minter",
-		"steward": "Steward",
-		"orcid": "ORCID",
-		"empty": "-"
-	},
-	"header": {
-		"home": "Home",
-		"venues": "Venues",
-		"saved": "saved",
-		"link": {
-			"login": "Log in"
-		},
-		"feedback": {
-			"testWarning": "This is a test environment for preview purposes. Data can be deleted at any time."
-		}
-	},
-	"footer": {
-		"link": {
-			"about": "About",
-			"terms": "Terms",
-			"updates": "Updates",
-			"feedback": "Feedback"
-		}
-	},
-	"banner": {
-		"beta": {
-			"lead": "We're in **beta** and want your feedback. [Report an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose) or [learn more](https://github.com/reciprocalreviews)."
-		},
-		"update": {
-			"message": "A new version is available.",
-			"updates": "See what changed",
-			"refresh": {
-				"tip": "Reload the page to load the latest version",
-				"label": "Refresh"
-			}
-		}
-	},
-	"notification": {
-		"emailed": "{recipient} was emailed \"{subject}\""
-	},
-	"widget": {
-		"card": {
-			"expand": "Expand this card",
-			"collapse": "Collapse this card"
-		},
-		"tokens": {
-			"single": "token",
-			"plural": "tokens"
-		},
-		"subheader": {
-			"link": "Link to this section"
-		}
-	},
-	"page": {
-		"error": {
-			"title": "Oops."
-		},
-		"home": {
-			"title": "Reciprocal Reviews",
-			"lead": "Make peer review count.",
-			"call": [
-				"Academia incentivizes publishing over peer review. That means too many submissions and not enough reviews, or reviews that are late and low quality.",
-				"**Reciprocal Reviews** breaks this cycle:",
-				"1. **Editors set a cost** for submissions, priced in review tokens.",
-				"2. **Authors earn tokens** by volunteering for venues, sharing expertise and availability, and submitting on-time, quality reviews, on whatever reviewing platform a venue uses.",
-				"3. **Authors spend tokens** to submit manuscripts for review, splitting the cost with co-authors. Or, they can gift tokens to individuals or shared pools to strategically support newcomers, colleagues in crisis, or emerging topics.",
-				"Because authors need to submit high-quality, on-time reviews to submit, authors get better, faster reviews, editors do less nagging, communities overall have a fairer distribution of peer review labor."
-			],
-			"tip": {
-				"browse": "**Interested in adopting?** See the [journals and conferences](/venues) using the platform and reach out to their editors for their experiences. Or, [log in](/login) to propose a journal or conference adopt *Reciprocal Reviews*.",
-				"about": "**We are a volunteer community** of academics, not a for-profit organization. Our only goal is to improve the sustainability, quality, and integrity of peer review. See our [about](/about) page if you're interested in helping.",
-				"track": "**Don't want to set a cost?** Use Reciprocal Reviews to track volunteer reviewers and expertise in your community, streamlining reviewing and program committee invitations."
-			},
-			"feedback": {
-				"beta": "We're in development! A public beta is likely in 2026. Visit [GitHub](https://github.com/reciprocalreviews) to see who's involved, see our [beta milestone](https://github.com/reciprocalreviews/reciprocalapp/issues?q=is:open%20milestone:%22Beta%22) for the work that remains. Subscribe to our low-volume [newsletter](https://reciprocalreviews.substack.com/) to follow along, check the [updates](/updates) page to see our weekly progress. And if you feel like helping, email us! We're a small volunteer group of academics."
-			}
-		},
-		"venues": {
-			"title": "Venues",
-			"description": "These are journals and conferences using Reciprocal Reviews to track and incentivize peer review. Choose one to see it's policies or volunteer to review for it, or propose a new one.",
-			"header": {
-				"proposed": "Proposed Venues",
-				"active": "Active Venues",
-				"inactive": "Inactive Venues"
-			},
-			"link": {
-				"propose": "Propose a new venue"
-			},
-			"feedback": {
-				"noVenues": "There are no active venues.",
-				"venuesNotLoaded": "We couldn't load the venues.",
-				"noProposals": "No venues have been proposed yet.",
-				"proposalsNotLoaded": "We couldn't load the venue proposals.",
-				"noInactiveVenues": "There are no inactive venues."
-			},
-			"field": {
-				"title": {
-					"label": "title",
-					"placeholder": "venue title",
-					"invalid": "Must be at least 1"
-				},
-				"editors": {
-					"label": "editors",
-					"placeholder": "email, email, ...",
-					"invalid": "Must be a list of comma separated email addresses."
-				},
-				"minters": {
-					"label": "minters",
-					"placeholder": "email, email, ...",
-					"invalid": "Must be a list of comma separated email addresses."
-				},
-				"url": {
-					"label": "URL",
-					"placeholder": "https://",
-					"invalid": "Not a valid URL"
-				},
-				"census": {
-					"label": "census",
-					"placeholder": "Venue census",
-					"invalid": "Must be a whole number"
-				}
-			},
-			"card": {
-				"settings": {
-					"header": "settings",
-					"note": "Title, editors, url, etc."
-				}
-			}
-		},
-		"login": {
-			"title": "Login",
-			"button": {
-				"sendPassword": {
-					"tip": "Send one-time password",
-					"label": "Login"
-				},
-				"signIn": {
-					"tip": "Sign in",
-					"label": "Login"
-				}
-			},
-			"note": {
-				"orcid": "[ORCID](https://orcid.org/) is the de facto way to manage scholar identity."
-			},
-			"field": {
-				"email": {
-					"label": "email",
-					"placeholder": ""
-				},
-				"password": {
-					"label": "password",
-					"placeholder": "6 digits"
-				}
-			},
-			"feedback": {
-				"orcidNote": "We're still implementing ORCID authentication. For now, enter your email for a one time password.",
-				"checkEmail": "Check your email for a sign in code.",
-				"sendPasswordError": "Unable to send one-time password.",
-				"signInError": "Unable to sign in."
-			},
-			"paragraph": {
-				"loggedIn": "You are logged in."
-			}
-		},
-		"proposeVenue": {
-			"title": "Propose a venue",
-			"button": {
-				"propose": {
-					"tip": "Propose venue",
-					"label": "Propose venue"
-				}
-			},
-			"checkbox": {
-				"paymentFree": {
-					"on": "**Payment-free venue**: just volunteering and bidding, with no currency, costs, or compensation.",
-					"off": "**Token-based venue**: authors pay tokens to submit and reviewers are compensated."
-				}
-			},
-			"section": {
-				"venueInfo": "Venue info",
-				"team": "Team",
-				"rationale": "Rationale"
-			},
-			"field": {
-				"venueName": {
-					"label": "venue",
-					"placeholder": "name",
-					"invalid": "Must include a venue name"
-				},
-				"editors": {
-					"label": "editors",
-					"placeholder": "email1@email.com, email2@email.com",
-					"invalid": "Must be a list of comma-separated email addresses."
-				},
-				"minters": {
-					"label": "minters",
-					"placeholder": "email1@email.com, email2@email.com",
-					"invalid": "Must be a list of at least one comma-separated email address."
-				},
-				"mintersConflict": "Editors can't be minters",
-				"url": {
-					"label": "official venue URL",
-					"placeholder": "https://...",
-					"invalid": "Must be a valid URL"
-				},
-				"size": {
-					"label": "community size",
-					"placeholder": "number",
-					"invalid": "Must be a positive whole number"
-				},
-				"rationale": {
-					"label": "why should the editors adopt Reciprocal Reviews? This will be shown publicly.",
-					"placeholder": "why",
-					"invalid": "Must include a rationale"
-				}
-			},
-			"status": {
-				"notLoggedIn": "[Log in](/login) to propose a venue."
-			},
-			"options": {
-				"currency": {
-					"label": "currency",
-					"createNew": "Create a new currency",
-					"note": "A currency is a shared token economy. Choose an existing currency to join another venue's economy (e.g., a related conference or journal in the same research community). Create a new one if your venue's economy should be independent."
-				}
-			},
-			"paragraph": {
-				"reviewedBy": "Venues are reviewed and approved by the [stewards](/about#managers), to ensure that only official editors and conference steering committees create venues.",
-				"howToPropose": "To propose a venue, share a few details about the venue. Your proposal serves two purposes: it requests steward approval to create a venue, and it invites the community to support adopting Reciprocal Reviews.",
-				"communitySupport": "Once submitted, your proposal will appear publicly on the venues page for the community to see and support. The stewards won't reach out to the editors until there is sufficient community interest.",
-				"emailNotice": "**Note:** When you submit this proposal, an email will be sent to the editors you list below, notifying them of this proposal."
-			}
-		},
-		"proposal": {
-			"title": "Proposal",
-			"feedback": {
-				"alreadySupported": "You've expressed support. You can edit or delete your support below.",
-				"logIn": "[Log in](/login) to express support.",
-				"notFound": "Unknown proposal."
-			},
-			"button": {
-				"deleteSupport": {
-					"tip": "Delete your support for this proposal",
-					"label": "$delete"
-				},
-				"deleteProposal": {
-					"tip": "Delete this proposal",
-					"label": "$delete",
-					"warn": "Delete this proposal forever?"
-				},
-				"approve": {
-					"tip": "Approve this proposal",
-					"label": "Approve",
-					"warn": "Approve and create this venue?"
-				},
-				"submitSupport": {
-					"tip": "Submit your support",
-					"label": "Support"
-				}
-			},
-			"note": {
-				"delete": "This cannot be undone.",
-				"editors": "After approving a proposal, the editors above will become the editors of the venue."
-			},
-			"field": {
-				"support": {
-					"label": "support",
-					"placeholder": "Why should the editors adopt Reciprocal Reviews?",
-					"invalid": "Must include a rationale"
-				}
-			},
-			"subtitle": {
-				"proposal": "Proposal",
-				"approved": "Approved"
-			},
-			"paragraph": {
-				"editorsDescription": "These are the editors the proposers indicated oversee the venue. If they aren't correct, you may contact a [steward](/about) to correct it.",
-				"approved": "This proposal was approved. See the [venue]({venueLink}).",
-				"proposed": "A community member has proposed [{title}]({url}) adopt Reciprocal Reviews. See below for information about the proposal.",
-				"census": "The reported estimated number of scholars in this community is **{census}**. We won't reach out to the editors above until there are at least 20% of the community supporting this proposal. If this estimate is off, contact a [steward](/about) to correct it."
-			}
-		},
-		"volunteers": {
-			"title": "Volunteers",
-			"feedback": {
-				"unknownVenue": "Unable to find this venue.",
-				"noVolunteers": "No volunteers yet.",
-				"volunteersNotLoaded": "Unable to load volunteers for this venue."
-			},
-			"button": {
-				"exportCSV": {
-					"tip": "Export the volunteer names, emails, ORCIDs, roles, expertise, and status as a CSV",
-					"label": "Export to CSV..."
-				}
-			},
-			"field": {
-				"filter": {
-					"placeholder": "name, expertise, email"
-				}
-			},
-			"unavailableTitle": "Volunteers unavailable",
-			"status": {
-				"active": "active",
-				"inactive": "inactive"
-			},
-			"headers": {
-				"active": "Active",
-				"name": "Name",
-				"expertise": "Expertise",
-				"papers": "Papers cap"
-			},
-			"subtitle": "Volunteers",
-			"paragraph": {
-				"intro": ""
-			}
-		},
-		"venueTransactions": {
-			"title": "Transactions",
-			"feedback": {
-				"transactionsNotLoaded": "Unable to load transactions for this venue."
-			},
-			"subtitle": "Transactions",
-			"paragraph": {
-				"count": "There are **{count}** transactions involving this venue visible to you."
-			},
-			"card": {
-				"reminders": {
-					"header": "Reminders",
-					"note": "Email this venue's admins and minters about unapproved proposed transactions on a fixed interval. The cron service checks once a day; this setting controls how many days must pass between batches for this venue."
-				}
-			},
-			"slider": {
-				"frequency": {
-					"label": "How often, in days, should we email reminders about unapproved transactions? Set to 0 to disable.",
-					"suffix": " days"
-				}
-			},
-			"tip": {
-				"remindersOff": "Reminders are off for this venue. Drag the slider above 0 to enable them."
-			}
-		},
-		"newSubmission": {
-			"title": "New submission",
-			"header": {
-				"details": "Details",
-				"payment": "Authors and payment",
-				"authors": "Authors",
-				"submit": "Submit"
-			},
-			"paragraph": {
-				"intro": "Ready to create a new submission? Typically, this form is filled by one of the authors of a submission, to pay for a submission to be reviewed.\n\n**List every co-author**, even those not contributing tokens — this lets editors and the platform identify conflicts of interest with potential reviewers. Non-paying co-authors should be listed with a payment of 0; the paying authors split the venue's submission cost between them.\n\nAfter filling out this form:\n\n- The submission will be created in the system.\n- Each paying author will need to confirm their payment.\n- Once everyone has paid, the editor will proceed with review."
-			},
-			"feedback": {
-				"notLoaded": "Unable to load the venue and/or submission types for this page.",
-				"notLoggedIn": "[Log in](/login) to create a new submission.",
-				"duplicateScholars": "Authors must be unique.",
-				"incompletePayment": "{deficit} more tokens to add.",
-				"sufficientBalance": "The authors have sufficient tokens to pay for this submission.",
-				"onlyAuthors": "Only authors of a submission can create a submission."
-			},
-			"button": {
-				"removeAuthor": {
-					"tip": "Remove this author from the submission",
-					"label": "x"
-				},
-				"addAuthor": {
-					"tip": "Add another author to the submission",
-					"label": "Add author"
-				},
-				"checkBalances": {
-					"tip": "Check if authors have enough tokens",
-					"label": "Check author balances"
-				},
-				"submit": {
-					"tip": "Create a new submission",
-					"label": "Create this submission"
-				}
-			},
-			"note": {
-				"payment": "List every co-author. Set the payment for each, with non-paying co-authors at 0. The total must equal the venue's submission cost.",
-				"authors": "List every co-author, even those not contributing — this lets editors and the platform identify conflicts of interest with potential reviewers.",
-				"balance": "Verify the balance to enable submission.",
-				"approve": "Each paying author will need to approve their payment. Non-paying co-authors don't owe anything, so no approval is needed from them."
-			},
-			"field": {
-				"authorOrcid": {
-					"label": "author",
-					"placeholder": "ORCID",
-					"invalid": "Invalid ORCID",
-					"unknownScholar": "Unknown scholar"
-				}
-			},
-			"slider": {
-				"payment": {
-					"label": "payment"
-				}
-			},
-			"table": {
-				"orcid": "ORCID",
-				"name": "Name",
-				"payment": "Payment",
-				"removeAuthor": "Remove author"
-			},
-			"options": {
-				"submissionType": {
-					"label": "submission type"
-				},
-				"previous": {
-					"label": "previous submission",
-					"note": "If this revises one of your earlier submissions to this venue, link it here. The matching resubmission type is selected automatically."
-				}
-			},
-			"cost": "Submitting a **{type}** costs **{cost}** tokens, split among the paying authors below.",
-			"error": {
-				"balanceCheck": "An error occurred while checking balances.",
-				"notFound": "These scholars were not found: {scholars}.",
-				"insufficentFunds": "These scholars do not have enough tokens: {short}."
-			}
-		},
-		"bulkImport": {
-			"title": "Import submissions",
-			"header": {
-				"csv": "Populate from CSV",
-				"defaults": "Defaults",
-				"rows": "Submissions",
-				"submit": "Submit"
-			},
-			"paragraph": {
-				"intro": "Import a batch of free submissions that pre-date this venue's launch on Reciprocal Reviews. These submissions will have no authors or payments, but reviewers can bid on them to earn tokens. Submitting this form will also propose a mint transaction sized to fund reviewer compensation, which a minter must approve before reviewers will receive tokens.",
-				"mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens, summed from each submission's type cost."
-			},
-			"note": {
-				"csv": "Upload or paste a CSV with header row. Columns: title, externalid, expertise, submission_type, previousid, note. Unknown or empty submission_type falls back to the default."
-			},
-			"feedback": {
-				"notLoaded": "Unable to load the venue or submission types.",
-				"notAdmin": "Only venue admins can import submissions."
-			},
-			"field": {
-				"title": {
-					"label": "title",
-					"placeholder": "title"
-				},
-				"externalID": {
-					"label": "external ID",
-					"placeholder": "ID"
-				},
-				"expertise": {
-					"label": "expertise",
-					"placeholder": "expertise"
-				},
-				"previousID": {
-					"label": "previous ID",
-					"placeholder": "ID"
-				},
-				"note": {
-					"label": "note",
-					"placeholder": "note"
-				},
-				"csvUpload": {
-					"label": "upload CSV file"
-				},
-				"csvPaste": {
-					"label": "paste CSV",
-					"placeholder": "title,externalid,...",
-					"note": "Paste CSV content with a header row, then click Parse."
-				},
-				"importNote": {
-					"label": "import note (optional)",
-					"placeholder": "reason for free submission",
-					"note": "Anything to note about the reason for these free submissions?"
-				}
-			},
-			"options": {
-				"defaultSubmissionType": {
-					"label": "default submission type"
-				},
-				"submissionType": {
-					"label": "type"
-				}
-			},
-			"button": {
-				"addRow": {
-					"tip": "Add another row",
-					"label": "Add row"
-				},
-				"removeRow": {
-					"tip": "Remove this row",
-					"label": "x"
-				},
-				"applyDefault": {
-					"tip": "Set every row to the default submission type",
-					"label": "Apply default to all"
-				},
-				"parseCSV": {
-					"tip": "Parse the pasted CSV into rows",
-					"label": "Add"
-				},
-				"submit": {
-					"tip": "Create the imported submissions and propose the mint transaction",
-					"label": "Import submissions"
-				}
-			},
-			"column": {
-				"title": "Title",
-				"externalID": "External ID",
-				"expertise": "Expertise",
-				"submissionType": "Type",
-				"previousID": "Previous ID",
-				"note": "Note"
-			},
-			"row": {
-				"invalid": {
-					"title": "Title is required.",
-					"externalID": "External ID is required.",
-					"duplicateExisting": "A submission with this external ID already exists in this venue.",
-					"duplicateRow": "Duplicate external ID across rows."
-				}
-			}
-		},
-		"submissions": {
-			"title": "Submissions",
-			"tip": {
-				"bid": "You can bid on submissions below that you are interested in volunteering for. This information goes to the {role}, who will select volunteers."
-			},
-			"feedback": {
-				"notLoaded": "Unable to load submissions.",
-				"noSubmissions": "This venue has no submissions (or none visible to you).",
-				"noneFiltered": "All submissions filtered."
-			},
-			"button": {
-				"sortPaymentFirst": {
-					"tip": "Sort by pending first",
-					"label": "↓"
-				},
-				"sortPaymentLast": {
-					"tip": "Sort by pending last",
-					"label": "↑"
-				},
-				"sortTitleAsc": {
-					"tip": "Sort by title",
-					"label": "↓"
-				},
-				"sortTitleDesc": {
-					"tip": "Reverse sort by title",
-					"label": "↑"
-				},
-				"sortIDAsc": {
-					"tip": "Sort by ID",
-					"label": "↓"
-				},
-				"sortIDDesc": {
-					"tip": "Reverse sort by ID",
-					"label": "↑"
-				},
-				"sortCreatedNewest": {
-					"tip": "Sort by newest first",
-					"label": "↓"
-				},
-				"sortCreatedOldest": {
-					"tip": "Sort by oldest first",
-					"label": "↑"
-				},
-				"declareConflict": {
-					"tip": "Declare a conflict with this submission. You will no longer see this submission in your bidding list.",
-					"label": "Declare conflict"
-				},
-				"bid": {
-					"tip": "Express interest in serving as {role}",
-					"label": "Bid"
-				},
-				"unbid": {
-					"tip": "Remove interest in serving as {role}",
-					"label": "Unbid"
-				}
-			},
-			"field": {
-				"title": {
-					"label": "submission title",
-					"placeholder": "title",
-					"invalid": "Title must be non-empty.",
-					"note": "For internal tracking, and bidding if enabled."
-				},
-				"expertise": {
-					"label": "expertise required to review (optional)",
-					"placeholder": "expertise",
-					"note": "Used by editors (and reviewers if bidding is enabled)"
-				},
-				"manuscriptID": {
-					"label": "manuscript ID",
-					"placeholder": "ID",
-					"note": "The manuscript's ID from your review system, to link this transaction to your submission.",
-					"invalid": "ID must be non-empty."
-				},
-				"previousID": {
-					"label": "previous external manuscript ID",
-					"placeholder": "ID",
-					"note": "The external ID of the previous submission, if this is a revision and you want to track it, but the previous submission isn't available above."
-				},
-				"note": {
-					"label": "note (optional)",
-					"placeholder": "anything reviewers and editors should know",
-					"note": "Anything to note about this submission that should be visible to editors and reviewers?"
-				},
-				"filter": {
-					"label": "filter submissions $filter",
-					"placeholder": "title, id, author, reviewer..."
-				}
-			},
-			"headers": {
-				"payment": "Payment",
-				"title": "Title",
-				"authors": "Authors",
-				"expertise": "Expertise Required",
-				"id": "ID",
-				"created": "Created",
-				"progress": "Progress"
-			},
-			"status": {
-				"paid": "paid",
-				"pending": "{count} pending",
-				"reviewing": "in review",
-				"done": "done"
-			},
-			"cell": {
-				"you": "you",
-				"assigned": "assigned",
-				"conflicted": "conflicted",
-				"bids": "bids",
-				"biddingClosed": "bidding closed"
-			},
-			"paragraph": {
-				"newSubmission": "Have a submission to pay for? Pay for a [new submission](submissions/new).",
-				"bulkImport": "Importing pre-launch submissions? [Import submissions in bulk](submissions/import)."
-			}
-		},
-		"submission": {
-			"title": "Submission",
-			"header": {
-				"authors": "Authors",
-				"venue": "Venue",
-				"assignments": "Assignments",
-				"expertise": "Expertise",
-				"note": "Note"
-			},
-			"feedback": {
-				"notLoaded": "This submission does not exist or is not visible to you.",
-				"confidential": "This submission is confidential to you.",
-				"missingAuthors": "Unable to find authors.",
-				"noAuthors": "No visible authors found.",
-				"noExpertise": "No expertise provided.",
-				"noNote": "No note provided.",
-				"invalidRole": "You must select a valid role.",
-				"scholarNotFound": "No scholar with that email or ORCID exists.",
-				"alreadyAssigned": "This scholar is already assigned to this role.",
-				"completionBlocked": "Cannot mark done: {count} assignment(s) are approved but not yet compensated. Complete them first.",
-				"completionInsufficient": "The venue does not have enough tokens to compensate every editor. A mint transaction has been proposed; once a minter approves it, retry.",
-				"completionNotEditor": "Only an approved editor (priority-0 role) can mark this submission done.",
-				"completionSucceeded": "Submission marked done and editor(s) compensated."
-			},
-			"button": {
-				"createAssignment": {
-					"tip": "Create a new assignment for this scholar and role",
-					"label": "+ assignee"
-				},
-				"unassign": {
-					"tip": "Remove this assignment",
-					"label": "Unassign"
-				},
-				"complete": {
-					"tip": "Mark this assignment complete and compensate the scholar for their work",
-					"label": "Complete",
-					"warn": "Mark complete and pay"
-				},
-				"approve": {
-					"tip": "Assign this scholar to this role",
-					"label": "Assign"
-				},
-				"approveBid": {
-					"tip": "Accept this bid, assigning this scholar to this role for this submission",
-					"label": "Assign"
-				},
-				"approveAnyway": {
-					"tip": "Assign this scholar despite the load warning",
-					"label": "Assign",
-					"warn": "Assign over cap?"
-				},
-				"markDone": {
-					"tip": "Compensate every editor on this submission and mark it done. This cannot be undone.",
-					"label": "Mark done",
-					"warn": "Compensate editor(s) and finalize"
-				}
-			},
-			"field": {
-				"newAssignment": {
-					"label": "scholar",
-					"placeholder": "email or ORCID",
-					"invalid": "Must be an email or ORCID"
-				},
-				"note": {
-					"label": "Note",
-					"placeholder": "Anything for editors and reviewers to know"
-				}
-			},
-			"status": {
-				"done": "done",
-				"reviewing": "reviewing",
-				"unknownTransaction": "unknown transaction",
-				"completed": "Completed",
-				"assigned": "Assigned",
-				"unassigned": "Unassigned",
-				"bidder": "Bidder"
-			},
-			"subtitle": "Submission",
-			"options": {
-				"submissionType": {
-					"label": "submission type"
-				},
-				"assignmentRole": {
-					"label": "role"
-				}
-			},
-			"headers": {
-				"role": "Role",
-				"scholar": "Scholar",
-				"expertise": "Expertise",
-				"balance": "Balance",
-				"load": "Assignments / Limit",
-				"action": "Action"
-			},
-			"thanks": {
-				"header": "Thank your reviewers",
-				"intro": "Send a short note of thanks to everyone who reviewed this submission. This is a thank-you, not a rebuttal — it may be reviewed by an editor before it is shared, and reviewers stay anonymous to you.",
-				"pending": "Your thanks have been submitted and will be shared with your reviewers once an editor approves them.",
-				"delivered": "Your thanks have been shared with your reviewers.",
-				"declinedReason": "An editor did not approve your note for sharing. Reason given:",
-				"review": "An author submitted a thank-you note for this submission. Approve it to share it with the reviewers, or decline it with a reason.",
-				"declineReasonPrompt": "Let the author know why this note wasn't approved for sharing.",
-				"received": "Thanks from the authors",
-				"field": {
-					"message": {
-						"label": "Your thanks",
-						"placeholder": "Thank you for the time and care you put into reviewing our work…",
-						"note": "Up to 1000 characters.",
-						"invalid": "Please write a note of at most 1000 characters."
-					},
-					"declineReason": {
-						"placeholder": "Why isn't this note approved for sharing?"
-					}
-				},
-				"button": {
-					"send": {
-						"label": "Send thanks",
-						"tip": "Share your thanks with this submission's reviewers."
-					},
-					"approve": { "label": "Approve", "tip": "Share this note with the reviewers." },
-					"declineInitiate": { "label": "Decline", "tip": "Decline this note with a reason." },
-					"declineConfirm": {
-						"label": "Confirm decline",
-						"tip": "Decline this note and notify the author."
-					}
-				}
-			},
-			"cell": {
-				"proposesToPay": "proposes to pay",
-				"paid": "paid",
-				"declinedToPay": "declined to pay",
-				"nonPaying": "non-paying co-author",
-				"anonymized": "anonymized",
-				"you": "you"
-			},
-			"tip": {
-				"newAssignment": "Add a new assignment to this submission. These are restricted to the roles for which you have assignment privileges."
-			}
-		},
-		"venue": {
-			"title": "Venue",
-			"header": {
-				"submissionTypes": "Submission types",
-				"roles": "Roles"
-			},
-			"field": {
-				"name": {
-					"placeholder": "Name",
-					"invalid": "Title cannot be empty."
-				},
-				"url": {
-					"placeholder": "https://...",
-					"invalid": "Must be a valid URL"
-				},
-				"description": {
-					"placeholder": "Venue description."
-				},
-				"typeName": {
-					"placeholder": "name"
-				},
-				"typeDescription": {
-					"placeholder": "description"
-				},
-				"cost": {
-					"label": "cost",
-					"placeholder": "e.g., 10",
-					"invalid": "Must be a whole number"
-				}
-			},
-			"button": {
-				"newSubmissionType": {
-					"tip": "Add a submission type",
-					"label": "New submission type"
-				},
-				"deleteSubmissionType": {
-					"tip": "Remove this submission type",
-					"label": "$delete",
-					"warn": "Delete?"
-				},
-				"requestCompensation": {
-					"tip": "Request compensation",
-					"label": "Request compensation"
-				}
-			},
-			"feedback": {
-				"startReview": "🤝 [Pay](/venue/{venue}/submissions/new) tokens for a submitted manuscript",
-				"startReviewFree": "🤝 [Register](/venue/{venue}/submissions/new) a submitted manuscript",
-				"volunteer": "🤝 [Earn](#roles) tokens by volunteering.",
-				"volunteerFree": "Help out by [volunteering](#roles).",
-				"viewSettings": "Welcome admin! Check the [settings](/venue/{venue}/settings) page to edit venue compensation, roles, and anonymity.",
-				"typesNotLoaded": "Couldn't load venue's submission types.",
-				"rolesNotLoaded": "Couldn't load venue's roles.",
-				"inactive": "This venue is currently **inactive**, so only admins can see its details. Here is the message from the admins: *{message}*",
-				"inactivePrompt": "This venue is currently **inactive**. Only you and other admins can see it, along with the message set in the [venue settings](/venue/{venue}/settings). Visit the settings to activate the venue."
-			},
-			"card": {
-				"setup": {
-					"header": "Setup",
-					"note": "Steps to get your venue ready for volunteers and submissions"
-				},
-				"gift": {
-					"header": "gift",
-					"note": "Send tokens to a scholar",
-					"purpose": "Venue gift",
-					"success": "Your tokens were successfully gifted."
-				}
-			},
-			"unknownTitle": "Unknown venue",
-			"subtitle": "Venue",
-			"options": {
-				"compensationRole": {
-					"label": "role"
-				}
-			},
-			"headers": {
-				"type": "Type",
-				"description": "Description",
-				"revisionOf": "Revision of",
-				"cost": "Cost"
-			},
-			"paragraph": {
-				"notFound": "Unable to find this venue.",
-				"submissionTypes": "These are the submission types for this venue. Each role can have a different amount of compensation for each type (e.g., reviews of new submissions may be compensated more than re-reviews).",
-				"missingCompensation": "Are you **missing compensation** for a role you accepted? It's possible it hasn't been entered by the scholar responsible. You can request compensation for it here, and the scholar responsible will be notified.",
-				"noDescription": "*No description.*",
-				"description": "{description}",
-				"allVolunteers": "See [all volunteers]({volunteersLink}) for this venue."
-			}
-		},
-		"settings": {
-			"title": "Settings",
-			"header": {
-				"policies": "Decide policies",
-				"compensation": "Compensation",
-				"roles": "Roles",
-				"visibility": "Visibility",
-				"preferenceLevels": "Bid preference levels",
-				"templates": "Email templates",
-				"bulkImport": "Import existing submissions",
-				"status": "Activate"
-			},
-			"feedback": {
-				"unknownVenue": "Unable to load this venue.",
-				"logIn": "[Log in](/login) to view this venue's settings.",
-				"adminsOnly": "Only admins of this venue can view this page.",
-				"noPreferenceLevels": "No preference levels defined. Bidders will see a simple yes/no bid."
-			},
-			"card": {
-				"economics": {
-					"header": "Setting welcome & compensation",
-					"note": "How to keep tokens in balance and avoid a market collapse"
-				},
-				"anonymityAssignment": {
-					"header": "Anonymity & assignment",
-					"note": "How reviewing is organized — who sees whom, and how work is assigned"
-				},
-				"reviewQuality": {
-					"header": "Defining review quality",
-					"note": "Deciding what counts as a creditable review, and who signs off"
-				},
-				"minters": {
-					"header": "Currency & minters",
-					"note": "Whether to join an existing economy or start your own, and who can mint"
-				}
-			},
-			"field": {
-				"inactiveMessage": {
-					"label": "inactive message",
-					"placeholder": "e.g., We're currently configuring the venue.",
-					"invalid": "You must include a message"
-				},
-				"welcomeTokens": {
-					"label": "welcome tokens (received when first volunteering)",
-					"placeholder": "e.g., 40",
-					"invalid": "Must be a whole number"
-				},
-				"preferenceLevelLabel": {
-					"label": "label",
-					"placeholder": "e.g., Preferred",
-					"invalid": "Label must not be empty"
-				},
-				"newPreferenceLevel": {
-					"label": "new preference level",
-					"placeholder": "e.g., If necessary",
-					"invalid": "Label must not be empty"
-				}
-			},
-			"button": {
-				"addPreferenceLevel": {
-					"label": "Add level",
-					"tip": "Add a new preference level after the lowest-ranked existing one."
-				},
-				"deletePreferenceLevel": {
-					"label": "Delete",
-					"tip": "Delete this preference level. Existing bids that referenced it will become unset."
-				},
-				"movePreferenceLevelUp": {
-					"label": "Up",
-					"tip": "Move this level up (toward more preferred)."
-				},
-				"movePreferenceLevelDown": {
-					"label": "Down",
-					"tip": "Move this level down (toward less preferred)."
-				}
-			},
-			"checkbox": {
-				"inactive": "**Inactive venue**: Scholars cannot volunteer, submit, or otherwise interact with this venue.",
-				"anonymousAssignments": {
-					"on": "**Anonymous assignments**: Authors and conflicted scholars cannot see who is assigned to review their submissions.",
-					"off": "**Visible assignments**: Authors and conflicted scholars can see who is assigned to review their submissions. This is open reviewing."
-				},
-				"vetThanks": {
-					"on": "**Vet thank-you notes**: An admin or editor must approve an author's thank-you note before it is shared with reviewers.",
-					"off": "**Share thank-you notes immediately**: Author thank-you notes are shared with reviewers without review."
-				},
-				"paymentFree": {
-					"label": "**Token-based venue**: Authors pay tokens to submit and reviewers are compensated with tokens. Uncheck to make this venue payment-free.",
-					"note": "**Payment-free venue**: Scholars submit and review without tokens. No currency, costs, or compensation are shown."
-				}
-			},
-			"slider": {
-				"doneVisibility": {
-					"label": "How long after a submission is marked done should it remain visible in the submissions list?",
-					"suffix": " days"
-				}
-			},
-			"paragraph": {
-				"welcome": "Welcome, venue admin! This page walks you through configuring your venue as a sequence of numbered steps. Work through each section in order. Start with **Step 1** below to align on the policies that the rest of the settings encode, then move down the page recording each decision. The last step is always **Activate** — flip the venue on to open it for volunteering.",
-				"policies": "Before changing any settings below, get community alignment on each of these decisions. The settings on this page just encode them; getting them wrong is hard to walk back once volunteers start participating.\n\n- The venue's **purpose and scope** — what topics, what kinds of submissions you accept\n- The **submission types** you'll accept (e.g., full papers, posters, revisions)\n- The **roles** scholars take on (Editor, Associate Editor, Reviewer, …) and how many people each submission needs in each role\n- The other **editors / admins** who can configure this venue with you\n- Which **external reviewing platform** (HotCRP, OJS, ScholarOne, etc.) handles your peer review, so the email-template snippets in Step 6 use the right syntax\n\nThe most consequential choices — the token economy, how reviewing is organized, what counts as a creditable review, and who can mint — are expanded in the cards below.",
-				"economics": "Tokens only work if they stay scarce enough to be worth earning. The economy has two failure modes:\n\n- **Too many tokens** — if welcome gifts are generous and submission costs are low, everyone already has enough to submit, so no one needs to review. Reviewing stalls and quality and timeliness suffer.\n- **Too few tokens** — if costs are high and tokens are hard to earn, authors can't accumulate enough to submit, and publishing slows down.\n\nTwo rules keep you in balance:\n\n1. **Per-role compensation for a submission must sum to no more than its submission cost.** Otherwise every reviewed submission injects net-new tokens and the supply inflates until reviewing has no value.\n2. **Mint tokens roughly in proportion to the number of active scholars**, topping up only as the community grows — not in large speculative batches.\n\n**For example.** A journal pays **10** tokens for a review, **10** for an associate-editor recommendation, and **1** for an editor-in-chief decision: **21** tokens paid out per submission. It sets the **submission cost to 40** (comfortably above the 21 paid out, so the venue reserve grows slightly) and the **welcome gift to 30**, so a newcomer can submit after reviewing just once (30 + 10 = 40). Tune these numbers to your community's reviewing load, but always check the two rules above before you change them.",
-					"anonymityAssignment": "How your community reviews is as consequential as how it pays. Two linked decisions:\n\n- **Anonymity model** — *open* (authors and reviewers see each other), *single-anonymous* (reviewers see authors but not the reverse), or *double-anonymous* (neither sees the other). More anonymity reduces bias but makes conflicts of interest harder to spot; open review increases accountability but can chill candid feedback. You set this per role — Step 4 controls whether authors can see who's assigned, and each role's settings control whether that role sees author identities.\n- **Bidding vs. central assignment** — let reviewers **bid** on what they want to review, or assign work **centrally**. Bidding scales well and surfaces genuine interest; central assignment gives editors tighter control over load and expertise matching. If you enable bidding for a role (Step 3), define the **preference labels** bidders choose from (Step 5), e.g. \"Preferred\" / \"If necessary\".",
-				"minters": "First decide on a **currency** — the shared token economy your venue runs on:\n\n- **Join an existing currency** to share an economy with a related venue (e.g. a sibling conference or journal in the same community). Tokens earned in one venue can then be spent in the other. The existing currency already has its own **minters**, so you don't appoint any — you inherit theirs.\n- **Start your own currency** if your venue's economy should stand alone. Only then do you choose minters.\n\n**Minters** can create new tokens, so choose them as carefully as you choose editors:\n\n- Pick **trusted, long-tenured members** of the community who understand its reviewing economy.\n- Appoint **more than one** so minting doesn't stall if someone steps away (avoid a single point of failure).\n- Choose people **willing to monitor the token supply** and mint gradually as the community grows, rather than in large batches.\n- Make sure they understand the **balance rules** in *Setting welcome & compensation* above — over-minting collapses the same way over-generous welcome gifts do.\n\nMinting happens on the currency page, where the mint form shows a warning about creating too many tokens.",
-				"reviewQuality": "The platform releases compensation when an assignment is marked complete — it does **not** judge whether a review was actually good. That editorial bar is yours to define. Before launch, agree on **what counts as a creditable review** (depth, timeliness, constructiveness) and **who signs off** before tokens are released.\n\nThree existing controls let you enforce that policy:\n\n- **Approver role** (Step 3, per role) — designate which role approves assignments to another role, so a human checks the work before it's credited.\n- **Compensation approval** — compensation transactions are approved before tokens move, giving editors a checkpoint to withhold credit for inadequate reviews.\n- **Vet thank-you notes** (Step 4) — optionally require an admin or editor to approve author thank-you notes before reviewers see them."
-			},
-			"subtitle": "Settings",
-			"tip": {
-				"policies": "This is the most consequential step on the page. Spend real time on it before touching anything below.",
-				"inactive": "Check the inactive message in the settings below, so your community knows you're busy configuring things.",
-				"compensation": "It is critical that you think carefully about the compensation structure for your venue. Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter newcomers from contributring. See [Setting welcome & compensation](#policies) in Step 1 for the balance rules and a worked example.",
-				"roles": "Configure your venue's volunteer roles below, create roles such as **reviewer**, **program commitee**, **associate editor** to represent the different kinds of contributions volunteers can make to this venue. Ensure you set total compensation levels for each role to not be higher than the cost of a submission — see [Setting welcome & compensation](#policies) in Step 1 for why this matters.",
-				"doneVisibility": "Done submissions still appear in the submissions list for this many days after completion (and are sorted to the bottom). After that, they're hidden from the list but still accessible by direct link. Set to 0 to hide them as soon as they're done.",
-				"preferenceLevels": "Bidders pick from these labels when bidding on submissions to signal how interested they are. The order matters: the top label is the most preferred. Leave this empty for a plain yes/no bid.",
-				"templates": "Paste these snippets into your reviewing platform's email templates so the system's automated emails carry the right Reciprocal Reviews link. Pick your platform first — the manuscript-id variable in the snippet body and the embedded URL will switch to that platform's syntax. Substitute the **{role}** placeholder yourself; reviewing platforms vary too much in how they expose role names.",
-				"bulkImport": "Have submissions already under review when you turn the venue on? [Bulk import them](/venue/{venueid}/submissions/import) so reviewers can bid and earn tokens from day one. Imports are free; the form will propose a corresponding mint to fund the resulting compensation transactions, which a minter must approve."
-			},
-			"options": {
-				"platform": {
-					"label": "Reviewing platform"
-				}
-			},
-			"template": {
-				"payment": {
-					"title": "Author submission payment",
-					"body": "Thanks for submitting to **{venue}**. To complete your submission, please pay for it on Reciprocal Reviews:\n\nhttps://reciprocal.reviews/venue/{venueid}/submissions/new?manuscript={manuscriptVar}"
-				},
-				"acknowledgement": {
-					"title": "Assignment acknowledgement (reviewer / AE / meta-reviewer)",
-					"body": "You've been assigned as **{role}** for a submission to **{venue}**. View it on Reciprocal Reviews:\n\nhttps://reciprocal.reviews/venue/{venueid}/submissions?filter={manuscriptVar}"
-				},
-				"compensation": {
-					"title": "Compensation request (reviewer / AE / meta-reviewer / EiC)",
-					"body": "You've completed **{role}** work for **{venue}**. Request compensation on Reciprocal Reviews:\n\nhttps://reciprocal.reviews/venue/{venueid}?compensate={manuscriptVar}"
-				}
-			}
-		},
-		"scholar": {
-			"title": "Anonymous",
-			"header": {
-				"submissions": "Submissions",
-				"tokens": "Tokens",
-				"settings": "Settings",
-				"tasks": "Tasks",
-				"volunteering": "Volunteering"
-			},
-			"feedback": {
-				"notLoaded": "Unable to load scholar profile.",
-				"submissionsNotLoaded": "Unable to load this scholar's submissions.",
-				"noStatus": "This scholar has not shared their reviewing status.",
-				"tokensNotLoaded": "Unable to load this scholar's tokens.",
-				"noTasks": "You have no pending tasks.",
-				"commitmentsNotLoaded": "Unable to load editing volunteering commitments.",
-				"notVolunteeringFirst": "You are not volunteering for any roles yet.",
-				"notVolunteeringThird": "This scholar is not volunteering for any roles yet.",
-				"volunteeringFirst": "These are your volunteer roles.",
-				"volunteeringThird": "These are this scholar's volunteer roles.",
-				"noName": "Welcome! Edit your name above to set it, then share your reviewing status below so others know your availability."
-			},
-			"field": {
-				"name": {
-					"label": "name",
-					"placeholder": "name",
-					"invalid": "Name must be at least 1 character"
-				},
-				"status": {
-					"placeholder": "Explain your current reviewing status to others."
-				},
-				"email": {
-					"label": "email",
-					"placeholder": "email",
-					"note": "Your email will be public and only used to send notifications.",
-					"invalid": "Must be a valid email"
-				}
-			},
-			"card": {
-				"gift": {
-					"header": "gift tokens",
-					"note": "to other scholars",
-					"purpose": "Gift to peer",
-					"success": "Your tokens were successfully gifted."
-				}
-			},
-			"checkbox": {
-				"available": "I am available to review."
-			},
-			"status": {
-				"available": "Available",
-				"unavailable": "Unavailable"
-			},
-			"subtitle": "Scholar",
-			"tip": {
-				"status": "Your status is public."
-			},
-			"paragraph": {
-				"youHave": "You have:",
-				"thisScholarHas": "This scholar has:"
-			}
-		},
-		"currency": {
-			"title": "Currency",
-			"feedback": {
-				"notLoaded": "Unable to load this currency."
-			},
-			"tip": {
-				"mintWarning": "Be careful creating new tokens. Too many tokens per scholar will diminish the incentive to earn them."
-			},
-			"header": {
-				"minters": "Minters",
-				"venues": "Venues",
-				"tokens": "Tokens"
-			},
-			"button": {
-				"mint": {
-					"tip": "Mint tokens",
-					"label": "Mint tokens"
-				},
-				"removeMinter": {
-					"tip": "Remove yourself as minter",
-					"label": "$delete"
-				},
-				"addMinter": {
-					"tip": "Add minter",
-					"label": "Add minter"
-				}
-			},
-			"note": {
-				"minters": "Minters can see, approve, and decline transactions, and most importantly, mint new tokens in this currency. They can also propose and improve currency exchanges and mergers. Choose them carefully — your venue's settings (Step 1, *Choosing minters*) explains what to look for."
-			},
-			"field": {
-				"name": {
-					"placeholder": "Name",
-					"invalid": "The name can't be empty"
-				},
-				"mintPurpose": {
-					"label": "why are these tokens being minted? This purpose will be public in the transaction history.",
-					"placeholder": "Purpose",
-					"invalid": "Purpose can't be empty"
-				},
-				"minter": {
-					"label": "scholar",
-					"placeholder": "ORCID or email",
-					"invalidMinter": "Minters can't be admins of a venue that uses this currency.",
-					"invalidContact": "Must be a valid email or ORCID"
-				},
-				"description": {
-					"placeholder": "Explain the currency to others.",
-					"note": "Currency descriptions are public."
-				}
-			},
-			"card": {
-				"mint": {
-					"header": "mint tokens",
-					"note": "Create new tokens in this currency."
-				},
-				"addMinter": {
-					"header": "add minter",
-					"note": "Allow another scholar to mint tokens."
-				}
-			},
-			"checkbox": {
-				"mintConsent": "I understand that creating excess tokens will erode this currency's value."
-			},
-			"slider": {
-				"newTokenCount": {
-					"label": "number of new tokens"
-				}
-			},
-			"options": {
-				"tokenOwner": {
-					"label": "which venue should own the new tokens?"
-				}
-			},
-			"paragraph": {
-				"mintersDescription": "These scholars are the minters for this currency. They can see and approve all transactions.",
-				"venuesDescription": "These are the venues that use this currency:",
-				"allTokens": "[See all transactions](/currency/{id}/transactions) in this currency."
-			},
-			"subtitle": "Currency"
-		},
-		"about": {
-			"title": "About",
-			"header": {
-				"stewards": "Stewards",
-				"change": "Theory of change"
-			},
-			"feedback": {
-				"stewardsNotLoaded": "Unable to load active stewards."
-			},
-			"paragraph": {
-				"community": "We are a volunteer community of academics interested in keeping peer review sustainable, for ourselves and our communities. You can learn more about who's contributing and how to contribute yourself on [GitHub](https://github.com/reciprocalreviews).",
-				"stewardsIntro": "Stewards oversee the platform and its use, guiding design, implementation, and usage with the goal of ensuring the platform is improving the sustainability of academic peer review:",
-				"currentStewards": "Current stewards are:",
-				"joinStewards": "Would you like to become a steward? Reach out to any of the stewards above and let's chat.",
-				"theoryIntro": "The theory of change behind this platform is rests upon the following argument:",
-				"closing": "We built this platform to test the claims above, and hope you'll join us in this effort!"
-			}
-		},
-		"updates": {
-			"title": "Updates",
-			"paragraph": {
-				"intro": "Here are the updates to Reciprocal Reviews. Have a [defect](https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=1-defect.yml) to report or [improvement](https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=2-improvement.yml) to suggest?"
-			}
-		},
-		"terms": {
-			"title": "Terms & Privacy",
-			"header": {
-				"terms": "Terms",
-				"what": "What this is",
-				"account": "Your account",
-				"email": "How we use your email",
-				"data": "How we use your data",
-				"venues": "Venues you join",
-				"openSource": "Open source",
-				"delete": "Deleting your account",
-				"changes": "Changes",
-				"privacy": "Privacy",
-				"definitions": "Definitions",
-				"legalBasis": "Legal basis",
-				"collect": "What we collect and why",
-				"retention": "Data retention",
-				"security": "Data security",
-				"privacyEmail": "Email communication",
-				"rights": "Your rights",
-				"international": "International transfers",
-				"contact": "Contact and complaints",
-				"privacyChanges": "Changes to this policy"
-			},
-			"paragraph": {
-				"intro": "By using Reciprocal Reviews, you agree to the terms below. The first section is short and plain. The second section explains in detail how we handle your personal data. If anything is unclear, please [open an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/).",
-				"what": "Reciprocal Reviews tracks peer-review labor as a currency, so that submitting an article costs tokens earned by reviewing. The platform exists to support sustainable, equitable peer review. It is governed by a community of stewards listed on the [About](/about) page.",
-				"account": "You sign in with [ORCID](https://orcid.org), which authenticates you and provides your scholar identity. We create a local account tied to your ORCID iD, along with a preferred email address you give us for communication. You are responsible for keeping access to your ORCID account secure.",
-				"email": "We only use your email to contact you about activity on the platform — submissions, review assignments, token transactions, and venue communications. We will not email you for marketing, and we will not share your address with anyone outside the platform.",
-				"data": "We collect only what we need to credit reviewing labor and run the site. We use that data to compensate scholars for their work. We do not sell it, and we do not disclose it to any other party. Full details are in the Privacy section below.",
-				"venues": "When you join a venue, that venue's editors and coordinators can see what they need to assign you work and credit your reviews. This only happens for venues you have chosen to join.",
-				"openSource": "Reciprocal Reviews is open source. The code, issues, and discussions live on [GitHub](https://github.com/reciprocalreviews).",
-				"delete": "You can ask us to delete your account at any time. Your token transactions remain in the historical record so venues can verify past reviews, but they will no longer be linked to you or your ORCID iD.",
-				"changes": "We may update these terms. Material changes will be noted on the [Updates](/updates) page.",
-				"privacyIntro": "This section explains in detail what personal data we collect, why we collect it, how we use it, and your rights regarding it. It applies to anyone using Reciprocal Reviews.",
-				"definitions": "- **Personal data** is any information that identifies you — for example, your name, ORCID iD, or email address.\n- **Processing** means anything we do with that data: collecting, storing, using, or sharing it.\n- **Token** is a unit of reviewing credit earned by reviewing or editing, and spent on submissions.\n- **Venue** is a third-party publication site you have explicitly joined to review for or submit to.",
-				"legalBasis": "We process your personal data under three grounds from the General Data Protection Regulation (GDPR) and similar laws:\n\n- **Legitimate interest** — to run the site, credit reviewing labor, and communicate with venues about reviews and submissions.\n- **Consent** — to improve the site and review processes, where you have given explicit consent. You can revoke consent at any time.\n- **Legal compliance** — where applicable laws require it.",
-				"collect": "**Registration.** We create a local account from your ORCID sign-in. We store your ORCID iD, preferred email, site preferences, venues you have joined, and the transactions affecting your tokens.\n\n**Reviewing.** We store your reviewing availability and preferences. If a venue you have joined asks for available reviewers in your area, we share your contact information and expertise with that venue. When a venue reports a completed review, we update your token balance.\n\n**Submissions.** When you submit through a venue you have joined, the venue can confirm with us whether you have tokens available. Once the venue reports the submission, we update your token balance.\n\n**Process improvement.** We may review aggregated activity — name, affiliation, expertise from ORCID, reviewing and submission patterns — to understand how the platform is used and to improve it.\n\n**Cookies and technical data.** We use only the cookies needed to keep you signed in, provided by our authentication service. We do not use cookies for analytics or advertising. We also store local preferences (such as dark mode) on your device for your convenience.",
-				"retention": "We keep your personal data for as long as you have a Reciprocal Reviews account. If you delete your account, we delete your preferences and venue links. Your token transactions stay in the record so venues can verify past reviews, but they are no longer linked to you.\n\nVenues you have joined may keep their own records of you and your past reviews. Deleting your Reciprocal Reviews account does not affect what those venues store, but it does stop them from updating or querying your token balance.",
-				"security": "We use reasonable physical, technical, and administrative safeguards to protect your data, and we require any service providers we use to do the same. Transmission over the internet is never fully secure, so we cannot guarantee data is safe in transit.",
-				"privacyEmail": "We email you only in response to legitimate activity: actions you take on the site, submissions you make, or reviewing and editing you have agreed to.",
-				"rights": "Under GDPR and similar laws, you have the right to:\n\n1. **Access** your personal data and information about how we process it.\n2. **Correct** inaccurate or incomplete data.\n3. **Delete** your data.\n4. **Restrict** how we process your data.\n5. **Receive** your data in a portable, machine-readable format.\n6. **Object** to processing, including for any direct marketing.\n7. **Not be subject** to decisions made solely by automated processing.\n\nTo exercise any of these rights, [open an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/) and we will respond.",
-				"international": "Venues you have joined may operate outside your country of residence, where data protection standards differ. By joining a venue, you accept that your data may be shared with that venue as needed to support peer review.",
-				"contact": "For privacy questions or requests, [open an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/). Please include enough information for us to identify you and answer your request. If you believe we have handled your data improperly, contact us first so we can address it. You also have the right to complain to a data protection authority — see [edpb.europa.eu](https://edpb.europa.eu/about-edpb/board/members_en) for EU authorities or [ico.org.uk](https://ico.org.uk) for the UK.",
-				"privacyChanges": "We may update this privacy section to reflect new practices or legal requirements. Material changes will be noted on the [Updates](/updates) page."
-			}
-		},
-		"currencyTransactions": {
-			"subtitle": "Transactions",
-			"paragraph": {
-				"count": "There are **{count}** transactions with this currency visible to you."
-			}
-		},
-		"scholarTransactions": {
-			"subtitle": "Transactions",
-			"paragraph": {
-				"count": "There are **{count}** transactions involving this scholar visible to you."
-			}
-		}
-	},
-	"view": {
-		"gift": {
-			"noTokens": "You don't have any tokens to gift.",
-			"button": {
-				"giftTokens": {
-					"tip": "Transfer tokens",
-					"label": "Gift tokens"
-				}
-			},
-			"field": {
-				"recipient": {
-					"label": "recipient",
-					"placeholder": "ORCID or email",
-					"invalid": "Must be an email or ORCID"
-				},
-				"purpose": {
-					"label": "purpose",
-					"placeholder": "What is the gift for?"
-				}
-			},
-			"checkbox": {
-				"consent": "I understand that these tokens can't be transferred back without the recipient's consent."
-			},
-			"slider": {
-				"tokenAmount": {
-					"label": "number of tokens to give"
-				}
-			},
-			"options": {
-				"venue": {
-					"label": "select a venue"
-				},
-				"currency": {
-					"label": "what currency should be used?"
-				}
-			},
-			"fieldset": {
-				"legend": "Gift to...",
-				"scholar": "Scholar",
-				"venue": "Venue"
-			}
-		},
-		"transactions": {
-			"feedback": {
-				"noTransactions": "No transactions.",
-				"notLoaded": "Unable to load transactions."
-			},
-			"purposeTemplate": {
-				"compensation": "Compensation for completing the {role} role for \"{title}\"",
-				"mint": "Mint to cover {amount}-token compensation for {role} work on \"{title}\" (venue is short {shortfall} tokens)"
-			},
-			"button": {
-				"approve": {
-					"tip": "Approve this proposed transaction",
-					"label": "Approve"
-				},
-				"declineInitiate": {
-					"tip": "Decline this proposed transaction",
-					"label": "Decline…"
-				},
-				"declineConfirm": {
-					"tip": "Decline this proposed transaction",
-					"label": "Decline this transaction",
-					"warn": "Decline"
-				},
-				"loadMore": {
-					"tip": "Load more transactions",
-					"label": "Load more transactions..."
-				}
-			},
-			"field": {
-				"declineReason": {
-					"label": "reason",
-					"placeholder": "Reason for declining"
-				}
-			},
-			"status": {
-				"proposed": "proposed",
-				"approved": "approved",
-				"declined": "declined"
-			},
-			"headers": {
-				"status": "Status",
-				"tokens": "Tokens",
-				"scholar": "Creator",
-				"from": "From",
-				"to": "To",
-				"purpose": "Purpose",
-				"actions": "Actions"
-			},
-			"cell": {
-				"minted": "minted",
-				"pendingApproval": "Pending approval by editor or minter.",
-				"allLoaded": "All transactions loaded."
-			},
-			"paragraph": {
-				"declineReason": "Indicate a reason and we'll record it with the transaction so the proposer knows why."
-			},
-			"error": {
-				"unknownVenue": "Unknown venue"
-			}
-		},
-		"roles": {
-			"feedback": {
-				"notInvited": "[Log in](/login) to volunteer for this role.",
-				"consult": "This role has **{count} volunteers**. We **highly** recommend that you communicate extensively with your community before changing any of the settings below, as they change the terms of volunteering.",
-				"noRoles": "No roles yet. Add one.",
-				"notLoaded": "Couldn't load venue's roles."
-			},
-			"button": {
-				"createRole": {
-					"tip": "Create a new role",
-					"label": "Create role"
-				},
-				"removeAdmin": {
-					"tip": "Remove admin",
-					"label": "$delete",
-					"warn": "Are you sure you want to remove this admin?"
-				},
-				"addAdmin": {
-					"tip": "Add admin",
-					"label": "Add admin"
-				},
-				"priorityUp": {
-					"tip": "Move this role's priority up",
-					"label": "↑"
-				},
-				"priorityDown": {
-					"tip": "Move this role's priority down",
-					"label": "↓"
-				},
-				"addCompensation": {
-					"tip": "Add compensation for this submission role",
-					"label": "Add compensation"
-				},
-				"removeCompensation": {
-					"tip": "Remove compensation for this submission role",
-					"label": "$delete"
-				},
-				"volunteer": {
-					"tip": "Volunteer for this role",
-					"label": "Volunteer…"
-				},
-				"accept": {
-					"tip": "Accept this invitation",
-					"label": "Accept"
-				},
-				"acceptInvite": {
-					"tip": "Accept this invitation",
-					"label": "Accept",
-					"warn": "Accept this invitation?"
-				},
-				"decline": {
-					"tip": "Decline this invitation",
-					"label": "Decline",
-					"warn": "Decline this invitation?"
-				},
-				"stop": {
-					"tip": "If clicked, you will be shown as inactive in the reviewer list. You will need to resume to be considered for assignments to this role.",
-					"label": "Pause volunteering"
-				},
-				"resume": {
-					"tip": "Resume volunteering for this role. You will again appear as active in the list of volunteers for this role, and be considered for assignments to this role.",
-					"label": "Resume..."
-				},
-				"invite": {
-					"tip": "Invite people to this role",
-					"label": "Invite"
-				},
-				"deleteRole": {
-					"tip": "Delete this role",
-					"label": "Delete $delete",
-					"warn": "Delete this role and all volunteers?"
-				}
-			},
-			"field": {
-				"newRoleName": {
-					"label": "role name",
-					"placeholder": "name",
-					"invalid": "Must include a name"
-				},
-				"adminScholar": {
-					"label": "scholar",
-					"placeholder": "ORCID or email"
-				},
-				"invite": {
-					"label": "email or orcid",
-					"placeholder": "",
-					"invalid": "Must be a comma separated list of emails or ORCID"
-				},
-				"roleName": {
-					"label": "name",
-					"placeholder": "name",
-					"invalid": "Must include a name"
-				},
-				"roleDescription": {
-					"label": "description",
-					"placeholder": "description"
-				},
-				"compensationRationale": {
-					"placeholder": "Why this amount?"
-				},
-				"expertise": {
-					"label": "share your expertise as phrases, separated by commas (public)",
-					"placeholder": "topic, area, method, theory, etc."
-				},
-				"papers": {
-					"label": "papers willing to review (optional cap)",
-					"placeholder": "e.g., 4",
-					"invalid": "Must be a whole number, or empty for no cap"
-				}
-			},
-			"card": {
-				"admins": {
-					"header": "Admins",
-					"note": "Scholars who manage this venue's configuration."
-				},
-				"settings": {
-					"header": "settings",
-					"note": "Edit this role's settings"
-				},
-				"unnamed": "Role"
-			},
-			"checkbox": {
-				"invited": {
-					"on": "Scholars must be invited to this role.",
-					"off": "Scholars can volunteer for this role without being invited."
-				},
-				"anonymousAuthors": {
-					"on": "This role cannot see author information.",
-					"off": "This role can see author information."
-				},
-				"biddable": {
-					"on": "Volunteers can bid on submissions.",
-					"off": "Volunteers cannot bid for this role on submissions."
-				}
-			},
-			"slider": {
-				"compensation": {
-					"label": "compensation amount",
-					"suffix": "/submission"
-				},
-				"desiredAssignments": {
-					"label": "desired number of assignments for this role. If bidding is on, it will be turned off for a submission that has this number of assignments, to avoid unnecessary bids.",
-					"suffix": " assignments"
-				}
-			},
-			"options": {
-				"approver": {
-					"label": "what role can approve assignments to this role for a submission, other than the editor?"
-				}
-			},
-			"headers": {
-				"type": "Type",
-				"compensation": "Compensation",
-				"rationale": "Rationale"
-			},
-			"tip": {
-				"highestPriority": "This is the highest priority role. Any volunteers for this role are automatically assigned this role for new submissions."
-			},
-			"paragraph": {
-				"createRole": "Create a new role.",
-				"adminsDescription": "Admins can edit venue information, add and remove other admins, and gift tokens. They are typically Editors-in-Chief, Program Chairs of a conference, or editorial staff.",
-				"addAdmin": "Add a new admin.",
-				"inviteDescription": "Add one or more people to invite to this role by email or ORCID, separated by commas.",
-				"administeredBy": "This venue is administered by",
-				"roleOpen": "This role is open to **volunteers**.",
-				"roleInvited": "This role is **invite-only**.",
-				"volunteersCount": "[{count} scholars](/venue/{venueid}/volunteers) have volunteered for this role.",
-				"invited": "You've been invited to this role. Accept to start volunteering, or decline to let the venue know you're not available.",
-				"declined": "You declined this role. Would you like to accept it?",
-				"volunteering": "Thanks for volunteering for this role!",
-				"stopped": "You stopped volunteering for this role."
-			}
-		},
-		"tasks": {
-			"button": {
-				"accept": {
-					"tip": "Accept this invitation",
-					"label": "Accept",
-					"warn": "Accept this invitation?"
-				},
-				"decline": {
-					"tip": "Decline this invitation",
-					"label": "Decline",
-					"warn": "Decline this invitation?"
-				}
-			},
-			"headers": {
-				"kind": "Kind",
-				"task": "Task"
-			},
-			"cell": {
-				"kind": {
-					"invitation": "Invitation",
-					"transaction": "Transaction",
-					"review": "Review",
-					"pendingAssignment": "Pending assignment",
-					"outgoingTransaction": "Pending approval"
-				},
-				"pendingTransactionsAfter": "pending transactions to approve"
-			},
-			"tip": {
-				"tasks": "These are tasks you need to complete."
-			}
-		},
-		"commitments": {
-			"headers": {
-				"venue": "Concern",
-				"role": "Role"
-			}
-		}
-	},
-	"component": {
-		"dialog": {
-			"close": {
-				"tip": "Close this dialog",
-				"label": "Close"
-			}
-		},
-		"text": {
-			"save": {
-				"tip": "Save this edit",
-				"label": "$confirm"
-			},
-			"edit": {
-				"tip": "Edit this text",
-				"label": "$edit"
-			},
-			"cancel": {
-				"tip": "Discard this invalid text",
-				"label": "$delete"
-			}
-		},
-		"header": {
-			"logout": {
-				"tip": "Sign out",
-				"label": "Logout"
-			}
-		},
-		"notification": {
-			"dismiss": {
-				"tip": "Dismiss notification",
-				"label": "𐄂"
-			}
-		},
-		"copyButton": {
-			"copy": {
-				"tip": "Copy this snippet to the clipboard",
-				"label": "Copy"
-			},
-			"copied": {
-				"tip": "Copied to clipboard",
-				"label": "Copied"
-			}
-		}
-	},
-	"error": {
-		"UpdateScholarStatus": "Unable to update your status",
-		"UpdateScholarName": "Unable to update your name",
-		"UpdateScholarEmail": "Unable to update your email",
-		"UpdateScholarAvailability": "Unable to update your availability",
-		"CreateProposal": "Unable to create a venue proposal",
-		"EditProposalTitle": "Unable to edit the proposal title",
-		"EditProposalCensus": "Unable to edit the proposal census",
-		"EditProposalEditors": "Unable to edit the proposal editors",
-		"EditProposalMinters": "Unable to edit the proposal minters",
-		"EditProposalURL": "Unable to edit the proposal URL",
-		"CreateSupporter": "Unable to create a supporter",
-		"UpdateCurrencyName": "Unable to update the currency name",
-		"UpdateCurrencyDescription": "Unable to update the currency description",
-		"EditSupport": "Unable to edit your support",
-		"RemoveSupport": "Unable to remove your support",
-		"DeleteProposal": "Unable to delete the proposal",
-		"ApproveProposalNotFound": "Unable to approve the proposal: couldn't find proposal.",
-		"ApproveProposalNoScholars": "Unable to approve the proposal: couldn't find all of the specified editors with accounts. Ask them to create accounts with the specified email addresses and then approve.",
-		"ApproveProposalNoMinters": "Unable to approve the proposal: couldn't find all of the specified minters with accounts. Ask them to create accounts with the specified email addresses and then approve.",
-		"ApproveProposalNoVenue": "Unable to approve the proposal: couldn't create the venue.",
-		"ApproveProposalCannotUpdateVenue": "Unable to approve the proposal: couldn't update the venue with the proposal.",
-		"ApproveProposalNoCurrency": "Unable to approve the proposal: couldn't create a currency for the venue.",
-		"EditVenueDescription": "Unable to edit the venue description",
-		"EditVenueAdmins": "Unable to edit the venue admins",
-		"EditVenueAddEditorVenueNotFound": "Unable to find venue",
-		"ScholarNotFound": "Unable to find scholar by this email or ORCID",
-		"EditVenueAddEditorAlreadyEditor": "Scholar is already an editor",
-		"EditVenueTitle": "Unable to edit the venue title",
-		"EditVenueURL": "Unable to edit the venue URL",
-		"EditVenueInactive": "Unable to edit the inactive message",
-		"EditVenueAnonymousAssignments": "Unable to edit anonymous assignments setting",
-		"EditVenueVetThanks": "Unable to update the thank-you vetting setting",
-		"EditVenueWelcomeAmount": "Unable to edit the welcome amount",
-		"EditVenuePaymentFree": "Unable to change the payment mode",
-		"EditVenueDoneVisibilityDays": "Unable to update the recently-done visibility window",
-		"EditVenueTransactionReminderFrequency": "Unable to update the transaction reminder frequency",
-		"EditRoleBidding": "Unable to toggle bidding",
-		"EditRoleDesiredAssignments": "Unable to set desired assignments",
-		"EditRoleAnonymousAuthors": "Unable to toggle anonymous authors",
-		"EditRoleApprover": "Unable to set approver",
-		"CreateRole": "Unable to create new role.",
-		"UpdateRoleName": "Unable to update role name",
-		"UpdateRoleDescription": "Unable to update role description",
-		"UpdateRoleInvited": "Unable to update invited status of role",
-		"UpdateRoleAmount": "Unable to update role compensation",
-		"ReorderRole": "Unable to reorder roles",
-		"DeleteRole": "Unable to delete role",
-		"UpdateSubmissionType": "Unable to update submission type",
-		"CreateSubmissionType": "Unable to create submission type",
-		"EditSubmissionType": "Unable to edit submission type",
-		"EditSubmissionTypeCost": "Unable to edit the submission cost",
-		"DeleteSubmissionType": "Unable to delete submission type",
-		"CreateCompensation": "Unable to create compensation for role",
-		"EditCompensation": "Unable to create compensation for role",
-		"CreateVolunteer": "Unable to add volunteer commitment",
-		"WelcomeVolunteer": "Unable to grant welcome tokens for first volunteer commitment",
-		"AlreadyVolunteered": "Already created a volunteer commitment for this role.",
-		"UpdateVolunteerActive": "Unable to update volunteer commitment",
-		"UpdateVolunteerExpertise": "Unable to update your expertise",
-		"UpdateVolunteerPapers": "Unable to update paper count",
-		"UpdateAssignmentPreference": "Unable to update bid preference",
-		"CreatePreferenceLevel": "Unable to create preference level",
-		"EditPreferenceLevel": "Unable to update preference level",
-		"ReorderPreferenceLevel": "Unable to reorder preference levels",
-		"DeletePreferenceLevel": "Unable to delete preference level",
-		"InviteToRole": "Unable to invite to role",
-		"InviteToRoleMissing": "Unknown scholars",
-		"InviteToRoleSuccess": "Successfully invited scholars to role.",
-		"AcceptRoleInvite": "Unable to accept role invite",
-		"EditCurrencyMinters": "Unable to edit minters",
-		"AddCurrencyMinter": "Unable to add minter",
-		"AlreadyMinter": "This scholar is already a minter",
-		"MintTokens": "Unable to mint tokens",
-		"TransferVenueTokens": "Unable to transfer tokens",
-		"TransferScholarTokens": "Unable to find scholar tokens to transfer",
-		"TransferTokensInsufficient": "Insufficient number tokens to transfer",
-		"CreateTransaction": "Unable to create transaction",
-		"GetScholarTransactions": "Unable to get transactions for this scholar",
-		"TransactionMissingFrom": "No source provided for transaction",
-		"TransactionMissingTo": "No destination provided for transaction",
-		"PendingTransactionHasTokens": "This pending transaction already has tokens that were transferred.",
-		"UnknownTransaction": "Unable to find this transaction",
-		"TransactionNotDeclined": "Unable to decline this transaction",
-		"AlreadyApproved": "This transaction is already approved",
-		"SelfDealingApproval": "You can't approve a transaction in which you are the recipient",
-		"ApproveTransaction": "Unable to approve this transaction",
-		"TransactionApprovalUpdate": "Unable to update the proposed transaction",
-		"MissingApprovalVenue": "The proposed transaction has no venue to transfer from.",
-		"MissingRecipient": "The proposed transaction has no scholar recipient.",
-		"UndeletedTransaction": "The proposed transaction couldn't be deleted.",
-		"InvalidCharges": "The proposed transaction's charges are invalid.",
-		"NewSubmission": "Unable to create a new submission",
-		"UnknownVenue": "Unable to find venue",
-		"MissingSubmissionCharge": "Didn't receive enough charge amounts for the authors given",
-		"BulkImportSubmissions": "Unable to import submissions",
-		"UpdateSubmissionExpertise": "Unable to update the submission expertise",
-		"UpdateSubmissionTitle": "Unable to update the submission's title",
-		"UpdateSubmissionNote": "Unable to update the submission's note",
-		"MarkSubmissionDoneRPC": "Unable to mark this submission done.",
-		"ApproveAssignment": "Unable to approve the assignment",
-		"CreateAssignment": "Unable to create this assignment",
-		"CompensationSubmissionNotFound": "Unable to find the submission for compensation request",
-		"CompensationAssignmentCheck": "Could not check for an existing request.",
-		"CompleteAssignmentNotFound": "Unable to find this assignment",
-		"CompleteAssignmentRoleNotFound": "Unable to find this assignment's role",
-		"CompleteAssignmentVenueNotFound": "Unable to find this assignment's venue",
-		"CompleteAssignmentInsufficientTokens": "The venue doesn't have enough tokens to pay this compensation. A proposed mint transaction has been recorded and the venue's minter has been notified.",
-		"CompleteAssignmentRPC": "Unable to complete this assignment.",
-		"DeleteAssignment": "Unable to delete this assignment",
-		"EmailScholar": "Unable to email this scholar",
-		"ApproveProposalNoSupporters": "Unable to retrieve supports of proposal for notification.",
-		"DeclareConflict": "Unable to declare a conflict with this submission.",
-		"NoRoleCompensation": "The role being compensated doesn't have a compensation amount for this submission type.",
-		"LoadVenue": "Unable to load venue data.",
-		"LoadCurrency": "Unable to load currency data.",
-		"LoadScholar": "Unable to load scholar data.",
-		"LoadSubmission": "Unable to load submission data.",
-		"LoadTransaction": "Unable to load transaction data.",
-		"LoadRole": "Unable to load role data.",
-		"LoadAssignment": "Unable to load assignment data.",
-		"LoadVolunteer": "Unable to load volunteer data.",
-		"LoadToken": "Unable to load token data.",
-		"LoadProposal": "Unable to load proposal data.",
-		"LoadCompensation": "Unable to load compensation data.",
-		"LoadPreferenceLevel": "Unable to load preference level data.",
-		"LoadSubmissionType": "Unable to load submission type data.",
-		"LoadConflict": "Unable to load conflict data.",
-		"ProposeThanks": "Unable to send your thanks.",
-		"ApproveThanks": "Unable to approve the thank-you note.",
-		"DeclineThanks": "Unable to decline the thank-you note.",
-		"LoadThanks": "Unable to load thank-you notes."
-	}
+    "$schema": "../../src/lib/locales/LocaleText.json",
+    "lang": "en",
+    "shorthand": {
+        "delete": "✖",
+        "confirm": "✓",
+        "edit": "✎",
+        "filter": "🔎",
+        "admin": "Admin",
+        "minter": "Minter",
+        "steward": "Steward",
+        "orcid": "ORCID",
+        "empty": "-"
+    },
+    "header": {
+        "home": "Home",
+        "venues": "Venues",
+        "saved": "saved",
+        "link": {
+            "login": "Log in"
+        },
+        "feedback": {
+            "testWarning": "This is a test environment for preview purposes. Data can be deleted at any time."
+        }
+    },
+    "footer": {
+        "link": {
+            "about": "About",
+            "terms": "Terms",
+            "updates": "Updates",
+            "feedback": "Feedback"
+        }
+    },
+    "banner": {
+        "beta": {
+            "lead": "We're in **beta** and want your feedback. [Report an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose) or [learn more](https://github.com/reciprocalreviews)."
+        },
+        "update": {
+            "message": "A new version is available.",
+            "updates": "See what changed",
+            "refresh": {
+                "tip": "Reload the page to load the latest version",
+                "label": "Refresh"
+            }
+        },
+        "email": {
+            "message": "You won't receive any notifications until you add and verify a contact email.",
+            "settings": "Add your email"
+        }
+    },
+    "notification": {
+        "emailed": "{recipient} was emailed \"{subject}\""
+    },
+    "widget": {
+        "card": {
+            "expand": "Expand this card",
+            "collapse": "Collapse this card"
+        },
+        "tokens": {
+            "single": "token",
+            "plural": "tokens"
+        },
+        "subheader": {
+            "link": "Link to this section"
+        }
+    },
+    "page": {
+        "error": {
+            "title": "Oops."
+        },
+        "home": {
+            "title": "Reciprocal Reviews",
+            "lead": "Make peer review count.",
+            "call": [
+                "Academia incentivizes publishing over peer review. That means too many submissions and not enough reviews, or reviews that are late and low quality.",
+                "**Reciprocal Reviews** breaks this cycle:",
+                "1. **Editors set a cost** for submissions, priced in review tokens.",
+                "2. **Authors earn tokens** by volunteering for venues, sharing expertise and availability, and submitting on-time, quality reviews, on whatever reviewing platform a venue uses.",
+                "3. **Authors spend tokens** to submit manuscripts for review, splitting the cost with co-authors. Or, they can gift tokens to individuals or shared pools to strategically support newcomers, colleagues in crisis, or emerging topics.",
+                "Because authors need to submit high-quality, on-time reviews to submit, authors get better, faster reviews, editors do less nagging, communities overall have a fairer distribution of peer review labor."
+            ],
+            "tip": {
+                "browse": "**Interested in adopting?** See the [journals and conferences](/venues) using the platform and reach out to their editors for their experiences. Or, [log in](/login) to propose a journal or conference adopt *Reciprocal Reviews*.",
+                "about": "**We are a volunteer community** of academics, not a for-profit organization. Our only goal is to improve the sustainability, quality, and integrity of peer review. See our [about](/about) page if you're interested in helping.",
+                "track": "**Don't want to set a cost?** Use Reciprocal Reviews to track volunteer reviewers and expertise in your community, streamlining reviewing and program committee invitations."
+            },
+            "feedback": {
+                "beta": "We're in development! A public beta is likely in 2026. Visit [GitHub](https://github.com/reciprocalreviews) to see who's involved, see our [beta milestone](https://github.com/reciprocalreviews/reciprocalapp/issues?q=is:open%20milestone:%22Beta%22) for the work that remains. Subscribe to our low-volume [newsletter](https://reciprocalreviews.substack.com/) to follow along, check the [updates](/updates) page to see our weekly progress. And if you feel like helping, email us! We're a small volunteer group of academics."
+            }
+        },
+        "venues": {
+            "title": "Venues",
+            "description": "These are journals and conferences using Reciprocal Reviews to track and incentivize peer review. Choose one to see it's policies or volunteer to review for it, or propose a new one.",
+            "header": {
+                "proposed": "Proposed venues",
+                "active": "Active venues"
+            },
+            "link": {
+                "propose": "Propose a new venue"
+            },
+            "feedback": {
+                "noVenues": "There are no active venues.",
+                "venuesNotLoaded": "We couldn't load the venues.",
+                "noProposals": "No venues have been proposed yet.",
+                "proposalsNotLoaded": "We couldn't load the venue proposals."
+            },
+            "field": {
+                "title": {
+                    "label": "title",
+                    "placeholder": "venue title",
+                    "invalid": "Must be at least 1"
+                },
+                "editors": {
+                    "label": "editors",
+                    "placeholder": "email, email, ...",
+                    "invalid": "Must be a list of comma separated email addresses."
+                },
+                "minters": {
+                    "label": "minters",
+                    "placeholder": "email, email, ...",
+                    "invalid": "Must be a list of comma separated email addresses."
+                },
+                "url": {
+                    "label": "URL",
+                    "placeholder": "https://",
+                    "invalid": "Not a valid URL"
+                },
+                "census": {
+                    "label": "census",
+                    "placeholder": "Venue census",
+                    "invalid": "Must be a whole number"
+                }
+            },
+            "card": {
+                "settings": {
+                    "header": "settings",
+                    "note": "Title, editors, url, etc."
+                }
+            }
+        },
+        "login": {
+            "title": "Login",
+            "button": {
+                "orcid": {
+                    "tip": "Sign in with your ORCID account",
+                    "label": "Sign in with ORCID"
+                },
+                "mockOrcid": {
+                    "tip": "Simulate an ORCID sign-in locally (development only)",
+                    "label": "Sign in with ORCID (mock)"
+                },
+                "signIn": {
+                    "tip": "Sign in",
+                    "label": "Login"
+                }
+            },
+            "note": {
+                "orcid": "[ORCID](https://orcid.org/) is the de facto way to manage scholar identity. Sign in with ORCID to get started."
+            },
+            "field": {
+                "email": {
+                    "label": "email",
+                    "placeholder": ""
+                },
+                "password": {
+                    "label": "password",
+                    "placeholder": ""
+                },
+                "orcidId": {
+                    "label": "ORCID iD",
+                    "placeholder": "0000-0000-0000-0000"
+                },
+                "name": {
+                    "label": "name",
+                    "placeholder": "Test Scholar"
+                }
+            },
+            "feedback": {
+                "orcidError": "Unable to start ORCID sign-in.",
+                "mockOrcidError": "Unable to create a mock ORCID session.",
+                "mockOrcidDev": "Development only — this stands in for real ORCID sign-in, which can't run locally. Leave both fields blank to onboard a brand-new scholar, or enter a previously used ORCID iD to sign back in as that scholar.",
+                "passwordDev": "Development only — sign in as one of the seeded scholars using their email and the shared test password (\"password\").",
+                "signInError": "Unable to sign in."
+            },
+            "paragraph": {
+                "loggedIn": "You are logged in."
+            }
+        },
+        "verify": {
+            "title": "Verify email",
+            "verified": "Your email is verified. You'll now receive Reciprocal Reviews notifications.",
+            "expired": "This verification link has expired. Request a new one from your profile.",
+            "invalid": "This verification link is invalid or has already been used.",
+            "error": "Something went wrong verifying your email. Please try again.",
+            "profile": "Go to your profile",
+            "login": "Sign in to add your email"
+        },
+        "proposeVenue": {
+            "title": "Propose a venue",
+            "button": {
+                "propose": {
+                    "tip": "Propose venue",
+                    "label": "Propose venue"
+                }
+            },
+            "checkbox": {
+                "paymentFree": {
+                    "on": "**Payment-free venue**: just volunteering and bidding, with no currency, costs, or compensation.",
+                    "off": "**Token-based venue**: authors pay tokens to submit and reviewers are compensated."
+                }
+            },
+            "section": {
+                "venueInfo": "Venue info",
+                "team": "Team",
+                "rationale": "Rationale"
+            },
+            "field": {
+                "venueName": {
+                    "label": "venue",
+                    "placeholder": "name",
+                    "invalid": "Must include a venue name"
+                },
+                "editors": {
+                    "label": "editors",
+                    "placeholder": "email1@email.com, email2@email.com",
+                    "invalid": "Must be a list of comma-separated email addresses."
+                },
+                "minters": {
+                    "label": "minters",
+                    "placeholder": "email1@email.com, email2@email.com",
+                    "invalid": "Must be a list of at least one comma-separated email address."
+                },
+                "mintersConflict": "Editors can't be minters",
+                "url": {
+                    "label": "official venue URL",
+                    "placeholder": "https://...",
+                    "invalid": "Must be a valid URL"
+                },
+                "size": {
+                    "label": "community size",
+                    "placeholder": "number",
+                    "invalid": "Must be a positive whole number"
+                },
+                "rationale": {
+                    "label": "why should the editors adopt Reciprocal Reviews? This will be shown publicly.",
+                    "placeholder": "why",
+                    "invalid": "Must include a rationale"
+                }
+            },
+            "status": {
+                "notLoggedIn": "[Log in](/login) to propose a venue."
+            },
+            "options": {
+                "currency": {
+                    "label": "currency",
+                    "createNew": "Create a new currency",
+                    "note": "A currency is a shared token economy. Choose an existing currency to join another venue's economy (e.g., a related conference or journal in the same research community). Create a new one if your venue's economy should be independent."
+                }
+            },
+            "paragraph": {
+                "reviewedBy": "Venues are reviewed and approved by the [stewards](/about#managers), to ensure that only official editors and conference steering committees create venues.",
+                "howToPropose": "To propose a venue, share a few details about the venue. Your proposal serves two purposes: it requests steward approval to create a venue, and it invites the community to support adopting Reciprocal Reviews.",
+                "communitySupport": "Once submitted, your proposal will appear publicly on the venues page for the community to see and support. The stewards won't reach out to the editors until there is sufficient community interest.",
+                "emailNotice": "**Note:** When you submit this proposal, an email will be sent to the editors you list below, notifying them of this proposal."
+            }
+        },
+        "proposal": {
+            "title": "Proposal",
+            "feedback": {
+                "alreadySupported": "You've expressed support. You can edit or delete your support below.",
+                "logIn": "[Log in](/login) to express support.",
+                "notFound": "Unknown proposal."
+            },
+            "button": {
+                "deleteSupport": {
+                    "tip": "Delete your support for this proposal",
+                    "label": "$delete"
+                },
+                "deleteProposal": {
+                    "tip": "Delete this proposal",
+                    "label": "$delete",
+                    "warn": "Delete this proposal forever?"
+                },
+                "approve": {
+                    "tip": "Approve this proposal",
+                    "label": "Approve",
+                    "warn": "Approve and create this venue?"
+                },
+                "submitSupport": {
+                    "tip": "Submit your support",
+                    "label": "Support"
+                }
+            },
+            "note": {
+                "delete": "This cannot be undone.",
+                "editors": "After approving a proposal, the editors above will become the editors of the venue."
+            },
+            "field": {
+                "support": {
+                    "label": "support",
+                    "placeholder": "Why should the editors adopt Reciprocal Reviews?",
+                    "invalid": "Must include a rationale"
+                }
+            },
+            "subtitle": {
+                "proposal": "Proposal",
+                "approved": "Approved"
+            },
+            "paragraph": {
+                "editorsDescription": "These are the editors the proposers indicated oversee the venue. If they aren't correct, you may contact a [steward](/about) to correct it.",
+                "approved": "This proposal was approved. See the [venue]({venueLink}).",
+                "proposed": "A community member has proposed [{title}]({url}) adopt Reciprocal Reviews. See below for information about the proposal.",
+                "census": "The reported estimated number of scholars in this community is **{census}**. We won't reach out to the editors above until there are at least 20% of the community supporting this proposal. If this estimate is off, contact a [steward](/about) to correct it."
+            }
+        },
+        "volunteers": {
+            "title": "Volunteers",
+            "feedback": {
+                "unknownVenue": "Unable to find this venue.",
+                "noVolunteers": "No volunteers yet.",
+                "volunteersNotLoaded": "Unable to load volunteers for this venue."
+            },
+            "button": {
+                "exportCSV": {
+                    "tip": "Export the volunteer names, emails, ORCIDs, roles, expertise, and status as a CSV",
+                    "label": "Export to CSV..."
+                }
+            },
+            "field": {
+                "filter": {
+                    "placeholder": "name, expertise, email"
+                }
+            },
+            "unavailableTitle": "Volunteers unavailable",
+            "status": {
+                "active": "active",
+                "inactive": "inactive"
+            },
+            "headers": {
+                "active": "Active",
+                "name": "Name",
+                "expertise": "Expertise",
+                "papers": "Papers cap"
+            },
+            "subtitle": "Volunteers",
+            "paragraph": {
+                "intro": ""
+            }
+        },
+        "venueTransactions": {
+            "title": "Transactions",
+            "feedback": {
+                "transactionsNotLoaded": "Unable to load transactions for this venue."
+            },
+            "subtitle": "Transactions",
+            "paragraph": {
+                "count": "There are **{count}** transactions involving this venue visible to you."
+            },
+            "card": {
+                "reminders": {
+                    "header": "Reminders",
+                    "note": "Email this venue's admins and minters about unapproved proposed transactions on a fixed interval. The cron service checks once a day; this setting controls how many days must pass between batches for this venue."
+                }
+            },
+            "slider": {
+                "frequency": {
+                    "label": "How often, in days, should we email reminders about unapproved transactions? Set to 0 to disable.",
+                    "suffix": " days"
+                }
+            },
+            "tip": {
+                "remindersOff": "Reminders are off for this venue. Drag the slider above 0 to enable them."
+            }
+        },
+        "newSubmission": {
+            "title": "New submission",
+            "header": {
+                "details": "Details",
+                "payment": "Authors and payment",
+                "authors": "Authors",
+                "submit": "Submit"
+            },
+            "paragraph": {
+                "intro": "Ready to create a new submission? Typically, this form is filled by one of the authors of a submission, to pay for a submission to be reviewed.\n\n**List every co-author**, even those not contributing tokens — this lets editors and the platform identify conflicts of interest with potential reviewers. Non-paying co-authors should be listed with a payment of 0; the paying authors split the venue's submission cost between them.\n\nAfter filling out this form:\n\n- The submission will be created in the system.\n- Each paying author will need to confirm their payment.\n- Once everyone has paid, the editor will proceed with review."
+            },
+            "feedback": {
+                "notLoaded": "Unable to load the venue and/or submission types for this page.",
+                "notLoggedIn": "[Log in](/login) to create a new submission.",
+                "duplicateScholars": "Authors must be unique.",
+                "incompletePayment": "{deficit} more tokens to add.",
+                "sufficientBalance": "The authors have sufficient tokens to pay for this submission.",
+                "onlyAuthors": "Only authors of a submission can create a submission."
+            },
+            "button": {
+                "removeAuthor": {
+                    "tip": "Remove this author from the submission",
+                    "label": "x"
+                },
+                "addAuthor": {
+                    "tip": "Add another author to the submission",
+                    "label": "Add author"
+                },
+                "checkBalances": {
+                    "tip": "Check if authors have enough tokens",
+                    "label": "Check author balances"
+                },
+                "submit": {
+                    "tip": "Create a new submission",
+                    "label": "Create this submission"
+                }
+            },
+            "note": {
+                "payment": "List every co-author. Set the payment for each, with non-paying co-authors at 0. The total must equal the venue's submission cost.",
+                "authors": "List every co-author, even those not contributing — this lets editors and the platform identify conflicts of interest with potential reviewers.",
+                "balance": "Verify the balance to enable submission.",
+                "approve": "Each paying author will need to approve their payment. Non-paying co-authors don't owe anything, so no approval is needed from them."
+            },
+            "field": {
+                "authorOrcid": {
+                    "label": "author",
+                    "placeholder": "ORCID",
+                    "invalid": "Invalid ORCID",
+                    "unknownScholar": "Unknown scholar"
+                }
+            },
+            "slider": {
+                "payment": {
+                    "label": "payment"
+                }
+            },
+            "table": {
+                "orcid": "ORCID",
+                "name": "Name",
+                "payment": "Payment",
+                "removeAuthor": "Remove author"
+            },
+            "options": {
+                "submissionType": {
+                    "label": "submission type"
+                },
+                "previous": {
+                    "label": "previous submission",
+                    "note": "If this revises one of your earlier submissions to this venue, link it here. The matching resubmission type is selected automatically."
+                }
+            },
+            "cost": "Submitting a **{type}** costs **{cost}** tokens, split among the paying authors below.",
+            "error": {
+                "balanceCheck": "An error occurred while checking balances.",
+                "notFound": "These scholars were not found: {scholars}.",
+                "insufficentFunds": "These scholars do not have enough tokens: {short}."
+            }
+        },
+        "bulkImport": {
+            "title": "Import submissions",
+            "header": {
+                "csv": "Populate from CSV",
+                "defaults": "Defaults",
+                "rows": "Submissions",
+                "submit": "Submit"
+            },
+            "paragraph": {
+                "intro": "Import a batch of free submissions that pre-date this venue's launch on Reciprocal Reviews. These submissions will have no authors or payments, but reviewers can bid on them to earn tokens. Submitting this form will also propose a mint transaction sized to fund reviewer compensation, which a minter must approve before reviewers will receive tokens.",
+                "mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens, summed from each submission's type cost."
+            },
+            "note": {
+                "csv": "Upload or paste a CSV with header row. Columns: title, externalid, expertise, submission_type, previousid, note. Unknown or empty submission_type falls back to the default."
+            },
+            "feedback": {
+                "notLoaded": "Unable to load the venue or submission types.",
+                "notAdmin": "Only venue admins can import submissions.",
+                "raggedRows": "Some rows had a different number of columns than the header, so columns may be misaligned and data dropped. Check line {lines} — a comma inside a field must be wrapped in double quotes."
+            },
+            "field": {
+                "title": {
+                    "label": "title",
+                    "placeholder": "title"
+                },
+                "externalID": {
+                    "label": "external ID",
+                    "placeholder": "ID"
+                },
+                "expertise": {
+                    "label": "expertise",
+                    "placeholder": "expertise"
+                },
+                "previousID": {
+                    "label": "previous ID",
+                    "placeholder": "ID"
+                },
+                "note": {
+                    "label": "note",
+                    "placeholder": "note"
+                },
+                "csvUpload": {
+                    "label": "upload CSV file"
+                },
+                "csvPaste": {
+                    "label": "paste CSV",
+                    "placeholder": "title,externalid,...",
+                    "note": "Paste CSV content with a header row, then click Parse."
+                },
+                "importNote": {
+                    "label": "import note (optional)",
+                    "placeholder": "reason for free submission",
+                    "note": "Anything to note about the reason for these free submissions?"
+                }
+            },
+            "options": {
+                "defaultSubmissionType": {
+                    "label": "default submission type"
+                },
+                "submissionType": {
+                    "label": "type"
+                }
+            },
+            "button": {
+                "addRow": {
+                    "tip": "Add another row",
+                    "label": "Add row"
+                },
+                "removeRow": {
+                    "tip": "Remove this row",
+                    "label": "x"
+                },
+                "applyDefault": {
+                    "tip": "Set every row to the default submission type",
+                    "label": "Apply default to all"
+                },
+                "parseCSV": {
+                    "tip": "Parse the pasted CSV into rows",
+                    "label": "Add"
+                },
+                "submit": {
+                    "tip": "Create the imported submissions and propose the mint transaction",
+                    "label": "Import submissions"
+                }
+            },
+            "column": {
+                "title": "Title",
+                "externalID": "External ID",
+                "expertise": "Expertise",
+                "submissionType": "Type",
+                "previousID": "Previous ID",
+                "note": "Note"
+            },
+            "row": {
+                "invalid": {
+                    "title": "Title is required.",
+                    "externalID": "External ID is required.",
+                    "duplicateExisting": "A submission with this external ID already exists in this venue.",
+                    "duplicateRow": "Duplicate external ID across rows."
+                }
+            }
+        },
+        "submissions": {
+            "title": "Submissions",
+            "tip": {
+                "bid": "You can bid on submissions below that you are interested in volunteering for. This information goes to the {role}, who will select volunteers."
+            },
+            "feedback": {
+                "notLoaded": "Unable to load submissions.",
+                "noSubmissions": "This venue has no submissions (or none visible to you).",
+                "noneFiltered": "All submissions filtered."
+            },
+            "button": {
+                "sortPaymentFirst": {
+                    "tip": "Sort by pending first",
+                    "label": "↓"
+                },
+                "sortPaymentLast": {
+                    "tip": "Sort by pending last",
+                    "label": "↑"
+                },
+                "sortTitleAsc": {
+                    "tip": "Sort by title",
+                    "label": "↓"
+                },
+                "sortTitleDesc": {
+                    "tip": "Reverse sort by title",
+                    "label": "↑"
+                },
+                "sortIDAsc": {
+                    "tip": "Sort by ID",
+                    "label": "↓"
+                },
+                "sortIDDesc": {
+                    "tip": "Reverse sort by ID",
+                    "label": "↑"
+                },
+                "sortCreatedNewest": {
+                    "tip": "Sort by newest first",
+                    "label": "↓"
+                },
+                "sortCreatedOldest": {
+                    "tip": "Sort by oldest first",
+                    "label": "↑"
+                },
+                "declareConflict": {
+                    "tip": "Declare a conflict with this submission. You will no longer see this submission in your bidding list.",
+                    "label": "Declare conflict"
+                },
+                "bid": {
+                    "tip": "Express interest in serving as {role}",
+                    "label": "Bid"
+                },
+                "unbid": {
+                    "tip": "Remove interest in serving as {role}",
+                    "label": "Unbid"
+                }
+            },
+            "field": {
+                "title": {
+                    "label": "submission title",
+                    "placeholder": "title",
+                    "invalid": "Title must be non-empty.",
+                    "note": "For internal tracking, and bidding if enabled."
+                },
+                "expertise": {
+                    "label": "expertise required to review (optional)",
+                    "placeholder": "expertise",
+                    "note": "Used by editors (and reviewers if bidding is enabled)"
+                },
+                "manuscriptID": {
+                    "label": "manuscript ID",
+                    "placeholder": "ID",
+                    "note": "The manuscript's ID from your review system, to link this transaction to your submission.",
+                    "invalid": "ID must be non-empty."
+                },
+                "previousID": {
+                    "label": "previous external manuscript ID",
+                    "placeholder": "ID",
+                    "note": "The external ID of the previous submission, if this is a revision and you want to track it, but the previous submission isn't available above."
+                },
+                "note": {
+                    "label": "note (optional)",
+                    "placeholder": "anything reviewers and editors should know",
+                    "note": "Anything to note about this submission that should be visible to editors and reviewers?"
+                },
+                "filter": {
+                    "label": "filter submissions $filter",
+                    "placeholder": "title, id, author, reviewer..."
+                }
+            },
+            "headers": {
+                "payment": "Payment",
+                "title": "Title",
+                "authors": "Authors",
+                "expertise": "Expertise Required",
+                "id": "ID",
+                "created": "Created",
+                "progress": "Progress"
+            },
+            "status": {
+                "paid": "paid",
+                "pending": "{count} pending",
+                "reviewing": "in review",
+                "done": "done"
+            },
+            "cell": {
+                "you": "you",
+                "assigned": "assigned",
+                "conflicted": "conflicted",
+                "bids": "bids",
+                "biddingClosed": "bidding closed"
+            },
+            "paragraph": {
+                "newSubmission": "Have a submission to pay for? Pay for a [new submission](submissions/new).",
+                "bulkImport": "Importing pre-launch submissions? [Import submissions in bulk](submissions/import)."
+            }
+        },
+        "submission": {
+            "title": "Submission",
+            "header": {
+                "authors": "Authors",
+                "venue": "Venue",
+                "assignments": "Assignments",
+                "expertise": "Expertise",
+                "note": "Note"
+            },
+            "feedback": {
+                "notLoaded": "This submission does not exist or is not visible to you.",
+                "confidential": "This submission is confidential to you.",
+                "missingAuthors": "Unable to find authors.",
+                "noAuthors": "No visible authors found.",
+                "noExpertise": "No expertise provided.",
+                "noNote": "No note provided.",
+                "invalidRole": "You must select a valid role.",
+                "scholarNotFound": "No scholar with that email or ORCID exists.",
+                "alreadyAssigned": "This scholar is already assigned to this role.",
+                "completionBlocked": "Cannot mark done: {count} assignment(s) are approved but not yet compensated. Complete them first.",
+                "completionInsufficient": "The venue does not have enough tokens to compensate every editor. A mint transaction has been proposed; once a minter approves it, retry.",
+                "completionNotEditor": "Only an approved editor (priority-0 role) can mark this submission done.",
+                "completionSucceeded": "Submission marked done and editor(s) compensated."
+            },
+            "button": {
+                "createAssignment": {
+                    "tip": "Create a new assignment for this scholar and role",
+                    "label": "+ assignee"
+                },
+                "unassign": {
+                    "tip": "Remove this assignment",
+                    "label": "Unassign"
+                },
+                "complete": {
+                    "tip": "Mark this assignment complete and compensate the scholar for their work",
+                    "label": "Complete",
+                    "warn": "Mark complete and pay"
+                },
+                "approve": {
+                    "tip": "Assign this scholar to this role",
+                    "label": "Assign"
+                },
+                "approveBid": {
+                    "tip": "Accept this bid, assigning this scholar to this role for this submission",
+                    "label": "Assign"
+                },
+                "approveAnyway": {
+                    "tip": "Assign this scholar despite the load warning",
+                    "label": "Assign",
+                    "warn": "Assign over cap?"
+                },
+                "markDone": {
+                    "tip": "Compensate every editor on this submission and mark it done. This cannot be undone.",
+                    "label": "Mark done",
+                    "warn": "Compensate editor(s) and finalize"
+                }
+            },
+            "field": {
+                "newAssignment": {
+                    "label": "scholar",
+                    "placeholder": "email or ORCID",
+                    "invalid": "Must be an email or ORCID"
+                },
+                "note": {
+                    "label": "Note",
+                    "placeholder": "Anything for editors and reviewers to know"
+                }
+            },
+            "status": {
+                "done": "done",
+                "reviewing": "reviewing",
+                "unknownTransaction": "unknown transaction",
+                "completed": "Completed",
+                "assigned": "Assigned",
+                "unassigned": "Unassigned",
+                "bidder": "Bidder"
+            },
+            "subtitle": "Submission",
+            "options": {
+                "submissionType": {
+                    "label": "submission type"
+                },
+                "assignmentRole": {
+                    "label": "role"
+                }
+            },
+            "headers": {
+                "role": "Role",
+                "scholar": "Scholar",
+                "expertise": "Expertise",
+                "balance": "Balance",
+                "load": "Assignments / Limit",
+                "action": "Action"
+            },
+            "thanks": {
+                "header": "Thank your reviewers",
+                "intro": "Send a short note of thanks to everyone who reviewed this submission. This is a thank-you, not a rebuttal — it may be reviewed by an editor before it is shared, and reviewers stay anonymous to you.",
+                "pending": "Your thanks have been submitted and will be shared with your reviewers once an editor approves them.",
+                "delivered": "Your thanks have been shared with your reviewers.",
+                "declinedReason": "An editor did not approve your note for sharing. Reason given:",
+                "review": "An author submitted a thank-you note for this submission. Approve it to share it with the reviewers, or decline it with a reason.",
+                "declineReasonPrompt": "Let the author know why this note wasn't approved for sharing.",
+                "received": "Thanks from the authors",
+                "field": {
+                    "message": {
+                        "label": "Your thanks",
+                        "placeholder": "Thank you for the time and care you put into reviewing our work…",
+                        "note": "Up to 1000 characters.",
+                        "invalid": "Please write a note of at most 1000 characters."
+                    },
+                    "declineReason": {
+                        "placeholder": "Why isn't this note approved for sharing?"
+                    }
+                },
+                "button": {
+                    "send": {
+                        "label": "Send thanks",
+                        "tip": "Share your thanks with this submission's reviewers."
+                    },
+                    "approve": {
+                        "label": "Approve",
+                        "tip": "Share this note with the reviewers."
+                    },
+                    "declineInitiate": {
+                        "label": "Decline",
+                        "tip": "Decline this note with a reason."
+                    },
+                    "declineConfirm": {
+                        "label": "Confirm decline",
+                        "tip": "Decline this note and notify the author."
+                    }
+                }
+            },
+            "cell": {
+                "proposesToPay": "proposes to pay",
+                "paid": "paid",
+                "declinedToPay": "declined to pay",
+                "nonPaying": "non-paying co-author",
+                "anonymized": "anonymized",
+                "you": "you"
+            },
+            "tip": {
+                "newAssignment": "Add a new assignment to this submission. These are restricted to the roles for which you have assignment privileges."
+            }
+        },
+        "venue": {
+            "title": "Venue",
+            "header": {
+                "submissionTypes": "Submission types",
+                "roles": "Roles"
+            },
+            "field": {
+                "name": {
+                    "placeholder": "Name",
+                    "invalid": "Title cannot be empty."
+                },
+                "url": {
+                    "placeholder": "https://...",
+                    "invalid": "Must be a valid URL"
+                },
+                "description": {
+                    "placeholder": "Venue description."
+                },
+                "typeName": {
+                    "placeholder": "name"
+                },
+                "typeDescription": {
+                    "placeholder": "description"
+                },
+                "cost": {
+                    "label": "cost",
+                    "placeholder": "e.g., 10",
+                    "invalid": "Must be a whole number"
+                }
+            },
+            "button": {
+                "newSubmissionType": {
+                    "tip": "Add a submission type",
+                    "label": "New submission type"
+                },
+                "deleteSubmissionType": {
+                    "tip": "Remove this submission type",
+                    "label": "$delete",
+                    "warn": "Delete?"
+                },
+                "requestCompensation": {
+                    "tip": "Request compensation",
+                    "label": "Request compensation"
+                }
+            },
+            "feedback": {
+                "startReview": "🤝 [Pay](/venue/{venue}/submissions/new) tokens for a submitted manuscript",
+                "startReviewFree": "🤝 [Register](/venue/{venue}/submissions/new) a submitted manuscript",
+                "volunteer": "🤝 [Earn](#roles) tokens by volunteering.",
+                "volunteerFree": "Help out by [volunteering](#roles).",
+                "viewSettings": "Welcome admin! Check the [settings](/venue/{venue}/settings) page to edit venue compensation, roles, and anonymity.",
+                "typesNotLoaded": "Couldn't load venue's submission types.",
+                "rolesNotLoaded": "Couldn't load venue's roles.",
+                "inactive": "This venue is currently **inactive**, so only admins can see its details. Here is the message from the admins: *{message}*",
+                "inactivePrompt": "This venue is currently **inactive**. Only you and other admins can see it, along with the message set in the [venue settings](/venue/{venue}/settings). Visit the settings to activate the venue."
+            },
+            "card": {
+                "setup": {
+                    "header": "Setup",
+                    "note": "Steps to get your venue ready for volunteers and submissions"
+                },
+                "gift": {
+                    "header": "gift",
+                    "note": "Send tokens to a scholar",
+                    "purpose": "Venue gift",
+                    "success": "Your tokens were successfully gifted."
+                }
+            },
+            "unknownTitle": "Unknown venue",
+            "subtitle": "Venue",
+            "options": {
+                "compensationRole": {
+                    "label": "role"
+                }
+            },
+            "headers": {
+                "type": "Type",
+                "description": "Description",
+                "revisionOf": "Revision of",
+                "cost": "Cost"
+            },
+            "paragraph": {
+                "notFound": "Unable to find this venue.",
+                "submissionTypes": "These are the submission types for this venue. Each role can have a different amount of compensation for each type (e.g., reviews of new submissions may be compensated more than re-reviews).",
+                "missingCompensation": "Are you **missing compensation** for a role you accepted? It's possible it hasn't been entered by the scholar responsible. You can request compensation for it here, and the scholar responsible will be notified.",
+                "noDescription": "*No description.*",
+                "description": "{description}",
+                "allVolunteers": "See [all volunteers]({volunteersLink}) for this venue."
+            }
+        },
+        "settings": {
+            "title": "Settings",
+            "header": {
+                "policies": "Decide policies",
+                "compensation": "Compensation",
+                "roles": "Roles",
+                "visibility": "Visibility",
+                "preferenceLevels": "Bid preference levels",
+                "templates": "Email templates",
+                "bulkImport": "Import existing submissions",
+                "status": "Activate"
+            },
+            "feedback": {
+                "unknownVenue": "Unable to load this venue.",
+                "logIn": "[Log in](/login) to view this venue's settings.",
+                "adminsOnly": "Only admins of this venue can view this page.",
+                "noPreferenceLevels": "No preference levels defined. Bidders will see a simple yes/no bid."
+            },
+            "card": {
+                "economics": {
+                    "header": "Setting welcome & compensation",
+                    "note": "How to keep tokens in balance and avoid a market collapse"
+                },
+                "anonymityAssignment": {
+                    "header": "Anonymity & assignment",
+                    "note": "How reviewing is organized — who sees whom, and how work is assigned"
+                },
+                "reviewQuality": {
+                    "header": "Defining review quality",
+                    "note": "Deciding what counts as a creditable review, and who signs off"
+                },
+                "minters": {
+                    "header": "Currency & minters",
+                    "note": "Whether to join an existing economy or start your own, and who can mint"
+                }
+            },
+            "field": {
+                "inactiveMessage": {
+                    "label": "inactive message",
+                    "placeholder": "e.g., We're currently configuring the venue.",
+                    "invalid": "You must include a message"
+                },
+                "welcomeTokens": {
+                    "label": "welcome tokens (received when first volunteering)",
+                    "placeholder": "e.g., 40",
+                    "invalid": "Must be a whole number"
+                },
+                "preferenceLevelLabel": {
+                    "label": "label",
+                    "placeholder": "e.g., Preferred",
+                    "invalid": "Label must not be empty"
+                },
+                "newPreferenceLevel": {
+                    "label": "new preference level",
+                    "placeholder": "e.g., If necessary",
+                    "invalid": "Label must not be empty"
+                }
+            },
+            "button": {
+                "addPreferenceLevel": {
+                    "label": "Add level",
+                    "tip": "Add a new preference level after the lowest-ranked existing one."
+                },
+                "deletePreferenceLevel": {
+                    "label": "Delete",
+                    "tip": "Delete this preference level. Existing bids that referenced it will become unset."
+                },
+                "movePreferenceLevelUp": {
+                    "label": "Up",
+                    "tip": "Move this level up (toward more preferred)."
+                },
+                "movePreferenceLevelDown": {
+                    "label": "Down",
+                    "tip": "Move this level down (toward less preferred)."
+                }
+            },
+            "checkbox": {
+                "inactive": "**Inactive venue**: Scholars cannot volunteer, submit, or otherwise interact with this venue.",
+                "anonymousAssignments": {
+                    "on": "**Anonymous assignments**: Authors and conflicted scholars cannot see who is assigned to review their submissions.",
+                    "off": "**Visible assignments**: Authors and conflicted scholars can see who is assigned to review their submissions. This is open reviewing."
+                },
+                "vetThanks": {
+                    "on": "**Vet thank-you notes**: An admin or editor must approve an author's thank-you note before it is shared with reviewers.",
+                    "off": "**Share thank-you notes immediately**: Author thank-you notes are shared with reviewers without review."
+                },
+                "paymentFree": {
+                    "label": "**Token-based venue**: Authors pay tokens to submit and reviewers are compensated with tokens. Uncheck to make this venue payment-free.",
+                    "note": "**Payment-free venue**: Scholars submit and review without tokens. No currency, costs, or compensation are shown."
+                }
+            },
+            "slider": {
+                "doneVisibility": {
+                    "label": "How long after a submission is marked done should it remain visible in the submissions list?",
+                    "suffix": " days"
+                }
+            },
+            "paragraph": {
+                "welcome": "Welcome, venue admin! This page walks you through configuring your venue as a sequence of numbered steps. Work through each section in order. Start with **Step 1** below to align on the policies that the rest of the settings encode, then move down the page recording each decision. The last step is always **Activate** — flip the venue on to open it for volunteering.",
+                "policies": "Before changing any settings below, get community alignment on each of these decisions. The settings on this page just encode them; getting them wrong is hard to walk back once volunteers start participating.\n\n- The venue's **purpose and scope** — what topics, what kinds of submissions you accept\n- The **submission types** you'll accept (e.g., full papers, posters, revisions)\n- The **roles** scholars take on (Editor, Associate Editor, Reviewer, …) and how many people each submission needs in each role\n- The other **editors / admins** who can configure this venue with you\n- Which **external reviewing platform** (HotCRP, OJS, ScholarOne, etc.) handles your peer review, so the email-template snippets in Step 6 use the right syntax\n\nThe most consequential choices — the token economy, how reviewing is organized, what counts as a creditable review, and who can mint — are expanded in the cards below.",
+                "economics": "Tokens only work if they stay scarce enough to be worth earning. The economy has two failure modes:\n\n- **Too many tokens** — if welcome gifts are generous and submission costs are low, everyone already has enough to submit, so no one needs to review. Reviewing stalls and quality and timeliness suffer.\n- **Too few tokens** — if costs are high and tokens are hard to earn, authors can't accumulate enough to submit, and publishing slows down.\n\nTwo rules keep you in balance:\n\n1. **Per-role compensation for a submission must sum to no more than its submission cost.** Otherwise every reviewed submission injects net-new tokens and the supply inflates until reviewing has no value.\n2. **Mint tokens roughly in proportion to the number of active scholars**, topping up only as the community grows — not in large speculative batches.\n\n**For example.** A journal pays **10** tokens for a review, **10** for an associate-editor recommendation, and **1** for an editor-in-chief decision: **21** tokens paid out per submission. It sets the **submission cost to 40** (comfortably above the 21 paid out, so the venue reserve grows slightly) and the **welcome gift to 30**, so a newcomer can submit after reviewing just once (30 + 10 = 40). Tune these numbers to your community's reviewing load, but always check the two rules above before you change them.",
+                "anonymityAssignment": "How your community reviews is as consequential as how it pays. Two linked decisions:\n\n- **Anonymity model** — *open* (authors and reviewers see each other), *single-anonymous* (reviewers see authors but not the reverse), or *double-anonymous* (neither sees the other). More anonymity reduces bias but makes conflicts of interest harder to spot; open review increases accountability but can chill candid feedback. You set this per role — Step 4 controls whether authors can see who's assigned, and each role's settings control whether that role sees author identities.\n- **Bidding vs. central assignment** — let reviewers **bid** on what they want to review, or assign work **centrally**. Bidding scales well and surfaces genuine interest; central assignment gives editors tighter control over load and expertise matching. If you enable bidding for a role (Step 3), define the **preference labels** bidders choose from (Step 5), e.g. \"Preferred\" / \"If necessary\".",
+                "minters": "First decide on a **currency** — the shared token economy your venue runs on:\n\n- **Join an existing currency** to share an economy with a related venue (e.g. a sibling conference or journal in the same community). Tokens earned in one venue can then be spent in the other. The existing currency already has its own **minters**, so you don't appoint any — you inherit theirs.\n- **Start your own currency** if your venue's economy should stand alone. Only then do you choose minters.\n\n**Minters** can create new tokens, so choose them as carefully as you choose editors:\n\n- Pick **trusted, long-tenured members** of the community who understand its reviewing economy.\n- Appoint **more than one** so minting doesn't stall if someone steps away (avoid a single point of failure).\n- Choose people **willing to monitor the token supply** and mint gradually as the community grows, rather than in large batches.\n- Make sure they understand the **balance rules** in *Setting welcome & compensation* above — over-minting collapses the same way over-generous welcome gifts do.\n\nMinting happens on the currency page, where the mint form shows a warning about creating too many tokens.",
+                "reviewQuality": "The platform releases compensation when an assignment is marked complete — it does **not** judge whether a review was actually good. That editorial bar is yours to define. Before launch, agree on **what counts as a creditable review** (depth, timeliness, constructiveness) and **who signs off** before tokens are released.\n\nThree existing controls let you enforce that policy:\n\n- **Approver role** (Step 3, per role) — designate which role approves assignments to another role, so a human checks the work before it's credited.\n- **Compensation approval** — compensation transactions are approved before tokens move, giving editors a checkpoint to withhold credit for inadequate reviews.\n- **Vet thank-you notes** (Step 4) — optionally require an admin or editor to approve author thank-you notes before reviewers see them."
+            },
+            "subtitle": "Settings",
+            "tip": {
+                "policies": "This is the most consequential step on the page. Spend real time on it before touching anything below.",
+                "inactive": "Check the inactive message in the settings below, so your community knows you're busy configuring things.",
+                "compensation": "It is critical that you think carefully about the compensation structure for your venue. Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter newcomers from contributring. See [Setting welcome & compensation](#policies) in Step 1 for the balance rules and a worked example.",
+                "roles": "Configure your venue's volunteer roles below, create roles such as **reviewer**, **program commitee**, **associate editor** to represent the different kinds of contributions volunteers can make to this venue. Ensure you set total compensation levels for each role to not be higher than the cost of a submission — see [Setting welcome & compensation](#policies) in Step 1 for why this matters.",
+                "doneVisibility": "Done submissions still appear in the submissions list for this many days after completion (and are sorted to the bottom). After that, they're hidden from the list but still accessible by direct link. Set to 0 to hide them as soon as they're done.",
+                "preferenceLevels": "Bidders pick from these labels when bidding on submissions to signal how interested they are. The order matters: the top label is the most preferred. Leave this empty for a plain yes/no bid.",
+                "templates": "Paste these snippets into your reviewing platform's email templates so the system's automated emails carry the right Reciprocal Reviews link. Pick your platform first — the manuscript-id variable in the snippet body and the embedded URL will switch to that platform's syntax. Substitute the **{role}** placeholder yourself; reviewing platforms vary too much in how they expose role names.",
+                "bulkImport": "Have submissions already under review when you turn the venue on? [Bulk import them](/venue/{venueid}/submissions/import) so reviewers can bid and earn tokens from day one. Imports are free; the form will propose a corresponding mint to fund the resulting compensation transactions, which a minter must approve."
+            },
+            "options": {
+                "platform": {
+                    "label": "Reviewing platform"
+                }
+            },
+            "template": {
+                "payment": {
+                    "title": "Author submission payment",
+                    "body": "Thanks for submitting to **{venue}**. To complete your submission, please pay for it on Reciprocal Reviews:\n\nhttps://reciprocal.reviews/venue/{venueid}/submissions/new?manuscript={manuscriptVar}"
+                },
+                "acknowledgement": {
+                    "title": "Assignment acknowledgement (reviewer / AE / meta-reviewer)",
+                    "body": "You've been assigned as **{role}** for a submission to **{venue}**. View it on Reciprocal Reviews:\n\nhttps://reciprocal.reviews/venue/{venueid}/submissions?filter={manuscriptVar}"
+                },
+                "compensation": {
+                    "title": "Compensation request (reviewer / AE / meta-reviewer / EiC)",
+                    "body": "You've completed **{role}** work for **{venue}**. Request compensation on Reciprocal Reviews:\n\nhttps://reciprocal.reviews/venue/{venueid}?compensate={manuscriptVar}"
+                }
+            }
+        },
+        "scholar": {
+            "title": "Anonymous",
+            "header": {
+                "submissions": "Submissions",
+                "tokens": "Tokens",
+                "settings": "Settings",
+                "tasks": "Tasks",
+                "volunteering": "Volunteering"
+            },
+            "feedback": {
+                "notLoaded": "Unable to load scholar profile.",
+                "submissionsNotLoaded": "Unable to load this scholar's submissions.",
+                "noStatus": "This scholar has not shared their reviewing status.",
+                "tokensNotLoaded": "Unable to load this scholar's tokens.",
+                "noTasks": "You have no pending tasks.",
+                "commitmentsNotLoaded": "Unable to load editing volunteering commitments.",
+                "notVolunteeringFirst": "You are not volunteering for any roles yet.",
+                "notVolunteeringThird": "This scholar is not volunteering for any roles yet.",
+                "volunteeringFirst": "These are your volunteer roles.",
+                "volunteeringThird": "These are this scholar's volunteer roles.",
+                "noName": "Welcome! Edit your name above to set it, then share your reviewing status below so others know your availability.",
+                "addEmail": "Add a contact email so editors can reach you and you can receive notifications. We'll send a link to verify it, and won't email you anything else until you do."
+            },
+            "field": {
+                "name": {
+                    "label": "name",
+                    "placeholder": "name",
+                    "invalid": "Name must be at least 1 character"
+                },
+                "status": {
+                    "placeholder": "Explain your current reviewing status to others."
+                },
+                "email": {
+                    "label": "email",
+                    "placeholder": "email",
+                    "note": "Your email is private and used only to send notifications. Saving a new address sends a verification link (valid 15 minutes); you'll receive notifications only after you verify it.",
+                    "invalid": "Must be a valid email"
+                }
+            },
+            "card": {
+                "gift": {
+                    "header": "gift tokens",
+                    "note": "to other scholars",
+                    "purpose": "Gift to peer",
+                    "success": "Your tokens were successfully gifted."
+                }
+            },
+            "checkbox": {
+                "available": "I am available to review."
+            },
+            "status": {
+                "available": "Available",
+                "unavailable": "Unavailable"
+            },
+            "subtitle": "Scholar",
+            "tip": {
+                "status": "Your status is public."
+            },
+            "paragraph": {
+                "youHave": "You have:",
+                "thisScholarHas": "This scholar has:"
+            },
+            "privacy": {
+                "header": "Your data",
+                "about": "You can download everything Reciprocal Reviews holds about you, or ask us to erase it. Erasing removes your name, email address, and ORCID iD permanently. Your reviewing and payment records stay, without your name attached, because they are part of other scholars’ histories too — the tokens you were paid remain valid currency for the venues that issued them.",
+                "export": {
+                    "label": "Download my data",
+                    "tip": "Download everything the platform holds about you as a JSON file."
+                },
+                "exporting": "Preparing your data…",
+                "erase": {
+                    "label": "Erase my account",
+                    "tip": "Permanently remove your name, email, and ORCID iD from Reciprocal Reviews.",
+                    "warn": "This cannot be undone. Your name, email, and ORCID iD will be permanently erased and you will not be able to sign in again. Press again to confirm."
+                },
+                "erasing": "Erasing your account…",
+                "erased": "Your account has been erased. Thank you for your contributions."
+            }
+        },
+        "currency": {
+            "title": "Currency",
+            "feedback": {
+                "notLoaded": "Unable to load this currency."
+            },
+            "tip": {
+                "mintWarning": "Be careful creating new tokens. Too many tokens per scholar will diminish the incentive to earn them."
+            },
+            "header": {
+                "minters": "Minters",
+                "venues": "Venues",
+                "tokens": "Tokens"
+            },
+            "button": {
+                "mint": {
+                    "tip": "Mint tokens",
+                    "label": "Mint tokens"
+                },
+                "removeMinter": {
+                    "tip": "Remove yourself as minter",
+                    "label": "$delete"
+                },
+                "addMinter": {
+                    "tip": "Add minter",
+                    "label": "Add minter"
+                }
+            },
+            "note": {
+                "minters": "Minters can see, approve, and decline transactions, and most importantly, mint new tokens in this currency. They can also propose and improve currency exchanges and mergers. Choose them carefully — your venue's settings (Step 1, *Choosing minters*) explains what to look for."
+            },
+            "field": {
+                "name": {
+                    "placeholder": "Name",
+                    "invalid": "The name can't be empty"
+                },
+                "mintPurpose": {
+                    "label": "why are these tokens being minted? This purpose will be public in the transaction history.",
+                    "placeholder": "Purpose",
+                    "invalid": "Purpose can't be empty"
+                },
+                "minter": {
+                    "label": "scholar",
+                    "placeholder": "ORCID or email",
+                    "invalidMinter": "Minters can't be admins of a venue that uses this currency.",
+                    "invalidContact": "Must be a valid email or ORCID"
+                },
+                "description": {
+                    "placeholder": "Explain the currency to others.",
+                    "note": "Currency descriptions are public."
+                }
+            },
+            "card": {
+                "mint": {
+                    "header": "mint tokens",
+                    "note": "Create new tokens in this currency."
+                },
+                "addMinter": {
+                    "header": "add minter",
+                    "note": "Allow another scholar to mint tokens."
+                }
+            },
+            "checkbox": {
+                "mintConsent": "I understand that creating excess tokens will erode this currency's value."
+            },
+            "slider": {
+                "newTokenCount": {
+                    "label": "number of new tokens"
+                }
+            },
+            "options": {
+                "tokenOwner": {
+                    "label": "which venue should own the new tokens?"
+                }
+            },
+            "paragraph": {
+                "mintersDescription": "These scholars are the minters for this currency. They can see and approve all transactions.",
+                "venuesDescription": "These are the venues that use this currency:",
+                "allTokens": "[See all transactions](/currency/{id}/transactions) in this currency."
+            },
+            "subtitle": "Currency"
+        },
+        "about": {
+            "title": "About",
+            "header": {
+                "stewards": "Stewards",
+                "change": "Theory of change"
+            },
+            "feedback": {
+                "stewardsNotLoaded": "Unable to load active stewards."
+            },
+            "paragraph": {
+                "community": "We are a volunteer community of academics interested in keeping peer review sustainable, for ourselves and our communities. You can learn more about who's contributing and how to contribute yourself on [GitHub](https://github.com/reciprocalreviews).",
+                "stewardsIntro": "Stewards oversee the platform and its use, guiding design, implementation, and usage with the goal of ensuring the platform is improving the sustainability of academic peer review:",
+                "currentStewards": "Current stewards are:",
+                "joinStewards": "Would you like to become a steward? Reach out to any of the stewards above and let's chat.",
+                "theoryIntro": "The theory of change behind this platform is rests upon the following argument:",
+                "closing": "We built this platform to test the claims above, and hope you'll join us in this effort!"
+            }
+        },
+        "updates": {
+            "title": "Updates",
+            "paragraph": {
+                "intro": "Here are the updates to Reciprocal Reviews. Have a [defect](https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=1-defect.yml) to report or [improvement](https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=2-improvement.yml) to suggest?"
+            }
+        },
+        "terms": {
+            "title": "Terms & Privacy",
+            "header": {
+                "terms": "Terms",
+                "what": "What this is",
+                "account": "Your account",
+                "email": "How we use your email",
+                "data": "How we use your data",
+                "venues": "Venues you join",
+                "openSource": "Open source",
+                "delete": "Deleting your account",
+                "changes": "Changes",
+                "privacy": "Privacy",
+                "definitions": "Definitions",
+                "legalBasis": "Legal basis",
+                "collect": "What we collect and why",
+                "retention": "Data retention",
+                "security": "Data security",
+                "privacyEmail": "Email communication",
+                "rights": "Your rights",
+                "international": "International transfers",
+                "contact": "Contact and complaints",
+                "privacyChanges": "Changes to this policy"
+            },
+            "paragraph": {
+                "intro": "By using Reciprocal Reviews, you agree to the terms below. The first section is short and plain. The second section explains in detail how we handle your personal data. If anything is unclear, please [open an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/).",
+                "what": "Reciprocal Reviews tracks peer-review labor as a currency, so that submitting an article costs tokens earned by reviewing. The platform exists to support sustainable, equitable peer review. It is governed by a community of stewards listed on the [About](/about) page.",
+                "account": "You sign in with [ORCID](https://orcid.org), which authenticates you and provides your scholar identity. We create a local account tied to your ORCID iD, along with a preferred email address you give us for communication. You are responsible for keeping access to your ORCID account secure.",
+                "email": "We only use your email to contact you about activity on the platform — submissions, review assignments, token transactions, and venue communications. We will not email you for marketing, and we will not share your address with anyone outside the platform.",
+                "data": "We collect only what we need to credit reviewing labor and run the site. We use that data to compensate scholars for their work. We do not sell it, and we do not disclose it to any other party. Full details are in the Privacy section below.",
+                "venues": "When you join a venue, that venue's editors and coordinators can see what they need to assign you work and credit your reviews. This only happens for venues you have chosen to join.",
+                "openSource": "Reciprocal Reviews is open source. The code, issues, and discussions live on [GitHub](https://github.com/reciprocalreviews).",
+                "delete": "You can ask us to delete your account at any time. Your token transactions remain in the historical record so venues can verify past reviews, but they will no longer be linked to you or your ORCID iD.",
+                "changes": "We may update these terms. Material changes will be noted on the [Updates](/updates) page.",
+                "privacyIntro": "This section explains in detail what personal data we collect, why we collect it, how we use it, and your rights regarding it. It applies to anyone using Reciprocal Reviews.",
+                "definitions": "- **Personal data** is any information that identifies you — for example, your name, ORCID iD, or email address.\n- **Processing** means anything we do with that data: collecting, storing, using, or sharing it.\n- **Token** is a unit of reviewing credit earned by reviewing or editing, and spent on submissions.\n- **Venue** is a third-party publication site you have explicitly joined to review for or submit to.",
+                "legalBasis": "We process your personal data under three grounds from the General Data Protection Regulation (GDPR) and similar laws:\n\n- **Legitimate interest** — to run the site, credit reviewing labor, and communicate with venues about reviews and submissions.\n- **Consent** — to improve the site and review processes, where you have given explicit consent. You can revoke consent at any time.\n- **Legal compliance** — where applicable laws require it.",
+                "collect": "**Registration.** We create a local account from your ORCID sign-in. We store your ORCID iD, preferred email, site preferences, venues you have joined, and the transactions affecting your tokens.\n\n**Reviewing.** We store your reviewing availability and preferences. If a venue you have joined asks for available reviewers in your area, we share your contact information and expertise with that venue. When a venue reports a completed review, we update your token balance.\n\n**Submissions.** When you submit through a venue you have joined, the venue can confirm with us whether you have tokens available. Once the venue reports the submission, we update your token balance.\n\n**Process improvement.** We may review aggregated activity — name, affiliation, expertise from ORCID, reviewing and submission patterns — to understand how the platform is used and to improve it.\n\n**Cookies and technical data.** We use only the cookies needed to keep you signed in, provided by our authentication service. We do not use cookies for analytics or advertising. We also store local preferences (such as dark mode) on your device for your convenience.",
+                "retention": "We keep your personal data for as long as you have a Reciprocal Reviews account. If you delete your account, we delete your preferences and venue links. Your token transactions stay in the record so venues can verify past reviews, but they are no longer linked to you.\n\nVenues you have joined may keep their own records of you and your past reviews. Deleting your Reciprocal Reviews account does not affect what those venues store, but it does stop them from updating or querying your token balance.",
+                "security": "We use reasonable physical, technical, and administrative safeguards to protect your data, and we require any service providers we use to do the same. Transmission over the internet is never fully secure, so we cannot guarantee data is safe in transit.",
+                "privacyEmail": "We email you only in response to legitimate activity: actions you take on the site, submissions you make, or reviewing and editing you have agreed to.",
+                "rights": "Under GDPR and similar laws, you have the right to:\n\n1. **Access** your personal data and information about how we process it.\n2. **Correct** inaccurate or incomplete data.\n3. **Delete** your data.\n4. **Restrict** how we process your data.\n5. **Receive** your data in a portable, machine-readable format.\n6. **Object** to processing, including for any direct marketing.\n7. **Not be subject** to decisions made solely by automated processing.\n\nTo exercise any of these rights, [open an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/) and we will respond.",
+                "international": "Venues you have joined may operate outside your country of residence, where data protection standards differ. By joining a venue, you accept that your data may be shared with that venue as needed to support peer review.",
+                "contact": "For privacy questions or requests, [open an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/). Please include enough information for us to identify you and answer your request. If you believe we have handled your data improperly, contact us first so we can address it. You also have the right to complain to a data protection authority — see [edpb.europa.eu](https://edpb.europa.eu/about-edpb/board/members_en) for EU authorities or [ico.org.uk](https://ico.org.uk) for the UK.",
+                "privacyChanges": "We may update this privacy section to reflect new practices or legal requirements. Material changes will be noted on the [Updates](/updates) page."
+            }
+        },
+        "currencyTransactions": {
+            "subtitle": "Transactions",
+            "paragraph": {
+                "count": "There are **{count}** transactions with this currency visible to you."
+            }
+        },
+        "scholarTransactions": {
+            "subtitle": "Transactions",
+            "paragraph": {
+                "count": "There are **{count}** transactions involving this scholar visible to you."
+            }
+        }
+    },
+    "view": {
+        "gift": {
+            "noTokens": "You don't have any tokens to gift.",
+            "button": {
+                "giftTokens": {
+                    "tip": "Transfer tokens",
+                    "label": "Gift tokens"
+                }
+            },
+            "field": {
+                "recipient": {
+                    "label": "recipient",
+                    "placeholder": "ORCID or email",
+                    "invalid": "Must be an email or ORCID"
+                },
+                "purpose": {
+                    "label": "purpose",
+                    "placeholder": "What is the gift for?"
+                }
+            },
+            "checkbox": {
+                "consent": "I understand that these tokens can't be transferred back without the recipient's consent."
+            },
+            "slider": {
+                "tokenAmount": {
+                    "label": "number of tokens to give"
+                }
+            },
+            "options": {
+                "venue": {
+                    "label": "select a venue"
+                },
+                "currency": {
+                    "label": "what currency should be used?"
+                }
+            },
+            "fieldset": {
+                "legend": "Gift to...",
+                "scholar": "Scholar",
+                "venue": "Venue"
+            }
+        },
+        "transactions": {
+            "feedback": {
+                "noTransactions": "No transactions.",
+                "notLoaded": "Unable to load transactions."
+            },
+            "purposeTemplate": {
+                "compensation": "Compensation for completing the {role} role for \"{title}\"",
+                "mint": "Mint to cover {amount}-token compensation for {role} work on \"{title}\" (venue is short {shortfall} tokens)"
+            },
+            "button": {
+                "approve": {
+                    "tip": "Approve this proposed transaction",
+                    "label": "Approve"
+                },
+                "declineInitiate": {
+                    "tip": "Decline this proposed transaction",
+                    "label": "Decline…"
+                },
+                "declineConfirm": {
+                    "tip": "Decline this proposed transaction",
+                    "label": "Decline this transaction",
+                    "warn": "Decline"
+                },
+                "loadMore": {
+                    "tip": "Load more transactions",
+                    "label": "Load more transactions..."
+                }
+            },
+            "field": {
+                "declineReason": {
+                    "label": "reason",
+                    "placeholder": "Reason for declining"
+                }
+            },
+            "status": {
+                "proposed": "proposed",
+                "approved": "approved",
+                "declined": "declined"
+            },
+            "headers": {
+                "status": "Status",
+                "tokens": "Tokens",
+                "scholar": "Creator",
+                "from": "From",
+                "to": "To",
+                "purpose": "Purpose",
+                "actions": "Actions"
+            },
+            "cell": {
+                "minted": "minted",
+                "pendingApproval": "Pending approval by editor or minter.",
+                "allLoaded": "All transactions loaded."
+            },
+            "paragraph": {
+                "declineReason": "Indicate a reason and we'll record it with the transaction so the proposer knows why."
+            },
+            "error": {
+                "unknownVenue": "Unknown venue"
+            }
+        },
+        "roles": {
+            "feedback": {
+                "notInvited": "[Log in](/login) to volunteer for this role.",
+                "consult": "This role has **{count} volunteers**. We **highly** recommend that you communicate extensively with your community before changing any of the settings below, as they change the terms of volunteering.",
+                "noRoles": "No roles yet. Add one.",
+                "notLoaded": "Couldn't load venue's roles."
+            },
+            "button": {
+                "createRole": {
+                    "tip": "Create a new role",
+                    "label": "Create role"
+                },
+                "removeAdmin": {
+                    "tip": "Remove admin",
+                    "label": "$delete",
+                    "warn": "Are you sure you want to remove this admin?"
+                },
+                "addAdmin": {
+                    "tip": "Add admin",
+                    "label": "Add admin"
+                },
+                "priorityUp": {
+                    "tip": "Move this role's priority up",
+                    "label": "↑"
+                },
+                "priorityDown": {
+                    "tip": "Move this role's priority down",
+                    "label": "↓"
+                },
+                "addCompensation": {
+                    "tip": "Add compensation for this submission role",
+                    "label": "Add compensation"
+                },
+                "removeCompensation": {
+                    "tip": "Remove compensation for this submission role",
+                    "label": "$delete"
+                },
+                "volunteer": {
+                    "tip": "Volunteer for this role",
+                    "label": "Volunteer…"
+                },
+                "accept": {
+                    "tip": "Accept this invitation",
+                    "label": "Accept"
+                },
+                "acceptInvite": {
+                    "tip": "Accept this invitation",
+                    "label": "Accept",
+                    "warn": "Accept this invitation?"
+                },
+                "decline": {
+                    "tip": "Decline this invitation",
+                    "label": "Decline",
+                    "warn": "Decline this invitation?"
+                },
+                "stop": {
+                    "tip": "If clicked, you will be shown as inactive in the reviewer list. You will need to resume to be considered for assignments to this role.",
+                    "label": "Pause volunteering"
+                },
+                "resume": {
+                    "tip": "Resume volunteering for this role. You will again appear as active in the list of volunteers for this role, and be considered for assignments to this role.",
+                    "label": "Resume..."
+                },
+                "invite": {
+                    "tip": "Invite people to this role",
+                    "label": "Invite"
+                },
+                "deleteRole": {
+                    "tip": "Delete this role",
+                    "label": "Delete $delete",
+                    "warn": "Delete this role and all volunteers?"
+                }
+            },
+            "field": {
+                "newRoleName": {
+                    "label": "role name",
+                    "placeholder": "name",
+                    "invalid": "Must include a name"
+                },
+                "adminScholar": {
+                    "label": "scholar",
+                    "placeholder": "ORCID or email"
+                },
+                "invite": {
+                    "label": "email or orcid",
+                    "placeholder": "",
+                    "invalid": "Must be a comma separated list of emails or ORCID"
+                },
+                "roleName": {
+                    "label": "name",
+                    "placeholder": "name",
+                    "invalid": "Must include a name"
+                },
+                "roleDescription": {
+                    "label": "description",
+                    "placeholder": "description"
+                },
+                "compensationRationale": {
+                    "placeholder": "Why this amount?"
+                },
+                "expertise": {
+                    "label": "share your expertise as phrases, separated by commas (public)",
+                    "placeholder": "topic, area, method, theory, etc."
+                },
+                "papers": {
+                    "label": "papers willing to review (optional cap)",
+                    "placeholder": "e.g., 4",
+                    "invalid": "Must be a whole number, or empty for no cap"
+                }
+            },
+            "card": {
+                "admins": {
+                    "header": "Admins",
+                    "note": "Scholars who manage this venue's configuration."
+                },
+                "settings": {
+                    "header": "settings",
+                    "note": "Edit this role's settings"
+                },
+                "unnamed": "Role"
+            },
+            "checkbox": {
+                "invited": {
+                    "on": "Scholars must be invited to this role.",
+                    "off": "Scholars can volunteer for this role without being invited."
+                },
+                "anonymousAuthors": {
+                    "on": "This role cannot see author information.",
+                    "off": "This role can see author information."
+                },
+                "biddable": {
+                    "on": "Volunteers can bid on submissions.",
+                    "off": "Volunteers cannot bid for this role on submissions."
+                }
+            },
+            "slider": {
+                "compensation": {
+                    "label": "compensation amount",
+                    "suffix": "/submission"
+                },
+                "desiredAssignments": {
+                    "label": "desired number of assignments for this role. If bidding is on, it will be turned off for a submission that has this number of assignments, to avoid unnecessary bids.",
+                    "suffix": " assignments"
+                }
+            },
+            "options": {
+                "approver": {
+                    "label": "what role can approve assignments to this role for a submission, other than the editor?"
+                }
+            },
+            "headers": {
+                "type": "Type",
+                "compensation": "Compensation",
+                "rationale": "Rationale"
+            },
+            "tip": {
+                "highestPriority": "This is the highest priority role. Any volunteers for this role are automatically assigned this role for new submissions."
+            },
+            "paragraph": {
+                "createRole": "Create a new role.",
+                "adminsDescription": "Admins can edit venue information, add and remove other admins, and gift tokens. They are typically Editors-in-Chief, Program Chairs of a conference, or editorial staff.",
+                "addAdmin": "Add a new admin.",
+                "inviteDescription": "Add one or more people to invite to this role by email or ORCID, separated by commas.",
+                "administeredBy": "This venue is administered by",
+                "roleOpen": "This role is open to **volunteers**.",
+                "roleInvited": "This role is **invite-only**.",
+                "volunteersCount": "[{count} scholars](/venue/{venueid}/volunteers) have volunteered for this role.",
+                "invited": "You've been invited to this role. Accept to start volunteering, or decline to let the venue know you're not available.",
+                "declined": "You declined this role. Would you like to accept it?",
+                "volunteering": "Thanks for volunteering for this role!",
+                "stopped": "You stopped volunteering for this role."
+            }
+        },
+        "tasks": {
+            "button": {
+                "accept": {
+                    "tip": "Accept this invitation",
+                    "label": "Accept",
+                    "warn": "Accept this invitation?"
+                },
+                "decline": {
+                    "tip": "Decline this invitation",
+                    "label": "Decline",
+                    "warn": "Decline this invitation?"
+                }
+            },
+            "headers": {
+                "kind": "Kind",
+                "task": "Task"
+            },
+            "cell": {
+                "kind": {
+                    "invitation": "Invitation",
+                    "transaction": "Transaction",
+                    "review": "Review",
+                    "pendingAssignment": "Pending assignment",
+                    "outgoingTransaction": "Pending approval"
+                },
+                "pendingTransactionsAfter": "pending transactions to approve"
+            },
+            "tip": {
+                "tasks": "These are tasks you need to complete."
+            }
+        },
+        "commitments": {
+            "headers": {
+                "venue": "Concern",
+                "role": "Role"
+            }
+        }
+    },
+    "component": {
+        "dialog": {
+            "close": {
+                "tip": "Close this dialog",
+                "label": "Close"
+            }
+        },
+        "text": {
+            "save": {
+                "tip": "Save this edit",
+                "label": "$confirm"
+            },
+            "edit": {
+                "tip": "Edit this text",
+                "label": "$edit"
+            },
+            "cancel": {
+                "tip": "Discard this invalid text",
+                "label": "$delete"
+            }
+        },
+        "header": {
+            "logout": {
+                "tip": "Sign out",
+                "label": "Logout"
+            }
+        },
+        "notification": {
+            "dismiss": {
+                "tip": "Dismiss notification",
+                "label": "𐄂"
+            }
+        },
+        "copyButton": {
+            "copy": {
+                "tip": "Copy this snippet to the clipboard",
+                "label": "Copy"
+            },
+            "copied": {
+                "tip": "Copied to clipboard",
+                "label": "Copied"
+            }
+        },
+        "verifyEmail": {
+            "field": {
+                "email": {
+                    "label": "contact email",
+                    "placeholder": "you@university.edu",
+                    "invalid": "Must be a valid email"
+                }
+            },
+            "button": {
+                "send": {
+                    "tip": "Send a verification link to this address",
+                    "label": "Send verification email"
+                }
+            },
+            "feedback": {
+                "sent": "We sent a verification link to {email} (valid 15 minutes). It becomes your contact email once you verify it.",
+                "error": "Unable to send a verification email.",
+                "unchanged": "That's already your contact email — nothing to verify.",
+                "cooldown": "You just requested a link — check your inbox, or try again in a minute.",
+                "notConfigured": "This site isn't set up to send email yet. Please report this to an administrator.",
+                "signedOut": "You've been signed out. Sign in again to verify your email."
+            }
+        }
+    },
+    "error": {
+        "UpdateScholarStatus": "Unable to update your status",
+        "UpdateScholarName": "Unable to update your name",
+        "UpdateScholarEmail": "Unable to send a verification email",
+        "VerifyEmail": "Unable to verify your email",
+        "UpdateScholarAvailability": "Unable to update your availability",
+        "CreateProposal": "Unable to create a venue proposal",
+        "EditProposalTitle": "Unable to edit the proposal title",
+        "EditProposalCensus": "Unable to edit the proposal census",
+        "EditProposalEditors": "Unable to edit the proposal editors",
+        "EditProposalMinters": "Unable to edit the proposal minters",
+        "EditProposalURL": "Unable to edit the proposal URL",
+        "CreateSupporter": "Unable to create a supporter",
+        "UpdateCurrencyName": "Unable to update the currency name",
+        "UpdateCurrencyDescription": "Unable to update the currency description",
+        "EditSupport": "Unable to edit your support",
+        "RemoveSupport": "Unable to remove your support",
+        "DeleteProposal": "Unable to delete the proposal",
+        "ApproveProposalNotFound": "Unable to approve the proposal: couldn't find proposal.",
+        "ApproveProposalNoScholars": "Unable to approve the proposal: couldn't find all of the specified editors with accounts. Ask them to create accounts with the specified email addresses and then approve.",
+        "ApproveProposalNoMinters": "Unable to approve the proposal: couldn't find all of the specified minters with accounts. Ask them to create accounts with the specified email addresses and then approve.",
+        "ApproveProposalNoVenue": "Unable to approve the proposal: couldn't create the venue.",
+        "ApproveProposalCannotUpdateVenue": "Unable to approve the proposal: couldn't update the venue with the proposal.",
+        "ApproveProposalNoCurrency": "Unable to approve the proposal: couldn't create a currency for the venue.",
+        "EditVenueDescription": "Unable to edit the venue description",
+        "EditVenueAdmins": "Unable to edit the venue admins",
+        "EditVenueAddEditorVenueNotFound": "Unable to find venue",
+        "ScholarNotFound": "Unable to find scholar by this email or ORCID",
+        "EditVenueAddEditorAlreadyEditor": "Scholar is already an editor",
+        "EditVenueTitle": "Unable to edit the venue title",
+        "EditVenueURL": "Unable to edit the venue URL",
+        "EditVenueInactive": "Unable to edit the inactive message",
+        "EditVenueAnonymousAssignments": "Unable to edit anonymous assignments setting",
+        "EditVenueVetThanks": "Unable to update the thank-you vetting setting",
+        "EditVenueWelcomeAmount": "Unable to edit the welcome amount",
+        "EditVenuePaymentFree": "Unable to change the payment mode",
+        "EditVenueDoneVisibilityDays": "Unable to update the recently-done visibility window",
+        "EditVenueTransactionReminderFrequency": "Unable to update the transaction reminder frequency",
+        "EditRoleBidding": "Unable to toggle bidding",
+        "EditRoleDesiredAssignments": "Unable to set desired assignments",
+        "EditRoleAnonymousAuthors": "Unable to toggle anonymous authors",
+        "EditRoleApprover": "Unable to set approver",
+        "CreateRole": "Unable to create new role.",
+        "UpdateRoleName": "Unable to update role name",
+        "UpdateRoleDescription": "Unable to update role description",
+        "UpdateRoleInvited": "Unable to update invited status of role",
+        "UpdateRoleAmount": "Unable to update role compensation",
+        "ReorderRole": "Unable to reorder roles",
+        "DeleteRole": "Unable to delete role",
+        "UpdateSubmissionType": "Unable to update submission type",
+        "CreateSubmissionType": "Unable to create submission type",
+        "EditSubmissionType": "Unable to edit submission type",
+        "EditSubmissionTypeCost": "Unable to edit the submission cost",
+        "DeleteSubmissionType": "Unable to delete submission type",
+        "CreateCompensation": "Unable to create compensation for role",
+        "EditCompensation": "Unable to create compensation for role",
+        "CreateVolunteer": "Unable to add volunteer commitment",
+        "AlreadyVolunteered": "Already created a volunteer commitment for this role.",
+        "UpdateVolunteerActive": "Unable to update volunteer commitment",
+        "UpdateVolunteerExpertise": "Unable to update your expertise",
+        "UpdateVolunteerPapers": "Unable to update paper count",
+        "UpdateAssignmentPreference": "Unable to update bid preference",
+        "CreatePreferenceLevel": "Unable to create preference level",
+        "EditPreferenceLevel": "Unable to update preference level",
+        "ReorderPreferenceLevel": "Unable to reorder preference levels",
+        "DeletePreferenceLevel": "Unable to delete preference level",
+        "InviteToRole": "Unable to invite to role",
+        "InviteToRoleMissing": "Unknown scholars",
+        "InviteToRoleSuccess": "Successfully invited scholars to role.",
+        "AcceptRoleInvite": "Unable to accept role invite",
+        "EditCurrencyMinters": "Unable to edit minters",
+        "AddCurrencyMinter": "Unable to add minter",
+        "AlreadyMinter": "This scholar is already a minter",
+        "MintTokens": "Unable to mint tokens",
+        "TransferVenueTokens": "Unable to transfer tokens",
+        "TransferScholarTokens": "Unable to find scholar tokens to transfer",
+        "TransferTokensInsufficient": "Insufficient number tokens to transfer",
+        "CreateTransaction": "Unable to create transaction",
+        "GetScholarTransactions": "Unable to get transactions for this scholar",
+        "TransactionMissingFrom": "No source provided for transaction",
+        "TransactionMissingTo": "No destination provided for transaction",
+        "PendingTransactionHasTokens": "This pending transaction already has tokens that were transferred.",
+        "UnknownTransaction": "Unable to find this transaction",
+        "TransactionNotDeclined": "Unable to decline this transaction",
+        "NotYourAccount": "That account is not yours, so it cannot be exported or erased.",
+        "ExportScholarData": "We were unable to prepare your data for download.",
+        "EraseScholar": "We were unable to erase this account.",
+        "AlreadyApproved": "This transaction is already approved",
+        "SelfDealingApproval": "You can't approve a transaction in which you are the recipient",
+        "ApproveTransaction": "Unable to approve this transaction",
+        "TransactionApprovalUpdate": "Unable to update the proposed transaction",
+        "MissingApprovalVenue": "The proposed transaction has no venue to transfer from.",
+        "MissingRecipient": "The proposed transaction has no scholar recipient.",
+        "UndeletedTransaction": "The proposed transaction couldn't be deleted.",
+        "InvalidCharges": "The proposed transaction's charges are invalid.",
+        "NewSubmission": "Unable to create a new submission",
+        "UnknownVenue": "Unable to find venue",
+        "MissingSubmissionCharge": "Didn't receive enough charge amounts for the authors given",
+        "BulkImportSubmissions": "Unable to import submissions",
+        "UpdateSubmissionExpertise": "Unable to update the submission expertise",
+        "UpdateSubmissionTitle": "Unable to update the submission's title",
+        "UpdateSubmissionNote": "Unable to update the submission's note",
+        "MarkSubmissionDoneRPC": "Unable to mark this submission done.",
+        "ApproveAssignment": "Unable to approve the assignment",
+        "CreateAssignment": "Unable to create this assignment",
+        "CompensationSubmissionNotFound": "Unable to find the submission for compensation request",
+        "CompensationAssignmentCheck": "Could not check for an existing request.",
+        "CompleteAssignmentNotFound": "Unable to find this assignment",
+        "CompleteAssignmentRoleNotFound": "Unable to find this assignment's role",
+        "CompleteAssignmentVenueNotFound": "Unable to find this assignment's venue",
+        "CompleteAssignmentInsufficientTokens": "The venue doesn't have enough tokens to pay this compensation. A proposed mint transaction has been recorded and the venue's minter has been notified.",
+        "CompleteAssignmentRPC": "Unable to complete this assignment.",
+        "DeleteAssignment": "Unable to delete this assignment",
+        "EmailScholar": "Unable to email this scholar",
+        "ApproveProposalNoSupporters": "Unable to retrieve supports of proposal for notification.",
+        "DeclareConflict": "Unable to declare a conflict with this submission.",
+        "NoRoleCompensation": "The role being compensated doesn't have a compensation amount for this submission type.",
+        "LoadVenue": "Unable to load venue data.",
+        "LoadCurrency": "Unable to load currency data.",
+        "LoadScholar": "Unable to load scholar data.",
+        "LoadSubmission": "Unable to load submission data.",
+        "LoadTransaction": "Unable to load transaction data.",
+        "LoadRole": "Unable to load role data.",
+        "LoadAssignment": "Unable to load assignment data.",
+        "LoadVolunteer": "Unable to load volunteer data.",
+        "LoadToken": "Unable to load token data.",
+        "LoadProposal": "Unable to load proposal data.",
+        "LoadCompensation": "Unable to load compensation data.",
+        "LoadPreferenceLevel": "Unable to load preference level data.",
+        "LoadSubmissionType": "Unable to load submission type data.",
+        "LoadConflict": "Unable to load conflict data.",
+        "ProposeThanks": "Unable to send your thanks.",
+        "ApproveThanks": "Unable to approve the thank-you note.",
+        "DeclineThanks": "Unable to decline the thank-you note.",
+        "LoadThanks": "Unable to load thank-you notes."
+    }
 }

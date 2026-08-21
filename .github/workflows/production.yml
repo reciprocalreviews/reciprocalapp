@@ -34,12 +34,63 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Pinned rather than `latest`. With `latest`, setup-cli resolves the release
+      # through the GitHub API on every job; a dev push and a main merge fire ~10
+      # of those within seconds, exhausting the shared rate limit and failing a job
+      # before any test runs. Pinning also stops CI drifting ahead of local.
       - uses: supabase/setup-cli@v2
         with:
-          version: latest
+          version: 2.111.0
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
+      # A bad migration is the likeliest cause of data loss and the one moment you
+      # know is coming. Recording the append-only watermarks here makes "restore to
+      # just before the deploy" a precise instruction: wall-clock cannot express it
+      # when user activity and the deploy interleave.
+      - name: Record the pre-migration restore point
+        env:
+          DB_URL: ${{ secrets.PRODUCTION_DB_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DB_URL" ]; then
+            echo "PRODUCTION_DB_URL not set; skipping the pre-migration restore point" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          marks=$(DB_URL="$DB_URL" ./supabase/dr/psql.sh -tAc "
+            select 'audit_log=' || coalesce((select max(seq) from public.audit_log), 0)
+                || ' token_events=' || coalesce((select max(seq) from public.token_events), 0)
+                || ' transactions=' || coalesce((select max(seq) from public.transactions), 0)")
+          {
+            echo "### Pre-migration restore point"
+            echo
+            echo "Deploy: \`${{ github.sha }}\`"
+            echo
+            echo '```'
+            echo "$marks"
+            echo '```'
+            echo
+            echo 'To undo a bad migration: restore the most recent nightly backup, load the'
+            echo 'tails up to this point, and replay to these watermarks (RECOVERY.md § Restoring).'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Refuse to push over migrations applied to production but absent from the repo.
+      - name: Guard against divergent remote migrations
+        run: |
+          set -euo pipefail
+          supabase migration list --linked > /tmp/migrations.txt || true
+          cat /tmp/migrations.txt
+          if grep -qE '^\s*\|\s+[0-9]{14}\s+\|' /tmp/migrations.txt; then
+            echo "::error::production has migrations this repository does not. Reconcile before pushing."
+            exit 1
+          fi
+
       - run: supabase db push
+      # Edge functions are NOT deployed by `db push`. Without this step a schema change
+      # that depends on new function behavior lands while the deployed function is stale —
+      # which fails quietly, since pg_net swallows the resulting error and mail simply
+      # stops arriving. Deploy them in the same job so schema and functions never drift.
+      - run: supabase functions deploy resend
+      - run: supabase functions deploy remind
 
   vercel:
     runs-on: ubuntu-latest

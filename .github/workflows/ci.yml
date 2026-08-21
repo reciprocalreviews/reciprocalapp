@@ -11,9 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Pinned rather than `latest`. With `latest`, setup-cli resolves the release
+      # through the GitHub API on every job; a dev push and a main merge fire ~10
+      # of those within seconds, exhausting the shared rate limit and failing a job
+      # before any test runs. Pinning also stops CI drifting ahead of local.
       - uses: supabase/setup-cli@v2
         with:
-          version: latest
+          version: 2.111.0
 
       - name: Start Supabase local development setup
         run: supabase start --exclude storage-api,imgproxy,logflare,supavisor,vector
@@ -26,3 +30,58 @@ jobs:
             git diff src/data/database.ts
             exit 1
           fi
+
+      # ARCHITECTURE.md calls supabase/schemas/ authoritative, and DESIGN.md links
+      # readers there. That claim has to be enforced or it decays: four RPCs, three
+      # submissions columns, two check constraints, a unique index and the trigger
+      # that creates scholars at all had each been added by migration and never
+      # mirrored, so the "authoritative" description of the schema was materially
+      # wrong for months.
+      #
+      # It is not only a documentation problem. A restore applies the schema from
+      # migrations and RECOVERY.md points at schemas/ to explain what should be
+      # there — a schema file that lies is a restore that goes wrong under pressure.
+      #
+      # `supabase db diff` reports the DDL needed to make the migrations match the
+      # declarative files. Agreement means empty output.
+      - name: Verify declarative schemas match the migrations
+        run: |
+          set -euo pipefail
+          supabase db diff --schema public > /tmp/drift.out 2>/tmp/drift.err || {
+            echo "::error::supabase db diff failed — schemas/ may not be applicable at all"
+            cat /tmp/drift.err; exit 1;
+          }
+          # `supabase db diff` has two output shapes, and this check has to read both.
+          #
+          # The npm-installed CLI wraps the DDL in a JSON object on stdout
+          # (`{"diff":"...","engine":"migra",...}`), with the statements escaped
+          # inside a single line — grepping that raw for '^create|^alter' finds
+          # nothing, which is how a first version of this check reported "no drift"
+          # against a schema that had plainly drifted.
+          #
+          # The binary that supabase/setup-cli installs — the one CI actually runs —
+          # prints the DDL to stdout as plain SQL, and prints NOTHING to stdout when
+          # the schemas agree, saying "No schema changes found" on stderr instead.
+          # Assuming the JSON shape therefore made this step fail on every run,
+          # drift or no drift: the grep matched nothing, `set -o pipefail` failed the
+          # pipeline, and `set -e` ended the step before any reporting line could
+          # run, so it exited 1 having printed nothing at all. That is how it failed
+          # the first time it ever ran, on the PR that added these very lines.
+          #
+          # So: parse the JSON when it is there, and otherwise take stdout at face
+          # value — for the binary, empty stdout means agreement and any content is
+          # the DDL that differs.
+          if grep -h -o '{"diff".*}' /tmp/drift.out /tmp/drift.err > /tmp/drift.json; then
+            jq -r '.diff // ""' /tmp/drift.json > /tmp/drift.sql
+          else
+            cp /tmp/drift.out /tmp/drift.sql
+          fi
+          if [ -n "$(tr -d '[:space:]' < /tmp/drift.sql)" ]; then
+            echo "::error::supabase/schemas/ has drifted from supabase/migrations/."
+            echo "The statements below are what the migrations contain and the schema files do not."
+            echo "Update the matching file in supabase/schemas/ so it describes the real schema."
+            echo
+            cat /tmp/drift.sql
+            exit 1
+          fi
+          echo "schemas/ and migrations/ agree"

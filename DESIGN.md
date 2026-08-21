@@ -105,9 +105,9 @@ There are several key types of data in RR.
 - [x] Scholars can also have _`admin`_ status on a `Venue`, which gives them the ability to manage the configuration of the venue `Venue`.
 - [x] Scholars can also have _`minter`_ status, which gives them the ability to create new `Token`s in a `Venue`'s `Currency`.
 - [x] An individual scholar cannot be both an _`editor`_ and a _`minter`_. However, editors and role approvers can spend a `Venue`'s token reserve directly (without minter approval). This separation prevents anyone with spending authority from also creating new tokens — the minter check is the only oversight on currency supply. Correspondingly, _`minter`_s mint new tokens and approve mints, but cannot move the ownership of existing tokens; reserve payouts are executed by a `Venue`'s editors/admins and priority-0 role holders.
-- [x] Scholars can specify an email address for communication.
+- [x] Scholars can specify a contact email address, verified via a link before RR sends to it (see the Login section and [#27](https://github.com/reciprocalreviews/reciprocalapp/issues/27)). The stored address is always a verified one.
 - [x] Anyone can view a `Scholar`'s record, but only `Scholars` can create, update, or delete their record.
-- [ ] ([#87](https://github.com/reciprocalreviews/reciprocalapp/issues/87)) Resolve the design ambiguity between email-as-identifier and ORCID-as-identifier, including how RR should behave when a scholar's email collides with another scholar's username/ORCID record.
+- [x] ([#87](https://github.com/reciprocalreviews/reciprocalapp/issues/87)) Identity is ORCID, not email: a scholar is identified by their ORCID iD (the auth identity), and email is only a verified contact address. This removes the email-vs-ORCID identifier ambiguity — email is never an identity key, so a shared or changed email cannot collide with another scholar's record.
 
 The authoritative schema lives in [`supabase/schemas/scholars.sql`](supabase/schemas/scholars.sql).
 
@@ -164,8 +164,21 @@ A `Token` represents an indivisible unit of peer review labor in a particular `C
 - [x] `Token`s are typically earned for reviewing labor, but there may be many other creative uses for them (e.g., gifts, incentives, etc.).
 - [x] `Token`s should generally be minted in proportion to scholars, to ensure that there is a balance between labor needed and labor provided. Too few `Token`s would mean that publishing slows because people cannot find enough of them to submit for peer review. Too many `Token`s means that quality and timeliness suffers, because everyone has more than enough tokens to publish, and therefore have no incentive to review.
 - [x] `Token`s are possessed by individual scholar or in a `Venue`'s reserve (meaning they are posessed by no one) and `Transaction`s can change who posses them. They cannot be possessed by neither a scholar or a venue.
+- [x] **Only a `Transaction` can change who possesses a `Token`.** This is enforced by the database, not by convention: direct writes to tokens are revoked, so every movement of value necessarily leaves a record of why it moved and who authorized it.
+- [x] **Every change of possession is recorded permanently.** The platform can account for where any token has been, and can reconstruct who held what at any past moment — so a bug that miscounted balances can be found and repaired precisely, rather than by discarding everything that happened since. That history is deliberately *not* visible to scholars: knowing which tokens moved when would reveal reviewing activity that a venue's anonymity settings exist to protect.
 
 The authoritative schema lives in [`supabase/schemas/tokens.sql`](supabase/schemas/tokens.sql).
+
+### Data rights
+
+> [!IMPORTANT]
+> The data below is specific to compliance with the platform's terms
+
+- [x] A `Scholar` can **download everything** the platform holds about them, as a single file: their profile, volunteering, submissions, assignments, conflicts, transactions, and the history of where their tokens have been.
+- [x] A `Scholar` can **erase their account**. Their name, email address, and ORCID iD are permanently removed and they can no longer sign in.
+- [x] Erasure does **not** delete their reviewing and payment records, and this is deliberate rather than a limitation. Those records are part of other scholars' histories too — the venue that paid for a review, the co-authors on a submission, the reviewer who received a thank-you note — so they remain, with no name attached to them. The tokens a scholar earned stay valid currency for the venues that issued them, because destroying them would quietly change what those venues hold.
+- [x] A steward can act on either request for a scholar who asks out of band, since not everyone who wants their data removed still has an account they can sign into.
+- [x] An erasure is remembered, so that recovering the platform from a backup cannot bring someone back who asked to be forgotten.
 
 ### Transactions
 
@@ -174,8 +187,9 @@ The authoritative schema lives in [`supabase/schemas/tokens.sql`](supabase/schem
 
 A `Transaction` represents an exchange of tokens for some purpose, such as submitting something for review, compensation for a review, or a gift.
 
-- [x] `Transaction`s cannot be deleted; they are a permanent record
-- [x] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable. They are also immutable once recorded: only the status and the accompanying approval/decline fields may change, so a transaction remains a faithful record of history.
+- [x] `Transaction`s cannot be deleted by anyone — not the giver, not a venue admin, not a currency minter. They are a permanent record.
+- [x] `Transaction`s have a definite order that the platform assigns, not one inferred from timestamps. A scholar's history therefore reads the same way every time, and paging through a long list cannot show the same entry twice or skip one — which matters because several transactions are often recorded in the same instant, as when a submission charges each of its authors.
+- [x] `Transaction`s are confidential — to preserve reviewing anonymity and gifts — but auditable. They are also immutable once recorded: a proposed transaction may be approved or declined, and **that decision is then final** — an approved transfer cannot later be turned into a refusal, nor a refusal into a transfer. The **amount cannot change after the fact** either, so no one can rewrite how much a completed transfer moved. A caller cannot choose a transaction's identity or backdate it; its place in history is set by the platform, not by whoever proposed it.
 
 The authoritative schema lives in [`supabase/schemas/transactions.sql`](supabase/schemas/transactions.sql).
 
@@ -189,6 +203,7 @@ A `Submission` represents a manuscript undergoing peer review.
 - [x] Depending on the venue, `Scholar`s may be able to bid on submissions, simplifying an editor's ability to find qualified reviewers.
 - [x] `Submission`s can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
 - [x] `Submission`s can be added manually by \_`editor`\_s.
+- [x] A `Submission`'s charges must add up to exactly its submission type's cost, and no author may be listed on it twice. Both are enforced by the database, not only by the submission form — a rule that lives only in a form is a rule that holds for people who use the form. Splitting a charge unevenly between co-authors is fine, including charging a co-author nothing; what is refused is a total that doesn't match the price.
 - [x] Bids on submissions can be approved by approvers
 - [x] Bids on submissions can be approved by roles that are set to be approving roles for another role (e.g., Associate Editors can approve bids from Reviewers)
 - [x] A submission's assignments are visible only to the assigned scholar, the role's approver chain (and venue admins), and — when a venue runs open (non-anonymous) review — the submission's authors. Scholars can declare conflicts on submissions; a declared conflict always hides that submission's assignments from the conflicted scholar, including in open review.
@@ -196,7 +211,6 @@ A `Submission` represents a manuscript undergoing peer review.
 - [x] Marking a submission done is the act by which the top-level editor (priority-0 role) self-compensates. It is one action, not two — the editor cannot compensate themselves in isolation, and the submission cannot move to done without that compensation happening.
 - [x] **Done is terminal.** A submission marked done cannot be reopened; this preserves the integrity of the completion record and the editor's self-compensation transaction.
 - [x] Done submissions remain visible in a venue's submissions list for a venue-configurable window (default 30 days, range 0–365, 7-day steps), sorted to the bottom of the list. After the window expires they're hidden from the list but still reachable by direct link.
-- [ ] ([#27](https://github.com/reciprocalreviews/reciprocalapp/issues/27)) When a submission's author scholars update their email address after submission, the updated address should propagate to the submission record so editor correspondence reaches the right inbox.
 - [x] ([#124](https://github.com/reciprocalreviews/reciprocalapp/issues/124)) `Submission`s can reference a previous submission by internal UUID (`submissions.previous`), in addition to the existing external-ID `previousid`, giving revise-and-resubmit chains within RR true referential integrity. When creating a submission, authors pick one of their earlier submissions to the same venue from a dropdown (which fills and locks the external-ID field, and auto-selects the matching revision submission type); the free-text external-ID field remains available for cross-venue or pre-RR ancestors. Because a resubmission is simply its own (revision) submission type, its cost follows from that type — no separate resubmission cost is needed. Bulk imports best-effort resolve their external `previousid` to an on-platform link.
 
 The authoritative schemas live in:
@@ -237,11 +251,12 @@ It has no functionalty.
 
 ### Login `/login`
 
-The purpose of the login page is to authenticate a person into the application using ORCID OAuth.
+The purpose of the login page is to authenticate a person into the application using ORCID OAuth, the exclusive and mandatory sign-in method.
 
 It should:
 
-- [ ] ([#19](https://github.com/reciprocalreviews/reciprocalapp/issues/19)): Allow a visitor to initiate and complete an ORCID OAuth authentication, landing them at their `/scholar/[id]` dashboard
+- [x] ([#19](https://github.com/reciprocalreviews/reciprocalapp/issues/19)): Allow a visitor to initiate and complete an ORCID OAuth authentication, landing them at their `/scholar/[id]` dashboard
+- [x] ([#27](https://github.com/reciprocalreviews/reciprocalapp/issues/27)): Because ORCID does not provide an email, prompt a newly signed-in scholar to add a contact email and verify ownership via a link (valid 15 minutes) before RR will send them any notifications. Until an email is verified, a persistent banner warns that no notifications will be sent, and RR sends nothing to an unverified address except the verification email itself. The same verification flow is used to change an email later. The link is delivered **only by email** and is never shown in the interface — a verification the requester could read on screen would confirm nothing about who controls the address. Re-visiting a link within its window is safe and still reports success, so a mail scanner or link preview cannot consume it before the scholar clicks.
 
 ### Scholar `/scholar/[scholarid]`
 
@@ -424,7 +439,7 @@ It should also support assignment decisions:
 
 ## Notifications
 
-All emails RR sends — both authentication emails (sign-in, confirmation, recovery, email change, invitation) and the transactional and reminder emails below — share one simple branded visual identity so they read as coming from the same platform. These templates are English only for now: RR has no mechanism yet to solicit a scholar's language preference. ([#56](https://github.com/reciprocalreviews/reciprocalapp/issues/56))
+All emails RR sends — contact-email verification and the transactional and reminder emails below — share one simple branded visual identity so they read as coming from the same platform. (Sign-in is ORCID, so RR no longer sends authentication emails.) These templates are English only for now: RR has no mechanism yet to solicit a scholar's language preference. ([#56](https://github.com/reciprocalreviews/reciprocalapp/issues/56))
 
 RR will also send periodic reminders based on time-based events:
 

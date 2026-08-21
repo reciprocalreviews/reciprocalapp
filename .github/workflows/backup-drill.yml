@@ -1,0 +1,146 @@
+name: Backup drill
+
+# Restore the most recent backup and prove it worked.
+#
+# A backup nobody has restored is a hypothesis. This runs monthly against a real
+# artifact from object storage, into a throwaway Supabase stack on the runner,
+# and asserts the result against the manifest the backup carried — row counts,
+# auth users, append-only watermarks, RLS policy count, and agreement between the
+# token ledger and token state.
+#
+# It deliberately restores a real backup rather than one taken inline: the thing
+# being tested is the artifact that would actually be used in an incident.
+#
+# The elapsed time it reports is the closest thing to a measured recovery time.
+# Copy it into RECOVERY.md after each run — an RTO nobody has measured is a guess,
+# and this one covers only the restore itself, not provisioning a project or
+# repointing the app.
+
+on:
+  schedule:
+    # 09:00 UTC on the 1st, an hour after the nightly backup.
+    - cron: '0 9 1 * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which project's backups to drill
+        type: choice
+        options: [production, staging]
+        default: production
+        required: true
+      prefix:
+        description: Specific prefix to restore (blank = most recent daily)
+        type: string
+        required: false
+
+concurrency:
+  group: backup-drill
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  drill:
+    name: Restore and verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the required secrets are present
+        env:
+          ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          KEY: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          SECRET: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+          IDENTITY: ${{ secrets.BACKUP_AGE_IDENTITY }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "$ENDPOINT" ] || missing+=("BACKUP_S3_ENDPOINT")
+          [ -n "$BUCKET" ]   || missing+=("BACKUP_S3_BUCKET")
+          [ -n "$KEY" ]      || missing+=("BACKUP_S3_ACCESS_KEY_ID")
+          [ -n "$SECRET" ]   || missing+=("BACKUP_S3_SECRET_ACCESS_KEY")
+          # The drill needs the PRIVATE key, which the backup job deliberately does
+          # not have. Use a SEPARATE age recipient written to a short-retention
+          # drill/ copy rather than the primary identity — that keeps the primary
+          # backups readable only offline, which is the whole point of the split.
+          [ -n "$IDENTITY" ] || missing+=("BACKUP_AGE_IDENTITY (see RECOVERY.md § Drills)")
+          if [ ${#missing[@]} -gt 0 ]; then
+            printf 'Missing repository secret: %s\n' "${missing[@]}" >&2
+            exit 1
+          fi
+
+      - name: Fetch the most recent backup
+        id: fetch
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+          ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          TARGET: ${{ github.event.inputs.target || 'production' }}
+          WANT: ${{ github.event.inputs.prefix }}
+        run: |
+          set -euo pipefail
+          if [ -n "$WANT" ]; then
+            prefix="$WANT"
+          else
+            prefix=$(aws s3 ls "s3://$BUCKET/$TARGET/daily/" --endpoint-url "$ENDPOINT" \
+              | awk '{print $2}' | tr -d '/' | sort | tail -1)
+            [ -n "$prefix" ] || { echo "no backups under $TARGET/daily/" >&2; exit 1; }
+            prefix="$TARGET/daily/$prefix"
+          fi
+          echo "restoring $prefix"
+          mkdir -p backup
+          aws s3 cp "s3://$BUCKET/$prefix/" backup/ --recursive \
+            --endpoint-url "$ENDPOINT" --only-show-errors
+          echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
+
+      - name: Start a throwaway Supabase stack
+        # A bare Postgres database is NOT a valid target: every RLS policy calls
+        # auth.uid(), so restoring without the auth schema silently drops 29 of 71
+        # policies while every row count still matches. drill.sh refuses to run
+        # against such a target; this gives it a real one.
+        run: |
+          set -euo pipefail
+          npm run start:test
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -c "drop schema public cascade; create schema public;" \
+            -c "grant usage on schema public to anon, authenticated, service_role;"
+
+      - name: Drill
+        env:
+          BACKUP_DIR: backup
+          TARGET_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+          PGSSLMODE: disable
+        run: |
+          set -euo pipefail
+          printf '%s' '${{ secrets.BACKUP_AGE_IDENTITY }}' > /tmp/identity.txt
+          chmod 600 /tmp/identity.txt
+          AGE_IDENTITY=/tmp/identity.txt ./supabase/dr/drill.sh | tee /tmp/drill.out
+          shred -u /tmp/identity.txt 2>/dev/null || rm -f /tmp/identity.txt
+
+      - name: Prove policies and grants survived
+        # Row counts say the data came back. This says the SECURITY came back —
+        # policies, column allowlists, and the append-only guards.
+        run: npm run test:rls
+
+      - name: Summarize
+        if: always()
+        run: |
+          {
+            echo "### Backup drill — \`${{ steps.fetch.outputs.prefix }}\`"
+            echo
+            echo '```'
+            sed -e 's/\x1b\[[0-9;]*m//g' /tmp/drill.out 2>/dev/null || echo "(drill produced no output)"
+            echo '```'
+            echo
+            echo 'The elapsed time above is the measured restore time. Record it in RECOVERY.md.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Shred the working copy
+        if: always()
+        run: rm -rf backup

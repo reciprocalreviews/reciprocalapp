@@ -164,8 +164,15 @@ export default abstract class CRUD {
 		submissionID: SubmissionID
 	): Promise<Result<MarkSubmissionDoneOutcome>>;
 
-	/** Check whether the given scholars have enough tokens for the given payments. True if so, and a list of remaining balances by scholar if not. */
-	abstract verifyCharges(charges: Charge[]): Promise<Result<true | Charge[] | undefined>>;
+	/** Check whether the given scholars have enough tokens for the given payments,
+	 * denominated in the given currency. True if so, and a list of remaining balances
+	 * by scholar if not. The currency is required: a balance is only meaningful within
+	 * one, and counting a scholar's holdings across all of them makes this disagree
+	 * with the create_submission RPC that ultimately decides. */
+	abstract verifyCharges(
+		charges: Charge[],
+		currency: CurrencyID
+	): Promise<Result<true | Charge[] | undefined>>;
 
 	abstract registerScholar(scholar: ScholarRow): Scholar;
 
@@ -183,8 +190,26 @@ export default abstract class CRUD {
 	/** Update scholar's reviewing status. */
 	abstract updateScholarStatus(id: ScholarID, status: string): Promise<Result>;
 
-	/** Update scholar's reviewing status. */
-	abstract updateScholarEmail(id: ScholarID, email: string): Promise<Result>;
+	/** Begin/resend/change contact-email verification for the current scholar (#27).
+	 * Records a pending candidate + token and queues a verification link to `email`,
+	 * entirely inside the database — the raw token is never returned to the client, and
+	 * the caller supplies neither the message body nor the link's origin. Token
+	 * consumption happens in the verify route's server load (see
+	 * src/routes/[[lang]]/verify/[token]) via the anon-callable verify_email RPC. */
+	abstract requestEmailVerification(email: string): Promise<Result>;
+
+	/** Export everything the platform holds about a scholar, as one JSON document.
+	 * A scholar may export themselves; a steward may export on their behalf for a
+	 * request that arrives out of band. Fulfils the portability half of the terms
+	 * (page.terms.paragraph.rights). */
+	abstract exportScholarData(scholar: ScholarID): Promise<Result<unknown>>;
+
+	/** Erase a scholar: destroy every field that identifies them, keeping the row
+	 * as an anonymous tombstone. Deletion is not possible — fourteen tables
+	 * reference scholars(id), including transactions.creator, which is NOT NULL —
+	 * and would in any case destroy records belonging to other people. The erasure
+	 * is recorded in `erasures` so it can be re-applied after a restore. */
+	abstract eraseScholar(scholar: ScholarID): Promise<Result>;
 
 	/** Propose a venue */
 	abstract proposeVenue(
@@ -290,13 +315,6 @@ export default abstract class CRUD {
 		compensate: boolean,
 		papers: number | null
 	): Promise<Result<string>>;
-
-	abstract welcomeVolunteer(
-		welcomer: ScholarID,
-		scholar: ScholarID,
-		roleid: RoleID,
-		reason: string
-	): Promise<Result>;
 
 	abstract updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result>;
 	abstract updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result>;
@@ -425,15 +443,11 @@ export default abstract class CRUD {
 
 	abstract deleteAssignment(assignment: AssignmentID): Promise<Result>;
 
-	/** Send an email with the given subject and message to the authenticated scholar. */
+	/** Queue a template email to the given scholars. Recipients are resolved server-side
+	 * from these ids; scholars with no verified contact email are skipped (#27). There is
+	 * deliberately no way to email an arbitrary address, and no way to supply a body —
+	 * both would make the branded pipeline an open relay. */
 	abstract emailScholars(scholars: ScholarID[], event: EmailType, args: string[]): Promise<Result>;
-
-	/** Send an email to people without scholar accounts */
-	abstract sendEmail(
-		emails: string[] | { id: ScholarID; email: string }[],
-		template: EmailType,
-		args: string[]
-	): Promise<Result>;
 
 	/** Add a conflict */
 	abstract declareConflict(
@@ -569,6 +583,14 @@ export default abstract class CRUD {
 	): Promise<ReadResult<ScholarVolunteering[] | null>>;
 	abstract getVolunteersByRoles(roleIDs: RoleID[]): Promise<ReadResult<VolunteerRow[] | null>>;
 	abstract getScholarActiveVolunteering(
+		scholar: ScholarID,
+		roleIDs: RoleID[]
+	): Promise<ReadResult<VolunteerRow[] | null>>;
+	/** A scholar's ACCEPTED volunteer records among the given roles, regardless of
+	 * whether they are currently active. Distinct from getScholarActiveVolunteering
+	 * on purpose: the submissions SELECT policy's bidder branch tests `accepted`
+	 * only, so a check that mirrors that policy must not also require `active`. */
+	abstract getScholarAcceptedVolunteering(
 		scholar: ScholarID,
 		roleIDs: RoleID[]
 	): Promise<ReadResult<VolunteerRow[] | null>>;

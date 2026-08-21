@@ -2,6 +2,7 @@
 	import { getLocaleContext } from '$routes/Contexts';
 	import { marked } from 'marked';
 	import type LocaleText from './Locale';
+	import interpolate from './interpolate';
 
 	let {
 		path,
@@ -15,23 +16,12 @@
 
 	const locale = getLocaleContext();
 
-	// Construct the text from the locale file.
+	// Construct the text from the locale file. The substitution rules themselves
+	// live in ./interpolate so they can be tested directly — this is the one
+	// place every user-visible string in the app passes through.
 	const text = $derived.by(() => {
 		const loc = locale();
-
-		const stuff = typeof path === 'string' ? path : path(loc);
-		// If it's an array, treat it like multiple paragraphs and join with newlines. Otherwise, just return the string.
-		let text = Array.isArray(stuff) ? stuff.join('\n\n') : stuff;
-
-		// Replace any shorthand in the text with the corresponding shorthand in the locale file.
-		text = text.replace(/\$(\w+)/g, (_, key) => {
-			return key in loc.shorthand ? loc.shorthand[key as keyof typeof loc.shorthand] : `$${key}`;
-		});
-
-		// Replace any template inputs in the text with the corresponding values.
-		text = text.replace(/\{(\w+)\}/g, (match, key) => (key in inputs ? inputs[key] : match));
-
-		return text;
+		return interpolate(typeof path === 'string' ? path : path(loc), loc.shorthand, inputs);
 	});
 </script>
 

@@ -37,7 +37,6 @@ import type {
 import { renderEmail, type EmailType } from '../../email/templates';
 import type Locale from '../locales/Locale';
 import CRUD, {
-	NullUUID,
 	type BulkImportResult,
 	type Charge,
 	type ImportedSubmission,
@@ -83,7 +82,7 @@ type CompleteAssignmentResult =
 /** Runtime narrowing of the Json that Supabase returns from the
  * complete_assignment RPC. Uses TypeScript's `in` narrowing so no
  * `as` cast is needed. */
-function isCompleteAssignmentResult(value: unknown): value is CompleteAssignmentResult {
+export function isCompleteAssignmentResult(value: unknown): value is CompleteAssignmentResult {
 	if (typeof value !== 'object' || value === null || !('status' in value)) return false;
 	return value.status === 'transferred' || value.status === 'insufficient';
 }
@@ -120,7 +119,7 @@ type MarkSubmissionDoneResult =
 			submission_id: SubmissionID;
 	  };
 
-function isMarkSubmissionDoneResult(value: unknown): value is MarkSubmissionDoneResult {
+export function isMarkSubmissionDoneResult(value: unknown): value is MarkSubmissionDoneResult {
 	if (typeof value !== 'object' || value === null || !('status' in value)) return false;
 	return (
 		value.status === 'completed' || value.status === 'blocked' || value.status === 'insufficient'
@@ -130,7 +129,7 @@ function isMarkSubmissionDoneResult(value: unknown): value is MarkSubmissionDone
 /** Read a string field from a jsonb object returned by an RPC, or null if
  * absent or the wrong type. The atomic-CRUD RPCs return jsonb_build_object
  * payloads (see migration 20260608000000_atomic_crud.sql). */
-function stringField(value: unknown, key: string): string | null {
+export function stringField(value: unknown, key: string): string | null {
 	if (typeof value !== 'object' || value === null || !(key in value)) return null;
 	const field = (value as Record<string, unknown>)[key];
 	return typeof field === 'string' ? field : null;
@@ -138,7 +137,7 @@ function stringField(value: unknown, key: string): string | null {
 
 /** Read a string[] field from a jsonb object returned by an RPC, or null if
  * absent or not an array of strings. */
-function stringArrayField(value: unknown, key: string): string[] | null {
+export function stringArrayField(value: unknown, key: string): string[] | null {
 	if (typeof value !== 'object' || value === null || !(key in value)) return null;
 	const field = (value as Record<string, unknown>)[key];
 	if (!Array.isArray(field) || field.some((v) => typeof v !== 'string')) return null;
@@ -151,7 +150,7 @@ function stringArrayField(value: unknown, key: string): string[] | null {
  * user-facing headline specific and localized for the user-actionable failures
  * (insufficient tokens, self-dealing, already approved, already volunteered)
  * instead of collapsing every failure to one generic message per RPC. */
-function rpcErrorKey(
+export function rpcErrorKey(
 	error: PostgrestError | null,
 	fallback: keyof Locale['error'],
 	map: Record<string, keyof Locale['error']>
@@ -473,14 +472,20 @@ export default class SupabaseCRUD extends CRUD {
 		}
 	}
 
-	async updateScholarEmail(id: ScholarID, email: string): Promise<Result> {
-		const { error } = await this.client.from('scholars').update({ email }).eq('id', id);
-		if (error) return this.error('UpdateScholarName', error);
-		else {
-			const state = this.scholars.get(id);
-			if (state) state.setEmail(email);
-			return {};
-		}
+	/** Begin (or resend, or change to) contact-email verification for the current
+	 * scholar (#27). We never write scholars.email directly — that column holds only a
+	 * verified address, and the column privilege to write it was revoked besides.
+	 *
+	 * Everything happens inside the RPC: it records the pending candidate and a token
+	 * hash, builds the link from the server's own configured origin, and queues the
+	 * branded email. Nothing comes back. That is deliberate — an earlier version returned
+	 * the raw token to this client, which let anyone read it out of the network tab and
+	 * verify an address they did not control. For the same reason the caller supplies
+	 * neither the message body nor the origin. */
+	async requestEmailVerification(email: string): Promise<Result> {
+		const { error } = await this.client.rpc('request_email_verification', { _email: email });
+		if (error) return this.error('UpdateScholarEmail', error);
+		return {};
 	}
 
 	async getScholarRow(id: ScholarID): Promise<ReadResult<ScholarRow | null>> {
@@ -540,6 +545,21 @@ export default class SupabaseCRUD extends CRUD {
 				.select('*')
 				.eq('scholarid', scholar)
 				.eq('active', true)
+				.eq('accepted', 'accepted')
+				.in('roleid', roleIDs)
+		);
+	}
+
+	async getScholarAcceptedVolunteering(
+		scholar: ScholarID,
+		roleIDs: RoleID[]
+	): Promise<ReadResult<VolunteerRow[] | null>> {
+		return this.rows(
+			'LoadVolunteer',
+			this.client
+				.from('volunteers')
+				.select('*')
+				.eq('scholarid', scholar)
 				.eq('accepted', 'accepted')
 				.in('roleid', roleIDs)
 		);
@@ -753,6 +773,26 @@ export default class SupabaseCRUD extends CRUD {
 	// Proposals & supporters
 	// ─────────────────────────────────────────────────────────────────────────
 
+	async exportScholarData(scholar: ScholarID): Promise<Result<unknown>> {
+		const { data, error } = await this.client.rpc('export_scholar_data', { _scholar: scholar });
+		if (error)
+			return this.error(
+				rpcErrorKey(error, 'ExportScholarData', { RR006: 'NotYourAccount' }),
+				error
+			);
+		return { data, error: undefined };
+	}
+
+	async eraseScholar(scholar: ScholarID): Promise<Result> {
+		// Irreversible by design: the point is that the data is gone. The caller is
+		// responsible for confirming intent and for signing the scholar out
+		// afterwards — their session outlives the identity behind it.
+		const { error } = await this.client.rpc('erase_scholar', { _scholar: scholar });
+		if (error)
+			return this.error(rpcErrorKey(error, 'EraseScholar', { RR006: 'NotYourAccount' }), error);
+		return { error: undefined, data: undefined };
+	}
+
 	async proposeVenue(
 		scholarid: ScholarID,
 		title: string,
@@ -792,11 +832,12 @@ export default class SupabaseCRUD extends CRUD {
 			if (stewardResult.notified) notified.push(...stewardResult.notified);
 		}
 
-		// Notify editors
-		const editorResult = await this.sendEmail(editors, 'ProposalCreatedEditors', [
-			title,
-			proposalid
-		]);
+		// Notify the proposal's editors. They are plain addresses rather than scholars, so
+		// the RPC reads them back off the proposal row we just wrote instead of accepting
+		// them here.
+		const editorResult = await this.queueEmail('ProposalCreatedEditors', [title, proposalid], {
+			proposal: proposalid
+		});
 		if (editorResult.notified) notified.push(...editorResult.notified);
 
 		return { data: proposalid, notified };
@@ -1058,7 +1099,10 @@ export default class SupabaseCRUD extends CRUD {
 	// Submissions & submission types
 	// ─────────────────────────────────────────────────────────────────────────
 
-	async verifyCharges(charges: Charge[]): Promise<Result<true | Charge[] | undefined>> {
+	async verifyCharges(
+		charges: Charge[],
+		currency: CurrencyID
+	): Promise<Result<true | Charge[] | undefined>> {
 		// First, find the scholars with the specified ORCIDs.
 		const { data: scholars, error: scholarsError } = await this.convertORCIDsToScholars(
 			charges.map((charge) => charge.scholar)
@@ -1078,10 +1122,16 @@ export default class SupabaseCRUD extends CRUD {
 
 		const scholarIDs = scholars.map((scholar) => scholar.id);
 
-		// Find all of the tokens owned by the set
+		// Find all of the tokens owned by the set, IN THIS VENUE'S CURRENCY. A
+		// balance is meaningless without the currency: without this filter a
+		// scholar's holdings in every other venue's currency counted toward the
+		// charge, so the check passed and create_submission then rejected the
+		// submission with RR003 — or left a co-author charge that could never be
+		// approved. Both create_submission and tokenBalancesQuery filter the same way.
 		const { data: tokens, error: tokenError } = await this.client
 			.from('tokens')
 			.select('scholar')
+			.eq('currency', currency)
 			.in('scholar', scholarIDs);
 		if (tokenError) {
 			return { error: { message: 'Missing token', details: tokenError } };
@@ -1133,7 +1183,18 @@ export default class SupabaseCRUD extends CRUD {
 		// tokens to the venue), and inserts the submission in a single
 		// transaction — so a connectivity loss can't orphan proposed
 		// transactions or violate the submission's array-cardinality constraints.
-		const chargeError = await this.verifyCharges(charges);
+		// Charges are denominated in the venue's currency, so read it from the venue
+		// rather than accepting it as an argument — that way the currency the
+		// balances are checked against cannot drift from the venue being submitted
+		// to, which is the same currency create_submission will use.
+		const { data: venueRow, error: venueError } = await this.client
+			.from('venues')
+			.select('currency')
+			.eq('id', venue)
+			.single();
+		if (venueError) return this.error('LoadVenue', venueError);
+
+		const chargeError = await this.verifyCharges(charges, venueRow.currency);
 		if (chargeError.error) return { error: chargeError.error };
 		if (chargeError.data !== true) return { error: { message: this.locale.error.InvalidCharges } };
 
@@ -1543,43 +1604,53 @@ export default class SupabaseCRUD extends CRUD {
 		}
 
 		// Notify whoever can act on this request, not the requester themselves.
-		// "Can act on it" matches canApproveAssignment.ts: anyone approved on
-		// this submission for the role that approves the requested role, plus
-		// venue admins as a fallback when no approver is assigned yet.
+		// "Can act on it" is exactly canApproveAssignment.ts — the same three
+		// branches, unioned, rather than the near-miss this used to be. It
+		// previously omitted the priority-0 editor branch entirely, and treated
+		// admins as a fallback consulted only when no approver was assigned, so
+		// the two people most able to act on a request were often the two who
+		// never heard about it.
 		const recipients = new Set<ScholarID>();
 
-		const { data: role, error: roleError } = await this.client
+		const { data: roles, error: rolesError } = await this.client
 			.from('roles')
-			.select('approver')
-			.eq('id', roleID)
+			.select('id, priority, approver')
+			.eq('venueid', venueID);
+		if (rolesError) return this.error('CompensationAssignmentCheck', rolesError);
+
+		const { data: submissionAssignments, error: approverError } = await this.client
+			.from('assignments')
+			.select('scholar, role')
+			.eq('submission', submission.id)
+			.eq('approved', true);
+		if (approverError) return this.error('CompensationAssignmentCheck', approverError);
+
+		const requestedRole = roles?.find((r) => r.id === roleID) ?? null;
+		const editorRoleIDs = new Set((roles ?? []).filter((r) => r.priority === 0).map((r) => r.id));
+
+		for (const a of submissionAssignments ?? []) {
+			// Branch 2: the priority-0 editor of this submission approves any role.
+			if (editorRoleIDs.has(a.role)) recipients.add(a.scholar);
+			// Branch 3: whoever holds the role that approves the requested role.
+			if (requestedRole?.approver !== null && a.role === requestedRole?.approver)
+				recipients.add(a.scholar);
+		}
+
+		// Branch 1: venue admins can always approve, so they are always notified —
+		// a union member, not a fallback.
+		const { data: adminVenue, error: adminVenueError } = await this.client
+			.from('venues')
+			.select('admins')
+			.eq('id', venueID)
 			.single();
-		if (roleError) return this.error('CompensationAssignmentCheck', roleError);
+		if (adminVenueError) return this.error('CompensationAssignmentCheck', adminVenueError);
+		for (const admin of adminVenue.admins) recipients.add(admin);
 
-		if (role.approver !== null) {
-			const { data: approverAssignments, error: approverError } = await this.client
-				.from('assignments')
-				.select('scholar')
-				.eq('submission', submission.id)
-				.eq('role', role.approver)
-				.eq('approved', true);
-			if (approverError) return this.error('CompensationAssignmentCheck', approverError);
-			for (const a of approverAssignments ?? []) recipients.add(a.scholar);
-		}
-
-		if (recipients.size === 0) {
-			const { data: venue, error: venueError } = await this.client
-				.from('venues')
-				.select('admins')
-				.eq('id', venueID)
-				.single();
-			if (venueError) return this.error('CompensationAssignmentCheck', venueError);
-			for (const admin of venue.admins) recipients.add(admin);
-		}
-
+		// A scholar cannot action their own request, so never mail it to them.
 		recipients.delete(scholarID);
 
-		// No one to notify (shouldn't happen given the admins fallback, but
-		// don't error if it does — the assignment was still created).
+		// No one left to notify — possible when the requester is the venue's only
+		// admin. Don't error: the assignment was still created.
 		if (recipients.size === 0) return { data: undefined, error: undefined };
 
 		return this.emailScholars([...recipients], 'CompensationRequested', [
@@ -1631,50 +1702,6 @@ export default class SupabaseCRUD extends CRUD {
 		const volunteerID = stringField(data, 'volunteer_id');
 		if (volunteerID === null) return this.error('CreateVolunteer');
 		return { data: volunteerID };
-	}
-
-	async welcomeVolunteer(
-		welcomer: ScholarID,
-		scholar: ScholarID,
-		roleid: RoleID,
-		reason: string
-	): Promise<Result> {
-		// Get the role and the venue.
-		const { data: role, error: roleError } = await this.client
-			.from('roles')
-			.select()
-			.eq('id', roleid)
-			.single();
-		if (role === null) return this.error('WelcomeVolunteer', roleError);
-		const venueid = role.venueid;
-		const { data: venue, error: venueError } = await this.client
-			.from('venues')
-			.select()
-			.eq('id', venueid)
-			.single();
-		if (venue === null) return this.error('WelcomeVolunteer', venueError);
-
-		// Payment-free venues have no tokens, so there is nothing to welcome with.
-		if (venue.payment_free) return {};
-
-		const welcome = venue.welcome_amount;
-
-		// Record an approved transaction to log the gift.
-		const { data: transaction, error } = await this.createTransaction(
-			welcomer,
-			null,
-			venueid,
-			scholar,
-			null,
-			// Create a list of null UUIDs to represent that they don't exist yet.
-			new Array(welcome).fill(NullUUID),
-			venue.currency,
-			reason,
-			'proposed'
-		);
-		if (error) return this.error('WelcomeVolunteer', error.details);
-
-		return transaction ? {} : this.error('WelcomeVolunteer');
 	}
 
 	async updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result> {
@@ -2096,11 +2123,28 @@ export default class SupabaseCRUD extends CRUD {
 
 		// Apply the decline — purpose stays untouched, audit columns capture
 		// who declined and why.
-		const { error: updateError } = await this.client
+		//
+		// The `status` predicate is what makes this safe against a concurrent
+		// approval. Without it the update matched on `id` alone, so an approval
+		// landing between the read above and this write would be overwritten: the
+		// tokens had already moved and been recorded in token_events, while the
+		// transaction ended up saying `declined`. The database now refuses that
+		// outright (RR005, see 20260808030000), and matching on status as well turns
+		// what would be a raw error into a clean zero-row result we can report.
+		const { data: declined, error: updateError } = await this.client
 			.from('transactions')
 			.update({ status: 'declined', decliner, decline_reason: reason })
-			.eq('id', id);
-		if (updateError) return this.errorOrEmpty('TransactionNotDeclined', updateError);
+			.eq('id', id)
+			.eq('status', 'proposed')
+			.select('id');
+		if (updateError)
+			return this.error(
+				rpcErrorKey(updateError, 'TransactionNotDeclined', { RR005: 'AlreadyApproved' }),
+				updateError
+			);
+		// Zero rows means someone decided it first — the realistic case being an
+		// approval that won the race.
+		if (!declined || declined.length === 0) return this.error('AlreadyApproved');
 
 		// Don't email proposers who declined their own transaction.
 		if (transaction.creator === decliner) return { error: undefined, data: undefined };
@@ -2149,12 +2193,20 @@ export default class SupabaseCRUD extends CRUD {
 		return { error: undefined, data: undefined };
 	}
 
+	// The three paginated transaction lists all sort by created_at and then by
+	// seq. The tiebreaker is not optional: created_at defaults to now(), which is
+	// transaction START time, so every row a single RPC writes carries an
+	// identical timestamp — create_submission inserts one charge per author that
+	// way. Sorting on created_at alone leaves those rows in an order the planner
+	// may choose differently per query, and a LIMIT/OFFSET over an unstable sort
+	// can return one row on two pages while skipping another entirely.
 	async getScholarTransactions(scholar: ScholarID, page: number = 0) {
 		return await this.client
 			.from('transactions')
 			.select('*', { count: 'exact' })
 			.or(`from_scholar.eq.${scholar},to_scholar.eq.${scholar}`)
 			.order('created_at', { ascending: false })
+			.order('seq', { ascending: false })
 			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 	}
 
@@ -2164,6 +2216,7 @@ export default class SupabaseCRUD extends CRUD {
 			.select('*', { count: 'exact' })
 			.or(`from_venue.eq.${venue},to_venue.eq.${venue}`)
 			.order('created_at', { ascending: false })
+			.order('seq', { ascending: false })
 			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 	}
 
@@ -2173,6 +2226,7 @@ export default class SupabaseCRUD extends CRUD {
 			.select('*', { count: 'exact' })
 			.eq('currency', currency)
 			.order('created_at', { ascending: false })
+			.order('seq', { ascending: false })
 			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 	}
 
@@ -2274,80 +2328,48 @@ export default class SupabaseCRUD extends CRUD {
 	// ─────────────────────────────────────────────────────────────────────────
 
 	/** Use the resend edge function to use the Resend API to send a message to the current user. */
+	/** Email scholars by id. Recipient resolution — including skipping scholars with no
+	 * verified contact email, which is what enforces "never notify an unverified
+	 * address" (#27) — happens inside the RPC, not here. */
 	async emailScholars(scholars: ScholarID[], template: EmailType, args: string[]): Promise<Result> {
-		// Get the email addresses and names of the specified scholars. Names are
-		// used to produce per-recipient notification banners.
-		let { data: scholarData, error: scholarsError } = await this.client
-			.from('scholars')
-			.select('id, email, name')
-			.in('id', scholars);
-		if (scholarData === null) return this.error('EmailScholar', scholarsError);
-
-		// Ignore scholars without an email address.
-		const scholarsWithEmail = scholarData.filter(
-			(scholar): scholar is { id: string; email: string; name: string } => scholar.email !== null
-		);
-
-		return this.sendEmail(scholarsWithEmail, template, args);
+		return this.queueEmail(template, args, { scholars });
 	}
 
-	/** Email some people who aren't scholars */
-	async sendEmail(
-		emails: string[] | { id: ScholarID; email: string; name?: string }[],
+	/**
+	 * Queue a template email through the `queue_email` RPC.
+	 *
+	 * Direct INSERT into `emails` is revoked: the table's AFTER INSERT trigger sends
+	 * branded mail, so accepting a recipient and body from the client made the pipeline an
+	 * open relay. The RPC resolves recipients server-side — scholars by id (skipping any
+	 * without a verified contact email) or a proposal's editor addresses — and the body is
+	 * rendered at send time from the template registry, so no prose crosses the API.
+	 *
+	 * We still render locally, but only to label the "emailed X about Y" notification; that
+	 * copy is display-only and is never what gets delivered.
+	 */
+	private async queueEmail(
 		template: EmailType,
-		args: string[]
+		args: string[],
+		target: { scholars?: ScholarID[]; proposal?: ProposalID }
 	): Promise<Result> {
-		// Make sure all the scholar emails have the shape of an email address.
-		const missingEmails = emails.filter(
-			(email) => !/^.+@.+$/.test(typeof email === 'string' ? email : email.email)
-		);
-		if (!emails.every((email) => /^.+@.+$/.test(typeof email === 'string' ? email : email.email)))
-			return this.error(
-				'EmailScholar',
-				null,
-				`Invalid email addresses: ${missingEmails.map((email) => email).join(', ')}`
-			);
+		const { data, error } = await this.client.rpc('queue_email', {
+			_event: template,
+			_args: args,
+			_scholars: target.scholars ?? undefined,
+			_proposal: target.proposal ?? undefined
+		});
+		if (error) return this.error('EmailScholar', error);
 
-		const { subject, message } = renderEmail(template, args);
-
-		// The scholar whose action is sending these emails, so they can later see
-		// what they sent (null when sent without an authenticated user).
-		const {
-			data: { user }
-		} = await this.client.auth.getUser();
-		const sender = user?.id ?? null;
-
-		// Insert the emails into the database, which will trigger the edge function to send the email via Resend.
-		const { error: emailInsertError } = await this.client.from('emails').insert(
-			emails.map((email) => ({
-				scholar: typeof email === 'string' ? null : email.id,
-				sender,
-				email: typeof email === 'string' ? email : email.email,
-				event: template,
-				venue: null,
-				subject: subject,
-				message
-			}))
-		);
-		if (emailInsertError) return this.error('EmailScholar', emailInsertError);
-
-		// We rely on an database trigger to call the edge function to send the email after the row is inserted into the emails table.
-		// This is slower and less direct, but ensures that the email sending functionality only lives in one place.
-
+		const { subject } = renderEmail(template, args);
+		const recipients = Array.isArray(data) ? (data as { name?: string; email: string }[]) : [];
 		const notificationTemplate = this.locale.notification.emailed;
 		return {
 			data: undefined,
-			notified: emails.map((email) => {
-				const recipient =
-					typeof email === 'string'
-						? email
-						: ((email.name?.trim() ? email.name : email.email) ?? email.email);
-				return {
-					message: notificationTemplate
-						.replace('{recipient}', recipient)
-						.replace('{subject}', subject)
-				};
-			})
+			notified: recipients.map((recipient) => ({
+				message: notificationTemplate
+					.replace('{recipient}', recipient.name?.trim() ? recipient.name : recipient.email)
+					.replace('{subject}', subject)
+			}))
 		};
 	}
 

@@ -4,6 +4,10 @@ create type public."transaction_status" as enum('proposed', 'approved', 'decline
 
 alter type public."transaction_status" OWNER to "postgres";
 
+-- Backs transactions.seq. Declared before the table so the column default can
+-- reference it; `owned by` is attached after the table exists.
+create sequence if not exists public.transactions_seq_seq;
+
 -- A table of transactions, recording a history of token transfers
 create table if not exists public.transactions (
 	-- The unique ID of the transaction
@@ -33,6 +37,13 @@ create table if not exists public.transactions (
 	decliner uuid,
 	-- The reason the decliner gave when declining (null when status != 'declined').
 	decline_reason text,
+	-- A monotonic ordering column. `created_at` defaults to now(), which is
+	-- transaction START time, so every row a single function writes shares a
+	-- timestamp exactly — create_submission inserts one charge per author that
+	-- way. Without a tiebreaker, paginating with ORDER BY created_at + OFFSET can
+	-- return a row twice and skip another. Not client-settable: the INSERT and
+	-- UPDATE column allowlists below omit it.
+	seq bigint not null default nextval('public.transactions_seq_seq'),
 	-- Require that there is either a scholar or venue source but not both
 	constraint check_from check ((num_nonnulls (from_scholar, from_venue)<=1)),
 	-- Require that there is either a scholar or venue destination but not both
@@ -60,8 +71,150 @@ from
 grant
 update (status, tokens, decliner, decline_reason) on public.transactions to authenticated;
 
+-- The same reasoning applies to INSERT: `grant all` confers it on every column,
+-- which let a client supply its own `id` or backdate `created_at`. A caller may
+-- propose a transaction, but may not choose its identity or its place in history.
+revoke insert on public.transactions
+from
+	authenticated;
+
+grant insert (
+	creator,
+	from_scholar,
+	from_venue,
+	to_scholar,
+	to_venue,
+	tokens,
+	currency,
+	purpose,
+	status
+) on public.transactions to authenticated;
+
+-- Make a decided transaction actually immutable, and make its amount unforgeable.
+--
+-- The column grants already lock the identity columns: `creator`, `created_at`,
+-- `from_*`, `to_*`, `currency`, `purpose`, `seq` and `id` cannot be written by a
+-- client at all. What they cannot express is a rule that depends on the row's
+-- CURRENT state, and two such rules matter here.
+--
+-- 1. TERMINALITY. `status`, `tokens`, `decliner` and `decline_reason` are
+--    writable because a proposed transaction has to become approved or declined.
+--    Nothing stopped that happening twice. An approved transfer — tokens already
+--    moved, recorded in token_events — could be flipped to `declined` afterwards,
+--    leaving the ledger saying value moved and the transaction saying it was
+--    refused. It also made approve-vs-decline a race with two winners: the app's
+--    decline path reads the row, then updates on `id` alone, so an approval
+--    landing in between is simply overwritten.
+--
+-- 2. AMOUNT PRESERVATION. `transactions` has no amount column; the amount IS
+--    cardinality(tokens). Since `tokens` is writable, the amount was writable —
+--    a proposed row carrying N placeholder UUIDs could be approved with a
+--    different number of real ones, and the transaction would then describe a
+--    transfer that never happened at that size. Every legitimate path already
+--    preserves cardinality: approve_transaction sizes its work from
+--    cardinality(_txn.tokens), and create_submission and transfer_tokens fill
+--    exactly as many ids as they reserved. This makes that a rule rather than a
+--    habit.
+--
+-- A trigger rather than a policy or a grant, because both of those decide by WHO
+-- is asking; this decides by what the row already is, and must apply equally to
+-- the SECURITY DEFINER RPCs and to anyone at a psql prompt.
+--
+-- A restore is unaffected: data loads with session_replication_role = replica,
+-- which suppresses user triggers, so historical rows arrive without being judged
+-- against rules they predate. That is the same mechanism the append-only logs
+-- rely on (see RECOVERY.md § Restoring, step 5).
+create or replace function public.transactions_immutable () returns trigger language plpgsql
+set
+	search_path='' as $$
+begin
+	-- Once decided, a transaction is a record of something that happened.
+	if old.status <> 'proposed' then
+		if (new.status, new.tokens, new.decliner, new.decline_reason)
+			is distinct from
+			(old.status, old.tokens, old.decliner, old.decline_reason) then
+			raise exception 'This transaction was already % and cannot be changed', old.status
+				using errcode = 'RR005';
+		end if;
+	end if;
+
+	-- The token count is the amount. It may be filled in, never resized.
+	if cardinality(new.tokens) is distinct from cardinality(old.tokens) then
+		raise exception 'A transaction cannot change how many tokens it moves (% to %)',
+			cardinality(old.tokens), cardinality(new.tokens)
+			using errcode = 'RR005';
+	end if;
+
+	return new;
+end;
+$$;
+
+alter function public.transactions_immutable () OWNER to "postgres";
+
+create or replace trigger transactions_immutable_check before
+update on public.transactions for each row
+execute function public.transactions_immutable ();
+
+-- History is never deleted. See the DELETE policy below.
+revoke delete on public.transactions
+from
+	authenticated,
+	anon;
+
+-- anon is never a writer here. No policy admits it, so RLS already denies these,
+-- but holding the privilege means a future policy written `to public` would
+-- silently open a write path for unauthenticated callers.
+revoke insert,
+update on public.transactions
+from
+	anon;
+
+alter sequence public.transactions_seq_seq owned by public.transactions.seq;
+
+-- A column DEFAULT calling nextval() needs USAGE on the sequence for the
+-- INSERTing role, or every client-side insert fails with "permission denied for
+-- sequence". anon is omitted: its INSERT was revoked above.
+grant
+usage on sequence public.transactions_seq_seq to authenticated,
+service_role;
+
 alter table only public.transactions
 add constraint transactions_pkey primary key (id);
+
+alter table only public.transactions
+add constraint transactions_seq_key unique (seq);
+
+--------------------------------------
+-- Indexes
+-- Chosen from the predicates the application and the remind edge function
+-- actually issue. Before these, every transaction list was a sequential scan
+-- plus a sort.
+--
+-- currency + created_at covers getCurrencyTransactions' filter AND its sort, so
+-- an ordered Index Scan can satisfy the ORDER BY with no Sort node; seq makes the
+-- pagination stable. On a near-empty table the planner still prefers a bitmap
+-- scan plus a sort, which is correct at that size — check the ordered path with
+-- `set enable_bitmapscan = off` before concluding the index is unused.
+create index transactions_currency_created_index on public.transactions using btree (currency, created_at desc, seq desc);
+
+-- The scholar and venue lists filter `from_x = $1 OR to_x = $1`, satisfied as a
+-- BitmapOr over these. Partial because the from/to columns are mutually
+-- exclusive by CHECK, so roughly half the table is null in each.
+create index transactions_from_scholar_index on public.transactions using btree (from_scholar)
+where
+	from_scholar is not null;
+
+create index transactions_to_scholar_index on public.transactions using btree (to_scholar)
+where
+	to_scholar is not null;
+
+create index transactions_from_venue_index on public.transactions using btree (from_venue)
+where
+	from_venue is not null;
+
+create index transactions_to_venue_index on public.transactions using btree (to_venue)
+where
+	to_venue is not null;
 
 alter table only public.transactions
 add constraint transactions_creator_fkey foreign KEY (creator) references public.scholars (id);
@@ -390,23 +543,13 @@ with
 		)
 	);
 
-create policy "transactions cannot be deleted" on public.transactions for DELETE to authenticated using (
-	(
-		(
-			select
-				auth.uid () as uid
-		)=any (
-			(
-				select
-					currencies.minters
-				from
-					currencies
-				where
-					(currencies.id=transactions.currency)
-			)::uuid[]
-		)
-	)
-);
+-- A transaction is the durable record that value moved. Nobody deletes one --
+-- not the giver, not a venue admin, not a currency minter. This policy's USING
+-- clause previously matched the currency's minters, which meant its name said
+-- one thing and its body did the opposite: a minter could permanently erase
+-- approved transfer history while the tokens those rows described stayed put,
+-- leaving the tokens with no explanation of how they got where they are.
+create policy "transactions cannot be deleted" on public.transactions for DELETE to authenticated using (false);
 
 --------------------------------------
 -- RPCs (defined in migration 20260608000000_atomic_crud.sql)
@@ -491,6 +634,12 @@ begin
 		raise exception 'Insufficient tokens to transfer' using errcode = 'RR003';
 	end if;
 
+	-- Attribute the movement to its transaction. coalesce because finalizing a
+	-- proposed transfer reuses that transaction's id, while a fresh transfer needs
+	-- one generated up front: the tokens move before its row is written.
+	_txn_id := coalesce(_transaction, gen_random_uuid());
+	perform set_config('app.txn', _txn_id::text, true);
+
 	-- Reassign all chosen tokens to the destination in one statement.
 	update public.tokens set scholar = _to_scholar, venue = _to_venue where id = any(_token_ids);
 
@@ -502,13 +651,15 @@ begin
 	else
 		-- A fresh transfer (e.g. a gift): record a new approved transaction.
 		insert into public.transactions (
-			creator, from_scholar, from_venue, to_scholar, to_venue,
+			id, creator, from_scholar, from_venue, to_scholar, to_venue,
 			tokens, currency, purpose, status
 		) values (
-			_caller, _from_scholar, _from_venue, _to_scholar, _to_venue,
+			_txn_id, _caller, _from_scholar, _from_venue, _to_scholar, _to_venue,
 			_token_ids, _currency, _purpose, 'approved'
-		) returning id into _txn_id;
+		);
 	end if;
+
+	perform set_config('app.txn', '', true);
 
 	-- Return the transaction id and the tokens that moved.
 	return jsonb_build_object('transaction_id', _txn_id, 'token_ids', to_jsonb(_token_ids));
@@ -554,6 +705,12 @@ begin
 	if _txn.status <> 'proposed' then
 		raise exception 'Transaction is not proposed' using errcode = 'RR001';
 	end if;
+
+	-- Every token write below — the pure mint, the shortfall mint, and the
+	-- transfer — belongs to this one transaction, so attribute once here. Cleared
+	-- before each return so a later write in the same database transaction cannot
+	-- inherit it.
+	perform set_config('app.txn', _transaction_id::text, true);
 
 	-- Collapse the from/to scholar-or-venue pairs into single endpoints; every
 	-- transaction has a recipient.
@@ -604,6 +761,7 @@ begin
 
 		-- Finalize the transaction with the real token ids.
 		update public.transactions set status = 'approved', tokens = _token_ids where id = _transaction_id;
+		perform set_config('app.txn', '', true);
 		return jsonb_build_object('transaction_id', _transaction_id, 'token_ids', to_jsonb(_token_ids));
 	end if;
 
@@ -654,6 +812,7 @@ begin
 	update public.tokens set scholar = _txn.to_scholar, venue = _txn.to_venue where id = any(_token_ids);
 	update public.transactions set status = 'approved', tokens = _token_ids where id = _transaction_id;
 
+	perform set_config('app.txn', '', true);
 	return jsonb_build_object('transaction_id', _transaction_id, 'token_ids', to_jsonb(_token_ids));
 end;
 $function$;

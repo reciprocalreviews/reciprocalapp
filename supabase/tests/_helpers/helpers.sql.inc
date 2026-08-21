@@ -54,8 +54,10 @@ $$;
 -- auth.* and bypass RLS regardless of the current role. Each returns the new id.
 --------------------------------------------------------------------------------
 
--- Create an auth user + scholar. The handle_new_scholar trigger creates the
--- scholars row from the auth.users insert; we then set name/steward.
+-- Create an auth user + scholar. The handle_new_scholar trigger creates the scholars
+-- row from the auth.users insert (populating orcid/name from ORCID OIDC metadata, not
+-- email — see #19), so we set email/name/steward explicitly here for tests that resolve
+-- or notify scholars by their contact email.
 create or replace function tests.create_scholar (p_email text default null, p_steward boolean default false)
 returns uuid language plpgsql security definer set search_path to '' as $$
 declare
@@ -77,7 +79,7 @@ begin
 	);
 	insert into public.scholars (id, email, name, steward)
 	values (new_id, addr, 'Test Scholar', p_steward)
-	on conflict (id) do update set name = excluded.name, steward = excluded.steward;
+	on conflict (id) do update set email = excluded.email, name = excluded.name, steward = excluded.steward;
 	return new_id;
 end;
 $$;
@@ -139,13 +141,16 @@ begin
 end;
 $$;
 
--- Create a submission type at a venue.
-create or replace function tests.create_submission_type (p_venue uuid)
+-- Create a submission type at a venue. The cost defaults to 0, matching the
+-- column default, so the many fixtures that don't care about money are
+-- unaffected; pass one when exercising create_submission, which now requires the
+-- author payments to add up to exactly this amount.
+create or replace function tests.create_submission_type (p_venue uuid, p_cost integer default 0)
 returns uuid language plpgsql security definer set search_path to '' as $$
 declare new_id uuid := gen_random_uuid();
 begin
-	insert into public.submission_types (id, venue, name)
-	values (new_id, p_venue, 'Test Type');
+	insert into public.submission_types (id, venue, name, submission_cost)
+	values (new_id, p_venue, 'Test Type', p_cost);
 	return new_id;
 end;
 $$;

@@ -109,6 +109,42 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          actor: string | null
+          after: Json | null
+          at: string
+          before: Json | null
+          op: string
+          row_id: string | null
+          seq: number
+          tbl: string
+          xid: unknown
+        }
+        Insert: {
+          actor?: string | null
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          op: string
+          row_id?: string | null
+          seq?: never
+          tbl: string
+          xid?: unknown
+        }
+        Update: {
+          actor?: string | null
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          op?: string
+          row_id?: string | null
+          seq?: never
+          tbl?: string
+          xid?: unknown
+        }
+        Relationships: []
+      }
       compensation: {
         Row: {
           amount: number | null
@@ -199,37 +235,72 @@ export type Database = {
         }
         Relationships: []
       }
+      email_verifications: {
+        Row: {
+          candidate_email: string
+          created_at: string
+          expires_at: string
+          scholar: string
+          token_hash: string
+        }
+        Insert: {
+          candidate_email: string
+          created_at?: string
+          expires_at?: string
+          scholar: string
+          token_hash: string
+        }
+        Update: {
+          candidate_email?: string
+          created_at?: string
+          expires_at?: string
+          scholar?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_verifications_scholar_fkey"
+            columns: ["scholar"]
+            isOneToOne: true
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emails: {
         Row: {
+          args: Json
           email: string
           event: string
           id: string
-          message: string
+          message: string | null
           scholar: string | null
           sender: string | null
-          subject: string
+          subject: string | null
           time_sent: string
           venue: string | null
         }
         Insert: {
+          args?: Json
           email: string
           event: string
           id?: string
-          message: string
+          message?: string | null
           scholar?: string | null
           sender?: string | null
-          subject: string
+          subject?: string | null
           time_sent?: string
           venue?: string | null
         }
         Update: {
+          args?: Json
           email?: string
           event?: string
           id?: string
-          message?: string
+          message?: string | null
           scholar?: string | null
           sender?: string | null
-          subject?: string
+          subject?: string | null
           time_sent?: string
           venue?: string | null
         }
@@ -256,6 +327,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      erasures: {
+        Row: {
+          completed_at: string | null
+          id: string
+          note: string | null
+          requested_at: string
+          subject: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          note?: string | null
+          requested_at?: string
+          subject: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          note?: string | null
+          requested_at?: string
+          subject?: string
+        }
+        Relationships: []
       }
       exchanges: {
         Row: {
@@ -387,6 +482,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reconciliations: {
+        Row: {
+          id: string
+          ok: boolean
+          ran_at: string
+          result: Json
+        }
+        Insert: {
+          id?: string
+          ok: boolean
+          ran_at?: string
+          result: Json
+        }
+        Update: {
+          id?: string
+          ok?: boolean
+          ran_at?: string
+          result?: Json
+        }
+        Relationships: []
       }
       roles: {
         Row: {
@@ -706,6 +822,51 @@ export type Database = {
           },
         ]
       }
+      token_events: {
+        Row: {
+          actor: string | null
+          at: string
+          currency: string
+          op: Database["public"]["Enums"]["token_op"]
+          prev_scholar: string | null
+          prev_venue: string | null
+          scholar: string | null
+          seq: number
+          token: string
+          txn: string | null
+          venue: string | null
+          xid: unknown
+        }
+        Insert: {
+          actor?: string | null
+          at?: string
+          currency: string
+          op: Database["public"]["Enums"]["token_op"]
+          prev_scholar?: string | null
+          prev_venue?: string | null
+          scholar?: string | null
+          seq?: never
+          token: string
+          txn?: string | null
+          venue?: string | null
+          xid?: unknown
+        }
+        Update: {
+          actor?: string | null
+          at?: string
+          currency?: string
+          op?: Database["public"]["Enums"]["token_op"]
+          prev_scholar?: string | null
+          prev_venue?: string | null
+          scholar?: string | null
+          seq?: never
+          token?: string
+          txn?: string | null
+          venue?: string | null
+          xid?: unknown
+        }
+        Relationships: []
+      }
       tokens: {
         Row: {
           currency: string
@@ -760,6 +921,7 @@ export type Database = {
           from_venue: string | null
           id: string
           purpose: string
+          seq: number
           status: Database["public"]["Enums"]["transaction_status"]
           to_scholar: string | null
           to_venue: string | null
@@ -775,6 +937,7 @@ export type Database = {
           from_venue?: string | null
           id?: string
           purpose: string
+          seq?: number
           status: Database["public"]["Enums"]["transaction_status"]
           to_scholar?: string | null
           to_venue?: string | null
@@ -790,6 +953,7 @@ export type Database = {
           from_venue?: string | null
           id?: string
           purpose?: string
+          seq?: number
           status?: Database["public"]["Enums"]["transaction_status"]
           to_scholar?: string | null
           to_venue?: string | null
@@ -982,6 +1146,10 @@ export type Database = {
         Args: { _import_note: string; _submissions: Json; _venueid: string }
         Returns: Json
       }
+      can_approve_assignment: {
+        Args: { _role: string; _submission: string }
+        Returns: boolean
+      }
       complete_assignment: {
         Args: {
           _assignment_id: string
@@ -1017,8 +1185,13 @@ export type Database = {
         Returns: Json
       }
       decline_thanks: { Args: { _id: string; _reason: string }; Returns: Json }
+      erase_scholar: {
+        Args: { _note?: string; _scholar?: string }
+        Returns: Json
+      }
+      export_scholar_data: { Args: { _scholar?: string }; Returns: Json }
+      forget_scholar: { Args: { _scholar: string }; Returns: Json }
       isadmin: { Args: { _venueid: string }; Returns: boolean }
-      isapprover: { Args: { _roleid: string }; Returns: boolean }
       isassigned: { Args: { _submissionid: string }; Returns: boolean }
       isauthor: { Args: { _submissionid: string }; Returns: boolean }
       isconflicted: { Args: { _submissionid: string }; Returns: boolean }
@@ -1028,6 +1201,7 @@ export type Database = {
         Returns: boolean
       }
       ispriorityzero: { Args: { _venueid: string }; Returns: boolean }
+      isroleapprovervolunteer: { Args: { _roleid: string }; Returns: boolean }
       issteward: { Args: never; Returns: boolean }
       mark_submission_done: {
         Args: {
@@ -1050,6 +1224,15 @@ export type Database = {
         Args: { _message: string; _submission: string }
         Returns: Json
       }
+      queue_email: {
+        Args: {
+          _args?: string[]
+          _event: string
+          _proposal?: string
+          _scholars?: string[]
+        }
+        Returns: Json
+      }
       queue_thanks_emails: {
         Args: {
           _audience: string
@@ -1058,6 +1241,24 @@ export type Database = {
           _thanks_id: string
         }
         Returns: number
+      }
+      reconcile_ledger: { Args: never; Returns: Json }
+      replay_audit_log: {
+        Args: { _dry_run?: boolean; _from_seq?: number }
+        Returns: Json
+      }
+      request_email_verification: {
+        Args: { _email: string }
+        Returns: undefined
+      }
+      tokens_as_of: {
+        Args: { _at?: string }
+        Returns: {
+          currency: string
+          scholar: string
+          token: string
+          venue: string
+        }[]
       }
       transfer_tokens: {
         Args: {
@@ -1072,12 +1273,14 @@ export type Database = {
         }
         Returns: Json
       }
+      verify_email: { Args: { _token: string }; Returns: Json }
     }
     Enums: {
       exchange_proposal_kind: "create" | "modify" | "merge"
       invited: "invited" | "accepted" | "declined"
       submission_status: "reviewing" | "done"
       thanks_status: "proposed" | "approved" | "declined"
+      token_op: "mint" | "move" | "burn"
       transaction_status: "proposed" | "approved" | "declined"
     }
     CompositeTypes: {
@@ -1213,6 +1416,7 @@ export const Constants = {
       invited: ["invited", "accepted", "declined"],
       submission_status: ["reviewing", "done"],
       thanks_status: ["proposed", "approved", "declined"],
+      token_op: ["mint", "move", "burn"],
       transaction_status: ["proposed", "approved", "declined"],
     },
   },

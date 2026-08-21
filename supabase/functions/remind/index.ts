@@ -1,6 +1,7 @@
 import 'edge-runtime';
 import { createClient, SupabaseClient } from 'supabase';
 import type { Database } from '../../../src/data/database.ts';
+import { requireSecretKey } from '../_shared/auth.ts';
 import { escapeHtml, renderBrandedEmail } from '../_shared/emailShell.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
@@ -175,7 +176,13 @@ async function getTransactionReminders(supabase: SupabaseClient<Database>): Prom
 	return emails;
 }
 
-const handler = async (): Promise<Response> => {
+const handler = async (request: Request): Promise<Response> => {
+	// Only the cron job may trigger reminders. Without this check anyone holding the
+	// (public) anon key could fire the daily run repeatedly, spamming scholars with
+	// reminder mail and advancing the reminder timestamps that suppress the real run.
+	const forbidden = await requireSecretKey(request);
+	if (forbidden) return forbidden;
+
 	try {
 		// Get service role access to the database.
 		const supabase = createClient<Database>(
@@ -190,6 +197,11 @@ const handler = async (): Promise<Response> => {
 
 		const statusReminders = await getStaleStatusReminder(supabase);
 		const transactionsReminders = await getTransactionReminders(supabase);
+
+		// Reminders are sent one per recipient, so one rejection should not abandon the rest
+		// of the run. Count them instead and report at the end — a cron job that reports
+		// success while silently delivering nothing is the failure mode worth avoiding.
+		let rejected = 0;
 
 		for (const email of [...statusReminders, ...transactionsReminders]) {
 			const { to, subject, message } = email;
@@ -220,9 +232,22 @@ const handler = async (): Promise<Response> => {
 						text
 					})
 				});
-				// Wait for the email to sent.
-				await res.json();
+				// `fetch` does not throw on 4xx/5xx, so an unverified sender domain or a
+				// rejected recipient would otherwise pass silently.
+				const data = await res.json().catch(() => null);
+				if (!res.ok) {
+					rejected++;
+					console.error('Resend rejected a reminder', res.status, to, data);
+				}
 			}
+		}
+
+		const attempted = statusReminders.length + transactionsReminders.length;
+		if (rejected > 0) {
+			return new Response(
+				JSON.stringify({ error: 'Resend rejected reminders', rejected, attempted }),
+				{ status: 502, headers: { 'Content-Type': 'application/json' } }
+			);
 		}
 
 		// Respond with success.

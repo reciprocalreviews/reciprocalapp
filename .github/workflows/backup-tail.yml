@@ -1,0 +1,120 @@
+name: Backup tail
+
+# Export the append-only logs every hour, closing the gap between nightly backups.
+#
+# Without point-in-time recovery, the nightly dump alone means a failure at 07:00
+# loses nearly a full day. A full hourly dump would be wasteful; but every change
+# since the last dump is already recorded in two append-only tables, and those are
+# a few kilobytes. Restoring last night's dump and replaying the tail over it
+# brings the recovery point from 24 hours to roughly one.
+#
+# The replay half lives in supabase/dr/replay.sql and public.replay_audit_log();
+# without it these files are inert, so change them together.
+
+on:
+  schedule:
+    # Twenty past, so it never contends with the nightly dump at 08:00.
+    - cron: '20 * * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which project to tail
+        type: choice
+        options: [production, staging]
+        default: production
+        required: true
+
+# Never two tails at once against the same database.
+concurrency:
+  group: backup-tail-${{ github.event.inputs.target || 'production' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  tail:
+    name: Export and upload
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve target
+        id: plan
+        env:
+          TARGET: ${{ github.event.inputs.target || 'production' }}
+        run: |
+          set -euo pipefail
+          {
+            echo "target=$TARGET"
+            echo "prefix=$TARGET/tail/$(date -u +%Y-%m-%d)/$(date -u +%H%M)Z"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check the required secrets are present
+        env:
+          DB_URL: ${{ github.event.inputs.target == 'staging' && secrets.STAGING_DB_URL || secrets.PRODUCTION_DB_URL }}
+          BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+        run: |
+          set -euo pipefail
+          [ -n "$DB_URL" ] || { echo "missing DB URL secret" >&2; exit 1; }
+          [ -n "$BUCKET" ] || { echo "missing BACKUP_S3_BUCKET" >&2; exit 1; }
+
+      - name: Resolve the age recipients
+        id: age
+        run: |
+          set -euo pipefail
+          f=supabase/dr/backup-recipient.age.pub
+          [ -s "$f" ] || { echo "::error::no age recipient at $f (see RECOVERY.md)"; exit 1; }
+          echo "recipient=$(grep -oE 'age1[0-9a-z]+' "$f" | paste -sd' ' -)" >> "$GITHUB_OUTPUT"
+
+      - name: Export the tail
+        env:
+          DB_URL: ${{ github.event.inputs.target == 'staging' && secrets.STAGING_DB_URL || secrets.PRODUCTION_DB_URL }}
+          AGE_RECIPIENT: ${{ steps.age.outputs.recipient }}
+          OUT_DIR: dr-tail
+          PGSSLMODE: require
+          # Three hours at an hourly cadence: GitHub's scheduled runs can be 20-30
+          # minutes late, and two consecutive misses should still leave no hole.
+          # Replay deduplicates, so the overlap costs only bytes.
+          WINDOW_HOURS: 3
+        run: |
+          set -euo pipefail
+          rm -rf dr-tail
+          ./supabase/dr/tail.sh
+
+      - name: Refuse to upload anything unencrypted
+        run: |
+          set -euo pipefail
+          if find dr-tail -type f ! -name '*.age' | grep -q .; then
+            echo "::error::unencrypted files in dr-tail; refusing to upload" >&2
+            find dr-tail -type f ! -name '*.age' >&2
+            exit 1
+          fi
+
+      - name: Upload
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+        run: |
+          set -euo pipefail
+          aws s3 cp dr-tail/ "s3://${{ secrets.BACKUP_S3_BUCKET }}/${{ steps.plan.outputs.prefix }}/" \
+            --recursive --endpoint-url "${{ secrets.BACKUP_S3_ENDPOINT }}" --only-show-errors
+          echo "uploaded to ${{ steps.plan.outputs.prefix }}"
+
+      - name: Report failure loudly
+        if: failure()
+        run: |
+          {
+            echo '### :rotating_light: Backup tail failed'
+            echo
+            echo 'The recovery point has silently widened back to the last nightly dump.'
+            echo 'A single missed hour is covered by the next run, since the export window'
+            echo 'overlaps — but repeated failures are not.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Shred the local copy
+        if: always()
+        run: rm -rf dr-tail

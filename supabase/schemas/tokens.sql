@@ -44,53 +44,25 @@ create policy "tokens are visible to authenticated scholars" on public.tokens fo
 select
 	to authenticated using (true);
 
-create policy "only minters can create tokens" on public.tokens for INSERT to authenticated
+-- Tokens are never written directly by a client. Every mint and every transfer
+-- goes through a SECURITY DEFINER RPC below (or in transactions.sql), each of
+-- which re-implements the authorization it bypasses.
+--
+-- This used to be an INSERT policy for currency minters and an UPDATE policy for
+-- the owning scholar / venue admins / priority-0 role holders. The UPDATE policy
+-- was `with check (true)`, which pinned nothing about the resulting row: the
+-- owning scholar could PATCH /rest/v1/tokens to reassign a token to anyone with
+-- NO transactions row written, and could rewrite the token's `currency` to
+-- counterfeit value in a currency they were never granted (balances are count(*)
+-- of token rows). The write privilege is revoked below, and these deny policies
+-- record the intent so policies_are() can assert it.
+create policy "tokens are only created by definer rpcs" on public.tokens for INSERT to authenticated
 with
-	check (
-		(
-			(
-				select
-					auth.uid () as uid
-			)=any (
-				(
-					select
-						currencies.minters
-					from
-						public.currencies
-					where
-						(currencies.id=tokens.currency)
-				)::uuid[]
-			)
-		)
-	);
+	check (false);
 
--- Token ownership may only be changed by the owning scholar, the owning venue's
--- admins, or a priority-0 role holder at the owning venue. Currency minters
--- mint tokens (INSERT) but must not move ownership of existing tokens.
-create policy "owners, admins, and priority-0 roles can update tokens" on public.tokens
+create policy "tokens are only updated by definer rpcs" on public.tokens
 for update
-	to authenticated using (
-		(
-			(
-				(scholar is not null)
-				and (
-					(
-						select
-							auth.uid () as uid
-					)=scholar
-				)
-			)
-			or (
-				(venue is not null)
-				and (
-					public.isAdmin (venue)
-					or public.isPriorityZero (venue)
-				)
-			)
-		)
-	)
-with
-	check (true);
+	to authenticated using (false);
 
 create policy "tokens cannot be deleted" on public.tokens for DELETE to authenticated using (false);
 
@@ -133,6 +105,12 @@ begin
 		raise exception 'A minter cannot mint into a venue they administer';
 	end if;
 
+	-- Attribute the mint to the transaction it belongs to. The id is generated up
+	-- front because the tokens are written before the transaction row exists, and
+	-- the token_events trigger reads app.txn at the moment of the write.
+	_txn_id := gen_random_uuid();
+	perform set_config('app.txn', _txn_id::text, true);
+
 	-- Create the tokens, owned by the destination venue, and capture their ids.
 	with inserted as (
 		insert into public.tokens (currency, venue, scholar)
@@ -143,12 +121,17 @@ begin
 
 	-- Record the matching approved mint transaction (no source, to the venue).
 	insert into public.transactions (
-		creator, from_scholar, from_venue, to_scholar, to_venue,
+		id, creator, from_scholar, from_venue, to_scholar, to_venue,
 		tokens, currency, purpose, status
 	) values (
-		_caller, null, null, null, _to_venue,
+		_txn_id, _caller, null, null, null, _to_venue,
 		_token_ids, _currency, _purpose, 'approved'
-	) returning id into _txn_id;
+	);
+
+	-- Clear it, so a later token write in this same database transaction that is
+	-- NOT part of this mint is recorded as unattributed rather than borrowing this
+	-- transaction's id. That is what keeps "txn is null" a trustworthy alarm.
+	perform set_config('app.txn', '', true);
 
 	-- Hand the new token ids and transaction id back to the caller.
 	return jsonb_build_object('token_ids', to_jsonb(_token_ids), 'transaction_id', _txn_id);
@@ -163,6 +146,17 @@ grant all on table public.tokens to anon;
 grant all on table public.tokens to authenticated;
 
 grant all on table public.tokens to service_role;
+
+-- `grant all` above confers TABLE-level INSERT/UPDATE/DELETE that a policy alone
+-- cannot subtract, so remove them. Tokens move only through the SECURITY DEFINER
+-- RPCs, which are unaffected by grants. service_role keeps its grant for
+-- administrative and recovery work.
+revoke insert,
+update,
+delete on public.tokens
+from
+	authenticated,
+	anon;
 
 alter publication supabase_realtime
 add table tokens;
