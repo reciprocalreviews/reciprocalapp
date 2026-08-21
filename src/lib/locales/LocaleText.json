@@ -4452,6 +4452,9 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "noInactiveVenues": {
+                      "type": "string"
+                    },
                     "noProposals": {
                       "type": "string"
                     },
@@ -4466,6 +4469,7 @@
                     }
                   },
                   "required": [
+                    "noInactiveVenues",
                     "noVenues",
                     "venuesNotLoaded",
                     "noProposals",
@@ -4602,11 +4606,15 @@
                     "active": {
                       "type": "string"
                     },
+                    "inactive": {
+                      "type": "string"
+                    },
                     "proposed": {
                       "type": "string"
                     }
                   },
                   "required": [
+                    "inactive",
                     "proposed",
                     "active"
                   ],

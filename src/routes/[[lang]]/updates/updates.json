@@ -1,5 +1,141 @@
 [
   {
+    "version": "0.4.4",
+    "date": "2026-06-28",
+    "changes": {
+      "added": [
+        "Authors can now send a short note of **thanks** to the reviewers of a completed submission; by default an editor reviews the note before it's shared, and reviewers stay anonymous to the author. (#22)"
+      ],
+      "fixed": [],
+      "changed": [
+        "Gave all platform emails a consistent branded look — both sign-in/authentication emails and notification emails — and routed authentication email through the same provider (#56).",
+        "Improved onboarding guidance (#65).",
+        "Updated internal tooling for stability."
+      ],
+      "removed": []
+    }
+  },
+  {
+    "version": "0.4.3",
+    "date": "2026-06-14",
+    "changes": {
+      "added": [],
+      "fixed": [],
+      "changed": [
+        "Updated internal tooling for stability.",
+        "Made the pay prompt on the venue page much more prominent, since it is the central functionality of the platform.",
+        "Clarified on venue proposal that editors will be emailed (#138).",
+        "Extracted all Supabase reads from page load functions to CRUD interface for better encapsulation (#137)."
+      ],
+      "removed": []
+    }
+  },
+  {
+    "version": "0.4.2",
+    "date": "2026-06-07",
+    "changes": {
+      "added": [
+        "Beta mode (#135).",
+        "Payment-free mode, to support volunteer tracking value proposition (#123).",
+        "Migrated non-atomic CRUD operations to RPCs for data integrity guarantees (#136)."
+      ],
+      "fixed": [],
+      "changed": [
+        "Updated internal tooling for stability.",
+        "Reduced end-to-end test and deploy time to ~5 minutes, while also increasing reliability.",
+        "Added end-to-end tests for scholar profile updates and gifting (#116)."
+      ],
+      "removed": []
+    }
+  },
+  {
+    "version": "0.4.1",
+    "date": "2026-05-31",
+    "changes": {
+      "added": [
+        "Submissions can now be **explicitly linked to a prior submission** to represent revise-and-resubmit chains. When creating a submission, authors pick one of their earlier submissions to the same venue from a dropdown (an internal link with true referential integrity); doing so fills and locks the external manuscript ID field and **auto-selects the matching revision submission type**. The free-text external manuscript ID stays available for predecessors that aren't on the platform. Bulk imports best-effort resolve their external `previousid` to an on-platform link. (#124)"
+      ],
+      "fixed": [
+        "Completed submissions and recorded transactions are now genuinely immutable: a submission's `status`/`completed_at` and a transaction's identity fields can no longer be edited directly through the API (a previous column-permission lock was silently ineffective). (#79)"
+      ],
+      "changed": [
+        "**Submission cost is now set per submission type** instead of venue-wide, since each type is a different amount of work. Admins edit each type's cost in the submission types table on the venue dashboard (the venue-wide submission-cost setting is gone). Because a resubmission is its own revision type, it simply carries its own cost. (#124)",
+        "Tightened access control across the database. A submission's assigned reviewers are now visible only to the assignee, the role's approver chain, and venue admins — plus the submission's authors when a venue runs **open (non-anonymous) review** — and a declared conflict always hides that submission's assignments. Currency **minters can now only mint tokens, not move existing ones** (reserve payouts are made by editors), and token balances, compensation amounts, and bid-preference levels are no longer visible to signed-out visitors.",
+        "Added a full-coverage test suite of all table's RLS rules (#79).",
+        "Updated internal tooling for stability."
+      ],
+      "removed": []
+    }
+  },
+  {
+    "version": "0.4.0",
+    "date": "2026-05-24",
+    "changes": {
+      "added": [
+        "Invited scholars can now **accept** or **decline** an invitation directly from the role card or their task list, with both actions requiring a confirm. Pending invitations also surface in the scholar's task list and the relevant role card auto-expands on the venue page. (#128)",
+        "The submissions filter on a venue's submissions page now matches **author** and **assigned reviewer** names in addition to title and external ID, respecting reviewer- and author-anonymity flags. The list also shows authors in a new column (where visible to the viewer) and highlights cells whose content matches the filter. (#125)",
+        "The proposer of a transaction is now emailed when a minter or editor **declines** it, with the decliner's name (and contact link), the reason, and a link back to follow up. The transactions page also shows the decliner and reason inline on declined rows, and the original purpose is preserved alongside the new audit columns. (#114)",
+        "The submission detail page now shows each candidate scholar's **active assignment count against their stated paper-count cap** in a new \"Assignments / Limit\" column (with cross-venue load shown as a secondary indicator), and approving an assignment that would push the scholar over their cap now requires a second click to confirm. (#126)",
+        "Venue editors can now copy ready-to-paste **email-template snippets** for author submission payment, assignment acknowledgement, and compensation requests from the venue's settings page, with the manuscript-ID variable rendered in the syntax of the chosen reviewing platform (HotCRP, EasyChair, ScholarOne, Editorial Manager, OJS, OpenReview, PCS, or plain text). The deep-link URLs in those snippets pre-fill the manuscript ID on the destination page so recipients land in the right form, ready to submit. (#113)"
+      ],
+      "fixed": [
+        "Fixed an issue where scholars who accepted an invitation to a role kept their volunteer status as \"invited\" instead of advancing to \"accepted,\" so editors filtering for confirmed volunteers wouldn't see them. (#127)"
+      ],
+      "changed": [
+        "Renamed the \"Cancel\" action on proposed transactions to **Decline** throughout the UI (button labels, status badge, error messages), to better match its meaning as an active, accountable decision. (#114)",
+        "Reworked the venue settings page as a **numbered setup workflow**: a \"Decide policies\" primer at the top lists the community decisions to make first, then each section is a numbered step (Activate is always the last one). Sections renumber automatically when one is hidden (e.g. Bid preference levels disappears if no role allows bidding), and per-role cards start collapsed so the page stays scannable.",
+        "Updated internal tooling for stability."
+      ],
+      "removed": []
+    }
+  },
+  {
+    "version": "0.3.15",
+    "date": "2026-05-17",
+    "changes": {
+      "added": [
+        "A submission can now be marked **done**, finalizing review and compensating its editor(s) in one action.",
+        "Submissions list now shows a per-submission **Progress** column (in review / done). Done submissions sort to the bottom of the list regardless of other sort order, and are hidden from the list after a venue-configurable window.",
+        "New venue setting: how long do fininshed submissions remain visible? They remain accessible by direct link.",
+        "Made subheaders linkable.",
+        "Wrote and wired up terms of service and privacy. Thanks to Andrew Petersen for the writing and research! (#13)",
+        "Added customizable reminder frequency for minting and transaction reminders.",
+        "Added preference levels to bidding (#122).",
+        "Added paper count limits to assignments (#129)."
+      ],
+      "fixed": [],
+      "changed": [
+        "Improved form design.",
+        "Updated RLS policies and front end to prevent \"self-dealing\": scholars who enrich themselves with tokens, without oversight.",
+        "Updated internal tooling for stability."
+      ],
+      "removed": []
+    }
+  },
+  {
+    "version": "0.3.14",
+    "date": "2026-05-10",
+    "changes": {
+      "added": [
+        "End-to-end tests for venue administration (#121), currency minting and transaction approval (#120), role configuration and volunteering (#118), submission and assignments (#119), and venue proposal (#117)."
+      ],
+      "fixed": [
+        "Locale validation now works instead of silently failing.",
+        "Request compensation emails now go to the correct recipients."
+      ],
+      "changed": [
+        "Volunteers can now approve and compensate the work of other volunteers when the are in an approving role. For example, rather than an Associate Editor marking a Reviewer's review approved, and then generating a proposed transaction that a minter must approve, the Associate Editor can directly approve the transfer from the venue. A transaction is still generated for transparency and auditing.",
+        "Updated DESIGN.md to be alignment with the current design and technical debt. Also updated CLAUDE.md to maintain DEISGN.md and ARCHITECTURE.md in response to changes in implementation.",
+        "Updated ARCHITECTURE.md to be a more complete onboarding document for new contributors.",
+        "Gated Vercel deployments behind verifications and Supabase migrations in GitHub Actions workflows for dev and prod.",
+        "Cached Supabase Docker for Playwright speed in CI.",
+        "Updated internal tooling for stability.",
+        "Only generate updates in CI."
+      ],
+      "removed": []
+    }
+  },
+  {
     "version": "0.3.13",
     "date": "2026-05-03",
     "changes": {
@@ -787,7 +923,7 @@
         "Added a toggleable submission status to each submission, to mark when it is no longer in review.",
         "Show submissions on scholar page.",
         "Transaction approval by giver or minter.",
-        "Transaction declining by giver, editor, or minter."
+        "Transaction cancelation by giver, editor, or minter."
       ],
       "fixed": [
         "Use Noto Emoji instead of system default to guarantee monochrome, consistent emojis.",

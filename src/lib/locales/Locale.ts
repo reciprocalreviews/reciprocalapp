@@ -140,6 +140,7 @@ export type LocaleText = {
 			title: string;
 			description: string;
 			header: {
+				inactive: string;
 				proposed: string;
 				active: string;
 			};
@@ -147,6 +148,7 @@ export type LocaleText = {
 				propose: string;
 			};
 			feedback: {
+				noInactiveVenues: string;
 				noVenues: string;
 				venuesNotLoaded: string;
 				noProposals: string;

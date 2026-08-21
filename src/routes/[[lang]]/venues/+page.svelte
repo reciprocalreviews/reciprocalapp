@@ -12,6 +12,7 @@
 
 	let proposals = $derived(data.proposals);
 	let venues = $derived(data.venues);
+	let inactiveVenues = $derived(data.inactiveVenues);
 
 	const auth = getAuth();
 </script>
@@ -25,20 +26,18 @@
 
 	<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.active} />
 
-	{#if venues}
-		{#if venues.length > 0}
-			<ul>
-				{#each venues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue, index}
-					<li>
-						<VenueLink id={venue.id} name={venue.title} testid={'venue-' + index}></VenueLink>
-					</li>
-				{/each}
-			</ul>
-		{:else}
-			<Feedback text={(l) => l.page.venues.feedback.noVenues} />
-		{/if}
-	{:else}
+	{#if venues === null}
 		<Feedback error text={(l) => l.page.venues.feedback.venuesNotLoaded} />
+	{:else if venues.length > 0}
+		<ul>
+			{#each venues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue, index}
+				<li>
+					<VenueLink id={venue.id} name={venue.title} testid={'venue-' + index}></VenueLink>
+				</li>
+			{/each}
+		</ul>
+	{:else}
+		<Feedback text={(l) => l.page.venues.feedback.noVenues} />
 	{/if}
 
 	<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.proposed} />
@@ -59,5 +58,20 @@
 		{/if}
 	{:else}
 		<Feedback error text={(l) => l.page.venues.feedback.proposalsNotLoaded} />
+	{/if}
+
+	{#if inactiveVenues !== null && inactiveVenues.length > 0}
+		<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.inactive} />
+
+		<ul>
+			{#each inactiveVenues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue, index}
+				<li data-testid={'inactive-venue-' + index}>
+					{venue.title}
+					{#if venue.inactive}
+						<span class="inactive-note">({venue.inactive})</span>
+					{/if}
+				</li>
+			{/each}
+		</ul>
 	{/if}
 </Page>
