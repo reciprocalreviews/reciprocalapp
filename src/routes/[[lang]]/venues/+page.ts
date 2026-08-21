@@ -8,7 +8,7 @@ export const load: PageLoad = async ({ parent }) => {
 
 	return {
 		proposals,
-		venues: allVenues?.filter((v) => v.inactive === null) ?? [],
-		inactiveVenues: allVenues?.filter((v) => v.inactive !== null) ?? []
+		venues: allVenues?.filter((v) => v.inactive === null) ?? null,
+		inactiveVenues: allVenues?.filter((v) => v.inactive !== null) ?? null
 	};
 };
