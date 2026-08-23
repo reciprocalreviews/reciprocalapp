@@ -20,6 +20,15 @@ jobs:
   rls-tests:
     uses: ./.github/workflows/rls.yml
 
+  # Formatting, generated-type freshness, and schemas/-vs-migrations drift.
+  # These live in ci.yml, which triggers on `pull_request` — but `dev` is pushed
+  # to directly, so before this they simply never ran on the deploy path. The
+  # drift check is the one that matters most here: supabase/schemas/ is
+  # documented as authoritative, and a direct push to dev is exactly where it
+  # would silently diverge from the migrations.
+  repo-checks:
+    uses: ./.github/workflows/ci.yml
+
   migrate:
     runs-on: ubuntu-latest
 

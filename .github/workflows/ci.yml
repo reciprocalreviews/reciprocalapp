@@ -1,7 +1,13 @@
 name: CI
 
 on:
+  # Run as its own check on pull requests,
   pull_request:
+  # allow the deploy workflows to call it, since `dev` and `main` are pushed to
+  # directly rather than through a PR (see `npm run deploy`), and without this
+  # these checks never run on the deploy path at all,
+  workflow_call:
+  # and allow manual runs.
   workflow_dispatch:
 
 jobs:
