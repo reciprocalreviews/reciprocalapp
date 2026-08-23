@@ -34,7 +34,10 @@ create table if not exists public.thanks (
 	-- One note per author per submission
 	constraint thanks_submission_author_key unique (submission, author),
 	-- The note must be non-empty and bounded
-	constraint thanks_message_check check (char_length(btrim(message)) > 0 and char_length(message) <= 1000)
+	constraint thanks_message_check check (
+		char_length(btrim(message))>0
+		and char_length(message)<=1000
+	)
 );
 
 alter table public.thanks OWNER to "postgres";
@@ -189,7 +192,8 @@ create or replace function public.queue_thanks_emails (
 	_message text
 ) returns integer language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_t public.thanks;
@@ -263,8 +267,13 @@ begin
 end;
 $function$;
 
-revoke execute on function public.queue_thanks_emails (uuid, text, text, text) from public;
-grant execute on function public.queue_thanks_emails (uuid, text, text, text) to authenticated;
+revoke
+execute on function public.queue_thanks_emails (uuid, text, text, text)
+from
+	public;
+
+grant
+execute on function public.queue_thanks_emails (uuid, text, text, text) to authenticated;
 
 --------------------------------------
 -- RPCs (defined in migration 20260628000000_author_thanks.sql)
@@ -273,12 +282,10 @@ grant execute on function public.queue_thanks_emails (uuid, text, text, text) to
 -- Inserts the note (proposed, or approved when the venue has vetting off), or
 -- revises a previously declined note. Returns the id, resolved status, and venue
 -- so the app layer can render and queue the right notification.
-create or replace function public.propose_thanks (
-	_submission uuid,
-	_message text
-) returns jsonb language plpgsql security definer
+create or replace function public.propose_thanks (_submission uuid, _message text) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_venue uuid;
@@ -349,17 +356,21 @@ begin
 end;
 $function$;
 
-revoke execute on function public.propose_thanks (uuid, text) from public;
-grant execute on function public.propose_thanks (uuid, text) to authenticated;
+revoke
+execute on function public.propose_thanks (uuid, text)
+from
+	public;
+
+grant
+execute on function public.propose_thanks (uuid, text) to authenticated;
 
 -- approve_thanks: a venue admin or priority-0 editor approves a proposed note.
 -- Returns the venue, submission, and note text so the app layer can render and
 -- queue the delivery to reviewers.
-create or replace function public.approve_thanks (
-	_id uuid
-) returns jsonb language plpgsql security definer
+create or replace function public.approve_thanks (_id uuid) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_t public.thanks;
@@ -386,18 +397,21 @@ begin
 end;
 $function$;
 
-revoke execute on function public.approve_thanks (uuid) from public;
-grant execute on function public.approve_thanks (uuid) to authenticated;
+revoke
+execute on function public.approve_thanks (uuid)
+from
+	public;
+
+grant
+execute on function public.approve_thanks (uuid) to authenticated;
 
 -- decline_thanks: a venue admin or priority-0 editor declines a proposed note,
 -- recording a reason. Returns the venue and submission so the app layer can
 -- render and queue the notification to the author. The note is never delivered.
-create or replace function public.decline_thanks (
-	_id uuid,
-	_reason text
-) returns jsonb language plpgsql security definer
+create or replace function public.decline_thanks (_id uuid, _reason text) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_t public.thanks;
@@ -424,5 +438,10 @@ begin
 end;
 $function$;
 
-revoke execute on function public.decline_thanks (uuid, text) from public;
-grant execute on function public.decline_thanks (uuid, text) to authenticated;
+revoke
+execute on function public.decline_thanks (uuid, text)
+from
+	public;
+
+grant
+execute on function public.decline_thanks (uuid, text) to authenticated;

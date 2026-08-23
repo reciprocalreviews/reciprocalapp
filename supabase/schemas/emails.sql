@@ -189,8 +189,8 @@ grant all on FUNCTION public.send_email () to "service_role";
 -- Triggers
 --
 create or replace trigger send_on_email_insert
-after INSERT on public.emails for EACH row
-execute FUNCTION public.send_email ();
+after insert on public.emails for each row
+execute function public.send_email ();
 
 --------------------------------------
 -- RPC (authoritative definition from migration 20260719030000_queue_email_rpc)
@@ -201,7 +201,8 @@ create or replace function public.queue_email (
 	_proposal uuid default null
 ) returns jsonb language plpgsql security definer
 set
-	"search_path" to 'public', 'pg_temp' as $$
+	"search_path" to 'public',
+	'pg_temp' as $$
 declare
 	_caller uuid := (select auth.uid());
 	_recipients jsonb := '[]'::jsonb;
@@ -253,12 +254,14 @@ $$;
 
 alter function public.queue_email (text, text[], uuid[], uuid) OWNER to "postgres";
 
-revoke execute on function public.queue_email (text, text[], uuid[], uuid)
+revoke
+execute on function public.queue_email (text, text[], uuid[], uuid)
 from
 	public,
 	anon;
 
-grant execute on function public.queue_email (text, text[], uuid[], uuid) to authenticated;
+grant
+execute on function public.queue_email (text, text[], uuid[], uuid) to authenticated;
 
 --------------------------------------
 -- The alias, defined once.
@@ -275,7 +278,8 @@ $$;
 
 alter function public.steward_inbox () OWNER to "postgres";
 
-grant execute on function public.steward_inbox () to authenticated;
+grant
+execute on function public.steward_inbox () to authenticated;
 
 --------------------------------------
 -- queue_steward_email: queue a steward notification to the shared inbox.
@@ -294,7 +298,8 @@ grant execute on function public.steward_inbox () to authenticated;
 -- inbox is staffed by the people best placed to recognize junk.
 create or replace function public.queue_steward_email (_event text, _args text[] default '{}') returns void language plpgsql security definer
 set
-	"search_path" to 'public', 'pg_temp' as $$
+	"search_path" to 'public',
+	'pg_temp' as $$
 declare
 	_caller uuid := (select auth.uid());
 begin
@@ -314,9 +319,11 @@ $$;
 
 alter function public.queue_steward_email (text, text[]) OWNER to "postgres";
 
-revoke execute on function public.queue_steward_email (text, text[])
+revoke
+execute on function public.queue_steward_email (text, text[])
 from
 	public,
 	anon;
 
-grant execute on function public.queue_steward_email (text, text[]) to authenticated;
+grant
+execute on function public.queue_steward_email (text, text[]) to authenticated;

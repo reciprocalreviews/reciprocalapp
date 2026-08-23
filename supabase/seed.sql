@@ -443,7 +443,7 @@ values
 -- (this whole file is local-only — see the warning at the top).
 update auth.users
 set
-	encrypted_password = extensions.crypt('password', extensions.gen_salt('bf'));
+	encrypted_password=extensions.crypt ('password', extensions.gen_salt ('bf'));
 
 insert into
 	public.currencies (id, name, description, minters)
@@ -637,7 +637,14 @@ values
 	);
 
 insert into
-	public.submission_types (id, venue, name, description, revision_of, submission_cost)
+	public.submission_types (
+		id,
+		venue,
+		name,
+		description,
+		revision_of,
+		submission_cost
+	)
 values
 	(
 		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
@@ -955,16 +962,26 @@ values
 -- Seed the venue's token reserve so role approvers have something to pay
 -- out when they click Complete on an assignment. Sized for usability
 -- testing (50 tokens = 5 reviewer compensations at 10 tokens each).
-insert into public.tokens (currency, scholar, venue)
-select 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac', null, 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6'
-from generate_series(1, 50);
+insert into
+	public.tokens (currency, scholar, venue)
+select
+	'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+	null,
+	'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6'
+from
+	generate_series(1, 50);
 
 -- Give author1 generous headroom so the submission end-to-end tests (which
 -- spend a submission cost plus a resubmission cost, and may re-run on CI) have
 -- plenty to pay with across a suite run.
-insert into public.tokens (currency, scholar, venue)
-select 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac', 'b8a805bf-0aae-4443-9185-de019a8715cb', null
-from generate_series(1, 100);
+insert into
+	public.tokens (currency, scholar, venue)
+select
+	'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+	'b8a805bf-0aae-4443-9185-de019a8715cb',
+	null
+from
+	generate_series(1, 100);
 
 insert into
 	public.volunteers (
@@ -1415,8 +1432,10 @@ values
 -- on TOK-2025-001 and TOK-2025-004; r3 (1 active + 1 bid) reads "1 / 1" red
 -- on TOK-2025-002's bid row. See #126.
 update public.volunteers
-set papers = 1
-where roleid = 'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81'
+set
+	papers=1
+where
+	roleid='f3209eee-ad37-11f0-a9a2-7ba7c65d0a81'
 	and scholarid in (
 		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
 		'7ff8621a-cbe0-4789-bbee-f008d38c4ac9'

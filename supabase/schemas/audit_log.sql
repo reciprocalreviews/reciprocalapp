@@ -60,7 +60,7 @@ create table if not exists public.audit_log (
 	before jsonb,
 	after jsonb,
 	actor uuid,
-	xid xid8 not null default pg_current_xact_id (),
+	xid xid8 not null default pg_current_xact_id(),
 	at timestamptz not null default clock_timestamp()
 );
 
@@ -164,9 +164,8 @@ $$;
 
 alter function public.audit_log_append_only () OWNER to "postgres";
 
-create or replace trigger audit_log_no_rewrite before
-update
-or delete on public.audit_log for each row
+create or replace trigger audit_log_no_rewrite
+before update or delete on public.audit_log for each row
 execute function public.audit_log_append_only ();
 
 --------------------------------------
@@ -202,7 +201,6 @@ select
 -- table inside the `before`/`after` payloads of `scholars` rows (and as `actor`
 -- anywhere they acted), so forget_scholar() must scrub here as well as in
 -- token_events and transactions.
-
 -- Replay the audit log forward over a restored database.
 --
 -- This is the half of the recovery-point story that the hourly tail is useless

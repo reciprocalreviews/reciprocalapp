@@ -141,8 +141,7 @@
 					style:width={size ? undefined : 'auth'}
 					style:height={size ? undefined : height + 'px'}
 					onkeydown={(event) =>
-						event.key === 'Enter' && event.metaKey && done ? edit(event) : undefined}
-				></textarea>
+						event.key === 'Enter' && event.metaKey && done ? edit(event) : undefined}></textarea>
 			{/if}
 			{#if error !== undefined && wasFocused}
 				<span class="field-error"><Text path={error} /></span>

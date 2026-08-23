@@ -127,10 +127,7 @@ test('editor invites a scholar to an invite-only role by email', async ({ page, 
 		.toBe('invited');
 });
 
-test('an invited scholar declines the invitation from the role card', async ({
-	page,
-	context
-}) => {
+test('an invited scholar declines the invitation from the role card', async ({ page, context }) => {
 	const inviteeID = sql(`select id from public.scholars where email = '${INVITEE_EMAIL}';`);
 
 	// Reset prior state so this test can re-run cleanly.
@@ -182,10 +179,7 @@ test('an invited scholar declines the invitation from the role card', async ({
 		.toBe('declined');
 });
 
-test('an invited scholar accepts the invitation from the role card', async ({
-	page,
-	context
-}) => {
+test('an invited scholar accepts the invitation from the role card', async ({ page, context }) => {
 	const inviteeID = sql(`select id from public.scholars where email = '${INVITEE_EMAIL}';`);
 
 	// Reset prior state so this test can re-run cleanly. Clear ALL of the
@@ -361,9 +355,7 @@ test('volunteer filter on /venue/[id]/volunteers narrows the table by name, emai
 	await page.waitForLoadState('networkidle');
 
 	// Without a filter, multiple Reviewer rows are visible (r1..r5).
-	const reviewerRowsUnfiltered = await page
-		.locator('tr[data-testid^="volunteer-row-2-"]')
-		.count();
+	const reviewerRowsUnfiltered = await page.locator('tr[data-testid^="volunteer-row-2-"]').count();
 	expect(reviewerRowsUnfiltered).toBeGreaterThan(1);
 
 	// Set a filter that uniquely picks out r1 by name (Rigor Russ).

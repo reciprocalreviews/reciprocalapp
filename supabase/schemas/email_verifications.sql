@@ -11,7 +11,9 @@
 -- The raw token lives only in the emailed URL; we store just its sha256 hash. There is
 -- at most one active request per scholar (primary key on scholar), so re-requesting
 -- (resend, or changing to a different address) simply replaces it and resets the clock.
-create extension if not exists pgcrypto with schema extensions;
+create extension if not exists pgcrypto
+with
+	schema extensions;
 
 create table if not exists public.email_verifications (
 	-- The scholar requesting verification; one active request each.
@@ -23,7 +25,7 @@ create table if not exists public.email_verifications (
 	-- When the request was made.
 	created_at timestamp with time zone default now() not null,
 	-- When the link expires (15 minutes after creation).
-	expires_at timestamp with time zone default (now() + interval '15 minutes') not null
+	expires_at timestamp with time zone default (now()+interval '15 minutes') not null
 );
 
 alter table public.email_verifications OWNER to "postgres";
@@ -70,7 +72,8 @@ alter table public.email_verifications ENABLE row LEVEL SECURITY;
 -- transient delivery fault.
 create or replace function public.request_email_verification (_email text) returns void language "plpgsql" security definer
 set
-	"search_path" to 'public', 'pg_temp' as $$
+	"search_path" to 'public',
+	'pg_temp' as $$
 declare
 	_caller uuid := (select auth.uid());
 	_token text;
@@ -132,9 +135,14 @@ $$;
 
 alter function public.request_email_verification (text) OWNER to "postgres";
 
-revoke execute on function public.request_email_verification (text) from public, anon;
+revoke
+execute on function public.request_email_verification (text)
+from
+	public,
+	anon;
 
-grant execute on function public.request_email_verification (text) to authenticated;
+grant
+execute on function public.request_email_verification (text) to authenticated;
 
 -- verify_email: consume a token. Callable by anon because the link may be clicked while
 -- logged out. Validates the token and its expiry; on success copies the candidate into
@@ -142,7 +150,8 @@ grant execute on function public.request_email_verification (text) to authentica
 -- page can render distinct UI. The 256-bit token makes enumeration infeasible.
 create or replace function public.verify_email (_token text) RETURNS jsonb LANGUAGE "plpgsql" SECURITY DEFINER
 set
-	"search_path" to 'public', 'pg_temp' as $$
+	"search_path" to 'public',
+	'pg_temp' as $$
 declare
 	_row public.email_verifications%rowtype;
 begin
@@ -174,6 +183,11 @@ $$;
 
 alter function public.verify_email (text) OWNER to "postgres";
 
-revoke execute on function public.verify_email (text) from public;
+revoke
+execute on function public.verify_email (text)
+from
+	public;
 
-grant execute on function public.verify_email (text) to anon, authenticated;
+grant
+execute on function public.verify_email (text) to anon,
+authenticated;

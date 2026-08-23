@@ -107,10 +107,7 @@ test('scholar declares a conflict on a submission and it disappears from their s
 	expect(initialButtonCount).toBeGreaterThanOrEqual(1);
 
 	// Click the declare-conflict button on the row containing TOK-2025-001.
-	await page
-		.locator('tr', { hasText: 'TOK-2025-001' })
-		.getByTestId('declare-conflict')
-		.click();
+	await page.locator('tr', { hasText: 'TOK-2025-001' }).getByTestId('declare-conflict').click();
 
 	// Conflict row landed in the DB.
 	await expect

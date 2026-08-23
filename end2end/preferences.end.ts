@@ -50,9 +50,7 @@ test('editor adds, edits, reorders, and deletes preference levels', async ({ pag
 	await field.press('Enter');
 	await expect
 		.poll(() =>
-			sql(
-				`select label from public.preference_levels where venueid = '${VENUE_ID}' and rank = 1;`
-			)
+			sql(`select label from public.preference_levels where venueid = '${VENUE_ID}' and rank = 1;`)
 		)
 		.toBe('If necessary, only');
 

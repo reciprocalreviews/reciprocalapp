@@ -35,7 +35,9 @@ test('an unverified scholar sees the banner and can verify a new contact email',
 	// updated yet — only verifying the token commits it.
 	await expect
 		.poll(() =>
-			sql(`select count(*) from public.emails where event = 'VerifyEmail' and email = '${newEmail}';`)
+			sql(
+				`select count(*) from public.emails where event = 'VerifyEmail' and email = '${newEmail}';`
+			)
 		)
 		.toBe('1');
 	expect(sql(`select coalesce(email, '') from public.scholars where id = '${R5.id}';`)).toBe('');
@@ -110,7 +112,9 @@ test('changing an email trims whitespace and sends; an unchanged address sends n
 	await expect(page.getByTestId('verify-email-sent')).toBeVisible();
 	await expect
 		.poll(() =>
-			sql(`select count(*) from public.emails where event = 'VerifyEmail' and email = '${newEmail}';`)
+			sql(
+				`select count(*) from public.emails where event = 'VerifyEmail' and email = '${newEmail}';`
+			)
 		)
 		.toBe('1');
 	expect(sql(`select email from public.scholars where id = '${R4.id}';`)).toBe(R4.email);

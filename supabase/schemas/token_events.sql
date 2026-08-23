@@ -62,7 +62,7 @@ create table if not exists public.token_events (
 	actor uuid,
 	-- Groups every row written by one database transaction: a 500-token mint is
 	-- 500 rows sharing one xid.
-	xid xid8 not null default pg_current_xact_id (),
+	xid xid8 not null default pg_current_xact_id(),
 	at timestamptz not null default clock_timestamp()
 );
 
@@ -126,13 +126,11 @@ alter function public.log_token_event () OWNER to "postgres";
 -- Two triggers rather than one: a WHEN clause cannot reference OLD on INSERT, so
 -- the ownership-changed guard can only be attached to the UPDATE.
 create or replace trigger tokens_event_log_write
-after insert
-or delete on public.tokens for each row
+after insert or delete on public.tokens for each row
 execute function public.log_token_event ();
 
 create or replace trigger tokens_event_log_move
-after
-update of scholar,
+after update of scholar,
 venue,
 currency on public.tokens for each row when (
 	(old.scholar, old.venue, old.currency) is distinct from (new.scholar, new.venue, new.currency)
@@ -171,9 +169,8 @@ $$;
 
 alter function public.token_events_append_only () OWNER to "postgres";
 
-create or replace trigger token_events_no_rewrite before
-update
-or delete on public.token_events for each row
+create or replace trigger token_events_no_rewrite
+before update or delete on public.token_events for each row
 execute function public.token_events_append_only ();
 
 --------------------------------------

@@ -38,9 +38,15 @@ create table if not exists public.venues (
 	-- There must be at least one admin
 	constraint venues_admins_check check (cardinality(admins)>0),
 	-- Bound the visibility window to a year
-	constraint venues_done_visibility_days_check check (done_visibility_days >= 0 and done_visibility_days <= 365),
+	constraint venues_done_visibility_days_check check (
+		done_visibility_days>=0
+		and done_visibility_days<=365
+	),
 	-- Bound reminder frequency to once-a-day through every-90-days
-	constraint venues_transaction_reminder_frequency_days_check check (transaction_reminder_frequency_days >= 0 and transaction_reminder_frequency_days <= 90)
+	constraint venues_transaction_reminder_frequency_days_check check (
+		transaction_reminder_frequency_days>=0
+		and transaction_reminder_frequency_days<=90
+	)
 );
 
 alter table only public.venues
@@ -68,7 +74,8 @@ grant all on FUNCTION public.isAdmin (_venueid uuid) to authenticated;
 grant all on FUNCTION public.isAdmin (_venueid uuid) to service_role;
 
 create or replace function public.no_minter_admins () returns trigger language plpgsql security definer
-set "search_path" to '' as $$
+set
+	"search_path" to '' as $$
 begin
     if new.payment_free then
         return new;
@@ -135,10 +142,9 @@ grant all on table public.venues to "service_role";
 
 --------------------------------------
 -- Trigger
-create or replace trigger no_minter_admins BEFORE INSERT
-or
-update on public.venues for EACH row
-execute FUNCTION public.no_minter_admins ();
+create or replace trigger no_minter_admins
+before insert or update on public.venues for each row
+execute function public.no_minter_admins ();
 
 alter publication supabase_realtime
 add table venues;

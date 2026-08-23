@@ -85,8 +85,7 @@ test('scholar edits their availability and status, persisting on reload', async 
 	// below interacts with the (hydration-gated) EditableText after this reload.
 	await page.reload();
 	await page.waitForLoadState('networkidle');
-	if (expectedAvailable === 't')
-		await expect(page.getByTestId('available-checkbox')).toBeChecked();
+	if (expectedAvailable === 't') await expect(page.getByTestId('available-checkbox')).toBeChecked();
 	else await expect(page.getByTestId('available-checkbox')).not.toBeChecked();
 
 	// Edit the status via the EditableText: click Edit, fill, then blur — the

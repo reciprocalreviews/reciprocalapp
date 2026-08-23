@@ -61,11 +61,10 @@ create policy "admins can delete proposals" on "public"."proposals" for DELETE t
 -- the new venue, all atomically, so a partial failure can't orphan records.
 -- SECURITY DEFINER; stewards only. Emails to editors and supporters are
 -- dispatched by the application layer from the returned ids.
-create or replace function public.approve_venue_proposal (
-	_proposal_id uuid
-) returns jsonb language plpgsql security definer
+create or replace function public.approve_venue_proposal (_proposal_id uuid) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_proposal public.proposals;
@@ -176,8 +175,13 @@ begin
 end;
 $function$;
 
-revoke execute on function public.approve_venue_proposal (uuid) from public;
-grant execute on function public.approve_venue_proposal (uuid) to authenticated;
+revoke
+execute on function public.approve_venue_proposal (uuid)
+from
+	public;
+
+grant
+execute on function public.approve_venue_proposal (uuid) to authenticated;
 
 grant all on table "public"."proposals" to "anon";
 

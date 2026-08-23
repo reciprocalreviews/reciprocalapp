@@ -26,10 +26,10 @@ alter table only public.preference_levels
 add constraint preference_levels_venue_label_unique unique (venueid, label);
 
 alter table only public.preference_levels
-add constraint preference_levels_label_check check (char_length(label) > 0);
+add constraint preference_levels_label_check check (char_length(label)>0);
 
 alter table only public.preference_levels
-add constraint preference_levels_rank_check check (rank >= 0);
+add constraint preference_levels_rank_check check (rank>=0);
 
 create index preference_levels_venue_index on public.preference_levels using btree (venueid);
 

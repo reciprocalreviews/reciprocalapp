@@ -86,7 +86,9 @@ test('editor adds and removes another editor; last-editor constraint blocks remo
 	// The second admin is now present in the venue's admins list (verify via
 	// DB rather than UI text, which can vary).
 	await expect
-		.poll(() => Number(sql(`select cardinality(admins) from public.venues where id = '${VENUE_ID}';`)))
+		.poll(() =>
+			Number(sql(`select cardinality(admins) from public.venues where id = '${VENUE_ID}';`))
+		)
 		.toBe(2);
 
 	// Remove buttons should now be visible (one per admin).
@@ -98,7 +100,9 @@ test('editor adds and removes another editor; last-editor constraint blocks remo
 	await page.getByTestId('remove-admin-1').click();
 	await page.getByTestId('remove-admin-1').click();
 	await expect
-		.poll(() => Number(sql(`select cardinality(admins) from public.venues where id = '${VENUE_ID}';`)))
+		.poll(() =>
+			Number(sql(`select cardinality(admins) from public.venues where id = '${VENUE_ID}';`))
+		)
 		.toBe(1);
 
 	// Last-editor invariant: the remove button disappears once only one
@@ -208,9 +212,7 @@ test('editor edits welcome amount, submission cost, and per-role compensation', 
 	await page.waitForLoadState('networkidle');
 
 	// Change welcome amount.
-	const originalWelcome = sql(
-		`select welcome_amount from public.venues where id = '${VENUE_ID}';`
-	);
+	const originalWelcome = sql(`select welcome_amount from public.venues where id = '${VENUE_ID}';`);
 	await page.getByTestId('venue-welcome-amount-toggle').click();
 	await page.getByTestId('venue-welcome-amount').fill('25');
 	await page.getByTestId('venue-welcome-amount-toggle').click();

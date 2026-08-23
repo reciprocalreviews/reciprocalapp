@@ -132,9 +132,12 @@ test('author can link a resubmission to a prior submission and is charged the re
 	await page.waitForTimeout(200);
 	await submitOriginal.click();
 	await expect
-		.poll(() => sql(`select count(*) from public.submissions where externalid = '${originalID}';`), {
-			timeout: 90_000
-		})
+		.poll(
+			() => sql(`select count(*) from public.submissions where externalid = '${originalID}';`),
+			{
+				timeout: 90_000
+			}
+		)
 		.toBe('1');
 	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 30_000 });
 

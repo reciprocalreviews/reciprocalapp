@@ -22,9 +22,9 @@ test('mock ORCID sign-in onboards a new scholar with no email and shows the bann
 	await expect
 		.poll(() => sql(`select count(*) from public.scholars where orcid = '${MOCK_ORCID}';`))
 		.toBe('1');
-	expect(sql(`select coalesce(email, '<null>') from public.scholars where orcid = '${MOCK_ORCID}';`)).toBe(
-		'<null>'
-	);
+	expect(
+		sql(`select coalesce(email, '<null>') from public.scholars where orcid = '${MOCK_ORCID}';`)
+	).toBe('<null>');
 	expect(sql(`select name from public.scholars where orcid = '${MOCK_ORCID}';`)).toBe(
 		'Onboarding Tester'
 	);

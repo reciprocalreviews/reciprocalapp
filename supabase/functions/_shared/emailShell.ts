@@ -77,26 +77,28 @@ export function paragraphsToHtml(body: string): string {
 
 /** Derive a clean text/plain alternative from rendered HTML. */
 export function htmlToText(html: string): string {
-	return html
-		.replace(/<style[\s\S]*?<\/style>/gi, '')
-		.replace(/<\/(p|div|tr|h[1-6])>/gi, '\n\n')
-		.replace(/<br\s*\/?>/gi, '\n')
-		.replace(/<[^>]+>/g, '')
-		.replace(/&nbsp;/g, ' ')
-		// The ampersand is decoded LAST, mirroring escapeHtml where it is escaped
-		// first. Decoding it first turned "&amp;lt;" into "&lt;", which the next
-		// pass decoded again into "<" — resurrecting markup that had been
-		// deliberately escaped twice.
-		.replace(/&lt;/g, '<')
-		.replace(/&gt;/g, '>')
-		.replace(/&quot;/g, '"')
-		.replace(/&#39;/g, "'")
-		.replace(/&amp;/g, '&')
-		.replace(/\n{3,}/g, '\n\n')
-		.split('\n')
-		.map((line) => line.trim())
-		.join('\n')
-		.trim();
+	return (
+		html
+			.replace(/<style[\s\S]*?<\/style>/gi, '')
+			.replace(/<\/(p|div|tr|h[1-6])>/gi, '\n\n')
+			.replace(/<br\s*\/?>/gi, '\n')
+			.replace(/<[^>]+>/g, '')
+			.replace(/&nbsp;/g, ' ')
+			// The ampersand is decoded LAST, mirroring escapeHtml where it is escaped
+			// first. Decoding it first turned "&amp;lt;" into "&lt;", which the next
+			// pass decoded again into "<" — resurrecting markup that had been
+			// deliberately escaped twice.
+			.replace(/&lt;/g, '<')
+			.replace(/&gt;/g, '>')
+			.replace(/&quot;/g, '"')
+			.replace(/&#39;/g, "'")
+			.replace(/&amp;/g, '&')
+			.replace(/\n{3,}/g, '\n\n')
+			.split('\n')
+			.map((line) => line.trim())
+			.join('\n')
+			.trim()
+	);
 }
 
 /**
@@ -145,10 +147,7 @@ ${bodyHtml}
  * Convenience helper: take a plain/semi-HTML message body and produce both the
  * branded HTML and a text/plain alternative ready to hand to Resend.
  */
-export function renderBrandedEmail(
-	subject: string,
-	body: string
-): { html: string; text: string } {
+export function renderBrandedEmail(subject: string, body: string): { html: string; text: string } {
 	const html = wrapEmail({ subject, bodyHtml: paragraphsToHtml(body) });
 	return { html, text: htmlToText(html) };
 }

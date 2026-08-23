@@ -177,7 +177,10 @@ from
 --------------------------------------
 -- The scholar-facing entry point. A scholar may erase themselves; a steward may
 -- erase anyone, for a request that arrives by post or by email.
-create or replace function public.erase_scholar (_scholar uuid default null, _note text default null) returns jsonb language plpgsql security definer
+create or replace function public.erase_scholar (
+	_scholar uuid default null,
+	_note text default null
+) returns jsonb language plpgsql security definer
 set
 	search_path='' as $$
 declare

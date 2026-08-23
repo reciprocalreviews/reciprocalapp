@@ -22,11 +22,20 @@ create table submissions (
 	-- The scholars associated with the submission. The non-empty requirement is
 	-- waived for imported rows: a bulk import knows the manuscript exists before it
 	-- knows who on this platform wrote it.
-	authors uuid[] not null constraint submissions_authors_check check (imported or cardinality(authors)>0),
+	authors uuid[] not null constraint submissions_authors_check check (
+		imported
+		or cardinality(authors)>0
+	),
 	-- The token amounts proposed for the submission, corresponding to the authors
-	payments integer[] not null constraint submissions_payments_nonempty_check check (imported or cardinality(payments)>0),
+	payments integer[] not null constraint submissions_payments_nonempty_check check (
+		imported
+		or cardinality(payments)>0
+	),
 	-- The transactions corresponding to the payments, corresponding to the authors. Null uuid of not yet paid.
-	transactions uuid[] not null constraint submissions_transactions_nonempty_check check (imported or cardinality(transactions)>0),
+	transactions uuid[] not null constraint submissions_transactions_nonempty_check check (
+		imported
+		or cardinality(transactions)>0
+	),
 	-- The three arrays stay aligned whether or not the row was imported.
 	constraint submissions_check check (cardinality(payments)=cardinality(authors)),
 	constraint submissions_check1 check (cardinality(transactions)=cardinality(authors)),
@@ -48,7 +57,7 @@ create table submissions (
 	note text,
 	-- Added with bulk import so imported rows have a meaningful ordering. UTC
 	-- explicitly rather than now(), so it does not depend on the server timezone.
-	created_at timestamp with time zone not null default timezone('utc'::text, now())
+	created_at timestamp with time zone not null default timezone ('utc'::text, now())
 );
 
 alter table public.submissions OWNER to "postgres";
@@ -69,15 +78,27 @@ grant all on table public.submissions to "service_role";
 -- by `grant all` above, so remove the table-level UPDATE and re-grant only the
 -- editable columns. (The author list among these is further gated to priority-0
 -- assigned scholars by the enforce_submission_author_edits trigger.)
-revoke update on public.submissions from authenticated;
+revoke
+update on public.submissions
+from
+	authenticated;
 
-grant update (
-	venue, externalid, previousid, previous, submission_type, authors, payments, transactions, title, expertise
+grant
+update (
+	venue,
+	externalid,
+	previousid,
+	previous,
+	submission_type,
+	authors,
+	payments,
+	transactions,
+	title,
+	expertise
 ) on public.submissions to authenticated;
 
 --------------------------------------
 -- Indexes
-
 create index submissions_previous_index on public.submissions using btree (previous);
 
 create index submissions_scholar_index on public.submissions using btree (authors);
@@ -242,8 +263,37 @@ begin
 end;
 $function$;
 
-revoke execute on function public.create_submission (uuid, text, text, uuid, uuid, uuid[], integer[], text, text, text, text) from public;
-grant execute on function public.create_submission (uuid, text, text, uuid, uuid, uuid[], integer[], text, text, text, text) to authenticated;
+revoke
+execute on function public.create_submission (
+	uuid,
+	text,
+	text,
+	uuid,
+	uuid,
+	uuid[],
+	integer[],
+	text,
+	text,
+	text,
+	text
+)
+from
+	public;
+
+grant
+execute on function public.create_submission (
+	uuid,
+	text,
+	text,
+	uuid,
+	uuid,
+	uuid[],
+	integer[],
+	text,
+	text,
+	text,
+	text
+) to authenticated;
 
 alter publication supabase_realtime
 add table submissions;
@@ -386,13 +436,13 @@ $function$;
 --------------------------------------
 -- RPC (authoritative definition from migration 20260804020000_token_event_attribution)
 create or replace function public.mark_submission_done (
-    _submission_id uuid,
-    _payment_purpose_template text,
-    _mint_purpose_template text
+	_submission_id uuid,
+	_payment_purpose_template text,
+	_mint_purpose_template text
 ) returns jsonb language plpgsql security definer
 set
-    search_path=public,
-    pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
     _caller uuid;
     _submission public.submissions;

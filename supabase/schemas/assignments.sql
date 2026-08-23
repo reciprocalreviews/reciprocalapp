@@ -206,7 +206,8 @@ grant all on FUNCTION public.isConflicted (_submissionid uuid) to "service_role"
 -- triggering the submissions RLS policy (which itself reads assignments — that
 -- mutual reference would otherwise be infinite recursion).
 create or replace function public.isAuthor (_submissionid uuid) returns boolean language sql security definer
-set "search_path" to '' as $$
+set
+	"search_path" to '' as $$
 	select exists (
 		select 1 from public.submissions
 		where id = _submissionid and (select auth.uid()) = any (authors)
@@ -453,8 +454,8 @@ $$;
 
 alter function public.enforce_submission_author_edits () OWNER to "postgres";
 
-create or replace trigger enforce_submission_author_edits before
-update on public.submissions for each row
+create or replace trigger enforce_submission_author_edits
+before update on public.submissions for each row
 execute function public.enforce_submission_author_edits ();
 
 grant all on table public.assignments to "anon";

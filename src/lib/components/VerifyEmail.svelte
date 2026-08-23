@@ -116,7 +116,10 @@
 {/if}
 
 {#if unchanged}
-	<Feedback testid="verify-email-unchanged" text={(l) => l.component.verifyEmail.feedback.unchanged} />
+	<Feedback
+		testid="verify-email-unchanged"
+		text={(l) => l.component.verifyEmail.feedback.unchanged}
+	/>
 {/if}
 
 {#if sent}

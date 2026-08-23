@@ -100,11 +100,7 @@ test('authenticated scholar supports a proposal', async ({ page, context }) => {
 
 test('steward edits proposal title, census, and editors', async ({ page, context }) => {
 	const initialTitle = `Edit-test ${Date.now()}`;
-	const proposalID = seedPendingProposal(
-		initialTitle,
-		[APPROVAL_MINTER_EMAIL],
-		[STEWARD_EMAIL]
-	);
+	const proposalID = seedPendingProposal(initialTitle, [APPROVAL_MINTER_EMAIL], [STEWARD_EMAIL]);
 
 	await login(STEWARD_EMAIL, page, context);
 	await page.goto(`/venues/proposal/${proposalID}`);

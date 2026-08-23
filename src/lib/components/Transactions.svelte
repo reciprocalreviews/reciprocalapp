@@ -40,7 +40,6 @@
 	// Editable if the user is the scholar being viewed.
 	let userid = $derived(auth().getUserID());
 
-
 	// The loaded transactions, starting with the ones passed in as props.
 	// svelte-ignore state_referenced_locally
 	let transactionsByPage = $state(new SvelteMap([[0, transactions]]));
@@ -129,7 +128,8 @@
 			<Note path={() => transaction.purpose} />
 			{#if transaction.status === 'declined' && transaction.decline_reason !== null}
 				<div class="decline">
-					<em>Declined{#if transaction.decliner}
+					<em
+						>Declined{#if transaction.decliner}
 							by <ScholarLink id={transaction.decliner} />{/if}:</em
 					>
 					<Note path={() => transaction.decline_reason ?? ''} />

@@ -44,12 +44,12 @@ For each package in the major list, in parallel where possible:
    - `https://github.com/<owner>/<repo>/releases` (look up the repo from `npm view <pkg> repository.url`)
    - The package's `CHANGELOG.md` on GitHub
    - `https://www.npmjs.com/package/<pkg>` if the above are unavailable
-   Focus on entries between `current` and `latest`. Summarize breaking changes only — skip features/fixes.
+     Focus on entries between `current` and `latest`. Summarize breaking changes only — skip features/fixes.
 
 2. **Find usage in the codebase.** Grep for the import:
    - `import .* from ['"]<pkg>['"]` and `require\(['"]<pkg>['"]\)`
    - For scoped packages and sub-paths, also grep the bare name.
-   Read enough of each call site to understand what API surface this repo actually uses.
+     Read enough of each call site to understand what API surface this repo actually uses.
 
 3. **Assess impact.** Cross-reference (1) and (2):
    - Which breaking changes touch APIs this repo uses?

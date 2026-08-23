@@ -37,8 +37,7 @@
 	{#if volunteerCount > 0}
 		<Feedback
 			error
-			text={(l) =>
-				l.view.roles.feedback.consult.replace('{count}', volunteerCount.toString())}
+			text={(l) => l.view.roles.feedback.consult.replace('{count}', volunteerCount.toString())}
 		/>
 	{/if}
 
@@ -96,8 +95,7 @@
 			{ label: locale().shorthand.empty, value: undefined },
 			...roles.filter((r) => r.id !== role.id).map((r) => ({ label: r.name, value: r.id }))
 		]}
-		onChange={(value) =>
-			db().editRoleApprover(role.id, value === null ? null : (value as RoleID))}
+		onChange={(value) => db().editRoleApprover(role.id, value === null ? null : (value as RoleID))}
 	/>
 
 	<Button

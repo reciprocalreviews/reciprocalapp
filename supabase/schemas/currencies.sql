@@ -88,9 +88,9 @@ grant all on FUNCTION "public"."no_admin_minters" () to "service_role";
 -- independently. The function it calls is declared once, above; it used to be
 -- declared twice in this file with identical bodies, and the second copy — the
 -- one Postgres actually kept — was the one missing the payment-free rationale.
-create or replace trigger "no_admin_minters" BEFORE
-update on "public"."currencies" for EACH row
-execute FUNCTION "public"."no_admin_minters" ();
+create or replace trigger "no_admin_minters"
+before update on "public"."currencies" for each row
+execute function "public"."no_admin_minters" ();
 
 alter publication supabase_realtime
 add table currencies;

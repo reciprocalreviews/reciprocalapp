@@ -151,8 +151,8 @@ $$;
 
 alter function public.transactions_immutable () OWNER to "postgres";
 
-create or replace trigger transactions_immutable_check before
-update on public.transactions for each row
+create or replace trigger transactions_immutable_check
+before update on public.transactions for each row
 execute function public.transactions_immutable ();
 
 -- History is never deleted. See the DELETE policy below.
@@ -174,8 +174,7 @@ alter sequence public.transactions_seq_seq owned by public.transactions.seq;
 -- A column DEFAULT calling nextval() needs USAGE on the sequence for the
 -- INSERTing role, or every client-side insert fails with "permission denied for
 -- sequence". anon is omitted: its INSERT was revoked above.
-grant
-usage on sequence public.transactions_seq_seq to authenticated,
+grant usage on sequence public.transactions_seq_seq to authenticated,
 service_role;
 
 alter table only public.transactions
@@ -569,7 +568,8 @@ create or replace function public.transfer_tokens (
 	_transaction uuid
 ) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_from_scholar uuid;
@@ -666,8 +666,13 @@ begin
 end;
 $function$;
 
-revoke execute on function public.transfer_tokens (uuid, uuid, text, uuid, text, integer, text, uuid) from public;
-grant execute on function public.transfer_tokens (uuid, uuid, text, uuid, text, integer, text, uuid) to authenticated;
+revoke
+execute on function public.transfer_tokens (uuid, uuid, text, uuid, text, integer, text, uuid)
+from
+	public;
+
+grant
+execute on function public.transfer_tokens (uuid, uuid, text, uuid, text, integer, text, uuid) to authenticated;
 
 -- approve_transaction: approve a proposed transaction, minting and/or moving
 -- tokens and flipping status to 'approved', atomically. SECURITY DEFINER,
@@ -675,11 +680,10 @@ grant execute on function public.transfer_tokens (uuid, uuid, text, uuid, text, 
 -- minter), the no-self-enrichment rule, and the tokens INSERT policy (minting
 -- requires a minter). Three branches: pure mint; scholar transfer; venue
 -- transfer (minting placeholder tokens first when the reserve lacks them).
-create or replace function public.approve_transaction (
-	_transaction_id uuid
-) returns jsonb language plpgsql security definer
+create or replace function public.approve_transaction (_transaction_id uuid) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_txn public.transactions;
@@ -817,8 +821,13 @@ begin
 end;
 $function$;
 
-revoke execute on function public.approve_transaction (uuid) from public;
-grant execute on function public.approve_transaction (uuid) to authenticated;
+revoke
+execute on function public.approve_transaction (uuid)
+from
+	public;
+
+grant
+execute on function public.approve_transaction (uuid) to authenticated;
 
 alter publication supabase_realtime
 add table transactions;

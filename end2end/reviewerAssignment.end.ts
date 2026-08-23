@@ -9,8 +9,7 @@ const SUBMISSION_002 = 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c13'; // TOK-2025-002
 const REVIEWER_ROLE = SEED.roles.reviewer;
 const MANNY_ID = SEED.scholars.r4.id;
 
-const APPROVE_BID_TIP =
-	'Accept this bid, assigning this scholar to this role for this submission';
+const APPROVE_BID_TIP = 'Accept this bid, assigning this scholar to this role for this submission';
 const APPROVE_ANYWAY_TIP = 'Assign this scholar despite the load warning';
 const UNASSIGN_TIP = 'Remove this assignment';
 

@@ -15,11 +15,15 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
 	depends('supabase:auth');
 
 	const supabase = isBrowser()
-		? createBrowserClient<Database, 'public'>(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
-				global: {
-					fetch
+		? createBrowserClient<Database, 'public'>(
+				PUBLIC_SUPABASE_URL,
+				PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+				{
+					global: {
+						fetch
+					}
 				}
-			})
+			)
 		: createServerClient<Database, 'public'>(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
 				global: {
 					fetch

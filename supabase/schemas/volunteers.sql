@@ -40,7 +40,10 @@ alter table only public.volunteers
 add constraint volunteers_scholarid_fkey foreign KEY (scholarid) references public.scholars (id) on delete cascade;
 
 alter table only public.volunteers
-add constraint volunteers_papers_check check (papers is null or papers >= 0);
+add constraint volunteers_papers_check check (
+	papers is null
+	or papers>=0
+);
 
 --------------------------------------
 -- Indexes
@@ -165,7 +168,8 @@ create or replace function public._welcome_volunteer (
 	_reason text
 ) returns void language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_venue public.venues;
 begin
@@ -199,7 +203,10 @@ begin
 end;
 $function$;
 
-revoke execute on function public._welcome_volunteer (uuid, uuid, uuid, text) from public;
+revoke
+execute on function public._welcome_volunteer (uuid, uuid, uuid, text)
+from
+	public;
 
 -- create_volunteer: insert a volunteer record and, when this is the scholar's
 -- first role and compensation is requested, record the proposed welcome grant —
@@ -213,7 +220,8 @@ create or replace function public.create_volunteer (
 	_papers integer
 ) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_venueid uuid;
@@ -268,18 +276,21 @@ begin
 end;
 $function$;
 
-revoke execute on function public.create_volunteer (uuid, uuid, boolean, boolean, integer) from public;
-grant execute on function public.create_volunteer (uuid, uuid, boolean, boolean, integer) to authenticated;
+revoke
+execute on function public.create_volunteer (uuid, uuid, boolean, boolean, integer)
+from
+	public;
+
+grant
+execute on function public.create_volunteer (uuid, uuid, boolean, boolean, integer) to authenticated;
 
 -- accept_role_invite: respond to a role invitation and, when accepting a first
 -- role, record the proposed welcome grant — atomically. SECURITY DEFINER,
 -- re-implementing the volunteers UPDATE policy (only the volunteering scholar).
-create or replace function public.accept_role_invite (
-	_volunteer_id uuid,
-	_response public.invited
-) returns jsonb language plpgsql security definer
+create or replace function public.accept_role_invite (_volunteer_id uuid, _response public.invited) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_v public.volunteers;
@@ -316,8 +327,13 @@ begin
 end;
 $function$;
 
-revoke execute on function public.accept_role_invite (uuid, public.invited) from public;
-grant execute on function public.accept_role_invite (uuid, public.invited) to authenticated;
+revoke
+execute on function public.accept_role_invite (uuid, public.invited)
+from
+	public;
+
+grant
+execute on function public.accept_role_invite (uuid, public.invited) to authenticated;
 
 alter publication supabase_realtime
 add table volunteers;

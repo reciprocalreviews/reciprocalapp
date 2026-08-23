@@ -79,7 +79,8 @@ create or replace function public.mint_tokens (
 	_purpose text
 ) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_token_ids uuid[];
@@ -138,8 +139,13 @@ begin
 end;
 $function$;
 
-revoke execute on function public.mint_tokens (uuid, integer, uuid, text) from public;
-grant execute on function public.mint_tokens (uuid, integer, uuid, text) to authenticated;
+revoke
+execute on function public.mint_tokens (uuid, integer, uuid, text)
+from
+	public;
+
+grant
+execute on function public.mint_tokens (uuid, integer, uuid, text) to authenticated;
 
 grant all on table public.tokens to anon;
 
