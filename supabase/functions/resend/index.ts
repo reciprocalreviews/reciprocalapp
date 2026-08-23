@@ -1,7 +1,7 @@
 import z from 'zod';
 import { requireSecretKey } from '../_shared/auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
-import { renderBrandedEmail } from '../_shared/emailShell.ts';
+import { FROM_EMAIL, renderBrandedEmail, SUPPORT_EMAIL } from '../_shared/emailShell.ts';
 import { Emails, renderEmail, type EmailType } from '../_shared/templates.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
@@ -57,6 +57,7 @@ const handler = async (request: Request): Promise<Response> => {
 		if (isLocal) {
 			console.log('--- email sent ---');
 			console.log('to: ', to);
+			console.log('reply-to:', SUPPORT_EMAIL);
 			console.log('subject:', subject);
 			console.log('message:', message);
 			console.log('---');
@@ -75,7 +76,11 @@ const handler = async (request: Request): Promise<Response> => {
 					Authorization: `Bearer ${RESEND_API_KEY}`
 				},
 				body: JSON.stringify({
-					from: 'notifications@reciprocal.reviews',
+					from: FROM_EMAIL,
+					// Mail is sent by a robot, but a reply has to reach people. Without this
+					// header every reply to a notification — a question about a proposal, a
+					// disputed transaction — is delivered to an unmonitored mailbox and lost.
+					reply_to: SUPPORT_EMAIL,
 					to: to,
 					subject: subject,
 					html,

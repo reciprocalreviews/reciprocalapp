@@ -249,6 +249,46 @@ The purpose of the about page is to give context about the project. It should:
 
 It has no functionalty.
 
+### Contact `/contact`
+
+The purpose of the contact page is to be a **front door**: one place a person who is stuck
+knows to go, that reaches a specific set of named people rather than an anonymous support
+queue. It should:
+
+- [x] Name the shared steward inbox, `stewards@reciprocal.reviews`, and say what it is for
+- [x] List the current stewards by name, linking to their profiles, so the address visibly
+      resolves to people who will read the message
+- [x] Set expectations: stewards are volunteers, and a reply may take days
+- [x] Point elsewhere for things that are not support requests: help articles, community
+      discussion, the issue tracker, the newsletter
+
+Design rationale: the alternative shapes were a personal email address, which is warm but
+does not scale past one steward and disappears when that person does; and a ticketing
+system, which scales but makes the sender feel they are writing to a company. A shared
+inbox with the stewards named beside it keeps both properties. A scholar knows _who_ they
+are writing to, and any steward can pick it up. It is also a Google Group in collaborative
+inbox mode, so stewards can assign and resolve among themselves rather than each holding a
+private copy and assuming someone else replied.
+
+The steward list is the same data the about page shows, so there is one authoritative
+answer to "who runs this."
+
+It has no functionality beyond loading the steward list.
+
+### Help `/help`
+
+The purpose of the help pages is to answer the questions stewards would otherwise answer by
+hand, so the front door is not the only way to get unstuck. It should:
+
+- [x] List articles, most-asked first
+- [x] Render each article at `/help/[slug]`
+- [x] Point at `/contact` when an article does not answer the question
+
+Articles are Markdown files in this repository rather than a wiki or a vendor's help tool:
+they are versioned alongside the code they describe, reviewed in pull requests, and served
+from our own domain, and the repository is the only durable storage the project has. Like
+the email templates, they are English only for now ([#56](https://github.com/reciprocalreviews/reciprocalapp/issues/56)).
+
 ### Login `/login`
 
 The purpose of the login page is to authenticate a person into the application using ORCID OAuth, the exclusive and mandatory sign-in method.
@@ -440,6 +480,20 @@ It should also support assignment decisions:
 ## Notifications
 
 All emails RR sends — contact-email verification and the transactional and reminder emails below — share one simple branded visual identity so they read as coming from the same platform. (Sign-in is ORCID, so RR no longer sends authentication emails.) These templates are English only for now: RR has no mechanism yet to solicit a scholar's language preference. ([#56](https://github.com/reciprocalreviews/reciprocalapp/issues/56))
+
+Every email RR sends is **replyable**. Mail is sent from `notifications@reciprocal.reviews`,
+but carries `Reply-To: stewards@reciprocal.reviews`, and its footer says so. A notification
+is therefore a valid starting point for a conversation: a scholar who does not understand
+why they were charged, or an editor with a question about a proposal, can answer the email
+they are looking at instead of hunting for a contact address. Without this, every reply to
+an RR notification went to an unmonitored mailbox and was lost.
+
+Notifications addressed to the **stewards** as a group (`ProposalCreatedStewards`,
+`ReconciliationFailed`) go to that one shared address rather than to each steward's personal
+contact email. Stewards still receive the mail individually, because the address is a group
+they belong to, but they additionally get a single thread they can assign and resolve, so
+it is visible whether anyone has picked a request up. This also means steward notifications
+no longer depend on a steward having verified a contact address.
 
 RR will also send periodic reminders based on time-based events:
 

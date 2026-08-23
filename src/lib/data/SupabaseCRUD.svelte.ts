@@ -819,18 +819,16 @@ export default class SupabaseCRUD extends CRUD {
 
 		if (error) return { error };
 
-		// Find the stewards to notify
-		const { data: stewards } = await this.client.from('scholars').select('id').eq('steward', true);
-
 		const notified: Notification[] = [];
-		if (stewards) {
-			const stewardResult = await this.emailScholars(
-				stewards.map((s) => s.id),
-				'ProposalCreatedStewards',
-				[title, proposalid]
-			);
-			if (stewardResult.notified) notified.push(...stewardResult.notified);
-		}
+
+		// Notify the stewards as a group, not individually. The shared inbox gives them one
+		// thread they can assign and resolve between themselves; a per-steward fan-out gave
+		// each of them a private copy and no way to see who had picked the proposal up.
+		const stewardResult = await this.queueStewardEmail('ProposalCreatedStewards', [
+			title,
+			proposalid
+		]);
+		if (stewardResult.notified) notified.push(...stewardResult.notified);
 
 		// Notify the proposal's editors. They are plain addresses rather than scholars, so
 		// the RPC reads them back off the proposal row we just wrote instead of accepting
@@ -2333,6 +2331,31 @@ export default class SupabaseCRUD extends CRUD {
 	 * address" (#27) — happens inside the RPC, not here. */
 	async emailScholars(scholars: ScholarID[], template: EmailType, args: string[]): Promise<Result> {
 		return this.queueEmail(template, args, { scholars });
+	}
+
+	/**
+	 * Queue a steward notification to the shared steward inbox.
+	 *
+	 * Separate from `queueEmail` because the recipient is not a scholar: it is the
+	 * stewards@ alias, which the RPC supplies itself. The RPC also whitelists the events it
+	 * will accept, so this cannot become a general channel into the stewards' mailbox.
+	 */
+	private async queueStewardEmail(template: EmailType, args: string[]): Promise<Result> {
+		const { error } = await this.client.rpc('queue_steward_email', {
+			_event: template,
+			_args: args
+		});
+		if (error) return this.error('EmailScholar', error);
+
+		const { subject } = renderEmail(template, args);
+		return {
+			data: undefined,
+			notified: [
+				{
+					message: this.locale.notification.emailedStewards.replace('{subject}', subject)
+				}
+			]
+		};
 	}
 
 	/**

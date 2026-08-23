@@ -16,8 +16,25 @@ const TEXT_COLOR = '#111111';
 const MUTED_COLOR = '#888888'; // --inactive-color
 const BORDER_COLOR = '#bbbbbb'; // --border-color
 
+/**
+ * The shared steward inbox — a Google Group in collaborative-inbox mode, so mail
+ * sent here reaches every steward and can be assigned and resolved among them.
+ * This is the platform's front door: it is the `Reply-To` on every email we send
+ * (see the `resend` and `remind` functions) and the address named on /contact.
+ */
+export const SUPPORT_EMAIL = 'stewards@reciprocal.reviews';
+
+/**
+ * The envelope sender. Mail comes *from* a robot but replies land somewhere
+ * people share, hence the separate SUPPORT_EMAIL above. The display name matters:
+ * without it clients show the bare address, which reads as no-reply automation.
+ */
+export const FROM_EMAIL = 'Reciprocal Reviews <notifications@reciprocal.reviews>';
+
 const WORDMARK = 'Reciprocal Reviews';
-const FOOTER = 'This is an automated email sent by Reciprocal Reviews.';
+// Says who to talk to, not just who sent it. Every email is a potential support
+// conversation, and this is the only place the recipient is told that replying works.
+const FOOTER = `Sent by Reciprocal Reviews. Reply to this email and a steward will see it, or write <a href="mailto:${SUPPORT_EMAIL}" style="color: ${MUTED_COLOR};">${SUPPORT_EMAIL}</a>.`;
 const FONT_STACK =
 	"'Quicksand', 'Josefin Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 

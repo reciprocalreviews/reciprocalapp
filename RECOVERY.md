@@ -510,8 +510,72 @@ deploys, or the Vercel repoint. Once a quarter, walk this document by hand into 
 throwaway hosted project and record how long it took. Don't automate that one —
 the value is a human finding the step that has gone stale.
 
+## Accounts and owners
+
+Everything above concerns recovering *data*. This section concerns recovering
+*access*, which no backup helps with: an off-platform dump of the database is
+useless if nobody can reach the Vercel project to deploy it, or the registrar to
+point the domain at it.
+
+> **Status, 2026-08-23.** Every account below has exactly one human who can reach
+> it, and that human is Amy Ko. There is no second steward yet, recruitment is
+> ongoing, so **there is currently no account in this list that survives its
+> owner becoming unavailable.** This is a known, accepted, temporary risk, and it
+> is the single largest gap in this document. It is recorded here rather than in
+> anyone's memory because that is the whole point of writing it down.
+
+| Account | What it holds | Owner | Second person |
+|---|---|---|---|
+| Squarespace | The `reciprocal.reviews` domain and all DNS | Amy Ko | **none** |
+| Google Workspace | `stewards@` shared inbox, Drive | Amy Ko | **none** |
+| Resend | Outbound application email | Amy Ko | **none** |
+| Substack | The newsletter and its subscriber list | Amy Ko | **none** |
+| Supabase | Production and staging databases | Amy Ko | **none** |
+| Vercel | Hosting and deployment | Amy Ko | **none** |
+| GitHub org | Source, issues, discussions, CI secrets | Amy Ko | **none** |
+
+### Why this matters more than it looks
+
+The domain is the keystone. It is what `stewards@` resolves through, what Resend
+signs mail as, and what the deployed application answers on. Losing access to
+Squarespace does not merely take the website down: it silently disables the front
+door, because mail to `stewards@reciprocal.reviews` stops resolving and senders
+get a bounce rather than a person.
+
+This is also not hypothetical for this project. The Slack workspace that preceded
+the current support model was administered by one person who became unreachable,
+and it could not be recovered. That is why the support model was rebuilt around
+accounts on a domain the project controls. Reproducing that failure mode on the
+domain itself would be worse in every respect.
+
+### What to do while there is only one steward
+
+These are mitigations, not fixes. The fix is a second person.
+
+- **Recovery contacts.** Point each account's recovery email and phone at
+  something a trusted second party can reach, so an account is recoverable even
+  when its owner is not.
+- **Credentials in a shared password manager**, with an emergency-access or
+  inheritance contact configured. Most managers support a time-delayed release
+  to a nominated person.
+- **Google Workspace specifically.** A genuine second super admin requires a
+  second licensed seat, so it cannot be arranged for free. Until then the
+  Workspace super-admin account's recovery options are the only path back in, and
+  they should be treated as such.
+- **Revisit this table whenever a steward joins.** Adding a steward to the
+  `scholars.steward` column grants them authority inside the application; it
+  grants them nothing here. The two are entirely separate, and this table is the
+  one that determines whether the project survives.
+
+### On adding the second person
+
+When a steward does join, the order that matters is: GitHub org owner and
+Squarespace first, since source and domain are the two from which everything else
+can be rebuilt, then Supabase and Vercel, then Workspace, Resend, and Substack.
+
 ## Related
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — deployment pipeline and database management
 - [supabase/dr/dump.sh](supabase/dr/dump.sh) — the backup itself, commented at length
 - [supabase/dr/manifest.sql](supabase/dr/manifest.sql) — what gets recorded and why
+- [DESIGN.md](DESIGN.md) — the support model these accounts exist to serve

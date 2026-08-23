@@ -1233,6 +1233,10 @@ export type Database = {
         }
         Returns: Json
       }
+      queue_steward_email: {
+        Args: { _args?: string[]; _event: string }
+        Returns: undefined
+      }
       queue_thanks_emails: {
         Args: {
           _audience: string
@@ -1251,6 +1255,7 @@ export type Database = {
         Args: { _email: string }
         Returns: undefined
       }
+      steward_inbox: { Args: never; Returns: string }
       tokens_as_of: {
         Args: { _at?: string }
         Returns: {

@@ -80,7 +80,10 @@ export type LocaleText = {
 			about: string;
 			terms: string;
 			updates: string;
-			feedback: string;
+			/** Knowledge base articles. */
+			help: string;
+			/** The steward inbox and the people behind it. */
+			contact: string;
 		};
 	};
 	banner: {
@@ -105,6 +108,9 @@ export type LocaleText = {
 	};
 	notification: {
 		emailed: string;
+		/** Shown after notifying the shared steward inbox, which is one recipient
+		 * rather than a named person. Takes {subject}. */
+		emailedStewards: string;
 	};
 	widget: {
 		card: {
@@ -903,6 +909,45 @@ export type LocaleText = {
 				joinStewards: string;
 				theoryIntro: string;
 				closing: string;
+			};
+		};
+		contact: {
+			title: string;
+			header: {
+				write: string;
+				stewards: string;
+				elsewhere: string;
+			};
+			paragraph: {
+				/** What the steward inbox is for. Takes {email}. */
+				write: string;
+				/** Sets expectations about who reads it and how fast. */
+				expectations: string;
+				/** Introduces the steward list below. */
+				stewards: string;
+				/** Where to go for things that aren't a support request. */
+				elsewhere: string;
+			};
+			link: {
+				help: string;
+				discussions: string;
+				issues: string;
+				newsletter: string;
+			};
+			feedback: {
+				stewardsNotLoaded: string;
+			};
+		};
+		help: {
+			title: string;
+			paragraph: {
+				intro: string;
+				/** Shown under the article list, pointing at /contact. */
+				more: string;
+			};
+			feedback: {
+				/** Shown when a slug matches no article. */
+				missing: string;
 			};
 		};
 		updates: {

@@ -259,3 +259,64 @@ from
 	anon;
 
 grant execute on function public.queue_email (text, text[], uuid[], uuid) to authenticated;
+
+--------------------------------------
+-- The alias, defined once.
+--
+-- Hardcoded rather than configured: it is a property of the deployment's DNS, changes
+-- about never, and a settings table would make a silent misconfiguration possible in the
+-- one path that reports that other paths are broken. Mirrored in
+-- supabase/functions/_shared/emailShell.ts as SUPPORT_EMAIL — keep the two in sync.
+create or replace function public.steward_inbox () returns text language sql immutable
+set
+	"search_path" to '' as $$
+	select 'stewards@reciprocal.reviews'::text;
+$$;
+
+alter function public.steward_inbox () OWNER to "postgres";
+
+grant execute on function public.steward_inbox () to authenticated;
+
+--------------------------------------
+-- queue_steward_email: queue a steward notification to the shared inbox.
+--
+-- Deliberately a separate function from queue_email rather than another branch inside it.
+-- queue_email's security rests on never accepting a recipient: it resolves scholars by id
+-- or reads a proposal's editors. This function accepts no recipient either — the address
+-- is fixed — but it does bypass the "recipient must be a scholar with a verified email"
+-- rule, so the safety has to come from somewhere else. It comes from the event whitelist:
+-- without it, any authenticated user could render ANY template into the stewards' inbox,
+-- which is precisely the mailbox least able to ignore what arrives.
+--
+-- The residual exposure is bounded and deliberate: an authenticated user can queue a
+-- steward notification with argument values of their choosing. That is the same shape as
+-- queue_email's residual (no prose, no links, attributable via emails.sender), and the
+-- inbox is staffed by the people best placed to recognize junk.
+create or replace function public.queue_steward_email (_event text, _args text[] default '{}') returns void language plpgsql security definer
+set
+	"search_path" to 'public', 'pg_temp' as $$
+declare
+	_caller uuid := (select auth.uid());
+begin
+	if _caller is null then
+		raise exception 'Authentication required';
+	end if;
+	-- Whitelist, not a blacklist: a template added later is un-sendable here until
+	-- someone deliberately adds it, which is the failure direction we want.
+	if _event is null or _event not in ('ProposalCreatedStewards', 'ReconciliationFailed') then
+		raise exception 'Not a steward notification: %', coalesce(_event, 'null');
+	end if;
+
+	insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
+	values (_event, null, _caller, null, public.steward_inbox(), null, null, to_jsonb(_args));
+end;
+$$;
+
+alter function public.queue_steward_email (text, text[]) OWNER to "postgres";
+
+revoke execute on function public.queue_steward_email (text, text[])
+from
+	public,
+	anon;
+
+grant execute on function public.queue_steward_email (text, text[]) to authenticated;

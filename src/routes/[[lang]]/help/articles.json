@@ -1,0 +1,27 @@
+[
+	{
+		"slug": "what-is-reciprocal-reviews",
+		"title": "What is Reciprocal Reviews?",
+		"summary": "The problem the platform is trying to solve, and how tokens fit in."
+	},
+	{
+		"slug": "proposing-a-venue",
+		"title": "Proposing a venue",
+		"summary": "How to bring a conference or journal onto the platform, and what happens next."
+	},
+	{
+		"slug": "volunteering-to-review",
+		"title": "Volunteering to review",
+		"summary": "Bidding for roles, setting how much you're willing to review, and being assigned."
+	},
+	{
+		"slug": "your-contact-email",
+		"title": "Your contact email",
+		"summary": "Why we verify it, and why you may not be getting notifications."
+	},
+	{
+		"slug": "your-data",
+		"title": "Exporting or deleting your data",
+		"summary": "Getting a copy of everything we hold, and asking us to erase it."
+	}
+]

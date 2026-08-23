@@ -140,7 +140,7 @@ A consequence to be aware of: `handle()` also calls `invalidateAll()` after ever
 
 ## Email pipeline
 
-Email is **application email** — transactional, reminder, and contact-email verification — all sharing one branded visual identity. (Supabase GoTrue no longer sends auth email: sign-in is ORCID and email verification is app-level, so the auth-email path is dormant — see below.) Templates are English only: there is no mechanism yet to solicit a scholar's language preference.
+Email is **application email** — transactional, reminder, and contact-email verification — all sharing one branded visual identity, and all replyable: every send carries `Reply-To: stewards@reciprocal.reviews` (see Addresses below). (Supabase GoTrue no longer sends auth email: sign-in is ORCID and email verification is app-level, so the auth-email path is dormant — see below.) Templates are English only: there is no mechanism yet to solicit a scholar's language preference.
 
 ### Application emails
 
@@ -169,6 +169,23 @@ Three consequences worth knowing before touching this code:
 - **Local development needs `EDGE_SECRET_KEY`** in `.env`. Hosted runtimes inject `SUPABASE_SECRET_KEYS` and `SUPABASE_SERVICE_ROLE_KEY` automatically, but the CLI refuses to pass any `--env-file` entry beginning with `SUPABASE_`, so the local name cannot match the hosted one. The same variable seeds the `secret_key` vault entry, which is what keeps the local database and the local functions agreeing on one value.
 
 **Edge functions are deployed by CI** ([staging.yml](.github/workflows/staging.yml), [production.yml](.github/workflows/production.yml)) alongside `supabase db push`. They were previously deploy-by-hand, which let a migration land against a stale function — a failure mode that is invisible, because `pg_net` swallows the resulting error and mail simply stops arriving.
+
+### Addresses
+
+[supabase/functions/\_shared/emailShell.ts](supabase/functions/_shared/emailShell.ts) owns both addresses, and re-exports them to app code through [src/email/emailShell.ts](src/email/emailShell.ts) so the Deno and SvelteKit sides cannot drift apart:
+
+- **`FROM_EMAIL`** is `Reciprocal Reviews <notifications@reciprocal.reviews>`. The display name matters; without it clients render a bare address, which reads as no-reply automation.
+- **`SUPPORT_EMAIL`** is `stewards@reciprocal.reviews`, set as `Reply-To` on every send from both the `resend` and `remind` functions, named in the shared footer, and surfaced in the interface by [src/lib/community.ts](src/lib/community.ts), which re-exports it rather than restating it, on `/contact`.
+
+It is a Google Group in collaborative-inbox mode, not a mailbox: mail reaches every steward's own inbox *and* creates one thread they can assign and resolve. Its MX and SPF records live at the domain root, while Resend's live on the `send.` subdomain, so the two do not collide.
+
+### Steward notifications
+
+`ProposalCreatedStewards` and `ReconciliationFailed` go to `SUPPORT_EMAIL` via **`queue_steward_email(_event, _args)`** ([20260823000000_steward_inbox.sql](supabase/migrations/20260823000000_steward_inbox.sql)), with the address defined once in SQL by `steward_inbox()`.
+
+It is a separate function from `queue_email` rather than another branch inside it, because it gives up that function's central safety property. `queue_email` is safe because it never accepts a recipient: it resolves scholars by id and skips any without a verified contact email. `queue_steward_email` does not accept a recipient either, but it does write to an address that belongs to no scholar and was never verified through that path. **The event whitelist is what replaces the missing check:** the function refuses any event outside the steward-notification set, so it cannot become a general channel into the mailbox least able to ignore what arrives. Its residual exposure has the same shape as `queue_email`'s: an authenticated caller chooses argument values but no prose and no links, and `emails.sender` records who did it.
+
+This replaced a per-steward fan-out, for two reasons. The visible one is collaboration, since N private copies gave no steward any way to see whether another had already picked a proposal up. The more serious one is that the fan-out selected `where steward = true and email is not null`, so `reconcile_ledger()`'s failure notification, the mail that says the token ledger is corrupt, could reach **nobody at all** if no steward had verified a contact address. A monitoring check whose delivery is conditional on unrelated profile state is the failure mode monitoring exists to prevent. The alias always resolves.
 
 ### Auth emails (dormant)
 

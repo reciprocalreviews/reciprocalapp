@@ -1,59 +1,82 @@
--- Daily reconciliation of the token economy against its own records.
+-- Route steward notifications to one shared inbox instead of N private copies.
 --
--- The backup work established that assertions are what catch real problems:
--- three separate defects survived every piece of reasoning about the restore and
--- were found only by checking. This is the same idea applied continuously to live
--- data, so corruption is found the morning after rather than whenever someone
--- happens to notice a balance looks wrong.
+-- `ProposalCreatedStewards` and `ReconciliationFailed` each resolved every steward and
+-- mailed them individually. That has three problems: no steward can see whether another
+-- has already picked a request up, there is no thread to discuss it in, and a steward
+-- with no verified contact address was silently skipped — so a reconciliation failure
+-- could reach nobody at all.
 --
--- Each check answers a question nothing else in the schema can:
---
---   1. unattributed_moves   — did value move without a transaction explaining it?
---   2. replay_mismatches    — does the ledger still reproduce current state?
---   3. chain_breaks         — did a write escape the logging trigger?
---   4. placeholders         — is an approved transaction still holding null-UUIDs?
---   5. dangling_token_refs  — does an approved transaction cite a token that is
---                             gone, or in another currency?
---   6. conservation         — do the two narratives agree, holder by holder?
---   7. orphan_proposals     — did a multi-step client write leave half a record?
---------------------------------------
--- Where results are kept. Append-only by convention rather than by trigger: this
--- is a monitoring record, not evidence, and a stuck row should be correctable.
-create table if not exists public.reconciliations (
-	id uuid primary key default gen_random_uuid(),
-	ran_at timestamptz not null default now(),
-	ok boolean not null,
-	result jsonb not null
-);
-
-alter table public.reconciliations OWNER to "postgres";
-
-create index reconciliations_ran_at_index on public.reconciliations using btree (ran_at desc);
-
--- Nobody reads this through the API. It describes the integrity of the whole
--- economy, which is not a scholar's business.
-alter table public.reconciliations ENABLE row LEVEL SECURITY;
-
-revoke all on table public.reconciliations
-from
-	anon,
-	authenticated;
-
--- Explicitly revoked, not merely un-granted: Supabase's default privileges give
--- service_role ALL on every new table in `public` before this file's grant runs,
--- so `grant select` alone left INSERT, UPDATE and DELETE in place and the line
--- below described a restriction that did not exist.
-revoke insert,
-update,
-delete on table public.reconciliations
-from
-	service_role;
-
-grant
-select
-	on table public.reconciliations to service_role;
+-- stewards@reciprocal.reviews is a Google Group in collaborative-inbox mode: members
+-- still receive the mail in their own inboxes, and additionally get a shared thread they
+-- can assign and resolve. Sending only to the alias therefore loses nothing.
 
 --------------------------------------
+-- The alias, defined once.
+--
+-- Hardcoded rather than configured: it is a property of the deployment's DNS, changes
+-- about never, and a settings table would make a silent misconfiguration possible in the
+-- one path that reports that other paths are broken. Mirrored in
+-- supabase/functions/_shared/emailShell.ts as SUPPORT_EMAIL — keep the two in sync.
+create or replace function public.steward_inbox () returns text language sql immutable
+set
+	"search_path" to '' as $$
+	select 'stewards@reciprocal.reviews'::text;
+$$;
+
+alter function public.steward_inbox () OWNER to "postgres";
+
+grant execute on function public.steward_inbox () to authenticated;
+
+--------------------------------------
+-- queue_steward_email: queue a steward notification to the shared inbox.
+--
+-- Deliberately a separate function from queue_email rather than another branch inside it.
+-- queue_email's security rests on never accepting a recipient: it resolves scholars by id
+-- or reads a proposal's editors. This function accepts no recipient either — the address
+-- is fixed — but it does bypass the "recipient must be a scholar with a verified email"
+-- rule, so the safety has to come from somewhere else. It comes from the event whitelist:
+-- without it, any authenticated user could render ANY template into the stewards' inbox,
+-- which is precisely the mailbox least able to ignore what arrives.
+--
+-- The residual exposure is bounded and deliberate: an authenticated user can queue a
+-- steward notification with argument values of their choosing. That is the same shape as
+-- queue_email's residual (no prose, no links, attributable via emails.sender), and the
+-- inbox is staffed by the people best placed to recognize junk.
+create or replace function public.queue_steward_email (_event text, _args text[] default '{}') returns void language plpgsql security definer
+set
+	"search_path" to 'public', 'pg_temp' as $$
+declare
+	_caller uuid := (select auth.uid());
+begin
+	if _caller is null then
+		raise exception 'Authentication required';
+	end if;
+	-- Whitelist, not a blacklist: a template added later is un-sendable here until
+	-- someone deliberately adds it, which is the failure direction we want.
+	if _event is null or _event not in ('ProposalCreatedStewards', 'ReconciliationFailed') then
+		raise exception 'Not a steward notification: %', coalesce(_event, 'null');
+	end if;
+
+	insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
+	values (_event, null, _caller, null, public.steward_inbox(), null, null, to_jsonb(_args));
+end;
+$$;
+
+alter function public.queue_steward_email (text, text[]) OWNER to "postgres";
+
+revoke execute on function public.queue_steward_email (text, text[])
+from
+	public,
+	anon;
+
+grant execute on function public.queue_steward_email (text, text[]) to authenticated;
+
+--------------------------------------
+-- reconcile_ledger: same checks, one recipient.
+--
+-- Replaced wholesale because Postgres has no way to patch a function body. The only
+-- change is the failure-notification INSERT at the end; everything above it is the
+-- definition from 20260808010000_reconcile_ledger.sql, unmodified.
 create or replace function public.reconcile_ledger () returns jsonb language plpgsql security definer
 set
 	search_path='' as $$
@@ -255,18 +278,3 @@ begin
 	return _result;
 end;
 $$;
-
-alter function public.reconcile_ledger () OWNER to "postgres";
-
-revoke
-execute on function public.reconcile_ledger ()
-from
-	public;
-
-grant
-execute on function public.reconcile_ledger () to service_role;
-
---------------------------------------
--- Scheduling lives in the migration, not here: cron.job is cluster state rather
--- than schema, captured separately by supabase/dr/dump.sh and restored from
--- quarantine's record. See migration 20260808010000.

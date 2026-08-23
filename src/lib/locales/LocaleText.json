@@ -885,7 +885,12 @@
                 "about": {
                   "type": "string"
                 },
-                "feedback": {
+                "contact": {
+                  "description": "The steward inbox and the people behind it.",
+                  "type": "string"
+                },
+                "help": {
+                  "description": "Knowledge base articles.",
                   "type": "string"
                 },
                 "terms": {
@@ -899,7 +904,8 @@
                 "about",
                 "terms",
                 "updates",
-                "feedback"
+                "help",
+                "contact"
               ],
               "type": "object"
             }
@@ -963,10 +969,15 @@
           "properties": {
             "emailed": {
               "type": "string"
+            },
+            "emailedStewards": {
+              "description": "Shown after notifying the shared steward inbox, which is one recipient rather than a named person. Takes {subject}.",
+              "type": "string"
             }
           },
           "required": [
-            "emailed"
+            "emailed",
+            "emailedStewards"
           ],
           "type": "object"
         },
@@ -1300,6 +1311,106 @@
               ],
               "type": "object"
             },
+            "contact": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "stewardsNotLoaded": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "stewardsNotLoaded"
+                  ],
+                  "type": "object"
+                },
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "elsewhere": {
+                      "type": "string"
+                    },
+                    "stewards": {
+                      "type": "string"
+                    },
+                    "write": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "write",
+                    "stewards",
+                    "elsewhere"
+                  ],
+                  "type": "object"
+                },
+                "link": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "discussions": {
+                      "type": "string"
+                    },
+                    "help": {
+                      "type": "string"
+                    },
+                    "issues": {
+                      "type": "string"
+                    },
+                    "newsletter": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "help",
+                    "discussions",
+                    "issues",
+                    "newsletter"
+                  ],
+                  "type": "object"
+                },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "elsewhere": {
+                      "description": "Where to go for things that aren't a support request.",
+                      "type": "string"
+                    },
+                    "expectations": {
+                      "description": "Sets expectations about who reads it and how fast.",
+                      "type": "string"
+                    },
+                    "stewards": {
+                      "description": "Introduces the steward list below.",
+                      "type": "string"
+                    },
+                    "write": {
+                      "description": "What the steward inbox is for. Takes {email}.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "write",
+                    "expectations",
+                    "stewards",
+                    "elsewhere"
+                  ],
+                  "type": "object"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "header",
+                "paragraph",
+                "link",
+                "feedback"
+              ],
+              "type": "object"
+            },
             "currency": {
               "additionalProperties": false,
               "properties": {
@@ -1578,6 +1689,50 @@
               },
               "required": [
                 "title"
+              ],
+              "type": "object"
+            },
+            "help": {
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "missing": {
+                      "description": "Shown when a slug matches no article.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "missing"
+                  ],
+                  "type": "object"
+                },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "intro": {
+                      "type": "string"
+                    },
+                    "more": {
+                      "description": "Shown under the article list, pointing at /contact.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "intro",
+                    "more"
+                  ],
+                  "type": "object"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "paragraph",
+                "feedback"
               ],
               "type": "object"
             },
@@ -4825,6 +4980,8 @@
             "verify",
             "proposeVenue",
             "about",
+            "contact",
+            "help",
             "updates",
             "terms"
           ],

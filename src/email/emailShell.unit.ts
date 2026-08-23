@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { escapeHtml, htmlToText, paragraphsToHtml } from './emailShell';
+import {
+	escapeHtml,
+	htmlToText,
+	paragraphsToHtml,
+	renderBrandedEmail,
+	SUPPORT_EMAIL
+} from './emailShell';
 
 describe('escapeHtml', () => {
 	it('escapes the five characters that can break out of text or an attribute', () => {
@@ -83,5 +89,29 @@ describe('htmlToText', () => {
 	it('round-trips escaped text without resurrecting it as markup', () => {
 		const escapedTwice = escapeHtml(escapeHtml('<script>'));
 		expect(htmlToText(`<p>${escapedTwice}</p>`)).toBe('&lt;script&gt;');
+	});
+});
+
+describe('renderBrandedEmail', () => {
+	// The footer is the only place a recipient is told that replying reaches a
+	// person. Losing it would silently turn every notification back into a
+	// dead end, and nothing else in the pipeline would fail.
+	it('names the steward inbox in the HTML footer', () => {
+		const { html } = renderBrandedEmail('Subject', 'Body.');
+		expect(html).toContain(`mailto:${SUPPORT_EMAIL}`);
+		expect(html).toContain(SUPPORT_EMAIL);
+	});
+
+	// The text/plain alternative is derived by stripping tags, so an address that
+	// lived only in an href attribute would vanish for plain-text readers.
+	it('keeps the steward inbox readable in the text alternative', () => {
+		const { text } = renderBrandedEmail('Subject', 'Body.');
+		expect(text).toContain(SUPPORT_EMAIL);
+	});
+
+	it('still renders the body it was given', () => {
+		const { html, text } = renderBrandedEmail('Subject', 'Hello there.');
+		expect(html).toContain('Hello there.');
+		expect(text).toContain('Hello there.');
 	});
 });

@@ -28,12 +28,13 @@
             "about": "About",
             "terms": "Terms",
             "updates": "Updates",
-            "feedback": "Feedback"
+            "help": "Help",
+            "contact": "Contact"
         }
     },
     "banner": {
         "beta": {
-            "lead": "We're in **beta** and want your feedback. [Report an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose) or [learn more](https://github.com/reciprocalreviews)."
+            "lead": "We're in **beta** and want your feedback. [Write to the stewards](/contact), [report an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose), or [learn more](/about)."
         },
         "update": {
             "message": "A new version is available.",
@@ -49,7 +50,8 @@
         }
     },
     "notification": {
-        "emailed": "{recipient} was emailed \"{subject}\""
+        "emailed": "{recipient} was emailed \"{subject}\"",
+        "emailedStewards": "The stewards were emailed \"{subject}\""
     },
     "widget": {
         "card": {
@@ -85,7 +87,7 @@
                 "track": "**Don't want to set a cost?** Use Reciprocal Reviews to track volunteer reviewers and expertise in your community, streamlining reviewing and program committee invitations."
             },
             "feedback": {
-                "beta": "We're in development! A public beta is likely in 2026. Visit [GitHub](https://github.com/reciprocalreviews) to see who's involved, see our [beta milestone](https://github.com/reciprocalreviews/reciprocalapp/issues?q=is:open%20milestone:%22Beta%22) for the work that remains. Subscribe to our low-volume [newsletter](https://reciprocalreviews.substack.com/) to follow along, check the [updates](/updates) page to see our weekly progress. And if you feel like helping, email us! We're a small volunteer group of academics."
+                "beta": "We're in development! A public beta is likely in 2026. Visit [GitHub](https://github.com/reciprocalreviews) to see who's involved, see our [beta milestone](https://github.com/reciprocalreviews/reciprocalapp/issues?q=is:open%20milestone:%22Beta%22) for the work that remains. Subscribe to our low-volume [newsletter](https://reciprocalreviews.substack.com/) to follow along, check the [updates](/updates) page to see our weekly progress. And if you feel like helping, [write to the stewards](/contact). We're a small volunteer group of academics."
             }
         },
         "venues": {
@@ -1212,15 +1214,48 @@
                 "community": "We are a volunteer community of academics interested in keeping peer review sustainable, for ourselves and our communities. You can learn more about who's contributing and how to contribute yourself on [GitHub](https://github.com/reciprocalreviews).",
                 "stewardsIntro": "Stewards oversee the platform and its use, guiding design, implementation, and usage with the goal of ensuring the platform is improving the sustainability of academic peer review:",
                 "currentStewards": "Current stewards are:",
-                "joinStewards": "Would you like to become a steward? Reach out to any of the stewards above and let's chat.",
+                "joinStewards": "Would you like to become a steward? Reach out to any of the stewards above, or [write to all of us at once](/contact), and let's chat.",
                 "theoryIntro": "The theory of change behind this platform is rests upon the following argument:",
                 "closing": "We built this platform to test the claims above, and hope you'll join us in this effort!"
+            }
+        },
+        "contact": {
+            "title": "Contact",
+            "header": {
+                "write": "Write to us",
+                "stewards": "Who you're writing to",
+                "elsewhere": "Elsewhere"
+            },
+            "paragraph": {
+                "write": "Email [{email}](mailto:{email}). That reaches all of the stewards at once. Write with questions about a venue proposal, a transaction that looks wrong, tokens, your account, or getting a copy of your data or having it deleted.",
+                "expectations": "The stewards are working scholars doing this alongside their jobs, so a reply may take a few days. You can also reply directly to any email Reciprocal Reviews sends you, and it will arrive in the same place.",
+                "stewards": "Stewards maintain the platform and review new venue proposals. These are the people who will read your message:",
+                "elsewhere": "Not a question for the stewards?"
+            },
+            "link": {
+                "help": "Read the help articles",
+                "discussions": "Ask the community",
+                "issues": "Report a defect or suggest an improvement",
+                "newsletter": "Subscribe to our newsletter"
+            },
+            "feedback": {
+                "stewardsNotLoaded": "We couldn't load the list of stewards, but the address above still works."
+            }
+        },
+        "help": {
+            "title": "Help",
+            "paragraph": {
+                "intro": "Answers to the questions we're asked most often.",
+                "more": "Didn't find what you needed? [Write to the stewards](/contact) and we'll answer, and probably add an article."
+            },
+            "feedback": {
+                "missing": "There's no such article. Try the list on the [help page](/help)."
             }
         },
         "updates": {
             "title": "Updates",
             "paragraph": {
-                "intro": "Here are the updates to Reciprocal Reviews. Have a [defect](https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=1-defect.yml) to report or [improvement](https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=2-improvement.yml) to suggest?"
+                "intro": "Here are the updates to Reciprocal Reviews. Have a [defect](https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=1-defect.yml) to report or [improvement](https://github.com/reciprocalreviews/reciprocalapp/issues/new?template=2-improvement.yml) to suggest? For where the project is headed rather than what just changed, follow [our newsletter](https://reciprocalreviews.substack.com)."
             }
         },
         "terms": {

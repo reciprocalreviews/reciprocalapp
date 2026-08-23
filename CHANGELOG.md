@@ -4,9 +4,19 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.4.8 - 2026-08-23
 
+### Added
+
+- Reciprocal Reviews now has a **help section** and a **contact page**. Help answers the questions we're asked most often; contact names the stewards who read your message and gives you one address that reaches all of them. Both are linked from the footer.
+
 ### Changed
 
 - Updated internal tooling for stability.
+- You can now **reply to any email** Reciprocal Reviews sends you and reach a person. Replies previously went to an unmonitored address and were lost.
+- Notifications to the stewards, such as new venue proposals and alerts about the platform's own health, now arrive in a shared inbox they can work through together. They previously went out as separate copies to each steward, with no way to see whether anyone had picked a request up.
+
+### Fixed
+
+- The alert that warns stewards the token ledger may be corrupt is now always delivered. It previously went only to stewards who had verified a contact email address, so the warning that something had gone seriously wrong could reach nobody at all.
 
 ## 0.4.7 - 2026-08-16
 

@@ -2,7 +2,12 @@ import 'edge-runtime';
 import { createClient, SupabaseClient } from 'supabase';
 import type { Database } from '../../../src/data/database.ts';
 import { requireSecretKey } from '../_shared/auth.ts';
-import { escapeHtml, renderBrandedEmail } from '../_shared/emailShell.ts';
+import {
+	escapeHtml,
+	FROM_EMAIL,
+	renderBrandedEmail,
+	SUPPORT_EMAIL
+} from '../_shared/emailShell.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const isLocal = Deno.env.get('PUBLIC_SUPABASE_URL')?.includes('127.0.0.1') ?? false;
@@ -209,6 +214,7 @@ const handler = async (request: Request): Promise<Response> => {
 			if (isLocal) {
 				console.log('--- send this email ---');
 				console.log('to: ', to);
+				console.log('reply-to:', SUPPORT_EMAIL);
 				console.log('subject:', subject);
 				console.log('message:', message);
 				console.log('---');
@@ -225,7 +231,10 @@ const handler = async (request: Request): Promise<Response> => {
 						Authorization: `Bearer ${RESEND_API_KEY}`
 					},
 					body: JSON.stringify({
-						from: 'notifications@reciprocal.reviews',
+						from: FROM_EMAIL,
+						// A reminder is the email a scholar is most likely to reply to with a
+						// question, so it especially needs a reply path that reaches a person.
+						reply_to: SUPPORT_EMAIL,
 						to,
 						subject,
 						html,
