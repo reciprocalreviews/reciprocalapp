@@ -1,0 +1,9 @@
+{
+	// Prompted on first open of the workspace. Prettier is required to satisfy
+	// the formatting check in CI; Svelte and Deno match the stack.
+	"recommendations": [
+		"esbenp.prettier-vscode",
+		"svelte.svelte-vscode",
+		"denoland.vscode-deno"
+	]
+}

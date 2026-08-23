@@ -11,3 +11,31 @@ node_modules
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
+
+# Generated, and verified by CI to match its generator. Formatting these means
+# the next `npm run types` or `npm run locale` reverts the formatting and the
+# build fails on a diff nobody introduced.
+src/data/database.ts
+src/lib/locales/LocaleText.json
+
+# Applied-once historical records. A migration that has already run against
+# production gains nothing from being reformatted, and prettier-plugin-sql is
+# not trustworthy enough here: it fails outright on the SQL below, so its
+# handling of dollar-quoted plpgsql bodies is unproven.
+supabase/migrations/
+
+# prettier-plugin-sql cannot parse psql meta-commands (\echo, \set, \gset),
+# which every pgTAP test and recovery script uses. These are run by psql, not
+# by a SQL parser, so there is no formatter to apply.
+supabase/tests/
+supabase/dr/*.sql
+
+# Supabase CLI scratch state, recreated on every `supabase start`. Git ignores it
+# via supabase/.gitignore, but Prettier does not read .gitignore.
+supabase/.temp/
+supabase/.branches/
+
+# Test output
+/test-results
+/playwright-report
+/blob-report

@@ -1,0 +1,23 @@
+# Baseline for editors that do not run Prettier. Prettier (.prettierrc) is
+# authoritative for the file types it handles; this covers everything else and
+# gets indentation right before the first save.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = tab
+
+[*.{yml,yaml,md}]
+indent_style = space
+indent_size = 2
+
+[*.sql]
+indent_style = space
+indent_size = 2
+
+[*.md]
+# Markdown gives meaning to trailing double-spaces.
+trim_trailing_whitespace = false

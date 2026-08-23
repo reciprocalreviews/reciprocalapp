@@ -11,6 +11,26 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Formatting is checked before anything expensive starts. It needs no
+      # database and fails in seconds, so a PR that is merely unformatted does
+      # not occupy a Supabase container for the length of a full run.
+      #
+      # Run `npm run format` to fix. What is exempt lives in .prettierignore,
+      # with a reason beside each entry — notably the generated files, which the
+      # step below regenerates and diffs, so formatting them would fail this
+      # workflow on a change nobody made.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify formatting
+        run: npm run format:check
+
       # Pinned rather than `latest`. With `latest`, setup-cli resolves the release
       # through the GitHub API on every job; a dev push and a main merge fire ~10
       # of those within seconds, exhausting the shared rate limit and failing a job

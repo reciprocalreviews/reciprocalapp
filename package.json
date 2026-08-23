@@ -10,6 +10,8 @@
 		"test": "npm run test:end && npm run test:unit && npm run test:rls",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"check:now": "svelte-check --tsconfig ./tsconfig.json",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
 		"sync": "svelte-kit sync",
 		"test:end": "playwright test",
 		"test:unit": "vitest",
