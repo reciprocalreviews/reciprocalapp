@@ -6,6 +6,8 @@ test('landing page is visible', async ({ page }) => {
 	// Expect the title to be Reciprocal Reviews.
 	await expect(page).toHaveTitle('Reciprocal Reviews');
 
-	// Expect the header to also be Reciprocal Reviews.
-	await expect(page.getByTestId('page-header')).toHaveText('★ Reciprocal Reviews');
+	// Expect the header to also be Reciprocal Reviews. The brand mark beside it is an
+	// inline SVG, so it contributes no text of its own; it is asserted separately.
+	await expect(page.getByTestId('page-header')).toHaveText('Reciprocal Reviews');
+	await expect(page.getByTestId('logo')).toBeVisible();
 });

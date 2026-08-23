@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/state';
-	import { PUBLIC_ENV } from '$env/static/public';
 	import { requiresAuth } from '$lib/auth/requiresAuth';
 	import Footer from '$lib/components/Footer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
@@ -26,12 +25,7 @@
 	// CRUD instance, so reuse it rather than constructing another.
 	setDB(() => db);
 
-	const inProd = PUBLIC_ENV === 'prod';
-
-	/** Always go home in production, pre-release */
 	onMount(() => {
-		if (inProd && !['/updates', '/about'].some((p) => page.url.pathname.startsWith(p))) goto('/');
-
 		// Listen to auth state changes and invalidate the auth context when they happen.
 		const { data } = db.client.auth.onAuthStateChange((event, _session) => {
 			if (_session?.expires_at !== claims?.exp) {
@@ -66,7 +60,7 @@
 	setContext('pageHeader', pageHeader);
 </script>
 
-<Nav {inProd} breadcrumbs={breadcrumbs.breadcrumbs}></Nav>
+<Nav breadcrumbs={breadcrumbs.breadcrumbs}></Nav>
 <main>
 	{@render children()}
 </main>

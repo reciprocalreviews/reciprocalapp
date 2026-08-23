@@ -2,8 +2,35 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<!-- The SVG is the real icon; the PNG is the fallback for browsers that predate
+		     `type="image/svg+xml"` support, and iOS ignores SVG touch icons entirely. -->
+		<link rel="icon" href="%sveltekit.assets%/brand/favicon.svg" type="image/svg+xml" />
+		<link rel="icon" href="%sveltekit.assets%/brand/favicon.png" sizes="any" />
+		<link rel="apple-touch-icon" href="%sveltekit.assets%/brand/apple-touch-icon.png" />
+		<meta name="theme-color" content="#007284" />
+
+		<!-- Defaults for a link to any page. Per-page <title> is set by Page.svelte;
+		     these describe the platform, which is what a shared link is announcing.
+		     og:image must be a raster — Slack, LinkedIn, and iMessage all reject SVG. -->
+		<meta
+			name="description"
+			content="Reciprocal Reviews makes peer review count: editors price submissions in review tokens, and authors earn them by reviewing."
+		/>
+		<meta property="og:site_name" content="Reciprocal Reviews" />
+		<meta property="og:title" content="Reciprocal Reviews" />
+		<meta
+			property="og:description"
+			content="Make peer review count. Editors price submissions in review tokens, and authors earn them by reviewing."
+		/>
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://reciprocal.reviews" />
+		<meta property="og:image" content="https://reciprocal.reviews/brand/og-image.png" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta name="twitter:card" content="summary_large_image" />
+
 		%sveltekit.head%
 
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -194,6 +221,36 @@
 
 			p:last-child {
 				margin-block-end: 0;
+			}
+
+			/* The review token chip. Global rather than scoped to Tokens.svelte because the
+			   same markup is also produced as an HTML string by tokenChip() and rendered
+			   through `{@html}`, which Svelte's style scoping does not reach. */
+			.token {
+				font-weight: 500;
+				font-size: var(--small-font-size);
+				padding: var(--spacing-half);
+				border-radius: var(--roundedness);
+				background-color: var(--salient-color-faded);
+				box-decoration-break: clone;
+				/* An amount and its unit are one value; wrapping between them reads as two. */
+				white-space: nowrap;
+			}
+
+			.token .star {
+				color: var(--salient-color);
+			}
+
+			.token .currency {
+				font-weight: 300;
+			}
+
+			.token.debit {
+				background-color: var(--error-color-faded);
+			}
+
+			.token.debit .star {
+				color: var(--error-color);
 			}
 
 			code {

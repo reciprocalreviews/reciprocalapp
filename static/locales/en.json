@@ -25,6 +25,7 @@
 	},
 	"footer": {
 		"link": {
+			"brand": "Brand",
 			"about": "About",
 			"terms": "Terms",
 			"updates": "Updates",
@@ -70,24 +71,47 @@
 		"error": {
 			"title": "Oops."
 		},
+		"brand": {
+			"title": "Brand",
+			"lead": "The mark, the colors, and the type.",
+			"header": {
+				"mark": "The mark",
+				"color": "Color",
+				"type": "Type"
+			},
+			"paragraph": {
+				"mark": "Two arrows chasing each other around a circle: reciprocity, which is the whole idea. It has no background, one color, and no filters, so it drops onto any surface and survives the sanitizers that avatar pipelines and mail clients run. The one exception is the favicon, which drops the shadow: at 16 to 32 pixels the offset is sub-pixel and only blurs the strokes.",
+				"usage": "Please don't recolor it outside this palette, rotate it, add a background plate, or set it in another typeface. If you need a variant we haven't published, [ask the stewards](/contact) — we would rather make one than have several in the wild. All of these files live in [the repository]({repo}) and are free to use under our license.",
+				"color": "Teal carries the brand and every interactive affordance: links, the page header, and the token chip. Plum is reserved for errors and debits, and the orange only ever marks keyboard focus. Everything else is neutral.",
+				"type": "Quicksand sets headings, Josefin Sans sets everything else, and Noto Sans Mono sets code. Both are open licensed and are served from this domain rather than a font CDN."
+			},
+			"file": {
+				"logo": "Logo",
+				"logoWhite": "Logo, white",
+				"favicon": "Favicon",
+				"touch": "Touch icon",
+				"social": "Social card"
+			},
+			"label": {
+				"heading": "Headings",
+				"body": "Body and everything else"
+			}
+		},
 		"home": {
 			"title": "Reciprocal Reviews",
 			"lead": "Make peer review count.",
 			"call": [
 				"Academia incentivizes publishing over peer review. That means too many submissions and not enough reviews, or reviews that are late and low quality.",
 				"**Reciprocal Reviews** breaks this cycle:",
-				"1. **Editors set a cost** for submissions, priced in review tokens.",
+				"1. **Editors set a cost** for submissions, priced in review tokens \u2014 for example, {cost}.",
 				"2. **Authors earn tokens** by volunteering for venues, sharing expertise and availability, and submitting on-time, quality reviews, on whatever reviewing platform a venue uses.",
 				"3. **Authors spend tokens** to submit manuscripts for review, splitting the cost with co-authors. Or, they can gift tokens to individuals or shared pools to strategically support newcomers, colleagues in crisis, or emerging topics.",
 				"Because authors need to submit high-quality, on-time reviews to submit, authors get better, faster reviews, editors do less nagging, communities overall have a fairer distribution of peer review labor."
 			],
 			"tip": {
 				"browse": "**Interested in adopting?** See the [journals and conferences](/venues) using the platform and reach out to their editors for their experiences. Or, [log in](/login) to propose a journal or conference adopt *Reciprocal Reviews*.",
-				"about": "**We are a volunteer community** of academics, not a for-profit organization. Our only goal is to improve the sustainability, quality, and integrity of peer review. See our [about](/about) page if you're interested in helping.",
+				"about": "**We are a volunteer community** of academics, not a for-profit organization. Our only goal is to improve the sustainability, quality, and integrity of peer review. See our [about](/about) page if you're interested in helping, or follow our [newsletter]({newsletter}) to see where we're headed.",
 				"track": "**Don't want to set a cost?** Use Reciprocal Reviews to track volunteer reviewers and expertise in your community, streamlining reviewing and program committee invitations."
-			},
-			"feedback": {
-				"beta": "We're in development! A public beta is likely in 2026. Visit [GitHub](https://github.com/reciprocalreviews) to see who's involved, see our [beta milestone](https://github.com/reciprocalreviews/reciprocalapp/issues?q=is:open%20milestone:%22Beta%22) for the work that remains. Subscribe to our low-volume [newsletter](https://reciprocalreviews.substack.com/) to follow along, check the [updates](/updates) page to see our weekly progress. And if you feel like helping, [write to the stewards](/contact). We're a small volunteer group of academics."
 			}
 		},
 		"venues": {

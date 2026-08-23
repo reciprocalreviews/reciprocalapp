@@ -885,6 +885,9 @@
                 "about": {
                   "type": "string"
                 },
+                "brand": {
+                  "type": "string"
+                },
                 "contact": {
                   "description": "The steward inbox and the people behind it.",
                   "type": "string"
@@ -901,6 +904,7 @@
                 }
               },
               "required": [
+                "brand",
                 "about",
                 "terms",
                 "updates",
@@ -1056,6 +1060,116 @@
                 "header",
                 "feedback",
                 "paragraph"
+              ],
+              "type": "object"
+            },
+            "brand": {
+              "additionalProperties": false,
+              "properties": {
+                "file": {
+                  "additionalProperties": false,
+                  "description": "Labels for the downloadable files.",
+                  "properties": {
+                    "favicon": {
+                      "type": "string"
+                    },
+                    "logo": {
+                      "type": "string"
+                    },
+                    "logoWhite": {
+                      "type": "string"
+                    },
+                    "social": {
+                      "type": "string"
+                    },
+                    "touch": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "logo",
+                    "logoWhite",
+                    "favicon",
+                    "touch",
+                    "social"
+                  ],
+                  "type": "object"
+                },
+                "header": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "color": {
+                      "type": "string"
+                    },
+                    "mark": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "mark",
+                    "color",
+                    "type"
+                  ],
+                  "type": "object"
+                },
+                "label": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "body": {
+                      "type": "string"
+                    },
+                    "heading": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "heading",
+                    "body"
+                  ],
+                  "type": "object"
+                },
+                "lead": {
+                  "type": "string"
+                },
+                "paragraph": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "color": {
+                      "type": "string"
+                    },
+                    "mark": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "usage": {
+                      "description": "Takes {repo}, a link to the asset folder on GitHub.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "mark",
+                    "usage",
+                    "color",
+                    "type"
+                  ],
+                  "type": "object"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "lead",
+                "header",
+                "paragraph",
+                "file",
+                "label"
               ],
               "type": "object"
             },
@@ -1740,22 +1854,11 @@
               "additionalProperties": false,
               "properties": {
                 "call": {
+                  "description": "The argument for the platform. Takes {cost}, a rendered token chip.",
                   "items": {
                     "type": "string"
                   },
                   "type": "array"
-                },
-                "feedback": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "beta": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "beta"
-                  ],
-                  "type": "object"
                 },
                 "lead": {
                   "type": "string"
@@ -1764,6 +1867,7 @@
                   "additionalProperties": false,
                   "properties": {
                     "about": {
+                      "description": "Takes {newsletter}, the newsletter's URL.",
                       "type": "string"
                     },
                     "browse": {
@@ -1788,8 +1892,7 @@
                 "title",
                 "lead",
                 "call",
-                "tip",
-                "feedback"
+                "tip"
               ],
               "type": "object"
             },
@@ -4961,6 +5064,7 @@
           },
           "required": [
             "error",
+            "brand",
             "home",
             "venues",
             "proposal",

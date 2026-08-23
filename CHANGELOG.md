@@ -2,6 +2,23 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.0 - 2026-08-23
+
+### Added
+
+- **Reciprocal Reviews is in public beta.** Every part of the platform is now reachable: you can browse venues, sign in, propose a journal or conference, volunteer to review, and manage a venue. Until now production redirected everything except the landing, about, and updates pages back to the home page.
+- Reciprocal Reviews has a **logo** — two arrows chasing each other around a circle — and a [brand page](/brand) listing the mark, the colors, and the typefaces, with the files available to download. It's linked from the footer.
+- Link previews now show a proper card with the logo and tagline when a Reciprocal Reviews page is shared, and the browser tab shows the logo rather than a generic icon. Search engines get a `robots.txt` and a sitemap that lists the public pages, the help articles, and every active venue.
+
+### Changed
+
+- The landing page leads with **"Make peer review count."** in the flow of the page rather than pinned to the header, and shows what a submission cost looks like — a token chip right in the sentence — instead of only describing one. The newsletter is now linked from the volunteer community note.
+
+### Fixed
+
+- Text that a venue or a proposal supplies — a venue description, a proposal title — can no longer inject markup into the page it appears on. Values substituted into a sentence are now escaped by default, and only markup the platform generated itself is exempt.
+- Token amounts no longer break across lines between the number and the word "tokens". A chip like ★ 10 tokens now stays whole wherever it appears, including in transaction tables and on scholar pages.
+
 ## 0.4.8 - 2026-08-23
 
 ### Added

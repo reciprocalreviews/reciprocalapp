@@ -13,6 +13,7 @@
 	<Link size="extra-small" to="/contact"><Text path={(l) => l.footer.link.contact} /></Link>
 	<Link size="extra-small" to="/terms"><Text path={(l) => l.footer.link.terms} /></Link>
 	<Link size="extra-small" to="/updates"><Text path={(l) => l.footer.link.updates} /></Link>
+	<Link size="extra-small" to="/brand"><Text path={(l) => l.footer.link.brand} /></Link>
 </footer>
 
 <style>

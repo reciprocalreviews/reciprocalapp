@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getLocaleContext } from '$routes/Contexts';
 	import { marked } from 'marked';
+	import type { Html } from './html';
 	import type LocaleText from './Locale';
 	import interpolate from './interpolate';
 
@@ -11,7 +12,10 @@
 	}: {
 		path: string | ((locale: LocaleText) => string | string[]);
 		markdown?: boolean;
-		inputs?: Record<string, string>;
+		/** Substituted into `{name}` placeholders. Plain strings are escaped when
+		 * `markdown` is set, since that path renders through `{@html}`; pass `html()`
+		 * from ./html for a value that is deliberately markup. */
+		inputs?: Record<string, string | Html>;
 	} = $props();
 
 	const locale = getLocaleContext();
@@ -21,7 +25,12 @@
 	// place every user-visible string in the app passes through.
 	const text = $derived.by(() => {
 		const loc = locale();
-		return interpolate(typeof path === 'string' ? path : path(loc), loc.shorthand, inputs);
+		return interpolate(
+			typeof path === 'string' ? path : path(loc),
+			loc.shorthand,
+			inputs,
+			markdown
+		);
 	});
 </script>
 

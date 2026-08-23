@@ -1,0 +1,12 @@
+# Reciprocal Reviews is a public platform: the landing page, the venue directory,
+# scholar profiles, and the help and about pages are all meant to be found.
+User-agent: *
+Allow: /
+
+# Nothing below is useful in an index, and some of it is per-session: the auth
+# callback, the one-time email verification links, and the login form.
+Disallow: /auth/
+Disallow: /verify/
+Disallow: /login
+
+Sitemap: https://reciprocal.reviews/sitemap.xml

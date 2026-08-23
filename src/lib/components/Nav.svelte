@@ -21,22 +21,12 @@
 
 	let pending = $derived(getPendingActions());
 
-	const { breadcrumbs, inProd }: { breadcrumbs: [string, string][]; inProd: boolean } = $props();
+	const { breadcrumbs }: { breadcrumbs: [string, string][] } = $props();
 
-	// In production only /updates and /about are reachable (everything else redirects home),
-	// so the header offers just those plus Home; otherwise it shows the full navigation.
-	const routes = $derived(
-		inProd
-			? [
-					{ path: '/', label: locale().header.home },
-					{ path: '/updates', label: locale().footer.link.updates },
-					{ path: '/about', label: locale().footer.link.about }
-				]
-			: [
-					{ path: '/', label: locale().header.home },
-					{ path: '/venues', label: locale().header.venues }
-				]
-	);
+	const routes = $derived([
+		{ path: '/', label: locale().header.home },
+		{ path: '/venues', label: locale().header.venues }
+	]);
 
 	const pageHeader = getContext<PageHeader>('pageHeader');
 </script>
@@ -48,58 +38,63 @@
 				<Link size="small" to={route.path}>{route.label}</Link>
 			</div>
 		{/each}
-		{#if !inProd}
-			{#each breadcrumbs as [url, label]}
-				<small>&gt;</small>
-				<div class="link">
-					<Link
-						size="small"
-						to={url}
-						icon={url.startsWith('/venue')
-							? VenueLabel
-							: url.startsWith('/scholar')
-								? ScholarLabel
-								: url.startsWith('/submission')
-									? SubmissionLabel
-									: null}>{label}</Link
-					>
-				</div>
-			{/each}
-			<div class="authenticated">
-				{#if pending > 0}
-					<div class="feedback">
-						{#if pending > 1}{pending}{/if}
-						<Dots></Dots>
-					</div>
-				{/if}
-				{#if auth().isAuthenticated()}
-					<div class="link">
-						<Link size="small" to="/scholar/{auth().getUserID()}">Profile</Link>
-					</div>
-					<div class="link">
-						<Button
-							small
-							testid="logout-button"
-							strings={(l) => l.component.header.logout}
-							action={() => {
-								auth().signOut();
-								goto('/login');
-							}}
-						/>
-					</div>
-				{:else}
-					<div class="link">
-						<Link size="small" to="/login"><Text path={(l) => l.header.link.login} /></Link>
-					</div>
-				{/if}
+		{#each breadcrumbs as [url, label]}
+			<small>&gt;</small>
+			<div class="link">
+				<Link
+					size="small"
+					to={url}
+					icon={url.startsWith('/venue')
+						? VenueLabel
+						: url.startsWith('/scholar')
+							? ScholarLabel
+							: url.startsWith('/submission')
+								? SubmissionLabel
+								: null}>{label}</Link
+				>
 			</div>
-		{/if}
+		{/each}
+		<div class="authenticated">
+			{#if pending > 0}
+				<div class="feedback">
+					{#if pending > 1}{pending}{/if}
+					<Dots></Dots>
+				</div>
+			{/if}
+			{#if auth().isAuthenticated()}
+				<div class="link">
+					<Link size="small" to="/scholar/{auth().getUserID()}">Profile</Link>
+				</div>
+				<div class="link">
+					<Button
+						small
+						testid="logout-button"
+						strings={(l) => l.component.header.logout}
+						action={() => {
+							auth().signOut();
+							goto('/login');
+						}}
+					/>
+				</div>
+			{:else}
+				<div class="link">
+					<Link size="small" to="/login"><Text path={(l) => l.header.link.login} /></Link>
+				</div>
+			{/if}
+		</div>
 	</div>
 	<Banners />
 	{#if pageHeader?.title}
 		<div class="page-header">
 			<h1 class="page-header-title" class:wobble={pageHeader.wobble} data-testid="page-header">
-				<span class="emoji">{pageHeader.icon}</span>
+				<!-- The header is baseline-aligned (.page-header-title beats the h1 rule
+				     below it), and an svg has no baseline of its own — it would align by
+				     its bottom edge and tower over the text. The span supplies one. -->
+				{#if typeof pageHeader.icon === 'string'}
+					<span class="emoji">{pageHeader.icon}</span>
+				{:else}
+					<span class="mark">{@render pageHeader.icon()}</span>
+				{/if}
 				{#if pageHeader.edit}
 					<EditableText
 						text={pageHeader.title}
@@ -187,6 +182,16 @@
 	.emoji {
 		font-family: 'Noto Emoji', 'Josefin Sans', sans-serif;
 		font-size: 80%;
+		/* A flex item; without this a long title squeezes the icon. */
+		flex: none;
+	}
+
+	.mark {
+		/* Full size, unlike .emoji's 80%: the logo's strokes are thinner than an
+		   emoji glyph's, so at 80% it reads lighter than the wordmark beside it. */
+		font-size: 100%;
+		line-height: 1;
+		flex: none;
 	}
 
 	h1 {

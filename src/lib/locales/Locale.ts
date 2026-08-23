@@ -77,6 +77,7 @@ export type LocaleText = {
 	};
 	footer: {
 		link: {
+			brand: string;
 			about: string;
 			terms: string;
 			updates: string;
@@ -129,17 +130,44 @@ export type LocaleText = {
 		error: {
 			title: string;
 		};
+		brand: {
+			title: string;
+			lead: string;
+			header: {
+				mark: string;
+				color: string;
+				type: string;
+			};
+			paragraph: {
+				mark: string;
+				/** Takes {repo}, a link to the asset folder on GitHub. */
+				usage: string;
+				color: string;
+				type: string;
+			};
+			/** Labels for the downloadable files. */
+			file: {
+				logo: string;
+				logoWhite: string;
+				favicon: string;
+				touch: string;
+				social: string;
+			};
+			label: {
+				heading: string;
+				body: string;
+			};
+		};
 		home: {
 			title: string;
 			lead: string;
+			/** The argument for the platform. Takes {cost}, a rendered token chip. */
 			call: string[];
 			tip: {
 				browse: string;
+				/** Takes {newsletter}, the newsletter's URL. */
 				about: string;
 				track: string;
-			};
-			feedback: {
-				beta: string;
 			};
 		};
 		venues: {

@@ -20,29 +20,7 @@
 	{#if amount === 1}{locale().widget.tokens.single}{:else}{locale().widget.tokens.plural}{/if}</span
 >
 
-<style>
-	.token {
-		font-weight: 500;
-		font-size: var(--small-font-size);
-		padding: var(--spacing-half);
-		border-radius: var(--roundedness);
-		background-color: var(--salient-color-faded);
-		box-decoration-break: clone;
-	}
-
-	.star {
-		color: var(--salient-color);
-	}
-
-	.currency {
-		font-weight: 300;
-	}
-
-	.debit .star {
-		color: var(--error-color);
-	}
-
-	.debit {
-		background-color: var(--error-color-faded);
-	}
-</style>
+<!-- No scoped styles: `.token` and friends live in the global block in src/app.html.
+     Svelte's scoping never reaches `{@html}` content, and the same chip is emitted as an
+     HTML string by tokenChip() so it can appear inside a localized sentence. Two copies of
+     these rules would drift; one global copy serves both. -->

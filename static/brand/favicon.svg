@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Reciprocal Reviews">
+  <title>Reciprocal Reviews</title>
+  <!-- The favicon renders at 16–32px, where the logo's offset shadow stops reading as
+       depth and just thickens the arrows. Flat mark only. See static/logo.svg. -->
+  <g fill="#007284">
+    <path d="M 42.49 78.01 L 39.65 88.64 A 40 40 0 0 1 33.10 13.75 L 28.66 4.23 L 50.60 15.51 L 42.18 33.23 L 37.74 23.72 A 29 29 0 0 0 42.49 78.01 Z"/>
+    <path d="M 57.51 21.99 L 60.35 11.36 A 40 40 0 0 1 66.90 86.25 L 71.34 95.77 L 49.40 84.49 L 57.82 66.77 L 62.26 76.28 A 29 29 0 0 0 57.51 21.99 Z"/>
+  </g>
+</svg>

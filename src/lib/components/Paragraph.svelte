@@ -1,10 +1,11 @@
 <script lang="ts">
+	import type { Html } from '$lib/locales/html';
 	import type Locale from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
 
 	interface Props {
 		text: (l: Locale) => string;
-		inputs?: Record<string, string>;
+		inputs?: Record<string, string | Html>;
 	}
 
 	const { text, inputs = {} }: Props = $props();

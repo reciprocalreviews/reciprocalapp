@@ -71,6 +71,8 @@ src/
     templates.ts            Email template registry
 static/
   locales/en.json           Localized strings (validated against LocaleText.json)
+  brand/                    Logo, favicons, and social card; see its README
+  robots.txt                Crawl policy; points at the generated /sitemap.xml
 supabase/
   schemas/                  Authoritative declarative table schemas (one file per table)
   migrations/               Timestamped migration history
@@ -80,6 +82,7 @@ supabase/
 end2end/                    Playwright integration tests
 scripts/
   updates.js                Generates updates.json from CHANGELOG.md at build time
+  icons.js                  Rasterizes static/brand/logo.svg into its PNG derivatives
 ```
 
 ## Authentication
@@ -266,6 +269,30 @@ The English locale file lives at [static/locales/en.json](static/locales/en.json
 <TextField label={(l) => l.page.login.form.email.label} />
 ```
 
+### Substitution, and why inputs are escaped
+
+Every string passes through [interpolate.ts](src/lib/locales/interpolate.ts) — the one choke point — which makes two replacements in order: `$name` from the locale's own `shorthand` table, then `{name}` from the caller's `inputs`. An unrecognized key is left literally as `$name` or `{name}`, so a missing string shows up as a visible placeholder rather than a hole in a sentence.
+
+`<Text markdown>` renders its result through `marked` and `{@html}`, and `marked` passes raw HTML through untouched. That makes an input _markup_, not text — and several inputs are authored by users: `venue.description`, `proposal.title`, `proposal.url`. Before this was addressed, a venue description of `<img src=x onerror=…>` executed for every visitor to that venue.
+
+So **inputs are escaped by default in the markdown path**. A value that genuinely is markup the platform generated must say so by arriving as `Html` from [html.ts](src/lib/locales/html.ts):
+
+```svelte
+<Text
+	markdown
+	path={(l) => l.page.home.call}
+	inputs={{ cost: tokenChip(locale().widget.tokens, 10) }}
+/>
+```
+
+`html()` is the only way to opt out, which makes every exemption one `grep` away. Three details are load-bearing:
+
+- **Shorthand is not escaped.** It is authored in the locale file beside the strings that use it, and `$delete` is `✖`.
+- **Escaping is skipped in the plain-text path**, where Svelte escapes the interpolated result itself. Doing both would double-encode and show the reader a literal `&lt;`.
+- **Both passes use function replacers**, so a `$1` or `$&` in a substituted value is inserted literally, and a `{name}` inside one is never re-scanned.
+
+The current holder of an `html()` exemption is [tokenChip.ts](src/lib/components/tokenChip.ts), which renders the review-token chip as a string so it can sit inside a localized sentence — something `<Text>` cannot do with a component. It duplicates `Tokens.svelte`'s markup deliberately; the two share class names defined once in the global block in `app.html`, because Svelte's scoped styles never reach `{@html}` content. **Change one and change the other.**
+
 ## Global context
 
 The root layout [src/routes/+layout.svelte](src/routes/+layout.svelte) sets up four context channels consumed throughout the app:
@@ -285,17 +312,19 @@ Plus breadcrumbs and page-header state for the chrome.
 
 ## Routing
 
-- All routes live under `src/routes/[[lang]]/`. `[[lang]]` is an optional locale prefix that defaults to `en`.
+- Localized routes live under `src/routes/[[lang]]/`. `[[lang]]` is an optional locale prefix that defaults to `en`.
+- A few routes sit at the root instead, because their URLs must be stable and locale-free: the landing page (`+page.svelte`), `/auth/callback` (the ORCID redirect target, which is in a provider allow-list), and `/sitemap.xml`.
 - Dynamic segments use the project's domain identifiers: `[id]` (scholars, currencies), `[venueid]`, `[submissionid]`, `[proposalid]`.
 - Route directories may contain `+page.svelte`, `+page.ts`, `+layout.svelte`, `+layout.ts`, plus arbitrary co-located helper Svelte files (e.g. `Roles.svelte`, `NewSubmission.svelte`) when a page is too big for one file.
 
 ## UI components
 
-[src/lib/components/](src/lib/components/) is the shared design system: `Button`, `Card`, `Cards`, `Form`, `TextField`, `Slider`, `Tag`, `Tags`, `Page`, `Nav`, `Footer`, `Feedback`, `Loading`, `Dialog`, and so on. New UI should compose these rather than introducing one-off styling. Components accept locale-path functions where they take user-visible text.
+[src/lib/components/](src/lib/components/) is the shared design system: `Button`, `Card`, `Cards`, `Form`, `TextField`, `Slider`, `Tag`, `Tags`, `Page`, `Nav`, `Footer`, `Feedback`, `Loading`, `Dialog`, and so on. New UI should compose these rather than introducing one-off styling. One of them is not generic: `Logo` draws the brand mark with `currentColor`, and its path data is duplicated in [static/brand/logo.svg](static/brand/logo.svg) for the copies that leave the app — change the geometry in both. Components accept locale-path functions where they take user-visible text.
 
 ## Build and release
 
 - `npm run build` runs [scripts/maybe-updates.js](scripts/maybe-updates.js) first, which invokes `npm run updates` only when `$CI` is set. CI builds regenerate `src/routes/[[lang]]/updates/updates.json` from [CHANGELOG.md](CHANGELOG.md) via [scripts/updates.js](scripts/updates.js); local builds reuse whatever was last committed, so the file doesn't churn on every dev rebuild. Run `npm run updates` manually if you want to regenerate it locally.
+- `npm run icons` rasterizes [static/brand/logo.svg](static/brand/logo.svg) into the PNGs that SVG cannot cover — the apple-touch icon (iOS ignores SVG), the favicon fallback, and the 1200×630 social card (link scrapers reject SVG). It drives Playwright's Chromium, which is the only rasterizer in the repo, and is **deliberately not part of `npm run build`**: builds run on Vercel, which has no browser installed. Run it by hand and commit the output.
 - `npm run deploy` merges `dev` → `main` and pushes both branches. The push triggers CI; CI does the actual deploy.
 - `package.json#version` is bumped manually as part of changelog updates.
 

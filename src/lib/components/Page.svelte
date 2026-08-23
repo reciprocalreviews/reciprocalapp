@@ -7,7 +7,7 @@
 	import { getContext, onMount, type Snippet } from 'svelte';
 
 	let {
-		icon,
+		icon = '',
 		title,
 		subtitle,
 		details,
@@ -16,7 +16,7 @@
 		wobble = false,
 		edit
 	}: {
-		icon: string;
+		icon?: string | Snippet;
 		title: string | ((l: LocaleText) => string);
 		subtitle?: Snippet;
 		details?: Snippet;
