@@ -382,6 +382,7 @@ When a venue is **approved** state:
 - [x] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
 - [x] _`scholar`_: Change expertise keywords for a role for the venue
 - [x] _`scholar`_: Change paper count for a role for the venue
+- [x] _`scholar`_: Stop volunteering for a role, and later resume. Volunteering is a **permanent record that deactivates rather than disappears** — nobody, not the scholar and not a venue admin, can delete it. That is what keeps a venue's welcome grant to a one-time thing: the grant is decided by whether the scholar has volunteered at this venue before, so a record that could be erased, or moved to another venue's role, would be a way to be welcomed twice.
 
 - [x] _`editor`_: Modify the venue name, description
 - [x] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one

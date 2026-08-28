@@ -65,7 +65,7 @@ positive and an adversarial-negative case per privilege branch.
 | currencies | ✓ | ✓ | ✓ | ✓ | steward-only insert; minter-only mutate; no_admin_minters |
 | exchanges | ✓ | ✓ | ✓ | ✓ | minter of either currency |
 | roles | ✓ | ✓ | ✓ | ✓ | admin-only |
-| volunteers | ✓ | ✓ | ✓ | ✓ | self vs admin; invite-only roles |
+| volunteers | ✓ | ✓ | ✓ | ✓ | self vs admin; invite-only roles; no delete; roleid/scholarid not writable |
 | proposals | ✓ | ✓ | ✓ | ✓ | steward-only mutate |
 | supporters | ✓ | ✓ | ✓ | ✓ | self-only update/delete |
 | tokens | ✓ | ✓ | ✓ | ✓ | anon cannot read; minter cannot move ownership; no delete |

@@ -31,6 +31,34 @@ grant all on table public.volunteers to authenticated;
 
 grant all on table public.volunteers to service_role;
 
+-- `grant all` above confers TABLE-level UPDATE on every column, which a
+-- column-level revoke cannot subtract, so remove it and re-grant only the
+-- columns a volunteer may write. `scholarid` and `roleid` are identity: the row
+-- records that this scholar volunteered for this role. The update policy's
+-- USING expression covered `scholarid` but never mentioned `roleid`, so a
+-- scholar could repoint their own row to a role at another venue — resetting the
+-- per-venue count that decides the welcome grant (see create_volunteer below)
+-- and earning it again. `accepted` is written only by the SECURITY DEFINER RPCs,
+-- which grants do not constrain, because responding to an invitation is what
+-- settles the welcome grant.
+revoke
+update on public.volunteers
+from
+	authenticated,
+	anon;
+
+grant
+update (active, expertise, papers) on public.volunteers to authenticated;
+
+-- `grant all` likewise confers TABLE-level DELETE that the deny policy alone
+-- cannot subtract, so remove the privilege as well. Volunteering is a permanent
+-- record that deactivates rather than disappears. service_role keeps its grant
+-- for administrative and recovery work.
+revoke delete on public.volunteers
+from
+	authenticated,
+	anon;
+
 alter table only public.volunteers
 add constraint volunteers_pkey primary key (id);
 
@@ -124,6 +152,11 @@ with
 		)
 	);
 
+-- The WITH CHECK is spelled out rather than left to default from USING. It is
+-- the same expression, so this changes nothing today; it is here so that a later
+-- widening of USING — to admit venue admins, say — cannot silently widen what a
+-- row is allowed to become along with it. What the row may not become is now
+-- carried by the column grants above, which is where `roleid` is refused.
 create policy "volunteers can update" on public.volunteers
 for update
 	to authenticated using (
@@ -133,28 +166,25 @@ for update
 					auth.uid () as uid
 			)=scholarid
 		)
-	);
-
-create policy "admins and volunteers can delete" on public.volunteers for DELETE to authenticated using (
-	(
-		public.isAdmin (
-			(
-				select
-					roles.venueid
-				from
-					public.roles
-				where
-					(roles.id=volunteers.roleid)
-			)
-		)
-		or (
+	)
+with
+	check (
+		(
 			(
 				select
 					auth.uid () as uid
 			)=scholarid
 		)
-	)
-);
+	);
+
+-- Nobody deletes a volunteer record. This previously admitted venue admins and
+-- the volunteering scholar, and no client path ever called it: CRUD declares no
+-- deleteVolunteer, no RPC deletes one, and the only admin action that removes
+-- volunteer rows is deleting the whole role, which cascades. What it permitted
+-- was not small — the row is what stops a venue's welcome grant being made
+-- twice, so deleting it and re-volunteering minted the welcome amount again.
+-- Unvolunteering toggles `active` instead, which is why that column exists.
+create policy "volunteers cannot be deleted" on public.volunteers for DELETE to authenticated using (false);
 
 --------------------------------------
 -- RPCs (defined in migration 20260608000000_atomic_crud.sql)
