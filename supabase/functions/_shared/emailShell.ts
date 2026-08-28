@@ -35,6 +35,11 @@ const WORDMARK = 'Reciprocal Reviews';
 // Says who to talk to, not just who sent it. Every email is a potential support
 // conversation, and this is the only place the recipient is told that replying works.
 const FOOTER = `Sent by Reciprocal Reviews. Reply to this email and a steward will see it, or write <a href="mailto:${SUPPORT_EMAIL}" style="color: ${MUTED_COLOR};">${SUPPORT_EMAIL}</a>.`;
+
+/** Where the wordmark links when no origin is supplied. Declared here rather
+ * than imported from templates.ts to keep this module dependency-free, as the
+ * header above promises. */
+const DEFAULT_ORIGIN = 'https://reciprocal.reviews';
 const FONT_STACK =
 	"'Quicksand', 'Josefin Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
@@ -106,7 +111,17 @@ export function htmlToText(html: string): string {
  * (table layout, inline CSS, text wordmark header, footer). `bodyHtml` is
  * inserted as-is, so callers are responsible for escaping any untrusted values.
  */
-export function wrapEmail({ subject, bodyHtml }: { subject: string; bodyHtml: string }): string {
+export function wrapEmail({
+	subject,
+	bodyHtml,
+	origin = DEFAULT_ORIGIN
+}: {
+	subject: string;
+	bodyHtml: string;
+	/** Where the wordmark links. Defaults to production so mail from a project
+	 * that never configured `site_url` is unchanged. */
+	origin?: string;
+}): string {
 	return `<!doctype html>
 <html lang="en">
 	<head>
@@ -122,7 +137,7 @@ export function wrapEmail({ subject, bodyHtml }: { subject: string; bodyHtml: st
 					<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; background-color: #ffffff; border: 1px solid ${BORDER_COLOR}; border-radius: 8px; overflow: hidden; font-family: ${FONT_STACK};">
 						<tr>
 							<td style="background-color: ${BRAND_COLOR}; padding: 20px 32px;">
-								<a href="https://reciprocal.reviews" style="color: #ffffff; font-size: 20px; font-weight: 700; text-decoration: none;">${WORDMARK}</a>
+								<a href="${escapeHtml(origin)}" style="color: #ffffff; font-size: 20px; font-weight: 700; text-decoration: none;">${WORDMARK}</a>
 							</td>
 						</tr>
 						<tr>
@@ -147,7 +162,11 @@ ${bodyHtml}
  * Convenience helper: take a plain/semi-HTML message body and produce both the
  * branded HTML and a text/plain alternative ready to hand to Resend.
  */
-export function renderBrandedEmail(subject: string, body: string): { html: string; text: string } {
-	const html = wrapEmail({ subject, bodyHtml: paragraphsToHtml(body) });
+export function renderBrandedEmail(
+	subject: string,
+	body: string,
+	origin: string = DEFAULT_ORIGIN
+): { html: string; text: string } {
+	const html = wrapEmail({ subject, bodyHtml: paragraphsToHtml(body), origin });
 	return { html, text: htmlToText(html) };
 }

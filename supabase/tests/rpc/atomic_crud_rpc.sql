@@ -13,7 +13,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(38);
+select plan(44);
 
 -- ---- Shared fixtures (owner context) -----------------------------------------
 select tests.clear_authentication();
@@ -269,6 +269,28 @@ select throws_ok(
 	'P0001', null,
 	'a submission type from another venue is rejected'
 );
+
+-- Only a listed author (or a venue admin) may create a submission. This rule
+-- previously lived only in the submission form, so a caller reaching the RPC
+-- directly could create submissions in any venue and generate proposed charges
+-- against arbitrary scholars.
+select tests.authenticate_as(:'outsider');
+select throws_ok(
+	$$ select public.create_submission( $$ || quote_literal(:'ven') || $$, 'EXT-8', null, null, $$
+		|| quote_literal(:'stype') || $$, array[ $$ || quote_literal(:'alice') || $$ ]::uuid[],
+		array[1]::integer[], 'H title', 'expertise', null, 'Payment for EXT-8' ) $$,
+	'RR009', null,
+	'a non-author cannot create a submission charging someone else'
+);
+
+-- A venue admin may add a submission on the authors' behalf (manual adds).
+select tests.authenticate_as(:'admin');
+select lives_ok(
+	$$ select public.create_submission( $$ || quote_literal(:'ven') || $$, 'EXT-9', null, null, $$
+		|| quote_literal(:'stype') || $$, array[ $$ || quote_literal(:'bob') || $$ ]::uuid[],
+		array[1]::integer[], 'I title', 'expertise', null, 'Payment for EXT-9' ) $$,
+	'a venue admin can add a submission on behalf of its authors'
+);
 select tests.clear_authentication();
 
 --------------------------------------------------------------------------------
@@ -280,7 +302,7 @@ select tests.create_role(:'ven', 1, null, false, true) as invite_role \gset
 select tests.create_role(:'ven', 1, null, false, false) as open_role \gset
 
 -- Happy: an admin adds :alice to the invite-only role, with compensation. As
--- her first role this records a proposed welcome grant.
+-- her first role this settles the welcome grant immediately.
 select tests.authenticate_as(:'admin');
 select lives_ok(
 	$$ select public.create_volunteer( $$ || quote_literal(:'alice') || $$, $$
@@ -295,10 +317,61 @@ select is(
 );
 select is(
 	(select count(*)::int from public.transactions
-		where from_venue = :'ven' and to_scholar = :'alice' and status = 'proposed'),
+		where from_venue = :'ven' and to_scholar = :'alice' and status = 'approved'
+		  and purpose = 'Welcome tokens for volunteering'),
 	1,
-	'create_volunteer recorded the proposed welcome grant atomically'
+	'create_volunteer settled the welcome grant atomically'
 );
+-- The grant moved welcome_amount (5) REAL tokens — no placeholders — and the
+-- scholar now owns every token the transaction cites.
+select is(
+	(select count(*)::int from public.tokens t
+		where t.scholar = :'alice' and t.id in (
+			select unnest(tokens) from public.transactions
+			where from_venue = :'ven' and to_scholar = :'alice'
+			  and purpose = 'Welcome tokens for volunteering')),
+	5,
+	'the welcome grant moved welcome_amount real tokens to the scholar'
+);
+
+-- The RPC reports what it granted, so the confirmation can say so precisely
+-- instead of promising tokens that may never have been granted. Whether a
+-- grant happens turns on the scholar's first-role status, the venue's
+-- payment_free flag, and its welcome_amount — none of which the client can
+-- evaluate without re-deriving the rule.
+select tests.authenticate_as(:'admin');
+select is(
+	(select (public.create_volunteer(
+		(select tests.create_scholar('rpc_welcomed@test.local')), :'open_role', true, true, null
+	) ->> 'welcome_granted')::int),
+	5,
+	'create_volunteer reports the granted amount on a first role'
+);
+
+-- A second role for the same scholar grants nothing, and says so.
+select is(
+	(select (public.create_volunteer(:'alice', :'open_role', true, true, null)
+		->> 'welcome_granted')::int),
+	0,
+	'create_volunteer reports zero when this is not the scholar''s first role'
+);
+
+-- A payment-free venue has no tokens to grant, and likewise reports zero.
+select tests.clear_authentication();
+select tests.create_scholar('rpc_freevenue_admin@test.local') as free_admin \gset
+select tests.create_currency(array[(select tests.create_scholar('rpc_freeminter@test.local'))]::uuid[]) as free_cur \gset
+select tests.create_venue(:'free_cur', array[:'free_admin']::uuid[], 5) as free_ven \gset
+update public.venues set payment_free = true where id = :'free_ven';
+select tests.create_role(:'free_ven', 1, null, false, false) as free_role \gset
+select tests.authenticate_as(:'free_admin');
+select is(
+	(select (public.create_volunteer(
+		(select tests.create_scholar('rpc_freescholar@test.local')), :'free_role', true, true, null
+	) ->> 'welcome_granted')::int),
+	0,
+	'create_volunteer reports zero for a payment-free venue'
+);
+select tests.clear_authentication();
 
 -- Volunteering for the same role twice is rejected (RR004 -> the app's
 -- AlreadyVolunteered message).

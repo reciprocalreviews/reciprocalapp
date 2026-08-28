@@ -40,9 +40,15 @@ export function validCharge(charges: Charge[], cost: number): boolean {
  *
  * Blank rows are excluded first: two untouched author rows are not a duplicate,
  * and treating them as one made this unusable as a submit gate — which is part
- * of why it was only ever wired to a warning. */
+ * of why it was only ever wired to a warning.
+ *
+ * The comparison is case-insensitive because an ORCID's final character may be
+ * an X, and `…-123X` and `…-123x` name the same person. The database would
+ * reject the pair anyway (RR008 compares resolved scholar ids), so matching
+ * case-insensitively here keeps the form's answer the same as the server's
+ * rather than letting the form wave through what the server will refuse. */
 export function duplicateScholars(charges: Charge[]): boolean {
-	const scholars = filled(charges).map((charge) => charge.scholar.trim());
+	const scholars = filled(charges).map((charge) => charge.scholar.trim().toLowerCase());
 	return new Set(scholars).size !== scholars.length;
 }
 

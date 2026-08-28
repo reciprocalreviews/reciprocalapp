@@ -122,23 +122,23 @@ for update
 		)
 	);
 
-create policy "stewards and admins can delete venues" on public.venues for DELETE to authenticated using (
-	(
-		public.isSteward ()
-		or (
-			(
-				select
-					auth.uid () as "uid"
-			)=any (admins)
-		)
-	)
-);
+-- No client path deletes a venue: deletion would cascade away its roles,
+-- volunteers, assignments, compensation, preference levels, and thanks.
+-- service_role keeps its grant for administrative and recovery work.
+create policy "venues cannot be deleted" on public.venues for DELETE to authenticated using (false);
 
 grant all on table public.venues to "anon";
 
 grant all on table public.venues to "authenticated";
 
 grant all on table public.venues to "service_role";
+
+-- `grant all` above confers TABLE-level DELETE that the deny policy alone
+-- cannot subtract for a caller with a permissive policy elsewhere, so remove it.
+revoke delete on public.venues
+from
+	authenticated,
+	anon;
 
 --------------------------------------
 -- Trigger

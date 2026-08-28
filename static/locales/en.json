@@ -16,8 +16,10 @@
 		"home": "Home",
 		"venues": "Venues",
 		"saved": "saved",
+		"balance": "Your total tokens across all currencies",
 		"link": {
-			"login": "Log in"
+			"login": "Log in",
+			"profile": "Profile"
 		},
 		"feedback": {
 			"testWarning": "This is a test environment for preview purposes. Data can be deleted at any time."
@@ -52,7 +54,12 @@
 	},
 	"notification": {
 		"emailed": "{recipient} was emailed \"{subject}\"",
-		"emailedStewards": "The stewards were emailed \"{subject}\""
+		"emailedStewards": "The stewards were emailed \"{subject}\"",
+		"volunteered": "Thank you for volunteering!",
+		"volunteeredWithTokens": "Thank you for volunteering! {amount} welcome tokens have been added to your balance.",
+		"inviteAccepted": "Invitation accepted.",
+		"inviteAcceptedWithTokens": "Invitation accepted. {amount} welcome tokens have been added to your balance.",
+		"inviteDeclined": "Invitation declined."
 	},
 	"widget": {
 		"card": {
@@ -65,6 +72,14 @@
 		},
 		"subheader": {
 			"link": "Link to this section"
+		},
+		"scholarSearch": {
+			"noMatches": "No matches",
+			"unknown": "No scholar here has that ORCID iD or email address.",
+			"choose": {
+				"tip": "Choose {name}",
+				"label": "Choose"
+			}
 		}
 	},
 	"page": {
@@ -103,7 +118,7 @@
 			"call": [
 				"Academia incentivizes publishing over peer review. That means too many submissions and not enough reviews, or reviews that are late and low quality.",
 				"**Reciprocal Reviews** breaks this cycle:",
-				"1. **Editors set a cost** for submissions, priced in review tokens \u2014 for example, {cost}.",
+				"1. **Editors set a cost** for submissions, priced in review tokens — for example, {cost}.",
 				"2. **Authors earn tokens** by volunteering for venues, sharing expertise and availability, and submitting on-time, quality reviews, on whatever reviewing platform a venue uses.",
 				"3. **Authors spend tokens** to submit manuscripts for review, splitting the cost with co-authors. Or, they can gift tokens to individuals or shared pools to strategically support newcomers, colleagues in crisis, or emerging topics.",
 				"Because authors need to submit high-quality, on-time reviews to submit, authors get better, faster reviews, editors do less nagging, communities overall have a fairer distribution of peer review labor."
@@ -172,16 +187,31 @@
 					"label": "Sign in with ORCID"
 				},
 				"mockOrcid": {
-					"tip": "Simulate an ORCID sign-in locally (development only)",
-					"label": "Sign in with ORCID (mock)"
+					"tip": "Create a brand-new scholar and sign in as them",
+					"label": "Create scholar"
 				},
 				"signIn": {
 					"tip": "Sign in",
 					"label": "Login"
+				},
+				"signInAs": {
+					"tip": "Sign in as this scholar",
+					"label": "Sign in as"
 				}
 			},
 			"note": {
 				"orcid": "[ORCID](https://orcid.org/) is the de facto way to manage scholar identity. Sign in with ORCID to get started."
+			},
+			"table": {
+				"scholar": "Scholar",
+				"email": "Email",
+				"roles": "Roles"
+			},
+			"card": {
+				"newScholar": {
+					"header": "Create a new scholar",
+					"note": "Not a sign-in: this mints a new account, the only way to see what a scholar meets on their first visit — no contact email yet, and the banner asking for one. Leave both fields blank for a fresh scholar, or reuse an ORCID iD to return to one you made earlier."
+				}
 			},
 			"field": {
 				"email": {
@@ -204,8 +234,8 @@
 			"feedback": {
 				"orcidError": "Unable to start ORCID sign-in.",
 				"mockOrcidError": "Unable to create a mock ORCID session.",
-				"mockOrcidDev": "Development only — this stands in for real ORCID sign-in, which can't run locally. Leave both fields blank to onboard a brand-new scholar, or enter a previously used ORCID iD to sign back in as that scholar.",
-				"passwordDev": "Development only — sign in as one of the seeded scholars using their email and the shared test password (\"password\").",
+				"passwordDev": "Sign in by address, for an account the table can't offer — one created below, which has no contact email yet, or one whose contact address no longer matches the address it signs in with. The password for every seeded scholar is \"password\".",
+				"seededDev": "Local development only. None of this is reachable in production, where ORCID is the only way in.",
 				"signInError": "Unable to sign in."
 			},
 			"paragraph": {
@@ -407,7 +437,7 @@
 				"submit": "Submit"
 			},
 			"paragraph": {
-				"intro": "Ready to create a new submission? Typically, this form is filled by one of the authors of a submission, to pay for a submission to be reviewed.\n\n**List every co-author**, even those not contributing tokens — this lets editors and the platform identify conflicts of interest with potential reviewers. Non-paying co-authors should be listed with a payment of 0; the paying authors split the venue's submission cost between them.\n\nAfter filling out this form:\n\n- The submission will be created in the system.\n- Each paying author will need to confirm their payment.\n- Once everyone has paid, the editor will proceed with review."
+				"intro": "Ready to create a new submission? This form is filled by one of the authors of a submission, to pay for a submission to be reviewed.\n\n**List every co-author who has a Reciprocal Reviews account**, even those not contributing tokens — this lets editors and the platform identify conflicts of interest with potential reviewers. Non-paying co-authors should be listed with a payment of 0; the paying authors split the venue's submission cost between them.\n\nEvery author you list must already have an account, since authors are identified by ORCID. A co-author without one simply can't be listed — leave them off and submit with the rest. They won't be charged, and the platform won't be able to detect conflicts of interest involving them.\n\nAfter filling out this form:\n\n- The submission will be created in the system.\n- Each paying author will need to confirm their payment, and will be emailed about it.\n- Once everyone has paid, the editor will proceed with review."
 			},
 			"feedback": {
 				"notLoaded": "Unable to load the venue and/or submission types for this page.",
@@ -437,16 +467,18 @@
 			},
 			"note": {
 				"payment": "List every co-author. Set the payment for each, with non-paying co-authors at 0. The total must equal the venue's submission cost.",
-				"authors": "List every co-author, even those not contributing — this lets editors and the platform identify conflicts of interest with potential reviewers.",
+				"authors": "List every co-author who has an account, even those not contributing — this lets editors and the platform identify conflicts of interest with potential reviewers. Co-authors without a Reciprocal Reviews account can't be listed; leave them off.",
 				"balance": "Verify the balance to enable submission.",
-				"approve": "Each paying author will need to approve their payment. Non-paying co-authors don't owe anything, so no approval is needed from them."
+				"approve": "Each paying author will need to approve their payment. Non-paying co-authors don't owe anything, so no approval is needed from them.",
+				"earnTokens": "Short on tokens? [Volunteer to review for this venue]({venue}) to earn them — reviewing is how tokens enter the community."
 			},
 			"field": {
 				"authorOrcid": {
 					"label": "author",
-					"placeholder": "ORCID",
-					"invalid": "Invalid ORCID",
-					"unknownScholar": "Unknown scholar"
+					"placeholder": "ORCID or name",
+					"invalid": "Enter an ORCID, or type a name to search",
+					"unknownScholar": "Unknown scholar",
+					"duplicate": "This author is already listed above"
 				}
 			},
 			"slider": {
@@ -581,14 +613,30 @@
 		"submissions": {
 			"title": "Submissions",
 			"tip": {
-				"bid": "You can bid on submissions below that you are interested in volunteering for. This information goes to the {role}, who will select volunteers."
+				"bid": "You can bid on submissions below that you are interested in volunteering for. This information goes to the {role}, who will select volunteers.",
+				"batchAssign": "Assigning one person to several submissions? Choose a role and find the scholar here, then use the assign buttons that appear in that role's column."
 			},
 			"feedback": {
 				"notLoaded": "Unable to load submissions.",
 				"noSubmissions": "This venue has no submissions (or none visible to you).",
-				"noneFiltered": "All submissions filtered."
+				"noneFiltered": "All submissions filtered.",
+				"scholarNotFound": "No scholar found with that email or ORCID.",
+				"batchReady": "Found them. Use the assign buttons in that role's column below."
+			},
+			"options": {
+				"batchRole": {
+					"label": "role to assign"
+				}
 			},
 			"button": {
+				"batchFind": {
+					"tip": "Find this scholar so you can assign them to submissions below",
+					"label": "Find scholar"
+				},
+				"batchAssign": {
+					"tip": "Assign the scholar you found to this submission in this role",
+					"label": "+ assign"
+				},
 				"sortPaymentFirst": {
 					"tip": "Sort by pending first",
 					"label": "↓"
@@ -665,6 +713,11 @@
 				"filter": {
 					"label": "filter submissions $filter",
 					"placeholder": "title, id, author, reviewer..."
+				},
+				"batchAssign": {
+					"label": "scholar to assign",
+					"placeholder": "email or ORCID",
+					"invalid": "Must be a valid email or ORCID."
 				}
 			},
 			"headers": {
@@ -725,7 +778,8 @@
 				},
 				"unassign": {
 					"tip": "Remove this assignment",
-					"label": "Unassign"
+					"label": "Unassign",
+					"warn": "Unassign this scholar?"
 				},
 				"complete": {
 					"tip": "Mark this assignment complete and compensate the scholar for their work",
@@ -877,7 +931,7 @@
 				"deleteSubmissionType": {
 					"tip": "Remove this submission type",
 					"label": "$delete",
-					"warn": "Delete?"
+					"warn": "Delete this type and its compensation rates?"
 				},
 				"requestCompensation": {
 					"tip": "Request compensation",
@@ -994,7 +1048,8 @@
 				},
 				"deletePreferenceLevel": {
 					"label": "Delete",
-					"tip": "Delete this preference level. Existing bids that referenced it will become unset."
+					"tip": "Delete this preference level. Existing bids that referenced it will become unset.",
+					"warn": "Delete, unsetting existing bids?"
 				},
 				"movePreferenceLevelUp": {
 					"label": "Up",
@@ -1053,15 +1108,15 @@
 			"template": {
 				"payment": {
 					"title": "Author submission payment",
-					"body": "Thanks for submitting to **{venue}**. To complete your submission, please pay for it on Reciprocal Reviews:\n\nhttps://reciprocal.reviews/venue/{venueid}/submissions/new?manuscript={manuscriptVar}"
+					"body": "Thanks for submitting to **{venue}**. To complete your submission, please pay for it on Reciprocal Reviews:\n\n{origin}/venue/{venueid}/submissions/new?manuscript={manuscriptVar}"
 				},
 				"acknowledgement": {
 					"title": "Assignment acknowledgement (reviewer / AE / meta-reviewer)",
-					"body": "You've been assigned as **{role}** for a submission to **{venue}**. View it on Reciprocal Reviews:\n\nhttps://reciprocal.reviews/venue/{venueid}/submissions?filter={manuscriptVar}"
+					"body": "You've been assigned as **{role}** for a submission to **{venue}**. View it on Reciprocal Reviews:\n\n{origin}/venue/{venueid}/submissions?filter={manuscriptVar}"
 				},
 				"compensation": {
 					"title": "Compensation request (reviewer / AE / meta-reviewer / EiC)",
-					"body": "You've completed **{role}** work for **{venue}**. Request compensation on Reciprocal Reviews:\n\nhttps://reciprocal.reviews/venue/{venueid}?compensate={manuscriptVar}"
+					"body": "You've completed **{role}** work for **{venue}**. Request compensation on Reciprocal Reviews:\n\n{origin}/venue/{venueid}?compensate={manuscriptVar}"
 				}
 			}
 		},
@@ -1164,7 +1219,8 @@
 				},
 				"removeMinter": {
 					"tip": "Remove yourself as minter",
-					"label": "$delete"
+					"label": "$delete",
+					"warn": "Remove this minter?"
 				},
 				"addMinter": {
 					"tip": "Add minter",
@@ -1232,7 +1288,8 @@
 				"change": "Theory of change"
 			},
 			"feedback": {
-				"stewardsNotLoaded": "Unable to load active stewards."
+				"stewardsNotLoaded": "Unable to load active stewards.",
+				"noStewards": "No one is currently stewarding the platform."
 			},
 			"paragraph": {
 				"community": "We are a volunteer community of academics interested in keeping peer review sustainable, for ourselves and our communities. You can learn more about who's contributing and how to contribute yourself on [GitHub](https://github.com/reciprocalreviews).",
@@ -1241,6 +1298,31 @@
 				"joinStewards": "Would you like to become a steward? Reach out to any of the stewards above, or [write to all of us at once](/contact), and let's chat.",
 				"theoryIntro": "The theory of change behind this platform is rests upon the following argument:",
 				"closing": "We built this platform to test the claims above, and hope you'll join us in this effort!"
+			},
+			"anonymous": "anonymous",
+			"card": {
+				"addSteward": {
+					"header": "Add a steward",
+					"note": "Search by name, or enter an ORCID iD or email address. Stewards can approve venues, create currencies, and appoint other stewards."
+				}
+			},
+			"field": {
+				"steward": {
+					"label": "Scholar",
+					"placeholder": "name, ORCID, or email",
+					"invalid": "Must be a valid ORCID iD or email address."
+				}
+			},
+			"button": {
+				"addSteward": {
+					"tip": "Make this scholar a steward",
+					"label": "Add steward"
+				},
+				"removeSteward": {
+					"tip": "Remove this scholar as a steward",
+					"label": "$delete",
+					"warn": "Remove this steward?"
+				}
 			}
 		},
 		"contact": {
@@ -1395,8 +1477,9 @@
 			},
 			"button": {
 				"approve": {
-					"tip": "Approve this proposed transaction",
-					"label": "Approve"
+					"tip": "Approve this proposed transaction, permanently transferring the tokens",
+					"label": "Approve",
+					"warn": "Approve permanently"
 				},
 				"declineInitiate": {
 					"tip": "Decline this proposed transaction",
@@ -1479,7 +1562,8 @@
 				},
 				"removeCompensation": {
 					"tip": "Remove compensation for this submission role",
-					"label": "$delete"
+					"label": "$delete",
+					"warn": "Remove this compensation rate?"
 				},
 				"volunteer": {
 					"tip": "Volunteer for this role",
@@ -1514,7 +1598,7 @@
 				"deleteRole": {
 					"tip": "Delete this role",
 					"label": "Delete $delete",
-					"warn": "Delete this role and all volunteers?"
+					"warn": "Delete this role, its volunteers, assignments, and compensation?"
 				}
 			},
 			"field": {
@@ -1525,7 +1609,9 @@
 				},
 				"adminScholar": {
 					"label": "scholar",
-					"placeholder": "ORCID or email"
+					"placeholder": "name, ORCID, or email",
+					"invalid": "Must be a valid ORCID iD or email address.",
+					"minter": "Admins can't be minters of the venue's currency."
 				},
 				"invite": {
 					"label": "email or orcid",
@@ -1640,6 +1726,7 @@
 					"transaction": "Transaction",
 					"review": "Review",
 					"pendingAssignment": "Pending assignment",
+					"pendingCompensation": "Compensation to approve",
 					"outgoingTransaction": "Pending approval"
 				},
 				"pendingTransactionsAfter": "pending transactions to approve"
@@ -1809,6 +1896,12 @@
 		"NotYourAccount": "That account is not yours, so it cannot be exported or erased.",
 		"ExportScholarData": "We were unable to prepare your data for download.",
 		"EraseScholar": "We were unable to erase this account.",
+		"NotSteward": "Only stewards can change who is a steward.",
+		"LastSteward": "There must always be at least one steward, so the last one can't be removed. Appoint someone else first.",
+		"CannotDemoteSelf": "You can't remove yourself as a steward. Ask another steward to do it.",
+		"AlreadySteward": "This scholar is already a steward",
+		"PromoteSteward": "Unable to make this scholar a steward",
+		"DemoteSteward": "Unable to remove this scholar as a steward",
 		"AlreadyApproved": "This transaction is already approved",
 		"SelfDealingApproval": "You can't approve a transaction in which you are the recipient",
 		"ApproveTransaction": "Unable to approve this transaction",
@@ -1818,6 +1911,7 @@
 		"UndeletedTransaction": "The proposed transaction couldn't be deleted.",
 		"InvalidCharges": "The proposed transaction's charges are invalid.",
 		"NewSubmission": "Unable to create a new submission",
+		"SubmissionNotAuthor": "Only a listed author or a venue admin can create a submission",
 		"UnknownVenue": "Unable to find venue",
 		"MissingSubmissionCharge": "Didn't receive enough charge amounts for the authors given",
 		"BulkImportSubmissions": "Unable to import submissions",

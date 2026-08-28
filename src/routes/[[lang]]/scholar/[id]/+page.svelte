@@ -21,7 +21,8 @@
 		pending,
 		outgoingPending,
 		reviews,
-		approvals
+		approvals,
+		compensating
 	} = $derived(data);
 
 	let volunteering = $derived(
@@ -78,5 +79,6 @@
 		{venues}
 		{reviews}
 		{approvals}
+		{compensating}
 	/>
 {/if}

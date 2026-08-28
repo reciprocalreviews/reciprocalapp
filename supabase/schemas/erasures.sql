@@ -110,6 +110,12 @@ begin
 		name = null,
 		email = null,
 		orcid = null,
+		-- Erasure destroys the identity, so it must destroy the privilege with it. A
+		-- tombstone that is still a steward appears on the public /about list as
+		-- "anonymous", still satisfies isSteward(), and would satisfy set_steward's
+		-- last-steward guard on behalf of a uuid nobody can sign into — letting the
+		-- last real steward be demoted while nobody is left who can act.
+		steward = false,
 		-- Emptied rather than nulled: `status` is NOT NULL. It is free text the
 		-- scholar wrote about themselves and can name anyone, so it has to go.
 		status = '',

@@ -18,12 +18,14 @@ function context(balances: Record<string, number>): AssigneeContext {
 const ids = <T extends { scholar: string }>(rows: T[]) => rows.map((r) => r.scholar);
 
 describe('sortAssignees', () => {
-	test('orders by balance, richest first', () => {
+	// Lowest balance first: the undercompensated are the ones most in need of
+	// paid work (DESIGN.md #93).
+	test('orders by balance, neediest first', () => {
 		const rows = [{ scholar: 'alice' }, { scholar: 'bob' }, { scholar: 'cara' }];
 		expect(ids(sortAssignees(rows, context({ alice: 1, bob: 9, cara: 5 })))).toEqual([
-			'bob',
+			'alice',
 			'cara',
-			'alice'
+			'bob'
 		]);
 	});
 
@@ -44,7 +46,7 @@ describe('sortAssignees', () => {
 
 	test('treats an unknown scholar as balance 0 and no name', () => {
 		const rows = [{ scholar: 'ghost' }, { scholar: 'alice' }];
-		expect(ids(sortAssignees(rows, context({ alice: 2 })))).toEqual(['alice', 'ghost']);
+		expect(ids(sortAssignees(rows, context({ alice: 2 })))).toEqual(['ghost', 'alice']);
 	});
 
 	test('does not mutate the input', () => {
@@ -109,7 +111,7 @@ describe('sortBids', () => {
 					preferenceLevels: LEVELS
 				})
 			)
-		).toEqual(['bob', 'cara', 'alice']);
+		).toEqual(['alice', 'bob', 'cara']);
 	});
 
 	// Both bids carry Infinity, and Infinity - Infinity is NaN. The old
@@ -128,7 +130,7 @@ describe('sortBids', () => {
 					preferenceLevels: LEVELS
 				})
 			)
-		).toEqual(['bob', 'cara', 'alice']);
+		).toEqual(['alice', 'cara', 'bob']);
 	});
 
 	// The same case as it actually arises: a venue that never configured

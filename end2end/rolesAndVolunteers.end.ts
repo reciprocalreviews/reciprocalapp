@@ -316,6 +316,41 @@ test('volunteer stops and re-volunteers; welcome tokens are minted only once', a
 	expect(welcomeAfterResume).toBe(1);
 });
 
+test('volunteering reports the actual welcome grant and updates the header balance', async ({
+	page,
+	context
+}) => {
+	// The confirmation used to promise tokens "once the minter approves them",
+	// which was wrong on both counts once grants started settling immediately —
+	// and it said the same thing whether or not a grant had happened at all. It
+	// now reports what the RPC actually granted.
+	const scholarID = sql(`select id from public.scholars where email = '${FRESH_SCHOLAR_EMAIL}';`);
+	sql(`delete from public.volunteers where scholarid = '${scholarID}';`);
+	sql(
+		`delete from public.transactions where to_scholar = '${scholarID}' and purpose = 'Welcome tokens for volunteering';`
+	);
+
+	const before = Number(sql(`select count(*) from public.tokens where scholar = '${scholarID}';`));
+	const welcome = Number(sql(`select welcome_amount from public.venues where id = '${VENUE_ID}';`));
+
+	await login(FRESH_SCHOLAR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_ID}`);
+	await page.waitForLoadState('networkidle');
+	await expect(page.getByTestId('header-balance')).toContainText(String(before));
+
+	await page.getByTestId('volunteer-for-role').click();
+
+	// The banner names the real amount, and says nothing about minter approval.
+	await expect(
+		page.getByText(new RegExp(`${welcome} welcome tokens have been added`))
+	).toBeVisible();
+	await expect(page.getByText(/minter approves/)).toHaveCount(0);
+
+	// The header balance follows, so earning tokens is visible without hunting
+	// for it on the profile page.
+	await expect(page.getByTestId('header-balance')).toContainText(String(before + welcome));
+});
+
 test('editor exports volunteers as CSV with name, email, ORCID, role, expertise, active', async ({
 	page,
 	context

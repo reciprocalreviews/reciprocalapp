@@ -38,8 +38,11 @@ import type { AuthError, PostgrestError, PostgrestResponse } from '@supabase/sup
 import type { EmailType } from '../../email/templates';
 import type SupabaseCRUD from './SupabaseCRUD.svelte';
 import type {
+	AssignmentAwaitingCompensation,
 	AssignmentForApproval,
+	DevScholar,
 	ProposalSupporter,
+	ScholarMatch,
 	ScholarReview,
 	ScholarVolunteering,
 	TokenBalance,
@@ -177,6 +180,11 @@ export default abstract class CRUD {
 	abstract registerScholar(scholar: ScholarRow): Scholar;
 
 	abstract findScholar(emailOrORCID: string): Promise<Result<ScholarID | undefined>>;
+	/** Up to three scholars whose name contains the query, for picking a
+	 * co-author whose ORCID the submitter doesn't know. */
+	abstract findScholarsByName(query: string): Promise<ReadResult<ScholarMatch[]>>;
+	/** Every scholar, for the local-only sign-in list on /login. */
+	abstract getScholarsForDevSignIn(): Promise<ReadResult<DevScholar[] | null>>;
 
 	/** Given a scholar ID, get information about the scholar, except the scholar's transactions */
 	abstract getScholar(scholarID: ScholarID): Promise<Scholar | null>;
@@ -210,6 +218,21 @@ export default abstract class CRUD {
 	 * and would in any case destroy records belonging to other people. The erasure
 	 * is recorded in `erasures` so it can be re-applied after a restore. */
 	abstract eraseScholar(scholar: ScholarID): Promise<Result>;
+
+	/** Promote or demote a steward. `steward` is privilege-bearing and no client role
+	 * may write it — the UPDATE grant on `scholars` omits the column — so this goes
+	 * through the set_steward RPC, which is SECURITY DEFINER and gated on isSteward().
+	 * Resolves to `false` when the scholar already had the requested status, which is
+	 * reported rather than raised. Nobody may demote themselves, and the last steward
+	 * may not be demoted at all: with the RPC as the only path to the column, a
+	 * platform with no stewards could never appoint one again. */
+	abstract setSteward(scholar: ScholarID, steward: boolean): Promise<Result<boolean>>;
+
+	/** Promote whoever holds this email address or ORCID iD, resolving them first so a
+	 * steward can type an address rather than a uuid — the same shape as adding a
+	 * currency minter. There is no `removeSteward(emailOrORCID)` twin: demotion
+	 * happens from a list that already carries the scholar's id. */
+	abstract addSteward(emailOrORCID: string): Promise<Result<ScholarID>>;
 
 	/** Propose a venue */
 	abstract proposeVenue(
@@ -505,6 +528,8 @@ export default abstract class CRUD {
 	abstract getVenueTokens(venue: VenueID): Promise<ReadResult<TokenRow[] | null>>;
 	abstract getCurrencyTokens(currency: CurrencyID): Promise<ReadResult<TokenRow[] | null>>;
 	abstract getScholarTokens(scholar: ScholarID): Promise<ReadResult<TokenRow[] | null>>;
+	/** The scholar's total token count across every currency, for the header balance. */
+	abstract getScholarTokenCount(scholar: ScholarID): Promise<ReadResult<number>>;
 	abstract getTokenBalances(
 		currency: CurrencyID,
 		scholarIDs: ScholarID[]
@@ -609,6 +634,9 @@ export default abstract class CRUD {
 	abstract getAssignmentsForApproval(
 		roleIDs: RoleID[]
 	): Promise<ReadResult<AssignmentForApproval[] | null>>;
+	abstract getAssignmentsAwaitingCompensation(
+		roleIDs: RoleID[]
+	): Promise<ReadResult<AssignmentAwaitingCompensation[] | null>>;
 
 	abstract getScholarConflicts(scholar: ScholarID): Promise<ReadResult<ConflictRow[] | null>>;
 

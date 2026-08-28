@@ -13,8 +13,13 @@
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Tip from '$lib/components/Tip.svelte';
+	import Form from '$lib/components/Form.svelte';
+	import Options from '$lib/components/Options.svelte';
+	import type Locale from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
+	import { validEmail, validORCID } from '$lib/validation';
 	import { getDB } from '$lib/data/CRUD';
+	import { alreadyAssigned } from '$lib/data/assignees';
 	import canApproveAssignment from '$lib/data/canApproveAssignment';
 	import isRoleApprover from '$lib/data/isRoleApprover';
 	import { submissionsView } from '$lib/data/sortSubmissions';
@@ -145,6 +150,39 @@
 	function formatDate(iso: string): string {
 		return new Date(iso).toLocaleDateString();
 	}
+
+	// ---- Batch assignment ----------------------------------------------------
+	// Assigning one scholar to several submissions (the monthly AE round, or an
+	// editor self-assigning) otherwise meant opening each submission in turn.
+	// Resolve the scholar and role once here, then assign per row below.
+
+	/** The roles this scholar could assign someone to somewhere in this venue. */
+	const assignableRoles = $derived(
+		isAdmin ? visibleRoles : visibleRoles.filter((role) => role.couldApprove)
+	);
+
+	let batchRole = $state<string | undefined>(undefined);
+	let batchScholar = $state('');
+	/** The resolved scholar id; null until the text above is looked up. */
+	let batchScholarID = $state<string | null>(null);
+	let batchResolving = $state(false);
+	let batchError = $state<((l: Locale) => string) | undefined>(undefined);
+
+	/** Re-resolving is required whenever the text changes, so a stale id can't
+	 * be assigned to someone the editor no longer has on screen. */
+	$effect(() => {
+		batchScholar;
+		batchScholarID = null;
+	});
+
+	async function resolveBatchScholar() {
+		batchResolving = true;
+		batchError = undefined;
+		const { data } = await db().findScholar(batchScholar);
+		if (data === undefined) batchError = (l) => l.page.submissions.feedback.scholarNotFound;
+		else batchScholarID = data;
+		batchResolving = false;
+	}
 </script>
 
 {#if venue && conflicts}
@@ -175,6 +213,41 @@
 			strings={(l) => l.page.submissions.field.filter}
 			bind:text={filter}
 		></TextField>
+
+		<!-- Assign one scholar across many submissions without opening each one. -->
+		{#if uid && assignableRoles.length > 0}
+			<Form>
+				<Tip><Text path={(l) => l.page.submissions.tip.batchAssign} /></Tip>
+				<Options
+					strings={(l) => l.page.submissions.options.batchRole}
+					bind:value={batchRole}
+					options={assignableRoles.map((role) => ({ label: role.name, value: role.id }))}
+				/>
+				<TextField
+					testid="batch-assign-scholar"
+					strings={(l) => l.page.submissions.field.batchAssign}
+					bind:text={batchScholar}
+					valid={(emailOrORCID) =>
+						emailOrORCID.length > 0 && !validEmail(emailOrORCID) && !validORCID(emailOrORCID)
+							? (l) => l.page.submissions.field.batchAssign.invalid
+							: undefined}
+				/>
+				<Button
+					testid="batch-assign-find"
+					strings={(l) => l.page.submissions.button.batchFind}
+					active={!batchResolving &&
+						batchScholarID === null &&
+						batchRole !== undefined &&
+						(validEmail(batchScholar) || validORCID(batchScholar))}
+					action={resolveBatchScholar}
+				/>
+				{#if batchError !== undefined}
+					<Feedback error text={batchError} />
+				{:else if batchScholarID !== null}
+					<Feedback text={(l) => l.page.submissions.feedback.batchReady} />
+				{/if}
+			</Form>
+		{/if}
 
 		{#if submissions === null}
 			<Feedback error text={(l) => l.page.submissions.feedback.notLoaded}></Feedback>
@@ -346,6 +419,26 @@
 												{:else}
 													<span><strong>0</strong> {locale().page.submissions.cell.assigned}</span>
 												{/each}
+
+												<!-- Batch assign: one click per submission once the scholar and
+												     role are resolved above. Hidden where they already hold this
+												     role, since a duplicate would just add a second row. -->
+												{#if batchScholarID !== null && batchRole === role.id && !alreadyAssigned(assignments, submission.id, batchScholarID, role.id)}
+													<Button
+														testid={`batch-assign-${index}-${roleIndex}`}
+														strings={(l) => l.page.submissions.button.batchAssign}
+														action={() =>
+															handle(
+																db().createAssignment(
+																	submission.id,
+																	batchScholarID!,
+																	role.id,
+																	false,
+																	true
+																)
+															)}
+													/>
+												{/if}
 											{/if}
 
 											<!-- Show bidding if the role is biddable. Bidding closes when the

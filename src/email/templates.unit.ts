@@ -21,6 +21,59 @@ describe('renderEmail', () => {
 		expect(message).toContain('https://reciprocal.reviews/venue/venue-id');
 	});
 
+	it('sends links to the origin it is given', () => {
+		// Templates used to hardcode production, so mail from a local stack or
+		// staging pointed at reciprocal.reviews — which made every flow that
+		// arrives by email untestable anywhere but production.
+		const { message } = renderEmail(
+			'VenueApproved',
+			['A venue', 'venue-id'],
+			'http://localhost:5173'
+		);
+		expect(message).toContain('http://localhost:5173/venue/venue-id');
+		expect(message).not.toContain('reciprocal.reviews');
+	});
+
+	it('falls back to production when no origin is given', () => {
+		// An unconfigured project keeps sending the links it always sent.
+		const { message } = renderEmail('VenueApproved', ['A venue', 'venue-id']);
+		expect(message).toContain('https://reciprocal.reviews/venue/venue-id');
+	});
+
+	it('ignores a trailing slash on the origin', () => {
+		const { message } = renderEmail(
+			'VenueApproved',
+			['A venue', 'venue-id'],
+			'http://localhost:5173/'
+		);
+		expect(message).toContain('http://localhost:5173/venue/venue-id');
+		expect(message).not.toContain('5173//venue');
+	});
+
+	it('does not expand {origin} appearing inside an argument value', () => {
+		// The origin is resolved in the template before arguments are substituted,
+		// so a venue title containing the literal token stays literal.
+		const { message } = renderEmail('VenueApproved', ['{origin}', 'venue-id'], 'http://local');
+		expect(message).toContain('{origin}');
+	});
+
+	it('keeps the decline link clickable', () => {
+		// TransactionDeclined passes its link as an argument, and arguments are
+		// defanged unless the template declares the position trusted — so these
+		// emails shipped a visibly mangled, unclickable link.
+		const { message } = renderEmail('TransactionDeclined', [
+			'purpose',
+			'3',
+			'Tokens',
+			'Decliner',
+			'decliner@uni.edu',
+			'reason',
+			'https://reciprocal.reviews/scholar/abc/transactions'
+		]);
+		expect(message).toContain('https://reciprocal.reviews/scholar/abc/transactions');
+		expect(message).not.toContain('[:]');
+	});
+
 	it('keeps a declared URL argument clickable', () => {
 		// VerifyEmail declares urlArgs: [1] — the link is built server-side, not by a caller.
 		const { message } = renderEmail('VerifyEmail', ['https://reciprocal.reviews/verify/abc123']);

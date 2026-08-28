@@ -11,6 +11,7 @@
 	let venue = $derived(data.venue);
 	let submissionTypes = $derived(data.submissionTypes);
 	let priorSubmissions = $derived(data.priorSubmissions);
+	let scholarORCID = $derived(data.scholarORCID);
 	/** Deep-link pre-fill from a reviewing-platform email (#113). */
 	let initialManuscript = $derived(page.url.searchParams.get('manuscript') ?? '');
 </script>
@@ -28,6 +29,7 @@
 			[`/venue/${venue.id}/submissions`, 'Submissions']
 		]}
 	>
-		<NewSubmission {venue} {submissionTypes} {priorSubmissions} {initialManuscript}></NewSubmission>
+		<NewSubmission {venue} {submissionTypes} {priorSubmissions} {initialManuscript} {scholarORCID}
+		></NewSubmission>
 	</Page>
 {/if}

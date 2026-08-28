@@ -22,6 +22,9 @@
 		password?: boolean;
 		view?: HTMLInputElement | HTMLTextAreaElement | undefined;
 		done?: ((() => void) | undefined) | undefined;
+		/** Called on every keystroke with the current text. `done` only fires on
+		 * blur/Enter, which is too late for search-as-you-type. */
+		change?: ((text: string) => void) | undefined;
 		testid?: string;
 	};
 
@@ -37,6 +40,7 @@
 		password = false,
 		view = $bindable(undefined),
 		done = undefined,
+		change = undefined,
 		testid = undefined
 	}: Props = $props();
 
@@ -114,6 +118,7 @@
 					onblur={() => {
 						done?.();
 					}}
+					oninput={(event) => change?.(event.currentTarget.value)}
 					style:width={!stretch && size === undefined
 						? width === 0
 							? 'auto'

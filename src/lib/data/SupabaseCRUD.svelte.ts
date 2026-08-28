@@ -135,6 +135,22 @@ export function stringField(value: unknown, key: string): string | null {
 	return typeof field === 'string' ? field : null;
 }
 
+/** Read a number field from a jsonb object returned by an RPC, or null if
+ * absent or the wrong type. */
+export function numberField(value: unknown, key: string): number | null {
+	if (typeof value !== 'object' || value === null || !(key in value)) return null;
+	const field = (value as Record<string, unknown>)[key];
+	return typeof field === 'number' ? field : null;
+}
+
+/** Read a boolean field from a jsonb object returned by an RPC, or null if
+ * absent or the wrong type. */
+export function booleanField(value: unknown, key: string): boolean | null {
+	if (typeof value !== 'object' || value === null || !(key in value)) return null;
+	const field = (value as Record<string, unknown>)[key];
+	return typeof field === 'boolean' ? field : null;
+}
+
 /** Read a string[] field from a jsonb object returned by an RPC, or null if
  * absent or not an array of strings. */
 export function stringArrayField(value: unknown, key: string): string[] | null {
@@ -224,6 +240,21 @@ export type AssignmentForApproval = QueryData<
 	ReturnType<typeof assignmentsForApprovalQuery>
 >[number];
 
+/** Assignments on the given roles whose scholar has requested compensation but
+ * hasn't been paid — the approver's "work awaiting your approval" task list. */
+function assignmentsAwaitingCompensationQuery(client: SupabaseClient<Database>, roleIDs: RoleID[]) {
+	return client
+		.from('assignments')
+		.select('*, scholars(*), submissions(*)')
+		.in('role', roleIDs)
+		.eq('approved', true)
+		.eq('completed', false)
+		.not('compensation_requested_at', 'is', null);
+}
+export type AssignmentAwaitingCompensation = QueryData<
+	ReturnType<typeof assignmentsAwaitingCompensationQuery>
+>[number];
+
 function tokenBalancesQuery(
 	client: SupabaseClient<Database>,
 	currency: CurrencyID,
@@ -236,6 +267,31 @@ function tokenBalancesQuery(
 		.in('scholar', scholarIDs);
 }
 export type TokenBalance = QueryData<ReturnType<typeof tokenBalancesQuery>>[number];
+
+/** Candidate co-authors matched by name. The columns are listed explicitly
+ * because the scholars SELECT policy is public — a wildcard here would hand
+ * out contact emails to anyone who can type into the author field. */
+function scholarsByNameQuery(client: SupabaseClient<Database>, pattern: string) {
+	return (
+		client
+			.from('scholars')
+			.select('id, name, orcid')
+			.ilike('name', pattern)
+			.not('name', 'is', null)
+			.not('orcid', 'is', null)
+			// Ordered, because `limit` makes the order decide WHICH matches are offered,
+			// not just their sequence. Without it the three shown are whichever three
+			// Postgres happens to reach first in heap order — which shifts every time any
+			// scholar's row is updated, so searching the same name twice can offer
+			// different people.
+			.order('name')
+			.limit(3)
+	);
+}
+export type ScholarMatch = QueryData<ReturnType<typeof scholarsByNameQuery>>[number];
+
+/** A seeded scholar offered on the local-only sign-in list. */
+export type DevScholar = Pick<ScholarRow, 'id' | 'name' | 'email' | 'steward'>;
 
 export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
@@ -397,6 +453,34 @@ export default class SupabaseCRUD extends CRUD {
 		return scholar;
 	}
 
+	async getScholarsForDevSignIn(): Promise<ReadResult<DevScholar[] | null>> {
+		// Backs the local-only sign-in list on /login, so testing a flow as a
+		// particular seeded scholar doesn't mean opening seed.sql to look up an
+		// address. Reads nothing the scholars policy doesn't already make public,
+		// and the page only renders the list against a local Supabase — but the
+		// name says what it is for, so it isn't reached for casually.
+		return this.rows(
+			'LoadScholar',
+			this.client.from('scholars').select('id, name, email, steward').order('name')
+		);
+	}
+
+	async findScholarsByName(query: string): Promise<ReadResult<ScholarMatch[]>> {
+		// Name search for the new-submission form, where an author may know a
+		// co-author's name but not their ORCID. Scholars with no name are skipped
+		// — that covers erased accounts, whose name is nulled — and so are those
+		// with no ORCID, since an ORCID is what the form needs back. The wildcards
+		// in the caller's text are escaped so a stray % doesn't match everyone.
+		const escaped = query.trim().replaceAll('%', '\\%').replaceAll('_', '\\_');
+		if (escaped.length === 0) return { data: [] };
+		const { data, error } = await scholarsByNameQuery(this.client, `%${escaped}%`);
+		if (error) {
+			console.error(error);
+			return { data: [], error: { message: this.locale.error.ScholarNotFound, details: error } };
+		}
+		return { data: data ?? [] };
+	}
+
 	async findScholar(emailOrORCID: string): Promise<Result<string>> {
 		const { data: scholar, error } = await this.client
 			.from('scholars')
@@ -506,9 +590,12 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async getStewards(): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>> {
+		// Ordered, because this list is public (/about) and heap order is not stable:
+		// Postgres moves a row's physical position on every UPDATE, so an unordered
+		// list reshuffles whenever any steward edits their name or status.
 		return this.rows(
 			'LoadScholar',
-			this.client.from('scholars').select('id, name').eq('steward', true)
+			this.client.from('scholars').select('id, name').eq('steward', true).order('name')
 		);
 	}
 
@@ -578,6 +665,21 @@ export default class SupabaseCRUD extends CRUD {
 
 	async getScholarTokens(scholar: ScholarID): Promise<ReadResult<TokenRow[] | null>> {
 		return this.rows('LoadToken', this.client.from('tokens').select('*').eq('scholar', scholar));
+	}
+
+	async getScholarTokenCount(scholar: ScholarID): Promise<ReadResult<number>> {
+		// A count rather than the rows: this runs in the root layout load, so on
+		// every navigation, and a scholar can hold hundreds of individual token
+		// rows. `head: true` asks Postgres for the count without the payload.
+		const { count, error } = await this.client
+			.from('tokens')
+			.select('id', { count: 'exact', head: true })
+			.eq('scholar', scholar);
+		if (error) {
+			console.error(error);
+			return { data: 0, error: { message: this.locale.error.LoadToken, details: error } };
+		}
+		return { data: count ?? 0 };
 	}
 
 	async getScholarConflicts(scholar: ScholarID): Promise<ReadResult<ConflictRow[] | null>> {
@@ -791,6 +893,39 @@ export default class SupabaseCRUD extends CRUD {
 		if (error)
 			return this.error(rpcErrorKey(error, 'EraseScholar', { RR006: 'NotYourAccount' }), error);
 		return { error: undefined, data: undefined };
+	}
+
+	async setSteward(scholar: ScholarID, steward: boolean): Promise<Result<boolean>> {
+		const { data, error } = await this.client.rpc('set_steward', {
+			_scholar: scholar,
+			_steward: steward
+		});
+		if (error)
+			return this.error(
+				rpcErrorKey(error, steward ? 'PromoteSteward' : 'DemoteSteward', {
+					RR010: 'NotSteward',
+					RR011: 'ScholarNotFound',
+					RR012: 'LastSteward',
+					RR013: 'CannotDemoteSelf'
+				}),
+				error
+			);
+		// `changed` distinguishes "we promoted them" from "they already were one",
+		// which the RPC reports rather than raising.
+		return { data: booleanField(data, 'changed') ?? false, error: undefined };
+	}
+
+	async addSteward(emailOrORCID: string): Promise<Result<ScholarID>> {
+		const { data: id, error: findError } = await this.findScholar(emailOrORCID);
+		if (id === undefined) return this.error('ScholarNotFound', findError?.details);
+
+		// No client-side "are they already a steward?" test: addCurrencyMinter can
+		// afford one because its caller already holds the array, but here the answer
+		// comes back from the RPC, which is free of the check-then-write race.
+		const { data: changed, error } = await this.setSteward(id, true);
+		if (error) return { error };
+		if (changed !== true) return this.error('AlreadySteward');
+		return { data: id, error: undefined };
 	}
 
 	async proposeVenue(
@@ -1187,7 +1322,7 @@ export default class SupabaseCRUD extends CRUD {
 		// to, which is the same currency create_submission will use.
 		const { data: venueRow, error: venueError } = await this.client
 			.from('venues')
-			.select('currency')
+			.select('currency, title')
 			.eq('id', venue)
 			.single();
 		if (venueError) return this.error('LoadVenue', venueError);
@@ -1229,13 +1364,34 @@ export default class SupabaseCRUD extends CRUD {
 		});
 		if (error)
 			return this.error(
-				rpcErrorKey(error, 'NewSubmission', { RR003: 'TransferTokensInsufficient' }),
+				rpcErrorKey(error, 'NewSubmission', {
+					RR003: 'TransferTokensInsufficient',
+					RR009: 'SubmissionNotAuthor'
+				}),
 				error
 			);
 
 		const submissionID = stringField(data, 'submission_id');
 		if (submissionID === null) return { error: { message: this.locale.error.NewSubmission } };
-		return { data: submissionID };
+
+		// Tell each charged co-author that a proposed charge awaits their
+		// approval — the submitter's own charge already settled in the RPC, and
+		// without this email a co-author would only discover the charge by
+		// visiting their dashboard. Per-recipient, since each charge differs.
+		const notifications: Notification[] = [];
+		for (const [index, author] of authors.entries()) {
+			const payment = charges[index]?.payment ?? 0;
+			if (author === creator || payment === 0) continue;
+			const emailResult = await this.emailScholars([author], 'SubmissionCharged', [
+				title.trim() ? title : externalID,
+				venueRow.title,
+				payment.toString(),
+				author
+			]);
+			if (emailResult.notified) notifications.push(...emailResult.notified);
+		}
+
+		return { data: submissionID, notified: notifications };
 	}
 
 	async bulkImportSubmissions(
@@ -1601,6 +1757,19 @@ export default class SupabaseCRUD extends CRUD {
 			if (result.error) return result;
 		}
 
+		// Stamp the request on the assignment (the scholar's own row, which the
+		// assignments UPDATE policy permits). The stamp is what lets the daily
+		// remind function nag approvers about finished work awaiting compensation
+		// without nagging them about reviews still in progress.
+		const { error: stampError } = await this.client
+			.from('assignments')
+			.update({ compensation_requested_at: new Date().toISOString() })
+			.eq('scholar', scholarID)
+			.eq('venue', venueID)
+			.eq('role', roleID)
+			.eq('submission', submission.id);
+		if (stampError) return this.error('CompensationAssignmentCheck', stampError);
+
 		// Notify whoever can act on this request, not the requester themselves.
 		// "Can act on it" is exactly canApproveAssignment.ts — the same three
 		// branches, unioned, rather than the near-miss this used to be. It
@@ -1680,9 +1849,9 @@ export default class SupabaseCRUD extends CRUD {
 		papers: number | null
 	): Promise<Result<string>> {
 		// Creating the volunteer record and, when this is the scholar's first
-		// role and compensation is requested, recording the proposed welcome
-		// grant both happen atomically inside the create_volunteer RPC, so the
-		// volunteer can never exist without its welcome grant (or vice versa).
+		// role and compensation is requested, settling the welcome grant both
+		// happen atomically inside the create_volunteer RPC, so the volunteer
+		// can never exist without its welcome grant (or vice versa).
 		const { data, error } = await this.client.rpc('create_volunteer', {
 			_scholarid: scholarid,
 			_roleid: roleid,
@@ -1699,7 +1868,26 @@ export default class SupabaseCRUD extends CRUD {
 
 		const volunteerID = stringField(data, 'volunteer_id');
 		if (volunteerID === null) return this.error('CreateVolunteer');
-		return { data: volunteerID };
+
+		// Report the welcome grant the RPC actually made. Whether one happened
+		// depends on the scholar's first-role status, the venue's payment_free
+		// flag, and its welcome_amount — so the amount comes back from the
+		// database rather than being guessed here.
+		const granted = numberField(data, 'welcome_granted') ?? 0;
+		return {
+			data: volunteerID,
+			notified: [
+				{
+					message:
+						granted > 0
+							? this.locale.notification.volunteeredWithTokens.replace(
+									'{amount}',
+									granted.toString()
+								)
+							: this.locale.notification.volunteered
+				}
+			]
+		};
 	}
 
 	async updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result> {
@@ -1765,13 +1953,27 @@ export default class SupabaseCRUD extends CRUD {
 
 	async acceptRoleInvite(scholar: ScholarID, id: VolunteerID, response: Response) {
 		// Updating the volunteer response and, when accepting a first role,
-		// recording the proposed welcome grant happen atomically inside the
+		// settling the welcome grant happen atomically inside the
 		// accept_role_invite RPC.
-		const { error } = await this.client.rpc('accept_role_invite', {
+		const { data, error } = await this.client.rpc('accept_role_invite', {
 			_volunteer_id: id,
 			_response: response
 		});
-		return this.errorOrEmpty('AcceptRoleInvite', error);
+		if (error) return this.error('AcceptRoleInvite', error);
+
+		// Accepting used to be silent, which left a scholar who had just earned
+		// welcome tokens with no indication anything had happened.
+		const granted = numberField(data, 'welcome_granted') ?? 0;
+		const message =
+			response !== 'accepted'
+				? this.locale.notification.inviteDeclined
+				: granted > 0
+					? this.locale.notification.inviteAcceptedWithTokens.replace(
+							'{amount}',
+							granted.toString()
+						)
+					: this.locale.notification.inviteAccepted;
+		return { data: undefined, notified: [{ message }] };
 	}
 
 	async getVolunteersByRoles(roleIDs: RoleID[]): Promise<ReadResult<VolunteerRow[] | null>> {
@@ -2006,6 +2208,12 @@ export default class SupabaseCRUD extends CRUD {
 		return this.rows('LoadAssignment', assignmentsForApprovalQuery(this.client, roleIDs));
 	}
 
+	async getAssignmentsAwaitingCompensation(
+		roleIDs: RoleID[]
+	): Promise<ReadResult<AssignmentAwaitingCompensation[] | null>> {
+		return this.rows('LoadAssignment', assignmentsAwaitingCompensationQuery(this.client, roleIDs));
+	}
+
 	// ─────────────────────────────────────────────────────────────────────────
 	// Transactions
 	// ─────────────────────────────────────────────────────────────────────────
@@ -2164,9 +2372,15 @@ export default class SupabaseCRUD extends CRUD {
 		const currencyName = currencyRow.data?.name ?? '';
 		const venueTitle = venueRow.data?.title ?? '';
 		const amount = transaction.tokens.length.toString();
+		// Point back at whichever environment the decline happened in. This runs
+		// in the browser, so the page's own origin is the right answer and is
+		// already to hand; the templates' other links are resolved server-side
+		// from the site_url vault secret.
+		const origin =
+			typeof window !== 'undefined' ? window.location.origin : 'https://reciprocal.reviews';
 		const link = venueID
-			? `https://reciprocal.reviews/venue/${venueID}/transactions`
-			: `https://reciprocal.reviews/scholar/${transaction.creator}/transactions`;
+			? `${origin}/venue/${venueID}/transactions`
+			: `${origin}/scholar/${transaction.creator}/transactions`;
 
 		// Pick the template variant: with vs without a venue title slot.
 		const args = venueID

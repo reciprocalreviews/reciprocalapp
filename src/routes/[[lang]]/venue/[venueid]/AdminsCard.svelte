@@ -5,8 +5,8 @@
 	import Form from '$lib/components/Form.svelte';
 	import { DeleteLabel } from '$lib/components/Labels';
 	import Paragraph from '$lib/components/Paragraph.svelte';
+	import ScholarField from '$lib/components/ScholarField.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import TextField from '$lib/components/TextField.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import type { LocaleText } from '$lib/locales/Locale';
 	import { validEmail, validORCID } from '$lib/validation';
@@ -33,14 +33,13 @@
 	function validAdmin(scholar: string | ScholarID): ((l: LocaleText) => string) | undefined {
 		if (validEmail(scholar)) {
 			if (!(minters ?? []).some((m) => m.email === scholar)) return undefined;
-			else return (_l) => "Admins can't be minters of the venue's currency.";
+			else return (l) => l.view.roles.field.adminScholar.minter;
 		}
 		if (validORCID(scholar)) {
-			if (currency.minters.includes(scholar))
-				return (_l) => "Admins can't be minters of the venue's currency.";
+			if (currency.minters.includes(scholar)) return (l) => l.view.roles.field.adminScholar.minter;
 			else return undefined;
 		}
-		return (_l) => 'Must be a valid email or ORCID.';
+		return (l) => l.view.roles.field.adminScholar.invalid;
 	}
 </script>
 
@@ -75,11 +74,12 @@
 	{#if isAdmin}
 		<Form>
 			<Paragraph text={(l) => l.view.roles.paragraph.addAdmin} />
-			<TextField
+			<ScholarField
 				strings={(l) => l.view.roles.field.adminScholar}
 				bind:text={newEditor}
 				size={19}
 				valid={(text) => validAdmin(text)}
+				showResolved={false}
 				testid="add-admin-field"
 			/><Button
 				strings={(l) => l.view.roles.button.addAdmin}

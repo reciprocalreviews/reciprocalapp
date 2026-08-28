@@ -9,7 +9,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(13);
+select plan(14);
 
 select tests.clear_authentication();
 select tests.create_scholar('era_subject@test.local') as subject \gset
@@ -129,6 +129,21 @@ select is(
 	(select count(*)::int from public.erasures where subject = :'subject' and completed_at is not null),
 	1,
 	'the erasure is recorded so it can be re-applied after a restore'
+);
+
+-- ---- Erasure destroys the privilege with the identity ----------------------------
+-- A tombstone that is still a steward appears on the public /about list as
+-- "anonymous", still satisfies isSteward(), and would satisfy set_steward's
+-- last-steward guard on behalf of a uuid nobody can sign into — letting the last
+-- real steward be demoted while nobody is left who can act.
+select tests.authenticate_as(:'steward');
+select public.erase_scholar() as _erased_steward \gset
+
+select tests.clear_authentication();
+select is(
+	(select steward from public.scholars where id = :'steward'),
+	false,
+	'erasing a steward revokes their stewardship'
 );
 
 select * from finish();

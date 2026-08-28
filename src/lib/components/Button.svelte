@@ -52,9 +52,14 @@
 			} else {
 				acting = true;
 				event.stopPropagation();
-				await action(event);
-				acting = false;
-				confirming = false;
+				try {
+					await action(event);
+				} finally {
+					// Always reset, even if the action throws, so the button
+					// can't be left stuck disabled in its confirming state.
+					acting = false;
+					confirming = false;
+				}
 			}
 		}
 	}

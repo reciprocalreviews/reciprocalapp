@@ -37,10 +37,27 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.4.7 - 2026-08-16
 
+### Added
+
+- Editors can now assign one scholar across several submissions from the submissions list — pick the role and person once, then assign per submission — instead of opening each submission in turn.
+- Reciprocal Reviews now follows up on work that stalls: co-authors are emailed when a submission charge awaits their payment, approvers are reminded when a reviewer has requested compensation, and editors are reminded when a submission has all its reviewing paid and is ready to be marked done. Each follows the venue's existing reminder frequency, and pending compensation now also appears in your task list.
+- Your **token balance** now appears in the header while you're signed in, counting up or down when it changes, so earning or spending tokens is visible where it happens rather than only on your profile.
+- You can now find a co-author by **name** on the new submission form, instead of needing their ORCID to hand. The top three matches appear beside the field; picking one fills in their ORCID.
+- Stewards can now **appoint and remove other stewards** from the About page, where the steward list already lived. Previously stewardship could only be granted by editing the database directly. A steward can't remove themselves — stepping down is something another steward does for you, so it can't happen by accident — and the last steward can't be removed at all.
+
 ### Changed
+
+- The new submission form now lists you as the first author, so it's clear you're included and where to set your own payment.
+- Email links now lead back to the site that sent them, so test and staging deployments no longer send people to the live site.
+- The volunteer confirmation now says how many welcome tokens you actually received — and says nothing about tokens when none were granted. It previously promised tokens "once the minter approves them", which stopped being true when welcome tokens started arriving immediately. Accepting a role invitation, which also grants them, now confirms as well.
 
 - Updated internal tooling for stability.
 - Submission charges are now checked by the database as well as the form: the amounts must add up to the submission type's cost, and the same author can't be listed twice. Previously these rules held only for people submitting through the form.
+- Welcome tokens now arrive the moment you volunteer, instead of waiting for a currency minter to approve them — the wait previously fell on newcomers volunteering in order to afford their own submission.
+- Reviewer bids and candidate assignees are now listed with the **lowest token balance first**, surfacing the scholars most in need of paid reviewing work.
+- Approving a transaction now asks for confirmation, since it moves tokens permanently and cannot be undone. Removing a minter, a compensation rate, a preference level, or an assignment now confirm too, and the warnings for deleting a role or submission type now say what else will be deleted.
+- Paying for a submission now explains that every author listed must have a Reciprocal Reviews account, and links to volunteering when an author is short of tokens.
+- Finding a scholar by **name** now works everywhere you name one, not just on the new submission form: adding a venue admin, adding a currency minter, and inviting someone to a role all offer matches as you type, instead of requiring an exact ORCID iD or email address.
 
 ### Fixed
 
@@ -51,6 +68,16 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Exporting volunteers as CSV no longer truncates the file at the first #, so an expertise like "C#" no longer cuts the download short.
 - Number, web address, and email fields now reject malformed input instead of accepting text that merely contains a number or a link. A venue's welcome amount could previously be set to a value that failed to save.
 - Links in emails that end a sentence no longer include the trailing punctuation in the link, and escaped text no longer reappears as markup in the plain-text version.
+- Only a listed author, or an admin of the venue, can create a submission. Any signed-in scholar could previously create one at any venue and leave payment demands against people who had never heard of it.
+- Gifting tokens to a venue now requires the same acknowledgement as gifting to a scholar; that confirmation was skipped for venues.
+- Venues, currencies, and submissions can no longer be deleted through the API. Nothing in the app offered this, but the permission existed — and deleting a venue would have taken its roles, volunteers, assignments, and compensation rates with it.
+- Emails telling you a transaction was declined now carry a working link. The link was arriving mangled and unclickable.
+- Listing the same author twice on a submission is now flagged on that author's own row, rather than only in a message at the bottom of the form. Two spellings of the same ORCID that differ only in capitalization are also caught, as the database always did.
+- The About page now says so when there are no stewards, instead of showing an empty space between "Current stewards are:" and the invitation to become one. The message when the list fails to load is now marked as an error.
+- Erasing an account now also removes any stewardship it held. An erased steward previously stayed on the public steward list as "anonymous" and kept the permissions that go with it.
+- Scholar name searches now return the same people in the same order each time. Results were previously in whatever order the database happened to return, which shifted whenever anyone's profile was edited — so searching the same name twice could offer different scholars, and only three are ever shown. The steward list is likewise ordered by name now.
+- Each name-search result now identifies the scholar to screen readers. Every match previously announced the same generic label, making a column of them impossible to tell apart.
+- Adding a venue admin now reports validation problems in the page's language, rather than in hardcoded English.
 
 ## 0.4.6 - 2026-08-08
 

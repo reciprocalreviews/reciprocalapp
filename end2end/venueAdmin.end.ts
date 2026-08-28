@@ -135,6 +135,9 @@ test('minter adds and removes another minter; last-minter constraint blocks remo
 
 	await expect(page.getByTestId('remove-minter-0')).toBeVisible();
 
+	// Removing a minter revokes minting authority, so it confirms: first click
+	// arms, second commits.
+	await page.getByTestId('remove-minter-1').click();
 	await page.getByTestId('remove-minter-1').click();
 	await expect
 		.poll(() =>
@@ -376,9 +379,14 @@ test('editor sees reviewing-platform email-template snippets and can copy them',
 	const paymentBody = page.getByTestId('template-payment');
 	await expect(paymentBody).toContainText(venueTitle);
 	await expect(paymentBody).toContainText('{{PID}}');
+	// The snippet links back to the environment the editor is looking at. It
+	// hardcoded production before, so an editor testing locally or on staging
+	// copied links that left the environment under test.
+	const origin = new URL(page.url()).origin;
 	await expect(paymentBody).toContainText(
-		`https://reciprocal.reviews/venue/${VENUE_ID}/submissions/new?manuscript={{PID}}`
+		`${origin}/venue/${VENUE_ID}/submissions/new?manuscript={{PID}}`
 	);
+	await expect(paymentBody).not.toContainText('reciprocal.reviews');
 
 	// Switch the platform selector to OJS; the snippet body should re-render
 	// with OJS's {$submissionId} syntax.

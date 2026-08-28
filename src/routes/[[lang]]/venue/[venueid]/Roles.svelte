@@ -20,6 +20,7 @@
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Table from '$lib/components/Table.svelte';
+	import ScholarField from '$lib/components/ScholarField.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
@@ -223,15 +224,26 @@
 				{#if isAdmin && scholar}
 					<Form>
 						<Paragraph text={(l) => l.view.roles.paragraph.inviteDescription} />
-						<TextField
+						<ScholarField
 							strings={(l) => l.view.roles.field.invite}
 							name="email"
 							size={20}
+							query={(text) => text.split(',').at(-1)?.trim() ?? ''}
 							valid={(text) =>
 								text.trim() === '' || validEmailsOrORCIDs(text)
 									? undefined
 									: (l) => l.view.roles.field.invite.invalid ?? ''}
 							bind:text={invites[role.id]}
+							showResolved={false}
+							choose={(match) => {
+								// This field holds a comma-separated list, so a chosen scholar is
+								// appended to what's already there rather than replacing it —
+								// the last segment is what was being searched for.
+								if (match.orcid === null) return;
+								const segments = invites[role.id].split(',');
+								segments[segments.length - 1] = match.orcid;
+								invites[role.id] = segments.map((s) => s.trim()).join(', ') + ', ';
+							}}
 							testid="role-invite-field-{role.name}"
 						/>
 						<Button

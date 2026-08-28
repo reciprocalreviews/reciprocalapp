@@ -69,11 +69,17 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
 		redirect(302, '/login');
 	}
 
-	// If there's a user, return scholar
+	// If there's a user, return scholar, plus their total token balance for the
+	// header. The count is loaded here rather than per page so the balance is
+	// present on every route, and it refreshes for free: handle() calls
+	// invalidateAll() after every successful write, which re-runs this load.
+	let tokens = 0;
 	if (userID) {
 		const { data: scholarData } = await db.getScholarRow(userID);
 		scholar = scholarData ?? null;
+		const { data: tokenCount } = await db.getScholarTokenCount(userID);
+		tokens = tokenCount;
 	} else scholar = null;
 
-	return { claims, db, scholar, locale: data.locale };
+	return { claims, db, scholar, tokens, locale: data.locale };
 };

@@ -38,6 +38,7 @@ export type Database = {
         Row: {
           approved: boolean
           bid: boolean
+          compensation_requested_at: string | null
           completed: boolean
           created_at: string
           id: string
@@ -50,6 +51,7 @@ export type Database = {
         Insert: {
           approved?: boolean
           bid?: boolean
+          compensation_requested_at?: string | null
           completed?: boolean
           created_at?: string
           id?: string
@@ -62,6 +64,7 @@ export type Database = {
         Update: {
           approved?: boolean
           bid?: boolean
+          compensation_requested_at?: string | null
           completed?: boolean
           created_at?: string
           id?: string
@@ -1130,7 +1133,7 @@ export type Database = {
           _scholar: string
           _welcomer: string
         }
-        Returns: undefined
+        Returns: number
       }
       accept_role_invite: {
         Args: {
@@ -1255,6 +1258,11 @@ export type Database = {
         Args: { _email: string }
         Returns: undefined
       }
+      set_steward: {
+        Args: { _scholar: string; _steward: boolean }
+        Returns: Json
+      }
+      site_origin: { Args: never; Returns: string }
       steward_inbox: { Args: never; Returns: string }
       tokens_as_of: {
         Args: { _at?: string }

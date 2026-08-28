@@ -344,6 +344,10 @@
             "AlreadyMinter": {
               "type": "string"
             },
+            "AlreadySteward": {
+              "description": "The scholar being promoted is already a steward.",
+              "type": "string"
+            },
             "AlreadyVolunteered": {
               "type": "string"
             },
@@ -378,6 +382,10 @@
               "type": "string"
             },
             "BulkImportSubmissions": {
+              "type": "string"
+            },
+            "CannotDemoteSelf": {
+              "description": "RR013: stepping down is an act another steward performs.",
               "type": "string"
             },
             "CompensationAssignmentCheck": {
@@ -447,6 +455,10 @@
               "type": "string"
             },
             "DeleteSubmissionType": {
+              "type": "string"
+            },
+            "DemoteSteward": {
+              "description": "Removing a scholar as a steward failed.",
               "type": "string"
             },
             "EditCompensation": {
@@ -559,6 +571,10 @@
             "InviteToRoleSuccess": {
               "type": "string"
             },
+            "LastSteward": {
+              "description": "RR012: there must always be one steward, or nobody can appoint another.",
+              "type": "string"
+            },
             "LoadAssignment": {
               "type": "string"
             },
@@ -625,11 +641,19 @@
             "NoRoleCompensation": {
               "type": "string"
             },
+            "NotSteward": {
+              "description": "RR010: the caller is not a steward, so cannot change who is one.",
+              "type": "string"
+            },
             "NotYourAccount": {
               "description": "The caller tried to export or erase an account that is not theirs.",
               "type": "string"
             },
             "PendingTransactionHasTokens": {
+              "type": "string"
+            },
+            "PromoteSteward": {
+              "description": "Promoting a scholar to steward failed.",
               "type": "string"
             },
             "ProposeThanks": {
@@ -648,6 +672,10 @@
               "type": "string"
             },
             "SelfDealingApproval": {
+              "type": "string"
+            },
+            "SubmissionNotAuthor": {
+              "description": "RR009: the caller is neither a listed author nor a venue admin.",
               "type": "string"
             },
             "TransactionApprovalUpdate": {
@@ -825,6 +853,12 @@
             "NotYourAccount",
             "ExportScholarData",
             "EraseScholar",
+            "NotSteward",
+            "LastSteward",
+            "CannotDemoteSelf",
+            "AlreadySteward",
+            "PromoteSteward",
+            "DemoteSteward",
             "AlreadyApproved",
             "SelfDealingApproval",
             "ApproveTransaction",
@@ -834,6 +868,7 @@
             "UndeletedTransaction",
             "InvalidCharges",
             "NewSubmission",
+            "SubmissionNotAuthor",
             "UnknownVenue",
             "MissingSubmissionCharge",
             "BulkImportSubmissions",
@@ -922,6 +957,10 @@
         "header": {
           "additionalProperties": false,
           "properties": {
+            "balance": {
+              "description": "Accessible name for the header's total token balance.",
+              "type": "string"
+            },
             "feedback": {
               "additionalProperties": false,
               "properties": {
@@ -942,10 +981,14 @@
               "properties": {
                 "login": {
                   "type": "string"
+                },
+                "profile": {
+                  "type": "string"
                 }
               },
               "required": [
-                "login"
+                "login",
+                "profile"
               ],
               "type": "object"
             },
@@ -960,6 +1003,7 @@
             "home",
             "venues",
             "saved",
+            "balance",
             "link",
             "feedback"
           ],
@@ -977,11 +1021,32 @@
             "emailedStewards": {
               "description": "Shown after notifying the shared steward inbox, which is one recipient rather than a named person. Takes {subject}.",
               "type": "string"
+            },
+            "inviteAccepted": {
+              "type": "string"
+            },
+            "inviteAcceptedWithTokens": {
+              "type": "string"
+            },
+            "inviteDeclined": {
+              "type": "string"
+            },
+            "volunteered": {
+              "description": "Shown after volunteering or accepting a role invitation. Which one applies depends on whether a welcome grant actually happened, which only the database can say — so the RPC reports the amount and the data layer picks. {amount} is the number of tokens granted.",
+              "type": "string"
+            },
+            "volunteeredWithTokens": {
+              "type": "string"
             }
           },
           "required": [
             "emailed",
-            "emailedStewards"
+            "emailedStewards",
+            "volunteered",
+            "volunteeredWithTokens",
+            "inviteAccepted",
+            "inviteAcceptedWithTokens",
+            "inviteDeclined"
           ],
           "type": "object"
         },
@@ -991,15 +1056,64 @@
             "about": {
               "additionalProperties": false,
               "properties": {
+                "anonymous": {
+                  "description": "Stands in for the name of a steward who has erased their account.",
+                  "type": "string"
+                },
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addSteward": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "removeSteward": {
+                      "$ref": "#/definitions/ConfirmButtonText"
+                    }
+                  },
+                  "required": [
+                    "addSteward",
+                    "removeSteward"
+                  ],
+                  "type": "object"
+                },
+                "card": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addSteward": {
+                      "$ref": "#/definitions/CardText"
+                    }
+                  },
+                  "required": [
+                    "addSteward"
+                  ],
+                  "type": "object"
+                },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "noStewards": {
+                      "description": "Shown when the platform has no stewards at all, which is distinct from failing to load the list.",
+                      "type": "string"
+                    },
                     "stewardsNotLoaded": {
                       "type": "string"
                     }
                   },
                   "required": [
-                    "stewardsNotLoaded"
+                    "stewardsNotLoaded",
+                    "noStewards"
+                  ],
+                  "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "steward": {
+                      "$ref": "#/definitions/TextFieldText"
+                    }
+                  },
+                  "required": [
+                    "steward"
                   ],
                   "type": "object"
                 },
@@ -1059,6 +1173,10 @@
                 "title",
                 "header",
                 "feedback",
+                "anonymous",
+                "card",
+                "field",
+                "button",
                 "paragraph"
               ],
               "type": "object"
@@ -1538,7 +1656,7 @@
                       "$ref": "#/definitions/ButtonText"
                     },
                     "removeMinter": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText"
                     }
                   },
                   "required": [
@@ -1910,21 +2028,36 @@
                     },
                     "signIn": {
                       "$ref": "#/definitions/ButtonText"
+                    },
+                    "signInAs": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "A seeded scholar on the local sign-in list; its label is their name."
                     }
                   },
                   "required": [
                     "orcid",
                     "mockOrcid",
-                    "signIn"
+                    "signIn",
+                    "signInAs"
+                  ],
+                  "type": "object"
+                },
+                "card": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "newScholar": {
+                      "$ref": "#/definitions/CardText",
+                      "description": "The local-only control that mints a brand-new scholar. Not a sign-in — it exists to reach the first-run experience."
+                    }
+                  },
+                  "required": [
+                    "newScholar"
                   ],
                   "type": "object"
                 },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
-                    "mockOrcidDev": {
-                      "type": "string"
-                    },
                     "mockOrcidError": {
                       "type": "string"
                     },
@@ -1934,6 +2067,10 @@
                     "passwordDev": {
                       "type": "string"
                     },
+                    "seededDev": {
+                      "description": "The page's single warning that these controls are local-only.",
+                      "type": "string"
+                    },
                     "signInError": {
                       "type": "string"
                     }
@@ -1941,8 +2078,8 @@
                   "required": [
                     "orcidError",
                     "mockOrcidError",
-                    "mockOrcidDev",
                     "passwordDev",
+                    "seededDev",
                     "signInError"
                   ],
                   "type": "object"
@@ -1995,6 +2132,27 @@
                   ],
                   "type": "object"
                 },
+                "table": {
+                  "additionalProperties": false,
+                  "description": "Column headers for the local-only table of seeded scholars.",
+                  "properties": {
+                    "email": {
+                      "type": "string"
+                    },
+                    "roles": {
+                      "type": "string"
+                    },
+                    "scholar": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "scholar",
+                    "email",
+                    "roles"
+                  ],
+                  "type": "object"
+                },
                 "title": {
                   "type": "string"
                 }
@@ -2003,6 +2161,8 @@
                 "title",
                 "button",
                 "note",
+                "table",
+                "card",
                 "field",
                 "feedback",
                 "paragraph"
@@ -2098,6 +2258,10 @@
                     "authorOrcid": {
                       "additionalProperties": false,
                       "properties": {
+                        "duplicate": {
+                          "description": "Shown on the row that repeats an author named above it.",
+                          "type": "string"
+                        },
                         "invalid": {
                           "description": "The optional validation error message",
                           "type": "string"
@@ -2115,6 +2279,7 @@
                         }
                       },
                       "required": [
+                        "duplicate",
                         "placeholder",
                         "unknownScholar"
                       ],
@@ -2162,6 +2327,10 @@
                     "balance": {
                       "type": "string"
                     },
+                    "earnTokens": {
+                      "description": "Shown when a balance check fails: how to earn the tokens. {venue} is the venue's URL.",
+                      "type": "string"
+                    },
                     "payment": {
                       "type": "string"
                     }
@@ -2170,7 +2339,8 @@
                     "payment",
                     "authors",
                     "balance",
-                    "approve"
+                    "approve",
+                    "earnTokens"
                   ],
                   "type": "object"
                 },
@@ -2978,7 +3148,7 @@
                       "$ref": "#/definitions/ButtonText"
                     },
                     "deletePreferenceLevel": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText"
                     },
                     "movePreferenceLevelDown": {
                       "$ref": "#/definitions/ButtonText"
@@ -3259,7 +3429,7 @@
                 },
                 "template": {
                   "additionalProperties": false,
-                  "description": "Email-template snippets editors copy into their reviewing platform (#113). Each entry's `body` is interpolated with `{venue}`, `{role}`, and `{manuscriptVar}` (the selected platform's submission-id syntax).",
+                  "description": "Email-template snippets editors copy into their reviewing platform (#113). Each entry's `body` is interpolated with `{origin}` (the environment's own base URL, so a snippet copied from a local or staging venue links back to it), `{venue}`, `{venueid}`, and `{manuscriptVar}` (the selected platform's submission-id syntax).\n\n`{role}` is deliberately NOT interpolated: an editor pastes these once per role, and reviewing platforms differ too much in how they expose role names for us to guess. The tip above the snippets says so — this list previously claimed otherwise, which read as a bug.",
                   "properties": {
                     "acknowledgement": {
                       "additionalProperties": false,
@@ -3410,7 +3580,7 @@
                       "description": "Editor button that compensates the editor(s) and marks the submission done in one atomic action."
                     },
                     "unassign": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText"
                     }
                   },
                   "required": [
@@ -3824,6 +3994,12 @@
                 "button": {
                   "additionalProperties": false,
                   "properties": {
+                    "batchAssign": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "batchFind": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
                     "bid": {
                       "$ref": "#/definitions/ButtonText"
                     },
@@ -3859,6 +4035,8 @@
                     }
                   },
                   "required": [
+                    "batchFind",
+                    "batchAssign",
                     "sortPaymentFirst",
                     "sortPaymentLast",
                     "sortTitleAsc",
@@ -3904,6 +4082,10 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "batchReady": {
+                      "description": "A scholar and role are resolved; per-row assign buttons are live.",
+                      "type": "string"
+                    },
                     "noSubmissions": {
                       "type": "string"
                     },
@@ -3912,18 +4094,46 @@
                     },
                     "notLoaded": {
                       "type": "string"
+                    },
+                    "scholarNotFound": {
+                      "description": "No scholar matched the email or ORCID typed into the batch form.",
+                      "type": "string"
                     }
                   },
                   "required": [
                     "notLoaded",
                     "noSubmissions",
-                    "noneFiltered"
+                    "noneFiltered",
+                    "scholarNotFound",
+                    "batchReady"
                   ],
                   "type": "object"
                 },
                 "field": {
                   "additionalProperties": false,
                   "properties": {
+                    "batchAssign": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
                     "expertise": {
                       "$ref": "#/definitions/NotedTextFieldText"
                     },
@@ -3997,7 +4207,8 @@
                     "manuscriptID",
                     "previousID",
                     "note",
-                    "filter"
+                    "filter",
+                    "batchAssign"
                   ],
                   "type": "object"
                 },
@@ -4034,6 +4245,18 @@
                     "id",
                     "created",
                     "progress"
+                  ],
+                  "type": "object"
+                },
+                "options": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "batchRole": {
+                      "$ref": "#/definitions/OptionsText"
+                    }
+                  },
+                  "required": [
+                    "batchRole"
                   ],
                   "type": "object"
                 },
@@ -4082,12 +4305,17 @@
                 "tip": {
                   "additionalProperties": false,
                   "properties": {
+                    "batchAssign": {
+                      "description": "Explains the batch assignment form above the submissions table.",
+                      "type": "string"
+                    },
                     "bid": {
                       "type": "string"
                     }
                   },
                   "required": [
-                    "bid"
+                    "bid",
+                    "batchAssign"
                   ],
                   "type": "object"
                 },
@@ -4100,6 +4328,7 @@
                 "tip",
                 "cell",
                 "feedback",
+                "options",
                 "button",
                 "headers",
                 "field",
@@ -5328,7 +5557,7 @@
                       "$ref": "#/definitions/ConfirmButtonText"
                     },
                     "removeCompensation": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText"
                     },
                     "resume": {
                       "$ref": "#/definitions/ButtonText"
@@ -5427,7 +5656,31 @@
                   "additionalProperties": false,
                   "properties": {
                     "adminScholar": {
-                      "$ref": "#/definitions/TextFieldText"
+                      "additionalProperties": false,
+                      "description": "`invalid` when the text is neither an email nor an ORCID iD; `minter` when it names someone who mints the venue's currency, which the database forbids an admin from also doing.",
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "minter": {
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "minter",
+                        "placeholder"
+                      ],
+                      "type": "object"
                     },
                     "compensationRationale": {
                       "$ref": "#/definitions/TextFieldText"
@@ -5648,6 +5901,10 @@
                         "pendingAssignment": {
                           "type": "string"
                         },
+                        "pendingCompensation": {
+                          "description": "Completed work whose compensation awaits this approver.",
+                          "type": "string"
+                        },
                         "review": {
                           "type": "string"
                         },
@@ -5660,6 +5917,7 @@
                         "transaction",
                         "review",
                         "pendingAssignment",
+                        "pendingCompensation",
                         "outgoingTransaction"
                       ],
                       "type": "object"
@@ -5718,7 +5976,8 @@
                   "additionalProperties": false,
                   "properties": {
                     "approve": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Confirm-style: approval moves tokens and is permanent (RR005), so it must not be a single click."
                     },
                     "declineConfirm": {
                       "$ref": "#/definitions/ConfirmButtonText"
@@ -5926,6 +6185,30 @@
               ],
               "type": "object"
             },
+            "scholarSearch": {
+              "additionalProperties": false,
+              "description": "The field that resolves typed text to a scholar, by ORCID iD, email address, or a search of names. Shared by every place one scholar names another: authors on a submission, venue admins, currency minters, and role invitations.",
+              "properties": {
+                "choose": {
+                  "$ref": "#/definitions/ButtonText",
+                  "description": "Picks one of the offered matches. The scholar's name becomes the label, and `{name}` in the tip is replaced with it — the tip is the button's aria-label, and a column of identically-named buttons is unusable."
+                },
+                "noMatches": {
+                  "description": "Searched, and matched nobody. Distinct from having typed nothing.",
+                  "type": "string"
+                },
+                "unknown": {
+                  "description": "Looked up an ORCID iD or email address that belongs to no one here.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "noMatches",
+                "unknown",
+                "choose"
+              ],
+              "type": "object"
+            },
             "subheader": {
               "additionalProperties": false,
               "properties": {
@@ -5958,7 +6241,8 @@
           "required": [
             "card",
             "tokens",
-            "subheader"
+            "subheader",
+            "scholarSearch"
           ],
           "type": "object"
         }

@@ -22,6 +22,7 @@
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
+	import ScholarField from '$lib/components/ScholarField.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import SourceLink from '$lib/components/VenueLink.svelte';
@@ -222,11 +223,12 @@
 					testid="add-minter-card"
 				>
 					<Form>
-						<TextField
+						<ScholarField
 							strings={(l) => l.page.currency.field.minter}
 							bind:text={newMinter}
 							size={19}
 							valid={isValidMinter}
+							showResolved={false}
 							testid="add-minter-field"
 						/><Button
 							strings={(l) => l.page.currency.button.addMinter}

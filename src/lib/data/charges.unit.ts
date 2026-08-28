@@ -95,6 +95,18 @@ describe('duplicateScholars', () => {
 			])
 		).toBe(true);
 	});
+
+	// An ORCID's final character can be an X, so the same person can be typed two
+	// ways. The database resolves both to one scholar id and rejects the pair
+	// (RR008); the form has to agree, or it waves through what the server refuses.
+	test('ignores case differences in an iD ending in X', () => {
+		expect(
+			duplicateScholars([
+				{ scholar: B, payment: 5 },
+				{ scholar: B.toLowerCase(), payment: 5 }
+			])
+		).toBe(true);
+	});
 });
 
 describe('validCharges', () => {

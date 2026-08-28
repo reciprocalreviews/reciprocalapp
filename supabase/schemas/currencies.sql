@@ -20,6 +20,13 @@ grant all on table "public"."currencies" to "authenticated";
 
 grant all on table "public"."currencies" to "service_role";
 
+-- `grant all` above confers TABLE-level DELETE; deletion is denied to clients
+-- (see the deny policy below), so remove the privilege as well.
+revoke delete on public.currencies
+from
+	authenticated,
+	anon;
+
 alter table only "public"."currencies"
 add constraint "currencies_pkey" primary key ("id");
 
@@ -36,14 +43,9 @@ select
 	to "authenticated",
 	"anon" using (true);
 
-create policy "minters can delete currencies" on "public"."currencies" for DELETE to authenticated using (
-	(
-		(
-			select
-				"auth"."uid" () as "uid"
-		)=any ("minters")
-	)
-);
+-- No client path deletes a currency; its tokens and transactions must outlive
+-- any attempt. service_role keeps its grant for administrative and recovery work.
+create policy "currencies cannot be deleted" on public.currencies for DELETE to authenticated using (false);
 
 create policy "minters can update currencies" on "public"."currencies"
 for update

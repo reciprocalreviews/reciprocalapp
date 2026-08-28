@@ -1,7 +1,12 @@
 import { type BrowserContext, type Page } from '@playwright/test';
 
-/** The shared password every seeded user has locally (see supabase/seed.sql). */
-const SEED_PASSWORD = 'password';
+// Relative, not the `$lib` alias: this module is loaded by Playwright through
+// Node, not through Vite, so nothing is around to resolve the alias. Playwright
+// maps it from the `paths` in `.svelte-kit/tsconfig.json`, which only exists
+// after `svelte-kit sync` — so on a fresh checkout the whole suite failed to
+// collect. See ARCHITECTURE.md § Testing.
+export { SEED_PASSWORD } from '../lib/auth/devPassword';
+import { SEED_PASSWORD } from '../lib/auth/devPassword';
 
 /**
  * Navigate to the login page and wait until its form is actually usable.

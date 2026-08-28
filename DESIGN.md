@@ -1,6 +1,6 @@
 # Design
 
-_Last revised: 2026-05-10_
+_Last revised: 2026-08-16_
 
 This document is a design specification for the Reciprocol Reviews (RR) platform. We intend it to specify the conceptual interaction design that people will experience when using the platform and rationale for those choices, as well as aspects of the design that are unresolved. It's primary purpose is to provide contributors with a high level checklist for implementation, but also a long term archive for _why_ it is designed the way it is. This document will _not_ specify low-level design details, like user interface mockups or visual design it; it will stay at the high level interaction flow and user-facing features, describing key pages, functionality, data, and features.
 
@@ -203,6 +203,7 @@ A `Submission` represents a manuscript undergoing peer review.
 - [x] Depending on the venue, `Scholar`s may be able to bid on submissions, simplifying an editor's ability to find qualified reviewers.
 - [x] `Submission`s can also be linked to previous submissions, to represent revise and resubmit cycles, or resubmissions to other venues.
 - [x] `Submission`s can be added manually by \_`editor`\_s.
+- [x] A `Submission` can only be created by one of its listed authors, or by a venue admin adding one manually. Enforced by the database rather than the form, for the same reason as the rules below: without it, any signed-in scholar could create a submission at any venue and propose charges against people who had never heard of it. Every listed author must already have an RR account, since authors are identified by ORCID; a co-author without one is simply left off the record, which means the platform cannot detect conflicts of interest involving them. The submitter is listed as the first author when the form opens, since a submission they aren't an author of would be refused anyway. Co-authors can be found by **name** as well as by ORCID — an author often knows who they wrote a paper with but not their identifier — and naming the same person twice is marked on the offending row rather than only summarized at the foot of the form.
 - [x] A `Submission`'s charges must add up to exactly its submission type's cost, and no author may be listed on it twice. Both are enforced by the database, not only by the submission form — a rule that lives only in a form is a rule that holds for people who use the form. Splitting a charge unevenly between co-authors is fine, including charging a co-author nothing; what is refused is a total that doesn't match the price.
 - [x] Bids on submissions can be approved by approvers
 - [x] Bids on submissions can be approved by roles that are set to be approving roles for another role (e.g., Associate Editors can approve bids from Reviewers)
@@ -223,6 +224,7 @@ The authoritative schemas live in:
 
 The RR web application includes serveral web application screens, each corresponding to one of the kinds of data above, and providing access to functionality to manipulate each. We'll list URL routes routes for each to clarify the browsing experience.
 
+- [x] While signed in, the page chrome carries the scholar's **total token balance** across every currency, beside the link to their profile. It counts up or down and flashes briefly when it changes, so earning or spending is visible where it happens rather than only on the profile page a click away. (Reduced-motion preferences drop the animation and update the number outright.)
 - [x] Every subsection heading on a page is independently linkable. A small chain-link icon next to each subheading copies a URL fragment to that subsection into the address bar, and following such a link smoothly scrolls the heading into the center of the viewport — making it easy to share a pointer to a specific part of a long, multi-section page.
 
 ### Landing `/`
@@ -247,7 +249,11 @@ The purpose of the about page is to give context about the project. It should:
 - [x] How others can get involved in maintaining and evolving it
 - [ ] How RR is governed and funded ([#13](https://github.com/reciprocalreviews/reciprocalapp/issues/13))
 
-It has no functionalty.
+It also lists the current stewards, and is where stewardship is managed:
+
+- [x] List the current stewards, saying so when there are none rather than showing an empty list.
+- [x] _`steward`_: Appoint another scholar as a steward, finding them by name as well as by ORCID iD or email address.
+- [x] _`steward`_: Remove another scholar as a steward. A steward may not remove themselves — stepping down is an act another steward performs, so nobody resigns by accident — and the last steward cannot be removed at all, since a platform with no stewards could never appoint one again.
 
 ### Contact `/contact`
 
@@ -370,7 +376,7 @@ When a venue is **approved** state:
 - [x] View the cost, welcome amount, roles, and compensation of the venue.
 - [x] View the _`minters`_ of the venue
 - [x] View the number of tokens owned by the venue
-- [x] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue `welcome_amount` should be minted and given to the scholar, welcoming them to the community.
+- [x] _`scholar`_: For non-invite only roles, volunteer to review for the venue in a particular role. When they first volunteer, a number of tokens specified by for venue `welcome_amount` should be minted and given to the scholar, welcoming them to the community. The grant **settles immediately** rather than waiting on a minter's approval: the amount is standing venue policy, granted at most once per scholar, so per-grant approval adds no oversight the `welcome_amount` setting doesn't already provide — while the delay landed precisely on the newcomer who volunteered in order to afford a submission. The confirmation says how many tokens were actually granted, and says nothing about tokens when none were — whether a grant happens depends on the scholar's first-role status, the venue's payment-free setting, and its welcome amount, so the platform reports what it did rather than promising what it might have.
 - [x] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
 - [x] _`scholar`_: Change expertise keywords for a role for the venue
 - [x] _`scholar`_: Change paper count for a role for the venue
@@ -395,7 +401,7 @@ When a venue is **approved** state:
 - [x] _`editor`_: Modify the newcomer gift in tokens
 - [x] _`editor`_: Modify submission costs in tokens, reviewing compensation in tokens. Submission cost is set **per submission type** (each type is a different amount of work, e.g. a resubmission type may cost less than a fresh submission), and must equal the total compensation for a submission of that type.
 - [x] _`editor`_: View the total number of tokens in the venue and who posses them, to gauge the health of the community.
-- [ ] _`editor`_ ([#93](https://github.com/reciprocalreviews/reciprocalapp/issues/93)): On the volunteers list, show each volunteer's current token balance in the venue's currency, so editors can see at a glance who is undercompensated and prioritize assignments accordingly.
+- [ ] _`editor`_ ([#93](https://github.com/reciprocalreviews/reciprocalapp/issues/93)): On the volunteers list, show each volunteer's current token balance in the venue's currency, so editors can see at a glance who is undercompensated and prioritize assignments accordingly. (The ordering half of this is done: bids and assignees are listed **lowest balance first**, so the scholars most in need of paid reviewing work surface at the top of every candidate list. The volunteers-list balance column remains.)
 - [x] _`editor`_: Change the _`minter`_(s) of the venue, ensuring there is always one
 - [x] _`editor`_: Enable or disable (`venues.bidding`), determining whether submissions can be bid on by `scholars`.
 
@@ -440,7 +446,7 @@ The purpose of this page is to allow for management of all `Transaction`s associ
 **FUNCTIONALITY**. The transactions page for a venue should allow for:
 
 - [x] _`editor`_, _`minter`_: View all transactions
-- [x] _`minter`_: Approve pending transactions, subject to the no-self-enrichment principle: an approver cannot approve a transaction that enriches them. They can freely approve transactions that spend their own balance (whatever the recipient), but they cannot approve transactions that move someone else's tokens — venue reserves, mints, or another scholar's balance — to themselves or to a venue they administer.
+- [x] _`minter`_: Approve pending transactions, subject to the no-self-enrichment principle: an approver cannot approve a transaction that enriches them. Approval asks for confirmation before it commits, because it is the least reversible action in the platform — it moves tokens and the decision is final, while declining (which changes nothing about who holds what) can always be followed by a fresh proposal. They can freely approve transactions that spend their own balance (whatever the recipient), but they cannot approve transactions that move someone else's tokens — venue reserves, mints, or another scholar's balance — to themselves or to a venue they administer.
 - [x] _`minters`_: Send email reminders about unfinished transactions and work at a customizable frequency.
 - [x] _`scholar`_: Transfer tokens from the venue to a scholar directly (no minter approval required) when authorizing a payout the approver has the authority to grant, such as completing a reviewer's assignment. The transfer fails if the venue's reserve is short; in that case a proposed mint transaction sized at the shortfall is recorded automatically, the venue's _`minter`_(s) are notified by email, and the approver can retry once the minter approves. Role approvers can also see the transactions they themselves created, so they can audit their own activity.
 
@@ -458,6 +464,7 @@ It should should:
 - [x] _`editor`_: Manually add a new submission, including all of the transactions, the manuscript ID specific to the venue, the scholar authors of the submission, and how much each author is contributing. (This is to overcome integration failures, or submisions managed outside of normal reviewing platform flows.)
 - [x] _`editor`_: Resolve a specific submission, generating transactions to compensate scholars for their reviewing labor
 - [x] _`editor`_: Submit bulk `Submission`s to the system, allowing more than one at a time
+- [x] _`editor`_: Assign one scholar across several submissions from the list itself. The role and the scholar are chosen once, then an assign button appears on each submission the editor can approve that role for, and the button is hidden wherever that scholar already holds the role. This serves the recurring editorial round — assigning Associate Editors to the month's submissions, and an editor assigning themselves the priority-0 role they will later need in order to mark each submission done — which otherwise meant opening every submission in turn.
 - [x] _`editor`_ ([#113](https://github.com/reciprocalreviews/reciprocalapp/issues/113)): View transaction templates for each transaction type to copy into the venue's reviewing platform email templates. These templates contain the RR links that authors and volunteers follow to explicitly submit payment or request compensation, per the pull-based model described in the User Stories section.
 
 If the `Venue` is set to be public:
@@ -479,7 +486,7 @@ It should also support assignment decisions:
 
 ## Notifications
 
-All emails RR sends — contact-email verification and the transactional and reminder emails below — share one simple branded visual identity so they read as coming from the same platform. (Sign-in is ORCID, so RR no longer sends authentication emails.) These templates are English only for now: RR has no mechanism yet to solicit a scholar's language preference. ([#56](https://github.com/reciprocalreviews/reciprocalapp/issues/56))
+All emails RR sends — contact-email verification and the transactional and reminder emails below — share one simple branded visual identity so they read as coming from the same platform. Their links point at the environment that sent them, so mail from a test deployment leads back to that deployment; the whole model depends on people following links out of email, and links that always led to production made every such flow impossible to rehearse anywhere else. (Sign-in is ORCID, so RR no longer sends authentication emails.) These templates are English only for now: RR has no mechanism yet to solicit a scholar's language preference. ([#56](https://github.com/reciprocalreviews/reciprocalapp/issues/56))
 
 Every email RR sends is **replyable**. Mail is sent from `notifications@reciprocal.reviews`,
 but carries `Reply-To: stewards@reciprocal.reviews`, and its footer says so. A notification
@@ -504,10 +511,17 @@ RR will also send periodic reminders based on time-based events:
 
 - [x] ([#44](https://github.com/reciprocalreviews/reciprocalapp/issues/44)): Send `minters` periodic reminders of unapproved transactions, based on the frequency set in the `Transactions` page
 
+The same per-venue frequency governs three further reminders, which exist because the pull-based model puts the *first* notice on a single email that can be missed. A one-shot notice is enough only when nothing depends on it; each of these ends a step of the editorial process, so a missed one stalls a submission indefinitely with no one aware:
+
+- [x] Remind an author of a proposed charge they have not yet approved — typically a co-author's share of a submission cost, which no one else can pay and which may hold up the submission's review.
+- [x] Remind the people who can compensate an assignment (venue admins, the submission's priority-0 editors, and the holder of the role's approving role) that a scholar has **requested compensation** for finished work. Only requested work is chased: an approved, uncompensated assignment is normally just a review still in progress, and nagging about those would train approvers to ignore the reminder.
+- [x] Remind a submission's priority-0 editors when every non-editor assignment on it has been compensated, so the submission is ready to be marked done — the step that also settles the editors' own compensation, and the one with no other prompt to perform it.
+
 RR will also send transactional emails in response to user actions:
 
 - [x] ([#114](https://github.com/reciprocalreviews/reciprocalapp/issues/114)) When a proposed `Transaction` is declined, an email is sent to the person who proposed it with an explanation for why.
 - [x] When `Venue`s become **approved**, send emails to the editor and all people who upvoted the venue, notifying them of their new tokens and the live process.
+- [x] When a `Submission` is created, email every co-author carrying a non-zero charge that a payment awaits their approval. The submitter's own charge settles as part of creating the submission, so only the others are notified; without this a co-author learned of the charge only by visiting their dashboard, or by the submitter telling them out of band.
 - [x] When a role approver completes an assignment and tokens are paid out, email the compensated scholar with the role name and amount paid.
 - [x] When a role approver attempts to pay out but the venue's reserve is too small, email the venue's _`minter`_(s) with the shortfall and a link to the venue's transactions page where the auto-recorded proposed mint awaits approval.
 - [x] ([#22](https://github.com/reciprocalreviews/reciprocalapp/issues/22)) When an author thanks their reviewers (see below), email the relevant parties: the venue's editors/admins when a note awaits review, the reviewers when a note is shared, and the author if a note is declined (with the reason).
