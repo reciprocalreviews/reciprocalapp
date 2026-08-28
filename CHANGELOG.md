@@ -15,6 +15,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Your **token balance** now appears in the header while you're signed in, counting up or down when it changes, so earning or spending tokens is visible where it happens rather than only on your profile.
 - You can now find a co-author by **name** on the new submission form, instead of needing their ORCID to hand. The top three matches appear beside the field; picking one fills in their ORCID.
 - Stewards can now **appoint and remove other stewards** from the About page, where the steward list already lived. Previously stewardship could only be granted by editing the database directly. A steward can't remove themselves — stepping down is something another steward does for you, so it can't happen by accident — and the last steward can't be removed at all.
+- Added ORCID link to profiles.
 
 ### Changed
 

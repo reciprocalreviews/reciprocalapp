@@ -1,6 +1,15 @@
 export const ORCIDRegex = /^(\d{4}-){3}\d{3}(\d|X)$/;
 
 /**
+ * A scholar's public ORCID profile. An ORCID iD is itself the path of its profile URL, so
+ * there is nothing to look up — but the host belongs in one place rather than inline at
+ * each call site, since it is the one part that isn't derived from the iD.
+ */
+export function orcidURL(id: string): string {
+	return `https://orcid.org/${id}`;
+}
+
+/**
  * Compute the ISO 7064 MOD 11-2 check character for a string of base digits, as ORCID
  * uses for the final character of an iD (0-9 or X). See
  * https://support.orcid.org/hc/en-us/articles/360006897674.

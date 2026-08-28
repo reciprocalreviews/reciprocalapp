@@ -15,6 +15,12 @@ test('the read-only scholar profile page should show volunteering roles', async 
 	// Expect the seeded scholar to have two commitments.
 	await expect(page.getByTestId('admin-0')).toBeVisible();
 	await expect(page.getByTestId('commitment-0')).toBeVisible();
+
+	// A visitor can reach the scholar's ORCID profile, which is where the publications
+	// and affiliations RR doesn't reproduce actually live.
+	const orcid = page.getByTestId('scholar-orcid');
+	await expect(orcid).toBeVisible();
+	await expect(orcid).toHaveAttribute('href', `https://orcid.org/${SEED.scholars.editor.orcid}`);
 });
 
 test('the logged in scholar should see many things', async ({ page, context }) => {

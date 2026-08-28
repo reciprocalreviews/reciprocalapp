@@ -18,6 +18,7 @@
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Gift from '$lib/components/Gift.svelte';
 	import { ScholarLabel, SettingsLabel, SubmissionLabel, TokenLabel } from '$lib/components/Labels';
+	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Status from '$lib/components/Status.svelte';
@@ -27,6 +28,7 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import VerifyEmail from '$lib/components/VerifyEmail.svelte';
 	import { getDB } from '$lib/data/CRUD';
+	import { orcidURL } from '$lib/data/ORCID';
 	import { handle } from '$routes/feedback.svelte';
 	import type Scholar from '$lib/data/Scholar.svelte';
 	import Text from '$lib/locales/Text.svelte';
@@ -95,6 +97,13 @@
 		<Feedback inline={false} text={(l) => l.page.scholar.feedback.noName} />
 	{/if}
 	{#snippet details()}
+		{@const orcid = scholar.getORCID()}
+		<!-- The iD is this scholar's identity here, and the way out to the publications and
+		     affiliations RR deliberately doesn't reproduce. Absent for a seeded account and
+		     for an erased tombstone, both of which have no profile to point at. -->
+		{#if orcid}
+			<Link to={orcidURL(orcid)} testid="scholar-orcid">orcid.org/{orcid}</Link>
+		{/if}
 		<Status
 			good={scholar.isAvailable()}
 			label={(l) =>
