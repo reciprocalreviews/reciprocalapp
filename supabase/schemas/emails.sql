@@ -134,14 +134,20 @@ alter function private.get_secret (secret_name text) OWNER to "postgres";
 -- the value is a public URL, but only that one caller needs it.
 create or replace function public.site_origin () returns text language sql security definer
 set
-	search_path = '' as $$
+	search_path='' as $$
 	select coalesce(nullif(btrim(coalesce(private.get_secret('site_url'), '')), ''),
 	                'https://reciprocal.reviews');
 $$;
 
-revoke execute on function public.site_origin () from public, anon, authenticated;
+revoke
+execute on function public.site_origin ()
+from
+	public,
+	anon,
+	authenticated;
 
-grant execute on function public.site_origin () to service_role;
+grant
+execute on function public.site_origin () to service_role;
 
 -- Calls the `resend` edge function, presenting one of the project's SECRET keys. It must
 -- NOT use the publishable/anon key: that key is public (it ships in the browser bundle),

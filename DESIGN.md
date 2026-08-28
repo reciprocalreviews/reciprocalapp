@@ -511,7 +511,7 @@ RR will also send periodic reminders based on time-based events:
 
 - [x] ([#44](https://github.com/reciprocalreviews/reciprocalapp/issues/44)): Send `minters` periodic reminders of unapproved transactions, based on the frequency set in the `Transactions` page
 
-The same per-venue frequency governs three further reminders, which exist because the pull-based model puts the *first* notice on a single email that can be missed. A one-shot notice is enough only when nothing depends on it; each of these ends a step of the editorial process, so a missed one stalls a submission indefinitely with no one aware:
+The same per-venue frequency governs three further reminders, which exist because the pull-based model puts the _first_ notice on a single email that can be missed. A one-shot notice is enough only when nothing depends on it; each of these ends a step of the editorial process, so a missed one stalls a submission indefinitely with no one aware:
 
 - [x] Remind an author of a proposed charge they have not yet approved — typically a co-author's share of a submission cost, which no one else can pay and which may hold up the submission's review.
 - [x] Remind the people who can compensate an assignment (venue admins, the submission's priority-0 editors, and the holder of the role's approving role) that a scholar has **requested compensation** for finished work. Only requested work is chased: an approved, uncompensated assignment is normally just a review still in progress, and nagging about those would train approvers to ignore the reminder.

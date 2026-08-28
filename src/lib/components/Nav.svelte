@@ -23,10 +23,8 @@
 
 	let pending = $derived(getPendingActions());
 
-	const {
-		breadcrumbs,
-		tokens = 0
-	}: { breadcrumbs: [string, string][]; tokens?: number } = $props();
+	const { breadcrumbs, tokens = 0 }: { breadcrumbs: [string, string][]; tokens?: number } =
+		$props();
 
 	/** Whether the viewer asked for less motion. The CSS guard below can only
 	 * stop the flash; the counting is JavaScript, so it has to be checked here
