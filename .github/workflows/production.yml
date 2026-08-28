@@ -20,6 +20,15 @@ jobs:
   rls-tests:
     uses: ./.github/workflows/rls.yml
 
+  # Formatting, generated-type freshness, and schemas/-vs-migrations drift.
+  # ci.yml triggers on `pull_request`, but `npm run deploy` pushes the merge
+  # straight to `main`, so without this these checks never ran on the path that
+  # actually reaches production — the same gap staging.yml closed for `dev`.
+  # Unlike staging, this one gates: a drift or a formatting slip stops the
+  # migration and the deploy rather than being reported after the fact.
+  repo-checks:
+    uses: ./.github/workflows/ci.yml
+
   migrate:
     runs-on: ubuntu-latest
 
@@ -29,7 +38,7 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ secrets.PRODUCTION_PROJECT_ID }}
 
     # Only run this if tests were successful
-    needs: [unit-tests, playwright, locale-validation, rls-tests]
+    needs: [unit-tests, playwright, locale-validation, rls-tests, repo-checks]
 
     steps:
       - uses: actions/checkout@v5
@@ -100,7 +109,7 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     # Only deploy after tests pass and migrations are applied
-    needs: [unit-tests, playwright, locale-validation, rls-tests, migrate]
+    needs: [unit-tests, playwright, locale-validation, rls-tests, repo-checks, migrate]
 
     steps:
       - uses: actions/checkout@v5

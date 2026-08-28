@@ -1,0 +1,55 @@
+name: Deploy path
+
+# CONTRIBUTING.md has always said feature branches target `dev`; nothing
+# enforced it, and GitHub offered `main` as the base for every new pull request
+# because `main` was the repository default. #148-#150 took that offer, and the
+# branches then sat diverged for a week — with `main` carrying work `dev` had
+# never seen, so `npm run deploy` would have merged the two for the first time
+# on the way to production.
+#
+# The default branch is now `dev`, which fixes the offer. These two jobs cover
+# what a default cannot: a deliberate mistarget, and the divergence itself.
+
+on:
+  pull_request:
+    # Filters on the BASE branch: this runs only for PRs proposing to change `main`.
+    branches: ['main']
+  push:
+    branches: ['main']
+
+jobs:
+  # Not a required status check, deliberately. A ruleset that requires a check
+  # also requires it to have passed before a *direct* push, and `npm run deploy`
+  # pushes the release commit to `main` directly — a check that only ever runs
+  # on `pull_request` has no result for that commit, and the deploy would be
+  # rejected. A red X on the pull request is enough.
+  base-is-dev:
+    if: github.event_name == 'pull_request' && github.head_ref != 'dev'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Only `dev` may target `main`
+        run: |
+          echo "::error::This pull request targets \`main\`. Work lands on \`dev\`; \`main\` only moves by \`npm run deploy\` (see CONTRIBUTING.md). Change the base branch to \`dev\`."
+          exit 1
+
+  # The invariant the whole arrangement rests on: `main` never holds a commit
+  # `dev` does not. It holds trivially on the deploy push, where the two are the
+  # same commit — so this is silent in normal operation and speaks up only when
+  # something has landed on `main` some other way. That is the alarm that would
+  # have gone off on 2026-08-17.
+  main-is-contained-by-dev:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check that dev contains main
+        run: |
+          git fetch origin dev
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/dev; then
+            echo "::error::\`main\` has a commit \`dev\` does not, so the branches have diverged. Merge \`main\` into \`dev\` before the next release, or the next \`npm run deploy\` will reconcile them for the first time on the way to production."
+            exit 1
+          fi
+          echo "\`dev\` contains \`main\`."

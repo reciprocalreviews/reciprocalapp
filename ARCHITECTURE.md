@@ -342,8 +342,16 @@ Plus breadcrumbs and page-header state for the chrome.
 
 - `npm run build` runs [scripts/maybe-updates.js](scripts/maybe-updates.js) first, which invokes `npm run updates` only when `$CI` is set. CI builds regenerate `src/routes/[[lang]]/updates/updates.json` from [CHANGELOG.md](CHANGELOG.md) via [scripts/updates.js](scripts/updates.js); local builds reuse whatever was last committed, so the file doesn't churn on every dev rebuild. Run `npm run updates` manually if you want to regenerate it locally.
 - `npm run icons` rasterizes [static/brand/logo.svg](static/brand/logo.svg) into the PNGs that SVG cannot cover — the apple-touch icon (iOS ignores SVG), the favicon fallback, and the 1200×630 social card (link scrapers reject SVG). It drives Playwright's Chromium, which is the only rasterizer in the repo, and is **deliberately not part of `npm run build`**: builds run on Vercel, which has no browser installed. Run it by hand and commit the output.
-- `npm run deploy` merges `dev` → `main` and pushes both branches. The push triggers CI; CI does the actual deploy.
+- `npm run deploy` ([scripts/deploy.js](scripts/deploy.js)) fast-forwards `main` to `dev` and pushes it. The push triggers CI; CI does the actual deploy. The merge is `--ff-only` and the script refuses to run when `main` holds a commit `dev` does not, when `dev` is unpushed, or when the tree is dirty — a plain `git merge` would otherwise reconcile two diverged branches inside the commit that deploys them, sending production a tree no CI run and no staging deploy had ever seen. That is what #148–#150 set up by landing on `main` directly, and it is the failure this guard exists for.
 - `package.json#version` is bumped manually as part of changelog updates.
+
+### Branches
+
+Work flows one way: feature branch → `dev` → `main`. `dev` is the **repository default branch**, which is what makes that the path of least resistance — a fork starts on `dev`, and a new pull request proposes `dev` as its base without anyone choosing it. `main` is the deploy target and moves only by fast-forward from `dev`.
+
+The arrangement rests on one invariant: **`main` never holds a commit `dev` does not.** While it holds, what production receives is byte-identical to what staging ran. It was broken once, when three pull requests were opened against `main` back when `main` was the default, and the branches then carried a week of independent work each — the reconciliation, when it finally happened, conflicted in ten files across both deployed feature sets. Three things now defend it: the default branch, so mistargeting takes deliberate effort; the `base-is-dev` job in [pr-target.yml](.github/workflows/pr-target.yml), which fails a pull request that targets `main` from anywhere but `dev`; and `main-is-contained-by-dev` in the same workflow, which re-checks the invariant on every push to `main` and is silent unless it has already been broken. `npm run deploy` refuses rather than papering over it.
+
+Two consequences worth knowing. Scheduled workflows run from the default branch, so the backups run from `dev` (see [Backups](#backups)). And the branch protection ruleset names `main` and `dev` explicitly rather than by `~DEFAULT_BRANCH`, so moving the default does not silently unprotect either.
 
 ### Deployment pipeline
 
@@ -352,14 +360,16 @@ Vercel's automatic git-deploys are **disabled** for `dev` and `main` (see [verce
 Each branch push triggers a workflow that runs jobs in this order:
 
 ```
-[unit-tests, playwright, locale-validation, rls-tests]   ── parallel
+[unit-tests, playwright, locale-validation, rls-tests, repo-checks]   ── parallel
               │
               ▼ (prod: all pass · staging: not gated)
-           migrate         ── supabase db push
+           migrate         ── supabase db push · functions deploy
               │
               ▼
            vercel          ── vercel pull → build → deploy
 ```
+
+`repo-checks` is [ci.yml](.github/workflows/ci.yml) — formatting, generated-type freshness, and `schemas/`-vs-`migrations/` drift — called by both deploy workflows. It triggers on `pull_request` on its own, but `dev` and `main` are pushed to directly, so on the deploy path it only runs because these workflows call it. Without that it never ran on a release at all, which is exactly where a stale `database.ts` or a drifted schema file would first matter.
 
 Migrations are applied before the Vercel deploy so schema changes are in place before the code that depends on them goes live.
 
@@ -454,7 +464,7 @@ Every erasure is recorded in `public.erasures`, which has no foreign key to `sch
 
 ## Backups
 
-The database is dumped nightly at 08:00 UTC by [.github/workflows/backup.yml](.github/workflows/backup.yml) to S3-compatible object storage we control, independent of Supabase. [RECOVERY.md](RECOVERY.md) is the operational document — provisioning, verification, and (from the next phase) the restore runbook. The mechanics live in [supabase/dr/dump.sh](supabase/dr/dump.sh), which is a standalone script rather than inline workflow steps so the nightly job, the pre-migration snapshot, and the rehearsal drill all capture byte-identical artifacts, and so it can be run from a laptop during an incident.
+The database is dumped nightly at 08:00 UTC by [.github/workflows/backup.yml](.github/workflows/backup.yml) to S3-compatible object storage we control, independent of Supabase. **These run from `dev`**, not from `main`: GitHub fires `schedule` triggers only from the repository's default branch, and the default is `dev` (see [Branches](#branches)). So an edit to a backup workflow takes effect on the real nightly backup as soon as it lands on `dev` — before the release that would carry it to `main`. Nothing else in the repository behaves that way; treat these three files as production code wherever they sit. [RECOVERY.md](RECOVERY.md) is the operational document — provisioning, verification, and (from the next phase) the restore runbook. The mechanics live in [supabase/dr/dump.sh](supabase/dr/dump.sh), which is a standalone script rather than inline workflow steps so the nightly job, the pre-migration snapshot, and the rehearsal drill all capture byte-identical artifacts, and so it can be run from a laptop during an incident.
 
 Four decisions worth knowing before touching any of it:
 
@@ -480,7 +490,7 @@ One ordering rule matters enough to state here. **Replay must happen before anyt
 
 - **Integration.** Playwright, Chromium only. Files in `end2end/`. Run with `npm run test:end` — it brings up its own stack via `emu` (`sync` → `build` → `start:test` → `preview`), so no manual setup is needed. `start:test` deliberately excludes the edge runtime: nothing in `end2end/` needs it, because every email assertion reads the `emails` table directly with the `sql()` helper (the verification token is pulled out of `emails.args`) rather than a delivered message, and `send_email()`'s pg_net POST is best-effort and swallows its own failure. **CI and local run the identical command**, which is what stops the two from drifting — they used to differ, and the local variant chained `npm start`, whose trailing `supabase functions serve` blocks forever, so `vite preview` never started and the suite timed out after ten minutes while CI stayed green. If you want mail logged to the console while developing, run `npm start` in a separate terminal.
 - **Combined.** `npm test` runs end2end then unit.
-- **What gates a pull request.** `ci.yml` (generated types + schema drift), `rls.yml` (all pgTAP), `vitest.yml`, and `locales.yml`. The last two were `workflow_call`-only and so ran first on the push to `dev` — i.e. after review had already passed, which meant a unit test could not actually block the change it was written for. Neither needs Supabase or a browser, so gating on them costs about a minute. Playwright still runs only on the push to `dev`, where the shard matrix is worth its runtime.
+- **What gates a pull request.** `ci.yml` (generated types + schema drift), `rls.yml` (all pgTAP), `vitest.yml`, and `locales.yml`. The last two were `workflow_call`-only and so ran first on the push to `dev` — i.e. after review had already passed, which meant a unit test could not actually block the change it was written for. Neither needs Supabase or a browser, so gating on them costs about a minute. Playwright still runs only on the push to `dev`, where the shard matrix is worth its runtime. [pr-target.yml](.github/workflows/pr-target.yml) also runs, but only for pull requests proposing to change `main`; it is not a required check, because a ruleset that requires one requires it of direct pushes too, and `npm run deploy` pushes the release commit to `main` directly.
 
 E2E specifics:
 

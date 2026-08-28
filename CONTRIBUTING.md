@@ -44,6 +44,8 @@ Feature branches should be merged into `dev`, which trigger a release to a stagi
 
 Pull requests should fork, branch from `dev`, and target `dev`. One of the maintainers will review, and if accepted, merge to `dev`.
 
+`dev` is the repository's default branch, so a fork starts there and a new pull request already proposes `dev` as its base — you shouldn't have to change anything. A pull request that targets `main` anyway fails the `Deploy path` check, which is there because `main` moves only by `npm run deploy`: anything that lands on it another way leaves the two branches diverged, and the next release then reconciles them for the first time on its way to production.
+
 Unit and integration tests will run on merge to `dev` via GitHub actions.
 
 ## Local development
