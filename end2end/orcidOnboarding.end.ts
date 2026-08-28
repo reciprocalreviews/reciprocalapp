@@ -46,10 +46,12 @@ test('the local sign-in list signs in a seeded scholar in one click', async ({ p
 	await expect(page.getByTestId('seeded-dev')).toBeVisible();
 
 	// Each row says what the account can do, which is what decides which one you
-	// want for the flow under test.
-	await expect(page.getByText(/steward/)).toBeVisible();
-	await expect(page.getByText(/admin of Transactions on Knowledge/)).toBeVisible();
-	await expect(page.getByText(/minter of Epistemology/)).toBeVisible();
+	// want for the flow under test. Scoped to the table: the page also offers to
+	// put you in touch with the stewards, so a bare /steward/ matches twice.
+	const seeded = page.getByRole('table');
+	await expect(seeded.getByText(/steward/)).toBeVisible();
+	await expect(seeded.getByText(/admin of Transactions on Knowledge/)).toBeVisible();
+	await expect(seeded.getByText(/minter of Epistemology/)).toBeVisible();
 
 	// Pick the editor by address rather than by position. Sign-in uses the
 	// scholar's *contact* email, which the email-verification spec changes for
