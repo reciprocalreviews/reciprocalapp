@@ -2,43 +2,14 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
-## 0.5.0 - 2026-08-23
+## 0.5.0 - 2026-08-28
 
 ### Added
 
 - **Reciprocal Reviews is in public beta.** Every part of the platform is now reachable: you can browse venues, sign in, propose a journal or conference, volunteer to review, and manage a venue. Until now production redirected everything except the landing, about, and updates pages back to the home page.
 - Reciprocal Reviews has a **logo** — two arrows chasing each other around a circle — and a [brand page](/brand) listing the mark, the colors, and the typefaces, with the files available to download. It's linked from the footer.
 - Link previews now show a proper card with the logo and tagline when a Reciprocal Reviews page is shared, and the browser tab shows the logo rather than a generic icon. Search engines get a `robots.txt` and a sitemap that lists the public pages, the help articles, and every active venue.
-
-### Changed
-
-- The landing page leads with **"Make peer review count."** in the flow of the page rather than pinned to the header, and shows what a submission cost looks like — a token chip right in the sentence — instead of only describing one. The newsletter is now linked from the volunteer community note.
-
-### Fixed
-
-- Text that a venue or a proposal supplies — a venue description, a proposal title — can no longer inject markup into the page it appears on. Values substituted into a sentence are now escaped by default, and only markup the platform generated itself is exempt.
-- Token amounts no longer break across lines between the number and the word "tokens". A chip like ★ 10 tokens now stays whole wherever it appears, including in transaction tables and on scholar pages.
-
-## 0.4.8 - 2026-08-23
-
-### Added
-
 - Reciprocal Reviews now has a **help section** and a **contact page**. Help answers the questions we're asked most often; contact names the stewards who read your message and gives you one address that reaches all of them. Both are linked from the footer.
-
-### Changed
-
-- Updated internal tooling for stability.
-- You can now **reply to any email** Reciprocal Reviews sends you and reach a person. Replies previously went to an unmonitored address and were lost.
-- Notifications to the stewards, such as new venue proposals and alerts about the platform's own health, now arrive in a shared inbox they can work through together. They previously went out as separate copies to each steward, with no way to see whether anyone had picked a request up.
-
-### Fixed
-
-- The alert that warns stewards the token ledger may be corrupt is now always delivered. It previously went only to stewards who had verified a contact email address, so the warning that something had gone seriously wrong could reach nobody at all.
-
-## 0.4.7 - 2026-08-16
-
-### Added
-
 - Editors can now assign one scholar across several submissions from the submissions list — pick the role and person once, then assign per submission — instead of opening each submission in turn.
 - Reciprocal Reviews now follows up on work that stalls: co-authors are emailed when a submission charge awaits their payment, approvers are reminded when a reviewer has requested compensation, and editors are reminded when a submission has all its reviewing paid and is ready to be marked done. Each follows the venue's existing reminder frequency, and pending compensation now also appears in your task list.
 - Your **token balance** now appears in the header while you're signed in, counting up or down when it changes, so earning or spending tokens is visible where it happens rather than only on your profile.
@@ -47,12 +18,13 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Changed
 
+- The landing page leads with **"Make peer review count."** in the flow of the page rather than pinned to the header, and shows what a submission cost looks like — a token chip right in the sentence — instead of only describing one. The newsletter is now linked from the volunteer community note.
+- Updated internal tooling for stability.
+- You can now **reply to any email** Reciprocal Reviews sends you and reach a person. Replies previously went to an unmonitored address and were lost.
+- Notifications to the stewards, such as new venue proposals and alerts about the platform's own health, now arrive in a shared inbox they can work through together. They previously went out as separate copies to each steward, with no way to see whether anyone had picked a request up.
 - The new submission form now lists you as the first author, so it's clear you're included and where to set your own payment.
 - Email links now lead back to the site that sent them, so test and staging deployments no longer send people to the live site.
 - The volunteer confirmation now says how many welcome tokens you actually received — and says nothing about tokens when none were granted. It previously promised tokens "once the minter approves them", which stopped being true when welcome tokens started arriving immediately. Accepting a role invitation, which also grants them, now confirms as well.
-
-- Updated internal tooling for stability.
-- Submission charges are now checked by the database as well as the form: the amounts must add up to the submission type's cost, and the same author can't be listed twice. Previously these rules held only for people submitting through the form.
 - Welcome tokens now arrive the moment you volunteer, instead of waiting for a currency minter to approve them — the wait previously fell on newcomers volunteering in order to afford their own submission.
 - Reviewer bids and candidate assignees are now listed with the **lowest token balance first**, surfacing the scholars most in need of paid reviewing work.
 - Approving a transaction now asks for confirmation, since it moves tokens permanently and cannot be undone. Removing a minter, a compensation rate, a preference level, or an assignment now confirm too, and the warnings for deleting a role or submission type now say what else will be deleted.
@@ -61,13 +33,9 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Fixed
 
-- Bulk CSV imports now warn when a row's columns don't line up with the header. An unquoted comma in a title used to shift every column and silently drop the last field, so an import could land with the wrong manuscript IDs and still look successful.
-- The balance check when paying for a submission now counts only the venue's own currency. It previously counted tokens from every venue, so the check could pass and the payment then be refused.
-- Reviewer bids now sort predictably in venues that haven't set up preference levels; their order was previously arbitrary.
-- The submissions list now breaks ties correctly when several submissions share a date.
-- Exporting volunteers as CSV no longer truncates the file at the first #, so an expertise like "C#" no longer cuts the download short.
-- Number, web address, and email fields now reject malformed input instead of accepting text that merely contains a number or a link. A venue's welcome amount could previously be set to a value that failed to save.
-- Links in emails that end a sentence no longer include the trailing punctuation in the link, and escaped text no longer reappears as markup in the plain-text version.
+- Text that a venue or a proposal supplies — a venue description, a proposal title — can no longer inject markup into the page it appears on. Values substituted into a sentence are now escaped by default, and only markup the platform generated itself is exempt.
+- Token amounts no longer break across lines between the number and the word "tokens". A chip like ★ 10 tokens now stays whole wherever it appears, including in transaction tables and on scholar pages.
+- The alert that warns stewards the token ledger may be corrupt is now always delivered. It previously went only to stewards who had verified a contact email address, so the warning that something had gone seriously wrong could reach nobody at all.
 - Only a listed author, or an admin of the venue, can create a submission. Any signed-in scholar could previously create one at any venue and leave payment demands against people who had never heard of it.
 - Gifting tokens to a venue now requires the same acknowledgement as gifting to a scholar; that confirmation was skipped for venues.
 - Venues, currencies, and submissions can no longer be deleted through the API. Nothing in the app offered this, but the permission existed — and deleting a venue would have taken its roles, volunteers, assignments, and compensation rates with it.
@@ -78,6 +46,23 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Scholar name searches now return the same people in the same order each time. Results were previously in whatever order the database happened to return, which shifted whenever anyone's profile was edited — so searching the same name twice could offer different scholars, and only three are ever shown. The steward list is likewise ordered by name now.
 - Each name-search result now identifies the scholar to screen readers. Every match previously announced the same generic label, making a column of them impossible to tell apart.
 - Adding a venue admin now reports validation problems in the page's language, rather than in hardcoded English.
+
+## 0.4.7 - 2026-08-16
+
+### Changed
+
+- Updated internal tooling for stability.
+- Submission charges are now checked by the database as well as the form: the amounts must add up to the submission type's cost, and the same author can't be listed twice. Previously these rules held only for people submitting through the form.
+
+### Fixed
+
+- Bulk CSV imports now warn when a row's columns don't line up with the header. An unquoted comma in a title used to shift every column and silently drop the last field, so an import could land with the wrong manuscript IDs and still look successful.
+- The balance check when paying for a submission now counts only the venue's own currency. It previously counted tokens from every venue, so the check could pass and the payment then be refused.
+- Reviewer bids now sort predictably in venues that haven't set up preference levels; their order was previously arbitrary.
+- The submissions list now breaks ties correctly when several submissions share a date.
+- Exporting volunteers as CSV no longer truncates the file at the first #, so an expertise like "C#" no longer cuts the download short.
+- Number, web address, and email fields now reject malformed input instead of accepting text that merely contains a number or a link. A venue's welcome amount could previously be set to a value that failed to save.
+- Links in emails that end a sentence no longer include the trailing punctuation in the link, and escaped text no longer reappears as markup in the plain-text version.
 
 ## 0.4.6 - 2026-08-08
 

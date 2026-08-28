@@ -1,6 +1,6 @@
 # Architecture
 
-_Last revised: 2026-08-16_
+_Last revised: 2026-08-28_
 
 This document describes the implementation of the Reciprocal Reviews platform — what runs where, how requests flow, and the conventions contributors should follow when extending it. For the user-facing design and rationale, see [DESIGN.md](DESIGN.md). The two documents are intended to stay in sync; changes to either should be audited against the other.
 
