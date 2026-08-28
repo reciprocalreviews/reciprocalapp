@@ -279,12 +279,14 @@
 				"editors": {
 					"label": "editors",
 					"placeholder": "email1@email.com, email2@email.com",
-					"invalid": "Must be a list of comma-separated email addresses."
+					"invalid": "Must be a list of comma-separated email addresses.",
+					"unknown": "No Reciprocal Reviews account uses {addresses} yet. You can still propose: they'll be emailed an invitation, and can be added to the venue once they sign up."
 				},
 				"minters": {
 					"label": "minters",
 					"placeholder": "email1@email.com, email2@email.com",
-					"invalid": "Must be a list of at least one comma-separated email address."
+					"invalid": "Must be a list of at least one comma-separated email address.",
+					"unknown": "No Reciprocal Reviews account uses {addresses} yet. You can still propose: the steward who approves this venue holds its currency until someone here can mint."
 				},
 				"mintersConflict": "Editors can't be minters",
 				"url": {
@@ -325,7 +327,9 @@
 			"feedback": {
 				"alreadySupported": "You've expressed support. You can edit or delete your support below.",
 				"logIn": "[Log in](/login) to express support.",
-				"notFound": "Unknown proposal."
+				"notFound": "Unknown proposal.",
+				"unknownEditors": "No account uses {addresses} yet, so approving won't make them admins of the venue. They were emailed an invitation when this was proposed; once they sign up, an admin can add them.",
+				"unknownMinters": "No account uses {addresses} yet, so approving makes **you** the minter of this venue's new currency until it names someone else. The venue can't go active while one of its own admins mints, so hand it over before launch."
 			},
 			"button": {
 				"deleteSupport": {
@@ -334,12 +338,12 @@
 				},
 				"deleteProposal": {
 					"tip": "Delete this proposal",
-					"label": "$delete",
+					"label": "$delete Delete",
 					"warn": "Delete this proposal forever?"
 				},
 				"approve": {
 					"tip": "Approve this proposal",
-					"label": "Approve",
+					"label": "$confirm Approve",
 					"warn": "Approve and create this venue?"
 				},
 				"submitSupport": {
@@ -999,7 +1003,8 @@
 				"unknownVenue": "Unable to load this venue.",
 				"logIn": "[Log in](/login) to view this venue's settings.",
 				"adminsOnly": "Only admins of this venue can view this page.",
-				"noPreferenceLevels": "No preference levels defined. Bidders will see a simple yes/no bid."
+				"noPreferenceLevels": "No preference levels defined. Bidders will see a simple yes/no bid.",
+				"adminMints": "This venue can't go active while one of its admins also mints its currency — minting the money of a venue you run is the one arrangement the token economy can't allow. Add a minter who isn't an admin here on the currency page, and remove the admin from the minters."
 			},
 			"card": {
 				"economics": {

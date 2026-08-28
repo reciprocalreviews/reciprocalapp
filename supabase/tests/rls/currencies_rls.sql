@@ -113,7 +113,7 @@ select throws_ok(
 	$$ update public.currencies
 	   set minters = array[ $$ || quote_literal(:'minter') || $$, $$ || quote_literal(:'vadmin') || $$ ]::uuid[]
 	   where id = $$ || quote_literal(:'cur'),
-	'P0001',
+	'RR015',
 	'A venue minter cannot be the admin of the venue currency',
 	'a venue admin cannot be added as a minter of the venue currency'
 );

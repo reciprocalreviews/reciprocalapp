@@ -2,6 +2,24 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.1 - 2026-08-28
+
+### Added
+
+- Scholar profiles now show the scholar's **ORCID iD**, linked to their ORCID record, so a visitor can confirm who they're looking at and follow through to the publications and affiliations Reciprocal Reviews doesn't reproduce itself.
+
+### Changed
+
+- A venue can now be **approved before its community has found a minter**. Approval takes whichever listed editors and minters already have accounts, and if no proposed minter has one, the steward who approves holds the venue's currency until the venue names someone. Previously a single unrecognized email address meant the venue couldn't be created at all — which asked a community to organize itself onto the platform before it could have a place on it.
+- A new venue still arrives **inactive**, and now can't be switched live while one of its own admins also mints its currency. The rule that stops anyone minting the money of a venue they run is unchanged; it is now a requirement for going live rather than for existing, so a steward can approve a venue they'll help edit and hold its currency while the community finds someone to take it over.
+- The venue proposal form now says which listed email addresses don't yet belong to a Reciprocal Reviews account, and a steward sees the same before approving. Neither blocks anything: listed editors are emailed an invitation when the proposal is filed, and are added to the venue when they sign up.
+- The button for deleting a proposal now says **Delete** instead of showing only an ✖, and **Approve** carries a matching checkmark.
+
+### Fixed
+
+- Proposing a venue now reliably takes you to the new proposal. The proposal was being created, but the page could silently fail to move you to it and leave the Propose button stuck, with nothing on screen or in the console to say why — a refresh was the only way out.
+- An email address listed twice on a proposal is now recorded once, so someone named twice is no longer emailed the same invitation twice.
+
 ## 0.5.0 - 2026-08-28
 
 ### Added
@@ -15,7 +33,6 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Your **token balance** now appears in the header while you're signed in, counting up or down when it changes, so earning or spending tokens is visible where it happens rather than only on your profile.
 - You can now find a co-author by **name** on the new submission form, instead of needing their ORCID to hand. The top three matches appear beside the field; picking one fills in their ORCID.
 - Stewards can now **appoint and remove other stewards** from the About page, where the steward list already lived. Previously stewardship could only be granted by editing the database directly. A steward can't remove themselves — stepping down is something another steward does for you, so it can't happen by accident — and the last steward can't be removed at all.
-- Added ORCID link to profiles.
 
 ### Changed
 

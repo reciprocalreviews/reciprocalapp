@@ -35,6 +35,15 @@
 	let message = $state('');
 
 	let proposal = $derived(data.proposal);
+	/** Listed addresses no account uses yet, split back into the two lists so the steward can
+	 * see which consequence applies: an unlisted editor simply isn't made an admin, while an
+	 * unlisted minter means this steward ends up holding the new currency. */
+	let unknownEditors = $derived(
+		(data.proposal?.editors ?? []).filter((e) => data.unknownAddresses.includes(e))
+	);
+	let unknownMinters = $derived(
+		(data.proposal?.minters ?? []).filter((m) => data.unknownAddresses.includes(m))
+	);
 	let approved = $derived(proposal && proposal.venue !== null);
 	let steward = $derived(data.scholar?.steward === true);
 
@@ -168,6 +177,25 @@
 						}}
 					/>
 					<Note path={(l) => l.page.proposal.note.delete} />
+
+					{#if unknownEditors.length > 0}
+						<Feedback
+							warning
+							inline={false}
+							text={(l) => l.page.proposal.feedback.unknownEditors}
+							inputs={{ addresses: unknownEditors.join(', ') }}
+							testid="proposal-unknown-editors"
+						/>
+					{/if}
+					{#if unknownMinters.length > 0}
+						<Feedback
+							warning
+							inline={false}
+							text={(l) => l.page.proposal.feedback.unknownMinters}
+							inputs={{ addresses: unknownMinters.join(', ') }}
+							testid="proposal-unknown-minters"
+						/>
+					{/if}
 
 					<Button
 						strings={(l) => l.page.proposal.button.approve}

@@ -5,6 +5,7 @@
 	import Page from '$lib/components/Page.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
 	import VenueLink from '$lib/components/VenueLink.svelte';
+	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
 	import Text from '$lib/locales/Text.svelte';
 	import { getAuth } from '$routes/Auth.svelte';
 
@@ -14,6 +15,15 @@
 	let venues = $derived(data.venues);
 
 	const auth = getAuth();
+
+	// Kept on the list rather than the layout, which also covered the proposal form. A
+	// realtime tick calls invalidateAll(), and an invalidation that lands while a `goto`
+	// is loading takes over and silently drops it — so the form's own insert could abort
+	// its own redirect. Only this page has a list to keep fresh.
+	reloadOnChanges('venues_changes', [
+		{ table: 'proposals', filter: undefined },
+		{ table: 'venues', filter: undefined }
+	]);
 </script>
 
 <Page icon={VenueLabel} title={(l) => l.page.venues.title} breadcrumbs={[]}>

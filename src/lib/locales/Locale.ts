@@ -227,6 +227,12 @@ export type LocaleText = {
 			title: string;
 			subtitle: { proposal: string; approved: string };
 			feedback: {
+				/** Listed editors no account uses: approval proceeds without them, so they
+				 * simply aren't made admins. Takes {addresses}. */
+				unknownEditors: string;
+				/** Listed minters no account uses: the approving steward ends up holding the
+				 * new currency until the venue names someone. Takes {addresses}. */
+				unknownMinters: string;
 				alreadySupported: string;
 				logIn: string;
 				notFound: string;
@@ -241,6 +247,7 @@ export type LocaleText = {
 				delete: string;
 				editors: string;
 			};
+
 			field: {
 				support: TextFieldText;
 			};
@@ -708,6 +715,10 @@ export type LocaleText = {
 				bulkImport: string;
 			};
 			feedback: {
+				/** Why a venue that is ready in every other way still cannot be switched live:
+				 * one of its admins mints its currency. Permitted while configuring, refused
+				 * at launch (RR015). */
+				adminMints: string;
 				unknownVenue: string;
 				logIn: string;
 				adminsOnly: string;
@@ -969,8 +980,13 @@ export type LocaleText = {
 			};
 			field: {
 				venueName: TextFieldText & { invalid: string };
-				editors: TextFieldText & { invalid: string };
-				minters: TextFieldText & { invalid: string };
+				/** `unknown` names the listed addresses that belong to no account yet. Takes
+				 * {addresses}. Not an error: an editor who hasn't signed up is emailed an
+				 * invitation by the proposal itself, which is how communities arrive. */
+				editors: TextFieldText & { invalid: string; unknown: string };
+				/** As above, but an unlisted minter means the approving steward holds the
+				 * currency until the venue names someone. Takes {addresses}. */
+				minters: TextFieldText & { invalid: string; unknown: string };
 				mintersConflict: string;
 				url: TextFieldText & { invalid: string };
 				size: TextFieldText & { invalid: string };

@@ -1,66 +1,27 @@
+-- Let a venue be approved before its community has found a minter.
+--
+-- WHY
+--
+-- `approve_venue_proposal` required every proposed editor AND minter address to already
+-- match a `scholars.email`, or it raised and rolled the whole approval back. That put the
+-- hardest requirement at the earliest moment: a community adopting the platform frequently
+-- has not identified an independent minter yet, and could not get a venue at all until it
+-- had. The failure also landed on a steward pressing Approve, possibly weeks after the
+-- proposal was filed, as an opaque "couldn't create the venue".
+--
+-- Three things already in the schema make a better arrangement possible:
+--
+--   1. Approval has never meant launch. `venues.inactive` defaults to 'This venue is being
+--      configured.' and this function never cleared it.
+--   2. A venue runs without a human minter. `_welcome_volunteer` settles welcome grants
+--      itself ("no per-grant minter approval is required"), so volunteers can join and be
+--      paid; a minter is needed only to top the reserve up later, or to exchange.
+--   3. A placeholder minter already existed — the payment-free branch below has always made
+--      the approving steward the sole minter of the hidden currency.
+--
+-- So: approval takes whoever has an account and never blocks on minters, and the separation
+-- that actually matters is enforced where it matters, at launch (20260828000010).
 --------------------------------------
--- Schema
--- Represents a proposal for a venue to be supported.
-create table if not exists "public"."proposals" (
-	-- The unique ID of the venue
-	id uuid default "gen_random_uuid" () not null,
-	-- The title of the venue
-	title text default ''::"text" not null,
-	-- A link to the venue's official web page
-	url text default ''::"text" not null,
-	-- The email addresses of editors responsible for the venue
-	editors text[] default '{}'::"text" [] not null,
-	-- The email addresses of minters for the new currency
-	minters text[] default '{}'::"text" [] not null,
-	-- The id of the existing currency to use for the venue, if any
-	currency uuid,
-	-- The estimated size of the research community,
-	census integer not null,
-	-- Whether the proposed venue should operate without payment. When true,
-	-- approval skips the minter requirement and auto-creates a hidden currency.
-	payment_free boolean default false not null,
-	-- If set, corresponds to the venue created upon approval.
-	venue uuid
-);
-
-alter table "public"."proposals" OWNER to "postgres";
-
-alter table only "public"."proposals"
-add constraint "proposals_currency_fkey" foreign KEY ("currency") references "public"."currencies" ("id");
-
-alter table only "public"."proposals"
-add constraint "proposals_venue_fkey" foreign KEY ("venue") references "public"."venues" ("id");
-
-alter table only "public"."proposals"
-add constraint "proposals_pkey" primary key ("id");
-
---------------------------------------
--- Security
-alter table "public"."proposals" ENABLE row LEVEL SECURITY;
-
-create policy "anyone can view proposals" on "public"."proposals" for
-select
-	to authenticated,
-	anon using (true);
-
-create policy "anyone can propose venues" on "public"."proposals" for INSERT to authenticated
-with
-	check (true);
-
-create policy "admins can update proposals" on "public"."proposals"
-for update
-	to authenticated using (public.isSteward ());
-
-create policy "admins can delete proposals" on "public"."proposals" for DELETE to authenticated using (public.isSteward ());
-
---------------------------------------
--- RPCs (defined in migration 20260608000000_atomic_crud.sql)
--- approve_venue_proposal: provision a whole venue from an approved proposal —
--- currency (if none was proposed), venue, editor role, editor volunteers,
--- default submission type, and default compensation — and link the proposal to
--- the new venue, all atomically, so a partial failure can't orphan records.
--- SECURITY DEFINER; stewards only. Emails to editors and supporters are
--- dispatched by the application layer from the returned ids.
 create or replace function public.approve_venue_proposal (_proposal_id uuid) returns jsonb language plpgsql security definer
 set
 	search_path=public,
@@ -182,20 +143,3 @@ begin
 	);
 end;
 $function$;
-
-revoke
-execute on function public.approve_venue_proposal (uuid)
-from
-	public;
-
-grant
-execute on function public.approve_venue_proposal (uuid) to authenticated;
-
-grant all on table "public"."proposals" to "anon";
-
-grant all on table "public"."proposals" to "authenticated";
-
-grant all on table "public"."proposals" to "service_role";
-
-alter publication supabase_realtime
-add table proposals;

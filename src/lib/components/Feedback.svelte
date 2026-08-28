@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Html } from '$lib/locales/html';
 	import type LocaleText from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
 
@@ -9,7 +10,8 @@
 		round = true,
 		size = 'small',
 		testid,
-		text
+		text,
+		inputs = {}
 	}: {
 		error?: boolean;
 		/** Something to be careful about, as distinct from something that has gone
@@ -21,11 +23,14 @@
 		size?: 'small' | 'normal';
 		testid?: string;
 		text: (locale: LocaleText) => string | string[];
+		/** Forwarded to Text for `{name}` substitution, so a message can name the thing it is
+		 * about — which addresses, which venue — rather than describing it in the abstract. */
+		inputs?: Record<string, string | Html>;
 	} = $props();
 </script>
 
 {#snippet content()}
-	<Text markdown path={text} />
+	<Text markdown path={text} {inputs} />
 {/snippet}
 
 {#if inline}

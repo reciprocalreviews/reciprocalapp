@@ -2466,9 +2466,19 @@
                     },
                     "notFound": {
                       "type": "string"
+                    },
+                    "unknownEditors": {
+                      "description": "Listed editors no account uses: approval proceeds without them, so they simply aren't made admins. Takes {addresses}.",
+                      "type": "string"
+                    },
+                    "unknownMinters": {
+                      "description": "Listed minters no account uses: the approving steward ends up holding the new currency until the venue names someone. Takes {addresses}.",
+                      "type": "string"
                     }
                   },
                   "required": [
+                    "unknownEditors",
+                    "unknownMinters",
                     "alreadySupported",
                     "logIn",
                     "notFound"
@@ -2590,6 +2600,7 @@
                   "properties": {
                     "editors": {
                       "additionalProperties": false,
+                      "description": "`unknown` names the listed addresses that belong to no account yet. Takes {addresses}. Not an error: an editor who hasn't signed up is emailed an invitation by the proposal itself, which is how communities arrive.",
                       "properties": {
                         "invalid": {
                           "description": "The optional validation error message",
@@ -2602,16 +2613,21 @@
                         "placeholder": {
                           "description": "The placeholder to show in the text field",
                           "type": "string"
+                        },
+                        "unknown": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "invalid",
-                        "placeholder"
+                        "placeholder",
+                        "unknown"
                       ],
                       "type": "object"
                     },
                     "minters": {
                       "additionalProperties": false,
+                      "description": "As above, but an unlisted minter means the approving steward holds the currency until the venue names someone. Takes {addresses}.",
                       "properties": {
                         "invalid": {
                           "description": "The optional validation error message",
@@ -2624,11 +2640,15 @@
                         "placeholder": {
                           "description": "The placeholder to show in the text field",
                           "type": "string"
+                        },
+                        "unknown": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "invalid",
-                        "placeholder"
+                        "placeholder",
+                        "unknown"
                       ],
                       "type": "object"
                     },
@@ -3235,6 +3255,10 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "adminMints": {
+                      "description": "Why a venue that is ready in every other way still cannot be switched live: one of its admins mints its currency. Permitted while configuring, refused at launch (RR015).",
+                      "type": "string"
+                    },
                     "adminsOnly": {
                       "type": "string"
                     },
@@ -3249,6 +3273,7 @@
                     }
                   },
                   "required": [
+                    "adminMints",
                     "unknownVenue",
                     "logIn",
                     "adminsOnly",

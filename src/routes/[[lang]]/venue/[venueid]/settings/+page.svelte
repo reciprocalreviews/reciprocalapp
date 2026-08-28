@@ -89,6 +89,18 @@
 	] as const;
 	type StepId = (typeof STEPS_IN_ORDER)[number];
 
+	/** True when someone both administers this venue and mints its currency.
+	 *
+	 * Tolerated while the venue is being configured — that is what lets a steward approve a
+	 * venue they will edit and hold its currency until the community names a minter — but the
+	 * database refuses to switch such a venue live (RR015), because minting the money of a
+	 * venue you run is the one arrangement the token economy cannot allow. Mirrored here so
+	 * the checkbox explains itself instead of failing on click. */
+	const adminMints = $derived(
+		!venue?.payment_free &&
+			(venue?.admins ?? []).some((admin) => (currency?.minters ?? []).includes(admin))
+	);
+
 	const hasBiddableRole = $derived((roles ?? []).some((r) => r.biddable));
 	const visibleSteps = $derived(
 		STEPS_IN_ORDER.filter((s) => s !== PREFERENCE_LEVELS || hasBiddableRole)
@@ -321,9 +333,18 @@
 		<Checkbox
 			testid="inactive-checkbox"
 			on={venue.inactive !== null}
+			active={venue.inactive === null || !adminMints}
 			change={(on) => db().editVenueInactive(venue.id, on ? 'This venue is not active.' : null)}
 			label={(l) => l.page.settings.checkbox.inactive}
 		/>
+		{#if venue.inactive !== null && adminMints}
+			<Feedback
+				warning
+				inline={false}
+				text={(l) => l.page.settings.feedback.adminMints}
+				testid="venue-admin-mints"
+			/>
+		{/if}
 
 		{#if venue.inactive !== null}
 			<EditableText

@@ -355,7 +355,7 @@ The purpose of this page is to allow people to support proposals and check their
 - [x] _`steward`_: Edit a proposal's venue census
 - [x] _`steward`_: Edit a proposal's venue editors
 - [x] _`steward`_: Delete a proposal
-- [x] _`steward`_: Approve a proposal
+- [x] _`steward`_: Approve a proposal. Approval takes whichever listed editors already have accounts and makes them the venue's admins; the rest are not blocked on, because the proposal itself emailed them an invitation and requiring an account first would mean that invitation could only ever reach people who did not need it. At least one editor must have an account, since a venue with nobody to administer it is not a venue. Minters are never blocking: whichever listed minters have accounts hold the new currency, and if none of them do, the approving steward holds it until the venue names someone. A community adopting RR often has not identified an independent minter yet, and refusing the venue until it has put the platform's hardest requirement at the moment a community is trying to join it.
 
 ### Venue `/venue/[id]`
 
@@ -364,6 +364,8 @@ The purpose of a `Venue` page is to provide information about its compensation, 
 The page should:
 
 - [x] Show the name, description, and URL to the venue's website.
+
+Approving a proposal creates a venue but does not launch it: a new venue is **inactive** — visible to and configurable by its admins, invisible to everyone else — until an admin switches it on. A venue cannot be switched active while one of its own admins also mints its currency. That separation is what stops anyone minting the money of a venue they run, and it is a requirement for going live rather than a permanent one: while a venue is being configured the overlap is allowed, which is what lets a steward approve a venue they will themselves edit and hold its currency in the meantime. (Minting into a venue you administer is refused at all times regardless.) Holding a platform role is not itself a conflict — a steward may mint for a venue they do not administer for as long as the community wants.
 
 When a venue is in a **proposed** state:
 

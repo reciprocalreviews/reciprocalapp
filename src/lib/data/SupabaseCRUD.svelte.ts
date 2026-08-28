@@ -1,4 +1,5 @@
 import type { Database } from '$data/database';
+import { dedupeAddresses } from './addresses';
 import type { AuthError, PostgrestError, QueryData, SupabaseClient } from '@supabase/supabase-js';
 import type {
 	AssignmentID,
@@ -491,6 +492,25 @@ export default class SupabaseCRUD extends CRUD {
 		return error || scholar === null ? this.error('ScholarNotFound', error) : { data: scholar.id };
 	}
 
+	async findUnknownAddresses(addresses: string[]): Promise<ReadResult<string[]>> {
+		// One query rather than one per address, and deliberately matched on `email` only.
+		// `approve_venue_proposal` resolves proposal addresses against `scholars.email`, which
+		// is written solely by the verification flow — so someone can hold an account and
+		// still not be found here, having never verified this address. Matching on anything
+		// wider (ORCID, say) would report addresses as known that approval would then reject.
+		if (addresses.length === 0) return { data: [] };
+		const { data, error } = await this.client
+			.from('scholars')
+			.select('email')
+			.in('email', addresses);
+		if (error) {
+			console.error(error);
+			return { data: [], error: { message: this.locale.error.ScholarNotFound, details: error } };
+		}
+		const known = new Set((data ?? []).map((scholar) => scholar.email));
+		return { data: addresses.filter((address) => !known.has(address)) };
+	}
+
 	async getScholar(scholarID: ScholarID): Promise<Scholar | null> {
 		const scholar = this.scholars.get(scholarID);
 		if (scholar) return scholar;
@@ -940,9 +960,20 @@ export default class SupabaseCRUD extends CRUD {
 		paymentFree: boolean = false
 	): Promise<Result<string>> {
 		// Make a proposal
+		// De-duplicated here rather than trusted from the form, because every writer of these
+		// arrays owes the same guarantee: ProposalCreatedEditors sends one message per listed
+		// address, so a doubled editor is invited twice.
 		const { data, error: insertError } = await this.client
 			.from('proposals')
-			.insert({ title, url, editors, census, currency, minters, payment_free: paymentFree })
+			.insert({
+				title,
+				url,
+				editors: dedupeAddresses(editors),
+				census,
+				currency,
+				minters: dedupeAddresses(minters),
+				payment_free: paymentFree
+			})
 			.select()
 			.single();
 
@@ -985,11 +1016,11 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async editVenueProposalEditors(venue: ProposalID, editors: string[]): Promise<Result> {
-		return this.updateProposal(venue, { editors }, 'EditProposalEditors');
+		return this.updateProposal(venue, { editors: dedupeAddresses(editors) }, 'EditProposalEditors');
 	}
 
 	async editVenueProposalMinters(venue: ProposalID, minters: string[]): Promise<Result> {
-		return this.updateProposal(venue, { minters }, 'EditProposalMinters');
+		return this.updateProposal(venue, { minters: dedupeAddresses(minters) }, 'EditProposalMinters');
 	}
 
 	async editVenueProposalURL(venue: ProposalID, url: string): Promise<Result> {
@@ -1012,7 +1043,14 @@ export default class SupabaseCRUD extends CRUD {
 		const { data, error } = await this.client.rpc('approve_venue_proposal', {
 			_proposal_id: proposal
 		});
-		if (error) return this.error('ApproveProposalNoVenue', error);
+		// RR014 is the one refusal a steward can act on: none of the proposed editors have
+		// accounts, so there is nobody to administer the venue. Everything else is genuinely
+		// "couldn't create the venue".
+		if (error)
+			return this.error(
+				rpcErrorKey(error, 'ApproveProposalNoVenue', { RR014: 'ApproveProposalNoScholars' }),
+				error
+			);
 
 		const venueID = stringField(data, 'venue_id');
 		const editorIDs = stringArrayField(data, 'editor_ids');

@@ -80,8 +80,13 @@ begin
     if new.payment_free then
         return new;
     end if;
+    -- Being configured: the overlap is allowed here and nowhere else. Switching the venue
+    -- live runs this same check against the new row, which is what makes activation the gate.
+    if new.inactive is not null then
+        return new;
+    end if;
     if new.admins && (select minters from public.currencies where id = new.currency) then
-        raise exception 'A venue admin cannot be the minter of the venue currency';
+        raise exception 'A venue admin cannot be the minter of the venue currency' using errcode = 'RR015';
     end if;
     return new;
 end;

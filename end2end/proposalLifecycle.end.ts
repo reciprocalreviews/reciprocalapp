@@ -71,6 +71,48 @@ test('authenticated scholar submits a new venue proposal', async ({ page, contex
 	expect(row).toBe(`${title}|${url}|250|${STEWARD_EMAIL}`);
 });
 
+test('proposing with a minter who has no account warns but does not block', async ({
+	page,
+	context
+}) => {
+	const title = `Unknown-minter-test ${Date.now()}`;
+
+	await login(PROPOSER_EMAIL, page, context);
+	await page.goto('/venues/proposal');
+	await page.waitForLoadState('networkidle');
+
+	const fillField = async (testid: string, value: string) => {
+		const field = page.getByTestId(testid);
+		await field.click();
+		await field.fill(value);
+		await field.blur();
+	};
+
+	await fillField('propose-venue-name', title);
+	await fillField('propose-venue-editors', STEWARD_EMAIL);
+	// Nobody has this address. Approval will hand the currency to whoever approves,
+	// rather than refusing, so proposing must not be blocked over it.
+	await fillField('propose-venue-minters', 'nobody@nowhere.edu');
+	await fillField('propose-venue-url', 'https://example.com/test');
+	await fillField('propose-venue-size', '250');
+	await fillField('propose-venue-rationale', `e2e unknown minter ${Date.now()}`);
+
+	// The warning names the address, and the button stays live.
+	await expect(page.getByTestId('propose-venue-minters-unknown')).toContainText(
+		'nobody@nowhere.edu'
+	);
+	const submitButton = page.getByTestId('propose-venue-submit');
+	await expect(submitButton).toBeEnabled({ timeout: 5_000 });
+	await submitButton.click();
+
+	// And the redirect happens: the form must never be left disabled on the page it
+	// just wrote from, which is what a dropped navigation used to do.
+	await page.waitForURL(/\/venues\/proposal\/[0-9a-f-]+$/);
+
+	const row = sql(`select minters[1] from public.proposals where title = '${title}';`);
+	expect(row).toBe('nobody@nowhere.edu');
+});
+
 test('authenticated scholar supports a proposal', async ({ page, context }) => {
 	const title = `Support-test ${Date.now()}`;
 	const proposalID = seedPendingProposal(title, [STEWARD_EMAIL], [APPROVAL_MINTER_EMAIL]);

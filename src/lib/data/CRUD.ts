@@ -180,6 +180,10 @@ export default abstract class CRUD {
 	abstract registerScholar(scholar: ScholarRow): Scholar;
 
 	abstract findScholar(emailOrORCID: string): Promise<Result<ScholarID | undefined>>;
+	/** Of the given email addresses, those that belong to no scholar. Matches on the
+	 * verified contact email alone, exactly as approve_venue_proposal does, so what a
+	 * proposal form reports and what approval will actually resolve cannot disagree. */
+	abstract findUnknownAddresses(addresses: string[]): Promise<ReadResult<string[]>>;
 	/** Up to three scholars whose name contains the query, for picking a
 	 * co-author whose ORCID the submitter doesn't know. */
 	abstract findScholarsByName(query: string): Promise<ReadResult<ScholarMatch[]>>;
