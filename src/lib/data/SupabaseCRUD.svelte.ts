@@ -1887,9 +1887,10 @@ export default class SupabaseCRUD extends CRUD {
 		papers: number | null
 	): Promise<Result<string>> {
 		// Creating the volunteer record and, when this is the scholar's first
-		// role and compensation is requested, settling the welcome grant both
-		// happen atomically inside the create_volunteer RPC, so the volunteer
-		// can never exist without its welcome grant (or vice versa).
+		// role at the role's venue and compensation is requested, settling the
+		// welcome grant both happen atomically inside the create_volunteer RPC,
+		// so the volunteer can never exist without its welcome grant (or vice
+		// versa).
 		const { data, error } = await this.client.rpc('create_volunteer', {
 			_scholarid: scholarid,
 			_roleid: roleid,
@@ -1908,9 +1909,9 @@ export default class SupabaseCRUD extends CRUD {
 		if (volunteerID === null) return this.error('CreateVolunteer');
 
 		// Report the welcome grant the RPC actually made. Whether one happened
-		// depends on the scholar's first-role status, the venue's payment_free
-		// flag, and its welcome_amount — so the amount comes back from the
-		// database rather than being guessed here.
+		// depends on whether this is the scholar's first role at this venue, the
+		// venue's payment_free flag, and its welcome_amount — so the amount comes
+		// back from the database rather than being guessed here.
 		const granted = numberField(data, 'welcome_granted') ?? 0;
 		return {
 			data: volunteerID,
@@ -1990,9 +1991,9 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async acceptRoleInvite(scholar: ScholarID, id: VolunteerID, response: Response) {
-		// Updating the volunteer response and, when accepting a first role,
-		// settling the welcome grant happen atomically inside the
-		// accept_role_invite RPC.
+		// Updating the volunteer response and, when accepting a first role at
+		// the role's venue, settling the welcome grant happen atomically inside
+		// the accept_role_invite RPC.
 		const { data, error } = await this.client.rpc('accept_role_invite', {
 			_volunteer_id: id,
 			_response: response

@@ -16,7 +16,8 @@ create table if not exists public.volunteers (
 	-- Relevant expertise provided by the scholar for the role
 	expertise text not null,
 	-- If the volunteer role is active or inactive, allowing scholars to unvolunteer, then revolunteer.
-	-- Allows us to keep the record of volunteering without granting newcomer tokens more than once.
+	-- Allows us to keep the record of volunteering without granting the venue's
+	-- newcomer tokens more than once.
 	active boolean default true not null,
 	-- Whether this role as been accepted by the scholar
 	accepted public.invited default 'accepted'::public.invited not null,
@@ -163,8 +164,8 @@ create policy "admins and volunteers can delete" on public.volunteers for DELETE
 -- given" on first volunteering): it draws from the venue's reserve, minting
 -- only any shortfall, and records one approved venue->scholar transaction.
 -- The amount is standing venue policy (venues.welcome_amount, granted at most
--- once per scholar), so no per-grant minter approval is required; minters
--- still approve every other mint. No-op for payment-free venues.
+-- once per scholar per venue), so no per-grant minter approval is required;
+-- minters still approve every other mint. No-op for payment-free venues.
 --
 -- Returns the number of tokens granted (0 on every no-op path), so the caller
 -- can tell the scholar what they actually received. Whether a grant happens
@@ -255,9 +256,9 @@ from
 	public;
 
 -- create_volunteer: insert a volunteer record and, when this is the scholar's
--- first role and compensation is requested, settle the welcome grant —
--- atomically. SECURITY DEFINER, re-implementing the volunteers INSERT policy
--- (venue admin, or self for a non-invite-only role).
+-- first role at the role's venue and compensation is requested, settle the
+-- welcome grant — atomically. SECURITY DEFINER, re-implementing the volunteers
+-- INSERT policy (venue admin, or self for a non-invite-only role).
 create or replace function public.create_volunteer (
 	_scholarid uuid,
 	_roleid uuid,
@@ -300,9 +301,15 @@ begin
 		raise exception 'Already volunteered for this role' using errcode = 'RR004';
 	end if;
 
-	-- Welcome tokens are granted only once, on the scholar's very first role, so
-	-- count their existing volunteer rows before inserting the new one.
-	select count(*) into _existing_count from public.volunteers where scholarid = _scholarid;
+	-- Welcome tokens are standing policy of one venue, so they are granted once
+	-- per scholar per venue: someone who volunteered elsewhere is still a
+	-- newcomer here, and this venue's currency is not one they already hold.
+	-- Count only their existing volunteer rows at this venue, before inserting
+	-- the new one.
+	select count(*) into _existing_count
+	from public.volunteers v
+	join public.roles r on r.id = v.roleid
+	where v.scholarid = _scholarid and r.venueid = _venueid;
 
 	-- Create the volunteer record.
 	insert into public.volunteers (scholarid, roleid, active, accepted, expertise, papers)
@@ -312,8 +319,8 @@ begin
 		'', _papers
 	) returning id into _volunteer_id;
 
-	-- First role and compensation requested? Settle the welcome grant in the
-	-- same transaction, so the volunteer can never exist without it.
+	-- First role at this venue and compensation requested? Settle the welcome
+	-- grant in the same transaction, so the volunteer can never exist without it.
 	if _existing_count = 0 and _compensate then
 		_granted := public._welcome_volunteer(_caller, _scholarid, _roleid, 'Welcome tokens for volunteering');
 	end if;
@@ -332,8 +339,9 @@ grant
 execute on function public.create_volunteer (uuid, uuid, boolean, boolean, integer) to authenticated;
 
 -- accept_role_invite: respond to a role invitation and, when accepting a first
--- role, settle the welcome grant — atomically. SECURITY DEFINER,
--- re-implementing the volunteers UPDATE policy (only the volunteering scholar).
+-- role at the role's venue, settle the welcome grant — atomically. SECURITY
+-- DEFINER, re-implementing the volunteers UPDATE policy (only the volunteering
+-- scholar).
 create or replace function public.accept_role_invite (_volunteer_id uuid, _response public.invited) returns jsonb language plpgsql security definer
 set
 	search_path=public,
@@ -341,6 +349,7 @@ set
 declare
 	_caller uuid;
 	_v public.volunteers;
+	_venueid uuid;
 	_total integer;
 	_granted integer := 0;
 begin
@@ -359,13 +368,20 @@ begin
 		raise exception 'You can only respond to your own invitations';
 	end if;
 
-	-- Count the scholar's volunteer rows to detect a first-role acceptance.
-	select count(*) into _total from public.volunteers where scholarid = _v.scholarid;
+	-- Count the scholar's volunteer rows at this role's venue to detect a
+	-- first-role acceptance here; the grant is once per scholar per venue. The
+	-- invitation row already exists, so a count of 1 means it is their only one.
+	select venueid into _venueid from public.roles where id = _v.roleid;
+	select count(*) into _total
+	from public.volunteers v
+	join public.roles r on r.id = v.roleid
+	where v.scholarid = _v.scholarid and r.venueid = _venueid;
 
 	-- Apply the response and (re)activate the record.
 	update public.volunteers set active = true, accepted = _response where id = _volunteer_id;
 
-	-- Accepting a first invitation earns the welcome grant, recorded atomically.
+	-- Accepting a first invitation at this venue earns its welcome grant,
+	-- recorded atomically.
 	if _total = 1 and _v.accepted = 'invited' and _response = 'accepted' then
 		_granted := public._welcome_volunteer(_v.scholarid, _v.scholarid, _v.roleid, 'Welcome tokens for accepting role invite');
 	end if;

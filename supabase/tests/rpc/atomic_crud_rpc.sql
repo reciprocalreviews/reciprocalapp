@@ -13,7 +13,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(44);
+select plan(47);
 
 -- ---- Shared fixtures (owner context) -----------------------------------------
 select tests.clear_authentication();
@@ -348,12 +348,13 @@ select is(
 	'create_volunteer reports the granted amount on a first role'
 );
 
--- A second role for the same scholar grants nothing, and says so.
+-- A second role at the SAME venue grants nothing, and says so. (:open_role and
+-- :invite_role both belong to :ven, where alice was already welcomed.)
 select is(
 	(select (public.create_volunteer(:'alice', :'open_role', true, true, null)
 		->> 'welcome_granted')::int),
 	0,
-	'create_volunteer reports zero when this is not the scholar''s first role'
+	'create_volunteer reports zero for a second role at a venue that already welcomed the scholar'
 );
 
 -- A payment-free venue has no tokens to grant, and likewise reports zero.
@@ -400,6 +401,38 @@ select lives_ok(
 	'a scholar can self-volunteer for an open role'
 );
 
+-- A scholar who volunteers at one venue is still a newcomer at the next.
+-- welcome_amount is standing policy of a single venue, denominated in that
+-- venue's own currency, so the grant is once per scholar PER VENUE. This
+-- previously counted volunteer rows platform-wide, so anyone who had ever
+-- volunteered anywhere silently received nothing at every venue they joined
+-- afterward. Second venue, its own disjoint minter and admin, welcome of 5.
+select tests.clear_authentication();
+select tests.create_currency(array[(select tests.create_scholar('rpc_minter2@test.local'))]::uuid[]) as cur2 \gset
+select tests.create_venue(:'cur2', array[(select tests.create_scholar('rpc_admin2@test.local'))]::uuid[], 5) as ven2 \gset
+select tests.create_role(:'ven2', 1, null, false, false) as open_role2 \gset
+select tests.create_role(:'ven2', 1, null, false, false) as open_role2b \gset
+select tests.create_role(:'ven2', 1, null, false, true) as invite_role2 \gset
+
+-- :alice already holds roles at :ven and was welcomed there; :ven2 must still
+-- welcome her.
+select tests.authenticate_as(:'alice');
+select is(
+	(select (public.create_volunteer(:'alice', :'open_role2', true, true, null)
+		->> 'welcome_granted')::int),
+	5,
+	'create_volunteer grants a second venue''s welcome tokens to a scholar who volunteers elsewhere'
+);
+
+-- ...and only once there, exactly as at the first venue.
+select is(
+	(select (public.create_volunteer(:'alice', :'open_role2b', true, true, null)
+		->> 'welcome_granted')::int),
+	0,
+	'create_volunteer reports zero for a second role at the new venue'
+);
+select tests.clear_authentication();
+
 --------------------------------------------------------------------------------
 -- accept_role_invite
 --------------------------------------------------------------------------------
@@ -427,6 +460,19 @@ select is(
 	'accepted',
 	'accept_role_invite recorded the acceptance'
 );
+
+-- accept_role_invite gates its grant the same way, and had the same defect.
+-- :bob holds an open role at :ven and none at :ven2, so accepting :ven2's
+-- invitation must earn :ven2's welcome tokens.
+select tests.clear_authentication();
+select tests.create_volunteer(:'bob', :'invite_role2', 'invited') as invite2 \gset
+select tests.authenticate_as(:'bob');
+select is(
+	(select (public.accept_role_invite(:'invite2', 'accepted') ->> 'welcome_granted')::int),
+	5,
+	'accept_role_invite grants a second venue''s welcome tokens'
+);
+select tests.clear_authentication();
 
 --------------------------------------------------------------------------------
 -- approve_venue_proposal

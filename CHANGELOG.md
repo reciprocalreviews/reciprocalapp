@@ -17,6 +17,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Fixed
 
+- **Joining a second venue now grants that venue's welcome tokens.** A venue's welcome amount is its own standing policy, in its own currency, but the grant was only ever made on the very first role a scholar took anywhere on the platform — so anyone who had already volunteered somewhere received nothing everywhere they went afterward, with nothing on screen to say a welcome had been skipped. Each venue now welcomes a newcomer once, on their first role there.
 - Proposing a venue now reliably takes you to the new proposal. The proposal was being created, but the page could silently fail to move you to it and leave the Propose button stuck, with nothing on screen or in the console to say why — a refresh was the only way out.
 - An email address listed twice on a proposal is now recorded once, so someone named twice is no longer emailed the same invitation twice.
 
