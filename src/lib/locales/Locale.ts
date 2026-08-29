@@ -841,6 +841,19 @@ export type LocaleText = {
 			checkbox: {
 				available: string;
 			};
+			/** Which of the platform's OPTIONAL notices this scholar wants. Shown only to
+			 * the scholar themselves, and only once they have a verified address, since
+			 * there is nothing to opt out of before one exists. One entry in `label` per
+			 * template marked `optional` in the email registry — a unit test asserts the
+			 * two stay in step, because a template with no label here would render a
+			 * control with no words on it. */
+			notifications: {
+				header: string;
+				about: string;
+				label: {
+					NewVolunteer: string;
+				};
+			};
 			status: {
 				available: string;
 				unavailable: string;
@@ -1381,6 +1394,8 @@ export type LocaleText = {
 		UpdateScholarEmail: string;
 		VerifyEmail: string;
 		UpdateScholarAvailability: string;
+		LoadNotificationSettings: string;
+		UpdateNotificationSetting: string;
 		CreateProposal: string;
 		EditProposalTitle: string;
 		EditProposalCensus: string;

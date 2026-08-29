@@ -9,7 +9,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(17);
 
 select tests.clear_authentication();
 select tests.create_scholar('era_subject@test.local') as subject \gset
@@ -31,6 +31,16 @@ select tests.clear_authentication();
 
 select tests.create_role(:'ven', 0) as role \gset
 select tests.create_volunteer(:'subject', :'role') as vol \gset
+
+-- Mail about SOMEBODY ELSE that merely copied the subject, and named them as the address a
+-- reply should reach. Neither `scholar` nor `sender` is the subject, so neither branch of
+-- the scrub matches this row -- which is exactly why the address-keyed pass exists. The
+-- send trigger posts to the Resend function via a vault secret the RLS CI job doesn't set,
+-- and none of this depends on delivery, so it is disabled for this rolled-back test.
+alter table public.emails disable trigger send_on_email_insert;
+insert into public.emails (event, scholar, sender, venue, email, cc, reply_to, args)
+values ('NewVolunteer', :'other', null, :'ven', 'era_other@test.local',
+        array['era_subject@test.local'], 'era_subject@test.local', '[]'::jsonb);
 
 -- ---- Export ---------------------------------------------------------------------
 select tests.authenticate_as(:'subject');
@@ -98,6 +108,30 @@ select is(
 		where id = :'subject' and (email like 'erased-%@invalid') and encrypted_password is null),
 	1,
 	'the auth identity is destroyed but the row survives, so the foreign keys hold'
+);
+
+-- An erased address must not survive in mail about other people. It did, until `cc` and
+-- `reply_to` existed to hold it and nothing looked for it there.
+select is(
+	(select cc from public.emails
+		where event = 'NewVolunteer' and venue = :'ven' and email = 'era_other@test.local'),
+	null,
+	'the erased scholar is no longer copied on mail about someone else'
+);
+
+select is(
+	(select reply_to from public.emails
+		where event = 'NewVolunteer' and venue = :'ven' and email = 'era_other@test.local'),
+	null,
+	'the erased scholar is no longer the address replies to that mail would reach'
+);
+
+-- Only the erased scholar's address leaves. The rest of the row belongs to other people.
+select is(
+	(select email from public.emails
+		where event = 'NewVolunteer' and venue = :'ven' and email = 'era_other@test.local'),
+	'era_other@test.local',
+	'the other recipient of that mail keeps their own address'
 );
 
 -- ---- What must NOT be destroyed --------------------------------------------------

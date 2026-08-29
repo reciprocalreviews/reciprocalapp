@@ -33,9 +33,10 @@ import type {
 	VolunteerRow,
 	ThanksID,
 	ThanksRow,
+	NotificationSettingRow,
 	ThanksStatus
 } from '../../data/types';
-import { renderEmail, type EmailType } from '../../email/templates';
+import { renderEmail, type EmailType, type OptionalEmailType } from '../../email/templates';
 import type Locale from '../locales/Locale';
 import CRUD, {
 	type BulkImportResult,
@@ -561,6 +562,36 @@ export default class SupabaseCRUD extends CRUD {
 			if (state) state.setAvailable(available);
 			return {};
 		}
+	}
+
+	/** Which optional notices this scholar has silenced. The RLS policy admits only the
+	 * scholar's own rows, so this comes back empty for anyone else's profile — which is
+	 * fine, because the controls are only rendered for the scholar themselves. */
+	async getNotificationSettings(
+		scholar: ScholarID
+	): Promise<ReadResult<NotificationSettingRow[] | null>> {
+		return this.rows(
+			'LoadNotificationSettings',
+			this.client.from('notification_settings').select().eq('scholar', scholar)
+		);
+	}
+
+	/** Turn one optional notice on or off.
+	 *
+	 * An upsert rather than an insert-or-delete: a row saying `true` is equivalent to no
+	 * row at all, so writing the preference either way is one round trip and the client
+	 * never has to decide whether "back to the default" means deleting. The composite
+	 * primary key is what makes the conflict target unambiguous. */
+	async updateNotificationSetting(
+		scholar: ScholarID,
+		event: OptionalEmailType,
+		enabled: boolean
+	): Promise<Result> {
+		const { error } = await this.client
+			.from('notification_settings')
+			.upsert({ scholar, event, enabled }, { onConflict: 'scholar,event' });
+		if (error) return this.error('UpdateNotificationSetting', error);
+		return {};
 	}
 
 	async updateScholarStatus(id: ScholarID, status: string): Promise<Result> {

@@ -27,7 +27,18 @@ create table if not exists public.emails (
 	-- so those rows carry structured args and the `resend` edge function renders them from
 	-- supabase/functions/_shared/templates.ts at send time. event + args is a complete,
 	-- re-renderable record of what was sent.
-	args jsonb default '[]'::jsonb not null
+	args jsonb default '[]'::jsonb not null,
+	-- The rest of this message's recipients, when it is meant to be ONE shared thread
+	-- rather than N private copies. Null for the vast majority of mail, which has a single
+	-- recipient. Like `email`, it is resolved server-side from scholars.email and is never
+	-- accepted from a caller -- see the note on the missing insert policy below.
+	cc text[],
+	-- Where a reply should go, when that is not the steward inbox. Null means stewards@,
+	-- which is what every message sent before this column existed carried and what the
+	-- `resend` function still substitutes. Never accepted from a caller either: it points
+	-- replies at an address, so a caller-supplied value would be a redirect sitting inside
+	-- genuinely branded mail.
+	reply_to text
 );
 
 alter table public.emails OWNER to "postgres";
@@ -40,6 +51,19 @@ grant all on table public.emails to "service_role";
 
 alter table only public.emails
 add constraint "emails_pkey" primary key (id);
+
+-- An empty array is not "no Cc": it is a list someone built and then emptied, and it would
+-- travel to Resend as `cc: []`, which that API treats as a malformed field rather than an
+-- absent one. Normalizing at the source makes `cc is null` the single unambiguous
+-- "one recipient" test, so neither send_email() nor the edge function has to guess.
+alter table only public.emails
+add constraint "emails_cc_shape" check (
+	cc is null
+	or (
+		cardinality(cc)>0
+		and array_position(cc, null::text) is null
+	)
+);
 
 alter table only public.emails
 add constraint "emails_scholar_fkey" foreign KEY (scholar) references public.scholars (id);
@@ -91,6 +115,11 @@ select
 -- public.queue_email (and public.request_email_verification), which resolve recipients
 -- server-side and render the body from the template registry at send time. The privilege
 -- is revoked too, so a direct attempt fails cleanly with 42501 rather than an empty result.
+--
+-- `cc` and `reply_to` are MORE recipient surface, so they tighten this rule rather than
+-- loosen it: neither may ever be written from a value that crossed the API. Neither
+-- queue_email nor queue_steward_email accepts a parameter for either, and the only writer
+-- is public._notify_new_volunteer, which resolves every address from scholars.email.
 revoke insert on table public.emails
 from
 	authenticated,
@@ -191,6 +220,14 @@ begin
       )::jsonb,
       body:=jsonb_build_object(
         'to', new.email,
+        -- to_jsonb of a null array yields JSON null, which the edge function's `.nullish()`
+        -- schema accepts, so a message with no Cc is indistinguishable from one sent before
+        -- the column existed.
+        'cc', to_jsonb(new.cc),
+        -- Null means "the stewards", which the edge function substitutes. Only SECURITY
+        -- DEFINER functions can set it -- the table's INSERT privilege is revoked from
+        -- authenticated and anon -- which is the same property that keeps `to` safe.
+        'reply_to', new.reply_to,
         'subject', new.subject,
         'message', new.message,
         'event', new.event,

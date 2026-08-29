@@ -30,12 +30,13 @@ import {
 	type PreferenceLevelRow,
 	type ThanksRow,
 	type ThanksID,
+	type NotificationSettingRow,
 	type ThanksStatus
 } from '../../data/types';
 import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
 import type { AuthError, PostgrestError, PostgrestResponse } from '@supabase/supabase-js';
-import type { EmailType } from '../../email/templates';
+import type { EmailType, OptionalEmailType } from '../../email/templates';
 import type SupabaseCRUD from './SupabaseCRUD.svelte';
 import type {
 	AssignmentAwaitingCompensation,
@@ -201,6 +202,23 @@ export default abstract class CRUD {
 
 	/** Update scholar's reviewing status. */
 	abstract updateScholarStatus(id: ScholarID, status: string): Promise<Result>;
+
+	/** Which optional notices this scholar has silenced. Only their own rows are readable,
+	 * so this returns nothing for anyone else's profile — the preference is deliberately
+	 * private, unlike the rest of a scholar's metadata. An absent row means the default,
+	 * which is on. */
+	abstract getNotificationSettings(
+		scholar: ScholarID
+	): Promise<ReadResult<NotificationSettingRow[] | null>>;
+
+	/** Turn one optional notice on or off for this scholar. Only templates marked
+	 * `optional` in the email registry can be silenced; consequential mail — a charge, a
+	 * decline, a verification — carries no such flag and has no setting. */
+	abstract updateNotificationSetting(
+		scholar: ScholarID,
+		event: OptionalEmailType,
+		enabled: boolean
+	): Promise<Result>;
 
 	/** Begin/resend/change contact-email verification for the current scholar (#27).
 	 * Records a pending candidate + token and queues a verification link to `email`,

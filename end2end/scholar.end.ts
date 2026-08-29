@@ -186,3 +186,47 @@ test('scholar gifts tokens to another scholar by ORCID', async ({ page, context 
 test('scholar gifts tokens to another scholar by email', async ({ page, context }) => {
 	await giftToAuthor2(page, context, AUTHOR2_EMAIL, `e2e email gift ${Date.now()}`);
 });
+
+test('a scholar can silence an optional notification', async ({ page, context }) => {
+	// The new-volunteer notice is a courtesy, so it has a setting. Consequential mail — a
+	// charge awaiting approval, a declined transaction — deliberately has none, which is
+	// why the controls are generated from the templates marked `optional` rather than
+	// hand-listed. Absence of a row is the default, and the default is on.
+	sql(`delete from public.notification_settings where scholar = '${AUTHOR1_ID}';`);
+
+	await login(AUTHOR1_EMAIL, page, context);
+	await page.goto(`/scholar/${AUTHOR1_ID}`);
+	await page.waitForLoadState('networkidle');
+
+	const checkbox = page.getByTestId('notify-NewVolunteer');
+	await checkbox.waitFor();
+	// On by default, with nothing stored.
+	await expect(checkbox).toBeChecked();
+
+	await checkbox.click();
+	await expect
+		.poll(() =>
+			sql(
+				`select enabled from public.notification_settings where scholar = '${AUTHOR1_ID}' and event = 'NewVolunteer';`
+			)
+		)
+		.toBe('f');
+
+	// The choice survives a reload, which is the whole point of storing it.
+	await page.reload();
+	await page.waitForLoadState('networkidle');
+	await expect(page.getByTestId('notify-NewVolunteer')).not.toBeChecked();
+
+	// And turning it back on writes the preference rather than leaving the old row.
+	await page.getByTestId('notify-NewVolunteer').click();
+	await expect
+		.poll(() =>
+			sql(
+				`select enabled from public.notification_settings where scholar = '${AUTHOR1_ID}' and event = 'NewVolunteer';`
+			)
+		)
+		.toBe('t');
+
+	sql(`delete from public.notification_settings where scholar = '${AUTHOR1_ID}';`);
+	await logout(page);
+});

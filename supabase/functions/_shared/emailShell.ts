@@ -7,6 +7,9 @@
 // are hand-authored to mirror this same shell (auth emails are rendered by
 // GoTrue, not this code), so keep the two visually in sync when editing.
 //
+// Exactly one thing varies between messages: the footer sentence about where a reply goes,
+// which follows the Reply-To the message actually carries. See `replyToFooter` below.
+//
 // English only: we have no way to solicit a scholar's language preference yet.
 
 /** Reciprocal Reviews brand colors, mirrored from src/app.html. */
@@ -34,7 +37,23 @@ export const FROM_EMAIL = 'Reciprocal Reviews <notifications@reciprocal.reviews>
 const WORDMARK = 'Reciprocal Reviews';
 // Says who to talk to, not just who sent it. Every email is a potential support
 // conversation, and this is the only place the recipient is told that replying works.
-const FOOTER = `Sent by Reciprocal Reviews. Reply to this email and a steward will see it, or write <a href="mailto:${SUPPORT_EMAIL}" style="color: ${MUTED_COLOR};">${SUPPORT_EMAIL}</a>.`;
+const STEWARD_FOOTER = `Sent by Reciprocal Reviews. Reply to this email and a steward will see it, or write <a href="mailto:${SUPPORT_EMAIL}" style="color: ${MUTED_COLOR};">${SUPPORT_EMAIL}</a>.`;
+
+/**
+ * The footer for a message that carries its OWN `Reply-To` — currently a notice about a
+ * specific person, addressed so its reader can answer them directly.
+ *
+ * The steward wording would be false here, and *quietly* false: the reader would believe a
+ * reply had reached support when it had actually gone to a stranger. So name the real reply
+ * address, say that Reply All keeps everyone copied on the thread, and keep SUPPORT_EMAIL
+ * visible as the separate route to help.
+ *
+ * The address arrives as data and lands in an `href`, so it is escaped.
+ */
+function replyToFooter(replyTo: string): string {
+	const address = escapeHtml(replyTo);
+	return `Sent by Reciprocal Reviews. Replying to this email goes to <a href="mailto:${address}" style="color: ${MUTED_COLOR};">${address}</a> — Reply All also reaches everyone copied on it. For help with Reciprocal Reviews, write <a href="mailto:${SUPPORT_EMAIL}" style="color: ${MUTED_COLOR};">${SUPPORT_EMAIL}</a>.`;
+}
 
 /** Where the wordmark links when no origin is supplied. Declared here rather
  * than imported from templates.ts to keep this module dependency-free, as the
@@ -114,13 +133,19 @@ export function htmlToText(html: string): string {
 export function wrapEmail({
 	subject,
 	bodyHtml,
-	origin = DEFAULT_ORIGIN
+	origin = DEFAULT_ORIGIN,
+	replyTo
 }: {
 	subject: string;
 	bodyHtml: string;
 	/** Where the wordmark links. Defaults to production so mail from a project
 	 * that never configured `site_url` is unchanged. */
 	origin?: string;
+	/** The address this message's replies actually reach, when that is not the steward
+	 * inbox. Changes the footer and nothing else — the `Reply-To` header itself is set by
+	 * the caller that posts to Resend. Absent for every message that carries no override,
+	 * which is nearly all of them. */
+	replyTo?: string;
 }): string {
 	return `<!doctype html>
 <html lang="en">
@@ -147,7 +172,7 @@ ${bodyHtml}
 						</tr>
 						<tr>
 							<td style="padding: 20px 32px; border-top: 1px solid ${BORDER_COLOR}; color: ${MUTED_COLOR}; font-size: 12px; line-height: 1.5;">
-								${FOOTER}
+								${replyTo ? replyToFooter(replyTo) : STEWARD_FOOTER}
 							</td>
 						</tr>
 					</table>
@@ -165,8 +190,12 @@ ${bodyHtml}
 export function renderBrandedEmail(
 	subject: string,
 	body: string,
-	origin: string = DEFAULT_ORIGIN
+	origin: string = DEFAULT_ORIGIN,
+	// Trailing and optional so the `remind` cron keeps compiling against the
+	// three-argument form. Every reminder's reply path genuinely IS the stewards, so it
+	// wants the default footer; a per-message Reply-To reminder would pass this.
+	replyTo?: string
 ): { html: string; text: string } {
-	const html = wrapEmail({ subject, bodyHtml: paragraphsToHtml(body), origin });
+	const html = wrapEmail({ subject, bodyHtml: paragraphsToHtml(body), origin, replyTo });
 	return { html, text: htmlToText(html) };
 }

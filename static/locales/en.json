@@ -1173,7 +1173,7 @@
 				"email": {
 					"label": "email",
 					"placeholder": "email",
-					"note": "Your email is private and used only to send notifications. Saving a new address sends a verification link (valid 15 minutes); you'll receive notifications only after you verify it.",
+					"note": "Your email is where notifications go, and it's visible to others on Reciprocal Reviews so editors can reach you. Saving a new address sends a verification link (valid 15 minutes); you'll receive notifications only after you verify it.",
 					"invalid": "Must be a valid email"
 				}
 			},
@@ -1187,6 +1187,13 @@
 			},
 			"checkbox": {
 				"available": "I am available to review."
+			},
+			"notifications": {
+				"header": "Notifications",
+				"about": "Some emails are courtesies you can turn off. Anything consequential — a charge awaiting your approval, a declined transaction, an assignment — is always sent.",
+				"label": {
+					"NewVolunteer": "Email me when someone volunteers at a venue where I hold its top role."
+				}
 			},
 			"status": {
 				"available": "Available",
@@ -1837,6 +1844,8 @@
 		"UpdateScholarEmail": "Unable to send a verification email",
 		"VerifyEmail": "Unable to verify your email",
 		"UpdateScholarAvailability": "Unable to update your availability",
+		"LoadNotificationSettings": "Unable to load your notification settings",
+		"UpdateNotificationSetting": "Unable to change that notification setting",
 		"CreateProposal": "Unable to create a venue proposal",
 		"EditProposalTitle": "Unable to edit the proposal title",
 		"EditProposalCensus": "Unable to edit the proposal census",

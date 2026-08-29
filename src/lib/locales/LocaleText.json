@@ -592,6 +592,9 @@
             "LoadCurrency": {
               "type": "string"
             },
+            "LoadNotificationSettings": {
+              "type": "string"
+            },
             "LoadPreferenceLevel": {
               "type": "string"
             },
@@ -722,6 +725,9 @@
             "UpdateCurrencyName": {
               "type": "string"
             },
+            "UpdateNotificationSetting": {
+              "type": "string"
+            },
             "UpdateRoleAmount": {
               "type": "string"
             },
@@ -777,6 +783,8 @@
             "UpdateScholarEmail",
             "VerifyEmail",
             "UpdateScholarAvailability",
+            "LoadNotificationSettings",
+            "UpdateNotificationSetting",
             "CreateProposal",
             "EditProposalTitle",
             "EditProposalCensus",
@@ -3035,6 +3043,36 @@
                   ],
                   "type": "object"
                 },
+                "notifications": {
+                  "additionalProperties": false,
+                  "description": "Which of the platform's OPTIONAL notices this scholar wants. Shown only to the scholar themselves, and only once they have a verified address, since there is nothing to opt out of before one exists. One entry in `label` per template marked `optional` in the email registry — a unit test asserts the two stay in step, because a template with no label here would render a control with no words on it.",
+                  "properties": {
+                    "about": {
+                      "type": "string"
+                    },
+                    "header": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "NewVolunteer": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "NewVolunteer"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "header",
+                    "about",
+                    "label"
+                  ],
+                  "type": "object"
+                },
                 "paragraph": {
                   "additionalProperties": false,
                   "properties": {
@@ -3132,6 +3170,7 @@
                 "field",
                 "card",
                 "checkbox",
+                "notifications",
                 "status",
                 "paragraph",
                 "privacy"

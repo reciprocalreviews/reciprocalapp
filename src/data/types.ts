@@ -35,3 +35,4 @@ export type ConflictRow = Tables['conflicts']['Row'];
 export type ThanksRow = Tables['thanks']['Row'];
 export type ThanksID = ThanksRow['id'];
 export type ThanksStatus = Database['public']['Enums']['thanks_status'];
+export type NotificationSettingRow = Tables['notification_settings']['Row'];

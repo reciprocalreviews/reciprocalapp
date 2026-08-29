@@ -8,6 +8,9 @@ const VOLUNTEER_EMAIL = SEED.scholars.r1.email; // already a Reviewer in the see
 const FRESH_SCHOLAR_EMAIL = SEED.scholars.author1.email; // no volunteer records in the seed
 const INVITEE_EMAIL = SEED.scholars.author2.email;
 const INVITEE_ORCID = SEED.scholars.author2.orcid;
+// Not a holder of the venue's top role in the seed; the new-volunteer test makes them one
+// so there is somebody to Cc.
+const SECOND_EDITOR_EMAIL = SEED.scholars.r2.email;
 
 test('editor creates a role, edits its description, and deletes it', async ({ page, context }) => {
 	await login(EDITOR_EMAIL, page, context);
@@ -405,4 +408,90 @@ test('volunteer filter on /venue/[id]/volunteers narrows the table by name, emai
 	await expect
 		.poll(async () => page.locator('tr[data-testid^="volunteer-row-2-"]').count())
 		.toBeGreaterThan(1);
+});
+
+test("volunteering tells the venue's top role on one thread that replies to the newcomer", async ({
+	page,
+	context
+}) => {
+	// A scholar volunteered and nobody was told: the venue found out when someone happened
+	// to open its volunteers list. The notice has to reach the holders of the venue's
+	// priority-0 role as ONE message — the longest-standing holder addressed, the rest
+	// copied — with Reply going to the newcomer rather than to the stewards.
+	const scholarID = sql(`select id from public.scholars where email = '${FRESH_SCHOLAR_EMAIL}';`);
+	const editorID = sql(`select id from public.scholars where email = '${EDITOR_EMAIL}';`);
+	const secondID = sql(`select id from public.scholars where email = '${SECOND_EDITOR_EMAIL}';`);
+	const topRole = sql(
+		`select id from public.roles where venueid = '${VENUE_ID}' and priority = 0 order by id limit 1;`
+	);
+
+	// This test asserts an EXACT recipient list, so it states its preconditions rather than
+	// inheriting them. The invitation tests above leave scholars accepted on this very role
+	// — by design, since the convention in this file is to reset at the start of a test
+	// rather than at the end — and each of them would legitimately appear in the Cc. So set
+	// everyone else on the role aside for the duration, and put them back afterwards.
+	const strangers = sql(
+		`select coalesce(string_agg(id::text, ''','''), '') from public.volunteers where roleid = '${topRole}' and active and accepted = 'accepted' and scholarid not in ('${editorID}', '${secondID}');`
+	);
+	if (strangers) sql(`update public.volunteers set active = false where id in ('${strangers}');`);
+
+	// The seed venue has exactly ONE accepted, active holder of its top role, so a second
+	// one has to exist for there to be anything to Cc. Joined "now", which is later than
+	// the seed's, so the ordering the notice depends on is unambiguous.
+	sql(`delete from public.volunteers where scholarid = '${scholarID}';`);
+	sql(
+		`delete from public.transactions where to_scholar = '${scholarID}' and purpose = 'Welcome tokens for volunteering';`
+	);
+	sql(`delete from public.emails where event = 'NewVolunteer' and venue = '${VENUE_ID}';`);
+	sql(`delete from public.notification_settings where scholar = '${secondID}';`);
+	sql(`delete from public.volunteers where scholarid = '${secondID}' and roleid = '${topRole}';`);
+	sql(
+		`insert into public.volunteers (scholarid, roleid, expertise, active, accepted, created_at) values ('${secondID}', '${topRole}', '', true, 'accepted', now());`
+	);
+
+	// One row per notice, so read the most recent rather than counting: the other tests in
+	// this file also self-volunteer, and each of those now queues a notice too.
+	const latest = () =>
+		sql(
+			`select email || ' | ' || coalesce(array_to_string(cc, ','), '') || ' | ' || coalesce(reply_to, '') from public.emails where event = 'NewVolunteer' and venue = '${VENUE_ID}' order by time_sent desc limit 1;`
+		);
+
+	// try/finally so a failed assertion cannot leave an extra holder on the venue's top
+	// role. Later files assume the seed's single-editor venue, and a leak from here showed
+	// up over there as an unrelated-looking timeout.
+	try {
+		await login(FRESH_SCHOLAR_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_ID}`);
+		await page.waitForLoadState('networkidle');
+		await page.getByTestId('volunteer-for-role').click();
+		await expect(page.getByTestId('volunteered-for-role')).toBeVisible();
+
+		await expect
+			.poll(latest)
+			.toBe(`${EDITOR_EMAIL} | ${SECOND_EDITOR_EMAIL} | ${FRESH_SCHOLAR_EMAIL}`);
+
+		// The same again with the second holder opted out. They should be neither addressed
+		// nor copied, and with only one recipient left there is no Cc at all — an empty
+		// array would be a malformed field to Resend, which the emails_cc_shape constraint
+		// forbids storing in the first place.
+		sql(`delete from public.volunteers where scholarid = '${scholarID}';`);
+		sql(`delete from public.emails where event = 'NewVolunteer' and venue = '${VENUE_ID}';`);
+		sql(
+			`insert into public.notification_settings (scholar, event, enabled) values ('${secondID}', 'NewVolunteer', false) on conflict (scholar, event) do update set enabled = false;`
+		);
+
+		await page.reload();
+		await page.waitForLoadState('networkidle');
+		await page.getByTestId('volunteer-for-role').click();
+		await expect(page.getByTestId('volunteered-for-role')).toBeVisible();
+
+		await expect.poll(latest).toBe(`${EDITOR_EMAIL} |  | ${FRESH_SCHOLAR_EMAIL}`);
+	} finally {
+		// Leave the venue as this test found it.
+		sql(`delete from public.notification_settings where scholar = '${secondID}';`);
+		sql(`delete from public.volunteers where scholarid = '${secondID}' and roleid = '${topRole}';`);
+		sql(`delete from public.emails where event = 'NewVolunteer' and venue = '${VENUE_ID}';`);
+		if (strangers) sql(`update public.volunteers set active = true where id in ('${strangers}');`);
+	}
+	await logout(page);
 });

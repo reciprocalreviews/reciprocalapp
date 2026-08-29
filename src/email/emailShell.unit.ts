@@ -114,4 +114,47 @@ describe('renderBrandedEmail', () => {
 		expect(html).toContain('Hello there.');
 		expect(text).toContain('Hello there.');
 	});
+
+	// A message that carries its own Reply-To must not repeat the steward promise. It
+	// would be false, and *quietly* false: the reader would believe a reply had reached
+	// support when it had actually gone to a stranger.
+	it('names the real reply address when the message carries its own', () => {
+		const { html } = renderBrandedEmail('Subject', 'Body.', undefined, 'newbie@uni.edu');
+		expect(html).toContain('mailto:newbie@uni.edu');
+		expect(html).not.toContain('a steward will see it');
+	});
+
+	// Support has to stay reachable. The reply goes to a person; a question about the
+	// platform itself still belongs with the stewards, so both addresses appear.
+	it('still names the steward inbox as the route to support', () => {
+		const { html } = renderBrandedEmail('Subject', 'Body.', undefined, 'newbie@uni.edu');
+		expect(html).toContain(SUPPORT_EMAIL);
+	});
+
+	// Both addresses live only in href attributes, which htmlToText strips.
+	it('keeps both addresses readable in the text alternative', () => {
+		const { text } = renderBrandedEmail('Subject', 'Body.', undefined, 'newbie@uni.edu');
+		expect(text).toContain('newbie@uni.edu');
+		expect(text).toContain(SUPPORT_EMAIL);
+	});
+
+	it('falls back to the steward footer when there is no reply address', () => {
+		// A volunteer with no verified contact address leaves reply_to null, and the
+		// footer has to be correct for that case too.
+		const { html } = renderBrandedEmail('Subject', 'Body.', undefined, undefined);
+		expect(html).toContain('a steward will see it');
+	});
+
+	// The address reaches the shell as data and lands inside an href, so a value carrying
+	// a quote must not be able to close the attribute and add one of its own.
+	it('escapes the reply address rather than letting it break out of the href', () => {
+		const { html } = renderBrandedEmail(
+			'Subject',
+			'Body.',
+			undefined,
+			'evil@x.com" onclick="alert(1)'
+		);
+		expect(html).not.toContain('onclick="alert(1)"');
+		expect(html).toContain('&quot;');
+	});
 });

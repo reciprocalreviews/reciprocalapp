@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { renderEmail } from './templates';
+import { Emails, OptionalEmails, renderEmail, type EmailType } from './templates';
+import en from '../../static/locales/en.json';
 
 describe('renderEmail', () => {
 	it('escapes markup in argument values', () => {
@@ -92,5 +93,68 @@ describe('renderEmail', () => {
 		const { message } = renderEmail('VenueApproved', ['Only one arg']);
 		expect(message).not.toContain('undefined');
 		expect(message).toContain('$2');
+	});
+});
+
+describe('NewVolunteer', () => {
+	const args = ['Ada Lovelace', 'Reviewer', 'TOCE', 'scholar-id', 'venue-id', 'Area Chair'];
+
+	// The priority-0 role is called whatever the venue calls it — "Editor", "Area Chair",
+	// "Associate Editor". Writing a word into the prose would be wrong for most venues, so
+	// the name is an argument resolved from the row.
+	it("names the venue's own word for its top role", () => {
+		const { message } = renderEmail('NewVolunteer', args);
+		expect(message).toContain('Area Chair');
+		expect(message).not.toContain('Editor');
+	});
+
+	it('names the volunteer, the role they took, and the venue', () => {
+		const { subject, message } = renderEmail('NewVolunteer', args);
+		expect(subject).toContain('TOCE');
+		expect(message).toContain('Ada Lovelace');
+		expect(message).toContain('Reviewer');
+	});
+
+	it('links to the volunteer and to the venue roster', () => {
+		const { message } = renderEmail('NewVolunteer', args, 'http://localhost:5173');
+		expect(message).toContain('http://localhost:5173/scholar/scholar-id');
+		expect(message).toContain('http://localhost:5173/venue/venue-id/volunteers');
+	});
+
+	// The name is the one value here a scholar chooses, and it lands in genuinely branded
+	// mail from notifications@reciprocal.reviews. A live link in it would be phishing.
+	it("defangs a link hiding in the volunteer's name", () => {
+		const { message } = renderEmail('NewVolunteer', ['https://evil.example', ...args.slice(1)]);
+		expect(message).toContain('https[:]//evil.example');
+		expect(message).not.toContain('https://evil.example');
+	});
+
+	it('substitutes every placeholder', () => {
+		const { subject, message } = renderEmail('NewVolunteer', args);
+		expect(subject).not.toMatch(/\$\d/);
+		expect(message).not.toMatch(/\$\d/);
+	});
+});
+
+describe('optional notices', () => {
+	// The registry decides what a scholar may silence, and the settings interface is
+	// generated from it. A template marked optional with no label would render a control
+	// with no words on it; a label with no template would be a setting for nothing.
+	it('gives every silenceable notice a label on the scholar profile', () => {
+		const labels = Object.keys(en.page.scholar.notifications.label).sort();
+		expect([...OptionalEmails].sort()).toEqual(labels);
+	});
+
+	// Consequential mail is not a courtesy. Someone who has been charged, declined, or
+	// assigned does not get to opt out of being told.
+	it('leaves consequential mail with no opt-out', () => {
+		for (const event of [
+			'SubmissionCharged',
+			'TransactionDeclined',
+			'VerifyEmail',
+			'WorkCompensated'
+		])
+			expect(OptionalEmails).not.toContain(event as EmailType);
+		expect(Object.keys(Emails).length).toBeGreaterThan(OptionalEmails.length);
 	});
 });

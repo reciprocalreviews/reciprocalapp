@@ -59,6 +59,11 @@ export const load: PageLoad = async ({ parent, params }) => {
 		approver?.map((r) => r.id) || []
 	);
 
+	// Which optional notices this scholar has silenced. The RLS policy admits only their
+	// own rows, so this is empty when viewing someone else's profile — which is right,
+	// since the controls are rendered only for the scholar themselves.
+	const { data: notifications } = await db.getNotificationSettings(scholarID);
+
 	return {
 		commitments: volunteers,
 		venues,
@@ -72,6 +77,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		outgoingPending: outgoingPending,
 		reviews: reviews,
 		approvals: approvals,
-		compensating: compensating
+		compensating: compensating,
+		notifications: notifications
 	};
 };

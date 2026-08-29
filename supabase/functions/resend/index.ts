@@ -17,6 +17,15 @@ const ResendBodySchema = z.object({
 	message: z.string().nullish(),
 	event: z.string().nullish(),
 	args: z.array(z.string()).nullish(),
+	// The rest of the recipients, when a message is meant to be ONE shared thread rather
+	// than N private copies. Like `to`, these are resolved inside the database from
+	// scholars.email — the emails table's INSERT privilege is revoked from authenticated
+	// and anon, so no caller can name them.
+	cc: z.array(z.string().email()).nullish(),
+	// Where a reply should go, when that is not the steward inbox. Same provenance as `cc`
+	// and the same reason it is safe: only the database can set it. Absent means stewards@,
+	// which is what every message sent before this field existed carried.
+	reply_to: z.string().email().nullish(),
 	// The application origin the rendered links should point at, from the
 	// `site_url` vault secret via send_email(). Only the database can set it —
 	// this function refuses callers without a project secret key — so it is
@@ -45,6 +54,8 @@ const handler = async (request: Request): Promise<Response> => {
 		// Validate the message body
 		const parsed = ResendBodySchema.parse(bodyJSON);
 		const { to } = parsed;
+		const cc = parsed.cc ?? [];
+		const replyTo = parsed.reply_to ?? undefined;
 
 		// Render from the template registry when the queuing code did not supply a body.
 		// An unknown event is a programming error, not something to deliver blank.
@@ -67,7 +78,8 @@ const handler = async (request: Request): Promise<Response> => {
 		if (isLocal) {
 			console.log('--- email sent ---');
 			console.log('to: ', to);
-			console.log('reply-to:', SUPPORT_EMAIL);
+			if (cc.length > 0) console.log('cc: ', cc.join(', '));
+			console.log('reply-to:', replyTo ?? SUPPORT_EMAIL);
 			console.log('subject:', subject);
 			console.log('message:', message);
 			console.log('---');
@@ -76,7 +88,14 @@ const handler = async (request: Request): Promise<Response> => {
 		} else {
 			// Wrap the stored plain-text body in the shared branded shell, sending
 			// both an HTML version and a text/plain alternative.
-			const { html, text } = renderBrandedEmail(subject, message, parsed.origin ?? undefined);
+			// The footer follows the header: a message with its own Reply-To says so, rather
+			// than repeating the steward promise that would be false for it.
+			const { html, text } = renderBrandedEmail(
+				subject,
+				message,
+				parsed.origin ?? undefined,
+				replyTo
+			);
 
 			// Post to the resend API using the API key
 			const res = await fetch('https://api.resend.com/emails', {
@@ -90,8 +109,15 @@ const handler = async (request: Request): Promise<Response> => {
 					// Mail is sent by a robot, but a reply has to reach people. Without this
 					// header every reply to a notification — a question about a proposal, a
 					// disputed transaction — is delivered to an unmonitored mailbox and lost.
-					reply_to: SUPPORT_EMAIL,
+					// Most mail's replies belong with the stewards; a notice ABOUT a specific
+					// person carries that person instead, so its reader can hit Reply and
+					// answer them rather than filing a support request.
+					reply_to: replyTo ?? SUPPORT_EMAIL,
 					to: to,
+					// Spread rather than `cc: cc`. Resend treats `cc: []` as a malformed
+					// field rather than an absent one, and an absent header is what every
+					// single-recipient email has always sent.
+					...(cc.length > 0 ? { cc } : {}),
 					subject: subject,
 					html,
 					text

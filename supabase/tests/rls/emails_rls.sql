@@ -20,7 +20,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(14);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -44,6 +44,34 @@ insert into public.emails (event, scholar, sender, venue, email, subject, messag
 values ('test event', :'recipient', :'sender', :'ven',
         'email_recipient@test.local', 'Test Subject', 'Test message')
 returning id as eml \gset
+
+-- The same, but copying the outsider, so the Cc visibility asymmetry below has a row.
+insert into public.emails (event, scholar, sender, venue, email, cc, subject, message)
+values ('test event', :'recipient', :'sender', :'ven',
+        'email_recipient@test.local', array['email_outsider@test.local'],
+        'Copied Subject', 'Copied message')
+returning id as copied \gset
+
+-- ---- Cc visibility, deliberately asymmetric -----------------------------------
+-- `scholar` names only the To recipient, so a Cc'd scholar who is neither the sender nor a
+-- venue admin cannot read the row of a message they actually received. That is a decision
+-- rather than an oversight: nothing in the application reads this table, venue admins
+-- already see these rows through the isAdmin branch, and widening the policy by address
+-- would mean resolving the reader's own scholars.email in a correlated subquery on every
+-- row read, for no consumer. The one place it genuinely mattered — a scholar's own data
+-- export — is handled inside export_scholar_data, which is SECURITY DEFINER and reads
+-- past this policy.
+select tests.authenticate_as(:'outsider');
+select is_empty(
+	$$ select 1 from public.emails where id = $$ || quote_literal(:'copied'),
+	'a scholar who was merely copied cannot read the email row'
+);
+
+select tests.authenticate_as(:'vadmin');
+select isnt_empty(
+	$$ select 1 from public.emails where id = $$ || quote_literal(:'copied'),
+	'a venue admin can still see a message that copied someone'
+);
 
 -- ---- Policy shape -------------------------------------------------------------
 select policies_are(

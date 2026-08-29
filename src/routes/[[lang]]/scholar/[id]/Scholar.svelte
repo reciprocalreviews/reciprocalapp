@@ -3,12 +3,14 @@
 		AssignmentRow,
 		CurrencyID,
 		CurrencyRow,
+		NotificationSettingRow,
 		ScholarRow,
 		SubmissionRow,
 		TokenRow,
 		TransactionRow,
 		VenueRow
 	} from '$data/types';
+	import { OptionalEmails } from '$lib/../email/templates';
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
@@ -51,7 +53,8 @@
 		venues,
 		reviews,
 		approvals,
-		compensating
+		compensating,
+		notifications
 	}: {
 		scholar: Scholar;
 		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
@@ -67,6 +70,10 @@
 		reviews: (AssignmentRow & { submissions: SubmissionRow })[] | null;
 		approvals: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
 		compensating: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
+		/** This scholar's own notification preferences. Only ever populated for the scholar
+		 * themselves — the RLS policy hides everyone else's — and only deviations from the
+		 * default are stored, so an absent row means the notice is on. */
+		notifications: NotificationSettingRow[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -75,6 +82,16 @@
 
 	// Editable if the user is the scholar being viewed.
 	let editable = $derived(auth().getUserID() === scholar.getID());
+
+	/** One control per template the email registry marks `optional`, so a notice becomes
+	 * silenceable by carrying the flag rather than by anyone remembering to add a checkbox.
+	 * Absence of a row is the default, and the default is on. */
+	let notificationControls = $derived(
+		OptionalEmails.map((event) => ({
+			event,
+			on: notifications?.find((setting) => setting.event === event)?.enabled ?? true
+		}))
+	);
 	let anonymous = $derived(editable && scholar.getName() === null);
 </script>
 
@@ -262,6 +279,19 @@
 		{#if scholar.getEmail() !== null}
 			<Subheader icon={SettingsLabel} text={(l) => l.page.scholar.header.settings}></Subheader>
 			<VerifyEmail current={scholar.getEmail()} />
+
+			<!-- Only shown once there is a verified address: there is nothing to opt out of
+			     before mail can reach you at all. -->
+			<Subheader icon={SettingsLabel} text={(l) => l.page.scholar.notifications.header}></Subheader>
+			<Paragraph text={(l) => l.page.scholar.notifications.about} />
+			{#each notificationControls as control (control.event)}
+				<Checkbox
+					on={control.on}
+					change={(on) => db().updateNotificationSetting(scholar.getID(), control.event, on)}
+					label={(l) => l.page.scholar.notifications.label[control.event]}
+					testid="notify-{control.event}"
+				/>
+			{/each}
 		{/if}
 
 		{#if editable}

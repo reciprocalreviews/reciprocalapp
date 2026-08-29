@@ -176,6 +176,8 @@ The authoritative schema lives in [`supabase/schemas/tokens.sql`](supabase/schem
 
 - [x] A `Scholar` can **download everything** the platform holds about them, as a single file: their profile, volunteering, submissions, assignments, conflicts, transactions, and the history of where their tokens have been.
 - [x] A `Scholar` can **erase their account**. Their name, email address, and ORCID iD are permanently removed and they can no longer sign in.
+- [x] Erasure reaches an address wherever mail put it — as the recipient, as a **copied** party on a notice about somebody else, or as the address a notice replied to. The last two arrived with shared-thread notices and are not reachable from the erased scholar's own rows, so they are scrubbed by address; only their address leaves those messages, since the rest of each one belongs to the other people on it.
+- [x] The download likewise counts mail a scholar was **copied on**, not only mail addressed to them, along with any notification preferences they have set.
 - [x] Erasure does **not** delete their reviewing and payment records, and this is deliberate rather than a limitation. Those records are part of other scholars' histories too — the venue that paid for a review, the co-authors on a submission, the reviewer who received a thank-you note — so they remain, with no name attached to them. The tokens a scholar earned stay valid currency for the venues that issued them, because destroying them would quietly change what those venues hold.
 - [x] A steward can act on either request for a scholar who asks out of band, since not everyone who wants their data removed still has an account they can sign into.
 - [x] An erasure is remembered, so that recovering the platform from a backup cannot bring someone back who asked to be forgotten.
@@ -384,6 +386,7 @@ When a venue is **approved** state:
 - [x] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
 - [x] _`scholar`_: Change expertise keywords for a role for the venue
 - [x] _`scholar`_: Change paper count for a role for the venue
+- [x] _`scholar`_: When a scholar volunteers for an open role, the holders of the venue's top-priority role are emailed so somebody can welcome them (see Notifications). A scholar who would rather not receive these can turn them off on their profile.
 - [x] _`scholar`_: Stop volunteering for a role, and later resume. Volunteering is a **permanent record that deactivates rather than disappears** — nobody, not the scholar and not a venue admin, can delete it. That is what keeps a venue's welcome grant to a one-time thing: the grant is decided by whether the scholar has volunteered at this venue before, so a record that could be erased, or moved to another venue's role, would be a way to be welcomed twice.
 
 - [x] _`editor`_: Modify the venue name, description
@@ -496,11 +499,29 @@ It should also support assignment decisions:
 All emails RR sends — contact-email verification and the transactional and reminder emails below — share one simple branded visual identity so they read as coming from the same platform. Their links point at the environment that sent them, so mail from a test deployment leads back to that deployment; the whole model depends on people following links out of email, and links that always led to production made every such flow impossible to rehearse anywhere else. (Sign-in is ORCID, so RR no longer sends authentication emails.) These templates are English only for now: RR has no mechanism yet to solicit a scholar's language preference. ([#56](https://github.com/reciprocalreviews/reciprocalapp/issues/56))
 
 Every email RR sends is **replyable**. Mail is sent from `notifications@reciprocal.reviews`,
-but carries `Reply-To: stewards@reciprocal.reviews`, and its footer says so. A notification
-is therefore a valid starting point for a conversation: a scholar who does not understand
-why they were charged, or an editor with a question about a proposal, can answer the email
-they are looking at instead of hunting for a contact address. Without this, every reply to
-an RR notification went to an unmonitored mailbox and was lost.
+and by default carries `Reply-To: stewards@reciprocal.reviews`. A notification is therefore a
+valid starting point for a conversation: a scholar who does not understand why they were
+charged, or an editor with a question about a proposal, can answer the email they are looking
+at instead of hunting for a contact address. Without this, every reply to an RR notification
+went to an unmonitored mailbox and was lost.
+
+A notice whose whole point is to start a conversation with a **specific person** replies to
+that person instead — currently just the new-volunteer notice below, which carries the
+newcomer's own address so a Reply is the welcome rather than a support request. The footer
+follows the header rather than repeating a fixed promise: it names whichever address a reply
+will actually reach, and names `stewards@` separately as the route to help. A footer that
+said "a steward will see it" on a message that replies to a stranger would be worse than no
+footer at all, because the reader would believe it.
+
+Most RR email is **consequential** — a charge awaiting your approval, a declined
+transaction, an assignment, a payout, a verification link — and has no opt-out: someone who
+has been billed does not get to opt out of being told. A few are **courtesies**, and those a
+scholar can silence from their profile. Which is which is decided in the email template
+registry itself rather than in a list kept somewhere else, so a notice becomes silenceable by
+being marked as one, and the settings on a scholar's profile are generated from that mark. A
+preference exists only where it deviates from the default, and the default is on; the
+controls appear only once a scholar has a verified address, since there is nothing to opt out
+of before mail can reach them.
 
 Notifications addressed to the **stewards** as a group (`ProposalCreatedStewards`,
 `ReconciliationFailed`) go to that one shared address rather than to each steward's personal
@@ -532,6 +553,7 @@ RR will also send transactional emails in response to user actions:
 - [x] When a `Submission` is created, email every co-author carrying a non-zero charge that a payment awaits their approval. The submitter's own charge settles as part of creating the submission, so only the others are notified; without this a co-author learned of the charge only by visiting their dashboard, or by the submitter telling them out of band.
 - [x] When a `Submission` is created, tell the venue's editors about it. Which message depends on what RR could do: the editor it assigned is told they are editing it, and if it could assign nobody, every editor and admin of the venue is told a submission is waiting and can be claimed. Without this a submission's arrival was announced only to the co-authors who owed money for it — a solo-author submission, or any submission at a payment-free venue, was announced to nobody at all.
 - [x] A bulk import sends one message rather than one per row. Two hundred imported manuscripts are one piece of news, not two hundred.
+- [x] When a `Scholar` volunteers for one of a venue's **open** roles, tell the holders of the venue's top-priority role. This is the argument for the submission notices above applied to the moment a community _gains_ a member: previously the venue found out when somebody happened to open its volunteers list, and a newcomer who volunteered heard nothing back, with no signal that anyone had noticed. It is **one message, not one each**: the longest-standing holder of the role is addressed and the rest are copied, so the welcome is a single shared thread rather than several private ones that never see each other. Its `Reply-To` is the **new volunteer's** address, so answering it _is_ the welcome. Only self-volunteering announces anything — an admin adding someone is that admin's own action, and an invitation is answered to the people who sent it. The message names the venue's own word for its top role ("Editor", "Area Chair", "Associate Editor"), because that is data and not a fixed title. A volunteer with no verified contact address is still announced, since the news is what matters and their profile is exactly what a holder needs; the message then simply has no reply path, and says so.
 - [x] When a role approver completes an assignment and tokens are paid out, email the compensated scholar with the role name and amount paid.
 - [x] When a role approver attempts to pay out but the venue's reserve is too small, email the venue's _`minter`_(s) with the shortfall and a link to the venue's transactions page where the auto-recorded proposed mint awaits approval.
 - [x] ([#22](https://github.com/reciprocalreviews/reciprocalapp/issues/22)) When an author thanks their reviewers (see below), email the relevant parties: the venue's editors/admins when a note awaits review, the reviewers when a note is shared, and the author if a note is declined (with the reason).

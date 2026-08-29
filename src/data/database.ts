@@ -273,10 +273,12 @@ export type Database = {
       emails: {
         Row: {
           args: Json
+          cc: string[] | null
           email: string
           event: string
           id: string
           message: string | null
+          reply_to: string | null
           scholar: string | null
           sender: string | null
           subject: string | null
@@ -285,10 +287,12 @@ export type Database = {
         }
         Insert: {
           args?: Json
+          cc?: string[] | null
           email: string
           event: string
           id?: string
           message?: string | null
+          reply_to?: string | null
           scholar?: string | null
           sender?: string | null
           subject?: string | null
@@ -297,10 +301,12 @@ export type Database = {
         }
         Update: {
           args?: Json
+          cc?: string[] | null
           email?: string
           event?: string
           id?: string
           message?: string | null
+          reply_to?: string | null
           scholar?: string | null
           sender?: string | null
           subject?: string | null
@@ -399,6 +405,35 @@ export type Database = {
             columns: ["currency_to"]
             isOneToOne: false
             referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          event: string
+          scholar: string
+        }
+        Insert: {
+          created_at?: string
+          enabled: boolean
+          event: string
+          scholar: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          event?: string
+          scholar?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_settings_scholar_fkey"
+            columns: ["scholar"]
+            isOneToOne: false
+            referencedRelation: "scholars"
             referencedColumns: ["id"]
           },
         ]
@@ -1126,6 +1161,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _notify_new_volunteer: {
+        Args: { _roleid: string; _scholarid: string; _venueid: string }
+        Returns: number
+      }
       _welcome_volunteer: {
         Args: {
           _reason: string

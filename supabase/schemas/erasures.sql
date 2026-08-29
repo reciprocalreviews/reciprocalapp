@@ -82,11 +82,19 @@ set
 declare
 	_placeholder text := 'erased-' || _scholar || '@invalid';
 	_emails int;
+	_copied int;
 	_audit int;
+	_old_email text;
 begin
 	if _scholar is null then
 		raise exception 'forget_scholar requires a scholar id';
 	end if;
+
+	-- Captured BEFORE the scholars row below is scrubbed. Mail where this scholar was
+	-- merely copied, or was the person replies went to, is reachable only by address:
+	-- emails.cc and emails.reply_to hold addresses, and neither is matched by the
+	-- scholar/sender scrub further down.
+	select email into _old_email from public.scholars where id = _scholar;
 
 	-- The identity behind the account. The row stays so the foreign keys hold, but
 	-- nothing in it points at a person any more, and the credentials are destroyed
@@ -133,9 +141,30 @@ begin
 		email = _placeholder,
 		subject = null,
 		message = null,
-		args = '[]'::jsonb
+		args = '[]'::jsonb,
+		-- Mail addressed TO this scholar may also have copied others and named a third
+		-- party as its reply address. Neither belongs to the erased scholar, but both are
+		-- contents of a message whose contents are being destroyed.
+		cc = null,
+		reply_to = null
 	where scholar = _scholar or sender = _scholar;
 	get diagnostics _emails = row_count;
+
+	-- Mail about SOMEBODY ELSE that merely copied this scholar, or that replied to them.
+	-- The rest of the row belongs to other people and stays; only this scholar's address
+	-- leaves it. Without this pass an erased address survived indefinitely in notices about
+	-- other scholars — the exact thing erasure exists to prevent.
+	if _old_email is not null then
+		update public.emails
+		set
+			cc = nullif(array_remove(cc, _old_email), '{}'::text[]),
+			reply_to = case when reply_to = _old_email then null else reply_to end
+		where (cc is not null and _old_email = any (cc))
+			or reply_to = _old_email;
+		get diagnostics _copied = row_count;
+	else
+		_copied := 0;
+	end if;
 
 	-- audit_log keeps WHOLE rows, so every edit this scholar's profile ever
 	-- received contains their name and address. Scrub the payloads and the actor,
@@ -165,6 +194,10 @@ begin
 	return jsonb_build_object(
 		'scholar', _scholar,
 		'emails_scrubbed', _emails,
+		-- Reported separately from emails_scrubbed: these rows were not scrubbed, only
+		-- de-addressed, and the receipt should not imply that mail about other people was
+		-- emptied out.
+		'emails_uncopied', _copied,
 		'audit_payloads_scrubbed', _audit
 	);
 end;
@@ -232,6 +265,7 @@ set
 declare
 	_caller uuid := (select auth.uid());
 	_target uuid := coalesce(_scholar, _caller);
+	_target_email text;
 begin
 	if _caller is null then
 		raise exception 'Authentication required';
@@ -239,6 +273,9 @@ begin
 	if _target <> _caller and not public.isSteward() then
 		raise exception 'You can only export your own data' using errcode = 'RR006';
 	end if;
+
+	-- Resolved once rather than per row: emails.cc holds addresses, not ids.
+	select email into _target_email from public.scholars s where s.id = _target;
 
 	return jsonb_build_object(
 		'exported_at', now(),
@@ -257,8 +294,20 @@ begin
 		-- there was no record of where a scholar's tokens had been.
 		'token_history', (select coalesce(jsonb_agg(to_jsonb(e) order by e.seq), '[]'::jsonb)
 			from public.token_events e where e.scholar = _target or e.prev_scholar = _target),
+		-- Addressed to them, or copied on it. `m.scholar` names only the To recipient, so
+		-- before the cc branch a scholar's own export said nothing about notices they
+		-- actually received. SECURITY DEFINER, so this scan is not limited by the emails
+		-- SELECT policy — which is what lets it report mail the scholar received but cannot
+		-- read the row for. Still only the event and the time: the export says what
+		-- arrived, not what it said.
 		'emails_received', (select coalesce(jsonb_agg(jsonb_build_object('event', m.event, 'time_sent', m.time_sent)), '[]'::jsonb)
-			from public.emails m where m.scholar = _target)
+			from public.emails m
+			where m.scholar = _target
+				or (_target_email is not null and m.cc is not null and _target_email = any (m.cc))),
+		-- Which notices they have silenced. Small, but it is a preference they set, and so
+		-- part of what the platform holds about them.
+		'notification_settings', (select coalesce(jsonb_agg(to_jsonb(n)), '[]'::jsonb)
+			from public.notification_settings n where n.scholar = _target)
 	);
 end;
 $$;

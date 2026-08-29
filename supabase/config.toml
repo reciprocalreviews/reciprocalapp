@@ -310,6 +310,7 @@ schema_paths = [
     # audit_log/reconciliations come last because their triggers attach to
     # every table above. The trailing glob catches anything not listed.
     "./schemas/scholars.sql",
+    "./schemas/notification_settings.sql",
     "./schemas/currencies.sql",
     "./schemas/exchanges.sql",
     "./schemas/venues.sql",

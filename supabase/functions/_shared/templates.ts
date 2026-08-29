@@ -12,6 +12,18 @@ export type Email = {
 	 * be built by the database or the server, never accepted from a caller.
 	 */
 	urlArgs?: number[];
+	/**
+	 * A courtesy notice a scholar may silence from their profile settings.
+	 *
+	 * Absent means the email is consequential — a charge, a decline, a verification, an
+	 * assignment, a payout — and is always delivered; someone who has been billed does not
+	 * get to opt out of being told. So this registry, not a list somewhere else, is the
+	 * single source of truth for what can be turned off, and marking a template `optional`
+	 * is the whole of adding a new preference. The key is what
+	 * `public.notification_settings.event` holds, and the producer of an optional email is
+	 * responsible for checking that table before queuing it.
+	 */
+	optional?: true;
 };
 
 export const Emails = {
@@ -72,6 +84,33 @@ export const Emails = {
 			'You have been invited to the $1 role for <a href="{origin}/venue/$2">$3</a>. You can accept or decline on your profile:',
 			'{origin}/scholar/$4'
 		]
+	},
+	// A scholar volunteered for one of a venue's open roles. Sent to the holders of the
+	// venue's priority-0 role as ONE message — the first in To, the rest in Cc — carrying
+	// the volunteer's verified address as its Reply-To, so a holder can hit Reply and
+	// welcome them while Reply All keeps the whole group on the thread. Queued by
+	// public._notify_new_volunteer, which resolves the recipients and the reply address;
+	// nothing here comes from the volunteer except their name.
+	//
+	// $6 is the priority-0 role's OWN name. A venue calls it "Editor", "Area Chair",
+	// "Associate Editor", or something else entirely, so the word is read from the row
+	// rather than written into the prose. Phrased to read the same whether one person holds
+	// it or several.
+	//
+	// The body deliberately does not say "reply to welcome them": a volunteer with no
+	// verified address leaves no Reply-To to promise, and the branded footer already varies
+	// on exactly that condition (emailShell.ts), so it carries the sentence instead.
+	NewVolunteer: {
+		subject: 'A new volunteer at $3',
+		paragraphs: [
+			'$1 volunteered for the $2 role at $3.',
+			'Their profile — reviewing status, availability, and what else they have taken on:',
+			'{origin}/scholar/$4',
+			'Everyone volunteering at the venue:',
+			'{origin}/venue/$5/volunteers',
+			'You and everyone else in the $6 role at $3 are copied on this message.'
+		],
+		optional: true
 	},
 	CompensationRequested: {
 		subject: 'Compensation requested for volunteer work',
@@ -208,6 +247,21 @@ export const Emails = {
 } satisfies Record<string, Email>;
 
 export type EmailType = keyof typeof Emails;
+
+/**
+ * The subset of templates a scholar may silence — the keys marked `optional` above, derived
+ * rather than restated so the two cannot drift. These are the values
+ * `public.notification_settings.event` is meant to hold, and the settings interface is
+ * generated from them, so a new preference is one flag plus one locale string.
+ */
+export type OptionalEmailType = {
+	[K in EmailType]: (typeof Emails)[K] extends { optional: true } ? K : never;
+}[EmailType];
+
+/** The `optional` keys as a value, for rendering one control per silenceable notice. */
+export const OptionalEmails = (Object.keys(Emails) as EmailType[]).filter(
+	(key) => 'optional' in Emails[key]
+) as OptionalEmailType[];
 
 /**
  * Escape a value for safe inclusion in HTML. The message bodies are later

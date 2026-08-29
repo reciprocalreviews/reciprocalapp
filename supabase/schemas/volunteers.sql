@@ -285,6 +285,164 @@ execute on function public._welcome_volunteer (uuid, uuid, uuid, text)
 from
 	public;
 
+-- _notify_new_volunteer: tell a venue's top-priority role holders that a scholar has
+-- volunteered for one of its open roles.
+--
+-- Owner-only, like public._welcome_volunteer beside it: this is a STEP of create_volunteer,
+-- not an entry point. Its authorization is create_volunteer's, and that is the point --
+-- there is no way to ask for this mail without also becoming a volunteer, and RR004 makes
+-- that a once-per-(scholar, role) event forever, so it cannot be used to send twice.
+--
+-- Returns how many holders were addressed, 0 when nobody qualifies. Nothing reads the
+-- number today; it exists so a caller can tell "nobody to tell" from "told somebody"
+-- without querying the emails table.
+create or replace function public._notify_new_volunteer (_venueid uuid, _roleid uuid, _scholarid uuid) returns integer language plpgsql security definer
+set
+	search_path=public,
+	pg_temp as $function$
+declare
+	_top_role uuid;
+	_top_role_name text;
+	_ids uuid[];
+	_addrs text[];
+	_reply_to text;
+	_name text;
+	_venue_title text;
+	_role_name text;
+begin
+	-- The venue's top-priority role -- whatever this venue calls it. The name is data, so it
+	-- is read here and handed to the template rather than assumed to be "Editor".
+	-- `order by r.id limit 1` mirrors create_submission: priority is unique per venue by
+	-- construction (create_role assigns max+1, and 20260828030000 renumbered the existing
+	-- ones densely), and this stays deterministic if it ever isn't. Resolving a single role
+	-- id also means a scholar who somehow holds two priority-0 roles is addressed once.
+	select r.id, r.name into _top_role, _top_role_name
+	from public.roles r
+	where r.venueid = _venueid and r.priority = 0
+	order by r.id
+	limit 1;
+
+	if _top_role is null then
+		return 0;
+	end if;
+
+	-- The new volunteer. scholars.email holds only VERIFIED addresses, so null here means
+	-- there is no reply path. The notice still goes out: the news is what matters, and a
+	-- scholar with no contact address is precisely the one an editor needs the profile link
+	-- for. The null is also what makes the branded footer fall back to naming the stewards
+	-- instead of promising that a reply reaches a person.
+	select coalesce(nullif(btrim(s.name), ''), 'A scholar'), s.email
+	into _name, _reply_to
+	from public.scholars s
+	where s.id = _scholarid;
+
+	select v.title into _venue_title from public.venues v where v.id = _venueid;
+	select r.name into _role_name from public.roles r where r.id = _roleid;
+
+	-- Who hears about it: ACTIVE, ACCEPTED holders of that role, with a verified contact
+	-- address, who have not silenced this notice, and never the new volunteer themselves --
+	-- someone can hold the top role here and still volunteer for another open one, and
+	-- telling them their own news is noise.
+	--
+	-- Note this filters `active`, which public.isPriorityZero() does not. The app's own
+	-- convention is the one followed here (see emailEditorsOf in SupabaseCRUD, which filters
+	-- active and accepted): someone who has stopped volunteering should not be mailed about
+	-- the venue's newcomers. Left as a comment rather than "fixed" in isPriorityZero,
+	-- because that function answers a question about authority and this one answers a
+	-- question about mail, and they are not obliged to agree.
+	--
+	-- Ordered by how long they have held the role, id breaking ties, so the To slot is
+	-- deterministic and the venue's longest-standing holder is the one addressed. The
+	-- tiebreak is load-bearing rather than decorative: supabase/seed.sql gives many
+	-- volunteer rows an identical created_at to the microsecond, so ordering by it alone is
+	-- genuinely ambiguous.
+	select array_agg(s.id order by v.created_at, s.id),
+	       array_agg(s.email order by v.created_at, s.id)
+	into _ids, _addrs
+	from public.volunteers v
+	join public.scholars s on s.id = v.scholarid
+	where v.roleid = _top_role
+		and v.active
+		and v.accepted = 'accepted'
+		and s.id <> _scholarid
+		and s.email is not null
+		and not exists (
+			select 1
+			from public.notification_settings n
+			where n.scholar = s.id and n.event = 'NewVolunteer' and not n.enabled
+		);
+
+	-- Nobody reachable. Saying nothing is right: the volunteering succeeded, and a venue
+	-- whose top-role holders have no verified address is a venue configuration problem
+	-- rather than a failure of volunteering. Note this is the DEFAULT state of a freshly
+	-- approved venue, whose admins have not necessarily verified an address yet.
+	if _addrs is null or cardinality(_addrs) = 0 then
+		return 0;
+	end if;
+
+	-- Resend caps a message at 50 addresses across to + cc + bcc and rejects the whole send
+	-- past that -- a rejection pg_net swallows, so the notice would vanish rather than fail
+	-- loudly. No real venue has 50 people in its top role; this slice is what keeps that
+	-- true rather than merely likely.
+	if cardinality(_addrs) > 50 then
+		_ids := _ids[1:50];
+		_addrs := _addrs[1:50];
+	end if;
+
+	-- ONE row, one send, one thread: the first holder in To, the rest in Cc. Reply reaches
+	-- the volunteer; Reply All reaches the volunteer and every other holder. A row per
+	-- recipient would mean each of them receiving one copy addressed to them plus N-1 as a
+	-- Cc, and the replies never converging.
+	insert into public.emails (
+		event, scholar, sender, venue, email, cc, reply_to, subject, message, args
+	) values (
+		'NewVolunteer',
+		_ids[1],
+		-- Attribution, as queue_email records its caller. This makes the row readable by the
+		-- volunteer through the SELECT policy's `sender` branch, which leaks nothing:
+		-- scholars.email is already readable by anyone signed in. thanks.sql nulls its
+		-- sender because reviewer anonymity depends on it; nothing here is anonymous -- the
+		-- volunteer is named in the body.
+		_scholarid,
+		_venueid,
+		_addrs[1],
+		-- nullif so a lone holder yields NULL rather than the empty array the check
+		-- constraint in part 1 forbids.
+		nullif(_addrs[2:], '{}'::text[]),
+		_reply_to,
+		-- Null so the body is rendered at send time from the template registry, which is the
+		-- invariant that keeps prose out of the API.
+		null,
+		null,
+		-- EVERY element must be non-null. jsonb_build_array with a NULL yields JSON null;
+		-- the edge function validates args as z.array(z.string()), so one null makes the
+		-- WHOLE body fail to parse, the function answers 400, and pg_net swallows it -- the
+		-- email simply never arrives, with nothing on screen to say so. scholars.name is
+		-- nullable (a fresh ORCID account has none) and role and venue titles default to '',
+		-- so every one of them is coalesced.
+		jsonb_build_array(
+			_name,
+			coalesce(nullif(btrim(_role_name), ''), 'volunteer'),
+			coalesce(nullif(btrim(_venue_title), ''), 'a venue'),
+			_scholarid::text,
+			_venueid::text,
+			coalesce(nullif(btrim(_top_role_name), ''), 'top')
+		)
+	);
+
+	return cardinality(_addrs);
+end;
+$function$;
+
+alter function public._notify_new_volunteer (uuid, uuid, uuid) OWNER to "postgres";
+
+revoke
+execute on function public._notify_new_volunteer (uuid, uuid, uuid)
+from
+	public,
+	anon,
+	authenticated;
+
 -- create_volunteer: insert a volunteer record and, when this is the scholar's
 -- first role at the role's venue and compensation is requested, settle the
 -- welcome grant — atomically. SECURITY DEFINER, re-implementing the volunteers
@@ -354,6 +512,30 @@ begin
 	if _existing_count = 0 and _compensate then
 		_granted := public._welcome_volunteer(_caller, _scholarid, _roleid, 'Welcome tokens for volunteering');
 	end if;
+
+	-- Tell the venue's top-priority role holders -- but only when a scholar volunteered for
+	-- THEMSELVES for an OPEN role. That is the news: an admin adding someone is not news to
+	-- the admins, and an invitation is answered through accept_role_invite, which stays
+	-- deliberately silent because the people who would be told are the ones who sent it.
+	--
+	-- The predicate is the authorization branch above, reused verbatim rather than restated,
+	-- so "may this person volunteer here" and "is this worth telling anyone" cannot drift
+	-- apart. It deliberately does not also require _accepted: the interface always passes
+	-- true on this path (VolunteerStatus.svelte), and a hand-rolled call passing false makes
+	-- a self-invitation that accept_role_invite later resolves without a second notice -- a
+	-- dead corner worth accepting to keep one predicate instead of two nearly-identical ones.
+	--
+	-- Best effort, like delivery itself (see send_email): the volunteer record and its
+	-- welcome grant are what must not be lost, and no failure to compose a notice may roll
+	-- them back.
+	begin
+		if _caller = _scholarid and not _invited then
+			perform public._notify_new_volunteer(_venueid, _roleid, _scholarid);
+		end if;
+	exception when others then
+		raise warning 'create_volunteer: volunteer % was created but the venue could not be notified: % (%)',
+			_volunteer_id, sqlerrm, sqlstate;
+	end;
 
 	-- Return the new volunteer id and what the grant actually came to.
 	return jsonb_build_object('volunteer_id', _volunteer_id, 'welcome_granted', _granted);
