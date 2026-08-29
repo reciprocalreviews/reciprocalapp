@@ -38,6 +38,15 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: assignments } =
 		submission === null ? { data: null } : await db.getSubmissionAssignments(submission.id);
 
+	// Whether anyone holds the venue's editor role on this submission. A boolean rather
+	// than a read of `assignments`, which is RLS-filtered: a venue editor who is not a
+	// venue admin sees none of them, and would be told every submission is unclaimed.
+	const { data: submissionEditors } = await db.getVenueSubmissionEditors(venueid);
+	const submissionHasEditor =
+		submissionEditors === null || submission === null
+			? undefined
+			: (submissionEditors.find((s) => s.submission === submission.id)?.has_editor ?? undefined);
+
 	// Get the volunteer records of those assigned so we can render their expertise.
 	const { data: volunteers } =
 		assignments === null
@@ -113,6 +122,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		previous: previous !== null && previous.length > 0 ? previous[0] : null,
 		transactions,
 		assignments,
+		submissionHasEditor,
 		volunteers,
 		roles,
 		balances,

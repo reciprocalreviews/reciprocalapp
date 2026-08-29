@@ -455,6 +455,10 @@ export type LocaleText = {
 			options: {
 				batchRole: OptionsText;
 			};
+			checkbox: {
+				/** Narrows the list to submissions with no editor. */
+				needsEditor: string;
+			};
 			button: {
 				batchFind: ButtonText;
 				batchAssign: ButtonText;
@@ -469,6 +473,8 @@ export type LocaleText = {
 				declareConflict: ButtonText;
 				bid: ButtonText;
 				unbid: ButtonText;
+				/** Take on a submission nobody is editing yet. */
+				claimEditor: ButtonText;
 			};
 			headers: {
 				payment: string;
@@ -495,6 +501,9 @@ export type LocaleText = {
 				reviewing: string;
 				/** Submission has been marked done. */
 				done: string;
+				/** Nobody holds the venue's editor role on this submission, so no assignment
+				 * on it can be approved and it cannot be marked done. */
+				needsEditor: string;
 			};
 			paragraph: {
 				newSubmission: string;
@@ -541,6 +550,9 @@ export type LocaleText = {
 				completionNotEditor: string;
 				/** Shown after a successful completion before notifications. */
 				completionSucceeded: string;
+				/** Nobody holds the venue's editor role on this submission yet, so nothing on it
+				 * can be approved and it cannot be marked done. */
+				needsEditor: string;
 			};
 			button: {
 				createAssignment: ButtonText;
@@ -556,6 +568,8 @@ export type LocaleText = {
 				/** Editor button that compensates the editor(s) and marks the
 				 * submission done in one atomic action. */
 				markDone: ConfirmButtonText;
+				/** Take on this submission as the venue's editor. */
+				claimEditor: ButtonText;
 			};
 			field: {
 				newAssignment: TextFieldText & { invalid: string };

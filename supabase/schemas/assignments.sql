@@ -136,6 +136,113 @@ from
 grant
 execute on function public.can_approve_assignment (uuid, uuid) to authenticated;
 
+-- A THIRD rule in this family, and again deliberately not the same question as the two
+-- above: "may I take this submission?", not "may I approve it for someone else?".
+--
+-- It exists because the venue's own editors could not seat themselves. The priority-0
+-- role has no approver, so isRoleApproverVolunteer is never true for it, and
+-- can_approve_assignment's editor branch requires an approved priority-0 assignment on
+-- the very submission being claimed — which is self-perpetuating. That left isAdmin() as
+-- the only way anyone became the first editor on a submission, so an Editor-role
+-- volunteer who was not also a venue admin could be told a submission needed them and be
+-- unable to do anything about it.
+--
+-- Narrow on every axis: the caller only, the venue's priority-0 role only, and only while
+-- the submission has no priority-0 assignment at all. It cannot seat anyone else, seat
+-- anyone in another role, or displace an editor who is already there.
+--
+-- SECURITY DEFINER is load-bearing rather than habitual: the emptiness test reads
+-- public.assignments, which is itself RLS-gated, so the same test written inline in the
+-- policy would see only the rows the claimer may select and would report "no editor" for
+-- a submission that already has one. Mirrored in TypeScript by
+-- src/lib/data/canClaimEditor.ts.
+create or replace function public.can_claim_editor_role (_submission uuid, _role uuid) returns boolean language sql security definer
+set
+	search_path to '' as $$
+	select exists (
+		select 1
+		from public.submissions s
+		join public.roles r
+			on r.id = _role and r.venueid = s.venue and r.priority = 0
+		join public.volunteers v
+			on v.roleid = r.id
+			and v.scholarid = (select auth.uid())
+			and v.active
+			and v.accepted = 'accepted'
+		where s.id = _submission
+		  and not exists (
+				select 1
+				from public.assignments a
+				join public.roles ar on ar.id = a.role
+				where a.submission = _submission and ar.priority = 0
+			)
+	);
+$$;
+
+alter function public.can_claim_editor_role (uuid, uuid) OWNER to "postgres";
+
+revoke
+execute on function public.can_claim_editor_role (uuid, uuid)
+from
+	public;
+
+grant
+execute on function public.can_claim_editor_role (uuid, uuid) to authenticated;
+
+-- Whether a submission has anyone in a priority-0 role, and nothing else about who.
+--
+-- The venue's editors can see their venue's submissions but none of its assignments, so
+-- the submissions list had no way to tell whether a submission already had an editor —
+-- it inferred from the assignment rows it could see, and for a non-admin editor that is
+-- none of them, so every submission looked unclaimed. Widening the assignments policy
+-- would have handed reviewer identities to more people to answer a yes/no question, so
+-- this answers the question instead.
+--
+-- SECURITY DEFINER, so it sees past the assignments policy; the pair below is what keeps
+-- that narrow. It discloses one bit, and only about a submission whose id the caller
+-- already holds.
+create or replace function public.submission_has_editor (_submission uuid) returns boolean language sql security definer stable
+set
+	"search_path" to '' as $$
+	select exists (
+		select 1
+		from public.assignments a
+		join public.roles r on r.id = a.role
+		where a.submission = _submission and r.priority = 0
+	);
+$$;
+
+alter function public.submission_has_editor (uuid) OWNER to "postgres";
+
+revoke
+execute on function public.submission_has_editor (uuid)
+from
+	public;
+
+grant
+execute on function public.submission_has_editor (uuid) to authenticated;
+
+-- The list form, and the one the application actually calls. SECURITY INVOKER, so the
+-- scan of public.submissions runs under the caller's own policy: a caller gets exactly
+-- one row per submission they may already see, each carrying that one bit.
+create or replace function public.venue_submission_editors (_venue uuid) returns table (submission uuid, has_editor boolean) language sql security invoker stable
+set
+	"search_path" to '' as $$
+	select s.id, public.submission_has_editor(s.id)
+	from public.submissions s
+	where s.venue = _venue;
+$$;
+
+alter function public.venue_submission_editors (uuid) OWNER to "postgres";
+
+revoke
+execute on function public.venue_submission_editors (uuid)
+from
+	public;
+
+grant
+execute on function public.venue_submission_editors (uuid) to authenticated;
+
 create or replace function public.isAssigned (_submissionid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
 set
 	"search_path" to '' as $$
@@ -289,6 +396,16 @@ select
 				assignments.submission=submissions.id
 				and public.isRoleApproverVolunteer (assignments.role)
 		)
+		-- The venue's editors, whether or not they are venue admins and whether or not
+		-- they are assigned to this submission yet. Every other branch above requires a
+		-- foothold ON the submission, so a priority-0 volunteer who was not also an admin
+		-- could not see an unassigned submission at all -- which made a submission
+		-- waiting for an editor invisible to precisely the people meant to pick it up.
+		-- Deliberately the more generous of the two editor rules: isPriorityZero asks only
+		-- that the role be accepted, while can_claim_editor_role also requires the
+		-- volunteer to be active, because seeing a venue's work is not the same as taking
+		-- a piece of it on.
+		or public.isPriorityZero (submissions.venue)
 	);
 
 -- We declare the submissions update policy after the assignments table is created
@@ -426,6 +543,19 @@ with
 							)
 					)
 				)
+			)
+			-- An editor of the venue claiming a submission nobody is editing yet. See
+			-- public.can_claim_editor_role above for why this branch has to exist and
+			-- why it is drawn this narrowly; the checks here are the ones the function
+			-- cannot make for itself, since it is not told who is being seated.
+			or (
+				scholar=(
+					select
+						auth.uid () as "uid"
+				)
+				and not bid
+				and not completed
+				and public.can_claim_editor_role (submission, role)
 			)
 		)
 	);

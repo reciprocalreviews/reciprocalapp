@@ -28,11 +28,13 @@ function view(over: Partial<SubmissionsViewContext> = {}) {
 		isAdmin: false,
 		assignments: [],
 		rolesById: new Map(),
+		submissionsWithEditor: new Set<string>(),
 		scholarName: new Map(),
 		conflicts: [],
 		transactions: [],
 		doneVisibilityDays: 30,
 		filter: '',
+		needsEditorOnly: false,
 		now: NOW,
 		sortOrder: ['payment', 'title', 'id', 'created'],
 		paymentSortPendingFirst: true,
@@ -64,7 +66,7 @@ describe('canSeeAuthors', () => {
 		expect(
 			view({
 				assignments: [{ submission: 's1', scholar: 'viewer', role: 'r1' }],
-				rolesById: new Map([['r1', { anonymous_authors: false }]])
+				rolesById: new Map([['r1', { anonymous_authors: false, priority: 1 }]])
 			}).canSeeAuthors(target)
 		).toBe(true);
 	});
@@ -73,7 +75,7 @@ describe('canSeeAuthors', () => {
 		expect(
 			view({
 				assignments: [{ submission: 's1', scholar: 'viewer', role: 'r1' }],
-				rolesById: new Map([['r1', { anonymous_authors: true }]])
+				rolesById: new Map([['r1', { anonymous_authors: true, priority: 1 }]])
 			}).canSeeAuthors(target)
 		).toBe(false);
 	});
@@ -88,8 +90,8 @@ describe('canSeeAuthors', () => {
 					{ submission: 's1', scholar: 'viewer', role: 'anon' }
 				],
 				rolesById: new Map([
-					['open', { anonymous_authors: false }],
-					['anon', { anonymous_authors: true }]
+					['open', { anonymous_authors: false, priority: 1 }],
+					['anon', { anonymous_authors: true, priority: 1 }]
 				])
 			}).canSeeAuthors(target)
 		).toBe(false);
@@ -99,7 +101,7 @@ describe('canSeeAuthors', () => {
 		expect(
 			view({
 				assignments: [{ submission: 'other', scholar: 'viewer', role: 'r1' }],
-				rolesById: new Map([['r1', { anonymous_authors: false }]])
+				rolesById: new Map([['r1', { anonymous_authors: false, priority: 1 }]])
 			}).canSeeAuthors(target)
 		).toBe(false);
 	});
@@ -139,7 +141,7 @@ describe('matchesFilter', () => {
 				filter: 'adams',
 				scholarName: new Map([['a1', 'alice adams']]),
 				assignments: [{ submission: 's1', scholar: 'viewer', role: 'anon' }],
-				rolesById: new Map([['anon', { anonymous_authors: true }]])
+				rolesById: new Map([['anon', { anonymous_authors: true, priority: 1 }]])
 			}).matchesFilter(target)
 		).toBe(false);
 	});
@@ -266,5 +268,55 @@ describe('sortedAndFiltered', () => {
 	test('a filter narrows to matches', () => {
 		const rows = [sub({ id: 's1', title: 'Alpha' }), sub({ id: 's2', title: 'Beta' })];
 		expect(ids(view({ filter: 'alph' }).sortedAndFiltered(rows))).toEqual(['s1']);
+	});
+});
+
+// A submission with no priority-0 assignment is stalled: nothing can be approved on it
+// and it cannot be marked done until someone holds the editor role. These cases have to
+// agree with public.can_claim_editor_role (pinned in
+// supabase/tests/rpc/editor_on_submission.sql), because a flag the database would refuse
+// a claim on is a button that fails when pressed.
+describe('needsEditor', () => {
+	test('a submission nobody is editing needs an editor', () => {
+		expect(view({ submissionsWithEditor: new Set<string>() }).needsEditor(sub({ id: 's1' }))).toBe(
+			true
+		);
+	});
+
+	test('a submission someone is editing does not', () => {
+		expect(view({ submissionsWithEditor: new Set(['s1']) }).needsEditor(sub({ id: 's1' }))).toBe(
+			false
+		);
+	});
+
+	test('an editor on another submission does not count', () => {
+		expect(view({ submissionsWithEditor: new Set(['s2']) }).needsEditor(sub({ id: 's1' }))).toBe(
+			true
+		);
+	});
+
+	// A finished paper is not waiting for anyone.
+	test('a done submission is never flagged', () => {
+		expect(
+			view({ submissionsWithEditor: new Set<string>() }).needsEditor(
+				sub({ id: 's1', status: 'done' })
+			)
+		).toBe(false);
+	});
+
+	// Unloaded data must not render a flag on every row.
+	test('unloaded editor data denies rather than flags', () => {
+		expect(view({ submissionsWithEditor: null }).needsEditor(sub({ id: 's1' }))).toBe(false);
+	});
+
+	test('the filter narrows to submissions waiting for an editor', () => {
+		const rows = [sub({ id: 's1' }), sub({ id: 's2' })];
+		expect(
+			ids(
+				view({ submissionsWithEditor: new Set(['s2']), needsEditorOnly: true }).sortedAndFiltered(
+					rows
+				)
+			)
+		).toEqual(['s1']);
 	});
 });

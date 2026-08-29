@@ -301,6 +301,72 @@ async function getVenueReminders(
 					]
 				});
 			}
+
+			// ---- Family 5: submissions with no editor → the venue's editors + admins
+			// The mirror image of family 4, and the reason it needs its own family: family
+			// 4 draws its recipients from the submission's own editors, so a submission
+			// with none is silently dropped — the exact case where nobody has been told.
+			// A submission arrives, its author is emailed about payment, and until someone
+			// takes it on nothing else in the review can happen. Recipients come from the
+			// venue instead: whoever volunteers for its priority-0 role (they can claim
+			// it) plus its admins (they can assign someone).
+
+			const { data: editorRoles, error: editorRolesError } = await supabase
+				.from('roles')
+				.select('id, venueid')
+				.eq('priority', 0)
+				.in('venueid', dueVenueIds);
+
+			const { data: editorVolunteers, error: editorVolunteersError } =
+				editorRoles === null || editorRoles.length === 0
+					? { data: [], error: null }
+					: await supabase
+							.from('volunteers')
+							.select('scholarid, roleid')
+							.eq('active', true)
+							.eq('accepted', 'accepted')
+							.in(
+								'roleid',
+								editorRoles.map((role) => role.id)
+							);
+
+			if (editorRoles === null || editorVolunteers === null) {
+				console.error(
+					'Error fetching editor volunteers for reminders',
+					editorRolesError ?? editorVolunteersError
+				);
+			} else {
+				const venueOfRole = new Map(editorRoles.map((role) => [role.id, role.venueid]));
+				const editorsByVenue = new Map<string, Set<string>>();
+				for (const venue of dueVenues) editorsByVenue.set(venue.id, new Set(venue.admins ?? []));
+				for (const volunteer of editorVolunteers) {
+					const venueid = venueOfRole.get(volunteer.roleid);
+					if (venueid !== undefined) editorsByVenue.get(venueid)?.add(volunteer.scholarid);
+				}
+
+				const unclaimedLinks = new Map<string, Set<string>>();
+				for (const submission of reviewing) {
+					const hasEditor = assignments.some(
+						(a) => a.submission === submission.id && a.roles?.priority === 0 && a.approved
+					);
+					if (hasEditor) continue;
+					const link = `${origin}/venue/${submission.venue}/submission/${submission.id}`;
+					for (const scholar of editorsByVenue.get(submission.venue) ?? []) {
+						if (!unclaimedLinks.has(scholar)) unclaimedLinks.set(scholar, new Set());
+						unclaimedLinks.get(scholar)!.add(link);
+					}
+				}
+				for (const [scholar, links] of unclaimedLinks) {
+					reminders.push({
+						scholar,
+						subject: 'Submissions are waiting for an editor',
+						paragraphs: [
+							`${links.size} submission(s) have no editor yet. Until one takes them on, nothing else in their review can proceed:`,
+							...links
+						]
+					});
+				}
+			}
 		}
 	}
 

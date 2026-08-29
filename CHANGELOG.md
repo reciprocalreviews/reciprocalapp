@@ -7,6 +7,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Added
 
 - Scholar profiles now show the scholar's **ORCID iD**, linked to their ORCID record, so a visitor can confirm who they're looking at and follow through to the publications and affiliations Reciprocal Reviews doesn't reproduce itself.
+- **A new submission now reaches an editor.** A venue with one editor has them assigned to the paper on arrival; a venue with several tells all of them a submission is waiting, since choosing for them would be arbitrary and assigning all of them would bill the venue an editor's compensation each. Submissions nobody is editing are flagged on the venue's submissions list, with a filter for just those and a button to claim one in a click, and a reminder chases any that stay unclaimed. Previously nothing was assigned and nobody was told: a submission's arrival was announced only to the co-authors who owed money for it, so a solo-author submission — or any submission at a payment-free venue — was announced to nobody at all, and could sit unnoticed indefinitely.
 
 ### Changed
 

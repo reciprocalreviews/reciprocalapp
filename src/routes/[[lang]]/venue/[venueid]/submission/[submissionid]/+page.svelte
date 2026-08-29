@@ -26,6 +26,7 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import VenueLink from '$lib/components/VenueLink.svelte';
 	import canApproveAssignment from '$lib/data/canApproveAssignment';
+	import canClaimEditor from '$lib/data/canClaimEditor';
 	import canViewSubmission from '$lib/data/canViewSubmission';
 	import { getDB, NullUUID } from '$lib/data/CRUD';
 	import {
@@ -58,6 +59,8 @@
 		volunteers,
 		/** All assignments related to this submission */
 		assignments,
+		/** Whether anyone holds the venue's editor role on this submission */
+		submissionHasEditor,
 		/** All balances of scholars */
 		balances,
 		/** The current user */
@@ -200,6 +203,10 @@
 				}
 			})
 	);
+
+	/** The venue's editor role, if it has one. Claiming is only ever about this role —
+	 * priority 0 is what the database checks when deciding who edits a submission. */
+	let editorRole = $derived((roles ?? []).find((r) => r.priority === 0));
 
 	/** Roles for which the current scholar can approve assignments on this
 	 * submission, computed via the shared canApproveAssignment helper. */
@@ -436,6 +443,20 @@
 		{/if}
 
 		<Subheader icon={EditLabel} text={(l) => l.page.submission.header.assignments}></Subheader>
+
+		<!-- Nobody is editing this submission yet, and this viewer is one of the venue's
+		     editors, so offer to take it. Until someone does, no assignment on it can be
+		     approved and it cannot be marked done — and before can_claim_editor_role only a
+		     venue admin could seat the first editor. -->
+		{#if editorRole && canClaimEditor(editorRole, scholar?.id ?? null, viewerVolunteering, submissionHasEditor)}
+			<Feedback text={(l) => l.page.submission.feedback.needsEditor} />
+			<Button
+				testid="claim-editor"
+				strings={(l) => l.page.submission.button.claimEditor}
+				action={() =>
+					handle(db().createAssignment(submission.id, scholar!.id, editorRole.id, false, true))}
+			/>
+		{/if}
 
 		<!-- If the authenticated scholar can approve any role on this submission, permit them to create new assignments. -->
 		{#if rolesScholarCanApprove.length > 0}

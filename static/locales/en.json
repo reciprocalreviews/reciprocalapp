@@ -632,6 +632,9 @@
 					"label": "role to assign"
 				}
 			},
+			"checkbox": {
+				"needsEditor": "Only show submissions waiting for an editor"
+			},
 			"button": {
 				"batchFind": {
 					"tip": "Find this scholar so you can assign them to submissions below",
@@ -684,6 +687,10 @@
 				"unbid": {
 					"tip": "Remove interest in serving as {role}",
 					"label": "Unbid"
+				},
+				"claimEditor": {
+					"tip": "Take on this submission as the venue's editor",
+					"label": "edit this"
 				}
 			},
 			"field": {
@@ -737,7 +744,8 @@
 				"paid": "paid",
 				"pending": "{count} pending",
 				"reviewing": "in review",
-				"done": "done"
+				"done": "done",
+				"needsEditor": "needs an editor"
 			},
 			"cell": {
 				"you": "you",
@@ -773,7 +781,8 @@
 				"completionBlocked": "Cannot mark done: {count} assignment(s) are approved but not yet compensated. Complete them first.",
 				"completionInsufficient": "The venue does not have enough tokens to compensate every editor. A mint transaction has been proposed; once a minter approves it, retry.",
 				"completionNotEditor": "Only an approved editor (priority-0 role) can mark this submission done.",
-				"completionSucceeded": "Submission marked done and editor(s) compensated."
+				"completionSucceeded": "Submission marked done and editor(s) compensated.",
+				"needsEditor": "No one is editing this submission yet. Until someone does, no assignment on it can be approved and it cannot be marked done."
 			},
 			"button": {
 				"createAssignment": {
@@ -807,6 +816,10 @@
 					"tip": "Compensate every editor on this submission and mark it done. This cannot be undone.",
 					"label": "Mark done",
 					"warn": "Compensate editor(s) and finalize"
+				},
+				"claimEditor": {
+					"tip": "Take on this submission as the venue's editor",
+					"label": "edit this submission"
 				}
 			},
 			"field": {

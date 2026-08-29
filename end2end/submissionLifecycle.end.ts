@@ -263,3 +263,88 @@ test('approver-role hierarchy: AE approves a Reviewer bid; a non-approver does n
 		)
 		.toBe(approveCount + 1);
 });
+
+test('a submission with no editor is flagged, and one of the venue’s editors can claim it', async ({
+	page,
+	context
+}) => {
+	// The seating rules themselves (one eligible editor seats them, several or none seat
+	// nobody, an editor is never seated on their own paper) are pinned against
+	// create_submission directly in supabase/tests/rpc/editor_on_submission.sql. What only
+	// a browser can show is the other half: that an editorless submission is visible to a
+	// venue editor at all, says so on the list, and can be taken in one click by someone
+	// who is NOT a venue admin — the case the claim policy exists for.
+	// The seed's only accepted Editor volunteer is also a venue admin, and an admin could
+	// always seat people. Enrol someone who is not, since that is the case the policy
+	// branch was added for.
+	const CLAIMANT = SEED.scholars.author2;
+	const editorRole = sql(
+		`select id from public.roles where venueid = '${VENUE_ID}' and priority = 0;`
+	);
+	const externalID = `NEEDS-EDITOR-${Date.now()}`;
+
+	expect(
+		sql(
+			`select count(*) from public.venues where id = '${VENUE_ID}' and '${CLAIMANT.id}' = any(admins);`
+		),
+		'the claimant must NOT be a venue admin, or this proves nothing'
+	).toBe('0');
+
+	sql(
+		`insert into public.volunteers (scholarid, roleid, active, accepted, expertise) values ('${CLAIMANT.id}', '${editorRole}', true, 'accepted', '');`
+	);
+
+	// An imported row is the cheapest editorless submission: no authors, no charges, and
+	// no assignments, which is exactly the state a real submission lands in when its venue
+	// has more than one editor.
+	const submissionID = sql(
+		`insert into public.submissions (venue, externalid, submission_type, authors, payments, transactions, title, imported) select '${VENUE_ID}', '${externalID}', id, array[]::uuid[], array[]::integer[], array[]::uuid[], '${externalID}', true from public.submission_types where venue = '${VENUE_ID}' limit 1 returning id;`
+	);
+
+	const editorCount = () =>
+		sql(
+			`select count(*) from public.assignments a join public.roles r on r.id = a.role where a.submission = '${submissionID}' and r.priority = 0;`
+		);
+
+	try {
+		expect(editorCount()).toBe('0');
+
+		await login(CLAIMANT.email, page, context);
+		await page.goto(`/venue/${VENUE_ID}/submissions`);
+		// The filter checkbox and the claim button are Svelte handlers, so the page has to
+		// have hydrated before either click means anything.
+		await page.waitForLoadState('networkidle');
+
+		// Narrow to the submissions waiting for an editor; ours must be among them.
+		await page.getByTestId('submissions-needs-editor-filter').click();
+		const row = page.getByRole('row').filter({ hasText: externalID });
+		await expect(row).toBeVisible();
+
+		await row
+			.getByRole('button', { name: "Take on this submission as the venue's editor" })
+			.click();
+
+		await expect.poll(() => editorCount()).toBe('1');
+		expect(
+			sql(
+				`select scholar from public.assignments a join public.roles r on r.id = a.role where a.submission = '${submissionID}' and r.priority = 0;`
+			)
+		).toBe(CLAIMANT.id);
+
+		// Claimed now, so the flag and its button are gone from the row. (The filter is
+		// component state, so it resets across the reload; assert on the row itself.)
+		await page.reload();
+		await page.waitForLoadState('networkidle');
+		const claimed = page.getByRole('row').filter({ hasText: externalID });
+		await expect(claimed).toBeVisible();
+		await expect(
+			claimed.getByRole('button', { name: "Take on this submission as the venue's editor" })
+		).toHaveCount(0);
+	} finally {
+		sql(`delete from public.assignments where submission = '${submissionID}';`);
+		sql(`delete from public.submissions where id = '${submissionID}';`);
+		sql(
+			`delete from public.volunteers where roleid = '${editorRole}' and scholarid = '${CLAIMANT.id}';`
+		);
+	}
+});

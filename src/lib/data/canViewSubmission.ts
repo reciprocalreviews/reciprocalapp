@@ -8,10 +8,14 @@
  * half-empty page if a row ever reaches a viewer it should not have.
  *
  * Keeping the branches aligned matters more than the code being short. In
- * particular branch 3 is easy to forget: a scholar who has accepted ANY
- * biddable role in the venue may read every submission in it, because that is
- * how they decide what to bid on. Gating on "assigned" alone would lock every
- * bidder out of the page they bid from.
+ * particular branches 3 and 6 are easy to forget, and both are of the same kind:
+ * they grant venue-wide reading to people with no foothold on the individual
+ * submission. A scholar who has accepted ANY biddable role may read every
+ * submission in the venue, because that is how they decide what to bid on; and
+ * the venue's editors may read every submission because an unclaimed one has no
+ * assignment to hang a permission on. Gating on "assigned" alone would lock every
+ * bidder out of the page they bid from, and every editor out of the page they are
+ * being asked to take.
  */
 
 export type ViewableSubmission = { id: string; authors: string[] };
@@ -22,7 +26,7 @@ export type SubmissionViewerContext = {
 	/** `venues.admins` for the submission's venue. */
 	venueAdmins: string[];
 	/** Every role in the venue. */
-	roles: { id: string; biddable: boolean }[] | null;
+	roles: { id: string; biddable: boolean; priority: number }[] | null;
 	/** The VIEWER's own volunteer records in this venue. Only `accepted` matters —
 	 * the policy does not test `active`, so neither may this. */
 	viewerVolunteering: { roleid: string; accepted: string }[] | null;
@@ -69,6 +73,22 @@ export default function canViewSubmission(
 	if (
 		(context.assignments ?? []).some(
 			(a) => a.submission === submission.id && context.approvesRole(a.role)
+		)
+	)
+		return true;
+
+	// 6. One of the venue's editors, whether or not they are assigned here. Every
+	//    branch above needs a foothold ON the submission, so without this an editor
+	//    who is not also a venue admin could not see a submission nobody is editing
+	//    yet — which is precisely the submission they are meant to pick up. Like
+	//    branch 3, and like the isPriorityZero() helper this mirrors, only `accepted`
+	//    is tested; `active` is the stricter test that governs claiming, not reading.
+	const editorRoleIDs = new Set(
+		(context.roles ?? []).filter((r) => r.priority === 0).map((r) => r.id)
+	);
+	if (
+		(context.viewerVolunteering ?? []).some(
+			(v) => v.accepted === 'accepted' && editorRoleIDs.has(v.roleid)
 		)
 	)
 		return true;

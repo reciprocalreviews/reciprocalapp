@@ -164,6 +164,9 @@ declare
 	_txn_id uuid;
 	_token_ids uuid[];
 	_submission_id uuid;
+	_editor_role uuid;
+	_editors uuid[];
+	_editor uuid;
 begin
 	-- Identify and require an authenticated caller (the submitter).
 	_caller := (select auth.uid());
@@ -274,8 +277,37 @@ begin
 		_authors, _payments, _transactions, coalesce(_title, ''), _expertise, _note
 	) returning id into _submission_id;
 
-	-- Return the new submission id.
-	return jsonb_build_object('submission_id', _submission_id);
+	-- Seat the venue's editor, when there is exactly one it could be.
+	--
+	-- A priority-0 assignment is also a compensation commitment: mark_submission_done
+	-- pays every approved priority-0 assignment on the submission. So this only fires
+	-- when the choice is unambiguous. Several eligible editors would mean an arbitrary
+	-- pick, and seating them all would mean several editor fees per paper; a sole editor
+	-- who is an author here would be editing their own submission. In any of those cases
+	-- nobody is seated, and the caller notifies the candidates instead.
+	select r.id into _editor_role
+	from public.roles r
+	where r.venueid = _venue and r.priority = 0
+	order by r.id
+	limit 1;
+
+	if _editor_role is not null then
+		select array_agg(v.scholarid) into _editors
+		from public.volunteers v
+		where v.roleid = _editor_role and v.active and v.accepted = 'accepted';
+
+		if cardinality(coalesce(_editors, array[]::uuid[])) = 1
+			and not (_editors[1] = any(_authors)) then
+			_editor := _editors[1];
+			insert into public.assignments (venue, submission, scholar, role, bid, approved)
+			values (_venue, _submission_id, _editor, _editor_role, false, true);
+		end if;
+	end if;
+
+	-- Return the new submission id, and who is editing it. A null editor is the
+	-- caller's cue to send the "this submission needs an editor" notice instead of
+	-- the "you were assigned one" notice.
+	return jsonb_build_object('submission_id', _submission_id, 'editor', _editor);
 end;
 $function$;
 
@@ -337,6 +369,10 @@ declare
     _previous uuid;
     _type_cost integer;
     _tokens uuid[];
+    _editor_role uuid;
+    _editors uuid[];
+    _editor uuid;
+    _seated integer := 0;
 begin
     _admin_id := (select auth.uid());
 
@@ -362,6 +398,25 @@ begin
     end if;
 
     _mint_amount := 0;
+
+    -- Resolve the venue's sole editor once, on the same unambiguous-only rule as
+    -- create_submission. Imported rows carry no authors, so the "not an author of this
+    -- paper" half of that rule has nothing to test here.
+    select r.id into _editor_role
+    from public.roles r
+    where r.venueid = _venueid and r.priority = 0
+    order by r.id
+    limit 1;
+
+    if _editor_role is not null then
+        select array_agg(v.scholarid) into _editors
+        from public.volunteers v
+        where v.roleid = _editor_role and v.active and v.accepted = 'accepted';
+
+        if cardinality(coalesce(_editors, array[]::uuid[])) = 1 then
+            _editor := _editors[1];
+        end if;
+    end if;
 
     _submission_ids := array[]::uuid[];
     for _row in select * from jsonb_array_elements(_submissions)
@@ -408,6 +463,12 @@ begin
         ) returning id into _new_submission_id;
         _submission_ids := _submission_ids || _new_submission_id;
 
+        if _editor is not null then
+            insert into public.assignments (venue, submission, scholar, role, bid, approved)
+            values (_venueid, _new_submission_id, _editor, _editor_role, false, true);
+            _seated := _seated + 1;
+        end if;
+
         -- Each row bills its submission type's cost.
         select submission_cost into _type_cost
         from public.submission_types
@@ -444,7 +505,9 @@ begin
     return jsonb_build_object(
         'submission_ids', to_jsonb(_submission_ids),
         'transaction_id', _transaction_id,
-        'mint_amount', _mint_amount
+        'mint_amount', _mint_amount,
+        'editor', _editor,
+        'seated', _seated
     );
 end;
 $function$;

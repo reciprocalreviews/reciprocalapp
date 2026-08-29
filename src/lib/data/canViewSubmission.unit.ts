@@ -8,8 +8,9 @@ function context(over: Partial<SubmissionViewerContext> = {}): SubmissionViewerC
 		uid: 'viewer',
 		venueAdmins: [],
 		roles: [
-			{ id: 'editor', biddable: false },
-			{ id: 'reviewer', biddable: true }
+			{ id: 'copyeditor', biddable: false, priority: 2 },
+			{ id: 'chief', biddable: false, priority: 0 },
+			{ id: 'reviewer', biddable: true, priority: 2 }
 		],
 		viewerVolunteering: [],
 		assignments: [],
@@ -51,7 +52,7 @@ describe('canViewSubmission', () => {
 		expect(
 			canViewSubmission(
 				SUBMISSION,
-				context({ viewerVolunteering: [{ roleid: 'editor', accepted: 'accepted' }] })
+				context({ viewerVolunteering: [{ roleid: 'copyeditor', accepted: 'accepted' }] })
 			)
 		).toBe(false);
 	});
@@ -129,6 +130,27 @@ describe('canViewSubmission', () => {
 	test('approving a role with no assignment here grants nothing', () => {
 		expect(
 			canViewSubmission(SUBMISSION, context({ assignments: [], approvesRole: () => true }))
+		).toBe(false);
+	});
+
+	// Branch 6. The venue's editors read every submission in it, because an unclaimed
+	// one has no assignment to hang a permission on — and it is exactly the submission
+	// they are being asked to take.
+	test('an accepted volunteer on the priority-0 role can, with no assignment here', () => {
+		expect(
+			canViewSubmission(
+				SUBMISSION,
+				context({ viewerVolunteering: [{ roleid: 'chief', accepted: 'accepted' }] })
+			)
+		).toBe(true);
+	});
+
+	test('a merely invited volunteer on the priority-0 role cannot', () => {
+		expect(
+			canViewSubmission(
+				SUBMISSION,
+				context({ viewerVolunteering: [{ roleid: 'chief', accepted: 'invited' }] })
+			)
 		).toBe(false);
 	});
 

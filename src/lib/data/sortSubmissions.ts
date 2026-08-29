@@ -31,7 +31,13 @@ export type SubmissionsViewContext = {
 	/** Assignments visible to the viewer (RLS has already filtered these). */
 	assignments: ViewAssignment[] | null;
 	/** Role lookup, for the anonymous_authors gate. */
-	rolesById: Map<string, { anonymous_authors: boolean }>;
+	rolesById: Map<string, { anonymous_authors: boolean; priority: number }>;
+	/** Which submissions already have someone in the venue's editor role, from
+	 * `public.venue_submission_editors`. Not derived from `assignments`: a venue editor
+	 * who is not a venue admin can see the venue's submissions and none of its
+	 * assignments, so inferring it from visible rows called every submission unclaimed.
+	 * Null when it hasn't loaded. */
+	submissionsWithEditor: Set<string> | null;
 	/** Scholar display names, ALREADY LOWERCASED, for name matching. */
 	scholarName: Map<string, string>;
 	/** The viewer's declared conflicts. */
@@ -42,6 +48,8 @@ export type SubmissionsViewContext = {
 	doneVisibilityDays: number | null;
 	/** The raw search box contents; trimmed and lowercased here. */
 	filter: string;
+	/** When true, show only submissions still waiting for an editor. */
+	needsEditorOnly: boolean;
 	/** Current time in ms, injected so the visibility window is testable. */
 	now: number;
 	/** Sort state, in precedence order: the LAST column listed is dominant,
@@ -125,6 +133,23 @@ export function submissionsView(context: SubmissionsViewContext) {
 		return expected.length - visible.length;
 	}
 
+	/** True if nobody is editing this submission yet.
+	 *
+	 * A submission with no priority-0 assignment is stalled: its author has paid, but
+	 * until someone holds the editor role on it, no assignment can be approved and it
+	 * cannot be marked done. `create_submission` seats the venue's editor when there is
+	 * exactly one, so this is the venue with several editors, or none.
+	 *
+	 * Done submissions are never flagged — whoever edited them has moved on, and a
+	 * finished paper is not waiting for anyone. Otherwise this is deliberately the same
+	 * test `can_claim_editor_role` makes, so the flag and the claim button it carries
+	 * agree with what the database will actually allow. */
+	function needsEditor(sub: ViewSubmission): boolean {
+		if (sub.status === 'done') return false;
+		if (context.submissionsWithEditor === null) return false;
+		return !context.submissionsWithEditor.has(sub.id);
+	}
+
 	/** Ascending comparators. Direction is applied by the caller rather than by
 	 * reversing the array: `reverse()` after a stable sort also reverses the ties
 	 * the PREVIOUS pass established, so the default newest-first list was
@@ -162,6 +187,7 @@ export function submissionsView(context: SubmissionsViewContext) {
 				: context.now - context.doneVisibilityDays * 24 * 60 * 60 * 1000;
 		const subs = submissions
 			.filter((sub) => trimmedFilter === '' || matchesFilter(sub))
+			.filter((sub) => !context.needsEditorOnly || needsEditor(sub))
 			.filter(
 				(sub) =>
 					context.conflicts !== null && !context.conflicts.some((c) => c.submissionid === sub.id)
@@ -191,6 +217,7 @@ export function submissionsView(context: SubmissionsViewContext) {
 		canSeeAuthors,
 		matchesFilter,
 		paymentStatus,
+		needsEditor,
 		sortedAndFiltered
 	};
 }

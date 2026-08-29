@@ -1153,6 +1153,10 @@ export type Database = {
         Args: { _role: string; _submission: string }
         Returns: boolean
       }
+      can_claim_editor_role: {
+        Args: { _role: string; _submission: string }
+        Returns: boolean
+      }
       complete_assignment: {
         Args: {
           _assignment_id: string
@@ -1285,6 +1289,7 @@ export type Database = {
       }
       site_origin: { Args: never; Returns: string }
       steward_inbox: { Args: never; Returns: string }
+      submission_has_editor: { Args: { _submission: string }; Returns: boolean }
       tokens_as_of: {
         Args: { _at?: string }
         Returns: {
@@ -1306,6 +1311,13 @@ export type Database = {
           _transaction: string
         }
         Returns: Json
+      }
+      venue_submission_editors: {
+        Args: { _venue: string }
+        Returns: {
+          has_editor: boolean
+          submission: string
+        }[]
       }
       verify_email: { Args: { _token: string }; Returns: Json }
     }

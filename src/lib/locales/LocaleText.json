@@ -3599,6 +3599,10 @@
                     "approveBid": {
                       "$ref": "#/definitions/ButtonText"
                     },
+                    "claimEditor": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Take on this submission as the venue's editor."
+                    },
                     "complete": {
                       "$ref": "#/definitions/ConfirmButtonText"
                     },
@@ -3620,7 +3624,8 @@
                     "approve",
                     "approveBid",
                     "approveAnyway",
-                    "markDone"
+                    "markDone",
+                    "claimEditor"
                   ],
                   "type": "object"
                 },
@@ -3687,6 +3692,10 @@
                     "missingAuthors": {
                       "type": "string"
                     },
+                    "needsEditor": {
+                      "description": "Nobody holds the venue's editor role on this submission yet, so nothing on it can be approved and it cannot be marked done.",
+                      "type": "string"
+                    },
                     "noAuthors": {
                       "type": "string"
                     },
@@ -3716,7 +3725,8 @@
                     "completionBlocked",
                     "completionInsufficient",
                     "completionNotEditor",
-                    "completionSucceeded"
+                    "completionSucceeded",
+                    "needsEditor"
                   ],
                   "type": "object"
                 },
@@ -4033,6 +4043,10 @@
                     "bid": {
                       "$ref": "#/definitions/ButtonText"
                     },
+                    "claimEditor": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Take on a submission nobody is editing yet."
+                    },
                     "declareConflict": {
                       "$ref": "#/definitions/ButtonText"
                     },
@@ -4077,7 +4091,8 @@
                     "sortCreatedOldest",
                     "declareConflict",
                     "bid",
-                    "unbid"
+                    "unbid",
+                    "claimEditor"
                   ],
                   "type": "object"
                 },
@@ -4106,6 +4121,19 @@
                     "conflicted",
                     "bids",
                     "biddingClosed"
+                  ],
+                  "type": "object"
+                },
+                "checkbox": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "needsEditor": {
+                      "description": "Narrows the list to submissions with no editor.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "needsEditor"
                   ],
                   "type": "object"
                 },
@@ -4313,6 +4341,10 @@
                       "description": "Submission has been marked done.",
                       "type": "string"
                     },
+                    "needsEditor": {
+                      "description": "Nobody holds the venue's editor role on this submission, so no assignment on it can be approved and it cannot be marked done.",
+                      "type": "string"
+                    },
                     "paid": {
                       "type": "string"
                     },
@@ -4328,7 +4360,8 @@
                     "paid",
                     "pending",
                     "reviewing",
-                    "done"
+                    "done",
+                    "needsEditor"
                   ],
                   "type": "object"
                 },
@@ -4359,6 +4392,7 @@
                 "cell",
                 "feedback",
                 "options",
+                "checkbox",
                 "button",
                 "headers",
                 "field",

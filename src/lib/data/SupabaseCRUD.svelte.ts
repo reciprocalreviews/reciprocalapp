@@ -866,6 +866,15 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
+	async getVenueSubmissionEditors(
+		venue: VenueID
+	): Promise<ReadResult<{ submission: SubmissionID; has_editor: boolean }[] | null>> {
+		return this.rows(
+			'LoadAssignment',
+			this.client.rpc('venue_submission_editors', { _venue: venue })
+		);
+	}
+
 	async getVenueActiveAssignmentScholars(
 		venue: VenueID
 	): Promise<ReadResult<Pick<AssignmentRow, 'scholar'>[] | null>> {
@@ -1365,7 +1374,7 @@ export default class SupabaseCRUD extends CRUD {
 		// to, which is the same currency create_submission will use.
 		const { data: venueRow, error: venueError } = await this.client
 			.from('venues')
-			.select('currency, title')
+			.select('currency, title, admins')
 			.eq('id', venue)
 			.single();
 		if (venueError) return this.error('LoadVenue', venueError);
@@ -1422,11 +1431,12 @@ export default class SupabaseCRUD extends CRUD {
 		// without this email a co-author would only discover the charge by
 		// visiting their dashboard. Per-recipient, since each charge differs.
 		const notifications: Notification[] = [];
+		const submissionTitle = title.trim() ? title : externalID;
 		for (const [index, author] of authors.entries()) {
 			const payment = charges[index]?.payment ?? 0;
 			if (author === creator || payment === 0) continue;
 			const emailResult = await this.emailScholars([author], 'SubmissionCharged', [
-				title.trim() ? title : externalID,
+				submissionTitle,
 				venueRow.title,
 				payment.toString(),
 				author
@@ -1434,7 +1444,63 @@ export default class SupabaseCRUD extends CRUD {
 			if (emailResult.notified) notifications.push(...emailResult.notified);
 		}
 
+		// Tell the venue's editors that a submission arrived. The RPC seats the venue's
+		// sole editor when there is exactly one and reports who; otherwise nobody is
+		// editing it yet and somebody has to pick it up — the step that previously had no
+		// prompt at all, which is how a submission could sit unnoticed indefinitely.
+		const editor = stringField(data, 'editor');
+		const editorResult =
+			editor !== null
+				? await this.emailScholars([editor], 'SubmissionAssignedEditor', [
+						submissionTitle,
+						venueRow.title,
+						venue,
+						submissionID
+					])
+				: await this.emailEditorsOf(venue, venueRow.admins, 'SubmissionNeedsEditor', [
+						submissionTitle,
+						venueRow.title,
+						venue,
+						submissionID
+					]);
+		if (editorResult.notified) notifications.push(...editorResult.notified);
+
 		return { data: submissionID, notified: notifications };
+	}
+
+	/**
+	 * Email the people who can act on a submission that has no editor: the venue's
+	 * editors, and its admins.
+	 *
+	 * Both, because after `can_claim_editor_role` either can do something about it — an
+	 * editor by claiming it, an admin by assigning someone to the role. Before that
+	 * policy existed only admins could, which is why notifying the editors would have
+	 * been mail nobody could act on.
+	 */
+	private async emailEditorsOf(
+		venue: VenueID,
+		admins: ScholarID[],
+		template: EmailType,
+		args: string[]
+	): Promise<Result> {
+		const { data: roles } = await this.client
+			.from('roles')
+			.select('id')
+			.eq('venueid', venue)
+			.eq('priority', 0);
+		const roleIDs = (roles ?? []).map((role) => role.id);
+		const { data: volunteers } =
+			roleIDs.length === 0
+				? { data: [] }
+				: await this.client
+						.from('volunteers')
+						.select('scholarid')
+						.in('roleid', roleIDs)
+						.eq('active', true)
+						.eq('accepted', 'accepted');
+		const recipients = [...new Set([...(volunteers ?? []).map((v) => v.scholarid), ...admins])];
+		if (recipients.length === 0) return {};
+		return this.emailScholars(recipients, template, args);
 	}
 
 	async bulkImportSubmissions(
@@ -1465,14 +1531,48 @@ export default class SupabaseCRUD extends CRUD {
 			submission_ids: SubmissionID[];
 			transaction_id: TransactionID | null;
 			mint_amount: number;
+			editor: ScholarID | null;
+			seated: number;
 		};
+
+		const imported = result.submission_ids?.length ?? 0;
+
+		// One digest rather than one message per row: an import of two hundred manuscripts
+		// should not be two hundred emails. When the venue has a sole editor the RPC seated
+		// them on every row, so the notice tells them what they now hold; otherwise the
+		// rows are waiting for someone, and the venue's editors and admins are told how
+		// many.
+		const notifications: Notification[] = [];
+		if (imported > 0) {
+			const { data: venueRow } = await this.client
+				.from('venues')
+				.select('title, admins')
+				.eq('id', venue)
+				.single();
+			if (venueRow !== null) {
+				const emailResult =
+					result.editor !== null
+						? await this.emailScholars([result.editor], 'SubmissionsAssignedEditor', [
+								result.seated.toString(),
+								venueRow.title,
+								venue
+							])
+						: await this.emailEditorsOf(venue, venueRow.admins, 'SubmissionsNeedEditors', [
+								imported.toString(),
+								venueRow.title,
+								venue
+							]);
+				if (emailResult.notified) notifications.push(...emailResult.notified);
+			}
+		}
 
 		return {
 			data: {
 				submissionIDs: result.submission_ids ?? [],
 				transactionID: result.transaction_id,
 				mintAmount: result.mint_amount
-			}
+			},
+			notified: notifications
 		};
 	}
 

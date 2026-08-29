@@ -625,6 +625,12 @@ export default abstract class CRUD {
 	): Promise<ReadResult<VolunteerRow[] | null>>;
 
 	abstract getVenueAssignments(venue: VenueID): Promise<ReadResult<AssignmentRow[] | null>>;
+	/** Which of a venue's submissions already have someone in its editor role. A boolean
+	 * per submission rather than the assignment rows themselves, because the venue's
+	 * editors can see its submissions but not its assignments. */
+	abstract getVenueSubmissionEditors(
+		venue: VenueID
+	): Promise<ReadResult<{ submission: SubmissionID; has_editor: boolean }[] | null>>;
 	abstract getSubmissionAssignments(
 		submission: SubmissionID
 	): Promise<ReadResult<AssignmentRow[] | null>>;

@@ -30,6 +30,13 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get all selectable assignments for the venue, according to the RLS policy.
 	const { data: assignments } = uid === null ? { data: [] } : await db.getVenueAssignments(venueid);
 
+	// Which submissions already have an editor. A boolean per submission rather than a
+	// read of `assignments`: the venue's editors can see its submissions but none of its
+	// assignments, so the list would otherwise call every submission unclaimed for exactly
+	// the people the flag is for.
+	const { data: submissionEditors } =
+		uid === null ? { data: [] } : await db.getVenueSubmissionEditors(venueid);
+
 	// Transactions in the submissions. Only retrieve IDs to preserve confidentiality.
 	const { data: transactions } =
 		submissions === null
@@ -67,6 +74,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		volunteering,
 		roles,
 		assignments,
+		submissionEditors,
 		transactions,
 		conflicts,
 		submissionTypes,

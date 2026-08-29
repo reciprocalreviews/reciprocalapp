@@ -12,6 +12,7 @@
 	import SubmissionPreview from '$lib/components/SubmissionLink.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
+	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import Options from '$lib/components/Options.svelte';
@@ -21,6 +22,7 @@
 	import { getDB } from '$lib/data/CRUD';
 	import { alreadyAssigned } from '$lib/data/assignees';
 	import canApproveAssignment from '$lib/data/canApproveAssignment';
+	import canClaimEditor from '$lib/data/canClaimEditor';
 	import isRoleApprover from '$lib/data/isRoleApprover';
 	import { submissionsView } from '$lib/data/sortSubmissions';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
@@ -41,6 +43,8 @@
 		roles,
 		/** If an editor, all submission assignments; otherwise, all of the current scholar's assignments. */
 		assignments,
+		/** Per submission, whether anyone holds the venue's editor role on it */
+		submissionEditors,
 		/** All transctions for all submissions in this venue */
 		transactions,
 		/** The conflicts for the current scholar */
@@ -59,6 +63,18 @@
 	/** Role lookup so we can honor `role.anonymous_authors` when deciding
 	 * whether to include author names in the search blob. */
 	const rolesById = $derived(new Map((roles ?? []).map((r) => [r.id, r])));
+
+	/** The venue's editor role, if it has one. Claiming is only ever about this role —
+	 * priority 0 is what the database checks when deciding who edits a submission. */
+	const editorRole = $derived((roles ?? []).find((r) => r.priority === 0));
+
+	/** The submissions someone is already editing. Null until it loads, so the flag stays
+	 * off rather than briefly claiming every submission needs an editor. */
+	const submissionsWithEditor = $derived(
+		submissionEditors === null
+			? null
+			: new Set(submissionEditors.filter((s) => s.has_editor).map((s) => s.submission))
+	);
 
 	const sortedLevels = $derived([...(preferenceLevels ?? [])].sort((a, b) => a.rank - b.rank));
 
@@ -121,6 +137,9 @@
 	]);
 	// svelte-ignore state_referenced_locally
 	let filter = $state(page.url.searchParams.get('filter') ?? '');
+	/** Narrow the list to submissions nobody is editing yet — the editorial round's
+	 * first question, and the one the list could not answer before. */
+	let needsEditorOnly = $state(false);
 	const locale = getLocaleContext();
 
 	/** The submissions-list view logic — search matching, the author-visibility
@@ -133,11 +152,13 @@
 			isAdmin,
 			assignments,
 			rolesById,
+			submissionsWithEditor,
 			scholarName,
 			conflicts,
 			transactions,
 			doneVisibilityDays: venue?.done_visibility_days ?? null,
 			filter,
+			needsEditorOnly,
 			now: Date.now(),
 			sortOrder,
 			paymentSortPendingFirst,
@@ -213,6 +234,12 @@
 			strings={(l) => l.page.submissions.field.filter}
 			bind:text={filter}
 		></TextField>
+
+		<Checkbox
+			testid="submissions-needs-editor-filter"
+			label={(l) => l.page.submissions.checkbox.needsEditor}
+			bind:on={needsEditorOnly}
+		/>
 
 		<!-- Assign one scholar across many submissions without opening each one. -->
 		{#if uid && assignableRoles.length > 0}
@@ -380,6 +407,28 @@
 									<Status label={(l) => l.page.submissions.status.done} />
 								{:else}
 									<Status good={false} label={(l) => l.page.submissions.status.reviewing} />
+									<!-- Nobody holds the editor role on this one, so no assignment on it can
+									     be approved and it cannot be marked done. Shown next to the status
+									     because it is a fact about the submission's progress, not about the
+									     viewer's own work. -->
+									{#if view.needsEditor(submission)}
+										<Status
+											good={false}
+											testid="needs-editor-{index}"
+											label={(l) => l.page.submissions.status.needsEditor}
+										/>
+										{#if editorRole && canClaimEditor(editorRole, uid, volunteering, submissionsWithEditor?.has(submission.id))}
+											<Button
+												small
+												testid="claim-editor-{index}"
+												strings={(l) => l.page.submissions.button.claimEditor}
+												action={() =>
+													handle(
+														db().createAssignment(submission.id, uid!, editorRole.id, false, true)
+													)}
+											/>
+										{/if}
+									{/if}
 								{/if}
 							</td>
 							<!-- If we have all the information, show metadata about bidding. -->

@@ -89,6 +89,38 @@ export const Emails = {
 			'{origin}/scholar/$4'
 		]
 	},
+	SubmissionAssignedEditor: {
+		subject: 'You are editing a new submission',
+		paragraphs: [
+			'A new submission, "$1", arrived at $2, and you are the venue\'s editor for it.',
+			'{origin}/venue/$3/submission/$4',
+			"You were assigned automatically because you are the venue's only editor. If someone else should handle it, you can remove yourself and assign them from the submission page."
+		]
+	},
+	SubmissionNeedsEditor: {
+		subject: 'A submission is waiting for an editor',
+		paragraphs: [
+			'A new submission, "$1", arrived at $2 and has no editor yet. Nobody was assigned automatically, because the venue has more than one editor — or none.',
+			'{origin}/venue/$3/submission/$4',
+			"Whoever takes it on can claim it from that page, or from the venue's submissions list. Until someone does, nothing else in the review can proceed."
+		]
+	},
+	SubmissionsAssignedEditor: {
+		subject: 'You are editing newly imported submissions',
+		paragraphs: [
+			"$1 submission(s) were imported into $2, and you are the venue's editor for all of them.",
+			'{origin}/venue/$3/submissions',
+			"You were assigned automatically because you are the venue's only editor. Remove yourself from any that someone else should handle."
+		]
+	},
+	SubmissionsNeedEditors: {
+		subject: 'Submissions are waiting for an editor',
+		paragraphs: [
+			'$1 submission(s) at $2 have no editor yet.',
+			'{origin}/venue/$3/submissions',
+			'You can claim them from that list, or assign someone else to the editor role on each.'
+		]
+	},
 	WorkCompensated: {
 		subject: 'You were paid for your $1 work',
 		paragraphs: [
