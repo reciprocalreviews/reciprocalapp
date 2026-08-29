@@ -1,76 +1,26 @@
--- Daily reconciliation of the token economy against its own records.
+-- An eighth reconciliation signal: accounts that cannot become scholars.
 --
--- The backup work established that assertions are what catch real problems:
--- three separate defects survived every piece of reasoning about the restore and
--- were found only by checking. This is the same idea applied continuously to live
--- data, so corruption is found the morning after rather than whenever someone
--- happens to notice a balance looks wrong.
+-- A public.scholars row is created exactly once, by the on_auth_user_created trigger on
+-- auth.users, and never again. An account that misses it is permanently unusable and
+-- says nothing about it: the Supabase session is valid and RLS sees auth.uid(), but the
+-- app reads its signed-in scholar from public.scholars, finds nothing, and renders the
+-- person as anonymous. Signing in again cannot help, because the auth.users row already
+-- exists. 20260901000000_ensure_scholar.sql makes that recoverable; this is what notices
+-- it happened.
 --
--- Each check answers a question nothing else in the schema can:
+-- Worth its own signal rather than folding into an existing one, because the likeliest
+-- cause is the trigger itself going missing — and that trigger lives on auth.users,
+-- outside the schema set CI's drift guard compares (config.toml exposes only public and
+-- graphql_public). Nothing else in this repository would ever have told us.
 --
---   1. unattributed_moves   — did value move without a transaction explaining it?
---   2. replay_mismatches    — does the ledger still reproduce current state?
---   3. chain_breaks         — did a write escape the logging trigger?
---   4. placeholders         — is an approved transaction still holding null-UUIDs?
---   5. dangling_token_refs  — does an approved transaction cite a token that is
---                             gone, or in another currency?
---   6. conservation         — do the two narratives agree, holder by holder?
---   7. orphan_proposals     — did a multi-step client write leave half a record?
---   8. orphan_accounts      — is there an account that cannot become a scholar?
+-- Counted as an INVARIANT, not advisory. The advisory carve-out exists because seed.sql
+-- makes unattributed_mints and orphan_proposals permanently non-zero in development;
+-- this one is different, since seed.sql inserts auth.users rows and only UPDATEs
+-- public.scholars, so it already relies on the trigger to create them. A seeded database
+-- with no trigger is broken, and going red is the right answer.
+--
+-- The whole function is restated because that is the only way to change a body.
 --------------------------------------
--- Where results are kept. Append-only by convention rather than by trigger: this
--- is a monitoring record, not evidence, and a stuck row should be correctable.
-create table if not exists public.reconciliations (
-	id uuid primary key default gen_random_uuid(),
-	ran_at timestamptz not null default now(),
-	ok boolean not null,
-	result jsonb not null,
-	-- How long the run took. Recorded because the failure mode of this job is not
-	-- a wrong answer but no answer: three of its checks scan the whole history of
-	-- the token ledger, which only grows, and a cron job that starts timing out
-	-- stops reporting silently. A visible trend is the warning.
-	duration_ms integer
-);
-
-alter table public.reconciliations OWNER to "postgres";
-
-create index reconciliations_ran_at_index on public.reconciliations using btree (ran_at desc);
-
--- Nobody reads this through the API. It describes the integrity of the whole
--- economy, which is not a scholar's business.
-alter table public.reconciliations ENABLE row LEVEL SECURITY;
-
-revoke all on table public.reconciliations
-from
-	anon,
-	authenticated;
-
--- Explicitly revoked, not merely un-granted: Supabase's default privileges give
--- service_role ALL on every new table in `public` before this file's grant runs,
--- so `grant select` alone left INSERT, UPDATE and DELETE in place and the line
--- below described a restriction that did not exist.
-revoke insert,
-update,
-delete on table public.reconciliations
-from
-	service_role;
-
-grant
-select
-	on table public.reconciliations to service_role;
-
---------------------------------------
--- _since bounds the three checks that scan the ENTIRE token history -- replay,
--- chain and dangling refs -- to events and transactions at or after that moment.
--- Null means everything, which is what a deliberate investigation wants; the
--- nightly cron passes a window, because those three grow without bound while the
--- rest do not.
---
--- Conservation (check 6) is deliberately NOT bounded. It compares current state
--- against the transactions that produced it, so it is O(the economy) rather than
--- O(its history) -- it does not grow with time, and it is the check that catches
--- a lost or duplicated payment. Narrowing it to save time would give away the
--- one invariant most worth having.
 create or replace function public.reconcile_ledger (_since timestamptz default null) returns jsonb language plpgsql security definer
 set
 	search_path='' as $$
@@ -324,25 +274,3 @@ begin
 	return _result;
 end;
 $$;
-
-alter function public.reconcile_ledger (timestamptz) OWNER to "postgres";
-
-revoke
-execute on function public.reconcile_ledger (timestamptz)
-from
-	public,
-	anon,
-	authenticated;
-
-grant
-execute on function public.reconcile_ledger (timestamptz) to service_role;
-
---------------------------------------
--- Scheduling lives in the migration, not here: cron.job is cluster state rather
--- than schema, captured separately by supabase/dr/dump.sh and restored from
--- quarantine's record. See migrations 20260808010000 and 20260830030000.
---
--- Two schedules: a bounded run nightly at 22:15, which is the alarm, and an
--- unbounded one weekly, which closes the hole bounding opens -- the window keys
--- on a token having moved recently, and a write that escaped the logging trigger
--- leaves no event to move it into view.

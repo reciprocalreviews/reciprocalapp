@@ -33,6 +33,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - Validation warnings no longer linger on a field that has been cleared. Fields now stay quiet until you type in them and go quiet again when something clears them — previously a field that emptied after you submitted kept the "must not be empty" warning it earned while you were filling it in.
 - **Closed a hole that let anyone mint or move tokens without signing in.** Several database routines that rely on their callers to have already checked permissions were reachable directly through the public API, so a venue's reserve could be emptied and new tokens created from nothing.
 - A venue's transactions page no longer shows a loading error when the venue's reserve is empty.
+- **An account whose profile was never created now repairs itself.** Signing in for the first time could leave you with an account but no profile, which every page read as not being signed in at all — your own profile reported that it couldn't load, and nothing you could do fixed it — so the missing profile is now created on your next visit.
+- **A link to a scholar who doesn't exist now says so.** A mistyped or outdated profile address previously reported that the profile couldn't be loaded, which was indistinguishable from the site being broken.
 
 ## 0.5.0 - 2026-08-28
 

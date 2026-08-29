@@ -84,7 +84,10 @@
 	},
 	"page": {
 		"error": {
-			"title": "Oops."
+			"title": "Oops.",
+			"missing": "Not found.",
+			"notFound": "There's nothing at this address. The link may be mistyped, or point to something that no longer exists.",
+			"unexpected": "Something went wrong on our end. Try again in a moment, and [write to the stewards](/contact) if it keeps happening."
 		},
 		"brand": {
 			"title": "Brand",
@@ -1989,6 +1992,7 @@
 		"LoadVenue": "Unable to load venue data.",
 		"LoadCurrency": "Unable to load currency data.",
 		"LoadScholar": "Unable to load scholar data.",
+		"EnsureScholar": "Unable to set up your scholar profile.",
 		"LoadSubmission": "Unable to load submission data.",
 		"LoadTransaction": "Unable to load transaction data.",
 		"LoadRole": "Unable to load role data.",

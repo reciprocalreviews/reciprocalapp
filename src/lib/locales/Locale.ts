@@ -154,7 +154,17 @@ export type LocaleText = {
 	};
 	page: {
 		error: {
+			/** Header for a request that failed. */
 			title: string;
+			/** Header for a request that named something that does not exist. Distinct
+			 * from `title` because "we broke" and "there is nothing here" are different
+			 * news, and a reader who mistyped a link should not be told the site is
+			 * down. */
+			missing: string;
+			/** Body for a 404. */
+			notFound: string;
+			/** Body for any other status. */
+			unexpected: string;
 		};
 		brand: {
 			title: string;
@@ -1570,6 +1580,7 @@ export type LocaleText = {
 		LoadVenue: string;
 		LoadCurrency: string;
 		LoadScholar: string;
+		EnsureScholar: string;
 		LoadSubmission: string;
 		LoadTransaction: string;
 		LoadRole: string;

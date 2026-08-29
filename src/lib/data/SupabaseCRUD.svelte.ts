@@ -41,6 +41,7 @@ import CRUD, {
 	type BulkImportResult,
 	type Charge,
 	type ChargeCoverage,
+	type EnsureScholarOutcome,
 	type ImportedSubmission,
 	type MarkSubmissionDoneOutcome,
 	type Notification,
@@ -356,6 +357,13 @@ export default class SupabaseCRUD extends CRUD {
 		return error ? this.error(id, error) : {};
 	}
 
+	// These three all return the failure alongside the data rather than only logging
+	// it. A caller that doesn't care can keep destructuring `data` exactly as before,
+	// but one that does can now tell a MISSING row from a FAILED read — which
+	// `.maybeSingle()` distinguishes (null data with a null error means the row isn't
+	// there) and this layer used to throw away. The scholar route depends on it to
+	// answer a 404 instead of rendering "unable to load" for every case alike.
+
 	/** Run a multi-row read, log on failure, and resolve with the rows (null on
 	 * error), preserving the query's inferred element type. Used by the page-load
 	 * read methods (#137). */
@@ -364,8 +372,7 @@ export default class SupabaseCRUD extends CRUD {
 		query: PromiseLike<{ data: Row[] | null; error: PostgrestError | null }>
 	): Promise<ReadResult<Row[] | null>> {
 		const { data, error } = await query;
-		if (error) this.error(id, error);
-		return { data };
+		return { data, ...(error ? this.error(id, error) : {}) };
 	}
 
 	/** Run a single-row read (`.maybeSingle()`), log on failure, and resolve with
@@ -375,8 +382,7 @@ export default class SupabaseCRUD extends CRUD {
 		query: PromiseLike<{ data: Row | null; error: PostgrestError | null }>
 	): Promise<ReadResult<Row | null>> {
 		const { data, error } = await query;
-		if (error) this.error(id, error);
-		return { data: data ?? null };
+		return { data: data ?? null, ...(error ? this.error(id, error) : {}) };
 	}
 
 	/** Run a count query (`{ count: 'exact', head: true }`), log on failure, and
@@ -386,8 +392,7 @@ export default class SupabaseCRUD extends CRUD {
 		query: PromiseLike<{ count: number | null; error: PostgrestError | null }>
 	): Promise<ReadResult<number | null>> {
 		const { count, error } = await query;
-		if (error) this.error(id, error);
-		return { data: count };
+		return { data: count, ...(error ? this.error(id, error) : {}) };
 	}
 
 	// Per-table single-row column updaters keyed by `id`. These collapse the many
@@ -657,6 +662,12 @@ export default class SupabaseCRUD extends CRUD {
 			'LoadScholar',
 			this.client.from('scholars').select().eq('id', id).maybeSingle()
 		);
+	}
+
+	async ensureScholar(): Promise<Result<EnsureScholarOutcome>> {
+		const { data, error } = await this.client.rpc('ensure_scholar');
+		if (error) return this.error('EnsureScholar', error);
+		return { data: data as EnsureScholarOutcome };
 	}
 
 	async getScholarsByIDs(ids: ScholarID[]): Promise<ReadResult<ScholarRow[] | null>> {

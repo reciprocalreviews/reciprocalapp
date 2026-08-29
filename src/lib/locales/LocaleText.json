@@ -556,6 +556,9 @@
             "EmailScholar": {
               "type": "string"
             },
+            "EnsureScholar": {
+              "type": "string"
+            },
             "EraseScholar": {
               "description": "Erasing a scholar's account failed.",
               "type": "string"
@@ -920,6 +923,7 @@
             "LoadVenue",
             "LoadCurrency",
             "LoadScholar",
+            "EnsureScholar",
             "LoadSubmission",
             "LoadTransaction",
             "LoadRole",
@@ -1938,12 +1942,28 @@
             "error": {
               "additionalProperties": false,
               "properties": {
+                "missing": {
+                  "description": "Header for a request that named something that does not exist. Distinct from `title` because \"we broke\" and \"there is nothing here\" are different news, and a reader who mistyped a link should not be told the site is down.",
+                  "type": "string"
+                },
+                "notFound": {
+                  "description": "Body for a 404.",
+                  "type": "string"
+                },
                 "title": {
+                  "description": "Header for a request that failed.",
+                  "type": "string"
+                },
+                "unexpected": {
+                  "description": "Body for any other status.",
                   "type": "string"
                 }
               },
               "required": [
-                "title"
+                "title",
+                "missing",
+                "notFound",
+                "unexpected"
               ],
               "type": "object"
             },

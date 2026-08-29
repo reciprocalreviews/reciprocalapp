@@ -1283,6 +1283,7 @@ export type Database = {
       }
       currency_holder_counts: { Args: { _currency: string }; Returns: Json }
       decline_thanks: { Args: { _id: string; _reason: string }; Returns: Json }
+      ensure_scholar: { Args: never; Returns: string }
       erase_scholar: {
         Args: { _note?: string; _scholar?: string }
         Returns: Json
@@ -1358,6 +1359,13 @@ export type Database = {
         Returns: {
           count: number
           scholar: string
+        }[]
+      }
+      scholar_identity: {
+        Args: { _meta: Json }
+        Returns: {
+          name: string
+          orcid: string
         }[]
       }
       set_steward: {

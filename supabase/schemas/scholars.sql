@@ -174,29 +174,51 @@ from
 grant
 execute on function public.set_steward (uuid, boolean) to authenticated;
 
-create or replace function public.handle_new_scholar () returns "trigger" language "plpgsql" security definer
+-- What a scholar row's identity columns are, given the OIDC metadata of the account
+-- behind it. Extracted so the two callers below cannot drift: the trigger that runs on
+-- signup, and the repair that runs when the trigger didn't. This logic has been wrong
+-- once already (20260720010000 fixed a `name` read that ORCID never sends, and
+-- backfilled the nulls it produced), and a second copy is a second chance to be wrong.
+create or replace function public.scholar_identity (_meta jsonb) returns table (orcid text, name text) language "sql" immutable
 set
 	"search_path" to '' as $$
-begin
-  insert into public.scholars (id, orcid, name)
-  values (
-    new.id,
+  select
     coalesce(
-      new.raw_user_meta_data->>'orcid',
-      new.raw_user_meta_data->>'provider_id',
-      new.raw_user_meta_data->>'sub'
+      _meta->>'orcid',
+      _meta->>'provider_id',
+      _meta->>'sub'
     ),
     -- ORCID sends given_name/family_name and no `name`. Prefer `name` for providers that do
     -- send it; fall back to the composed form. Left null when the provider sends neither,
     -- so the scholar can supply one rather than being given a placeholder.
     coalesce(
-      nullif(btrim(new.raw_user_meta_data->>'name'), ''),
+      nullif(btrim(_meta->>'name'), ''),
       nullif(btrim(concat_ws(' ',
-        new.raw_user_meta_data->>'given_name',
-        new.raw_user_meta_data->>'family_name'
+        _meta->>'given_name',
+        _meta->>'family_name'
       )), '')
-    )
-  );
+    );
+$$;
+
+alter function public.scholar_identity (jsonb) OWNER to "postgres";
+
+-- Called only from the two SECURITY DEFINER functions below, which run as postgres.
+revoke
+execute on function public.scholar_identity (jsonb)
+from
+	public,
+	anon,
+	authenticated;
+
+create or replace function public.handle_new_scholar () returns "trigger" language "plpgsql" security definer
+set
+	"search_path" to '' as $$
+declare
+  _identity record;
+begin
+  select * into _identity from public.scholar_identity(new.raw_user_meta_data);
+  insert into public.scholars (id, orcid, name)
+  values (new.id, _identity.orcid, _identity.name);
   return new;
 end;
 $$;
@@ -208,6 +230,73 @@ grant all on FUNCTION public.handle_new_scholar () to "anon";
 grant all on FUNCTION public.handle_new_scholar () to "authenticated";
 
 grant all on FUNCTION public.handle_new_scholar () to "service_role";
+
+-- The repair path for an account whose scholar row does not exist.
+--
+-- The trigger above is the only thing that ever creates a scholar row, and it fires on
+-- INSERT into auth.users — once, at signup, never again. So if it does not run, the
+-- account is permanently unusable and nothing notices: the session is valid, RLS sees
+-- auth.uid(), but the app reads its signed-in scholar FROM this table, finds nothing,
+-- and renders the person as anonymous forever. Signing in again does not help, because
+-- the auth.users row already exists. That is not a hypothetical — it happened in
+-- production, to a scholar whose first ORCID sign-in landed them on a profile page for
+-- a scholar that did not exist.
+--
+-- This makes that state recoverable, and it is deliberately callable by the person
+-- affected rather than by a steward, because they are the one who notices. It takes no
+-- arguments: the row it creates is always auth.uid()'s, so there is nothing to pass and
+-- no way to aim it at someone else.
+create or replace function public.ensure_scholar () returns text language "plpgsql" security definer
+set
+	"search_path" to '' as $$
+declare
+  _uid uuid := (select auth.uid());
+  _meta jsonb;
+  _identity record;
+begin
+  if _uid is null then
+    return 'no_account';
+  end if;
+
+  -- The overwhelmingly common case: nothing to do, and no write.
+  if exists (select 1 from public.scholars where id = _uid) then
+    return 'exists';
+  end if;
+
+  select raw_user_meta_data into _meta from auth.users where id = _uid;
+  if not found then
+    return 'no_account';
+  end if;
+
+  select * into _identity from public.scholar_identity(_meta);
+
+  -- scholars_orcid_unique: one iD identifies exactly one scholar (#87). If another row
+  -- already holds this one, two accounts are claiming one researcher — reported rather
+  -- than papered over, because the alternatives (fail the sign-in, or create a row with
+  -- a blank iD) are both worse than saying so and letting a person decide.
+  if _identity.orcid is not null
+    and exists (select 1 from public.scholars where orcid = _identity.orcid) then
+    return 'orcid_conflict';
+  end if;
+
+  insert into public.scholars (id, orcid, name)
+  values (_uid, _identity.orcid, _identity.name)
+  on conflict (id) do nothing;
+
+  return 'created';
+end;
+$$;
+
+alter function public.ensure_scholar () OWNER to "postgres";
+
+revoke
+execute on function public.ensure_scholar ()
+from
+	public,
+	anon;
+
+grant
+execute on function public.ensure_scholar () to authenticated;
 
 --------------------------------------
 -- SECURITY

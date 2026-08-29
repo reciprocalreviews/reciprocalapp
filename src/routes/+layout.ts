@@ -75,8 +75,27 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
 	// invalidateAll() after every successful write, which re-runs this load.
 	let tokens = 0;
 	if (userID) {
-		const { data: scholarData } = await db.getScholarRow(userID);
+		const { data: scholarData, error: scholarError } = await db.getScholarRow(userID);
 		scholar = scholarData ?? null;
+
+		// A valid session with no scholar row is a dead end the app can neither show nor
+		// escape. `isAuthenticated()` reads this row, so the person is rendered as
+		// anonymous while genuinely signed in; the redirect above does not fire, because
+		// it is gated on the absence of a user id and there is one; and signing in again
+		// changes nothing, since the trigger that creates the row runs only when the
+		// account is created. So repair it here and re-read.
+		//
+		// Only when the read actually SUCCEEDED. A failed read says nothing about whether
+		// the row exists, and writing on the strength of an error is how a transient
+		// outage turns into a second problem.
+		if (scholar === null && scholarError === undefined) {
+			const { data: outcome } = await db.ensureScholar();
+			if (outcome === 'created') {
+				const { data: repaired } = await db.getScholarRow(userID);
+				scholar = repaired ?? null;
+			}
+		}
+
 		const { data: tokenCount } = await db.getScholarTokenCount(userID);
 		tokens = tokenCount;
 	} else scholar = null;

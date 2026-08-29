@@ -77,9 +77,18 @@ begin
 		now(), now(),
 		'', '', '', ''
 	);
-	insert into public.scholars (id, email, name, steward)
-	values (new_id, addr, 'Test Scholar', p_steward)
-	on conflict (id) do update set email = excluded.email, name = excluded.name, steward = excluded.steward;
+	-- The trigger has already created the scholar row from the insert above, so this
+	-- only fills in what tests need it to have. Deliberately an UPDATE and not an
+	-- upsert: an upsert would create the row itself when the trigger is missing, and
+	-- the whole suite would go green against a database that cannot make scholars at
+	-- all -- which is precisely the production failure nothing caught.
+	update public.scholars
+	set email = addr, name = 'Test Scholar', steward = p_steward
+	where id = new_id;
+	if not found then
+		raise exception
+			'no scholar row for %: is the on_auth_user_created trigger missing?', new_id;
+	end if;
 	return new_id;
 end;
 $$;

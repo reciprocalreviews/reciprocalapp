@@ -83,9 +83,19 @@ export type Result<Type = undefined> = {
 /** The result of a read method used by page load functions (#137). Unlike
  * {@link Result}, `data` is always present (it carries the rows, or null when
  * the row is missing or the query failed) so callers can destructure `data`
- * with the same nullability the raw query builder used to give them. Read
- * failures are logged by the implementation rather than surfaced here. */
+ * with the same nullability the raw query builder used to give them.
+ *
+ * Read failures are logged by the implementation AND reported here. Most callers
+ * only want `data`, but the two reasons it can be null are not the same answer: a
+ * `.maybeSingle()` that finds nothing yields null with no `error`, while a failed
+ * query yields null with one. A route that renders "not found" for the first and
+ * "something went wrong" for the second needs to tell them apart. */
 export type ReadResult<Type> = { data: Type; error?: DBError };
+
+/** What `ensure_scholar` found when asked to repair the caller's own scholar row.
+ * `orcid_conflict` is the one that needs a person: another scholar row already holds
+ * this account's ORCID iD, so two accounts are claiming one researcher. */
+export type EnsureScholarOutcome = 'exists' | 'created' | 'orcid_conflict' | 'no_account';
 
 export type Charge = { scholar: string; payment: number | undefined };
 
@@ -541,6 +551,12 @@ export default abstract class CRUD {
 	): Promise<PostgrestResponse<TransactionListRow>>;
 
 	abstract getScholarRow(id: ScholarID): Promise<ReadResult<ScholarRow | null>>;
+	/** Create the signed-in scholar's row if it is somehow missing, and report what
+	 * happened. A scholar row is created once, by a trigger, when the account is
+	 * created; if that does not happen the account is unusable and cannot recover on
+	 * its own, because signing in again does not re-create the auth user. Called from
+	 * the root layout when there is a session but no scholar. */
+	abstract ensureScholar(): Promise<Result<EnsureScholarOutcome>>;
 	abstract getScholarsByIDs(ids: ScholarID[]): Promise<ReadResult<ScholarRow[] | null>>;
 	abstract getScholarNames(
 		ids: ScholarID[]
