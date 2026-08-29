@@ -116,8 +116,9 @@ begin
 			-- least one, and a community adopting the platform often has not found an
 			-- independent minter yet — refusing the venue until it has is the barrier this
 			-- replaces. The steward may also be one of the editors above, and so an admin of
-			-- this venue: that overlap is tolerated only while the venue is inactive, and
-			-- mint_tokens refuses to mint into a venue the caller administers regardless.
+			-- this venue: that overlap is permitted, for as long as the venue needs it. The
+			-- venue page discloses it to everyone who is neither an admin nor a minter,
+			-- which is the safeguard that replaced forbidding it.
 			select array_agg(id) into _minter_ids from public.scholars where email = any(_proposal.minters);
 			if _minter_ids is null then
 				_minter_ids := array[_caller];

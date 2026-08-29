@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CurrencyRow, ScholarID, ScholarRow, VenueRow } from '$data/types';
+	import type { ScholarID, VenueRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -15,14 +15,10 @@
 
 	let {
 		venue,
-		isAdmin,
-		minters,
-		currency
+		isAdmin
 	}: {
 		venue: VenueRow;
 		isAdmin: boolean;
-		minters: ScholarRow[] | null;
-		currency: CurrencyRow;
 	} = $props();
 
 	const db = getDB();
@@ -30,15 +26,10 @@
 
 	let newEditor: string = $state('');
 
+	/** An admin may also mint this venue's currency: the overlap is disclosed on the venue
+	 * page rather than refused, so all this checks is that the contact is well-formed. */
 	function validAdmin(scholar: string | ScholarID): ((l: LocaleText) => string) | undefined {
-		if (validEmail(scholar)) {
-			if (!(minters ?? []).some((m) => m.email === scholar)) return undefined;
-			else return (l) => l.view.roles.field.adminScholar.minter;
-		}
-		if (validORCID(scholar)) {
-			if (currency.minters.includes(scholar)) return (l) => l.view.roles.field.adminScholar.minter;
-			else return undefined;
-		}
+		if (validEmail(scholar) || validORCID(scholar)) return undefined;
 		return (l) => l.view.roles.field.adminScholar.invalid;
 	}
 </script>

@@ -102,39 +102,35 @@ select throws_ok(
 select tests.clear_authentication();
 
 --------------------------------------------------------------------------------
--- The steward approving a venue they will administer: allowed, and it cannot go live.
+-- The steward approving a venue they will administer: allowed, and it can go live.
 --------------------------------------------------------------------------------
 select tests.authenticate_as(pg_temp.id('steward'));
 select lives_ok(
 	format('select public.approve_venue_proposal(%L)', pg_temp.propose('Self Approved', array['stewie@uni.edu'], array['nobody@uni.edu'])),
-	'a steward may approve a venue they are an editor of, holding its currency in the interim'
+	'a steward may approve a venue they are an editor of, holding its currency'
 );
 select tests.clear_authentication();
 
-select throws_ok(
+select lives_ok(
 	format('update public.venues set inactive = null where id = %L', (select id from public.venues where title = 'Self Approved')),
-	'RR015',
-	null,
-	'that venue cannot be switched live while its admin still mints its currency'
+	'and that venue goes live even though its admin still mints its currency'
 );
 
--- Handing the currency over is what unblocks it.
+-- Handing the currency to someone else is an ordinary edit, not a precondition.
 update public.currencies
 set minters = array[pg_temp.id('minter')]
 where id = (select currency from public.venues where title = 'Self Approved');
 
 select lives_ok(
 	format('update public.venues set inactive = null where id = %L', (select id from public.venues where title = 'Self Approved')),
-	'once an independent minter holds the currency, the venue goes live'
+	'the venue stays live once an independent minter holds the currency'
 );
 
-select throws_ok(
+select lives_ok(
 	format('update public.currencies set minters = %L where id = %L',
 		array[pg_temp.id('steward')],
 		(select currency from public.venues where title = 'Self Approved')),
-	'RR015',
-	null,
-	'and an active venue cannot take back a minter who administers it'
+	'and a live venue can take the currency back from an independent minter'
 );
 
 --------------------------------------------------------------------------------

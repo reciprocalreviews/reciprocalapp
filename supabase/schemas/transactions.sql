@@ -677,9 +677,10 @@ execute on function public.transfer_tokens (uuid, uuid, text, uuid, text, intege
 -- approve_transaction: approve a proposed transaction, minting and/or moving
 -- tokens and flipping status to 'approved', atomically. SECURITY DEFINER,
 -- re-implementing the transactions UPDATE policy (giver scholar, venue admin, or
--- minter), the no-self-enrichment rule, and the tokens INSERT policy (minting
--- requires a minter). Three branches: pure mint; scholar transfer; venue
--- transfer (minting placeholder tokens first when the reserve lacks them).
+-- minter), the no-self-enrichment rule (which exempts pure mints, see below), and
+-- the tokens INSERT policy (minting requires a minter). Three branches: pure mint;
+-- scholar transfer; venue transfer (minting placeholder tokens first when the
+-- reserve lacks them).
 create or replace function public.approve_transaction (_transaction_id uuid) returns jsonb language plpgsql security definer
 set
 	search_path=public,
@@ -727,12 +728,17 @@ begin
 	-- No-self-enrichment: spending one's own balance is unrestricted; otherwise
 	-- the approver may not be the recipient or an admin of the recipient venue.
 	-- RR002 lets the app show the specific self-dealing message.
+	--
+	-- A pure mint (`_from` is null) into a venue you administer is exempt: a small
+	-- community's organizer may be its only minter, and the platform now discloses
+	-- that arrangement on the venue page rather than forbidding it. Moving tokens
+	-- that already exist into a venue you run is a different act and still refused.
 	_spending_own := (_txn.from_scholar is not null and _txn.from_scholar = _caller);
 	if not _spending_own then
 		if _txn.to_scholar is not null and _txn.to_scholar = _caller then
 			raise exception 'You cannot approve a transaction that pays you' using errcode = 'RR002';
 		end if;
-		if _txn.to_venue is not null and public.isAdmin(_txn.to_venue) then
+		if _from is not null and _txn.to_venue is not null and public.isAdmin(_txn.to_venue) then
 			raise exception 'You cannot approve a transaction that pays a venue you administer' using errcode = 'RR002';
 		end if;
 	end if;

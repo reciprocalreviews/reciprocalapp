@@ -29,8 +29,8 @@ select tests.create_scholar('sub_admin@test.local')    as admin     \gset
 select tests.create_scholar('sub_minter@test.local')   as minter    \gset
 select tests.create_scholar('sub_outsider@test.local') as outsider  \gset
 
--- Currency minter and venue admin must be DISTINCT scholars (the no_minter_admins
--- / no_admin_minters triggers forbid overlap).
+-- Currency minter and venue admin are DISTINCT scholars here; the overlap is permitted
+-- but nothing in this file turns on it.
 select tests.create_currency(array[:'minter']::uuid[])                  as cur \gset
 select tests.create_venue(:'cur', array[:'admin']::uuid[])              as ven \gset
 select tests.create_submission_type(:'ven')                            as styp \gset

@@ -73,6 +73,7 @@
 {#snippet row(transaction: TransactionRow, index: number)}
 	{@const currency = currencies?.find((c) => c.id === transaction.currency)}
 	{@const proposed = transaction.status === 'proposed'}
+	{@const pureMint = transaction.from_scholar === null && transaction.from_venue === null}
 	{@const editable =
 		proposed &&
 		userid !== null &&
@@ -80,12 +81,17 @@
 			(transaction.from_venue !== null &&
 				venues.find((v) => v.id === transaction.from_venue)?.admins.includes(userid)) ||
 			currency?.minters.includes(userid)) &&
-		// Anti-self-dealing: hide approval from recipients.
+		// Anti-self-dealing: hide approval from recipients. A pure mint is exempt, mirroring
+		// approve_transaction: it brings new tokens into existence rather than moving
+		// someone else's, so a minter who also administers the venue may approve it. That is
+		// the shortfall mint a payout records, and hiding it here would strand the one person
+		// a small community has to approve it.
 		transaction.to_scholar !== userid &&
-		!(
-			transaction.to_venue !== null &&
-			venues.find((v) => v.id === transaction.to_venue)?.admins.includes(userid)
-		)}
+		(pureMint ||
+			!(
+				transaction.to_venue !== null &&
+				venues.find((v) => v.id === transaction.to_venue)?.admins.includes(userid)
+			))}
 	<tr data-testid={testid + '-' + index}>
 		<td>
 			<Status

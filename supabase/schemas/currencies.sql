@@ -58,48 +58,5 @@ for update
 		)
 	);
 
---------------------------------------
--- Functions
-create or replace function "public"."no_admin_minters" () RETURNS "trigger" LANGUAGE "plpgsql" SECURITY DEFINER
-set
-	"search_path" to '' as $$
-begin
-    -- Payment-free venues never mint or pay, so the anti-self-dealing rule
-    -- does not apply; their hidden currency may be minted by an admin.
-    if exists (
-        select *
-        from public.venues
-        where public.venues.currency = new.id
-            and (public.venues.admins && new.minters)
-            and not public.venues.payment_free
-            and public.venues.inactive is null
-    ) then
-        raise exception 'A venue minter cannot be the admin of the venue currency' using errcode = 'RR015';
-    end if;
-    return new;
-end;
-$$;
-
-alter function "public"."no_admin_minters" () OWNER to "postgres";
-
-grant all on FUNCTION "public"."no_admin_minters" () to "anon";
-
-grant all on FUNCTION "public"."no_admin_minters" () to "authenticated";
-
-grant all on FUNCTION "public"."no_admin_minters" () to "service_role";
-
---------------------------------------
--- Triggers
---------------------------------------
--- The mirror of venues.no_minter_admins: that one stops a venue gaining an admin
--- who mints its currency; this one stops a currency gaining a minter who
--- administers a venue using it. Both are needed, since either table can be edited
--- independently. The function it calls is declared once, above; it used to be
--- declared twice in this file with identical bodies, and the second copy — the
--- one Postgres actually kept — was the one missing the payment-free rationale.
-create or replace trigger "no_admin_minters"
-before update on "public"."currencies" for each row
-execute function "public"."no_admin_minters" ();
-
 alter publication supabase_realtime
 add table currencies;

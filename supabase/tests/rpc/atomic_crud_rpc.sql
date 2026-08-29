@@ -13,7 +13,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(47);
+select plan(50);
 
 -- ---- Shared fixtures (owner context) -----------------------------------------
 select tests.clear_authentication();
@@ -25,7 +25,7 @@ select tests.create_scholar('rpc_outsider@test.local') as outsider \gset
 select tests.create_scholar('rpc_steward@test.local', true) as steward \gset
 
 -- Currency minted by :minter; venue administered by :admin (disjoint from the
--- minter, so the no_minter_admins trigger does not fire). Welcome grant of 5.
+-- minter; the overlap gets its own venue further down). Welcome grant of 5.
 select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
 select tests.create_venue(:'cur', array[:'admin']::uuid[], 5) as ven \gset
 
@@ -59,6 +59,48 @@ select throws_ok(
 		|| quote_literal(:'ven') || $$, 'bad mint' ) $$,
 	'P0001', null,
 	'a non-minter cannot mint tokens'
+);
+
+--------------------------------------------------------------------------------
+-- The admin/minter overlap
+--------------------------------------------------------------------------------
+-- :minter mints :cur and also administers :own. The platform permits that — a small
+-- community's organizer is often its only minter — and discloses it on the venue page
+-- instead of refusing it, so minting into your own venue must succeed by both routes.
+select tests.clear_authentication();
+select tests.create_venue(:'cur', array[:'minter']::uuid[], 0) as own \gset
+
+select tests.authenticate_as(:'minter');
+select lives_ok(
+	$$ select public.mint_tokens( $$ || quote_literal(:'cur') || $$, 2, $$
+		|| quote_literal(:'own') || $$, 'solo mint' ) $$,
+	'a minter can mint into a venue they administer'
+);
+
+-- The same act by the other route: approving a proposed pure mint into that venue.
+select tests.clear_authentication();
+insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status)
+values (:'minter', null, null, null, :'own',
+	array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[1]), :'cur', 'proposed solo mint', 'proposed')
+returning id as own_mint \gset
+select tests.authenticate_as(:'minter');
+select lives_ok(
+	$$ select public.approve_transaction( $$ || quote_literal(:'own_mint') || $$ ) $$,
+	'a minter can approve a pure mint into a venue they administer'
+);
+
+-- Creating new tokens for your own venue is not the same act as helping yourself to
+-- someone else's: approving a transfer into a venue you administer is still refused.
+select tests.clear_authentication();
+insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status)
+values (:'minter', null, :'ven', null, :'own',
+	array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[1]), :'cur', 'proposed grab', 'proposed')
+returning id as own_grab \gset
+select tests.authenticate_as(:'minter');
+select throws_ok(
+	$$ select public.approve_transaction( $$ || quote_literal(:'own_grab') || $$ ) $$,
+	'RR002', null,
+	'but a minter cannot approve a transfer into a venue they administer'
 );
 
 --------------------------------------------------------------------------------

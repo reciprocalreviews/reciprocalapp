@@ -31,17 +31,8 @@
 	import Roles from '../Roles.svelte';
 
 	let { data } = $props();
-	let {
-		venue,
-		scholar,
-		roles,
-		volunteers,
-		currency,
-		minters,
-		types,
-		compensation,
-		preferenceLevels
-	} = $derived(data);
+	let { venue, scholar, roles, volunteers, currency, types, compensation, preferenceLevels } =
+		$derived(data);
 
 	const db = getDB();
 	const locale = getLocaleContext();
@@ -91,11 +82,11 @@
 
 	/** True when someone both administers this venue and mints its currency.
 	 *
-	 * Tolerated while the venue is being configured — that is what lets a steward approve a
-	 * venue they will edit and hold its currency until the community names a minter — but the
-	 * database refuses to switch such a venue live (RR015), because minting the money of a
-	 * venue you run is the one arrangement the token economy cannot allow. Mirrored here so
-	 * the checkbox explains itself instead of failing on click. */
+	 * Permitted, and nothing here blocks on it: a small community's organizer is often its
+	 * only minter, and refusing the arrangement stopped such a venue going live at all. It
+	 * is disclosed instead — every visitor who is neither an admin nor a minter sees a notice
+	 * on the venue page — so the admin is told the same thing, and told where to hand the
+	 * currency over if someone else will hold it. */
 	const adminMints = $derived(
 		!venue?.payment_free &&
 			(venue?.admins ?? []).some((admin) => (currency?.minters ?? []).includes(admin))
@@ -212,8 +203,6 @@
 			{roles}
 			{volunteers}
 			isAdmin={true}
-			{currency}
-			{minters}
 			{types}
 			{compensation}
 			startCollapsed
@@ -333,15 +322,15 @@
 		<Checkbox
 			testid="inactive-checkbox"
 			on={venue.inactive !== null}
-			active={venue.inactive === null || !adminMints}
 			change={(on) => db().editVenueInactive(venue.id, on ? 'This venue is not active.' : null)}
 			label={(l) => l.page.settings.checkbox.inactive}
 		/>
-		{#if venue.inactive !== null && adminMints}
+		{#if adminMints}
 			<Feedback
 				warning
 				inline={false}
 				text={(l) => l.page.settings.feedback.adminMints}
+				inputs={{ currency: currency.id }}
 				testid="venue-admin-mints"
 			/>
 		{/if}

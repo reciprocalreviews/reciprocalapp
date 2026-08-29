@@ -36,7 +36,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let { currency, venues, admins, count, scholarCount, venueCount } = $derived(data);
+	let { currency, venues, count, scholarCount, venueCount } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -51,16 +51,11 @@
 	let newTokenCreating = $state(false);
 	let newTokenPurpose = $state('');
 
+	/** A minter may also administer a venue using this currency: the overlap is disclosed on
+	 * that venue's page rather than refused, so all this checks is the contact's shape. */
 	function isValidMinter(text: string | ScholarID) {
-		if (validEmail(text)) {
-			return admins.some((scholar) => scholar.email === text)
-				? (l: LocaleText) => l.page.currency.field.minter.invalidMinter
-				: undefined;
-		} else if (validORCID(text)) {
-			return admins.some((scholar) => scholar.orcid === text)
-				? (l: LocaleText) => l.page.currency.field.minter.invalidMinter
-				: undefined;
-		} else return (l: LocaleText) => l.page.currency.field.minter.invalidContact;
+		if (validEmail(text) || validORCID(text)) return undefined;
+		return (l: LocaleText) => l.page.currency.field.minter.invalidContact;
 	}
 </script>
 

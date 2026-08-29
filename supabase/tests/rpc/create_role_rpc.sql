@@ -23,7 +23,7 @@ select tests.create_scholar('cr_admin@test.local') as admin \gset
 select tests.create_scholar('cr_outsider@test.local') as outsider \gset
 
 -- Two venues, so the "bottom of the order" is per venue rather than global. Admins must
--- not overlap the currency's minters (the no_minter_admins trigger enforces that).
+-- not overlap the currency's minters; nothing here turns on the permitted overlap.
 select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
 select tests.create_venue(:'cur', array[:'admin']::uuid[]) as ven \gset
 select tests.create_venue(:'cur', array[:'admin']::uuid[]) as ven2 \gset

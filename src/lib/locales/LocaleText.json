@@ -1738,9 +1738,6 @@
                         "invalidContact": {
                           "type": "string"
                         },
-                        "invalidMinter": {
-                          "type": "string"
-                        },
                         "label": {
                           "description": "The optional label to show above the text feild",
                           "type": "string"
@@ -1752,7 +1749,6 @@
                       },
                       "required": [
                         "invalidContact",
-                        "invalidMinter",
                         "placeholder"
                       ],
                       "type": "object"
@@ -3300,7 +3296,7 @@
                   "additionalProperties": false,
                   "properties": {
                     "adminMints": {
-                      "description": "Why a venue that is ready in every other way still cannot be switched live: one of its admins mints its currency. Permitted while configuring, refused at launch (RR015).",
+                      "description": "Advice, not a refusal: one of this venue's admins also mints its currency. The arrangement is permitted — a small community's organizer is often its only minter — but visitors see a notice saying so, and the admin should know that and be able to hand the currency over.",
                       "type": "string"
                     },
                     "adminsOnly": {
@@ -4720,6 +4716,10 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "adminMints": {
+                      "description": "Shown to everyone who is neither an admin of this venue nor a minter of its currency, when the two sets overlap. The platform permits the arrangement and discloses it, so the community rather than the database is the check on it. Takes {currency}.",
+                      "type": "string"
+                    },
                     "inactive": {
                       "type": "string"
                     },
@@ -4754,6 +4754,7 @@
                     "volunteer",
                     "volunteerFree",
                     "viewSettings",
+                    "adminMints",
                     "typesNotLoaded",
                     "rolesNotLoaded",
                     "inactive",
@@ -5770,9 +5771,6 @@
                           "description": "The optional label to show above the text feild",
                           "type": "string"
                         },
-                        "minter": {
-                          "type": "string"
-                        },
                         "placeholder": {
                           "description": "The placeholder to show in the text field",
                           "type": "string"
@@ -5780,7 +5778,6 @@
                       },
                       "required": [
                         "invalid",
-                        "minter",
                         "placeholder"
                       ],
                       "type": "object"

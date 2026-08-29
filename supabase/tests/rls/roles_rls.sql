@@ -20,7 +20,7 @@ select tests.create_scholar('roles_outsider@test.local') as outsider \gset
 -- A second venue with a different admin, to prove admin rights are venue-scoped.
 select tests.create_scholar('roles_otheradmin@test.local') as otheradmin \gset
 select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
--- admins must NOT overlap currency minters (no_minter_admins trigger).
+-- admins are kept apart from currency minters; nothing here turns on the overlap.
 select tests.create_venue(:'cur', array[:'admin']::uuid[]) as ven \gset
 select tests.create_venue(:'cur', array[:'otheradmin']::uuid[]) as other_ven \gset
 

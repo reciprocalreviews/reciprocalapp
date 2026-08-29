@@ -70,8 +70,12 @@ create policy "tokens cannot be deleted" on public.tokens for DELETE to authenti
 -- RPCs (defined in migration 20260608000000_atomic_crud.sql)
 -- mint_tokens: mint _amount tokens of _currency into a venue reserve and record
 -- the approved mint transaction, atomically. SECURITY DEFINER, so it
--- re-implements the tokens INSERT policy (caller must be a minter) and the
--- transactions approved policy (a minter must not mint into a venue they admin).
+-- re-implements the tokens INSERT policy (caller must be a minter).
+--
+-- Minting into a venue the caller administers is permitted: a small community's
+-- organizer is often its only minter, and refusing left such a venue unable to
+-- hold any tokens at all. The overlap is disclosed on the venue page instead of
+-- being forbidden here (see 20260828000020_admin_minter_overlap_allowed.sql).
 create or replace function public.mint_tokens (
 	_currency uuid,
 	_amount integer,
@@ -98,12 +102,6 @@ begin
 	-- Only a minter of this currency may create its tokens (tokens INSERT policy).
 	if not public.isminter(_caller, _currency) then
 		raise exception 'Only currency minters can mint tokens';
-	end if;
-	-- Refuse self-enrichment: a minter must not mint into a venue they
-	-- administer. The no_admin_minters trigger normally makes this impossible,
-	-- but SECURITY DEFINER skips RLS, so we check explicitly.
-	if public.isAdmin(_to_venue) then
-		raise exception 'A minter cannot mint into a venue they administer';
 	end if;
 
 	-- Attribute the mint to the transaction it belongs to. The id is generated up

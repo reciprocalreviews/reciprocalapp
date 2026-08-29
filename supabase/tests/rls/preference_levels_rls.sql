@@ -16,7 +16,7 @@ select plan(9);
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
 -- admin and minter must be DISTINCT scholars: a venue's admins must not overlap
--- its currency's minters (no_minter_admins / no_admin_minters triggers).
+-- its currency's minters; nothing here turns on the admin/minter overlap.
 select tests.create_scholar('pref_minter@test.local') as minter \gset
 select tests.create_scholar('pref_admin@test.local') as admin \gset
 select tests.create_scholar('pref_outsider@test.local') as outsider \gset

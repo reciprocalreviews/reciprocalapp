@@ -26,7 +26,6 @@
 	const {
 		venue,
 		currency,
-		minters,
 		scholar,
 		roles,
 		volunteers,
@@ -41,6 +40,16 @@
 	let isAdmin = $derived(scholar && venue && venue.admins.includes(scholar.id));
 	// When false, the venue is payment-free: hide all token/currency/cost/compensation UI.
 	let showPayment = $derived(venue ? !venue.payment_free : true);
+	let isMinter = $derived(scholar && currency ? currency.minters.includes(scholar.id) : false);
+	/** True when someone both administers this venue and mints its currency.
+	 *
+	 * The platform permits this — a small community's organizer is often its only minter —
+	 * and discloses it instead, to everyone who is neither of those two things. Naming the
+	 * arrangement in public is what replaced forbidding it, so the check on self-dealing is
+	 * the community rather than the database. */
+	let adminMints = $derived(
+		venue !== null && currency !== null && currency.minters.some((m) => venue.admins.includes(m))
+	);
 	let isVolunteer = $derived(
 		scholar && venue && volunteers && volunteers.some((v) => v.scholarid === scholar.id)
 	);
@@ -88,6 +97,18 @@
 						? l.page.venue.paragraph.noDescription
 						: l.page.venue.paragraph.description}
 				inputs={venue.description.length === 0 ? {} : { description: venue.description }}
+			/>
+		{/if}
+
+		<!-- Name the admin/minter overlap to everyone who isn't one of them. -->
+		{#if showPayment && adminMints && !isAdmin && !isMinter && currency}
+			<Feedback
+				warning
+				inline={false}
+				size="normal"
+				testid="venue-admin-mints-notice"
+				text={(l) => l.page.venue.feedback.adminMints}
+				inputs={{ currency: currency.id }}
 			/>
 		{/if}
 
@@ -268,8 +289,6 @@
 				{roles}
 				{volunteers}
 				isAdmin={false}
-				{currency}
-				{minters}
 				{compensation}
 				{types}
 			/>

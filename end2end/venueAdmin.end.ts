@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { login } from '../src/routes/login';
+import { login, logout } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
@@ -10,6 +10,7 @@ const RECIPIENT_EMAIL_FOR_GIFT = SEED.scholars.author2.email;
 const SECOND_EDITOR_EMAIL = SEED.scholars.author2.email;
 const SECOND_MINTER_EMAIL = SEED.scholars.r2.email;
 const NON_EDITOR_EMAIL = SEED.scholars.r3.email;
+const EDITOR_ID = SEED.scholars.editor.id;
 
 test('editor edits venue title, description, and URL', async ({ page, context }) => {
 	// Snapshot the original values so we can restore them at the end — keeps
@@ -417,4 +418,55 @@ test('deep-link pre-fill populates the new-submission form from a ?manuscript qu
 	await page.waitForLoadState('networkidle');
 
 	await expect(page.getByTestId('submission-manuscript-id')).toHaveValue('TEST-001');
+});
+
+test('a venue whose admin mints its currency discloses it, and is not blocked by it', async ({
+	page,
+	context
+}) => {
+	// The platform used to refuse this arrangement outright, which stopped a venue going
+	// live and could not describe a community too small to staff both roles. It is now
+	// permitted and disclosed instead, so the two halves have to agree: nothing blocks the
+	// admin, and everyone who is neither admin nor minter is told.
+	const originalMinters = sql(
+		`select array_to_string(minters, ',') from public.currencies where id = '${CURRENCY_ID}';`
+	);
+
+	try {
+		// Make the venue's own admin a minter of its currency.
+		sql(
+			`update public.currencies set minters = minters || '${EDITOR_ID}'::uuid ` +
+				`where id = '${CURRENCY_ID}' and not ('${EDITOR_ID}' = any(minters));`
+		);
+
+		// The admin is advised, not stopped: the Activate checkbox stays usable.
+		await login(EDITOR_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_ID}/settings`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId('venue-admin-mints')).toBeVisible();
+		await expect(page.getByTestId('inactive-checkbox')).toBeEnabled();
+
+		// The admin does not get the public notice — they are the subject of it.
+		await page.goto(`/venue/${VENUE_ID}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId('venue-admin-mints-notice')).toHaveCount(0);
+
+		// A minter does not either.
+		await logout(page);
+		await login(MINTER_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_ID}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId('venue-admin-mints-notice')).toHaveCount(0);
+
+		// Everyone else does, signed out included.
+		await logout(page);
+		await page.goto(`/venue/${VENUE_ID}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId('venue-admin-mints-notice')).toBeVisible();
+	} finally {
+		sql(
+			`update public.currencies set minters = string_to_array('${originalMinters}', ',')::uuid[] ` +
+				`where id = '${CURRENCY_ID}';`
+		);
+	}
 });

@@ -646,6 +646,11 @@ export type LocaleText = {
 				volunteer: string;
 				volunteerFree: string;
 				viewSettings: string;
+				/** Shown to everyone who is neither an admin of this venue nor a minter of its
+				 * currency, when the two sets overlap. The platform permits the arrangement
+				 * and discloses it, so the community rather than the database is the check on
+				 * it. Takes {currency}. */
+				adminMints: string;
 				typesNotLoaded: string;
 				rolesNotLoaded: string;
 				inactive: string;
@@ -729,9 +734,10 @@ export type LocaleText = {
 				bulkImport: string;
 			};
 			feedback: {
-				/** Why a venue that is ready in every other way still cannot be switched live:
-				 * one of its admins mints its currency. Permitted while configuring, refused
-				 * at launch (RR015). */
+				/** Advice, not a refusal: one of this venue's admins also mints its currency.
+				 * The arrangement is permitted — a small community's organizer is often its
+				 * only minter — but visitors see a notice saying so, and the admin should
+				 * know that and be able to hand the currency over. */
 				adminMints: string;
 				unknownVenue: string;
 				logIn: string;
@@ -899,7 +905,7 @@ export type LocaleText = {
 			field: {
 				name: TextFieldText & { invalid: string };
 				mintPurpose: TextFieldText;
-				minter: TextFieldText & { invalidMinter: string; invalidContact: string };
+				minter: TextFieldText & { invalidContact: string };
 				description: NotedTextFieldText;
 			};
 			card: {
@@ -1265,7 +1271,7 @@ export type LocaleText = {
 				/** `invalid` when the text is neither an email nor an ORCID iD;
 				 * `minter` when it names someone who mints the venue's currency,
 				 * which the database forbids an admin from also doing. */
-				adminScholar: TextFieldText & { invalid: string; minter: string };
+				adminScholar: TextFieldText & { invalid: string };
 				invite: TextFieldText;
 				roleName: TextFieldText;
 				roleDescription: TextFieldText;

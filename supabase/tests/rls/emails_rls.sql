@@ -35,7 +35,7 @@ select tests.create_scholar('email_sender@test.local')    as sender    \gset
 select tests.create_scholar('email_vadmin@test.local')    as vadmin    \gset
 select tests.create_scholar('email_minter@test.local')    as minter    \gset
 select tests.create_scholar('email_outsider@test.local')  as outsider  \gset
--- admins and minters must be DISTINCT scholars (no_minter_admins trigger).
+-- admins and minters are DISTINCT scholars here; nothing in this file turns on that.
 select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
 select tests.create_venue(:'cur', array[:'vadmin']::uuid[]) as ven \gset
 

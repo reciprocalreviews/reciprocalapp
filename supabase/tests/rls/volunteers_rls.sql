@@ -32,7 +32,7 @@ select tests.create_role(:'ven', 0, null, false, false) as open_role \gset
 select tests.create_role(:'ven', 0, null, false, true) as invite_role \gset
 
 -- A second venue, for the cross-venue repoint probe below. Its admin and minter
--- are distinct scholars, as at :ven, so no_minter_admins does not fire.
+-- are distinct scholars, as at :ven, so nothing here turns on the overlap.
 select tests.create_scholar('vol_minter2@test.local') as minter2 \gset
 select tests.create_scholar('vol_admin2@test.local') as vadmin2 \gset
 select tests.create_currency(array[:'minter2']::uuid[]) as cur2 \gset

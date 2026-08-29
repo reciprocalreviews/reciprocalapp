@@ -186,7 +186,7 @@ test('steward approves a proposal; the live venue becomes reachable at /venue/[i
 }) => {
 	// The approval flow looks up scholars by email, so editors and minters
 	// must be existing scholars. Use the steward as the editor, and
-	// author2 as the minter (different scholar, satisfies no_minter_admins).
+	// author2 as the minter (a different scholar, so the venue page shows no overlap notice).
 	const title = `Approve-test ${Date.now()}`;
 	const proposalID = seedPendingProposal(title, [STEWARD_EMAIL], [APPROVAL_MINTER_EMAIL]);
 

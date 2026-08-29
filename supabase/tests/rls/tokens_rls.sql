@@ -39,7 +39,7 @@ select tests.create_scholar('tok_pzero@test.local') as pzero \gset
 select tests.create_scholar('tok_outsider@test.local') as outsider \gset
 
 -- A currency minted by :minter, and a venue administered by :vadmin (distinct
--- from the minter so the no_minter_admins trigger does not fire).
+-- from the minter, so nothing here turns on the admin/minter overlap).
 select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
 select tests.create_venue(:'cur', array[:'vadmin']::uuid[]) as ven \gset
 

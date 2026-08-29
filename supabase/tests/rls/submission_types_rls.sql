@@ -20,7 +20,7 @@ select tests.create_scholar('st_outsider@test.local') as outsider \gset
 -- A second, unrelated venue (with its own admin) to prove cross-venue isolation.
 select tests.create_scholar('st_other_admin@test.local') as other_admin \gset
 
--- admins must NOT overlap the currency's minters (no_minter_admins trigger).
+-- admins are kept apart from the currency's minters; nothing here turns on the overlap.
 select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
 select tests.create_venue(:'cur', array[:'admin']::uuid[]) as ven \gset
 select tests.create_venue(:'cur', array[:'other_admin']::uuid[]) as other_ven \gset

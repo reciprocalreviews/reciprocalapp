@@ -20,7 +20,7 @@ select plan(19);
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
 
--- Scholars. admin/minter must be DISTINCT (no_minter_admins trigger).
+-- Scholars. admin/minter kept DISTINCT, so nothing here turns on the overlap.
 select tests.create_scholar('asg_minter@test.local') as minter \gset
 select tests.create_scholar('asg_admin@test.local') as admin \gset
 select tests.create_scholar('asg_assignee@test.local') as assignee \gset

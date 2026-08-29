@@ -61,8 +61,8 @@ positive and an adversarial-negative case per privilege branch.
 | Table | SELECT | INSERT | UPDATE | DELETE | Notable adversarial cases |
 |-------|:------:|:------:|:------:|:------:|---------------------------|
 | scholars | ✓ | ✓ | ✓ | ✓ | insert blocked for all; update self vs steward |
-| venues | ✓ | ✓ | ✓ | ✓ | steward vs admin; no_minter_admins trigger |
-| currencies | ✓ | ✓ | ✓ | ✓ | steward-only insert; minter-only mutate; no_admin_minters |
+| venues | ✓ | ✓ | ✓ | ✓ | steward vs admin; admin/minter overlap permitted |
+| currencies | ✓ | ✓ | ✓ | ✓ | steward-only insert; minter-only mutate; admin may mint |
 | exchanges | ✓ | ✓ | ✓ | ✓ | minter of either currency |
 | roles | ✓ | ✓ | ✓ | ✓ | admin-only |
 | volunteers | ✓ | ✓ | ✓ | ✓ | self vs admin; invite-only roles; no delete; roleid/scholarid not writable |

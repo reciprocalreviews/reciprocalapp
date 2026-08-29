@@ -961,6 +961,7 @@
 				"volunteer": "🤝 [Earn](#roles) tokens by volunteering.",
 				"volunteerFree": "Help out by [volunteering](#roles).",
 				"viewSettings": "Welcome admin! Check the [settings](/venue/{venue}/settings) page to edit venue compensation, roles, and anonymity.",
+				"adminMints": "This venue's admin is also its [currency](/currency/{currency})'s minter. Consider volunteering to be the currency's minter to help reduce the risk of perceived or actual self-dealing.",
 				"typesNotLoaded": "Couldn't load venue's submission types.",
 				"rolesNotLoaded": "Couldn't load venue's roles.",
 				"inactive": "This venue is currently **inactive**, so only admins can see its details. Here is the message from the admins: *{message}*",
@@ -1017,7 +1018,7 @@
 				"logIn": "[Log in](/login) to view this venue's settings.",
 				"adminsOnly": "Only admins of this venue can view this page.",
 				"noPreferenceLevels": "No preference levels defined. Bidders will see a simple yes/no bid.",
-				"adminMints": "This venue can't go active while one of its admins also mints its currency — minting the money of a venue you run is the one arrangement the token economy can't allow. Add a minter who isn't an admin here on the currency page, and remove the admin from the minters."
+				"adminMints": "One of this venue's admins also mints its currency. That's allowed, and for a small community it may be the only way to have a currency at all — but everyone else who visits this venue sees a note saying so, because minting the money of a venue you run invites doubt even when nothing is wrong. If someone outside the venue's admins is willing to hold it, hand the currency over on the [currency page](/currency/{currency})."
 			},
 			"card": {
 				"economics": {
@@ -1268,7 +1269,6 @@
 				"minter": {
 					"label": "scholar",
 					"placeholder": "ORCID or email",
-					"invalidMinter": "Minters can't be admins of a venue that uses this currency.",
 					"invalidContact": "Must be a valid email or ORCID"
 				},
 				"description": {
@@ -1635,8 +1635,7 @@
 				"adminScholar": {
 					"label": "scholar",
 					"placeholder": "name, ORCID, or email",
-					"invalid": "Must be a valid ORCID iD or email address.",
-					"minter": "Admins can't be minters of the venue's currency."
+					"invalid": "Must be a valid ORCID iD or email address."
 				},
 				"invite": {
 					"label": "email or orcid",

@@ -19,7 +19,7 @@ select plan(14);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
--- Distinct scholars for admin vs minter (no_minter_admins / no_admin_minters).
+-- Distinct scholars for admin vs minter; nothing here turns on the overlap.
 select tests.create_scholar('comp_minter@test.local') as minter \gset
 select tests.create_scholar('comp_vadmin@test.local') as vadmin \gset
 select tests.create_scholar('comp_other_admin@test.local') as oadmin \gset

@@ -14,7 +14,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Changed
 
 - A venue can now be **approved before its community has found a minter**: approval takes whichever listed editors and minters already have accounts, and if no proposed minter has one, the approving steward holds the currency until the venue names someone. Previously a single unrecognized email address meant the venue couldn't be created at all.
-- A new venue still arrives **inactive**, and now can't be switched live while one of its own admins also mints its currency. The rule that stops anyone minting the money of a venue they run is unchanged; it is now a requirement for going live rather than for existing, so a steward can approve a venue they'll help edit and hold its currency while the community finds someone to take it over.
+- **A venue's admin can now also mint its currency**, and a venue whose admin does says so on its page to every visitor who is neither, inviting them to take the minting role over. Forbidding the arrangement blocked venues from going live, asked more of a small community than it could staff, and treated the people running a venue as suspects; approving a payment into a venue you run is still refused, since that moves tokens somebody else already holds.
 - The venue proposal form now says which listed email addresses don't yet belong to a Reciprocal Reviews account, and a steward sees the same before approving. Neither blocks anything: listed editors are emailed an invitation when the proposal is filed, and are added to the venue when they sign up.
 - The button for deleting a proposal now says **Delete** instead of showing only an ✖, and **Approve** carries a matching checkmark.
 

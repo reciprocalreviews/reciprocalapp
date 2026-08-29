@@ -95,8 +95,8 @@ begin
 end;
 $$;
 
--- Create a venue. admins must be non-empty and must NOT overlap the currency's
--- minters (the no_minter_admins trigger enforces this).
+-- Create a venue. admins must be non-empty. Overlapping the currency's minters is
+-- permitted; most fixtures keep them apart so they exercise the ordinary case.
 create or replace function tests.create_venue (
 	p_currency uuid,
 	p_admins uuid[],

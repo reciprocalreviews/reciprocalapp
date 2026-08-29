@@ -7,12 +7,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	const { data: venues } = await db.getCurrencyVenues(params.id);
 
-	const adminScholarIDs = (
-		venues?.map((venue) => venue.admins).filter((id) => id !== null) ?? []
-	).flat();
-
-	const { data: admins } = await db.getScholarsByIDs(adminScholarIDs);
-
 	const { data: tokens } = await db.getCurrencyTokens(params.id);
 
 	const scholarCount = tokens
@@ -28,7 +22,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 		venues: venues,
 		count: tokens?.length ?? null,
 		scholarCount,
-		venueCount,
-		admins: admins ?? []
+		venueCount
 	};
 };

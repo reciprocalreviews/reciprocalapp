@@ -8,9 +8,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get the matching venue's currency.
 	const { data: currency } = venue ? await db.getCurrency(venue.currency) : { data: null };
 
-	// Get the current's minter's emails.
-	const { data: minters } = currency ? await db.getScholarsByIDs(currency.minters) : { data: null };
-
 	// Get the matching venue's roles.
 	const { data: roles } = await db.getVenueRoles(venueid);
 
@@ -33,7 +30,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 		roles,
 		volunteers,
 		currency,
-		minters,
 		types,
 		compensation,
 		preferenceLevels

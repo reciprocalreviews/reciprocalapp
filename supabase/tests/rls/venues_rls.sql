@@ -7,7 +7,7 @@
 --   DELETE  no one (denied by policy AND the table privilege is revoked, since
 --           deletion would cascade away roles, volunteers, assignments,
 --           compensation, preference levels, and thanks).
---   TRIGGER no_minter_admins: a venue admin may not be a minter of the venue's
+--   ADMIN/MINTER OVERLAP: a venue admin may also mint the venue's
 --           currency; the trigger raises on both INSERT and UPDATE.
 
 \ir ../_helpers/helpers.sql.inc
@@ -23,7 +23,8 @@ select tests.create_scholar('ven_minter@test.local') as minter \gset
 select tests.create_scholar('ven_admin@test.local') as admin \gset
 select tests.create_scholar('ven_admin2@test.local') as admin2 \gset
 select tests.create_scholar('ven_outsider@test.local') as outsider \gset
--- Currency minters and venue admins must be DISTINCT (no_minter_admins trigger).
+-- Currency minters and venue admins are kept DISTINCT here, so these cases exercise
+-- the ordinary arrangement rather than the overlap tested at the end of the file.
 select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
 select tests.create_venue(:'cur', array[:'admin']::uuid[]) as ven \gset
 -- A second venue used for the delete tests so the update probes keep a row.
@@ -126,29 +127,29 @@ select throws_ok(
 	'a steward cannot delete a venue'
 );
 
--- ---- TRIGGER: no_minter_admins ------------------------------------------------
--- Inserting a venue whose admin is also a minter of its currency raises.
+-- ---- ADMIN/MINTER OVERLAP: permitted, not refused -----------------------------
+-- The `no_minter_admins` trigger used to refuse an active venue whose admin minted its
+-- currency. It is gone: a small community's organizer is often its only minter, and the
+-- venue page discloses the arrangement instead. Both writes it blocked must now succeed.
+--
+-- Creating an ACTIVE venue (inactive is null) whose admin mints its currency.
 select tests.authenticate_as(:'steward');
-select throws_ok(
+select lives_ok(
 	$$ insert into public.venues (title, currency, welcome_amount, admins, inactive)
-	   values ('Bad Venue', $$ || quote_literal(:'cur') || $$, 0,
+	   values ('Solo Venue', $$ || quote_literal(:'cur') || $$, 0,
 	           array[ $$ || quote_literal(:'minter') || $$ ]::uuid[], null) $$,
-	null,
-	'A venue admin cannot be the minter of the venue currency',
-	'a venue admin cannot be a minter of the currency (insert)'
+	'an active venue may be administered by a minter of its currency (insert)'
 );
 
--- Updating a venue to add a minter as an admin raises.
+-- Handing an already-live venue to an admin who mints its currency.
 -- Create a clean target venue in owner context (admins distinct from minters).
 select tests.clear_authentication();
 select tests.create_venue(:'cur', array[:'admin2']::uuid[]) as ven_trig \gset
 select tests.authenticate_as(:'steward');
-select throws_ok(
+select lives_ok(
 	$$ update public.venues set admins = array[ $$ || quote_literal(:'minter') || $$ ]::uuid[]
 	   where id = $$ || quote_literal(:'ven_trig'),
-	null,
-	'A venue admin cannot be the minter of the venue currency',
-	'a venue admin cannot be a minter of the currency (update)'
+	'a venue may take on an admin who mints its currency (update)'
 );
 
 select * from finish();

@@ -1,11 +1,9 @@
 <script lang="ts">
 	import type {
 		CompensationRow,
-		CurrencyRow,
 		RoleID,
 		RoleRow,
 		ScholarID,
-		ScholarRow,
 		SubmissionType,
 		VenueRow,
 		VolunteerRow
@@ -38,8 +36,6 @@
 		volunteers,
 		scholar,
 		isAdmin,
-		currency,
-		minters,
 		compensation,
 		types,
 		startCollapsed = false
@@ -49,8 +45,6 @@
 		roles: RoleRow[] | null;
 		volunteers: VolunteerRow[] | null;
 		isAdmin: boolean;
-		currency: CurrencyRow;
-		minters: ScholarRow[] | null;
 		types: SubmissionType[] | null;
 		compensation: CompensationRow[] | null;
 		/** When true, per-role cards start collapsed regardless of viewer role.
@@ -275,6 +269,6 @@
 		{:else}
 			<Feedback text={(l) => l.view.roles.feedback.noRoles}></Feedback>
 		{/each}
-		<AdminsCard {venue} {isAdmin} {minters} {currency} />
+		<AdminsCard {venue} {isAdmin} />
 	</Cards>
 {/if}

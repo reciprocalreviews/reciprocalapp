@@ -73,33 +73,6 @@ grant all on FUNCTION public.isAdmin (_venueid uuid) to authenticated;
 
 grant all on FUNCTION public.isAdmin (_venueid uuid) to service_role;
 
-create or replace function public.no_minter_admins () returns trigger language plpgsql security definer
-set
-	"search_path" to '' as $$
-begin
-    if new.payment_free then
-        return new;
-    end if;
-    -- Being configured: the overlap is allowed here and nowhere else. Switching the venue
-    -- live runs this same check against the new row, which is what makes activation the gate.
-    if new.inactive is not null then
-        return new;
-    end if;
-    if new.admins && (select minters from public.currencies where id = new.currency) then
-        raise exception 'A venue admin cannot be the minter of the venue currency' using errcode = 'RR015';
-    end if;
-    return new;
-end;
-$$;
-
-alter function public.no_minter_admins () OWNER to "postgres";
-
-grant all on FUNCTION public.no_minter_admins () to "anon";
-
-grant all on FUNCTION public.no_minter_admins () to "authenticated";
-
-grant all on FUNCTION public.no_minter_admins () to "service_role";
-
 --------------------------------------
 -- Security
 alter table public.venues ENABLE row LEVEL SECURITY;
@@ -144,12 +117,6 @@ revoke delete on public.venues
 from
 	authenticated,
 	anon;
-
---------------------------------------
--- Trigger
-create or replace trigger no_minter_admins
-before insert or update on public.venues for each row
-execute function public.no_minter_admins ();
 
 alter publication supabase_realtime
 add table venues;
