@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { CurrencyRow, TransactionRow, VenueRow } from '$data/types';
+	import type { CurrencyRow, VenueRow } from '$data/types';
+	import type { TransactionListRow } from '$lib/data/SupabaseCRUD.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { getAuth } from '../../routes/Auth.svelte';
@@ -23,14 +24,14 @@
 		more,
 		isDebit
 	}: {
-		transactions: TransactionRow[];
+		transactions: TransactionListRow[];
 		venues: VenueRow[];
 		currencies: CurrencyRow[];
 		testid?: string;
 		count: number;
-		more: (page: number) => Promise<{ data: TransactionRow[] | null; error: any }>;
+		more: (page: number) => Promise<{ data: TransactionListRow[] | null; error: any }>;
 		/** Should return true if the row should be treated as a debit */
-		isDebit: (transaction: TransactionRow) => boolean;
+		isDebit: (transaction: TransactionListRow) => boolean;
 	} = $props();
 
 	// Get the current user
@@ -45,8 +46,17 @@
 	let transactionsByPage = $state(new SvelteMap([[0, transactions]]));
 	let page = $state(0);
 
-	// Re-sync when the prop changes (e.g. after invalidateAll() from a realtime event).
+	// Re-sync when the FIRST PAGE actually changes, not merely when the prop
+	// identity does. `invalidateAll()` re-runs the load and hands back a fresh
+	// array every time — on every write anywhere on the page and on every realtime
+	// tick — so keying this on the prop threw away every page the scholar had
+	// loaded and scrolled them back to the top whenever anything changed at all,
+	// including changes that left this list identical.
+	let lastFirstPage: string | undefined = undefined;
 	$effect(() => {
+		const key = `${count}:${transactions.map((t) => t.id).join(',')}`;
+		if (key === lastFirstPage) return;
+		lastFirstPage = key;
 		transactionsByPage = new SvelteMap([[0, transactions]]);
 		page = 0;
 	});
@@ -70,7 +80,7 @@
 	}
 </script>
 
-{#snippet row(transaction: TransactionRow, index: number)}
+{#snippet row(transaction: TransactionListRow, index: number)}
 	{@const currency = currencies?.find((c) => c.id === transaction.currency)}
 	{@const proposed = transaction.status === 'proposed'}
 	{@const pureMint = transaction.from_scholar === null && transaction.from_venue === null}
@@ -104,7 +114,7 @@
 							: l.view.transactions.status.proposed}
 			/>
 		</td>
-		<td><Tokens amount={transaction.tokens.length} debit={isDebit(transaction)} {currency} /></td>
+		<td><Tokens amount={transaction.amount} debit={isDebit(transaction)} {currency} /></td>
 		<td>
 			<ScholarLink size="extra-small" id={transaction.creator} />
 		</td>

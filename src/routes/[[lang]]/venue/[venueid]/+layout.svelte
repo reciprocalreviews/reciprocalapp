@@ -26,9 +26,12 @@
 	reloadOnChanges('venue_changes', [
 		{ table: 'venues', filter: `id=eq.${venueid}` },
 		{ table: 'roles', filter: `venueid=eq.${venueid}` },
+		// The two transactions filters below already cover every change to the
+		// venue's reserve: only a transaction can move a token. Watching `tokens`
+		// as well meant a payout of N tokens woke every client on any page under
+		// this venue N times over, each waking re-running the whole dashboard load.
 		{ table: 'transactions', filter: `from_venue=eq.${venueid}` },
 		{ table: 'transactions', filter: `to_venue=eq.${venueid}` },
-		{ table: 'tokens', filter: `venue=eq.${venueid}` },
 		{ table: 'submissions', filter: `venue=eq.${venueid}` },
 		{ table: 'assignments', filter: `venue=eq.${venueid}` }
 	]);

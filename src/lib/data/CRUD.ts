@@ -13,7 +13,6 @@ import {
 	type VolunteerRow,
 	type Response,
 	type TokenID,
-	type TokenRow,
 	type TransactionStatus,
 	type TransactionRow,
 	type AssignmentID,
@@ -42,11 +41,13 @@ import type {
 	AssignmentAwaitingCompensation,
 	AssignmentForApproval,
 	DevScholar,
+	CurrencyHolderCounts,
 	ProposalSupporter,
 	ScholarMatch,
 	ScholarReview,
 	ScholarVolunteering,
 	TokenBalance,
+	TransactionListRow,
 	VenueCommitment,
 	VenueSettingsVolunteer,
 	VenueVolunteer
@@ -514,17 +515,17 @@ export default abstract class CRUD {
 	abstract getScholarTransactions(
 		scholar: ScholarID,
 		page?: number
-	): Promise<PostgrestResponse<TransactionRow>>;
+	): Promise<PostgrestResponse<TransactionListRow>>;
 	/** Paginated transactions a venue is the source or destination of. */
 	abstract getVenueTransactions(
 		venue: VenueID,
 		page?: number
-	): Promise<PostgrestResponse<TransactionRow>>;
+	): Promise<PostgrestResponse<TransactionListRow>>;
 	/** Paginated transactions in a currency. */
 	abstract getCurrencyTransactions(
 		currency: CurrencyID,
 		page?: number
-	): Promise<PostgrestResponse<TransactionRow>>;
+	): Promise<PostgrestResponse<TransactionListRow>>;
 
 	abstract getScholarRow(id: ScholarID): Promise<ReadResult<ScholarRow | null>>;
 	abstract getScholarsByIDs(ids: ScholarID[]): Promise<ReadResult<ScholarRow[] | null>>;
@@ -557,11 +558,26 @@ export default abstract class CRUD {
 	abstract getVenueRoles(venue: VenueID): Promise<ReadResult<RoleRow[] | null>>;
 	abstract getRolesByApprover(roleIDs: RoleID[]): Promise<ReadResult<RoleRow[] | null>>;
 
-	abstract getVenueTokens(venue: VenueID): Promise<ReadResult<TokenRow[] | null>>;
-	abstract getCurrencyTokens(currency: CurrencyID): Promise<ReadResult<TokenRow[] | null>>;
-	abstract getScholarTokens(scholar: ScholarID): Promise<ReadResult<TokenRow[] | null>>;
+	// Balances are count(*) over `tokens`, one row per token, so these are all
+	// counts rather than reads. Fetching the rows and taking `.length` in the
+	// browser — which is what these used to do — is wrong rather than merely slow:
+	// PostgREST caps a response at `max_rows` and truncation is not an error, so
+	// every such balance silently stopped at 1000.
+	/** How many tokens of the given currency the venue's reserve holds. */
+	abstract getVenueTokenCount(
+		venue: VenueID,
+		currency: CurrencyID
+	): Promise<ReadResult<number | null>>;
+	/** A currency's total supply, and how many scholars and venues hold any of it. */
+	abstract getCurrencyHolderCounts(
+		currency: CurrencyID
+	): Promise<ReadResult<CurrencyHolderCounts | null>>;
+	/** How many tokens the scholar holds, keyed by currency id. */
+	abstract getScholarBalances(scholar: ScholarID): Promise<ReadResult<Record<string, number>>>;
 	/** The scholar's total token count across every currency, for the header balance. */
 	abstract getScholarTokenCount(scholar: ScholarID): Promise<ReadResult<number>>;
+	/** How many tokens of one currency each named scholar holds. Scholars holding
+	 * none are absent rather than zero. */
 	abstract getTokenBalances(
 		currency: CurrencyID,
 		scholarIDs: ScholarID[]
@@ -580,10 +596,10 @@ export default abstract class CRUD {
 		scholar: ScholarID
 	): Promise<ReadResult<TransactionRow[] | null>>;
 	abstract getTransactionVenues(
-		transactions: TransactionRow[]
+		transactions: Pick<TransactionRow, 'from_venue' | 'to_venue'>[]
 	): Promise<ReadResult<VenueRow[] | null>>;
 	abstract getTransactionCurrencies(
-		transactions: TransactionRow[]
+		transactions: Pick<TransactionRow, 'currency'>[]
 	): Promise<ReadResult<CurrencyRow[] | null>>;
 
 	abstract getVenueSubmissions(venue: VenueID): Promise<ReadResult<SubmissionRow[] | null>>;

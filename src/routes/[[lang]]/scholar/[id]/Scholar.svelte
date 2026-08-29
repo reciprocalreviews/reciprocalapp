@@ -6,7 +6,6 @@
 		NotificationSettingRow,
 		ScholarRow,
 		SubmissionRow,
-		TokenRow,
 		TransactionRow,
 		VenueRow
 	} from '$data/types';
@@ -44,7 +43,7 @@
 		commitments,
 		admins,
 		minting,
-		tokens,
+		balances,
 		transactions,
 		submissions,
 		currencies,
@@ -66,7 +65,10 @@
 			venueSlug: string | null;
 		}[];
 		admins: { id: string; title: string; slug: string | null }[] | null;
-		tokens: TokenRow[] | null;
+		/** How many tokens this scholar holds, keyed by currency id. Counted in the
+		 * database: this used to be the token rows themselves, re-filtered once per
+		 * currency below, and silently truncated at `max_rows`. */
+		balances: Record<string, number>;
 		transactions: number | null;
 		submissions: SubmissionRow[] | null;
 		currencies: CurrencyRow[] | null;
@@ -179,7 +181,7 @@
 					link: `#submissions`
 				},
 				{
-					number: tokens?.length,
+					number: Object.values(balances).reduce((sum, n) => sum + n, 0),
 					title: `Tokens in ${currencies?.length} ${currencies?.length === 1 ? 'currency' : 'currencies'}`,
 					link: `#tokens`
 				},
@@ -224,7 +226,7 @@
 
 	<Subheader icon={TokenLabel} id="tokens" text={(l) => l.page.scholar.header.tokens}></Subheader>
 
-	{#if tokens === null || currencies === null}
+	{#if currencies === null}
 		<Feedback text={(l) => l.page.scholar.feedback.tokensNotLoaded}></Feedback>
 	{:else}
 		<Paragraph
@@ -234,8 +236,7 @@
 		<ul>
 			{#each currencies as currency, index}
 				<li data-testid={'currency-' + index}>
-					<Tokens amount={tokens.filter((t) => t.currency === currency.id).length} {currency}
-					></Tokens>
+					<Tokens amount={balances[currency.id] ?? 0} {currency}></Tokens>
 				</li>
 			{:else}
 				<Tokens amount={0}></Tokens>
@@ -245,7 +246,7 @@
 
 	{#if editable}
 		<Cards>
-			{#if tokens !== null && currencies !== null}
+			{#if currencies !== null}
 				<Card
 					subheader
 					icon={TokenLabel}
@@ -253,7 +254,7 @@
 					testid="scholar-gift-card"
 				>
 					<Gift
-						{tokens}
+						{balances}
 						purpose={locale().page.scholar.card.gift.purpose}
 						success={locale().page.scholar.card.gift.success}
 						{currencies}

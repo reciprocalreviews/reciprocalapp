@@ -19,6 +19,10 @@
 	let { data } = $props();
 	let { venue, transactions, count, venues, currencies, scholar, tokens } = $derived(data);
 
+	// The reserve holds one currency, so the gift form's balance map has one entry.
+	// `tokens` is now that reserve's count rather than its rows -- see the load.
+	let balances = $derived(venue && tokens !== null ? { [venue.currency]: tokens } : null);
+
 	let db = getDB();
 	let locale = getLocaleContext();
 </script>
@@ -47,7 +51,7 @@
 				>
 					{#if scholar}
 						<Gift
-							{tokens}
+							{balances}
 							purpose={locale().page.venue.card.gift.purpose}
 							success={locale().page.venue.card.gift.success}
 							{currencies}

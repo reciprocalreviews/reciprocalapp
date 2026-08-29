@@ -23,11 +23,14 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get the scholar's administered venues
 	const { data: admins } = await db.getScholarAdminVenues(scholarID);
 
-	// Get the scholar's current tokens.
-	const { data: tokens } = await db.getScholarTokens(scholarID);
+	// How many tokens the scholar holds, per currency, counted in the database.
+	// This used to fetch one row per token and re-filter that array once per
+	// currency in the page — O(currencies x tokens) in the browser, and silently
+	// capped at `max_rows` besides.
+	const { data: balances } = await db.getScholarBalances(scholarID);
 
 	// Get the currencies that the tokens use
-	const currencyIDs = tokens ? tokens.map((t) => t.currency) : [];
+	const currencyIDs = Object.keys(balances);
 	const { data: currencies } = await db.getCurrenciesByIDs(currencyIDs);
 
 	// Get the scholar's most recent transactions.
@@ -68,7 +71,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		commitments: volunteers,
 		venues,
 		admins: admins,
-		tokens: tokens,
+		balances,
 		transactions: transactions,
 		submissions: submissions,
 		currencies: currencies,

@@ -63,7 +63,7 @@ where
 
 --------------------------------------
 -- FUNCTIONS
-create or replace function public.isSteward () RETURNS boolean LANGUAGE "sql" SECURITY DEFINER
+create or replace function public.isSteward () RETURNS boolean LANGUAGE "sql" SECURITY DEFINER STABLE
 set
 	"search_path" to '' as $$
     select (exists (select id from public.scholars where id = (select auth.uid()) and steward));

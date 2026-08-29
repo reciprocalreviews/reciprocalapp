@@ -1,75 +1,36 @@
--- Daily reconciliation of the token economy against its own records.
+-- Token scaling, phase 3b: the nightly integrity check will stop finishing.
 --
--- The backup work established that assertions are what catch real problems:
--- three separate defects survived every piece of reasoning about the restore and
--- were found only by checking. This is the same idea applied continuously to live
--- data, so corruption is found the morning after rather than whenever someone
--- happens to notice a balance looks wrong.
+-- reconcile_ledger runs from pg_cron at 22:15 daily and mails the steward inbox
+-- when an invariant breaks -- including the conservation check, which is what
+-- would catch the lost payment that phase 1's locking fixed. It is the alarm.
 --
--- Each check answers a question nothing else in the schema can:
+-- Three of its seven checks scan the ENTIRE history of the token ledger, and
+-- that history only grows: replay does a distinct-on over every token_event ever
+-- recorded, chain runs a window function over the same, and dangling refs
+-- unnests every approved transaction's token array -- one row per token ever
+-- moved. So the tool for detecting corruption is the tool that stops finishing
+-- once there is enough production to have corruption, and a cron job that times
+-- out fails silently: no row, no mail, no alarm.
 --
---   1. unattributed_moves   — did value move without a transaction explaining it?
---   2. replay_mismatches    — does the ledger still reproduce current state?
---   3. chain_breaks         — did a write escape the logging trigger?
---   4. placeholders         — is an approved transaction still holding null-UUIDs?
---   5. dangling_token_refs  — does an approved transaction cite a token that is
---                             gone, or in another currency?
---   6. conservation         — do the two narratives agree, holder by holder?
---   7. orphan_proposals     — did a multi-step client write leave half a record?
---------------------------------------
--- Where results are kept. Append-only by convention rather than by trigger: this
--- is a monitoring record, not evidence, and a stuck row should be correctable.
-create table if not exists public.reconciliations (
-	id uuid primary key default gen_random_uuid(),
-	ran_at timestamptz not null default now(),
-	ok boolean not null,
-	result jsonb not null,
-	-- How long the run took. Recorded because the failure mode of this job is not
-	-- a wrong answer but no answer: three of its checks scan the whole history of
-	-- the token ledger, which only grows, and a cron job that starts timing out
-	-- stops reporting silently. A visible trend is the warning.
-	duration_ms integer
-);
-
-alter table public.reconciliations OWNER to "postgres";
-
-create index reconciliations_ran_at_index on public.reconciliations using btree (ran_at desc);
-
--- Nobody reads this through the API. It describes the integrity of the whole
--- economy, which is not a scholar's business.
-alter table public.reconciliations ENABLE row LEVEL SECURITY;
-
-revoke all on table public.reconciliations
-from
-	anon,
-	authenticated;
-
--- Explicitly revoked, not merely un-granted: Supabase's default privileges give
--- service_role ALL on every new table in `public` before this file's grant runs,
--- so `grant select` alone left INSERT, UPDATE and DELETE in place and the line
--- below described a restriction that did not exist.
-revoke insert,
-update,
-delete on table public.reconciliations
-from
-	service_role;
-
-grant
-select
-	on table public.reconciliations to service_role;
+-- This gives those three an optional window and points the cron at a bounded
+-- one. Conservation is deliberately left whole: it compares current state
+-- against the transactions that produced it, so it is O(the economy) and not
+-- O(its history), and it is the check most worth keeping exact.
+--
+-- `reconcile_ledger()` with no argument still means "all history", so an
+-- investigation gets the full run by asking for it.
 
 --------------------------------------
--- _since bounds the three checks that scan the ENTIRE token history -- replay,
--- chain and dangling refs -- to events and transactions at or after that moment.
--- Null means everything, which is what a deliberate investigation wants; the
--- nightly cron passes a window, because those three grow without bound while the
--- rest do not.
---
--- Conservation (check 6) is deliberately NOT bounded. It compares current state
--- against the transactions that produced it, so it is O(the economy) rather than
--- O(its history) -- it does not grow with time, and it is the check that catches
--- a lost or duplicated payment. Narrowing it to save time would give away the
--- one invariant most worth having.
+-- How long a run took, so the trend is visible before it becomes an outage.
+alter table public.reconciliations
+add column if not exists duration_ms integer;
+
+--------------------------------------
+-- The old zero-argument function is dropped rather than replaced: adding a
+-- defaulted parameter creates a second overload, and `reconcile_ledger()` would
+-- then be ambiguous -- which the cron would discover at 22:15.
+drop function if exists public.reconcile_ledger ();
+
 create or replace function public.reconcile_ledger (_since timestamptz default null) returns jsonb language plpgsql security definer
 set
 	search_path='' as $$
@@ -313,11 +274,31 @@ grant
 execute on function public.reconcile_ledger (timestamptz) to service_role;
 
 --------------------------------------
--- Scheduling lives in the migration, not here: cron.job is cluster state rather
--- than schema, captured separately by supabase/dr/dump.sh and restored from
--- quarantine's record. See migrations 20260808010000 and 20260830030000.
+-- Two schedules rather than one, because bounding alone leaves a hole.
 --
--- Two schedules: a bounded run nightly at 22:15, which is the alarm, and an
--- unbounded one weekly, which closes the hole bounding opens -- the window keys
--- on a token having moved recently, and a write that escaped the logging trigger
--- leaves no event to move it into view.
+-- The nightly run is bounded to 30 days: far longer than the gap between a
+-- defect landing and the next morning's mail, and flat in cost as the ledger
+-- grows. That is the alarm.
+--
+-- But the window is keyed on a token having MOVED recently, and the corruption
+-- these checks look for is a write that escaped the logging trigger -- which by
+-- definition leaves no event behind. A token last touched a year ago, quietly
+-- altered today, would move no event into the window and the nightly run would
+-- not look at it. So the unbounded run still happens, weekly, when nothing else
+-- is scheduled. It is allowed to be slow; it is not allowed to be absent.
+select
+	cron.unschedule ('reconcile-ledger');
+
+select
+	cron.schedule (
+		'reconcile-ledger',
+		'15 22 * * *',
+		$$select public.reconcile_ledger(now() - interval '30 days')$$
+	);
+
+select
+	cron.schedule (
+		'reconcile-ledger-full',
+		'45 3 * * 0',
+		$$select public.reconcile_ledger()$$
+	);

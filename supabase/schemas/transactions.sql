@@ -26,6 +26,16 @@ create table if not exists public.transactions (
 	to_venue uuid,
 	-- An array of token ids moved in the transaction. If the null UUID, then tokens haven't been determined yet.
 	tokens uuid[] not null,
+	-- How many tokens moved. Generated, not stored independently, so it cannot
+	-- disagree with the array it summarizes -- including across the rewrite from
+	-- placeholder UUIDs to real ids on approval, which changes the contents and
+	-- never the length.
+	--
+	-- It exists so the transaction lists can stop selecting `tokens` at all. The
+	-- array is one UUID per token moved, so a page of twenty transactions from a
+	-- venue that mints in bulk detoasts and ships tens of thousands of UUIDs to
+	-- render a column that only ever showed their count.
+	amount integer generated always as (cardinality(tokens)) stored not null,
 	-- The currency the amount is in
 	currency uuid not null,
 	-- The purpose of the transaction, containing any information necessary for
@@ -615,33 +625,21 @@ begin
 		end if;
 	end if;
 
-	-- Pick exactly _amount tokens currently owned by the source in this currency.
-	select array_agg(id) into _token_ids
-	from (
-		select id from public.tokens
-		where currency = _currency
-		  and (
-			(_from_scholar is not null and scholar = _from_scholar)
-			or (_from_venue is not null and venue = _from_venue)
-		  )
-		order by id
-		limit _amount
-	) sub;
-
-	-- The source must actually hold that many tokens. RR003 lets the app show
-	-- the specific "insufficient tokens" message (see SupabaseCRUD.rpcErrorKey).
-	if _token_ids is null or cardinality(_token_ids) < _amount then
-		raise exception 'Insufficient tokens to transfer' using errcode = 'RR003';
-	end if;
-
 	-- Attribute the movement to its transaction. coalesce because finalizing a
 	-- proposed transfer reuses that transaction's id, while a fresh transfer needs
-	-- one generated up front: the tokens move before its row is written.
+	-- one generated up front: the tokens move before its row is written. Set
+	-- before the move, not after, because the token_events trigger reads app.txn
+	-- at the moment of each write.
 	_txn_id := coalesce(_transaction, gen_random_uuid());
 	perform set_config('app.txn', _txn_id::text, true);
 
-	-- Reassign all chosen tokens to the destination in one statement.
-	update public.tokens set scholar = _to_scholar, venue = _to_venue where id = any(_token_ids);
+	-- Take exactly _amount of the source's tokens under lock and reassign them to
+	-- the destination. RR003 lets the app show the specific "insufficient tokens"
+	-- message (see SupabaseCRUD.rpcErrorKey).
+	_token_ids := public._move_tokens(
+		_currency, _from_scholar, _from_venue, _to_scholar, _to_venue,
+		_amount, 'Insufficient tokens to transfer'
+	);
 
 	if _transaction is not null then
 		-- Finalizing a previously proposed transfer: flip it to approved and
@@ -799,27 +797,17 @@ begin
 		select _txn.currency, _txn.from_venue, null from generate_series(1, _null_count);
 	end if;
 
-	-- Choose as many of the source's tokens as the transaction calls for.
+	-- Take as many of the source's tokens as the transaction calls for, under
+	-- lock, and move them to the recipient. Rolls back any mint above if the
+	-- source cannot cover it.
 	_needed := cardinality(_txn.tokens);
-	select array_agg(id) into _token_ids
-	from (
-		select id from public.tokens
-		where currency = _txn.currency
-		  and (
-			(_txn.from_scholar is not null and scholar = _txn.from_scholar)
-			or (_txn.from_venue is not null and venue = _txn.from_venue)
-		  )
-		order by id
-		limit _needed
-	) sub;
+	_token_ids := public._move_tokens(
+		_txn.currency, _txn.from_scholar, _txn.from_venue,
+		_txn.to_scholar, _txn.to_venue,
+		_needed, 'Insufficient tokens to complete the transfer'
+	);
 
-	-- Bail (rolling back any mint above) if the source can't cover the transfer.
-	if _token_ids is null or cardinality(_token_ids) < _needed then
-		raise exception 'Insufficient tokens to complete the transfer' using errcode = 'RR003';
-	end if;
-
-	-- Move the tokens to the recipient and finalize the transaction together.
-	update public.tokens set scholar = _txn.to_scholar, venue = _txn.to_venue where id = any(_token_ids);
+	-- Finalize the transaction with the tokens that actually moved.
 	update public.transactions set status = 'approved', tokens = _token_ids where id = _transaction_id;
 
 	perform set_config('app.txn', '', true);

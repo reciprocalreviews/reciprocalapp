@@ -246,19 +246,13 @@ begin
 		-- The submitter's own charge is settled now: move their tokens to the
 		-- venue and approve the transaction. Co-authors approve theirs later.
 		if _author = _caller then
-			-- Take exactly _payment of the submitter's tokens in this currency.
-			select array_agg(id) into _token_ids
-			from (
-				select id from public.tokens
-				where currency = _currency and scholar = _caller
-				order by id limit _payment
-			) sub;
-			-- Can't pay? Abort the whole submission (everything rolls back). RR003
-			-- surfaces the specific "insufficient tokens" message.
-			if _token_ids is null or cardinality(_token_ids) < _payment then
-				raise exception 'You do not have enough tokens to pay your submission charge' using errcode = 'RR003';
-			end if;
-			update public.tokens set scholar = null, venue = _venue where id = any(_token_ids);
+			-- Take exactly _payment of the submitter's tokens under lock and move
+			-- them to the venue. Can't pay? Abort the whole submission (everything
+			-- rolls back); RR003 surfaces the specific "insufficient tokens" message.
+			_token_ids := public._move_tokens(
+				_currency, _caller, null, null, _venue,
+				_payment, 'You do not have enough tokens to pay your submission charge'
+			);
 			update public.transactions set status = 'approved', tokens = _token_ids where id = _txn_id;
 		end if;
 
@@ -689,22 +683,22 @@ begin
                 '{title}', _submission.title
             );
 
-            select array_agg(id) into _token_ids from (
-                select id from public.tokens
-                    where venue = _submission.venue and currency = _venue.currency
-                    order by id
-                    limit _editor.amount
-            ) sub;
-
             -- Per editor, not once for the call: each payout is its own
             -- transaction, so one GUC for the whole function would file every
-            -- movement under the last editor's id.
+            -- movement under the last editor's id. Set before the move, because
+            -- the token_events trigger reads app.txn at the moment of each write.
             _txn_id := gen_random_uuid();
             perform set_config('app.txn', _txn_id::text, true);
 
-            update public.tokens
-                set venue = null, scholar = _editor.scholar_id
-                where id = any(_token_ids);
+            -- Take this editor's payout under lock and move it. The reserve check
+            -- above covered the whole payout run, but each editor draws from the
+            -- same reserve in turn, so a concurrent payout can still make a later
+            -- editor short -- RR003 rolls the whole run back rather than paying
+            -- some editors and silently skipping others.
+            _token_ids := public._move_tokens(
+                _venue.currency, null, _submission.venue, _editor.scholar_id, null,
+                _editor.amount, 'Insufficient tokens to compensate this submission''s editors'
+            );
 
             insert into public.transactions (
                 id, creator, from_scholar, from_venue, to_scholar, to_venue,

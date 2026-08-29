@@ -13,7 +13,7 @@
 		commitments,
 		venues,
 		admins,
-		tokens,
+		balances,
 		transactions,
 		submissions,
 		currencies,
@@ -62,7 +62,8 @@
 	// Reload when any related scholar info changes.
 	reloadOnChanges('scholar_info_changes', [
 		{ table: 'volunteers', filter: `scholarid=eq.${page.params.id}` },
-		{ table: 'tokens', filter: `scholar=eq.${page.params.id}` },
+		// No `tokens` filter: the two transactions filters below wake on the same
+		// events, and one row per movement rather than one per token.
 		{ table: 'transactions', filter: `from_scholar=eq.${page.params.id}` },
 		{ table: 'transactions', filter: `to_scholar=eq.${page.params.id}` },
 		{ table: 'assignments', filter: `scholar=eq.${page.params.id}` },
@@ -81,7 +82,7 @@
 		scholar={state}
 		commitments={volunteering}
 		{admins}
-		{tokens}
+		{balances}
 		{transactions}
 		{submissions}
 		{currencies}

@@ -168,6 +168,14 @@ A `Token` represents an indivisible unit of peer review labor in a particular `C
 - [x] **Only a `Transaction` can change who possesses a `Token`.** This is enforced by the database, not by convention: direct writes to tokens are revoked, so every movement of value necessarily leaves a record of why it moved and who authorized it.
 - [x] **Every change of possession is recorded permanently.** The platform can account for where any token has been, and can reconstruct who held what at any past moment — so a bug that miscounted balances can be found and repaired precisely, rather than by discarding everything that happened since. That history is deliberately _not_ visible to scholars: knowing which tokens moved when would reveal reviewing activity that a venue's anonymity settings exist to protect.
 
+- [x] **One database row per token, deliberately.** A `Token` is an indivisible unit and the platform stores it as an indivisible row; a balance is `count(*)` over those rows. The alternative — a balance per holder, with the ledger recording deltas — was considered and **rejected**, because the row is what makes "only a `Transaction` can change who possesses a `Token`" enforceable by the database rather than by convention.
+
+  The cost is that the work of moving value scales with the _amount_ moved rather than with the number of movements: paying fifty tokens is fifty row updates and fifty ledger entries. That is accepted, and it puts three standing constraints on the design:
+
+  - **Minting is the largest single write the platform makes.** Creating a community's whole supply in one action is one row, one ledger entry and one audited array entry per token. Mint sizes are bounded for this reason, not arbitrarily.
+  - **Nothing should surface an individual token's identity.** Which particular token a scholar receives is arbitrary — the platform takes whichever ones are free — so a feature that showed token ids would be exposing an implementation detail with no meaning to anyone, and would make the per-row model harder to revisit later.
+  - **The ledger is append-only and grows forever**, at one entry per token per movement. It is designed so that it can be partitioned by age when it needs to be, before it needs to be.
+
 The authoritative schema lives in [`supabase/schemas/tokens.sql`](supabase/schemas/tokens.sql).
 
 ### Data rights
@@ -331,7 +339,7 @@ If scholar ID corresponds to the authenticated user, it should also allow the sc
 
 - [x] _`scholar`_: View a history of `Transaction`s associated with the scholar
 - [x] _`scholar`_: Gift tokens to someone else using the scholar's ORCID or email
-- [ ] ([#109](https://github.com/reciprocalreviews/reciprocalapp/issues/109)) Decide whether a scholar's token balance is public, private, or visible only to editors of venues where the scholar holds tokens. Resolution affects every place balances are displayed.
+- [ ] ([#109](https://github.com/reciprocalreviews/reciprocalapp/issues/109)) Decide whether a scholar's token balance is public, private, or visible only to editors of venues where the scholar holds tokens. Resolution affects every place balances are displayed — and, until it is made, tokens stay readable by every signed-in scholar, so anyone with an account can read who holds how much of what across every venue on the platform. This decision is what the database rule is waiting on; it is not an open question about presentation only.
 
 ### Venue List `/venues`
 

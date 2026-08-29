@@ -13,7 +13,7 @@
 		userid,
 		testid
 	}: {
-		transaction: TransactionRow;
+		transaction: Pick<TransactionRow, 'id'>;
 		index: number;
 		userid: ScholarID;
 		testid: string;

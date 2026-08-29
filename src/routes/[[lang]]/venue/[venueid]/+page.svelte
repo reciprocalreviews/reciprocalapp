@@ -173,7 +173,7 @@
 				...(showPayment
 					? [
 							{
-								number: tokens?.length,
+								number: tokens ?? undefined,
 								title: 'tokens',
 								link: `/venue/${venuePath(venue)}/transactions`
 							}

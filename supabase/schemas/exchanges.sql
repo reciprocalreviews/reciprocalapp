@@ -39,7 +39,7 @@ create unique index "to_index" on "public"."exchanges" using "btree" ("currency_
 
 --------------------------------------
 -- Functions
-create or replace function "public"."isminter" ("_scholarid" "uuid", "_currencyid" "uuid") RETURNS boolean LANGUAGE "sql" SECURITY DEFINER
+create or replace function "public"."isminter" ("_scholarid" "uuid", "_currencyid" "uuid") RETURNS boolean LANGUAGE "sql" SECURITY DEFINER STABLE
 set
 	"search_path" to '' as $$
     select (exists (select id from public.currencies where id = _currencyid and _scholarid = any(minters)));

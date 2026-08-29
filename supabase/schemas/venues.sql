@@ -80,7 +80,7 @@ alter table public.venues OWNER to "postgres";
 
 --------------------------------------
 -- Functions
-create or replace function public.isAdmin (_venueid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
+create or replace function public.isAdmin (_venueid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
 set
 	"search_path" to '' as $$
     select ((select auth.uid()) = any((select admins from public.venues where id = _venueid)::uuid[]));

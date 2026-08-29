@@ -92,6 +92,19 @@ create index token_events_unattributed_index on public.token_events using btree 
 where
 	txn is null;
 
+-- "Everything this log knows about one scholar" -- export_scholar_data reads it
+-- as `where scholar = $1 or prev_scholar = $1`, and with neither column indexed
+-- that was a full scan of the entire log for every data-rights export. Two
+-- indexes rather than one because the OR cannot use a composite, and partial
+-- because a venue-held token has null in both.
+create index token_events_scholar_seq_index on public.token_events using btree (scholar, seq)
+where
+	scholar is not null;
+
+create index token_events_prev_scholar_seq_index on public.token_events using btree (prev_scholar, seq)
+where
+	prev_scholar is not null;
+
 --------------------------------------
 -- Capture
 create or replace function public.log_token_event () returns trigger language plpgsql security definer

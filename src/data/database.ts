@@ -523,18 +523,21 @@ export type Database = {
       }
       reconciliations: {
         Row: {
+          duration_ms: number | null
           id: string
           ok: boolean
           ran_at: string
           result: Json
         }
         Insert: {
+          duration_ms?: number | null
           id?: string
           ok: boolean
           ran_at?: string
           result: Json
         }
         Update: {
+          duration_ms?: number | null
           id?: string
           ok?: boolean
           ran_at?: string
@@ -950,6 +953,7 @@ export type Database = {
       }
       transactions: {
         Row: {
+          amount: number
           created_at: string
           creator: string
           currency: string
@@ -966,6 +970,7 @@ export type Database = {
           tokens: string[]
         }
         Insert: {
+          amount?: number
           created_at?: string
           creator: string
           currency: string
@@ -982,6 +987,7 @@ export type Database = {
           tokens: string[]
         }
         Update: {
+          amount?: number
           created_at?: string
           creator?: string
           currency?: string
@@ -1164,6 +1170,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _move_tokens: {
+        Args: {
+          _amount: number
+          _currency: string
+          _from_scholar: string
+          _from_venue: string
+          _mint_shortfall?: boolean
+          _shortfall_message?: string
+          _to_scholar: string
+          _to_venue: string
+        }
+        Returns: string[]
+      }
       _notify_new_volunteer: {
         Args: { _roleid: string; _scholarid: string; _venueid: string }
         Returns: number
@@ -1254,6 +1273,7 @@ export type Database = {
         }
         Returns: Json
       }
+      currency_holder_counts: { Args: { _currency: string }; Returns: Json }
       decline_thanks: { Args: { _id: string; _reason: string }; Returns: Json }
       erase_scholar: {
         Args: { _note?: string; _scholar?: string }
@@ -1316,7 +1336,7 @@ export type Database = {
         }
         Returns: number
       }
-      reconcile_ledger: { Args: never; Returns: Json }
+      reconcile_ledger: { Args: { _since?: string }; Returns: Json }
       replay_audit_log: {
         Args: { _dry_run?: boolean; _from_seq?: number }
         Returns: Json
@@ -1324,6 +1344,13 @@ export type Database = {
       request_email_verification: {
         Args: { _email: string }
         Returns: undefined
+      }
+      scholar_balances: {
+        Args: { _currency: string; _scholars: string[] }
+        Returns: {
+          count: number
+          scholar: string
+        }[]
       }
       set_steward: {
         Args: { _scholar: string; _steward: boolean }

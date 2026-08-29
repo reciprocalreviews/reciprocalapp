@@ -23,7 +23,6 @@ import type {
 	SubmissionTypeID,
 	SupporterID,
 	TokenID,
-	TokenRow,
 	TransactionID,
 	TransactionRow,
 	TransactionStatus,
@@ -259,18 +258,45 @@ export type AssignmentAwaitingCompensation = QueryData<
 	ReturnType<typeof assignmentsAwaitingCompensationQuery>
 >[number];
 
-function tokenBalancesQuery(
-	client: SupabaseClient<Database>,
-	currency: CurrencyID,
-	scholarIDs: ScholarID[]
-) {
+/** How many tokens of one currency each named scholar holds. Scholars holding
+ * none are absent rather than zero; callers default.
+ *
+ * An RPC rather than a PostgREST aggregate over `tokens`: the scholar list is a
+ * venue's whole volunteer roster, and as an `in.(...)` query string five thousand
+ * UUIDs is a ~185KB URL and a 414 before Postgres ever sees it. As an argument it
+ * travels in the POST body. The grouped result was also subject to `max_rows`,
+ * so past a thousand distinct holders the balances were silently truncated. */
+/** Every `transactions` column except `tokens`, which is one UUID per token
+ * moved. The lists render only its length, and `amount` is that length as a
+ * generated column — so selecting `*` meant detoasting and shipping tens of
+ * thousands of UUIDs per page to draw a number the row already carries. */
+const TRANSACTION_LIST_COLUMNS =
+	'id, created_at, creator, from_scholar, from_venue, to_scholar, to_venue, currency, purpose, status, decliner, decline_reason, seq, amount';
+
+/** The three paginated transaction lists, which differ only in their filter.
+ *
+ * `withCount` is true only for the first page. The total is displayed and drives
+ * the "load more" stop condition, so it has to be exact — but it was being asked
+ * for on EVERY page, and an exact count re-runs the whole filtered scan through
+ * the transactions SELECT policy, whose venue and minter branches are correlated
+ * subqueries evaluated per row. Every "load more" was therefore paying for the
+ * page twice: once for ten rows, once to recount every row the scholar can see. */
+function transactionListQuery(client: SupabaseClient<Database>, withCount: boolean) {
 	return client
-		.from('tokens')
-		.select('scholar, id.count()')
-		.eq('currency', currency)
-		.in('scholar', scholarIDs);
+		.from('transactions')
+		.select(TRANSACTION_LIST_COLUMNS, withCount ? { count: 'exact' } : undefined);
 }
-export type TokenBalance = QueryData<ReturnType<typeof tokenBalancesQuery>>[number];
+export type TransactionListRow = QueryData<ReturnType<typeof transactionListQuery>>[number];
+
+export type TokenBalance = Database['public']['Functions']['scholar_balances']['Returns'][number];
+
+/** Total supply of a currency and how many scholars and venues hold any of it.
+ * `currency_holder_counts` returns Json, so the shape is named here. */
+export type CurrencyHolderCounts = {
+	supply: number;
+	scholars: number;
+	venues: number;
+};
 
 /** Candidate co-authors matched by name. The columns are listed explicitly
  * because the scholars SELECT policy is public — a wildcard here would hand
@@ -716,8 +742,22 @@ export default class SupabaseCRUD extends CRUD {
 		return this.rows('LoadAssignment', scholarReviewsQuery(this.client, scholar));
 	}
 
-	async getScholarTokens(scholar: ScholarID): Promise<ReadResult<TokenRow[] | null>> {
-		return this.rows('LoadToken', this.client.from('tokens').select('*').eq('scholar', scholar));
+	/** How many tokens the scholar holds, per currency. The scholar page used to
+	 * fetch one ROW PER TOKEN and re-filter that array once per currency; PostgREST
+	 * caps a response at `max_rows`, so both the total and every per-currency figure
+	 * silently stopped at 1000. This groups in the database instead. */
+	async getScholarBalances(scholar: ScholarID): Promise<ReadResult<Record<string, number>>> {
+		const { data, error } = await this.client
+			.from('tokens')
+			.select('currency, id.count()')
+			.eq('scholar', scholar);
+		if (error) {
+			this.error('LoadToken', error);
+			return { data: {} };
+		}
+		return {
+			data: Object.fromEntries(data.map((row) => [row.currency, row.count]))
+		};
 	}
 
 	async getScholarTokenCount(scholar: ScholarID): Promise<ReadResult<number>> {
@@ -898,8 +938,22 @@ export default class SupabaseCRUD extends CRUD {
 		return this.rows('LoadRole', this.client.from('roles').select('*').eq('venueid', venue));
 	}
 
-	async getVenueTokens(venue: VenueID): Promise<ReadResult<TokenRow[] | null>> {
-		return this.rows('LoadToken', this.client.from('tokens').select('*').eq('venue', venue));
+	/** How many tokens of the given currency the venue's reserve holds. A count
+	 * rather than the rows: the dashboard and the gift form only ever wanted the
+	 * number, and a reserve large enough to serve a community is far past the
+	 * `max_rows` cap that silently truncated the array they used to count. */
+	async getVenueTokenCount(
+		venue: VenueID,
+		currency: CurrencyID
+	): Promise<ReadResult<number | null>> {
+		return this.count(
+			'LoadToken',
+			this.client
+				.from('tokens')
+				.select('id', { count: 'exact', head: true })
+				.eq('venue', venue)
+				.eq('currency', currency)
+		);
 	}
 
 	async getVenueSubmissions(venue: VenueID): Promise<ReadResult<SubmissionRow[] | null>> {
@@ -1277,15 +1331,35 @@ export default class SupabaseCRUD extends CRUD {
 		return this.rows('LoadVenue', this.client.from('venues').select().eq('currency', currency));
 	}
 
-	async getCurrencyTokens(currency: CurrencyID): Promise<ReadResult<TokenRow[] | null>> {
-		return this.rows('LoadToken', this.client.from('tokens').select().eq('currency', currency));
+	/** Total supply of a currency, and how many scholars and venues hold any of
+	 * it. The currency page used to download every token row in the currency and
+	 * compute all three in the browser with `.length` and two `Set`s — so past a
+	 * thousand tokens it reported 1000, and holder counts drawn from an arbitrary
+	 * sample of them. Three SQL aggregates in one round trip. */
+	async getCurrencyHolderCounts(
+		currency: CurrencyID
+	): Promise<ReadResult<CurrencyHolderCounts | null>> {
+		const { data, error } = await this.client.rpc('currency_holder_counts', {
+			_currency: currency
+		});
+		if (error) {
+			this.error('LoadToken', error);
+			return { data: null };
+		}
+		return { data: data as unknown as CurrencyHolderCounts };
 	}
 
 	async getTokenBalances(
 		currency: CurrencyID,
 		scholarIDs: ScholarID[]
 	): Promise<ReadResult<TokenBalance[] | null>> {
-		return this.rows('LoadToken', tokenBalancesQuery(this.client, currency, scholarIDs));
+		// Short-circuit rather than sending an empty array: there is nothing to
+		// group, and every caller treats a missing scholar as a zero balance.
+		if (scholarIDs.length === 0) return { data: [] };
+		return this.rows(
+			'LoadToken',
+			this.client.rpc('scholar_balances', { _currency: currency, _scholars: scholarIDs })
+		);
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────
@@ -1399,23 +1473,24 @@ export default class SupabaseCRUD extends CRUD {
 		// scholar's holdings in every other venue's currency counted toward the
 		// charge, so the check passed and create_submission then rejected the
 		// submission with RR003 — or left a co-author charge that could never be
-		// approved. Both create_submission and tokenBalancesQuery filter the same way.
-		const { data: tokens, error: tokenError } = await this.client
-			.from('tokens')
-			.select('scholar')
-			.eq('currency', currency)
-			.in('scholar', scholarIDs);
-		if (tokenError) {
-			return { error: { message: 'Missing token', details: tokenError } };
+		// approved. Both create_submission and scholar_balances filter the same way.
+		// Grouped in the database, not here. This used to fetch one ROW PER TOKEN
+		// and count them in the loop below — and PostgREST caps a response at
+		// `max_rows` without erroring, so once the charged authors collectively held
+		// more than a thousand tokens the count came back short and this method
+		// reported a deficit for a submission its authors could comfortably afford.
+		// `null` is the read helper's failure signal (it has already posted the
+		// notification). Distinguished from an empty array, which legitimately means
+		// none of these authors holds anything — treating the two alike would report
+		// a full deficit for every author whenever the query merely failed.
+		const { data: counts } = await this.getTokenBalances(currency, scholarIDs);
+		if (counts === null) {
+			return { error: { message: 'Missing token' } };
 		}
 
-		// Sum the tokens possessed by each scholar
-		const balances = new Map<string, number>();
-		for (const token of tokens) {
-			if (token.scholar === null) continue;
-			const balance = balances.get(token.scholar) ?? 0;
-			balances.set(token.scholar, balance + 1);
-		}
+		const balances = new Map<string, number>(
+			counts.map((balance) => [balance.scholar, balance.count])
+		);
 
 		// Compute the deficits
 		const deficits = charges.map((charge) => {
@@ -2565,7 +2640,7 @@ export default class SupabaseCRUD extends CRUD {
 		// venue and currency before we update.
 		const { data: transaction, error: readError } = await this.client
 			.from('transactions')
-			.select('creator, purpose, currency, from_venue, to_venue, tokens')
+			.select('creator, purpose, currency, from_venue, to_venue, amount')
 			.eq('id', id)
 			.single();
 		if (readError || !transaction) return this.error('TransactionNotDeclined', readError);
@@ -2614,7 +2689,7 @@ export default class SupabaseCRUD extends CRUD {
 		const declinerEmail = declinerRow.data?.email ?? '';
 		const currencyName = currencyRow.data?.name ?? '';
 		const venueTitle = venueRow.data?.title ?? '';
-		const amount = transaction.tokens.length.toString();
+		const amount = transaction.amount.toString();
 		// Point back at whichever environment the decline happened in. This runs
 		// in the browser, so the page's own origin is the right answer and is
 		// already to hand; the templates' other links are resolved server-side
@@ -2657,9 +2732,7 @@ export default class SupabaseCRUD extends CRUD {
 	// may choose differently per query, and a LIMIT/OFFSET over an unstable sort
 	// can return one row on two pages while skipping another entirely.
 	async getScholarTransactions(scholar: ScholarID, page: number = 0) {
-		return await this.client
-			.from('transactions')
-			.select('*', { count: 'exact' })
+		return await transactionListQuery(this.client, page === 0)
 			.or(`from_scholar.eq.${scholar},to_scholar.eq.${scholar}`)
 			.order('created_at', { ascending: false })
 			.order('seq', { ascending: false })
@@ -2667,9 +2740,7 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async getVenueTransactions(venue: VenueID, page: number = 0) {
-		return await this.client
-			.from('transactions')
-			.select('*', { count: 'exact' })
+		return await transactionListQuery(this.client, page === 0)
 			.or(`from_venue.eq.${venue},to_venue.eq.${venue}`)
 			.order('created_at', { ascending: false })
 			.order('seq', { ascending: false })
@@ -2677,9 +2748,7 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async getCurrencyTransactions(currency: CurrencyID, page: number = 0) {
-		return await this.client
-			.from('transactions')
-			.select('*', { count: 'exact' })
+		return await transactionListQuery(this.client, page === 0)
 			.eq('currency', currency)
 			.order('created_at', { ascending: false })
 			.order('seq', { ascending: false })
@@ -2746,7 +2815,7 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async getTransactionVenues(
-		transactions: TransactionRow[]
+		transactions: Pick<TransactionRow, 'from_venue' | 'to_venue'>[]
 	): Promise<ReadResult<VenueRow[] | null>> {
 		return this.rows(
 			'LoadVenue',
@@ -2768,7 +2837,7 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async getTransactionCurrencies(
-		transactions: TransactionRow[]
+		transactions: Pick<TransactionRow, 'currency'>[]
 	): Promise<ReadResult<CurrencyRow[] | null>> {
 		return this.rows(
 			'LoadCurrency',

@@ -69,7 +69,7 @@ create index "idx_assignments_completed" on public.assignments using "btree" (co
 -- policy, where an AE must be able to approve a bid on a submission they hold no
 -- assignment on — so it cannot be narrowed to match the other rule without
 -- revoking that. See migration 20260816010000 for the full reasoning.
-create or replace function public.isRoleApproverVolunteer (_roleid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
+create or replace function public.isRoleApproverVolunteer (_roleid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
 set
 	"search_path" to '' as $$
 	select (
@@ -96,7 +96,7 @@ grant all on FUNCTION public.isRoleApproverVolunteer (uuid) to "service_role";
 -- on this submission" — a venue admin, the submission's priority-0 editor, or the
 -- holder of the approving role, each requiring an APPROVED ASSIGNMENT on this
 -- submission. Mirrored in TypeScript by src/lib/data/canApproveAssignment.ts.
-create or replace function public.can_approve_assignment (_submission uuid, _role uuid) returns boolean language sql security definer
+create or replace function public.can_approve_assignment (_submission uuid, _role uuid) returns boolean language sql security definer STABLE
 set
 	search_path to '' as $$
 	select exists (
@@ -156,7 +156,7 @@ execute on function public.can_approve_assignment (uuid, uuid) to authenticated;
 -- policy would see only the rows the claimer may select and would report "no editor" for
 -- a submission that already has one. Mirrored in TypeScript by
 -- src/lib/data/canClaimEditor.ts.
-create or replace function public.can_claim_editor_role (_submission uuid, _role uuid) returns boolean language sql security definer
+create or replace function public.can_claim_editor_role (_submission uuid, _role uuid) returns boolean language sql security definer STABLE
 set
 	search_path to '' as $$
 	select exists (
@@ -243,7 +243,7 @@ from
 grant
 execute on function public.venue_submission_editors (uuid) to authenticated;
 
-create or replace function public.isAssigned (_submissionid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
+create or replace function public.isAssigned (_submissionid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
 set
 	"search_path" to '' as $$
 	select (exists (select id from public.assignments where submission=_submissionid and scholar=(select auth.uid()) and approved=true))
@@ -262,7 +262,7 @@ grant all on FUNCTION public.isAssigned (_submissionid uuid) to "service_role";
 -- so on). These are the scholars empowered to make/oversee assignments to the
 -- role, so they may see its assignments. Walks roles.approver upward with a
 -- depth guard to tolerate accidental cycles.
-create or replace function public.isInApproverChain (_roleid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
+create or replace function public.isInApproverChain (_roleid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
 set
 	"search_path" to '' as $$
 	with recursive chain as (
@@ -294,7 +294,7 @@ grant all on FUNCTION public.isInApproverChain (_roleid uuid) to "service_role";
 -- True if the current scholar has a declared conflict of interest on the given
 -- submission. plpgsql (not sql) so the body's reference to public.conflicts is
 -- resolved at run time, since the conflicts table loads after this file.
-create or replace function public.isConflicted (_submissionid uuid) RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER
+create or replace function public.isConflicted (_submissionid uuid) RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER STABLE
 set
 	"search_path" to '' as $$
 begin
@@ -318,7 +318,7 @@ grant all on FUNCTION public.isConflicted (_submissionid uuid) to "service_role"
 -- DEFINER so the assignments SELECT policy can read submissions.authors without
 -- triggering the submissions RLS policy (which itself reads assignments — that
 -- mutual reference would otherwise be infinite recursion).
-create or replace function public.isAuthor (_submissionid uuid) returns boolean language sql security definer
+create or replace function public.isAuthor (_submissionid uuid) returns boolean language sql security definer STABLE
 set
 	"search_path" to '' as $$
 	select exists (
@@ -721,24 +721,20 @@ begin
         );
     end if;
 
-    -- Pick the tokens to move. Order is stable but arbitrary.
-    select array_agg(id) into _token_ids from (
-        select id from public.tokens
-            where venue = _assignment.venue and currency = _venue.currency
-            order by id
-            limit _amount
-    ) sub;
-
     -- Attribute the payout to its transaction. Generated up front: the tokens
     -- move before the transaction row exists, and the token_events trigger reads
     -- app.txn at the moment of the write.
     _txn_id := gen_random_uuid();
     perform set_config('app.txn', _txn_id::text, true);
 
-    -- Reassign the tokens to the scholar.
-    update public.tokens
-        set venue = null, scholar = _assignment.scholar
-        where id = any(_token_ids);
+    -- Take the tokens under lock and reassign them to the scholar. The count
+    -- above decided whether to propose a mint; this can still come up short if a
+    -- concurrent payout holds the rows it counted, which RR003 reports as a
+    -- retryable shortfall rather than paying out tokens the venue no longer has.
+    _token_ids := public._move_tokens(
+        _venue.currency, null, _assignment.venue, _assignment.scholar, null,
+        _amount, 'Insufficient tokens to compensate this assignment'
+    );
 
     -- Record the approved transaction.
     insert into public.transactions (

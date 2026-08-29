@@ -17,8 +17,13 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get all volunteers for the venue.
 	const { data: volunteers } = await db.getVenueVolunteers(venueid);
 
-	// See how many tokens the venue posseses.
-	const { data: tokens } = await db.getVenueTokens(venueid);
+	// See how many tokens the venue possesses. A count, not the rows: the page
+	// only ever showed the number, and a reserve serving a real community is far
+	// past the `max_rows` cap that silently truncated the array this used to
+	// count — a quarter-million-token reserve displayed as 1000.
+	const { data: tokens } = venue
+		? await db.getVenueTokenCount(venueid, venue.currency)
+		: { data: null };
 
 	// See how many transactions the venue is part of.
 	const { data: transactionCount } = await db.getVenueTransactionCount(venueid);

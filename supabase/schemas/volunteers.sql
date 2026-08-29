@@ -84,7 +84,7 @@ create index scholar_volunteer_index on public.volunteers using btree (scholarid
 -- Functions
 -- True if the current scholar holds an accepted priority-0 role at the given venue.
 -- Used by the tokens UPDATE policy to grant token-management authority.
-create or replace function public.isPriorityZero (_venueid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
+create or replace function public.isPriorityZero (_venueid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
 set
 	"search_path" to '' as $$
 	select exists (
@@ -213,8 +213,6 @@ set
 declare
 	_venue public.venues;
 	_txn_id uuid;
-	_available integer;
-	_shortfall integer;
 	_token_ids uuid[];
 begin
 	-- Find the venue that owns the role being volunteered for.
@@ -240,26 +238,17 @@ begin
 	_txn_id := gen_random_uuid();
 	perform set_config('app.txn', _txn_id::text, true);
 
-	-- Draw from the venue's reserve, minting only the shortfall into it first —
-	-- the same shape approve_transaction gives a venue-sourced transfer.
-	select count(*) into _available
-	from public.tokens
-	where currency = _venue.currency and venue = _venue.id;
-	_shortfall := greatest(0, _venue.welcome_amount - _available);
-	if _shortfall > 0 then
-		insert into public.tokens (currency, venue, scholar)
-		select _venue.currency, _venue.id, null from generate_series(1, _shortfall);
-	end if;
-
-	-- Choose the granted tokens and move them to the scholar.
-	select array_agg(id) into _token_ids
-	from (
-		select id from public.tokens
-		where currency = _venue.currency and venue = _venue.id
-		order by id
-		limit _venue.welcome_amount
-	) sub;
-	update public.tokens set venue = null, scholar = _scholar where id = any(_token_ids);
+	-- Draw from the venue's reserve and move the grant to the scholar, minting
+	-- only what the reserve cannot cover -- the same shape approve_transaction
+	-- gives a venue-sourced transfer. _mint_shortfall rather than a count(*) and a
+	-- pre-mint: the count could not see which of those tokens a concurrent payout
+	-- had already locked, so a reserve that looked sufficient could still come up
+	-- short. Taking first and minting the remainder is exact under concurrency,
+	-- and drops a count(*) over the whole reserve from the volunteering path.
+	_token_ids := public._move_tokens(
+		_venue.currency, null, _venue.id, _scholar, null,
+		_venue.welcome_amount, 'Insufficient tokens for the welcome grant', true
+	);
 
 	-- Record the settled grant as one approved venue->scholar transaction.
 	insert into public.transactions (

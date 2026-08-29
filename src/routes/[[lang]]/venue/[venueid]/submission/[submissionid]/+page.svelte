@@ -246,8 +246,18 @@
 		return volunteers?.find((v) => v.roleid === role && v.scholarid === scholar);
 	}
 
+	// A map, built once, rather than a linear scan per lookup. getBalance is the
+	// body of the sortAssignees/sortBids comparators, so a `.find()` here made
+	// ordering a candidate list O(n^2 log n) — and on a venue whose roster is the
+	// whole community, that list is the whole community. Its neighbours
+	// venueActiveCounts and elsewhereActiveCounts were already built as maps; this
+	// one was the exception.
+	let balanceByScholar = $derived(
+		new Map((balances ?? []).map((balance) => [balance.scholar, balance.count]))
+	);
+
 	function getBalance(scholar: ScholarID) {
-		return balances?.find((balance) => balance.scholar === scholar)?.count ?? 0;
+		return balanceByScholar.get(scholar) ?? 0;
 	}
 </script>
 

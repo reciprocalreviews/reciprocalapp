@@ -17,8 +17,12 @@ export const load: PageLoad = async ({ parent }) => {
 	const { data: currencies } =
 		transactions === null ? { data: null } : await db.getTransactionCurrencies(transactions);
 
-	// Get the venue's tokens.
-	const { data: tokens } = await db.getVenueTokens(venueid);
+	// How much the reserve holds, for the gift form's upper bound. A count, not
+	// the rows: a whole venue's token table was being fetched to set a slider's
+	// `max`, and PostgREST truncated it at `max_rows` anyway.
+	const { data: tokens } = venue
+		? await db.getVenueTokenCount(venueid, venue.currency)
+		: { data: null };
 
 	return {
 		transactions,

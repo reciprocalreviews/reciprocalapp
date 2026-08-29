@@ -1,12 +1,5 @@
 <script lang="ts">
-	import type {
-		CurrencyID,
-		CurrencyRow,
-		ScholarID,
-		TokenRow,
-		VenueID,
-		VenueRow
-	} from '$data/types';
+	import type { CurrencyID, CurrencyRow, ScholarID, VenueID, VenueRow } from '$data/types';
 	import { type Result } from '$lib/data/CRUD';
 	import { ORCIDRegex } from '$lib/data/ORCID';
 	import { validEmail, validORCID } from '$lib/validation';
@@ -22,14 +15,18 @@
 	import TextField from './TextField.svelte';
 
 	let {
-		tokens,
+		balances,
 		purpose,
 		transfer,
 		success,
 		currencies,
 		venues
 	}: {
-		tokens: TokenRow[] | null;
+		/** How many tokens the giver holds, keyed by currency id. A map rather than
+		 * the token rows: this only ever needed a count per currency, and the array it
+		 * used to filter was the giver's whole token table — capped at `max_rows`, so
+		 * a large holder's slider silently topped out at 1000. */
+		balances: Record<CurrencyID, number> | null;
 		purpose: string;
 		success: string;
 		currencies: CurrencyRow[];
@@ -57,10 +54,14 @@
 	let venue = $state<undefined | string>(undefined);
 
 	const locale = getLocaleContext();
+
+	let total = $derived(
+		balances === null ? 0 : Object.values(balances).reduce((sum, n) => sum + n, 0)
+	);
 </script>
 
 <Form>
-	{#if tokens === null || tokens.length === 0}
+	{#if balances === null || total === 0}
 		<Feedback text={(l) => l.view.gift.noTokens}></Feedback>
 	{:else}
 		<fieldset>
@@ -101,7 +102,7 @@
 		/>
 		<Slider
 			min={1}
-			max={tokens?.filter((t) => t.currency === currency).length ?? 20}
+			max={(currency === undefined ? undefined : balances?.[currency]) ?? 20}
 			bind:value={giftAmount}
 			step={1}
 			strings={(l) => l.view.gift.slider.tokenAmount}

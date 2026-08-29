@@ -52,10 +52,18 @@
 	$effect(() => {
 		const id = scholar?.id;
 		if (id === undefined) return;
+		// Watches `transactions`, not `tokens`. Both wake on exactly the same
+		// events, because only a transaction can move a token — but `tokens` is one
+		// row per token, so earning fifty of them woke this channel fifty times and
+		// re-ran every load function on the page fifty times. A transaction is one
+		// row however much it moves.
 		const channel = getRealtimeChannel(
 			`header-balance-${id}`,
 			db.client,
-			[{ table: 'tokens', filter: `scholar=eq.${id}` }],
+			[
+				{ table: 'transactions', filter: `from_scholar=eq.${id}` },
+				{ table: 'transactions', filter: `to_scholar=eq.${id}` }
+			],
 			() => invalidateAll()
 		).subscribe();
 		return () => {
