@@ -29,6 +29,7 @@ supabase/migrations/
 # by a SQL parser, so there is no formatter to apply.
 supabase/tests/
 supabase/dr/*.sql
+scripts/*.sql
 
 # Supabase CLI scratch state, recreated on every `supabase start`. Git ignores it
 # via supabase/.gitignore, but Prettier does not read .gitignore.
