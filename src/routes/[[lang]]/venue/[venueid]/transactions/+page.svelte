@@ -27,7 +27,10 @@
 	let locale = getLocaleContext();
 </script>
 
-{#if venue && transactions && venues && currencies && scholar && tokens && count !== null}
+<!-- `tokens !== null`, not `tokens`. It is a reserve COUNT now, and 0 is falsy —
+	so a venue that had spent its whole reserve rendered the "could not be loaded"
+	error page instead of its transactions. -->
+{#if venue && transactions && venues && currencies && scholar && tokens !== null && count !== null}
 	<Page
 		icon={VenueLabel}
 		title={venue.title}

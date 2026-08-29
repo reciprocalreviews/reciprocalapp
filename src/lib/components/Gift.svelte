@@ -61,6 +61,11 @@
 </script>
 
 <Form>
+	<!-- `null` is "could not be read", not "holds none" — under the private-balance
+	rule a failed read is a real possibility, and telling someone they have no
+	tokens when they have plenty is worse than saying nothing. Both render the same
+	notice for now; the distinction is kept so the slider below cannot silently
+	offer a bound drawn from a balance nobody actually read. -->
 	{#if balances === null || total === 0}
 		<Feedback text={(l) => l.view.gift.noTokens}></Feedback>
 	{:else}
@@ -102,7 +107,7 @@
 		/>
 		<Slider
 			min={1}
-			max={(currency === undefined ? undefined : balances?.[currency]) ?? 20}
+			max={(currency === undefined ? undefined : balances?.[currency]) ?? 0}
 			bind:value={giftAmount}
 			step={1}
 			strings={(l) => l.view.gift.slider.tokenAmount}

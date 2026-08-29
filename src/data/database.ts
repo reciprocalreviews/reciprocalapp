@@ -1206,6 +1206,13 @@ export type Database = {
       approve_thanks: { Args: { _id: string }; Returns: Json }
       approve_transaction: { Args: { _transaction_id: string }; Returns: Json }
       approve_venue_proposal: { Args: { _proposal_id: string }; Returns: Json }
+      authors_can_cover: {
+        Args: { _amounts: number[]; _currency: string; _scholars: string[] }
+        Returns: {
+          covered: boolean
+          scholar: string
+        }[]
+      }
       bulk_import_submissions: {
         Args: { _import_note: string; _submissions: Json; _venueid: string }
         Returns: Json
@@ -1218,6 +1225,7 @@ export type Database = {
         Args: { _role: string; _submission: string }
         Returns: boolean
       }
+      can_see_balances: { Args: { _currency: string }; Returns: boolean }
       complete_assignment: {
         Args: {
           _assignment_id: string

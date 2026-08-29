@@ -1,7 +1,7 @@
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { db } = await parent();
+	const { db, scholar: viewer } = await parent();
 
 	const scholarID = params.id;
 
@@ -23,11 +23,17 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get the scholar's administered venues
 	const { data: admins } = await db.getScholarAdminVenues(scholarID);
 
-	// How many tokens the scholar holds, per currency, counted in the database.
-	// This used to fetch one row per token and re-filter that array once per
-	// currency in the page — O(currencies x tokens) in the browser, and silently
-	// capped at `max_rows` besides.
-	const { data: balances } = await db.getScholarBalances(scholarID);
+	// How many tokens the scholar holds, per currency, counted in the database —
+	// and ONLY when you are looking at your own profile. Balances are private
+	// (#109), and the RLS policy enforces that, so asking for someone else's would
+	// return an empty map. That is not the same as "holds nothing", and the page
+	// below rendered it as a confident "0 tokens" — which is what anonymous
+	// visitors have always been shown. Not asking is how the page tells the
+	// difference.
+	const viewingSelf = viewer?.id === scholarID;
+	const { data: balances } = viewingSelf
+		? await db.getScholarBalances(scholarID)
+		: { data: {} as Record<string, number> };
 
 	// Get the currencies that the tokens use
 	const currencyIDs = Object.keys(balances);

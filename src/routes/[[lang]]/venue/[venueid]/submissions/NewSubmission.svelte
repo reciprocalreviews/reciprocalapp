@@ -155,10 +155,10 @@
 			affordable = (l) => l.page.newSubmission.error.balanceCheck;
 		} else if (data !== true) {
 			const notFound = data
-				.filter((result) => result.payment === undefined)
+				.filter((result) => result.covered === undefined)
 				.map((result) => result.scholar);
 			const short = data
-				.filter((result) => result.payment !== undefined && result.payment < 0)
+				.filter((result) => result.covered === false)
 				.map((result) => result.scholar);
 			if (notFound.length > 0)
 				affordable = (l) =>

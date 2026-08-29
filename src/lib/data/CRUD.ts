@@ -89,6 +89,14 @@ export type ReadResult<Type> = { data: Type; error?: DBError };
 
 export type Charge = { scholar: string; payment: number | undefined };
 
+/** Whether one author can cover the charge proposed for them.
+ *
+ * `covered: undefined` means the scholar could not be resolved at all;
+ * `false` means they hold too little. Deliberately a boolean rather than the
+ * remaining balance: the form only ever needed to name who cannot pay, and the
+ * submitter is not entitled to know how much anybody else holds (#109). */
+export type ChargeCoverage = { scholar: string; covered: boolean | undefined };
+
 export type ImportedSubmission = {
 	title: string;
 	externalID: string;
@@ -170,14 +178,19 @@ export default abstract class CRUD {
 	): Promise<Result<MarkSubmissionDoneOutcome>>;
 
 	/** Check whether the given scholars have enough tokens for the given payments,
-	 * denominated in the given currency. True if so, and a list of remaining balances
-	 * by scholar if not. The currency is required: a balance is only meaningful within
-	 * one, and counting a scholar's holdings across all of them makes this disagree
-	 * with the create_submission RPC that ultimately decides. */
+	 * denominated in the given currency. True if so, and a per-scholar can/cannot
+	 * otherwise. The currency is required: a balance is only meaningful within one,
+	 * and counting a scholar's holdings across all of them makes this disagree with
+	 * the create_submission RPC that ultimately decides.
+	 *
+	 * Answers can/cannot rather than by-how-much. Balances are private (#109) and a
+	 * submitter is not in the audience for their co-authors' — being named on a
+	 * manuscript together confers nothing. The form never displayed the number
+	 * anyway; it only ever named who was short. */
 	abstract verifyCharges(
 		charges: Charge[],
 		currency: CurrencyID
-	): Promise<Result<true | Charge[] | undefined>>;
+	): Promise<Result<true | ChargeCoverage[] | undefined>>;
 
 	abstract registerScholar(scholar: ScholarRow): Scholar;
 

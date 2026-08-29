@@ -272,7 +272,9 @@ $function$;
 revoke
 execute on function public._welcome_volunteer (uuid, uuid, uuid, text)
 from
-	public;
+	public,
+	anon,
+	authenticated;
 
 -- _notify_new_volunteer: tell a venue's top-priority role holders that a scholar has
 -- volunteered for one of its open roles.

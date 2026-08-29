@@ -18,6 +18,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **A venue's admin can now also mint its currency**, and a venue whose admin does says so on its page to every visitor who is neither, inviting them to take the minting role over. Forbidding the arrangement blocked venues from going live, asked more of a small community than it could staff, and treated the people running a venue as suspects; approving a payment into a venue you run is still refused, since that moves tokens somebody else already holds.
 - The venue proposal form now says which listed email addresses don't yet belong to a Reciprocal Reviews account, and a steward sees the same before approving. Neither blocks anything: listed editors are emailed an invitation when the proposal is filed, and are added to the venue when they sign up.
 - The button for deleting a proposal now says **Delete** instead of showing only an ✖, and **Approve** carries a matching checkmark.
+- **Token balances are now private.** A scholar sees their own; a venue's editors and its currency's minters see the balances of scholars reviewing there, so paid work can go to whoever is most undercompensated; nobody else — including a submission's authors and the reviewers bidding alongside you — sees them at all. Previously any signed-in scholar could read who held how much of what, across every venue on the platform. (#109)
+- The new submission form now says which co-authors cannot cover their share of the charge, rather than how many tokens short they are.
 
 ### Fixed
 
@@ -29,6 +31,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **Every role a venue created was silently a top-priority role.** The top role's holders act as the venue's editors — able to approve any assignment, edit a submission's author list, and mark it done — and new roles landed there by default, handing out that authority until an admin used the reorder arrows. New roles are now added at the bottom, venues with tied roles have been renumbered, and the note explaining the top role no longer appears on several roles at once.
 - Saving an editable field no longer flashes the old value: the field shows what you typed the moment you save, the button shows that a save is in flight, and it reopens with your text intact if the save fails. Previously it reverted while the save was in progress and switched back a second later, which on a slow connection read as the edit having been lost.
 - Validation warnings no longer linger on a field that has been cleared. Fields now stay quiet until you type in them and go quiet again when something clears them — previously a field that emptied after you submitted kept the "must not be empty" warning it earned while you were filling it in.
+- **Closed a hole that let anyone mint or move tokens without signing in.** Several database routines that rely on their callers to have already checked permissions were reachable directly through the public API, so a venue's reserve could be emptied and new tokens created from nothing.
+- A venue's transactions page no longer shows a loading error when the venue's reserve is empty.
 
 ## 0.5.0 - 2026-08-28
 

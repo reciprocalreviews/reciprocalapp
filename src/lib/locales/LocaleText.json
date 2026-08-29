@@ -3086,16 +3086,12 @@
                 "paragraph": {
                   "additionalProperties": false,
                   "properties": {
-                    "thisScholarHas": {
-                      "type": "string"
-                    },
                     "youHave": {
                       "type": "string"
                     }
                   },
                   "required": [
-                    "youHave",
-                    "thisScholarHas"
+                    "youHave"
                   ],
                   "type": "object"
                 },

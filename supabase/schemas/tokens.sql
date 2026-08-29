@@ -62,9 +62,35 @@ where
 -- Security
 alter table public.tokens ENABLE row LEVEL SECURITY;
 
-create policy "tokens are visible to authenticated scholars" on public.tokens for
+-- Balances are private (#109). This policy used to be `using (true)`, so every
+-- signed-in scholar could read who held how much of what across every venue on
+-- the platform -- by listing this table directly, whatever the UI chose to show.
+--
+-- Two branches, and deliberately no more. Both are plain column comparisons, so
+-- this stays exactly as cheap as `using (true)` was and the composite indexes
+-- above still serve it: a policy is evaluated once PER ROW, and a token table
+-- has a row per token, so anything cleverer here is paid for a quarter of a
+-- million times per venue.
+--
+-- Cross-scholar reads are not served by this policy at all. They go through
+-- public.scholar_balances, which is SECURITY DEFINER and asks
+-- public.can_see_balances ONCE per call rather than once per row -- the same
+-- division of labour every other RPC in this schema uses, and the reason the
+-- audience rule can be as broad as it is without costing anything.
+create policy "tokens are visible to their holder, and venue reserves to any scholar" on public.tokens for
 select
-	to authenticated using (true);
+	to authenticated using (
+		-- Your own balance. Null-safe by construction: a venue-held row has
+		-- `scholar is null`, and `null = uuid` is null, not true.
+		scholar=(
+			select
+				auth.uid ()
+		)
+		-- A venue's reserve, which is institutional rather than personal. A scholar
+		-- deciding whether to volunteer somewhere is entitled to know whether the
+		-- venue can actually pay, and #109 is about what individuals hold.
+		or venue is not null
+	);
 
 -- Tokens are never written directly by a client. Every mint and every transfer
 -- goes through a SECURITY DEFINER RPC below (or in transactions.sql), each of
@@ -167,6 +193,22 @@ from
 grant
 execute on function public.mint_tokens (uuid, integer, uuid, text) to authenticated;
 
+--------------------------------------
+-- A NOTE ON `revoke ... from public` THROUGHOUT THIS SCHEMA
+--
+-- It is not sufficient on its own. Supabase's default privileges grant anon,
+-- authenticated and service_role EXECUTE on every function created in `public`
+-- BEFORE the revoke runs, and revoking from PUBLIC does not remove an explicit
+-- per-role grant -- so a function that reads as owner-only here can still be
+-- called by anyone at POST /rest/v1/rpc/<name>. The same trap is documented for
+-- TABLES in token_events.sql and below; it applies to FUNCTIONS too, and nobody
+-- had looked until #109.
+--
+-- Every SECURITY DEFINER function's real audience is therefore set in one place,
+-- 20260831000000_definer_function_grants.sql, which revokes from public, anon AND
+-- authenticated and then grants back by category. `supabase db diff` does NOT
+-- compare function ACLs, so CI cannot catch a regression here -- the guard rail is
+-- supabase/tests/rls/definer_grants.sql. Add a function, add it to both.
 --------------------------------------
 -- Moving tokens
 -- _move_tokens: take _amount of _currency from the source, reassign them to the
@@ -302,15 +344,35 @@ begin
 end;
 $function$;
 
-alter function public._move_tokens (uuid, uuid, uuid, uuid, uuid, integer, text, boolean) OWNER to "postgres";
+alter function public._move_tokens (
+	uuid,
+	uuid,
+	uuid,
+	uuid,
+	uuid,
+	integer,
+	text,
+	boolean
+) OWNER to "postgres";
 
 -- A step of the RPCs above, not an entry point: it moves value with no
 -- authorization of its own, so only the definer functions that have already
 -- authorized the move may call it.
 revoke
-execute on function public._move_tokens (uuid, uuid, uuid, uuid, uuid, integer, text, boolean)
+execute on function public._move_tokens (
+	uuid,
+	uuid,
+	uuid,
+	uuid,
+	uuid,
+	integer,
+	text,
+	boolean
+)
 from
-	public;
+	public,
+	anon,
+	authenticated;
 
 --------------------------------------
 -- Reading balances
@@ -346,11 +408,76 @@ from
 grant
 execute on function public.currency_holder_counts (uuid) to authenticated;
 
+-- can_see_balances: may the caller see OTHER scholars' balances in this currency?
+--
+-- #109 resolved: balances are not public, and no feature is wanted to make them
+-- public. The audience is the people who run and staff the reviewing the currency
+-- pays for -- they decide who to assign and who is undercompensated, and DESIGN.md
+-- asks them to prioritize the scholars most in need of paid work, which is not a
+-- judgement anyone can make blind.
+--
+-- Deliberately NOT the authors of a submission. An author can reach a submission
+-- page and see who is reviewing it, but what those reviewers hold is none of their
+-- business -- and before this, the submission page showed it to them, and encoded
+-- it a second time in the row order.
+--
+-- Takes a currency rather than a row, so a caller evaluates it ONCE. Keeping this
+-- out of the tokens policy is the whole reason the audience can be this broad
+-- without costing anything per row.
+create or replace function public.can_see_balances (_currency uuid) returns boolean language sql stable security definer
+set
+	search_path='' as $function$
+	select
+		-- Minters answer for the currency's supply.
+		public.isminter((select auth.uid()), _currency)
+		-- Venue admins, who need not be volunteers anywhere.
+		or exists (
+			select 1 from public.venues ve
+			where ve.currency = _currency
+				and (select auth.uid()) = any (ve.admins)
+		)
+		-- The reviewing pool: anyone holding an accepted, still-active role at a
+		-- venue using this currency. `active` matters -- unvolunteering keeps the
+		-- row (it is what stops a welcome grant being made twice), so accepting
+		-- alone would leave visibility behind forever.
+		or exists (
+			select 1
+			from public.volunteers v
+			join public.roles r on r.id = v.roleid
+			join public.venues ve on ve.id = r.venueid
+			where v.scholarid = (select auth.uid())
+				and v.accepted = 'accepted'
+				and v.active
+				and ve.currency = _currency
+		);
+$function$;
+
+alter function public.can_see_balances (uuid) OWNER to "postgres";
+
+revoke
+execute on function public.can_see_balances (uuid)
+from
+	public,
+	anon;
+
+grant
+execute on function public.can_see_balances (uuid) to authenticated;
+
 -- scholar_balances: how many tokens of one currency each named scholar holds.
 -- An RPC rather than a PostgREST aggregate because the scholar list is a venue's
 -- whole volunteer roster: as a `in.(...)` query string, five thousand UUIDs is a
 -- ~185 KB URL and a 414 before Postgres ever sees it, and the grouped result was
 -- itself subject to max_rows. As an argument it travels in the POST body.
+--
+-- SECURITY DEFINER, so it bypasses RLS and must re-implement the rule itself --
+-- which is the point: the tokens policy stays a two-column comparison and the
+-- audience question is asked here, once. Before #109 this function had no checks
+-- at all, and since scholars.id is publicly readable, an attacker could harvest
+-- every id and reconstruct the platform's entire balance table from it.
+--
+-- Filters rather than raising. A caller outside the audience still gets their own
+-- row: a reviewer's submission page must not error just because they may not see
+-- their peers' balances, it must simply stop showing them.
 --
 -- Scholars holding none are absent rather than zero; every caller defaults.
 create or replace function public.scholar_balances (_currency uuid, _scholars uuid[]) returns table (scholar uuid, count bigint) language sql stable security definer
@@ -360,6 +487,13 @@ set
 	from public.tokens t
 	where t.currency = _currency
 		and t.scholar = any (_scholars)
+		and (
+			-- Your own balance is always yours to see.
+			t.scholar = (select auth.uid())
+			-- Everyone else's, only for the currency's reviewing audience. Constant
+			-- for the call, so it is evaluated once and not once per token.
+			or public.can_see_balances(_currency)
+		)
 	group by t.scholar;
 $function$;
 
@@ -372,6 +506,49 @@ from
 
 grant
 execute on function public.scholar_balances (uuid, uuid[]) to authenticated;
+
+-- authors_can_cover: can each of these scholars afford the charge beside them?
+--
+-- The new-submission form has to tell a submitter which co-authors cannot cover
+-- their share, or the submission fails at create_submission with an RR003 nobody
+-- can act on. But the submitter is usually outside the balance audience -- being
+-- someone's co-author confers nothing -- so scholar_balances rightly returns them
+-- nothing, and the form would report every co-author as broke.
+--
+-- So this answers the question the form actually asks. It returns a BOOLEAN per
+-- author and never an amount: "Amara cannot cover her share" is what the
+-- submitter needs, and is strictly less than the exact shortfall the form used to
+-- disclose about people who never agreed to share it.
+--
+-- Deliberately not gated on can_see_balances: a yes/no about a charge the
+-- submitter is themselves proposing is a much smaller disclosure than a balance,
+-- and gating it would break co-authored submissions entirely.
+create or replace function public.authors_can_cover (
+	_currency uuid,
+	_scholars uuid[],
+	_amounts integer[]
+) returns table (scholar uuid, covered boolean) language sql stable security definer
+set
+	search_path='' as $function$
+	select
+		a.scholar,
+		(
+			select count(*) from public.tokens t
+			where t.currency = _currency and t.scholar = a.scholar
+		) >= a.amount
+	from unnest(_scholars, _amounts) as a (scholar, amount);
+$function$;
+
+alter function public.authors_can_cover (uuid, uuid[], integer[]) OWNER to "postgres";
+
+revoke
+execute on function public.authors_can_cover (uuid, uuid[], integer[])
+from
+	public,
+	anon;
+
+grant
+execute on function public.authors_can_cover (uuid, uuid[], integer[]) to authenticated;
 
 grant all on table public.tokens to anon;
 

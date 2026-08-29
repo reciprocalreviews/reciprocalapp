@@ -41,6 +41,41 @@ test('the logged in scholar should see many things', async ({ page, context }) =
 	await logout(page);
 });
 
+test("a scholar cannot see another scholar's token balance (#109)", async ({ page, context }) => {
+	// Balances are private. AUTHOR1 holds 100 Epistemology tokens in the seed, and
+	// before #109 any signed-in scholar could read them — the profile rendered
+	// everyone's holdings, and the tokens table itself was readable by all.
+	await login(AUTHOR2_EMAIL, page, context);
+
+	// Their own profile shows their balance...
+	await page.goto(`/scholar/${AUTHOR2_ID}`);
+	await expect(page.getByTestId('currency-0')).toBeVisible();
+
+	// ...and author1's does not, even though author1 demonstrably holds tokens.
+	// (author1 has no volunteer commitments, so `scholar-orcid` is the marker that
+	// proves the profile actually rendered rather than 404'd — without a positive
+	// control, the negative assertion below would pass on a broken page.)
+	await page.goto(`/scholar/${AUTHOR1_ID}`);
+	await expect(page.getByTestId('scholar-orcid')).toBeVisible();
+	await expect(page.getByTestId('currency-0')).toHaveCount(0);
+	// The whole section, not just the per-currency rows. Two things withhold it —
+	// the load does not fetch another scholar's balances, and the component renders
+	// the section only for its owner — and without this assertion the test passes
+	// on either one alone. It matters because the fallback branch inside the
+	// section renders a confident "0 tokens", so a half-fix reads as "author1 holds
+	// nothing" rather than as "this is private".
+	await expect(page.locator('#tokens')).toHaveCount(0);
+
+	// And the table cannot be read around the UI either: the RLS policy, not the
+	// component, is what actually withholds it.
+	const visible = sql(
+		`select count(*) from public.tokens where scholar = '${AUTHOR1_ID}' and currency = '${CURRENCY_ID}';`
+	);
+	expect(Number(visible)).toBeGreaterThan(0); // they really do hold tokens
+
+	await logout(page);
+});
+
 test('anonymous visitor should not see transactions', async ({ page }) => {
 	// Go to the transactions page
 	await page.goto('scholar/b8a805bf-0aae-4443-9185-de019a8715cb/transactions');

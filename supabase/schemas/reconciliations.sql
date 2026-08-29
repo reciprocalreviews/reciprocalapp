@@ -307,7 +307,9 @@ alter function public.reconcile_ledger (timestamptz) OWNER to "postgres";
 revoke
 execute on function public.reconcile_ledger (timestamptz)
 from
-	public;
+	public,
+	anon,
+	authenticated;
 
 grant
 execute on function public.reconcile_ledger (timestamptz) to service_role;

@@ -339,7 +339,18 @@ If scholar ID corresponds to the authenticated user, it should also allow the sc
 
 - [x] _`scholar`_: View a history of `Transaction`s associated with the scholar
 - [x] _`scholar`_: Gift tokens to someone else using the scholar's ORCID or email
-- [ ] ([#109](https://github.com/reciprocalreviews/reciprocalapp/issues/109)) Decide whether a scholar's token balance is public, private, or visible only to editors of venues where the scholar holds tokens. Resolution affects every place balances are displayed — and, until it is made, tokens stay readable by every signed-in scholar, so anyone with an account can read who holds how much of what across every venue on the platform. This decision is what the database rule is waiting on; it is not an open question about presentation only.
+- [x] ([#109](https://github.com/reciprocalreviews/reciprocalapp/issues/109)) **A scholar's token balance is private.** It is not public, and there is deliberately no setting to make it public — publishing what someone has earned invites exactly the comparisons a labor currency should not encourage.
+
+  Four audiences can see a balance, and each because they need it to do something:
+
+  - **The scholar themselves**, wherever they are signed in.
+  - **The people who run and staff a venue's reviewing** — its admins, and anyone holding an accepted, active role at a venue using that currency. They decide who to assign, and this platform asks them to give paid work first to whoever is most undercompensated, which is not a judgement anyone can make blind.
+  - **A currency's minters**, who answer for its supply.
+  - **Nobody else** — including the authors of a submission. Seeing who reviewed your manuscript is not the same as seeing what they were paid, and a fellow bidder is not entitled to know how their competition is doing.
+
+  Two things are deliberately outside the rule, because neither is a person's balance. A **venue's reserve** stays visible to any signed-in scholar: it is institutional, and someone deciding whether to volunteer is entitled to know whether the venue can actually pay. A currency's **total supply and holder counts** stay public, since the oversight on minting is the public ledger.
+
+  One consequence worth stating plainly: a co-author must still be told whether they can cover their share of a submission charge, or a shared submission fails for a reason nobody can act on. The platform answers that as a **yes or no**, never as an amount.
 
 ### Venue List `/venues`
 
@@ -420,7 +431,7 @@ When a venue is **approved** state:
 - [x] _`editor`_: Modify the newcomer gift in tokens
 - [x] _`editor`_: Modify submission costs in tokens, reviewing compensation in tokens. Submission cost is set **per submission type** (each type is a different amount of work, e.g. a resubmission type may cost less than a fresh submission), and must equal the total compensation for a submission of that type.
 - [x] _`editor`_: View the total number of tokens in the venue and who posses them, to gauge the health of the community.
-- [ ] _`editor`_ ([#93](https://github.com/reciprocalreviews/reciprocalapp/issues/93)): On the volunteers list, show each volunteer's current token balance in the venue's currency, so editors can see at a glance who is undercompensated and prioritize assignments accordingly. (The ordering half of this is done: bids and assignees are listed **lowest balance first**, so the scholars most in need of paid reviewing work surface at the top of every candidate list. The volunteers-list balance column remains.)
+- [ ] _`editor`_ ([#93](https://github.com/reciprocalreviews/reciprocalapp/issues/93)): On the volunteers list, show each volunteer's current token balance in the venue's currency, so editors can see at a glance who is undercompensated and prioritize assignments accordingly. (The ordering half of this is done: bids and assignees are listed **lowest balance first**, so the scholars most in need of paid reviewing work surface at the top of every candidate list — for the editors who may see balances, and for nobody else, since the ordering would otherwise disclose by implication what the column no longer shows. The volunteers-list balance column remains, and #109 has settled that editors are entitled to it.)
 - [x] _`editor`_: Change the _`minter`_(s) of the venue, ensuring there is always one
 - [x] _`editor`_: Enable or disable (`venues.bidding`), determining whether submissions can be bid on by `scholars`.
 

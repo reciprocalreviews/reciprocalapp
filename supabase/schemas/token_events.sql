@@ -248,7 +248,9 @@ alter function public.tokens_as_of (timestamptz) OWNER to "postgres";
 revoke
 execute on function public.tokens_as_of (timestamptz)
 from
-	public;
+	public,
+	anon,
+	authenticated;
 
 grant
 execute on function public.tokens_as_of (timestamptz) to service_role;

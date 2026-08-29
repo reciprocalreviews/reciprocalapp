@@ -896,7 +896,6 @@ export type LocaleText = {
 			};
 			paragraph: {
 				youHave: string;
-				thisScholarHas: string;
 			};
 			/** The scholar's own data-rights controls: export and erasure. Only ever
 			 * shown to the scholar themselves. */

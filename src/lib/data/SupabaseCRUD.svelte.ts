@@ -40,6 +40,7 @@ import type Locale from '../locales/Locale';
 import CRUD, {
 	type BulkImportResult,
 	type Charge,
+	type ChargeCoverage,
 	type ImportedSubmission,
 	type MarkSubmissionDoneOutcome,
 	type Notification,
@@ -1448,7 +1449,7 @@ export default class SupabaseCRUD extends CRUD {
 	async verifyCharges(
 		charges: Charge[],
 		currency: CurrencyID
-	): Promise<Result<true | Charge[] | undefined>> {
+	): Promise<Result<true | ChargeCoverage[] | undefined>> {
 		// First, find the scholars with the specified ORCIDs.
 		const { data: scholars, error: scholarsError } = await this.convertORCIDsToScholars(
 			charges.map((charge) => charge.scholar)
@@ -1462,51 +1463,56 @@ export default class SupabaseCRUD extends CRUD {
 			return {
 				data: charges.map((charge) => ({
 					scholar: charge.scholar,
-					payment: scholars.some((s) => s.orcid === charge.scholar) ? charge.payment : undefined
+					// Resolvable but unchecked, versus not a scholar at all. The caller
+					// reports the latter separately, so it must stay distinguishable.
+					covered: scholars.some((s) => s.orcid === charge.scholar) ? true : undefined
 				}))
 			};
 
-		const scholarIDs = scholars.map((scholar) => scholar.id);
+		// Answered in the database, per author, as a yes/no — IN THIS VENUE'S
+		// CURRENCY. The currency filter is not optional: a balance is meaningless
+		// without one, and counting a scholar's holdings across all currencies made
+		// this disagree with the create_submission RPC that ultimately decides, so
+		// the check passed and the submission was then rejected with RR003.
+		//
+		// A yes/no rather than the balances themselves, because balances are private
+		// (#109) and co-authorship puts nobody in the audience for anybody's. It also
+		// keeps working: scholar_balances would rightly return the submitter nothing
+		// about their co-authors, and this would then report every one of them as
+		// unable to pay. The form never showed the number — only who was short.
+		const resolvable = charges
+			.map((charge) => ({
+				charge,
+				id: scholars.find((scholar) => scholar.orcid === charge.scholar)?.id
+			}))
+			.filter((entry): entry is { charge: Charge; id: ScholarID } => entry.id !== undefined)
+			.filter((entry) => entry.charge.payment !== undefined);
 
-		// Find all of the tokens owned by the set, IN THIS VENUE'S CURRENCY. A
-		// balance is meaningless without the currency: without this filter a
-		// scholar's holdings in every other venue's currency counted toward the
-		// charge, so the check passed and create_submission then rejected the
-		// submission with RR003 — or left a co-author charge that could never be
-		// approved. Both create_submission and scholar_balances filter the same way.
-		// Grouped in the database, not here. This used to fetch one ROW PER TOKEN
-		// and count them in the loop below — and PostgREST caps a response at
-		// `max_rows` without erroring, so once the charged authors collectively held
-		// more than a thousand tokens the count came back short and this method
-		// reported a deficit for a submission its authors could comfortably afford.
-		// `null` is the read helper's failure signal (it has already posted the
-		// notification). Distinguished from an empty array, which legitimately means
-		// none of these authors holds anything — treating the two alike would report
-		// a full deficit for every author whenever the query merely failed.
-		const { data: counts } = await this.getTokenBalances(currency, scholarIDs);
-		if (counts === null) {
+		const { data: coverage, error } = await this.client.rpc('authors_can_cover', {
+			_currency: currency,
+			_scholars: resolvable.map((entry) => entry.id),
+			_amounts: resolvable.map((entry) => entry.charge.payment as number)
+		});
+		if (error) {
+			this.error('LoadToken', error);
 			return { error: { message: 'Missing token' } };
 		}
 
-		const balances = new Map<string, number>(
-			counts.map((balance) => [balance.scholar, balance.count])
-		);
+		const covered = new Map(coverage.map((row) => [row.scholar, row.covered]));
 
-		// Compute the deficits
-		const deficits = charges.map((charge) => {
+		const results: ChargeCoverage[] = charges.map((charge) => {
 			const scholarID = scholars.find((scholar) => scholar.orcid === charge.scholar)?.id;
-			const balance = scholarID !== undefined ? (balances.get(scholarID) ?? 0) : 0;
 			return {
 				scholar: charge.scholar,
-				payment:
-					balance === undefined || charge.payment === undefined
+				// Unresolvable scholar, or a charge with no amount: nothing to check.
+				covered:
+					scholarID === undefined || charge.payment === undefined
 						? undefined
-						: balance - charge.payment
+						: (covered.get(scholarID) ?? false)
 			};
 		});
 
-		if (deficits.some((deficit) => deficit.payment === undefined || deficit.payment < 0))
-			return { data: deficits };
+		if (results.some((result) => result.covered !== true)) return { data: results };
 
 		// Otherwise, all is good.
 		return { data: true };

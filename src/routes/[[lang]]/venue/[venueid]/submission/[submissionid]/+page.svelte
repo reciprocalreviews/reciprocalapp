@@ -256,7 +256,25 @@
 		new Map((balances ?? []).map((balance) => [balance.scholar, balance.count]))
 	);
 
+	/** Whether this viewer may see other scholars' balances on this page.
+	 *
+	 * Balances are private (#109). The audience is the people who run and staff the
+	 * reviewing — those who can approve an assignment here — and the database agrees:
+	 * scholar_balances returns an outsider nothing but their own row. This exists so
+	 * the page does not render a column of confident zeroes for everyone else; it
+	 * matches the server rather than replacing it.
+	 *
+	 * canViewSubmission admits authors and fellow bidders to this page, and they are
+	 * deliberately NOT in the audience: seeing who reviews your manuscript is not the
+	 * same as seeing what they are paid. */
+	let canSeeBalances = $derived(rolesScholarCanApprove.length > 0);
+
 	function getBalance(scholar: ScholarID) {
+		// Withheld, not merely hidden. Removing the column alone would leave the ROW
+		// ORDER as a balance oracle, because sortAssignees/sortBids sort ascending by
+		// this value. Returning a constant makes the comparator fall through to
+		// family name — which is exactly what that injection point is for.
+		if (!canSeeBalances) return 0;
 		return balanceByScholar.get(scholar) ?? 0;
 	}
 </script>
@@ -542,7 +560,7 @@
 				<th>{locale().page.submission.headers.role}</th>
 				<th>{locale().page.submission.headers.scholar}</th>
 				<th>{locale().page.submission.headers.expertise}</th>
-				<th>{locale().page.submission.headers.balance}</th>
+				{#if canSeeBalances}<th>{locale().page.submission.headers.balance}</th>{/if}
 				<th>{locale().page.submission.headers.load}</th>
 				<th>{locale().page.submission.headers.action}</th>
 			{/snippet}
@@ -594,7 +612,7 @@
 						<td
 							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 						>
-						<td><Tokens amount={getBalance(assignment.scholar)} /></td>
+						{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} /></td>{/if}
 						<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 						<td>
 							<Row>
@@ -657,7 +675,7 @@
 							<td
 								>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
 							>
-							<td><Tokens amount={getBalance(assignment.scholar)} /></td>
+							{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} /></td>{/if}
 							<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 							<td>
 								<Row>

@@ -1,7 +1,11 @@
 -- RLS tests for public.tokens.
 --
 -- Authorization model under test:
---   SELECT  authenticated scholars only (using = true) — anon cannot read.
+--   SELECT  a scholar's own tokens, plus any venue's reserve. Anon reads
+--           nothing. Balances are private (#109): nobody reads anybody else's
+--           token rows through this table, whatever their role — the audience
+--           rule lives in scholar_balances instead, so that a policy evaluated
+--           once per token row stays two column comparisons.
 --   INSERT  nobody, directly. Tokens are minted only by mint_tokens.
 --   UPDATE  nobody, directly. Ownership moves only through transfer_tokens,
 --           approve_transaction, complete_assignment, mark_submission_done,
@@ -28,7 +32,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(16);
+select plan(21);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -64,7 +68,7 @@ returning id as tok_venue \gset
 select policies_are(
 	'public', 'tokens',
 	array[
-		'tokens are visible to authenticated scholars',
+		'tokens are visible to their holder, and venue reserves to any scholar',
 		'tokens are only created by definer rpcs',
 		'tokens are only updated by definer rpcs',
 		'tokens cannot be deleted'
@@ -72,19 +76,60 @@ select policies_are(
 );
 
 -- ---- SELECT -------------------------------------------------------------------
--- Any authenticated scholar may read tokens (using = true). Reading is how
--- balances are computed, so this stays open.
-select tests.authenticate_as(:'outsider');
+-- Balances are private (#109). This section used to assert the opposite -- that
+-- :outsider, a scholar with no relationship to this currency, venue or token,
+-- could read it -- because the policy was `using (true)`. That assertion was an
+-- accurate description of a leak: any signed-in scholar could list this table and
+-- reconstruct who held how much of what across the whole platform.
+
+-- A scholar reads their own tokens.
+select tests.authenticate_as(:'owner');
 select isnt_empty(
 	$$ select 1 from public.tokens where id = $$ || quote_literal(:'tok_scholar'),
-	'an authenticated scholar can read tokens'
+	'a scholar can read their own tokens'
 );
 
--- Anonymous visitors cannot read any token.
+-- And nobody else's. Not an unrelated scholar...
+select tests.authenticate_as(:'outsider');
+select is_empty(
+	$$ select 1 from public.tokens where id = $$ || quote_literal(:'tok_scholar'),
+	'an unrelated scholar cannot read another scholar''s tokens'
+);
+
+-- ...and not the venue admin or the priority-0 editor either. Both ARE in the
+-- balance audience, but they reach it through scholar_balances, which asks the
+-- audience question once per call. The table itself tells them nothing, so a
+-- widened audience can never turn into a per-row cost here by accident.
+select tests.authenticate_as(:'vadmin');
+select is_empty(
+	$$ select 1 from public.tokens where id = $$ || quote_literal(:'tok_scholar'),
+	'a venue admin cannot read a scholar''s tokens through the table'
+);
+
+select tests.authenticate_as(:'pzero');
+select is_empty(
+	$$ select 1 from public.tokens where id = $$ || quote_literal(:'tok_scholar'),
+	'a priority-0 editor cannot read a scholar''s tokens through the table'
+);
+
+-- A venue's reserve is institutional rather than personal, and stays readable by
+-- any signed-in scholar: someone deciding whether to volunteer is entitled to
+-- know whether the venue can pay.
+select tests.authenticate_as(:'outsider');
+select isnt_empty(
+	$$ select 1 from public.tokens where id = $$ || quote_literal(:'tok_venue'),
+	'any signed-in scholar can read a venue reserve token'
+);
+
+-- Anonymous visitors read nothing at all, reserves included.
 select tests.authenticate_as_anon();
 select is_empty(
 	$$ select 1 from public.tokens where id = $$ || quote_literal(:'tok_scholar'),
 	'anonymous visitors cannot read tokens'
+);
+select is_empty(
+	$$ select 1 from public.tokens where id = $$ || quote_literal(:'tok_venue'),
+	'anonymous visitors cannot read venue reserves either'
 );
 
 -- ---- INSERT -------------------------------------------------------------------

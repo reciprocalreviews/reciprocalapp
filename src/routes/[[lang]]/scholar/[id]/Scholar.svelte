@@ -224,24 +224,27 @@
 		</ul>
 	{/if}
 
-	<Subheader icon={TokenLabel} id="tokens" text={(l) => l.page.scholar.header.tokens}></Subheader>
+	<!-- Only ever your own. Balances are private (#109): the RLS policy admits a
+	scholar to their own token rows and nobody else's, so this section rendered
+	someone else's holdings as a confident "0 tokens" rather than as unknown. It is
+	hidden instead of zeroed, because a wrong number is worse than no number. -->
+	{#if editable}
+		<Subheader icon={TokenLabel} id="tokens" text={(l) => l.page.scholar.header.tokens}></Subheader>
 
-	{#if currencies === null}
-		<Feedback text={(l) => l.page.scholar.feedback.tokensNotLoaded}></Feedback>
-	{:else}
-		<Paragraph
-			text={(l) =>
-				editable ? l.page.scholar.paragraph.youHave : l.page.scholar.paragraph.thisScholarHas}
-		/>
-		<ul>
-			{#each currencies as currency, index}
-				<li data-testid={'currency-' + index}>
-					<Tokens amount={balances[currency.id] ?? 0} {currency}></Tokens>
-				</li>
-			{:else}
-				<Tokens amount={0}></Tokens>
-			{/each}
-		</ul>
+		{#if currencies === null}
+			<Feedback text={(l) => l.page.scholar.feedback.tokensNotLoaded}></Feedback>
+		{:else}
+			<Paragraph text={(l) => l.page.scholar.paragraph.youHave} />
+			<ul>
+				{#each currencies as currency, index}
+					<li data-testid={'currency-' + index}>
+						<Tokens amount={balances[currency.id] ?? 0} {currency}></Tokens>
+					</li>
+				{:else}
+					<Tokens amount={0}></Tokens>
+				{/each}
+			</ul>
+		{/if}
 	{/if}
 
 	{#if editable}
