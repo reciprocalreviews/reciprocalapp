@@ -91,7 +91,7 @@ async function getVenueReminders(
 	const { data: venues, error: venuesError } = await supabase
 		.from('venues')
 		.select(
-			'id, title, admins, currency, transaction_reminder_frequency_days, transaction_reminder_time, currencies!currency(minters)'
+			'id, title, slug, admins, currency, transaction_reminder_frequency_days, transaction_reminder_time, currencies!currency(minters)'
 		)
 		.gt('transaction_reminder_frequency_days', 0);
 
@@ -110,6 +110,15 @@ async function getVenueReminders(
 	if (dueVenues.length === 0) return emails;
 
 	const dueVenueIds = dueVenues.map((v) => v.id);
+
+	/** The path segment a venue is reached by: its web address once it has one, its id
+	 * until then. The links below are built here rather than being rendered from a template
+	 * argument, so they resolve the address themselves. A venue not in this batch cannot
+	 * appear in any of them — every query is scoped to `dueVenueIds` — but the fallback
+	 * keeps a link working rather than producing `/venue/undefined` if one ever did. */
+	const venuePaths = new Map(dueVenues.map((v) => [v.id, v.slug ?? v.id]));
+	const venuePathOf = (id: string) => venuePaths.get(id) ?? id;
+
 	const reminders: PendingReminder[] = [];
 
 	// ---- Family 1: proposed venue-sourced transactions → admins + minters ------
@@ -240,7 +249,7 @@ async function getVenueReminders(
 		);
 		const compensationLinks = new Map<string, Set<string>>();
 		for (const assignment of pendingCompensation) {
-			const link = `${origin}/venue/${assignment.venue}/submission/${assignment.submission}`;
+			const link = `${origin}/venue/${venuePathOf(assignment.venue)}/submission/${assignment.submission}`;
 			for (const approver of approversOf(assignment)) {
 				if (!compensationLinks.has(approver)) compensationLinks.set(approver, new Set());
 				compensationLinks.get(approver)!.add(link);
@@ -285,7 +294,7 @@ async function getVenueReminders(
 					(a) => a.roles?.priority === 0 && a.approved && !a.completed
 				);
 				if (!hasCompensatedWork || hasBlockers || editors.length === 0) continue;
-				const link = `${origin}/venue/${submission.venue}/submission/${submission.id}`;
+				const link = `${origin}/venue/${venuePathOf(submission.venue)}/submission/${submission.id}`;
 				for (const editor of editors) {
 					if (!doneLinks.has(editor.scholar)) doneLinks.set(editor.scholar, new Set());
 					doneLinks.get(editor.scholar)!.add(link);
@@ -350,7 +359,7 @@ async function getVenueReminders(
 						(a) => a.submission === submission.id && a.roles?.priority === 0 && a.approved
 					);
 					if (hasEditor) continue;
-					const link = `${origin}/venue/${submission.venue}/submission/${submission.id}`;
+					const link = `${origin}/venue/${venuePathOf(submission.venue)}/submission/${submission.id}`;
 					for (const scholar of editorsByVenue.get(submission.venue) ?? []) {
 						if (!unclaimedLinks.has(scholar)) unclaimedLinks.set(scholar, new Set());
 						unclaimedLinks.get(scholar)!.add(link);

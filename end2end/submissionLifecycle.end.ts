@@ -3,6 +3,7 @@ import { login } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
+const VENUE_PATH = SEED.venuePath;
 const SUBMISSION_ID = SEED.submissions.tok001; // TOK-2025-001
 const EDITOR_EMAIL = SEED.scholars.editor.email;
 const EDITOR_ID = SEED.scholars.editor.id;
@@ -27,7 +28,7 @@ test('editor manually adds a single submission with themselves as the sole autho
 	const externalID = `EDITOR-ADD-${Date.now()}`;
 
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new`);
 	// Keep networkidle here: the submission form's bound <select>/inputs must be
 	// hydrated before we selectOption/fill, or Svelte drops the change.
 	await page.waitForLoadState('networkidle');
@@ -97,7 +98,7 @@ test('scholar declares a conflict on a submission and it disappears from their s
 	);
 
 	await login(CONFLICT_DECLARER_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/submissions`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions`);
 	await page.waitForLoadState('networkidle');
 
 	// TOK-2025-001 should be in the list with a declare-conflict button.
@@ -142,7 +143,7 @@ test('mark-done is blocked until non-editor assignments are compensated, then fl
 	);
 
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 
 	// Button exists but is disabled while non-editor assignments are
 	// pending, and the blockers list is visible.
@@ -193,7 +194,7 @@ test('reviewer-anonymity flag actually hides assignees from authors', async ({ p
 	sql(`update public.venues set anonymous_assignments = true where id = '${VENUE_ID}';`);
 
 	await login(AUTHOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 
 	// As the author, with anonymity on, the assigned reviewer's name (r1,
 	// Rigor Russ) is NOT visible on the page — RLS at
@@ -223,7 +224,7 @@ test('approver-role hierarchy: AE approves a Reviewer bid; a non-approver does n
 	// role but is NOT the approver of the Reviewer role (the AE is). r2 also
 	// isn't a venue admin. So r2 should not see the bid-approve button.
 	await login('r2@uni.edu', page, context);
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 	await expect(
 		page.getByRole('button', {
 			name: 'Accept this bid, assigning this scholar to this role for this submission'
@@ -236,7 +237,7 @@ test('approver-role hierarchy: AE approves a Reviewer bid; a non-approver does n
 	// present, and clicking it flips the bid's approved=true.
 	await context.clearCookies();
 	await login('ae@uni.edu', page, context);
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 	await page.waitForLoadState('networkidle');
 
 	const approveCount = Number(
@@ -310,7 +311,7 @@ test('a submission with no editor is flagged, and one of the venue’s editors c
 		expect(editorCount()).toBe('0');
 
 		await login(CLAIMANT.email, page, context);
-		await page.goto(`/venue/${VENUE_ID}/submissions`);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
 		// The filter checkbox and the claim button are Svelte handlers, so the page has to
 		// have hydrated before either click means anything.
 		await page.waitForLoadState('networkidle');

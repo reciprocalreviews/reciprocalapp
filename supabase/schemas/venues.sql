@@ -9,6 +9,10 @@ create table if not exists public.venues (
 	description text default ''::text not null,
 	-- A link to the venue's official web page
 	url text default ''::text not null,
+	-- The venue's web address: the path segment it is reached by, in place of its id.
+	-- Null until the venue chooses one. Released the moment it is changed — nothing
+	-- reserves a former address, so links to it break.
+	slug text,
 	-- The id of the currency the venue is currently using
 	currency uuid not null,
 	-- The optional amount of newly minted tokens granted to new volunteers
@@ -37,6 +41,19 @@ create table if not exists public.venues (
 	transaction_reminder_time timestamp with time zone,
 	-- There must be at least one admin
 	constraint venues_admins_check check (cardinality(admins)>0),
+	-- Four characters minimum: three-letter acronyms are the ones most likely to be
+	-- contested, and handing the first arrival a name a dozen communities have equal claim
+	-- to is not a race worth running. Lowercase only, so an address is the same address
+	-- however it is typed. And never a UUID's shape: the resolver decides which column to
+	-- query by looking at the segment, and `[a-z][a-z0-9-]*` alone admits one.
+	constraint venues_slug_check check (
+		slug is null
+		or (
+			slug~'^[a-z][a-z0-9]*(-[a-z0-9]+)*$'
+			and length(slug) between 4 and 40
+			and slug!~'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+		)
+	),
 	-- Bound the visibility window to a year
 	constraint venues_done_visibility_days_check check (
 		done_visibility_days>=0
@@ -51,6 +68,10 @@ create table if not exists public.venues (
 
 alter table only public.venues
 add constraint venues_pkey primary key (id);
+
+-- Globally unique, and null is not a value: a btree unique index treats nulls as distinct,
+-- so every venue that has not chosen an address coexists with every other.
+create unique index if not exists venues_slug_key on public.venues (slug);
 
 alter table only public.venues
 add constraint venues_currency_fkey foreign KEY (currency) references public.currencies (id);
@@ -72,6 +93,29 @@ grant all on FUNCTION public.isAdmin (_venueid uuid) to anon;
 grant all on FUNCTION public.isAdmin (_venueid uuid) to authenticated;
 
 grant all on FUNCTION public.isAdmin (_venueid uuid) to service_role;
+
+-- Only the TRANSITION to active is guarded, not the state. A blanket "active implies an
+-- address" constraint would be true of the data we want but false of the data we have:
+-- every venue already live has no address, and such a rule would refuse every subsequent
+-- edit to it — title, compensation, roles — until someone renamed it. Guarding the
+-- transition asks for an address at the one moment an admin is already deciding to
+-- publish, and leaves a running venue alone.
+create or replace function public.venue_needs_address_to_activate () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+set
+	"search_path" to '' as $$
+begin
+	if new.inactive is null and old.inactive is not null and new.slug is null then
+		raise exception 'A venue needs a web address before it can be activated' using errcode = 'RR016';
+	end if;
+	return new;
+end;
+$$;
+
+alter function public.venue_needs_address_to_activate () OWNER to postgres;
+
+create trigger venue_needs_address_to_activate
+before update on public.venues for each row
+execute function public.venue_needs_address_to_activate ();
 
 --------------------------------------
 -- Security

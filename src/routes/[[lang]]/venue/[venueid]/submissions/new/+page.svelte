@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { venuePath } from '$lib/data/venuePath';
 	import NewSubmission from '../NewSubmission.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import { type PageData } from './$types';
@@ -25,8 +26,8 @@
 		icon={SubmissionLabel}
 		title={(l) => l.page.newSubmission.title}
 		breadcrumbs={[
-			[`/venue/${venue.id}`, venue.title],
-			[`/venue/${venue.id}/submissions`, 'Submissions']
+			[`/venue/${venuePath(venue)}`, venue.title],
+			[`/venue/${venuePath(venue)}/submissions`, 'Submissions']
 		]}
 	>
 		<NewSubmission {venue} {submissionTypes} {priorSubmissions} {initialManuscript} {scholarORCID}

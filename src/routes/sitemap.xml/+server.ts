@@ -1,4 +1,5 @@
 import { articles } from '$routes/[[lang]]/help/articles';
+import { venuePath } from '$lib/data/venuePath';
 import type { RequestHandler } from './$types';
 
 /** A sitemap of the pages that are meant to be found.
@@ -57,7 +58,10 @@ export const GET: RequestHandler = async ({ url, locals, setHeaders }) => {
 	// A venue is active exactly when `inactive` is null; the rest are still
 	// reachable but are being configured or have been retired, and pointing a
 	// crawler at them advertises something that isn't running.
-	const { data: venues } = await locals.supabase.from('venues').select('id').is('inactive', null);
+	const { data: venues } = await locals.supabase
+		.from('venues')
+		.select('id, slug')
+		.is('inactive', null);
 
 	const entries = [
 		...STATIC_PAGES.map((p) => entry(origin, p.path, p.priority, p.changefreq)),
@@ -65,8 +69,10 @@ export const GET: RequestHandler = async ({ url, locals, setHeaders }) => {
 		// A failed query yields no venue entries rather than no sitemap: the static
 		// pages are the half that search engines most need, and a 500 here would
 		// cost us those too.
-		...((venues ?? []) as { id: string }[]).map((venue) =>
-			entry(origin, `/venue/${venue.id}`, '0.8', 'weekly')
+		// Advertised at the canonical address, not the id: the id form only redirects there,
+		// and a sitemap of redirects is a sitemap of second-best URLs.
+		...((venues ?? []) as { id: string; slug: string | null }[]).map((venue) =>
+			entry(origin, `/venue/${venuePath(venue)}`, '0.8', 'weekly')
 		)
 	];
 

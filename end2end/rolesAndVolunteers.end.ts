@@ -3,6 +3,7 @@ import { login, logout } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
+const VENUE_PATH = SEED.venuePath;
 const EDITOR_EMAIL = SEED.scholars.editor.email;
 const VOLUNTEER_EMAIL = SEED.scholars.r1.email; // already a Reviewer in the seed
 const FRESH_SCHOLAR_EMAIL = SEED.scholars.author1.email; // no volunteer records in the seed
@@ -14,7 +15,7 @@ const SECOND_EDITOR_EMAIL = SEED.scholars.r2.email;
 
 test('editor creates a role, edits its description, and deletes it', async ({ page, context }) => {
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 
 	const roleName = `e2e-role-${Date.now()}`;
@@ -74,7 +75,7 @@ test('editor creates a role, edits its description, and deletes it', async ({ pa
 
 test('editor invites a scholar to an invite-only role by ORCID', async ({ page, context }) => {
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 
 	const inviteeID = sql(`select id from public.scholars where orcid = '${INVITEE_ORCID}';`);
@@ -105,7 +106,7 @@ test('editor invites a scholar to an invite-only role by ORCID', async ({ page, 
 
 test('editor invites a scholar to an invite-only role by email', async ({ page, context }) => {
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 
 	const inviteeID = sql(`select id from public.scholars where email = '${INVITEE_EMAIL}';`);
@@ -140,7 +141,7 @@ test('an invited scholar declines the invitation from the role card', async ({ p
 
 	// Editor invites the scholar to the invite-only Editor role.
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 	await page.getByTestId('role-Editor').click();
 	await page.getByTestId('role-invite-field-Editor').fill(INVITEE_EMAIL);
@@ -163,7 +164,7 @@ test('an invited scholar declines the invitation from the role card', async ({ p
 	}
 	await logout(page);
 	await login(INVITEE_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}`);
 	await page.waitForLoadState('networkidle');
 
 	// Decline is a confirm button: first click enters confirm mode, second
@@ -198,7 +199,7 @@ test('an invited scholar accepts the invitation from the role card', async ({ pa
 
 	// Editor invites the scholar to the invite-only Editor role.
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 	await page.getByTestId('role-Editor').click();
 	await page.getByTestId('role-invite-field-Editor').fill(INVITEE_EMAIL);
@@ -219,7 +220,7 @@ test('an invited scholar accepts the invitation from the role card', async ({ pa
 	}
 	await logout(page);
 	await login(INVITEE_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}`);
 	await page.waitForLoadState('networkidle');
 
 	// Accept is a confirm button: first click enters confirm mode, second
@@ -252,7 +253,7 @@ test('an invited scholar accepts the invitation from the role card', async ({ pa
 
 test('an active volunteer updates their expertise', async ({ page, context }) => {
 	await login(VOLUNTEER_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}`);
 	await page.waitForLoadState('networkidle');
 
 	// Reviewer is the only role r1 holds and it's not invite-only, so its
@@ -286,7 +287,7 @@ test('volunteer stops and re-volunteers; welcome tokens are minted only once', a
 	);
 
 	await login(FRESH_SCHOLAR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}`);
 	await page.waitForLoadState('networkidle');
 
 	// Volunteer for the (non-invite-only) Reviewer role.
@@ -337,7 +338,7 @@ test('volunteering reports the actual welcome grant and updates the header balan
 	const welcome = Number(sql(`select welcome_amount from public.venues where id = '${VENUE_ID}';`));
 
 	await login(FRESH_SCHOLAR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}`);
 	await page.waitForLoadState('networkidle');
 	await expect(page.getByTestId('header-balance')).toContainText(String(before));
 
@@ -359,7 +360,7 @@ test('editor exports volunteers as CSV with name, email, ORCID, role, expertise,
 	context
 }) => {
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/volunteers`);
+	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
 	await page.waitForLoadState('networkidle');
 
 	const downloadPromise = page.waitForEvent('download');
@@ -389,7 +390,7 @@ test('volunteer filter on /venue/[id]/volunteers narrows the table by name, emai
 	context
 }) => {
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/volunteers`);
+	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
 	await page.waitForLoadState('networkidle');
 
 	// Without a filter, multiple Reviewer rows are visible (r1..r5).
@@ -461,7 +462,7 @@ test("volunteering tells the venue's top role on one thread that replies to the 
 	// up over there as an unrelated-looking timeout.
 	try {
 		await login(FRESH_SCHOLAR_EMAIL, page, context);
-		await page.goto(`/venue/${VENUE_ID}`);
+		await page.goto(`/venue/${VENUE_PATH}`);
 		await page.waitForLoadState('networkidle');
 		await page.getByTestId('volunteer-for-role').click();
 		await expect(page.getByTestId('volunteered-for-role')).toBeVisible();

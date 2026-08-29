@@ -535,6 +535,9 @@
             "EditVenuePaymentFree": {
               "type": "string"
             },
+            "EditVenueSlug": {
+              "type": "string"
+            },
             "EditVenueTitle": {
               "type": "string"
             },
@@ -773,6 +776,14 @@
             "UpdateVolunteerPapers": {
               "type": "string"
             },
+            "VenueAddressInvalid": {
+              "description": "The web address broke the format rule at the database. The field validates the same rule, so seeing this means something reached the write unvalidated.",
+              "type": "string"
+            },
+            "VenueAddressTaken": {
+              "description": "The web address someone asked for belongs to another venue. Raised by the unique index, which is what actually decides a contested address — the field's own availability check can only say the address was free a moment ago.",
+              "type": "string"
+            },
             "VerifyEmail": {
               "type": "string"
             }
@@ -810,6 +821,9 @@
             "EditVenueAddEditorAlreadyEditor",
             "EditVenueTitle",
             "EditVenueURL",
+            "EditVenueSlug",
+            "VenueAddressTaken",
+            "VenueAddressInvalid",
             "EditVenueInactive",
             "EditVenueAnonymousAssignments",
             "EditVenueVetThanks",
@@ -3207,6 +3221,10 @@
                     "addPreferenceLevel": {
                       "$ref": "#/definitions/ButtonText"
                     },
+                    "changeWebAddress": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Change an address the venue already has. Confirmed, because the old address is released the moment this succeeds — nothing reserves it and nothing redirects from it, so every link anyone has sent stops working."
+                    },
                     "deletePreferenceLevel": {
                       "$ref": "#/definitions/ConfirmButtonText"
                     },
@@ -3215,9 +3233,15 @@
                     },
                     "movePreferenceLevelUp": {
                       "$ref": "#/definitions/ButtonText"
+                    },
+                    "setWebAddress": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Claim a web address for a venue that has none. No `warn`: there is nothing to lose yet."
                     }
                   },
                   "required": [
+                    "setWebAddress",
+                    "changeWebAddress",
                     "addPreferenceLevel",
                     "deletePreferenceLevel",
                     "movePreferenceLevelUp",
@@ -3295,6 +3319,26 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "addressAvailable": {
+                      "description": "Nobody holds this address. Advisory — the unique index decides.",
+                      "type": "string"
+                    },
+                    "addressChecking": {
+                      "description": "The availability lookup is in flight.",
+                      "type": "string"
+                    },
+                    "addressCurrent": {
+                      "description": "The venue already has a web address, shown above the field so the warning on the change button has something concrete to refer to. Takes `{address}`.",
+                      "type": "string"
+                    },
+                    "addressRequiredToActivate": {
+                      "description": "Why the Activate checkbox is disabled: a venue needs an address to go live, so that every link anyone sends about it is one they can read.",
+                      "type": "string"
+                    },
+                    "addressTaken": {
+                      "description": "Another venue holds this address.",
+                      "type": "string"
+                    },
                     "adminMints": {
                       "description": "Advice, not a refusal: one of this venue's admins also mints its currency. The arrangement is permitted — a small community's organizer is often its only minter — but visitors see a notice saying so, and the admin should know that and be able to hand the currency over.",
                       "type": "string"
@@ -3317,7 +3361,12 @@
                     "unknownVenue",
                     "logIn",
                     "adminsOnly",
-                    "noPreferenceLevels"
+                    "noPreferenceLevels",
+                    "addressCurrent",
+                    "addressChecking",
+                    "addressAvailable",
+                    "addressTaken",
+                    "addressRequiredToActivate"
                   ],
                   "type": "object"
                 },
@@ -3371,11 +3420,35 @@
                       ],
                       "type": "object"
                     },
+                    "webAddress": {
+                      "additionalProperties": false,
+                      "description": "The venue's web address. `invalid` states the format rule, since the field is where someone learns it.",
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
                     "welcomeTokens": {
                       "$ref": "#/definitions/TextFieldText"
                     }
                   },
                   "required": [
+                    "webAddress",
                     "inactiveMessage",
                     "welcomeTokens",
                     "preferenceLevelLabel",
@@ -3394,7 +3467,7 @@
                       "type": "string"
                     },
                     "policies": {
-                      "description": "Step 1: community-policy checklist before configuring anything.",
+                      "description": "Community-policy checklist before configuring anything.",
                       "type": "string"
                     },
                     "preferenceLevels": {
@@ -3412,9 +3485,14 @@
                     },
                     "visibility": {
                       "type": "string"
+                    },
+                    "webAddress": {
+                      "description": "The venue's web address — the first step, because every later step's links and copy-paste snippets are built from it.",
+                      "type": "string"
                     }
                   },
                   "required": [
+                    "webAddress",
                     "policies",
                     "status",
                     "roles",
@@ -3494,7 +3572,7 @@
                 },
                 "template": {
                   "additionalProperties": false,
-                  "description": "Email-template snippets editors copy into their reviewing platform (#113). Each entry's `body` is interpolated with `{origin}` (the environment's own base URL, so a snippet copied from a local or staging venue links back to it), `{venue}`, `{venueid}`, and `{manuscriptVar}` (the selected platform's submission-id syntax).\n\n`{role}` is deliberately NOT interpolated: an editor pastes these once per role, and reviewing platforms differ too much in how they expose role names for us to guess. The tip above the snippets says so — this list previously claimed otherwise, which read as a bug.",
+                  "description": "Email-template snippets editors copy into their reviewing platform (#113). Each entry's `body` is interpolated with `{origin}` (the environment's own base URL, so a snippet copied from a local or staging venue links back to it), `{venue}` (the venue's title), `{venuepath}` (the segment the venue is addressed by — its web address once it has one, its id until then), and `{manuscriptVar}` (the selected platform's submission-id syntax).\n\n`{role}` is deliberately NOT interpolated: an editor pastes these once per role, and reviewing platforms differ too much in how they expose role names for us to guess. The tip above the snippets says so — this list previously claimed otherwise, which read as a bug.",
                   "properties": {
                     "acknowledgement": {
                       "additionalProperties": false,
@@ -3570,7 +3648,7 @@
                       "type": "string"
                     },
                     "policies": {
-                      "description": "Frames Step 1 (\"Decide policies\") as a critical prerequisite.",
+                      "description": "Frames the policies step as a critical prerequisite.",
                       "type": "string"
                     },
                     "preferenceLevels": {
@@ -3583,9 +3661,14 @@
                     "templates": {
                       "description": "Explains the email-templates section (#113): pick the reviewing platform first, then paste each snippet into its email template.",
                       "type": "string"
+                    },
+                    "webAddress": {
+                      "description": "Explains the venue's web address: what it is for, and that changing one releases the old address immediately rather than redirecting from it.",
+                      "type": "string"
                     }
                   },
                   "required": [
+                    "webAddress",
                     "policies",
                     "inactive",
                     "compensation",

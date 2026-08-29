@@ -26,6 +26,10 @@ export function sql(statement: string): string {
 export const SEED = {
 	/** "Transactions on Knowledge" */
 	venue: 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+	/** The seed venue's web address. Venue URLs are built from this, not from the id: the
+	 * id form only redirects to it, and a suite that navigates by id would be testing the
+	 * redirect over and over instead of the pages. Use `venue` for SQL, this for URLs. */
+	venuePath: 'knowledge',
 	/** Epistemology */
 	currency: 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 	roles: {

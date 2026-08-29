@@ -3,6 +3,7 @@ import { login, logout } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
+const VENUE_PATH = SEED.venuePath;
 const SUBMISSION_EXTERNAL_ID = 'TOK-2025-001';
 const SUBMISSION_ID = SEED.submissions.tok001;
 const SUBMISSION_002 = 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c13'; // TOK-2025-002
@@ -17,11 +18,11 @@ test('AE assigns two reviewer bids and bidding closes', async ({ page, context }
 	await login('ae@uni.edu', page, context);
 
 	// Submissions list shows TOK-2025-001.
-	await page.goto(`/venue/${VENUE_ID}/submissions`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions`);
 	await expect(page.getByText(SUBMISSION_EXTERNAL_ID)).toBeVisible();
 
 	// Open the submission detail page.
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 	await page.waitForLoadState('networkidle');
 
 	// Two pending bids waiting for assignment, plus one already-approved Reviewer
@@ -41,7 +42,7 @@ test('AE assigns two reviewer bids and bidding closes', async ({ page, context }
 
 	// Back on the submissions list, bidding for that submission's Reviewer role
 	// should now be closed (3 approved Reviewer assignments meets desired=3).
-	await page.goto(`/venue/${VENUE_ID}/submissions`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions`);
 	await expect(page.getByText('bidding closed')).toBeVisible();
 
 	await logout(page);
@@ -70,7 +71,7 @@ test('over-cap bidder shows load indicator and requires confirm to assign', asyn
 
 	try {
 		await login('ae@uni.edu', page, context);
-		await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 		await page.waitForLoadState('networkidle');
 
 		// Manny's bid row exists; the load indicator on it reads "1 / 1" and is

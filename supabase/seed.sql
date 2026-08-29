@@ -556,7 +556,8 @@ insert into
 		"currency",
 		"welcome_amount",
 		"admins",
-		"inactive"
+		"inactive",
+		"slug"
 	)
 values
 	(
@@ -567,7 +568,8 @@ values
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'20',
 		'{"d181d165-8b6a-4d79-ad28-a9aece21d813"}',
-		null
+		null,
+		'knowledge'
 	);
 
 insert into

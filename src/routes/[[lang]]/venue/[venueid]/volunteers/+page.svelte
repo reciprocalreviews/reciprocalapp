@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/Button.svelte';
+	import { venuePath } from '$lib/data/venuePath';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { EmptyLabel, ErrorLabel, ScholarLabel, VenueLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
@@ -63,7 +64,11 @@
 		<Feedback text={(l) => l.page.volunteers.feedback.volunteersNotLoaded}></Feedback>
 	</Page>
 {:else}
-	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
+	<Page
+		icon={VenueLabel}
+		title={venue.title}
+		breadcrumbs={[[`/venue/${venuePath(venue)}`, venue.title]]}
+	>
 		{#snippet subtitle()}<Text path={(l) => l.page.volunteers.subtitle} />{/snippet}
 		<Paragraph text={(l) => l.page.volunteers.paragraph.intro} />
 

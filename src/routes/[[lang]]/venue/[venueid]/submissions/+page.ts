@@ -1,3 +1,4 @@
+import { NO_VENUE_ID } from '$lib/data/venuePath';
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
@@ -5,7 +6,9 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	const uid = scholar?.id ?? null;
 
-	const venueid = params.venueid;
+	// The URL segment may be the venue's web address, so the id comes from the venue the
+	// layout resolved, never from the param — every query below is keyed on a uuid column.
+	const venueid = venue?.id ?? NO_VENUE_ID;
 
 	// Get the venue's submissions.
 	const { data: submissions } = await db.getVenueSubmissions(venueid);

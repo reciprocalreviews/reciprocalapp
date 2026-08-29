@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { venuePath } from '$lib/data/venuePath';
 	import Card from '$lib/components/Card.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import CopyButton from '$lib/components/CopyButton.svelte';
@@ -28,6 +29,7 @@
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import PreferenceLevels from '../PreferenceLevels.svelte';
+	import WebAddress from './WebAddress.svelte';
 	import Roles from '../Roles.svelte';
 
 	let { data } = $props();
@@ -47,16 +49,17 @@
 	 * the note on the locale type. `{origin}` resolves to the environment the
 	 * editor is looking at, so a snippet copied from a local or staging venue
 	 * links back to that venue rather than to production. */
-	function renderTemplate(body: string, venueTitle: string, venueId: string): string {
+	function renderTemplate(body: string, venueTitle: string, path: string): string {
 		return body
 			.replaceAll('{origin}', page.url.origin)
 			.replaceAll('{venue}', venueTitle)
-			.replaceAll('{venueid}', venueId)
+			.replaceAll('{venuepath}', path)
 			.replaceAll('{manuscriptVar}', selectedPlatform.submissionVar);
 	}
 
 	/** Section ids declared once; reused throughout so typos at use sites are
 	 * caught at compile time. */
+	const ADDRESS = 'address';
 	const POLICIES = 'policies';
 	const COMPENSATION = 'compensation';
 	const ROLES = 'roles';
@@ -69,6 +72,9 @@
 	 * `visibleSteps` so hiding a section (e.g. preference levels when nothing
 	 * is biddable) renumbers the rest. */
 	const STEPS_IN_ORDER = [
+		// First, because every step below it renders links and copy-paste snippets built
+		// from the address, and because a venue cannot be activated without one.
+		ADDRESS,
 		POLICIES,
 		COMPENSATION,
 		ROLES,
@@ -110,7 +116,11 @@
 		<Feedback error text={(l) => l.page.settings.feedback.logIn} />
 	</Page>
 {:else if !venue.admins.includes(scholar.id)}
-	<Page icon={ErrorLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
+	<Page
+		icon={ErrorLabel}
+		title={venue.title}
+		breadcrumbs={[[`/venue/${venuePath(venue)}`, venue.title]]}
+	>
 		{#snippet subtitle()}<Text path={(l) => l.page.settings.subtitle} />{/snippet}
 		<Feedback error text={(l) => l.page.settings.feedback.adminsOnly} />
 	</Page>
@@ -118,7 +128,7 @@
 	<Page
 		icon={VenueLabel}
 		title={venue.title}
-		breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}
+		breadcrumbs={[[`/venue/${venuePath(venue)}`, venue.title]]}
 		edit={{
 			placeholder: (l) => l.page.venue.field.name.placeholder,
 			valid: (text) => (text.length > 0 ? undefined : (l) => l.page.venue.field.name.invalid),
@@ -128,7 +138,19 @@
 		{#snippet subtitle()}<Text path={(l) => l.page.settings.subtitle} />{/snippet}
 		<Paragraph text={(l) => l.page.settings.paragraph.welcome} />
 
-		<!-- Step 1: Decide policies -->
+		<!-- Step 1: Choose a web address -->
+		<Subheader
+			id="web-address"
+			icon={VenueLabel}
+			number={stepNumber(ADDRESS)}
+			text={(l) => l.page.settings.header.webAddress}
+		/>
+
+		<Tip><Text path={(l) => l.page.settings.tip.webAddress} /></Tip>
+
+		<WebAddress {venue} />
+
+		<!-- Step 2: Decide policies -->
 		<Subheader
 			id="policies"
 			icon={SettingsLabel}
@@ -155,7 +177,7 @@
 			<Paragraph text={(l) => l.page.settings.paragraph.minters} />
 		</Card>
 
-		<!-- Step 2: Compensation -->
+		<!-- Step 3: Compensation -->
 		<Subheader
 			id="compensation"
 			icon={SettingsLabel}
@@ -187,7 +209,7 @@
 			/>
 		{/if}
 
-		<!-- Step 3: Roles -->
+		<!-- Step 4: Roles -->
 		<Subheader
 			id="roles"
 			icon={ScholarLabel}
@@ -208,7 +230,7 @@
 			startCollapsed
 		/>
 
-		<!-- Step 4: Visibility -->
+		<!-- Step 5: Visibility -->
 		<Subheader
 			id="visibility"
 			icon={SettingsLabel}
@@ -247,7 +269,7 @@
 			testid="done-visibility-days"
 		/>
 
-		<!-- Step 5: Bid preference levels (only when at least one role is biddable) -->
+		<!-- Step 6: Bid preference levels (only when at least one role is biddable) -->
 		{#if hasBiddableRole}
 			<Subheader
 				id="preference-levels"
@@ -261,7 +283,7 @@
 			<PreferenceLevels {venue} levels={preferenceLevels ?? []} />
 		{/if}
 
-		<!-- Step 6: Email templates -->
+		<!-- Step 7: Email templates -->
 		<Subheader
 			id="templates"
 			icon={SettingsLabel}
@@ -285,7 +307,7 @@
 					: kind === 'acknowledgement'
 						? locale().page.settings.template.acknowledgement
 						: locale().page.settings.template.compensation}
-			{@const rendered = renderTemplate(tpl.body, venue.title, venue.id)}
+			{@const rendered = renderTemplate(tpl.body, venue.title, venuePath(venue))}
 			<Card
 				icon={SettingsLabel}
 				subheader
@@ -297,7 +319,7 @@
 			</Card>
 		{/each}
 
-		<!-- Step 7: Bulk import -->
+		<!-- Step 8: Bulk import -->
 		<Subheader
 			id="bulk-import"
 			icon={SettingsLabel}
@@ -306,10 +328,14 @@
 		/>
 
 		<Tip>
-			<Text markdown path={(l) => l.page.settings.tip.bulkImport} inputs={{ venueid: venue.id }} />
+			<Text
+				markdown
+				path={(l) => l.page.settings.tip.bulkImport}
+				inputs={{ venue: venuePath(venue) }}
+			/>
 		</Tip>
 
-		<!-- Step 8: Activate (the last thing you do) -->
+		<!-- Step 9: Activate (the last thing you do) -->
 		<Subheader
 			id="status"
 			icon={SettingsLabel}
@@ -319,12 +345,25 @@
 
 		<Tip><Text path={(l) => l.page.settings.tip.inactive} /></Tip>
 
+		<!-- Deactivating is always allowed; activating needs an address, so that every link
+		     anyone sends about a live venue is one they can read. The database refuses the
+		     transition too (venue_needs_address_to_activate) — this is the half that says
+		     why, before someone finds out by being refused. -->
 		<Checkbox
 			testid="inactive-checkbox"
+			active={venue.slug !== null || venue.inactive === null}
 			on={venue.inactive !== null}
 			change={(on) => db().editVenueInactive(venue.id, on ? 'This venue is not active.' : null)}
 			label={(l) => l.page.settings.checkbox.inactive}
 		/>
+		{#if venue.slug === null && venue.inactive !== null}
+			<Feedback
+				warning
+				inline={false}
+				text={(l) => l.page.settings.feedback.addressRequiredToActivate}
+				testid="venue-address-required"
+			/>
+		{/if}
 		{#if adminMints}
 			<Feedback
 				warning

@@ -3,6 +3,7 @@ import { login } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
+const VENUE_PATH = SEED.venuePath;
 const CURRENCY_ID = SEED.currency;
 const SUBMISSION_ID = SEED.submissions.tok001;
 const REVIEWER_ROLE_ID = SEED.roles.reviewer;
@@ -10,7 +11,7 @@ const REVIEWER_ROLE_ID = SEED.roles.reviewer;
 test('AE compensates a reviewer and tokens transfer immediately', async ({ page, context }) => {
 	await login('ae@uni.edu', page, context);
 
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 	await page.waitForLoadState('networkidle');
 
 	// At least one approved-but-incomplete Reviewer assignment is present
@@ -50,7 +51,7 @@ test('when the venue is out of tokens, Complete surfaces an error and queues a p
 	);
 
 	await login('ae@uni.edu', page, context);
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 	await page.waitForLoadState('networkidle');
 
 	await page.getByTestId('complete-assignment').first().click();

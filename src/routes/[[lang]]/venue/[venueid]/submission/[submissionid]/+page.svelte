@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { RoleID, RoleRow, ScholarID } from '$data/types';
+	import { venuePath as toVenuePath } from '$lib/data/venuePath';
 	import Button from '$lib/components/Button.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
@@ -80,6 +81,11 @@
 		/** Thank-you notes for this submission, filtered by RLS to the viewer */
 		thanks
 	} = $derived(data);
+
+	/** How this venue is addressed in links from here. Empty when the venue failed to load,
+	 * which is the case the two error breadcrumbs below are for — they render a dead link
+	 * rather than none so the page keeps its shape. */
+	const venuePath = $derived(venue === null ? '' : toVenuePath(venue));
 
 	function nameOf(scholarID: string): string {
 		return assignmentScholars.find((s) => s.id === scholarID)?.name ?? '';
@@ -263,8 +269,8 @@
 		icon={ErrorLabel}
 		title={(l) => l.page.submission.title}
 		breadcrumbs={[
-			[`/venue/${venue?.id}`, venue?.title ?? ''],
-			[`/venue/${venue?.id}/submissions`, 'Submissions']
+			[`/venue/${venuePath}`, venue?.title ?? ''],
+			[`/venue/${venuePath}/submissions`, 'Submissions']
 		]}
 	>
 		<Feedback error text={(l) => l.page.submission.feedback.notLoaded}></Feedback>
@@ -274,8 +280,8 @@
 		icon={ErrorLabel}
 		title={(l) => l.page.submission.title}
 		breadcrumbs={[
-			[`/venue/${venue?.id}`, venue?.title ?? ''],
-			[`/venue/${venue?.id}/submissions`, 'Submissions']
+			[`/venue/${venuePath}`, venue?.title ?? ''],
+			[`/venue/${venuePath}/submissions`, 'Submissions']
 		]}
 	>
 		<Feedback error text={(l) => l.page.submission.feedback.confidential}></Feedback>
@@ -285,8 +291,8 @@
 		icon={SubmissionLabel}
 		title={submission.title}
 		breadcrumbs={[
-			[`/venue/${submission.venue}`, venue?.title ?? ''],
-			[`/venue/${submission.venue}/submissions`, 'Submissions']
+			[`/venue/${venuePath}`, venue?.title ?? ''],
+			[`/venue/${venuePath}/submissions`, 'Submissions']
 		]}
 		edit={// Only editors can update the submission title.
 		isEditor
@@ -312,7 +318,7 @@
 		{/snippet}
 		{#snippet details()}
 			{#if previous}
-				<Link to="/venue/{venue.id}/submission/{previous.id}">{previous.externalid}</Link>→
+				<Link to="/venue/{venuePath}/submission/{previous.id}">{previous.externalid}</Link>→
 			{/if}
 			{submission.externalid}
 			{#if done}
@@ -409,7 +415,7 @@
 		{/each}
 
 		<Subheader icon={VenueLabel} text={(l) => l.page.submission.header.venue}></Subheader>
-		<VenueLink id={venue.id} name={venue.title} />
+		<VenueLink id={venue.id} name={venue.title} slug={venue.slug} />
 
 		<Subheader icon={EditLabel} text={(l) => l.page.submission.header.expertise}></Subheader>
 		{#if isAuthor}

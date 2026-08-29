@@ -3,6 +3,7 @@ import { login, logout } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
+const VENUE_PATH = SEED.venuePath;
 const CURRENCY_ID = SEED.currency;
 const EDITOR_EMAIL = SEED.scholars.editor.email;
 const MINTER_EMAIL = SEED.scholars.r1.email;
@@ -26,7 +27,7 @@ test('editor edits venue title, description, and URL', async ({ page, context })
 		await login(EDITOR_EMAIL, page, context);
 
 		// Description and URL live on /venue/[id].
-		await page.goto(`/venue/${VENUE_ID}`);
+		await page.goto(`/venue/${VENUE_PATH}`);
 		await page.waitForLoadState('networkidle');
 
 		const newDescription = `Description updated by e2e at ${Date.now()}`;
@@ -47,7 +48,7 @@ test('editor edits venue title, description, and URL', async ({ page, context })
 
 		// Title lives in the page header (Nav.svelte) on any venue route. Edit it
 		// from /venue/[id]/settings.
-		await page.goto(`/venue/${VENUE_ID}/settings`);
+		await page.goto(`/venue/${VENUE_PATH}/settings`);
 		await page.waitForLoadState('networkidle');
 
 		const newTitle = `Renamed by e2e ${Date.now()}`;
@@ -72,7 +73,7 @@ test('editor adds and removes another editor; last-editor constraint blocks remo
 }) => {
 	await login(EDITOR_EMAIL, page, context);
 
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 
 	// At seed, the venue has one admin and the "remove admin" button isn't
@@ -154,7 +155,7 @@ test('editor sets the venue inactive; non-editor sees the inactive notice on the
 	context
 }) => {
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 
 	await page.getByTestId('inactive-checkbox').click();
@@ -176,7 +177,7 @@ test('editor sets the venue inactive; non-editor sees the inactive notice on the
 	// inactive notice is what they see when visiting the venue page.
 	await context.clearCookies();
 	await login(NON_EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}`);
 	await page.waitForLoadState('networkidle');
 	await expect(page.getByTestId('venue-inactive-notice')).toBeVisible();
 });
@@ -190,7 +191,7 @@ test('editor reactivates the venue; the inactive notice disappears for non-edito
 	sql(`update public.venues set inactive = 'temp' where id = '${VENUE_ID}';`);
 
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 
 	// Toggle the checkbox off to reactivate.
@@ -202,7 +203,7 @@ test('editor reactivates the venue; the inactive notice disappears for non-edito
 	// A non-editor now sees the venue without the inactive notice.
 	await context.clearCookies();
 	await login(NON_EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}`);
 	await page.waitForLoadState('networkidle');
 	await expect(page.getByTestId('venue-inactive-notice')).toHaveCount(0);
 });
@@ -212,7 +213,7 @@ test('editor edits welcome amount, submission cost, and per-role compensation', 
 	context
 }) => {
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 
 	// Change welcome amount.
@@ -233,7 +234,7 @@ test('editor edits welcome amount, submission cost, and per-role compensation', 
 	const originalCost = sql(
 		`select submission_cost from public.submission_types where venue = '${VENUE_ID}' and name = 'Research Article';`
 	);
-	await page.goto(`/venue/${VENUE_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}`);
 	await page.waitForLoadState('networkidle');
 	await page.getByTestId('submission-cost-0-toggle').click();
 	await page.getByTestId('submission-cost-0').fill('12');
@@ -247,7 +248,7 @@ test('editor edits welcome amount, submission cost, and per-role compensation', 
 		.toBe('1');
 
 	// Return to the settings page for the remaining edits.
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 
 	// Change Reviewer×Research Article compensation. The slider exposes a
@@ -291,7 +292,7 @@ test('editor edits welcome amount, submission cost, and per-role compensation', 
 
 test('editor toggles bidding off and back on for a role', async ({ page, context }) => {
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 
 	// Expand the Reviewer role card and its inner admin-settings card so
@@ -329,7 +330,7 @@ test('editor gifts tokens from the venue reserve to a scholar', async ({ page, c
 		)
 	);
 
-	await page.goto(`/venue/${VENUE_ID}/transactions`);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
 	await page.waitForLoadState('networkidle');
 
 	// Expand the gift card so its form is rendered.
@@ -373,7 +374,7 @@ test('editor sees reviewing-platform email-template snippets and can copy them',
 	const venueTitle = sql(`select title from public.venues where id = '${VENUE_ID}';`);
 
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 
 	// Default platform is HotCRP → its submission variable is {{PID}}.
@@ -385,7 +386,7 @@ test('editor sees reviewing-platform email-template snippets and can copy them',
 	// copied links that left the environment under test.
 	const origin = new URL(page.url()).origin;
 	await expect(paymentBody).toContainText(
-		`${origin}/venue/${VENUE_ID}/submissions/new?manuscript={{PID}}`
+		`${origin}/venue/${VENUE_PATH}/submissions/new?manuscript={{PID}}`
 	);
 	await expect(paymentBody).not.toContainText('reciprocal.reviews');
 
@@ -414,7 +415,7 @@ test('deep-link pre-fill populates the new-submission form from a ?manuscript qu
 	// Editor visits the new-submission page with a manuscript ID query param,
 	// as if they followed the link from a reviewing-platform-generated email.
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/submissions/new?manuscript=TEST-001`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new?manuscript=TEST-001`);
 	await page.waitForLoadState('networkidle');
 
 	await expect(page.getByTestId('submission-manuscript-id')).toHaveValue('TEST-001');
@@ -441,32 +442,145 @@ test('a venue whose admin mints its currency discloses it, and is not blocked by
 
 		// The admin is advised, not stopped: the Activate checkbox stays usable.
 		await login(EDITOR_EMAIL, page, context);
-		await page.goto(`/venue/${VENUE_ID}/settings`);
+		await page.goto(`/venue/${VENUE_PATH}/settings`);
 		await page.waitForLoadState('networkidle');
 		await expect(page.getByTestId('venue-admin-mints')).toBeVisible();
 		await expect(page.getByTestId('inactive-checkbox')).toBeEnabled();
 
 		// The admin does not get the public notice — they are the subject of it.
-		await page.goto(`/venue/${VENUE_ID}`);
+		await page.goto(`/venue/${VENUE_PATH}`);
 		await page.waitForLoadState('networkidle');
 		await expect(page.getByTestId('venue-admin-mints-notice')).toHaveCount(0);
 
 		// A minter does not either.
 		await logout(page);
 		await login(MINTER_EMAIL, page, context);
-		await page.goto(`/venue/${VENUE_ID}`);
+		await page.goto(`/venue/${VENUE_PATH}`);
 		await page.waitForLoadState('networkidle');
 		await expect(page.getByTestId('venue-admin-mints-notice')).toHaveCount(0);
 
 		// Everyone else does, signed out included.
 		await logout(page);
-		await page.goto(`/venue/${VENUE_ID}`);
+		await page.goto(`/venue/${VENUE_PATH}`);
 		await page.waitForLoadState('networkidle');
 		await expect(page.getByTestId('venue-admin-mints-notice')).toBeVisible();
 	} finally {
 		sql(
 			`update public.currencies set minters = string_to_array('${originalMinters}', ',')::uuid[] ` +
 				`where id = '${CURRENCY_ID}';`
+		);
+	}
+});
+
+test('an id URL redirects to the venue web address, on every subpage', async ({
+	page,
+	context
+}) => {
+	await login(EDITOR_EMAIL, page, context);
+
+	// The promise that makes renaming survivable: every link sent before a venue named
+	// itself still lands, and lands on the canonical address.
+	for (const suffix of ['', '/submissions', '/volunteers', '/settings']) {
+		await page.goto(`/venue/${VENUE_ID}${suffix}`);
+		await page.waitForURL(`**/venue/${VENUE_PATH}${suffix}`);
+	}
+
+	// The query string survives the redirect — the copy-paste snippets in settings hand
+	// reviewing platforms links with one on.
+	await page.goto(`/venue/${VENUE_ID}/submissions?filter=TOK-2025-001`);
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions?filter=TOK-2025-001`);
+});
+
+test('editor changes the venue web address, is warned, and the old address stops working', async ({
+	page,
+	context
+}) => {
+	const taken = `taken-${Date.now()}`;
+	const wanted = `wanted-${Date.now()}`;
+	// A second venue holding an address, so the availability check has something to find.
+	// Created inactive, since nothing here needs it live.
+	// One statement on one line: sql() JSON-encodes what it is given, so a newline inside
+	// this string reaches psql as a literal backslash-n.
+	sql(
+		`insert into public.venues (title, currency, welcome_amount, admins, slug) select 'Address Rival', currency, 0, admins, '${taken}' from public.venues where id = '${VENUE_ID}';`
+	);
+
+	try {
+		await login(EDITOR_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/settings`);
+		await page.waitForLoadState('networkidle');
+
+		// The venue already has an address, so the step says which one.
+		await expect(page.getByTestId('venue-address-current')).toBeVisible();
+
+		// Too short: the format rule is stated by the field, before any lookup happens.
+		await page.getByTestId('venue-address').fill('chi');
+		await expect(page.getByTestId('venue-address-save')).toBeDisabled();
+
+		// Taken: the lookup finds the rival and the button stays refused.
+		await page.getByTestId('venue-address').fill(taken);
+		await expect(page.getByTestId('venue-address-taken')).toBeVisible();
+		await expect(page.getByTestId('venue-address-save')).toBeDisabled();
+
+		// Free: the lookup finds nobody.
+		await page.getByTestId('venue-address').fill(wanted);
+		await expect(page.getByTestId('venue-address-free')).toBeVisible();
+
+		// Changing an address the venue already has takes two clicks: the first asks whether
+		// to release the old one, since nothing redirects from it afterwards.
+		await page.getByTestId('venue-address-save').click();
+		await page.getByTestId('venue-address-save').click();
+
+		await expect
+			.poll(() => sql(`select slug from public.venues where id = '${VENUE_ID}';`))
+			.toBe(wanted);
+
+		// The new address serves the venue...
+		await page.goto(`/venue/${wanted}`);
+		await expect(page.getByTestId('role-Editor')).toBeVisible();
+
+		// ...and the old one is gone, not redirected. That is what the warning warned about.
+		await page.goto(`/venue/${VENUE_PATH}`);
+		await expect(page.getByText('Unable to find this venue.')).toBeVisible();
+	} finally {
+		// The suite shares one database, so put the seed venue back at its own address and
+		// take the rival away.
+		sql(`delete from public.venues where slug = '${taken}';`);
+		sql(`update public.venues set slug = '${VENUE_PATH}' where id = '${VENUE_ID}';`);
+	}
+});
+
+test('a venue with no web address cannot be activated', async ({ page, context }) => {
+	// Deactivate and clear the address, the state every venue created before addresses
+	// existed is in the moment it is taken offline.
+	sql(`update public.venues set inactive = 'temp', slug = null where id = '${VENUE_ID}';`);
+
+	try {
+		await login(EDITOR_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_ID}/settings`);
+		await page.waitForLoadState('networkidle');
+
+		// The checkbox is refused rather than allowed and then failing at the database.
+		await expect(page.getByTestId('inactive-checkbox')).toBeDisabled();
+		await expect(page.getByTestId('venue-address-required')).toBeVisible();
+
+		// Naming it enables activation.
+		await page.getByTestId('venue-address').fill(VENUE_PATH);
+		await page.getByTestId('venue-address-save').click();
+		await expect
+			.poll(() => sql(`select slug from public.venues where id = '${VENUE_ID}';`))
+			.toBe(VENUE_PATH);
+
+		await page.goto(`/venue/${VENUE_PATH}/settings`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId('inactive-checkbox')).toBeEnabled();
+		await page.getByTestId('inactive-checkbox').click();
+		await expect
+			.poll(() => sql(`select inactive is null from public.venues where id = '${VENUE_ID}';`))
+			.toBe('t');
+	} finally {
+		sql(
+			`update public.venues set inactive = null, slug = '${VENUE_PATH}' where id = '${VENUE_ID}';`
 		);
 	}
 });

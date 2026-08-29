@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { venuePath } from '$lib/data/venuePath';
 	import Button from '$lib/components/Button.svelte';
 	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
 	import Dashboard, { type Stat } from '$lib/components/Dashboard.svelte';
@@ -162,15 +163,21 @@
 				{
 					number: volunteers?.length ?? undefined,
 					title: 'volunteers',
-					link: `/venue/${venue.id}/volunteers`
+					link: `/venue/${venuePath(venue)}/volunteers`
 				},
 				{
 					number: submissionCount ?? undefined,
 					title: 'submissions visible to you',
-					link: `/venue/${venue.id}/submissions`
+					link: `/venue/${venuePath(venue)}/submissions`
 				},
 				...(showPayment
-					? [{ number: tokens?.length, title: 'tokens', link: `/venue/${venue.id}/transactions` }]
+					? [
+							{
+								number: tokens?.length,
+								title: 'tokens',
+								link: `/venue/${venuePath(venue)}/transactions`
+							}
+						]
 					: [])
 			] as [Stat, ...Stat[]]}
 		></Dashboard>
@@ -280,7 +287,7 @@
 		{:else}
 			<Paragraph
 				text={(l) => l.page.venue.paragraph.allVolunteers}
-				inputs={{ volunteersLink: `/venue/${venue.id}/volunteers` }}
+				inputs={{ volunteersLink: `/venue/${venuePath(venue)}/volunteers` }}
 			/>
 
 			<Roles

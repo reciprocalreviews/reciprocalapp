@@ -5,6 +5,7 @@
 <!-- svelte-ignore state_referenced_locally -->
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { venuePath } from '$lib/data/venuePath';
 	import type { SubmissionType, SubmissionTypeID, VenueRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
@@ -387,7 +388,7 @@
 				     to review is how a scholar earns the tokens to submit. -->
 				<Paragraph
 					text={(l) => l.page.newSubmission.note.earnTokens}
-					inputs={{ venue: `/venue/${venue.id}` }}
+					inputs={{ venue: `/venue/${venuePath(venue)}` }}
 				/>
 			{:else if affordable === true}
 				<Feedback text={(l) => l.page.newSubmission.feedback.sufficientBalance} />
@@ -428,7 +429,7 @@
 
 					// Redirect to the submission page if successful.
 					if (result) {
-						goto(`/venue/${venue.id}/submission/${result}`);
+						goto(`/venue/${venuePath(venue)}/submission/${result}`);
 					}
 
 					return result;

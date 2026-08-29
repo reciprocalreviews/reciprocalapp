@@ -115,6 +115,7 @@
 				/>{:else if transaction.from_venue}<VenueLink
 					size="extra-small"
 					id={transaction.from_venue}
+					slug={venues.find((v) => v.id === transaction.from_venue)?.slug ?? null}
 					name={venues.find((v) => v.id === transaction.from_venue)?.title ??
 						locale().view.transactions.error.unknownVenue}
 				></VenueLink>{:else}<em>{locale().view.transactions.cell.minted}</em>{/if}</td
@@ -126,6 +127,7 @@
 				/>{:else if transaction.to_venue}<VenueLink
 					size="extra-small"
 					id={transaction.to_venue}
+					slug={venues.find((v) => v.id === transaction.to_venue)?.slug ?? null}
 					name={venues.find((v) => v.id === transaction.to_venue)?.title ??
 						locale().view.transactions.error.unknownVenue}
 				></VenueLink>{/if}</td

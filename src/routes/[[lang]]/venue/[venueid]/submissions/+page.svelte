@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { venuePath } from '$lib/data/venuePath';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { DownLabel, PrivateLabel, SubmissionLabel, UpLabel } from '$lib/components/Labels';
@@ -210,7 +211,7 @@
 	<Page
 		icon={SubmissionLabel}
 		title={(l) => l.page.submissions.title}
-		breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}
+		breadcrumbs={[[`/venue/${venuePath(venue)}`, venue.title]]}
 	>
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 

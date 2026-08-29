@@ -33,7 +33,14 @@
 		approvals,
 		compensating
 	}: {
-		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
+		commitments: {
+			id: string;
+			invited: boolean;
+			name: string;
+			venue: string;
+			venueid: string;
+			venueSlug: string | null;
+		}[];
 		minting: CurrencyRow[] | null;
 		pending: TransactionRow[] | null;
 		outgoingPending: TransactionRow[] | null;
@@ -70,7 +77,7 @@
 				<td>{locale().view.tasks.cell.kind.invitation}</td>
 				<td>
 					<strong>{invite.name ?? EmptyLabel}</strong>
-					<VenueLink id={invite.venueid} name={invite.venue} />
+					<VenueLink id={invite.venueid} name={invite.venue} slug={invite.venueSlug} />
 					<Button
 						testid="invitation-accept-{index}"
 						strings={(l) => l.view.tasks.button.accept}

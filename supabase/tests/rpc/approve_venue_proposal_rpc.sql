@@ -111,6 +111,11 @@ select lives_ok(
 );
 select tests.clear_authentication();
 
+-- A venue needs a web address before it can go live (20260829020000). Approval doesn't
+-- choose one — it is the admin's to pick during setup — so these tests supply one, since
+-- what they are about is the admin/minter overlap and not the address rule.
+update public.venues set slug = 'self-approved' where title = 'Self Approved';
+
 select lives_ok(
 	format('update public.venues set inactive = null where id = %L', (select id from public.venues where title = 'Self Approved')),
 	'and that venue goes live even though its admin still mints its currency'
@@ -142,6 +147,8 @@ select lives_ok(
 	'a venue whose only minter is a non-admin steward approves'
 );
 select tests.clear_authentication();
+
+update public.venues set slug = 'steward-minter' where title = 'Steward Minter';
 
 select lives_ok(
 	format('update public.venues set inactive = null where id = %L', (select id from public.venues where title = 'Steward Minter')),

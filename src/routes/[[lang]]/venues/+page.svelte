@@ -40,7 +40,8 @@
 			<ul>
 				{#each venues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue, index}
 					<li>
-						<VenueLink id={venue.id} name={venue.title} testid={'venue-' + index}></VenueLink>
+						<VenueLink id={venue.id} name={venue.title} slug={venue.slug} testid={'venue-' + index}
+						></VenueLink>
 					</li>
 				{/each}
 			</ul>

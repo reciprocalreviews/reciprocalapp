@@ -57,8 +57,15 @@
 		notifications
 	}: {
 		scholar: Scholar;
-		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
-		admins: { id: string; title: string }[] | null;
+		commitments: {
+			id: string;
+			invited: boolean;
+			name: string;
+			venue: string;
+			venueid: string;
+			venueSlug: string | null;
+		}[];
+		admins: { id: string; title: string; slug: string | null }[] | null;
 		tokens: TokenRow[] | null;
 		transactions: number | null;
 		submissions: SubmissionRow[] | null;

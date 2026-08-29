@@ -118,6 +118,7 @@ A `Venue` is a named and curated collection of manuscripts undergoing peer revie
 - [x] A `Venue` has a cost and reward for reviewing labor.
 - [x] `Venue`s are associated with `Submission`s, `Token`s, a `Currency`, and `Transaction`s.
 - [x] `Venue`s can be proposed, but aren't created until approved.
+- [x] A `Venue` has a globally unique **web address** — a short, readable name it is reached by, in place of its identifier. It is chosen during setup, and a venue cannot be switched on without one, so every link anyone sends about a live venue is one they can read. Changing it releases the old address immediately: nothing reserves it and nothing redirects from it, so every link that used it breaks. Four to forty characters, lowercase letters and digits with single hyphens between them, starting with a letter — four because three-letter acronyms are the ones a dozen communities have equal claim to.
 - [x] `Venue`s can have one or more volunteer roles, which are helpful for distinguishing between different types of volunteering for a venue (e.g., reviewer, reviewer for track A, meta-reviewer for track B)
 - [x] When a `Scholar` volunteers for a `Venue`, they do so for a particular role, optionally with an expertise statement and a soft cap on the number of papers they are willing to review for that role.
 - [x] Venues can be set to keep reviewer assignments hidden or visible to authors
@@ -361,15 +362,17 @@ The purpose of this page is to allow people to support proposals and check their
 - [x] _`steward`_: Delete a proposal
 - [x] _`steward`_: Approve a proposal. Approval takes whichever listed editors already have accounts and makes them the venue's admins; the rest are not blocked on, because the proposal itself emailed them an invitation and requiring an account first would mean that invitation could only ever reach people who did not need it. At least one editor must have an account, since a venue with nobody to administer it is not a venue. Minters are never blocking: whichever listed minters have accounts hold the new currency, and if none of them do, the approving steward holds it until the venue names someone. A community adopting RR often has not identified an independent minter yet, and refusing the venue until it has put the platform's hardest requirement at the moment a community is trying to join it.
 
-### Venue `/venue/[id]`
+### Venue `/venue/[address]`
 
 The purpose of a `Venue` page is to provide information about its compensation, costs, and people in charge.
+
+A venue is reached by its web address once it has chosen one, and by its identifier until then. Both forms resolve, and the identifier form redirects to the address, so links sent before a venue named itself still land — and land on the readable URL. Every subpage below follows the same rule.
 
 The page should:
 
 - [x] Show the name, description, and URL to the venue's website.
 
-Approving a proposal creates a venue but does not launch it: a new venue is **inactive** — visible to and configurable by its admins, invisible to everyone else — until an admin switches it on. Whether one of its admins also mints its currency does not bear on that: the overlap is permitted at every stage of a venue's life, so a steward may approve a venue they will themselves edit and hold its currency for as long as the community wants. What the platform does instead is disclose. A live, paying venue whose admin also mints its currency carries a notice on its page, shown to everyone who is neither an admin nor a minter, naming the arrangement and inviting them to volunteer as the currency's minter; its admins see the same fact in venue settings, so they know what visitors are being told and where to hand the currency over. Holding a platform role is not itself a conflict either — a steward may mint for a venue they do not administer for as long as the community wants.
+Approving a proposal creates a venue but does not launch it: a new venue is **inactive** — visible to and configurable by its admins, invisible to everyone else — until an admin switches it on. Whether one of its admins also mints its currency does not bear on that: the overlap is permitted at every stage of a venue's life, so a steward may approve a venue they will themselves edit and hold its currency for as long as the community wants. What the platform does instead is disclose. A live, paying venue whose admin also mints its currency carries a notice on its page, shown to everyone who is neither an admin nor a minter, naming the arrangement and inviting them to volunteer as the currency's minter; its admins see the same fact in venue settings, so they know what visitors are being told and where to hand the currency over. Holding a platform role is not itself a conflict either — a steward may mint for a venue they do not administer for as long as the community wants. What a venue must have before it goes live is a web address: it is the first setup step, and the switch that activates the venue stays disabled until one is set, because the moment a venue is visible is the moment people start sending links to it.
 
 When a venue is in a **proposed** state:
 

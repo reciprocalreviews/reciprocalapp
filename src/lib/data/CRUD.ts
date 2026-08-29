@@ -298,6 +298,10 @@ export default abstract class CRUD {
 	abstract addVenueAdmin(id: VenueID, emailOrORCID: string): Promise<Result>;
 	abstract editVenueTitle(id: VenueID, title: string): Promise<Result>;
 	abstract editVenueURL(id: VenueID, url: string): Promise<Result>;
+	/** Set or change the venue's web address. Changing one releases the old address
+	 * immediately: nothing reserves it, nothing redirects from it, and every link that
+	 * used it breaks. The interface warns before doing it. */
+	abstract editVenueSlug(id: VenueID, slug: string): Promise<Result>;
 	abstract editVenueInactive(id: VenueID, inactive: string | null): Promise<Result>;
 	abstract editVenueAnonymousAssignments(id: VenueID, anonymous: boolean): Promise<Result>;
 	/** Toggle whether author thank-you notes to reviewers require vetting. */
@@ -530,12 +534,18 @@ export default abstract class CRUD {
 	abstract getStewards(): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>>;
 
 	abstract getVenue(id: VenueID): Promise<ReadResult<VenueRow | null>>;
+	/** Resolve a venue from a URL path segment, which is its web address once it has one
+	 * and its id until then. Both forms keep working, so mail already sent still lands. */
+	abstract getVenueByPath(path: string): Promise<ReadResult<VenueRow | null>>;
+	/** Whether no venue holds this web address yet. Advisory only — two venues can pass
+	 * this check at the same moment, and the unique index is what settles it. */
+	abstract isVenueAddressAvailable(slug: string): Promise<ReadResult<boolean>>;
 	abstract getVenues(): Promise<ReadResult<VenueRow[] | null>>;
 	abstract getVenuesByIDs(ids: VenueID[]): Promise<ReadResult<VenueRow[] | null>>;
 	abstract getCurrencyVenues(currency: CurrencyID): Promise<ReadResult<VenueRow[] | null>>;
 	abstract getScholarAdminVenues(
 		scholar: ScholarID
-	): Promise<ReadResult<Pick<VenueRow, 'id' | 'title'>[] | null>>;
+	): Promise<ReadResult<Pick<VenueRow, 'id' | 'title' | 'slug'>[] | null>>;
 
 	abstract getCurrency(id: CurrencyID): Promise<ReadResult<CurrencyRow | null>>;
 	abstract getCurrencies(): Promise<ReadResult<CurrencyRow[] | null>>;

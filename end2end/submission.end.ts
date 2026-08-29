@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
-const VENUE_ID = SEED.venue;
+const VENUE_PATH = SEED.venuePath;
 const AUTHOR1_ORCID = SEED.scholars.author1.orcid; // Foot Note (author1@uni.edu)
 const AUTHOR2_ORCID = SEED.scholars.author2.orcid; // Ann Thesis (author2@uni.edu)
 
@@ -12,7 +12,7 @@ test('the author form lists the submitter, finds co-authors by name, and flags a
 }) => {
 	test.setTimeout(90_000);
 	await login('author1@uni.edu', page, context);
-	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new`);
 	await page.waitForLoadState('networkidle');
 
 	// The submitter is listed as the first author, already resolved — they used
@@ -64,7 +64,7 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 
 	const externalID = `TOK-2026-TEST-${Date.now()}`;
 
-	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new`);
 	// Keep networkidle here: the submission form's bound <select>/inputs must be
 	// hydrated before we selectOption/fill, or Svelte drops the change. (Most
 	// other pages replaced this with an explicit content wait.)
@@ -151,7 +151,7 @@ test('author can link a resubmission to a prior submission and is charged the re
 
 	// 1. Create the original submission as the sole author, paying the venue's
 	// regular submission cost of 10 tokens.
-	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new`);
 	// Keep networkidle here: the submission form's bound <select>/inputs must be
 	// hydrated before we selectOption/fill, or Svelte drops the change. (Most
 	// other pages replaced this with an explicit content wait.)
@@ -189,7 +189,7 @@ test('author can link a resubmission to a prior submission and is charged the re
 
 	// 2. Create a resubmission linking the original. Start from the plain
 	// "Research Article" type (cost 10), then let the predecessor pick the type.
-	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new`);
 	// Keep networkidle here: the submission form's bound <select>/inputs must be
 	// hydrated before we selectOption/fill, or Svelte drops the change. (Most
 	// other pages replaced this with an explicit content wait.)

@@ -49,6 +49,8 @@ import CRUD, {
 	type SubmissionBlocker
 } from './CRUD';
 import Scholar from './Scholar.svelte';
+import { isUUID } from '../validation';
+import { venuePath } from './venuePath';
 
 // A constant page size for paginated queries.
 export const PAGE_SIZE = 10;
@@ -652,10 +654,10 @@ export default class SupabaseCRUD extends CRUD {
 
 	async getScholarAdminVenues(
 		scholar: ScholarID
-	): Promise<ReadResult<Pick<VenueRow, 'id' | 'title'>[] | null>> {
+	): Promise<ReadResult<Pick<VenueRow, 'id' | 'title' | 'slug'>[] | null>> {
 		return this.rows(
 			'LoadVenue',
-			this.client.from('venues').select('id, title').contains('admins', [scholar])
+			this.client.from('venues').select('id, title, slug').contains('admins', [scholar])
 		);
 	}
 
@@ -791,7 +793,31 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async editVenueURL(id: VenueID, url: string) {
-		return this.updateVenue(id, { url }, 'EditVenueTitle');
+		return this.updateVenue(id, { url }, 'EditVenueURL');
+	}
+
+	/**
+	 * Set or change the venue's web address.
+	 *
+	 * The unique index, not the availability check the field runs while someone types, is
+	 * what decides who gets a contested address: two venues can both be told an address is
+	 * free in the same second, and only one write can win. So the collision is read off the
+	 * error rather than prevented, and the loser is told the address was taken rather than
+	 * shown a generic failure. `23514` is the format constraint, which the field's own
+	 * validation should have caught — it means something reached here unvalidated.
+	 */
+	async editVenueSlug(id: VenueID, slug: string) {
+		const { error } = await this.client
+			.from('venues')
+			.update({ slug: slug.trim().toLowerCase() })
+			.eq('id', id);
+		return this.errorOrEmpty(
+			rpcErrorKey(error, 'EditVenueSlug', {
+				'23505': 'VenueAddressTaken',
+				'23514': 'VenueAddressInvalid'
+			}),
+			error
+		);
 	}
 
 	async editVenueInactive(id: VenueID, inactive: string | null) {
@@ -828,6 +854,36 @@ export default class SupabaseCRUD extends CRUD {
 
 	async getVenue(id: VenueID): Promise<ReadResult<VenueRow | null>> {
 		return this.row('LoadVenue', this.client.from('venues').select().eq('id', id).maybeSingle());
+	}
+
+	/**
+	 * Resolve a venue from a URL path segment.
+	 *
+	 * The segment is the venue's web address once it has chosen one, and its id until then.
+	 * Which column to query is decided by looking at the segment rather than by trying one
+	 * and falling back to the other: `venues_slug_check` forbids an address shaped like a
+	 * UUID precisely so this stays a decision and not a guess, and a UUID compared against a
+	 * text column (or the reverse) is a wasted round trip at best.
+	 */
+	async getVenueByPath(path: string): Promise<ReadResult<VenueRow | null>> {
+		const segment = path.trim();
+		return this.row(
+			'LoadVenue',
+			isUUID(segment)
+				? this.client.from('venues').select().eq('id', segment).maybeSingle()
+				: this.client.from('venues').select().eq('slug', segment.toLowerCase()).maybeSingle()
+		);
+	}
+
+	/** Whether no venue holds this web address yet. Advisory: see `editVenueSlug`. */
+	async isVenueAddressAvailable(slug: string): Promise<ReadResult<boolean>> {
+		const { data, error } = await this.client
+			.from('venues')
+			.select('id')
+			.eq('slug', slug.trim().toLowerCase())
+			.maybeSingle();
+		if (error) return { data: false, error: this.error('LoadVenue', error).error };
+		return { data: data === null, error: undefined };
 	}
 
 	async getVenues(): Promise<ReadResult<VenueRow[] | null>> {
@@ -1102,7 +1158,7 @@ export default class SupabaseCRUD extends CRUD {
 		const scholarsToEmail = [...editorIDs, ...supporterIDs];
 		const emailResult = await this.emailScholars(scholarsToEmail, 'VenueApproved', [
 			title,
-			venueID
+			await this.venuePathOf(venueID)
 		]);
 
 		return { data: venueID, notified: emailResult.notified };
@@ -1405,7 +1461,7 @@ export default class SupabaseCRUD extends CRUD {
 		// to, which is the same currency create_submission will use.
 		const { data: venueRow, error: venueError } = await this.client
 			.from('venues')
-			.select('currency, title, admins')
+			.select('id, currency, title, admins, slug')
 			.eq('id', venue)
 			.single();
 		if (venueError) return this.error('LoadVenue', venueError);
@@ -1485,13 +1541,13 @@ export default class SupabaseCRUD extends CRUD {
 				? await this.emailScholars([editor], 'SubmissionAssignedEditor', [
 						submissionTitle,
 						venueRow.title,
-						venue,
+						venuePath(venueRow),
 						submissionID
 					])
 				: await this.emailEditorsOf(venue, venueRow.admins, 'SubmissionNeedsEditor', [
 						submissionTitle,
 						venueRow.title,
-						venue,
+						venuePath(venueRow),
 						submissionID
 					]);
 		if (editorResult.notified) notifications.push(...editorResult.notified);
@@ -1577,7 +1633,7 @@ export default class SupabaseCRUD extends CRUD {
 		if (imported > 0) {
 			const { data: venueRow } = await this.client
 				.from('venues')
-				.select('title, admins')
+				.select('id, title, admins, slug')
 				.eq('id', venue)
 				.single();
 			if (venueRow !== null) {
@@ -1586,12 +1642,12 @@ export default class SupabaseCRUD extends CRUD {
 						? await this.emailScholars([result.editor], 'SubmissionsAssignedEditor', [
 								result.seated.toString(),
 								venueRow.title,
-								venue
+								venuePath(venueRow)
 							])
 						: await this.emailEditorsOf(venue, venueRow.admins, 'SubmissionsNeedEditors', [
 								imported.toString(),
 								venueRow.title,
-								venue
+								venuePath(venueRow)
 							]);
 				if (emailResult.notified) notifications.push(...emailResult.notified);
 			}
@@ -1664,7 +1720,7 @@ export default class SupabaseCRUD extends CRUD {
 					data.total_amount.toString(),
 					'editor',
 					data.shortfall.toString(),
-					data.venue_id,
+					await this.venuePathOf(data.venue_id),
 					data.venue_title
 				]);
 			}
@@ -1681,11 +1737,14 @@ export default class SupabaseCRUD extends CRUD {
 		// individually with their actual payout amount and role, so each
 		// gets a per-recipient banner via handle().
 		const notifications: Notification[] = [];
+		// Resolved once rather than per payout: every message in this loop is about the same
+		// venue.
+		const donePath = await this.venuePathOf(data.venue_id);
 		for (const payout of data.payouts) {
 			const result = await this.emailScholars([payout.scholar_id], 'WorkCompensated', [
 				payout.role_name,
 				payout.amount.toString(),
-				data.venue_id,
+				donePath,
 				data.submission_id
 			]);
 			if (result.notified) notifications.push(...result.notified);
@@ -1799,15 +1858,16 @@ export default class SupabaseCRUD extends CRUD {
 		const thanksID = stringField(data, 'thanks_id');
 		const venue = stringField(data, 'venue');
 		if (thanksID && venue) {
+			const path = await this.venuePathOf(venue);
 			if (status === 'approved')
 				await this.queueThanksEmails(thanksID, 'recipients', 'ThanksReceived', [
 					message,
-					venue,
+					path,
 					submission
 				]);
 			else
 				await this.queueThanksEmails(thanksID, 'vetters', 'ThanksPendingReview', [
-					venue,
+					path,
 					submission
 				]);
 		}
@@ -1824,7 +1884,11 @@ export default class SupabaseCRUD extends CRUD {
 		const submission = stringField(data, 'submission');
 		const note = stringField(data, 'message');
 		if (venue && submission && note !== null)
-			await this.queueThanksEmails(id, 'recipients', 'ThanksReceived', [note, venue, submission]);
+			await this.queueThanksEmails(id, 'recipients', 'ThanksReceived', [
+				note,
+				await this.venuePathOf(venue),
+				submission
+			]);
 		return { error: undefined, data: undefined };
 	}
 
@@ -1834,7 +1898,11 @@ export default class SupabaseCRUD extends CRUD {
 		const venue = stringField(data, 'venue');
 		const submission = stringField(data, 'submission');
 		if (venue && submission)
-			await this.queueThanksEmails(id, 'author', 'ThanksDeclined', [reason, venue, submission]);
+			await this.queueThanksEmails(id, 'author', 'ThanksDeclined', [
+				reason,
+				await this.venuePathOf(venue),
+				submission
+			]);
 		return { error: undefined, data: undefined };
 	}
 
@@ -1995,7 +2063,7 @@ export default class SupabaseCRUD extends CRUD {
 		if (recipients.size === 0) return { data: undefined, error: undefined };
 
 		return this.emailScholars([...recipients], 'CompensationRequested', [
-			venueID,
+			await this.venuePathOf(venueID),
 			submission.id,
 			note
 		]);
@@ -2116,7 +2184,7 @@ export default class SupabaseCRUD extends CRUD {
 				ids.push(data);
 				const inviteResult = await this.emailScholars([scholar.id], 'RoleInvite', [
 					role.name,
-					venue.id,
+					venuePath(venue),
 					venue.title,
 					scholar.id
 				]);
@@ -2282,7 +2350,7 @@ export default class SupabaseCRUD extends CRUD {
 					scholar.getName() ?? '',
 					scholar.getEmail() ?? '',
 					role.name,
-					assignment.venue,
+					await this.venuePathOf(assignment.venue),
 					assignment.submission
 				]
 			);
@@ -2333,7 +2401,7 @@ export default class SupabaseCRUD extends CRUD {
 					data.amount.toString(),
 					data.role_name,
 					data.shortfall.toString(),
-					data.venue_id,
+					await this.venuePathOf(data.venue_id),
 					data.venue_title
 				]);
 			}
@@ -2344,7 +2412,7 @@ export default class SupabaseCRUD extends CRUD {
 		return this.emailScholars([data.scholar_id], 'WorkCompensated', [
 			data.role_name,
 			data.amount.toString(),
-			data.venue_id,
+			await this.venuePathOf(data.venue_id),
 			data.submission_id
 		]);
 	}
@@ -2538,7 +2606,7 @@ export default class SupabaseCRUD extends CRUD {
 			this.client.from('scholars').select('name, email').eq('id', decliner).single(),
 			this.client.from('currencies').select('name').eq('id', transaction.currency).single(),
 			venueID
-				? this.client.from('venues').select('title').eq('id', venueID).single()
+				? this.client.from('venues').select('id, title, slug').eq('id', venueID).single()
 				: Promise.resolve({ data: null, error: null })
 		]);
 
@@ -2553,9 +2621,10 @@ export default class SupabaseCRUD extends CRUD {
 		// from the site_url vault secret.
 		const origin =
 			typeof window !== 'undefined' ? window.location.origin : 'https://reciprocal.reviews';
-		const link = venueID
-			? `${origin}/venue/${venueID}/transactions`
-			: `${origin}/scholar/${transaction.creator}/transactions`;
+		const link =
+			venueID && venueRow.data !== null
+				? `${origin}/venue/${venuePath(venueRow.data)}/transactions`
+				: `${origin}/scholar/${transaction.creator}/transactions`;
 
 		// Pick the template variant: with vs without a venue title slot.
 		const args = venueID
@@ -2713,6 +2782,24 @@ export default class SupabaseCRUD extends CRUD {
 	// ─────────────────────────────────────────────────────────────────────────
 	// Emails & conflicts
 	// ─────────────────────────────────────────────────────────────────────────
+
+	/**
+	 * The path segment a venue's mail should link to: its web address once it has one, its
+	 * id until then.
+	 *
+	 * Resolved here, at queue time, rather than at send time like `{origin}` — the one
+	 * exception to that rule. Venue mail is queued and sent by the `emails` table's AFTER
+	 * INSERT trigger within seconds of each other, so a rename cannot realistically overtake
+	 * a message in flight; and if one ever did, the link still resolves, because the venue
+	 * layout accepts an id and the address it was renamed from is simply gone either way.
+	 *
+	 * A round trip per venue-linked email, which is why callers that already hold the venue
+	 * row use `venuePath` directly instead.
+	 */
+	private async venuePathOf(id: VenueID): Promise<string> {
+		const { data } = await this.client.from('venues').select('id, slug').eq('id', id).maybeSingle();
+		return data === null ? id : venuePath(data);
+	}
 
 	/** Use the resend edge function to use the Resend API to send a message to the current user. */
 	/** Email scholars by id. Recipient resolution — including skipping scholars with no

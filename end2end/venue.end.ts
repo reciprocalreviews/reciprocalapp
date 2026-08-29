@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
 
+// These navigate by the venue's UUID rather than its web address, deliberately. Every
+// other suite uses the address; this one keeps the id form exercised, so the promise that
+// links sent before a venue named itself still resolve — and redirect — is tested rather
+// than assumed. Don't 'tidy' these into SEED.venuePath.
 test('author1 can volunteer for the reviewer role', async ({ page, context }) => {
 	await login('author2@uni.edu', page, context);
 

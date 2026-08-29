@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
 import { SEED } from './test-utils';
 
-const VENUE_ID = SEED.venue;
+const VENUE_PATH = SEED.venuePath;
 
 test('admin can bulk import free submissions and a proposed mint transaction', async ({
 	page,
@@ -10,7 +10,7 @@ test('admin can bulk import free submissions and a proposed mint transaction', a
 }) => {
 	await login('editor@uni.edu', page, context);
 
-	await page.goto(`/venue/${VENUE_ID}/submissions/import`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
 	await page.waitForLoadState('networkidle');
 
 	const externalA = `import-a-${Date.now()}`;
@@ -29,7 +29,7 @@ test('admin can bulk import free submissions and a proposed mint transaction', a
 	await page.getByTestId('bulk-import-submit').click();
 
 	// Should redirect back to the submissions index.
-	await page.waitForURL(`**/venue/${VENUE_ID}/submissions`);
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
 
 	// Verify both imported submissions show up.
 	await expect(page.getByText(externalA)).toBeVisible();

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Page from '$lib/components/Page.svelte';
+	import { venuePath } from '$lib/data/venuePath';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { ErrorLabel, SubmissionLabel } from '$lib/components/Labels';
 	import { type PageData } from './$types';
@@ -26,8 +27,8 @@
 		icon={ErrorLabel}
 		title={(l) => l.page.bulkImport.title}
 		breadcrumbs={[
-			[`/venue/${venue.id}`, venue.title],
-			[`/venue/${venue.id}/submissions`, 'Submissions']
+			[`/venue/${venuePath(venue)}`, venue.title],
+			[`/venue/${venuePath(venue)}/submissions`, 'Submissions']
 		]}
 	>
 		<Feedback error text={(l) => l.page.bulkImport.feedback.notAdmin} />
@@ -37,8 +38,8 @@
 		icon={SubmissionLabel}
 		title={(l) => l.page.bulkImport.title}
 		breadcrumbs={[
-			[`/venue/${venue.id}`, venue.title],
-			[`/venue/${venue.id}/submissions`, 'Submissions']
+			[`/venue/${venuePath(venue)}`, venue.title],
+			[`/venue/${venuePath(venue)}/submissions`, 'Submissions']
 		]}
 	>
 		<BulkImport {venue} {submissionTypes} {existingExternalIDs} />

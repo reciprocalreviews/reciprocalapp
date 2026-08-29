@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { type CurrencyID } from '$data/types.js';
+	import { venuePath } from '$lib/data/venuePath';
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
@@ -23,7 +24,11 @@
 </script>
 
 {#if venue && transactions && venues && currencies && scholar && tokens && count !== null}
-	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
+	<Page
+		icon={VenueLabel}
+		title={venue.title}
+		breadcrumbs={[[`/venue/${venuePath(venue)}`, venue.title]]}
+	>
 		{#snippet subtitle()}<Text path={(l) => l.page.venueTransactions.subtitle} />{/snippet}
 
 		<Paragraph

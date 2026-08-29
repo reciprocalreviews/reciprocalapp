@@ -1,12 +1,15 @@
 import { describe, expect, test } from 'vitest';
 import {
+	isUUID,
 	isntEmpty,
+	slugifyTitle,
 	validEmail,
 	validEmails,
 	validEmailsOrORCIDs,
 	validInteger,
 	validORCID,
-	validURL
+	validURL,
+	validVenueSlug
 } from './validation';
 
 describe('validInteger', () => {
@@ -171,5 +174,66 @@ describe('isntEmpty', () => {
 	// whitespace-only value passes. Callers that care trim first.
 	test('treats whitespace as non-empty', () => {
 		expect(isntEmpty(' ')).toBe(true);
+	});
+});
+
+describe('isUUID', () => {
+	test.each([
+		['c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6', true],
+		['C60D7D0A-AD37-11F0-83E5-EFB2EB8BDBD6', true],
+		['  c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6  ', true],
+		['acm-chi', false],
+		['c60d7d0a-ad37-11f0-83e5', false],
+		['', false]
+	])('isUUID(%s) is %s', (text, expected) => {
+		expect(isUUID(text)).toBe(expected);
+	});
+});
+
+describe('validVenueSlug', () => {
+	test.each([
+		['acm-chi', true],
+		['sigcse2027', true],
+		['tochi', true],
+		['acm-chi-2027', true],
+		// Four characters is the floor: three-letter acronyms are the contested ones.
+		['chi', false],
+		['abcd', true],
+		// Stored lowercase, so uppercase is not merely normalized here — it is refused, and
+		// the caller lowercases before writing.
+		['ACM-CHI', false],
+		['-chi-2027', false],
+		['acm-chi-', false],
+		['acm--chi', false],
+		['2027chi', false],
+		['acm_chi', false],
+		['acm.chi', false],
+		['acm chi', false],
+		// Never a UUID's shape: the venue resolver picks a column by looking at the segment,
+		// and an address that could pass for an id would make that a guess.
+		['abcdef12-3456-7890-abcd-ef1234567890', false],
+		['a'.repeat(41), false],
+		['a'.repeat(40), true],
+		['', false]
+	])('validVenueSlug(%s) is %s', (text, expected) => {
+		expect(validVenueSlug(text)).toBe(expected);
+	});
+});
+
+describe('slugifyTitle', () => {
+	test.each([
+		['Transactions on Knowledge', 'transactions-on-knowledge'],
+		['ACM CHI', 'acm-chi'],
+		['  Spaces   Everywhere  ', 'spaces-everywhere'],
+		// Diacritics decompose and their marks are dropped, rather than becoming hyphens
+		// mid-word: "Zürich" is "zurich", not "zu-rich".
+		['Zürich Review', 'zurich-review'],
+		// A leading number can't start an address, so it is dropped rather than kept and
+		// then rejected.
+		['2027 Workshop', 'workshop'],
+		// Best effort: what comes back may still be too short, which the field then says.
+		['AI', 'ai']
+	])('slugifyTitle(%s) is %s', (title, expected) => {
+		expect(slugifyTitle(title)).toBe(expected);
 	});
 });

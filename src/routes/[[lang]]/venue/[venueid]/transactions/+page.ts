@@ -1,10 +1,15 @@
+import { NO_VENUE_ID } from '$lib/data/venuePath';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ parent, params }) => {
-	const { db } = await parent();
+export const load: PageLoad = async ({ parent }) => {
+	const { db, venue } = await parent();
+
+	// The URL segment may be the venue's web address, so the id comes from the venue the
+	// layout resolved, never from the param — the queries below are keyed on uuid columns.
+	const venueid = venue?.id ?? NO_VENUE_ID;
 
 	// Get the venue's most recent transactions.
-	const { data: transactions, count } = await db.getVenueTransactions(params.venueid);
+	const { data: transactions, count } = await db.getVenueTransactions(venueid);
 
 	const { data: venues } =
 		transactions === null ? { data: null } : await db.getTransactionVenues(transactions);
@@ -13,7 +18,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		transactions === null ? { data: null } : await db.getTransactionCurrencies(transactions);
 
 	// Get the venue's tokens.
-	const { data: tokens } = await db.getVenueTokens(params.venueid);
+	const { data: tokens } = await db.getVenueTokens(venueid);
 
 	return {
 		transactions,

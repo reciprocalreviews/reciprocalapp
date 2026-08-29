@@ -10,6 +10,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **A setting for notices you'd rather not get.** A scholar's profile now lists the emails that are courtesies rather than consequences, each with a switch. Anything consequential — a charge awaiting approval, a declined transaction, an assignment — is always sent.
 - Scholar profiles now show the scholar's **ORCID iD**, linked to their ORCID record, so a visitor can confirm who they're looking at and follow through to the publications and affiliations Reciprocal Reviews doesn't reproduce itself.
 - **A new submission now reaches an editor.** A venue with one editor has them assigned on arrival; a venue with several tells all of them a submission is waiting, and the ones nobody is editing are flagged on the submissions list with a filter, a one-click claim button, and a reminder that chases them. Previously nothing was assigned and nobody was told, so a submission could sit unnoticed indefinitely.
+- **Venues now have a readable web address.** A venue picks one during setup — `reciprocal.reviews/venue/acm-chi` — and every link to it, in the app and in email, uses that instead of a 36-character identifier. Changing an address releases the old one immediately, so links that used it stop working, and the button says so before you commit.
 
 ### Changed
 

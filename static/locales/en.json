@@ -1004,6 +1004,7 @@
 		"settings": {
 			"title": "Settings",
 			"header": {
+				"webAddress": "Choose a web address",
 				"policies": "Decide policies",
 				"compensation": "Compensation",
 				"roles": "Roles",
@@ -1018,6 +1019,11 @@
 				"logIn": "[Log in](/login) to view this venue's settings.",
 				"adminsOnly": "Only admins of this venue can view this page.",
 				"noPreferenceLevels": "No preference levels defined. Bidders will see a simple yes/no bid.",
+				"addressCurrent": "This venue is at **{address}**.",
+				"addressChecking": "Checking\u2026",
+				"addressAvailable": "**{address}** is free.",
+				"addressTaken": "Another venue is already at **{address}**.",
+				"addressRequiredToActivate": "Choose a web address in step 1 before activating this venue, so every link anyone sends about it is one they can read.",
 				"adminMints": "One of this venue's admins also mints its currency. That's allowed, and for a small community it may be the only way to have a currency at all — but everyone else who visits this venue sees a note saying so, because minting the money of a venue you run invites doubt even when nothing is wrong. If someone outside the venue's admins is willing to hold it, hand the currency over on the [currency page](/currency/{currency})."
 			},
 			"card": {
@@ -1039,6 +1045,11 @@
 				}
 			},
 			"field": {
+				"webAddress": {
+					"label": "Web address",
+					"placeholder": "acm-chi",
+					"invalid": "Use 4 to 40 characters: lowercase letters, numbers, and single hyphens between them, starting with a letter."
+				},
 				"inactiveMessage": {
 					"label": "inactive message",
 					"placeholder": "e.g., We're currently configuring the venue.",
@@ -1061,6 +1072,15 @@
 				}
 			},
 			"button": {
+				"setWebAddress": {
+					"label": "Use this address",
+					"tip": "Give the venue this web address."
+				},
+				"changeWebAddress": {
+					"label": "Change address",
+					"tip": "Move the venue to this web address, releasing the current one.",
+					"warn": "Release the old address and break its links?"
+				},
 				"addPreferenceLevel": {
 					"label": "Add level",
 					"tip": "Add a new preference level after the lowest-ranked existing one."
@@ -1110,6 +1130,7 @@
 			},
 			"subtitle": "Settings",
 			"tip": {
+				"webAddress": "Pick the address this venue lives at. It goes in every link anyone sends about the venue \u2014 emails, breadcrumbs, and the snippets in step 6 \u2014 so choose something people will recognize and can read aloud. You can change it later, but the old address is released the moment you do: nothing redirects from it, and every link that used it breaks.",
 				"policies": "This is the most consequential step on the page. Spend real time on it before touching anything below.",
 				"inactive": "Check the inactive message in the settings below, so your community knows you're busy configuring things.",
 				"compensation": "It is critical that you think carefully about the compensation structure for your venue. Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter newcomers from contributring. See [Setting welcome & compensation](#policies) in Step 1 for the balance rules and a worked example.",
@@ -1117,7 +1138,7 @@
 				"doneVisibility": "Done submissions still appear in the submissions list for this many days after completion (and are sorted to the bottom). After that, they're hidden from the list but still accessible by direct link. Set to 0 to hide them as soon as they're done.",
 				"preferenceLevels": "Bidders pick from these labels when bidding on submissions to signal how interested they are. The order matters: the top label is the most preferred. Leave this empty for a plain yes/no bid.",
 				"templates": "Paste these snippets into your reviewing platform's email templates so the system's automated emails carry the right Reciprocal Reviews link. Pick your platform first — the manuscript-id variable in the snippet body and the embedded URL will switch to that platform's syntax. Substitute the **{role}** placeholder yourself; reviewing platforms vary too much in how they expose role names.",
-				"bulkImport": "Have submissions already under review when you turn the venue on? [Bulk import them](/venue/{venueid}/submissions/import) so reviewers can bid and earn tokens from day one. Imports are free; the form will propose a corresponding mint to fund the resulting compensation transactions, which a minter must approve."
+				"bulkImport": "Have submissions already under review when you turn the venue on? [Bulk import them](/venue/{venue}/submissions/import) so reviewers can bid and earn tokens from day one. Imports are free; the form will propose a corresponding mint to fund the resulting compensation transactions, which a minter must approve."
 			},
 			"options": {
 				"platform": {
@@ -1127,15 +1148,15 @@
 			"template": {
 				"payment": {
 					"title": "Author submission payment",
-					"body": "Thanks for submitting to **{venue}**. To complete your submission, please pay for it on Reciprocal Reviews:\n\n{origin}/venue/{venueid}/submissions/new?manuscript={manuscriptVar}"
+					"body": "Thanks for submitting to **{venue}**. To complete your submission, please pay for it on Reciprocal Reviews:\n\n{origin}/venue/{venuepath}/submissions/new?manuscript={manuscriptVar}"
 				},
 				"acknowledgement": {
 					"title": "Assignment acknowledgement (reviewer / AE / meta-reviewer)",
-					"body": "You've been assigned as **{role}** for a submission to **{venue}**. View it on Reciprocal Reviews:\n\n{origin}/venue/{venueid}/submissions?filter={manuscriptVar}"
+					"body": "You've been assigned as **{role}** for a submission to **{venue}**. View it on Reciprocal Reviews:\n\n{origin}/venue/{venuepath}/submissions?filter={manuscriptVar}"
 				},
 				"compensation": {
 					"title": "Compensation request (reviewer / AE / meta-reviewer / EiC)",
-					"body": "You've completed **{role}** work for **{venue}**. Request compensation on Reciprocal Reviews:\n\n{origin}/venue/{venueid}?compensate={manuscriptVar}"
+					"body": "You've completed **{role}** work for **{venue}**. Request compensation on Reciprocal Reviews:\n\n{origin}/venue/{venuepath}?compensate={manuscriptVar}"
 				}
 			}
 		},
@@ -1720,7 +1741,7 @@
 				"administeredBy": "This venue is administered by",
 				"roleOpen": "This role is open to **volunteers**.",
 				"roleInvited": "This role is **invite-only**.",
-				"volunteersCount": "[{count} scholars](/venue/{venueid}/volunteers) have volunteered for this role.",
+				"volunteersCount": "[{count} scholars](/venue/{venue}/volunteers) have volunteered for this role.",
 				"invited": "You've been invited to this role. Accept to start volunteering, or decline to let the venue know you're not available.",
 				"declined": "You declined this role. Would you like to accept it?",
 				"volunteering": "Thanks for volunteering for this role!",
@@ -1870,6 +1891,9 @@
 		"EditVenueAddEditorAlreadyEditor": "Scholar is already an editor",
 		"EditVenueTitle": "Unable to edit the venue title",
 		"EditVenueURL": "Unable to edit the venue URL",
+		"EditVenueSlug": "Unable to set the venue's web address",
+		"VenueAddressTaken": "Another venue already uses that web address. Pick a different one.",
+		"VenueAddressInvalid": "That web address isn't allowed. Use 4 to 40 characters: lowercase letters, numbers, and single hyphens between them, starting with a letter.",
 		"EditVenueInactive": "Unable to edit the inactive message",
 		"EditVenueAnonymousAssignments": "Unable to edit anonymous assignments setting",
 		"EditVenueVetThanks": "Unable to update the thank-you vetting setting",

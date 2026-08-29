@@ -3,6 +3,7 @@ import { login } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
+const VENUE_PATH = SEED.venuePath;
 const CURRENCY_ID = SEED.currency;
 const MINTER_EMAIL = SEED.scholars.r1.email;
 const EDITOR_ID = SEED.scholars.editor.id;
@@ -85,7 +86,7 @@ test('an editor approves a pending venue transfer; status moves to approved and 
 	expect(txnID).toMatch(/^[0-9a-f-]+$/);
 
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/transactions`);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
 	await page.waitForLoadState('networkidle');
 
 	// Find the row for the new proposed transaction. Match the table cell
@@ -136,7 +137,7 @@ test('a gift transaction is visible in venue transactions, scholar history, and 
 	const purpose = `e2e visibility test ${Date.now()}`;
 
 	await login('editor@uni.edu', page, context);
-	await page.goto(`/venue/${VENUE_ID}/transactions`);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
 	await page.waitForLoadState('networkidle');
 
 	await page.getByTestId('venue-gift-card').click();
@@ -182,7 +183,7 @@ test('minter cannot approve a venue→minter transaction (anti-self-dealing UPDA
 	expect(txnID).toMatch(/^[0-9a-f-]+$/);
 
 	await login(MINTER_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/transactions`);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
 
 	// The row is visible (minter can SELECT transactions for their currency)…
 	await expect(page.getByRole('cell', { name: purpose })).toBeVisible();
@@ -231,7 +232,7 @@ test('minter declining a proposed transaction emails the proposer and records th
 	expect(txnID).toMatch(/^[0-9a-f-]+$/);
 
 	await login(MINTER_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/transactions`);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
 	await page.waitForLoadState('networkidle');
 
 	// Open the decline dialog on our row, fill the reason, confirm. Each row

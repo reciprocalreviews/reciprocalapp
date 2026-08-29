@@ -3,6 +3,7 @@ import { login, logout } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
+const VENUE_PATH = SEED.venuePath;
 // r4 (Manny Script) — has a Reviewer volunteer record and is neither author
 // of nor approved-Reviewer on any seeded submission, so they always have
 // biddable papers in the venue's submissions list.
@@ -18,7 +19,7 @@ test('a reviewer can bid on a paper and then see an unbid button', async ({ page
 
 	try {
 		await login(BIDDER_EMAIL, page, context);
-		await page.goto(`/venue/${VENUE_ID}/submissions`);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
 		await page.waitForLoadState('networkidle');
 
 		// No bids placed yet → no unbid buttons.
@@ -74,7 +75,7 @@ test('editor filters submissions by author name, reviewer name, title, and exter
 	);
 
 	await login('editor@uni.edu', page, context);
-	await page.goto(`/venue/${VENUE_ID}/submissions`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions`);
 	await page.waitForLoadState('networkidle');
 
 	const rows = page.locator('tr[data-testid^="submission-"]');

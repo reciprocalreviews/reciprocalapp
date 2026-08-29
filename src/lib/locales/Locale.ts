@@ -690,7 +690,10 @@ export type LocaleText = {
 			title: string;
 			subtitle: string;
 			tip: {
-				/** Frames Step 1 ("Decide policies") as a critical prerequisite. */
+				/** Explains the venue's web address: what it is for, and that changing one
+				 * releases the old address immediately rather than redirecting from it. */
+				webAddress: string;
+				/** Frames the policies step as a critical prerequisite. */
 				policies: string;
 				inactive: string;
 				compensation: string;
@@ -721,7 +724,10 @@ export type LocaleText = {
 				minters: CardText;
 			};
 			header: {
-				/** Step 1: community-policy checklist before configuring anything. */
+				/** The venue's web address — the first step, because every later step's links
+				 * and copy-paste snippets are built from it. */
+				webAddress: string;
+				/** Community-policy checklist before configuring anything. */
 				policies: string;
 				status: string;
 				roles: string;
@@ -743,8 +749,23 @@ export type LocaleText = {
 				logIn: string;
 				adminsOnly: string;
 				noPreferenceLevels: string;
+				/** The venue already has a web address, shown above the field so the warning
+				 * on the change button has something concrete to refer to. Takes `{address}`. */
+				addressCurrent: string;
+				/** The availability lookup is in flight. */
+				addressChecking: string;
+				/** Nobody holds this address. Advisory — the unique index decides. */
+				addressAvailable: string;
+				/** Another venue holds this address. */
+				addressTaken: string;
+				/** Why the Activate checkbox is disabled: a venue needs an address to go live,
+				 * so that every link anyone sends about it is one they can read. */
+				addressRequiredToActivate: string;
 			};
 			field: {
+				/** The venue's web address. `invalid` states the format rule, since the field
+				 * is where someone learns it. */
+				webAddress: TextFieldText & { invalid: string };
 				inactiveMessage: TextFieldText;
 				welcomeTokens: TextFieldText;
 				preferenceLevelLabel: TextFieldText & { invalid: string };
@@ -756,6 +777,13 @@ export type LocaleText = {
 				platform: OptionsText;
 			};
 			button: {
+				/** Claim a web address for a venue that has none. No `warn`: there is nothing
+				 * to lose yet. */
+				setWebAddress: ButtonText;
+				/** Change an address the venue already has. Confirmed, because the old address
+				 * is released the moment this succeeds — nothing reserves it and nothing
+				 * redirects from it, so every link anyone has sent stops working. */
+				changeWebAddress: ConfirmButtonText;
 				addPreferenceLevel: ButtonText;
 				deletePreferenceLevel: ConfirmButtonText;
 				movePreferenceLevelUp: ButtonText;
@@ -796,7 +824,9 @@ export type LocaleText = {
 			/** Email-template snippets editors copy into their reviewing platform
 			 * (#113). Each entry's `body` is interpolated with `{origin}` (the
 			 * environment's own base URL, so a snippet copied from a local or
-			 * staging venue links back to it), `{venue}`, `{venueid}`, and
+			 * staging venue links back to it), `{venue}` (the venue's title),
+			 * `{venuepath}` (the segment the venue is addressed by — its web
+			 * address once it has one, its id until then), and
 			 * `{manuscriptVar}` (the selected platform's submission-id syntax).
 			 *
 			 * `{role}` is deliberately NOT interpolated: an editor pastes these
@@ -1427,6 +1457,14 @@ export type LocaleText = {
 		EditVenueAddEditorAlreadyEditor: string;
 		EditVenueTitle: string;
 		EditVenueURL: string;
+		EditVenueSlug: string;
+		/** The web address someone asked for belongs to another venue. Raised by the unique
+		 * index, which is what actually decides a contested address — the field's own
+		 * availability check can only say the address was free a moment ago. */
+		VenueAddressTaken: string;
+		/** The web address broke the format rule at the database. The field validates the
+		 * same rule, so seeing this means something reached the write unvalidated. */
+		VenueAddressInvalid: string;
 		EditVenueInactive: string;
 		EditVenueAnonymousAssignments: string;
 		EditVenueVetThanks: string;

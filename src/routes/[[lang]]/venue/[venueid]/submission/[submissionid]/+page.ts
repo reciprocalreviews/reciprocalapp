@@ -1,16 +1,20 @@
+import { NO_VENUE_ID } from '$lib/data/venuePath';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { db, scholar } = await parent();
+	// The venue comes from the layout, which is what resolves a web address to a venue; the
+	// URL segment is not an id and must not be used as one.
+	const { db, scholar, venue: resolved } = await parent();
 
-	const venueid = params.venueid;
+	const venueid = resolved?.id ?? NO_VENUE_ID;
 	const submissionid = params.submissionid;
 
 	// Get the submission.
 	const { data: submission } = await db.getSubmission(submissionid);
 
-	// Get the corresponding venue.
-	const { data: venue } = submission === null ? { data: null } : await db.getVenue(venueid);
+	// The venue, but only alongside a submission — a submission that isn't there means
+	// there is nothing on this page to show it in.
+	const venue = submission === null ? null : resolved;
 
 	// Get the authors
 	const { data: authors } =

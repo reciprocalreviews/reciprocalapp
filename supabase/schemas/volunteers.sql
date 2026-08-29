@@ -308,6 +308,7 @@ declare
 	_reply_to text;
 	_name text;
 	_venue_title text;
+	_venue_path text;
 	_role_name text;
 begin
 	-- The venue's top-priority role -- whatever this venue calls it. The name is data, so it
@@ -336,7 +337,13 @@ begin
 	from public.scholars s
 	where s.id = _scholarid;
 
-	select v.title into _venue_title from public.venues v where v.id = _venueid;
+	-- The venue's title for the prose and its path for the link. The path is the venue's web
+	-- address once it has chosen one, and its id until then; both resolve, so a venue that
+	-- has not named itself still gets a working link.
+	select v.title, coalesce(v.slug, v.id::text)
+	into _venue_title, _venue_path
+	from public.venues v
+	where v.id = _venueid;
 	select r.name into _role_name from public.roles r where r.id = _roleid;
 
 	-- Who hears about it: ACTIVE, ACCEPTED holders of that role, with a verified contact
@@ -425,7 +432,7 @@ begin
 			coalesce(nullif(btrim(_role_name), ''), 'volunteer'),
 			coalesce(nullif(btrim(_venue_title), ''), 'a venue'),
 			_scholarid::text,
-			_venueid::text,
+			_venue_path,
 			coalesce(nullif(btrim(_top_role_name), ''), 'top')
 		)
 	);

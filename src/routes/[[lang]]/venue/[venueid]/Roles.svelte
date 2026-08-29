@@ -8,6 +8,7 @@
 		VenueRow,
 		VolunteerRow
 	} from '$data/types';
+	import { venuePath } from '$lib/data/venuePath';
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
@@ -206,7 +207,7 @@
 
 				<Paragraph
 					text={(l) => l.view.roles.paragraph.volunteersCount}
-					inputs={{ count: (roleVolunteers.length ?? 0).toString(), venueid: venue.id }}
+					inputs={{ count: (roleVolunteers.length ?? 0).toString(), venue: venuePath(venue) }}
 				/>
 
 				{#if scholar}

@@ -1,6 +1,7 @@
 <!-- svelte-ignore state_referenced_locally -->
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { venuePath } from '$lib/data/venuePath';
 	import type { SubmissionType, SubmissionTypeID, VenueRow } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
@@ -284,7 +285,7 @@
 				)
 			);
 			if (result) {
-				goto(`/venue/${venue.id}/submissions`);
+				goto(`/venue/${venuePath(venue)}/submissions`);
 			}
 		}}
 	/>

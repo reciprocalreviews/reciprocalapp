@@ -1059,6 +1059,7 @@ export type Database = {
           id: string
           inactive: string | null
           payment_free: boolean
+          slug: string | null
           title: string
           transaction_reminder_frequency_days: number
           transaction_reminder_time: string | null
@@ -1075,6 +1076,7 @@ export type Database = {
           id?: string
           inactive?: string | null
           payment_free?: boolean
+          slug?: string | null
           title?: string
           transaction_reminder_frequency_days?: number
           transaction_reminder_time?: string | null
@@ -1091,6 +1093,7 @@ export type Database = {
           id?: string
           inactive?: string | null
           payment_free?: boolean
+          slug?: string | null
           title?: string
           transaction_reminder_frequency_days?: number
           transaction_reminder_time?: string | null
