@@ -1691,7 +1691,7 @@
 				"rationale": "Rationale"
 			},
 			"tip": {
-				"highestPriority": "This is the highest priority role. Any volunteers for this role are automatically assigned this role for new submissions."
+				"highestPriority": "This is the venue's top priority role. Scholars assigned it act as editors on a submission: they can approve any assignment on it, edit its author list, and mark it done — which is also how they are compensated. Use the arrows to change which role comes first."
 			},
 			"paragraph": {
 				"createRole": "Create a new role.",
@@ -1766,6 +1766,10 @@
 			"cancel": {
 				"tip": "Discard this invalid text",
 				"label": "$delete"
+			},
+			"saving": {
+				"tip": "Saving this edit",
+				"label": "…"
 			}
 		},
 		"header": {

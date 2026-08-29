@@ -3,9 +3,15 @@ import { ORCIDRegex } from './data/ORCID';
 /** Anchored, and excluding whitespace and commas on both sides of the `@`.
  * Anchoring alone is not enough: `^.+@.+\..+$` still matches "Amy Ko <a@b.co>
  * extra", because `.` matches the spaces. Commas are excluded so that a whole
- * list fails here and is only accepted by validEmails, which splits first. */
+ * list fails here and is only accepted by validEmails, which splits first.
+ *
+ * Surrounding whitespace is trimmed first, because everything that consumes an
+ * address already trims it — request_email_verification, VerifyEmail.request(),
+ * validEmails and validEmailsOrORCIDs all do — so a pasted address with a stray
+ * space around it is a valid address, not a mistake to report. Internal
+ * whitespace is still rejected, so the embedded-in-prose cases above still fail. */
 export function validEmail(text: string) {
-	return /^[^\s,@]+@[^\s,@]+\.[^\s,@]+$/.test(text);
+	return /^[^\s,@]+@[^\s,@]+\.[^\s,@]+$/.test(text.trim());
 }
 
 export function validORCID(id: string) {

@@ -1161,6 +1161,27 @@ export type Database = {
         }
         Returns: Json
       }
+      create_role: {
+        Args: { _description?: string; _name: string; _venue: string }
+        Returns: {
+          anonymous_authors: boolean
+          approver: string | null
+          biddable: boolean
+          description: string
+          desired_assignments: number
+          id: string
+          invited: boolean
+          name: string
+          priority: number
+          venueid: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "roles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_submission: {
         Args: {
           _authors: string[]

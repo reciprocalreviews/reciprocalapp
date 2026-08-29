@@ -1196,12 +1196,17 @@ export default class SupabaseCRUD extends CRUD {
 	// Roles
 	// ─────────────────────────────────────────────────────────────────────────
 
+	/** Goes through the RPC rather than a plain insert so the new role gets a priority of
+	 * its own. `roles.priority` defaults to 0, and priority 0 is what the database checks
+	 * when deciding who acts as an editor, so inserting directly made every new role an
+	 * editor role. The RPC runs as the caller, so the venue-admin insert policy still
+	 * applies. */
 	async createRole(id: VenueID, name: string, description: string = ''): Promise<Result<RoleRow>> {
-		const { data, error } = await this.client
-			.from('roles')
-			.insert({ venueid: id, invited: true, name, description })
-			.select()
-			.single();
+		const { data, error } = await this.client.rpc('create_role', {
+			_venue: id,
+			_name: name,
+			_description: description
+		});
 		if (error) return this.error('CreateRole', error);
 		else return { data };
 	}

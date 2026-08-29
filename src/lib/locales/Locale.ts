@@ -1205,6 +1205,9 @@ export type LocaleText = {
 		};
 		roles: {
 			tip: {
+				/** Shown to admins on the first role in priority order. Priority zero is not
+				 * just presentation: it is what the database checks when deciding who may
+				 * approve assignments, edit an author list, and mark a submission done. */
 				highestPriority: string;
 			};
 			feedback: {
@@ -1322,6 +1325,9 @@ export type LocaleText = {
 			save: ButtonText;
 			edit: ButtonText;
 			cancel: ButtonText;
+			/** Shown on the toggle while the edit is being written, so a slow save isn't
+			 * a second of silence. The button is disabled for the duration. */
+			saving: ButtonText;
 		};
 		header: {
 			logout: ButtonText;

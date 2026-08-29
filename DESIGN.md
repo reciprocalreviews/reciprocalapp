@@ -390,7 +390,7 @@ When a venue is **approved** state:
 
 - [x] _`editor`_: Export the list of reviewers as a CSV file for use on other plaforms, including ORCID, name, email, expertise, role, papers cap, and active status.
 - [x] _`editor`_ ([#122](https://github.com/reciprocalreviews/reciprocalapp/issues/122)): Define ordered, custom-labeled preference levels for the venue (e.g. "Preferred" / "If necessary") that bidders pick from when expressing interest. Optional — leaving them empty falls back to a binary bid.
-- [x] _`editor`_: Create roles for the venue.
+- [x] _`editor`_: Create roles for the venue. A new role is added at the **bottom** of the venue's priority order. Order is not only presentation: the first role is the one whose holders act as the venue's editors — able to approve any assignment on a submission, edit its author list, and mark it done — so adding a role must never be a way to hand out that authority by accident. Moving it is a deliberate act, done with the reorder arrows.
 - [x] _`editor`_: Edit the descriptions of roles.
 - [x] _`editor`_: Delete a role, confirming they understand that all volunteers will be removed from the role.
 - [x] _`editor`_ ([#32](https://github.com/reciprocalreviews/reciprocalapp/issues/32)): Invite one or more `Scholar`s by ORCID to a particular role.

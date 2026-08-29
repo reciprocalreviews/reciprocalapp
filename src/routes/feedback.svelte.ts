@@ -55,7 +55,11 @@ export async function handle<T>(
 		if (notified) {
 			for (const note of notified) addFeedback(note.message, 'success');
 		}
-		invalidateAll();
+		// Awaited, so that callers resolve only once the page data reflects the write.
+		// Returning first meant every caller was handed "success" while `data` from the
+		// load functions was still the pre-write value — which is how a saved field could
+		// show its old text for as long as the refetch took, and then flip to the new one.
+		await invalidateAll();
 		if (data) return data;
 		else return true;
 	}

@@ -133,7 +133,7 @@
 					{/if}
 				{/snippet}
 
-				{#if isAdmin && role.priority === 0}
+				{#if isAdmin && index === 0}
 					<Tip>{locale().view.roles.tip.highestPriority}</Tip>
 				{/if}
 

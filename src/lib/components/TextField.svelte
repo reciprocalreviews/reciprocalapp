@@ -21,7 +21,9 @@
 		stretch?: boolean;
 		password?: boolean;
 		view?: HTMLInputElement | HTMLTextAreaElement | undefined;
-		done?: ((() => void) | undefined) | undefined;
+		/** Called on blur (with the blur event, so callers can see where focus went)
+		 * and on Enter (with nothing). */
+		done?: (((event?: FocusEvent) => void) | undefined) | undefined;
 		/** Called on every keystroke with the current text. `done` only fires on
 		 * blur/Enter, which is too late for search-as-you-type. */
 		change?: ((text: string) => void) | undefined;
@@ -45,7 +47,6 @@
 	}: Props = $props();
 
 	let error = $derived(valid ? valid(text) : undefined);
-	let isValid = $derived(error === undefined);
 	let measure = $state<HTMLSpanElement | undefined>(undefined);
 	let width = $state(0);
 	let height = $state(0);
@@ -57,8 +58,36 @@
 	let label = $derived(labels.label);
 	let placeholder = $derived(labels.placeholder);
 
-	/** We keep track of the first focus to avoid showing validation errors until interaction. */
-	let wasFocused = $state(false);
+	/** Whether anyone has typed in this field yet. Validation stays silent until they
+	 * have: a required field that is empty because nobody has filled it in yet isn't a
+	 * mistake, it's a field waiting its turn. */
+	let touched = $state(false);
+
+	/** The last value this field itself produced, so the effect below can tell a
+	 * keystroke from an assignment made somewhere else. `oninput` records the new value
+	 * during the event, before effects flush, so typing never looks external. Plain
+	 * `let` rather than `$state`, so writing it from the effect can't re-trigger it. */
+	let typed = text;
+
+	/** Anything that changes `text` from outside — a form clearing the field after a
+	 * successful submit, `EditableText` re-syncing from its prop — returns the field to
+	 * its untouched state. Without this, a field cleared on submit keeps showing the
+	 * "must not be empty" error it earned while the user was filling it in. */
+	$effect(() => {
+		if (text !== typed) {
+			typed = text;
+			touched = false;
+		}
+	});
+
+	/** Only complain once there's something to complain about that the user did. */
+	let invalid = $derived(error !== undefined && touched);
+
+	function input(value: string) {
+		typed = value;
+		touched = true;
+		change?.(value);
+	}
 
 	let labelView = $state<HTMLLabelElement | undefined>(undefined);
 
@@ -114,32 +143,31 @@
 					{name}
 					disabled={!active}
 					{size}
-					onfocus={() => (wasFocused = true)}
-					onblur={() => {
-						done?.();
+					onblur={(event) => {
+						done?.(event);
 					}}
-					oninput={(event) => change?.(event.currentTarget.value)}
+					oninput={(event) => input(event.currentTarget.value)}
 					style:width={!stretch && size === undefined
 						? width === 0
 							? 'auto'
 							: width + 'px'
 						: undefined}
-					class:invalid={!isValid}
+					class:invalid
 					{placeholder}
 					type={password ? 'password' : 'text'}
 					onkeydown={(event) => (event.key === 'Enter' && done ? edit(event) : undefined)}
 				/>
 			{:else}
 				<textarea
-					class:invalid={!isValid}
+					class:invalid
 					class:active
 					disabled={!active}
 					{placeholder}
 					data-testid={testid}
-					onfocus={() => (wasFocused = true)}
-					onblur={() => {
-						done?.();
+					onblur={(event) => {
+						done?.(event);
 					}}
+					oninput={(event) => input(event.currentTarget.value)}
 					bind:value={text}
 					bind:this={view}
 					cols={size}
@@ -148,7 +176,7 @@
 					onkeydown={(event) =>
 						event.key === 'Enter' && event.metaKey && done ? edit(event) : undefined}></textarea>
 			{/if}
-			{#if error !== undefined && wasFocused}
+			{#if invalid && error !== undefined}
 				<span class="field-error"><Text path={error} /></span>
 			{/if}
 		</div>

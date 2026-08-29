@@ -219,12 +219,17 @@
                 },
                 "save": {
                   "$ref": "#/definitions/ButtonText"
+                },
+                "saving": {
+                  "$ref": "#/definitions/ButtonText",
+                  "description": "Shown on the toggle while the edit is being written, so a slow save isn't a second of silence. The button is disabled for the duration."
                 }
               },
               "required": [
                 "save",
                 "edit",
-                "cancel"
+                "cancel",
+                "saving"
               ],
               "type": "object"
             },
@@ -5869,6 +5874,7 @@
                   "additionalProperties": false,
                   "properties": {
                     "highestPriority": {
+                      "description": "Shown to admins on the first role in priority order. Priority zero is not just presentation: it is what the database checks when deciding who may approve assignments, edit an author list, and mark a submission done.",
                       "type": "string"
                     }
                   },

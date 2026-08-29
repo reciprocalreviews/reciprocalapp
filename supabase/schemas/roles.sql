@@ -35,6 +35,49 @@ add constraint "roles_venueid_fkey" foreign KEY ("venueid") references public.ve
 create index roles_venue_index on public.roles using btree (venueid);
 
 --------------------------------------
+-- Functions
+-- Create a role at the bottom of a venue's priority order.
+--
+-- Priority is not merely presentation. Zero is what public.isPriorityZero(),
+-- public.can_approve_assignment(), the submissions author-list lock and
+-- public.mark_submission_done() all check when deciding who acts as an editor. Because
+-- the column defaults to 0, a plain insert made every role an admin created an editor
+-- role, and left several of them claiming to be the venue's first. Taking max + 1 here
+-- keeps priorities unique within a venue and keeps that authority where an admin put it.
+-- A venue's first role still lands at 0, so proposal approval's default Editor is
+-- unaffected.
+--
+-- security invoker, so the "only admins can create venue roles" policy below remains the
+-- only authorization check. The advisory lock is what makes max + 1 safe: two admins
+-- adding a role to the same venue at once would otherwise both read the same maximum.
+create or replace function public.create_role (
+	_venue uuid,
+	_name text,
+	_description text default ''
+) returns public.roles language plpgsql security invoker
+set
+	"search_path" to '' as $$
+declare
+	_role public.roles;
+begin
+	perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(_venue::text, 0));
+
+	insert into public.roles (venueid, invited, name, description, priority)
+	values (
+		_venue, true, _name, _description,
+		coalesce((select max(priority) + 1 from public.roles where venueid = _venue), 0)
+	)
+	returning * into _role;
+
+	return _role;
+end;
+$$;
+
+alter function public.create_role (uuid, text, text) OWNER to postgres;
+
+grant all on FUNCTION public.create_role (uuid, text, text) to authenticated;
+
+--------------------------------------
 -- Security
 alter table public.roles OWNER to "postgres";
 

@@ -74,6 +74,15 @@ describe('validEmail', () => {
 	test('rejects a whole comma-separated list, which is validEmails’ job', () => {
 		expect(validEmail('a@b.co, c@d.co')).toBe(false);
 	});
+
+	// Every consumer trims before using the address, so surrounding whitespace is
+	// insignificant and reporting it as invalid only blocks a save that would have
+	// succeeded. Internal whitespace is a different matter and still fails, which is
+	// what keeps the embedded-in-prose cases above rejected.
+	test('accepts an address padded with whitespace', () => {
+		expect(validEmail('  amy@example.com  ')).toBe(true);
+		expect(validEmail('\tamy@example.com\n')).toBe(true);
+	});
 });
 
 describe('validEmails', () => {
