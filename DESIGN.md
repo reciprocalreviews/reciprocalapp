@@ -491,7 +491,7 @@ It should should:
 
 - [x] Show the total number of active submissions in the system.
 - [x] _`editor`_: Filter submissions by whether they are active, by author, reviewer, etc.
-- [x] _`editor`_: Manually add a new submission, including all of the transactions, the manuscript ID specific to the venue, the scholar authors of the submission, and how much each author is contributing. (This is to overcome integration failures, or submisions managed outside of normal reviewing platform flows.)
+- [x] _`editor`_: Manually add a new submission, including all of the transactions, the manuscript ID specific to the venue, the scholar authors of the submission, and how much each author is contributing. (This is to overcome integration failures, or submissions managed outside of normal reviewing platform flows.) The editor lists the submission's actual authors, and is not one of them unless they wrote it: the author list is what conflict of interest checks read, so the form starts an editor with an empty author row rather than their own name, and each author is emailed to approve their own charge.
 - [x] _`editor`_: Resolve a specific submission, generating transactions to compensate scholars for their reviewing labor
 - [x] _`editor`_: Submit bulk `Submission`s to the system, allowing more than one at a time
 - [x] _`editor`_: See which submissions are waiting for an editor, flagged in the list beside the review status, with a filter that narrows the list to just those — the editorial round's first question, and the one the list could not previously answer. A submission is flagged until someone holds the venue's top-priority role on it; done submissions never are.

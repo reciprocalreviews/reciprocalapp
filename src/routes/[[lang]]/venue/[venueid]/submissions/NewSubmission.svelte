@@ -54,7 +54,8 @@
 		/** Optional manuscript ID to pre-fill, e.g. from a `?manuscript=` query
 		 * param when an editor's reviewing platform deep-links here. */
 		initialManuscript?: string;
-		/** The submitter's own ORCID, used to list them as the first author. */
+		/** The submitter's own ORCID, used to list them as the first author —
+		 * unless they administer the venue, who start with an empty row. */
 		scholarORCID?: string | null;
 	} = $props();
 
@@ -73,12 +74,30 @@
 	let previous = $state<string | null>(null);
 	let submissionType = $state<SubmissionTypeID>(submissionTypes[0].id);
 	let note = $state('');
-	/** The submitter is listed as the first author, since a submission they are
-	 * not an author of is refused anyway (RR009) and leaving the row blank made
-	 * them type an identifier they may not have memorized. Removable, because a
-	 * venue admin may be filing this on someone else's behalf. */
+	/** Who is signed in, read once at init: the two initialisers below have to
+	 * settle the first author row before `user` is reactive. */
 	// svelte-ignore state_referenced_locally
-	let charges = $state<Charge[]>([{ scholar: scholarORCID ?? '', payment: 0 }]);
+	const initialUser = auth().getUserID();
+	/** Whether the person filling this in administers the venue, decided once at
+	 * init for the pre-filled row below. `isAdmin` is the reactive form. */
+	// svelte-ignore state_referenced_locally
+	const initialAdmin = initialUser !== null && venue.admins.includes(initialUser);
+	/** The submitter is listed as the first author, since for them a submission
+	 * they are not an author of is refused anyway (RR009) and leaving the row
+	 * blank made them type an identifier they may not have memorized. It starts
+	 * resolved, too, rather than making them blur the field to see their own name.
+	 *
+	 * A venue admin is the exception, and gets an empty row: RR009 admits them
+	 * precisely so they can record someone else's submission (DESIGN's manual
+	 * add), so the premise above does not hold for them, and an editor who did
+	 * not notice the prefill would be recorded as a non-paying co-author of a
+	 * paper they did not write — which is what conflict-of-interest checks read
+	 * and what the author-list lock protects. An admin submitting their own
+	 * paper names themselves the same way they name any co-author. */
+	// svelte-ignore state_referenced_locally
+	let charges = $state<Charge[]>([
+		{ scholar: initialAdmin ? '' : (scholarORCID ?? ''), payment: 0 }
+	]);
 
 	/** The selected submission type, whose cost the author pays. */
 	let selectedType = $derived(submissionTypes.find((t) => t.id === submissionType));
@@ -96,15 +115,14 @@
 		return submissionTypes.find((t) => t.revision_of === typeID)?.id;
 	}
 
-	// The pre-filled first row is the authenticated scholar, so it starts
-	// resolved rather than making them blur the field to see their own name.
-	// svelte-ignore state_referenced_locally
-	const initialUser = auth().getUserID();
 	/** Per-row ORCID lookup and name search. One instance per author row; see
 	 * ScholarSearch.svelte.ts for why the behaviour is a class rather than a
 	 * component (the field and its matches live in different table cells). */
 	let searches = $state<ScholarSearch[]>([
-		new ScholarSearch(db, scholarORCID !== null && initialUser !== null ? initialUser : undefined)
+		new ScholarSearch(
+			db,
+			!initialAdmin && scholarORCID !== null && initialUser !== null ? initialUser : undefined
+		)
 	]);
 
 	/** Adopt a searched-for scholar: their ORCID becomes the row's value, and
@@ -137,9 +155,16 @@
 		affordable = undefined;
 	});
 
-	/** True if the authenticated user is not among the found authors */
+	/** Whether the authenticated user administers this venue. */
+	let isAdmin = $derived(user !== null && venue.admins.includes(user));
+
+	/** True if the authenticated user is neither one of the found authors nor an
+	 * admin of this venue — the two callers `create_submission` admits (RR009).
+	 * An admin is exempt because recording a submission for its authors is a
+	 * documented editor power; without the exemption the form dead-ended on the
+	 * one path it exists to serve (#153). */
 	let isNonAuthor = $derived(
-		searches.some((s) => s.id !== undefined) && !searches.some((s) => s.id === user)
+		!isAdmin && searches.some((s) => s.id !== undefined) && !searches.some((s) => s.id === user)
 	);
 
 	function validExternalID(id: string) {
@@ -183,14 +208,17 @@
 	/** Whether the submission can be created. In a payment-free venue there is
 	 * no balance to verify, so the charges are checked against a cost of zero —
 	 * which still rejects a malformed ORCID or the same author listed twice, both
-	 * of which the database now refuses (RR008). */
+	 * of which the database now refuses (RR008). Either way the caller must be an
+	 * author or a venue admin: the balance check gated that before, so it did not
+	 * hold in a payment-free venue, where there is no balance check to reach. */
 	let canSubmit = $derived(
-		venue.payment_free
-			? isntEmpty(title) &&
+		!isNonAuthor &&
+			(venue.payment_free
+				? isntEmpty(title) &&
 					validExternalID(externalID) &&
 					(previousID.length === 0 || validExternalID(previousID)) &&
 					validCharges(charges, 0)
-			: affordable === true && validSubmission(title, externalID, charges, cost)
+				: affordable === true && validSubmission(title, externalID, charges, cost))
 	);
 </script>
 
@@ -284,6 +312,9 @@
 			<h3><Text path={(l) => l.page.newSubmission.header.authors} /></h3>
 			<Note path={(l) => l.page.newSubmission.note.authors} />
 		{/if}
+		{#if isAdmin}
+			<Note path={(l) => l.page.newSubmission.note.onBehalf} />
+		{/if}
 		<Table>
 			{#snippet header()}
 				<th><Text path={(l) => l.page.newSubmission.table.orcid} /></th>
@@ -359,6 +390,8 @@
 
 		{#if duplicateScholars(charges)}
 			<Feedback error text={(l) => l.page.newSubmission.feedback.duplicateScholars}></Feedback>
+		{:else if isNonAuthor}
+			<Feedback error text={(l) => l.page.newSubmission.feedback.onlyAuthors} />
 		{:else if !showPayment}
 			<!-- Payment-free venue: no balance to verify. -->
 		{:else if charges.reduce((sum, charge) => sum + charge.payment, 0) < cost}
@@ -370,8 +403,6 @@
 						(cost - charges.reduce((sum, charge) => sum + charge.payment, 0)).toString()
 					)}
 			/>
-		{:else if isNonAuthor}
-			<Feedback error text={(l) => l.page.newSubmission.feedback.onlyAuthors} />
 		{:else}
 			<Note path={(l) => l.page.newSubmission.note.balance} />
 

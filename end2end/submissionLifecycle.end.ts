@@ -79,6 +79,94 @@ test('editor manually adds a single submission with themselves as the sole autho
 	expect(row).toBe(`1|${EDITOR_ID}`);
 });
 
+test('a venue admin records a submission on another scholar’s behalf', async ({
+	page,
+	context
+}) => {
+	// The sibling test above exercises an editor adding a submission they authored
+	// themselves, which is the case that always worked. This is the one DESIGN
+	// actually describes — an editor recording somebody else's paper — and the form
+	// refused it until #153, even though create_submission has admitted a venue
+	// admin all along (RR009, pinned in supabase/tests/rpc/atomic_crud_rpc.sql).
+	test.setTimeout(120_000);
+
+	const AUTHOR = SEED.scholars.author1;
+	const externalID = `ONBEHALF-${Date.now()}`;
+
+	// The exemption belongs to venue admins, so this proves nothing unless the
+	// editor is one.
+	expect(
+		sql(
+			`select count(*) from public.venues where id = '${VENUE_ID}' and '${EDITOR_ID}' = any(admins);`
+		),
+		'the editor must be a venue admin, or this proves nothing'
+	).toBe('1');
+
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new`);
+	// Keep networkidle here, for the reason the sibling test gives: the form's
+	// bound <select>/inputs must be hydrated before we selectOption/fill.
+	await page.waitForLoadState('networkidle');
+
+	// An admin's first author row starts empty. The prefill exists because a
+	// non-author's submission is refused anyway, which is exactly what stops
+	// being true for an admin — and an unnoticed prefill would file the editor as
+	// a non-paying co-author of a paper they did not write, which is what the
+	// conflict-of-interest checks read.
+	await expect(page.getByTestId('author-orcid-0')).toHaveValue('');
+
+	await page
+		.getByRole('combobox', { name: 'submission type' })
+		.selectOption({ label: 'Research Article' });
+	await page.getByTestId('submission-title').fill('Recorded by the editor');
+	await page.getByTestId('submission-manuscript-id').fill(externalID);
+
+	// Somebody else entirely wrote it, and pays the whole cost (10).
+	await page.getByTestId('author-orcid-0').fill(AUTHOR.orcid);
+	await page.getByTestId('author-orcid-0').blur();
+	await expect(page.getByTestId('scholar-found-0')).toBeVisible();
+	await page.getByTestId('payment-slider-0').fill('10');
+
+	// The dead end: this message used to replace the whole submit path, so there
+	// was no balance check to click and no submit button to reach.
+	await expect(
+		page.locator('text=Only authors of a submission can create a submission.')
+	).toHaveCount(0);
+
+	await page.getByTestId('check-balances').click();
+	await expect(
+		page.locator('text=The authors have sufficient tokens to pay for this submission.')
+	).toBeVisible();
+
+	const submit = page.getByTestId('submit-submission');
+	await expect(submit).toBeEnabled({ timeout: 5_000 });
+	await page.waitForTimeout(200);
+	await submit.click();
+
+	await expect
+		.poll(
+			() => sql(`select count(*) from public.submissions where externalid = '${externalID}';`),
+			{ timeout: 90_000 }
+		)
+		.toBe('1');
+	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 30_000 });
+
+	// The scholar named is the sole author, and the editor is not on the paper.
+	expect(
+		sql(
+			`select cardinality(authors), authors[1] from public.submissions where externalid = '${externalID}';`
+		)
+	).toBe(`1|${AUTHOR.id}`);
+
+	// The charge is the author's to approve, not the editor's: create_submission
+	// settles only the caller's own charge, and the caller here is not paying.
+	expect(
+		sql(
+			`select t.status::text, t.from_scholar from public.transactions t join public.submissions s on t.id = any(s.transactions) where s.externalid = '${externalID}';`
+		)
+	).toBe(`proposed|${AUTHOR.id}`);
+});
+
 test('scholar declares a conflict on a submission and it disappears from their submissions list', async ({
 	page,
 	context

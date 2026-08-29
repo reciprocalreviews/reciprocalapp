@@ -444,7 +444,7 @@
 				"submit": "Submit"
 			},
 			"paragraph": {
-				"intro": "Ready to create a new submission? This form is filled by one of the authors of a submission, to pay for a submission to be reviewed.\n\n**List every co-author who has a Reciprocal Reviews account**, even those not contributing tokens — this lets editors and the platform identify conflicts of interest with potential reviewers. Non-paying co-authors should be listed with a payment of 0; the paying authors split the venue's submission cost between them.\n\nEvery author you list must already have an account, since authors are identified by ORCID. A co-author without one simply can't be listed — leave them off and submit with the rest. They won't be charged, and the platform won't be able to detect conflicts of interest involving them.\n\nAfter filling out this form:\n\n- The submission will be created in the system.\n- Each paying author will need to confirm their payment, and will be emailed about it.\n- Once everyone has paid, the editor will proceed with review."
+				"intro": "Ready to create a new submission? This form is filled by one of the authors of a submission, to pay for a submission to be reviewed — or by an editor of the venue, recording a submission on the authors' behalf.\n\n**List every co-author who has a Reciprocal Reviews account**, even those not contributing tokens — this lets editors and the platform identify conflicts of interest with potential reviewers. Non-paying co-authors should be listed with a payment of 0; the paying authors split the venue's submission cost between them.\n\nEvery author you list must already have an account, since authors are identified by ORCID. A co-author without one simply can't be listed — leave them off and submit with the rest. They won't be charged, and the platform won't be able to detect conflicts of interest involving them.\n\nAfter filling out this form:\n\n- The submission will be created in the system.\n- Each paying author will need to confirm their payment, and will be emailed about it.\n- Once everyone has paid, the editor will proceed with review."
 			},
 			"feedback": {
 				"notLoaded": "Unable to load the venue and/or submission types for this page.",
@@ -475,6 +475,7 @@
 			"note": {
 				"payment": "List every co-author. Set the payment for each, with non-paying co-authors at 0. The total must equal the venue's submission cost.",
 				"authors": "List every co-author who has an account, even those not contributing — this lets editors and the platform identify conflicts of interest with potential reviewers. Co-authors without a Reciprocal Reviews account can't be listed; leave them off.",
+				"onBehalf": "You administer this venue, so you can record a submission on behalf of its authors. List the authors themselves, not yourself — the author list is what conflict of interest checks read. Each paying author will be emailed to approve their charge.",
 				"balance": "Verify the balance to enable submission.",
 				"approve": "Each paying author will need to approve their payment. Non-paying co-authors don't owe anything, so no approval is needed from them.",
 				"earnTokens": "Short on tokens? [Volunteer to review for this venue]({venue}) to earn them — reviewing is how tokens enter the community."

@@ -2374,6 +2374,10 @@
                       "description": "Shown when a balance check fails: how to earn the tokens. {venue} is the venue's URL.",
                       "type": "string"
                     },
+                    "onBehalf": {
+                      "description": "Shown to a venue admin, who may record a submission on behalf of its authors: the author rows are theirs to fill in, not the admin's.",
+                      "type": "string"
+                    },
                     "payment": {
                       "type": "string"
                     }
@@ -2381,6 +2385,7 @@
                   "required": [
                     "payment",
                     "authors",
+                    "onBehalf",
                     "balance",
                     "approve",
                     "earnTokens"

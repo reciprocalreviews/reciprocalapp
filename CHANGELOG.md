@@ -35,6 +35,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - A venue's transactions page no longer shows a loading error when the venue's reserve is empty.
 - **An account whose profile was never created now repairs itself.** Signing in for the first time could leave you with an account but no profile, which every page read as not being signed in at all — your own profile reported that it couldn't load, and nothing you could do fixed it — so the missing profile is now created on your next visit.
 - **A link to a scholar who doesn't exist now says so.** A mistyped or outdated profile address previously reported that the profile couldn't be loaded, which was indistinguishable from the site being broken.
+- **An editor can now add a submission on behalf of scholars.** Filling the new submission form in with someone else's ORCID used to replace the whole submit path with "Only authors of a submission can create a submission," so the only way to record someone else's paper was to list yourself as one of its authors; an editor now starts with an empty author row instead of their own name ([#153](https://github.com/reciprocalreviews/reciprocalapp/issues/153)).
 
 ## 0.5.0 - 2026-08-28
 

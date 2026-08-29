@@ -344,6 +344,9 @@ export type LocaleText = {
 			note: {
 				payment: string;
 				authors: string;
+				/** Shown to a venue admin, who may record a submission on behalf of its
+				 * authors: the author rows are theirs to fill in, not the admin's. */
+				onBehalf: string;
 				balance: string;
 				approve: string;
 				/** Shown when a balance check fails: how to earn the tokens.
