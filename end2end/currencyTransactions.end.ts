@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { login } from '../src/routes/login';
-import { SEED, sql } from './test-utils';
+import { asScholar, SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
 const VENUE_PATH = SEED.venuePath;
 const CURRENCY_ID = SEED.currency;
 const MINTER_EMAIL = SEED.scholars.r1.email;
+const MINTER_ID = SEED.scholars.r1.id;
 const EDITOR_ID = SEED.scholars.editor.id;
 const EDITOR_EMAIL = SEED.scholars.editor.email;
 const RECIPIENT_EMAIL = SEED.scholars.author2.email;
@@ -67,19 +68,27 @@ test('an editor approves a pending venue transfer; status moves to approved and 
 		)
 	);
 
+	const purpose = `e2e approve test ${Date.now()}`;
+
 	// Seed three real tokens into the venue reserve and reference them directly,
 	// so approval is a pure transfer of existing reserve tokens. (Approving a
 	// placeholder-token transfer would force a mint, which is a minter-only
-	// action — and minting into a venue you administer is self-dealing.)
-	const reserveTokenIds = sql(
-		`insert into public.tokens (currency, venue) values ('${CURRENCY_ID}','${VENUE_ID}'),('${CURRENCY_ID}','${VENUE_ID}'),('${CURRENCY_ID}','${VENUE_ID}') returning id;`
+	// action — and minting into a venue you administer is self-dealing.) They are
+	// minted through the RPC as the currency's minter rather than inserted into
+	// public.tokens, so the ledger records where they came from: a raw insert is
+	// an unattributed mint, and unattributed provenance switches off
+	// reconcile_ledger's conservation check entirely (#152). The mint's purpose must
+	// not contain `purpose`: the row assertions below match transaction cells by
+	// substring, and would find two rows.
+	const reserveTokenIds = asScholar(
+		MINTER_ID,
+		`select jsonb_array_elements_text(public.mint_tokens('${CURRENCY_ID}', 3, '${VENUE_ID}', 'e2e reserve top-up ${Date.now()}') -> 'token_ids')`
 	)
 		.split('\n')
 		.map((s) => s.trim())
 		.filter(Boolean);
 	const tokensLiteral = `array[${reserveTokenIds.map((id) => `'${id}'`).join(',')}]::uuid[]`;
 
-	const purpose = `e2e approve test ${Date.now()}`;
 	const txnID = sql(
 		`insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${recipientID}', null, ${tokensLiteral}, '${CURRENCY_ID}', '${purpose}', 'proposed') returning id;`
 	);
@@ -197,9 +206,7 @@ test('minter cannot approve a venue→minter transaction (anti-self-dealing UPDA
 	// The with-check on the RLS policy either raises or silently rejects;
 	// either way the row stays 'proposed'.
 	try {
-		sql(
-			`begin; set local role authenticated; set local request.jwt.claims to '{"sub":"${minterID}","role":"authenticated"}'; update public.transactions set status = 'approved' where id = '${txnID}'; commit;`
-		);
+		asScholar(minterID, `update public.transactions set status = 'approved' where id = '${txnID}'`);
 	} catch {
 		// Expected: RLS with-check raises and the transaction rolls back.
 	}
@@ -284,8 +291,9 @@ test('editor cannot insert an already-approved venue→editor transaction (anti-
 	// case where the editor names themselves as recipient.
 	const purpose = `e2e self-deal insert test ${Date.now()}`;
 	try {
-		sql(
-			`begin; set local role authenticated; set local request.jwt.claims to '{"sub":"${EDITOR_ID}","role":"authenticated"}'; insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${EDITOR_ID}', null, array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[1]), '${CURRENCY_ID}', '${purpose}', 'approved'); commit;`
+		asScholar(
+			EDITOR_ID,
+			`insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${EDITOR_ID}', null, array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[1]), '${CURRENCY_ID}', '${purpose}', 'approved')`
 		);
 	} catch {
 		// Expected: RLS check raises and the transaction rolls back.

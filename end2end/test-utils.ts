@@ -19,6 +19,31 @@ export function sql(statement: string): string {
 }
 
 /**
+ * Run a SQL statement as a particular scholar, and return its output.
+ *
+ * `sql()` connects as `postgres`, which has no session: `auth.uid()` is null.
+ * Every RPC that moves value opens with `if auth.uid() is null then raise
+ * 'Authentication required'`, so none of them can be called from a bare psql
+ * connection. `auth.uid()` reads the `request.jwt.claims` GUC, so setting it
+ * (transaction-locally, alongside the `authenticated` role the grants are written
+ * against) is what lets a fixture call `mint_tokens`, `transfer_tokens`, or
+ * `approve_transaction` the way the app does.
+ *
+ * Use this rather than writing `public.tokens` directly. A trigger logs every
+ * write to that table into `public.token_events`, and a raw insert or delete
+ * produces exactly the unattributed mint or the orphaned burn that
+ * `reconcile_ledger()` exists to find — which is how the e2e suite once left four
+ * pgTAP invariants failing on a clean tree (#152). `end2end/global-teardown.ts`
+ * now fails the run if it happens again.
+ */
+export function asScholar(scholar: string, statement: string): string {
+	const claims = JSON.stringify({ sub: scholar, role: 'authenticated' }).replaceAll("'", "''");
+	return sql(
+		`begin; set local role authenticated; set local request.jwt.claims to '${claims}'; ${statement}; commit;`
+	);
+}
+
+/**
  * Stable identifiers seeded by `supabase/seed.sql`. Referencing these by name
  * (e.g. `SEED.scholars.editor.email`) instead of redeclaring raw UUIDs in every
  * file keeps the suite readable and makes seed changes a single-file edit.

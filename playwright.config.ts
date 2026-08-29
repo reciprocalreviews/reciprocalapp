@@ -6,6 +6,10 @@ const config: PlaywrightTestConfig = {
 	// mutations from previous runs don't break tests (CI gets a fresh DB per run
 	// and skips this — see end2end/global-setup.ts).
 	globalSetup: './end2end/global-setup.ts',
+	// After the suite, assert the token ledger still reconstructs — the check the
+	// pgTAP invariants make one suite later, hoisted to the run that would break it
+	// (see end2end/global-teardown.ts).
+	globalTeardown: './end2end/global-teardown.ts',
 	webServer: {
 		// Sync types, build with vite, start Supabase locally without the services
 		// the suite doesn't use, then run the preview server.
