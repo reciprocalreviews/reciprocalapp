@@ -56,14 +56,20 @@
 		done={() => search.done(query ? query(text) : text)}
 		{testid}
 	/>
-	<ScholarMatches
-		{search}
-		choose={chooseMatch}
-		{showResolved}
-		foundTestid={testid ? `${testid}-found` : undefined}
-		matchTestid={testid ? `${testid}-match` : undefined}
-		noMatchesTestid={testid ? `${testid}-no-matches` : undefined}
-	/>
+	<!-- Wrapped, so this component owns the alignment. Feedback sets its own
+	     `align-self: flex-start`, which would override any `align-items` set on the
+	     row; against this plain span that declaration has no flex parent to act on,
+	     and the wrapper is what gets aligned instead. -->
+	<span class="matches">
+		<ScholarMatches
+			{search}
+			choose={chooseMatch}
+			{showResolved}
+			foundTestid={testid ? `${testid}-found` : undefined}
+			matchTestid={testid ? `${testid}-match` : undefined}
+			noMatchesTestid={testid ? `${testid}-no-matches` : undefined}
+		/>
+	</span>
 </span>
 
 <style>
@@ -71,7 +77,18 @@
 		display: inline-flex;
 		flex-direction: row;
 		flex-wrap: wrap;
-		align-items: baseline;
+		/* `flex-end`, not `baseline`. A TextField is a label stacked above an input,
+		   so its first baseline is the LABEL's — which left the matches and the "no
+		   matches" feedback floating up beside the label instead of beside the field
+		   they describe. Aligning the bottoms puts them level with the input.
+		   Deliberately still a row: stacking them under the field reads well but
+		   makes the field taller, which pushes whatever follows it — the Invite and
+		   Add buttons that sit beside these fields — down the page. */
+		align-items: flex-end;
 		gap: var(--spacing-half);
+	}
+
+	.matches {
+		display: inline-block;
 	}
 </style>
