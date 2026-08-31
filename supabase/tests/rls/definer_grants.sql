@@ -136,8 +136,8 @@ select
 --------------------------------------------------------------------------------
 select
 	ok (
-		not has_function_privilege ('anon', 'public._move_tokens(uuid,uuid,uuid,uuid,uuid,integer,text,boolean)', 'execute')
-		and not has_function_privilege ('authenticated', 'public._move_tokens(uuid,uuid,uuid,uuid,uuid,integer,text,boolean)', 'execute'),
+		not has_function_privilege ('anon', 'public._move_tokens(uuid,uuid,uuid,uuid,uuid,integer,text,boolean,uuid,text)', 'execute')
+		and not has_function_privilege ('authenticated', 'public._move_tokens(uuid,uuid,uuid,uuid,uuid,integer,text,boolean,uuid,text)', 'execute'),
 		'_move_tokens is reachable only by its owner and the service role'
 	);
 
@@ -156,7 +156,7 @@ select
 		join pg_namespace n on n.oid = p.pronamespace
 		where n.nspname = 'public'
 			and p.prokind = 'f'
-			and p.proname in ('tokens_as_of', 'reconcile_ledger', 'replay_audit_log', 'site_origin')
+			and p.proname in ('tokens_as_of', 'reconcile_ledger', 'conservation_violations', 'replay_audit_log', 'site_origin')
 			and (
 				has_function_privilege('anon', p.oid, 'execute')
 				or has_function_privilege('authenticated', p.oid, 'execute')

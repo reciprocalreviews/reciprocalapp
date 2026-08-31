@@ -249,7 +249,14 @@ create or replace function public._move_tokens (
 	_to_venue uuid,
 	_amount integer,
 	_shortfall_message text default 'Insufficient tokens',
-	_mint_shortfall boolean default false
+	_mint_shortfall boolean default false,
+	-- Who to credit the shortfall mint to. A parameter rather than auth.uid():
+	-- transactions.creator is NOT NULL with an FK to scholars, and auth.uid() is
+	-- null for pg_cron, a recovery script, or any service_role path -- which would
+	-- turn "no session" into a constraint violation deep inside a token move.
+	-- Callers that mint already know whose act caused it.
+	_mint_creator uuid default null,
+	_mint_purpose text default null
 ) returns uuid[] language plpgsql security definer
 set
 	search_path=public,
@@ -258,6 +265,9 @@ declare
 	_ids uuid[];
 	_short integer;
 	_moved integer;
+	_minted uuid[];
+	_mint_txn uuid;
+	_caller_txn text;
 begin
 	-- Nothing to move is not an error; several callers compute the amount.
 	if _amount is null or _amount <= 0 then
@@ -308,14 +318,56 @@ begin
 	-- held" cover the difference by minting into the source venue. Rows this
 	-- transaction just inserted are invisible to everyone else, so they need no
 	-- lock and cannot be contended.
+	--
+	-- Creating a token CREDITS the reserve, and a credit with no transaction
+	-- behind it is exactly what reconcile_ledger's conservation check reports:
+	-- the venue's `expected` balance stays short by every token ever minted here,
+	-- permanently, because the caller only ever records the debit that follows.
+	-- Attributing the mint through app.txn is NOT the same thing -- that says
+	-- which transaction TOUCHED the token, not that anybody was CREDITED for its
+	-- creation. The two were conflated until 2026-08-30, when the nightly check
+	-- reported a venue whose own history no longer added up to its reserve.
+	-- So mint the way mint_tokens does: id first, attribute, insert, record.
+	--
+	-- No minter check, deliberately. _move_tokens performs no authorization of
+	-- its own -- that is its contract, and the one definer_grants.sql is built
+	-- around -- and the welcome grant settles immediately precisely because the
+	-- amount is standing venue policy rather than a decision someone makes.
 	_short := _amount - cardinality(_ids);
 	if _short > 0 and _mint_shortfall and _from_venue is not null then
+		if _mint_creator is null then
+			raise exception
+				'_move_tokens cannot mint a shortfall with nobody to credit the mint to';
+		end if;
+
+		-- The MINT is its own transaction; the move below is still the caller's.
+		-- Saved and restored rather than cleared, so the UPDATE at the end of this
+		-- function still files under the transfer that asked for it. coalesce,
+		-- because current_setting returns NULL when the GUC was never set, and
+		-- set_config(NULL) resets the setting rather than blanking it.
+		_caller_txn := coalesce(current_setting('app.txn', true), '');
+		_mint_txn := gen_random_uuid();
+		perform set_config('app.txn', _mint_txn::text, true);
+
 		with inserted as (
 			insert into public.tokens (currency, venue, scholar)
 			select _currency, _from_venue, null from generate_series(1, _short)
 			returning id
 		)
-		select _ids || array_agg(id) into _ids from inserted;
+		select array_agg(id) into _minted from inserted;
+
+		insert into public.transactions (
+			id, creator, from_scholar, from_venue, to_scholar, to_venue,
+			tokens, currency, purpose, status
+		) values (
+			_mint_txn, _mint_creator, null, null, null, _from_venue,
+			_minted, _currency,
+			coalesce(_mint_purpose, 'Minted into the reserve'), 'approved'
+		);
+
+		perform set_config('app.txn', _caller_txn, true);
+
+		_ids := _ids || _minted;
 		_short := 0;
 	end if;
 
@@ -352,7 +404,9 @@ alter function public._move_tokens (
 	uuid,
 	integer,
 	text,
-	boolean
+	boolean,
+	uuid,
+	text
 ) OWNER to "postgres";
 
 -- A step of the RPCs above, not an entry point: it moves value with no
@@ -367,7 +421,9 @@ execute on function public._move_tokens (
 	uuid,
 	integer,
 	text,
-	boolean
+	boolean,
+	uuid,
+	text
 )
 from
 	public,

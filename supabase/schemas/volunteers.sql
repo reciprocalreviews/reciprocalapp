@@ -245,9 +245,16 @@ begin
 	-- had already locked, so a reserve that looked sufficient could still come up
 	-- short. Taking first and minting the remainder is exact under concurrency,
 	-- and drops a count(*) over the whole reserve from the volunteering path.
+	--
+	-- The last two arguments are what makes that mint accountable: _move_tokens
+	-- records it as its own approved transaction crediting the reserve, so the
+	-- venue's transactions still add up to the tokens it holds. Until 2026-08-30
+	-- they did not, and reconcile_ledger's conservation check is what said so.
+	-- _welcomer is the same person the transfer below names.
 	_token_ids := public._move_tokens(
 		_venue.currency, null, _venue.id, _scholar, null,
-		_venue.welcome_amount, 'Insufficient tokens for the welcome grant', true
+		_venue.welcome_amount, 'Insufficient tokens for the welcome grant', true,
+		_welcomer, 'Minted to welcome a new volunteer'
 	);
 
 	-- Record the settled grant as one approved venue->scholar transaction.
