@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.2 - 2026-08-30
+
+### Fixed
+
+- **A venue's ledger now accounts for the tokens its welcome grants create.** When a newcomer's welcome grant was larger than the venue's reserve, the platform minted the difference and passed it straight on without recording where it came from, so the venue's transaction history quietly stopped adding up to its balance. Minting is now recorded as its own entry crediting the reserve, and the venues already affected have had the missing entries added.
+
 ## 0.5.1 - 2026-08-28
 
 ### Added

@@ -60,6 +60,104 @@ select
 	on table public.reconciliations to service_role;
 
 --------------------------------------
+-- Conservation, on its own, so it can be ASKED without answering everything else.
+--
+-- Two reasons this is a function rather than lines inside reconcile_ledger.
+--
+-- Triage. reconcile_ledger WRITES -- a reconciliations row, and steward mail when
+-- it fails -- so the obvious way to look at a failing economy appends to the
+-- record of it and sends another email to the people already reading the first.
+-- This one only reads.
+--
+-- Testing. supabase/seed.sql inserts tokens directly, so every development and CI
+-- database permanently has unattributed_mints > 0 and check 6 below SKIPS. The
+-- invariant therefore ran nowhere but production until 2026-08-30, when it found
+-- shortfall mints that no transaction credited -- which is exactly the class of
+-- bug it exists to catch, and which had been drifting a venue's reserve since
+-- launch. Scoped to a single currency it can be asserted against a clean fixture
+-- on a dirty database, which is what supabase/tests/invariants/conservation.sql
+-- does. An invariant nothing exercises is a comment.
+--
+-- Every column reference below is table-qualified and the currency column is
+-- carried as `cur`: a RETURNS TABLE column name is in scope throughout the body of
+-- a SQL function, so a bare `currency` would be ambiguous against the out
+-- parameter and fail at creation.
+create or replace function public.conservation_violations (_currency uuid default null) returns table (
+	kind text,
+	holder uuid,
+	currency uuid,
+	expected bigint,
+	actual bigint
+) language sql stable security definer
+set
+	search_path='' as $$
+	with moved as (
+		select x.to_venue as holder, 'venue'::text as kind, x.currency as cur,
+			sum(cardinality(x.tokens)) as n
+			from public.transactions x
+			where x.status = 'approved' and x.to_venue is not null
+				and (_currency is null or x.currency = _currency)
+			group by 1, 3
+		union all
+		select x.from_venue, 'venue'::text, x.currency, -sum(cardinality(x.tokens))
+			from public.transactions x
+			where x.status = 'approved' and x.from_venue is not null
+				and (_currency is null or x.currency = _currency)
+			group by 1, 3
+		union all
+		select x.to_scholar, 'scholar'::text, x.currency, sum(cardinality(x.tokens))
+			from public.transactions x
+			where x.status = 'approved' and x.to_scholar is not null
+				and (_currency is null or x.currency = _currency)
+			group by 1, 3
+		union all
+		select x.from_scholar, 'scholar'::text, x.currency, -sum(cardinality(x.tokens))
+			from public.transactions x
+			where x.status = 'approved' and x.from_scholar is not null
+				and (_currency is null or x.currency = _currency)
+			group by 1, 3
+	),
+	expected as (
+		select m.holder, m.kind, m.cur, sum(m.n) as expected from moved m group by 1, 2, 3
+	),
+	actual as (
+		select tk.venue as holder, 'venue'::text as kind, tk.currency as cur, count(*) as actual
+			from public.tokens tk
+			where tk.venue is not null and (_currency is null or tk.currency = _currency)
+			group by 1, 3
+		union all
+		select tk.scholar, 'scholar'::text, tk.currency, count(*)
+			from public.tokens tk
+			where tk.scholar is not null and (_currency is null or tk.currency = _currency)
+			group by 1, 3
+	)
+	select
+		coalesce(e.kind, a.kind),
+		coalesce(e.holder, a.holder),
+		coalesce(e.cur, a.cur),
+		coalesce(e.expected, 0)::bigint,
+		coalesce(a.actual, 0)::bigint
+	from expected e
+	full outer join actual a
+		on a.holder = e.holder and a.kind = e.kind and a.cur = e.cur
+	where coalesce(e.expected, 0) <> coalesce(a.actual, 0);
+$$;
+
+alter function public.conservation_violations (uuid) OWNER to "postgres";
+
+-- Same audience as reconcile_ledger: this describes the integrity of the whole
+-- economy, and scoped to a currency it still reports every holder's balance in it.
+revoke
+execute on function public.conservation_violations (uuid)
+from
+	public,
+	anon,
+	authenticated;
+
+grant
+execute on function public.conservation_violations (uuid) to service_role;
+
+--------------------------------------
 -- _since bounds the three checks that scan the ENTIRE token history -- replay,
 -- chain and dangling refs -- to events and transactions at or after that moment.
 -- Null means everything, which is what a deliberate investigation wants; the
@@ -182,39 +280,9 @@ begin
 	-- transaction to account for them, so this would report drift that check 1 has
 	-- already explained. Skipped rather than reported as a false violation.
 	if _unattributed = 0 and _unattributed_mints = 0 then
-		with moved as (
-			select to_venue as holder, 'venue' as kind, currency, sum(cardinality(tokens)) as n
-				from public.transactions where status = 'approved' and to_venue is not null group by 1, 3
-			union all
-			select from_venue, 'venue', currency, -sum(cardinality(tokens))
-				from public.transactions where status = 'approved' and from_venue is not null group by 1, 3
-			union all
-			select to_scholar, 'scholar', currency, sum(cardinality(tokens))
-				from public.transactions where status = 'approved' and to_scholar is not null group by 1, 3
-			union all
-			select from_scholar, 'scholar', currency, -sum(cardinality(tokens))
-				from public.transactions where status = 'approved' and from_scholar is not null group by 1, 3
-		),
-		expected as (select holder, kind, currency, sum(n) as expected from moved group by 1, 2, 3),
-		actual as (
-			select venue as holder, 'venue' as kind, currency, count(*) as actual
-				from public.tokens where venue is not null group by 1, 3
-			union all
-			select scholar, 'scholar', currency, count(*)
-				from public.tokens where scholar is not null group by 1, 3
-		)
-		select coalesce(jsonb_agg(jsonb_build_object(
-			'kind', coalesce(e.kind, a.kind),
-			'holder', coalesce(e.holder, a.holder),
-			'currency', coalesce(e.currency, a.currency),
-			'expected', coalesce(e.expected, 0),
-			'actual', coalesce(a.actual, 0)
-		)), '[]'::jsonb), count(*)
+		select coalesce(jsonb_agg(to_jsonb(v)), '[]'::jsonb), count(*)
 		into _conservation, _conservation_n
-		from expected e
-		full outer join actual a
-			on a.holder = e.holder and a.kind = e.kind and a.currency = e.currency
-		where coalesce(e.expected, 0) <> coalesce(a.actual, 0);
+		from public.conservation_violations() v;
 	else
 		_conservation := to_jsonb('skipped: unattributed token provenance present'::text);
 	end if;

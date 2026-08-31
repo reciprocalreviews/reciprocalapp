@@ -28,7 +28,7 @@
 begin;
 
 \ir ../_helpers/helpers.sql.inc
-select plan(15);
+select plan(16);
 
 --------------------------------------------------------------------------------
 -- Fixtures: one currency, one venue reserve, two scholars to pay.
@@ -149,13 +149,27 @@ select is(pg_temp.held_by_venue(), 3::bigint, 'the refused draw moved nothing');
 select is(
 	cardinality(public._move_tokens(
 		pg_temp.id('currency'), null, pg_temp.id('venue'), pg_temp.id('bob'), null,
-		5, 'short', true
+		5, 'short', true, pg_temp.id('minter'), 'covering the shortfall'
 	)),
 	5,
 	'_mint_shortfall grants the full amount from a reserve holding only 3'
 );
 
 select is(pg_temp.held_by_scholar('bob'), 30::bigint, 'bob received all 5, three drawn and two minted');
+
+-- The two it minted have to be CREDITED to the reserve, not merely attributed to
+-- the transfer that carried them out. Skipping this is what left a venue holding
+-- tokens its own history did not account for until 2026-08-30; conservation is
+-- asserted end to end in supabase/tests/invariants/conservation.sql, which needs
+-- a fixture whose provenance is clean, unlike this file's directly-seeded reserve.
+select is(
+	(select count(*) from public.transactions
+		where status = 'approved' and from_scholar is null and from_venue is null
+			and to_venue = pg_temp.id('venue') and currency = pg_temp.id('currency')
+			and amount = 2),
+	1::bigint,
+	'the shortfall mint is recorded as an approved mint transaction crediting the reserve'
+);
 
 --------------------------------------------------------------------------------
 -- Spending one's own balance works in the other direction too.
@@ -174,7 +188,7 @@ select lives_ok(
 -- asserted rather than assumed.
 --------------------------------------------------------------------------------
 select matches(
-	pg_get_functiondef('public._move_tokens(uuid,uuid,uuid,uuid,uuid,integer,text,boolean)'::regprocedure),
+	pg_get_functiondef('public._move_tokens(uuid,uuid,uuid,uuid,uuid,integer,text,boolean,uuid,text)'::regprocedure),
 	'for update skip locked',
 	'_move_tokens still takes its rows with FOR UPDATE SKIP LOCKED'
 );

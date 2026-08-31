@@ -376,6 +376,21 @@ foreign key to `scholars`, so it stays valid even against a restore predating th
 accounts it names, and re-running it is harmless: `forget_scholar` only ever
 removes.
 
+For the same reason, repair the shortfall mints again. A backup predating
+[20260902010000](supabase/migrations/20260902010000_backfill_shortfall_mints.sql)
+brings back a ledger in which tokens were minted into venue reserves with no
+transaction crediting them, and restoring does **not** re-run the migration:
+
+```sh
+DB_URL=... ./supabase/dr/psql.sh -c "select public._backfill_shortfall_mints();"
+DB_URL=... ./supabase/dr/psql.sh -c "select * from public.conservation_violations();"
+```
+
+Both are idempotent and both read as assertions: the first returns 0 when there
+was nothing to repair, and the second returns no rows when the restored economy
+adds up. The manifest already checks that the row counts came back; this checks
+that they still _mean_ something.
+
 ### Why reminders get suppressed
 
 Reminder de-duplication is stamped in the data — `scholars.status_reminder_time`
@@ -396,9 +411,51 @@ duplicate mail to every scholar is not.
 | 5   | Accidental cascade delete of a scholar  | Re-create the `auth.users` row with the same uuid; the FKs and `on_auth_user_created` re-link. `token_events` is FK-free by design, so the token history was never lost.                |
 | 6   | Balances look wrong after a deploy      | **No restore.** Diff `tokens` against `tokens_as_of('<before the deploy>')` and repair only the difference. This keeps every legitimate transaction that happened since.                |
 | 7   | A scholar's data must stay deleted      | `public.erasures`, re-applied at step 8 of every restore.                                                                                                                               |
+| 8   | A `ReconciliationFailed` email arrives  | **No restore.** Read the newest `public.reconciliations` row, which names which checks failed and for whom, then follow the runbook below.                                              |
 
 Scenario 6 is the common one in practice, and the only one that costs nothing:
 it is a query and a targeted update, not a recovery.
+
+### Responding to a ReconciliationFailed email
+
+The email is a **summary**; `public.reconciliations` is the evidence. The mail
+names only which checks were non-zero and by how many holders — never which
+holders, and never by how much.
+
+**Two emails in one day is usually one incident.** The nightly bounded run (22:15
+UTC) and the weekly unbounded one (03:45 Sunday) compute conservation
+identically, because `_since` bounds checks 2, 3 and 5 and never check 6. Two
+mails naming the same count are the same violation seen twice, not an escalation.
+
+**Do not run `reconcile_ledger()` to look.** It appends a `reconciliations` row
+and mails the stewards again. Read the last run instead:
+
+```sh
+DB_URL=... ./supabase/dr/psql.sh -c "
+select r.ran_at, r.result ->> 'window' as window,
+       v ->> 'kind' as kind, v ->> 'holder' as holder, v ->> 'currency' as currency,
+       (v ->> 'expected')::bigint as expected, (v ->> 'actual')::bigint as actual
+from public.reconciliations r
+cross join lateral jsonb_array_elements(r.result -> 'invariants' -> 'conservation_violations') v
+where jsonb_typeof(r.result -> 'invariants' -> 'conservation_violations') = 'array'
+order by r.ran_at desc limit 10;"
+```
+
+The `jsonb_typeof` guard is load-bearing: `conservation_violations` is a _string_
+when the check was skipped, and `jsonb_array_elements` on a string errors.
+
+Then, by check:
+
+| Reported                   | First move                                                                                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `conservation violations`  | `select * from public.conservation_violations();` — reads without writing a row or sending mail. Names every drifted holder, currency and amount. |
+| `unattributed moves`       | The `tokens_as_of()` diff in scenario 6. Something moved value without a transaction.                                                             |
+| `replay mismatches`        | Same diff. Either a write escaped the logging trigger, or the log was altered.                                                                    |
+| `accounts with no scholar` | `ensure_scholar` repairs on the person's next load; check the `on_auth_user_created` trigger still exists.                                        |
+
+Only once the repair is done, run `select public.reconcile_ledger();` **once,
+deliberately**, to confirm the alarm clears — and check no new
+`ReconciliationFailed` row appeared in `public.emails`.
 
 ## Drills
 

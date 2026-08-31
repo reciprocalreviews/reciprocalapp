@@ -1170,12 +1170,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _backfill_shortfall_mints: { Args: never; Returns: number }
       _move_tokens: {
         Args: {
           _amount: number
           _currency: string
           _from_scholar: string
           _from_venue: string
+          _mint_creator?: string
+          _mint_purpose?: string
           _mint_shortfall?: boolean
           _shortfall_message?: string
           _to_scholar: string
@@ -1233,6 +1236,16 @@ export type Database = {
           _payment_purpose_template: string
         }
         Returns: Json
+      }
+      conservation_violations: {
+        Args: { _currency?: string }
+        Returns: {
+          actual: number
+          currency: string
+          expected: number
+          holder: string
+          kind: string
+        }[]
       }
       create_role: {
         Args: { _description?: string; _name: string; _venue: string }

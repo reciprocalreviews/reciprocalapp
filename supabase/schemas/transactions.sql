@@ -692,6 +692,8 @@ declare
 	_null_count integer;
 	_needed integer;
 	_token_ids uuid[];
+	_mint_txn uuid;
+	_minted uuid[];
 begin
 	-- Identify and require an authenticated caller.
 	_caller := (select auth.uid());
@@ -709,10 +711,11 @@ begin
 		raise exception 'Transaction is not proposed' using errcode = 'RR001';
 	end if;
 
-	-- Every token write below — the pure mint, the shortfall mint, and the
-	-- transfer — belongs to this one transaction, so attribute once here. Cleared
-	-- before each return so a later write in the same database transaction cannot
-	-- inherit it.
+	-- The pure mint and the transfer below belong to this one transaction, so
+	-- attribute once here. Cleared before each return so a later write in the same
+	-- database transaction cannot inherit it. The shortfall mint in Branch B is the
+	-- exception: it is its own transaction and sets app.txn to its own id, then
+	-- restores this one for the move that follows.
 	perform set_config('app.txn', _transaction_id::text, true);
 
 	-- Collapse the from/to scholar-or-venue pairs into single endpoints; every
@@ -789,12 +792,46 @@ begin
 
 	-- If the venue source is short real tokens, mint the placeholders into its
 	-- reserve first. Minting requires a minter (tokens INSERT policy).
+	--
+	-- Recorded as its own approved mint transaction crediting the reserve, for the
+	-- reason _move_tokens now gives: the transfer below records only the debit, so
+	-- minting without a counter-entry leaves the venue permanently holding more
+	-- than its own history accounts for. This drifted even when the reserve was
+	-- NOT short, because the mint is sized by _null_count -- the placeholders the
+	-- proposal carried -- rather than by whatever the reserve turned out to lack.
+	--
+	-- NOT delegated to _move_tokens(_mint_shortfall => true), which looks like the
+	-- DRY move and is a security regression: the isminter gate and the amount are
+	-- both pinned to _null_count here, whereas _move_tokens would size the mint by
+	-- the actual shortfall at approval time. A reserve drained between proposal and
+	-- approval would then turn a case that correctly raises RR003 into one minter
+	-- approval authorizing an unbounded mint. Two mint sites, both correct.
 	if _null_count > 0 and _txn.from_venue is not null then
 		if not public.isminter(_caller, _txn.currency) then
 			raise exception 'Only currency minters can mint the tokens this transaction requires';
 		end if;
-		insert into public.tokens (currency, venue, scholar)
-		select _txn.currency, _txn.from_venue, null from generate_series(1, _null_count);
+
+		_mint_txn := gen_random_uuid();
+		perform set_config('app.txn', _mint_txn::text, true);
+
+		with inserted as (
+			insert into public.tokens (currency, venue, scholar)
+			select _txn.currency, _txn.from_venue, null from generate_series(1, _null_count)
+			returning id
+		)
+		select array_agg(id) into _minted from inserted;
+
+		insert into public.transactions (
+			id, creator, from_scholar, from_venue, to_scholar, to_venue,
+			tokens, currency, purpose, status
+		) values (
+			_mint_txn, _caller, null, null, null, _txn.from_venue,
+			_minted, _txn.currency,
+			'Minted to complete an approved transfer', 'approved'
+		);
+
+		-- Back to the transaction being approved: the move below is its movement.
+		perform set_config('app.txn', _transaction_id::text, true);
 	end if;
 
 	-- Take as many of the source's tokens as the transaction calls for, under
@@ -822,6 +859,109 @@ from
 
 grant
 execute on function public.approve_transaction (uuid) to authenticated;
+
+--------------------------------------
+-- Repairing the mints that were never recorded
+--
+-- Before 20260902000000, the two shortfall-mint paths created tokens in a venue's
+-- reserve and recorded only the transfer that carried them out, so those venues
+-- hold tokens their own history does not account for. This writes the missing
+-- credit, and nothing else.
+--
+-- The evidence is in token_events and is unambiguous: a mint event whose txn is a
+-- TRANSFER rather than a mint is exactly a shortfall mint. mint_tokens and
+-- approve_transaction's Branch A both point their mint events at a transaction
+-- with no source at all, so there are no false positives.
+--
+-- A function rather than a bare `do` block in the migration, because a restore
+-- from a backup predating the repair brings the drift back and will NOT re-run the
+-- migration -- RECOVERY.md can then simply call this, with no second copy of the
+-- SQL to drift out of step. Underscore-prefixed, so definer_grants.sql's
+-- owner-only assertion already covers it.
+create or replace function public._backfill_shortfall_mints () returns integer language plpgsql security definer
+set
+	search_path=public,
+	pg_temp as $function$
+declare
+	_bad integer;
+	_n integer;
+begin
+	-- Refuse rather than guess. A mint that landed on a scholar, or one tied to a
+	-- transfer that was never approved, is a shape this repair has no evidence for;
+	-- and backfilling a token that is gone or has changed currency would trade a
+	-- conservation violation for a dangling_token_refs one, which is not a repair.
+	select count(*) into _bad
+	from public.token_events e
+	join public.transactions x on x.id = e.txn
+	left join public.tokens t on t.id = e.token
+	where e.op = 'mint'
+		and (x.from_scholar is not null or x.from_venue is not null)
+		and (
+			e.venue is null
+			or x.status <> 'approved'
+			or t.id is null
+			or t.currency <> e.currency
+		);
+	if _bad > 0 then
+		raise exception
+			'% shortfall mint(s) are not in the shape this repair understands; investigate before backfilling', _bad;
+	end if;
+
+	-- One approved mint transaction per (transfer, reserve), crediting the reserve
+	-- with the tokens that were minted into it.
+	--
+	-- created_at is deliberately NOT backdated. These rows are being written today
+	-- and transactions.seq says so regardless, so a backdated created_at would only
+	-- make the two disagree -- and a definite order the platform assigns is exactly
+	-- what seq is for. The original date goes in the purpose instead, where it is
+	-- honest and readable. Recording a missing entry is not the same as inventing
+	-- one that was there all along.
+	--
+	-- creator is the creator of the transfer that caused the mint: already known to
+	-- satisfy the FK, and the person accountable for the act. NOT token_events.actor,
+	-- which has no FK and is nulled by erasure, so it can name a row that is gone.
+	with shortfall as (
+		select e.txn as transfer_txn, e.venue as reserve, e.currency as cur,
+			x.creator as creator, x.purpose as purpose, x.created_at as created_at,
+			array_agg(e.token order by e.seq) as tokens
+		from public.token_events e
+		join public.transactions x on x.id = e.txn
+		where e.op = 'mint'
+			and (x.from_scholar is not null or x.from_venue is not null)
+		group by 1, 2, 3, 4, 5, 6
+	),
+	written as (
+		insert into public.transactions (
+			id, creator, from_scholar, from_venue, to_scholar, to_venue,
+			tokens, currency, purpose, status
+		)
+		select
+			-- Deterministic, so a second run is a no-op rather than a second credit.
+			md5('shortfall-mint-backfill:' || s.transfer_txn::text || ':' || s.reserve::text)::uuid,
+			s.creator, null, null, null, s.reserve,
+			s.tokens, s.cur,
+			format('Minted %s to cover %s (recorded retroactively)',
+				to_char(s.created_at at time zone 'utc', 'YYYY-MM-DD'), s.purpose),
+			'approved'
+		from shortfall s
+		on conflict (id) do nothing
+		returning 1
+	)
+	select count(*) into _n from written;
+
+	raise notice 'backfilled % shortfall mint transaction(s)', _n;
+	return _n;
+end;
+$function$;
+
+alter function public._backfill_shortfall_mints () OWNER to "postgres";
+
+revoke
+execute on function public._backfill_shortfall_mints ()
+from
+	public,
+	anon,
+	authenticated;
 
 alter publication supabase_realtime
 add table transactions;
