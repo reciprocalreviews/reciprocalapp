@@ -33,12 +33,48 @@
 
 		%sveltekit.head%
 
+		<!-- The two faces that always load: the body face, and the latin subset of the
+		     heading face. Both are discovered only after the inline CSS below parses, so
+		     preloading starts them a round trip earlier. `crossorigin` is required even
+		     though these are same-origin — fonts are fetched in CORS mode, and without it
+		     the preload is discarded and the file fetched twice. The italic Josefin and
+		     the other two Quicksand subsets are conditional, so they are not preloaded. -->
+		<link
+			rel="preload"
+			as="font"
+			type="font/woff2"
+			href="%sveltekit.assets%/fonts/Josefin/JosefinSansVariable.woff2"
+			crossorigin
+		/>
+		<link
+			rel="preload"
+			as="font"
+			type="font/woff2"
+			href="%sveltekit.assets%/fonts/Quicksand/Quicksand500-3.woff2"
+			crossorigin
+		/>
+
+		<!-- Noto Emoji (in the body stack below) and Noto Sans Mono (for `code`) are the
+		     only faces not self-hosted, and this was the page's one render-blocking
+		     third-party resource: nothing painted until DNS, TLS, and the fetch against
+		     fonts.googleapis.com all completed. `media="print"` makes it non-blocking, and
+		     the onload promotes it once it has arrived. The URL already asks for
+		     `display=swap`, so text renders in the fallback and swaps, exactly as the
+		     self-hosted faces do. -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
 			href="https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300..700&family=Noto+Sans+Mono:wght@100..900&display=swap"
 			rel="stylesheet"
+			media="print"
+			onload="this.media = 'all'"
 		/>
+		<noscript>
+			<link
+				href="https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300..700&family=Noto+Sans+Mono:wght@100..900&display=swap"
+				rel="stylesheet"
+			/>
+		</noscript>
 
 		<style global>
 			/* vietnamese */

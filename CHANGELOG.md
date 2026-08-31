@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.3 - 2026-08-31
+
+### Fixed
+
+- **Pages now load faster**, the home page most of all. Arriving at the home page while already signed in briefly shows **Log in** in the header before your profile and token balance appear.
+
 ## 0.5.2 - 2026-08-30
 
 ### Fixed

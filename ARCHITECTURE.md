@@ -49,6 +49,8 @@ Supabase Postgres (RLS-enforced)
   └──► (writes to `emails` table) ──► resend / remind Edge Functions ──► Resend API
 ```
 
+The Vercel function is pinned to **`sfo1`** ([svelte.config.js](svelte.config.js)`#adapter`), because the Supabase project is in **AWS `us-west-1`**. They are a pair: the function defaulted to `iad1`, which made every server-side query a cross-country round trip of roughly 130ms, and a load that runs two of them serially paid it twice. Moving either side without the other reintroduces that. `regions` belongs in the adapter options rather than [vercel.json](vercel.json) — the adapter writes it into the function's `.vc-config.json`, which is what the Build Output API actually reads.
+
 Reads are gated by Postgres row-level security, so the database is the last line of defense regardless of what the client requests. Writes that should produce email enqueue rows in the `emails` table; an Edge Function consumes them and posts to Resend in production (or logs to the console in local dev).
 
 ## Source tree
@@ -341,12 +343,16 @@ Localization is type-driven so the schema cannot drift from the strings:
 3. `npm run locale-validate` runs `ajv` against the per-language JSON files.
 4. `npm run locale` does both. Run after any change to `Locale.ts`.
 
-The English locale file lives at [static/locales/en.json](static/locales/en.json). It is loaded server-side in the root layout and exposed via `setLocaleContext()`. Components consume strings through [src/lib/locales/Text.svelte](src/lib/locales/Text.svelte) and locale-typed prop functions:
+The English locale file lives at [static/locales/en.json](static/locales/en.json). The root [+layout.ts](src/routes/+layout.ts) imports it through the `$locales` alias — a plain static import, so it is part of the bundle on both sides — and exposes it via `setLocaleContext()`. Components consume strings through [src/lib/locales/Text.svelte](src/lib/locales/Text.svelte) and locale-typed prop functions:
 
 ```svelte
 <Text path={(l) => l.page.login.buttons.login} />
 <TextField label={(l) => l.page.login.form.email.label} />
 ```
+
+It stays in `static/` because `locale-validate` globs `static/locales/*.json`, and it is still served there for anything that wants a locale over HTTP — but nothing in the app fetches it any more. It used to: the root `+layout.server.ts` did `await fetch('/locales/en.json')` and returned the parsed object as load data. Both halves of that were expensive. A server load has no filesystem read for `static/` under adapter-vercel, so kit's `fetch` fell through to a real outbound HTTPS request from the function back to its own origin — 90KB fetched and parsed on every render of every non-prerendered page. And because it was _server_ load data, SvelteKit serialized all 90KB into every HTML response, and into every `__data.json` that `invalidateAll()` refetches after every write. Importing it in the universal load fixes both: universal-load return values are never serialized (which is already why the `db` instance can be returned), and in the browser it arrives inside a content-hashed chunk cached for a year.
+
+Keep it a **static** import. A dynamic `import()` is not in the root layout's static graph, so SvelteKit emits no `modulepreload` for it, and hydration awaits every universal load before mounting — it would trade an HTML payload for a serial round trip. A second language becomes a branch in `+layout.ts`, still statically imported.
 
 ### Substitution, and why inputs are escaped
 

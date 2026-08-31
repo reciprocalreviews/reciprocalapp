@@ -1,22 +1,15 @@
-import type { LocaleText } from '$lib/locales/Locale';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ cookies, params, fetch }) => {
-	const lang = params.lang || 'en';
-
-	// Dynamically import the correct translation file
-	let locale: LocaleText | undefined = undefined;
-	try {
-		const strings = await fetch(`/locales/${lang}.json`);
-		locale = (await strings.json()) as LocaleText;
-	} catch (e) {
-		// Fallback to default locale (e.g., 'en') if the requested locale is missing
-		const strings = await fetch(`/locales/en.json`);
-		locale = (await strings.json()) as LocaleText;
-	}
-
+export const load: LayoutServerLoad = async ({ cookies }) => {
+	// Only the cookies. The locale used to be fetched here and returned as load
+	// data, which cost an outbound HTTPS request from the serverless function back
+	// to its own origin for 90KB of JSON on every render — server loads have no
+	// filesystem read for `static/` under adapter-vercel, so kit's `fetch` falls
+	// through to a real network call — and then serialized that 90KB into every
+	// HTML response, and into every `__data.json` that `invalidateAll()` refetches
+	// after every write. It is a static import in `+layout.ts` now: bundled on the
+	// server, and an immutably-cached chunk in the browser.
 	return {
-		cookies: cookies.getAll(),
-		locale
+		cookies: cookies.getAll()
 	};
 };
