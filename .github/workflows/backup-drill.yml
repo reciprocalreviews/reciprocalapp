@@ -45,7 +45,15 @@ jobs:
     name: Restore and verify
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
+      # Pinned rather than `latest`. With `latest`, setup-cli resolves the release
+      # through the GitHub API on every job; a dev push and a main merge fire ~10
+      # of those within seconds, exhausting the shared rate limit and failing a job
+      # before any test runs. Pinning also stops CI drifting ahead of local.
+      - uses: supabase/setup-cli@v2
+        with:
+          version: 2.111.0
 
       - name: Check the required secrets are present
         env:
