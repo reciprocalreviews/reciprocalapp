@@ -484,6 +484,7 @@ _security_ came back.
 | ---------- | --------------------- | ------- | --------------------------------- |
 | 2026-08-04 | local stack           | 8s      | first drill                       |
 | 2026-08-08 | **hosted production** | **33s** | first hosted rehearsal; 1 scholar |
+| 2026-09-02 | **hosted production** | **23s** | first fully automated CI drill    |
 
 Update after each run.
 
@@ -496,7 +497,7 @@ database; it will grow with the data.
 
 ### What the drills found
 
-Both findings below were invisible to every test in the repository, and each
+Every finding below was invisible to every test in the repository, and each
 would have produced a restore that looked completely successful.
 
 **A bare Postgres database is not a valid restore target.** Restoring into one
@@ -530,6 +531,21 @@ drill passed, because none of them looked at privileges.
 records a `grant_fingerprint` covering table _and_ column grants — the column ones
 carry the INSERT/UPDATE allowlists that `20260802010000` relies on — and
 `drill.sh` asserts it, plus a direct `has_table_privilege('anon', …)` check.
+
+**A trigger we own on a table we don't is in no dump.** `on_auth_user_created`
+sits on `auth.users` and runs `public.handle_new_scholar()`, so neither dump
+carried it: `--schema=public` emits no triggers on tables in other schemas, and
+`auth.dump` is `--data-only`. A restore brought back every row, policy, grant and
+watermark — the drill passed outright — and still produced a database where
+**every account created afterward gets no `scholars` row**, which is the orphan
+account `20260901010000` exists to detect. `20260901000000` had already named the
+risk in a comment: the trigger lives outside the schema set CI's drift guard
+compares, so nothing had ever checked it was still there.
+
+`dump.sh` captures triggers whose function lives in `public`/`private`, on
+whatever schema they sit, and `drill.sh` restores them after the public and auth
+restores. Found by the first drill that got far enough to run the RLS suite
+against a restore, where it failed all 41 files on one missing fixture.
 
 ### The drill needs a private key — use a second recipient
 
