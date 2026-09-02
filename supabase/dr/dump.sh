@@ -180,6 +180,39 @@ pgrun 'psql "$PGURL" -X -tAc "
 	where e.extname <> '"'"'plpgsql'"'"'
 " > /out/extensions.sql'
 
+# Triggers we own that sit on tables we do NOT own. `on_auth_user_created` lives
+# on auth.users and runs public.handle_new_scholar(), so pg_dump emits it under
+# neither dump: --schema=public does not carry triggers on tables in other
+# schemas, and auth.dump is --data-only. A restore therefore brings back every
+# row, policy and grant while silently leaving new sign-ups with no scholars row
+# — the orphan-account failure that 20260901010000 exists to detect. Found by the
+# first drill that got far enough to run the RLS suite against a restore.
+#
+# Scoped by where the trigger FUNCTION lives, not by table: anything executing a
+# public/private function is ours to restore, on whatever platform schema it sits.
+# Paired with a drop so re-running against a live target is idempotent.
+echo "==> Capturing triggers on platform schemas"
+# PGOPTIONS empties search_path so pg_get_triggerdef schema-qualifies the function
+# it references. Without it the definition reads EXECUTE FUNCTION
+# handle_new_scholar(), which resolves against whatever search_path the restoring
+# session happens to have — the one thing this capture must not depend on. Set on
+# the connection rather than as a statement so psql does not emit a `SET` tag into
+# the file.
+pgrun 'PGOPTIONS="-c search_path=" psql "$PGURL" -X -tAc "
+	select coalesce(string_agg(
+		format('"'"'drop trigger if exists %I on %I.%I;'"'"', t.tgname, n.nspname, c.relname)
+			|| chr(10) || pg_get_triggerdef(t.oid) || '"'"';'"'"',
+		chr(10) order by n.nspname, c.relname, t.tgname), '"'"''"'"')
+	from pg_trigger t
+	join pg_class c on c.oid = t.tgrelid
+	join pg_namespace n on n.oid = c.relnamespace
+	join pg_proc p on p.oid = t.tgfoid
+	join pg_namespace fn on fn.oid = p.pronamespace
+	where not t.tgisinternal
+		and n.nspname not in ('"'"'public'"'"', '"'"'private'"'"')
+		and fn.nspname in ('"'"'public'"'"', '"'"'private'"'"')
+" > /out/triggers.sql'
+
 echo "==> Capturing cron jobs and vault secret names"
 pgrun 'psql "$PGURL" -X -tAc "
 	select case when to_regclass('"'"'cron.job'"'"') is null then '"'"'[]'"'"'

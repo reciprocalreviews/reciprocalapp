@@ -170,6 +170,19 @@ else
 	AUTH_RESTORED=0
 fi
 
+# Triggers we own that live on platform tables. Applied last, because the trigger
+# function has to exist (public) and so does the table it fires on (auth). After
+# the auth data restore rather than before, so restoring rows can never fire them
+# — the data restore already suppresses triggers, and this keeps that belt-and-
+# braces. Without this the restore is silently missing on_auth_user_created and
+# every account created after the restore gets no scholars row.
+if [ -f "$WORK/triggers.sql" ]; then
+	pgrun 'psql "$PGURL" -q -v ON_ERROR_STOP=0 -f /work/triggers.sql' >/dev/null 2>&1 || true
+	say "triggers on platform schemas"
+else
+	say "triggers SKIPPED — backup predates trigger capture"
+fi
+
 # ---- Assert --------------------------------------------------------------------
 echo "==> Verifying against the manifest"
 
