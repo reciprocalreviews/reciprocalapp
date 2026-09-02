@@ -204,9 +204,22 @@ done
 # pg_net, send_email() calls a function that does not exist, the row is recorded,
 # delivery is best-effort, and NOT ONE EMAIL EVER LEAVES — which is exactly what
 # happened on a real project before migration 20260720020000.
+#
+# Some extensions the hosted cluster carries CANNOT exist on a local stack, and
+# failing on those trains you to ignore a red drill — which is how a real missing
+# extension gets waved through. pgsodium is the case in hand: it appears nowhere
+# in this schema, Supabase has deprecated it, and the local stack does not ship
+# it, so `create extension pgsodium` in extensions.sql silently no-ops. Report
+# those as warnings and keep asserting everything the schema actually depends on.
+UNAVAILABLE_LOCALLY="pgsodium"
 while read -r ext; do
 	[ -n "$ext" ] || continue
-	check "extension: $ext" "1" "$(q "select count(*) from pg_extension where extname='$ext'")"
+	got=$(q "select count(*) from pg_extension where extname='$ext'")
+	if [ "$got" != "1" ] && printf '%s\n' $UNAVAILABLE_LOCALLY | grep -qx "$ext"; then
+		printf '  \033[33m!\033[0m %-34s absent; not available on this target\n' "extension: $ext"
+		continue
+	fi
+	check "extension: $ext" "1" "$got"
 done < <(jq -r '.db.extensions | keys[]' "$WORK/manifest.json")
 
 # Table and column GRANTs, as an exact fingerprint. Policies and privileges are

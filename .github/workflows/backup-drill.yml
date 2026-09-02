@@ -115,9 +115,17 @@ jobs:
         run: |
           set -euo pipefail
           npm run start:test
+          # `supabase start` runs supabase/seed.sql, which inserts 9 local test
+          # users into auth.users. Dropping `public` does not touch them, so the
+          # restore lands 15 production users on top of 9 leftovers and the
+          # `auth.users` assertion reads 24 — measuring the seed, not the restore.
+          # Truncate after the public drop, once scholars' FK to auth.users is
+          # gone. Deliberately done here and not by disabling the seed: config.toml
+          # is shared, and the RLS and Playwright suites both need seed.sql.
           psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
             -c "drop schema public cascade; create schema public;" \
-            -c "grant usage on schema public to anon, authenticated, service_role;"
+            -c "grant usage on schema public to anon, authenticated, service_role;" \
+            -c "truncate auth.users cascade;"
 
       - name: Drill
         env:
