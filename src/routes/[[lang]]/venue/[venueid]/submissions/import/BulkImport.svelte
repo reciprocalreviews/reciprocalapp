@@ -793,7 +793,6 @@
 								error
 								testid="import-row-{index}-unmatched"
 								text={(l) => l.page.bulkImport.person.unmatched}
-								inputs={{ role: role.name }}
 							/>
 						{/if}
 					</td>

@@ -4,16 +4,23 @@
 
 	let {
 		good = true,
+		neutral = false,
 		label,
 		testid
 	}: {
 		good?: boolean;
+		/** For a state that is neither good nor a problem — a fact about the thing
+		 * rather than a verdict on it. Takes precedence over `good`, since both
+		 * of that prop's colours would misstate one. */
+		neutral?: boolean;
 		label: (l: LocaleText) => string;
 		testid?: string;
 	} = $props();
 </script>
 
-<span class="status" class:good data-testid={testid}><Text path={label} /></span>
+<span class="status" class:good={good && !neutral} class:neutral data-testid={testid}
+	><Text path={label} /></span
+>
 
 <style>
 	.status {
@@ -28,5 +35,9 @@
 
 	.good {
 		background: var(--salient-color);
+	}
+
+	.neutral {
+		background: var(--inactive-color);
 	}
 </style>

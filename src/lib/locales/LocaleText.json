@@ -1649,7 +1649,7 @@
                       "type": "string"
                     },
                     "unmatched": {
-                      "description": "Shown beside a name matching nobody who holds that role. Kept very short: it sits in a table cell barely wider than one word, and the consequence is explained once above the table instead of once per row. `{role}` is the venue's own name for the role.",
+                      "description": "Shown beside a name matching nobody who holds that role. Kept very short: it sits in a table cell barely wider than one word, and the consequence is explained once above the table instead of once per row. Says what is true of the name rather than naming the role, which the column heading already does.",
                       "type": "string"
                     },
                     "unmatchedNote": {
@@ -4660,14 +4660,20 @@
                       "description": "Submission has been marked done.",
                       "type": "string"
                     },
+                    "free": {
+                      "description": "Nothing was ever charged for this submission: it was imported, or its venue is payment-free. Distinct from `paid`, which the column used to claim for these too.",
+                      "type": "string"
+                    },
                     "needsEditor": {
                       "description": "Nobody holds the venue's editor role on this submission, so no assignment on it can be approved and it cannot be marked done.",
                       "type": "string"
                     },
                     "paid": {
+                      "description": "Every charge on the submission has a transaction. Says nothing about a submission that was never charged — see `free`.",
                       "type": "string"
                     },
                     "pending": {
+                      "description": "Charges with no transaction yet. `{count}` of them.",
                       "type": "string"
                     },
                     "reviewing": {
@@ -4678,6 +4684,7 @@
                   "required": [
                     "paid",
                     "pending",
+                    "free",
                     "reviewing",
                     "done",
                     "needsEditor"

@@ -662,7 +662,7 @@
 			},
 			"person": {
 				"ambiguous": "Several people match this name. Choose one:",
-				"unmatched": "No {role}",
+				"unmatched": "No matching scholar",
 				"noRole": "No role at this venue has an accepted, active volunteer to seat.",
 				"note": "For each role, choose the column naming who holds it. Leave a role unmatched to seat nobody in it; a row naming nobody falls back to the venue’s editor, if it has exactly one.",
 				"header": "Match editors",
@@ -806,6 +806,7 @@
 			"status": {
 				"paid": "paid",
 				"pending": "{count} pending",
+				"free": "free",
 				"reviewing": "in review",
 				"done": "done",
 				"needsEditor": "needs an editor"

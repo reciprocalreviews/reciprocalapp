@@ -509,7 +509,8 @@ export type LocaleText = {
 				/** Shown beside a name matching nobody who holds that role. Kept very
 				 * short: it sits in a table cell barely wider than one word, and the
 				 * consequence is explained once above the table instead of once per
-				 * row. `{role}` is the venue's own name for the role. */
+				 * row. Says what is true of the name rather than naming the role,
+				 * which the column heading already does. */
 				unmatched: string;
 				/** Explains, above the table, what an unmatched name means — that the
 				 * submission imports with nobody in that role rather than failing. */
@@ -592,8 +593,15 @@ export type LocaleText = {
 				batchAssign: TextFieldText & { invalid: string };
 			};
 			status: {
+				/** Every charge on the submission has a transaction. Says nothing
+				 * about a submission that was never charged — see `free`. */
 				paid: string;
+				/** Charges with no transaction yet. `{count}` of them. */
 				pending: string;
+				/** Nothing was ever charged for this submission: it was imported, or
+				 * its venue is payment-free. Distinct from `paid`, which the column
+				 * used to claim for these too. */
+				free: string;
 				/** Submission is still in review. */
 				reviewing: string;
 				/** Submission has been marked done. */

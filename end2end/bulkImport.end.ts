@@ -35,6 +35,13 @@ test('admin can bulk import free submissions and a proposed mint transaction', a
 	await expect(page.getByText(externalA)).toBeVisible();
 	await expect(page.getByText(externalB)).toBeVisible();
 
+	// And that the list does not claim anybody paid for them. Nobody did: an
+	// imported submission is free by construction, and the tokens meant to fund
+	// its reviewing are still an unapproved mint. Anchored to the row for this
+	// import rather than to a row index, since the venue already holds others.
+	const row = page.locator('tr', { hasText: externalA });
+	await expect(row.locator('[data-testid$="-payment"]')).toHaveText('free');
+
 	await logout(page);
 });
 
