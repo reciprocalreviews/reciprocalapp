@@ -66,9 +66,11 @@ export class ScholarSearch {
 	private searchByName(text: string) {
 		clearTimeout(this.timer);
 		const query = text.trim();
-		// Too short, or already an ORCID: nothing to search for, and no result to
-		// report either way.
-		if (validORCID(query) || query.length < MIN_QUERY) {
+		// Too short, or already an identifier: nothing to search for, and no result to
+		// report either way. Addresses are skipped as well as ORCID iDs, because a
+		// complete address searched for as a NAME finds nobody, and the field then says
+		// "No matches" about somebody it can resolve perfectly well.
+		if (validORCID(query) || validEmail(query) || query.length < MIN_QUERY) {
 			this.sequence++;
 			this.search = { status: 'none' };
 			return;
