@@ -189,14 +189,20 @@ test('scholar declares a conflict on a submission and it disappears from their s
 	await page.goto(`/venue/${VENUE_PATH}/submissions`);
 	await page.waitForLoadState('networkidle');
 
-	// TOK-2025-001 should be in the list with a declare-conflict button.
-	await expect(page.locator('text=TOK-2025-001')).toBeVisible();
+	// The declarer is a plain Reviewer volunteer, so the venue's anonymized roles
+	// withhold TOK-2025-001's manuscript ID from them. The title is what they
+	// recognize the submission by — which is the whole basis on which a scholar
+	// declares a conflict — so the row is addressed by title here.
+	const SUBMISSION_TITLE = 'A Study on the Effectiveness of Peer Review Incentives';
+
+	// The submission should be in the list with a declare-conflict button.
+	await expect(page.getByText(SUBMISSION_TITLE).first()).toBeVisible();
 	const declareButtons = page.getByTestId('declare-conflict');
 	const initialButtonCount = await declareButtons.count();
 	expect(initialButtonCount).toBeGreaterThanOrEqual(1);
 
-	// Click the declare-conflict button on the row containing TOK-2025-001.
-	await page.locator('tr', { hasText: 'TOK-2025-001' }).getByTestId('declare-conflict').click();
+	// Click the declare-conflict button on that submission's row.
+	await page.locator('tr', { hasText: SUBMISSION_TITLE }).getByTestId('declare-conflict').click();
 
 	// Conflict row landed in the DB.
 	await expect
@@ -210,7 +216,7 @@ test('scholar declares a conflict on a submission and it disappears from their s
 	// The submission is no longer present in the scholar's submissions list
 	// (the page filters out conflicted submissions for them).
 	await page.reload();
-	await expect(page.locator('text=TOK-2025-001')).toHaveCount(0);
+	await expect(page.getByText(SUBMISSION_TITLE)).toHaveCount(0);
 });
 
 test('mark-done is blocked until non-editor assignments are compensated, then flips status', async ({

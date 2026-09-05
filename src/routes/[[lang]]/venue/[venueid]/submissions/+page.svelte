@@ -3,7 +3,14 @@
 	import { venuePath } from '$lib/data/venuePath';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { DownLabel, PrivateLabel, SubmissionLabel, UpLabel } from '$lib/components/Labels';
+	import {
+		DownLabel,
+		EmptyLabel,
+		PrivateLabel,
+		SubmissionLabel,
+		UnknownLabel,
+		UpLabel
+	} from '$lib/components/Labels';
 	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
@@ -131,6 +138,16 @@
 					.filter((r) => r.isVisible)
 	);
 
+	/** Whether this scholar helps run the venue's reviewing — a venue admin, or
+	 * the approver of some role — as opposed to a scholar who is only bidding
+	 * here. The manuscript ID is gated on this rather than on author visibility,
+	 * because an editor at an anonymized venue still needs the ID to find the
+	 * submission in the system it came from. */
+	const isVenueApprover = $derived(
+		isAdmin ||
+			(uid !== null && (roles ?? []).some((role) => isRoleApprover(role, volunteering ?? [], uid)))
+	);
+
 	/** State of sorting and filtering */
 	let paymentSortPendingFirst = $state(true);
 	let titleSortIncreasing = $state(true);
@@ -160,6 +177,7 @@
 			isAdmin,
 			assignments,
 			rolesById,
+			isVenueApprover,
 			submissionsWithEditor,
 			scholarName,
 			conflicts,
@@ -424,11 +442,32 @@
 										{/if}<ScholarLink id={authorID} />
 									{/each}
 								{:else}
-									{PrivateLabel}
+									<!-- Deliberately withheld, which is a different fact from the
+									     "couldn't load" and "not signed in" cases that also use
+									     PrivateLabel on this page. The lock says which one this is;
+									     the title carries the word for anyone who can't read the
+									     glyph. -->
+									<span title={locale().page.submissions.cell.anonymized}>{UnknownLabel}</span>
 								{/if}
 							</td>
-							<td>{submission.expertise}</td>
-							<td class:highlight={view.matches(submission.externalid)}>{submission.externalid}</td>
+							<!-- Expertise is what a bidder reads to decide whether to bid, and it
+							     is nullable — the detail page writes null back for empty input. An
+							     empty cell looked broken rather than unanswered. -->
+							<td>{submission.expertise?.trim() ? submission.expertise : EmptyLabel}</td>
+							{#if view.canSeeExternalID(submission)}
+								<td class:highlight={view.matches(submission.externalid)}
+									>{submission.externalid}</td
+								>
+							{:else}
+								<!-- Withheld from a scholar who is only bidding: the ID is the key
+								     this paper is filed under in the venue's own reviewing system,
+								     so it leads back to the authors the column above is hiding.
+								     Editors and role approvers keep it — it is how they find the
+								     submission in the system it came from. -->
+								<td
+									><span title={locale().page.submissions.cell.anonymized}>{UnknownLabel}</span></td
+								>
+							{/if}
 							<td>{formatDate(submission.created_at)}</td>
 							<td>
 								{#if submission.status === 'done'}

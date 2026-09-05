@@ -12,6 +12,7 @@
 		ErrorLabel,
 		ScholarLabel,
 		SubmissionLabel,
+		UnknownLabel,
 		VenueLabel
 	} from '$lib/components/Labels';
 	import Link from '$lib/components/Link.svelte';
@@ -435,7 +436,10 @@
 						{/if}
 					{/if}
 				{:else}
-					<em>{locale().page.submission.cell.anonymized}</em>
+					<!-- The same lock the submissions list uses, so both views mark a withheld
+					     author the same way. The word stays: there is room for it here, and a
+					     bare glyph would otherwise be the only signal. -->
+					<em>{UnknownLabel} {locale().page.submission.cell.anonymized}</em>
 				{/if}
 			</Row>
 		{:else}

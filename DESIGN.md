@@ -503,8 +503,8 @@ It should should:
 
 If the `Venue` is set to be public:
 
-- [x] _`scholar`_: View specific active submissions and the topic and method expertise required (but not submission titles), sorted by submissions most in need of reviews
-- [x] _`scholar`_: Bid on active submissions based on expertise required
+- [x] _`scholar`_: View specific active submissions, their titles, and the topic and method expertise required, sorted by submissions most in need of reviews. Where a scholar's role cannot see author information, the **author list is withheld**, and a scholar who is only bidding — one who neither administers the venue nor approves assignments for any of its roles — also has the **manuscript ID withheld**; both are marked with a lock, while the **title stays visible**. Editors and role approvers keep the ID, since it is how they find a submission in the system it came from. Matching the ID in the submissions filter is gated the same way, so search cannot return what the column withholds.
+- [x] _`scholar`_: Bid on active submissions based on the title and expertise required
 
 ### Submission `/venue/[venueid]/submission/[submissionid]`
 

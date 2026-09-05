@@ -3845,7 +3845,7 @@
                       "type": "string"
                     },
                     "preferenceLevels": {
-                      "description": "Explains what preference levels are for and how the binary default works when no levels are defined.",
+                      "description": "Explains what preference levels are for, and that leaving them empty falls back to the plain Bid / Unbid pair.",
                       "type": "string"
                     },
                     "roles": {
@@ -4410,6 +4410,10 @@
                 "cell": {
                   "additionalProperties": false,
                   "properties": {
+                    "anonymized": {
+                      "description": "Hover text on the lock that stands in for an author list or a manuscript ID withheld from a role that cannot see author information.",
+                      "type": "string"
+                    },
                     "assigned": {
                       "type": "string"
                     },
@@ -4431,7 +4435,8 @@
                     "assigned",
                     "conflicted",
                     "bids",
-                    "biddingClosed"
+                    "biddingClosed",
+                    "anonymized"
                   ],
                   "type": "object"
                 },

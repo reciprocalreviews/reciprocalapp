@@ -115,3 +115,65 @@ test('editor filters submissions by author name, reviewer name, title, and exter
 
 	await logout(page);
 });
+
+// The submissions list is where a bidder decides what to bid on, and at a venue
+// whose roles are anonymized it must not hand back the author identities it is
+// withholding. The seeded Reviewer role is biddable with anonymous_authors set,
+// and Manny is neither an author of nor an approved Reviewer on any seeded
+// submission, so every row is anonymized from their seat.
+test('a bidder at an anonymized venue sees locks, not authors or manuscript IDs', async ({
+	page,
+	context
+}) => {
+	const LOCK = '\u{1F512}\uFE0E';
+	const EM_DASH = '\u2014';
+	// Blank one submission's expertise so the "none provided" cell has a subject.
+	// The seed fills every submission's expertise, and the detail page writes
+	// null back for empty input, so null is the state to reproduce.
+	const priorExpertise = sql(
+		`select coalesce(expertise, '') from public.submissions where externalid = 'TOK-2025-002';`
+	);
+	sql(`update public.submissions set expertise = null where externalid = 'TOK-2025-002';`);
+
+	try {
+		await login(BIDDER_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
+		await page.waitForLoadState('networkidle');
+
+		const rows = page.locator('tr[data-testid^="submission-"]');
+		const baseline = await rows.count();
+		expect(baseline).toBeGreaterThanOrEqual(4);
+
+		// Authors and manuscript ID are both withheld, and say so with a lock.
+		const firstRow = rows.first();
+		await expect(firstRow.getByTitle('anonymized')).toHaveCount(2);
+		await expect(firstRow.getByTitle('anonymized').first()).toHaveText(LOCK);
+
+		// No manuscript ID leaks into any row.
+		await expect(page.getByText('TOK-2025-', { exact: false })).toHaveCount(0);
+
+		// The title stays visible: it is what a bidder judges interest by, and
+		// what they recognize a conflict from.
+		await expect(page.getByText('Windmill', { exact: false }).first()).toBeVisible();
+
+		// Expertise nobody supplied reads as none provided, not as a blank cell.
+		const windmillRow = rows.filter({ hasText: 'Windmill' });
+		await expect(windmillRow.getByText(EM_DASH, { exact: true })).toHaveCount(1);
+
+		// The search box must not become the side channel the ID column closed:
+		// a guessed manuscript ID confirms nothing.
+		const filter = page.getByTestId('submissions-filter');
+		await filter.fill('TOK-2025-002');
+		await expect.poll(async () => rows.count()).toBe(0);
+
+		// A title fragment still filters, so search is gated rather than broken.
+		await filter.fill('Windmill');
+		await expect.poll(async () => rows.count()).toBe(1);
+
+		await logout(page);
+	} finally {
+		sql(
+			`update public.submissions set expertise = ${priorExpertise === '' ? 'null' : `'${priorExpertise}'`} where externalid = 'TOK-2025-002';`
+		);
+	}
+});
