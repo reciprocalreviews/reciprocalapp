@@ -18,7 +18,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(21);
+select plan(35);
 
 -- ---- Fixtures (owner context) ------------------------------------------------
 select tests.clear_authentication();
@@ -257,6 +257,153 @@ select is(
 	(select count(*)::int from public.venue_submission_editors(:'ven')),
 	0,
 	'venue_submission_editors tells an outsider nothing'
+);
+
+
+--------------------------------------------------------------------------------
+-- Seating on bulk_import_submissions
+--------------------------------------------------------------------------------
+-- A bulk import may name the person to seat on each row, in a role the importing admin
+-- chose. Two things are being pinned here. First, that the named path reaches cases the
+-- sole-editor rule cannot -- a venue with several editors, which is most of them.
+-- Second, that naming somebody is never a way to acquire a role: the person must already
+-- hold it, accepted and active, and a row that fails that check takes the whole import
+-- down with it rather than leaving half a batch seated.
+--
+-- The priority-0 count assertions are the money ones. mark_submission_done pays every
+-- approved priority-0 assignment on a submission, so "exactly one" is not tidiness.
+
+select tests.clear_authentication();
+-- An associate-editor role at each venue, so somebody can be seated below priority 0.
+select tests.create_role(:'ven', 1) as ae_role \gset
+select tests.create_volunteer(:'editor2', :'ae_role') as v5 \gset
+select tests.create_role(:'ven2', 1) as ae_role2 \gset
+select tests.create_volunteer(:'author', :'ae_role2') as v6 \gset
+
+select tests.authenticate_as(:'admin');
+
+-- Venue B has two editors, so the sole-editor rule seats nobody. Naming one is the only
+-- way these submissions get an editor at import, and it is the case the column is for.
+select lives_ok(
+	$$ select public.bulk_import_submissions( $$ || quote_literal(:'ven2') || $$,
+		'[{"externalid":"BI-B-1","title":"Named at an ambiguous venue","submission_type":"$$
+		|| :'stype2' || $$","person":"$$ || :'editor2' || $$","person_role":"$$
+		|| :'editor_role2' || $$"}]'::jsonb, '' ) $$,
+	'a bulk import can name an editor at a venue with several'
+);
+select tests.clear_authentication();
+select is(
+	(select count(*)::int from public.assignments a
+		join public.roles r on r.id = a.role
+		join public.submissions s on s.id = a.submission
+		where s.externalid = 'BI-B-1' and r.priority = 0),
+	1,
+	'the named editor is seated where the sole-editor rule would seat nobody'
+);
+select is(
+	(select a.scholar from public.assignments a
+		join public.submissions s on s.id = a.submission
+		where s.externalid = 'BI-B-1'),
+	:'editor2'::uuid,
+	'and it is the person the row named'
+);
+
+-- Venue A has one editor. Naming an associate editor should seat both: the AE in the
+-- role named, and the venue's own editor by the existing fallback.
+select tests.authenticate_as(:'admin');
+select lives_ok(
+	$$ select public.bulk_import_submissions( $$ || quote_literal(:'ven') || $$,
+		'[{"externalid":"BI-A-1","title":"Named associate editor","submission_type":"$$
+		|| :'stype' || $$","person":"$$ || :'editor2' || $$","person_role":"$$
+		|| :'ae_role' || $$"}]'::jsonb, '' ) $$,
+	'a bulk import can name somebody for a role below the top one'
+);
+select tests.clear_authentication();
+select is(
+	(select count(*)::int from public.assignments a
+		join public.roles r on r.id = a.role
+		join public.submissions s on s.id = a.submission
+		where s.externalid = 'BI-A-1' and r.priority = 0),
+	1,
+	'the venue''s sole editor is still seated alongside a named associate editor'
+);
+select is(
+	(select count(*)::int from public.assignments a
+		join public.roles r on r.id = a.role
+		join public.submissions s on s.id = a.submission
+		where s.externalid = 'BI-A-1' and r.priority = 1),
+	1,
+	'and the named associate editor is seated in the role the import chose'
+);
+
+-- A row naming nobody still gets the venue's editor, exactly as before this change.
+select tests.authenticate_as(:'admin');
+select lives_ok(
+	$$ select public.bulk_import_submissions( $$ || quote_literal(:'ven') || $$,
+		'[{"externalid":"BI-A-2","title":"Nobody named","submission_type":"$$
+		|| :'stype' || $$"}]'::jsonb, '' ) $$,
+	'a bulk import row may still name nobody'
+);
+select tests.clear_authentication();
+select is(
+	(select a.scholar from public.assignments a
+		join public.submissions s on s.id = a.submission
+		where s.externalid = 'BI-A-2'),
+	:'editor'::uuid,
+	'a row naming nobody falls back to the venue''s sole editor'
+);
+
+-- Naming the venue's own editor for the editor role must not seat them twice: the
+-- fallback has to stand down. Two priority-0 assignments would be paid twice.
+select tests.authenticate_as(:'admin');
+select lives_ok(
+	$$ select public.bulk_import_submissions( $$ || quote_literal(:'ven') || $$,
+		'[{"externalid":"BI-A-3","title":"Named the sole editor","submission_type":"$$
+		|| :'stype' || $$","person":"$$ || :'editor' || $$","person_role":"$$
+		|| :'editor_role' || $$"}]'::jsonb, '' ) $$,
+	'a bulk import may name the venue''s own sole editor'
+);
+select tests.clear_authentication();
+select is(
+	(select count(*)::int from public.assignments a
+		join public.submissions s on s.id = a.submission
+		where s.externalid = 'BI-A-3'),
+	1,
+	'naming the sole editor seats them once, not twice'
+);
+
+-- Seating is not a way to acquire a role. The outsider holds nothing at this venue.
+select tests.authenticate_as(:'admin');
+select throws_ok(
+	$$ select public.bulk_import_submissions( $$ || quote_literal(:'ven') || $$,
+		'[{"externalid":"BI-A-4","title":"Ineligible","submission_type":"$$
+		|| :'stype' || $$","person":"$$ || :'outsider' || $$","person_role":"$$
+		|| :'editor_role' || $$"}]'::jsonb, '' ) $$,
+	'A named person must already be an accepted, active volunteer in that role',
+	'a bulk import cannot seat somebody who does not hold the role'
+);
+select tests.clear_authentication();
+select is(
+	(select count(*)::int from public.submissions where externalid = 'BI-A-4'),
+	0,
+	'the refused import left no submission behind'
+);
+
+-- A role belonging to another venue is refused, so an admin cannot reach across venues.
+select tests.authenticate_as(:'admin');
+select throws_ok(
+	$$ select public.bulk_import_submissions( $$ || quote_literal(:'ven') || $$,
+		'[{"externalid":"BI-A-5","title":"Foreign role","submission_type":"$$
+		|| :'stype' || $$","person":"$$ || :'editor2' || $$","person_role":"$$
+		|| :'editor_role2' || $$"}]'::jsonb, '' ) $$,
+	'That role does not belong to this venue',
+	'a bulk import cannot seat somebody in another venue''s role'
+);
+select tests.clear_authentication();
+select is(
+	(select count(*)::int from public.submissions where externalid = 'BI-A-5'),
+	0,
+	'the cross-venue import left no submission behind'
 );
 
 select * from finish();

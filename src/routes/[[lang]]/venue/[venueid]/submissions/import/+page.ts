@@ -12,9 +12,18 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	const { data: existingSubmissions } = await db.getVenueSubmissionExternalIDs(venueid);
 
+	// The venue's roles and who holds them, so a CSV naming an editor per row can be
+	// resolved against the people this venue already trusts rather than against every
+	// scholar on the platform.
+	const { data: roles } = await db.getVenueRoles(venueid);
+
+	const { data: commitments } = await db.getVenueCommitments(venueid);
+
 	return {
 		venue,
 		submissionTypes,
-		existingExternalIDs: (existingSubmissions ?? []).map((s) => s.externalid)
+		existingExternalIDs: (existingSubmissions ?? []).map((s) => s.externalid),
+		roles: roles ?? [],
+		commitments: commitments ?? []
 	};
 };

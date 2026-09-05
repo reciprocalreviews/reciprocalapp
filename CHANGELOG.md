@@ -4,8 +4,15 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.5.3 - 2026-08-31
 
+### Added
+
+- **The submission importer now reads exports from any reviewing system.** Upload a CSV with whatever column names it arrived with and match them to fields on screen, rather than renaming columns by hand first.
+- **A bulk import can now name each submission's editor.** You choose which of the venue's roles they take, and a name the venue cannot match to someone already holding that role stops the import rather than being guessed at.
+
 ### Fixed
 
+- **A line break inside a title or status column no longer breaks an import.** Every row after it shifted into the wrong columns, which made a file exported straight from a reviewing platform unusable.
+- **An imported submission's expertise can now be edited by its editor.** Imported submissions have no authors and only an author could edit it, so the field reviewers read when deciding what to bid on could be filled in by nobody.
 - **Pages now load faster**, the home page most of all. Arriving at the home page while already signed in briefly shows **Log in** in the header before your profile and token balance appear.
 
 ## 0.5.2 - 2026-08-30

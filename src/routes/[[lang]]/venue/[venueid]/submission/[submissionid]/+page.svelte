@@ -446,7 +446,13 @@
 		<VenueLink id={venue.id} name={venue.title} slug={venue.slug} />
 
 		<Subheader icon={EditLabel} text={(l) => l.page.submission.header.expertise}></Subheader>
-		{#if isAuthor}
+		<!-- Editors as well as authors, because an imported submission has no authors
+		     at all and this was therefore editable by nobody — while expertise is
+		     exactly what reviewers read when deciding what to bid on. Not admins:
+		     the update policy admits the seated priority-0 editor and the authors,
+		     so offering an admin the control would show them one the database
+		     refuses. -->
+		{#if isAuthor || isEditor}
 			<EditableText
 				strings={(l) => ({
 					label: 'Expertise',

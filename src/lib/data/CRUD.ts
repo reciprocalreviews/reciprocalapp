@@ -114,12 +114,21 @@ export type ImportedSubmission = {
 	expertise: string | null;
 	submission_type: SubmissionTypeID;
 	note: string | null;
+	/** The scholar to seat on this submission, already resolved from whatever
+	 * name the CSV wrote, or null when the row names nobody. */
+	person: ScholarID | null;
+	/** The role to seat them in. Required whenever `person` is set, and refused
+	 * by the database unless they already hold it, accepted and active. */
+	person_role: RoleID | null;
 };
 
 export type BulkImportResult = {
 	submissionIDs: SubmissionID[];
 	transactionID: TransactionID | null;
 	mintAmount: number;
+	/** How many submissions each scholar was seated on, so the import can tell
+	 * each of them what they now hold in one message rather than one per row. */
+	seatedBy: Record<ScholarID, number>;
 };
 
 /** A non-editor assignment that is approved but not yet completed, returned

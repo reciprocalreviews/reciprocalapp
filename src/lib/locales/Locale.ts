@@ -385,6 +385,7 @@ export type LocaleText = {
 			title: string;
 			header: {
 				csv: string;
+				mapping: string;
 				defaults: string;
 				rows: string;
 				submit: string;
@@ -395,14 +396,24 @@ export type LocaleText = {
 			};
 			note: {
 				csv: string;
+				/** Explains the column mapping panel: the importer reads any CSV with
+				 * a header row, and these menus say which of its columns feeds which
+				 * field. */
+				mapping: string;
 			};
 			feedback: {
 				notLoaded: string;
 				notAdmin: string;
-				/** Shown when parsed rows had a different number of cells than the
+				/** Shown when parsed records had a different number of cells than the
 				 * header, which means columns shifted and data was dropped. `{lines}`
-				 * is the list of affected line numbers. */
+				 * is the list of lines those records start on. */
 				raggedRows: string;
+				/** Names the CSV columns no field is reading, so they are visibly
+				 * ignored rather than silently dropped. `{columns}` is the list. */
+				ignoredColumns: string;
+				/** Shown when the CSV has no column feeding a field the importer
+				 * cannot do without. `{fields}` is the list. */
+				missingRequired: string;
 			};
 			field: {
 				title: TextFieldText;
@@ -410,6 +421,7 @@ export type LocaleText = {
 				expertise: TextFieldText;
 				previousID: TextFieldText;
 				note: TextFieldText;
+				person: TextFieldText;
 				csvUpload: { label: string };
 				csvPaste: NotedTextFieldText;
 				importNote: NotedTextFieldText;
@@ -417,6 +429,21 @@ export type LocaleText = {
 			options: {
 				defaultSubmissionType: OptionsText;
 				submissionType: OptionsText;
+				/** One menu per import field, choosing which CSV column feeds it. */
+				mapField: {
+					title: OptionsText;
+					externalID: OptionsText;
+					expertise: OptionsText;
+					submissionType: OptionsText;
+					previousID: OptionsText;
+					note: OptionsText;
+					/** The column naming who to seat on each submission. */
+					person: OptionsText;
+				};
+				/** The choice offered when a field should read no column at all. */
+				unmapped: string;
+				/** Which venue role the named person is seated in. */
+				personRole: OptionsText;
 			};
 			button: {
 				addRow: ButtonText;
@@ -432,6 +459,7 @@ export type LocaleText = {
 				submissionType: string;
 				previousID: string;
 				note: string;
+				person: string;
 			};
 			row: {
 				invalid: {
@@ -439,7 +467,24 @@ export type LocaleText = {
 					externalID: string;
 					duplicateExisting: string;
 					duplicateRow: string;
+					personUnresolved: string;
 				};
+			};
+			person: {
+				/** Shown beside a name that matches more than one of the venue's
+				 * volunteers, above the buttons offering each. */
+				ambiguous: string;
+				/** Shown beside a name matching nobody who holds the chosen role.
+				 * `{role}` is the venue's own name for that role. */
+				unmatched: string;
+				/** Shown in place of the person column when no role has anyone in it. */
+				noRole: string;
+				/** Explains that a row naming nobody falls back to the venue's sole
+				 * editor, when it has one. */
+				note: string;
+				/** Warns that a column of names was matched but no role chosen, so
+				 * nobody would be seated from it. */
+				roleMissing: string;
 			};
 		};
 		submissions: {

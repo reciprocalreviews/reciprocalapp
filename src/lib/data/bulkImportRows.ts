@@ -6,6 +6,8 @@
  * an import can create a whole conference's submissions and a mint sized to
  * their total cost — and none of it was reachable by a test. */
 
+import type { ColumnMapping } from './columnMapping';
+
 /** The editable shape of one row in the import table. */
 export type ImportRow = {
 	title: string;
@@ -14,6 +16,9 @@ export type ImportRow = {
 	submissionType: string;
 	previousID: string;
 	note: string;
+	/** The person named to be seated on this submission, as the file wrote them.
+	 * Empty when the row names nobody. */
+	person: string;
 };
 
 /** Only the submission-type fields these rules read. */
@@ -21,7 +26,8 @@ export type ImportSubmissionType = { id: string; name: string; submission_cost: 
 
 /** Why a row cannot be imported, as a stable key the component maps to locale
  * text. Ordered by which is reported first when several apply. */
-export type RowProblem = 'title' | 'externalID' | 'duplicateExisting' | 'duplicateRow';
+export type RowProblem =
+	'title' | 'externalID' | 'duplicateExisting' | 'duplicateRow' | 'personUnresolved';
 
 /** Indices of rows whose external ID collides with another row in the batch.
  * Blank IDs are skipped — they are already reported as a missing external ID,
@@ -45,12 +51,21 @@ export function duplicateAcrossRows(rows: ImportRow[]): Set<number> {
 export function rowError(
 	row: ImportRow,
 	index: number,
-	context: { existingExternalIDs: Set<string>; duplicates: Set<number> }
+	context: {
+		existingExternalIDs: Set<string>;
+		duplicates: Set<number>;
+		/** Rows naming somebody the venue could not identify. Optional, since a
+		 * caller that offers no person column has nobody to resolve. */
+		personUnresolved?: Set<number>;
+	}
 ): RowProblem | null {
 	if (row.title.trim().length === 0) return 'title';
 	if (row.externalID.trim().length === 0) return 'externalID';
 	if (context.existingExternalIDs.has(row.externalID.trim())) return 'duplicateExisting';
 	if (context.duplicates.has(index)) return 'duplicateRow';
+	// Last, so the checks that were here first keep reporting first: a row missing
+	// its title has a more basic problem than one whose editor could not be named.
+	if (context.personUnresolved?.has(index)) return 'personUnresolved';
 	return null;
 }
 
@@ -66,27 +81,46 @@ export function mintAmount(rows: ImportRow[], types: ImportSubmissionType[]): nu
 	);
 }
 
-/** Map parsed CSV records onto import rows.
+/** Collapse runs of whitespace — including the newlines a quoted field may
+ * carry — into single spaces. Applied to the single-line fields, so a title that
+ * wrapped across two lines in the export arrives as one line here rather than
+ * putting a newline through a single-line text field and into the database. */
+function collapse(value: string): string {
+	return value.replace(/\s+/g, ' ').trim();
+}
+
+/** Read one field's cell out of a parsed record, or '' when the field is mapped
+ * to nothing or the column is absent. */
+function cell(record: Record<string, string>, header: string | null): string {
+	return header === null ? '' : (record[header] ?? '');
+}
+
+/** Map parsed CSV records onto import rows, reading each field from whichever
+ * column the editor mapped to it.
  *
- * Header spellings are accepted in both the lowercase form a spreadsheet tends
- * to produce and the camelCase form the table uses, since editors export from
- * many different reviewing platforms. An unrecognized submission type name falls
- * back to the chosen default rather than failing the row. */
+ * The importer does not require a CSV to use its own column names: `mapping`
+ * says which header feeds which field, guessed by `guessMapping` and corrected
+ * by hand. An unrecognized submission type name falls back to the chosen default
+ * rather than failing the row. */
 export function rowsFromParsed(
 	parsed: Record<string, string>[],
+	mapping: ColumnMapping,
 	types: ImportSubmissionType[],
 	defaultSubmissionType: string
 ): ImportRow[] {
-	return parsed.map((p) => {
-		const typeName = (p.submission_type ?? '').trim().toLowerCase();
+	return parsed.map((record) => {
+		const typeName = collapse(cell(record, mapping.submissionType)).toLowerCase();
 		const matched = typeName ? types.find((t) => t.name.toLowerCase() === typeName) : null;
 		return {
-			title: p.title ?? '',
-			externalID: p.externalid ?? p.externalID ?? '',
-			expertise: p.expertise ?? '',
+			title: collapse(cell(record, mapping.title)),
+			externalID: collapse(cell(record, mapping.externalID)),
+			expertise: collapse(cell(record, mapping.expertise)),
 			submissionType: matched ? matched.id : defaultSubmissionType,
-			previousID: p.previousid ?? p.previousID ?? '',
-			note: p.note ?? ''
+			previousID: collapse(cell(record, mapping.previousID)),
+			person: collapse(cell(record, mapping.person)),
+			// Not collapsed: a multi-line status or comment column is the note's
+			// content, and flattening it would destroy what it says.
+			note: cell(record, mapping.note).trim()
 		};
 	});
 }

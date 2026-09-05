@@ -1365,6 +1365,9 @@
                     "note": {
                       "type": "string"
                     },
+                    "person": {
+                      "type": "string"
+                    },
                     "previousID": {
                       "type": "string"
                     },
@@ -1381,13 +1384,22 @@
                     "expertise",
                     "submissionType",
                     "previousID",
-                    "note"
+                    "note",
+                    "person"
                   ],
                   "type": "object"
                 },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "ignoredColumns": {
+                      "description": "Names the CSV columns no field is reading, so they are visibly ignored rather than silently dropped. `{columns}` is the list.",
+                      "type": "string"
+                    },
+                    "missingRequired": {
+                      "description": "Shown when the CSV has no column feeding a field the importer cannot do without. `{fields}` is the list.",
+                      "type": "string"
+                    },
                     "notAdmin": {
                       "type": "string"
                     },
@@ -1395,14 +1407,16 @@
                       "type": "string"
                     },
                     "raggedRows": {
-                      "description": "Shown when parsed rows had a different number of cells than the header, which means columns shifted and data was dropped. `{lines}` is the list of affected line numbers.",
+                      "description": "Shown when parsed records had a different number of cells than the header, which means columns shifted and data was dropped. `{lines}` is the list of lines those records start on.",
                       "type": "string"
                     }
                   },
                   "required": [
                     "notLoaded",
                     "notAdmin",
-                    "raggedRows"
+                    "raggedRows",
+                    "ignoredColumns",
+                    "missingRequired"
                   ],
                   "type": "object"
                 },
@@ -1436,6 +1450,9 @@
                     "note": {
                       "$ref": "#/definitions/TextFieldText"
                     },
+                    "person": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
                     "previousID": {
                       "$ref": "#/definitions/TextFieldText"
                     },
@@ -1449,6 +1466,7 @@
                     "expertise",
                     "previousID",
                     "note",
+                    "person",
                     "csvUpload",
                     "csvPaste",
                     "importNote"
@@ -1464,6 +1482,9 @@
                     "defaults": {
                       "type": "string"
                     },
+                    "mapping": {
+                      "type": "string"
+                    },
                     "rows": {
                       "type": "string"
                     },
@@ -1473,6 +1494,7 @@
                   },
                   "required": [
                     "csv",
+                    "mapping",
                     "defaults",
                     "rows",
                     "submit"
@@ -1484,10 +1506,15 @@
                   "properties": {
                     "csv": {
                       "type": "string"
+                    },
+                    "mapping": {
+                      "description": "Explains the column mapping panel: the importer reads any CSV with a header row, and these menus say which of its columns feeds which field.",
+                      "type": "string"
                     }
                   },
                   "required": [
-                    "csv"
+                    "csv",
+                    "mapping"
                   ],
                   "type": "object"
                 },
@@ -1497,13 +1524,62 @@
                     "defaultSubmissionType": {
                       "$ref": "#/definitions/OptionsText"
                     },
+                    "mapField": {
+                      "additionalProperties": false,
+                      "description": "One menu per import field, choosing which CSV column feeds it.",
+                      "properties": {
+                        "expertise": {
+                          "$ref": "#/definitions/OptionsText"
+                        },
+                        "externalID": {
+                          "$ref": "#/definitions/OptionsText"
+                        },
+                        "note": {
+                          "$ref": "#/definitions/OptionsText"
+                        },
+                        "person": {
+                          "$ref": "#/definitions/OptionsText",
+                          "description": "The column naming who to seat on each submission."
+                        },
+                        "previousID": {
+                          "$ref": "#/definitions/OptionsText"
+                        },
+                        "submissionType": {
+                          "$ref": "#/definitions/OptionsText"
+                        },
+                        "title": {
+                          "$ref": "#/definitions/OptionsText"
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "externalID",
+                        "expertise",
+                        "submissionType",
+                        "previousID",
+                        "note",
+                        "person"
+                      ],
+                      "type": "object"
+                    },
+                    "personRole": {
+                      "$ref": "#/definitions/OptionsText",
+                      "description": "Which venue role the named person is seated in."
+                    },
                     "submissionType": {
                       "$ref": "#/definitions/OptionsText"
+                    },
+                    "unmapped": {
+                      "description": "The choice offered when a field should read no column at all.",
+                      "type": "string"
                     }
                   },
                   "required": [
                     "defaultSubmissionType",
-                    "submissionType"
+                    "submissionType",
+                    "mapField",
+                    "unmapped",
+                    "personRole"
                   ],
                   "type": "object"
                 },
@@ -1523,6 +1599,39 @@
                   ],
                   "type": "object"
                 },
+                "person": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ambiguous": {
+                      "description": "Shown beside a name that matches more than one of the venue's volunteers, above the buttons offering each.",
+                      "type": "string"
+                    },
+                    "noRole": {
+                      "description": "Shown in place of the person column when no role has anyone in it.",
+                      "type": "string"
+                    },
+                    "note": {
+                      "description": "Explains that a row naming nobody falls back to the venue's sole editor, when it has one.",
+                      "type": "string"
+                    },
+                    "roleMissing": {
+                      "description": "Warns that a column of names was matched but no role chosen, so nobody would be seated from it.",
+                      "type": "string"
+                    },
+                    "unmatched": {
+                      "description": "Shown beside a name matching nobody who holds the chosen role. `{role}` is the venue's own name for that role.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ambiguous",
+                    "unmatched",
+                    "noRole",
+                    "note",
+                    "roleMissing"
+                  ],
+                  "type": "object"
+                },
                 "row": {
                   "additionalProperties": false,
                   "properties": {
@@ -1538,6 +1647,9 @@
                         "externalID": {
                           "type": "string"
                         },
+                        "personUnresolved": {
+                          "type": "string"
+                        },
                         "title": {
                           "type": "string"
                         }
@@ -1546,7 +1658,8 @@
                         "title",
                         "externalID",
                         "duplicateExisting",
-                        "duplicateRow"
+                        "duplicateRow",
+                        "personUnresolved"
                       ],
                       "type": "object"
                     }
@@ -1570,7 +1683,8 @@
                 "options",
                 "button",
                 "column",
-                "row"
+                "row",
+                "person"
               ],
               "type": "object"
             },

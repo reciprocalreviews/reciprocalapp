@@ -341,7 +341,7 @@ alter publication supabase_realtime
 add table submissions;
 
 --------------------------------------
--- RPC (authoritative definition from migration 20260531000000_resubmission_link)
+-- RPC (authoritative definition from migration 20260905000000_bulk_import_person_column)
 create or replace function public.bulk_import_submissions (
 	_venueid uuid,
 	_submissions jsonb,
@@ -367,6 +367,11 @@ declare
     _editors uuid[];
     _editor uuid;
     _seated integer := 0;
+    _row_person uuid;
+    _row_role uuid;
+    _row_priority integer;
+    _seated_by jsonb := '{}'::jsonb;
+    _waiting integer := 0;
 begin
     _admin_id := (select auth.uid());
 
@@ -457,10 +462,78 @@ begin
         ) returning id into _new_submission_id;
         _submission_ids := _submission_ids || _new_submission_id;
 
-        if _editor is not null then
+        -- A row may name the scholar to seat on it, in a role the importing admin
+        -- chose. The client resolves the name to an id and checks eligibility before
+        -- sending; it is re-checked here because a rule that lives only in the form
+        -- is a rule that holds only for people who use the form -- the same reason
+        -- create_submission re-checks its own charges. Raising rolls the whole import
+        -- back, which is what we want: a half-seated batch is worse than none, and
+        -- reaching this at all means the form was bypassed.
+        _row_person := nullif(_row->>'person', '')::uuid;
+        _row_role := nullif(_row->>'person_role', '')::uuid;
+        _row_priority := null;
+
+        if _row_person is not null then
+            if _row_role is null then
+                raise exception 'A named person needs a role to be seated in';
+            end if;
+
+            select r.priority into _row_priority
+            from public.roles r
+            where r.id = _row_role and r.venueid = _venueid;
+
+            if _row_priority is null then
+                raise exception 'That role does not belong to this venue';
+            end if;
+
+            -- Seating is not a way to hand out a role. Priority-0 holders can approve
+            -- any assignment on the submission, edit its author list and mark it done,
+            -- and every seat is a claim on the venue's tokens, so the person must
+            -- already hold the role.
+            if not exists (
+                select 1
+                from public.volunteers v
+                where v.roleid = _row_role
+                    and v.scholarid = _row_person
+                    and v.active
+                    and v.accepted = 'accepted'
+            ) then
+                raise exception 'A named person must already be an accepted, active volunteer in that role';
+            end if;
+
+            insert into public.assignments (venue, submission, scholar, role, bid, approved)
+            values (_venueid, _new_submission_id, _row_person, _row_role, false, true);
+            _seated := _seated + 1;
+            _seated_by := jsonb_set(
+                _seated_by,
+                array[_row_person::text],
+                to_jsonb(coalesce((_seated_by->>_row_person::text)::integer, 0) + 1)
+            );
+        end if;
+
+        -- The venue's sole editor is still seated, except on a row that named
+        -- somebody for the editor role itself. Doing both would put two priority-0
+        -- assignments on one submission, and marking a submission done pays every
+        -- approved priority-0 assignment on it -- an editor's compensation per editor
+        -- per paper.
+        if _editor is not null and not (_row_person is not null and _row_priority = 0) then
             insert into public.assignments (venue, submission, scholar, role, bid, approved)
             values (_venueid, _new_submission_id, _editor, _editor_role, false, true);
             _seated := _seated + 1;
+            _seated_by := jsonb_set(
+                _seated_by,
+                array[_editor::text],
+                to_jsonb(coalesce((_seated_by->>_editor::text)::integer, 0) + 1)
+            );
+        end if;
+
+        -- A submission with nobody in the venue's top-priority role is waiting for an
+        -- editor, and is flagged as such on the venue's submissions list. Counted per
+        -- row rather than derived from _seated, which counts assignments: a row can
+        -- carry two of them -- an associate editor named by the file and the venue's
+        -- sole editor -- and subtracting one from the other would report nonsense.
+        if not (_row_person is not null and _row_priority = 0) and _editor is null then
+            _waiting := _waiting + 1;
         end if;
 
         -- Each row bills its submission type's cost.
@@ -501,7 +574,9 @@ begin
         'transaction_id', _transaction_id,
         'mint_amount', _mint_amount,
         'editor', _editor,
-        'seated', _seated
+        'seated', _seated,
+        'seated_by', _seated_by,
+        'waiting', _waiting
     );
 end;
 $function$;
