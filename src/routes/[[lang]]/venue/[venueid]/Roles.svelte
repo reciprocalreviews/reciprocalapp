@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type {
 		CompensationRow,
-		RoleID,
 		RoleRow,
 		ScholarID,
 		SubmissionType,
@@ -19,15 +18,15 @@
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Table from '$lib/components/Table.svelte';
-	import ScholarField from '$lib/components/ScholarField.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import { isntEmpty, validEmailsOrORCIDs } from '$lib/validation';
+	import { isntEmpty } from '$lib/validation';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import AdminsCard from './AdminsCard.svelte';
+	import RoleInvite from './RoleInvite.svelte';
 	import RoleSettings from './RoleSettings.svelte';
 	import VolunteerStatus from './VolunteerStatus.svelte';
 
@@ -37,6 +36,7 @@
 		volunteers,
 		scholar,
 		isAdmin,
+		canInvite = undefined,
 		compensation,
 		types,
 		startCollapsed = false
@@ -46,6 +46,16 @@
 		roles: RoleRow[] | null;
 		volunteers: VolunteerRow[] | null;
 		isAdmin: boolean;
+		/** Whether the viewer may invite scholars to a role, which venue admins may.
+		 * Separate from `isAdmin` because the venue page shows the role cards read-only —
+		 * no reordering, no compensation editing, no role settings — but an admin already
+		 * looking at the venue should not have to find the roles step of venue settings to
+		 * add a person. Defaults to `isAdmin`, so settings, which passes only that, is
+		 * unchanged.
+		 *
+		 * An affordance, not authorization: create_volunteer and the volunteers INSERT
+		 * policy both gate on public.isAdmin, so this only decides what is offered. */
+		canInvite?: boolean | undefined;
 		types: SubmissionType[] | null;
 		compensation: CompensationRow[] | null;
 		/** When true, per-role cards start collapsed regardless of viewer role.
@@ -59,11 +69,9 @@
 	// Payment-free venues have no token compensation, so hide the compensation table.
 	let showPayment = $derived(!venue.payment_free);
 
+	let mayInvite = $derived(canInvite ?? isAdmin);
+
 	let newRole: string = $state('');
-	let invites = $state<Record<RoleID, string>>(
-		// svelte-ignore state_referenced_locally
-		Object.fromEntries((roles ?? []).map((role) => [role.id, '']))
-	);
 </script>
 
 {#if roles === null}
@@ -85,11 +93,7 @@
 				active={isntEmpty(newRole)}
 				action={async () => {
 					const result = await handle(db().createRole(venue.id, newRole));
-					if (typeof result !== 'boolean') {
-						// Initialize the invite list for this role
-						invites[result.id] = '';
-						newRole = '';
-					}
+					if (typeof result !== 'boolean') newRole = '';
 				}}
 			/>
 		</Form>
@@ -110,7 +114,7 @@
 						note: role.description.length === 0 ? l.view.roles.card.unnamed : role.description
 					};
 				}}
-				expand={scholarInvited || (!startCollapsed && (isAdmin || !role.invited))}
+				expand={scholarInvited || (!startCollapsed && (isAdmin || mayInvite || !role.invited))}
 				testid="role-{role.name}"
 			>
 				{#snippet controls()}
@@ -216,51 +220,8 @@
 					<Feedback error inline text={(l) => l.view.roles.feedback.notInvited}></Feedback>
 				{/if}
 
-				{#if isAdmin && scholar}
-					<Form>
-						<Paragraph text={(l) => l.view.roles.paragraph.inviteDescription} />
-						<ScholarField
-							strings={(l) => l.view.roles.field.invite}
-							name="email"
-							size={20}
-							query={(text) => text.split(',').at(-1)?.trim() ?? ''}
-							valid={(text) =>
-								text.trim() === '' || validEmailsOrORCIDs(text)
-									? undefined
-									: (l) => l.view.roles.field.invite.invalid ?? ''}
-							bind:text={invites[role.id]}
-							showResolved={false}
-							choose={(match) => {
-								// This field holds a comma-separated list, so a chosen scholar is
-								// appended to what's already there rather than replacing it —
-								// the last segment is what was being searched for.
-								if (match.orcid === null) return;
-								const segments = invites[role.id].split(',');
-								segments[segments.length - 1] = match.orcid;
-								invites[role.id] = segments.map((s) => s.trim()).join(', ') + ', ';
-							}}
-							testid="role-invite-field-{role.name}"
-						/>
-						<Button
-							strings={(l) => l.view.roles.button.invite}
-							testid="role-invite-button-{role.name}"
-							active={validEmailsOrORCIDs(invites[role.id])}
-							action={async () => {
-								if (
-									await handle(
-										db().inviteToRole(
-											scholar,
-											role,
-											venue,
-											invites[role.id].split(',').map((s) => s.trim())
-										),
-										'Invitations sent!'
-									)
-								)
-									invites[role.id] = '';
-							}}>Invite</Button
-						>
-					</Form>
+				{#if mayInvite && scholar}
+					<RoleInvite {venue} {role} {scholar} already={roleVolunteers.map((v) => v.scholarid)} />
 				{/if}
 
 				{#if isAdmin}

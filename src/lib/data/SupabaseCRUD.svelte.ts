@@ -1,5 +1,6 @@
 import type { Database } from '$data/database';
 import { dedupeAddresses } from './addresses';
+import { eqFilter, inFilter } from './postgrestFilter';
 import type { AuthError, PostgrestError, QueryData, SupabaseClient } from '@supabase/supabase-js';
 import type {
 	AssignmentID,
@@ -322,6 +323,24 @@ function scholarsByNameQuery(client: SupabaseClient<Database>, pattern: string) 
 }
 export type ScholarMatch = QueryData<ReturnType<typeof scholarsByNameQuery>>[number];
 
+/** Scholars named by an exact email address or ORCID iD. The columns are listed
+ * explicitly for the same reason scholarsByNameQuery lists them: the scholars SELECT
+ * policy is public, so a wildcard hands out every column of any row a caller can name.
+ *
+ * `email` is among them because it is how a matched row is attributed back to the entry
+ * that was typed — and every address here was supplied by the caller, so echoing one
+ * back discloses nothing they did not already have. That is findUnknownAddresses's
+ * reasoning too. A row matched by its ORCID iD does carry its address into the response;
+ * the column is dropped before the method returns. */
+function scholarsByAddressQuery(client: SupabaseClient<Database>, filter: string) {
+	return client.from('scholars').select('id, name, orcid, email').or(filter);
+}
+type ScholarAddressRow = QueryData<ReturnType<typeof scholarsByAddressQuery>>[number];
+
+/** A scholar an invite entry named. No `email`: the caller typed the addresses, and a
+ * preview only needs a name to show and an id to invite. */
+export type ScholarInvitee = Omit<ScholarAddressRow, 'email'>;
+
 /** A seeded scholar offered on the local-only sign-in list. */
 export type DevScholar = Pick<ScholarRow, 'id' | 'name' | 'email' | 'steward'>;
 
@@ -521,7 +540,7 @@ export default class SupabaseCRUD extends CRUD {
 		const { data: scholar, error } = await this.client
 			.from('scholars')
 			.select('id')
-			.or(`orcid.eq.${emailOrORCID},email.eq.${emailOrORCID}`)
+			.or(`${eqFilter('orcid', emailOrORCID)},${eqFilter('email', emailOrORCID)}`)
 			.single();
 
 		return error || scholar === null ? this.error('ScholarNotFound', error) : { data: scholar.id };
@@ -544,6 +563,38 @@ export default class SupabaseCRUD extends CRUD {
 		}
 		const known = new Set((data ?? []).map((scholar) => scholar.email));
 		return { data: addresses.filter((address) => !known.has(address)) };
+	}
+
+	async findScholarsByAddresses(
+		emailsOrORCIDs: string[]
+	): Promise<ReadResult<Map<string, ScholarInvitee>>> {
+		const addresses = dedupeAddresses(emailsOrORCIDs);
+		// An empty `in.()` is a syntax error rather than an empty result, so the empty
+		// list is answered here rather than asked about.
+		if (addresses.length === 0) return { data: new Map() };
+
+		// One filter across two columns, because one round trip beats two — which means
+		// composing `or()` as a string, which means quoting every value by hand.
+		const filter = `${inFilter('email', addresses)},${inFilter('orcid', addresses)}`;
+		const { data, error } = await scholarsByAddressQuery(this.client, filter);
+		if (error) {
+			console.error(error);
+			return {
+				data: new Map(),
+				error: { message: this.locale.error.ScholarNotFound, details: error }
+			};
+		}
+
+		// Keyed by what the caller typed, not by what the row holds: the caller asked
+		// about entries and has to match answers back to them. The `includes` guards are
+		// what drop the incidental address of a row that matched only on its ORCID iD.
+		const found = new Map<string, ScholarInvitee>();
+		for (const { email, ...scholar } of data ?? []) {
+			if (email !== null && addresses.includes(email)) found.set(email, scholar);
+			if (scholar.orcid !== null && addresses.includes(scholar.orcid))
+				found.set(scholar.orcid, scholar);
+		}
+		return { data: found };
 	}
 
 	async getScholar(scholarID: ScholarID): Promise<Scholar | null> {
@@ -2255,31 +2306,26 @@ export default class SupabaseCRUD extends CRUD {
 		inviter: ScholarID,
 		role: RoleRow,
 		venue: VenueRow,
-		emailsOrORCIDs: string[]
+		scholars: ScholarID[]
 	): Promise<Result<string[]>> {
-		const { data: scholars, error: scholarsError } = await this.client
-			.from('scholars')
-			.select()
-			.or(
-				'email.in.(' +
-					emailsOrORCIDs.map((e) => `"${e}"`).join(',') +
-					'), orcid.in.(' +
-					emailsOrORCIDs.map((e) => `"${e}"`).join(',') +
-					')'
-			);
-		if (scholarsError) return this.error('InviteToRole', scholarsError);
+		// One invitation per scholar. The form stages each person once, so this guards the
+		// interface rather than the UI — but create_volunteer refuses a second row for a
+		// (scholar, role) pair, so a list naming somebody twice would fail the batch
+		// halfway through, with the first half already sent.
+		const invitees = [...new Set(scholars)];
 
-		const missing = emailsOrORCIDs.filter(
-			(id) => !scholars.some((scholar) => scholar.email === id || scholar.orcid === id)
-		);
-		if (missing.length > 0) return this.error('InviteToRoleMissing', null, missing.join(', '));
+		// Inviting nobody is not an invitation. The button that calls this is already held
+		// on an empty list, so this too guards the interface: an empty batch succeeds
+		// trivially, and reporting invitations sent for a batch of nobody would be a false
+		// report.
+		if (invitees.length === 0) return this.error('InviteToRole');
 
 		const ids: string[] = [];
 		const notified: Notification[] = [];
-		for (const scholar of scholars) {
+		for (const invitee of invitees) {
 			const { data, error } = await this.createVolunteer(
 				inviter,
-				scholar.id,
+				invitee,
 				role.id,
 				false,
 				false,
@@ -2288,11 +2334,11 @@ export default class SupabaseCRUD extends CRUD {
 			if (error) return { error };
 			if (data) {
 				ids.push(data);
-				const inviteResult = await this.emailScholars([scholar.id], 'RoleInvite', [
+				const inviteResult = await this.emailScholars([invitee], 'RoleInvite', [
 					role.name,
 					venuePath(venue),
 					venue.title,
-					scholar.id
+					invitee
 				]);
 				if (inviteResult.notified) notified.push(...inviteResult.notified);
 			}

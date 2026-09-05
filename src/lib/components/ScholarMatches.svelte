@@ -20,7 +20,7 @@
 	}: {
 		search: ScholarSearch;
 		/** What choosing a match means. The new-submission form fills the row's
-		 * ORCID; the role invite appends to a comma-separated list. */
+		 * ORCID; ScholarField replaces its text with it. */
 		choose: (match: ScholarMatch) => void;
 		showResolved?: boolean;
 		placeholder?: string;

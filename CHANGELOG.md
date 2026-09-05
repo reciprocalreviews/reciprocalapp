@@ -9,6 +9,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **The submission importer now reads exports from any reviewing system.** Upload a CSV with whatever column names it arrived with and match them to fields on screen, rather than renaming columns by hand first.
 - **A bulk import can now name each submission's editors.** Your file's editor columns are matched to the venue's roles, so an export naming an editor in chief and a handling editor separately seats both. A name matching nobody leaves that submission unseated rather than stopping the import; one matching several people waits for you to choose.
 - **The file's own submission-type names are matched too**, each listed with how many rows carry it, so the type an import gives its submissions is chosen rather than silently defaulted.
+- **Invite people to a role from the venue page**, not only from the roles step of venue settings. The form sits on the role's own card in both places.
+- **The invite field now finds people by name, and several at once.** Type or paste any mix of email addresses, ORCID iDs, and names, separated by commas; everyone each entry matches is offered below the field, and clicking one moves them to the list to be invited and clears the entry that found them. Nothing goes out until you press **Invite**, and only the people on that list are sent to. Someone who already has a record for the role isn't offered, and an entry matching nobody is named without holding up the rest — previously one mistyped address refused the whole batch.
 
 ### Fixed
 
@@ -17,6 +19,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **A CSV can now actually be pasted.** The paste box was a single-line field, so a multi-line CSV collapsed onto one line and arrived as a header with no rows.
 - **The submissions list no longer says imported submissions were paid for.** Nothing was ever charged for them, and the tokens meant to fund their reviewing are still an unapproved mint, so they now read **free**. The same wrong badge appeared on every submission at a payment-free venue, which no longer shows a payment column at all.
 - **An imported submission's expertise can now be edited by its editor.** Imported submissions have no authors and only an author could edit it, so the field reviewers read when deciding what to bid on could be filled in by nobody.
+- **Inviting someone to a role no longer reports it twice.** "Invitations sent!" appeared alongside "… was emailed …" for each person; the second says the same thing and names who was told, so the generic one now only appears when nobody could be emailed.
+- **Typing a complete email address into a scholar field no longer reports "No matches."** The address was searched for as though it were a name, so a person the field could resolve perfectly well was announced as unfindable.
 
 ## 0.5.3 - 2026-08-31
 

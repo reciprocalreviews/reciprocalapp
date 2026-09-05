@@ -1641,7 +1641,10 @@
 				"notInvited": "[Log in](/login) to volunteer for this role.",
 				"consult": "This role has **{count} volunteers**. We **highly** recommend that you communicate extensively with your community before changing any of the settings below, as they change the terms of volunteering.",
 				"noRoles": "No roles yet. Add one.",
-				"notLoaded": "Couldn't load venue's roles."
+				"notLoaded": "Couldn't load venue's roles.",
+				"inviteUnmatched": "No one here matches {queries}.",
+				"inviteAlready": "{queries} already has a record for this role, so they can't be added again.",
+				"invited": "Invitations sent!"
 			},
 			"button": {
 				"createRole": {
@@ -1704,6 +1707,10 @@
 					"tip": "Invite people to this role",
 					"label": "Invite"
 				},
+				"removeInvite": {
+					"tip": "Don't invite {name}",
+					"label": "x"
+				},
 				"deleteRole": {
 					"tip": "Delete this role",
 					"label": "Delete $delete",
@@ -1722,9 +1729,8 @@
 					"invalid": "Must be a valid ORCID iD or email address."
 				},
 				"invite": {
-					"label": "email or orcid",
-					"placeholder": "",
-					"invalid": "Must be a comma separated list of emails or ORCID"
+					"label": "email, orcid, or name",
+					"placeholder": ""
 				},
 				"roleName": {
 					"label": "name",
@@ -1747,6 +1753,10 @@
 					"placeholder": "e.g., 4",
 					"invalid": "Must be a whole number, or empty for no cap"
 				}
+			},
+			"fieldset": {
+				"matches": "matches",
+				"invites": "invites"
 			},
 			"card": {
 				"admins": {
@@ -1800,7 +1810,7 @@
 				"createRole": "Create a new role.",
 				"adminsDescription": "Admins can edit venue information, add and remove other admins, and gift tokens. They are typically Editors-in-Chief, Program Chairs of a conference, or editorial staff.",
 				"addAdmin": "Add a new admin.",
-				"inviteDescription": "Add one or more people to invite to this role by email or ORCID, separated by commas.",
+				"inviteDescription": "Add one or more people to invite to this role, separated by commas.",
 				"administeredBy": "This venue is administered by",
 				"roleOpen": "This role is open to **volunteers**.",
 				"roleInvited": "This role is **invite-only**.",
@@ -1993,8 +2003,6 @@
 		"ReorderPreferenceLevel": "Unable to reorder preference levels",
 		"DeletePreferenceLevel": "Unable to delete preference level",
 		"InviteToRole": "Unable to invite to role",
-		"InviteToRoleMissing": "Unknown scholars",
-		"InviteToRoleSuccess": "Successfully invited scholars to role.",
 		"AcceptRoleInvite": "Unable to accept role invite",
 		"EditCurrencyMinters": "Unable to edit minters",
 		"AddCurrencyMinter": "Unable to add minter",

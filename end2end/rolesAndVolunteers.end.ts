@@ -74,23 +74,28 @@ test('editor creates a role, edits its description, and deletes it', async ({ pa
 });
 
 test('editor invites a scholar to an invite-only role by ORCID', async ({ page, context }) => {
-	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_PATH}/settings`);
-	await page.waitForLoadState('networkidle');
-
 	const inviteeID = sql(`select id from public.scholars where orcid = '${INVITEE_ORCID}';`);
-
-	// The Editor role is invite-only in the seed; expand it to reveal the
-	// invite form (which is admin-only).
-	await page.getByTestId('role-Editor').click();
-
 	// Clear any prior volunteer record for this scholar+role so the test can
 	// re-run without colliding with createVolunteer's "AlreadyVolunteered" guard.
 	sql(
 		`delete from public.volunteers where scholarid = '${inviteeID}' and roleid in (select id from public.roles where venueid = '${VENUE_ID}' and name = 'Editor');`
 	);
 
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
+	await page.waitForLoadState('networkidle');
+	// The Editor role is invite-only in the seed; expand it to reveal the
+	// invite form (which is admin-only).
+	await page.getByTestId('role-Editor').click();
+	// Type, choose, then send. The field offers whoever the entry matched; clicking moves
+	// them to the list to be invited. The `delete` above is what keeps the invitee off
+	// this role and therefore ON offer — someone already on a role is not matched, since
+	// create_volunteer would refuse a second record for them.
 	await page.getByTestId('role-invite-field-Editor').fill(INVITEE_ORCID);
+	await page.getByTestId(`role-invite-match-Editor-${SEED.scholars.author2.id}`).click();
+	await expect(
+		page.getByTestId(`role-invite-invitee-Editor-${SEED.scholars.author2.id}`)
+	).toBeVisible();
 	await page.getByTestId('role-invite-button-Editor').click();
 
 	// A volunteer record now exists for the invitee on the Editor role,
@@ -105,21 +110,26 @@ test('editor invites a scholar to an invite-only role by ORCID', async ({ page, 
 });
 
 test('editor invites a scholar to an invite-only role by email', async ({ page, context }) => {
-	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_PATH}/settings`);
-	await page.waitForLoadState('networkidle');
-
 	const inviteeID = sql(`select id from public.scholars where email = '${INVITEE_EMAIL}';`);
-
-	// Use the Associate Editor role (also invite-only) so this test doesn't
-	// collide with the by-ORCID test above.
-	await page.getByTestId('role-Associate Editor').click();
-
 	sql(
 		`delete from public.volunteers where scholarid = '${inviteeID}' and roleid in (select id from public.roles where venueid = '${VENUE_ID}' and name = 'Associate Editor');`
 	);
 
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
+	await page.waitForLoadState('networkidle');
+	// Use the Associate Editor role (also invite-only) so this test doesn't
+	// collide with the by-ORCID test above.
+	await page.getByTestId('role-Associate Editor').click();
+	// Type, choose, then send. The field offers whoever the entry matched; clicking moves
+	// them to the list to be invited. The `delete` above is what keeps the invitee off
+	// this role and therefore ON offer — someone already on a role is not matched, since
+	// create_volunteer would refuse a second record for them.
 	await page.getByTestId('role-invite-field-Associate Editor').fill(INVITEE_EMAIL);
+	await page.getByTestId(`role-invite-match-Associate Editor-${SEED.scholars.author2.id}`).click();
+	await expect(
+		page.getByTestId(`role-invite-invitee-Associate Editor-${SEED.scholars.author2.id}`)
+	).toBeVisible();
 	await page.getByTestId('role-invite-button-Associate Editor').click();
 
 	await expect
@@ -144,7 +154,15 @@ test('an invited scholar declines the invitation from the role card', async ({ p
 	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 	await page.getByTestId('role-Editor').click();
+	// Type, choose, then send. The field offers whoever the entry matched; clicking moves
+	// them to the list to be invited. The `delete` above is what keeps the invitee off
+	// this role and therefore ON offer — someone already on a role is not matched, since
+	// create_volunteer would refuse a second record for them.
 	await page.getByTestId('role-invite-field-Editor').fill(INVITEE_EMAIL);
+	await page.getByTestId(`role-invite-match-Editor-${SEED.scholars.author2.id}`).click();
+	await expect(
+		page.getByTestId(`role-invite-invitee-Editor-${SEED.scholars.author2.id}`)
+	).toBeVisible();
 	await page.getByTestId('role-invite-button-Editor').click();
 	await expect
 		.poll(() =>
@@ -202,7 +220,15 @@ test('an invited scholar accepts the invitation from the role card', async ({ pa
 	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 	await page.getByTestId('role-Editor').click();
+	// Type, choose, then send. The field offers whoever the entry matched; clicking moves
+	// them to the list to be invited. The `delete` above is what keeps the invitee off
+	// this role and therefore ON offer — someone already on a role is not matched, since
+	// create_volunteer would refuse a second record for them.
 	await page.getByTestId('role-invite-field-Editor').fill(INVITEE_EMAIL);
+	await page.getByTestId(`role-invite-match-Editor-${SEED.scholars.author2.id}`).click();
+	await expect(
+		page.getByTestId(`role-invite-invitee-Editor-${SEED.scholars.author2.id}`)
+	).toBeVisible();
 	await page.getByTestId('role-invite-button-Editor').click();
 	await expect
 		.poll(() =>
@@ -495,4 +521,205 @@ test("volunteering tells the venue's top role on one thread that replies to the 
 		if (strangers) sql(`update public.volunteers set active = true where id in ('${strangers}');`);
 	}
 	await logout(page);
+});
+
+test('an admin invites from the venue page, not only from settings', async ({ page, context }) => {
+	const inviteeID = sql(`select id from public.scholars where orcid = '${INVITEE_ORCID}';`);
+	sql(
+		`delete from public.volunteers where scholarid = '${inviteeID}' and roleid in (select id from public.roles where venueid = '${VENUE_ID}' and name = 'Associate Editor');`
+	);
+
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}`);
+	await page.waitForLoadState('networkidle');
+	// No click to expand: an invite-only role's card is open for somebody who may
+	// invite, which is the whole point of putting the form here.
+	await expect(page.getByTestId('role-invite-field-Associate Editor')).toBeVisible();
+
+	await page.getByTestId('role-invite-field-Associate Editor').fill(INVITEE_ORCID);
+	// The match is labelled with who the entry found, so the right person is confirmed by
+	// name before anything is sent.
+	const match = page.getByTestId(`role-invite-match-Associate Editor-${SEED.scholars.author2.id}`);
+	await expect(match).toHaveText(SEED.scholars.author2.name);
+	await match.click();
+	await expect(
+		page.getByTestId(`role-invite-invitee-Associate Editor-${SEED.scholars.author2.id}`)
+	).toBeVisible();
+
+	await page.getByTestId('role-invite-button-Associate Editor').click();
+
+	await expect
+		.poll(() =>
+			sql(
+				`select accepted::text from public.volunteers v join public.roles r on r.id = v.roleid where v.scholarid = '${inviteeID}' and r.venueid = '${VENUE_ID}' and r.name = 'Associate Editor';`
+			)
+		)
+		.toBe('invited');
+
+	// The card is still open and the field still there afterwards: a successful invite
+	// calls invalidateAll(), which re-evaluates the card's expand rule, and an admin who
+	// has just invited one person often has another to add.
+	await expect(page.getByTestId('role-invite-field-Associate Editor')).toBeVisible();
+	await expect(page.getByTestId('role-invite-field-Associate Editor')).toHaveValue('');
+});
+
+test('the invite field matches several scholars at once and invites them in one batch', async ({
+	page,
+	context
+}) => {
+	const byOrcid = SEED.scholars.author2;
+	const byEmail = SEED.scholars.author1;
+	const byName = SEED.scholars.r5; // Anne Notation
+	sql(
+		`delete from public.volunteers where scholarid in ('${byOrcid.id}', '${byEmail.id}', '${byName.id}') and roleid in (select id from public.roles where venueid = '${VENUE_ID}' and name = 'Editor');`
+	);
+
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
+	await page.waitForLoadState('networkidle');
+
+	await page.getByTestId('role-Editor').click();
+	const field = page.getByTestId('role-invite-field-Editor');
+	const button = page.getByTestId('role-invite-button-Editor');
+
+	// Three entries, three kinds of entry, one round of matches — an ORCID iD, an email
+	// address, and a name, all searched at once. Searching several names at a time is the
+	// whole point of the field taking a comma-separated list.
+	await field.fill(`${byOrcid.orcid}, ${byEmail.email}, Anne`);
+
+	for (const scholar of [byOrcid, byEmail, byName]) {
+		const match = page.getByTestId(`role-invite-match-Editor-${scholar.id}`);
+		await expect(match).toHaveText(scholar.name);
+		await match.click();
+		await expect(page.getByTestId(`role-invite-invitee-Editor-${scholar.id}`)).toBeVisible();
+	}
+
+	// Choosing each of them took the entry that found them out of the field, so by the
+	// time all three are staged there is nothing left to search for.
+	await expect(field).toHaveValue('');
+	await expect(button).toBeEnabled();
+	await button.click();
+
+	await expect
+		.poll(() =>
+			Number(
+				sql(
+					`select count(*) from public.volunteers v join public.roles r on r.id = v.roleid where v.scholarid in ('${byOrcid.id}', '${byEmail.id}', '${byName.id}') and r.venueid = '${VENUE_ID}' and r.name = 'Editor' and v.accepted = 'invited';`
+				)
+			)
+		)
+		.toBe(3);
+});
+
+test('a name matching several scholars offers all of them, and invites only the one chosen', async ({
+	page,
+	context
+}) => {
+	const chosen = SEED.scholars.author2; // Ann Thesis
+	const other = SEED.scholars.r5; // Anne Notation
+	sql(
+		`delete from public.volunteers where scholarid in ('${chosen.id}', '${other.id}') and roleid in (select id from public.roles where venueid = '${VENUE_ID}' and name = 'Editor');`
+	);
+
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
+	await page.waitForLoadState('networkidle');
+
+	await page.getByTestId('role-Editor').click();
+
+	// "Ann" is ambiguous, which is why choosing is a step rather than a guess.
+	await page.getByTestId('role-invite-field-Editor').fill('Ann');
+	await expect(page.getByTestId(`role-invite-match-Editor-${chosen.id}`)).toBeVisible();
+	await expect(page.getByTestId(`role-invite-match-Editor-${other.id}`)).toBeVisible();
+
+	await page.getByTestId(`role-invite-match-Editor-${chosen.id}`).click();
+	await expect(page.getByTestId(`role-invite-invitee-Editor-${chosen.id}`)).toBeVisible();
+	await expect(page.getByTestId(`role-invite-invitee-Editor-${other.id}`)).toHaveCount(0);
+
+	await page.getByTestId('role-invite-button-Editor').click();
+
+	await expect
+		.poll(() =>
+			sql(
+				`select coalesce(string_agg(v.scholarid::text, ','), '') from public.volunteers v join public.roles r on r.id = v.roleid where v.scholarid in ('${chosen.id}', '${other.id}') and r.venueid = '${VENUE_ID}' and r.name = 'Editor';`
+			)
+		)
+		.toBe(chosen.id);
+});
+
+test('an entry matching nobody is named, and does not hold up the rest', async ({
+	page,
+	context
+}) => {
+	const invitee = SEED.scholars.author2;
+	sql(
+		`delete from public.volunteers where scholarid = '${invitee.id}' and roleid in (select id from public.roles where venueid = '${VENUE_ID}' and name = 'Associate Editor');`
+	);
+
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
+	await page.waitForLoadState('networkidle');
+
+	await page.getByTestId('role-Associate Editor').click();
+	const field = page.getByTestId('role-invite-field-Associate Editor');
+	const button = page.getByTestId('role-invite-button-Associate Editor');
+
+	await field.fill(`${invitee.orcid}, nobody@nowhere.example`);
+	await expect(page.getByTestId('role-invite-unmatched-Associate Editor')).toContainText(
+		'nobody@nowhere.example'
+	);
+
+	// The entry that matched nobody is named, but it does not refuse the batch: an editor
+	// who cannot find one of two people invites the other and comes back for them. This
+	// assertion is the inverse of the all-or-nothing rule it replaced.
+	await page.getByTestId(`role-invite-match-Associate Editor-${invitee.id}`).click();
+	await expect(button).toBeEnabled();
+	await button.click();
+
+	await expect
+		.poll(() =>
+			sql(
+				`select accepted::text from public.volunteers v join public.roles r on r.id = v.roleid where v.scholarid = '${invitee.id}' and r.venueid = '${VENUE_ID}' and r.name = 'Associate Editor';`
+			)
+		)
+		.toBe('invited');
+
+	// The unfinished entry survives the send, because it is still unfinished work.
+	await expect(field).toHaveValue('nobody@nowhere.example');
+});
+
+test('a scholar already on the role is not offered', async ({ page, context }) => {
+	await login(EDITOR_EMAIL, page, context);
+
+	const invitee = SEED.scholars.author2;
+	// Put them on the role first, in the state that reads least like a member: declined.
+	// create_volunteer refuses a second record whatever state the first is in.
+	sql(
+		`delete from public.volunteers where scholarid = '${invitee.id}' and roleid in (select id from public.roles where venueid = '${VENUE_ID}' and name = 'Editor');`
+	);
+	sql(
+		`insert into public.volunteers (scholarid, roleid, accepted, active, expertise) select '${invitee.id}', id, 'declined', false, '' from public.roles where venueid = '${VENUE_ID}' and name = 'Editor';`
+	);
+
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
+	await page.waitForLoadState('networkidle');
+	await page.getByTestId('role-Editor').click();
+
+	await page.getByTestId('role-invite-field-Editor').fill(invitee.email);
+	await expect(page.getByTestId('role-invite-already-Editor')).toContainText(invitee.email);
+	await expect(page.getByTestId(`role-invite-match-Editor-${invitee.id}`)).toHaveCount(0);
+	await expect(page.getByTestId('role-invite-button-Editor')).toBeDisabled();
+});
+
+test('a scholar who does not administer the venue is offered no invite field', async ({
+	page,
+	context
+}) => {
+	await login(VOLUNTEER_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}`);
+	await page.waitForLoadState('networkidle');
+
+	await expect(page.getByTestId('role-Reviewer')).toBeVisible();
+	await expect(page.getByTestId('role-invite-field-Reviewer')).toHaveCount(0);
+	await expect(page.getByTestId('role-invite-field-Editor')).toHaveCount(0);
 });

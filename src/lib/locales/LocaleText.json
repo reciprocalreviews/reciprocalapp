@@ -576,12 +576,6 @@
             "InviteToRole": {
               "type": "string"
             },
-            "InviteToRoleMissing": {
-              "type": "string"
-            },
-            "InviteToRoleSuccess": {
-              "type": "string"
-            },
             "LastSteward": {
               "description": "RR012: there must always be one steward, or nobody can appoint another.",
               "type": "string"
@@ -863,8 +857,6 @@
             "ReorderPreferenceLevel",
             "DeletePreferenceLevel",
             "InviteToRole",
-            "InviteToRoleMissing",
-            "InviteToRoleSuccess",
             "AcceptRoleInvite",
             "EditCurrencyMinters",
             "AddCurrencyMinter",
@@ -5954,6 +5946,10 @@
                     "removeCompensation": {
                       "$ref": "#/definitions/ConfirmButtonText"
                     },
+                    "removeInvite": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Takes a chosen scholar back off the list before anything is sent. `{name}` in the tip is replaced with theirs, because the tip is the button's aria-label and a row of buttons all announcing \"x\" is unusable. Not a confirm button: nothing has gone out, so there is nothing to undo."
+                    },
                     "resume": {
                       "$ref": "#/definitions/ButtonText"
                     },
@@ -5979,6 +5975,7 @@
                     "stop",
                     "resume",
                     "invite",
+                    "removeInvite",
                     "deleteRole"
                   ],
                   "type": "object"
@@ -6029,6 +6026,18 @@
                     "consult": {
                       "type": "string"
                     },
+                    "inviteAlready": {
+                      "description": "Queries whose every match is somebody who cannot be added again. Distinct from `inviteUnmatched`, because \"nobody is called that\" and \"they are already here\" are different news. Worded to be true of every state a volunteer record can be in, since create_volunteer refuses a second row whether the first is invited, accepted, declined, or paused.",
+                      "type": "string"
+                    },
+                    "inviteUnmatched": {
+                      "description": "Queries that were looked up and matched nobody at all. Named rather than left silent, and advisory: the invitation goes ahead without them.",
+                      "type": "string"
+                    },
+                    "invited": {
+                      "description": "Confirms a batch of invitations went out.",
+                      "type": "string"
+                    },
                     "noRoles": {
                       "type": "string"
                     },
@@ -6043,7 +6052,10 @@
                     "notInvited",
                     "consult",
                     "noRoles",
-                    "notLoaded"
+                    "notLoaded",
+                    "inviteUnmatched",
+                    "inviteAlready",
+                    "invited"
                   ],
                   "type": "object"
                 },
@@ -6080,7 +6092,8 @@
                       "$ref": "#/definitions/TextFieldText"
                     },
                     "invite": {
-                      "$ref": "#/definitions/TextFieldText"
+                      "$ref": "#/definitions/TextFieldText",
+                      "description": "The role invite's field. It takes a comma-separated list of email addresses, ORCID iDs, and names, so the label names all three. There is no `invalid`, because nothing the field can hold is a mistake — a query that matches nobody is reported as a query that matched nobody, not as text that should not have been typed."
                     },
                     "newRoleName": {
                       "$ref": "#/definitions/TextFieldText"
@@ -6124,6 +6137,23 @@
                     "compensationRationale",
                     "expertise",
                     "papers"
+                  ],
+                  "type": "object"
+                },
+                "fieldset": {
+                  "additionalProperties": false,
+                  "description": "Captions for the two rows under the invite field: who the queries matched, and who has been chosen from them. Lowercase, like a field label, because that is what they are — a name for the group beside them, not a sentence.",
+                  "properties": {
+                    "invites": {
+                      "type": "string"
+                    },
+                    "matches": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "matches",
+                    "invites"
                   ],
                   "type": "object"
                 },
@@ -6250,6 +6280,7 @@
                 "feedback",
                 "button",
                 "field",
+                "fieldset",
                 "card",
                 "checkbox",
                 "slider",
