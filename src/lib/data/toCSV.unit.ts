@@ -42,4 +42,16 @@ describe('toCSV round trip', () => {
 			{ Name: 'Plain', Email: 'c@example.com', Expertise: '' }
 		]);
 	});
+
+	// toCSV always quoted newlines correctly; until parseCSV learned to read
+	// them, this half of the round trip was a claim the pair could not honour.
+	test('survives a newline inside a value', () => {
+		const headers = ['Title', 'Note'];
+		const rows = [['Flexible Deadlines:\nA Systematic Review', 'line one\nline two']];
+		const parsed = parseCSV(toCSV(headers, rows));
+		expect(parsed.ragged).toEqual([]);
+		expect(parsed.rows).toEqual([
+			{ Title: 'Flexible Deadlines:\nA Systematic Review', Note: 'line one\nline two' }
+		]);
+	});
 });
