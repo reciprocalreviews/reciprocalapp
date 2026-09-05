@@ -32,6 +32,11 @@ export type SubmissionsViewContext = {
 	assignments: ViewAssignment[] | null;
 	/** Role lookup, for the anonymous_authors gate. */
 	rolesById: Map<string, { anonymous_authors: boolean; priority: number }>;
+	/** Whether the viewer can approve assignments for any role at this venue —
+	 * a venue admin, an editor, or the approver of some role. This is the line
+	 * between someone running the venue's reviewing and someone only bidding in
+	 * it, and it is what the manuscript ID is gated on. */
+	isVenueApprover: boolean;
 	/** Which submissions already have someone in the venue's editor role, from
 	 * `public.venue_submission_editors`. Not derived from `assignments`: a venue editor
 	 * who is not a venue admin can see the venue's submissions and none of its
@@ -129,6 +134,26 @@ export function submissionsView(context: SubmissionsViewContext) {
 		);
 	}
 
+	/** Whether the viewer may see this submission's manuscript ID.
+	 *
+	 * A looser gate than canSeeAuthors on purpose. The ID is the key the paper is
+	 * filed under in the venue's own reviewing system, so it leads back to the
+	 * authors — but the people who can perform that lookup are the ones running
+	 * the venue's reviewing, and the ID is how they cross-reference a submission
+	 * with the system it came from. Gating it on canSeeAuthors took it away from
+	 * every editor and associate editor at a venue whose roles are anonymized,
+	 * which is the default and, in practice, most of them.
+	 *
+	 * So the line is drawn at bidding rather than at author visibility. A scholar
+	 * choosing what to bid on has no editorial access to look the ID up with, and
+	 * that is who this withholds it from. An anonymized editor still cannot see
+	 * the author list here — that is what anonymous_authors is for — and whatever
+	 * they could learn by taking the ID to the external system, they could learn
+	 * before this change too. */
+	function canSeeExternalID(sub: ViewSubmission): boolean {
+		return context.isVenueApprover || canSeeAuthors(sub);
+	}
+
 	/** True if the search term matches the submission's title, or any of the
 	 * identifying details this viewer is allowed to see.
 	 *
@@ -137,13 +162,13 @@ export function submissionsView(context: SubmissionsViewContext) {
 	 * manuscript-ID matches honor `role.anonymous_authors` explicitly, so a
 	 * reviewer in an anonymous-authors role cannot discover either via search.
 	 *
-	 * The ID is gated for the same reason the cell hides it. Matching it here
-	 * regardless would hand back what the column withholds: type a guessed ID and
-	 * watch whether a row survives, and the guess is confirmed one query at a
-	 * time. Titles stay searchable — they are shown to everyone. */
+	 * The ID is gated by canSeeExternalID, the same predicate its column uses.
+	 * Matching it here regardless would hand back what the column withholds: type
+	 * a guessed ID and watch whether a row survives, and the guess is confirmed
+	 * one query at a time. Titles stay searchable — they are shown to everyone. */
 	function matchesFilter(sub: ViewSubmission): boolean {
 		if (matches(sub.title)) return true;
-		if (canSeeAuthors(sub) && matches(sub.externalid)) return true;
+		if (canSeeExternalID(sub) && matches(sub.externalid)) return true;
 
 		const subAssignments = context.assignments?.filter((a) => a.submission === sub.id) ?? [];
 		if (anyScholarMatches(subAssignments.map((a) => a.scholar))) return true;
@@ -260,6 +285,7 @@ export function submissionsView(context: SubmissionsViewContext) {
 		matches,
 		anyScholarMatches,
 		canSeeAuthors,
+		canSeeExternalID,
 		matchesFilter,
 		paymentStatus,
 		needsEditor,

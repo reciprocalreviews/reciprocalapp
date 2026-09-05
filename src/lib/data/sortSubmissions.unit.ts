@@ -28,6 +28,7 @@ function view(over: Partial<SubmissionsViewContext> = {}) {
 		isAdmin: false,
 		assignments: [],
 		rolesById: new Map(),
+		isVenueApprover: false,
 		submissionsWithEditor: new Set<string>(),
 		scholarName: new Map(),
 		conflicts: [],
@@ -111,6 +112,31 @@ describe('canSeeAuthors', () => {
 	});
 });
 
+describe('canSeeExternalID', () => {
+	const target = sub({ id: 's1', authors: ['author'] });
+
+	// Looser than canSeeAuthors on purpose: gating the manuscript ID on author
+	// visibility took it away from every editor and associate editor at a venue
+	// whose roles are anonymized, which is the default.
+	test('an approver at an anonymized venue can, though they cannot see authors', () => {
+		const v = view({
+			isVenueApprover: true,
+			assignments: [{ submission: 's1', scholar: 'viewer', role: 'anon' }],
+			rolesById: new Map([['anon', { anonymous_authors: true, priority: 1 }]])
+		});
+		expect(v.canSeeAuthors(target)).toBe(false);
+		expect(v.canSeeExternalID(target)).toBe(true);
+	});
+
+	test('a scholar who is only bidding cannot', () => {
+		expect(view({ isVenueApprover: false }).canSeeExternalID(target)).toBe(false);
+	});
+
+	test('an author of the submission can', () => {
+		expect(view({ uid: 'author' }).canSeeExternalID(target)).toBe(true);
+	});
+});
+
 describe('matchesFilter', () => {
 	const target = sub({ id: 's1', title: 'Deep Learning', externalid: 'EXT-42', authors: ['a1'] });
 
@@ -138,6 +164,10 @@ describe('matchesFilter', () => {
 
 	test('does match an external id for an author of the submission', () => {
 		expect(view({ filter: 'ext-4', uid: 'a1' }).matchesFilter(target)).toBe(true);
+	});
+
+	test('does match an external id for a venue approver', () => {
+		expect(view({ filter: 'ext-4', isVenueApprover: true }).matchesFilter(target)).toBe(true);
 	});
 
 	test('does not match unrelated text', () => {

@@ -138,6 +138,16 @@
 					.filter((r) => r.isVisible)
 	);
 
+	/** Whether this scholar helps run the venue's reviewing — a venue admin, or
+	 * the approver of some role — as opposed to a scholar who is only bidding
+	 * here. The manuscript ID is gated on this rather than on author visibility,
+	 * because an editor at an anonymized venue still needs the ID to find the
+	 * submission in the system it came from. */
+	const isVenueApprover = $derived(
+		isAdmin ||
+			(uid !== null && (roles ?? []).some((role) => isRoleApprover(role, volunteering ?? [], uid)))
+	);
+
 	/** State of sorting and filtering */
 	let paymentSortPendingFirst = $state(true);
 	let titleSortIncreasing = $state(true);
@@ -167,6 +177,7 @@
 			isAdmin,
 			assignments,
 			rolesById,
+			isVenueApprover,
 			submissionsWithEditor,
 			scholarName,
 			conflicts,
@@ -443,14 +454,16 @@
 							     is nullable — the detail page writes null back for empty input. An
 							     empty cell looked broken rather than unanswered. -->
 							<td>{submission.expertise?.trim() ? submission.expertise : EmptyLabel}</td>
-							{#if view.canSeeAuthors(submission)}
+							{#if view.canSeeExternalID(submission)}
 								<td class:highlight={view.matches(submission.externalid)}
 									>{submission.externalid}</td
 								>
 							{:else}
-								<!-- The manuscript ID is the key this paper is filed under in the
-								     venue's own reviewing system, so it leads back to the authors
-								     the column above is hiding. -->
+								<!-- Withheld from a scholar who is only bidding: the ID is the key
+								     this paper is filed under in the venue's own reviewing system,
+								     so it leads back to the authors the column above is hiding.
+								     Editors and role approvers keep it — it is how they find the
+								     submission in the system it came from. -->
 								<td
 									><span title={locale().page.submissions.cell.anonymized}>{UnknownLabel}</span></td
 								>
