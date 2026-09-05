@@ -7,7 +7,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Added
 
 - **The submission importer now reads exports from any reviewing system.** Upload a CSV with whatever column names it arrived with and match them to fields on screen, rather than renaming columns by hand first.
-- **A bulk import can now name each submission's editors.** Your file's editor columns are matched to the venue's roles — an export naming an editor in chief and a handling editor separately seats both — and a name the venue cannot match to someone already holding that role stops the import rather than being guessed at.
+- **A bulk import can now name each submission's editors.** Your file's editor columns are matched to the venue's roles, so an export naming an editor in chief and a handling editor separately seats both. A name matching nobody leaves that submission unseated rather than stopping the import; one matching several people waits for you to choose.
 - **The file's own submission-type names are matched too**, each listed with how many rows carry it, so the type an import gives its submissions is chosen rather than silently defaulted.
 
 ### Fixed

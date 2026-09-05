@@ -386,13 +386,16 @@ export type LocaleText = {
 			header: {
 				csv: string;
 				mapping: string;
-				defaults: string;
 				rows: string;
 				submit: string;
 			};
 			paragraph: {
 				intro: string;
 				mintSummary: string;
+				/** Says how many submissions will import with nobody in a role,
+				 * because the names in that column matched no volunteer. `{count}`
+				 * submissions, `{role}` the venue's own name for the role. */
+				unseated: string;
 			};
 			note: {
 				csv: string;
@@ -488,7 +491,12 @@ export type LocaleText = {
 				header: string;
 				/** Explains that each distinct value becomes one submission type. */
 				note: string;
-				/** One value and how many rows carry it. `{value}`, `{count}`. */
+				/** Shown instead when the file has no type column, so one type
+				 * applies to every row. */
+				noColumn: string;
+				/** One value and how many rows carry it. `{value}`, `{count}`. Written
+				 * so it reads correctly at a count of one without pluralizing, since
+				 * nothing in this app pluralizes. */
 				value: string;
 				/** Flags values matching no submission type by name, which take the
 				 * default. `{values}` is the list. */
@@ -498,9 +506,14 @@ export type LocaleText = {
 				/** Shown beside a name that matches more than one of the venue's
 				 * volunteers, above the buttons offering each. */
 				ambiguous: string;
-				/** Shown beside a name matching nobody who holds the chosen role.
-				 * `{role}` is the venue's own name for that role. */
+				/** Shown beside a name matching nobody who holds that role. Kept very
+				 * short: it sits in a table cell barely wider than one word, and the
+				 * consequence is explained once above the table instead of once per
+				 * row. `{role}` is the venue's own name for the role. */
 				unmatched: string;
+				/** Explains, above the table, what an unmatched name means — that the
+				 * submission imports with nobody in that role rather than failing. */
+				unmatchedNote: string;
 				/** Shown in place of the person column when no role has anyone in it. */
 				noRole: string;
 				/** Explains that a row naming nobody falls back to the venue's sole

@@ -1499,9 +1499,6 @@
                     "csv": {
                       "type": "string"
                     },
-                    "defaults": {
-                      "type": "string"
-                    },
                     "mapping": {
                       "type": "string"
                     },
@@ -1515,7 +1512,6 @@
                   "required": [
                     "csv",
                     "mapping",
-                    "defaults",
                     "rows",
                     "submit"
                   ],
@@ -1616,11 +1612,16 @@
                     },
                     "mintSummary": {
                       "type": "string"
+                    },
+                    "unseated": {
+                      "description": "Says how many submissions will import with nobody in a role, because the names in that column matched no volunteer. `{count}` submissions, `{role}` the venue's own name for the role.",
+                      "type": "string"
                     }
                   },
                   "required": [
                     "intro",
-                    "mintSummary"
+                    "mintSummary",
+                    "unseated"
                   ],
                   "type": "object"
                 },
@@ -1648,13 +1649,18 @@
                       "type": "string"
                     },
                     "unmatched": {
-                      "description": "Shown beside a name matching nobody who holds the chosen role. `{role}` is the venue's own name for that role.",
+                      "description": "Shown beside a name matching nobody who holds that role. Kept very short: it sits in a table cell barely wider than one word, and the consequence is explained once above the table instead of once per row. `{role}` is the venue's own name for the role.",
+                      "type": "string"
+                    },
+                    "unmatchedNote": {
+                      "description": "Explains, above the table, what an unmatched name means — that the submission imports with nobody in that role rather than failing.",
                       "type": "string"
                     }
                   },
                   "required": [
                     "ambiguous",
                     "unmatched",
+                    "unmatchedNote",
                     "noRole",
                     "note",
                     "header",
@@ -1705,6 +1711,10 @@
                       "description": "Heading for matching the file's own type names to the venue's.",
                       "type": "string"
                     },
+                    "noColumn": {
+                      "description": "Shown instead when the file has no type column, so one type applies to every row.",
+                      "type": "string"
+                    },
                     "note": {
                       "description": "Explains that each distinct value becomes one submission type.",
                       "type": "string"
@@ -1714,13 +1724,14 @@
                       "type": "string"
                     },
                     "value": {
-                      "description": "One value and how many rows carry it. `{value}`, `{count}`.",
+                      "description": "One value and how many rows carry it. `{value}`, `{count}`. Written so it reads correctly at a count of one without pluralizing, since nothing in this app pluralizes.",
                       "type": "string"
                     }
                   },
                   "required": [
                     "header",
                     "note",
+                    "noColumn",
                     "value",
                     "unmatched"
                   ],

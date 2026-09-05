@@ -521,13 +521,13 @@
 			"header": {
 				"csv": "Populate from CSV",
 				"mapping": "Match columns",
-				"defaults": "Defaults",
 				"rows": "Submissions",
 				"submit": "Submit"
 			},
 			"paragraph": {
 				"intro": "Import a batch of free submissions that pre-date this venue's launch on Reciprocal Reviews. These submissions will have no authors or payments, but reviewers can bid on them to earn tokens. Submitting this form will also propose a mint transaction sized to fund reviewer compensation, which a minter must approve before reviewers will receive tokens.",
-				"mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens, summed from each submission's type cost."
+				"mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens, summed from each submission's type cost.",
+				"unseated": "**{count}** of these will import with no {role}."
 			},
 			"note": {
 				"csv": "Upload or paste a CSV with a header row, exported from whatever system you review in. Any column names will do — you match them to fields in the next step. Line breaks inside quoted fields are read correctly.",
@@ -662,17 +662,19 @@
 			},
 			"person": {
 				"ambiguous": "Several people match this name. Choose one:",
-				"unmatched": "Nobody holding the {role} role at this venue matches this name.",
+				"unmatched": "No {role}",
 				"noRole": "No role at this venue has an accepted, active volunteer to seat.",
 				"note": "For each role, choose the column naming who holds it. Leave a role unmatched to seat nobody in it; a row naming nobody falls back to the venue’s editor, if it has exactly one.",
 				"header": "Match editors",
-				"doubleSeated": "This row seats the same person in two roles. That is allowed — but they will be paid for both."
+				"doubleSeated": "This row seats the same person in two roles. That is allowed — but they will be paid for both.",
+				"unmatchedNote": "A name nobody at this venue matches does not stop the import: that submission arrives with nobody in the role, and is flagged as waiting for an editor. A name matching several people does need choosing before you can import."
 			},
 			"type": {
 				"header": "Match types",
 				"note": "Each value in your type column becomes one of this venue’s submission types. The cost of the type you choose is what the import mints for that submission.",
-				"value": "{value} — {count} submissions",
-				"unmatched": "These values match no submission type by name and will use whichever type you choose above: {values}."
+				"value": "{value} × {count}",
+				"unmatched": "These values match no submission type by name and will use whichever type you choose above: {values}.",
+				"noColumn": "Nothing in your file says which type these submissions are, so they all get this one. You can change any of them in the table below."
 			}
 		},
 		"submissions": {

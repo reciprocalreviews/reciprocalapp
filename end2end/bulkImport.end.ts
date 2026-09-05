@@ -38,18 +38,21 @@ test('admin can bulk import free submissions and a proposed mint transaction', a
 	await logout(page);
 });
 
-// The editor columns decide who holds a submission and who is paid for it, so the
-// behaviour worth pinning in the browser is that an unmatched name stops the import
-// rather than being guessed at. Seating several roles at once, and the refusals
-// around priority-0, are left to the pgTAP tests, which can build a venue with two
-// editors and two top roles; the seed has one of each.
-test('an editor named in the import must be one the venue knows', async ({ page, context }) => {
+// An unmatched editor name must NOT stop the import. A backlog is exactly the case
+// where the people named in the file have not signed up yet, and refusing it there
+// made the feature useless where it mattered most — an unmatched name seats nobody,
+// so there is no wrong person to seat. Ambiguity is the case that still blocks, and
+// matchPersonName.unit.ts covers that; the seed has no two volunteers sharing a name.
+test('a name the venue does not know imports with nobody in that role', async ({
+	page,
+	context
+}) => {
 	await login('editor@uni.edu', page, context);
 
 	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
 	await page.waitForLoadState('networkidle');
 
-	const external = `import-person-${Date.now()}`;
+	const external = `import-unmatched-${Date.now()}`;
 
 	// A CSV is what reveals the matching panel, so drive the paste path rather than
 	// the file picker, which Playwright cannot open.
@@ -65,13 +68,37 @@ test('an editor named in the import must be one the venue knows', async ({ page,
 		.first()
 		.selectOption({ label: 'handling editor' });
 
-	// A name nobody at this venue holds blocks the import.
-	await expect(page.getByTestId('bulk-import-submit')).toBeDisabled();
-
-	// The venue's own editor resolves, and the import goes through.
-	const cell = page.locator('[data-testid^="import-row-0-person-"]');
-	await cell.fill('Scholar Lee');
+	// Reported in the cell, and counted before submitting, but not blocking.
+	await expect(page.getByTestId('import-row-0-unmatched')).toBeVisible();
 	await expect(page.getByTestId('bulk-import-submit')).toBeEnabled();
+
+	await page.getByTestId('bulk-import-submit').click();
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+	await expect(page.getByText(external)).toBeVisible();
+
+	await logout(page);
+});
+
+// The other half: a name the venue does know is seated.
+test('an editor the venue knows is matched and seated', async ({ page, context }) => {
+	await login('editor@uni.edu', page, context);
+
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+
+	const external = `import-person-${Date.now()}`;
+
+	await page
+		.getByTestId('bulk-import-paste')
+		.fill(`title,externalid,handling editor\nPre-launch paper,${external},Scholar Lee`);
+	await page.getByTestId('bulk-import-parse').click();
+
+	await page
+		.locator('[data-testid^="role-column-"]')
+		.first()
+		.selectOption({ label: 'handling editor' });
+
+	await expect(page.getByTestId('import-row-0-unmatched')).toHaveCount(0);
 	await page.getByTestId('bulk-import-submit').click();
 
 	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);

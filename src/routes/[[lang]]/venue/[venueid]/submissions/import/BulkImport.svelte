@@ -268,19 +268,39 @@
 		});
 	});
 
-	/** Rows naming somebody the venue could not identify, in any role. These block
-	 * the import: seating the wrong person is a worse outcome than making the
-	 * editor fix the name. */
+	/** Rows where a name matched several of the venue's volunteers and nobody has
+	 * chosen between them. These block the import, because this is the one case
+	 * where the wrong person could be seated: the file clearly means somebody the
+	 * venue knows, and picking for the editor would be a guess. Choosing is one
+	 * click. */
 	const personUnresolved = $derived(
 		new Set(
 			personMatches
 				.map((matches, index) =>
-					Object.values(matches).every((m) => m.status === 'resolved' || m.status === 'none')
-						? -1
-						: index
+					Object.values(matches).some((m) => m.status === 'ambiguous') ? index : -1
 				)
 				.filter((index) => index >= 0)
 		)
+	);
+
+	/** How many rows name somebody nobody at this venue matches, per role.
+	 *
+	 * These deliberately block nothing. An unmatched name seats NOBODY, so there
+	 * is no wrong person to seat — the reasoning that justifies blocking an
+	 * ambiguous name does not carry over, and applying it here refused the import
+	 * outright in exactly the case the feature exists for: a backlog whose editors
+	 * have not signed up yet, where every row names somebody the platform has
+	 * never heard of. Those submissions import unseated and carry the venue's
+	 * existing waiting-for-an-editor flag, which is what that flag is for. The
+	 * count is reported before submitting, since importing without editors should
+	 * be a thing the editor decided rather than noticed later. */
+	const unmatchedByRole = $derived(
+		matchedRoles
+			.map((role) => ({
+				role,
+				count: personMatches.filter((matches) => matches[role.id]?.status === 'unmatched').length
+			}))
+			.filter(({ count }) => count > 0)
 	);
 
 	const allRowsValid = $derived(
@@ -506,14 +526,18 @@
 
 	<!-- inline={false} renders a textarea. As a single-line input this field could
 	     not hold a CSV at all: pasting multi-line text into an <input> flattens it
-	     to one line, so every paste arrived as a header with no rows. -->
-	<TextField
-		strings={(l) => l.page.bulkImport.field.csvPaste}
-		size={60}
-		inline={false}
-		testid="bulk-import-paste"
-		bind:text={csvText}
-	/>
+	     to one line, so every paste arrived as a header with no rows. Wrapped and
+	     capped because the textarea grows to its content, and a real export is
+	     hundreds of lines — it pushed the whole form off the screen. -->
+	<div class="paste">
+		<TextField
+			strings={(l) => l.page.bulkImport.field.csvPaste}
+			size={60}
+			inline={false}
+			testid="bulk-import-paste"
+			bind:text={csvText}
+		/>
+	</div>
 	<Button
 		strings={(l) => l.page.bulkImport.button.parseCSV}
 		testid="bulk-import-parse"
@@ -603,35 +627,6 @@
 			{/if}
 		</Form>
 
-		<!-- What each value in the type column becomes. This used to happen per row
-		     in silence, so a file whose type names are its own — the normal case —
-		     became a batch of the default type, whose cost then set the mint. -->
-		{#if typeValues.length > 0}
-			<h3><Text path={(l) => l.page.bulkImport.type.header} /></h3>
-			<Note path={(l) => l.page.bulkImport.type.note} />
-			<Form>
-				{#each typeValues as { value, count } (value)}
-					<Options
-						strings={(l) => ({
-							label: l.page.bulkImport.type.value
-								.replace('{value}', value)
-								.replace('{count}', count.toString())
-						})}
-						options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
-						value={typeAssignments[value.toLowerCase()] ?? defaultSubmissionType}
-						onChange={(type) => reassignType(value, type)}
-					/>
-				{/each}
-				{#if unmatchedTypeValues.length > 0}
-					<Feedback
-						testid="type-values-unmatched"
-						text={(l) => l.page.bulkImport.type.unmatched}
-						inputs={{ values: unmatchedTypeValues.map((v) => v.value).join(', ') }}
-					/>
-				{/if}
-			</Form>
-		{/if}
-
 		<!-- One column per role, rather than one column and a role: an export often
 		     names an editor in chief and a handling editor in separate columns, which
 		     are two people in two roles on the same manuscript. -->
@@ -665,143 +660,188 @@
 	</section>
 {/if}
 
-<h3><Text path={(l) => l.page.bulkImport.header.defaults} /></h3>
+<!-- One section, because these are one decision. When the file has a type column
+     every distinct value gets a menu and those menus ARE the answer, so there is
+     no separate default to compete with them — which matters, because "apply
+     default to all" overwrote every row unconditionally and would silently undo
+     the matching above it. When there is no type column the default is the only
+     thing deciding, so it appears instead. -->
+<h3><Text path={(l) => l.page.bulkImport.type.header} /></h3>
 
-<Form>
-	<Options
-		strings={(l) => l.page.bulkImport.options.defaultSubmissionType}
-		bind:value={defaultSubmissionType}
-		options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
-	/>
-	<Button strings={(l) => l.page.bulkImport.button.applyDefault} action={applyDefaultType} />
-</Form>
+{#if typeValues.length > 0}
+	<Note path={(l) => l.page.bulkImport.type.note} />
+	<Form>
+		{#each typeValues as { value, count } (value)}
+			<Options
+				strings={(l) => ({
+					label: l.page.bulkImport.type.value
+						.replace('{value}', value)
+						.replace('{count}', count.toString())
+				})}
+				options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
+				value={typeAssignments[value.toLowerCase()] ?? defaultSubmissionType}
+				testid="type-value-{value}"
+				onChange={(type) => reassignType(value, type)}
+			/>
+		{/each}
+		{#if unmatchedTypeValues.length > 0}
+			<Feedback
+				testid="type-values-unmatched"
+				text={(l) => l.page.bulkImport.type.unmatched}
+				inputs={{ values: unmatchedTypeValues.map((v) => v.value).join(', ') }}
+			/>
+		{/if}
+	</Form>
+{:else}
+	<Note path={(l) => l.page.bulkImport.type.noColumn} />
+	<Form>
+		<Options
+			strings={(l) => l.page.bulkImport.options.defaultSubmissionType}
+			bind:value={defaultSubmissionType}
+			options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
+		/>
+		<Button strings={(l) => l.page.bulkImport.button.applyDefault} action={applyDefaultType} />
+	</Form>
+{/if}
 
 <h3><Text path={(l) => l.page.bulkImport.header.rows} /></h3>
 
-<Table>
-	{#snippet header()}
-		<th><Text path={(l) => l.page.bulkImport.column.title} /></th>
-		<th><Text path={(l) => l.page.bulkImport.column.externalID} /></th>
-		<th><Text path={(l) => l.page.bulkImport.column.expertise} /></th>
-		<th><Text path={(l) => l.page.bulkImport.column.submissionType} /></th>
-		{#each matchedRoles as role (role.id)}
-			<th>{role.name}</th>
-		{/each}
-		<th><Text path={(l) => l.page.bulkImport.column.previousID} /></th>
-		<th><Text path={(l) => l.page.bulkImport.column.note} /></th>
-		<th></th>
-	{/snippet}
-	{#each rows as row, index (index)}
-		{@const err = rowError(row, index)}
-		<tr data-testid="import-row-{index}">
-			<td>
-				<TextField
-					strings={(l) => ({ ...l.page.bulkImport.field.title, label: '' })}
-					bind:text={row.title}
-					testid="import-row-{index}-title"
-				/>
-			</td>
-			<td>
-				<TextField
-					strings={(l) => ({ ...l.page.bulkImport.field.externalID, label: '' })}
-					bind:text={row.externalID}
-					testid="import-row-{index}-externalid"
-				/>
-			</td>
-			<td>
-				<TextField
-					strings={(l) => ({ ...l.page.bulkImport.field.expertise, label: '' })}
-					bind:text={row.expertise}
-				/>
-			</td>
-			<td>
-				<Options
-					strings={(l) => ({ ...l.page.bulkImport.options.submissionType, label: '' })}
-					bind:value={row.submissionType}
-					options={submissionTypes.map((t) => ({ value: t.id, label: t.name }))}
-				/>
-			</td>
+<!-- Said once here rather than once per row: the cells are barely wider than a
+     word, so they carry only the fact and this carries the consequence. -->
+{#if matchedRoles.length > 0}
+	<Note path={(l) => l.page.bulkImport.person.unmatchedNote} />
+{/if}
+
+<!-- Table has no scroll container of its own (its only escape hatch is the opt-in
+     `full` viewport bleed). This table grows a column per matched role, each with a
+     min-width, so past two or three roles it would otherwise push its right-hand
+     columns off the page with no way to reach them. -->
+<div class="rows">
+	<Table>
+		{#snippet header()}
+			<th><Text path={(l) => l.page.bulkImport.column.title} /></th>
+			<th><Text path={(l) => l.page.bulkImport.column.externalID} /></th>
+			<th><Text path={(l) => l.page.bulkImport.column.expertise} /></th>
+			<th><Text path={(l) => l.page.bulkImport.column.submissionType} /></th>
 			{#each matchedRoles as role (role.id)}
-				{@const match = personMatches[index][role.id] ?? { status: 'none' }}
+				<th class="person">{role.name}</th>
+			{/each}
+			<th><Text path={(l) => l.page.bulkImport.column.previousID} /></th>
+			<th><Text path={(l) => l.page.bulkImport.column.note} /></th>
+			<th></th>
+		{/snippet}
+		{#each rows as row, index (index)}
+			{@const err = rowError(row, index)}
+			<tr data-testid="import-row-{index}">
 				<td>
 					<TextField
-						strings={(l) => ({ ...l.page.bulkImport.field.person, label: '' })}
-						bind:text={row.people[role.id]}
-						testid="import-row-{index}-person-{role.id}"
+						strings={(l) => ({ ...l.page.bulkImport.field.title, label: '' })}
+						bind:text={row.title}
+						testid="import-row-{index}-title"
 					/>
-					{#if match.status === 'resolved'}
-						<ScholarLink id={match.id} size="small" />
-					{:else if match.status === 'ambiguous'}
-						<Feedback text={(l) => l.page.bulkImport.person.ambiguous} />
-						<div class="matches">
-							{#each match.candidates as candidate (candidate.id)}
-								<Button
-									small
-									strings={(l) => ({
-										label: candidate.name,
-										// The name goes in the tip as well as the label, because the
-										// tip is the button's aria-label: a column of buttons all
-										// announcing "Choose this scholar" is unusable by voice or
-										// screen reader.
-										tip: l.widget.scholarSearch.choose.tip.replace('{name}', candidate.name)
-									})}
-									action={() => (row.peopleChoices[role.id] = candidate.id)}
-								/>
-							{/each}
-						</div>
-					{:else if match.status === 'unmatched'}
-						<Feedback
-							error
-							testid="import-row-{index}-unmatched"
-							text={(l) => l.page.bulkImport.person.unmatched}
-							inputs={{ role: role.name }}
-						/>
-					{/if}
 				</td>
-			{/each}
-			<td>
-				<TextField
-					strings={(l) => ({ ...l.page.bulkImport.field.previousID, label: '' })}
-					bind:text={row.previousID}
-				/>
-			</td>
-			<td>
-				<TextField
-					strings={(l) => ({ ...l.page.bulkImport.field.note, label: '' })}
-					bind:text={row.note}
-				/>
-			</td>
-			<td>
-				<Button
-					strings={(l) => l.page.bulkImport.button.removeRow}
-					active={rows.length > 1}
-					action={() => removeRow(index)}
-				/>
-			</td>
-		</tr>
-		{#if err}
-			<tr>
-				<td colspan={7 + matchedRoles.length}>
-					<Feedback error text={err} />
+				<td>
+					<TextField
+						strings={(l) => ({ ...l.page.bulkImport.field.externalID, label: '' })}
+						bind:text={row.externalID}
+						testid="import-row-{index}-externalid"
+					/>
+				</td>
+				<td>
+					<TextField
+						strings={(l) => ({ ...l.page.bulkImport.field.expertise, label: '' })}
+						bind:text={row.expertise}
+					/>
+				</td>
+				<td>
+					<Options
+						strings={(l) => ({ ...l.page.bulkImport.options.submissionType, label: '' })}
+						bind:value={row.submissionType}
+						options={submissionTypes.map((t) => ({ value: t.id, label: t.name }))}
+					/>
+				</td>
+				{#each matchedRoles as role (role.id)}
+					{@const match = personMatches[index][role.id] ?? { status: 'none' }}
+					<td class="person">
+						<TextField
+							strings={(l) => ({ ...l.page.bulkImport.field.person, label: '' })}
+							bind:text={row.people[role.id]}
+							testid="import-row-{index}-person-{role.id}"
+						/>
+						{#if match.status === 'resolved'}
+							<ScholarLink id={match.id} size="small" />
+						{:else if match.status === 'ambiguous'}
+							<Feedback text={(l) => l.page.bulkImport.person.ambiguous} />
+							<div class="matches">
+								{#each match.candidates as candidate (candidate.id)}
+									<Button
+										small
+										strings={(l) => ({
+											label: candidate.name,
+											// The name goes in the tip as well as the label, because the
+											// tip is the button's aria-label: a column of buttons all
+											// announcing "Choose this scholar" is unusable by voice or
+											// screen reader.
+											tip: l.widget.scholarSearch.choose.tip.replace('{name}', candidate.name)
+										})}
+										action={() => (row.peopleChoices[role.id] = candidate.id)}
+									/>
+								{/each}
+							</div>
+						{:else if match.status === 'unmatched'}
+							<Feedback
+								error
+								testid="import-row-{index}-unmatched"
+								text={(l) => l.page.bulkImport.person.unmatched}
+								inputs={{ role: role.name }}
+							/>
+						{/if}
+					</td>
+				{/each}
+				<td>
+					<TextField
+						strings={(l) => ({ ...l.page.bulkImport.field.previousID, label: '' })}
+						bind:text={row.previousID}
+					/>
+				</td>
+				<td>
+					<TextField
+						strings={(l) => ({ ...l.page.bulkImport.field.note, label: '' })}
+						bind:text={row.note}
+					/>
+				</td>
+				<td>
+					<Button
+						strings={(l) => l.page.bulkImport.button.removeRow}
+						active={rows.length > 1}
+						action={() => removeRow(index)}
+					/>
 				</td>
 			</tr>
-		{/if}
-		<!-- Allowed, not blocked: somebody who was both the editor and the handling
+			{#if err}
+				<tr>
+					<td colspan={7 + matchedRoles.length}>
+						<Feedback error text={err} />
+					</td>
+				</tr>
+			{/if}
+			<!-- Allowed, not blocked: somebody who was both the editor and the handling
 		     editor did both jobs. But it is two payments for one paper, and an import
 		     is where that mistake gets made fifty times at once. -->
-		{#if doubleSeated.has(index)}
-			<tr>
-				<td colspan={7 + matchedRoles.length}>
-					<Feedback
-						warning
-						testid="import-row-{index}-double-seated"
-						text={(l) => l.page.bulkImport.person.doubleSeated}
-					/>
-				</td>
-			</tr>
-		{/if}
-	{/each}
-</Table>
+			{#if doubleSeated.has(index)}
+				<tr>
+					<td colspan={7 + matchedRoles.length}>
+						<Feedback
+							warning
+							testid="import-row-{index}-double-seated"
+							text={(l) => l.page.bulkImport.person.doubleSeated}
+						/>
+					</td>
+				</tr>
+			{/if}
+		{/each}
+	</Table>
+</div>
 
 <Form>
 	<Button
@@ -819,6 +859,18 @@
 			.replaceAll('{count}', rows.length.toString())
 			.replaceAll('{total}', mintAmount.toString())}
 />
+
+<!-- Importing without editors should be something the editor decided, not
+     something they notice afterwards. This is the whole reason an unmatched name
+     is allowed to pass. -->
+{#each unmatchedByRole as { role, count } (role.id)}
+	<Paragraph
+		text={(l) =>
+			l.page.bulkImport.paragraph.unseated
+				.replaceAll('{count}', count.toString())
+				.replaceAll('{role}', role.name)}
+	/>
+{/each}
 
 <Form>
 	<TextField strings={(l) => l.page.bulkImport.field.importNote} size={60} bind:text={importNote} />
@@ -855,3 +907,45 @@
 		}}
 	/>
 </Form>
+
+<style>
+	/* The wrapper exists so the matching panel can be scrolled to by reference
+	   (see matchingSection). Being an element rather than a fragment makes it the
+	   flex item in Page's .content column, which reverts everything inside it to
+	   ordinary block flow — so its headings lost the 2rem gap that spaces every
+	   other heading on the page. Repeating .content's own layout here restores
+	   that, rather than giving h3 a margin globally: the app spaces headings by
+	   ancestor gap, so a margin would stack on top of it everywhere. */
+	section {
+		display: flex;
+		flex-direction: column;
+		gap: calc(2 * var(--spacing));
+	}
+
+	/* The table has no column widths and lays out automatically, so a cell holding
+	   a text field and a message collapses to the width of its longest word —
+	   "Associate" on its own line, then "Editor" on the next. Wide enough for a
+	   name and a short verdict beside it. */
+	.person {
+		min-width: 11em;
+	}
+
+	.rows {
+		overflow-x: auto;
+	}
+
+	.paste :global(textarea) {
+		max-height: 12em;
+		overflow-y: auto;
+	}
+
+	/* Copied from ScholarMatches, whose rule is scoped to that component: this
+	   file borrowed its markup for the candidate buttons but could not borrow its
+	   CSS, so they were stacking as unstyled block flow. */
+	.matches {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-half);
+	}
+</style>
