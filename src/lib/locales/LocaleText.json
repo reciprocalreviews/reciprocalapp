@@ -1396,6 +1396,14 @@
                       "description": "Names the CSV columns no field is reading, so they are visibly ignored rather than silently dropped. `{columns}` is the list.",
                       "type": "string"
                     },
+                    "loaded": {
+                      "description": "Announced when a file parses, since the native file control goes back to saying nothing is chosen. `{count}` rows, `{name}` file.",
+                      "type": "string"
+                    },
+                    "loadedFrom": {
+                      "description": "Names the file the current rows came from. `{name}`, `{count}`.",
+                      "type": "string"
+                    },
                     "missingRequired": {
                       "description": "Shown when the CSV has no column feeding a field the importer cannot do without. `{fields}` is the list.",
                       "type": "string"
@@ -1406,8 +1414,16 @@
                     "notLoaded": {
                       "type": "string"
                     },
+                    "pastedSource": {
+                      "description": "Stands in for a file name when the CSV was pasted rather than uploaded, so both paths can say where the rows came from.",
+                      "type": "string"
+                    },
                     "raggedRows": {
                       "description": "Shown when parsed records had a different number of cells than the header, which means columns shifted and data was dropped. `{lines}` is the list of lines those records start on.",
+                      "type": "string"
+                    },
+                    "twoTopRoles": {
+                      "description": "Warns that two of the venue's top-priority roles both have a column, which the database refuses. `{roles}` is the list.",
                       "type": "string"
                     }
                   },
@@ -1416,7 +1432,11 @@
                     "notAdmin",
                     "raggedRows",
                     "ignoredColumns",
-                    "missingRequired"
+                    "missingRequired",
+                    "loaded",
+                    "loadedFrom",
+                    "pastedSource",
+                    "twoTopRoles"
                   ],
                   "type": "object"
                 },
@@ -1562,12 +1582,16 @@
                       ],
                       "type": "object"
                     },
-                    "personRole": {
+                    "roleColumn": {
                       "$ref": "#/definitions/OptionsText",
-                      "description": "Which venue role the named person is seated in."
+                      "description": "Which column names the holder of one venue role. `{role}` is the venue's own name for it."
                     },
                     "submissionType": {
                       "$ref": "#/definitions/OptionsText"
+                    },
+                    "typeValue": {
+                      "$ref": "#/definitions/OptionsText",
+                      "description": "Which submission type one value in the file's type column becomes."
                     },
                     "unmapped": {
                       "description": "The choice offered when a field should read no column at all.",
@@ -1579,7 +1603,8 @@
                     "submissionType",
                     "mapField",
                     "unmapped",
-                    "personRole"
+                    "roleColumn",
+                    "typeValue"
                   ],
                   "type": "object"
                 },
@@ -1606,16 +1631,20 @@
                       "description": "Shown beside a name that matches more than one of the venue's volunteers, above the buttons offering each.",
                       "type": "string"
                     },
+                    "doubleSeated": {
+                      "description": "Warns that one row seats the same person in two roles, which is allowed but paid twice.",
+                      "type": "string"
+                    },
+                    "header": {
+                      "description": "Heading for matching columns of names to the venue's roles.",
+                      "type": "string"
+                    },
                     "noRole": {
                       "description": "Shown in place of the person column when no role has anyone in it.",
                       "type": "string"
                     },
                     "note": {
                       "description": "Explains that a row naming nobody falls back to the venue's sole editor, when it has one.",
-                      "type": "string"
-                    },
-                    "roleMissing": {
-                      "description": "Warns that a column of names was matched but no role chosen, so nobody would be seated from it.",
                       "type": "string"
                     },
                     "unmatched": {
@@ -1628,7 +1657,8 @@
                     "unmatched",
                     "noRole",
                     "note",
-                    "roleMissing"
+                    "header",
+                    "doubleSeated"
                   ],
                   "type": "object"
                 },
@@ -1647,9 +1677,6 @@
                         "externalID": {
                           "type": "string"
                         },
-                        "personUnresolved": {
-                          "type": "string"
-                        },
                         "title": {
                           "type": "string"
                         }
@@ -1658,8 +1685,7 @@
                         "title",
                         "externalID",
                         "duplicateExisting",
-                        "duplicateRow",
-                        "personUnresolved"
+                        "duplicateRow"
                       ],
                       "type": "object"
                     }
@@ -1671,6 +1697,34 @@
                 },
                 "title": {
                   "type": "string"
+                },
+                "type": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "header": {
+                      "description": "Heading for matching the file's own type names to the venue's.",
+                      "type": "string"
+                    },
+                    "note": {
+                      "description": "Explains that each distinct value becomes one submission type.",
+                      "type": "string"
+                    },
+                    "unmatched": {
+                      "description": "Flags values matching no submission type by name, which take the default. `{values}` is the list.",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "One value and how many rows carry it. `{value}`, `{count}`.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "header",
+                    "note",
+                    "value",
+                    "unmatched"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
@@ -1684,6 +1738,7 @@
                 "button",
                 "column",
                 "row",
+                "type",
                 "person"
               ],
               "type": "object"

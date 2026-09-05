@@ -6,7 +6,7 @@
  * an import can create a whole conference's submissions and a mint sized to
  * their total cost — and none of it was reachable by a test. */
 
-import type { ColumnMapping } from './columnMapping';
+import type { ColumnMapping, RoleColumns } from './columnMapping';
 
 /** The editable shape of one row in the import table. */
 export type ImportRow = {
@@ -16,13 +16,60 @@ export type ImportRow = {
 	submissionType: string;
 	previousID: string;
 	note: string;
-	/** The person named to be seated on this submission, as the file wrote them.
-	 * Empty when the row names nobody. */
-	person: string;
+	/** The name each role's column wrote on this row, keyed by role id, as the
+	 * file wrote it. One key per role that has a column — present and empty when
+	 * the cell is blank, so a field can be bound to it without meeting an
+	 * `undefined`. */
+	people: Record<string, string>;
 };
 
 /** Only the submission-type fields these rules read. */
 export type ImportSubmissionType = { id: string; name: string; submission_cost: number };
+
+/** Which submission type each distinct value in the file's type column becomes,
+ * keyed by that value normalized (collapsed and lowercased).
+ *
+ * Resolution is decided once, for the whole import, where the editor can see it
+ * and change it. It used to happen per row inside `rowsFromParsed`, which meant a
+ * file whose type names matched nothing — the normal case, since a venue's type
+ * names are its own — silently became a batch of the default type, and the
+ * default type's cost silently set the mint. */
+export type TypeAssignments = Record<string, string>;
+
+/** The distinct values in the file's type column, with how many rows carry each,
+ * most common first. Empty cells are not values and are left out. */
+export function distinctTypeValues(
+	parsed: Record<string, string>[],
+	header: string | null
+): { value: string; count: number }[] {
+	if (header === null) return [];
+	const counts = new Map<string, { value: string; count: number }>();
+	for (const record of parsed) {
+		const value = collapse(record[header] ?? '');
+		if (value.length === 0) continue;
+		const key = value.toLowerCase();
+		const seen = counts.get(key);
+		if (seen === undefined) counts.set(key, { value, count: 1 });
+		else seen.count++;
+	}
+	return [...counts.values()].sort((a, b) => b.count - a.count);
+}
+
+/** Pre-fill each distinct value with the submission type of the same name, and
+ * everything else with the default. Exactly the rule this module applied per row
+ * before; the difference is that the result is now visible and changeable. */
+export function guessTypeAssignments(
+	values: { value: string }[],
+	types: ImportSubmissionType[],
+	defaultSubmissionType: string
+): TypeAssignments {
+	const assignments: TypeAssignments = {};
+	for (const { value } of values) {
+		const matched = types.find((t) => t.name.toLowerCase() === value.toLowerCase());
+		assignments[value.toLowerCase()] = matched ? matched.id : defaultSubmissionType;
+	}
+	return assignments;
+}
 
 /** Why a row cannot be imported, as a stable key the component maps to locale
  * text. Ordered by which is reported first when several apply. */
@@ -96,28 +143,35 @@ function cell(record: Record<string, string>, header: string | null): string {
 }
 
 /** Map parsed CSV records onto import rows, reading each field from whichever
- * column the editor mapped to it.
+ * column the editor matched to it.
  *
- * The importer does not require a CSV to use its own column names: `mapping`
- * says which header feeds which field, guessed by `guessMapping` and corrected
- * by hand. An unrecognized submission type name falls back to the chosen default
- * rather than failing the row. */
+ * The importer does not require a CSV to use its own column names: `mapping` says
+ * which header feeds which field and `roleColumns` which header names the holder
+ * of which venue role, both chosen by the editor. `typeAssignments` says what each
+ * distinct value in the type column becomes; a value with no assignment falls back
+ * to the default, which is the case for a row typed in by hand. */
 export function rowsFromParsed(
 	parsed: Record<string, string>[],
 	mapping: ColumnMapping,
-	types: ImportSubmissionType[],
-	defaultSubmissionType: string
+	roleColumns: RoleColumns,
+	defaultSubmissionType: string,
+	typeAssignments: TypeAssignments = {}
 ): ImportRow[] {
 	return parsed.map((record) => {
-		const typeName = collapse(cell(record, mapping.submissionType)).toLowerCase();
-		const matched = typeName ? types.find((t) => t.name.toLowerCase() === typeName) : null;
+		const typeValue = collapse(cell(record, mapping.submissionType)).toLowerCase();
 		return {
 			title: collapse(cell(record, mapping.title)),
 			externalID: collapse(cell(record, mapping.externalID)),
 			expertise: collapse(cell(record, mapping.expertise)),
-			submissionType: matched ? matched.id : defaultSubmissionType,
+			submissionType: typeAssignments[typeValue] ?? defaultSubmissionType,
 			previousID: collapse(cell(record, mapping.previousID)),
-			person: collapse(cell(record, mapping.person)),
+			// One key per role with a column, whether or not the cell has anything
+			// in it. Names are collapsed like the other single-line fields, so a
+			// name wrapped across two lines in the export never reaches name
+			// matching with a newline inside it.
+			people: Object.fromEntries(
+				Object.entries(roleColumns).map(([role, header]) => [role, collapse(cell(record, header))])
+			),
 			// Not collapsed: a multi-line status or comment column is the note's
 			// content, and flattening it would destroy what it says.
 			note: cell(record, mapping.note).trim()

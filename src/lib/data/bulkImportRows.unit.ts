@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import {
+	distinctTypeValues,
 	duplicateAcrossRows,
+	guessTypeAssignments,
 	mintAmount,
 	rowError,
 	rowsFromParsed,
@@ -22,7 +24,7 @@ function row(over: Partial<ImportRow> = {}): ImportRow {
 		submissionType: 'full',
 		previousID: '',
 		note: '',
-		person: '',
+		people: {},
 		...over
 	};
 }
@@ -121,7 +123,7 @@ describe('rowsFromParsed', () => {
 			rowsFromParsed(
 				[{ 'Manuscript Title': 'T', 'Manuscript ID': 'E', 'Previous Paper ID': 'P' }],
 				mapping,
-				TYPES,
+				{},
 				'full'
 			)
 		).toEqual([
@@ -132,7 +134,7 @@ describe('rowsFromParsed', () => {
 				submissionType: 'full',
 				previousID: 'P',
 				note: '',
-				person: ''
+				people: {}
 			}
 		]);
 	});
@@ -142,7 +144,7 @@ describe('rowsFromParsed', () => {
 		const [r] = rowsFromParsed(
 			[{ title: 'T', externalid: 'E', previousid: 'P' }],
 			mapping,
-			TYPES,
+			{},
 			'full'
 		);
 		expect(r.title).toBe('T');
@@ -152,27 +154,33 @@ describe('rowsFromParsed', () => {
 
 	test('leaves a field empty when nothing is mapped to it', () => {
 		const mapping = guessMapping(['title']);
-		const [r] = rowsFromParsed([{ title: 'T' }], mapping, TYPES, 'full');
+		const [r] = rowsFromParsed([{ title: 'T' }], mapping, {}, 'full');
 		expect(r.externalID).toBe('');
 		expect(r.expertise).toBe('');
 	});
 
-	test('matches a submission type by name, case-insensitively', () => {
+	test('gives each row the type its value was assigned', () => {
 		const mapping = guessMapping(['submission_type']);
-		const [r] = rowsFromParsed([{ submission_type: '  full paper ' }], mapping, TYPES, 'revision');
+		const parsed = [{ submission_type: '  full paper ' }];
+		const assignments = guessTypeAssignments(
+			distinctTypeValues(parsed, mapping.submissionType),
+			TYPES,
+			'revision'
+		);
+		const [r] = rowsFromParsed(parsed, mapping, {}, 'revision', assignments);
 		expect(r.submissionType).toBe('full');
 	});
 
-	test('falls back to the default type when the name is unknown or absent', () => {
+	test('falls back to the default when a value has no assignment', () => {
 		const mapping = guessMapping(['submission_type']);
 		expect(
-			rowsFromParsed([{ submission_type: 'Poster' }], mapping, TYPES, 'revision')[0].submissionType
+			rowsFromParsed([{ submission_type: 'Poster' }], mapping, {}, 'revision')[0].submissionType
 		).toBe('revision');
-		expect(rowsFromParsed([{}], mapping, TYPES, 'revision')[0].submissionType).toBe('revision');
+		expect(rowsFromParsed([{}], mapping, {}, 'revision')[0].submissionType).toBe('revision');
 	});
 
 	test('fills every missing column with an empty string, never undefined', () => {
-		const [r] = rowsFromParsed([{}], guessMapping(['title']), TYPES, 'full');
+		const [r] = rowsFromParsed([{}], guessMapping(['title']), {}, 'full');
 		expect(Object.values(r).every((v) => v !== undefined)).toBe(true);
 		expect(r.title).toBe('');
 	});
@@ -186,7 +194,7 @@ describe('rowsFromParsed whitespace', () => {
 		const [r] = rowsFromParsed(
 			[{ title: 'Flexible Deadlines:\nA Systematic Review' }],
 			mapping,
-			TYPES,
+			{},
 			'full'
 		);
 		expect(r.title).toBe('Flexible Deadlines: A Systematic Review');
@@ -197,7 +205,7 @@ describe('rowsFromParsed whitespace', () => {
 		const [r] = rowsFromParsed(
 			[{ externalid: ' E\n1 ', expertise: 'a\n b', previousid: 'P\n2' }],
 			mapping,
-			TYPES,
+			{},
 			'full'
 		);
 		expect(r.externalID).toBe('E 1');
@@ -212,14 +220,14 @@ describe('rowsFromParsed whitespace', () => {
 		const [r] = rowsFromParsed(
 			[{ Status: 'AE: Petersen\nEIC: Ko\n3 invited' }],
 			mapping,
-			TYPES,
+			{},
 			'full'
 		);
 		expect(r.note).toBe('AE: Petersen\nEIC: Ko\n3 invited');
 	});
 });
 
-describe('rowError with a person column', () => {
+describe('rowError with person columns', () => {
 	const context = (over: Partial<Parameters<typeof rowError>[2]> = {}) => ({
 		existingExternalIDs: new Set<string>(),
 		duplicates: new Set<number>(),
@@ -228,7 +236,7 @@ describe('rowError with a person column', () => {
 
 	test('reports a row naming somebody the venue could not identify', () => {
 		expect(
-			rowError(row({ person: 'Nobody' }), 0, context({ personUnresolved: new Set([0]) }))
+			rowError(row({ people: { ae: 'Nobody' } }), 0, context({ personUnresolved: new Set([0]) }))
 		).toBe('personUnresolved');
 	});
 
@@ -252,24 +260,87 @@ describe('rowError with a person column', () => {
 
 	// A caller that offers no person column has nobody to resolve.
 	test('works without the person set at all', () => {
-		expect(rowError(row({ person: 'Anybody' }), 0, context())).toBeNull();
+		expect(rowError(row({ people: { ae: 'Anybody' } }), 0, context())).toBeNull();
 	});
 });
 
-describe('rowsFromParsed person column', () => {
-	test('reads the person from the column mapped to it', () => {
-		const mapping = guessMapping(['Editor'], ['person']);
-		const [r] = rowsFromParsed([{ Editor: 'Petersen, Andrew' }], mapping, TYPES, 'full');
-		expect(r.person).toBe('Petersen, Andrew');
+describe('rowsFromParsed role columns', () => {
+	// The case the feature exists for, and one no heuristic could produce: the
+	// column called "Editor" feeds the ASSOCIATE editor role, while "Editor in
+	// Chief" feeds the top one. Only the editor knows that.
+	test('reads each role from the column matched to it, however they cross', () => {
+		const mapping = guessMapping(['Manuscript Title', 'Editor in Chief', 'Editor']);
+		const roleColumns = { 'role-editor': 'Editor in Chief', 'role-ae': 'Editor' };
+		const [r] = rowsFromParsed(
+			[{ 'Manuscript Title': 'T', 'Editor in Chief': 'Ko, Amy', Editor: 'Petersen, Andrew' }],
+			mapping,
+			roleColumns,
+			'full'
+		);
+		expect(r.people['role-editor']).toBe('Ko, Amy');
+		expect(r.people['role-ae']).toBe('Petersen, Andrew');
 	});
 
-	test('leaves the person empty when no column is mapped', () => {
+	test('gives a role with no column no key at all', () => {
 		const [r] = rowsFromParsed(
 			[{ Editor: 'Petersen, Andrew' }],
 			guessMapping(['title']),
-			TYPES,
+			{},
 			'full'
 		);
-		expect(r.person).toBe('');
+		expect(r.people).toEqual({});
+	});
+
+	// Present and empty, not absent: a field bound to a missing key would meet an
+	// undefined where it expects a string.
+	test('gives a blank cell an empty string rather than no key', () => {
+		const [r] = rowsFromParsed([{ Editor: '' }], guessMapping(['title']), { ae: 'Editor' }, 'full');
+		expect(r.people).toEqual({ ae: '' });
+	});
+
+	test('collapses a name wrapped across two lines', () => {
+		const [r] = rowsFromParsed(
+			[{ Editor: 'Petersen,\nAndrew' }],
+			guessMapping(['title']),
+			{ ae: 'Editor' },
+			'full'
+		);
+		expect(r.people.ae).toBe('Petersen, Andrew');
+	});
+});
+
+describe('distinctTypeValues', () => {
+	const parsed = [
+		{ Type: 'Paper' },
+		{ Type: 'Paper' },
+		{ Type: 'Special Issue' },
+		{ Type: '' },
+		{ Type: '  paper  ' }
+	];
+
+	test('counts each distinct value, most common first', () => {
+		expect(distinctTypeValues(parsed, 'Type')).toEqual([
+			{ value: 'Paper', count: 3 },
+			{ value: 'Special Issue', count: 1 }
+		]);
+	});
+
+	test('reads nothing when no type column is matched', () => {
+		expect(distinctTypeValues(parsed, null)).toEqual([]);
+	});
+});
+
+describe('guessTypeAssignments', () => {
+	test('pre-fills a value with the type of the same name', () => {
+		const assignments = guessTypeAssignments([{ value: 'Full Paper' }], TYPES, 'revision');
+		expect(assignments['full paper']).toBe('full');
+	});
+
+	// The normal case: a venue's type names are its own, and a file's are its own.
+	// This used to happen per row in silence, and the default type's cost then set
+	// the mint.
+	test('pre-fills a value matching nothing with the default', () => {
+		const assignments = guessTypeAssignments([{ value: 'Paper' }], TYPES, 'revision');
+		expect(assignments['paper']).toBe('revision');
 	});
 });

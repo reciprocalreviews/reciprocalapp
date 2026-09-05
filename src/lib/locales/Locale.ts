@@ -414,6 +414,17 @@ export type LocaleText = {
 				/** Shown when the CSV has no column feeding a field the importer
 				 * cannot do without. `{fields}` is the list. */
 				missingRequired: string;
+				/** Announced when a file parses, since the native file control goes
+				 * back to saying nothing is chosen. `{count}` rows, `{name}` file. */
+				loaded: string;
+				/** Names the file the current rows came from. `{name}`, `{count}`. */
+				loadedFrom: string;
+				/** Stands in for a file name when the CSV was pasted rather than
+				 * uploaded, so both paths can say where the rows came from. */
+				pastedSource: string;
+				/** Warns that two of the venue's top-priority roles both have a
+				 * column, which the database refuses. `{roles}` is the list. */
+				twoTopRoles: string;
 			};
 			field: {
 				title: TextFieldText;
@@ -442,8 +453,11 @@ export type LocaleText = {
 				};
 				/** The choice offered when a field should read no column at all. */
 				unmapped: string;
-				/** Which venue role the named person is seated in. */
-				personRole: OptionsText;
+				/** Which column names the holder of one venue role. `{role}` is the
+				 * venue's own name for it. */
+				roleColumn: OptionsText;
+				/** Which submission type one value in the file's type column becomes. */
+				typeValue: OptionsText;
 			};
 			button: {
 				addRow: ButtonText;
@@ -467,8 +481,18 @@ export type LocaleText = {
 					externalID: string;
 					duplicateExisting: string;
 					duplicateRow: string;
-					personUnresolved: string;
 				};
+			};
+			type: {
+				/** Heading for matching the file's own type names to the venue's. */
+				header: string;
+				/** Explains that each distinct value becomes one submission type. */
+				note: string;
+				/** One value and how many rows carry it. `{value}`, `{count}`. */
+				value: string;
+				/** Flags values matching no submission type by name, which take the
+				 * default. `{values}` is the list. */
+				unmatched: string;
 			};
 			person: {
 				/** Shown beside a name that matches more than one of the venue's
@@ -482,9 +506,11 @@ export type LocaleText = {
 				/** Explains that a row naming nobody falls back to the venue's sole
 				 * editor, when it has one. */
 				note: string;
-				/** Warns that a column of names was matched but no role chosen, so
-				 * nobody would be seated from it. */
-				roleMissing: string;
+				/** Heading for matching columns of names to the venue's roles. */
+				header: string;
+				/** Warns that one row seats the same person in two roles, which is
+				 * allowed but paid twice. */
+				doubleSeated: string;
 			};
 		};
 		submissions: {

@@ -1694,8 +1694,8 @@ export default class SupabaseCRUD extends CRUD {
 			expertise: s.expertise,
 			submission_type: s.submission_type,
 			note: s.note,
-			person: s.person,
-			person_role: s.person_role
+			// Entry keys are the RPC's own, so this passes through as it is.
+			people: s.people
 		}));
 
 		const { data, error } = await this.client.rpc('bulk_import_submissions', {

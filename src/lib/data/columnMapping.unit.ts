@@ -35,8 +35,7 @@ describe('guessMapping with the importer own column names', () => {
 			expertise: 'expertise',
 			submissionType: 'submission_type',
 			previousID: 'previousid',
-			note: 'note',
-			person: null
+			note: 'note'
 		});
 	});
 });
@@ -86,7 +85,7 @@ describe('guessMapping generality', () => {
 		const headers = ['Manuscript ID', 'Date Submitted', 'Submitting Author', 'Country'];
 		const mapping = guessMapping(headers);
 		expect(mapping.title).toBeNull();
-		expect(unmappedHeaders(headers, mapping)).toEqual([
+		expect(unmappedHeaders(headers, mapping, {})).toEqual([
 			'Date Submitted',
 			'Submitting Author',
 			'Country'
@@ -107,10 +106,10 @@ describe('guessMapping precedence', () => {
 	});
 
 	test('prefers the column that names the concept over one that mentions it', () => {
-		// The narrower header wins: "Editor" is the editor column, while "Editor
-		// in Chief" is a column that happens to contain the word.
-		const mapping = guessMapping(['Editor in Chief', 'Editor']);
-		expect(mapping.person).toBe('Editor');
+		// The narrower header wins: "Type" is the type column, while "Manuscript
+		// Type" merely contains the word. This pins score()'s share rule, which
+		// nothing else covers.
+		expect(guessMapping(['Manuscript Type', 'Type']).submissionType).toBe('Type');
 	});
 
 	test('never reads one column into two fields', () => {
@@ -133,8 +132,7 @@ describe('guessMapping declines rather than guessing', () => {
 			expertise: null,
 			submissionType: null,
 			previousID: null,
-			note: null,
-			person: null
+			note: null
 		});
 	});
 
@@ -148,16 +146,40 @@ describe('guessMapping with a narrowed field set', () => {
 	// it, or that column disappears from the ignored-columns report while
 	// feeding nothing.
 	test('does not claim a header for a field it was not asked about', () => {
-		const headers = ['Manuscript ID', 'Manuscript Title', 'Editor'];
-		const fields = ['title', 'externalID'] as const;
-		const mapping = guessMapping(headers, [...fields]);
-		expect(mapping.person).toBeNull();
-		expect(unmappedHeaders(headers, mapping)).toEqual(['Editor']);
+		const headers = ['Manuscript ID', 'Manuscript Title', 'Status'];
+		const mapping = guessMapping(headers, ['title', 'externalID']);
+		expect(mapping.note).toBeNull();
+		expect(unmappedHeaders(headers, mapping, {})).toEqual(['Status']);
 	});
 
 	test('still maps the fields it was asked about', () => {
 		const mapping = guessMapping(['Manuscript ID', 'Manuscript Title'], ['title', 'externalID']);
 		expect(mapping.title).toBe('Manuscript Title');
 		expect(mapping.externalID).toBe('Manuscript ID');
+	});
+});
+
+describe('role columns', () => {
+	// Which of a file's columns names the holder of which venue role is venue
+	// semantics, not vocabulary. Guessing it would be confidently wrong on exactly
+	// the case the feature exists for — and wrong in the direction that hands out
+	// the top role.
+	test('never guesses which column names a role', () => {
+		const headers = ['Manuscript Title', 'Editor in Chief', 'Editor'];
+		const mapping = guessMapping(headers);
+		expect(unmappedHeaders(headers, mapping, {})).toEqual(['Editor in Chief', 'Editor']);
+	});
+
+	test('a header feeding a role is not reported as ignored', () => {
+		const headers = ['Manuscript Title', 'Editor in Chief', 'Editor'];
+		const mapping = guessMapping(headers);
+		const roleColumns = { 'role-editor': 'Editor in Chief', 'role-ae': 'Editor' };
+		expect(unmappedHeaders(headers, mapping, roleColumns)).toEqual([]);
+	});
+
+	test('a header feeding nothing is still reported', () => {
+		const headers = ['Manuscript Title', 'Editor', 'Manuscript Flag'];
+		const mapping = guessMapping(headers);
+		expect(unmappedHeaders(headers, mapping, { 'role-ae': 'Editor' })).toEqual(['Manuscript Flag']);
 	});
 });

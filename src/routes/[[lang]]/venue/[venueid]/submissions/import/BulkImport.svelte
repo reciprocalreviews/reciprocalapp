@@ -16,23 +16,29 @@
 	import { getDB } from '$lib/data/CRUD';
 	import type { VenueCommitment } from '$lib/data/SupabaseCRUD.svelte';
 	import {
+		distinctTypeValues,
 		duplicateAcrossRows,
+		guessTypeAssignments,
 		mintAmount as mintTotal,
 		rowError as rowProblem,
-		rowsFromParsed
+		rowsFromParsed,
+		type ImportRow,
+		type TypeAssignments
 	} from '$lib/data/bulkImportRows';
 	import {
 		guessMapping,
 		unmappedHeaders,
 		type ColumnMapping,
-		type ImportField
+		type ImportField,
+		type RoleColumns
 	} from '$lib/data/columnMapping';
-	import { matchPersonName, type Candidate } from '$lib/data/matchPersonName';
+	import { matchPersonName, type Candidate, type PersonMatch } from '$lib/data/matchPersonName';
 	import parseCSV from '$lib/data/parseCSV';
 	import type LocaleText from '$lib/locales/Locale';
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { addFeedback, handle } from '$routes/feedback.svelte';
+	import { tick } from 'svelte';
 
 	let {
 		venue,
@@ -58,12 +64,12 @@
 		submissionType: SubmissionTypeID;
 		previousID: string;
 		note: string;
-		/** The name as the file wrote it, editable here. */
-		person: string;
-		/** A scholar the editor picked when the name alone was ambiguous. Kept
-		 * separate from `person` so the text stays the file's and the choice stays
-		 * revocable. */
-		personChoice: string | null;
+		/** The name each role's column wrote, keyed by role id, editable here. */
+		people: Record<string, string>;
+		/** A scholar the editor picked when a name alone was ambiguous, keyed by
+		 * role id. Kept separate from the name so the text stays the file's and the
+		 * choice stays revocable. */
+		peopleChoices: Record<string, string>;
 	};
 
 	function emptyRow(): Row {
@@ -74,8 +80,8 @@
 			submissionType: defaultSubmissionType,
 			previousID: '',
 			note: '',
-			person: '',
-			personChoice: null
+			people: {},
+			peopleChoices: {}
 		};
 	}
 
@@ -89,8 +95,7 @@
 		'expertise',
 		'submissionType',
 		'previousID',
-		'note',
-		'person'
+		'note'
 	];
 
 	function noMapping(): ColumnMapping {
@@ -100,8 +105,7 @@
 			expertise: null,
 			submissionType: null,
 			previousID: null,
-			note: null,
-			person: null
+			note: null
 		};
 	}
 
@@ -112,6 +116,19 @@
 	let parsedRecords = $state<Record<string, string>[]>([]);
 	let csvHeaders = $state<string[]>([]);
 	let mapping = $state<ColumnMapping>(noMapping());
+	/** Which column names the holder of each venue role. Never guessed — see
+	 * guessMapping's note on why a wrong role is not like a wrong title. */
+	let roleColumns = $state<RoleColumns>({});
+	/** What each distinct value in the type column becomes. */
+	let typeAssignments = $state<TypeAssignments>({});
+	/** The name of the file that produced the current rows, so the form can say
+	 * what it read: the native control is cleared straight after reading (so
+	 * re-picking the same file fires `change` again) and goes back to saying no
+	 * file is chosen. */
+	let loadedFile = $state<string | null>(null);
+	/** The matching section, so the page can take the eye to it. The rows appear
+	 * below the fold and used to arrive with no signal at all. */
+	let matchingSection = $state<HTMLElement | null>(null);
 	let importNote = $state('');
 	let csvText = $state('');
 	let csvError = $state<string | null>(null);
@@ -131,15 +148,18 @@
 			duplicates,
 			personUnresolved
 		});
-		return problem === null ? null : (l) => l.page.bulkImport.row.invalid[problem];
+		// A person the venue could not identify is reported in the cell itself, where
+		// it can name the role that has no such volunteer. Repeating it under the row
+		// said the same thing twice and promised suggestions that only exist when a
+		// name is ambiguous. It still blocks the import — see allRowsValid.
+		if (problem === null || problem === 'personUnresolved') return null;
+		return (l) => l.page.bulkImport.row.invalid[problem];
 	}
-
-	const allRowsValid = $derived(rows.every((r, i) => rowError(r, i) === null));
 
 	const mintAmount = $derived(mintTotal(rows, submissionTypes));
 
 	const ignoredColumns = $derived(
-		csvHeaders.length === 0 ? [] : unmappedHeaders(csvHeaders, mapping)
+		csvHeaders.length === 0 ? [] : unmappedHeaders(csvHeaders, mapping, roleColumns)
 	);
 
 	/** Required fields nothing is mapped to. Reported rather than blocking on its
@@ -169,58 +189,148 @@
 			.sort((a, b) => a.priority - b.priority)
 	);
 
-	let personRole = $state<string | undefined>(undefined);
+	/** The distinct values in the matched type column, with how many rows carry
+	 * each. Empty when no type column is matched. */
+	const typeValues = $derived(distinctTypeValues(parsedRecords, mapping.submissionType));
 
-	/** Who a name in the person column may refer to: the chosen role's accepted,
-	 * active volunteers, and nobody else. A closed list is what keeps this from
-	 * being a search across every scholar on the platform. */
-	const candidates = $derived<Candidate[]>(
-		personRole === undefined
-			? []
-			: commitments
-					.filter((c) => c.roleid === personRole && c.active && c.accepted === 'accepted')
+	/** Values that matched no submission type by name and so took the default —
+	 * the case that used to set the mint in silence. */
+	const unmatchedTypeValues = $derived(
+		typeValues.filter(
+			({ value }) => !submissionTypes.some((t) => t.name.toLowerCase() === value.toLowerCase())
+		)
+	);
+
+	/** The roles that actually have a column, in the venue's own priority order.
+	 * These are the columns the row table shows. */
+	const matchedRoles = $derived(seatableRoles.filter((role) => roleColumns[role.id] !== undefined));
+
+	/** The venue's top-priority roles. More than one is representable — nothing
+	 * constrains roles.priority to be unique within a venue — and with one column
+	 * per role an admin could match a column to each, which the database refuses. */
+	const topRoles = $derived(seatableRoles.filter((role) => role.priority === 0));
+
+	/** Top roles that both have a column. Caught here rather than at submit: an
+	 * admin who has matched four hundred rows should not learn this from an opaque
+	 * rollback. */
+	const duplicateTopRoles = $derived(topRoles.filter((role) => roleColumns[role.id] !== undefined));
+
+	/** Who a name in a role's column may refer to: that role's accepted, active
+	 * volunteers, and nobody else. A closed list is what keeps this from being a
+	 * search across every scholar on the platform, which is how you seat the wrong
+	 * Andrew. */
+	const candidatesByRole = $derived(
+		new Map<string, Candidate[]>(
+			seatableRoles.map((role) => [
+				role.id,
+				commitments
+					.filter((c) => c.roleid === role.id && c.active && c.accepted === 'accepted')
 					.map((c) => ({ id: c.scholarid, name: c.scholars?.name ?? '' }))
 					.filter((c) => c.name.length > 0)
+			])
+		)
 	);
 
-	/** What each row's person cell resolves to. A choice the editor pinned wins,
-	 * but only while it is still one of the current candidates — so changing the
-	 * role cannot leave a stale scholar attached to a row. */
-	const personMatches = $derived(
-		rows.map((row) => {
-			// With no role chosen there is nothing to seat anybody in, so the column
-			// is inert rather than every row failing to match an empty candidate list.
-			if (personRole === undefined) return { status: 'none' } as const;
-			if (row.personChoice !== null && candidates.some((c) => c.id === row.personChoice))
-				return { status: 'resolved', id: row.personChoice } as const;
-			return matchPersonName(row.person, candidates);
-		})
-	);
+	/** What each row's cells resolve to, as row → role id → match.
+	 *
+	 * Memoized per (role, written name) because matchPersonName re-tokenizes every
+	 * candidate on every call: four hundred rows across three roles against sixty
+	 * volunteers is tens of thousands of calls, re-run on every keystroke in any
+	 * cell. The distinct names in a column are far fewer than its rows. */
+	const personMatches = $derived.by(() => {
+		const memo = new Map<string, Map<string, PersonMatch>>();
+		return rows.map((row) => {
+			const matches: Record<string, PersonMatch> = {};
+			for (const role of Object.keys(roleColumns)) {
+				const candidates = candidatesByRole.get(role) ?? [];
+				const written = row.people[role] ?? '';
+				// A choice the editor pinned wins, but only while it is still one of
+				// this role's candidates — so changing a column cannot leave a stale
+				// scholar attached to a row.
+				const pinned = row.peopleChoices[role];
+				if (pinned !== undefined && candidates.some((c) => c.id === pinned)) {
+					matches[role] = { status: 'resolved', id: pinned };
+					continue;
+				}
+				let byName = memo.get(role);
+				if (byName === undefined) {
+					byName = new Map();
+					memo.set(role, byName);
+				}
+				let match = byName.get(written);
+				if (match === undefined) {
+					match = matchPersonName(written, candidates);
+					byName.set(written, match);
+				}
+				matches[role] = match;
+			}
+			return matches;
+		});
+	});
 
-	/** A person column was mapped but no role chosen, so the names in it would be
-	 * read and then ignored. Worth saying out loud rather than importing silently
-	 * without seating anybody. */
-	const personRoleMissing = $derived(mapping.person !== null && personRole === undefined);
-
-	/** Rows naming somebody the venue could not identify. These block the import:
-	 * seating the wrong person is a worse outcome than making the editor fix the
-	 * name. */
+	/** Rows naming somebody the venue could not identify, in any role. These block
+	 * the import: seating the wrong person is a worse outcome than making the
+	 * editor fix the name. */
 	const personUnresolved = $derived(
 		new Set(
 			personMatches
-				.map((match, index) =>
-					match.status === 'resolved' || match.status === 'none' ? -1 : index
+				.map((matches, index) =>
+					Object.values(matches).every((m) => m.status === 'resolved' || m.status === 'none')
+						? -1
+						: index
 				)
 				.filter((index) => index >= 0)
 		)
 	);
 
-	/** Rewrite only the field whose column changed. The row table is editable, and
-	 * rebuilding every row would throw away corrections the editor has already
-	 * made to the other columns. */
+	const allRowsValid = $derived(
+		rows.every(
+			(r, i) =>
+				rowProblem(r, i, {
+					existingExternalIDs: existingIDSet,
+					duplicates,
+					personUnresolved
+				}) === null
+		) && duplicateTopRoles.length < 2
+	);
+
+	/** Rows seating one person in two roles. Allowed — they did both jobs — but
+	 * worth saying, because it is two payments for one paper and an import is
+	 * exactly where the mistake gets made fifty times at once. */
+	const doubleSeated = $derived(
+		new Set(
+			personMatches
+				.map((matches, index) => {
+					const ids = Object.values(matches)
+						.filter((m) => m.status === 'resolved')
+						.map((m) => (m.status === 'resolved' ? m.id : ''));
+					return new Set(ids).size === ids.length ? -1 : index;
+				})
+				.filter((index) => index >= 0)
+		)
+	);
+
+	/** Every row rebuilt from the current matching. Used only to copy one field
+	 * out of; never assigned wholesale, since the row table is editable and
+	 * rebuilding would throw away corrections the editor has already made. */
+	function rebuilt(): ImportRow[] {
+		return rowsFromParsed(
+			parsedRecords,
+			mapping,
+			roleColumns,
+			defaultSubmissionType,
+			typeAssignments
+		);
+	}
+
+	/** Rewrite only the field whose column changed. */
 	function remap(field: ImportField, header: string | undefined) {
 		mapping = { ...mapping, [field]: header ?? null };
-		const fresh = rowsFromParsed(parsedRecords, mapping, submissionTypes, defaultSubmissionType);
+		if (field === 'submissionType') {
+			// A different type column means different values to resolve.
+			typeAssignments = guessTypeAssignments(typeValues, submissionTypes, defaultSubmissionType);
+		}
+		const fresh = rebuilt();
 		rows = rows.map((row, index) => {
 			const source = fresh[index];
 			if (source === undefined) return row;
@@ -237,13 +347,45 @@
 					return { ...row, previousID: source.previousID };
 				case 'note':
 					return { ...row, note: source.note };
-				case 'person':
-					// A new column means the pinned choice was made about other text.
-					return { ...row, person: source.person, personChoice: null };
 				default:
 					return row;
 			}
 		});
+	}
+
+	/** Rewrite only one role's names. A new column means any pinned choice for
+	 * that role was made about text that is no longer there. */
+	function remapRole(role: string, header: string | undefined) {
+		const next = { ...roleColumns };
+		if (header === undefined) delete next[role];
+		else next[role] = header;
+		roleColumns = next;
+
+		const fresh = rowsFromParsed(
+			parsedRecords,
+			mapping,
+			roleColumns,
+			defaultSubmissionType,
+			typeAssignments
+		);
+		rows = rows.map((row, index) => {
+			const people = { ...row.people };
+			const choices = { ...row.peopleChoices };
+			delete choices[role];
+			if (header === undefined) delete people[role];
+			else people[role] = fresh[index]?.people[role] ?? '';
+			return { ...row, people, peopleChoices: choices };
+		});
+	}
+
+	/** Rewrite every row's type from the current value assignments. */
+	function reassignType(value: string, type: string | undefined) {
+		if (type === undefined) return;
+		typeAssignments = { ...typeAssignments, [value.toLowerCase()]: type };
+		const fresh = rebuilt();
+		rows = rows.map((row, index) =>
+			fresh[index] === undefined ? row : { ...row, submissionType: fresh[index].submissionType }
+		);
 	}
 
 	/** The menu offered for one field: every column in the file, plus the choice
@@ -268,7 +410,7 @@
 		rows = rows.map((r) => ({ ...r, submissionType: defaultSubmissionType }));
 	}
 
-	function ingestCSV(text: string) {
+	async function ingestCSV(text: string, name: string) {
 		csvError = null;
 		csvWarning = null;
 		try {
@@ -279,12 +421,24 @@
 			}
 			parsedRecords = parsed;
 			csvHeaders = Object.keys(parsed[0]);
-			// A guess, not a decision: every column stays changeable below.
+			// A guess, not a decision: every column stays changeable below. Role
+			// columns are deliberately not guessed at all.
 			mapping = guessMapping(csvHeaders, MappedFields);
-			rows = rowsFromParsed(parsed, mapping, submissionTypes, defaultSubmissionType).map((r) => ({
-				...r,
-				personChoice: null
-			}));
+			roleColumns = {};
+			typeAssignments = guessTypeAssignments(
+				distinctTypeValues(parsed, mapping.submissionType),
+				submissionTypes,
+				defaultSubmissionType
+			);
+			rows = rowsFromParsed(
+				parsed,
+				mapping,
+				roleColumns,
+				defaultSubmissionType,
+				typeAssignments
+			).map((r) => ({ ...r, peopleChoices: {} }));
+			loadedFile = name;
+
 			// A misaligned row still imports — the editor may want to fix it in the
 			// table below rather than re-export — but it must not do so quietly.
 			// An unquoted comma shifts every column and pushes the last field off
@@ -293,6 +447,25 @@
 				const lines = ragged.map((r) => r.line).join(', ');
 				csvWarning = (l) => l.page.bulkImport.feedback.raggedRows.replace('{lines}', lines);
 			}
+
+			// Say that something happened. Banners is an aria-live region, so this is
+			// spoken as well as seen — and reading a file used to produce no output at
+			// all unless it failed, while the native file control goes back to saying
+			// no file is chosen the moment we clear it below.
+			addFeedback(
+				locale()
+					.page.bulkImport.feedback.loaded.replace('{count}', parsed.length.toString())
+					.replace('{name}', name),
+				'success'
+			);
+
+			// And take the eye to what appeared, which is otherwise below the fold.
+			// The section is revealed by an {#if} in this same tick, so it does not
+			// exist yet — tick() is doing here what Page's requestAnimationFrame does
+			// for the hash pattern, which does not apply because this is content
+			// appearing in place rather than an anchor to a stable heading.
+			await tick();
+			matchingSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		} catch (e) {
 			csvError = e instanceof Error ? e.message : 'Failed to parse CSV';
 		}
@@ -303,7 +476,10 @@
 		const file = input.files?.[0];
 		if (!file) return;
 		const text = await file.text();
-		ingestCSV(text);
+		await ingestCSV(text, file.name);
+		// Cleared so re-picking the same file fires `change` again. This is also what
+		// makes the native control say no file is chosen, which is why the form says
+		// what it read itself.
 		input.value = '';
 	}
 
@@ -312,7 +488,7 @@
 			csvError = 'Paste CSV content first';
 			return;
 		}
-		ingestCSV(csvText);
+		void ingestCSV(csvText, locale().page.bulkImport.feedback.pastedSource);
 	}
 </script>
 
@@ -328,9 +504,19 @@
 		onChange={handleFileUpload}
 	/>
 
-	<TextField strings={(l) => l.page.bulkImport.field.csvPaste} size={60} bind:text={csvText} />
+	<!-- inline={false} renders a textarea. As a single-line input this field could
+	     not hold a CSV at all: pasting multi-line text into an <input> flattens it
+	     to one line, so every paste arrived as a header with no rows. -->
+	<TextField
+		strings={(l) => l.page.bulkImport.field.csvPaste}
+		size={60}
+		inline={false}
+		testid="bulk-import-paste"
+		bind:text={csvText}
+	/>
 	<Button
 		strings={(l) => l.page.bulkImport.button.parseCSV}
+		testid="bulk-import-parse"
 		active={csvText.trim().length > 0}
 		action={pasteCSV}
 	/>
@@ -342,79 +528,141 @@
 	{#if csvWarning}
 		<Feedback warning text={csvWarning} testid="csv-ragged-warning" />
 	{/if}
+
+	<!-- The banner announcing this is dismissible; the fact is not. -->
+	{#if loadedFile !== null}
+		<Feedback
+			testid="csv-loaded"
+			text={(l) => l.page.bulkImport.feedback.loadedFrom}
+			inputs={{ name: loadedFile, count: rows.length.toString() }}
+		/>
+	{/if}
 </Form>
 
 {#if csvHeaders.length > 0}
-	<h3><Text path={(l) => l.page.bulkImport.header.mapping} /></h3>
-	<Note path={(l) => l.page.bulkImport.note.mapping} />
+	<section bind:this={matchingSection}>
+		<h3><Text path={(l) => l.page.bulkImport.header.mapping} /></h3>
+		<Note path={(l) => l.page.bulkImport.note.mapping} />
 
-	<Form>
-		<Options
-			strings={(l) => l.page.bulkImport.options.mapField.title}
-			options={columnOptions(locale())}
-			value={mapping.title ?? undefined}
-			onChange={(header) => remap('title', header)}
-		/>
-		<Options
-			strings={(l) => l.page.bulkImport.options.mapField.externalID}
-			options={columnOptions(locale())}
-			value={mapping.externalID ?? undefined}
-			onChange={(header) => remap('externalID', header)}
-		/>
-		<Options
-			strings={(l) => l.page.bulkImport.options.mapField.submissionType}
-			options={columnOptions(locale())}
-			value={mapping.submissionType ?? undefined}
-			onChange={(header) => remap('submissionType', header)}
-		/>
-		<Options
-			strings={(l) => l.page.bulkImport.options.mapField.expertise}
-			options={columnOptions(locale())}
-			value={mapping.expertise ?? undefined}
-			onChange={(header) => remap('expertise', header)}
-		/>
-		<Options
-			strings={(l) => l.page.bulkImport.options.mapField.previousID}
-			options={columnOptions(locale())}
-			value={mapping.previousID ?? undefined}
-			onChange={(header) => remap('previousID', header)}
-		/>
-		<Options
-			strings={(l) => l.page.bulkImport.options.mapField.note}
-			options={columnOptions(locale())}
-			value={mapping.note ?? undefined}
-			onChange={(header) => remap('note', header)}
-		/>
-
-		{#if seatableRoles.length > 0}
+		<Form>
 			<Options
-				strings={(l) => l.page.bulkImport.options.mapField.person}
+				strings={(l) => l.page.bulkImport.options.mapField.title}
 				options={columnOptions(locale())}
-				value={mapping.person ?? undefined}
-				onChange={(header) => remap('person', header)}
+				value={mapping.title ?? undefined}
+				onChange={(header) => remap('title', header)}
 			/>
+			<Options
+				strings={(l) => l.page.bulkImport.options.mapField.externalID}
+				options={columnOptions(locale())}
+				value={mapping.externalID ?? undefined}
+				onChange={(header) => remap('externalID', header)}
+			/>
+			<Options
+				strings={(l) => l.page.bulkImport.options.mapField.submissionType}
+				options={columnOptions(locale())}
+				value={mapping.submissionType ?? undefined}
+				onChange={(header) => remap('submissionType', header)}
+			/>
+			<Options
+				strings={(l) => l.page.bulkImport.options.mapField.expertise}
+				options={columnOptions(locale())}
+				value={mapping.expertise ?? undefined}
+				onChange={(header) => remap('expertise', header)}
+			/>
+			<Options
+				strings={(l) => l.page.bulkImport.options.mapField.previousID}
+				options={columnOptions(locale())}
+				value={mapping.previousID ?? undefined}
+				onChange={(header) => remap('previousID', header)}
+			/>
+			<Options
+				strings={(l) => l.page.bulkImport.options.mapField.note}
+				options={columnOptions(locale())}
+				value={mapping.note ?? undefined}
+				onChange={(header) => remap('note', header)}
+			/>
+
+			{#if missingRequired.length > 0}
+				<Feedback
+					warning
+					testid="mapping-missing-required"
+					text={(l) =>
+						l.page.bulkImport.feedback.missingRequired.replace(
+							'{fields}',
+							missingRequired.join(', ')
+						)}
+				/>
+			{/if}
+
+			{#if ignoredColumns.length > 0}
+				<Feedback
+					testid="mapping-ignored-columns"
+					text={(l) => l.page.bulkImport.feedback.ignoredColumns}
+					inputs={{ columns: ignoredColumns.join(', ') }}
+				/>
+			{/if}
+		</Form>
+
+		<!-- What each value in the type column becomes. This used to happen per row
+		     in silence, so a file whose type names are its own — the normal case —
+		     became a batch of the default type, whose cost then set the mint. -->
+		{#if typeValues.length > 0}
+			<h3><Text path={(l) => l.page.bulkImport.type.header} /></h3>
+			<Note path={(l) => l.page.bulkImport.type.note} />
+			<Form>
+				{#each typeValues as { value, count } (value)}
+					<Options
+						strings={(l) => ({
+							label: l.page.bulkImport.type.value
+								.replace('{value}', value)
+								.replace('{count}', count.toString())
+						})}
+						options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
+						value={typeAssignments[value.toLowerCase()] ?? defaultSubmissionType}
+						onChange={(type) => reassignType(value, type)}
+					/>
+				{/each}
+				{#if unmatchedTypeValues.length > 0}
+					<Feedback
+						testid="type-values-unmatched"
+						text={(l) => l.page.bulkImport.type.unmatched}
+						inputs={{ values: unmatchedTypeValues.map((v) => v.value).join(', ') }}
+					/>
+				{/if}
+			</Form>
 		{/if}
 
-		{#if missingRequired.length > 0}
-			<Feedback
-				warning
-				testid="mapping-missing-required"
-				text={(l) =>
-					l.page.bulkImport.feedback.missingRequired.replace(
-						'{fields}',
-						missingRequired.join(', ')
-					)}
-			/>
+		<!-- One column per role, rather than one column and a role: an export often
+		     names an editor in chief and a handling editor in separate columns, which
+		     are two people in two roles on the same manuscript. -->
+		<h3><Text path={(l) => l.page.bulkImport.person.header} /></h3>
+		{#if seatableRoles.length > 0}
+			<Note path={(l) => l.page.bulkImport.person.note} />
+			<Form>
+				{#each seatableRoles as role (role.id)}
+					<Options
+						strings={(l) => ({
+							label: (l.page.bulkImport.options.roleColumn.label ?? '').replace('{role}', role.name)
+						})}
+						options={columnOptions(locale())}
+						value={roleColumns[role.id]}
+						testid="role-column-{role.id}"
+						onChange={(header) => remapRole(role.id, header)}
+					/>
+				{/each}
+				{#if duplicateTopRoles.length > 1}
+					<Feedback
+						error
+						testid="two-top-roles"
+						text={(l) => l.page.bulkImport.feedback.twoTopRoles}
+						inputs={{ roles: duplicateTopRoles.map((r) => r.name).join(', ') }}
+					/>
+				{/if}
+			</Form>
+		{:else}
+			<Feedback text={(l) => l.page.bulkImport.person.noRole} />
 		{/if}
-
-		{#if ignoredColumns.length > 0}
-			<Feedback
-				testid="mapping-ignored-columns"
-				text={(l) =>
-					l.page.bulkImport.feedback.ignoredColumns.replace('{columns}', ignoredColumns.join(', '))}
-			/>
-		{/if}
-	</Form>
+	</section>
 {/if}
 
 <h3><Text path={(l) => l.page.bulkImport.header.defaults} /></h3>
@@ -426,28 +674,6 @@
 		options={submissionTypes.map((type) => ({ value: type.id, label: type.name }))}
 	/>
 	<Button strings={(l) => l.page.bulkImport.button.applyDefault} action={applyDefaultType} />
-
-	{#if seatableRoles.length > 0}
-		<Options
-			strings={(l) => l.page.bulkImport.options.personRole}
-			options={[
-				{ value: undefined, label: locale().page.bulkImport.options.unmapped },
-				...seatableRoles.map((role) => ({ value: role.id, label: role.name }))
-			]}
-			value={personRole}
-			onChange={(role) => (personRole = role)}
-		/>
-		<Note path={(l) => l.page.bulkImport.person.note} />
-		{#if personRoleMissing}
-			<Feedback
-				warning
-				testid="person-role-missing"
-				text={(l) => l.page.bulkImport.person.roleMissing}
-			/>
-		{/if}
-	{:else}
-		<Feedback text={(l) => l.page.bulkImport.person.noRole} />
-	{/if}
 </Form>
 
 <h3><Text path={(l) => l.page.bulkImport.header.rows} /></h3>
@@ -458,7 +684,9 @@
 		<th><Text path={(l) => l.page.bulkImport.column.externalID} /></th>
 		<th><Text path={(l) => l.page.bulkImport.column.expertise} /></th>
 		<th><Text path={(l) => l.page.bulkImport.column.submissionType} /></th>
-		<th><Text path={(l) => l.page.bulkImport.column.person} /></th>
+		{#each matchedRoles as role (role.id)}
+			<th>{role.name}</th>
+		{/each}
 		<th><Text path={(l) => l.page.bulkImport.column.previousID} /></th>
 		<th><Text path={(l) => l.page.bulkImport.column.note} /></th>
 		<th></th>
@@ -493,39 +721,44 @@
 					options={submissionTypes.map((t) => ({ value: t.id, label: t.name }))}
 				/>
 			</td>
-			<td>
-				{#if seatableRoles.length > 0}
-					{@const match = personMatches[index]}
+			{#each matchedRoles as role (role.id)}
+				{@const match = personMatches[index][role.id] ?? { status: 'none' }}
+				<td>
 					<TextField
 						strings={(l) => ({ ...l.page.bulkImport.field.person, label: '' })}
-						bind:text={row.person}
-						testid="import-row-{index}-person"
+						bind:text={row.people[role.id]}
+						testid="import-row-{index}-person-{role.id}"
 					/>
 					{#if match.status === 'resolved'}
 						<ScholarLink id={match.id} size="small" />
 					{:else if match.status === 'ambiguous'}
 						<Feedback text={(l) => l.page.bulkImport.person.ambiguous} />
-						{#each match.candidates as candidate (candidate.id)}
-							<Button
-								strings={(l) => ({
-									label: candidate.name,
-									tip: l.widget.scholarSearch.choose.tip
-								})}
-								action={() => (row.personChoice = candidate.id)}
-							/>
-						{/each}
+						<div class="matches">
+							{#each match.candidates as candidate (candidate.id)}
+								<Button
+									small
+									strings={(l) => ({
+										label: candidate.name,
+										// The name goes in the tip as well as the label, because the
+										// tip is the button's aria-label: a column of buttons all
+										// announcing "Choose this scholar" is unusable by voice or
+										// screen reader.
+										tip: l.widget.scholarSearch.choose.tip.replace('{name}', candidate.name)
+									})}
+									action={() => (row.peopleChoices[role.id] = candidate.id)}
+								/>
+							{/each}
+						</div>
 					{:else if match.status === 'unmatched'}
 						<Feedback
 							error
-							text={(l) =>
-								l.page.bulkImport.person.unmatched.replace(
-									'{role}',
-									seatableRoles.find((r) => r.id === personRole)?.name ?? ''
-								)}
+							testid="import-row-{index}-unmatched"
+							text={(l) => l.page.bulkImport.person.unmatched}
+							inputs={{ role: role.name }}
 						/>
 					{/if}
-				{/if}
-			</td>
+				</td>
+			{/each}
 			<td>
 				<TextField
 					strings={(l) => ({ ...l.page.bulkImport.field.previousID, label: '' })}
@@ -548,8 +781,22 @@
 		</tr>
 		{#if err}
 			<tr>
-				<td colspan="8">
+				<td colspan={7 + matchedRoles.length}>
 					<Feedback error text={err} />
+				</td>
+			</tr>
+		{/if}
+		<!-- Allowed, not blocked: somebody who was both the editor and the handling
+		     editor did both jobs. But it is two payments for one paper, and an import
+		     is where that mistake gets made fifty times at once. -->
+		{#if doubleSeated.has(index)}
+			<tr>
+				<td colspan={7 + matchedRoles.length}>
+					<Feedback
+						warning
+						testid="import-row-{index}-double-seated"
+						text={(l) => l.page.bulkImport.person.doubleSeated}
+					/>
 				</td>
 			</tr>
 		{/if}
@@ -585,7 +832,6 @@
 				db().bulkImportSubmissions(
 					venue.id,
 					rows.map((r, index) => {
-						const match = personMatches[index];
 						return {
 							title: r.title.trim(),
 							externalID: r.externalID.trim(),
@@ -595,8 +841,9 @@
 							note: r.note.trim() === '' ? null : r.note.trim(),
 							// Only a confidently resolved name is sent. Anything else
 							// already blocked the submit button above.
-							person: match.status === 'resolved' ? match.id : null,
-							person_role: match.status === 'resolved' ? (personRole ?? null) : null
+							people: Object.entries(personMatches[index]).flatMap(([role, m]) =>
+								m.status === 'resolved' ? [{ person: m.id, person_role: role }] : []
+							)
 						};
 					}),
 					importNote.trim() === '' ? null : importNote.trim()

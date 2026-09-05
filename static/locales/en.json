@@ -538,7 +538,11 @@
 				"notAdmin": "Only venue admins can import submissions.",
 				"raggedRows": "Some records had a different number of columns than the header, so columns may be misaligned and data dropped. Check the record starting at line {lines} — a comma inside a field must be wrapped in double quotes.",
 				"ignoredColumns": "These columns are not being imported: {columns}.",
-				"missingRequired": "Nothing is matched to {fields}, which every submission needs."
+				"missingRequired": "Nothing is matched to {fields}, which every submission needs.",
+				"loaded": "Read {count} submissions from {name}. Review them below.",
+				"loadedFrom": "{count} submissions read from {name}.",
+				"twoTopRoles": "Two of this venue’s top roles ({roles}) both have a column. A submission can have only one editor, so match a column to just one of them.",
+				"pastedSource": "pasted text"
 			},
 			"field": {
 				"title": {
@@ -610,9 +614,11 @@
 						"label": "Editor"
 					}
 				},
-				"personRole": {
-					"label": "seat the named editor as",
-					"note": "The person named on each row is given this role on that submission. They must already hold it at this venue."
+				"roleColumn": {
+					"label": "{role}"
+				},
+				"typeValue": {
+					"label": "{value}"
 				}
 			},
 			"button": {
@@ -651,16 +657,22 @@
 					"title": "Title is required.",
 					"externalID": "External ID is required.",
 					"duplicateExisting": "A submission with this external ID already exists in this venue.",
-					"duplicateRow": "Duplicate external ID across rows.",
-					"personUnresolved": "This name could not be matched. Choose one of the suggestions, correct the spelling, or clear the cell."
+					"duplicateRow": "Duplicate external ID across rows."
 				}
 			},
 			"person": {
 				"ambiguous": "Several people match this name. Choose one:",
 				"unmatched": "Nobody holding the {role} role at this venue matches this name.",
 				"noRole": "No role at this venue has an accepted, active volunteer to seat.",
-				"note": "Leave a row blank to fall back to the venue’s editor, if it has exactly one.",
-				"roleMissing": "You matched a column of names but have not chosen a role to seat them in, so nobody will be assigned."
+				"note": "For each role, choose the column naming who holds it. Leave a role unmatched to seat nobody in it; a row naming nobody falls back to the venue’s editor, if it has exactly one.",
+				"header": "Match editors",
+				"doubleSeated": "This row seats the same person in two roles. That is allowed — but they will be paid for both."
+			},
+			"type": {
+				"header": "Match types",
+				"note": "Each value in your type column becomes one of this venue’s submission types. The cost of the type you choose is what the import mints for that submission.",
+				"value": "{value} — {count} submissions",
+				"unmatched": "These values match no submission type by name and will use whichever type you choose above: {values}."
 			}
 		},
 		"submissions": {
