@@ -114,9 +114,30 @@ describe('canSeeAuthors', () => {
 describe('matchesFilter', () => {
 	const target = sub({ id: 's1', title: 'Deep Learning', externalid: 'EXT-42', authors: ['a1'] });
 
-	test('matches title and external id case-insensitively', () => {
+	test('matches title case-insensitively, for everyone', () => {
 		expect(view({ filter: 'deep' }).matchesFilter(target)).toBe(true);
-		expect(view({ filter: 'ext-4' }).matchesFilter(target)).toBe(true);
+	});
+
+	test('matches an external id the viewer may see, case-insensitively', () => {
+		expect(view({ filter: 'ext-4', isAdmin: true }).matchesFilter(target)).toBe(true);
+	});
+
+	// The manuscript ID is gated for the same reason the column hides it: it is
+	// the key the paper is filed under in the venue's own reviewing system, so
+	// matching it here would let a bidder confirm a guessed ID one query at a
+	// time and walk from it back to the authors.
+	test('does not match an external id the viewer may not see', () => {
+		expect(
+			view({
+				filter: 'ext-4',
+				assignments: [{ submission: 's1', scholar: 'viewer', role: 'anon' }],
+				rolesById: new Map([['anon', { anonymous_authors: true, priority: 1 }]])
+			}).matchesFilter(target)
+		).toBe(false);
+	});
+
+	test('does match an external id for an author of the submission', () => {
+		expect(view({ filter: 'ext-4', uid: 'a1' }).matchesFilter(target)).toBe(true);
 	});
 
 	test('does not match unrelated text', () => {

@@ -104,10 +104,18 @@ export function submissionsView(context: SubmissionsViewContext) {
 		return false;
 	}
 
-	/** Whether the current viewer can see the authors of a given submission,
-	 * mirroring the role.anonymous_authors gate on the submission detail page.
-	 * Used both by the filter (to decide whether to match author names) and by
-	 * the Authors column (to decide whether to render them). */
+	/** Whether the current viewer can see the identifying details of a given
+	 * submission, mirroring the role.anonymous_authors gate on the submission
+	 * detail page.
+	 *
+	 * That means the author list AND the manuscript ID. The ID is not merely a
+	 * label: it is the key the paper is filed under in the venue's real reviewing
+	 * system, so anyone who can look it up there can walk from it straight to the
+	 * author list this gate is withholding. Showing one while hiding the other
+	 * protects nothing.
+	 *
+	 * Used by the filter (to decide which fields may be matched) and by the
+	 * Authors and ID columns (to decide whether to render them). */
 	function canSeeAuthors(sub: ViewSubmission): boolean {
 		if (context.isAdmin) return true;
 		if (context.uid !== null && sub.authors.includes(context.uid)) return true;
@@ -121,16 +129,21 @@ export function submissionsView(context: SubmissionsViewContext) {
 		);
 	}
 
-	/** True if the search term matches the submission's title, external ID, any
-	 * visible author name, or any visible assigned-reviewer name.
+	/** True if the search term matches the submission's title, or any of the
+	 * identifying details this viewer is allowed to see.
 	 *
 	 * Reviewer-name matches honor `venue.anonymous_assignments` automatically:
-	 * RLS already filters which assignment rows arrive. Author-name matches honor
-	 * `role.anonymous_authors` explicitly, so a reviewer in an anonymous-authors
-	 * role cannot discover author names via search. */
+	 * RLS already filters which assignment rows arrive. Author-name and
+	 * manuscript-ID matches honor `role.anonymous_authors` explicitly, so a
+	 * reviewer in an anonymous-authors role cannot discover either via search.
+	 *
+	 * The ID is gated for the same reason the cell hides it. Matching it here
+	 * regardless would hand back what the column withholds: type a guessed ID and
+	 * watch whether a row survives, and the guess is confirmed one query at a
+	 * time. Titles stay searchable — they are shown to everyone. */
 	function matchesFilter(sub: ViewSubmission): boolean {
 		if (matches(sub.title)) return true;
-		if (matches(sub.externalid)) return true;
+		if (canSeeAuthors(sub) && matches(sub.externalid)) return true;
 
 		const subAssignments = context.assignments?.filter((a) => a.submission === sub.id) ?? [];
 		if (anyScholarMatches(subAssignments.map((a) => a.scholar))) return true;

@@ -3,7 +3,14 @@
 	import { venuePath } from '$lib/data/venuePath';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { DownLabel, PrivateLabel, SubmissionLabel, UpLabel } from '$lib/components/Labels';
+	import {
+		DownLabel,
+		EmptyLabel,
+		PrivateLabel,
+		SubmissionLabel,
+		UnknownLabel,
+		UpLabel
+	} from '$lib/components/Labels';
 	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
@@ -424,11 +431,30 @@
 										{/if}<ScholarLink id={authorID} />
 									{/each}
 								{:else}
-									{PrivateLabel}
+									<!-- Deliberately withheld, which is a different fact from the
+									     "couldn't load" and "not signed in" cases that also use
+									     PrivateLabel on this page. The lock says which one this is;
+									     the title carries the word for anyone who can't read the
+									     glyph. -->
+									<span title={locale().page.submissions.cell.anonymized}>{UnknownLabel}</span>
 								{/if}
 							</td>
-							<td>{submission.expertise}</td>
-							<td class:highlight={view.matches(submission.externalid)}>{submission.externalid}</td>
+							<!-- Expertise is what a bidder reads to decide whether to bid, and it
+							     is nullable — the detail page writes null back for empty input. An
+							     empty cell looked broken rather than unanswered. -->
+							<td>{submission.expertise?.trim() ? submission.expertise : EmptyLabel}</td>
+							{#if view.canSeeAuthors(submission)}
+								<td class:highlight={view.matches(submission.externalid)}
+									>{submission.externalid}</td
+								>
+							{:else}
+								<!-- The manuscript ID is the key this paper is filed under in the
+								     venue's own reviewing system, so it leads back to the authors
+								     the column above is hiding. -->
+								<td
+									><span title={locale().page.submissions.cell.anonymized}>{UnknownLabel}</span></td
+								>
+							{/if}
 							<td>{formatDate(submission.created_at)}</td>
 							<td>
 								{#if submission.status === 'done'}

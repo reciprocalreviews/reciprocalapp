@@ -21,6 +21,11 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **An imported submission's expertise can now be edited by its editor.** Imported submissions have no authors and only an author could edit it, so the field reviewers read when deciding what to bid on could be filled in by nobody.
 - **Inviting someone to a role no longer reports it twice.** "Invitations sent!" appeared alongside "… was emailed …" for each person; the second says the same thing and names who was told, so the generic one now only appears when nobody could be emailed.
 - **Typing a complete email address into a scholar field no longer reports "No matches."** The address was searched for as though it were a name, so a person the field could resolve perfectly well was announced as unfindable.
+- **A submission nobody has said what expertise it needs now says so.** The column was simply blank, which read as a page that had failed to load rather than a question the submission had left unanswered.
+- **A withheld author list now carries a lock** instead of an anonymous "•••", which the same list also used for "couldn't load" and "sign in to see". The submission page marks a withheld author the same way.
+- **The manuscript ID is now withheld from anyone who cannot see the authors.** It is the key the paper is filed under in the venue's own reviewing system, so a bidder could look it up there and read off the author list the venue was hiding — including by typing a guess into the search box and watching whether the row survived.
+- **Venue settings no longer promises bidders a "yes/no" bid** when no preference levels are defined. They get a single **Bid** button, with **Unbid** to take it back, which is what the copy now says.
+- **The anonymity and assignment guidance now names the setup steps it points at** rather than numbering them. Two of the three numbers were wrong, and the preference-levels step's number changes depending on whether any role takes bids.
 
 ## 0.5.3 - 2026-08-31
 

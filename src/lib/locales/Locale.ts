@@ -540,6 +540,10 @@ export type LocaleText = {
 				conflicted: string;
 				bids: string;
 				biddingClosed: string;
+				/** Hover text on the lock that stands in for an author list or a
+				 * manuscript ID withheld from a role that cannot see author
+				 * information. */
+				anonymized: string;
 			};
 			feedback: {
 				notLoaded: string;
@@ -805,8 +809,8 @@ export type LocaleText = {
 				roles: string;
 				/** Explains how done_visibility_days controls the list. */
 				doneVisibility: string;
-				/** Explains what preference levels are for and how the binary
-				 * default works when no levels are defined. */
+				/** Explains what preference levels are for, and that leaving them
+				 * empty falls back to the plain Bid / Unbid pair. */
 				preferenceLevels: string;
 				/** Explains the email-templates section (#113): pick the reviewing
 				 * platform first, then paste each snippet into its email template. */
