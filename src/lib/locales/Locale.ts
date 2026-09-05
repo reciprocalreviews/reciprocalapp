@@ -1382,6 +1382,17 @@ export type LocaleText = {
 				consult: string;
 				noRoles: string;
 				notLoaded: string;
+				/** Queries that were looked up and matched nobody at all. Named rather than
+				 * left silent, and advisory: the invitation goes ahead without them. */
+				inviteUnmatched: string;
+				/** Queries whose every match is somebody who cannot be added again. Distinct
+				 * from `inviteUnmatched`, because "nobody is called that" and "they are
+				 * already here" are different news. Worded to be true of every state a
+				 * volunteer record can be in, since create_volunteer refuses a second row
+				 * whether the first is invited, accepted, declined, or paused. */
+				inviteAlready: string;
+				/** Confirms a batch of invitations went out. */
+				invited: string;
 			};
 			button: {
 				createRole: ButtonText;
@@ -1398,6 +1409,11 @@ export type LocaleText = {
 				stop: ButtonText;
 				resume: ButtonText;
 				invite: ButtonText;
+				/** Takes a chosen scholar back off the list before anything is sent. `{name}` in
+				 * the tip is replaced with theirs, because the tip is the button's aria-label and
+				 * a row of buttons all announcing "x" is unusable. Not a confirm button: nothing
+				 * has gone out, so there is nothing to undo. */
+				removeInvite: ButtonText;
 				deleteRole: ConfirmButtonText;
 			};
 			field: {
@@ -1406,6 +1422,11 @@ export type LocaleText = {
 				 * `minter` when it names someone who mints the venue's currency,
 				 * which the database forbids an admin from also doing. */
 				adminScholar: TextFieldText & { invalid: string };
+				/** The role invite's field. It takes a comma-separated list of email
+				 * addresses, ORCID iDs, and names, so the label names all three. There is no
+				 * `invalid`, because nothing the field can hold is a mistake — a query that
+				 * matches nobody is reported as a query that matched nobody, not as text
+				 * that should not have been typed. */
 				invite: TextFieldText;
 				roleName: TextFieldText;
 				roleDescription: TextFieldText;
@@ -1414,6 +1435,13 @@ export type LocaleText = {
 				/** Per-volunteer soft cap on the number of papers the volunteer
 				 * is willing to review for this role. Empty = unspecified. */
 				papers: TextFieldText & { invalid: string };
+			};
+			/** Captions for the two rows under the invite field: who the queries matched,
+			 * and who has been chosen from them. Lowercase, like a field label, because that
+			 * is what they are — a name for the group beside them, not a sentence. */
+			fieldset: {
+				matches: string;
+				invites: string;
 			};
 			card: {
 				settings: CardText;
@@ -1605,8 +1633,6 @@ export type LocaleText = {
 		ReorderPreferenceLevel: string;
 		DeletePreferenceLevel: string;
 		InviteToRole: string;
-		InviteToRoleMissing: string;
-		InviteToRoleSuccess: string;
 		AcceptRoleInvite: string;
 		EditCurrencyMinters: string;
 		AddCurrencyMinter: string;

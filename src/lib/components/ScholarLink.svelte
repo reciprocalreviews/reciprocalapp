@@ -9,7 +9,11 @@
 		id,
 		size = 'normal'
 	}: {
-		id: string | Scholar | ScholarRow;
+		/** A scholar id to look up, a Scholar already loaded, or just the id and name of
+		 * one — the row branch below reads only those two fields, so a caller that already
+		 * holds them (a name-search match, an invitation about to be sent) can render
+		 * without the round trip and the `...` flash that looking one up costs. */
+		id: string | Scholar | Pick<ScholarRow, 'id' | 'name'>;
 		size?: 'small' | 'normal' | 'extra-small';
 	} = $props();
 

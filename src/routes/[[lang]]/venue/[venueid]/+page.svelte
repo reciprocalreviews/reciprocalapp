@@ -38,7 +38,7 @@
 
 	const db = getDB();
 	const locale = getLocaleContext();
-	let isAdmin = $derived(scholar && venue && venue.admins.includes(scholar.id));
+	let isAdmin = $derived(scholar !== null && venue !== null && venue.admins.includes(scholar.id));
 	// When false, the venue is payment-free: hide all token/currency/cost/compensation UI.
 	let showPayment = $derived(venue ? !venue.payment_free : true);
 	let isMinter = $derived(scholar && currency ? currency.minters.includes(scholar.id) : false);
@@ -296,6 +296,7 @@
 				{roles}
 				{volunteers}
 				isAdmin={false}
+				canInvite={isAdmin}
 				{compensation}
 				{types}
 			/>

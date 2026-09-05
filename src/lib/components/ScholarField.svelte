@@ -14,8 +14,6 @@
 		size = undefined,
 		name = undefined,
 		showResolved = true,
-		query = undefined,
-		choose = undefined,
 		testid = undefined
 	}: {
 		text: string;
@@ -25,13 +23,6 @@
 		size?: number | undefined;
 		name?: string | undefined;
 		showResolved?: boolean;
-		/** What part of the field to search for. Defaults to the whole thing; a
-		 * field holding a comma-separated list searches only its last segment. */
-		query?: ((text: string) => string) | undefined;
-		/** What choosing a match means. Defaults to replacing the text with the
-		 * chosen scholar's ORCID iD, which is what a single-scholar field wants;
-		 * the role invite overrides it to append to a comma-separated list. */
-		choose?: ((match: ScholarMatch) => void) | undefined;
 		testid?: string;
 	} = $props();
 
@@ -39,8 +30,7 @@
 	const search = new ScholarSearch(db);
 
 	function chooseMatch(match: ScholarMatch) {
-		if (choose) choose(match);
-		else if (match.orcid !== null) text = match.orcid;
+		if (match.orcid !== null) text = match.orcid;
 		search.choose(match);
 	}
 </script>
@@ -52,8 +42,8 @@
 		{size}
 		{name}
 		{valid}
-		change={(value) => search.change(query ? query(value) : value)}
-		done={() => search.done(query ? query(text) : text)}
+		change={(value) => search.change(value)}
+		done={() => search.done(text)}
 		{testid}
 	/>
 	<!-- Wrapped, so this component owns the alignment. Feedback sets its own
@@ -82,8 +72,8 @@
 		   matches" feedback floating up beside the label instead of beside the field
 		   they describe. Aligning the bottoms puts them level with the input.
 		   Deliberately still a row: stacking them under the field reads well but
-		   makes the field taller, which pushes whatever follows it — the Invite and
-		   Add buttons that sit beside these fields — down the page. */
+		   makes the field taller, which pushes whatever follows it — the Add buttons that
+		   sit beside these fields — down the page. */
 		align-items: flex-end;
 		gap: var(--spacing-half);
 	}

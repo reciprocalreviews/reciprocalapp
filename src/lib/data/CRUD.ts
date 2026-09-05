@@ -43,6 +43,7 @@ import type {
 	DevScholar,
 	CurrencyHolderCounts,
 	ProposalSupporter,
+	ScholarInvitee,
 	ScholarMatch,
 	ScholarReview,
 	ScholarVolunteering,
@@ -220,6 +221,26 @@ export default abstract class CRUD {
 	 * verified contact email alone, exactly as approve_venue_proposal does, so what a
 	 * proposal form reports and what approval will actually resolve cannot disagree. */
 	abstract findUnknownAddresses(addresses: string[]): Promise<ReadResult<string[]>>;
+	/** Which scholar, if any, each of the given email addresses or ORCID iDs names,
+	 * keyed by the exact text that was given. One query for the whole list, so a form
+	 * can say who it is about to invite — and which entries name nobody — before
+	 * anything is sent.
+	 *
+	 * Unlike findUnknownAddresses, this matches ORCID iDs as well as verified contact
+	 * addresses, because the invite field offers a scholar found either way and
+	 * create_volunteer cares only which scholar was chosen. It used to be inviteToRole's
+	 * own lookup, so that a preview and the invitation could not disagree about who an
+	 * address named; the invitation now takes scholars rather than text, so there is
+	 * nothing left to disagree with — this resolves the field, and the field's answer is
+	 * what gets sent.
+	 *
+	 * Matching is exact, including case, for the reason addresses.ts gives: the
+	 * invitation matches exactly too, so folding case here would report an address as
+	 * known that the invitation would then reject. An entry that matched nobody is
+	 * absent from the map rather than present with a null. */
+	abstract findScholarsByAddresses(
+		emailsOrORCIDs: string[]
+	): Promise<ReadResult<Map<string, ScholarInvitee>>>;
 	/** Up to three scholars whose name contains the query, for picking a
 	 * co-author whose ORCID the submitter doesn't know. */
 	abstract findScholarsByName(query: string): Promise<ReadResult<ScholarMatch[]>>;
@@ -418,11 +439,18 @@ export default abstract class CRUD {
 		direction: -1 | 1
 	): Promise<Result>;
 	abstract deletePreferenceLevel(id: PreferenceLevelID): Promise<Result>;
+	/** Invite each of these scholars to the role, as one batch: a volunteer record in the
+	 * `invited` state, and a message telling them so.
+	 *
+	 * Scholars, not addresses. The form that calls this resolves what was typed into
+	 * particular people before anything is staged, and the invitation sends to the people
+	 * who were chosen rather than re-resolving text that may since have come to mean
+	 * somebody else. */
 	abstract inviteToRole(
 		inviter: ScholarID,
 		role: RoleRow,
 		venue: VenueRow,
-		emails: string[]
+		scholars: ScholarID[]
 	): Promise<Result<string[]>>;
 
 	abstract acceptRoleInvite(

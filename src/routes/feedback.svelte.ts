@@ -50,7 +50,15 @@ export async function handle<T>(
 		addError(error);
 		return false;
 	} else {
-		if (success) addFeedback(success, 'success');
+		// A generic "it worked" is worth saying only when the action didn't already say
+		// something specific. Inviting one person to a role used to report both
+		// "Invitations sent!" and "Manny Script was emailed …", which is the same news
+		// twice — and the second one is strictly better, because it names who was told.
+		// The generic message stays the fallback for when nothing was sent: a scholar with
+		// no verified contact email is skipped by queue_email, and an invitation that
+		// succeeded should not look like a click that did nothing.
+		if (success && (notified === undefined || notified.length === 0))
+			addFeedback(success, 'success');
 		// Render one success banner per notification (e.g., one per email recipient).
 		if (notified) {
 			for (const note of notified) addFeedback(note.message, 'success');
