@@ -2,6 +2,22 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.4 - 2026-09-05
+
+### Added
+
+- **The submission importer now reads exports from any reviewing system.** Upload a CSV with whatever column names it arrived with and match them to fields on screen, rather than renaming columns by hand first.
+- **A bulk import can now name each submission's editors.** Your file's editor columns are matched to the venue's roles, so an export naming an editor in chief and a handling editor separately seats both. A name matching nobody leaves that submission unseated rather than stopping the import; one matching several people waits for you to choose.
+- **The file's own submission-type names are matched too**, each listed with how many rows carry it, so the type an import gives its submissions is chosen rather than silently defaulted.
+
+### Fixed
+
+- **A line break inside a title or status column no longer breaks an import.** Every row after it shifted into the wrong columns, which made a file exported straight from a reviewing platform unusable.
+- **Reading a CSV now says what it read** and scrolls to it. Nothing acknowledged the file at all, and the rows appeared below the fold behind a control that had gone back to reading "no file chosen".
+- **A CSV can now actually be pasted.** The paste box was a single-line field, so a multi-line CSV collapsed onto one line and arrived as a header with no rows.
+- **The submissions list no longer says imported submissions were paid for.** Nothing was ever charged for them, and the tokens meant to fund their reviewing are still an unapproved mint, so they now read **free**. The same wrong badge appeared on every submission at a payment-free venue, which no longer shows a payment column at all.
+- **An imported submission's expertise can now be edited by its editor.** Imported submissions have no authors and only an author could edit it, so the field reviewers read when deciding what to bid on could be filled in by nobody.
+
 ## 0.5.3 - 2026-08-31
 
 ### Fixed

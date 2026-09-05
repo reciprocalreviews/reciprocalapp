@@ -12,6 +12,8 @@
 	let venue = $derived(data.venue);
 	let submissionTypes = $derived(data.submissionTypes);
 	let existingExternalIDs = $derived(data.existingExternalIDs);
+	let roles = $derived(data.roles);
+	let commitments = $derived(data.commitments);
 
 	const auth = getAuth();
 	const uid = $derived(auth().getUserID());
@@ -42,6 +44,6 @@
 			[`/venue/${venuePath(venue)}/submissions`, 'Submissions']
 		]}
 	>
-		<BulkImport {venue} {submissionTypes} {existingExternalIDs} />
+		<BulkImport {venue} {submissionTypes} {existingExternalIDs} {roles} {commitments} />
 	</Page>
 {/if}

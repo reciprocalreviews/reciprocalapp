@@ -385,24 +385,49 @@ export type LocaleText = {
 			title: string;
 			header: {
 				csv: string;
-				defaults: string;
+				mapping: string;
 				rows: string;
 				submit: string;
 			};
 			paragraph: {
 				intro: string;
 				mintSummary: string;
+				/** Says how many submissions will import with nobody in a role,
+				 * because the names in that column matched no volunteer. `{count}`
+				 * submissions, `{role}` the venue's own name for the role. */
+				unseated: string;
 			};
 			note: {
 				csv: string;
+				/** Explains the column mapping panel: the importer reads any CSV with
+				 * a header row, and these menus say which of its columns feeds which
+				 * field. */
+				mapping: string;
 			};
 			feedback: {
 				notLoaded: string;
 				notAdmin: string;
-				/** Shown when parsed rows had a different number of cells than the
+				/** Shown when parsed records had a different number of cells than the
 				 * header, which means columns shifted and data was dropped. `{lines}`
-				 * is the list of affected line numbers. */
+				 * is the list of lines those records start on. */
 				raggedRows: string;
+				/** Names the CSV columns no field is reading, so they are visibly
+				 * ignored rather than silently dropped. `{columns}` is the list. */
+				ignoredColumns: string;
+				/** Shown when the CSV has no column feeding a field the importer
+				 * cannot do without. `{fields}` is the list. */
+				missingRequired: string;
+				/** Announced when a file parses, since the native file control goes
+				 * back to saying nothing is chosen. `{count}` rows, `{name}` file. */
+				loaded: string;
+				/** Names the file the current rows came from. `{name}`, `{count}`. */
+				loadedFrom: string;
+				/** Stands in for a file name when the CSV was pasted rather than
+				 * uploaded, so both paths can say where the rows came from. */
+				pastedSource: string;
+				/** Warns that two of the venue's top-priority roles both have a
+				 * column, which the database refuses. `{roles}` is the list. */
+				twoTopRoles: string;
 			};
 			field: {
 				title: TextFieldText;
@@ -410,6 +435,7 @@ export type LocaleText = {
 				expertise: TextFieldText;
 				previousID: TextFieldText;
 				note: TextFieldText;
+				person: TextFieldText;
 				csvUpload: { label: string };
 				csvPaste: NotedTextFieldText;
 				importNote: NotedTextFieldText;
@@ -417,6 +443,24 @@ export type LocaleText = {
 			options: {
 				defaultSubmissionType: OptionsText;
 				submissionType: OptionsText;
+				/** One menu per import field, choosing which CSV column feeds it. */
+				mapField: {
+					title: OptionsText;
+					externalID: OptionsText;
+					expertise: OptionsText;
+					submissionType: OptionsText;
+					previousID: OptionsText;
+					note: OptionsText;
+					/** The column naming who to seat on each submission. */
+					person: OptionsText;
+				};
+				/** The choice offered when a field should read no column at all. */
+				unmapped: string;
+				/** Which column names the holder of one venue role. `{role}` is the
+				 * venue's own name for it. */
+				roleColumn: OptionsText;
+				/** Which submission type one value in the file's type column becomes. */
+				typeValue: OptionsText;
 			};
 			button: {
 				addRow: ButtonText;
@@ -432,6 +476,7 @@ export type LocaleText = {
 				submissionType: string;
 				previousID: string;
 				note: string;
+				person: string;
 			};
 			row: {
 				invalid: {
@@ -440,6 +485,46 @@ export type LocaleText = {
 					duplicateExisting: string;
 					duplicateRow: string;
 				};
+			};
+			type: {
+				/** Heading for matching the file's own type names to the venue's. */
+				header: string;
+				/** Explains that each distinct value becomes one submission type. */
+				note: string;
+				/** Shown instead when the file has no type column, so one type
+				 * applies to every row. */
+				noColumn: string;
+				/** One value and how many rows carry it. `{value}`, `{count}`. Written
+				 * so it reads correctly at a count of one without pluralizing, since
+				 * nothing in this app pluralizes. */
+				value: string;
+				/** Flags values matching no submission type by name, which take the
+				 * default. `{values}` is the list. */
+				unmatched: string;
+			};
+			person: {
+				/** Shown beside a name that matches more than one of the venue's
+				 * volunteers, above the buttons offering each. */
+				ambiguous: string;
+				/** Shown beside a name matching nobody who holds that role. Kept very
+				 * short: it sits in a table cell barely wider than one word, and the
+				 * consequence is explained once above the table instead of once per
+				 * row. Says what is true of the name rather than naming the role,
+				 * which the column heading already does. */
+				unmatched: string;
+				/** Explains, above the table, what an unmatched name means — that the
+				 * submission imports with nobody in that role rather than failing. */
+				unmatchedNote: string;
+				/** Shown in place of the person column when no role has anyone in it. */
+				noRole: string;
+				/** Explains that a row naming nobody falls back to the venue's sole
+				 * editor, when it has one. */
+				note: string;
+				/** Heading for matching columns of names to the venue's roles. */
+				header: string;
+				/** Warns that one row seats the same person in two roles, which is
+				 * allowed but paid twice. */
+				doubleSeated: string;
 			};
 		};
 		submissions: {
@@ -508,8 +593,15 @@ export type LocaleText = {
 				batchAssign: TextFieldText & { invalid: string };
 			};
 			status: {
+				/** Every charge on the submission has a transaction. Says nothing
+				 * about a submission that was never charged — see `free`. */
 				paid: string;
+				/** Charges with no transaction yet. `{count}` of them. */
 				pending: string;
+				/** Nothing was ever charged for this submission: it was imported, or
+				 * its venue is payment-free. Distinct from `paid`, which the column
+				 * used to claim for these too. */
+				free: string;
 				/** Submission is still in review. */
 				reviewing: string;
 				/** Submission has been marked done. */

@@ -1365,6 +1365,9 @@
                     "note": {
                       "type": "string"
                     },
+                    "person": {
+                      "type": "string"
+                    },
                     "previousID": {
                       "type": "string"
                     },
@@ -1381,28 +1384,59 @@
                     "expertise",
                     "submissionType",
                     "previousID",
-                    "note"
+                    "note",
+                    "person"
                   ],
                   "type": "object"
                 },
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "ignoredColumns": {
+                      "description": "Names the CSV columns no field is reading, so they are visibly ignored rather than silently dropped. `{columns}` is the list.",
+                      "type": "string"
+                    },
+                    "loaded": {
+                      "description": "Announced when a file parses, since the native file control goes back to saying nothing is chosen. `{count}` rows, `{name}` file.",
+                      "type": "string"
+                    },
+                    "loadedFrom": {
+                      "description": "Names the file the current rows came from. `{name}`, `{count}`.",
+                      "type": "string"
+                    },
+                    "missingRequired": {
+                      "description": "Shown when the CSV has no column feeding a field the importer cannot do without. `{fields}` is the list.",
+                      "type": "string"
+                    },
                     "notAdmin": {
                       "type": "string"
                     },
                     "notLoaded": {
                       "type": "string"
                     },
+                    "pastedSource": {
+                      "description": "Stands in for a file name when the CSV was pasted rather than uploaded, so both paths can say where the rows came from.",
+                      "type": "string"
+                    },
                     "raggedRows": {
-                      "description": "Shown when parsed rows had a different number of cells than the header, which means columns shifted and data was dropped. `{lines}` is the list of affected line numbers.",
+                      "description": "Shown when parsed records had a different number of cells than the header, which means columns shifted and data was dropped. `{lines}` is the list of lines those records start on.",
+                      "type": "string"
+                    },
+                    "twoTopRoles": {
+                      "description": "Warns that two of the venue's top-priority roles both have a column, which the database refuses. `{roles}` is the list.",
                       "type": "string"
                     }
                   },
                   "required": [
                     "notLoaded",
                     "notAdmin",
-                    "raggedRows"
+                    "raggedRows",
+                    "ignoredColumns",
+                    "missingRequired",
+                    "loaded",
+                    "loadedFrom",
+                    "pastedSource",
+                    "twoTopRoles"
                   ],
                   "type": "object"
                 },
@@ -1436,6 +1470,9 @@
                     "note": {
                       "$ref": "#/definitions/TextFieldText"
                     },
+                    "person": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
                     "previousID": {
                       "$ref": "#/definitions/TextFieldText"
                     },
@@ -1449,6 +1486,7 @@
                     "expertise",
                     "previousID",
                     "note",
+                    "person",
                     "csvUpload",
                     "csvPaste",
                     "importNote"
@@ -1461,7 +1499,7 @@
                     "csv": {
                       "type": "string"
                     },
-                    "defaults": {
+                    "mapping": {
                       "type": "string"
                     },
                     "rows": {
@@ -1473,7 +1511,7 @@
                   },
                   "required": [
                     "csv",
-                    "defaults",
+                    "mapping",
                     "rows",
                     "submit"
                   ],
@@ -1484,10 +1522,15 @@
                   "properties": {
                     "csv": {
                       "type": "string"
+                    },
+                    "mapping": {
+                      "description": "Explains the column mapping panel: the importer reads any CSV with a header row, and these menus say which of its columns feeds which field.",
+                      "type": "string"
                     }
                   },
                   "required": [
-                    "csv"
+                    "csv",
+                    "mapping"
                   ],
                   "type": "object"
                 },
@@ -1497,13 +1540,67 @@
                     "defaultSubmissionType": {
                       "$ref": "#/definitions/OptionsText"
                     },
+                    "mapField": {
+                      "additionalProperties": false,
+                      "description": "One menu per import field, choosing which CSV column feeds it.",
+                      "properties": {
+                        "expertise": {
+                          "$ref": "#/definitions/OptionsText"
+                        },
+                        "externalID": {
+                          "$ref": "#/definitions/OptionsText"
+                        },
+                        "note": {
+                          "$ref": "#/definitions/OptionsText"
+                        },
+                        "person": {
+                          "$ref": "#/definitions/OptionsText",
+                          "description": "The column naming who to seat on each submission."
+                        },
+                        "previousID": {
+                          "$ref": "#/definitions/OptionsText"
+                        },
+                        "submissionType": {
+                          "$ref": "#/definitions/OptionsText"
+                        },
+                        "title": {
+                          "$ref": "#/definitions/OptionsText"
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "externalID",
+                        "expertise",
+                        "submissionType",
+                        "previousID",
+                        "note",
+                        "person"
+                      ],
+                      "type": "object"
+                    },
+                    "roleColumn": {
+                      "$ref": "#/definitions/OptionsText",
+                      "description": "Which column names the holder of one venue role. `{role}` is the venue's own name for it."
+                    },
                     "submissionType": {
                       "$ref": "#/definitions/OptionsText"
+                    },
+                    "typeValue": {
+                      "$ref": "#/definitions/OptionsText",
+                      "description": "Which submission type one value in the file's type column becomes."
+                    },
+                    "unmapped": {
+                      "description": "The choice offered when a field should read no column at all.",
+                      "type": "string"
                     }
                   },
                   "required": [
                     "defaultSubmissionType",
-                    "submissionType"
+                    "submissionType",
+                    "mapField",
+                    "unmapped",
+                    "roleColumn",
+                    "typeValue"
                   ],
                   "type": "object"
                 },
@@ -1515,11 +1612,59 @@
                     },
                     "mintSummary": {
                       "type": "string"
+                    },
+                    "unseated": {
+                      "description": "Says how many submissions will import with nobody in a role, because the names in that column matched no volunteer. `{count}` submissions, `{role}` the venue's own name for the role.",
+                      "type": "string"
                     }
                   },
                   "required": [
                     "intro",
-                    "mintSummary"
+                    "mintSummary",
+                    "unseated"
+                  ],
+                  "type": "object"
+                },
+                "person": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ambiguous": {
+                      "description": "Shown beside a name that matches more than one of the venue's volunteers, above the buttons offering each.",
+                      "type": "string"
+                    },
+                    "doubleSeated": {
+                      "description": "Warns that one row seats the same person in two roles, which is allowed but paid twice.",
+                      "type": "string"
+                    },
+                    "header": {
+                      "description": "Heading for matching columns of names to the venue's roles.",
+                      "type": "string"
+                    },
+                    "noRole": {
+                      "description": "Shown in place of the person column when no role has anyone in it.",
+                      "type": "string"
+                    },
+                    "note": {
+                      "description": "Explains that a row naming nobody falls back to the venue's sole editor, when it has one.",
+                      "type": "string"
+                    },
+                    "unmatched": {
+                      "description": "Shown beside a name matching nobody who holds that role. Kept very short: it sits in a table cell barely wider than one word, and the consequence is explained once above the table instead of once per row. Says what is true of the name rather than naming the role, which the column heading already does.",
+                      "type": "string"
+                    },
+                    "unmatchedNote": {
+                      "description": "Explains, above the table, what an unmatched name means — that the submission imports with nobody in that role rather than failing.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ambiguous",
+                    "unmatched",
+                    "unmatchedNote",
+                    "noRole",
+                    "note",
+                    "header",
+                    "doubleSeated"
                   ],
                   "type": "object"
                 },
@@ -1558,6 +1703,39 @@
                 },
                 "title": {
                   "type": "string"
+                },
+                "type": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "header": {
+                      "description": "Heading for matching the file's own type names to the venue's.",
+                      "type": "string"
+                    },
+                    "noColumn": {
+                      "description": "Shown instead when the file has no type column, so one type applies to every row.",
+                      "type": "string"
+                    },
+                    "note": {
+                      "description": "Explains that each distinct value becomes one submission type.",
+                      "type": "string"
+                    },
+                    "unmatched": {
+                      "description": "Flags values matching no submission type by name, which take the default. `{values}` is the list.",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "One value and how many rows carry it. `{value}`, `{count}`. Written so it reads correctly at a count of one without pluralizing, since nothing in this app pluralizes.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "header",
+                    "note",
+                    "noColumn",
+                    "value",
+                    "unmatched"
+                  ],
+                  "type": "object"
                 }
               },
               "required": [
@@ -1570,7 +1748,9 @@
                 "options",
                 "button",
                 "column",
-                "row"
+                "row",
+                "type",
+                "person"
               ],
               "type": "object"
             },
@@ -4480,14 +4660,20 @@
                       "description": "Submission has been marked done.",
                       "type": "string"
                     },
+                    "free": {
+                      "description": "Nothing was ever charged for this submission: it was imported, or its venue is payment-free. Distinct from `paid`, which the column used to claim for these too.",
+                      "type": "string"
+                    },
                     "needsEditor": {
                       "description": "Nobody holds the venue's editor role on this submission, so no assignment on it can be approved and it cannot be marked done.",
                       "type": "string"
                     },
                     "paid": {
+                      "description": "Every charge on the submission has a transaction. Says nothing about a submission that was never charged — see `free`.",
                       "type": "string"
                     },
                     "pending": {
+                      "description": "Charges with no transaction yet. `{count}` of them.",
                       "type": "string"
                     },
                     "reviewing": {
@@ -4498,6 +4684,7 @@
                   "required": [
                     "paid",
                     "pending",
+                    "free",
                     "reviewing",
                     "done",
                     "needsEditor"

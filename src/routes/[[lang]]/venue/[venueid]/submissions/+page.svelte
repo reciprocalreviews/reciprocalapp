@@ -56,6 +56,13 @@
 		scholars
 	} = $derived(data);
 
+	/** A payment-free venue has no currency, so its submissions have nothing to
+	 * report and the column asks a question that does not apply. Every other
+	 * payment-aware page already derives this; this one never did, which is how it
+	 * came to show a green "paid" badge on every submission at a venue that
+	 * charges nothing. */
+	const showPayment = $derived(venue ? !venue.payment_free : true);
+
 	/** Lowercase name lookup for use in the submissions filter. */
 	const scholarName = $derived(
 		new Map((scholars ?? []).map((s) => [s.id, (s.name ?? '').toLowerCase()]))
@@ -289,21 +296,23 @@
 				<!-- Show a full-width table of all submissions, metadata about each, and bidding buttons if the current scholar is a volunteer. -->
 				<Table full>
 					{#snippet header()}
-						<th
-							>{locale().page.submissions.headers.payment}
-							<Button
-								small
-								background={false}
-								strings={(l) =>
-									paymentSortPendingFirst
-										? l.page.submissions.button.sortPaymentLast
-										: l.page.submissions.button.sortPaymentFirst}
-								action={() => {
-									paymentSortPendingFirst = !paymentSortPendingFirst;
-									sortOrder = [...sortOrder.filter((o) => o !== 'payment'), 'payment'];
-								}}>{paymentSortPendingFirst ? DownLabel : UpLabel}</Button
-							></th
-						>
+						{#if showPayment}
+							<th
+								>{locale().page.submissions.headers.payment}
+								<Button
+									small
+									background={false}
+									strings={(l) =>
+										paymentSortPendingFirst
+											? l.page.submissions.button.sortPaymentLast
+											: l.page.submissions.button.sortPaymentFirst}
+									action={() => {
+										paymentSortPendingFirst = !paymentSortPendingFirst;
+										sortOrder = [...sortOrder.filter((o) => o !== 'payment'), 'payment'];
+									}}>{paymentSortPendingFirst ? DownLabel : UpLabel}</Button
+								></th
+							>
+						{/if}
 						<th
 							>{locale().page.submissions.headers.title}
 							<Button
@@ -360,20 +369,38 @@
 					{#each sorted as submission, index}
 						{@const status = view.paymentStatus(submission)}
 						<tr data-testid="submission-{index}">
-							<td>
-								<!-- Couldn't load transactions? -->
-								{#if status === undefined}
-									{PrivateLabel}
-								{:else if status === 0}
-									<Status label={(l) => l.page.submissions.status.paid} />
-								{:else}
-									<Status
-										good={false}
-										label={(l) =>
-											l.page.submissions.status.pending.replace('{count}', status.toString())}
-									/>
-								{/if}
-							</td>
+							{#if showPayment}
+								<td>
+									{#if status.state === 'unknown'}
+										<!-- Couldn't load transactions. -->
+										{PrivateLabel}
+									{:else if status.state === 'free'}
+										<!-- Nothing was ever charged: imported, or a zero-cost type. Neither
+										     colour of the good/bad pair fits, because this is a fact about the
+										     submission rather than a verdict on anybody. -->
+										<Status
+											neutral
+											testid="submission-{index}-payment"
+											label={(l) => l.page.submissions.status.free}
+										/>
+									{:else if status.state === 'paid'}
+										<Status
+											testid="submission-{index}-payment"
+											label={(l) => l.page.submissions.status.paid}
+										/>
+									{:else}
+										<Status
+											good={false}
+											testid="submission-{index}-payment"
+											label={(l) =>
+												l.page.submissions.status.pending.replace(
+													'{count}',
+													status.count.toString()
+												)}
+										/>
+									{/if}
+								</td>
+							{/if}
 							<td class:highlight={view.matches(submission.title)}>
 								<Column>
 									<SubmissionPreview {submission} />

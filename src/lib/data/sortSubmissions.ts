@@ -64,6 +64,26 @@ export type SubmissionsViewContext = {
 /** A non-paying co-author's slot in `submission.transactions`. */
 export const NULL_TRANSACTION = '00000000-0000-0000-0000-000000000000';
 
+/** What a submission's payment column has to say.
+ *
+ * These used to be one number, where zero meant "nothing outstanding" — which is
+ * true both of a submission whose authors paid and of one that was never charged
+ * at all, and the column said "paid" for both. It was wrong for every imported
+ * submission (bulk_import_submissions writes no transactions) and for every
+ * submission at a payment-free venue (every author's charge is zero, so every
+ * slot is a placeholder). Neither had been paid for; in the imported case the
+ * tokens did not even exist yet. Splitting the states apart is what makes the
+ * claim checkable. */
+export type PaymentState =
+	/** Transactions have not loaded, so nothing can be said. */
+	| { state: 'unknown' }
+	/** Nothing was ever charged for this submission. */
+	| { state: 'free' }
+	/** There were charges, and each has a transaction. */
+	| { state: 'paid' }
+	/** Charges with no visible transaction yet. */
+	| { state: 'pending'; count: number };
+
 export function submissionsView(context: SubmissionsViewContext) {
 	const trimmedFilter = context.filter.trim().toLowerCase();
 
@@ -120,17 +140,29 @@ export function submissionsView(context: SubmissionsViewContext) {
 		return false;
 	}
 
-	/** How many of a submission's expected charges have no visible transaction.
-	 * `undefined` when transactions haven't loaded. NullUUID slots represent
-	 * non-paying co-authors — no transaction is expected for them, so they don't
-	 * count toward the pending tally. */
-	function paymentStatus(sub: ViewSubmission): number | undefined {
-		if (context.transactions === null) return undefined;
+	/** What this submission's payment column should say.
+	 *
+	 * NullUUID slots represent non-paying co-authors — no transaction is expected
+	 * for them, so they neither count toward the pending tally nor make a
+	 * submission look charged. A submission with nothing expected of anyone was
+	 * never charged, which is a different fact from having been paid for and is
+	 * reported as its own state rather than borrowing "paid". */
+	function paymentStatus(sub: ViewSubmission): PaymentState {
+		if (context.transactions === null) return { state: 'unknown' };
 		const expected = sub.transactions.filter((t) => t !== NULL_TRANSACTION);
+		if (expected.length === 0) return { state: 'free' };
 		const visible = expected
 			.map((t) => context.transactions?.find((tr) => tr.id === t))
 			.filter((t) => t !== undefined);
-		return expected.length - visible.length;
+		const outstanding = expected.length - visible.length;
+		return outstanding === 0 ? { state: 'paid' } : { state: 'pending', count: outstanding };
+	}
+
+	/** How many charges are outstanding, for ordering only. Free and paid tie at
+	 * zero: neither is waiting on anybody, and the sort is "pending first". */
+	function outstandingCharges(sub: ViewSubmission): number {
+		const status = paymentStatus(sub);
+		return status.state === 'pending' ? status.count : status.state === 'unknown' ? -1 : 0;
 	}
 
 	/** True if nobody is editing this submission yet.
@@ -155,7 +187,7 @@ export function submissionsView(context: SubmissionsViewContext) {
 	 * the PREVIOUS pass established, so the default newest-first list was
 	 * breaking created_at ties by descending title instead of ascending. */
 	const ascending: Record<SortColumn, (a: ViewSubmission, b: ViewSubmission) => number> = {
-		payment: (a, b) => (paymentStatus(a) ?? -1) - (paymentStatus(b) ?? -1),
+		payment: (a, b) => outstandingCharges(a) - outstandingCharges(b),
 		title: (a, b) => a.title.localeCompare(b.title),
 		id: (a, b) => a.externalid.localeCompare(b.externalid),
 		created: (a, b) => a.created_at.localeCompare(b.created_at)

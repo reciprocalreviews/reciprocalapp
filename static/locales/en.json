@@ -520,21 +520,29 @@
 			"title": "Import submissions",
 			"header": {
 				"csv": "Populate from CSV",
-				"defaults": "Defaults",
+				"mapping": "Match columns",
 				"rows": "Submissions",
 				"submit": "Submit"
 			},
 			"paragraph": {
 				"intro": "Import a batch of free submissions that pre-date this venue's launch on Reciprocal Reviews. These submissions will have no authors or payments, but reviewers can bid on them to earn tokens. Submitting this form will also propose a mint transaction sized to fund reviewer compensation, which a minter must approve before reviewers will receive tokens.",
-				"mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens, summed from each submission's type cost."
+				"mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens, summed from each submission's type cost.",
+				"unseated": "**{count}** of these will import with no {role}."
 			},
 			"note": {
-				"csv": "Upload or paste a CSV with header row. Columns: title, externalid, expertise, submission_type, previousid, note. Unknown or empty submission_type falls back to the default."
+				"csv": "Upload or paste a CSV with a header row, exported from whatever system you review in. Any column names will do — you match them to fields in the next step. Line breaks inside quoted fields are read correctly.",
+				"mapping": "Choose which column of your file feeds each field. The importer guesses from your column names; correct anything it got wrong. Title and external ID are required, the rest are optional."
 			},
 			"feedback": {
 				"notLoaded": "Unable to load the venue or submission types.",
 				"notAdmin": "Only venue admins can import submissions.",
-				"raggedRows": "Some rows had a different number of columns than the header, so columns may be misaligned and data dropped. Check line {lines} — a comma inside a field must be wrapped in double quotes."
+				"raggedRows": "Some records had a different number of columns than the header, so columns may be misaligned and data dropped. Check the record starting at line {lines} — a comma inside a field must be wrapped in double quotes.",
+				"ignoredColumns": "These columns are not being imported: {columns}.",
+				"missingRequired": "Nothing is matched to {fields}, which every submission needs.",
+				"loaded": "Read {count} submissions from {name}. Review them below.",
+				"loadedFrom": "{count} submissions read from {name}.",
+				"twoTopRoles": "Two of this venue’s top roles ({roles}) both have a column. A submission can have only one editor, so match a column to just one of them.",
+				"pastedSource": "pasted text"
 			},
 			"field": {
 				"title": {
@@ -569,6 +577,10 @@
 					"label": "import note (optional)",
 					"placeholder": "reason for free submission",
 					"note": "Anything to note about the reason for these free submissions?"
+				},
+				"person": {
+					"label": "editor",
+					"placeholder": "name"
 				}
 			},
 			"options": {
@@ -577,6 +589,36 @@
 				},
 				"submissionType": {
 					"label": "type"
+				},
+				"unmapped": "— not imported —",
+				"mapField": {
+					"title": {
+						"label": "Title"
+					},
+					"externalID": {
+						"label": "External ID"
+					},
+					"expertise": {
+						"label": "Expertise"
+					},
+					"submissionType": {
+						"label": "Submission type"
+					},
+					"previousID": {
+						"label": "Previous ID"
+					},
+					"note": {
+						"label": "Note"
+					},
+					"person": {
+						"label": "Editor"
+					}
+				},
+				"roleColumn": {
+					"label": "{role}"
+				},
+				"typeValue": {
+					"label": "{value}"
 				}
 			},
 			"button": {
@@ -607,7 +649,8 @@
 				"expertise": "Expertise",
 				"submissionType": "Type",
 				"previousID": "Previous ID",
-				"note": "Note"
+				"note": "Note",
+				"person": "Editor"
 			},
 			"row": {
 				"invalid": {
@@ -616,6 +659,22 @@
 					"duplicateExisting": "A submission with this external ID already exists in this venue.",
 					"duplicateRow": "Duplicate external ID across rows."
 				}
+			},
+			"person": {
+				"ambiguous": "Several people match this name. Choose one:",
+				"unmatched": "No matching scholar",
+				"noRole": "No role at this venue has an accepted, active volunteer to seat.",
+				"note": "For each role, choose the column naming who holds it. Leave a role unmatched to seat nobody in it; a row naming nobody falls back to the venue’s editor, if it has exactly one.",
+				"header": "Match editors",
+				"doubleSeated": "This row seats the same person in two roles. That is allowed — but they will be paid for both.",
+				"unmatchedNote": "A name nobody at this venue matches does not stop the import: that submission arrives with nobody in the role, and is flagged as waiting for an editor. A name matching several people does need choosing before you can import."
+			},
+			"type": {
+				"header": "Match types",
+				"note": "Each value in your type column becomes one of this venue’s submission types. The cost of the type you choose is what the import mints for that submission.",
+				"value": "{value} × {count}",
+				"unmatched": "These values match no submission type by name and will use whichever type you choose above: {values}.",
+				"noColumn": "Nothing in your file says which type these submissions are, so they all get this one. You can change any of them in the table below."
 			}
 		},
 		"submissions": {
@@ -747,6 +806,7 @@
 			"status": {
 				"paid": "paid",
 				"pending": "{count} pending",
+				"free": "free",
 				"reviewing": "in review",
 				"done": "done",
 				"needsEditor": "needs an editor"
@@ -1024,7 +1084,7 @@
 				"adminsOnly": "Only admins of this venue can view this page.",
 				"noPreferenceLevels": "No preference levels defined. Bidders will see a simple yes/no bid.",
 				"addressCurrent": "This venue is at **{address}**.",
-				"addressChecking": "Checking\u2026",
+				"addressChecking": "Checking…",
 				"addressAvailable": "**{address}** is free.",
 				"addressTaken": "Another venue is already at **{address}**.",
 				"addressRequiredToActivate": "Choose a web address in step 1 before activating this venue, so every link anyone sends about it is one they can read.",
@@ -1134,7 +1194,7 @@
 			},
 			"subtitle": "Settings",
 			"tip": {
-				"webAddress": "Pick the address this venue lives at. It goes in every link anyone sends about the venue \u2014 emails, breadcrumbs, and the snippets in step 6 \u2014 so choose something people will recognize and can read aloud. You can change it later, but the old address is released the moment you do: nothing redirects from it, and every link that used it breaks.",
+				"webAddress": "Pick the address this venue lives at. It goes in every link anyone sends about the venue — emails, breadcrumbs, and the snippets in step 6 — so choose something people will recognize and can read aloud. You can change it later, but the old address is released the moment you do: nothing redirects from it, and every link that used it breaks.",
 				"policies": "This is the most consequential step on the page. Spend real time on it before touching anything below.",
 				"inactive": "Check the inactive message in the settings below, so your community knows you're busy configuring things.",
 				"compensation": "It is critical that you think carefully about the compensation structure for your venue. Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter newcomers from contributring. See [Setting welcome & compensation](#policies) in Step 1 for the balance rules and a worked example.",

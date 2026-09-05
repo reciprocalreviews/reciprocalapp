@@ -341,7 +341,7 @@ alter publication supabase_realtime
 add table submissions;
 
 --------------------------------------
--- RPC (authoritative definition from migration 20260531000000_resubmission_link)
+-- RPC (authoritative definition from migration 20260905000000_bulk_import_person_column)
 create or replace function public.bulk_import_submissions (
 	_venueid uuid,
 	_submissions jsonb,
@@ -367,6 +367,14 @@ declare
     _editors uuid[];
     _editor uuid;
     _seated integer := 0;
+    _entry jsonb;
+    _entry_person uuid;
+    _entry_role uuid;
+    _entry_priority integer;
+    _row_roles uuid[];
+    _row_priority_zero boolean;
+    _seated_by jsonb := '{}'::jsonb;
+    _waiting integer := 0;
 begin
     _admin_id := (select auth.uid());
 
@@ -457,10 +465,129 @@ begin
         ) returning id into _new_submission_id;
         _submission_ids := _submission_ids || _new_submission_id;
 
-        if _editor is not null then
+        -- A row may name one person per venue role. An export carrying both an
+        -- "Editor in Chief" column and an "Editor" column names two different people
+        -- in two different roles on the same manuscript, and reading only one of them
+        -- throws the other away. The client resolves each name against the venue's own
+        -- volunteers and refuses to submit a row it could not; every entry is checked
+        -- again here because a rule that lives only in the form is a rule that holds
+        -- only for people who use the form -- the same reason create_submission
+        -- re-checks its own charges. Any raise below rolls the whole import back,
+        -- including submissions and assignments earlier rows already wrote: a
+        -- half-seated batch is worse than none, and reaching this means the form was
+        -- bypassed.
+        --
+        -- The submission is inserted above, before these checks run. That is fine and
+        -- deliberate -- a raise anywhere aborts the transaction -- so there is nothing
+        -- to gain by hoisting the validation.
+        --
+        -- RESET PER ROW. These two carry the per-submission guarantees below, and
+        -- `declare` runs once per call, not once per row. Leaking either would let the
+        -- first row's editor suppress the fallback for every row after it, silently:
+        -- right submission count, right mint, no error, and nothing else holding an
+        -- editor.
+        _row_roles := array[]::uuid[];
+        _row_priority_zero := false;
+
+        if jsonb_typeof(coalesce(_row->'people', '[]'::jsonb)) <> 'array' then
+            raise exception 'A row''s people must be a list of person and role pairs';
+        end if;
+
+        for _entry in select * from jsonb_array_elements(coalesce(_row->'people', '[]'::jsonb))
+        loop
+            _entry_person := nullif(_entry->>'person', '')::uuid;
+            _entry_role := nullif(_entry->>'person_role', '')::uuid;
+
+            -- A blank cell in one role's column says nothing about the other roles on
+            -- the same row, so it is skipped rather than refused.
+            continue when _entry_person is null;
+
+            if _entry_role is null then
+                raise exception 'A named person needs a role to be seated in';
+            end if;
+
+            select r.priority into _entry_priority
+            from public.roles r
+            where r.id = _entry_role and r.venueid = _venueid;
+
+            if _entry_priority is null then
+                raise exception 'That role does not belong to this venue';
+            end if;
+
+            -- One seat per role per submission. The form offers each role exactly one
+            -- column, so two of them cannot target the same role; nothing outside the
+            -- form is bound by that, and two assignments in one role are two claims on
+            -- the venue's reserve for one piece of work. Refused rather than
+            -- de-duplicated, so a caller cannot decide which of the two survives.
+            if _entry_role = any(_row_roles) then
+                raise exception 'A submission cannot seat two people in the same role';
+            end if;
+
+            -- At most one priority-0 seat per submission -- stated by PRIORITY, not by
+            -- role identity. mark_submission_done pays every approved priority-0
+            -- assignment on a submission, so a second one is a second editor's fee for
+            -- one paper. roles.priority carries no per-venue uniqueness constraint,
+            -- which is why the sole-editor lookup above already says `order by r.id
+            -- limit 1`; two distinct priority-0 roles would be two distinct columns in
+            -- the form, and checking the priority is what covers that.
+            if _entry_priority = 0 and _row_priority_zero then
+                raise exception 'A submission can have only one editor';
+            end if;
+
+            -- Seating is not a way to hand out a role. Priority-0 holders can approve
+            -- any assignment on the submission, edit its author list and mark it done,
+            -- and every seat is a claim on the venue's tokens, so the person must
+            -- already hold the role.
+            if not exists (
+                select 1
+                from public.volunteers v
+                where v.roleid = _entry_role
+                    and v.scholarid = _entry_person
+                    and v.active
+                    and v.accepted = 'accepted'
+            ) then
+                raise exception 'A named person must already be an accepted, active volunteer in that role';
+            end if;
+
+            insert into public.assignments (venue, submission, scholar, role, bid, approved)
+            values (_venueid, _new_submission_id, _entry_person, _entry_role, false, true);
+
+            _row_roles := _row_roles || _entry_role;
+            if _entry_priority = 0 then
+                _row_priority_zero := true;
+            end if;
+
+            _seated := _seated + 1;
+            _seated_by := jsonb_set(
+                _seated_by,
+                array[_entry_person::text],
+                to_jsonb(coalesce((_seated_by->>_entry_person::text)::integer, 0) + 1)
+            );
+        end loop;
+
+        -- The venue's sole editor is still seated, except on a row that named
+        -- somebody for the editor role itself. Doing both would put two priority-0
+        -- assignments on one submission, and marking a submission done pays every
+        -- approved priority-0 assignment on it -- an editor's compensation per editor
+        -- per paper.
+        if _editor is not null and not _row_priority_zero then
             insert into public.assignments (venue, submission, scholar, role, bid, approved)
             values (_venueid, _new_submission_id, _editor, _editor_role, false, true);
             _seated := _seated + 1;
+            _seated_by := jsonb_set(
+                _seated_by,
+                array[_editor::text],
+                to_jsonb(coalesce((_seated_by->>_editor::text)::integer, 0) + 1)
+            );
+        end if;
+
+        -- A submission with nobody in the venue's top-priority role is waiting for an
+        -- editor, and is flagged as such on the venue's submissions list. Counted per
+        -- row rather than derived from _seated, which counts assignments: a row can
+        -- carry two of them -- an associate editor named by the file and the venue's
+        -- sole editor -- and subtracting one from the other would report nonsense.
+        if not _row_priority_zero and _editor is null then
+            _waiting := _waiting + 1;
         end if;
 
         -- Each row bills its submission type's cost.
@@ -501,7 +628,9 @@ begin
         'transaction_id', _transaction_id,
         'mint_amount', _mint_amount,
         'editor', _editor,
-        'seated', _seated
+        'seated', _seated,
+        'seated_by', _seated_by,
+        'waiting', _waiting
     );
 end;
 $function$;

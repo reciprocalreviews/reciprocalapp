@@ -114,12 +114,23 @@ export type ImportedSubmission = {
 	expertise: string | null;
 	submission_type: SubmissionTypeID;
 	note: string | null;
+	/** Who to seat on this submission and in which role, already resolved from
+	 * whatever names the CSV wrote — one entry per role that named somebody.
+	 * Empty when the row names nobody.
+	 *
+	 * At most one entry per role, and at most one in a priority-0 role: both are
+	 * refused by the database, not merely by the form. The keys are the RPC's own,
+	 * so this passes through without re-mapping. */
+	people: { person: ScholarID; person_role: RoleID }[];
 };
 
 export type BulkImportResult = {
 	submissionIDs: SubmissionID[];
 	transactionID: TransactionID | null;
 	mintAmount: number;
+	/** How many submissions each scholar was seated on, so the import can tell
+	 * each of them what they now hold in one message rather than one per row. */
+	seatedBy: Record<ScholarID, number>;
 };
 
 /** A non-editor assignment that is approved but not yet completed, returned

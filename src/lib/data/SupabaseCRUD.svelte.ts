@@ -1693,7 +1693,9 @@ export default class SupabaseCRUD extends CRUD {
 			previousid: s.previousID,
 			expertise: s.expertise,
 			submission_type: s.submission_type,
-			note: s.note
+			note: s.note,
+			// Entry keys are the RPC's own, so this passes through as it is.
+			people: s.people
 		}));
 
 		const { data, error } = await this.client.rpc('bulk_import_submissions', {
@@ -1712,15 +1714,18 @@ export default class SupabaseCRUD extends CRUD {
 			mint_amount: number;
 			editor: ScholarID | null;
 			seated: number;
+			seated_by: Record<ScholarID, number> | null;
+			waiting: number;
 		};
 
 		const imported = result.submission_ids?.length ?? 0;
+		const seatedBy = result.seated_by ?? {};
 
-		// One digest rather than one message per row: an import of two hundred manuscripts
-		// should not be two hundred emails. When the venue has a sole editor the RPC seated
-		// them on every row, so the notice tells them what they now hold; otherwise the
-		// rows are waiting for someone, and the venue's editors and admins are told how
-		// many.
+		// One digest per person rather than one message per row: an import of two hundred
+		// manuscripts is one piece of news, not two hundred. Each scholar the import seated
+		// is told how many submissions they now hold -- which may be one editor seated on
+		// every row, or a dozen associate editors each holding a few -- and the venue's
+		// editors and admins are told about whatever was left for somebody to claim.
 		const notifications: Notification[] = [];
 		if (imported > 0) {
 			const { data: venueRow } = await this.client
@@ -1729,19 +1734,27 @@ export default class SupabaseCRUD extends CRUD {
 				.eq('id', venue)
 				.single();
 			if (venueRow !== null) {
-				const emailResult =
-					result.editor !== null
-						? await this.emailScholars([result.editor], 'SubmissionsAssignedEditor', [
-								result.seated.toString(),
-								venueRow.title,
-								venuePath(venueRow)
-							])
-						: await this.emailEditorsOf(venue, venueRow.admins, 'SubmissionsNeedEditors', [
-								imported.toString(),
-								venueRow.title,
-								venuePath(venueRow)
-							]);
-				if (emailResult.notified) notifications.push(...emailResult.notified);
+				for (const [scholar, count] of Object.entries(seatedBy)) {
+					const seatedResult = await this.emailScholars([scholar], 'SubmissionsAssignedEditor', [
+						count.toString(),
+						venueRow.title,
+						venuePath(venueRow)
+					]);
+					if (seatedResult.notified) notifications.push(...seatedResult.notified);
+				}
+
+				// Only when something is actually waiting. Telling a venue that zero
+				// submissions need an editor is noise.
+				const unseated = result.waiting ?? 0;
+				if (unseated > 0) {
+					const waitingResult = await this.emailEditorsOf(
+						venue,
+						venueRow.admins,
+						'SubmissionsNeedEditors',
+						[unseated.toString(), venueRow.title, venuePath(venueRow)]
+					);
+					if (waitingResult.notified) notifications.push(...waitingResult.notified);
+				}
 			}
 		}
 
@@ -1749,7 +1762,8 @@ export default class SupabaseCRUD extends CRUD {
 			data: {
 				submissionIDs: result.submission_ids ?? [],
 				transactionID: result.transaction_id,
-				mintAmount: result.mint_amount
+				mintAmount: result.mint_amount,
+				seatedBy
 			},
 			notified: notifications
 		};

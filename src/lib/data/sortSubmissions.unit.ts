@@ -158,23 +158,78 @@ describe('matchesFilter', () => {
 });
 
 describe('paymentStatus', () => {
-	test('is undefined until transactions load', () => {
-		expect(view({ transactions: null }).paymentStatus(sub({ id: 's1' }))).toBeUndefined();
+	test('is unknown until transactions load', () => {
+		expect(view({ transactions: null }).paymentStatus(sub({ id: 's1' }))).toEqual({
+			state: 'unknown'
+		});
 	});
 
 	test('counts charges with no visible transaction', () => {
 		const target = sub({ id: 's1', transactions: ['t1', 't2'] });
-		expect(view({ transactions: [{ id: 't1' }] }).paymentStatus(target)).toBe(1);
+		expect(view({ transactions: [{ id: 't1' }] }).paymentStatus(target)).toEqual({
+			state: 'pending',
+			count: 1
+		});
 	});
 
-	test('is zero when every charge is visible', () => {
+	test('is paid when every charge is visible', () => {
 		const target = sub({ id: 's1', transactions: ['t1'] });
-		expect(view({ transactions: [{ id: 't1' }] }).paymentStatus(target)).toBe(0);
+		expect(view({ transactions: [{ id: 't1' }] }).paymentStatus(target)).toEqual({
+			state: 'paid'
+		});
 	});
 
-	test('ignores non-paying co-author placeholder slots', () => {
+	// The bug this type exists to prevent. A bulk-imported submission has no
+	// transactions at all, and the old arithmetic reported that as zero
+	// outstanding — indistinguishable from paid, so the list showed a green
+	// "paid" badge on submissions nobody had paid for and whose tokens had not
+	// even been minted. This case ran through every test in this file as the
+	// fixture default and was asserted by none of them.
+	test('is free when there were never any charges', () => {
+		const target = sub({ id: 's1', transactions: [] });
+		expect(view({ transactions: [] }).paymentStatus(target)).toEqual({ state: 'free' });
+	});
+
+	// The same conflation reached payment-free venues by another route: every
+	// author's charge is zero, so every slot is a placeholder.
+	test('is free when every slot is a non-paying co-author placeholder', () => {
 		const target = sub({ id: 's1', transactions: [NULL_TRANSACTION, NULL_TRANSACTION] });
-		expect(view({ transactions: [] }).paymentStatus(target)).toBe(0);
+		expect(view({ transactions: [] }).paymentStatus(target)).toEqual({ state: 'free' });
+	});
+
+	test('ignores placeholder slots when tallying real charges', () => {
+		const target = sub({ id: 's1', transactions: [NULL_TRANSACTION, 't1'] });
+		expect(view({ transactions: [] }).paymentStatus(target)).toEqual({
+			state: 'pending',
+			count: 1
+		});
+	});
+});
+
+describe('payment sorting', () => {
+	// The invariant that splitting "nothing outstanding" into free and paid must
+	// not break: neither displaces the other, so the list does not silently
+	// reorder. Only a submission with charges still outstanding moves.
+	//
+	// Deliberately asserts the tie and the separation rather than which end
+	// pending lands on: `paymentSortPendingFirst` maps to an ASCENDING sort, so
+	// with its default of true the list actually puts pending last. That
+	// inversion predates this change and is preserved by it exactly.
+	test('free and paid tie, and pending sorts apart from both', () => {
+		const rows = [
+			sub({ id: 'free', transactions: [] }),
+			sub({ id: 'pending', transactions: ['t1'] }),
+			sub({ id: 'paid', transactions: ['t2'] })
+		];
+		const sorted = ids(
+			view({
+				transactions: [{ id: 't2' }],
+				sortOrder: ['payment'],
+				paymentSortPendingFirst: true
+			}).sortedAndFiltered(rows)
+		);
+		expect(sorted.slice(0, 2).sort()).toEqual(['free', 'paid']);
+		expect(sorted[2]).toBe('pending');
 	});
 });
 
