@@ -135,6 +135,36 @@
 	/** A non-fatal parse problem: the rows loaded, but something about them
 	 * needs the editor's eye before importing. */
 	let csvWarning = $state<((l: LocaleText) => string) | null>(null);
+	/** True from the moment the import is submitted until it has been written and
+	 * the page's data refetched. The write is not the slow part -- `handle` awaits
+	 * `invalidateAll` after it, and the per-scholar digest emails go out before
+	 * that -- so this is several seconds on a real import, and the form spends all
+	 * of them still showing the batch it just sent. */
+	let importing = $state(false);
+
+	/** Put the importer back to how it loaded. Called once an import has landed,
+	 * so the form is not still holding the batch it just sent: navigating away
+	 * happens to dispose this component today, but leaving the only cleanup to a
+	 * side effect of `goto` means an import that stays on the page -- for any
+	 * reason -- leaves a table of rows that are now all duplicates of themselves.
+	 *
+	 * `defaultSubmissionType` and `matchingSection` are deliberately left: the
+	 * first is a venue-level choice rather than part of this batch, the second is
+	 * an element reference. Everything derived from `rows` -- `personMatches`,
+	 * `duplicates` -- clears itself. */
+	function reset() {
+		rows = [emptyRow()];
+		parsedRecords = [];
+		csvHeaders = [];
+		mapping = noMapping();
+		roleColumns = {};
+		typeAssignments = {};
+		loadedFile = null;
+		importNote = '';
+		csvText = '';
+		csvError = null;
+		csvWarning = null;
+	}
 
 	const existingIDSet = $derived(new Set(existingExternalIDs));
 
@@ -143,6 +173,13 @@
 	/** The row rules live in $lib/data/bulkImportRows; this maps the problem they
 	 * report onto the locale text for it. */
 	function rowError(row: Row, index: number): ((l: LocaleText) => string) | null {
+		// Nothing is wrong with these rows while they are being written. `handle`
+		// refetches the page's data on success, which lands the just-imported IDs in
+		// `existingExternalIDs` while this table is still showing the rows that
+		// produced them -- turning every one of them red with "already exists in this
+		// venue" for the seconds before the navigation. That reads as a failed import
+		// of the batch that in fact just succeeded.
+		if (importing) return null;
 		const problem = rowProblem(row, index, {
 			existingExternalIDs: existingIDSet,
 			duplicates,
@@ -877,30 +914,48 @@
 	<Button
 		strings={(l) => l.page.bulkImport.button.submit}
 		testid="bulk-import-submit"
-		active={allRowsValid}
+		active={allRowsValid && !importing}
 		action={async () => {
-			const result = await handle(
-				db().bulkImportSubmissions(
-					venue.id,
-					rows.map((r, index) => {
-						return {
-							title: r.title.trim(),
-							externalID: r.externalID.trim(),
-							previousID: r.previousID.trim() === '' ? null : r.previousID.trim(),
-							expertise: r.expertise.trim() === '' ? null : r.expertise.trim(),
-							submission_type: r.submissionType,
-							note: r.note.trim() === '' ? null : r.note.trim(),
-							// Only a confidently resolved name is sent. Anything else
-							// already blocked the submit button above.
-							people: Object.entries(personMatches[index]).flatMap(([role, m]) =>
-								m.status === 'resolved' ? [{ person: m.id, person_role: role }] : []
-							)
-						};
-					}),
-					importNote.trim() === '' ? null : importNote.trim()
-				)
-			);
-			if (result) {
+			// Also gates the button above: an import is one transaction sized by the
+			// rows in front of it, and a second click while the first is still in the
+			// air is a second mint and a batch of manuscripts the unique index then
+			// refuses halfway through the editor's afternoon.
+			importing = true;
+			let imported = false;
+			try {
+				imported = Boolean(
+					await handle(
+						db().bulkImportSubmissions(
+							venue.id,
+							rows.map((r, index) => {
+								return {
+									title: r.title.trim(),
+									externalID: r.externalID.trim(),
+									previousID: r.previousID.trim() === '' ? null : r.previousID.trim(),
+									expertise: r.expertise.trim() === '' ? null : r.expertise.trim(),
+									submission_type: r.submissionType,
+									note: r.note.trim() === '' ? null : r.note.trim(),
+									// Only a confidently resolved name is sent. Anything else
+									// already blocked the submit button above.
+									people: Object.entries(personMatches[index]).flatMap(([role, m]) =>
+										m.status === 'resolved' ? [{ person: m.id, person_role: role }] : []
+									)
+								};
+							}),
+							importNote.trim() === '' ? null : importNote.trim()
+						)
+					)
+				);
+			} finally {
+				// In a `finally` so a throw cannot strand the form: the rows are still
+				// there and still correct, and the editor has to be able to try again.
+				importing = false;
+			}
+			if (imported) {
+				// Before navigating, not as a consequence of it. See reset(). Reached
+				// synchronously after `importing = false`, so the table is never rendered
+				// holding the old rows against the refreshed ID list.
+				reset();
 				goto(`/venue/${venuePath(venue)}/submissions`);
 			}
 		}}

@@ -386,6 +386,10 @@
             "ApproveTransaction": {
               "type": "string"
             },
+            "BulkImportDuplicate": {
+              "description": "23505 on submissions_venue_externalid_unique: a manuscript in the file is already in this venue. The import is one transaction, so none of it landed.",
+              "type": "string"
+            },
             "BulkImportSubmissions": {
               "type": "string"
             },
@@ -894,6 +898,7 @@
             "UnknownVenue",
             "MissingSubmissionCharge",
             "BulkImportSubmissions",
+            "BulkImportDuplicate",
             "UpdateSubmissionExpertise",
             "UpdateSubmissionTitle",
             "UpdateSubmissionNote",

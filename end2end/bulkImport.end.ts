@@ -131,3 +131,41 @@ test('parsing a CSV says what it read', async ({ page, context }) => {
 
 	await logout(page);
 });
+
+// Pins the property, not the symptom that prompted it. The importer used to be
+// cleared only as a side effect of navigating away, so it held the batch it had
+// just written for as long as that took -- and, once `handle` refetched the
+// page's data, held it with every row marked a duplicate of the submission it
+// had itself created. A reload rebuilds the component either way, so this would
+// have passed then too; what it guards is that an import ends with an empty
+// form, however the form comes to be shown again.
+test('a completed import leaves the form empty', async ({ page, context }) => {
+	await login('editor@uni.edu', page, context);
+
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+
+	const external = `import-clears-${Date.now()}`;
+
+	await page
+		.getByTestId('bulk-import-paste')
+		.fill(`title,externalid\nPre-launch paper,${external}`);
+	await page.getByTestId('bulk-import-parse').click();
+	await expect(page.getByTestId('import-row-0-externalid')).toHaveValue(external);
+
+	await page.getByTestId('bulk-import-submit').click();
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+	await expect(page.getByText(external)).toBeVisible();
+
+	// Back to the importer: one blank row, nothing pasted, and no row carrying the
+	// ID that was just imported.
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+
+	await expect(page.getByTestId('bulk-import-paste')).toHaveValue('');
+	await expect(page.getByTestId('import-row-0-externalid')).toHaveValue('');
+	await expect(page.getByTestId('import-row-0-title')).toHaveValue('');
+	await expect(page.getByTestId('import-row-1')).toHaveCount(0);
+
+	await logout(page);
+});

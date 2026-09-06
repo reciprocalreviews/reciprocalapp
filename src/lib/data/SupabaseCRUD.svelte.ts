@@ -1026,13 +1026,41 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
+	/** Every external ID in the venue, paged past PostgREST's `max_rows`.
+	 *
+	 * The bulk importer flags a row whose manuscript ID is already here, so this
+	 * list being complete is the whole point of it: a single unpaged select is
+	 * capped at `max_rows` (1000, see supabase/config.toml), which silently
+	 * returned an arbitrary thousand and let the importer pass duplicates against
+	 * everything past them. The unique index on (venue, externalid) still refused
+	 * those, but only after the editor had finished mapping columns and matching
+	 * names -- and a venue big enough to hit the cap is exactly the one this
+	 * feature exists for.
+	 *
+	 * Ordered, because `.range()` paging without an ORDER BY has no defined page
+	 * boundary and can both repeat and skip rows. A failed page returns the error
+	 * rather than the rows gathered so far: a partial list here is the bug. */
 	async getVenueSubmissionExternalIDs(
 		venue: VenueID
 	): Promise<ReadResult<Pick<SubmissionRow, 'externalid'>[] | null>> {
-		return this.rows(
-			'LoadSubmission',
-			this.client.from('submissions').select('externalid').eq('venue', venue)
-		);
+		const size = 1000;
+		const all: Pick<SubmissionRow, 'externalid'>[] = [];
+		for (let from = 0; ; from += size) {
+			const { data, error } = await this.client
+				.from('submissions')
+				.select('externalid')
+				.eq('venue', venue)
+				.order('externalid')
+				.range(from, from + size - 1);
+			if (error) return { data: null, ...this.error('LoadSubmission', error) };
+			if (data === null) break;
+			all.push(...data);
+			// A short page is the last one. An exactly-full final page costs one
+			// more round trip that comes back empty, which is the price of not
+			// guessing.
+			if (data.length < size) break;
+		}
+		return { data: all };
 	}
 
 	async getVenueSubmissionCount(venue: VenueID): Promise<ReadResult<number | null>> {
@@ -1756,7 +1784,17 @@ export default class SupabaseCRUD extends CRUD {
 		});
 
 		if (error) {
-			return { error: { message: this.locale.error.BulkImportSubmissions, details: error } };
+			// 23505 is the unique violation from submissions_venue_externalid_unique: a
+			// manuscript already in this venue. The importer flags those on the row before
+			// submitting, so reaching here means its list of existing IDs was stale -- the
+			// page has been open while somebody else imported, or the same file was
+			// submitted twice. Worth its own message, because the generic one says nothing
+			// about which of the two things went wrong or whether any of it landed.
+			// Postgres names the offending ID in its own detail, which rides along below.
+			const key = rpcErrorKey(error, 'BulkImportSubmissions', {
+				'23505': 'BulkImportDuplicate'
+			});
+			return { error: { message: this.locale.error[key], details: error } };
 		}
 
 		const result = data as {

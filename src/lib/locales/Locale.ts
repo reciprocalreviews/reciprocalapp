@@ -1699,6 +1699,9 @@ export type LocaleText = {
 		UnknownVenue: string;
 		MissingSubmissionCharge: string;
 		BulkImportSubmissions: string;
+		/** 23505 on submissions_venue_externalid_unique: a manuscript in the file is
+		 * already in this venue. The import is one transaction, so none of it landed. */
+		BulkImportDuplicate: string;
 		UpdateSubmissionExpertise: string;
 		UpdateSubmissionTitle: string;
 		UpdateSubmissionNote: string;

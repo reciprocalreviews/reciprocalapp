@@ -2058,6 +2058,7 @@
 		"UnknownVenue": "Unable to find venue",
 		"MissingSubmissionCharge": "Didn't receive enough charge amounts for the authors given",
 		"BulkImportSubmissions": "Unable to import submissions",
+		"BulkImportDuplicate": "A manuscript ID in this file is already in this venue, so nothing was imported. Reload this page to refresh the list of IDs it already has, then check the rows it flags.",
 		"UpdateSubmissionExpertise": "Unable to update the submission expertise",
 		"UpdateSubmissionTitle": "Unable to update the submission's title",
 		"UpdateSubmissionNote": "Unable to update the submission's note",
