@@ -91,23 +91,14 @@
 
 		{@const allTags = view.tags(commitments)}
 		{#if allTags.length > 0}
-			<div role="group" aria-label={locale().page.volunteers.label.expertiseFilter}>
-				<Tags>
-					<!-- Keyed on the tag's key so Svelte reuses the same button when the list
-					     re-ranks, which is what keeps focus on the chip you just pressed. -->
-					{#each showAllTags ? allTags : view.capped(allTags) as tag (tag.key)}
-						<Tag
-							wrap
-							action={() => toggleTag(tag.key, tag.label)}
-							selected={selectedTags.some((t) => t.key === tag.key)}
-							testid="volunteer-tag-{tag.key}"
-							><Text
-								path={(l) => l.page.volunteers.label.count}
-								inputs={{ name: tag.label, count: tag.count.toString() }}
-							/></Tag
-						>
-					{/each}
-				</Tags>
+			<div
+				class="expertise"
+				role="group"
+				aria-label={locale().page.volunteers.label.expertiseFilter}
+			>
+				<!-- Above the keywords, not below them: expanded, the list runs to many rows,
+				     and a collapse control at the bottom of it is the one thing the reader
+				     has to scroll past everything to reach. -->
 				{#if allTags.length > TAG_LIMIT || selectedTags.length > 0}
 					<Row>
 						{#if allTags.length > TAG_LIMIT}
@@ -133,6 +124,22 @@
 						{/if}
 					</Row>
 				{/if}
+				<Tags>
+					<!-- Keyed on the tag's key so Svelte reuses the same button when the list
+					     re-ranks, which is what keeps focus on the chip you just pressed. -->
+					{#each showAllTags ? allTags : view.capped(allTags) as tag (tag.key)}
+						<Tag
+							wrap
+							action={() => toggleTag(tag.key, tag.label)}
+							selected={selectedTags.some((t) => t.key === tag.key)}
+							testid="volunteer-tag-{tag.key}"
+							><Text
+								path={(l) => l.page.volunteers.label.count}
+								inputs={{ name: tag.label, count: tag.count.toString() }}
+							/></Tag
+						>
+					{/each}
+				</Tags>
 			</div>
 		{/if}
 
@@ -204,3 +211,13 @@
 		/>
 	</Page>
 {/if}
+
+<style>
+	.expertise {
+		display: flex;
+		flex-direction: column;
+		/* The standard gap, so the controls read as belonging to the keywords below
+		   them rather than to the search field above. */
+		gap: var(--spacing);
+	}
+</style>
