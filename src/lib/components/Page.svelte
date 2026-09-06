@@ -107,11 +107,24 @@
 <style>
 	.page-header {
 		/* Pinned below the nav, which is sticky at the top of the viewport. Its height
-		   varies with banners and row wrapping, so it is measured rather than guessed;
-		   the fallback covers the first paint and a scripting-off reader. The nav keeps
-		   a higher z-index, so it wins if this offset is ever momentarily stale. */
+		   varies with banners and row wrapping, so it is measured rather than guessed.
+		   The nav keeps a higher z-index, so it wins if this offset is ever stale.
+
+		   The fallback is 0, and it has to be: a sticky box whose natural position sits
+		   ABOVE its own threshold is pushed down to meet it. So a fallback larger than
+		   the real nav height opens a visible gap between the banners and this band on
+		   every first paint, which then closes on hydration — which is exactly what an
+		   8rem guess did here when the nav measured 103px. Zero can never overshoot,
+		   because the nav is never shorter than nothing, so the band sits at its natural
+		   position until the measurement arrives and nothing moves when it does. With
+		   scripting off the band scrolls under the nav instead of pinning below it,
+		   which is a far better failure than a gap on every load.
+
+		   Note this is the opposite of how `--nav-height` is defaulted for
+		   `scroll-padding-block-start` in app.html, where guessing low would let an
+		   anchored heading land underneath the chrome. Same variable, opposite risk. */
 		position: sticky;
-		top: var(--nav-height, 8rem);
+		top: var(--nav-height, 0px);
 		z-index: 1;
 
 		/* Deliberately the full width of `main`, not the text column: the h1 is a
