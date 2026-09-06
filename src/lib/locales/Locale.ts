@@ -276,12 +276,27 @@ export type LocaleText = {
 				unknownVenue: string;
 				volunteersNotLoaded: string;
 				noVolunteers: string;
+				/** Shown when the search and the expertise keywords together match nobody. */
+				noneMatching: string;
 			};
 			button: {
 				exportCSV: ButtonText;
+				/** Unselects every expertise keyword. */
+				clearTags: ButtonText;
+				/** Unfolds the expertise keywords past the most common ones. */
+				moreTags: ButtonText;
+				/** Folds them back. */
+				fewerTags: ButtonText;
 			};
 			field: {
 				filter: TextFieldText;
+			};
+			label: {
+				/** Accessible name for the group of expertise filter keywords. */
+				expertiseFilter: string;
+				/** A name with a count after it, for a role's section heading and for an
+				 * expertise keyword. Takes {name} and {count}. */
+				count: string;
 			};
 			status: {
 				active: string;

@@ -37,7 +37,7 @@
 	},
 	"banner": {
 		"beta": {
-			"lead": "We're in **beta** and want your feedback. [Write to the stewards](/contact), [report an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose), or [learn more](/about)."
+			"lead": "We're in **beta**. [Report issues](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose) or [write the stewards](/contact) with thoughts."
 		},
 		"update": {
 			"message": "A new version is available.",
@@ -381,18 +381,35 @@
 			"feedback": {
 				"unknownVenue": "Unable to find this venue.",
 				"noVolunteers": "No volunteers yet.",
-				"volunteersNotLoaded": "Unable to load volunteers for this venue."
+				"volunteersNotLoaded": "Unable to load volunteers for this venue.",
+				"noneMatching": "No volunteers match this search and these expertise keywords."
 			},
 			"button": {
 				"exportCSV": {
 					"tip": "Export the volunteer names, emails, ORCIDs, roles, expertise, and status as a CSV",
 					"label": "Export to CSV..."
+				},
+				"clearTags": {
+					"tip": "Clear the selected expertise keywords and show every volunteer again",
+					"label": "Clear"
+				},
+				"moreTags": {
+					"tip": "Show every expertise keyword volunteers have listed, not only the most common ones",
+					"label": "Show all expertise"
+				},
+				"fewerTags": {
+					"tip": "Show only the most common expertise keywords",
+					"label": "Show fewer"
 				}
 			},
 			"field": {
 				"filter": {
 					"placeholder": "name, expertise, email"
 				}
+			},
+			"label": {
+				"expertiseFilter": "Filter by expertise",
+				"count": "{name} ({count})"
 			},
 			"unavailableTitle": "Volunteers unavailable",
 			"status": {
@@ -407,7 +424,7 @@
 			},
 			"subtitle": "Volunteers",
 			"paragraph": {
-				"intro": ""
+				"intro": "Search for a volunteer by name, email, or expertise, or narrow the list to the expertise keywords volunteers have listed. Within each role, volunteers who have stopped are listed last."
 			}
 		},
 		"venueTransactions": {

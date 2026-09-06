@@ -11,6 +11,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **The file's own submission-type names are matched too**, each listed with how many rows carry it, so the type an import gives its submissions is chosen rather than silently defaulted.
 - **Invite people to a role from the venue page**, not only from the roles step of venue settings. The form sits on the role's own card in both places.
 - **The invite field now finds people by name, and several at once.** Type or paste any mix of email addresses, ORCID iDs, and names, separated by commas; everyone each entry matches is offered below the field, and clicking one moves them to the list to be invited and clears the entry that found them. Nothing goes out until you press **Invite**, and only the people on that list are sent to. Someone who already has a record for the role isn't offered, and an entry matching nobody is named without holding up the rest — previously one mistyped address refused the whole batch.
+- **A venue's volunteers can now be narrowed by expertise.** The keywords volunteers have listed appear above the list, most claimed first with a count each, and picking several shows everyone who claims any of them.
+- **Each role now says how many volunteers it is showing**, in parentheses after its name, so a filtered list reports its own size.
 
 ### Fixed
 
@@ -26,6 +28,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **The manuscript ID is now withheld from a scholar who is only bidding.** It is the key the paper is filed under in the venue's own reviewing system, so it led back to the author list the venue was hiding — including by typing a guess into the search box and watching whether the row survived. Editors and role approvers still see it; it is how they find a submission in the system it came from.
 - **Venue settings no longer promises bidders a "yes/no" bid** when no preference levels are defined. They get a single **Bid** button, with **Unbid** to take it back, which is what the copy now says.
 - **The anonymity and assignment guidance now names the setup steps it points at** rather than numbering them. Two of the three numbers were wrong, and the preference-levels step's number changes depending on whether any role takes bids.
+- **Volunteers are now listed in an order.** Within each role, those still volunteering come first, then everyone alphabetically by family name; previously the rows arrived in whatever order the database returned them.
+- **The volunteers table no longer scrolls its last column off screen.** A volunteer who wrote their expertise as one long phrase set an unbreakable minimum width for the whole table, pushing **Papers cap** out of view on an ordinary laptop.
+- **A volunteer's expertise keywords no longer begin with a stray space**, and the heading above each role now spans the whole table rather than three of its four columns.
+- **Export to CSV now sits below the volunteers list** rather than above it.
 
 ## 0.5.3 - 2026-08-31
 

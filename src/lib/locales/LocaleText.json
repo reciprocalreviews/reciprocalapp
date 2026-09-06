@@ -5566,12 +5566,27 @@
                 "button": {
                   "additionalProperties": false,
                   "properties": {
+                    "clearTags": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Unselects every expertise keyword."
+                    },
                     "exportCSV": {
                       "$ref": "#/definitions/ButtonText"
+                    },
+                    "fewerTags": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Folds them back."
+                    },
+                    "moreTags": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Unfolds the expertise keywords past the most common ones."
                     }
                   },
                   "required": [
-                    "exportCSV"
+                    "exportCSV",
+                    "clearTags",
+                    "moreTags",
+                    "fewerTags"
                   ],
                   "type": "object"
                 },
@@ -5579,6 +5594,10 @@
                   "additionalProperties": false,
                   "properties": {
                     "noVolunteers": {
+                      "type": "string"
+                    },
+                    "noneMatching": {
+                      "description": "Shown when the search and the expertise keywords together match nobody.",
                       "type": "string"
                     },
                     "unknownVenue": {
@@ -5591,7 +5610,8 @@
                   "required": [
                     "unknownVenue",
                     "volunteersNotLoaded",
-                    "noVolunteers"
+                    "noVolunteers",
+                    "noneMatching"
                   ],
                   "type": "object"
                 },
@@ -5628,6 +5648,24 @@
                     "name",
                     "expertise",
                     "papers"
+                  ],
+                  "type": "object"
+                },
+                "label": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "count": {
+                      "description": "A name with a count after it, for a role's section heading and for an expertise keyword. Takes {name} and {count}.",
+                      "type": "string"
+                    },
+                    "expertiseFilter": {
+                      "description": "Accessible name for the group of expertise filter keywords.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "expertiseFilter",
+                    "count"
                   ],
                   "type": "object"
                 },
@@ -5676,6 +5714,7 @@
                 "feedback",
                 "button",
                 "field",
+                "label",
                 "status",
                 "headers",
                 "paragraph"

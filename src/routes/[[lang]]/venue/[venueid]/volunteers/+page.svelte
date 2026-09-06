@@ -4,6 +4,7 @@
 	import { EmptyLabel, ErrorLabel, ScholarLabel, VenueLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
+	import Row from '$lib/components/Row.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import Table from '$lib/components/Table.svelte';
@@ -11,6 +12,7 @@
 	import Tags from '$lib/components/Tags.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import toCSV from '$lib/data/toCSV';
+	import { expertiseTags, TAG_LIMIT, volunteersView } from '$lib/data/volunteersView';
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 
@@ -18,7 +20,25 @@
 	const { venue, commitments, roles } = $derived(data);
 
 	let filter = $state('');
+	/** The selected expertise chips. Held as keys rather than labels, so a selection
+	 * survives a change in which spelling is commonest — and with the label it was
+	 * picked under, so the chip never relabels while the reader is using it. */
+	let selectedTags = $state<{ key: string; label: string }[]>([]);
+	let showAllTags = $state(false);
 	const locale = getLocaleContext();
+
+	/** The list's rules — search matching, how the expertise keywords are ranked,
+	 * and the row ordering — live in $lib/data/volunteersView so they are testable
+	 * outside a component. */
+	const view = $derived(
+		volunteersView({ filter, selected: new Map(selectedTags.map((t) => [t.key, t.label])) })
+	);
+
+	function toggleTag(key: string, label: string) {
+		selectedTags = selectedTags.some((t) => t.key === key)
+			? selectedTags.filter((t) => t.key !== key)
+			: [...selectedTags, { key, label }];
+	}
 
 	function exportCSV() {
 		if (commitments === null) return;
@@ -69,11 +89,52 @@
 			testid="volunteer-filter"
 		></TextField>
 
-		<Button
-			strings={(l) => l.page.volunteers.button.exportCSV}
-			testid="volunteer-export-csv"
-			action={exportCSV}
-		/>
+		{@const allTags = view.tags(commitments)}
+		{#if allTags.length > 0}
+			<div role="group" aria-label={locale().page.volunteers.label.expertiseFilter}>
+				<Tags>
+					<!-- Keyed on the tag's key so Svelte reuses the same button when the list
+					     re-ranks, which is what keeps focus on the chip you just pressed. -->
+					{#each showAllTags ? allTags : view.capped(allTags) as tag (tag.key)}
+						<Tag
+							wrap
+							action={() => toggleTag(tag.key, tag.label)}
+							selected={selectedTags.some((t) => t.key === tag.key)}
+							testid="volunteer-tag-{tag.key}"
+							><Text
+								path={(l) => l.page.volunteers.label.count}
+								inputs={{ name: tag.label, count: tag.count.toString() }}
+							/></Tag
+						>
+					{/each}
+				</Tags>
+				{#if allTags.length > TAG_LIMIT || selectedTags.length > 0}
+					<Row>
+						{#if allTags.length > TAG_LIMIT}
+							<Button
+								small
+								background={false}
+								testid="volunteer-tags-more"
+								strings={(l) =>
+									showAllTags
+										? l.page.volunteers.button.fewerTags
+										: l.page.volunteers.button.moreTags}
+								action={() => (showAllTags = !showAllTags)}
+							/>
+						{/if}
+						{#if selectedTags.length > 0}
+							<Button
+								small
+								background={false}
+								testid="volunteer-tags-clear"
+								strings={(l) => l.page.volunteers.button.clearTags}
+								action={() => (selectedTags = [])}
+							/>
+						{/if}
+					</Row>
+				{/if}
+			</div>
+		{/if}
 
 		{@const rolesIDs = [...new Set(commitments.map((c) => c.roleid))].toSorted(
 			(a, b) =>
@@ -83,6 +144,8 @@
 
 		{#if rolesIDs.length === 0}
 			<Feedback text={(l) => l.page.volunteers.feedback.noVolunteers}></Feedback>
+		{:else if !commitments.some((c) => view.matchesFilter(c) && view.matchesTags(c))}
+			<Feedback text={(l) => l.page.volunteers.feedback.noneMatching}></Feedback>
 		{:else}
 			<Table full>
 				{#snippet header()}
@@ -91,27 +154,26 @@
 					<th>{locale().page.volunteers.headers.expertise}</th>
 					<th>{locale().page.volunteers.headers.papers}</th>
 				{/snippet}
-				{#each rolesIDs as role, roleIndex}
-					{@const roleCommitments = commitments.filter((c) => c.roleid === role)}
-					{@const filteredScholars =
-						filter.length === 0
-							? roleCommitments
-							: roleCommitments.filter(
-									(c) =>
-										c.scholars.name?.toLowerCase().includes(filter.toLowerCase()) ||
-										c.expertise.toLowerCase().includes(filter.toLowerCase()) ||
-										c.scholars.email?.toLowerCase().includes(filter.toLowerCase())
-								)}
-					{#if filteredScholars.length > 0}
-						<tr
-							><td colspan="3"><strong>{ScholarLabel} {filteredScholars[0].roles?.name}</strong></td
+				{#each rolesIDs as role, roleIndex (role)}
+					{@const rows = view.sortedAndFiltered(commitments.filter((c) => c.roleid === role))}
+					{#if rows.length > 0}
+						<tr data-testid="volunteer-role-{roleIndex}"
+							><td colspan="4"
+								><strong
+									>{ScholarLabel}
+									<Text
+										path={(l) => l.page.volunteers.label.count}
+										inputs={{ name: rows[0].roles?.name ?? '', count: rows.length.toString() }}
+									/></strong
+								></td
 							></tr
 						>
-						{#each filteredScholars.toSorted((a, b) => a.roles?.name.localeCompare(b.roles?.name ?? '') ?? 0) as volunteer, volunteerIndex}
-							{@const expertise = volunteer.expertise.split(',').filter((s) => s.trim() !== '')}
+						{#each rows as volunteer, volunteerIndex (volunteer.id)}
+							{@const expertise = expertiseTags(volunteer.expertise)}
 							<tr data-testid="volunteer-row-{roleIndex}-{volunteerIndex}">
 								<td
 									><Status
+										testid="volunteer-status"
 										good={volunteer.active}
 										label={(l) =>
 											volunteer.active
@@ -122,7 +184,7 @@
 								<td><ScholarLink id={volunteer.scholarid} /></td>
 								<td
 									><Tags
-										>{#each expertise as topic}<Tag>{topic}</Tag>{:else}<em>{EmptyLabel}</em
+										>{#each expertise as topic}<Tag wrap>{topic}</Tag>{:else}<em>{EmptyLabel}</em
 											>{/each}</Tags
 									></td
 								>
@@ -133,5 +195,12 @@
 				{/each}
 			</Table>
 		{/if}
+
+		<!-- Below the list it exports, rather than above it. -->
+		<Button
+			strings={(l) => l.page.volunteers.button.exportCSV}
+			testid="volunteer-export-csv"
+			action={exportCSV}
+		/>
 	</Page>
 {/if}

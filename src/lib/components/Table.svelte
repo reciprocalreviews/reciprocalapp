@@ -56,6 +56,16 @@
 		background: var(--alternating-color);
 	}
 
+	/* A full-bleed table has the whole viewport but also the most columns, and
+	   every cell pays 1rem of padding on each side from the global td/th rule in
+	   app.html — 8rem of padding across four columns before any content. Halving
+	   it here buys back the width that was pushing the last column out of view. */
+	.full table :global(td),
+	.full table :global(th) {
+		padding-left: var(--spacing-half);
+		padding-right: var(--spacing-half);
+	}
+
 	.full {
 		width: calc(100vw - var(--spacing) * 2);
 		margin-inline-start: calc(-1 * (100vw - min(100%, var(--page-width))) / 2 + var(--spacing));
