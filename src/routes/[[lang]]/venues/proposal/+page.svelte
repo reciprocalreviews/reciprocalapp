@@ -117,7 +117,7 @@
 	}
 </script>
 
-<Page icon={VenueLabel} title={(l) => l.page.proposeVenue.title} breadcrumbs={[]}>
+<Page icon={VenueLabel} title={(l) => l.page.proposeVenue.title}>
 	<Paragraph text={(l) => l.page.proposeVenue.paragraph.reviewedBy} />
 	<Paragraph text={(l) => l.page.proposeVenue.paragraph.howToPropose} />
 	<Paragraph text={(l) => l.page.proposeVenue.paragraph.communitySupport} />

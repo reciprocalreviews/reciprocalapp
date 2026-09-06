@@ -42,7 +42,7 @@
 	</li>
 {/snippet}
 
-<Page icon={IdeaLabel} title={(l) => l.page.updates.title} breadcrumbs={[]}>
+<Page icon={IdeaLabel} title={(l) => l.page.updates.title}>
 	<Paragraph text={(l) => l.page.updates.paragraph.intro} />
 
 	{#each datedUpdates as update}

@@ -26,7 +26,7 @@
 	]);
 </script>
 
-<Page icon={VenueLabel} title={(l) => l.page.venues.title} breadcrumbs={[]}>
+<Page icon={VenueLabel} title={(l) => l.page.venues.title}>
 	<Text markdown path={(l) => l.page.venues.description} />
 
 	{#if auth().isAuthenticated()}<Link to="/venues/proposal"

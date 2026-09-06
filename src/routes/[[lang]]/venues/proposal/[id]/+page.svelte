@@ -81,11 +81,11 @@
 </script>
 
 {#if proposal === null || supporters === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.proposal.feedback.notFound}></Feedback>
 	</Page>
 {:else}
-	<Page icon={VenueLabel} title={proposal.title} breadcrumbs={[]}>
+	<Page icon={VenueLabel} title={proposal.title}>
 		{#snippet subtitle()}<Text
 				path={(l) =>
 					approved ? l.page.proposal.subtitle.approved : l.page.proposal.subtitle.proposal}

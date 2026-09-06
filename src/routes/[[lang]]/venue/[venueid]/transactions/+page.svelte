@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { type CurrencyID } from '$data/types.js';
-	import { venuePath } from '$lib/data/venuePath';
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
@@ -31,11 +30,7 @@
 	so a venue that had spent its whole reserve rendered the "could not be loaded"
 	error page instead of its transactions. -->
 {#if venue && transactions && venues && currencies && scholar && tokens !== null && count !== null}
-	<Page
-		icon={VenueLabel}
-		title={venue.title}
-		breadcrumbs={[[`/venue/${venuePath(venue)}`, venue.title]]}
-	>
+	<Page icon={VenueLabel} title={venue.title}>
 		{#snippet subtitle()}<Text path={(l) => l.page.venueTransactions.subtitle} />{/snippet}
 
 		<Paragraph
@@ -117,7 +112,7 @@
 		/>
 	</Page>
 {:else}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.venueTransactions.feedback.transactionsNotLoaded}
 		></Feedback>
 	</Page>

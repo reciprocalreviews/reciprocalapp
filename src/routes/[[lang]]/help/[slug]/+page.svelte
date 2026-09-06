@@ -13,7 +13,7 @@
 	let html = $derived(marked(article.body.replace(/^#\s.*\n/, '')) as string);
 </script>
 
-<Page icon={IdeaLabel} title={article.title} breadcrumbs={[['/help', 'Help']]}>
+<Page icon={IdeaLabel} title={article.title}>
 	<div class="article">
 		{@html html}
 	</div>

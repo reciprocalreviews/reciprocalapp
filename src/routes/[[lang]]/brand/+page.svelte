@@ -30,7 +30,7 @@
 	];
 </script>
 
-<Page title={(l) => l.page.brand.title} breadcrumbs={[]}>
+<Page title={(l) => l.page.brand.title}>
 	{#snippet icon()}<Logo />{/snippet}
 
 	<p class="lead"><Text path={(l) => l.page.brand.lead} /></p>

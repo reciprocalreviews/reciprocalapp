@@ -14,11 +14,7 @@
 </script>
 
 {#if currency && transactions && venues && count !== null}
-	<Page
-		icon={TokenLabel}
-		title={currency.name}
-		breadcrumbs={[[`/currency/${currency.id}`, `${TokenLabel} ${currency.name}`]]}
-	>
+	<Page icon={TokenLabel} title={currency.name}>
 		{#snippet subtitle()}<Text path={(l) => l.page.currencyTransactions.subtitle} />{/snippet}
 
 		<Paragraph
@@ -38,7 +34,7 @@
 		/>
 	</Page>
 {:else if currency === null || transactions === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.currency.feedback.notLoaded} />
 	</Page>
 {/if}

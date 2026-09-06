@@ -62,11 +62,11 @@
 </script>
 
 {#if venue === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.venue.unknownTitle} breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.venue.unknownTitle}>
 		<Paragraph text={(l) => l.page.venue.paragraph.notFound} />
 	</Page>
 {:else}
-	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[]}>
+	<Page icon={VenueLabel} title={venue.title}>
 		{#snippet subtitle()}<Text path={(l) => l.page.venue.subtitle} />{/snippet}
 		{#snippet details()}
 			{#if isAdmin}

@@ -12,7 +12,7 @@
 	import Subheader from '$lib/components/Subheader.svelte';
 </script>
 
-<Page icon={UnknownLabel} title={(l) => l.page.terms.title} breadcrumbs={[]}>
+<Page icon={UnknownLabel} title={(l) => l.page.terms.title}>
 	<Paragraph text={(l) => l.page.terms.paragraph.intro} />
 
 	<Subheader icon="📜" text={(l) => l.page.terms.header.terms} />

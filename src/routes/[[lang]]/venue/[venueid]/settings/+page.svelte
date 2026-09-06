@@ -108,19 +108,15 @@
 </script>
 
 {#if venue === null || currency === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.settings.feedback.unknownVenue} />
 	</Page>
 {:else if !scholar}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.settings.feedback.logIn} />
 	</Page>
 {:else if !venue.admins.includes(scholar.id)}
-	<Page
-		icon={ErrorLabel}
-		title={venue.title}
-		breadcrumbs={[[`/venue/${venuePath(venue)}`, venue.title]]}
-	>
+	<Page icon={ErrorLabel} title={venue.title}>
 		{#snippet subtitle()}<Text path={(l) => l.page.settings.subtitle} />{/snippet}
 		<Feedback error text={(l) => l.page.settings.feedback.adminsOnly} />
 	</Page>
@@ -128,7 +124,6 @@
 	<Page
 		icon={VenueLabel}
 		title={venue.title}
-		breadcrumbs={[[`/venue/${venuePath(venue)}`, venue.title]]}
 		edit={{
 			placeholder: (l) => l.page.venue.field.name.placeholder,
 			valid: (text) => (text.length > 0 ? undefined : (l) => l.page.venue.field.name.invalid),

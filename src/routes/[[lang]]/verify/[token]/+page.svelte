@@ -21,7 +21,7 @@
 	});
 </script>
 
-<Page icon={ScholarLabel} title={(l) => l.page.verify.title} breadcrumbs={[]}>
+<Page icon={ScholarLabel} title={(l) => l.page.verify.title}>
 	{#if data.status === 'verified'}
 		<Feedback testid="verify-verified" text={(l) => l.page.verify.verified} />
 	{:else if data.status === 'expired'}

@@ -1,3 +1,4 @@
+import { venueCrumbs } from '$lib/data/breadcrumbs';
 import { NO_VENUE_ID } from '$lib/data/venuePath';
 import type { PageLoad } from './$types';
 
@@ -25,6 +26,7 @@ export const load: PageLoad = async ({ parent }) => {
 		: { data: null };
 
 	return {
+		breadcrumbs: venueCrumbs(venue),
 		transactions,
 		venues,
 		currencies,

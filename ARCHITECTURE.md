@@ -393,7 +393,18 @@ The root layout [src/routes/+layout.svelte](src/routes/+layout.svelte) sets up f
 - `setFeedback()` / `getFeedback()` — global error/success notification stack
 - `setAuth()` / `getAuth()` — authenticated session and scholar
 
-Plus breadcrumbs and page-header state for the chrome.
+The chrome uses no context channel of its own. Breadcrumbs travel in load data — any
+`+page.ts` or `+layout.ts` may return `breadcrumbs`, built with the helpers in
+[breadcrumbs.ts](src/lib/data/breadcrumbs.ts) — and the root layout reads them off
+`page.data`. The page's title band is rendered in flow by
+[Page.svelte](src/lib/components/Page.svelte), which pins it below the nav using the
+`--nav-height` that [measure.ts](src/lib/components/measure.ts) observes.
+
+Both were once mutable contexts that `Page` wrote from an `$effect`, and that is worth
+remembering before reaching for the pattern again: an `$effect` does not run during SSR,
+and the layout renders `<Nav>` before its children, so a title handed upward could not
+appear in the server HTML at all. It arrived at hydration and pushed the page down on
+every load, and collapsed and regrew on every client-side navigation.
 
 ## State conventions
 

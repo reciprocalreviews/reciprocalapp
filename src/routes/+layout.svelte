@@ -6,10 +6,9 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import { setDB } from '$lib/data/CRUD';
 	import getRealtimeChannel from '$lib/data/SupabaseRealtime';
-	import { onMount, setContext } from 'svelte';
+	import { onMount } from 'svelte';
 	import SupabaseAuth, { setAuth } from './Auth.svelte';
 	import { setLocaleContext } from './Contexts';
-	import type PageHeader from './PageHeader';
 
 	let { data, children } = $props();
 	let { db, scholar, claims, locale, tokens } = $derived(data);
@@ -71,24 +70,13 @@
 		};
 	});
 
-	// This global state stores breadcrumb data. The Page component sets it.
-	let breadcrumbs = $state<{ breadcrumbs: [string, string][] }>({ breadcrumbs: [] });
-
-	setContext('breadcrumbs', breadcrumbs);
-
-	let pageHeader = $state<PageHeader>({
-		icon: '',
-		title: '',
-		wobble: false,
-		subtitle: undefined,
-		details: undefined,
-		edit: undefined
-	});
-
-	setContext('pageHeader', pageHeader);
+	// The trail shown in the nav, from whichever load supplied one. It used to be a
+	// mutable context that `Page` wrote from an `$effect` — which never runs during
+	// SSR, so the server rendered a nav with no trail and hydration inserted it.
+	let breadcrumbs = $derived(page.data.breadcrumbs ?? []);
 </script>
 
-<Nav {tokens} breadcrumbs={breadcrumbs.breadcrumbs}></Nav>
+<Nav {tokens} {breadcrumbs}></Nav>
 <main>
 	{@render children()}
 </main>
@@ -96,16 +84,16 @@
 
 <style>
 	main {
-		margin-block-start: var(--spacing);
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing);
-		margin: auto;
-		max-width: var(--page-width);
-		/* Keep the last of the page's content clear of the sticky footer, which would
-		   otherwise sit directly on top of it. Pairs with the scroll-padding on `html`
-		   in app.html: that governs where scrolling stops, this guarantees there is
-		   somewhere to stop. */
-		padding-block-end: 5rem;
+		/* Absorb whatever height the page does not use, so the footer below is carried
+		   to the bottom of the viewport rather than floating up to meet short content
+		   (#156). Pairs with the flex column on `body` in app.html. */
+		flex: 1;
+		/* Deliberately full width, and deliberately no block-start margin. The page
+		   title bar is a full-bleed band that sits flush beneath the nav, so the text
+		   column's `--page-width` cap lives one level down, on `.page` in
+		   Page.svelte. */
 	}
 </style>

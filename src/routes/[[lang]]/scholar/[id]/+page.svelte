@@ -74,7 +74,7 @@
 </script>
 
 {#if state === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.scholar.feedback.notLoaded}></Feedback>
 	</Page>
 {:else}

@@ -159,19 +159,23 @@
 			}
 
 			/*
-			 * The nav header and the footer are both `position: sticky`, so they overlay
-			 * whatever the page scrolls under them. Reserve that space on the scrollport so
-			 * anything scrolled to — an anchor link beside a heading, or an element a test
-			 * or the browser scrolls into view — lands in the visible band between them
-			 * rather than underneath. Without this, a control near the end of a long page
-			 * can sit permanently beneath the footer: visible, but impossible to click.
+			 * Two sticky bands overlay whatever the page scrolls under them: the nav in
+			 * `Nav.svelte`, and the page title block in `Page.svelte` that pins directly
+			 * below it. Reserve both on the scrollport so anything scrolled to — an anchor
+			 * beside a heading, or an element a test or the browser scrolls into view —
+			 * lands in the visible band beneath them rather than underneath.
 			 *
-			 * The start value covers the nav plus up to three stacked banners (beta, test
-			 * environment, unverified email), which is the tallest the header gets.
+			 * Both heights are measured at runtime by the `measure` action and written
+			 * here, because each varies: the nav with how many banners are up and whether
+			 * its row wraps, the title block with the length of the title and whether the
+			 * page supplies a subtitle or details. The fallbacks are typical values, used
+			 * for the first paint before the observers report and whenever script is off.
+			 *
+			 * The end value is 0: the footer is in normal flow and covers nothing.
 			 */
 			html {
-				scroll-padding-block-start: 14rem;
-				scroll-padding-block-end: 5rem;
+				scroll-padding-block-start: calc(var(--nav-height, 8rem) + var(--page-header-height, 6rem));
+				scroll-padding-block-end: 0;
 			}
 
 			body {
@@ -183,6 +187,17 @@
 				padding: 0;
 				margin: 0;
 				line-height: 1.4;
+
+				/* A column at least as tall as the viewport, so `main` can absorb the slack
+				   and the footer is carried to the bottom instead of ending up mid-screen on
+				   a short page (#156). `dvh` rather than `svh`/`lvh` because it tracks the
+				   viewport as a mobile URL bar hides — which is the moment the footer was
+				   reported detaching. The body's app wrapper is `display: contents`, so
+				   header/main/footer are the flex items here. */
+				min-height: 100vh;
+				min-height: 100dvh;
+				display: flex;
+				flex-direction: column;
 			}
 
 			strong,

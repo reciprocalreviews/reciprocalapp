@@ -1,10 +1,11 @@
+import { submissionsCrumbs } from '$lib/data/breadcrumbs';
 import { NO_VENUE_ID } from '$lib/data/venuePath';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
 	// The venue comes from the layout, which is what resolves a web address to a venue; the
 	// URL segment is not an id and must not be used as one.
-	const { db, scholar, venue: resolved } = await parent();
+	const { db, locale, scholar, venue: resolved } = await parent();
 
 	const venueid = resolved?.id ?? NO_VENUE_ID;
 	const submissionid = params.submissionid;
@@ -120,6 +121,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	}
 
 	return {
+		breadcrumbs: submissionsCrumbs(resolved, locale),
 		submission,
 		venue,
 		authors,
