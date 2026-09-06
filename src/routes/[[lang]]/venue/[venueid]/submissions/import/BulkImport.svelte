@@ -712,135 +712,135 @@
 	<Note path={(l) => l.page.bulkImport.person.unmatchedNote} />
 {/if}
 
-<!-- Table has no scroll container of its own (its only escape hatch is the opt-in
-     `full` viewport bleed). This table grows a column per matched role, each with a
-     min-width, so past two or three roles it would otherwise push its right-hand
-     columns off the page with no way to reach them. -->
-<div class="rows">
-	<Table>
-		{#snippet header()}
-			<th><Text path={(l) => l.page.bulkImport.column.title} /></th>
-			<th><Text path={(l) => l.page.bulkImport.column.externalID} /></th>
-			<th><Text path={(l) => l.page.bulkImport.column.expertise} /></th>
-			<th><Text path={(l) => l.page.bulkImport.column.submissionType} /></th>
+<!-- Full-bleed, like every other wide table in the app: seven fixed columns plus one
+     per matched role, each with a min-width floor, so confined to the text column this
+     is a narrow strip scrolled sideways while the window sits empty on either side.
+     `Table`'s own `overflow-x: auto` still catches an import wide enough to outgrow
+     even the viewport. Note this cannot be wrapped in a scroll container: an
+     `overflow` ancestor clips the negative margin the bleed is made of. -->
+<Table full>
+	{#snippet header()}
+		<th><Text path={(l) => l.page.bulkImport.column.title} /></th>
+		<th><Text path={(l) => l.page.bulkImport.column.externalID} /></th>
+		<th><Text path={(l) => l.page.bulkImport.column.expertise} /></th>
+		<th><Text path={(l) => l.page.bulkImport.column.submissionType} /></th>
+		{#each matchedRoles as role (role.id)}
+			<th class="person">{role.name}</th>
+		{/each}
+		<th><Text path={(l) => l.page.bulkImport.column.previousID} /></th>
+		<th><Text path={(l) => l.page.bulkImport.column.note} /></th>
+		<th></th>
+	{/snippet}
+	{#each rows as row, index (index)}
+		{@const err = rowError(row, index)}
+		<tr data-testid="import-row-{index}">
+			<td>
+				<TextField
+					strings={(l) => ({ ...l.page.bulkImport.field.title, label: '' })}
+					bind:text={row.title}
+					testid="import-row-{index}-title"
+				/>
+			</td>
+			<td>
+				<TextField
+					strings={(l) => ({ ...l.page.bulkImport.field.externalID, label: '' })}
+					bind:text={row.externalID}
+					testid="import-row-{index}-externalid"
+				/>
+			</td>
+			<td>
+				<TextField
+					strings={(l) => ({ ...l.page.bulkImport.field.expertise, label: '' })}
+					bind:text={row.expertise}
+				/>
+			</td>
+			<td>
+				<Options
+					strings={(l) => ({ ...l.page.bulkImport.options.submissionType, label: '' })}
+					bind:value={row.submissionType}
+					options={submissionTypes.map((t) => ({ value: t.id, label: t.name }))}
+				/>
+			</td>
 			{#each matchedRoles as role (role.id)}
-				<th class="person">{role.name}</th>
-			{/each}
-			<th><Text path={(l) => l.page.bulkImport.column.previousID} /></th>
-			<th><Text path={(l) => l.page.bulkImport.column.note} /></th>
-			<th></th>
-		{/snippet}
-		{#each rows as row, index (index)}
-			{@const err = rowError(row, index)}
-			<tr data-testid="import-row-{index}">
-				<td>
+				{@const match = personMatches[index][role.id] ?? { status: 'none' }}
+				<td class="person">
 					<TextField
-						strings={(l) => ({ ...l.page.bulkImport.field.title, label: '' })}
-						bind:text={row.title}
-						testid="import-row-{index}-title"
+						strings={(l) => ({ ...l.page.bulkImport.field.person, label: '' })}
+						bind:text={row.people[role.id]}
+						testid="import-row-{index}-person-{role.id}"
 					/>
-				</td>
-				<td>
-					<TextField
-						strings={(l) => ({ ...l.page.bulkImport.field.externalID, label: '' })}
-						bind:text={row.externalID}
-						testid="import-row-{index}-externalid"
-					/>
-				</td>
-				<td>
-					<TextField
-						strings={(l) => ({ ...l.page.bulkImport.field.expertise, label: '' })}
-						bind:text={row.expertise}
-					/>
-				</td>
-				<td>
-					<Options
-						strings={(l) => ({ ...l.page.bulkImport.options.submissionType, label: '' })}
-						bind:value={row.submissionType}
-						options={submissionTypes.map((t) => ({ value: t.id, label: t.name }))}
-					/>
-				</td>
-				{#each matchedRoles as role (role.id)}
-					{@const match = personMatches[index][role.id] ?? { status: 'none' }}
-					<td class="person">
-						<TextField
-							strings={(l) => ({ ...l.page.bulkImport.field.person, label: '' })}
-							bind:text={row.people[role.id]}
-							testid="import-row-{index}-person-{role.id}"
+					{#if match.status === 'resolved'}
+						<ScholarLink id={match.id} size="small" />
+					{:else if match.status === 'ambiguous'}
+						<Feedback text={(l) => l.page.bulkImport.person.ambiguous} />
+						<div class="matches">
+							{#each match.candidates as candidate (candidate.id)}
+								<Button
+									small
+									strings={(l) => ({
+										label: candidate.name,
+										// The name goes in the tip as well as the label, because the
+										// tip is the button's aria-label: a column of buttons all
+										// announcing "Choose this scholar" is unusable by voice or
+										// screen reader.
+										tip: l.widget.scholarSearch.choose.tip.replace('{name}', candidate.name)
+									})}
+									action={() => (row.peopleChoices[role.id] = candidate.id)}
+								/>
+							{/each}
+						</div>
+					{:else if match.status === 'unmatched'}
+						<Feedback
+							error
+							testid="import-row-{index}-unmatched"
+							text={(l) => l.page.bulkImport.person.unmatched}
 						/>
-						{#if match.status === 'resolved'}
-							<ScholarLink id={match.id} size="small" />
-						{:else if match.status === 'ambiguous'}
-							<Feedback text={(l) => l.page.bulkImport.person.ambiguous} />
-							<div class="matches">
-								{#each match.candidates as candidate (candidate.id)}
-									<Button
-										small
-										strings={(l) => ({
-											label: candidate.name,
-											// The name goes in the tip as well as the label, because the
-											// tip is the button's aria-label: a column of buttons all
-											// announcing "Choose this scholar" is unusable by voice or
-											// screen reader.
-											tip: l.widget.scholarSearch.choose.tip.replace('{name}', candidate.name)
-										})}
-										action={() => (row.peopleChoices[role.id] = candidate.id)}
-									/>
-								{/each}
-							</div>
-						{:else if match.status === 'unmatched'}
-							<Feedback
-								error
-								testid="import-row-{index}-unmatched"
-								text={(l) => l.page.bulkImport.person.unmatched}
-							/>
-						{/if}
-					</td>
-				{/each}
-				<td>
-					<TextField
-						strings={(l) => ({ ...l.page.bulkImport.field.previousID, label: '' })}
-						bind:text={row.previousID}
-					/>
+					{/if}
 				</td>
-				<td>
-					<TextField
-						strings={(l) => ({ ...l.page.bulkImport.field.note, label: '' })}
-						bind:text={row.note}
-					/>
+			{/each}
+			<td>
+				<TextField
+					strings={(l) => ({ ...l.page.bulkImport.field.previousID, label: '' })}
+					bind:text={row.previousID}
+				/>
+			</td>
+			<td>
+				<TextField
+					strings={(l) => ({ ...l.page.bulkImport.field.note, label: '' })}
+					bind:text={row.note}
+				/>
+			</td>
+			<td>
+				<Button
+					strings={(l) => l.page.bulkImport.button.removeRow}
+					active={rows.length > 1}
+					action={() => removeRow(index)}
+				/>
+			</td>
+		</tr>
+		{#if err}
+			<tr>
+				<td colspan={7 + matchedRoles.length}>
+					<Feedback error text={err} />
 				</td>
-				<td>
-					<Button
-						strings={(l) => l.page.bulkImport.button.removeRow}
-						active={rows.length > 1}
-						action={() => removeRow(index)}
+			</tr>
+		{/if}
+		<!-- Allowed, not blocked: somebody who was both the editor and the handling
+	     editor did both jobs. But it is two payments for one paper, and an import
+	     is where that mistake gets made fifty times at once. -->
+		{#if doubleSeated.has(index)}
+			<tr>
+				<td colspan={7 + matchedRoles.length}>
+					<Feedback
+						warning
+						testid="import-row-{index}-double-seated"
+						text={(l) => l.page.bulkImport.person.doubleSeated}
 					/>
 				</td>
 			</tr>
-			{#if err}
-				<tr>
-					<td colspan={7 + matchedRoles.length}>
-						<Feedback error text={err} />
-					</td>
-				</tr>
-			{/if}
-			<!-- Allowed, not blocked: somebody who was both the editor and the handling
-		     editor did both jobs. But it is two payments for one paper, and an import
-		     is where that mistake gets made fifty times at once. -->
-			{#if doubleSeated.has(index)}
-				<tr>
-					<td colspan={7 + matchedRoles.length}>
-						<Feedback
-							warning
-							testid="import-row-{index}-double-seated"
-							text={(l) => l.page.bulkImport.person.doubleSeated}
-						/>
-					</td>
-				</tr>
-			{/if}
-		{/each}
-	</Table>
-</div>
+		{/if}
+	{/each}
+</Table>
 
 <Form>
 	<Button
@@ -927,10 +927,6 @@
 	   name and a short verdict beside it. */
 	.person {
 		min-width: 11em;
-	}
-
-	.rows {
-		overflow-x: auto;
 	}
 
 	.paste :global(textarea) {
