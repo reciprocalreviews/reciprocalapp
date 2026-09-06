@@ -62,7 +62,6 @@
 <Page
 	icon={TokenLabel}
 	title={currency ? currency.name : 'Oops'}
-	breadcrumbs={[]}
 	edit={isMinter && currency !== null
 		? {
 				placeholder: (l: LocaleText) => l.page.currency.field.name.placeholder,

@@ -12,7 +12,7 @@
 	let { stewards } = $derived(data);
 </script>
 
-<Page icon={ScholarLabel} title={(l) => l.page.contact.title} breadcrumbs={[]}>
+<Page icon={ScholarLabel} title={(l) => l.page.contact.title}>
 	<Subheader icon="✉️" text={(l) => l.page.contact.header.write} />
 
 	<Paragraph text={(l) => l.page.contact.paragraph.write} inputs={{ email: SUPPORT_EMAIL }} />

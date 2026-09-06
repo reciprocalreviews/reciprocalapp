@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { venuePath } from '$lib/data/venuePath';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import {
@@ -233,11 +232,7 @@
 </script>
 
 {#if venue && conflicts}
-	<Page
-		icon={SubmissionLabel}
-		title={(l) => l.page.submissions.title}
-		breadcrumbs={[[`/venue/${venuePath(venue)}`, venue.title]]}
-	>
+	<Page icon={SubmissionLabel} title={(l) => l.page.submissions.title}>
 		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
 
 		<!-- Provide a clear link to the new submission page. -->

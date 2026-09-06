@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { venuePath } from '$lib/data/venuePath';
 	import NewSubmission from '../NewSubmission.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import { type PageData } from './$types';
@@ -18,18 +17,11 @@
 </script>
 
 {#if venue === null || submissionTypes === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.newSubmission.title} breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.newSubmission.title}>
 		<Feedback error text={(l) => l.page.newSubmission.feedback.notLoaded}></Feedback>
 	</Page>
 {:else}
-	<Page
-		icon={SubmissionLabel}
-		title={(l) => l.page.newSubmission.title}
-		breadcrumbs={[
-			[`/venue/${venuePath(venue)}`, venue.title],
-			[`/venue/${venuePath(venue)}/submissions`, 'Submissions']
-		]}
-	>
+	<Page icon={SubmissionLabel} title={(l) => l.page.newSubmission.title}>
 		<NewSubmission {venue} {submissionTypes} {priorSubmissions} {initialManuscript} {scholarORCID}
 		></NewSubmission>
 	</Page>

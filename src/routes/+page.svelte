@@ -10,7 +10,7 @@
 	const locale = getLocaleContext();
 </script>
 
-<Page title={(l) => l.page.home.title} breadcrumbs={[]}>
+<Page title={(l) => l.page.home.title}>
 	{#snippet icon()}<Logo />{/snippet}
 
 	<!-- The thesis the rest of the page argues for. It used to be the Page subtitle,

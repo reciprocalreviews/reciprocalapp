@@ -294,35 +294,17 @@
 {/snippet}
 
 {#if submission === null || venue === null || roles === null || scholar === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
-	<Page
-		icon={ErrorLabel}
-		title={(l) => l.page.submission.title}
-		breadcrumbs={[
-			[`/venue/${venuePath}`, venue?.title ?? ''],
-			[`/venue/${venuePath}/submissions`, 'Submissions']
-		]}
-	>
+	<Page icon={ErrorLabel} title={(l) => l.page.submission.title}>
 		<Feedback error text={(l) => l.page.submission.feedback.notLoaded}></Feedback>
 	</Page>
 {:else if !canView}
-	<Page
-		icon={ErrorLabel}
-		title={(l) => l.page.submission.title}
-		breadcrumbs={[
-			[`/venue/${venuePath}`, venue?.title ?? ''],
-			[`/venue/${venuePath}/submissions`, 'Submissions']
-		]}
-	>
+	<Page icon={ErrorLabel} title={(l) => l.page.submission.title}>
 		<Feedback error text={(l) => l.page.submission.feedback.confidential}></Feedback>
 	</Page>
 {:else}
 	<Page
 		icon={SubmissionLabel}
 		title={submission.title}
-		breadcrumbs={[
-			[`/venue/${venuePath}`, venue?.title ?? ''],
-			[`/venue/${venuePath}/submissions`, 'Submissions']
-		]}
 		edit={// Only editors can update the submission title.
 		isEditor
 			? {

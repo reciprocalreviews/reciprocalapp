@@ -35,7 +35,7 @@
 	}
 </script>
 
-<Page icon={IdeaLabel} title={(l) => l.page.about.title} breadcrumbs={[]}>
+<Page icon={IdeaLabel} title={(l) => l.page.about.title}>
 	<Paragraph text={(l) => l.page.about.paragraph.community} />
 
 	<Subheader icon={ScholarLabel} text={(l) => l.page.about.header.stewards} />

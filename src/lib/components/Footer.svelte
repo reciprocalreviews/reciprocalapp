@@ -29,10 +29,9 @@
 		padding: var(--spacing);
 		border-block-start: var(--border-color) solid var(--border-width);
 		background: var(--background-color);
-
-		/* The header is sticky */
-		position: sticky;
-		bottom: 0;
-		z-index: 2;
+		/* Not sticky. It used to be, and on a short page — or on mobile the moment the
+		   URL bar hides and the viewport grows — its natural position ended up above
+		   the bottom edge and it appeared to float mid-screen (#156). The flex column
+		   on `body` keeps it at the bottom without pinning it over the content. */
 	}
 </style>

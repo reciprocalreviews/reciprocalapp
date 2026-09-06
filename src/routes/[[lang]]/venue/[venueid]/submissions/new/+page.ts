@@ -1,8 +1,9 @@
+import { submissionsCrumbs } from '$lib/data/breadcrumbs';
 import { NO_VENUE_ID } from '$lib/data/venuePath';
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { db, venue, scholar } = await parent();
+	const { db, locale, venue, scholar } = await parent();
 
 	// The URL segment may be the venue's web address, so the id comes from the venue the
 	// layout resolved, never from the param — every query below is keyed on a uuid column.
@@ -18,6 +19,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		: { data: [] };
 
 	return {
+		breadcrumbs: submissionsCrumbs(venue, locale),
 		venue,
 		submissionTypes,
 		priorSubmissions: priorSubmissions ?? [],

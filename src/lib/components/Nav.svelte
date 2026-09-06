@@ -3,19 +3,16 @@
 	import Banners from '$lib/components/Banners.svelte';
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
-	import type PageHeader from '$routes/PageHeader';
-	import { getContext, untrack } from 'svelte';
+	import { untrack } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 	import { getAuth } from '../../routes/Auth.svelte';
 	import { getPendingActions } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
 	import Dots from './Dots.svelte';
-	import EditableText from './EditableText.svelte';
 	import { ScholarLabel, SubmissionLabel, TokenLabel, VenueLabel } from './Labels';
-	import Lead from './Lead.svelte';
 	import Link from './Link.svelte';
-	import Loading from './Loading.svelte';
+	import measure from './measure';
 
 	const locale = getLocaleContext();
 
@@ -67,11 +64,9 @@
 		{ path: '/', label: locale().header.home },
 		{ path: '/venues', label: locale().header.venues }
 	]);
-
-	const pageHeader = getContext<PageHeader>('pageHeader');
 </script>
 
-<header>
+<header use:measure={'--nav-height'}>
 	<div class="nav">
 		{#each routes as route}
 			<div class="link">
@@ -136,44 +131,14 @@
 		</div>
 	</div>
 	<Banners />
-	{#if pageHeader?.title}
-		<div class="page-header">
-			<h1 class="page-header-title" class:wobble={pageHeader.wobble} data-testid="page-header">
-				<!-- The header is baseline-aligned (.page-header-title beats the h1 rule
-				     below it), and an svg has no baseline of its own — it would align by
-				     its bottom edge and tower over the text. The span supplies one. -->
-				{#if typeof pageHeader.icon === 'string'}
-					<span class="emoji">{pageHeader.icon}</span>
-				{:else}
-					<span class="mark">{@render pageHeader.icon()}</span>
-				{/if}
-				{#if pageHeader.edit}
-					<EditableText
-						text={pageHeader.title}
-						valid={pageHeader.edit.valid}
-						edit={pageHeader.edit.update}
-						strings={(l) => ({ placeholder: pageHeader.edit!.placeholder(l) })}
-						testid="page-title-edit"
-					/>
-				{:else if pageHeader.title.length > 0}
-					{pageHeader.title}
-				{:else}
-					<Loading />
-				{/if}
-			</h1>
-			{#if pageHeader.subtitle || pageHeader.details}
-				<div class="details">
-					{#if pageHeader.subtitle}<Lead>{@render pageHeader.subtitle()}</Lead>{/if}
-					{@render pageHeader.details?.()}
-				</div>
-			{/if}
-		</div>
-	{/if}
 </header>
 
 <style>
 	header {
-		/* The header is sticky */
+		/* The upper of two sticky bands. The page's title block in Page.svelte pins
+		   directly beneath it, offset by the height measured here into
+		   `--nav-height`. This one keeps the higher z-index so it stays on top if
+		   that measurement is ever momentarily stale. */
 		position: sticky;
 		top: 0;
 		z-index: 2;
@@ -214,66 +179,6 @@
 		gap: var(--spacing);
 		margin-inline-start: auto;
 		align-items: center;
-	}
-
-	.page-header {
-		width: 100%;
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-half);
-		padding-top: 0;
-		background: var(--background-color);
-		margin-bottom: var(--spacing);
-		overflow-x: clip;
-	}
-
-	.page-header-title {
-		align-items: baseline;
-	}
-
-	.emoji {
-		font-family: 'Noto Emoji', 'Josefin Sans', sans-serif;
-		font-size: 80%;
-		/* A flex item; without this a long title squeezes the icon. */
-		flex: none;
-	}
-
-	.mark {
-		/* Full size, unlike .emoji's 80%: the logo's strokes are thinner than an
-		   emoji glyph's, so at 80% it reads lighter than the wordmark beside it. */
-		font-size: 100%;
-		line-height: 1;
-		flex: none;
-	}
-
-	h1 {
-		display: flex;
-		gap: 0.5rem;
-		align-items: center;
-		margin: 0;
-	}
-
-	@keyframes wobble {
-		0%,
-		100% {
-			transform: translateX(0);
-		}
-		20% {
-			transform: translateX(-5px);
-		}
-		40% {
-			transform: translateX(5px);
-		}
-		60% {
-			transform: translateX(-3px);
-		}
-		80% {
-			transform: translateX(3px);
-		}
-	}
-
-	.wobble {
-		animation: wobble 0.8s ease-in-out 0.3s 3;
 	}
 
 	/* The header token balance. Styled like the Tokens pill but compact — no
@@ -317,20 +222,5 @@
 		.balance.changed {
 			animation: none;
 		}
-		.wobble {
-			animation: none;
-		}
-	}
-
-	.details {
-		display: flex;
-		flex-direction: row;
-		gap: var(--spacing);
-		align-items: baseline;
-		font-size: var(--small-font-size);
-		padding-left: calc(var(--spacing) / 2);
-		padding-right: calc(var(--spacing) / 2);
-		padding-bottom: calc(var(--spacing) / 2);
-		border-block-end: var(--border-color) solid var(--border-width);
 	}
 </style>

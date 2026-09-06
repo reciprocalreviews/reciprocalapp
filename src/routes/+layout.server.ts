@@ -9,6 +9,10 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
 	// HTML response, and into every `__data.json` that `invalidateAll()` refetches
 	// after every write. It is a static import in `+layout.ts` now: bundled on the
 	// server, and an immutably-cached chunk in the browser.
+	// Note that this puts the session cookies — the JWT among them — into the rendered
+	// HTML and into every `__data.json`. That is what makes a response to a signed-in
+	// scholar impossible to share, and why `hooks.server.ts` marks one `private,
+	// no-store` rather than letting the CDN keep it.
 	return {
 		cookies: cookies.getAll()
 	};

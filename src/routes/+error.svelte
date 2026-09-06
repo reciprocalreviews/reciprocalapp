@@ -15,11 +15,7 @@
 	let missing = $derived(page.status === 404);
 </script>
 
-<Page
-	icon={ErrorLabel}
-	title={(l) => (missing ? l.page.error.missing : l.page.error.title)}
-	breadcrumbs={[]}
->
+<Page icon={ErrorLabel} title={(l) => (missing ? l.page.error.missing : l.page.error.title)}>
 	<Feedback error text={(l) => (missing ? l.page.error.notFound : l.page.error.unexpected)}
 	></Feedback>
 </Page>

@@ -1,3 +1,4 @@
+import { venueCrumbs } from '$lib/data/breadcrumbs';
 import { NO_VENUE_ID } from '$lib/data/venuePath';
 import type { PageLoad } from './$types.js';
 
@@ -72,6 +73,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
 	return {
+		breadcrumbs: venueCrumbs(venue),
 		venue,
 		submissions,
 		volunteering,

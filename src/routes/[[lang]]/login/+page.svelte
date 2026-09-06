@@ -145,7 +145,7 @@
 	}
 </script>
 
-<Page icon={ScholarLabel} title={(l) => l.page.login.title} breadcrumbs={[]}>
+<Page icon={ScholarLabel} title={(l) => l.page.login.title}>
 	{#if auth().isAuthenticated()}
 		<Paragraph text={(l) => l.page.login.paragraph.loggedIn} />
 	{:else if !devLogin}

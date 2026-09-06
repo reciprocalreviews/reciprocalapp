@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Page from '$lib/components/Page.svelte';
-	import { venuePath } from '$lib/data/venuePath';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import { ErrorLabel, SubmissionLabel } from '$lib/components/Labels';
 	import { type PageData } from './$types';
@@ -21,29 +20,15 @@
 </script>
 
 {#if venue === null || submissionTypes === null || submissionTypes.length === 0}
-	<Page icon={ErrorLabel} title={(l) => l.page.bulkImport.title} breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.bulkImport.title}>
 		<Feedback error text={(l) => l.page.bulkImport.feedback.notLoaded} />
 	</Page>
 {:else if !isAdmin}
-	<Page
-		icon={ErrorLabel}
-		title={(l) => l.page.bulkImport.title}
-		breadcrumbs={[
-			[`/venue/${venuePath(venue)}`, venue.title],
-			[`/venue/${venuePath(venue)}/submissions`, 'Submissions']
-		]}
-	>
+	<Page icon={ErrorLabel} title={(l) => l.page.bulkImport.title}>
 		<Feedback error text={(l) => l.page.bulkImport.feedback.notAdmin} />
 	</Page>
 {:else}
-	<Page
-		icon={SubmissionLabel}
-		title={(l) => l.page.bulkImport.title}
-		breadcrumbs={[
-			[`/venue/${venuePath(venue)}`, venue.title],
-			[`/venue/${venuePath(venue)}/submissions`, 'Submissions']
-		]}
-	>
+	<Page icon={SubmissionLabel} title={(l) => l.page.bulkImport.title}>
 		<BulkImport {venue} {submissionTypes} {existingExternalIDs} {roles} {commitments} />
 	</Page>
 {/if}

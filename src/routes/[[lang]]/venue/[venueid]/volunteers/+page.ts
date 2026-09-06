@@ -1,3 +1,4 @@
+import { venueCrumbs } from '$lib/data/breadcrumbs';
 import { NO_VENUE_ID } from '$lib/data/venuePath';
 import type { PageLoad } from './$types.js';
 
@@ -15,6 +16,7 @@ export const load: PageLoad = async ({ parent }) => {
 	const { data: roles } = await db.getVenueRoles(venueid);
 
 	return {
+		breadcrumbs: venueCrumbs(venue),
 		venue,
 		commitments,
 		roles

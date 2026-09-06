@@ -6,7 +6,7 @@
 	import { articles } from './articles';
 </script>
 
-<Page icon={IdeaLabel} title={(l) => l.page.help.title} breadcrumbs={[]}>
+<Page icon={IdeaLabel} title={(l) => l.page.help.title}>
 	<Paragraph text={(l) => l.page.help.paragraph.intro} />
 
 	<ul>

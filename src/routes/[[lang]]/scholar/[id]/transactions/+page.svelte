@@ -14,13 +14,7 @@
 </script>
 
 {#if scholar && transactions && venues && currencies && count !== null}
-	<Page
-		icon={ScholarLabel}
-		title={scholar.name ?? scholar.email ?? ((l) => l.page.scholar.title)}
-		breadcrumbs={[
-			[`/scholar/${scholar.id}`, scholar.name ?? scholar.orcid ?? scholar.email ?? 'anonymous']
-		]}
-	>
+	<Page icon={ScholarLabel} title={scholar.name ?? scholar.email ?? ((l) => l.page.scholar.title)}>
 		{#snippet subtitle()}<Text path={(l) => l.page.scholarTransactions.subtitle} />{/snippet}
 		<Paragraph
 			text={(l) => l.page.scholarTransactions.paragraph.count}
@@ -37,7 +31,7 @@
 		/>
 	</Page>
 {:else}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.view.transactions.feedback.notLoaded}></Feedback>
 	</Page>
 {/if}
