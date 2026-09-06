@@ -437,6 +437,91 @@ test('volunteer filter on /venue/[id]/volunteers narrows the table by name, emai
 		.toBeGreaterThan(1);
 });
 
+test('expertise keywords narrow the volunteers table, and say how many claim each', async ({
+	page,
+	context
+}) => {
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
+	await page.waitForLoadState('networkidle');
+
+	// The chip's key is the lowercased tag, and its label is the spelling the most
+	// volunteers wrote — most of the seed writes "peer review", two write "Peer
+	// review", so the lowercase one wins. The count is a pattern rather than a
+	// number: the e2e database is shared, and other specs add reviewers.
+	const chip = page.getByTestId('volunteer-tag-peer review');
+	await expect(chip).toBeVisible();
+	await expect(chip).toHaveText(/^peer review \(\d+\)$/);
+	await expect(chip).toHaveAttribute('aria-pressed', 'false');
+
+	const allRows = await page.locator('tr[data-testid^="volunteer-row-"]').count();
+
+	await chip.click();
+	await expect(chip).toHaveAttribute('aria-pressed', 'true');
+	await expect
+		.poll(async () => page.locator('tr[data-testid^="volunteer-row-"]').count())
+		.toBeLessThan(allRows);
+
+	// The chip's number is the number of rows selecting it alone shows: a volunteer
+	// counts once per keyword however many times they wrote it.
+	const claimed = Number(/\((\d+)\)/.exec((await chip.textContent()) ?? '')?.[1]);
+	await expect
+		.poll(async () => page.locator('tr[data-testid^="volunteer-row-"]').count())
+		.toBe(claimed);
+
+	await page.getByTestId('volunteer-tags-clear').click();
+	await expect
+		.poll(async () => page.locator('tr[data-testid^="volunteer-row-"]').count())
+		.toBe(allRows);
+});
+
+test('each role section says how many volunteers it is showing', async ({ page, context }) => {
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
+	await page.waitForLoadState('networkidle');
+
+	// Both sides are read from the DOM, so a shared database that other specs have
+	// added reviewers to cannot make this wrong.
+	const sectionCount = async () =>
+		Number(/\((\d+)\)/.exec((await page.getByTestId('volunteer-role-2').textContent()) ?? '')?.[1]);
+
+	expect(await sectionCount()).toBe(
+		await page.locator('tr[data-testid^="volunteer-row-2-"]').count()
+	);
+
+	// It tracks the search box, not just the initial load.
+	await page.getByTestId('volunteer-filter').fill('Rigor');
+	await expect.poll(sectionCount).toBe(1);
+	expect(await page.locator('tr[data-testid^="volunteer-row-2-"]').count()).toBe(1);
+});
+
+test('volunteers who have stopped are listed after those who have not', async ({
+	page,
+	context
+}) => {
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
+	await page.waitForLoadState('networkidle');
+
+	// Per section, not across the whole table: the ordering restarts at each role,
+	// so an active row following an inactive one is only wrong within a section.
+	// Derived rather than pinned to names, because which scholars are active here
+	// depends on what the rest of the suite has done.
+	let checked = 0;
+	for (const roleIndex of [0, 1, 2]) {
+		const statuses = await page
+			.locator(`tr[data-testid^="volunteer-row-${roleIndex}-"] [data-testid="volunteer-status"]`)
+			.allTextContents();
+		const firstInactive = statuses.indexOf('inactive');
+		if (firstInactive === -1) continue;
+		checked += 1;
+		expect(statuses.slice(firstInactive).every((s) => s === 'inactive')).toBe(true);
+	}
+	// The seed deactivates volunteers in at least one section; if none did, this
+	// test proved nothing and should say so rather than pass quietly.
+	expect(checked).toBeGreaterThan(0);
+});
+
 test("volunteering tells the venue's top role on one thread that replies to the newcomer", async ({
 	page,
 	context
