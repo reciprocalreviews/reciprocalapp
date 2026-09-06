@@ -1,5 +1,6 @@
 import type { Database } from '$data/database';
 import type { ScholarRow } from '$data/types';
+import { hasAuthCookie } from '$lib/auth/hasAuthCookie';
 import { requiresAuth } from '$lib/auth/requiresAuth';
 import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
 import type { LocaleText } from '$lib/locales/Locale';
@@ -76,8 +77,7 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
 	// genuinely anonymous visitor has no auth cookie, so public browsing is unaffected. The
 	// live case (token dying while the page is open) is handled by the SIGNED_OUT listener in
 	// +layout.svelte.
-	const hasAuthCookie = data.cookies.some((cookie) => /^sb-.*-auth-token/.test(cookie.name));
-	if (!userID && hasAuthCookie && requiresAuth(url.pathname)) {
+	if (!userID && hasAuthCookie(data.cookies) && requiresAuth(url.pathname)) {
 		redirect(302, '/login');
 	}
 

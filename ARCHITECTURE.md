@@ -53,6 +53,44 @@ The Vercel function is pinned to **`sfo1`** ([svelte.config.js](svelte.config.js
 
 Reads are gated by Postgres row-level security, so the database is the last line of defense regardless of what the client requests. Writes that should produce email enqueue rows in the `emails` table; an Edge Function consumes them and posts to Resend in production (or logs to the console in local dev).
 
+### Shared and private responses
+
+Four routes — `/`, `/[[lang]]/terms`, `/[[lang]]/updates`, `/[[lang]]/help` — render the
+same HTML for every anonymous visitor, and are listed in `PUBLICLY_CACHEABLE` in
+[hooks.server.ts](src/hooks.server.ts). For a request carrying no Supabase session cookie
+they are returned `public, max-age=0, s-maxage=3600, stale-while-revalidate=86400` with
+`Vary: cookie`, so Vercel's CDN serves them without invoking the function; for a request
+carrying one they are returned `private, no-store` and rendered for real.
+
+They used to be `prerender = true` instead. That was free, but it ran
+[+layout.server.ts](src/routes/+layout.server.ts) at build time against a request with no
+cookies, so `cookies: []` was baked into the shipped payload and a signed-in scholar
+landed on the anonymous header until hydration replaced it. Per-request rendering plus
+per-request caching keeps the anonymous path off the function while giving a signed-in
+scholar a correct header in the first byte.
+
+Four details hold it together, and none of them is optional:
+
+- **The decision lives in the hook, not in a `load` calling `setHeaders`.** Kit applies
+  `setHeaders` values and _then_ `Set-Cookie` inside the `resolve()` that `handle` awaits,
+  so a load cannot see a cookie it is about to set and the hook can. A response that sets
+  any cookie is therefore never marked public — the interlock against caching a session.
+- **`Vary: cookie`, on both branches.** A request bearing cookies can never match the
+  entry cached for requests bearing none.
+- **`max-age=0` beside `s-maxage`.** The shared cache may keep the anonymous copy; the
+  browser may not, or a visitor who signs in would be served it from their own disk cache,
+  where no request happens and nothing can correct it.
+- **Matching on `event.route.id`, not the pathname.** `[[lang]]` is optional and
+  unconstrained, so `/terms`, `/en/terms` and `/anything/terms` all resolve to
+  `/[[lang]]/terms`.
+
+Why this matters beyond the four routes: `+layout.server.ts` serializes the session
+cookies, JWT included, into the HTML and into every `__data.json`. Anything that becomes
+publicly cacheable while carrying that payload hands one scholar's session to whoever asks
+next. **Adding a route to `PUBLICLY_CACHEABLE` is a claim that its output is identical for
+every anonymous visitor** — and adding anything personalized to a route already on the
+list breaks that claim silently.
+
 ## Source tree
 
 ```
@@ -97,7 +135,7 @@ Auth is **ORCID**, via Supabase's custom OIDC provider ([#19](https://github.com
 - On first sign-in the `handle_new_scholar` trigger creates the scholar row from the OIDC metadata (`orcid`/`name`); it does **not** set an email (ORCID does not release one).
 - [src/hooks.server.ts](src/hooks.server.ts) creates a per-request Supabase server client from cookies and exposes it on `event.locals.supabase`. The JWT is validated locally via `getClaims()` in [src/routes/+layout.ts](src/routes/+layout.ts) before scholar data is loaded.
 - [src/lib/auth/Authentication.ts](src/lib/auth/Authentication.ts) and `src/routes/Auth.svelte` wrap session state for client code. Routes consume auth via `getAuth()`.
-- **Expired-session handling.** When a session dies (token expiry, a revoked refresh token, or a local DB reset), the scholar is sent to `/login` instead of being left on an authenticated page where every write fails with a cryptic RLS/permission error. Two hooks cover it, gated by [`requiresAuth()`](src/lib/auth/requiresAuth.ts) (public routes — landing, login, about, terms, updates, verify — are exempt): the layout load ([+layout.ts](src/routes/+layout.ts)) redirects when an auth cookie is present but `getClaims()` yields no user (a present-but-invalid session — distinct from an anonymous visitor, who has no cookie and is not redirected); and the `onAuthStateChange` listener in [+layout.svelte](src/routes/+layout.svelte) redirects on a live `SIGNED_OUT` event.
+- **Expired-session handling.** When a session dies (token expiry, a revoked refresh token, or a local DB reset), the scholar is sent to `/login` instead of being left on an authenticated page where every write fails with a cryptic RLS/permission error. Two hooks cover it, gated by [`requiresAuth()`](src/lib/auth/requiresAuth.ts) (public routes — landing, login, about, help, contact, brand, terms, updates, verify — are exempt; every page the footer links to belongs on that list, since a broken session is exactly when someone reaches for them): the layout load ([+layout.ts](src/routes/+layout.ts)) redirects when an auth cookie is present but `getClaims()` yields no user (a present-but-invalid session — distinct from an anonymous visitor, who has no cookie and is not redirected); and the `onAuthStateChange` listener in [+layout.svelte](src/routes/+layout.svelte) redirects on a live `SIGNED_OUT` event.
 
 **Contact email + verification (app-level, #27).** Because ORCID carries no email, a scholar's contact email is collected separately and its ownership verified in-app — independent of Supabase auth. `scholars.email` holds only a **verified** address (or null). Two things enforce that, and both are needed: it is written solely by the `verify_email` RPC, and the column privilege to write it is revoked (see Column privileges below).
 

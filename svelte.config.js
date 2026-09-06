@@ -11,10 +11,14 @@ const config = {
 		// Co-located with the Supabase project, which is in AWS us-west-1. The function
 		// defaulted to iad1, so every server-side query was a cross-country round trip
 		// (~130ms); sfo1 makes it ~10ms. The cost is ~60ms of TTFB for eastern and
-		// European visitors, which the prerendered landing page cancels out for the page
-		// most of them arrive on. `regions` belongs here rather than in vercel.json: the
-		// adapter writes it into the function's .vc-config.json, which is what the Build
-		// Output API actually reads.
+		// European visitors. The landing page used to cancel that out by being
+		// prerendered; it is now rendered per request and cached on the CDN for anonymous
+		// visitors instead (see PUBLICLY_CACHEABLE in src/hooks.server.ts), so only the
+		// first visitor in a region pays the round trip and the rest are served locally —
+		// while a signed-in scholar gets a header that is right in the first byte, which
+		// prerendering could not give them. `regions` belongs here rather than in
+		// vercel.json: the adapter writes it into the function's .vc-config.json, which is
+		// what the Build Output API actually reads.
 		adapter: adapter({ regions: ['sfo1'] }),
 		// The default version.name is a build timestamp, so it changes on every
 		// deployment. pollInterval makes the client check for a newer version in the
