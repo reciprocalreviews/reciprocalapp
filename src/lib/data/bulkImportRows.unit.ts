@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
+	alreadyPresent,
 	distinctTypeValues,
 	duplicateAcrossRows,
 	guessTypeAssignments,
@@ -58,10 +59,58 @@ describe('duplicateAcrossRows', () => {
 			[]
 		);
 	});
+
+	// The case a re-exported queue produces: the same manuscript twice in a file
+	// that has it at the venue already. Both rows are skipped, so calling them a
+	// duplicate of each other would block an import with nothing wrong with it.
+	test('ignores rows that are being skipped', () => {
+		expect([
+			...duplicateAcrossRows([row({ externalID: 'A' }), row({ externalID: 'A' })], new Set([0, 1]))
+		]).toEqual([]);
+	});
+
+	// Only one of the two is skipped, so the other collides with nothing.
+	test('does not flag the surviving row when its twin is skipped', () => {
+		expect([
+			...duplicateAcrossRows([row({ externalID: 'A' }), row({ externalID: 'A' })], new Set([0]))
+		]).toEqual([]);
+	});
+});
+
+// Already at the venue is a reason to LEAVE A ROW OUT, not to refuse the batch:
+// a venue's queue is exported again next month still carrying last month's
+// manuscripts, which is the ordinary input rather than a mistake in the file.
+describe('alreadyPresent', () => {
+	test('finds nothing when the venue has none of these IDs', () => {
+		expect([...alreadyPresent([row({ externalID: 'A' })], new Set(['B']))]).toEqual([]);
+	});
+
+	test('flags every row the venue already has', () => {
+		const present = alreadyPresent(
+			[row({ externalID: 'A' }), row({ externalID: 'B' }), row({ externalID: 'C' })],
+			new Set(['A', 'C'])
+		);
+		expect([...present].sort()).toEqual([0, 2]);
+	});
+
+	test('ignores surrounding whitespace when comparing', () => {
+		expect([...alreadyPresent([row({ externalID: '  A  ' })], new Set(['A']))]).toEqual([0]);
+	});
+
+	// The unique index it stands in for is case-sensitive, so this must be too:
+	// saying a row will be skipped and then writing it is worse than either.
+	test('compares case sensitively, like the unique index', () => {
+		expect([...alreadyPresent([row({ externalID: 'abc-1' })], new Set(['ABC-1']))]).toEqual([]);
+	});
+
+	// A blank ID matches nothing and is already reported as a missing external ID.
+	test('ignores blank external IDs', () => {
+		expect([...alreadyPresent([row({ externalID: '  ' })], new Set(['']))]).toEqual([]);
+	});
 });
 
 describe('rowError', () => {
-	const context = { existingExternalIDs: new Set<string>(), duplicates: new Set<number>() };
+	const context = { skipped: new Set<number>(), duplicates: new Set<number>() };
 
 	test('accepts a complete row', () => {
 		expect(rowError(row(), 0, context)).toBeNull();
@@ -75,26 +124,24 @@ describe('rowError', () => {
 		expect(rowError(row({ externalID: ' ' }), 0, context)).toBe('externalID');
 	});
 
-	test('reports a collision with a submission already in the venue', () => {
-		expect(
-			rowError(row({ externalID: 'EXT-1' }), 0, {
-				...context,
-				existingExternalIDs: new Set(['EXT-1'])
-			})
-		).toBe('duplicateExisting');
-	});
-
 	test('reports a collision with another row in the batch', () => {
 		expect(rowError(row(), 2, { ...context, duplicates: new Set([2]) })).toBe('duplicateRow');
 	});
 
-	test('prefers the existing-submission collision over the in-batch one', () => {
-		expect(
-			rowError(row({ externalID: 'EXT-1' }), 0, {
-				existingExternalIDs: new Set(['EXT-1']),
-				duplicates: new Set([0])
-			})
-		).toBe('duplicateExisting');
+	// A row already at the venue is not being written, so nothing about it can be
+	// wrong. It used to report a duplicate, which blocked the whole import.
+	test('says nothing about a row that is being skipped', () => {
+		expect(rowError(row(), 0, { ...context, skipped: new Set([0]) })).toBeNull();
+	});
+
+	// Every rule below it, not just the duplicate ones: a skipped row's blank title
+	// is not a problem the editor has to fix to import the rest of the file.
+	test('says nothing about a skipped row missing its title', () => {
+		expect(rowError(row({ title: '   ' }), 0, { ...context, skipped: new Set([0]) })).toBeNull();
+	});
+
+	test('still reports the rows that are not skipped', () => {
+		expect(rowError(row({ title: '' }), 1, { ...context, skipped: new Set([0]) })).toBe('title');
 	});
 });
 
@@ -229,7 +276,7 @@ describe('rowsFromParsed whitespace', () => {
 
 describe('rowError with person columns', () => {
 	const context = (over: Partial<Parameters<typeof rowError>[2]> = {}) => ({
-		existingExternalIDs: new Set<string>(),
+		skipped: new Set<number>(),
 		duplicates: new Set<number>(),
 		...over
 	});
@@ -256,6 +303,14 @@ describe('rowError with person columns', () => {
 		expect(
 			rowError(row(), 0, context({ duplicates: new Set([0]), personUnresolved: new Set([0]) }))
 		).toBe('duplicateRow');
+	});
+
+	// The row is not being written, so there is nobody to seat and nothing to choose
+	// between. It used to be blocked twice over: skipped rows were duplicates too.
+	test('says nothing about an unresolved person on a skipped row', () => {
+		expect(
+			rowError(row(), 0, context({ skipped: new Set([0]), personUnresolved: new Set([0]) }))
+		).toBeNull();
 	});
 
 	// A caller that offers no person column has nobody to resolve.

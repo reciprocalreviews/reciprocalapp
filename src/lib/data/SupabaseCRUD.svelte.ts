@@ -1783,19 +1783,11 @@ export default class SupabaseCRUD extends CRUD {
 			_import_note: importNote ?? ''
 		});
 
-		if (error) {
-			// 23505 is the unique violation from submissions_venue_externalid_unique: a
-			// manuscript already in this venue. The importer flags those on the row before
-			// submitting, so reaching here means its list of existing IDs was stale -- the
-			// page has been open while somebody else imported, or the same file was
-			// submitted twice. Worth its own message, because the generic one says nothing
-			// about which of the two things went wrong or whether any of it landed.
-			// Postgres names the offending ID in its own detail, which rides along below.
-			const key = rpcErrorKey(error, 'BulkImportSubmissions', {
-				'23505': 'BulkImportDuplicate'
-			});
-			return { error: { message: this.locale.error[key], details: error } };
-		}
+		// No 23505 case: the function skips a manuscript already in this venue rather
+		// than refusing the batch, so a stale list of existing IDs -- the page left open
+		// while somebody else imported -- costs those rows and nothing else.
+		if (error)
+			return { error: { message: this.locale.error.BulkImportSubmissions, details: error } };
 
 		const result = data as {
 			submission_ids: SubmissionID[];
@@ -1805,6 +1797,7 @@ export default class SupabaseCRUD extends CRUD {
 			seated: number;
 			seated_by: Record<ScholarID, number> | null;
 			waiting: number;
+			skipped: number;
 		};
 
 		const imported = result.submission_ids?.length ?? 0;
@@ -1852,7 +1845,8 @@ export default class SupabaseCRUD extends CRUD {
 				submissionIDs: result.submission_ids ?? [],
 				transactionID: result.transaction_id,
 				mintAmount: result.mint_amount,
-				seatedBy
+				seatedBy,
+				skipped: result.skipped ?? 0
 			},
 			notified: notifications
 		};

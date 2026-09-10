@@ -129,6 +129,10 @@ export type BulkImportResult = {
 	submissionIDs: SubmissionID[];
 	transactionID: TransactionID | null;
 	mintAmount: number;
+	/** How many of the submitted rows were already at the venue and so were not
+	 * written. Counted by the database rather than the form, so it also covers rows
+	 * the form did not know about -- a page left open while somebody else imported. */
+	skipped: number;
 	/** How many submissions each scholar was seated on, so the import can tell
 	 * each of them what they now hold in one message rather than one per row. */
 	seatedBy: Record<ScholarID, number>;

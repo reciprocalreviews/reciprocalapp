@@ -386,10 +386,6 @@
             "ApproveTransaction": {
               "type": "string"
             },
-            "BulkImportDuplicate": {
-              "description": "23505 on submissions_venue_externalid_unique: a manuscript in the file is already in this venue. The import is one transaction, so none of it landed.",
-              "type": "string"
-            },
             "BulkImportSubmissions": {
               "type": "string"
             },
@@ -898,7 +894,6 @@
             "UnknownVenue",
             "MissingSubmissionCharge",
             "BulkImportSubmissions",
-            "BulkImportDuplicate",
             "UpdateSubmissionExpertise",
             "UpdateSubmissionTitle",
             "UpdateSubmissionNote",
@@ -1419,6 +1414,10 @@
                       "description": "Shown when parsed records had a different number of cells than the header, which means columns shifted and data was dropped. `{lines}` is the list of lines those records start on.",
                       "type": "string"
                     },
+                    "skipped": {
+                      "description": "Reports a partial import: `{imported}` submissions written and `{skipped}` left out because they were already at the venue. Uses the database's count, so it also names rows the form did not know about.",
+                      "type": "string"
+                    },
                     "twoTopRoles": {
                       "description": "Warns that two of the venue's top-priority roles both have a column, which the database refuses. `{roles}` is the list.",
                       "type": "string"
@@ -1433,7 +1432,8 @@
                     "loaded",
                     "loadedFrom",
                     "pastedSource",
-                    "twoTopRoles"
+                    "twoTopRoles",
+                    "skipped"
                   ],
                   "type": "object"
                 },
@@ -1610,6 +1610,10 @@
                     "mintSummary": {
                       "type": "string"
                     },
+                    "skipping": {
+                      "description": "Says how many rows are already at this venue and so will not be written, so the size of the batch is a decision rather than a discovery. `{count}` rows.",
+                      "type": "string"
+                    },
                     "unseated": {
                       "description": "Says how many submissions will import with nobody in a role, because the names in that column matched no volunteer. `{count}` submissions, `{role}` the venue's own name for the role.",
                       "type": "string"
@@ -1618,6 +1622,7 @@
                   "required": [
                     "intro",
                     "mintSummary",
+                    "skipping",
                     "unseated"
                   ],
                   "type": "object"
@@ -1671,9 +1676,6 @@
                     "invalid": {
                       "additionalProperties": false,
                       "properties": {
-                        "duplicateExisting": {
-                          "type": "string"
-                        },
                         "duplicateRow": {
                           "type": "string"
                         },
@@ -1687,14 +1689,18 @@
                       "required": [
                         "title",
                         "externalID",
-                        "duplicateExisting",
                         "duplicateRow"
                       ],
                       "type": "object"
+                    },
+                    "skipped": {
+                      "description": "Marks a row whose manuscript is already at this venue. Not an error: that row is left out and the rest of the file still imports.",
+                      "type": "string"
                     }
                   },
                   "required": [
-                    "invalid"
+                    "invalid",
+                    "skipped"
                   ],
                   "type": "object"
                 },

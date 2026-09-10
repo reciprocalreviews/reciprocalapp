@@ -544,6 +544,7 @@
 			"paragraph": {
 				"intro": "Import a batch of free submissions that pre-date this venue's launch on Reciprocal Reviews. These submissions will have no authors or payments, but reviewers can bid on them to earn tokens. Submitting this form will also propose a mint transaction sized to fund reviewer compensation, which a minter must approve before reviewers will receive tokens.",
 				"mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens, summed from each submission's type cost.",
+				"skipping": "**{count}** of these are already in this venue and will be skipped.",
 				"unseated": "**{count}** of these will import with no {role}."
 			},
 			"note": {
@@ -559,7 +560,8 @@
 				"loaded": "Read {count} submissions from {name}. Review them below.",
 				"loadedFrom": "{count} submissions read from {name}.",
 				"twoTopRoles": "Two of this venue’s top roles ({roles}) both have a column. A submission can have only one editor, so match a column to just one of them.",
-				"pastedSource": "pasted text"
+				"pastedSource": "pasted text",
+				"skipped": "Imported {imported} submissions. {skipped} were already in this venue and were skipped."
 			},
 			"field": {
 				"title": {
@@ -673,9 +675,9 @@
 				"invalid": {
 					"title": "Title is required.",
 					"externalID": "External ID is required.",
-					"duplicateExisting": "A submission with this external ID already exists in this venue.",
 					"duplicateRow": "Duplicate external ID across rows."
-				}
+				},
+				"skipped": "Already in this venue \u2014 this row will be skipped."
 			},
 			"person": {
 				"ambiguous": "Several people match this name. Choose one:",
@@ -2058,7 +2060,6 @@
 		"UnknownVenue": "Unable to find venue",
 		"MissingSubmissionCharge": "Didn't receive enough charge amounts for the authors given",
 		"BulkImportSubmissions": "Unable to import submissions",
-		"BulkImportDuplicate": "A manuscript ID in this file is already in this venue, so nothing was imported. Reload this page to refresh the list of IDs it already has, then check the rows it flags.",
 		"UpdateSubmissionExpertise": "Unable to update the submission expertise",
 		"UpdateSubmissionTitle": "Unable to update the submission's title",
 		"UpdateSubmissionNote": "Unable to update the submission's note",
