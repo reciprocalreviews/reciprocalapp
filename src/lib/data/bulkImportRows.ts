@@ -73,15 +73,45 @@ export function guessTypeAssignments(
 
 /** Why a row cannot be imported, as a stable key the component maps to locale
  * text. Ordered by which is reported first when several apply. */
-export type RowProblem =
-	'title' | 'externalID' | 'duplicateExisting' | 'duplicateRow' | 'personUnresolved';
+export type RowProblem = 'title' | 'externalID' | 'duplicateRow' | 'personUnresolved';
+
+/** Indices of rows whose external ID is already a submission at this venue.
+ *
+ * These are SKIPPED, not refused. An export of a venue's queue is re-exported
+ * next month still carrying last month's manuscripts, so an overlap with what is
+ * already here is the normal case for this feature rather than a mistake in the
+ * file. Refusing the batch over it meant the only way to import the new rows was
+ * to delete the old ones by hand first.
+ *
+ * Blank IDs are left out: they cannot match anything, and they are already
+ * reported as a missing external ID. Trimmed and case-sensitive, the same
+ * comparison submissions_venue_externalid_unique makes. */
+export function alreadyPresent(rows: ImportRow[], existingExternalIDs: Set<string>): Set<number> {
+	const present = new Set<number>();
+	rows.forEach((r, i) => {
+		const id = r.externalID.trim();
+		if (id.length > 0 && existingExternalIDs.has(id)) present.add(i);
+	});
+	return present;
+}
 
 /** Indices of rows whose external ID collides with another row in the batch.
  * Blank IDs are skipped — they are already reported as a missing external ID,
- * and treating every blank row as a duplicate of every other would bury that. */
-export function duplicateAcrossRows(rows: ImportRow[]): Set<number> {
+ * and treating every blank row as a duplicate of every other would bury that.
+ *
+ * Unlike a row already at the venue, this one blocks. Two rows claiming one ID
+ * may carry different titles or editors, and choosing between them would discard
+ * something the file states — the same reason the import refuses rather than
+ * de-duplicates two people seated in one role.
+ *
+ * `skip` names rows that are not being imported, which are not candidates for
+ * colliding with anything: two rows both already at the venue are both skipped,
+ * and calling that an in-file duplicate on top would block an import that has
+ * nothing wrong with it. */
+export function duplicateAcrossRows(rows: ImportRow[], skip?: Set<number>): Set<number> {
 	const seen = new Map<string, number[]>();
 	rows.forEach((r, i) => {
+		if (skip?.has(i)) return;
 		const id = r.externalID.trim();
 		if (id.length === 0) return;
 		if (!seen.has(id)) seen.set(id, []);
@@ -99,16 +129,20 @@ export function rowError(
 	row: ImportRow,
 	index: number,
 	context: {
-		existingExternalIDs: Set<string>;
+		/** Rows that are already at the venue and so are not being imported. */
+		skipped: Set<number>;
 		duplicates: Set<number>;
 		/** Rows naming somebody the venue could not identify. Optional, since a
 		 * caller that offers no person column has nobody to resolve. */
 		personUnresolved?: Set<number>;
 	}
 ): RowProblem | null {
+	// Nothing about a row that is not being imported can be wrong, so a skipped row
+	// with a blank title or an editor nobody could pick between reports nothing and
+	// blocks nothing. Checked first, ahead of every rule below.
+	if (context.skipped.has(index)) return null;
 	if (row.title.trim().length === 0) return 'title';
 	if (row.externalID.trim().length === 0) return 'externalID';
-	if (context.existingExternalIDs.has(row.externalID.trim())) return 'duplicateExisting';
 	if (context.duplicates.has(index)) return 'duplicateRow';
 	// Last, so the checks that were here first keep reporting first: a row missing
 	// its title has a more basic problem than one whose editor could not be named.

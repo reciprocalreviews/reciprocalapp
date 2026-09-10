@@ -169,3 +169,85 @@ test('a completed import leaves the form empty', async ({ page, context }) => {
 
 	await logout(page);
 });
+
+// The bug this pins: a file that overlaps what the venue already has could not be
+// imported at all. An already-present external ID was a row ERROR, and the submit
+// button required every row to be error-free -- so re-importing a queue that still
+// carried last month's manuscripts meant deleting those rows by hand first. They are
+// now skipped, and everything else in the file lands.
+test('a manuscript already in the venue is skipped, and the rest still imports', async ({
+	page,
+	context
+}) => {
+	await login('editor@uni.edu', page, context);
+
+	const stamp = Date.now();
+	const existing = `import-skip-existing-${stamp}`;
+	const fresh = `import-skip-new-${stamp}`;
+
+	// First, put the overlapping manuscript in the venue.
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+	await page.getByTestId('bulk-import-paste').fill(`title,externalid\nAlready here,${existing}`);
+	await page.getByTestId('bulk-import-parse').click();
+	await page.getByTestId('bulk-import-submit').click();
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+	await expect(page.getByText(existing)).toBeVisible();
+
+	// Now import a file carrying it again, alongside one the venue has never seen.
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+	await page
+		.getByTestId('bulk-import-paste')
+		.fill(`title,externalid\nAlready here,${existing}\nBrand new,${fresh}`);
+	await page.getByTestId('bulk-import-parse').click();
+	await expect(page.getByTestId('import-row-1-externalid')).toHaveValue(fresh);
+
+	// The overlapping row says it will be skipped -- and says it as a notice rather
+	// than an error, because there is nothing here for the editor to fix.
+	await expect(page.getByTestId('import-row-0-skipped')).toBeVisible();
+	await expect(page.getByTestId('import-row-1-skipped')).toHaveCount(0);
+
+	// The batch is sized to what will actually be written: one submission, not two.
+	// Counting the skipped row here would propose a mint funding a manuscript that
+	// already exists and was already funded once.
+	await expect(page.getByText('Importing 1 submissions')).toBeVisible();
+
+	// The whole point: the form is submittable.
+	await page.getByTestId('bulk-import-submit').click();
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+	await expect(page.getByText(fresh)).toBeVisible();
+
+	// And the manuscript that was already here was not duplicated.
+	await expect(page.getByText(existing, { exact: true })).toHaveCount(1);
+
+	await logout(page);
+});
+
+// A file whose every row is already here has nothing to write, so the button stays
+// inactive rather than sending a batch the database would answer with nothing. The
+// skip line is what explains why.
+test('a file that is entirely already imported cannot be submitted', async ({ page, context }) => {
+	await login('editor@uni.edu', page, context);
+
+	const external = `import-all-skipped-${Date.now()}`;
+
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+	await page.getByTestId('bulk-import-paste').fill(`title,externalid\nOnly one,${external}`);
+	await page.getByTestId('bulk-import-parse').click();
+	await page.getByTestId('bulk-import-submit').click();
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+
+	// The same file again.
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+	await page.getByTestId('bulk-import-paste').fill(`title,externalid\nOnly one,${external}`);
+	await page.getByTestId('bulk-import-parse').click();
+
+	await expect(page.getByTestId('import-row-0-skipped')).toBeVisible();
+	await expect(page.getByText('1 of these are already in this venue')).toBeVisible();
+	await expect(page.getByTestId('bulk-import-submit')).toBeDisabled();
+
+	await logout(page);
+});

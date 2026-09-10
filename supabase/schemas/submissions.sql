@@ -341,7 +341,7 @@ alter publication supabase_realtime
 add table submissions;
 
 --------------------------------------
--- RPC (authoritative definition from migration 20260905000000_bulk_import_person_column)
+-- RPC (authoritative definition from migration 20260910000000_bulk_import_skip_duplicates)
 create or replace function public.bulk_import_submissions (
 	_venueid uuid,
 	_submissions jsonb,
@@ -375,6 +375,7 @@ declare
     _row_priority_zero boolean;
     _seated_by jsonb := '{}'::jsonb;
     _waiting integer := 0;
+    _skipped integer := 0;
 begin
     _admin_id := (select auth.uid());
 
@@ -462,7 +463,33 @@ begin
             (_row->>'submission_type')::uuid,
             nullif(_row->>'note', ''),
             true
-        ) returning id into _new_submission_id;
+        ) on conflict (venue, externalid) do nothing
+        returning id into _new_submission_id;
+
+        -- Already at this venue: skip the row and carry on with the batch.
+        --
+        -- An export of a venue's queue is exported again next month still carrying last
+        -- month's manuscripts, so an overlap with what is already here is the ordinary
+        -- shape of this feature's input rather than a mistake in the file. Without this,
+        -- submissions_venue_externalid_unique raised 23505 and rolled the whole import
+        -- back, and the only way to import the new rows was to delete the old ones from
+        -- the file by hand. The form flags these rows before submitting and leaves them
+        -- out; this clause is what makes a list of existing IDs that has gone stale --
+        -- the page left open while somebody else imported -- cost those rows and nothing
+        -- else.
+        --
+        -- Targeted at (venue, externalid) rather than a bare `do nothing`, so any other
+        -- unique violation is still an error rather than a submission that silently
+        -- vanishes from the batch.
+        --
+        -- `continue` lands ahead of the people loop, the sole-editor fallback, the
+        -- waiting count and the mint: a row that was not written seats nobody, is not
+        -- waiting for an editor, and funds nothing.
+        if not found then
+            _skipped := _skipped + 1;
+            continue;
+        end if;
+
         _submission_ids := _submission_ids || _new_submission_id;
 
         -- A row may name one person per venue role. An export carrying both an
@@ -630,7 +657,8 @@ begin
         'editor', _editor,
         'seated', _seated,
         'seated_by', _seated_by,
-        'waiting', _waiting
+        'waiting', _waiting,
+        'skipped', _skipped
     );
 end;
 $function$;

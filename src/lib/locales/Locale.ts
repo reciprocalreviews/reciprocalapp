@@ -407,6 +407,10 @@ export type LocaleText = {
 			paragraph: {
 				intro: string;
 				mintSummary: string;
+				/** Says how many rows are already at this venue and so will not be
+				 * written, so the size of the batch is a decision rather than a
+				 * discovery. `{count}` rows. */
+				skipping: string;
 				/** Says how many submissions will import with nobody in a role,
 				 * because the names in that column matched no volunteer. `{count}`
 				 * submissions, `{role}` the venue's own name for the role. */
@@ -443,6 +447,10 @@ export type LocaleText = {
 				/** Warns that two of the venue's top-priority roles both have a
 				 * column, which the database refuses. `{roles}` is the list. */
 				twoTopRoles: string;
+				/** Reports a partial import: `{imported}` submissions written and
+				 * `{skipped}` left out because they were already at the venue. Uses the
+				 * database's count, so it also names rows the form did not know about. */
+				skipped: string;
 			};
 			field: {
 				title: TextFieldText;
@@ -497,9 +505,11 @@ export type LocaleText = {
 				invalid: {
 					title: string;
 					externalID: string;
-					duplicateExisting: string;
 					duplicateRow: string;
 				};
+				/** Marks a row whose manuscript is already at this venue. Not an error:
+				 * that row is left out and the rest of the file still imports. */
+				skipped: string;
 			};
 			type: {
 				/** Heading for matching the file's own type names to the venue's. */
@@ -1699,9 +1709,6 @@ export type LocaleText = {
 		UnknownVenue: string;
 		MissingSubmissionCharge: string;
 		BulkImportSubmissions: string;
-		/** 23505 on submissions_venue_externalid_unique: a manuscript in the file is
-		 * already in this venue. The import is one transaction, so none of it landed. */
-		BulkImportDuplicate: string;
 		UpdateSubmissionExpertise: string;
 		UpdateSubmissionTitle: string;
 		UpdateSubmissionNote: string;

@@ -16,6 +16,7 @@
 	import { getDB } from '$lib/data/CRUD';
 	import type { VenueCommitment } from '$lib/data/SupabaseCRUD.svelte';
 	import {
+		alreadyPresent,
 		distinctTypeValues,
 		duplicateAcrossRows,
 		guessTypeAssignments,
@@ -168,7 +169,25 @@
 
 	const existingIDSet = $derived(new Set(existingExternalIDs));
 
-	const duplicates = $derived(duplicateAcrossRows(rows));
+	/** Rows already at this venue. Skipped rather than refused -- see alreadyPresent
+	 * -- so they are left out of the payload, the mint, and every row rule below. */
+	const skipped = $derived(alreadyPresent(rows, existingIDSet));
+
+	/** The rows that will actually be written. Everything sized by the batch reads
+	 * this rather than `rows`: a summary counting submissions that cannot land, and
+	 * a mint funding them, is a promise the import does not keep. */
+	const importable = $derived(rows.filter((_, index) => !skipped.has(index)));
+
+	const duplicates = $derived(duplicateAcrossRows(rows, skipped));
+
+	/** Whether to say this row is already here. Suppressed while importing for the
+	 * same reason rowError is: `handle` refetches the page's data on success, which
+	 * lands the just-imported IDs in `existingExternalIDs` while this table is still
+	 * showing the rows that produced them -- turning the whole batch into skip
+	 * notices for the seconds before the navigation. */
+	function rowSkipped(index: number): boolean {
+		return !importing && skipped.has(index);
+	}
 
 	/** The row rules live in $lib/data/bulkImportRows; this maps the problem they
 	 * report onto the locale text for it. */
@@ -181,7 +200,7 @@
 		// of the batch that in fact just succeeded.
 		if (importing) return null;
 		const problem = rowProblem(row, index, {
-			existingExternalIDs: existingIDSet,
+			skipped,
 			duplicates,
 			personUnresolved
 		});
@@ -193,7 +212,7 @@
 		return (l) => l.page.bulkImport.row.invalid[problem];
 	}
 
-	const mintAmount = $derived(mintTotal(rows, submissionTypes));
+	const mintAmount = $derived(mintTotal(importable, submissionTypes));
 
 	const ignoredColumns = $derived(
 		csvHeaders.length === 0 ? [] : unmappedHeaders(csvHeaders, mapping, roleColumns)
@@ -340,15 +359,20 @@
 			.filter(({ count }) => count > 0)
 	);
 
+	/** Whether the import can be submitted. Requires at least one row that will
+	 * actually be written: a file whose every row is already here has nothing to
+	 * send, and the RPC refuses an empty batch. */
 	const allRowsValid = $derived(
-		rows.every(
-			(r, i) =>
-				rowProblem(r, i, {
-					existingExternalIDs: existingIDSet,
-					duplicates,
-					personUnresolved
-				}) === null
-		) && duplicateTopRoles.length < 2
+		importable.length > 0 &&
+			rows.every(
+				(r, i) =>
+					rowProblem(r, i, {
+						skipped,
+						duplicates,
+						personUnresolved
+					}) === null
+			) &&
+			duplicateTopRoles.length < 2
 	);
 
 	/** Rows seating one person in two roles. Allowed — they did both jobs — but
@@ -855,6 +879,19 @@
 				/>
 			</td>
 		</tr>
+		<!-- Skipped, not refused: this manuscript is already at the venue, so the row
+	     is left out of the batch and everything else in the file still imports. -->
+		{#if rowSkipped(index)}
+			<tr>
+				<td colspan={7 + matchedRoles.length}>
+					<Feedback
+						warning
+						testid="import-row-{index}-skipped"
+						text={(l) => l.page.bulkImport.row.skipped}
+					/>
+				</td>
+			</tr>
+		{/if}
 		{#if err}
 			<tr>
 				<td colspan={7 + matchedRoles.length}>
@@ -892,9 +929,19 @@
 <Paragraph
 	text={(l) =>
 		l.page.bulkImport.paragraph.mintSummary
-			.replaceAll('{count}', rows.length.toString())
+			.replaceAll('{count}', importable.length.toString())
 			.replaceAll('{total}', mintAmount.toString())}
 />
+
+<!-- Said once for the batch as well as on each row: the table can run to hundreds
+     of rows, and how many of them this import is actually going to write is the
+     number the editor is deciding on. -->
+{#if skipped.size > 0}
+	<Paragraph
+		text={(l) =>
+			l.page.bulkImport.paragraph.skipping.replaceAll('{count}', skipped.size.toString())}
+	/>
+{/if}
 
 <!-- Importing without editors should be something the editor decided, not
      something they notice afterwards. This is the whole reason an unmatched name
@@ -923,12 +970,20 @@
 			importing = true;
 			let imported = false;
 			try {
-				imported = Boolean(
-					await handle(
-						db().bulkImportSubmissions(
-							venue.id,
-							rows.map((r, index) => {
-								return {
+				// Read before the await rather than inside the payload builder: `skipped`
+				// is derived from `existingExternalIDs`, which `handle` refetches, and what
+				// is sent has to be what the table showed when the button was clicked.
+				const leaveOut = new Set(skipped);
+				const result = await handle(
+					db().bulkImportSubmissions(
+						venue.id,
+						// flatMap rather than map: a row already at this venue is left out
+						// entirely, while `index` stays each row's own so personMatches still
+						// lines up with it.
+						rows.flatMap((r, index) => {
+							if (leaveOut.has(index)) return [];
+							return [
+								{
 									title: r.title.trim(),
 									externalID: r.externalID.trim(),
 									previousID: r.previousID.trim() === '' ? null : r.previousID.trim(),
@@ -940,12 +995,26 @@
 									people: Object.entries(personMatches[index]).flatMap(([role, m]) =>
 										m.status === 'resolved' ? [{ person: m.id, person_role: role }] : []
 									)
-								};
-							}),
-							importNote.trim() === '' ? null : importNote.trim()
-						)
+								}
+							];
+						}),
+						importNote.trim() === '' ? null : importNote.trim()
 					)
 				);
+				imported = Boolean(result);
+				// The database's count, not `leaveOut.size`: it also covers rows this form
+				// did not know were here -- the page left open while somebody else imported
+				// -- which are the ones the editor has had no other warning about.
+				if (typeof result === 'object' && result.skipped > 0)
+					addFeedback(
+						locale()
+							.page.bulkImport.feedback.skipped.replaceAll(
+								'{imported}',
+								result.submissionIDs.length.toString()
+							)
+							.replaceAll('{skipped}', result.skipped.toString()),
+						'success'
+					);
 			} finally {
 				// In a `finally` so a throw cannot strand the form: the rows are still
 				// there and still correct, and the editor has to be able to try again.
