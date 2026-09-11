@@ -226,7 +226,9 @@ test('an expired link offers a resend to its owner, and sign-in to everyone else
 	await login(R5.email, page, context);
 	await page.goto(`/verify/${raw}`);
 	await page.waitForLoadState('networkidle');
-	await expect(page.getByTestId('verify-expired')).toBeVisible();
+	// One notice, not two: the component's names the address, so the page's generic
+	// "this link has expired" is suppressed rather than stacked on top of it.
+	await expect(page.getByTestId('verify-expired')).toBeHidden();
 	await expect(page.getByTestId('verify-email-expired')).toContainText('lapsed@uni.edu');
 	const resend = page.getByTestId('verify-email-resend');
 	await expect(resend).toBeEnabled();

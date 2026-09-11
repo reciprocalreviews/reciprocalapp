@@ -249,7 +249,6 @@
 			"title": "Verify email",
 			"verified": "Your email is verified. You'll now receive Reciprocal Reviews notifications.",
 			"expired": "This verification link has expired.",
-			"expiredSignedIn": "Send yourself a new one:",
 			"expiredSignedOut": "Sign in, and you can send yourself a new one from your profile.",
 			"invalid": "This verification link is invalid or has already been used.",
 			"error": "Something went wrong verifying your email. Please try again.",

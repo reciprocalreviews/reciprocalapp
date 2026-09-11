@@ -24,7 +24,11 @@ const config: PlaywrightTestConfig = {
 		// everywhere, and nothing in end2end/ needs it: every email assertion reads
 		// the `emails` table directly with the `sql()` helper (the verification
 		// token is pulled out of `emails.args`), never a delivered message, and
-		// `send_email()`'s pg_net POST is best-effort and swallows its own failure.
+		// `send_email()`'s pg_net POST is best effort and never rolls back its caller.
+		// It no longer swallows its failure silently, though: delivery is recorded on
+		// the row (#164), so every send in this suite is genuinely marked failed. That
+		// is why `end2end/global-setup.ts` unschedules `reconcile-email-delivery` for
+		// the run — see the note there.
 		//
 		// If you want mail logged to the console while developing, run `npm start`
 		// in another terminal — that path still serves functions.

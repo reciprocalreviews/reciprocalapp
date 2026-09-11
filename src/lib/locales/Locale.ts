@@ -1149,10 +1149,10 @@ export type LocaleText = {
 			verified: string;
 			/** Shown when the token has expired (the 24-hour window elapsed). */
 			expired: string;
-			/** Follows `expired` for a signed-in visitor, who gets a resend button below it. */
-			expiredSignedIn: string;
-			/** Follows `expired` for a signed-out visitor. Resending needs a session — the
-			 * RPC's EXECUTE is revoked from anon — so the only next step is signing in. */
+			/** Follows `expired` when there is nothing to resend from here. Resending needs a
+			 * session — the RPC's EXECUTE is revoked from anon — so the only next step is
+			 * signing in. A visitor who CAN resend sees the component's own notice instead,
+			 * which names the address; showing both stated one fact three times. */
 			expiredSignedOut: string;
 			/** Shown when the token is unknown or already used. */
 			invalid: string;

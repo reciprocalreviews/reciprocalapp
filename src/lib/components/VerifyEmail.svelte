@@ -171,7 +171,12 @@
 				text={(l) => l.component.verifyEmail.feedback.pending}
 				inputs={{
 					email: pendingEmail,
-					expires: new Date(waiting.expires_at).toLocaleString()
+					// Date and time, no seconds: this is a 24-hour deadline, and a countdown
+					// to the second reads as precision the number does not have.
+					expires: new Date(waiting.expires_at).toLocaleString(undefined, {
+						dateStyle: 'medium',
+						timeStyle: 'short'
+					})
 				}}
 			/>
 		{/if}

@@ -5574,12 +5574,8 @@
                   "description": "Shown when the token has expired (the 24-hour window elapsed).",
                   "type": "string"
                 },
-                "expiredSignedIn": {
-                  "description": "Follows `expired` for a signed-in visitor, who gets a resend button below it.",
-                  "type": "string"
-                },
                 "expiredSignedOut": {
-                  "description": "Follows `expired` for a signed-out visitor. Resending needs a session — the RPC's EXECUTE is revoked from anon — so the only next step is signing in.",
+                  "description": "Follows `expired` when there is nothing to resend from here. Resending needs a session — the RPC's EXECUTE is revoked from anon — so the only next step is signing in. A visitor who CAN resend sees the component's own notice instead, which names the address; showing both stated one fact three times.",
                   "type": "string"
                 },
                 "invalid": {
@@ -5606,7 +5602,6 @@
                 "title",
                 "verified",
                 "expired",
-                "expiredSignedIn",
                 "expiredSignedOut",
                 "invalid",
                 "error",

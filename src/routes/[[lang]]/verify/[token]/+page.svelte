@@ -31,16 +31,20 @@
 	{#if data.status === 'verified'}
 		<Feedback testid="verify-verified" text={(l) => l.page.verify.verified} />
 	{:else if data.status === 'expired'}
-		<Feedback error testid="verify-expired" text={(l) => l.page.verify.expired} />
 		{#if resendable}
 			<!-- A dead end until now: the copy said "request a new one from your profile",
 			     and the row this needs had just been deleted. Both are fixed, so the next
-			     step is here rather than three navigations away. -->
-			<Feedback text={(l) => l.page.verify.expiredSignedIn} />
+			     step is here rather than three navigations away.
+			     
+			     No generic "this link has expired" above it: the component's own notice says
+			     the same thing and names the address, and stacking both made the page state
+			     one fact three times over. -->
 			<VerifyEmail pending={data.pending} />
 		{:else}
-			<!-- Resending needs a session: request_email_verification is authenticated-only,
-			     and it acts on auth.uid() rather than on the token. -->
+			<!-- Nothing to resend from here — either there is no session (resending acts on
+			     auth.uid(), not on the token) or the request is gone. Say what happened, then
+			     point at the one place it can be fixed. -->
+			<Feedback error testid="verify-expired" text={(l) => l.page.verify.expired} />
 			<Feedback text={(l) => l.page.verify.expiredSignedOut} />
 		{/if}
 	{:else if data.status === 'error'}
