@@ -183,6 +183,37 @@ select
 alter table public.emails
 enable trigger send_on_email_insert;
 
+-- Seed both secrets first, so that deleting ONE of them is what this asserts on.
+-- supabase/config.toml seeds these locally from the environment, but the RLS CI job runs
+-- `supabase start` with no env file and has neither — and send_email names supabase_url
+-- ahead of secret_key when both are missing, so without this the test passes locally and
+-- fails in CI on the wrong branch. (email_verifications_rls.sql seeds site_url for the same
+-- reason.) Values are never dialled: the branch under test returns before any post.
+select
+	vault.create_secret ('http://127.0.0.1:54321', 'supabase_url')
+where
+	not exists (
+		select
+			1
+		from
+			vault.secrets
+		where
+			name = 'supabase_url'
+	);
+
+select
+	vault.create_secret ('sb_secret_placeholder', 'secret_key')
+where
+	not exists (
+		select
+			1
+		from
+			vault.secrets
+		where
+			name = 'secret_key'
+	);
+
+-- Now remove exactly one, so the message has to name that one.
 delete from vault.secrets
 where
 	name = 'secret_key';
