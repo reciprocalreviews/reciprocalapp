@@ -82,6 +82,15 @@ describe('renderEmail', () => {
 		expect(message).not.toContain('[:]');
 	});
 
+	// The lifetime is decided by public.email_verifications.expires_at, but prose cannot read
+	// a column default, so the number is stated in this template too. This is the assertion
+	// that keeps the two from drifting into telling a scholar the wrong deadline — the SQL
+	// half is pinned by supabase/tests/rls/email_verifications_rls.sql.
+	it('tells the recipient how long the verification link lasts', () => {
+		const { message } = renderEmail('VerifyEmail', ['https://reciprocal.reviews/verify/abc123']);
+		expect(message).toContain('24 hours');
+	});
+
 	it('substitutes every occurrence of a placeholder, not just the first', () => {
 		const { message } = renderEmail('RoleInvite', ['Reviewer', 'venue-id', 'Venue', 'scholar-id']);
 		// $2 appears once and $4 once, but $1/$3 are what we can see repeated in prose;

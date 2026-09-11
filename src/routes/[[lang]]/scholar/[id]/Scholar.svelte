@@ -28,7 +28,7 @@
 	import Tip from '$lib/components/Tip.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import VerifyEmail from '$lib/components/VerifyEmail.svelte';
-	import { getDB } from '$lib/data/CRUD';
+	import { getDB, type PendingEmailVerification } from '$lib/data/CRUD';
 	import { orcidURL } from '$lib/data/ORCID';
 	import { handle } from '$routes/feedback.svelte';
 	import type Scholar from '$lib/data/Scholar.svelte';
@@ -53,7 +53,8 @@
 		reviews,
 		approvals,
 		compensating,
-		notifications
+		notifications,
+		pendingEmail
 	}: {
 		scholar: Scholar;
 		commitments: {
@@ -83,6 +84,9 @@
 		 * themselves — the RLS policy hides everyone else's — and only deviations from the
 		 * default are stored, so an absent row means the notice is on. */
 		notifications: NotificationSettingRow[] | null;
+		/** What this scholar is waiting to verify, if anything (#27). Like `notifications`,
+		 * only ever populated for the scholar themselves: the RPC answers for auth.uid(). */
+		pendingEmail: PendingEmailVerification | null;
 	} = $props();
 
 	const db = getDB();
@@ -168,7 +172,7 @@
 			testid="email-onboarding"
 			text={(l) => l.page.scholar.feedback.addEmail}
 		/>
-		<VerifyEmail />
+		<VerifyEmail pending={pendingEmail} />
 	{/if}
 
 	{#if editable}
@@ -288,7 +292,7 @@
 
 		{#if scholar.getEmail() !== null}
 			<Subheader icon={SettingsLabel} text={(l) => l.page.scholar.header.settings}></Subheader>
-			<VerifyEmail current={scholar.getEmail()} />
+			<VerifyEmail current={scholar.getEmail()} pending={pendingEmail} />
 
 			<!-- Only shown once there is a verified address: there is nothing to opt out of
 			     before mail can reach you at all. -->

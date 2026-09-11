@@ -242,25 +242,38 @@ export type Database = {
         Row: {
           candidate_email: string
           created_at: string
+          email_id: string | null
           expires_at: string
           scholar: string
           token_hash: string
+          verified_at: string | null
         }
         Insert: {
           candidate_email: string
           created_at?: string
+          email_id?: string | null
           expires_at?: string
           scholar: string
           token_hash: string
+          verified_at?: string | null
         }
         Update: {
           candidate_email?: string
           created_at?: string
+          email_id?: string | null
           expires_at?: string
           scholar?: string
           token_hash?: string
+          verified_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "email_verifications_email_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "emails"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "email_verifications_scholar_fkey"
             columns: ["scholar"]
@@ -274,11 +287,15 @@ export type Database = {
         Row: {
           args: Json
           cc: string[] | null
+          delivery: string | null
+          delivery_at: string | null
+          delivery_detail: string | null
           email: string
           event: string
           id: string
           message: string | null
           reply_to: string | null
+          request_id: number | null
           scholar: string | null
           sender: string | null
           subject: string | null
@@ -288,11 +305,15 @@ export type Database = {
         Insert: {
           args?: Json
           cc?: string[] | null
+          delivery?: string | null
+          delivery_at?: string | null
+          delivery_detail?: string | null
           email: string
           event: string
           id?: string
           message?: string | null
           reply_to?: string | null
+          request_id?: number | null
           scholar?: string | null
           sender?: string | null
           subject?: string | null
@@ -302,11 +323,15 @@ export type Database = {
         Update: {
           args?: Json
           cc?: string[] | null
+          delivery?: string | null
+          delivery_at?: string | null
+          delivery_detail?: string | null
           email?: string
           event?: string
           id?: string
           message?: string | null
           reply_to?: string | null
+          request_id?: number | null
           scholar?: string | null
           sender?: string | null
           subject?: string | null
@@ -1332,6 +1357,7 @@ export type Database = {
         }
         Returns: Json
       }
+      pending_email_verification: { Args: never; Returns: Json }
       propose_thanks: {
         Args: { _message: string; _submission: string }
         Returns: Json
@@ -1358,6 +1384,7 @@ export type Database = {
         }
         Returns: number
       }
+      reconcile_email_delivery: { Args: never; Returns: Json }
       reconcile_ledger: { Args: { _since?: string }; Returns: Json }
       replay_audit_log: {
         Args: { _dry_run?: boolean; _from_seq?: number }

@@ -1147,8 +1147,13 @@ export type LocaleText = {
 			title: string;
 			/** Shown when the token was valid and the email is now verified. */
 			verified: string;
-			/** Shown when the token has expired (15-minute window elapsed). */
+			/** Shown when the token has expired (the 24-hour window elapsed). */
 			expired: string;
+			/** Follows `expired` for a signed-in visitor, who gets a resend button below it. */
+			expiredSignedIn: string;
+			/** Follows `expired` for a signed-out visitor. Resending needs a session — the
+			 * RPC's EXECUTE is revoked from anon — so the only next step is signing in. */
+			expiredSignedOut: string;
 			/** Shown when the token is unknown or already used. */
 			invalid: string;
 			/** Shown when the verification RPC itself failed. */
@@ -1569,9 +1574,25 @@ export type LocaleText = {
 			};
 			button: {
 				send: ButtonText;
+				/** Ask for a fresh link for the address already pending. */
+				resend: ButtonText;
+				/** Abandon the pending address and type a different one. */
+				different: ButtonText;
 			};
 			feedback: {
 				sent: string;
+				/** A link is out and still live — shown on every visit, not just the one
+				 * that sent it, since the request now outlives the page that made it. */
+				pending: string;
+				/** The link went unused long enough to lapse. Not an error: the next step
+				 * is one button away. */
+				expired: string;
+				/** The message never left the building (public.emails.delivery), so waiting
+				 * for it is pointless. */
+				undelivered: string;
+				/** Seconds left on the one-minute cooldown, counted down beside a disabled
+				 * resend button so the limit is never hit as an error. */
+				wait: string;
 				/** Fallback when the server gave no recognizable reason. */
 				error: string;
 				unchanged: string;
@@ -1590,6 +1611,7 @@ export type LocaleText = {
 		UpdateScholarName: string;
 		UpdateScholarEmail: string;
 		VerifyEmail: string;
+		LoadPendingEmailVerification: string;
 		UpdateScholarAvailability: string;
 		LoadNotificationSettings: string;
 		UpdateNotificationSetting: string;

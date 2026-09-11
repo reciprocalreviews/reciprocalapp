@@ -4,6 +4,7 @@
 	import { ScholarLabel } from '$lib/components/Labels';
 	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
+	import VerifyEmail from '$lib/components/VerifyEmail.svelte';
 	import Text from '$lib/locales/Text.svelte';
 	import { getAuth } from '../../../Auth.svelte';
 
@@ -19,6 +20,11 @@
 			invalidate('supabase:auth');
 		}
 	});
+
+	// Whether there is a pending request this visitor is entitled to resend. The server
+	// load only asks when the link expired, and only gets an answer for a signed-in
+	// caller, so this is false for everyone else.
+	let resendable = $derived(data.pending !== null && data.pending.pending);
 </script>
 
 <Page icon={ScholarLabel} title={(l) => l.page.verify.title}>
@@ -26,6 +32,17 @@
 		<Feedback testid="verify-verified" text={(l) => l.page.verify.verified} />
 	{:else if data.status === 'expired'}
 		<Feedback error testid="verify-expired" text={(l) => l.page.verify.expired} />
+		{#if resendable}
+			<!-- A dead end until now: the copy said "request a new one from your profile",
+			     and the row this needs had just been deleted. Both are fixed, so the next
+			     step is here rather than three navigations away. -->
+			<Feedback text={(l) => l.page.verify.expiredSignedIn} />
+			<VerifyEmail pending={data.pending} />
+		{:else}
+			<!-- Resending needs a session: request_email_verification is authenticated-only,
+			     and it acts on auth.uid() rather than on the token. -->
+			<Feedback text={(l) => l.page.verify.expiredSignedOut} />
+		{/if}
 	{:else if data.status === 'error'}
 		<Feedback error testid="verify-error" text={(l) => l.page.verify.error} />
 	{:else}

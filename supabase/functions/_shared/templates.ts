@@ -231,10 +231,14 @@ export const Emails = {
 	// Contact-email ownership verification (#27). Sent through the normal branded pipeline
 	// directly to the (still unverified) candidate address — the one message we're allowed
 	// to send to an unverified email. $1 is the verification URL.
+	//
+	// The 24 hours below restates public.email_verifications.expires_at, which is the source
+	// of truth for it. Prose cannot read a column default, so the number lives in both places
+	// on purpose; src/email/templates.unit.ts asserts this half.
 	VerifyEmail: {
 		subject: 'Verify your Reciprocal Reviews contact email',
 		paragraphs: [
-			'Confirm this address to receive Reciprocal Reviews notifications. This link expires in 15 minutes:',
+			'Confirm this address to receive Reciprocal Reviews notifications. This link expires in 24 hours:',
 			'$1',
 			'If you did not request this, you can safely ignore this email.'
 		],
