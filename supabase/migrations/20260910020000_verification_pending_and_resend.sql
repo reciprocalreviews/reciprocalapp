@@ -1,100 +1,71 @@
 --------------------------------------
--- TABLE
--- App-level contact-email verification (#27). This is deliberately independent of
--- Supabase auth: scholars authenticate with ORCID (which does not release an email),
--- so we collect a contact email separately and verify ownership ourselves. The
--- invariant that makes the rest of the app simple: public.scholars.email holds only a
--- VERIFIED address (or null) — this table holds the pending, not-yet-verified candidate
--- and a hash of the emailed token. On successful verification the candidate is copied
--- into scholars.email; until then the previously verified email (if any) is preserved.
+-- Contact-email verification: 24-hour links, persistent pending state, and a resend (#27).
 --
--- The raw token lives only in the emailed URL; we store just its sha256 hash. There is
--- at most one active request per scholar (primary key on scholar), so re-requesting
--- (resend, or changing to a different address) simply replaces it and resets the clock.
-create extension if not exists pgcrypto
-with
-	schema extensions;
+-- Three faults compounded here. The link lived 15 minutes, measured from the moment the row
+-- was written rather than the moment the mail arrived — with a best-effort pg_net POST, an
+-- edge function cold start, Resend's queue and the recipient's greylisting all in between.
+-- There was no resend affordance anywhere: request_email_verification has always BEEN the
+-- resend path (its upsert on the scholar primary key resets the token and clock), but the
+-- only way to reach it was to retype the address. And verify_email DELETED the row on expiry,
+-- which — with this table under deny-all RLS and no read RPC — left the application with no
+-- memory that a verification had ever been requested. A scholar who missed the window came
+-- back to an empty form and no sign of which address was waiting.
+--
+-- This migration: raises the lifetime to 24 hours; keeps the row after BOTH endings and adds
+-- verified_at to tell them apart; links each request to the public.emails row its link went
+-- out in so delivery failure can be surfaced; and adds public.pending_email_verification() so
+-- the interface can show what is pending and offer to send it again.
+--
+-- Also closes an erasure gap this change makes findable — see forget_scholar below.
+--
+-- Paired with supabase/schemas/email_verifications.sql and supabase/schemas/erasures.sql.
+-- Must run AFTER 20260910010000_email_delivery_status.sql: email_id has a foreign key to
+-- public.emails(id), and pending_email_verification() reads public.emails.delivery.
+--------------------------------------
+-- 15 minutes -> 24 hours. Restated in the insert inside request_email_verification below;
+-- a pgTAP assertion pins the two to each other.
+alter table public.email_verifications
+alter column expires_at
+set default (now() + interval '24 hours');
 
-create table if not exists public.email_verifications (
-	-- The scholar requesting verification; one active request each.
-	scholar uuid not null,
-	-- sha256 hex hash of the raw token that was emailed.
-	token_hash text not null,
-	-- The unverified address awaiting confirmation.
-	candidate_email text not null,
-	-- When the request was made. Also the cooldown clock and, for the interface, the
-	-- "we sent this N minutes ago" the scholar sees.
-	created_at timestamp with time zone default now() not null,
-	-- When the link expires: 24 hours, raised from 15 minutes (#27). Fifteen minutes was
-	-- shorter than the gap between reading a notification on a phone and getting back to a
-	-- computer, and it was measured from the moment the row was written rather than from
-	-- the moment the mail arrived -- with a best-effort pg_net POST, an edge function cold
-	-- start, Resend's queue and the recipient's greylisting all in between. And because the
-	-- request row was DELETED on expiry, the scholar who missed the window arrived at a dead
-	-- end: an empty form with no memory that they had already asked. Both halves of that are
-	-- fixed here; this is the first half.
-	--
-	-- Restated in two places that cannot read a column default: the email body
-	-- (supabase/functions/_shared/templates.ts, VerifyEmail) and the help article
-	-- (src/routes/[[lang]]/help/articles/your-contact-email.md). The value written in
-	-- request_email_verification below is pinned to this one by a pgTAP assertion in
-	-- supabase/tests/rls/email_verifications_rls.sql; the prose is pinned by
-	-- src/email/templates.unit.ts. Nothing can pin prose to a column default, so the number
-	-- is stated four times on purpose and checked three.
-	expires_at timestamp with time zone default (now()+interval '24 hours') not null,
-	-- When this candidate was confirmed, or null while it is still pending.
-	--
-	-- Needed because the row now outlives BOTH of its endings. It is kept after success
-	-- (verification has always been idempotent, so a mail scanner's prefetch cannot burn the
-	-- link) and, as of this change, kept after expiry too -- because deleting it destroyed
-	-- the only record that this scholar had ever asked for anything, which is exactly the
-	-- state a "send it again" button hangs on. With the row surviving both, its mere
-	-- existence no longer answers "is something pending?". This column does.
-	verified_at timestamp with time zone,
-	-- The public.emails row this request's link went out in, so a scholar can be told when
-	-- the message never left the building (public.emails.delivery).
-	--
-	-- The pointer goes THIS way on purpose. That email row is deliberately attributed to
-	-- nobody -- null scholar, null sender -- so that no branch of the emails SELECT policy
-	-- matches it and the requester cannot read the token back out of `args`. Pointing from
-	-- here to there adds no policy branch and changes nothing about that; and
-	-- public.pending_email_verification() returns only the coarse delivery status, never
-	-- this id, precisely so a later change cannot be tempted to "helpfully" join on it.
-	email_id uuid
-);
+-- Pending is now `verified_at is null`, not "a row exists": the row survives success (so a
+-- mail scanner's prefetch cannot burn the link) and, as of this migration, survives expiry
+-- too (so there is something for a Resend button to hang on).
+alter table public.email_verifications
+add column if not exists verified_at timestamp with time zone;
 
-alter table public.email_verifications OWNER to "postgres";
+-- Which public.emails row carried this request's link, so its delivery status can be read
+-- back. ON DELETE SET NULL rather than CASCADE: the mail log is evidence and the pending
+-- request is state — losing the pointer should cost a delivery status, not the verification.
+alter table public.email_verifications
+add column if not exists email_id uuid;
 
-alter table only public.email_verifications
-add constraint "email_verifications_pkey" primary key ("scholar");
+alter table public.email_verifications
+drop constraint if exists email_verifications_email_fkey;
 
-alter table only public.email_verifications
-add constraint "email_verifications_scholar_fkey" foreign KEY ("scholar") references public.scholars ("id") on delete cascade;
+alter table public.email_verifications
+add constraint email_verifications_email_fkey foreign key (email_id) references public.emails (id) on delete set null;
 
--- ON DELETE SET NULL rather than CASCADE: the mail log is evidence and the pending request
--- is state. Losing the pointer should cost the scholar a delivery status, not their pending
--- verification.
-alter table only public.email_verifications
-add constraint "email_verifications_email_fkey" foreign KEY ("email_id") references public.emails ("id") on delete set null;
-
-create index email_verifications_token_hash_index on public.email_verifications using btree (token_hash);
-
-grant all on table public.email_verifications to "anon";
-
-grant all on table public.email_verifications to "authenticated";
-
-grant all on table public.email_verifications to "service_role";
+-- Backfill, and NOT optional. The row has always been kept on success, so every project has
+-- rows here whose candidate was confirmed under code that recorded nothing. Without this they
+-- would read as pending forever, and every such scholar would open their profile to be told a
+-- link is on its way for an address they verified weeks ago. A local `npm run reset` will not
+-- reveal that; only a database with history will.
+--
+-- created_at rather than now(): we do not know when they confirmed, but we do know it was not
+-- this moment, and the request time is the closest defensible answer.
+update public.email_verifications v
+set
+	verified_at = v.created_at
+from
+	public.scholars s
+where
+	s.id = v.scholar
+	and s.email is not null
+	and lower(s.email) = lower(v.candidate_email)
+	and v.verified_at is null;
 
 --------------------------------------
--- SECURITY
--- Enable RLS with NO policies for anon/authenticated: all direct access is denied.
--- The table holds a secret token hash and an unverified address, so it is reachable
--- only through the SECURITY DEFINER RPCs below (owner postgres).
-alter table public.email_verifications ENABLE row LEVEL SECURITY;
-
---------------------------------------
--- FUNCTIONS
---
 -- request_email_verification: create (or replace) a pending verification for the
 -- authenticated scholar and QUEUE the branded email. Returns nothing: the raw token never
 -- leaves the database. An earlier version returned it to the browser, which let anyone
@@ -211,6 +182,7 @@ from
 grant
 execute on function public.request_email_verification (text) to authenticated;
 
+--------------------------------------
 -- verify_email: consume a token. Callable by anon because the link may be clicked while
 -- logged out. Validates the token and its expiry; on success copies the candidate into
 -- scholars.email. Returns a discriminated status so the verify page can render distinct UI.
@@ -379,3 +351,167 @@ from
 
 grant
 execute on function public.pending_email_verification () to authenticated;
+
+--------------------------------------
+-- forget_scholar: redact the verification email too.
+--
+-- The VerifyEmail row is attributed to NOBODY — null scholar, null sender, so that no branch
+-- of the emails SELECT policy matches it and the requester cannot read the token back out of
+-- `args`. That is a deliberate security property, and it meant the existing redaction pass,
+-- keyed on exactly those two columns, never touched it: an erased scholar's unverified
+-- candidate address survived in `email` and the raw verification URL in `args`, indefinitely.
+-- email_verifications.email_id, added above, is what makes it findable.
+create or replace function public.forget_scholar (_scholar uuid) returns jsonb language plpgsql security definer
+set
+	search_path='' as $$
+declare
+	_placeholder text := 'erased-' || _scholar || '@invalid';
+	_emails int;
+	_copied int;
+	_audit int;
+	_old_email text;
+begin
+	if _scholar is null then
+		raise exception 'forget_scholar requires a scholar id';
+	end if;
+
+	-- Captured BEFORE the scholars row below is scrubbed. Mail where this scholar was
+	-- merely copied, or was the person replies went to, is reachable only by address:
+	-- emails.cc and emails.reply_to hold addresses, and neither is matched by the
+	-- scholar/sender scrub further down.
+	select email into _old_email from public.scholars where id = _scholar;
+
+	-- The identity behind the account. The row stays so the foreign keys hold, but
+	-- nothing in it points at a person any more, and the credentials are destroyed
+	-- so the account cannot be used again.
+	update auth.users
+	set
+		email = _placeholder,
+		phone = null,
+		encrypted_password = null,
+		raw_user_meta_data = '{}'::jsonb,
+		raw_app_meta_data = '{}'::jsonb,
+		confirmation_token = '',
+		recovery_token = '',
+		email_change = ''
+	where id = _scholar;
+
+	-- ORCID is the login identity; `status` is free text the scholar wrote about
+	-- themselves and can name anyone.
+	update public.scholars
+	set
+		name = null,
+		email = null,
+		orcid = null,
+		-- Erasure destroys the identity, so it must destroy the privilege with it. A
+		-- tombstone that is still a steward appears on the public /about list as
+		-- "anonymous", still satisfies isSteward(), and would satisfy set_steward's
+		-- last-steward guard on behalf of a uuid nobody can sign into — letting the
+		-- last real steward be demoted while nobody is left who can act.
+		steward = false,
+		-- Emptied rather than nulled: `status` is NOT NULL. It is free text the
+		-- scholar wrote about themselves and can name anyone, so it has to go.
+		status = '',
+		available = false
+	where id = _scholar;
+
+	-- The verification email itself. It is attributed to NOBODY — null scholar, null sender,
+	-- so that no branch of the emails SELECT policy matches it and the requester cannot read
+	-- the token back out of `args` — which means the redaction pass below, keyed on exactly
+	-- those two columns, has never touched it. An erased scholar's unverified candidate
+	-- address therefore survived in `email`, and the raw verification URL in `args`,
+	-- indefinitely. email_verifications.email_id is what makes it findable (#27).
+	--
+	-- Runs BEFORE the delete below, because it reads the row being deleted.
+	update public.emails
+	set
+		email = _placeholder,
+		args = '[]'::jsonb
+	where
+		id in (
+			select email_id from public.email_verifications
+			where scholar = _scholar and email_id is not null
+		);
+
+	-- A pending verification holds an address that was never even confirmed.
+	delete from public.email_verifications where scholar = _scholar;
+
+	-- Queued and sent mail carries the address and, in `args`, rendered values that
+	-- can include their name. The row stays as evidence that a message was sent;
+	-- its contents do not.
+	update public.emails
+	set
+		email = _placeholder,
+		subject = null,
+		message = null,
+		args = '[]'::jsonb,
+		-- Mail addressed TO this scholar may also have copied others and named a third
+		-- party as its reply address. Neither belongs to the erased scholar, but both are
+		-- contents of a message whose contents are being destroyed.
+		cc = null,
+		reply_to = null
+	where scholar = _scholar or sender = _scholar;
+	get diagnostics _emails = row_count;
+
+	-- Mail about SOMEBODY ELSE that merely copied this scholar, or that replied to them.
+	-- The rest of the row belongs to other people and stays; only this scholar's address
+	-- leaves it. Without this pass an erased address survived indefinitely in notices about
+	-- other scholars — the exact thing erasure exists to prevent.
+	if _old_email is not null then
+		update public.emails
+		set
+			cc = nullif(array_remove(cc, _old_email), '{}'::text[]),
+			reply_to = case when reply_to = _old_email then null else reply_to end
+		where (cc is not null and _old_email = any (cc))
+			or reply_to = _old_email;
+		get diagnostics _copied = row_count;
+	else
+		_copied := 0;
+	end if;
+
+	-- audit_log keeps WHOLE rows, so every edit this scholar's profile ever
+	-- received contains their name and address. Scrub the payloads and the actor,
+	-- leaving which table changed and when — the append-only guard permits exactly
+	-- this much and nothing more.
+	perform set_config('app.erasure', 'on', true);
+
+	update public.audit_log
+	set
+		before = case when before is not null then '{}'::jsonb end,
+		after = case when after is not null then '{}'::jsonb end
+	where tbl = 'scholars' and row_id = _scholar;
+	get diagnostics _audit = row_count;
+
+	update public.audit_log set actor = null where actor = _scholar;
+
+	-- token_events.actor is the only field here that names a person; the ownership
+	-- columns are left untouched, because the ledger is reconstructed from them.
+	update public.token_events set actor = null where actor = _scholar;
+
+	perform set_config('app.erasure', '', true);
+
+	insert into public.erasures (subject, completed_at)
+	values (_scholar, now())
+	on conflict (subject) do update set completed_at = now();
+
+	return jsonb_build_object(
+		'scholar', _scholar,
+		'emails_scrubbed', _emails,
+		-- Reported separately from emails_scrubbed: these rows were not scrubbed, only
+		-- de-addressed, and the receipt should not imply that mail about other people was
+		-- emptied out.
+		'emails_uncopied', _copied,
+		'audit_payloads_scrubbed', _audit
+	);
+end;
+$$;
+
+alter function public.forget_scholar (uuid) OWNER to "postgres";
+
+revoke
+execute on function public.forget_scholar (uuid)
+from
+	public,
+	anon,
+	authenticated,
+	service_role;

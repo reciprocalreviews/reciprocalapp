@@ -73,6 +73,15 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// since the controls are rendered only for the scholar themselves.
 	const { data: notifications } = await db.getNotificationSettings(scholarID);
 
+	// What, if anything, this scholar is waiting to verify (#27). Only when they are
+	// looking at their own profile: the RPC answers for auth.uid() regardless of whose
+	// page is open, so asking on someone else's would spend a round trip to render
+	// nothing. Read here rather than in the component so the pending notice is in the
+	// first byte, with no flash of "nothing pending" on the way.
+	const { data: pendingEmail } = viewingSelf
+		? await db.getPendingEmailVerification()
+		: { data: null };
+
 	return {
 		commitments: volunteers,
 		venues,
@@ -87,6 +96,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		reviews: reviews,
 		approvals: approvals,
 		compensating: compensating,
-		notifications: notifications
+		notifications: notifications,
+		pendingEmail
 	};
 };

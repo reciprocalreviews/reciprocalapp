@@ -239,12 +239,22 @@
                 "button": {
                   "additionalProperties": false,
                   "properties": {
+                    "different": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Abandon the pending address and type a different one."
+                    },
+                    "resend": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Ask for a fresh link for the address already pending."
+                    },
                     "send": {
                       "$ref": "#/definitions/ButtonText"
                     }
                   },
                   "required": [
-                    "send"
+                    "send",
+                    "resend",
+                    "different"
                   ],
                   "type": "object"
                 },
@@ -259,8 +269,16 @@
                       "description": "Fallback when the server gave no recognizable reason.",
                       "type": "string"
                     },
+                    "expired": {
+                      "description": "The link went unused long enough to lapse. Not an error: the next step is one button away.",
+                      "type": "string"
+                    },
                     "notConfigured": {
                       "description": "This deployment has no `site_url` vault secret, so no link can be built. A configuration fault, not something the scholar can retry into working.",
+                      "type": "string"
+                    },
+                    "pending": {
+                      "description": "A link is out and still live — shown on every visit, not just the one that sent it, since the request now outlives the page that made it.",
                       "type": "string"
                     },
                     "sent": {
@@ -272,10 +290,22 @@
                     },
                     "unchanged": {
                       "type": "string"
+                    },
+                    "undelivered": {
+                      "description": "The message never left the building (public.emails.delivery), so waiting for it is pointless.",
+                      "type": "string"
+                    },
+                    "wait": {
+                      "description": "Seconds left on the one-minute cooldown, counted down beside a disabled resend button so the limit is never hit as an error.",
+                      "type": "string"
                     }
                   },
                   "required": [
                     "sent",
+                    "pending",
+                    "expired",
+                    "undelivered",
+                    "wait",
                     "error",
                     "unchanged",
                     "cooldown",
@@ -595,6 +625,9 @@
             "LoadNotificationSettings": {
               "type": "string"
             },
+            "LoadPendingEmailVerification": {
+              "type": "string"
+            },
             "LoadPreferenceLevel": {
               "type": "string"
             },
@@ -790,6 +823,7 @@
             "UpdateScholarName",
             "UpdateScholarEmail",
             "VerifyEmail",
+            "LoadPendingEmailVerification",
             "UpdateScholarAvailability",
             "LoadNotificationSettings",
             "UpdateNotificationSetting",
@@ -5537,7 +5571,11 @@
                   "type": "string"
                 },
                 "expired": {
-                  "description": "Shown when the token has expired (15-minute window elapsed).",
+                  "description": "Shown when the token has expired (the 24-hour window elapsed).",
+                  "type": "string"
+                },
+                "expiredSignedOut": {
+                  "description": "Follows `expired` when there is nothing to resend from here. Resending needs a session — the RPC's EXECUTE is revoked from anon — so the only next step is signing in. A visitor who CAN resend sees the component's own notice instead, which names the address; showing both stated one fact three times.",
                   "type": "string"
                 },
                 "invalid": {
@@ -5564,6 +5602,7 @@
                 "title",
                 "verified",
                 "expired",
+                "expiredSignedOut",
                 "invalid",
                 "error",
                 "profile",

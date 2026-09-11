@@ -13,6 +13,12 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **The invite field now finds people by name, and several at once.** Type or paste any mix of email addresses, ORCID iDs, and names, separated by commas; everyone each entry matches is offered below the field, and clicking one moves them to the list to be invited and clears the entry that found them. Nothing goes out until you press **Invite**, and only the people on that list are sent to. Someone who already has a record for the role isn't offered, and an entry matching nobody is named without holding up the rest — previously one mistyped address refused the whole batch.
 - **A venue's volunteers can now be narrowed by expertise.** The keywords volunteers have listed appear above the list, most claimed first with a count each, and picking several shows everyone who claims any of them.
 - **Each role now says how many volunteers it is showing**, in parentheses after its name, so a filtered list reports its own size.
+- **A pending email verification now stays on your profile until you finish it**, naming the address waiting, when its link stops working, and a **Send it again** button. The expired-link page offers the same button, so a lapsed link no longer sends you back to retype an address you already typed (#164).
+- **You're now told when a verification email never went out**, rather than being left waiting on a message that was never sent (#164).
+
+### Changed
+
+- **Verification links now last 24 hours instead of 15 minutes.** The old window was measured from the moment we sent, so slow mail delivery could use most of it up before the message arrived (#164).
 
 ### Fixed
 
@@ -36,6 +42,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **A refused import now says a manuscript ID is already in the venue**, and that nothing was imported, rather than only "Unable to import submissions".
 - **The import form is now emptied once its submissions are created.** It kept the batch it had just sent on screen, and then marked every row a duplicate of the submission it had itself just made. Submitting twice while the first import is still going is also refused now.
 - **An import no longer refuses a whole file because some of its manuscripts are already in the venue.** Those rows are marked and skipped, everything else imports, and the proposed mint is sized to only what was written.
+- **Erasing an account now removes its verification emails too.** An address you had typed but never confirmed, and the link sent to it, were both left behind in the mail log (#27).
 
 ## 0.5.3 - 2026-08-31
 

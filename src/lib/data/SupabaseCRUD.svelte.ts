@@ -46,6 +46,7 @@ import CRUD, {
 	type ImportedSubmission,
 	type MarkSubmissionDoneOutcome,
 	type Notification,
+	type PendingEmailVerification,
 	type ReadResult,
 	type Result,
 	type SubmissionBlocker
@@ -706,6 +707,26 @@ export default class SupabaseCRUD extends CRUD {
 		const { error } = await this.client.rpc('request_email_verification', { _email: email });
 		if (error) return this.error('UpdateScholarEmail', error);
 		return {};
+	}
+
+	/** What this scholar is waiting to verify, if anything (#27).
+	 *
+	 * There is no way to read this from the table: email_verifications has RLS enabled
+	 * with no policies, so the RPC is the only door. It answers for auth.uid() and takes
+	 * no argument, so there is no other scholar's row that could be asked for, and it
+	 * returns neither the token hash nor the id of the email that carried the link. */
+	async getPendingEmailVerification(): Promise<ReadResult<PendingEmailVerification | null>> {
+		const { data, error } = await this.client.rpc('pending_email_verification');
+		if (error) {
+			// A caller with no session never reaches the function's own auth check: EXECUTE is
+			// revoked from anon, so Postgres refuses first with 42501. That is not a fault to
+			// report — it is a session that expired between the layout load and this read, and
+			// the layout guard is already redirecting to login. Reporting it would put "unable
+			// to check…" in the log on every routine sign-out.
+			if (error.code === '42501') return { data: null };
+			return { data: null, ...this.error('LoadPendingEmailVerification', error) };
+		}
+		return { data: data as PendingEmailVerification };
 	}
 
 	async getScholarRow(id: ScholarID): Promise<ReadResult<ScholarRow | null>> {

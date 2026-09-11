@@ -93,6 +93,28 @@ export type Result<Type = undefined> = {
  * "something went wrong" for the second needs to tell them apart. */
 export type ReadResult<Type> = { data: Type; error?: DBError };
 
+/** What the caller is currently waiting to verify, if anything (#27) — the shape of
+ * `public.pending_email_verification`'s jsonb.
+ *
+ * Deliberately carries no token, no `emails` row id, and no delivery detail; see that
+ * function's comment for why each is withheld. `delivery` is the coarse status of the
+ * message that carried the link, so the interface can say it never left the building
+ * rather than leaving a scholar waiting on mail that was never sent. */
+export type PendingEmailVerification =
+	| { pending: false }
+	| {
+			pending: true;
+			email: string;
+			created_at: string;
+			expires_at: string;
+			expired: boolean;
+			/** When the database's one-minute cooldown lifts, as an instant, so a countdown
+			 * targets the same moment the RPC starts accepting again rather than re-deriving
+			 * "one minute" here and disagreeing with the database by a second. */
+			resend_after: string;
+			delivery: 'queued' | 'sent' | 'failed' | 'unknown' | null;
+	  };
+
 /** What `ensure_scholar` found when asked to repair the caller's own scholar row.
  * `orcid_conflict` is the one that needs a person: another scholar row already holds
  * this account's ORCID iD, so two accounts are claiming one researcher. */
@@ -283,10 +305,19 @@ export default abstract class CRUD {
 	/** Begin/resend/change contact-email verification for the current scholar (#27).
 	 * Records a pending candidate + token and queues a verification link to `email`,
 	 * entirely inside the database — the raw token is never returned to the client, and
-	 * the caller supplies neither the message body nor the link's origin. Token
-	 * consumption happens in the verify route's server load (see
-	 * src/routes/[[lang]]/verify/[token]) via the anon-callable verify_email RPC. */
+	 * the caller supplies neither the message body nor the link's origin. The link is
+	 * valid for 24 hours. Token consumption happens in the verify route's server load
+	 * (see src/routes/[[lang]]/verify/[token]) via the anon-callable verify_email RPC.
+	 *
+	 * This is also the resend path: the database upserts on the scholar's primary key,
+	 * so calling it again with the same address replaces the token and restarts the
+	 * clock. It refuses a second call within a minute of the last one. */
 	abstract requestEmailVerification(email: string): Promise<Result>;
+
+	/** What, if anything, the current scholar is waiting to verify (#27). Used by load
+	 * functions to render the pending notice and the resend button; the database is the
+	 * only place this state exists, since email_verifications is unreadable directly. */
+	abstract getPendingEmailVerification(): Promise<ReadResult<PendingEmailVerification | null>>;
 
 	/** Export everything the platform holds about a scholar, as one JSON document.
 	 * A scholar may export themselves; a steward may export on their behalf for a

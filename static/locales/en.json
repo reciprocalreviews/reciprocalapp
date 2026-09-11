@@ -248,7 +248,8 @@
 		"verify": {
 			"title": "Verify email",
 			"verified": "Your email is verified. You'll now receive Reciprocal Reviews notifications.",
-			"expired": "This verification link has expired. Request a new one from your profile.",
+			"expired": "This verification link has expired.",
+			"expiredSignedOut": "Sign in, and you can send yourself a new one from your profile.",
 			"invalid": "This verification link is invalid or has already been used.",
 			"error": "Something went wrong verifying your email. Please try again.",
 			"profile": "Go to your profile",
@@ -677,7 +678,7 @@
 					"externalID": "External ID is required.",
 					"duplicateRow": "Duplicate external ID across rows."
 				},
-				"skipped": "Already in this venue \u2014 this row will be skipped."
+				"skipped": "Already in this venue — this row will be skipped."
 			},
 			"person": {
 				"ambiguous": "Several people match this name. Choose one:",
@@ -1279,7 +1280,7 @@
 				"email": {
 					"label": "email",
 					"placeholder": "email",
-					"note": "Your email is where notifications go, and it's visible to others on Reciprocal Reviews so editors can reach you. Saving a new address sends a verification link (valid 15 minutes); you'll receive notifications only after you verify it.",
+					"note": "Your email is where notifications go, and it's visible to others on Reciprocal Reviews so editors can reach you. Saving a new address sends a verification link (valid 24 hours); you'll receive notifications only after you verify it.",
 					"invalid": "Must be a valid email"
 				}
 			},
@@ -1939,10 +1940,22 @@
 				"send": {
 					"tip": "Send a verification link to this address",
 					"label": "Send verification email"
+				},
+				"resend": {
+					"tip": "Send another verification link to this address",
+					"label": "Send it again"
+				},
+				"different": {
+					"tip": "Verify a different address instead",
+					"label": "Use a different address"
 				}
 			},
 			"feedback": {
-				"sent": "We sent a verification link to {email} (valid 15 minutes). It becomes your contact email once you verify it.",
+				"sent": "We sent a verification link to {email} (valid 24 hours). It becomes your contact email once you verify it.",
+				"pending": "We sent a verification link to {email}. It works until {expires} — follow it and that becomes your contact email.",
+				"expired": "The link we sent to {email} expired before it was used. Send yourself another; there is no limit.",
+				"undelivered": "We couldn't deliver the verification link to {email}. Check it for a typo and try again — if it keeps failing, tell the stewards.",
+				"wait": "You just asked for a link. You can ask for another in {seconds}s.",
 				"error": "Unable to send a verification email.",
 				"unchanged": "That's already your contact email — nothing to verify.",
 				"cooldown": "You just requested a link — check your inbox, or try again in a minute.",
@@ -1956,6 +1969,7 @@
 		"UpdateScholarName": "Unable to update your name",
 		"UpdateScholarEmail": "Unable to send a verification email",
 		"VerifyEmail": "Unable to verify your email",
+		"LoadPendingEmailVerification": "Unable to check whether you have an email waiting to be verified",
 		"UpdateScholarAvailability": "Unable to update your availability",
 		"LoadNotificationSettings": "Unable to load your notification settings",
 		"UpdateNotificationSetting": "Unable to change that notification setting",

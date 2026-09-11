@@ -130,6 +130,24 @@ begin
 		available = false
 	where id = _scholar;
 
+	-- The verification email itself. It is attributed to NOBODY — null scholar, null sender,
+	-- so that no branch of the emails SELECT policy matches it and the requester cannot read
+	-- the token back out of `args` — which means the redaction pass below, keyed on exactly
+	-- those two columns, has never touched it. An erased scholar's unverified candidate
+	-- address therefore survived in `email`, and the raw verification URL in `args`,
+	-- indefinitely. email_verifications.email_id is what makes it findable (#27).
+	--
+	-- Runs BEFORE the delete below, because it reads the row being deleted.
+	update public.emails
+	set
+		email = _placeholder,
+		args = '[]'::jsonb
+	where
+		id in (
+			select email_id from public.email_verifications
+			where scholar = _scholar and email_id is not null
+		);
+
 	-- A pending verification holds an address that was never even confirmed.
 	delete from public.email_verifications where scholar = _scholar;
 
