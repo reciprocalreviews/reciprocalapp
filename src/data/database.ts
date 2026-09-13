@@ -434,6 +434,21 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          default_on: boolean
+          key: string
+        }
+        Insert: {
+          default_on?: boolean
+          key: string
+        }
+        Update: {
+          default_on?: boolean
+          key?: string
+        }
+        Relationships: []
+      }
       notification_settings: {
         Row: {
           created_at: string
@@ -455,11 +470,41 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "notification_settings_event_fkey"
+            columns: ["event"]
+            isOneToOne: false
+            referencedRelation: "notification_preferences"
+            referencedColumns: ["key"]
+          },
+          {
             foreignKeyName: "notification_settings_scholar_fkey"
             columns: ["scholar"]
             isOneToOne: false
             referencedRelation: "scholars"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      optional_emails: {
+        Row: {
+          event: string
+          preference: string
+        }
+        Insert: {
+          event: string
+          preference: string
+        }
+        Update: {
+          event?: string
+          preference?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "optional_emails_preference_fkey"
+            columns: ["preference"]
+            isOneToOne: false
+            referencedRelation: "notification_preferences"
+            referencedColumns: ["key"]
           },
         ]
       }
@@ -1321,6 +1366,10 @@ export type Database = {
       }
       currency_holder_counts: { Args: { _currency: string }; Returns: Json }
       decline_thanks: { Args: { _id: string; _reason: string }; Returns: Json }
+      decline_venue_proposal: {
+        Args: { _message: string; _proposal_id: string; _subject: string }
+        Returns: number
+      }
       ensure_scholar: { Args: never; Returns: string }
       erase_scholar: {
         Args: { _note?: string; _scholar?: string }
@@ -1355,6 +1404,10 @@ export type Database = {
         }
         Returns: Json
       }
+      notification_allowed: {
+        Args: { _event: string; _scholar: string }
+        Returns: boolean
+      }
       pending_email_verification: { Args: never; Returns: Json }
       propose_thanks: {
         Args: { _message: string; _submission: string }
@@ -1368,6 +1421,10 @@ export type Database = {
           _scholars?: string[]
         }
         Returns: Json
+      }
+      queue_reminder_email: {
+        Args: { _args: string[]; _event: string; _scholar: string }
+        Returns: number
       }
       queue_steward_email: {
         Args: { _args?: string[]; _event: string }

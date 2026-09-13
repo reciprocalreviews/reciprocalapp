@@ -224,6 +224,7 @@ set
 	'pg_temp' as $$
 declare
 	_row public.email_verifications%rowtype;
+	_previous text;
 begin
 	select * into _row from public.email_verifications
 	where token_hash = encode(extensions.digest(_token, 'sha256'), 'hex');
@@ -262,7 +263,27 @@ begin
 	-- (email link scanner prefetch, or SvelteKit hover-preload) returns 'verified' rather
 	-- than a misleading 'invalid'. A later request replaces this row (upsert on the
 	-- scholar PK).
+	select email into _previous from public.scholars where id = _row.scholar;
+
 	update public.scholars set email = _row.candidate_email where id = _row.scholar;
+
+	-- Tell the address that just stopped receiving this scholar's mail.
+	--
+	-- It is the only party with no other way to find out: the new address gets everything from
+	-- here on, the scholar sees their profile, and the old address simply goes quiet -- which
+	-- is indistinguishable from a takeover. Consequential, so no preference is consulted.
+	--
+	-- Safe to put after the early return above: a repeat fetch inside the validity window
+	-- exits at `verified_at is not null` and never reaches here, so the notice is sent once.
+	-- Nothing is sent on a first-ever verification (_previous is null) or a re-verification of
+	-- the same address.
+	if _previous is not null and _previous <> _row.candidate_email then
+		insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
+		values (
+			'EmailChanged', _row.scholar, null, null, _previous, null, null,
+			to_jsonb(array[_row.candidate_email])
+		);
+	end if;
 
 	-- Stamped rather than deleted, so pending_email_verification() can tell a confirmed row
 	-- from one still waiting. coalesce keeps the FIRST confirmation time under a re-fetch.

@@ -561,13 +561,17 @@ export default abstract class CRUD {
 
 	/** Create a new assignment record. `preferenceid` is meaningful only on bids
 	 * and only when the venue has defined preference levels. */
+	/** Create an assignment. When `approved` is true and `approver` is someone other than the
+	 * assignee, the assignee is emailed the same notice approveAssignment sends — being seated
+	 * here and being approved there are the same news, and only one of them used to say so. */
 	abstract createAssignment(
 		submission: SubmissionID,
 		scholar: ScholarID,
 		role: RoleID,
 		bid: boolean,
 		approved?: boolean,
-		preferenceid?: PreferenceLevelID | null
+		preferenceid?: PreferenceLevelID | null,
+		approver?: ScholarID | null
 	): Promise<Result>;
 
 	/** Update the bidder's preference level on an existing bid assignment. */

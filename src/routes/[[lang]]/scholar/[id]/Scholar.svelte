@@ -9,7 +9,11 @@
 		TransactionRow,
 		VenueRow
 	} from '$data/types';
-	import { OptionalEmails } from '$lib/../email/templates';
+	import {
+		NotificationPreferences,
+		defaultFor,
+		type NotificationSection
+	} from '$lib/../email/templates';
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Cards from '$lib/components/Cards.svelte';
@@ -18,7 +22,14 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Gift from '$lib/components/Gift.svelte';
-	import { ScholarLabel, SettingsLabel, SubmissionLabel, TokenLabel } from '$lib/components/Labels';
+	import {
+		ScholarLabel,
+		SettingsLabel,
+		SubmissionLabel,
+		ThanksLabel,
+		TokenLabel,
+		VenueLabel
+	} from '$lib/components/Labels';
 	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
@@ -96,14 +107,42 @@
 	// Editable if the user is the scholar being viewed.
 	let editable = $derived(auth().getUserID() === scholar.getID());
 
-	/** One control per template the email registry marks `optional`, so a notice becomes
+	/** An icon per notification group. Keyed by the registry's own section names, so a section
+	 * added there without one here is a type error rather than a blank heading. */
+	const NotificationSectionLabels: Record<NotificationSection, string> = {
+		tokens: TokenLabel,
+		reviewing: SubmissionLabel,
+		venues: VenueLabel,
+		community: ThanksLabel
+	};
+
+	/** One control per preference the email registry marks `optional`, so a notice becomes
 	 * silenceable by carrying the flag rather than by anyone remembering to add a checkbox.
-	 * Absence of a row is the default, and the default is on. */
+	 * Grouped because a scholar holds several unrelated relationships to the platform at once
+	 * — they are paid, they review, they run venues — and two dozen controls in one column
+	 * would be unscannable.
+	 *
+	 * Absence of a row means "no opinion", not "on": the default is the registry's, so that a
+	 * notice too frequent to impose can ship off and wait to be asked for. Empty sections are
+	 * dropped rather than rendered as a header with nothing under it. */
 	let notificationControls = $derived(
-		OptionalEmails.map((event) => ({
-			event,
-			on: notifications?.find((setting) => setting.event === event)?.enabled ?? true
-		}))
+		NotificationPreferences.map((group) => ({
+			section: group.section,
+			controls: group.preferences
+				.map((event) => ({
+					event,
+					on:
+						notifications?.find((setting) => setting.event === event)?.enabled ?? defaultFor(event)
+				}))
+				// Sorted by what the row actually says, not by the registry's declaration order,
+				// which is the order the notices happened to be written and means nothing to
+				// someone scanning the list for the one they want to turn off.
+				.sort((a, b) =>
+					locale().page.scholar.notifications.label[a.event].localeCompare(
+						locale().page.scholar.notifications.label[b.event]
+					)
+				)
+		})).filter((group) => group.controls.length > 0)
 	);
 	let anonymous = $derived(editable && scholar.getName() === null);
 </script>
@@ -298,13 +337,42 @@
 			     before mail can reach you at all. -->
 			<Subheader icon={SettingsLabel} text={(l) => l.page.scholar.notifications.header}></Subheader>
 			<Paragraph text={(l) => l.page.scholar.notifications.about} />
-			{#each notificationControls as control (control.event)}
-				<Checkbox
-					on={control.on}
-					change={(on) => db().updateNotificationSetting(scholar.getID(), control.event, on)}
-					label={(l) => l.page.scholar.notifications.label[control.event]}
-					testid="notify-{control.event}"
-				/>
+			{#each notificationControls as group (group.section)}
+				<!-- A level below the Notifications heading above, not a sibling of it: these
+				     name parts of that section rather than sections of their own, and a screen
+				     reader navigating by heading would otherwise be told this page has five
+				     unrelated settings sections.
+				
+				     The id is given rather than derived. Subheader builds one from the heading
+				     text, and "Tokens" here would collide with the balances section's own
+				     id="tokens" above — two elements with one id, so both anchor links land on
+				     the first. -->
+				<Subheader
+					sub
+					id="notifications-{group.section}"
+					icon={NotificationSectionLabels[group.section]}
+					text={(l) => l.page.scholar.notifications.section[group.section]}
+				></Subheader>
+				<!-- The labels below are fragments completing this legend ("Email me when…
+				     someone transfers tokens to me"), so that the phrase is written once per
+				     group rather than twenty-two times.
+				
+				     A fieldset is what makes that safe rather than merely shorter: a legend is
+				     announced along with every control inside it, so someone tabbing onto a
+				     checkbox still hears the whole sentence. Factoring the words into a plain
+				     paragraph would have read fine down the page and left each checkbox saying
+				     half a thing to anyone who arrived at it directly. -->
+				<fieldset>
+					<legend><Text path={(l) => l.page.scholar.notifications.prompt} /></legend>
+					{#each group.controls as control (control.event)}
+						<Checkbox
+							on={control.on}
+							change={(on) => db().updateNotificationSetting(scholar.getID(), control.event, on)}
+							label={(l) => l.page.scholar.notifications.label[control.event]}
+							testid="notify-{control.event}"
+						/>
+					{/each}
+				</fieldset>
 			{/each}
 		{/if}
 
@@ -342,6 +410,26 @@
 </Page>
 
 <style>
+	/* The fieldset is here for its legend, not for a box: the legend is what a screen reader
+	   announces alongside each checkbox inside it, which is what lets the labels be fragments.
+	   So the browser's default border and inset padding are removed and the legend is styled
+	   as the quiet lead-in line it reads as. */
+	fieldset {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing);
+		border: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	legend {
+		padding: 0;
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
+	}
+
 	.privacy {
 		display: flex;
 		flex-wrap: wrap;

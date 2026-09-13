@@ -1020,8 +1020,45 @@ export type LocaleText = {
 			notifications: {
 				header: string;
 				about: string;
+				/** The lead-in each group's controls complete, written once per group rather
+				 * than repeated in every label. It is a fieldset legend, so a screen reader
+				 * announces it with each checkbox — which is what lets the labels below be
+				 * fragments rather than sentences. */
+				prompt: string;
+				/** Headers for the groups the controls are rendered in. The keys are
+				 * `NotificationSectionKeys` in the email registry; a unit test asserts the
+				 * two stay in step. */
+				section: {
+					tokens: string;
+					reviewing: string;
+					venues: string;
+					community: string;
+				};
+				/** Each one completes `prompt` above — "Email me when… someone transfers tokens
+				 * to me" — so they are fragments, not sentences, and start lowercase. */
 				label: {
+					AvailabilityReminder: string;
+					CompensationChanged: string;
+					CompensationRequested: string;
+					ConflictDeclared: string;
+					InviteAccepted: string;
+					NewBid: string;
 					NewVolunteer: string;
+					ProposalSupported: string;
+					SubmissionClaimed: string;
+					SubmissionDone: string;
+					SubmissionsNeedEditors: string;
+					SubmissionsReady: string;
+					ThanksPendingReview: string;
+					ThanksReceived: string;
+					ThanksShared: string;
+					TokensMinted: string;
+					TokensReceived: string;
+					TransactionApproved: string;
+					TransactionsPending: string;
+					VenueApproved: string;
+					VenueDeactivated: string;
+					VolunteerPaused: string;
 				};
 			};
 			status: {
