@@ -382,6 +382,9 @@
 				"unknownVenue": "Unable to find this venue.",
 				"noVolunteers": "No volunteers yet.",
 				"volunteersNotLoaded": "Unable to load volunteers for this venue.",
+				"withheld": "{count} more volunteer(s) in this role are not listed publicly.",
+				"withheldAll": "This venue does not list this role's {count} volunteer(s) publicly.",
+				"partialExport": "This file has only the volunteers you can see. Some of this venue's roles are not listed publicly.",
 				"noneMatching": "No volunteers match this search and these expertise keywords."
 			},
 			"button": {
@@ -1264,7 +1267,7 @@
 				"noTasks": "You have no pending tasks.",
 				"commitmentsNotLoaded": "Unable to load editing volunteering commitments.",
 				"notVolunteeringFirst": "You are not volunteering for any roles yet.",
-				"notVolunteeringThird": "This scholar is not volunteering for any roles yet.",
+				"notVolunteeringThird": "No roles to show for this scholar. Venues choose whether to list their volunteers publicly, so there may be roles here that are not shown.",
 				"volunteeringFirst": "These are your volunteer roles.",
 				"volunteeringThird": "These are this scholar's volunteer roles.",
 				"noName": "Welcome! Edit your name above to set it, then share your reviewing status below so others know your availability.",
@@ -1854,6 +1857,17 @@
 			"options": {
 				"approver": {
 					"label": "what role can approve assignments to this role for a submission, other than the editor?"
+				},
+				"volunteerVisibility": {
+					"label": "who can see this role's volunteers?",
+					"note": "You, the venue's admins and editors, and anyone who approves assignments to this role always see everyone. This decides what everyone else sees on the venue's public volunteers page. Listing people who have completed work publishes the fact that they have completed work here."
+				}
+			},
+			"optionLabels": {
+				"volunteerVisibility": {
+					"all": "everyone",
+					"completed": "only people who have completed work at this venue",
+					"none": "only people who staff this role"
 				}
 			},
 			"headers": {
@@ -1862,6 +1876,8 @@
 				"rationale": "Rationale"
 			},
 			"tip": {
+				"volunteerVisibilityInert": "This role's volunteers are listed publicly whatever you choose here: invitations and the editor role are both status nobody can give themselves. Your choice is saved, and applies if that changes.",
+				"invitedHidesRoster": "This role's volunteers are listed publicly only because it is invite-only. Opening it up will also hide them, as you have asked.",
 				"highestPriority": "This is the venue's top priority role. Scholars assigned it act as editors on a submission: they can approve any assignment on it, edit its author list, and mark it done — which is also how they are compensated. Use the arrows to change which role comes first."
 			},
 			"paragraph": {
@@ -2049,6 +2065,7 @@
 		"EditRoleBidding": "Unable to toggle bidding",
 		"EditRoleDesiredAssignments": "Unable to set desired assignments",
 		"EditRoleAnonymousAuthors": "Unable to toggle anonymous authors",
+		"EditRoleVolunteerVisibility": "Unable to change who can see this role's volunteers",
 		"EditRoleApprover": "Unable to set approver",
 		"CreateRole": "Unable to create new role.",
 		"UpdateRoleName": "Unable to update role name",

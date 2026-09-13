@@ -14,8 +14,14 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get the matching venue's roles.
 	const { data: roles } = await db.getVenueRoles(venueid);
 
-	// Get all volunteers for the venue.
+	// Get all volunteers for the venue. RLS returns only the ones this viewer may
+	// see, which for a restricted role is fewer than there are — see the counts below.
 	const { data: volunteers } = await db.getVenueVolunteers(venueid);
+
+	// How many volunteers each role REALLY has. The rows above are filtered by the
+	// role's volunteer_visibility setting, so counting them would report a different
+	// number to every reader; the counts are public whatever the roster says.
+	const { data: volunteerCounts } = await db.getVenueVolunteerCounts(venueid);
 
 	// See how many tokens the venue possesses. A count, not the rows: the page
 	// only ever showed the number, and a reserve serving a real community is far
@@ -59,6 +65,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		currency,
 		roles,
 		volunteers,
+		volunteerCounts,
 		tokens: tokens,
 		transactionCount,
 		submissionCount,

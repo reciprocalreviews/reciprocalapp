@@ -10,6 +10,7 @@ import {
 	type SupporterID,
 	type VenueID,
 	type VolunteerID,
+	type VolunteerVisibility,
 	type VolunteerRow,
 	type Response,
 	type TokenID,
@@ -448,6 +449,12 @@ export default abstract class CRUD {
 	abstract editRoleAnonymousAuthors(id: RoleID, anonymous: boolean): Promise<Result>;
 	abstract editRoleApprover(id: RoleID, approver: RoleID | null): Promise<Result>;
 	abstract editRoleDesiredAssignments(id: RoleID, bidLimit: number | null): Promise<Result>;
+	/** Who may see this role's volunteers. Inert while the role is invite-only or at
+	 * priority 0 — see the volunteers SELECT policy for why those are exempt. */
+	abstract editRoleVolunteerVisibility(
+		id: RoleID,
+		visibility: VolunteerVisibility
+	): Promise<Result>;
 	abstract reorderRole(role: RoleRow, roles: RoleRow[], direction: -1 | 1): Promise<Result>;
 	abstract deleteRole(id: RoleID): Promise<Result>;
 
@@ -819,6 +826,14 @@ export default abstract class CRUD {
 	): Promise<ReadResult<PreferenceLevelRow[] | null>>;
 
 	abstract getVenueVolunteers(venue: VenueID): Promise<ReadResult<VenueVolunteer[] | null>>;
+	/** How many volunteers each of a venue's roles has, regardless of how many of them
+	 * the viewer may see. A count rather than the rows themselves, because the volunteers
+	 * SELECT policy withholds rows the interface still has to count — the role card
+	 * badge, the venue's dashboard tile, the roster page's headings — and a count taken
+	 * from the filtered rows would mean something different to every reader. */
+	abstract getVenueVolunteerCounts(
+		venue: VenueID
+	): Promise<ReadResult<{ role: RoleID; volunteer_count: number }[] | null>>;
 	abstract getVenueSettingsVolunteers(
 		venue: VenueID
 	): Promise<ReadResult<VenueSettingsVolunteer[] | null>>;

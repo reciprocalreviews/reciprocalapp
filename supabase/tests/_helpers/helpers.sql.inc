@@ -126,12 +126,13 @@ create or replace function tests.create_role (
 	p_priority integer default 0,
 	p_approver uuid default null,
 	p_biddable boolean default false,
-	p_invited boolean default false
+	p_invited boolean default false,
+	p_volunteer_visibility public.volunteer_visibility default 'all'
 ) returns uuid language plpgsql security definer set search_path to '' as $$
 declare new_id uuid := gen_random_uuid();
 begin
-	insert into public.roles (id, venueid, name, invited, biddable, approver, priority)
-	values (new_id, p_venue, 'Test Role', p_invited, p_biddable, p_approver, p_priority);
+	insert into public.roles (id, venueid, name, invited, biddable, approver, priority, volunteer_visibility)
+	values (new_id, p_venue, 'Test Role', p_invited, p_biddable, p_approver, p_priority, p_volunteer_visibility);
 	return new_id;
 end;
 $$;
@@ -189,12 +190,13 @@ create or replace function tests.create_assignment (
 	p_scholar uuid,
 	p_role uuid,
 	p_approved boolean default true,
-	p_bid boolean default false
+	p_bid boolean default false,
+	p_completed boolean default false
 ) returns uuid language plpgsql security definer set search_path to '' as $$
 declare new_id uuid := gen_random_uuid();
 begin
-	insert into public.assignments (id, venue, submission, scholar, role, bid, approved)
-	values (new_id, p_venue, p_submission, p_scholar, p_role, p_bid, p_approved);
+	insert into public.assignments (id, venue, submission, scholar, role, bid, approved, completed)
+	values (new_id, p_venue, p_submission, p_scholar, p_role, p_bid, p_approved, p_completed);
 	return new_id;
 end;
 $$;

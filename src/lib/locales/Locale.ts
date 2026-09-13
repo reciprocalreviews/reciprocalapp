@@ -287,6 +287,17 @@ export type LocaleText = {
 				noVolunteers: string;
 				/** Shown when the search and the expertise keywords together match nobody. */
 				noneMatching: string;
+				/** How many of a role's volunteers this venue does not list publicly. Named
+				 * rather than left as a shorter list, because a roster that is quietly
+				 * partial reads as a complete one. Compared against the role's UNFILTERED
+				 * rows, so searching never reads as withholding. Takes `{count}`. */
+				withheld: string;
+				/** The whole roster is withheld for this role: there is no shorter list to
+				 * show, only a count. Takes `{count}`. */
+				withheldAll: string;
+				/** Warns that the CSV carries only the rows this viewer may see. A partial
+				 * export that looks complete is worse than none. */
+				partialExport: string;
 			};
 			button: {
 				exportCSV: ButtonText;
@@ -1018,6 +1029,14 @@ export type LocaleText = {
 				noTasks: string;
 				commitmentsNotLoaded: string;
 				notVolunteeringFirst: string;
+				/** Deliberately does NOT say the scholar volunteers for nothing, which is
+				 * what it used to say and could not know. A venue may set a role's
+				 * volunteer_visibility so that its roster is not published, and those rows
+				 * simply do not arrive — so an empty list means "nothing to show you" and
+				 * not "nothing to show". The same correction the balances on this page
+				 * already carry, where an empty map "is not the same as 'holds nothing'".
+				 * The first-person string is exempt: a scholar always sees their own
+				 * records, whatever a venue publishes. */
 				notVolunteeringThird: string;
 				volunteeringFirst: string;
 				volunteeringThird: string;
@@ -1468,6 +1487,15 @@ export type LocaleText = {
 		};
 		roles: {
 			tip: {
+				/** Why the volunteer visibility setting is having no effect: the role is
+				 * invite-only, or it is the venue's editor role. Both are status nobody can
+				 * award themselves, so both stay public. The stored choice is kept, and
+				 * takes effect if the role stops being either. */
+				volunteerVisibilityInert: string;
+				/** Warns an admin that unchecking "invite only" will, in the same click,
+				 * hide a roster that was public a moment ago — the visibility setting stops
+				 * being inert. Shown only when that setting is not `all`. */
+				invitedHidesRoster: string;
 				/** Shown to admins on the first role in priority order. Priority zero is not
 				 * just presentation: it is what the database checks when deciding who may
 				 * approve assignments, edit an author list, and mark a submission done. */
@@ -1581,6 +1609,21 @@ export type LocaleText = {
 			};
 			options: {
 				approver: OptionsText;
+				/** Who may see the role's volunteers. The note has to say plainly what each
+				 * choice publishes, because the admin choosing it is deciding on other
+				 * people's behalf and cannot see the result from where they are standing —
+				 * they keep seeing the whole roster whatever they pick. */
+				volunteerVisibility: OptionsText;
+			};
+			/** Labels for the fixed choices of an Options control. `options.approver`
+			 * builds its labels from role names, so this is the first set of them that
+			 * has to be written rather than derived. */
+			optionLabels: {
+				volunteerVisibility: {
+					all: string;
+					completed: string;
+					none: string;
+				};
 			};
 			headers: {
 				type: string;
@@ -1749,6 +1792,7 @@ export type LocaleText = {
 		EditRoleBidding: string;
 		EditRoleDesiredAssignments: string;
 		EditRoleAnonymousAuthors: string;
+		EditRoleVolunteerVisibility: string;
 		EditRoleApprover: string;
 		CreateRole: string;
 		UpdateRoleName: string;

@@ -30,6 +30,7 @@
 		scholar,
 		roles,
 		volunteers,
+		volunteerCounts,
 		tokens,
 		submissionCount,
 		types,
@@ -38,6 +39,16 @@
 
 	const db = getDB();
 	const locale = getLocaleContext();
+
+	/** The venue's real volunteer total. Not `volunteers.length`: those rows are
+	 * filtered by each role's volunteer_visibility, so a signed-out reader would
+	 * otherwise be told a venue with a hidden roster has no volunteers. */
+	let volunteerTotal = $derived(
+		volunteerCounts === null
+			? undefined
+			: volunteerCounts.reduce((total, row) => total + row.volunteer_count, 0)
+	);
+
 	let isAdmin = $derived(scholar !== null && venue !== null && venue.admins.includes(scholar.id));
 	// When false, the venue is payment-free: hide all token/currency/cost/compensation UI.
 	let showPayment = $derived(venue ? !venue.payment_free : true);
@@ -161,7 +172,7 @@
 						]
 					: []),
 				{
-					number: volunteers?.length ?? undefined,
+					number: volunteerTotal,
 					title: 'volunteers',
 					link: `/venue/${venuePath(venue)}/volunteers`
 				},
@@ -295,6 +306,7 @@
 				scholar={scholar?.id}
 				{roles}
 				{volunteers}
+				{volunteerCounts}
 				isAdmin={false}
 				canInvite={isAdmin}
 				{compensation}
