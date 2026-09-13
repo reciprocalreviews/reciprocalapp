@@ -33,7 +33,7 @@ select
 --------------------------------------------------------------------------------
 -- The allowlist: functions that may be called without a session.
 --------------------------------------------------------------------------------
--- Ten of these are RLS policy predicates, and their openness is load-bearing
+-- Eleven of these are RLS policy predicates, and their openness is load-bearing
 -- rather than an oversight. A policy expression is evaluated as the QUERYING
 -- role, so that role needs EXECUTE on every function the policy calls; the
 -- `submissions` SELECT policy is granted to {anon, authenticated} and calls
@@ -42,11 +42,23 @@ select
 -- relationships -- auth.uid(), which is null for anon -- over inputs
 -- (venues.admins, currencies.minters) that are publicly readable anyway.
 --
--- The other two are deliberate product decisions: verify_email is followed from a
+-- can_see_volunteer is the one exception to that last sentence, and the reason it
+-- takes a volunteer ROW ID rather than the (roleid, scholarid) pair it reads like
+-- it wants. Under the 'completed' tier it answers something about a THIRD party --
+-- has this scholar finished work at this venue -- and public.scholars is
+-- world-readable, so the pair form would have been an anon-callable oracle over
+-- every scholar id, reconstructing exactly the reviewing activity token_events and
+-- tokens_as_of are kept from anon to protect. Keyed on the row id, the answer
+-- concerns a row whose id the caller already holds, and holding it they could have
+-- selected the row instead.
+--
+-- The other three are deliberate product decisions: verify_email is followed from a
 -- link in an email before the recipient has signed in, and currency_holder_counts
--- returns only aggregates -- total supply and holder COUNTS, never a balance --
--- which DESIGN.md holds should be public ("the oversight on supply is the public
--- ledger").
+-- and venue_volunteer_counts return only aggregates -- total supply and holder
+-- COUNTS, a role's volunteer COUNT, never a balance and never a name -- which
+-- DESIGN.md holds should be public ("the oversight on supply is the public
+-- ledger"). venue_volunteer_counts exists precisely so that restricting a roster
+-- hides who is on it without hiding how many there are.
 create temporary table anon_allowed (name text primary key);
 
 insert into
@@ -62,8 +74,10 @@ values
 	('can_approve_assignment'),
 	('can_claim_editor_role'),
 	('submission_has_editor'),
+	('can_see_volunteer'),
 	('verify_email'),
-	('currency_holder_counts');
+	('currency_holder_counts'),
+	('venue_volunteer_counts');
 
 --------------------------------------------------------------------------------
 -- 1. Nothing outside the allowlist is reachable without a session.

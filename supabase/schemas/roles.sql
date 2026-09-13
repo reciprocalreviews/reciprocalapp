@@ -1,5 +1,14 @@
 --------------------------------------
 -- Schema
+-- Who may see a role's volunteers when the viewer cannot staff the role. Three
+-- values rather than a boolean because "nobody" and "whoever has earned it" are
+-- different venue policies: a public roster is a credential, and listing someone
+-- who has only ever signed up hands them one they have not earned, while listing
+-- nobody also hides the people who did the work.
+create type public.volunteer_visibility as enum('all', 'completed', 'none');
+
+alter type public.volunteer_visibility OWNER to postgres;
+
 create table if not exists public.roles (
 	-- The unique id of the role
 	id uuid default gen_random_uuid() not null,
@@ -20,7 +29,13 @@ create table if not exists public.roles (
 	-- Whether authors are visible to scholars assigned to a submission
 	anonymous_authors boolean default true not null,
 	-- The number of assignments after which bidding should be turned off. Null for no limit.
-	desired_assignments integer not null default 1
+	desired_assignments integer not null default 1,
+	-- Who may see this role's volunteers, when the viewer neither holds the record
+	-- nor staffs the role. Inert in two cases, both of them status a person cannot
+	-- award themselves: an invite-only role, where the invitation IS the vetting,
+	-- and the venue's priority-0 editor role, which is the venue's public face and
+	-- whose roster the notification fan-out resolves by reading this table.
+	volunteer_visibility public.volunteer_visibility default 'all'::public.volunteer_visibility not null
 );
 
 alter table only public.roles

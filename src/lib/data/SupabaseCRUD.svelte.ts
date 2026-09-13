@@ -30,6 +30,7 @@ import type {
 	VenueID,
 	VenueRow,
 	VolunteerID,
+	VolunteerVisibility,
 	VolunteerRow,
 	ThanksID,
 	ThanksRow,
@@ -195,8 +196,13 @@ function venueVolunteersQuery(client: SupabaseClient<Database>, venue: VenueID) 
 }
 export type VenueVolunteer = QueryData<ReturnType<typeof venueVolunteersQuery>>[number];
 
+// `roles!inner`, not `roles`: PostgREST does not filter PARENT rows on an embedded
+// resource's filter unless the embed is an inner join, so the `.eq` below did nothing
+// and this selected every volunteer row on the platform, capped at `max_rows`. The
+// settings page then filtered client-side, which looked right until a venue's roster
+// ran past the cap. venueVolunteersQuery above always had this right.
 function venueSettingsVolunteersQuery(client: SupabaseClient<Database>, venue: VenueID) {
-	return client.from('volunteers').select('*, roles (venueid)').eq('roles.venueid', venue);
+	return client.from('volunteers').select('*, roles!inner(venueid)').eq('roles.venueid', venue);
 }
 export type VenueSettingsVolunteer = QueryData<
 	ReturnType<typeof venueSettingsVolunteersQuery>
@@ -1211,6 +1217,12 @@ export default class SupabaseCRUD extends CRUD {
 		return this.rows('LoadVolunteer', venueCommitmentsQuery(this.client, venue));
 	}
 
+	async getVenueVolunteerCounts(
+		venue: VenueID
+	): Promise<ReadResult<{ role: RoleID; volunteer_count: number }[] | null>> {
+		return this.rows('LoadVolunteer', this.client.rpc('venue_volunteer_counts', { _venue: venue }));
+	}
+
 	async getVenueAssignments(venue: VenueID): Promise<ReadResult<AssignmentRow[] | null>> {
 		return this.rows(
 			'LoadAssignment',
@@ -1705,6 +1717,10 @@ export default class SupabaseCRUD extends CRUD {
 			{ desired_assignments: desiredAssignments },
 			'EditRoleDesiredAssignments'
 		);
+	}
+
+	async editRoleVolunteerVisibility(id: RoleID, visibility: VolunteerVisibility): Promise<Result> {
+		return this.updateRole(id, { volunteer_visibility: visibility }, 'EditRoleVolunteerVisibility');
 	}
 
 	async editRoleApprover(id: RoleID, approver: RoleID | null) {

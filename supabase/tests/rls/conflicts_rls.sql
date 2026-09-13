@@ -13,7 +13,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(15);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -157,6 +157,29 @@ select is(
 	1,
 	'a non-admin cannot delete a conflict'
 );
+
+-- ---- Volunteer visibility does not break self-declaration ---------------------
+-- The INSERT policy's second branch reads public.volunteers filtered on
+-- conflicts.scholarid rather than auth.uid() -- the only inline read of that table
+-- in another table's policy that is not self-scoped -- so it is gated by the
+-- volunteers SELECT policy, which now depends on a venue setting. The path the UI
+-- actually uses is a scholar declaring their OWN conflict, which reads their own
+-- row and survives. (What narrows is a non-admin declaring a conflict on somebody
+-- else at a restricted role: a path this policy never should have offered, since it
+-- does not check that the caller is the scholar.)
+select tests.clear_authentication();
+update public.roles set volunteer_visibility = 'none' where id = :'role';
+delete from public.conflicts where submissionid = :'sub' and scholarid = :'volunteer';
+
+select tests.authenticate_as(:'volunteer');
+select lives_ok(
+	$$ insert into public.conflicts (submissionid, scholarid, reason)
+	   values ( $$ || quote_literal(:'sub') || $$, $$ || quote_literal(:'volunteer') || $$, 'mine' ) $$,
+	'a scholar can still declare their own conflict when the role publishes nobody'
+);
+
+select tests.clear_authentication();
+update public.roles set volunteer_visibility = 'all' where id = :'role';
 
 -- A volunteer for the venue is still not an admin, so cannot delete either.
 select tests.authenticate_as(:'volunteer');

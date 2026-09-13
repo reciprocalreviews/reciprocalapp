@@ -9,6 +9,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **Your profile now has 22 notification settings rather than one.** Grouped by tokens, reviewing, venues you help run, and proposals and thanks, with the noisier ones off until you ask for them.
 - **RR now emails you when things happen that you would otherwise have to go looking for.** Tokens arriving, a submission of yours finishing review, a role, venue administration, or minting authority granted or taken away, a bid or a conflict on a paper you edit, and an invitation you sent being answered.
 - **A venue's editors can now ask a role's volunteers to bid, in their own words.** The form sits on any biddable role's card, says how many people will receive the message before it goes, and sets replies to come back to whoever sent it.
+- **A role can now choose who its volunteers are listed to:** everyone, only people who have completed work at the venue, or only the people who staff the role. Every role starts at everyone, as before, and the number of volunteers stays public whichever you pick — as do invite-only roles and the venue's editor role, which are listed either way.
 
 ### Changed
 

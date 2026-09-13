@@ -808,3 +808,69 @@ test('a scholar who does not administer the venue is offered no invite field', a
 	await expect(page.getByTestId('role-invite-field-Reviewer')).toHaveCount(0);
 	await expect(page.getByTestId('role-invite-field-Editor')).toHaveCount(0);
 });
+
+test('an editor restricts a role, and the public roster stops naming its volunteers', async ({
+	page,
+	context
+}) => {
+	// The seed's Reviewer role is the venue's only open (not invite-only) role below
+	// priority 0, which is what makes it the one role the setting actually governs:
+	// invite-only roles and the venue's editor role are exempt, because an invitation
+	// and the editor role are both status nobody can award themselves.
+	const ROLE = 'Reviewer';
+
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
+	await page.waitForLoadState('networkidle');
+
+	await page.getByTestId(`role-${ROLE}`).click();
+	await page.getByTestId(`role-settings-${ROLE}`).click();
+
+	await page.getByTestId(`role-volunteer-visibility-${ROLE}`).selectOption('none');
+
+	// Assert against the database rather than the control: the select showing 'none'
+	// only proves the browser redrew it.
+	await expect
+		.poll(() =>
+			sql(`select volunteer_visibility from public.roles where id = '${SEED.roles.reviewer}';`)
+		)
+		.toBe('none');
+
+	// The admin who set it still sees the whole roster — the setting governs the
+	// public view, not the people who staff the role.
+	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
+	await expect(
+		page.getByTestId('volunteer-row-2-0'),
+		'Expect the venue admin to still see the reviewers'
+	).toBeVisible();
+
+	await logout(page);
+
+	// Signed out, the reviewers are gone but the role and its size are not: hiding a
+	// roster must not take the venue's recruiting signal with it.
+	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
+	await page.waitForLoadState('networkidle');
+
+	// "Anne Notation" volunteers for Reviewer and nothing else, so their name
+	// disappearing is a fact about this setting rather than about one of the exempt
+	// roles. Several seed scholars hold the Editor or Associate Editor role as well,
+	// and those rosters stay public whatever Reviewer is set to.
+	await expect(
+		page.getByText('Anne Notation'),
+		'Expect a signed-out visitor not to see a reviewer-only volunteer by name'
+	).toHaveCount(0);
+	await expect(page.getByTestId('volunteer-row-2-0'), 'Expect no reviewer rows at all').toHaveCount(
+		0
+	);
+	await expect(
+		page.getByTestId('volunteer-withheld-2'),
+		'Expect the page to say the roster is withheld rather than omit the role'
+	).toBeVisible();
+	await expect(
+		page.getByTestId('volunteer-row-0-0'),
+		'Expect the editor role, which is exempt, to still name its volunteers'
+	).toBeVisible();
+
+	// Put it back, so this test does not decide what the others see.
+	sql(`update public.roles set volunteer_visibility = 'all' where id = '${SEED.roles.reviewer}';`);
+});

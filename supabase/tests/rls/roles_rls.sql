@@ -10,7 +10,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(14);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -116,6 +116,26 @@ select is(
 	(select name from public.roles where id = :'role'),
 	'Renamed',
 	'an admin of another venue cannot update a role here (no-op)'
+);
+
+-- ---- volunteer_visibility -----------------------------------------------------
+-- The setting is written through the ordinary roles UPDATE policy -- there is no
+-- separate rule for it -- so this asserts it is reachable by the people who own the
+-- role and no one else. What the setting then DOES is volunteers_rls.sql's subject.
+select tests.authenticate_as(:'admin');
+select lives_ok(
+	$$ update public.roles set volunteer_visibility = 'none' where id = $$ || quote_literal(:'role'),
+	'a venue admin can change who may see a role''s volunteers'
+);
+
+-- A non-admin's update is filtered by the using clause: 0 rows, no error.
+select tests.authenticate_as(:'outsider');
+update public.roles set volunteer_visibility = 'all' where id = :'role';
+select tests.clear_authentication();
+select is(
+	(select volunteer_visibility::text from public.roles where id = :'role'),
+	'none',
+	'a non-admin cannot change it (no-op)'
 );
 
 -- ---- DELETE -------------------------------------------------------------------

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type {
 		CompensationRow,
+		RoleID,
 		RoleRow,
 		ScholarID,
 		SubmissionType,
@@ -35,6 +36,7 @@
 		venue,
 		roles,
 		volunteers,
+		volunteerCounts = null,
 		scholar,
 		isAdmin,
 		canInvite = undefined,
@@ -46,6 +48,12 @@
 		scholar: ScholarID | undefined;
 		roles: RoleRow[] | null;
 		volunteers: VolunteerRow[] | null;
+		/** How many volunteers each role really has. `volunteers` above is filtered by
+		 * each role's volunteer_visibility, so its length is what THIS viewer may see
+		 * rather than what is there; every number the cards show comes from here instead.
+		 * Null falls back to counting the visible rows, which is right for the settings
+		 * page, where the viewer is a venue admin and sees them all. */
+		volunteerCounts?: { role: RoleID; volunteer_count: number }[] | null;
 		isAdmin: boolean;
 		/** Whether the viewer may invite scholars to a role, which venue admins may.
 		 * Separate from `isAdmin` because the venue page shows the role cards read-only —
@@ -125,12 +133,14 @@
 	<Cards>
 		{#each roles.toSorted((a, b) => a.priority - b.priority) as role, index (role.id)}
 			{@const roleVolunteers = volunteers?.filter((v) => v.roleid === role.id) ?? []}
+			{@const roleVolunteerCount =
+				volunteerCounts?.find((c) => c.role === role.id)?.volunteer_count ?? roleVolunteers.length}
 			{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}
 			{@const scholarInvited = scholarVolunteer?.accepted === 'invited' && !scholarVolunteer.active}
 			<Card
 				full
 				subheader
-				icon={roleVolunteers.length === 0 ? ScholarLabel : roleVolunteers.length}
+				icon={roleVolunteerCount === 0 ? ScholarLabel : roleVolunteerCount}
 				strings={(l) => {
 					return {
 						header: role.name,
@@ -234,7 +244,7 @@
 
 				<Paragraph
 					text={(l) => l.view.roles.paragraph.volunteersCount}
-					inputs={{ count: (roleVolunteers.length ?? 0).toString(), venue: venuePath(venue) }}
+					inputs={{ count: roleVolunteerCount.toString(), venue: venuePath(venue) }}
 				/>
 
 				{#if scholar}
@@ -254,7 +264,7 @@
 				{/if}
 
 				{#if isAdmin}
-					<RoleSettings {role} {roles} volunteerCount={roleVolunteers.length} />
+					<RoleSettings {role} {roles} volunteerCount={roleVolunteerCount} />
 				{/if}
 			</Card>
 		{:else}

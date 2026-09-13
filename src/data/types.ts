@@ -13,6 +13,9 @@ export type VenueRow = Tables['venues']['Row'];
 export type VenueID = VenueRow['id'];
 export type RoleRow = Tables['roles']['Row'];
 export type RoleID = RoleRow['id'];
+/** Who may see a role's volunteers when the viewer neither holds the record nor
+ * staffs the role. Inert for invite-only and priority-0 roles. */
+export type VolunteerVisibility = Database['public']['Enums']['volunteer_visibility'];
 export type VolunteerRow = Tables['volunteers']['Row'];
 export type VolunteerID = VolunteerRow['id'];
 export type Response = Database['public']['Enums']['invited'];

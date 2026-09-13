@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RoleID, RoleRow } from '$data/types';
+	import type { RoleID, RoleRow, VolunteerVisibility } from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
@@ -8,6 +8,7 @@
 	import { DeleteLabel, SettingsLabel } from '$lib/components/Labels';
 	import Options from '$lib/components/Options.svelte';
 	import Slider from '$lib/components/Slider.svelte';
+	import Tip from '$lib/components/Tip.svelte';
 	import { getDB } from '$lib/data/CRUD';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
@@ -25,6 +26,12 @@
 
 	const db = getDB();
 	const locale = getLocaleContext();
+
+	/** Whether the visibility setting below currently decides anything. Invite-only
+	 * roles and the venue's editor role are exempt in the database, so the control
+	 * would otherwise sit there looking as though it worked. The stored value is
+	 * kept either way — it applies again the moment the role stops being either. */
+	const visibilityInert = $derived(role.invited || role.priority === 0);
 </script>
 
 <Card
@@ -59,6 +66,9 @@
 		change={(on) => db().editRoleInvited(role.id, on)}
 		label={(l) => l.view.roles.checkbox.invited}
 	/>
+	{#if role.invited && role.priority !== 0 && role.volunteer_visibility !== 'all'}
+		<Tip>{locale().view.roles.tip.invitedHidesRoster}</Tip>
+	{/if}
 
 	<Checkbox
 		on={role.anonymous_authors}
@@ -82,6 +92,32 @@
 		immediately={false}
 		change={(value) => handle(db().editRoleDesiredAssignments(role.id, value))}
 	/>
+
+	<Options
+		strings={(l) => l.view.roles.options.volunteerVisibility}
+		value={role.volunteer_visibility}
+		testid="role-volunteer-visibility-{role.name}"
+		options={[
+			{ label: locale().view.roles.optionLabels.volunteerVisibility.all, value: 'all' },
+			{
+				label: locale().view.roles.optionLabels.volunteerVisibility.completed,
+				value: 'completed'
+			},
+			{ label: locale().view.roles.optionLabels.volunteerVisibility.none, value: 'none' }
+		]}
+		onChange={(value) =>
+			handle(
+				db().editRoleVolunteerVisibility(
+					role.id,
+					// The column is NOT NULL and the three options are never empty, so the
+					// undefined Options reserves for its empty choice cannot arrive here.
+					(value ?? 'all') as VolunteerVisibility
+				)
+			)}
+	/>
+	{#if visibilityInert}
+		<Tip>{locale().view.roles.tip.volunteerVisibilityInert}</Tip>
+	{/if}
 
 	<Options
 		strings={(l) => l.view.roles.options.approver}

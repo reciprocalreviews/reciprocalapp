@@ -10,15 +10,23 @@ export const load: PageLoad = async ({ parent }) => {
 
 	const venueid = venue?.id ?? NO_VENUE_ID;
 
-	// The commitments to the venue's roles.
+	// The commitments to the venue's roles. RLS returns only the ones this viewer may
+	// see: a role can publish all of its volunteers, only those who have completed work
+	// at the venue, or none of them.
 	const { data: commitments } = await db.getVenueCommitments(venueid);
 
 	const { data: roles } = await db.getVenueRoles(venueid);
+
+	// How many volunteers each role really has, which stays public whatever the roster
+	// says. Without it the page cannot tell a role nobody has volunteered for from one
+	// whose roster is withheld, and would report the second as the first.
+	const { data: volunteerCounts } = await db.getVenueVolunteerCounts(venueid);
 
 	return {
 		breadcrumbs: venueCrumbs(venue),
 		venue,
 		commitments,
-		roles
+		roles,
+		volunteerCounts
 	};
 };

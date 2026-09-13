@@ -106,16 +106,205 @@ grant all on FUNCTION public.isPriorityZero (_venueid uuid) to authenticated;
 
 grant all on FUNCTION public.isPriorityZero (_venueid uuid) to service_role;
 
+-- The single definition of "may this viewer see this volunteer record". Mirrors
+-- nothing in TypeScript: the roster is read straight from the table, so this
+-- policy is the only place the rule lives.
+--
+-- Keyed on the ROW ID rather than on (roleid, scholarid), which is the signature
+-- it looks like it wants. This function is granted to anon and public.scholars is
+-- world-readable, so a (roleid, scholarid) form would answer, for any scholar id
+-- an anonymous caller cared to try, whether that scholar has completed an
+-- assignment at the venue -- whether or not they volunteer for the role at all.
+-- That is the disclosure public.token_events and public.tokens_as_of already
+-- refuse on the grounds that it leaks reviewing activity venue anonymity is meant
+-- to protect. Taking the row id confines the answer to a row whose id the caller
+-- already holds, and holding it they could have selected the row instead.
+--
+-- SECURITY DEFINER is load-bearing: the branches below read public.volunteers and
+-- public.assignments, and the same tests written inline in the policy would be
+-- gated by those tables' own policies -- public.volunteers by this very one. The
+-- table is owned by postgres and does not FORCE row level security, so the reads
+-- bypass RLS and cannot recurse. Same reason public.can_claim_editor_role and
+-- public.isAuthor are DEFINER.
+--
+-- STABLE because a policy predicate must be; see ARCHITECTURE.md on the
+-- 20260830020000 sweep. It buys less here than usual -- the planner will not
+-- inline a function that is both SECURITY DEFINER and carries a SET clause, and
+-- _volunteer varies per row -- which is why the policy below tests the three cheap
+-- cases inline and reaches this function only for a restricted role.
+--
+-- plpgsql rather than sql, for the same reason public.isConflicted is: a sql body
+-- is parsed and resolved when the function is created, and this one reads
+-- public.assignments, whose schema file loads AFTER this one. A sql body would
+-- create fine during a migration replay and fail when the declarative schema is
+-- rebuilt in dependency order.
+create or replace function public.can_see_volunteer (_volunteer uuid) returns boolean language plpgsql security definer stable
+set
+	"search_path" to '' as $$
+begin
+	return exists (
+		select 1
+		from public.volunteers v
+		join public.roles r on r.id = v.roleid
+		where v.id = _volunteer
+			and (
+				-- Your own record. Load-bearing well beyond courtesy: the submissions
+				-- SELECT policy and the assignments INSERT policy each read
+				-- public.volunteers inline, so both are gated by this policy. Each
+				-- filters to auth.uid(), so this branch is what keeps bidding and
+				-- editor-claiming working at a role that publishes nobody.
+				v.scholarid = (select auth.uid())
+				-- An invitation is vetting nobody can award themselves, so holding an
+				-- invite-only role is earned status and the setting does not apply.
+				or r.invited
+				-- The venue's editors are its public face rather than its grift
+				-- surface. Also load-bearing: emailEditorsOf resolves the editor
+				-- mailing list by reading this table with the CALLER's session, and
+				-- its callers include authors, bidders and reviewers.
+				or r.priority = 0
+				-- The default, and true of every role until an admin opts out. Tested
+				-- before the subquery branches below so the common case never runs one.
+				or r.volunteer_visibility = 'all'
+				-- Whoever staffs the role sees who is available to staff it: the venue's
+				-- admins, its editors, and the holders of the role that approves this
+				-- one. That last branch is venue-wide, which ARCHITECTURE.md records as
+				-- the rule 20260913000000 deliberately removed -- from deciding who may
+				-- ACT on a submission. This is a read of the roster and grants no
+				-- authority; an approver who cannot see the pool cannot seat anyone from
+				-- it.
+				or public.isAdmin (r.venueid)
+				or public.isPriorityZero (r.venueid)
+				or (
+					r.approver is not null
+					and exists (
+						select 1
+						from public.volunteers av
+						where av.roleid = r.approver
+							and av.scholarid = (select auth.uid())
+							and av.accepted = 'accepted'
+					)
+				)
+				-- Otherwise the role's own setting decides. 'completed' means completed
+				-- anywhere at this venue, not only in this role: contributing to the
+				-- venue is what the listing is meant to recognize.
+				--
+				-- Joined through public.roles rather than read from assignments.venue.
+				-- Both columns carry a foreign key, but assignments.venue is a
+				-- denormalized copy the client supplies (createAssignment writes it
+				-- directly) and nothing constrains it to agree with the venue of
+				-- assignments.role -- no check, no trigger, and the INSERT policy never
+				-- compares them. roles.venueid is the authoritative answer, and every
+				-- other authorization rule in the schema reaches the venue the same way.
+				or (
+					r.volunteer_visibility = 'completed'
+					and exists (
+						select 1
+						from public.assignments a
+						join public.roles ar on ar.id = a.role
+						where a.scholar = v.scholarid
+							and ar.venueid = r.venueid
+							and a.completed
+					)
+				)
+			)
+	);
+end;
+$$;
+
+alter function public.can_see_volunteer (_volunteer uuid) OWNER to postgres;
+
+revoke
+execute on function public.can_see_volunteer (_volunteer uuid)
+from
+	public;
+
+grant
+execute on function public.can_see_volunteer (_volunteer uuid) to anon;
+
+grant
+execute on function public.can_see_volunteer (_volunteer uuid) to authenticated;
+
+-- Per-role volunteer counts, regardless of who may see the volunteers themselves.
+--
+-- The policy above withholds rows the interface still has to count: the role card
+-- badge, the "N volunteers" line, the venue's dashboard tile and the roster page's
+-- section headings. A count derived from the filtered rows would quietly mean
+-- something different to every reader, and would take a venue's recruiting signal
+-- away along with the names -- which is not what hiding a roster is for. So this
+-- answers the count and nothing else, the way public.submission_has_editor answers
+-- one bit and public.currency_holder_counts answers an aggregate.
+--
+-- Safe to leave open to anon for the same reason currency_holder_counts is: it
+-- discloses no name and no membership, only a number that is public today.
+--
+-- Counts EVERY row for the role, including inactive rows and declined invitations,
+-- because that is what the interface counts today. Narrowing it would change every
+-- number on the page for every viewer, which is a separate decision.
+create or replace function public.venue_volunteer_counts (_venue uuid) returns table (role uuid, volunteer_count integer) language sql security definer stable
+set
+	"search_path" to '' as $$
+	select r.id, count(v.id)::integer
+	from public.roles r
+	left join public.volunteers v on v.roleid = r.id
+	where r.venueid = _venue
+	group by r.id;
+$$;
+
+alter function public.venue_volunteer_counts (_venue uuid) OWNER to postgres;
+
+revoke
+execute on function public.venue_volunteer_counts (_venue uuid)
+from
+	public;
+
+grant
+execute on function public.venue_volunteer_counts (_venue uuid) to anon;
+
+grant
+execute on function public.venue_volunteer_counts (_venue uuid) to authenticated;
+
 --------------------------------------
 -- Security
 alter table public.volunteers OWNER to postgres;
 
 alter table public.volunteers ENABLE row LEVEL SECURITY;
 
-create policy "anyone can view volunteers" on public.volunteers for
+-- Renamed rather than replaced in place: "anyone can view volunteers" was the
+-- rule as well as the name, and leaving the name on a policy that no longer says
+-- so would make the one place this schema states its rules in prose into the one
+-- place it misstates them.
+--
+-- The three cheap tests are inline rather than left to can_see_volunteer, which
+-- carries them too. public.roles is world-readable, so reading invited, priority
+-- and the setting here discloses nothing and creates no oracle -- and it means a
+-- venue that has not opted in pays one primary-key lookup per row instead of a
+-- function call the planner cannot inline. The function remains the complete
+-- rule; this is a fast path in front of it, not a substitute for it.
+create policy "volunteer visibility follows the role's setting" on public.volunteers for
 select
 	to authenticated,
-	anon using (true);
+	anon using (
+		(
+			scholarid=(
+				select
+					auth.uid ()
+			)
+		)
+		or exists (
+			select
+				1
+			from
+				public.roles r
+			where
+				r.id=volunteers.roleid
+				and (
+					r.invited
+					or r.priority=0
+					or r.volunteer_visibility='all'
+				)
+		)
+		or public.can_see_volunteer (id)
+	);
 
 create policy "admins can invite and volunteers if not invite only" on public.volunteers for INSERT to authenticated
 with

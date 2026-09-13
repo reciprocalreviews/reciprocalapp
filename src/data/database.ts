@@ -627,6 +627,7 @@ export type Database = {
           name: string
           priority: number
           venueid: string
+          volunteer_visibility: Database["public"]["Enums"]["volunteer_visibility"]
         }
         Insert: {
           anonymous_authors?: boolean
@@ -639,6 +640,7 @@ export type Database = {
           name?: string
           priority?: number
           venueid: string
+          volunteer_visibility?: Database["public"]["Enums"]["volunteer_visibility"]
         }
         Update: {
           anonymous_authors?: boolean
@@ -651,6 +653,7 @@ export type Database = {
           name?: string
           priority?: number
           venueid?: string
+          volunteer_visibility?: Database["public"]["Enums"]["volunteer_visibility"]
         }
         Relationships: [
           {
@@ -1300,6 +1303,7 @@ export type Database = {
         Returns: boolean
       }
       can_see_balances: { Args: { _currency: string }; Returns: boolean }
+      can_see_volunteer: { Args: { _volunteer: string }; Returns: boolean }
       complete_assignment: {
         Args: {
           _assignment_id: string
@@ -1331,6 +1335,7 @@ export type Database = {
           name: string
           priority: number
           venueid: string
+          volunteer_visibility: Database["public"]["Enums"]["volunteer_visibility"]
         }
         SetofOptions: {
           from: "*"
@@ -1504,6 +1509,13 @@ export type Database = {
           submission: string
         }[]
       }
+      venue_volunteer_counts: {
+        Args: { _venue: string }
+        Returns: {
+          role: string
+          volunteer_count: number
+        }[]
+      }
       verify_email: { Args: { _token: string }; Returns: Json }
     }
     Enums: {
@@ -1513,6 +1525,7 @@ export type Database = {
       thanks_status: "proposed" | "approved" | "declined"
       token_op: "mint" | "move" | "burn"
       transaction_status: "proposed" | "approved" | "declined"
+      volunteer_visibility: "all" | "completed" | "none"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1649,6 +1662,7 @@ export const Constants = {
       thanks_status: ["proposed", "approved", "declined"],
       token_op: ["mint", "move", "burn"],
       transaction_status: ["proposed", "approved", "declined"],
+      volunteer_visibility: ["all", "completed", "none"],
     },
   },
 } as const
