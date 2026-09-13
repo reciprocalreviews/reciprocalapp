@@ -4,8 +4,14 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.5.5 - 2026-09-13
 
+### Added
+
+- **Your profile now has 22 notification settings rather than one.** Grouped by tokens, reviewing, venues you help run, and proposals and thanks, with the noisier ones off until you ask for them.
+- **RR now emails you when things happen that you would otherwise have to go looking for.** Tokens arriving, a submission of yours finishing review, a role, venue administration, or minting authority granted or taken away, a bid or a conflict on a paper you edit, and an invitation you sent being answered.
+
 ### Changed
 
+- **Reminders can now be turned off, and show up in your data download.** They previously bypassed the mail record entirely, so they could not be silenced and did not appear in it.
 - **Checkboxes now say one thing.** Their labels used to rewrite themselves when you checked them. Now each one names the setting it turns on and holds still.
 - **The venue proposal form's payment checkbox now matches venue settings.** It reads **Token-based venue** and starts checked, where before it read payment-free and started unchecked, pointing the same setting opposite ways in the two places.
 - **A bulk import row that is already in the venue now names and links the manuscript it matched.** The notice said only that something here had that ID, which left an ID two different papers share looking exactly like a queue re-exported with last month's rows still in it.
@@ -13,6 +19,9 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Fixed
 
+- **Approving a transaction, sharing a thank-you note, and declining a venue proposal now write to the people affected.** Each of those had a counterpart that did — declining a transaction, declining a note, approving a proposal — so the quiet half of each pair had gone unnoticed.
+- **Changing your contact email now tells the address it replaced**, which otherwise just went quiet.
+- **Being assigned to a submission now emails you whichever way it happened.** Assignment through the multi-assign flow and the submission page's assignee control sent nothing, while approving an assignment always had.
 - **A submission is no longer visible to everyone who holds a role approving work on it.** Holding a venue's associate editor role showed you any submission that had a reviewer on it — and those reviewers' names, even at a venue that anonymizes assignments — whether or not the paper was yours to handle. Approving now means approving _that_ submission: its assignees, its editor, the approvers seated on it, and the venue's admins.
 - **Approving, unassigning, and seating people on a submission now requires handling that submission.** Anyone holding a role that approves another role could act on any paper at the venue, though the buttons for it were never shown to them.
 - **The "submissions visible to you" count now matches the list it links to.** It counted submissions the list then hid — ones you had declared a conflict on, and done ones past the venue's visibility window.

@@ -371,11 +371,7 @@ begin
 		and v.accepted = 'accepted'
 		and s.id <> _scholarid
 		and s.email is not null
-		and not exists (
-			select 1
-			from public.notification_settings n
-			where n.scholar = s.id and n.event = 'NewVolunteer' and not n.enabled
-		);
+		and public.notification_allowed(s.id, 'NewVolunteer');
 
 	-- Nobody reachable. Saying nothing is right: the volunteering succeeded, and a venue
 	-- whose top-role holders have no verified address is a venue configuration problem
@@ -536,6 +532,31 @@ begin
 	begin
 		if _caller = _scholarid and not _invited then
 			perform public._notify_new_volunteer(_venueid, _roleid, _scholarid);
+		elsif _caller <> _scholarid and _accepted then
+			-- The other side of that condition, and the case nobody was told about at all.
+			--
+			-- An administrator can seat somebody directly, with no invitation to accept. The
+			-- notice above is deliberately suppressed for it (it is the admin's own action, so
+			-- it is not news to the admins), and RoleInvite only fires where there IS an
+			-- invitation -- so the person acquiring a venue commitment, and possibly a welcome
+			-- grant with it, was the one party who heard nothing.
+			--
+			-- Consequential: it is a role with obligations, arriving unasked. No preference is
+			-- consulted, for the same reason RoleInvite consults none.
+			insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
+			select
+				'RoleEnrolled', s.id, _caller, _venueid, s.email, null, null,
+				to_jsonb(array[
+					r.name,
+					v.title,
+					coalesce(v.slug, v.id::text),
+					s.id::text
+				])
+			from public.scholars s, public.roles r, public.venues v
+			where s.id = _scholarid
+				and r.id = _roleid
+				and v.id = _venueid
+				and s.email is not null;
 		end if;
 	exception when others then
 		raise warning 'create_volunteer: volunteer % was created but the venue could not be notified: % (%)',

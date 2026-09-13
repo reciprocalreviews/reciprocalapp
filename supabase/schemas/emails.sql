@@ -537,16 +537,30 @@ begin
 
 	-- Resolve scholar recipients. Scholars with no verified contact email are skipped:
 	-- scholars.email holds only verified addresses, so a null here means "not verified".
+	--
+	-- Silenced scholars are skipped too. This is the whole of the opt-out mechanism: the
+	-- registry used to say each producer was responsible for consulting
+	-- public.notification_settings itself, and exactly one of them ever did, which is why the
+	-- profile could only ever offer one checkbox. Resolving it here means marking a template
+	-- `optional` is genuinely all it takes.
+	--
+	-- A template with no public.optional_emails row is consequential, matches nothing here,
+	-- and always sends -- so a template missing from the seed fails toward delivering mail.
 	if _scholars is not null then
 		insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
 		select _event, s.id, _caller, null, s.email, null, null, to_jsonb(_args)
 		from public.scholars s
-		where s.id = any(_scholars) and s.email is not null;
+		where s.id = any(_scholars) and s.email is not null
+			and public.notification_allowed(s.id, _event);
 
+		-- The same predicate, because this is what the caller is told it sent. Reporting the
+		-- unfiltered list would have the application announce "emailed 4 people" for a notice
+		-- that reached one, and those counts surface to users as feedback banners.
 		select coalesce(jsonb_agg(jsonb_build_object('name', s.name, 'email', s.email)), '[]'::jsonb)
 		into _recipients
 		from public.scholars s
-		where s.id = any(_scholars) and s.email is not null;
+		where s.id = any(_scholars) and s.email is not null
+			and public.notification_allowed(s.id, _event);
 	end if;
 
 	-- Resolve a proposal's editor addresses.
@@ -641,3 +655,68 @@ from
 
 grant
 execute on function public.queue_steward_email (text, text[]) to authenticated;
+
+--------------------------------------
+-- RPC
+--
+-- queue_reminder_email: the scheduled reminders' way into the mail pipeline.
+--
+-- A third queueing function rather than a branch inside queue_email, because the caller is
+-- not a person. The reminder cron runs as `service_role` with no `auth.uid()`, so it fails
+-- queue_email's first line; loosening that check would mean the function that every
+-- user-facing producer goes through no longer requires a caller, which is a worse trade than
+-- a small sibling.
+--
+-- It keeps queue_email's actual safety property intact: it accepts no address, no subject and
+-- no body. The recipient is resolved from a scholar id, skipped without a verified contact
+-- email, and skipped again if the preference is off -- so a reminder is silenceable by the
+-- same mark on the same template as the notice it chases. `sender` is null because nobody
+-- sent it, which is the honest record and matches reconcile_ledger's own notifications.
+--
+-- `reply_to` is left null deliberately. The cron used to set it to stewards@ explicitly, and
+-- null already resolves to exactly that (see send_email), so the reminders keep the reply
+-- path they had -- the one thing about them most likely to be answered with a question.
+create or replace function public.queue_reminder_email (_event text, _args text[], _scholar uuid) returns integer language plpgsql security definer
+set
+	"search_path" to 'public',
+	'pg_temp' as $$
+declare
+	_count integer;
+begin
+	if _event is null or _event = '' then
+		raise exception 'An event is required';
+	end if;
+	-- The same refusal queue_email makes, for the same reason: VerifyEmail renders an
+	-- argument as a clickable link, so it is queued only by request_email_verification.
+	if _event = 'VerifyEmail' then
+		raise exception 'VerifyEmail is queued only by request_email_verification';
+	end if;
+
+	insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
+	select _event, s.id, null, null, s.email, null, null, to_jsonb(_args)
+	from public.scholars s
+	where s.id = _scholar
+		and s.email is not null
+		and public.notification_allowed(s.id, _event);
+
+	get diagnostics _count = row_count;
+	return _count;
+end;
+$$;
+
+alter function public.queue_reminder_email (text, text[], uuid) OWNER to "postgres";
+
+-- Explicitly revoked, not merely un-granted: Supabase's ALTER DEFAULT PRIVILEGES hands anon
+-- and authenticated EXECUTE on every function created in `public` at creation time, and
+-- `revoke ... from public` does not take those back. See 20260831000000. Leaving this open
+-- would hand any signed-in user a way to send branded mail to any scholar, with no caller
+-- recorded against it -- strictly worse than queue_email, which at least stamps `sender`.
+revoke
+execute on function public.queue_reminder_email (text, text[], uuid)
+from
+	public,
+	anon,
+	authenticated;
+
+grant
+execute on function public.queue_reminder_email (text, text[], uuid) to service_role;

@@ -74,8 +74,15 @@
 		strings={(l) => l.page.settings.button.addPreferenceLevel}
 		active={isntEmpty(newLabel)}
 		action={async () => {
-			const result = await handle(db().createPreferenceLevel(venue.id, newLabel));
-			if (typeof result !== 'boolean') newLabel = '';
+			// Cleared BEFORE the await, not after. handle() ends in invalidateAll(), so a clear
+			// that runs afterwards races whatever has been typed in the meantime and can wipe
+			// it — the hazard EditableText.svelte exists to avoid, and the reason this form
+			// intermittently refused a second entry. Restored if the write fails, so nothing
+			// typed is lost to an error.
+			const label = newLabel;
+			newLabel = '';
+			const result = await handle(db().createPreferenceLevel(venue.id, label));
+			if (typeof result === 'boolean') newLabel = label;
 		}}
 	/>
 </Form>

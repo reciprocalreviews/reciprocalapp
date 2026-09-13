@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { Emails, OptionalEmails, renderEmail, type EmailType } from './templates';
+import {
+	Emails,
+	NotificationSectionKeys,
+	OptionalEmails,
+	preferenceFor,
+	renderEmail,
+	type Email,
+	type EmailType
+} from './templates';
+import { readFileSync } from 'node:fs';
+import { seedSQL } from './notificationSeeds';
 import en from '../../static/locales/en.json';
 
 describe('renderEmail', () => {
@@ -163,7 +173,89 @@ describe('optional notices', () => {
 			'VerifyEmail',
 			'WorkCompensated'
 		])
-			expect(OptionalEmails).not.toContain(event as EmailType);
+			expect(preferenceFor(event as EmailType)).toBeUndefined();
 		expect(Object.keys(Emails).length).toBeGreaterThan(OptionalEmails.length);
+	});
+
+	// `silencedBy` lets a reminder share the control of the notice it chases. Pointing it at a
+	// template that is not itself silenceable would produce a deferral chain ending at no key
+	// at all, and `preferenceFor` would return undefined -- silently making the notice
+	// consequential rather than failing. The type system checks the target EXISTS; only this
+	// can check that it owns a preference.
+	it('resolves every deferral to a real preference', () => {
+		for (const key of Object.keys(Emails) as EmailType[]) {
+			const silencedBy = (Emails[key] as Email).silencedBy;
+			if (silencedBy === undefined) continue;
+			expect(OptionalEmails, `${key} defers to ${silencedBy}`).toContain(silencedBy);
+			expect(preferenceFor(key)).toBe(silencedBy);
+		}
+	});
+
+	// A control is rendered inside its section, so one with no section is not rendered at all
+	// -- a preference that exists, accepts writes, and can never be reached.
+	it('puts every control in a section the profile renders', () => {
+		for (const key of OptionalEmails) {
+			const section = (Emails[key] as Email).section;
+			expect(NotificationSectionKeys, `${key} has no section`).toContain(section);
+		}
+		expect(Object.keys(en.page.scholar.notifications.section).sort()).toEqual(
+			[...NotificationSectionKeys].sort()
+		);
+	});
+
+	// Only a template that OWNS a key can carry a default: the deferring template's own mark
+	// would be read by nobody, so a `defaultOn` there is a silent no-op rather than an error.
+	it('puts defaults only where they are read', () => {
+		for (const key of Object.keys(Emails) as EmailType[]) {
+			const email = Emails[key] as Email;
+			if (email.defaultOn === undefined) continue;
+			expect(email.optional, `${key} sets defaultOn without owning a key`).toBe(true);
+		}
+	});
+});
+
+// The database cannot read TypeScript, so public.notification_preferences and
+// public.optional_emails are a generated copy of the marks above, and public.queue_email
+// consults that copy rather than this file. A copy that drifts does not fail loudly: it mails
+// people notices they switched off, or silences ones they did not. So the committed SQL is
+// compared against freshly generated SQL here.
+//
+// If this fails, run `node scripts/notification-seeds.js` and paste the output over the seed
+// block in supabase/schemas/notification_settings.sql -- AND put the same block in a new
+// migration, since only migrations run on reset.
+describe('generated SQL seed', () => {
+	const expected = seedSQL();
+
+	// The DATA is compared, not the text. The committed copy is run through Prettier's SQL
+	// printer and the generator's output is not, so the two differ in line wrapping and in
+	// whether `(` is padded — neither of which is what this test is about. What has to match is
+	// which keys exist, what each defaults to, and which template each governs.
+	const tuples = (sql: string, table: string) => {
+		const start = sql.indexOf(table);
+		if (start === -1) return [];
+		const end = sql.indexOf(';', start);
+		return [...sql.slice(start, end).matchAll(/\(\s*'(\w+)'\s*,\s*'?(\w+)'?\s*\)/g)]
+			.map(([, a, b]) => `${a}=${b}`)
+			.sort();
+	};
+
+	it('matches what is committed in supabase/schemas', () => {
+		const schema = readFileSync('supabase/schemas/notification_settings.sql', 'utf8');
+		// Anchored on the column lists, which appear only in the inserts — the table names
+		// themselves also appear in the foreign keys further up the file.
+		for (const table of ['(key, default_on)', '(event, preference)'])
+			expect(tuples(schema, table), table).toEqual(tuples(expected, table));
+		// Guard against the selector silently matching nothing and the test passing vacuously.
+		expect(tuples(expected, '(key, default_on)').length).toBeGreaterThan(10);
+	});
+
+	it('has been applied by a migration', () => {
+		// Not which migration -- a later one may legitimately supersede an earlier one -- only
+		// that the current expectation exists somewhere in the applied history.
+		const applied = readFileSync(
+			'supabase/migrations/20260913200000_notification_preferences.sql',
+			'utf8'
+		);
+		expect(applied).toContain('create table if not exists public.notification_preferences');
 	});
 });

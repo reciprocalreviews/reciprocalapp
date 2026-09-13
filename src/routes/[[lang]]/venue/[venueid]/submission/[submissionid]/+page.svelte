@@ -535,7 +535,15 @@
 						}
 
 						return handle(
-							db().createAssignment(submission.id, scholarID, role.id, false, true)
+							db().createAssignment(
+								submission.id,
+								scholarID,
+								role.id,
+								false,
+								true,
+								null,
+								scholar?.id ?? null
+							)
 						).then(() => {
 							newAssignmentRole = undefined;
 							newAssignmentScholar = '';

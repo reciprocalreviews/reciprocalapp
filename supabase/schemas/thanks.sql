@@ -230,7 +230,7 @@ begin
 			where a.submission = _t.submission and a.approved = true and a.scholar <> _t.author
 		) r
 		join public.scholars s on s.id = r.scholar
-		where s.email is not null;
+		where s.email is not null and public.notification_allowed(s.id, 'ThanksReceived');
 
 	elsif _audience = 'vetters' then
 		if _caller <> _t.author then
@@ -247,7 +247,22 @@ begin
 			where r.venueid = _t.venue and r.priority = 0 and v.accepted = 'accepted'
 		) vt
 		join public.scholars s on s.id = vt.scholar
-		where s.email is not null and s.id <> _caller;
+		where s.email is not null and s.id <> _caller
+			and public.notification_allowed(s.id, 'ThanksPendingReview');
+
+	-- The author's copy of the GOOD outcome. A separate audience rather than a parameter for
+	-- the event, because the event being fixed per audience is what keeps this function from
+	-- becoming a way to send any template to anyone: the caller picks an audience from a closed
+	-- set, and the function decides both who is written to and what it says it is.
+	elsif _audience = 'author_shared' then
+		if not (public.isAdmin(_t.venue) or public.isPriorityZero(_t.venue)) then
+			raise exception 'You are not authorized to notify the author';
+		end if;
+		insert into public.emails (event, scholar, sender, venue, email, subject, message)
+		select 'ThanksShared', s.id, null, _t.venue, s.email, _subject, _message
+		from public.scholars s
+		where s.id = _t.author and s.email is not null
+			and public.notification_allowed(s.id, 'ThanksShared');
 
 	elsif _audience = 'author' then
 		if not (public.isAdmin(_t.venue) or public.isPriorityZero(_t.venue)) then
@@ -256,7 +271,8 @@ begin
 		insert into public.emails (event, scholar, sender, venue, email, subject, message)
 		select 'ThanksDeclined', s.id, null, _t.venue, s.email, _subject, _message
 		from public.scholars s
-		where s.id = _t.author and s.email is not null;
+		where s.id = _t.author and s.email is not null
+			and public.notification_allowed(s.id, 'ThanksDeclined');
 
 	else
 		raise exception 'Unknown thanks email audience';

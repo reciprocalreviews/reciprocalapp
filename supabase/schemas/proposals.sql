@@ -192,6 +192,95 @@ from
 grant
 execute on function public.approve_venue_proposal (uuid) to authenticated;
 
+--------------------------------------
+-- RPC
+--
+-- decline_venue_proposal: tell the people a proposal was announced to that it has ended, and
+-- close it -- in one transaction.
+--
+-- Why an RPC rather than an email followed by a delete. The proposal's listed editors are
+-- plain addresses on the row (proposals.editors), not scholars, so the only way to reach them
+-- is public.queue_email's `_proposal` branch, which reads the row. Emailing first and deleting
+-- second means a failed delete leaves a live proposal whose editors have been told it is
+-- dead; deleting first leaves nobody to address. Doing both here makes that ordering
+-- impossible to get wrong.
+--
+-- The subject and message are rendered by the caller and passed in, exactly as
+-- public.queue_thanks_emails takes them: the template registry is TypeScript and the database
+-- cannot render from it. The safety property that replaces "accepts no body" is the same one
+-- that function relies on -- the caller chooses no recipient. Addresses come from the row and
+-- from scholars.email, and a steward is the only caller who gets this far.
+create or replace function public.decline_venue_proposal (_proposal_id uuid, _subject text, _message text) returns integer language plpgsql security definer
+set
+	"search_path" to 'public',
+	'pg_temp' as $function$
+declare
+	_caller uuid := (select auth.uid());
+	_proposal public.proposals;
+	_supporters integer;
+	_editors integer;
+begin
+	if _caller is null then
+		raise exception 'Authentication required';
+	end if;
+	if not public.isSteward() then
+		raise exception 'Only stewards can decline venue proposals';
+	end if;
+
+	select * into _proposal from public.proposals where id = _proposal_id;
+	if not found then
+		raise exception 'Proposal not found';
+	end if;
+
+	-- The supporters, who are scholars and so have a preference to honour.
+	insert into public.emails (event, scholar, sender, venue, email, subject, message)
+	select 'ProposalDeclined', s.id, _caller, null, s.email, _subject, _message
+	from public.supporters p
+	join public.scholars s on s.id = p.scholarid
+	where p.proposalid = _proposal_id
+		and s.email is not null
+		and public.notification_allowed(s.id, 'ProposalDeclined');
+
+	get diagnostics _supporters = row_count;
+
+	-- The listed editors, who are addresses rather than accounts. No preference applies:
+	-- there is no scholar to hold one, which is the same reason ProposalCreatedEditors is
+	-- sent to them unconditionally. Anyone listed who also supported is skipped, so a person
+	-- who is both does not get two copies.
+	insert into public.emails (event, scholar, sender, venue, email, subject, message)
+	select 'ProposalDeclined', null, _caller, null, e, _subject, _message
+	from unnest(_proposal.editors) as e
+	where e is not null
+		and e <> ''
+		and e not in (
+			select s.email from public.supporters p
+			join public.scholars s on s.id = p.scholarid
+			where p.proposalid = _proposal_id and s.email is not null
+		);
+
+	-- Two counters rather than one: GET DIAGNOSTICS assigns an item to a variable and takes
+	-- no expression, so `_count = _count + row_count` is a syntax error rather than a sum.
+	get diagnostics _editors = row_count;
+
+	delete from public.proposals where id = _proposal_id;
+
+	return _supporters + _editors;
+end;
+$function$;
+
+alter function public.decline_venue_proposal (uuid, text, text) OWNER to "postgres";
+
+-- Explicitly revoked, not merely un-granted: Supabase's ALTER DEFAULT PRIVILEGES hands anon
+-- EXECUTE on every function created in `public` at creation time.
+revoke
+execute on function public.decline_venue_proposal (uuid, text, text)
+from
+	public,
+	anon;
+
+grant
+execute on function public.decline_venue_proposal (uuid, text, text) to authenticated;
+
 grant all on table "public"."proposals" to "anon";
 
 grant all on table "public"."proposals" to "authenticated";

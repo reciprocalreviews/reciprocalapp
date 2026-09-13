@@ -891,7 +891,36 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async editVenueAdmins(id: VenueID, admins: string[]) {
-		return this.updateVenue(id, { admins: Array.from(new Set(admins)) }, 'EditVenueAdmins');
+		// Read the list being replaced, so the difference can be told to the people it is
+		// about. addVenueAdmin delegates here, so both ends are covered in one place.
+		const { data: before } = await this.client
+			.from('venues')
+			.select('id, title, slug, admins')
+			.eq('id', id)
+			.single();
+
+		const result = await this.updateVenue(
+			id,
+			{ admins: Array.from(new Set(admins)) },
+			'EditVenueAdmins'
+		);
+		if (result.error) return result;
+
+		// Consequential: administering a venue is authority over its roles, its submissions
+		// and its money, and acquiring or losing it used to happen without a word.
+		if (before !== null) {
+			const was = new Set(before.admins ?? []);
+			const now = new Set(admins);
+			const added = [...now].filter((scholar) => !was.has(scholar));
+			const removed = [...was].filter((scholar) => !now.has(scholar));
+			const path = venuePath(before);
+			if (added.length > 0)
+				await this.emailScholars(added, 'VenueAdminAdded', [before.title, path]);
+			if (removed.length > 0)
+				await this.emailScholars(removed, 'VenueAdminRemoved', [before.title]);
+		}
+
+		return result;
 	}
 
 	async addVenueAdmin(id: VenueID, emailOrORCID: string): Promise<Result> {
@@ -931,21 +960,58 @@ export default class SupabaseCRUD extends CRUD {
 	 * validation should have caught — it means something reached here unvalidated.
 	 */
 	async editVenueSlug(id: VenueID, slug: string) {
-		const { error } = await this.client
+		const { data: before } = await this.client
 			.from('venues')
-			.update({ slug: slug.trim().toLowerCase() })
-			.eq('id', id);
-		return this.errorOrEmpty(
-			rpcErrorKey(error, 'EditVenueSlug', {
-				'23505': 'VenueAddressTaken',
-				'23514': 'VenueAddressInvalid'
-			}),
-			error
-		);
+			.select('id, title, slug')
+			.eq('id', id)
+			.single();
+
+		const next = slug.trim().toLowerCase();
+		const { error } = await this.client.from('venues').update({ slug: next }).eq('id', id);
+		if (error)
+			return this.errorOrEmpty(
+				rpcErrorKey(error, 'EditVenueSlug', {
+					'23505': 'VenueAddressTaken',
+					'23514': 'VenueAddressInvalid'
+				}),
+				error
+			);
+
+		// Consequential, and the sharpest of these: the whole payment model depends on links
+		// pasted into a reviewing platform's email templates, and every one of them stops
+		// resolving the moment this changes. The people who pasted them are exactly the
+		// venue's editors and admins.
+		if (before !== null && venuePath(before) !== next)
+			await this.emailVenueEditors(id, 'VenueAddressChanged', () => [
+				before.title,
+				next,
+				venuePath(before)
+			]);
+
+		return {};
 	}
 
 	async editVenueInactive(id: VenueID, inactive: string | null) {
-		return this.updateVenue(id, { inactive }, 'EditVenueInactive');
+		const { data: before } = await this.client
+			.from('venues')
+			.select('inactive')
+			.eq('id', id)
+			.single();
+		const result = await this.updateVenue(id, { inactive }, 'EditVenueInactive');
+		if (result.error) return result;
+
+		// Only on an actual change of state, not on every edit of the message shown while
+		// inactive. VenueApproved fires when a steward approves a proposal, which DESIGN.md is
+		// explicit is NOT the moment a venue launches — this is that moment.
+		const wasInactive = (before?.inactive ?? null) !== null;
+		if (wasInactive !== (inactive !== null))
+			await this.emailVenueEditors(
+				id,
+				inactive !== null ? 'VenueDeactivated' : 'VenueReactivated',
+				(path, title) => [title, path, inactive ?? '']
+			);
+
+		return result;
 	}
 
 	async editVenueAnonymousAssignments(id: VenueID, anonymous_assignments: boolean) {
@@ -1226,7 +1292,15 @@ export default class SupabaseCRUD extends CRUD {
 			);
 		// `changed` distinguishes "we promoted them" from "they already were one",
 		// which the RPC reports rather than raising.
-		return { data: booleanField(data, 'changed') ?? false, error: undefined };
+		const changed = booleanField(data, 'changed') ?? false;
+
+		// Consequential, and only on an actual change: stewardship is authority over the
+		// platform rather than over one venue, and both acquiring and losing it used to happen
+		// in silence.
+		if (changed)
+			await this.emailScholars([scholar], steward ? 'StewardAppointed' : 'StewardRemoved', []);
+
+		return { data: changed, error: undefined };
 	}
 
 	async addSteward(emailOrORCID: string): Promise<Result<ScholarID>> {
@@ -1322,7 +1396,23 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async deleteVenueProposal(proposal: ProposalID): Promise<Result> {
-		const { error } = await this.client.from('proposals').delete().eq('id', proposal);
+		// Read the title before the RPC, because the notice names the venue and the row is gone
+		// by the time the RPC returns.
+		const { data: row } = await this.client
+			.from('proposals')
+			.select('title')
+			.eq('id', proposal)
+			.single();
+
+		// Rendered here and fanned out server-side, the same division queue_thanks_emails uses:
+		// the registry is TypeScript, and the database chooses the recipients so the caller
+		// cannot. Declining and deleting happen in one transaction — see the note on the RPC.
+		const { subject, message } = renderEmail('ProposalDeclined', [row?.title ?? '']);
+		const { error } = await this.client.rpc('decline_venue_proposal', {
+			_proposal_id: proposal,
+			_subject: subject,
+			_message: message
+		});
 		if (error) return this.error('DeleteProposal');
 		else return {};
 	}
@@ -1373,7 +1463,22 @@ export default class SupabaseCRUD extends CRUD {
 			.insert({ proposalid, scholarid, message });
 
 		if (error) return this.error('CreateSupporter', error);
-		else return {};
+
+		// Tell the proposal's listed editors. Stewards weigh community support when deciding,
+		// and the people the proposal was made on behalf of had no way to see it accumulating
+		// short of reloading the page. Goes through queue_email's `_proposal` branch because
+		// those are addresses on the row rather than accounts.
+		const [{ data: proposal }, { data: supporter }] = await Promise.all([
+			this.client.from('proposals').select('title').eq('id', proposalid).single(),
+			this.client.from('scholars').select('name').eq('id', scholarid).single()
+		]);
+		await this.queueEmail(
+			'ProposalSupported',
+			[proposal?.title ?? '', supporter?.name ?? 'A scholar', proposalid],
+			{ proposal: proposalid }
+		);
+
+		return {};
 	}
 
 	async editVenueProposalSupport(support: SupporterID, message: string): Promise<Result> {
@@ -1417,7 +1522,30 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<Result> {
-		return this.updateCurrency(id, { minters }, 'EditCurrencyMinters');
+		// Read the list being replaced so the difference can be told to the people it is about.
+		// Both the add and the remove path come through here — addCurrencyMinter delegates to
+		// it — so diffing here covers both rather than notifying in one and not the other.
+		const { data: before } = await this.client
+			.from('currencies')
+			.select('name, minters')
+			.eq('id', id)
+			.single();
+
+		const result = await this.updateCurrency(id, { minters }, 'EditCurrencyMinters');
+		if (result.error) return result;
+
+		// Holding a currency's minting authority, or losing it, is a privilege change and is
+		// consequential: it decides who can approve new tokens into existence. Neither end of
+		// it used to write to anybody.
+		const was = new Set(before?.minters ?? []);
+		const now = new Set(minters);
+		const added = [...now].filter((scholar) => !was.has(scholar));
+		const removed = [...was].filter((scholar) => !now.has(scholar));
+		if (added.length > 0) await this.emailScholars(added, 'MinterAdded', [before?.name ?? '', id]);
+		if (removed.length > 0)
+			await this.emailScholars(removed, 'MinterRemoved', [before?.name ?? '']);
+
+		return result;
 	}
 
 	async addCurrencyMinter(
@@ -1453,6 +1581,31 @@ export default class SupabaseCRUD extends CRUD {
 
 		const tokenIDs = stringArrayField(data, 'token_ids');
 		if (tokenIDs === null) return this.error('MintTokens');
+
+		// Tell the venue's admins and the currency's other minters. Minting changes the supply
+		// that every holder's balance is denominated in, and only the shortfall path
+		// (VenueOutOfTokens) ever announced itself — so a deliberate mint was invisible to
+		// everyone except whoever performed it.
+		//
+		// Default OFF for this preference: at an active venue it is frequent, and an admin who
+		// never asked to watch the money supply should not be opted into watching it.
+		const [currencyRow, venueRow] = await Promise.all([
+			this.client.from('currencies').select('name, minters').eq('id', currencyID).single(),
+			this.client.from('venues').select('id, title, slug, admins').eq('id', to).single()
+		]);
+		const audience = new Set<ScholarID>([
+			...(venueRow.data?.admins ?? []),
+			...(currencyRow.data?.minters ?? [])
+		]);
+		audience.delete(creator);
+		if (audience.size > 0 && venueRow.data !== null)
+			await this.emailScholars([...audience], 'TokensMinted', [
+				amount.toString(),
+				currencyRow.data?.name ?? '',
+				venueRow.data.title,
+				venuePath(venueRow.data)
+			]);
+
 		return { data: tokenIDs };
 	}
 
@@ -1573,12 +1726,58 @@ export default class SupabaseCRUD extends CRUD {
 			if (error) return this.error('ReorderRole', error);
 		}
 
+		// Only when the TOP role changes hands. Priority 0 is not a label: its holders are the
+		// venue's editors, so moving a role into it transfers editorial authority — new
+		// submissions are assigned to them, they approve assignments, and they mark submissions
+		// done. That happened with no notice to anyone, including the people who acquired it.
+		const wasTop = roles.toSorted((a, b) => a.priority - b.priority)[0];
+		const isTop = sorted[0];
+		if (isTop !== undefined && wasTop?.id !== isTop.id) {
+			const { data: venue } = await this.client
+				.from('venues')
+				.select('id, title, slug')
+				.eq('id', isTop.venueid)
+				.single();
+			if (venue !== null)
+				await this.emailVolunteersOf(isTop.id, 'RolePriorityChanged', [
+					isTop.name,
+					venue.title,
+					venuePath(venue)
+				]);
+		}
+
 		return {};
 	}
 
 	async deleteRole(id: RoleID) {
+		// Read the role and who is in it BEFORE the delete: volunteers cascade with it
+		// (volunteers_roleid_fkey is ON DELETE CASCADE), so afterwards there is no record of
+		// who was affected.
+		const { data: role } = await this.client
+			.from('roles')
+			.select('name, venueid, venues!venueid(id, title, slug)')
+			.eq('id', id)
+			.single();
+		const { data: volunteers } = await this.client
+			.from('volunteers')
+			.select('scholarid')
+			.eq('roleid', id)
+			.eq('accepted', 'accepted');
+
 		const { error } = await this.client.from('roles').delete().eq('id', id);
-		return this.errorOrEmpty('DeleteRole', error);
+		if (error) return this.error('DeleteRole', error);
+
+		// Consequential: a commitment they had was removed, and nothing on their profile
+		// afterwards would explain where it went.
+		const recipients = [...new Set((volunteers ?? []).map((v) => v.scholarid))];
+		if (role?.venues && recipients.length > 0)
+			await this.emailScholars(recipients, 'RoleDeleted', [
+				role.name,
+				role.venues.title,
+				venuePath(role.venues)
+			]);
+
+		return { data: undefined };
 	}
 
 	async getRolesByApprover(roleIDs: RoleID[]): Promise<ReadResult<RoleRow[] | null>> {
@@ -1788,11 +1987,70 @@ export default class SupabaseCRUD extends CRUD {
 	 * policy existed only admins could, which is why notifying the editors would have
 	 * been mail nobody could act on.
 	 */
+	/** Email a venue's priority-0 volunteers and its admins.
+	 *
+	 * `except` drops the person whose action prompted the message: most of these notices exist
+	 * so that everyone ELSE finds out, and mailing someone about their own click is noise. */
+	/** A submission's title, for a notice that names it. Empty rather than throwing: the title
+	 * is prose in a message, and failing to read it must not fail the write it describes. */
+	private async submissionTitle(submission: SubmissionID): Promise<string> {
+		const { data } = await this.client
+			.from('submissions')
+			.select('title')
+			.eq('id', submission)
+			.single();
+		return data?.title ?? '';
+	}
+
+	/** Email a venue's editors and admins, resolving the venue itself. */
+	private async emailVenueEditors(
+		venue: VenueID,
+		template: EmailType,
+		args: (path: string, title: string) => string[],
+		except: ScholarID | null = null
+	): Promise<Result> {
+		const { data } = await this.client
+			.from('venues')
+			.select('id, title, slug, admins')
+			.eq('id', venue)
+			.single();
+		if (data === null) return {};
+		return this.emailEditorsOf(
+			venue,
+			data.admins ?? [],
+			template,
+			args(venuePath(data), data.title),
+			except
+		);
+	}
+
+	/** Email everyone volunteering for a role. Used where the news is about the role itself —
+	 * its compensation, its priority, its deletion — rather than about one person in it. */
+	private async emailVolunteersOf(
+		role: RoleID,
+		template: EmailType,
+		args: string[],
+		except: ScholarID | null = null
+	): Promise<Result> {
+		const { data: volunteers } = await this.client
+			.from('volunteers')
+			.select('scholarid')
+			.eq('roleid', role)
+			.eq('active', true)
+			.eq('accepted', 'accepted');
+		const recipients = [...new Set((volunteers ?? []).map((v) => v.scholarid))].filter(
+			(scholar) => scholar !== except
+		);
+		if (recipients.length === 0) return {};
+		return this.emailScholars(recipients, template, args);
+	}
+
 	private async emailEditorsOf(
 		venue: VenueID,
 		admins: ScholarID[],
 		template: EmailType,
-		args: string[]
+		args: string[],
+		except: ScholarID | null = null
 	): Promise<Result> {
 		const { data: roles } = await this.client
 			.from('roles')
@@ -1809,7 +2067,9 @@ export default class SupabaseCRUD extends CRUD {
 						.in('roleid', roleIDs)
 						.eq('active', true)
 						.eq('accepted', 'accepted');
-		const recipients = [...new Set([...(volunteers ?? []).map((v) => v.scholarid), ...admins])];
+		const recipients = [
+			...new Set([...(volunteers ?? []).map((v) => v.scholarid), ...admins])
+		].filter((scholar) => scholar !== except);
 		if (recipients.length === 0) return {};
 		return this.emailScholars(recipients, template, args);
 	}
@@ -1932,6 +2192,13 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async markSubmissionDone(submissionID: SubmissionID): Promise<Result<MarkSubmissionDoneOutcome>> {
+		// Read the authors and title before the RPC, so the notice below can name the paper.
+		const { data: submission } = await this.client
+			.from('submissions')
+			.select('title, authors, venues!venue(title)')
+			.eq('id', submissionID)
+			.single();
+
 		// Authorization, blocker validation, atomic compensation of every
 		// uncompleted priority-0 editor assignment, and the status flip all
 		// happen inside the mark_submission_done RPC. The application layer
@@ -1991,6 +2258,22 @@ export default class SupabaseCRUD extends CRUD {
 			]);
 			if (result.notified) notifications.push(...result.notified);
 		}
+
+		// And tell the authors that reviewing is over.
+		//
+		// Everyone else on the submission has already heard: each reviewer got WorkCompensated
+		// as their own work was completed, and the editors are being paid in this very call.
+		// The authors — the people whose paper it is — were the only party never told, and
+		// DESIGN.md makes a done submission the precondition for thanking its reviewers, so
+		// the thank-you feature had no trigger at all. Best effort, after the fact: the
+		// submission is done and the tokens have moved.
+		if (submission !== null && submission.authors.length > 0)
+			await this.emailScholars(submission.authors, 'SubmissionDone', [
+				submission.title,
+				submission.venues?.title ?? '',
+				donePath,
+				data.submission_id
+			]);
 
 		return {
 			data: {
@@ -2070,7 +2353,7 @@ export default class SupabaseCRUD extends CRUD {
 	 * state change, matching the rest of the email pipeline. */
 	private async queueThanksEmails(
 		thanksID: ThanksID,
-		audience: 'recipients' | 'vetters' | 'author',
+		audience: 'recipients' | 'vetters' | 'author' | 'author_shared',
 		template: EmailType,
 		args: string[]
 	) {
@@ -2125,12 +2408,14 @@ export default class SupabaseCRUD extends CRUD {
 		const venue = stringField(data, 'venue');
 		const submission = stringField(data, 'submission');
 		const note = stringField(data, 'message');
-		if (venue && submission && note !== null)
-			await this.queueThanksEmails(id, 'recipients', 'ThanksReceived', [
-				note,
-				await this.venuePathOf(venue),
-				submission
-			]);
+		if (venue && submission && note !== null) {
+			const path = await this.venuePathOf(venue);
+			await this.queueThanksEmails(id, 'recipients', 'ThanksReceived', [note, path, submission]);
+			// And tell the author it was shared. declineThanks has always written back to them;
+			// the approve path did not, so the one outcome an author was never told about was
+			// the one they were hoping for.
+			await this.queueThanksEmails(id, 'author_shared', 'ThanksShared', [path, submission]);
+		}
 		return { error: undefined, data: undefined };
 	}
 
@@ -2204,6 +2489,22 @@ export default class SupabaseCRUD extends CRUD {
 			.single();
 
 		if (error) return this.error('EditCompensation', error);
+
+		// Tell the people whose pay it is. A venue changing what a role earns used to be
+		// invisible to everyone holding that role until they were next compensated.
+		const { data: roleRow } = await this.client
+			.from('roles')
+			.select('name, venueid, venues!venueid(id, title, slug)')
+			.eq('id', role)
+			.single();
+		if (roleRow?.venues)
+			await this.emailVolunteersOf(role, 'CompensationChanged', [
+				roleRow.name,
+				(amount ?? 0).toString(),
+				roleRow.venues.title,
+				venuePath(roleRow.venues)
+			]);
+
 		return { data: undefined };
 	}
 
@@ -2376,7 +2677,34 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result> {
-		return this.updateVolunteer(id, { active }, 'UpdateVolunteerActive');
+		const result = await this.updateVolunteer(id, { active }, 'UpdateVolunteerActive');
+		if (result.error) return result;
+
+		// Someone becoming unavailable, or available again, is capacity news for whoever is
+		// trying to find reviewers this week — and it used to reach them only if they happened
+		// to reload the volunteers list. Default off: at a venue with many volunteers this is
+		// frequent, so it waits to be asked for.
+		const { data: volunteer } = await this.client
+			.from('volunteers')
+			.select('scholarid, roles!roleid(name, venueid)')
+			.eq('id', id)
+			.single();
+		const role = volunteer?.roles;
+		if (role) {
+			const { data: who } = await this.client
+				.from('scholars')
+				.select('name')
+				.eq('id', volunteer.scholarid)
+				.single();
+			await this.emailVenueEditors(
+				role.venueid,
+				active ? 'VolunteerResumed' : 'VolunteerPaused',
+				(path, title) => [who?.name ?? 'A volunteer', role.name, title, path],
+				volunteer.scholarid
+			);
+		}
+
+		return result;
 	}
 
 	async updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result> {
@@ -2453,6 +2781,30 @@ export default class SupabaseCRUD extends CRUD {
 							granted.toString()
 						)
 					: this.locale.notification.inviteAccepted;
+		// Tell the venue the answer. This was deliberately silent, on the reasoning that the
+		// people who would be told are the ones who sent the invitation — but sending one and
+		// learning whether it was taken up are days apart, and DESIGN.md's user stories name
+		// wanting to know "who agrees" as exactly what an editor is doing here.
+		const { data: volunteer } = await this.client
+			.from('volunteers')
+			.select('scholarid, roles!roleid(name, venueid)')
+			.eq('id', id)
+			.single();
+		const role = volunteer?.roles;
+		if (role) {
+			const { data: who } = await this.client
+				.from('scholars')
+				.select('name')
+				.eq('id', scholar)
+				.single();
+			await this.emailVenueEditors(
+				role.venueid,
+				response === 'accepted' ? 'InviteAccepted' : 'InviteDeclined',
+				(path, title) => [who?.name ?? 'A scholar', role.name, title, path],
+				scholar
+			);
+		}
+
 		return { data: undefined, notified: [{ message }] };
 	}
 
@@ -2539,7 +2891,8 @@ export default class SupabaseCRUD extends CRUD {
 		roleid: RoleID,
 		bid: boolean,
 		approved: boolean = false,
-		preferenceid: PreferenceLevelID | null = null
+		preferenceid: PreferenceLevelID | null = null,
+		approver: ScholarID | null = null
 	): Promise<Result> {
 		const { data: role, error: roleError } = await this.client
 			.from('roles')
@@ -2560,7 +2913,77 @@ export default class SupabaseCRUD extends CRUD {
 			approved,
 			preferenceid
 		});
-		return this.errorOrEmpty('CreateAssignment', error);
+		if (error) return this.error('CreateAssignment', error);
+
+		// A bid is a request rather than an assignment, so it notifies the people who can answer
+		// it rather than the person who made it. Without this an editor found out a bid had
+		// arrived by opening the submission.
+		if (bid) {
+			const { data: venue } = await this.client
+				.from('venues')
+				.select('id, title, slug, admins')
+				.eq('id', role.venueid)
+				.single();
+			if (venue !== null)
+				await this.emailEditorsOf(
+					role.venueid,
+					venue.admins ?? [],
+					'NewBid',
+					[await this.submissionTitle(submission), role.name, venuePath(venue), submission],
+					scholar
+				);
+			return { data: undefined };
+		}
+
+		// Seating an editor answers the SubmissionNeedsEditor notice the venue's other editors
+		// received, so they are told it is answered. Two editors could otherwise both set out
+		// to claim the same paper, each with no way of seeing the other had.
+		if (approved && role.priority === 0) {
+			const [venueRow, claimer] = await Promise.all([
+				this.client
+					.from('venues')
+					.select('id, title, slug, admins')
+					.eq('id', role.venueid)
+					.single(),
+				this.client.from('scholars').select('name').eq('id', scholar).single()
+			]);
+			if (venueRow.data !== null)
+				await this.emailEditorsOf(
+					role.venueid,
+					venueRow.data.admins ?? [],
+					'SubmissionClaimed',
+					[
+						await this.submissionTitle(submission),
+						claimer.data?.name ?? 'Another editor',
+						venuePath(venueRow.data),
+						submission
+					],
+					scholar
+				);
+		}
+
+		// And tell the person seated. Being assigned here is the same news as being assigned
+		// through approveAssignment, so it sends the same notice — it did not, which meant the
+		// multi-assign flow and the submission page's assignee control seated people silently
+		// while the approve path mailed them, the same act notifying or not depending on which
+		// button was pressed.
+		//
+		// Skipped when the assignee is the one doing the assigning, since claiming a submission
+		// as its editor comes through here and mailing someone about their own click is noise,
+		// and when no approver is known, since the notice names who did it.
+		if (!approved || approver === null || approver === scholar) return { data: undefined };
+
+		const assigner = await this.getScholar(approver);
+		if (assigner === null) return { data: undefined };
+
+		const { notified } = await this.emailScholars([scholar], 'AssignmentApproved', [
+			assigner.getName() ?? '',
+			assigner.getEmail() ?? '',
+			role.name,
+			await this.venuePathOf(role.venueid),
+			submission
+		]);
+		return { data: undefined, notified };
 	}
 
 	async approveAssignment(
@@ -2727,7 +3150,27 @@ export default class SupabaseCRUD extends CRUD {
 			.select()
 			.single();
 
-		return error ? this.error('CreateTransaction', error) : { data: data.id };
+		if (error) return this.error('CreateTransaction', error);
+
+		// Tell the charged scholar, when the charge is against a person, is only proposed, and
+		// was not proposed by them. SubmissionCharged covers the submission case, which is most
+		// of them; anything else used to wait on a reminder family that a venue opts into and
+		// can set to zero, so at a venue with reminders off it was announced to nobody.
+		if (status === 'proposed' && fromScholar !== null && fromScholar !== creator) {
+			const { data: currencyRow } = await this.client
+				.from('currencies')
+				.select('name')
+				.eq('id', currency)
+				.single();
+			await this.emailScholars([fromScholar], 'TransactionProposed', [
+				purpose,
+				tokens.length.toString(),
+				currencyRow?.name ?? '',
+				fromScholar
+			]);
+		}
+
+		return { data: data.id };
 	}
 
 	async transferTokens(
@@ -2771,10 +3214,46 @@ export default class SupabaseCRUD extends CRUD {
 		const transactionID = stringField(data, 'transaction_id');
 		const tokenIDs = stringArrayField(data, 'token_ids');
 		if (transactionID === null || tokenIDs === null) return this.error('TransferVenueTokens');
+
+		// Tell the recipient, when the recipient is a person. Tokens arriving was the quietest
+		// thing the platform did: the failures around a transfer all wrote to somebody, and the
+		// transfer itself wrote to nobody, so a scholar learned they had been given tokens by
+		// visiting their balance and noticing it had changed.
+		//
+		// Best effort and after the fact: the tokens have moved, so a mail failure must not
+		// turn a completed transfer into a reported error. Nobody is told about moving tokens
+		// to themselves.
+		if (toKind !== 'venueid' && toEntity !== creator) {
+			const [currencyRow, giver] = await Promise.all([
+				this.client.from('currencies').select('name').eq('id', currency).single(),
+				fromKind === 'venueid'
+					? this.client.from('venues').select('title').eq('id', fromEntity).single()
+					: this.client.from('scholars').select('name').eq('id', fromEntity).single()
+			]);
+			const giverName =
+				(giver.data && 'title' in giver.data ? giver.data.title : giver.data?.name) ?? '';
+			await this.emailScholars([toEntity], 'TokensReceived', [
+				amount.toString(),
+				currencyRow.data?.name ?? '',
+				giverName,
+				purpose,
+				toEntity
+			]);
+		}
+
 		return { data: { transaction: transactionID, tokens: tokenIDs } };
 	}
 
-	async approveTransaction(creator: ScholarID, id: TransactionID) {
+	async approveTransaction(approver: ScholarID, id: TransactionID) {
+		// Read the transaction before approving, for the same reason declineTransaction does:
+		// the notice names the purpose, amount and currency, and reading them first keeps the
+		// email body describing the thing that was actually decided.
+		const { data: transaction } = await this.client
+			.from('transactions')
+			.select('creator, purpose, currency, from_venue, to_venue, amount')
+			.eq('id', id)
+			.single();
+
 		// Authorization (giver / minter, no self-enrichment), any required token
 		// minting, the token movement, and the status flip all happen atomically
 		// inside the approve_transaction RPC. Previously these were several
@@ -2790,6 +3269,42 @@ export default class SupabaseCRUD extends CRUD {
 				}),
 				error
 			);
+
+		// Tell the proposer, as declineTransaction has always told them. Without this the two
+		// halves of the same decision behaved differently: a decline explained itself and an
+		// approval said nothing, so a co-author who paid a charge learned it had gone through
+		// only by visiting their balance.
+		//
+		// Best effort, and deliberately after the RPC: the tokens have already moved and the
+		// transaction is settled, so a mail failure must not turn a successful approval into a
+		// reported error. Nobody is mailed about approving their own proposal.
+		if (transaction && transaction.creator !== approver) {
+			const venueID = transaction.from_venue ?? transaction.to_venue;
+			const [approverRow, currencyRow, venueRow] = await Promise.all([
+				this.client.from('scholars').select('name, email').eq('id', approver).single(),
+				this.client.from('currencies').select('name').eq('id', transaction.currency).single(),
+				venueID
+					? this.client.from('venues').select('id, title, slug').eq('id', venueID).single()
+					: Promise.resolve({ data: null, error: null })
+			]);
+			// This runs in the browser, so the page's own origin is the right answer and is
+			// already to hand; the templates' other links resolve server-side from site_url.
+			const origin =
+				typeof window !== 'undefined' ? window.location.origin : 'https://reciprocal.reviews';
+			const link =
+				venueID && venueRow.data !== null
+					? `${origin}/venue/${venuePath(venueRow.data)}/transactions`
+					: `${origin}/scholar/${transaction.creator}/transactions`;
+			await this.emailScholars([transaction.creator], 'TransactionApproved', [
+				transaction.purpose,
+				transaction.amount.toString(),
+				currencyRow.data?.name ?? '',
+				approverRow.data?.name ?? '',
+				approverRow.data?.email ?? '',
+				link
+			]);
+		}
+
 		return { error: undefined, data: undefined };
 	}
 
@@ -3113,6 +3628,24 @@ export default class SupabaseCRUD extends CRUD {
 			.from('conflicts')
 			.insert({ scholarid, submissionid, reason });
 		if (error) return this.error('DeclareConflict', error);
+
+		// Tell the venue's editors: a declared conflict removes somebody from the pool for this
+		// paper, and the person it matters to is whoever is trying to find reviewers for it.
+		// Default off — conflicts are declared far more often than papers are claimed.
+		const { data: submission } = await this.client
+			.from('submissions')
+			.select('title, venue, venues!venue(id, title, slug, admins)')
+			.eq('id', submissionid)
+			.single();
+		const venue = submission?.venues;
+		if (venue)
+			await this.emailEditorsOf(
+				submission.venue,
+				venue.admins ?? [],
+				'ConflictDeclared',
+				[submission.title, venuePath(venue), submissionid],
+				scholarid
+			);
 
 		return { data: undefined };
 	}

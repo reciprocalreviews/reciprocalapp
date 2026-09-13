@@ -1289,8 +1289,36 @@
 			"notifications": {
 				"header": "Notifications",
 				"about": "Some emails are courtesies you can turn off. Anything consequential — a charge awaiting your approval, a declined transaction, an assignment — is always sent.",
+				"prompt": "Email me when…",
+				"section": {
+					"tokens": "Tokens",
+					"reviewing": "My reviewing",
+					"venues": "Venues I help run",
+					"community": "Proposals and thanks"
+				},
 				"label": {
-					"NewVolunteer": "Email me when someone volunteers at a venue where I hold its top role."
+					"AvailabilityReminder": "my reviewing availability has gone stale",
+					"CompensationChanged": "the compensation changes for a role I volunteer for",
+					"CompensationRequested": "someone requests compensation for work I can approve",
+					"ConflictDeclared": "someone declares a conflict on a submission at one of my venues",
+					"InviteAccepted": "someone answers a role invitation at one of my venues",
+					"NewBid": "someone bids to review a submission at one of my venues",
+					"NewVolunteer": "someone volunteers at a venue where I hold its top role",
+					"ProposalSupported": "someone supports a venue proposal I am listed on",
+					"SubmissionClaimed": "another editor takes on a submission at one of my venues",
+					"SubmissionDone": "reviewing is complete on a submission I authored",
+					"SubmissionsNeedEditors": "a submission at one of my venues is waiting for an editor",
+					"SubmissionsReady": "submissions at one of my venues may be ready to mark done",
+					"ThanksPendingReview": "an author’s thank-you note is waiting to be reviewed",
+					"ThanksReceived": "an author thanks me for reviewing their submission",
+					"ThanksShared": "a thank-you note I wrote is shared with the reviewers",
+					"TokensMinted": "new tokens are minted into a venue I help run",
+					"TokensReceived": "someone transfers tokens to me",
+					"TransactionApproved": "a transaction I proposed is approved",
+					"TransactionsPending": "proposed transactions are waiting for my approval",
+					"VenueApproved": "a venue I proposed or supported is approved or declined",
+					"VenueDeactivated": "one of my venues is switched off or becomes active again",
+					"VolunteerPaused": "a volunteer at one of my venues pauses or resumes"
 				}
 			},
 			"status": {

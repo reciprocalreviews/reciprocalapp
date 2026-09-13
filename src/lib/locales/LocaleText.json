@@ -3291,13 +3291,127 @@
                     },
                     "label": {
                       "additionalProperties": false,
+                      "description": "Each one completes `prompt` above — \"Email me when… someone transfers tokens to me\" — so they are fragments, not sentences, and start lowercase.",
                       "properties": {
+                        "AvailabilityReminder": {
+                          "type": "string"
+                        },
+                        "CompensationChanged": {
+                          "type": "string"
+                        },
+                        "CompensationRequested": {
+                          "type": "string"
+                        },
+                        "ConflictDeclared": {
+                          "type": "string"
+                        },
+                        "InviteAccepted": {
+                          "type": "string"
+                        },
+                        "NewBid": {
+                          "type": "string"
+                        },
                         "NewVolunteer": {
+                          "type": "string"
+                        },
+                        "ProposalSupported": {
+                          "type": "string"
+                        },
+                        "SubmissionClaimed": {
+                          "type": "string"
+                        },
+                        "SubmissionDone": {
+                          "type": "string"
+                        },
+                        "SubmissionsNeedEditors": {
+                          "type": "string"
+                        },
+                        "SubmissionsReady": {
+                          "type": "string"
+                        },
+                        "ThanksPendingReview": {
+                          "type": "string"
+                        },
+                        "ThanksReceived": {
+                          "type": "string"
+                        },
+                        "ThanksShared": {
+                          "type": "string"
+                        },
+                        "TokensMinted": {
+                          "type": "string"
+                        },
+                        "TokensReceived": {
+                          "type": "string"
+                        },
+                        "TransactionApproved": {
+                          "type": "string"
+                        },
+                        "TransactionsPending": {
+                          "type": "string"
+                        },
+                        "VenueApproved": {
+                          "type": "string"
+                        },
+                        "VenueDeactivated": {
+                          "type": "string"
+                        },
+                        "VolunteerPaused": {
                           "type": "string"
                         }
                       },
                       "required": [
-                        "NewVolunteer"
+                        "AvailabilityReminder",
+                        "CompensationChanged",
+                        "CompensationRequested",
+                        "ConflictDeclared",
+                        "InviteAccepted",
+                        "NewBid",
+                        "NewVolunteer",
+                        "ProposalSupported",
+                        "SubmissionClaimed",
+                        "SubmissionDone",
+                        "SubmissionsNeedEditors",
+                        "SubmissionsReady",
+                        "ThanksPendingReview",
+                        "ThanksReceived",
+                        "ThanksShared",
+                        "TokensMinted",
+                        "TokensReceived",
+                        "TransactionApproved",
+                        "TransactionsPending",
+                        "VenueApproved",
+                        "VenueDeactivated",
+                        "VolunteerPaused"
+                      ],
+                      "type": "object"
+                    },
+                    "prompt": {
+                      "description": "The lead-in each group's controls complete, written once per group rather than repeated in every label. It is a fieldset legend, so a screen reader announces it with each checkbox — which is what lets the labels below be fragments rather than sentences.",
+                      "type": "string"
+                    },
+                    "section": {
+                      "additionalProperties": false,
+                      "description": "Headers for the groups the controls are rendered in. The keys are `NotificationSectionKeys` in the email registry; a unit test asserts the two stay in step.",
+                      "properties": {
+                        "community": {
+                          "type": "string"
+                        },
+                        "reviewing": {
+                          "type": "string"
+                        },
+                        "tokens": {
+                          "type": "string"
+                        },
+                        "venues": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "tokens",
+                        "reviewing",
+                        "venues",
+                        "community"
                       ],
                       "type": "object"
                     }
@@ -3305,6 +3419,8 @@
                   "required": [
                     "header",
                     "about",
+                    "prompt",
+                    "section",
                     "label"
                   ],
                   "type": "object"

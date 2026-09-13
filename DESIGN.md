@@ -414,7 +414,7 @@ When a venue is **approved** state:
 - [x] _`scholar`_: For invite-only roles, the role is shown, but without the ability to volunteer, unless the scholar is in the invited list. If they are invited, they can confirm or reject their invite.
 - [x] _`scholar`_: Change expertise keywords for a role for the venue
 - [x] _`scholar`_: Change paper count for a role for the venue
-- [x] _`scholar`_: When a scholar volunteers for an open role, the holders of the venue's top-priority role are emailed so somebody can welcome them (see Notifications). A scholar who would rather not receive these can turn them off on their profile.
+- [x] _`scholar`_: When a scholar volunteers for an open role, the holders of the venue's top-priority role are emailed so somebody can welcome them (see Notifications). A scholar who would rather not receive these can turn them off on their profile, as they can for any courtesy (see Notifications).
 - [x] _`scholar`_: Stop volunteering for a role, and later resume. Volunteering is a **permanent record that deactivates rather than disappears** — nobody, not the scholar and not a venue admin, can delete it. That is what keeps a venue's welcome grant to a one-time thing: the grant is decided by whether the scholar has volunteered at this venue before, so a record that could be erased, or moved to another venue's role, would be a way to be welcomed twice.
 
 - [x] _`editor`_: Modify the venue name, description
@@ -542,15 +542,38 @@ will actually reach, and names `stewards@` separately as the route to help. A fo
 said "a steward will see it" on a message that replies to a stranger would be worse than no
 footer at all, because the reader would believe it.
 
-Most RR email is **consequential** — a charge awaiting your approval, a declined
-transaction, an assignment, a payout, a verification link — and has no opt-out: someone who
-has been billed does not get to opt out of being told. A few are **courtesies**, and those a
-scholar can silence from their profile. Which is which is decided in the email template
-registry itself rather than in a list kept somewhere else, so a notice becomes silenceable by
-being marked as one, and the settings on a scholar's profile are generated from that mark. A
-preference exists only where it deviates from the default, and the default is on; the
-controls appear only once a scholar has a verified address, since there is nothing to opt out
-of before mail can reach them.
+RR email is **consequential** — a charge awaiting your approval, a declined transaction, an
+assignment, a payout, a verification link, a privilege granted or taken away — and has no
+opt-out: someone who has been billed does not get to opt out of being told. The rest are
+**courtesies**, and those a scholar can silence from their profile. Which is which is decided
+in the email template registry itself rather than in a list kept somewhere else, so a notice
+becomes silenceable by being marked as one, and the settings on a scholar's profile are
+generated from that mark. The controls appear only once a scholar has a verified address,
+since there is nothing to opt out of before mail can reach them.
+
+The governing rule for what gets sent at all: **any action somebody would otherwise only
+discover by logging in and looking for new activity deserves an optional email.** Measured
+against that, RR was silent about most of what it did — tokens arriving, minting authority
+granted, a role deleted out from under its volunteers, a submission finishing review. Every
+_failure_ around a transaction wrote to somebody while the transaction itself did not.
+
+Two things keep that from becoming an unusable inbox. A preference may govern **several**
+notices, so a notice, its plural form and the reminder that chases it share one control rather
+than needing three: chasing a thing is the same subscription as being told about it. And a
+preference declares whether it is **on by default**. Absence of a preference means "no
+opinion" rather than "on", because a default of on was a reasonable rule for one notice and a
+bad one for twenty-two — it would opt every existing scholar into all of them at once. A
+notice that is genuinely useful but too frequent to impose (a bid arriving, a volunteer
+pausing, tokens being minted) ships off and waits to be asked for.
+
+Controls are grouped on the profile — tokens, reviewing, venues you help run, proposals and
+thanks — because a scholar holds several unrelated relationships to the platform at once, and
+two dozen checkboxes in one column would be unscannable. Each group heading sits a level below
+the section's own, since these name parts of it rather than sections of their own. Each group
+carries the phrase "Email me when…" once, and its controls complete it, so the words are
+written once per group rather than twenty-two times; the phrase is the group's fieldset legend
+rather than a line of prose above it, so that it is announced with each control and a reader
+arriving at one directly still gets the whole sentence.
 
 Notifications addressed to the **stewards** as a group (`ProposalCreatedStewards`,
 `ReconciliationFailed`) go to that one shared address rather than to each steward's personal
@@ -558,6 +581,11 @@ contact email. Stewards still receive the mail individually, because the address
 they belong to, but they additionally get a single thread they can assign and resolve, so
 it is visible whether anyone has picked a request up. This also means steward notifications
 no longer depend on a steward having verified a contact address.
+
+Reminders go through the same pipeline and the same registry as everything else, so they are
+silenceable on the same terms, appear in the mail log, get the same delivery tracking, and are
+counted in a scholar's data download. They were none of those things while they were assembled
+separately and sent directly — one cause with four symptoms.
 
 RR will also send periodic reminders based on time-based events:
 
@@ -586,6 +614,27 @@ RR will also send transactional emails in response to user actions:
 - [x] When a role approver completes an assignment and tokens are paid out, email the compensated scholar with the role name and amount paid.
 - [x] When a role approver attempts to pay out but the venue's reserve is too small, email the venue's _`minter`_(s) with the shortfall and a link to the venue's transactions page where the auto-recorded proposed mint awaits approval.
 - [x] ([#22](https://github.com/reciprocalreviews/reciprocalapp/issues/22)) When an author thanks their reviewers (see below), email the relevant parties: the venue's editors/admins when a note awaits review, the reviewers when a note is shared, and the author if a note is declined (with the reason).
+- [x] When a proposed `Transaction` is **approved**, email the person who proposed it. Approving and declining are the same decision with opposite outcomes, and only the decline used to say so — the quiet half being the happy one is why nobody noticed.
+- [x] When a thank-you note is **shared**, email its author. Declining one always wrote back to them, so the only outcome an author was never told about was the one they were hoping for.
+- [x] When a venue proposal is **declined**, email its supporters and the editor addresses it named. `VenueApproved` had no counterpart, so the people told a venue was being proposed for their community were left to infer the ending from silence.
+- [x] When a scholar's contact email is **changed**, email the address being replaced. It is the only party with no other way to notice: the new address receives everything from then on, the scholar sees their own profile, and the old address simply goes quiet — which is indistinguishable from a takeover.
+- [x] When tokens are **transferred** to a scholar, tell them. Money moving was the least-notified thing RR did.
+- [x] When tokens are **minted** into a venue's reserve, tell the venue's admins and the currency's other minters — minting changes the supply every balance is denominated in. Off by default.
+- [x] When a `Transaction` proposes a charge against a scholar that no submission covers, tell them. `SubmissionCharged` covers the submission case; anything else used to wait on a reminder a venue has to opt into and can set to zero.
+- [x] When a scholar is made or unmade a **minter**, a **venue admin**, or a **steward**, tell them. Each is authority — over a currency's supply, a venue's operation, or the platform — and acquiring or losing it happened in silence.
+- [x] When a scholar is **seated in a role directly** by an administrator, tell them. The new-volunteer notice is suppressed for that path (it is the admin's own action) and `RoleInvite` only fires where there is an invitation, so the person acquiring the commitment was the one party who heard nothing.
+- [x] When a **role is deleted**, tell its volunteers: their volunteer records go with it, and nothing on their profile afterwards would explain where the role went.
+- [x] When **roles are reordered** so that a different role becomes priority 0, tell that role's holders. Priority 0 is not a label — its holders are the venue's editors.
+- [x] When a `Submission` is **marked done**, email its authors. The reviewers already heard, as each was compensated; the authors did not — and a done submission is the precondition for thanking reviewers, so that feature had no trigger.
+- [x] When a submission is **claimed** by an editor, tell the venue's other editors, who were told it needed one. Otherwise two editors can each set out to claim the same paper.
+- [x] When a **bid** arrives on a submission, tell the people who can answer it.
+- [x] When a **conflict** is declared, tell the venue's editors: a candidate has left the pool for that paper. Off by default.
+- [x] When a role invitation is **answered**, tell the venue. This was deliberately silent on the reasoning that the people told would be the ones who sent it — but sending an invitation and learning whether it was taken up are days apart.
+- [x] When a volunteer **pauses or resumes**, tell the venue's editors — capacity news for whoever is assigning papers this week. Off by default.
+- [x] When a venue is **switched off or becomes active again**, tell its editors and admins. `VenueApproved` fires at approval, which is explicitly not the moment a venue launches.
+- [x] When a role's **compensation changes**, tell the people who hold it.
+- [x] When a venue's **web address changes**, tell its editors and admins: every link already pasted into a reviewing platform's templates stops resolving, and they are the people who pasted them.
+- [x] When someone **supports a proposal**, tell the editors it named. Stewards weigh community support, and the people it was made for could not see it accumulating.
 
 ### Thanking reviewers
 
