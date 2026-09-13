@@ -2,7 +2,9 @@
 --
 -- Authorization model under test:
 --   SELECT  authors, accepted volunteers on a biddable role at the venue, and
---           scholars with an approved assignment to the submission.
+--           scholars with an approved assignment to the submission. Approving a
+--           role does NOT by itself confer sight of the submissions that role is
+--           assigned to -- the approver must be seated on the submission.
 --   INSERT  anyone authenticated may create a submission.
 --   UPDATE  authors, or scholars with an approved priority-0 role assignment.
 --   DELETE  no one (denied by policy AND the table privilege is revoked, since
@@ -17,7 +19,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(18);
+select plan(20);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -44,6 +46,21 @@ select tests.create_role(:'ven', 2, null, false, false)                 as revie
 -- A priority-0 role used for the editor (priority-0) UPDATE / author-lock cases.
 select tests.create_role(:'ven', 0, null, false, false)                 as editor_role \gset
 
+-- An approver role and the role it approves, for the "approving a role is not the
+-- same as approving THIS submission" cases below. Priority is deliberately non-zero:
+-- a priority-0 volunteer sees the whole venue through isPriorityZero, which would
+-- mask what these two tests are actually asking.
+select tests.create_role(:'ven', 3, null, false, false)                 as ae_role    \gset
+select tests.create_role(:'ven', 4, :'ae_role', false, false)           as child_role \gset
+
+-- Two volunteers on the approving role. Neither volunteers on the biddable role,
+-- which would grant venue-wide sight on its own.
+select tests.create_scholar('sub_unseated_ae@test.local')               as unseated_ae \gset
+select tests.create_scholar('sub_child@test.local')                     as child_holder \gset
+select tests.create_scholar('sub_seated_ae@test.local')                 as seated_ae   \gset
+select tests.create_volunteer(:'unseated_ae', :'ae_role', 'accepted')   as vol_unseated \gset
+select tests.create_volunteer(:'seated_ae', :'ae_role', 'accepted')     as vol_seated   \gset
+
 -- The main submission, authored by :author.
 select tests.create_submission(:'ven', :'styp', array[:'author']::uuid[]) as sub_main \gset
 -- A second submission used solely for the DELETE cases.
@@ -53,6 +70,11 @@ select tests.create_submission(:'ven', :'styp', array[:'author']::uuid[]) as sub
 select tests.create_assignment(:'ven', :'sub_main', :'assigned', :'review_role', true, false) as asn_review \gset
 -- :prio0 has an approved priority-0 assignment to sub_main → may UPDATE + edit authors.
 select tests.create_assignment(:'ven', :'sub_main', :'prio0', :'editor_role', true, false)    as asn_editor \gset
+-- Somebody holds the approved-by role on sub_main. This is what used to make the
+-- submission visible to every volunteer on :ae_role across the whole venue.
+select tests.create_assignment(:'ven', :'sub_main', :'child_holder', :'child_role', true, false) as asn_child \gset
+-- :seated_ae actually holds the approving role ON sub_main.
+select tests.create_assignment(:'ven', :'sub_main', :'seated_ae', :'ae_role', true, false)    as asn_ae     \gset
 
 -- ---- Policy shape -------------------------------------------------------------
 select policies_are(
@@ -82,6 +104,23 @@ select tests.authenticate_as(:'assigned');
 select isnt_empty(
 	$$ select 1 from public.submissions where id = $$ || quote_literal(:'sub_main'),
 	'a scholar with an approved assignment can see the submission'
+);
+
+-- Regression: an accepted volunteer on a role that approves :child_role, with no
+-- assignment of their own on this submission. sub_main has a :child_role assignment,
+-- which previously satisfied the venue-wide approver branch and exposed the
+-- submission -- and its reviewers -- to every such volunteer at the venue.
+select tests.authenticate_as(:'unseated_ae');
+select is_empty(
+	$$ select 1 from public.submissions where id = $$ || quote_literal(:'sub_main'),
+	'approving a role venue-wide does not expose a submission the approver is not seated on'
+);
+
+-- The same scholar, seated on this submission in the approving role, does see it.
+select tests.authenticate_as(:'seated_ae');
+select isnt_empty(
+	$$ select 1 from public.submissions where id = $$ || quote_literal(:'sub_main'),
+	'an approver seated on the submission can see it'
 );
 
 select tests.authenticate_as(:'outsider');

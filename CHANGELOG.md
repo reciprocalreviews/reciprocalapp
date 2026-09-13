@@ -43,6 +43,9 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **The import form is now emptied once its submissions are created.** It kept the batch it had just sent on screen, and then marked every row a duplicate of the submission it had itself just made. Submitting twice while the first import is still going is also refused now.
 - **An import no longer refuses a whole file because some of its manuscripts are already in the venue.** Those rows are marked and skipped, everything else imports, and the proposed mint is sized to only what was written.
 - **Erasing an account now removes its verification emails too.** An address you had typed but never confirmed, and the link sent to it, were both left behind in the mail log (#27).
+- **A submission is no longer visible to everyone who holds a role approving work on it.** Holding a venue's associate editor role showed you any submission that had a reviewer on it — and those reviewers' names, even at a venue that anonymizes assignments — whether or not the paper was yours to handle. Approving now means approving _that_ submission: its assignees, its editor, the approvers seated on it, and the venue's admins.
+- **Approving, unassigning, and seating people on a submission now requires handling that submission.** Anyone holding a role that approves another role could act on any paper at the venue, though the buttons for it were never shown to them.
+- **The "submissions visible to you" count now matches the list it links to.** It counted submissions the list then hid — ones you had declared a conflict on, and done ones past the venue's visibility window.
 
 ## 0.5.3 - 2026-08-31
 

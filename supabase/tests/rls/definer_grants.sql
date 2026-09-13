@@ -33,11 +33,11 @@ select
 --------------------------------------------------------------------------------
 -- The allowlist: functions that may be called without a session.
 --------------------------------------------------------------------------------
--- Twelve of these are RLS policy predicates, and their openness is load-bearing
+-- Ten of these are RLS policy predicates, and their openness is load-bearing
 -- rather than an oversight. A policy expression is evaluated as the QUERYING
 -- role, so that role needs EXECUTE on every function the policy calls; the
 -- `submissions` SELECT policy is granted to {anon, authenticated} and calls
--- isAdmin, isPriorityZero and isRoleApproverVolunteer. They are safe to leave
+-- isAdmin and isPriorityZero. They are safe to leave
 -- open because each is a read-only predicate about the CALLER's own
 -- relationships -- auth.uid(), which is null for anon -- over inputs
 -- (venues.admins, currencies.minters) that are publicly readable anyway.
@@ -59,8 +59,6 @@ values
 	('isassigned'),
 	('isauthor'),
 	('isconflicted'),
-	('isinapproverchain'),
-	('isroleapprovervolunteer'),
 	('can_approve_assignment'),
 	('can_claim_editor_role'),
 	('submission_has_editor'),
