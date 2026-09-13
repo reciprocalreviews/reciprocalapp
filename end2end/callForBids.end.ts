@@ -29,6 +29,12 @@ const MUTED_EMAIL = SEED.scholars.r2.email;
 /** The seed's Reviewer role is biddable; the form only appears on roles that are. */
 const ROLE_NAME = 'Reviewer';
 
+/** `rgb(0, 114, 132)` as `#007284`, so a computed colour can be compared with a palette hex. */
+function hexOf(rgb: string): string {
+	const [r, g, b] = rgb.match(/\d+/g)!.map(Number);
+	return '#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('');
+}
+
 function clean() {
 	sql(`delete from public.emails where event = 'CallForBids' and venue = '${VENUE_ID}';`);
 	sql(`delete from public.notification_settings where event = 'CallForBids';`);
@@ -81,6 +87,18 @@ test('an editor asks a biddable role to bid, and only the eligible are written t
 		// It names somebody and counts the rest, so the difference between who was asked and who
 		// was actually reachable is still legible.
 		await expect(banners.first()).toContainText('others');
+
+		// And it is painted as good news. Success used to share a CSS rule with the beta notice
+		// and so arrived in the error colour, which nothing caught because nothing looked. Read
+		// against the palette rather than a hardcoded hex, so rebranding does not break this.
+		const [banner, salient] = await page.evaluate(() => {
+			const el = document.querySelector('[data-testid="feedback-success"]')!;
+			return [
+				getComputedStyle(el).backgroundColor,
+				getComputedStyle(document.documentElement).getPropertyValue('--salient-color').trim()
+			];
+		});
+		expect(hexOf(banner)).toBe(salient.toLowerCase());
 
 		const got = recipients();
 		// The sender is left off their own call, and the opted-out volunteer is skipped.

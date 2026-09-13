@@ -75,9 +75,17 @@
 		margin-inline-start: var(--spacing);
 	}
 
-	.beta,
-	.success {
+	.beta {
 		background: var(--error-color);
+	}
+
+	/* Salient, not the error colour. Success shared a rule with `.beta` and so announced every
+	   completed action in the same plum as a failure — the one colour in the palette that means
+	   something went wrong. Salient is what the rest of the app already uses for good news:
+	   Status.svelte paints its `good` state with it, and Feedback.svelte's default (the level
+	   that is neither error nor warning) is the same colour and its faded companion. */
+	.success {
+		background: var(--salient-color);
 	}
 
 	.update,

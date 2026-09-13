@@ -31,6 +31,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **A confirmation no longer commits twice.** Both the confirm and its cancel are now inactive while the action is in flight, so the least reversible actions in the platform — approving a transaction, deleting a role — happen exactly once per confirmation.
 - **A confirmation's warning is no longer cut off.** A long one now wraps instead of running past the edge of the page, which had been hiding the end of the sentence saying what cannot be undone.
 - **An email that replies to a person no longer offers Reply All when it copies nobody.** The footer promised a group that did not exist on any message with a single recipient.
+- **Confirmations no longer appear in the colour used for failures.** Every success banner shared a rule with the beta notice and arrived in the same plum as an error, so a completed action and a refused one looked alike.
 
 ## 0.5.4 - 2026-09-05
 
