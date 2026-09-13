@@ -8,6 +8,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - **Checkboxes now say one thing.** Their labels used to rewrite themselves when you checked them. Now each one names the setting it turns on and holds still.
 - **The venue proposal form's payment checkbox now matches venue settings.** It reads **Token-based venue** and starts checked, where before it read payment-free and started unchecked, pointing the same setting opposite ways in the two places.
+- **A bulk import row that is already in the venue now names and links the manuscript it matched.** The notice said only that something here had that ID, which left an ID two different papers share looking exactly like a queue re-exported with last month's rows still in it.
 - Updated internal tooling for stability.
 
 ### Fixed

@@ -1047,7 +1047,8 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
-	/** Every external ID in the venue, paged past PostgREST's `max_rows`.
+	/** Enough of every submission in the venue to recognize one by its manuscript
+	 * ID, paged past PostgREST's `max_rows`.
 	 *
 	 * The bulk importer flags a row whose manuscript ID is already here, so this
 	 * list being complete is the whole point of it: a single unpaged select is
@@ -1058,18 +1059,23 @@ export default class SupabaseCRUD extends CRUD {
 	 * names -- and a venue big enough to hit the cap is exactly the one this
 	 * feature exists for.
 	 *
+	 * The id and title travel with each external ID so a skipped row can name and
+	 * link the manuscript it collided with. An ID alone said a row was already here
+	 * without saying which paper that was, which is the one thing an editor needs
+	 * to tell a re-exported queue apart from two different papers sharing an ID.
+	 *
 	 * Ordered, because `.range()` paging without an ORDER BY has no defined page
 	 * boundary and can both repeat and skip rows. A failed page returns the error
 	 * rather than the rows gathered so far: a partial list here is the bug. */
-	async getVenueSubmissionExternalIDs(
+	async getVenueSubmissionIdentities(
 		venue: VenueID
-	): Promise<ReadResult<Pick<SubmissionRow, 'externalid'>[] | null>> {
+	): Promise<ReadResult<Pick<SubmissionRow, 'id' | 'externalid' | 'title'>[] | null>> {
 		const size = 1000;
-		const all: Pick<SubmissionRow, 'externalid'>[] = [];
+		const all: Pick<SubmissionRow, 'id' | 'externalid' | 'title'>[] = [];
 		for (let from = 0; ; from += size) {
 			const { data, error } = await this.client
 				.from('submissions')
-				.select('externalid')
+				.select('id, externalid, title')
 				.eq('venue', venue)
 				.order('externalid')
 				.range(from, from + size - 1);

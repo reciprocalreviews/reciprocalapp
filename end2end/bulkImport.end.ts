@@ -208,6 +208,15 @@ test('a manuscript already in the venue is skipped, and the rest still imports',
 	await expect(page.getByTestId('import-row-0-skipped')).toBeVisible();
 	await expect(page.getByTestId('import-row-1-skipped')).toHaveCount(0);
 
+	// And it says WHICH manuscript is already here, by the venue's title for it and
+	// not the file's. An ID the two disagree about is a different paper wearing the
+	// same number, and nothing in the file itself can tell that apart from a queue
+	// re-exported with last month's rows still in it.
+	const alreadyHere = page.getByTestId('import-row-0-skipped-link');
+	await expect(alreadyHere).toContainText('Already here');
+	await expect(alreadyHere).toHaveAttribute('href', /\/venue\/.+\/submission\/[0-9a-f-]{36}$/);
+	await expect(page.getByTestId('import-row-1-skipped-link')).toHaveCount(0);
+
 	// The batch is sized to what will actually be written: one submission, not two.
 	// Counting the skipped row here would propose a mint funding a manuscript that
 	// already exists and was already funded once.
@@ -248,6 +257,13 @@ test('a file that is entirely already imported cannot be submitted', async ({ pa
 	await expect(page.getByTestId('import-row-0-skipped')).toBeVisible();
 	await expect(page.getByText('1 of these are already in this venue')).toBeVisible();
 	await expect(page.getByTestId('bulk-import-submit')).toBeDisabled();
+
+	// Naming the manuscript is only half of it: the link has to reach the paper the
+	// editor is being asked to compare their file against.
+	await page.getByTestId('import-row-0-skipped-link').click();
+	await page.waitForURL(/\/submission\/[0-9a-f-]{36}$/);
+	await expect(page.getByTestId('page-header')).toContainText('Only one');
+	await expect(page.getByText(external)).toBeVisible();
 
 	await logout(page);
 });

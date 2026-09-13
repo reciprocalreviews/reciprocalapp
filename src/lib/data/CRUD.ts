@@ -736,9 +736,9 @@ export default abstract class CRUD {
 	): Promise<
 		ReadResult<Pick<SubmissionRow, 'id' | 'externalid' | 'title' | 'submission_type'>[] | null>
 	>;
-	abstract getVenueSubmissionExternalIDs(
+	abstract getVenueSubmissionIdentities(
 		venue: VenueID
-	): Promise<ReadResult<Pick<SubmissionRow, 'externalid'>[] | null>>;
+	): Promise<ReadResult<Pick<SubmissionRow, 'id' | 'externalid' | 'title'>[] | null>>;
 	/** How many of the venue's submissions this scholar would find in the submissions
 	 * list: RLS-visible, minus the ones they have a conflict on and the done ones past
 	 * the venue's visibility window, both of which the list itself hides. */

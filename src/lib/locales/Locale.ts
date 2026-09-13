@@ -505,7 +505,10 @@ export type LocaleText = {
 					duplicateRow: string;
 				};
 				/** Marks a row whose manuscript is already at this venue. Not an error:
-				 * that row is left out and the rest of the file still imports. */
+				 * that row is left out and the rest of the file still imports. A link to
+				 * that manuscript follows the message, so keep it one whole sentence that
+				 * introduces it: which paper is already here is what tells a re-exported
+				 * queue apart from two papers sharing one ID. */
 				skipped: string;
 			};
 			type: {

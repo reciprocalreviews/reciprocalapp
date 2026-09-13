@@ -675,7 +675,7 @@
 					"externalID": "External ID is required.",
 					"duplicateRow": "Duplicate external ID across rows."
 				},
-				"skipped": "Already in this venue — this row will be skipped."
+				"skipped": "This manuscript is already in this venue and will be skipped:"
 			},
 			"person": {
 				"ambiguous": "Several people match this name. Choose one:",

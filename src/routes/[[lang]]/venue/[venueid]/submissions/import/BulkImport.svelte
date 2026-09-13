@@ -2,11 +2,19 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { venuePath } from '$lib/data/venuePath';
-	import type { RoleRow, SubmissionType, SubmissionTypeID, VenueRow } from '$data/types';
+	import type {
+		RoleRow,
+		SubmissionRow,
+		SubmissionType,
+		SubmissionTypeID,
+		VenueRow
+	} from '$data/types';
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import FileInput from '$lib/components/FileInput.svelte';
 	import Form from '$lib/components/Form.svelte';
+	import { SubmissionLabel } from '$lib/components/Labels';
+	import Link from '$lib/components/Link.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import Options from '$lib/components/Options.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
@@ -44,13 +52,15 @@
 	let {
 		venue,
 		submissionTypes,
-		existingExternalIDs,
+		existingSubmissions,
 		roles,
 		commitments
 	}: {
 		venue: VenueRow;
 		submissionTypes: SubmissionType[];
-		existingExternalIDs: string[];
+		/** Enough of every submission already at this venue to recognize one by its
+		 * manuscript ID and link to it. */
+		existingSubmissions: Pick<SubmissionRow, 'id' | 'externalid' | 'title'>[];
 		roles: RoleRow[];
 		commitments: VenueCommitment[];
 	} = $props();
@@ -167,7 +177,14 @@
 		csvWarning = null;
 	}
 
-	const existingIDSet = $derived(new Set(existingExternalIDs));
+	/** The venue's manuscripts keyed by external ID, for naming the one a row
+	 * collided with. The unique index on (venue, externalid) is what makes one
+	 * entry per ID the right shape. */
+	const existingByID = $derived(
+		new Map(existingSubmissions.map((s) => [s.externalid, s] as const))
+	);
+
+	const existingIDSet = $derived(new Set(existingByID.keys()));
 
 	/** Rows already at this venue. Skipped rather than refused -- see alreadyPresent
 	 * -- so they are left out of the payload, the mint, and every row rule below. */
@@ -182,11 +199,27 @@
 
 	/** Whether to say this row is already here. Suppressed while importing for the
 	 * same reason rowError is: `handle` refetches the page's data on success, which
-	 * lands the just-imported IDs in `existingExternalIDs` while this table is still
+	 * lands the just-imported IDs in `existingSubmissions` while this table is still
 	 * showing the rows that produced them -- turning the whole batch into skip
 	 * notices for the seconds before the navigation. */
 	function rowSkipped(index: number): boolean {
 		return !importing && skipped.has(index);
+	}
+
+	/** The manuscript a skipped row collided with, so the row can link to it rather
+	 * than just saying something here already has this ID -- which is the whole
+	 * question when a file's title and the venue's disagree about one ID.
+	 *
+	 * Trimmed, because `alreadyPresent` decides what is skipped on the trimmed ID:
+	 * looking up the raw cell would leave a row padded with spaces marked skipped
+	 * and unlinked. Falls back to the external ID when a manuscript has no title --
+	 * `submissions.title` defaults to '' -- so the link is never a bare icon with
+	 * nothing to read or announce. */
+	function skippedSubmission(row: Row): { id: string; label: string } | null {
+		const existing = existingByID.get(row.externalID.trim());
+		if (existing === undefined) return null;
+		const title = existing.title.trim();
+		return { id: existing.id, label: title.length > 0 ? title : existing.externalid };
 	}
 
 	/** The row rules live in $lib/data/bulkImportRows; this maps the problem they
@@ -194,7 +227,7 @@
 	function rowError(row: Row, index: number): ((l: LocaleText) => string) | null {
 		// Nothing is wrong with these rows while they are being written. `handle`
 		// refetches the page's data on success, which lands the just-imported IDs in
-		// `existingExternalIDs` while this table is still showing the rows that
+		// `existingSubmissions` while this table is still showing the rows that
 		// produced them -- turning every one of them red with "already exists in this
 		// venue" for the seconds before the navigation. That reads as a failed import
 		// of the batch that in fact just succeeded.
@@ -880,15 +913,29 @@
 			</td>
 		</tr>
 		<!-- Skipped, not refused: this manuscript is already at the venue, so the row
-	     is left out of the batch and everything else in the file still imports. -->
+	     is left out of the batch and everything else in the file still imports.
+	     Named and linked, because which manuscript is already here is the question:
+	     a re-exported queue and two different papers sharing one ID look identical
+	     until you can open the one the venue already has. -->
 		{#if rowSkipped(index)}
+			{@const existing = skippedSubmission(row)}
 			<tr>
 				<td colspan={7 + matchedRoles.length}>
-					<Feedback
-						warning
-						testid="import-row-{index}-skipped"
-						text={(l) => l.page.bulkImport.row.skipped}
-					/>
+					<div class="skipped">
+						<Feedback
+							warning
+							testid="import-row-{index}-skipped"
+							text={(l) => l.page.bulkImport.row.skipped}
+						/>
+						{#if existing}
+							<Link
+								to="/venue/{venuePath(venue)}/submission/{existing.id}"
+								icon={SubmissionLabel}
+								size="small"
+								testid="import-row-{index}-skipped-link">{existing.label}</Link
+							>
+						{/if}
+					</div>
 				</td>
 			</tr>
 		{/if}
@@ -971,7 +1018,7 @@
 			let imported = false;
 			try {
 				// Read before the await rather than inside the payload builder: `skipped`
-				// is derived from `existingExternalIDs`, which `handle` refetches, and what
+				// is derived from `existingSubmissions`, which `handle` refetches, and what
 				// is sent has to be what the table showed when the button was clicked.
 				const leaveOut = new Set(skipped);
 				const result = await handle(
@@ -1056,6 +1103,17 @@
 	.paste :global(textarea) {
 		max-height: 12em;
 		overflow-y: auto;
+	}
+
+	/* Feedback's inline variant is an inline-block whose `align-self` does nothing
+	   in a plain table cell, so the link beside it needs a flex line of its own to
+	   sit on. Wraps, because a long title in a narrow column otherwise widens the
+	   whole table. */
+	.skipped {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--spacing-half);
 	}
 
 	/* Copied from ScholarMatches, whose rule is scoped to that component: this

@@ -10,7 +10,7 @@
 
 	let venue = $derived(data.venue);
 	let submissionTypes = $derived(data.submissionTypes);
-	let existingExternalIDs = $derived(data.existingExternalIDs);
+	let existingSubmissions = $derived(data.existingSubmissions);
 	let roles = $derived(data.roles);
 	let commitments = $derived(data.commitments);
 
@@ -29,6 +29,6 @@
 	</Page>
 {:else}
 	<Page icon={SubmissionLabel} title={(l) => l.page.bulkImport.title}>
-		<BulkImport {venue} {submissionTypes} {existingExternalIDs} {roles} {commitments} />
+		<BulkImport {venue} {submissionTypes} {existingSubmissions} {roles} {commitments} />
 	</Page>
 {/if}
