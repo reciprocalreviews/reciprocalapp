@@ -2,9 +2,8 @@
 	import type { CurrencyRow, VenueRow } from '$data/types';
 	import type { TransactionListRow } from '$lib/data/SupabaseCRUD.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
-	import { SvelteMap } from 'svelte/reactivity';
 	import { getAuth } from '../../routes/Auth.svelte';
-	import { handle } from '../../routes/feedback.svelte';
+	import { addError } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
 	import Feedback from './Feedback.svelte';
 	import Note from './Note.svelte';
@@ -41,42 +40,65 @@
 	// Editable if the user is the scholar being viewed.
 	let userid = $derived(auth().getUserID());
 
-	// The loaded transactions, starting with the ones passed in as props.
-	// svelte-ignore state_referenced_locally
-	let transactionsByPage = $state(new SvelteMap([[0, transactions]]));
-	let page = $state(0);
+	// Page 0 is NOT cached: it is the `transactions` prop, rendered live. Caching it
+	// made a refetch that changed only a row's mutable fields — the status an approval
+	// flips, the decliner and reason a decline records — invisible, because the cache
+	// was keyed on the row ids and those don't change. The Approve button therefore
+	// stayed on screen after an approval and could be pressed again.
+	//
+	// Pages 1..n must be cached, because `more(page)` pages by absolute offset and
+	// nothing else supplies them. They are stamped with the pagination window they
+	// were fetched against, since those offsets mean nothing once a row is inserted.
+	// Comparing the window — rather than the prop's identity — is what distinguishes a
+	// real shift from the `invalidateAll()` that `handle()` runs after every write and
+	// that every realtime tick runs: keying on identity threw away every page the
+	// scholar had loaded and scrolled them back to the top whenever anything on the
+	// page changed at all. A stale stamp can never match again, because `count` is in
+	// the key and transactions are never deleted (DESIGN.md, Transactions), so the
+	// count only ever rises.
+	let windowKey = $derived(`${count}:${transactions.map((t) => t.id).join(',')}`);
+	let loaded = $state.raw<{ key: string; pages: TransactionListRow[][] }>({ key: '', pages: [] });
+	let morePages = $derived(loaded.key === windowKey ? loaded.pages : []);
 
-	// Re-sync when the FIRST PAGE actually changes, not merely when the prop
-	// identity does. `invalidateAll()` re-runs the load and hands back a fresh
-	// array every time — on every write anywhere on the page and on every realtime
-	// tick — so keying this on the prop threw away every page the scholar had
-	// loaded and scrolled them back to the top whenever anything changed at all,
-	// including changes that left this list identical.
-	let lastFirstPage: string | undefined = undefined;
-	$effect(() => {
-		const key = `${count}:${transactions.map((t) => t.id).join(',')}`;
-		if (key === lastFirstPage) return;
-		lastFirstPage = key;
-		transactionsByPage = new SvelteMap([[0, transactions]]);
-		page = 0;
-	});
-
-	let allTransactions = $derived(Array.from(transactionsByPage.values()).flat());
+	// Newest first, matching the three server queries' `created_at desc, seq desc` (the
+	// sort is stable, so rows sharing a timestamp keep the server's `seq` order).
+	// Sorted on a copy: `transactions` belongs to the load function's data.
+	let allTransactions = $derived(
+		[...transactions, ...morePages.flat()].sort(
+			(a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+		)
+	);
 
 	let loading = $state(false);
 	async function loadMore() {
 		// Don't load more if we've already loaded all transactions.
 		if (allTransactions.length >= count) return;
 		loading = true;
-		page = page + 1;
-		const { data: transactions, error } = await more(page);
-		if (error || transactions === null) {
-			handle(error);
-			page = page - 1;
-		} else {
-			transactionsByPage.set(page, transactions);
-		}
+		// Read the window before awaiting. If a row arrives while this request is in
+		// flight, what comes back is offset against a window that no longer exists;
+		// stamping it with the key it was fetched under is what discards it.
+		const key = windowKey;
+		const previous = morePages;
+		const { data, error } = await more(previous.length + 1);
+		if (error || data === null)
+			addError({ message: locale().view.transactions.feedback.notLoaded, details: error });
+		else loaded = { key, pages: [...previous, data] };
 		loading = false;
+	}
+
+	/** Refetch whichever loaded page holds this transaction. Page 0 is the prop and
+	 * `handle()`'s invalidateAll has already refreshed it; pages 1..n are snapshots, so
+	 * a row approved down there would keep rendering its old status and its Approve
+	 * button. */
+	async function refresh(id: TransactionListRow['id']) {
+		const index = morePages.findIndex((rows) => rows.some((t) => t.id === id));
+		if (index < 0) return;
+		const key = windowKey;
+		const previous = morePages;
+		const { data, error } = await more(index + 1);
+		if (error || data === null)
+			addError({ message: locale().view.transactions.feedback.notLoaded, details: error });
+		else loaded = { key, pages: previous.map((rows, i) => (i === index ? data : rows)) };
 	}
 </script>
 
@@ -105,6 +127,7 @@
 	<tr data-testid={testid + '-' + index}>
 		<td>
 			<Status
+				testid={testid + '-' + index + '-status'}
 				good={transaction.status === 'approved'}
 				label={(l) =>
 					transaction.status === 'approved'
@@ -156,7 +179,13 @@
 		</td>
 		<td>
 			{#if editable && userid !== null}
-				<TransactionActions {transaction} {index} {userid} testid={testid ?? ''} />
+				<TransactionActions
+					{transaction}
+					{index}
+					{userid}
+					testid={testid ?? ''}
+					onChange={refresh}
+				/>
 			{:else if proposed}
 				<em>{locale().view.transactions.cell.pendingApproval}</em>
 			{:else}
@@ -179,7 +208,7 @@
 			<th>{locale().view.transactions.headers.purpose}</th>
 			<th>{locale().view.transactions.headers.actions}</th>
 		{/snippet}
-		{#each allTransactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) as transaction, index}
+		{#each allTransactions as transaction, index}
 			{@render row(transaction, index)}
 		{/each}
 		<tr>

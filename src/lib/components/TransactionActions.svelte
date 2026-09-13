@@ -11,12 +11,17 @@
 		transaction,
 		index,
 		userid,
-		testid
+		testid,
+		onChange
 	}: {
 		transaction: Pick<TransactionRow, 'id'>;
 		index: number;
 		userid: ScholarID;
 		testid: string;
+		/** Called after a decision commits, so a row on a cached page past the first
+		 * can refetch itself. Page 0 comes straight from the load function, which
+		 * `handle()`'s invalidateAll has already refreshed by the time it resolves. */
+		onChange?: (id: TransactionRow['id']) => Promise<void>;
 	} = $props();
 
 	const db = getDB();
@@ -30,7 +35,10 @@
 	<Button
 		strings={(l) => l.view.transactions.button.approve}
 		testid={testid + '-' + index + '-approve'}
-		action={() => handle(db().approveTransaction(userid, transaction.id))}
+		action={async () => {
+			if ((await handle(db().approveTransaction(userid, transaction.id))) !== false)
+				await onChange?.(transaction.id);
+		}}
 	/>
 	<Button
 		strings={(l) => l.view.transactions.button.declineInitiate}
@@ -50,7 +58,10 @@
 			testid={testid + '-' + index + '-decline-confirm'}
 			active={declineReason.length > 0}
 			action={async () => {
-				await handle(db().declineTransaction(userid, transaction.id, declineReason));
+				if (
+					(await handle(db().declineTransaction(userid, transaction.id, declineReason))) !== false
+				)
+					await onChange?.(transaction.id);
 				showDecline = false;
 			}}
 		/>

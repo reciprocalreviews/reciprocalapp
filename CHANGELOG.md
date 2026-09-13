@@ -16,6 +16,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **A submission is no longer visible to everyone who holds a role approving work on it.** Holding a venue's associate editor role showed you any submission that had a reviewer on it — and those reviewers' names, even at a venue that anonymizes assignments — whether or not the paper was yours to handle. Approving now means approving _that_ submission: its assignees, its editor, the approvers seated on it, and the venue's admins.
 - **Approving, unassigning, and seating people on a submission now requires handling that submission.** Anyone holding a role that approves another role could act on any paper at the venue, though the buttons for it were never shown to them.
 - **The "submissions visible to you" count now matches the list it links to.** It counted submissions the list then hid — ones you had declared a conflict on, and done ones past the venue's visibility window.
+- **Approving or declining a transaction now settles the row it was decided on.** The new status and the decline reason appear without a reload and the Approve and Decline buttons leave with the decision; before, the row went on showing the transaction as proposed, with both buttons still sitting there to press again.
+- **A confirmation no longer commits twice.** Both the confirm and its cancel are now inactive while the action is in flight, so the least reversible actions in the platform — approving a transaction, deleting a role — happen exactly once per confirmation.
 
 ## 0.5.4 - 2026-09-05
 

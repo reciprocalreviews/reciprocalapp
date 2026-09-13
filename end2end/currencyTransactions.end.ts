@@ -127,6 +127,20 @@ test('an editor approves a pending venue transfer; status moves to approved and 
 			)
 		)
 		.toBe(recipientBalanceBefore + 3);
+
+	// The row's controls leave with the decision, and the status it shows is the
+	// status that was written. Asserted after the database polls above, so a
+	// failure here means the UI didn't update rather than the write didn't land.
+	// Both halves regressed once: the confirm button was never disabled while
+	// approve_transaction was in flight, and the table rendered a cached copy of
+	// the first page that a status-only change did not invalidate — so Approve
+	// stayed on screen after approving and could be pressed again, re-firing the
+	// RPC. The token count asserted above is what catches a re-fire moving tokens
+	// twice; these catch it still being offered.
+	const approvedRow = page.locator(`tr:has(td:has-text(${JSON.stringify(purpose)}))`);
+	await expect(approvedRow.locator('[data-testid$="-approve"]')).toHaveCount(0);
+	await expect(approvedRow.locator('[data-testid$="-decline-initiate"]')).toHaveCount(0);
+	await expect(approvedRow.locator('[data-testid$="-status"]')).toHaveText('approved');
 });
 
 test('a gift transaction is visible in venue transactions, scholar history, and balance', async ({
@@ -260,6 +274,15 @@ test('minter declining a proposed transaction emails the proposer and records th
 			)
 		)
 		.toBe(`declined|${minterID}|${reason}|${purpose}`);
+
+	// The decline is visible in the row without a reload: its status, its reason,
+	// and the absence of the controls. The reason is the half that never surfaced
+	// at all — the first page was cached on the row ids, and a decline changes only
+	// status, decliner, and decline_reason.
+	await expect(row.locator('[data-testid$="-decline-initiate"]')).toHaveCount(0);
+	await expect(row.locator('[data-testid$="-approve"]')).toHaveCount(0);
+	await expect(row).toContainText(reason);
+	await expect(row.locator('[data-testid$="-status"]')).toHaveText('declined');
 
 	// Exactly one decline email queued for the editor (the proposer).
 	await expect

@@ -46,6 +46,10 @@
 	let tip = $derived(buttonText.tip);
 
 	async function act(event: Event) {
+		// Refuse re-entry while an action is in flight. `disabled` on the buttons
+		// below is the visible half of this; this is the half that doesn't depend
+		// on the DOM having been updated between two clicks.
+		if (acting) return;
 		if (active) {
 			if (warn && !confirming) {
 				confirming = true;
@@ -86,9 +90,13 @@
 	>
 {:else}
 	<div class="row">
-		<button onclick={() => (confirming = false)}><Text path={(l) => l.shorthand.delete} /></button>
+		<button type="button" disabled={acting} onclick={() => (confirming = false)}
+			><Text path={(l) => l.shorthand.delete} /></button
+		>
 		<button
+			type="button"
 			data-testid={testid}
+			disabled={!active || acting}
 			class:warn={warn !== undefined}
 			onclick={async (event) => await act(event)}
 			><Text path={(l) => strings(l).warn ?? ''} /></button
