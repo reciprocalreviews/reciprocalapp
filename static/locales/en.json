@@ -264,10 +264,7 @@
 				}
 			},
 			"checkbox": {
-				"paymentFree": {
-					"on": "**Payment-free venue**: just volunteering and bidding, with no currency, costs, or compensation.",
-					"off": "**Token-based venue**: authors pay tokens to submit and reviewers are compensated."
-				}
+				"paymentFree": "**Token-based venue**: Authors pay tokens to submit and reviewers are compensated with tokens."
 			},
 			"section": {
 				"venueInfo": "Venue info",
@@ -1185,18 +1182,12 @@
 				}
 			},
 			"checkbox": {
-				"inactive": "**Inactive venue**: Scholars cannot volunteer, submit, or otherwise interact with this venue.",
-				"anonymousAssignments": {
-					"on": "**Anonymous assignments**: Authors and conflicted scholars cannot see who is assigned to review their submissions.",
-					"off": "**Visible assignments**: Authors and conflicted scholars can see who is assigned to review their submissions. This is open reviewing."
-				},
-				"vetThanks": {
-					"on": "**Vet thank-you notes**: An admin or editor must approve an author's thank-you note before it is shared with reviewers.",
-					"off": "**Share thank-you notes immediately**: Author thank-you notes are shared with reviewers without review."
-				},
+				"inactive": "**Inactive venue**: Volunteering, submissions, and other scholar activity are paused.",
+				"anonymousAssignments": "**Anonymous assignments**: Reviewer assignments are hidden from a submission's authors and from conflicted scholars.",
+				"vetThanks": "**Vet thank-you notes**: An admin or editor must approve an author's thank-you note before it is shared with reviewers.",
 				"paymentFree": {
-					"label": "**Token-based venue**: Authors pay tokens to submit and reviewers are compensated with tokens. Uncheck to make this venue payment-free.",
-					"note": "**Payment-free venue**: Scholars submit and review without tokens. No currency, costs, or compensation are shown."
+					"label": "**Token-based venue**: Authors pay tokens to submit and reviewers are compensated with tokens.",
+					"note": "**Payment-free venue**: Scholars submit and review for free. Currency, costs, and compensation are hidden."
 				}
 			},
 			"slider": {
@@ -1575,7 +1566,7 @@
 				}
 			},
 			"checkbox": {
-				"consent": "I understand that these tokens can't be transferred back without the recipient's consent."
+				"consent": "I understand that transferring these tokens back requires the recipient's consent."
 			},
 			"slider": {
 				"tokenAmount": {
@@ -1791,18 +1782,9 @@
 				"unnamed": "Role"
 			},
 			"checkbox": {
-				"invited": {
-					"on": "Scholars must be invited to this role.",
-					"off": "Scholars can volunteer for this role without being invited."
-				},
-				"anonymousAuthors": {
-					"on": "This role cannot see author information.",
-					"off": "This role can see author information."
-				},
-				"biddable": {
-					"on": "Volunteers can bid on submissions.",
-					"off": "Volunteers cannot bid for this role on submissions."
-				}
+				"invited": "**Invite-only**: Scholars must be invited to hold this role.",
+				"anonymousAuthors": "**Anonymous authors**: Author names are hidden from scholars in this role.",
+				"biddable": "**Bidding**: Volunteers in this role can bid on submissions."
 			},
 			"slider": {
 				"compensation": {

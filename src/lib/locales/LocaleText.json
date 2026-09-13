@@ -42,23 +42,6 @@
       ],
       "type": "object"
     },
-    "CheckboxOnOff": {
-      "additionalProperties": false,
-      "description": "Text for a checkbox with on/off state variants",
-      "properties": {
-        "off": {
-          "type": "string"
-        },
-        "on": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "on",
-        "off"
-      ],
-      "type": "object"
-    },
     "ConfirmButtonText": {
       "additionalProperties": false,
       "description": "An optional warning text for confirm buttons",
@@ -2852,7 +2835,8 @@
                   "additionalProperties": false,
                   "properties": {
                     "paymentFree": {
-                      "$ref": "#/definitions/CheckboxOnOff"
+                      "description": "Checked means the venue is token-based, matching the venue settings page; unchecked proposes a payment-free venue.",
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -3520,14 +3504,14 @@
                   "additionalProperties": false,
                   "properties": {
                     "anonymousAssignments": {
-                      "$ref": "#/definitions/CheckboxOnOff"
+                      "type": "string"
                     },
                     "inactive": {
                       "type": "string"
                     },
                     "paymentFree": {
                       "additionalProperties": false,
-                      "description": "`label` is the always-visible checkbox label (checked = payments on); `note` describes the payment-free state shown when unchecked.",
+                      "description": "`label` is the checkbox label (checked = payments on); `note` describes the payment-free state, shown only when unchecked.",
                       "properties": {
                         "label": {
                           "type": "string"
@@ -3543,7 +3527,7 @@
                       "type": "object"
                     },
                     "vetThanks": {
-                      "$ref": "#/definitions/CheckboxOnOff"
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -6098,13 +6082,13 @@
                   "additionalProperties": false,
                   "properties": {
                     "anonymousAuthors": {
-                      "$ref": "#/definitions/CheckboxOnOff"
+                      "type": "string"
                     },
                     "biddable": {
-                      "$ref": "#/definitions/CheckboxOnOff"
+                      "type": "string"
                     },
                     "invited": {
-                      "$ref": "#/definitions/CheckboxOnOff"
+                      "type": "string"
                     }
                   },
                   "required": [

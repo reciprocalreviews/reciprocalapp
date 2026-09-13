@@ -180,15 +180,12 @@
 				{/if}
 				<Checkbox
 					testid="propose-venue-payment-free"
-					on={paymentFree}
+					on={!paymentFree}
 					change={async (on) => {
-						paymentFree = on;
+						paymentFree = !on;
 						return {};
 					}}
-					label={(l) =>
-						paymentFree
-							? l.page.proposeVenue.checkbox.paymentFree.on
-							: l.page.proposeVenue.checkbox.paymentFree.off}
+					label={(l) => l.page.proposeVenue.checkbox.paymentFree}
 				/>
 				{#if !paymentFree}
 					<Options

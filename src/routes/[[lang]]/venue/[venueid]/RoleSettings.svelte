@@ -57,24 +57,19 @@
 	<Checkbox
 		on={role.invited}
 		change={(on) => db().editRoleInvited(role.id, on)}
-		label={(l) =>
-			role.invited ? l.view.roles.checkbox.invited.on : l.view.roles.checkbox.invited.off}
+		label={(l) => l.view.roles.checkbox.invited}
 	/>
 
 	<Checkbox
 		on={role.anonymous_authors}
 		change={(on) => db().editRoleAnonymousAuthors(role.id, on)}
-		label={(l) =>
-			role.anonymous_authors
-				? l.view.roles.checkbox.anonymousAuthors.on
-				: l.view.roles.checkbox.anonymousAuthors.off}
+		label={(l) => l.view.roles.checkbox.anonymousAuthors}
 	/>
 
 	<Checkbox
 		on={role.biddable}
 		change={(on) => db().editRoleBidding(role.id, on)}
-		label={(l) =>
-			role.biddable ? l.view.roles.checkbox.biddable.on : l.view.roles.checkbox.biddable.off}
+		label={(l) => l.view.roles.checkbox.biddable}
 		testid="role-biddable-{role.name}"
 	/>
 

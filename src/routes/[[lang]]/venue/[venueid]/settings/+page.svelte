@@ -238,19 +238,13 @@
 		<Checkbox
 			on={venue.anonymous_assignments}
 			change={(on) => db().editVenueAnonymousAssignments(venue.id, on)}
-			label={(l) =>
-				venue.anonymous_assignments
-					? l.page.settings.checkbox.anonymousAssignments.on
-					: l.page.settings.checkbox.anonymousAssignments.off}
+			label={(l) => l.page.settings.checkbox.anonymousAssignments}
 		/>
 
 		<Checkbox
 			on={venue.vet_thanks}
 			change={(on) => db().editVenueVetThanks(venue.id, on)}
-			label={(l) =>
-				venue.vet_thanks
-					? l.page.settings.checkbox.vetThanks.on
-					: l.page.settings.checkbox.vetThanks.off}
+			label={(l) => l.page.settings.checkbox.vetThanks}
 		/>
 
 		<Slider

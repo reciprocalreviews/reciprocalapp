@@ -6,6 +6,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Changed
 
+- **Checkboxes now say one thing.** Their labels used to rewrite themselves when you checked them. Now each one names the setting it turns on and holds still.
+- **The venue proposal form's payment checkbox now matches venue settings.** It reads **Token-based venue** and starts checked, where before it read payment-free and started unchecked, pointing the same setting opposite ways in the two places.
 - Updated internal tooling for stability.
 
 ### Fixed

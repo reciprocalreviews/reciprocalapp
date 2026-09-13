@@ -23,9 +23,6 @@ export type NotedTextFieldText = TextFieldText & {
 /** An optional warning text for confirm buttons */
 export type ConfirmButtonText = ButtonText & { warn: string };
 
-/** Text for a checkbox with on/off state variants */
-export type CheckboxOnOff = { on: string; off: string };
-
 /** Text for the Options (select) component */
 export type OptionsText = {
 	/** The optional label to show above the select */
@@ -925,10 +922,10 @@ export type LocaleText = {
 			};
 			checkbox: {
 				inactive: string;
-				anonymousAssignments: CheckboxOnOff;
-				vetThanks: CheckboxOnOff;
-				/** `label` is the always-visible checkbox label (checked = payments
-				 * on); `note` describes the payment-free state shown when unchecked. */
+				anonymousAssignments: string;
+				vetThanks: string;
+				/** `label` is the checkbox label (checked = payments on); `note`
+				 * describes the payment-free state, shown only when unchecked. */
 				paymentFree: { label: string; note: string };
 			};
 			slider: {
@@ -1172,7 +1169,9 @@ export type LocaleText = {
 				propose: ButtonText;
 			};
 			checkbox: {
-				paymentFree: CheckboxOnOff;
+				/** Checked means the venue is token-based, matching the venue
+				 * settings page; unchecked proposes a payment-free venue. */
+				paymentFree: string;
 			};
 			section: {
 				venueInfo: string;
@@ -1483,9 +1482,9 @@ export type LocaleText = {
 				unnamed: string;
 			};
 			checkbox: {
-				invited: CheckboxOnOff;
-				anonymousAuthors: CheckboxOnOff;
-				biddable: CheckboxOnOff;
+				invited: string;
+				anonymousAuthors: string;
+				biddable: string;
 			};
 			slider: {
 				compensation: SliderText;
