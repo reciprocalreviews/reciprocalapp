@@ -45,14 +45,23 @@ const STEWARD_FOOTER = `Sent by Reciprocal Reviews. Reply to this email and a st
  *
  * The steward wording would be false here, and *quietly* false: the reader would believe a
  * reply had reached support when it had actually gone to a stranger. So name the real reply
- * address, say that Reply All keeps everyone copied on the thread, and keep SUPPORT_EMAIL
- * visible as the separate route to help.
+ * address and keep SUPPORT_EMAIL visible as the separate route to help.
+ *
+ * `copied` decides whether Reply All is mentioned at all, on exactly the same reasoning. The
+ * clause used to be unconditional, which was true of the only message that carried its own
+ * Reply-To at the time -- the new-volunteer notice, addressed to one holder of the venue's top
+ * role and copying the rest. It is false of a call for bids, which is N private copies on
+ * purpose (its readers are reviewers who must not learn each other's addresses) and of a
+ * new-volunteer notice sent to a venue with a single holder. Telling those readers that Reply
+ * All reaches everyone copied invites them to answer a group that does not exist, and a footer
+ * the reader would believe is worse than no footer at all.
  *
  * The address arrives as data and lands in an `href`, so it is escaped.
  */
-function replyToFooter(replyTo: string): string {
+function replyToFooter(replyTo: string, copied: boolean): string {
 	const address = escapeHtml(replyTo);
-	return `Sent by Reciprocal Reviews. Replying to this email goes to <a href="mailto:${address}" style="color: ${MUTED_COLOR};">${address}</a> — Reply All also reaches everyone copied on it. For help with Reciprocal Reviews, write <a href="mailto:${SUPPORT_EMAIL}" style="color: ${MUTED_COLOR};">${SUPPORT_EMAIL}</a>.`;
+	const replyAll = copied ? ' — Reply All also reaches everyone copied on it' : '';
+	return `Sent by Reciprocal Reviews. Replying to this email goes to <a href="mailto:${address}" style="color: ${MUTED_COLOR};">${address}</a>${replyAll}. For help with Reciprocal Reviews, write <a href="mailto:${SUPPORT_EMAIL}" style="color: ${MUTED_COLOR};">${SUPPORT_EMAIL}</a>.`;
 }
 
 /** Where the wordmark links when no origin is supplied. Declared here rather
@@ -134,7 +143,8 @@ export function wrapEmail({
 	subject,
 	bodyHtml,
 	origin = DEFAULT_ORIGIN,
-	replyTo
+	replyTo,
+	copied = false
 }: {
 	subject: string;
 	bodyHtml: string;
@@ -146,6 +156,9 @@ export function wrapEmail({
 	 * the caller that posts to Resend. Absent for every message that carries no override,
 	 * which is nearly all of them. */
 	replyTo?: string;
+	/** Whether the message actually copies anyone, so the footer only offers Reply All when
+	 * there is somebody for it to reach. */
+	copied?: boolean;
 }): string {
 	return `<!doctype html>
 <html lang="en">
@@ -172,7 +185,7 @@ ${bodyHtml}
 						</tr>
 						<tr>
 							<td style="padding: 20px 32px; border-top: 1px solid ${BORDER_COLOR}; color: ${MUTED_COLOR}; font-size: 12px; line-height: 1.5;">
-								${replyTo ? replyToFooter(replyTo) : STEWARD_FOOTER}
+								${replyTo ? replyToFooter(replyTo, copied) : STEWARD_FOOTER}
 							</td>
 						</tr>
 					</table>
@@ -194,8 +207,11 @@ export function renderBrandedEmail(
 	// Trailing and optional so the `remind` cron keeps compiling against the
 	// three-argument form. Every reminder's reply path genuinely IS the stewards, so it
 	// wants the default footer; a per-message Reply-To reminder would pass this.
-	replyTo?: string
+	replyTo?: string,
+	// Also trailing and optional: only the consumer that knows the row's `cc` can answer this,
+	// and every other caller sends to one recipient.
+	copied: boolean = false
 ): { html: string; text: string } {
-	const html = wrapEmail({ subject, bodyHtml: paragraphsToHtml(body), origin, replyTo });
+	const html = wrapEmail({ subject, bodyHtml: paragraphsToHtml(body), origin, replyTo, copied });
 	return { html, text: htmlToText(html) };
 }

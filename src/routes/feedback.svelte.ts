@@ -1,5 +1,6 @@
 import { invalidateAll } from '$app/navigation';
 import { type DBError, type Result } from '$lib/data/CRUD';
+import { collapseNotifications } from '$lib/data/notifications';
 import type { AuthError, PostgrestError } from '@supabase/supabase-js';
 
 export type Level = 'error' | 'warning' | 'success';
@@ -7,6 +8,11 @@ export type Feedback = {
 	message: string;
 	level: Level;
 	error?: PostgrestError | AuthError | undefined;
+	/** How many FURTHER notifications this banner stands for, when a batch of one kind was
+	 * collapsed into it. Absent on an ordinary banner, and never 0. Banners.svelte turns it
+	 * into "… — and N others"; the wording lives there because it needs locale, which this
+	 * module does not have. */
+	others?: number;
 };
 
 // A global list of errors to display to the user, global to the application.
@@ -22,9 +28,10 @@ export function getPendingActions() {
 export function addFeedback(
 	message: string,
 	level: Level,
-	error?: PostgrestError | AuthError | undefined
+	error?: PostgrestError | AuthError | undefined,
+	others?: number
 ) {
-	messages = [...messages, { message, level, error }];
+	messages = [...messages, { message, level, error, others }];
 }
 
 export function addError(error: DBError) {
@@ -59,9 +66,14 @@ export async function handle<T>(
 		// succeeded should not look like a click that did nothing.
 		if (success && (notified === undefined || notified.length === 0))
 			addFeedback(success, 'success');
-		// Render one success banner per notification (e.g., one per email recipient).
+		// One banner per notification, except that a batch of one kind collapses into a single
+		// banner that names the first and counts the rest. One per recipient is right for the
+		// one or two most actions have, and unusable for the ones that fan out: a call for bids
+		// to a three-hundred-volunteer role filled the sticky header with three hundred bars,
+		// each needing its own click. See collapseNotifications for the rules.
 		if (notified) {
-			for (const note of notified) addFeedback(note.message, 'success');
+			for (const banner of collapseNotifications(notified))
+				addFeedback(banner.message, 'success', undefined, banner.others);
 		}
 		// Awaited, so that callers resolve only once the page data reflects the write.
 		// Returning first meant every caller was handed "success" while `data` from the

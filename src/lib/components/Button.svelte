@@ -132,6 +132,12 @@
 
 	.row button:last-child {
 		flex-grow: 1;
+		/* The confirming button holds a SENTENCE, not a label. `white-space: nowrap` above is
+		   right for a label — a two-word button that wraps mid-phrase looks broken — and wrong
+		   here: it makes the button's minimum width the whole warning, which pushes the row
+		   past its container and gets the end of the question clipped rather than wrapped. The
+		   reader then loses exactly the part that says what cannot be undone. */
+		white-space: normal;
 	}
 
 	button:not([disabled]):hover {

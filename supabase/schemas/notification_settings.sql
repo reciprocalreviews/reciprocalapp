@@ -282,6 +282,7 @@ insert into
 	public.notification_preferences (key, default_on)
 values
 	('AvailabilityReminder', true),
+	('CallForBids', true),
 	('CompensationChanged', true),
 	('CompensationRequested', true),
 	('ConflictDeclared', false),
@@ -311,6 +312,7 @@ insert into
 	public.optional_emails (event, preference)
 values
 	('AvailabilityReminder', 'AvailabilityReminder'),
+	('CallForBids', 'CallForBids'),
 	('CompensationChanged', 'CompensationChanged'),
 	('CompensationPending', 'CompensationRequested'),
 	('CompensationRequested', 'CompensationRequested'),
@@ -349,6 +351,7 @@ delete from public.optional_emails
 where
 	event not in (
 		'AvailabilityReminder',
+		'CallForBids',
 		'CompensationChanged',
 		'CompensationPending',
 		'CompensationRequested',
@@ -382,6 +385,7 @@ delete from public.notification_preferences
 where
 	key not in (
 		'AvailabilityReminder',
+		'CallForBids',
 		'CompensationChanged',
 		'CompensationRequested',
 		'ConflictDeclared',

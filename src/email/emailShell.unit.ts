@@ -138,6 +138,24 @@ describe('renderBrandedEmail', () => {
 		expect(text).toContain(SUPPORT_EMAIL);
 	});
 
+	// Reply All is offered only when somebody is actually copied. The clause used to be
+	// unconditional, which was true of the only message that carried its own Reply-To at the
+	// time — the new-volunteer notice, addressed to one holder of a venue's top role and
+	// copying the rest. It is false of a call for bids, which is N private copies on purpose,
+	// and of a new-volunteer notice at a venue with a single holder.
+	it('offers Reply All only when the message copies somebody', () => {
+		const { html } = renderBrandedEmail('Subject', 'Body.', undefined, 'newbie@uni.edu', true);
+		expect(html).toContain('Reply All');
+	});
+
+	it('does not invite Reply All on a message with no copies', () => {
+		// The same argument as the steward promise above: a footer the reader would believe,
+		// pointing at a group that does not exist, is worse than no footer at all.
+		const { html } = renderBrandedEmail('Subject', 'Body.', undefined, 'newbie@uni.edu');
+		expect(html).not.toContain('Reply All');
+		expect(html).toContain('mailto:newbie@uni.edu');
+	});
+
 	it('falls back to the steward footer when there is no reply address', () => {
 		// A volunteer with no verified contact address leaves reply_to null, and the
 		// footer has to be correct for that case too.

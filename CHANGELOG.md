@@ -8,6 +8,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - **Your profile now has 22 notification settings rather than one.** Grouped by tokens, reviewing, venues you help run, and proposals and thanks, with the noisier ones off until you ask for them.
 - **RR now emails you when things happen that you would otherwise have to go looking for.** Tokens arriving, a submission of yours finishing review, a role, venue administration, or minting authority granted or taken away, a bid or a conflict on a paper you edit, and an invitation you sent being answered.
+- **A venue's editors can now ask a role's volunteers to bid, in their own words.** The form sits on any biddable role's card, says how many people will receive the message before it goes, and sets replies to come back to whoever sent it.
 
 ### Changed
 
@@ -15,6 +16,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **Checkboxes now say one thing.** Their labels used to rewrite themselves when you checked them. Now each one names the setting it turns on and holds still.
 - **The venue proposal form's payment checkbox now matches venue settings.** It reads **Token-based venue** and starts checked, where before it read payment-free and started unchecked, pointing the same setting opposite ways in the two places.
 - **A bulk import row that is already in the venue now names and links the manuscript it matched.** The notice said only that something here had that ID, which left an ID two different papers share looking exactly like a queue re-exported with last month's rows still in it.
+- **Confirmations for an action that emails many people are now one message rather than one each.** Asking three hundred volunteers to bid would have filled the page with three hundred separate confirmations, each needing its own dismissal; now one names somebody and counts the rest.
 - Updated internal tooling for stability.
 
 ### Fixed
@@ -27,6 +29,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **The "submissions visible to you" count now matches the list it links to.** It counted submissions the list then hid — ones you had declared a conflict on, and done ones past the venue's visibility window.
 - **Approving or declining a transaction now settles the row it was decided on.** The new status and the decline reason appear without a reload and the Approve and Decline buttons leave with the decision; before, the row went on showing the transaction as proposed, with both buttons still sitting there to press again.
 - **A confirmation no longer commits twice.** Both the confirm and its cancel are now inactive while the action is in flight, so the least reversible actions in the platform — approving a transaction, deleting a role — happen exactly once per confirmation.
+- **A confirmation's warning is no longer cut off.** A long one now wraps instead of running past the edge of the page, which had been hiding the end of the sentence saying what cannot be undone.
+- **An email that replies to a person no longer offers Reply All when it copies nobody.** The footer promised a group that did not exist on any message with a single recipient.
 
 ## 0.5.4 - 2026-09-05
 

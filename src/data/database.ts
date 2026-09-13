@@ -1290,6 +1290,7 @@ export type Database = {
         Args: { _import_note: string; _submissions: Json; _venueid: string }
         Returns: Json
       }
+      call_for_bids_status: { Args: { _role: string }; Returns: Json }
       can_approve_assignment: {
         Args: { _role: string; _submission: string }
         Returns: boolean
@@ -1411,6 +1412,10 @@ export type Database = {
       pending_email_verification: { Args: never; Returns: Json }
       propose_thanks: {
         Args: { _message: string; _submission: string }
+        Returns: Json
+      }
+      queue_call_for_bids: {
+        Args: { _note: string; _role: string }
         Returns: Json
       }
       queue_email: {

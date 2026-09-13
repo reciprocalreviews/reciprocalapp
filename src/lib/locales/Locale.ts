@@ -109,6 +109,18 @@ export type LocaleText = {
 	};
 	notification: {
 		emailed: string;
+		/** `emailed`, said of a whole batch: the plural form used when one send reached more
+		 * people than are worth listing. `{count}` is the REST of them, so a send to 307 reads
+		 * as one name and "306 others". Written as its own sentence rather than assembled from
+		 * the singular, because "was emailed" has to become "were emailed" and editing a verb
+		 * inside already-translated prose is not something a substitution can do. */
+		emailedMany: string;
+		/** The fallback when a batch collapsed but its producer supplied no plural form: wraps
+		 * the ALREADY-LOCALIZED first notification and counts the rest. Reads less well than a
+		 * purpose-written plural, and exists so that a producer which groups without writing one
+		 * still reports the true size rather than silently speaking for people it does not
+		 * mention. `{count}` is again the rest of the batch. */
+		andOthers: string;
 		/** Shown after notifying the shared steward inbox, which is one recipient
 		 * rather than a named person. Takes {subject}. */
 		emailedStewards: string;
@@ -1038,6 +1050,7 @@ export type LocaleText = {
 				 * to me" — so they are fragments, not sentences, and start lowercase. */
 				label: {
 					AvailabilityReminder: string;
+					CallForBids: string;
 					CompensationChanged: string;
 					CompensationRequested: string;
 					ConflictDeclared: string;
@@ -1466,9 +1479,29 @@ export type LocaleText = {
 				inviteAlready: string;
 				/** Confirms a batch of invitations went out. */
 				invited: string;
+				/** How many of the role's volunteers would actually receive a call for bids.
+				 * Not the same as the role's volunteer count, and deliberately so: someone
+				 * with no verified address, someone who has silenced the notice, and the
+				 * sender themselves are all excluded, and reporting the larger number would
+				 * promise more than the send delivers. Takes `{count}`. */
+				callForBidsRecipients: string;
+				/** When the venue last asked, and who asked. Plain information, not a
+				 * warning: there is no rate limit, and this exists so two co-chairs do not
+				 * unknowingly send the same nudge an hour apart. Takes `{name}` and
+				 * `{when}`. */
+				callForBidsLast: string;
+				/** Why the send is refused when the sender has verified no contact address. A
+				 * call for bids replies to its sender, so there is nowhere for an answer to
+				 * go. */
+				callForBidsUnverified: string;
+				/** Shown in place of the form when nobody would receive it. */
+				callForBidsNobody: string;
 			};
 			button: {
 				createRole: ButtonText;
+				/** Sends the call for bids. A confirm button: the mail goes to everyone in
+				 * the role at once and cannot be recalled. */
+				callForBids: ConfirmButtonText;
 				removeAdmin: ConfirmButtonText;
 				addAdmin: ButtonText;
 				priorityUp: ButtonText;
@@ -1501,6 +1534,12 @@ export type LocaleText = {
 				 * matches nobody is reported as a query that matched nobody, not as text
 				 * that should not have been typed. */
 				invite: TextFieldText;
+				/** The call for bids itself — the editor's own words, and the only prose
+				 * anybody writes into RR's mail. The note explains the two things the
+				 * pipeline does to it that a writer would not expect: a link is rendered
+				 * inert, because branded mail must not carry a caller's URL, and the whole
+				 * note arrives as one paragraph. */
+				callForBids: NotedTextFieldText & { invalid: string };
 				roleName: TextFieldText;
 				roleDescription: TextFieldText;
 				compensationRationale: TextFieldText;
@@ -1547,6 +1586,9 @@ export type LocaleText = {
 				roleOpen: string;
 				roleInvited: string;
 				volunteersCount: string;
+				/** Introduces the call-for-bids form: who it reaches and that it is the
+				 * editor's own words, not an automated notice. */
+				callForBids: string;
 				invited: string;
 				declined: string;
 				volunteering: string;
@@ -1807,6 +1849,11 @@ export type LocaleText = {
 		ApproveThanks: string;
 		DeclineThanks: string;
 		LoadThanks: string;
+		CallForBids: string;
+		/** The one call-for-bids failure a person can fix themselves, so it says what to do
+		 * rather than that something went wrong. */
+		CallForBidsUnverified: string;
+		CallForBidsStatus: string;
 	};
 };
 

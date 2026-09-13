@@ -75,7 +75,7 @@ The root layout (`src/routes/+layout.svelte`) sets up four pieces of context con
 
 - `setDB()` — database instance
 - `setLocaleContext()` — locale strings
-- `setFeedback()` — error/success notifications
+- `addFeedback()` / `getFeedback()` — error/success notifications (a module-level store in `src/routes/feedback.svelte.ts`, not a context)
 - `setBreadcrumbs()` / page headers — navigation
 
 ### State

@@ -26,6 +26,7 @@
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import AdminsCard from './AdminsCard.svelte';
+	import CallForBids from './CallForBids.svelte';
 	import RoleInvite from './RoleInvite.svelte';
 	import RoleSettings from './RoleSettings.svelte';
 	import VolunteerStatus from './VolunteerStatus.svelte';
@@ -70,6 +71,28 @@
 	let showPayment = $derived(!venue.payment_free);
 
 	let mayInvite = $derived(canInvite ?? isAdmin);
+
+	/** Whether the viewer may ask a role's volunteers to bid: the venue's admins, and the
+	 * holders of its priority-0 role — the same union that vets thank-you notes, and the one
+	 * `emailEditorsOf` already computes server-side.
+	 *
+	 * `accepted` but not `active`, matching public.isPriorityZero: this is a question about
+	 * authority, and an editor who has paused their own volunteering is still the venue's
+	 * editor. (The recipient query filters `active`, because that is a question about mail.)
+	 *
+	 * An affordance, not authorization — queue_call_for_bids re-derives all of this and
+	 * refuses anyone else. */
+	let maySolicit = $derived(
+		isAdmin ||
+			(scholar !== undefined &&
+				(roles ?? []).some(
+					(r) =>
+						r.priority === 0 &&
+						(volunteers ?? []).some(
+							(v) => v.roleid === r.id && v.scholarid === scholar && v.accepted === 'accepted'
+						)
+				))
+	);
 
 	let newRole: string = $state('');
 </script>
@@ -222,6 +245,12 @@
 
 				{#if mayInvite && scholar}
 					<RoleInvite {venue} {role} {scholar} already={roleVolunteers.map((v) => v.scholarid)} />
+				{/if}
+
+				<!-- Only on a biddable role: a nudge to bid, sent to people the submissions page
+				     will not show bid buttons to, is a message nobody can act on. -->
+				{#if role.biddable && maySolicit && scholar}
+					<CallForBids {role} />
 				{/if}
 
 				{#if isAdmin}

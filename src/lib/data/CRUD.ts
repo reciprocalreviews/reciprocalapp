@@ -71,13 +71,35 @@ export type DBError = { message: string; details?: PostgrestError | AuthError };
  * message so the feedback layer can render it without needing locale
  * access. The CRUD layer (which has locale via this.locale) is responsible
  * for formatting. */
-export type Notification = { message: string };
+export type Notification = {
+	message: string;
+	/** Entries sharing a key are one piece of news. When more than a few arrive at once, the
+	 * feedback layer posts one banner for the group and counts the rest rather than one banner
+	 * each — a call for bids to a three-hundred-volunteer role is one thing that happened, not
+	 * three hundred. Absent means the entry always stands alone, so a producer that has not
+	 * thought about batching behaves exactly as it did before. See
+	 * [notifications.ts](./notifications.ts). */
+	group?: string;
+	/** `message` said of the whole batch, for when this entry's group collapses.
+	 *
+	 * Still carrying its `{count}` placeholder, which the feedback layer fills once it knows how
+	 * many entries the group turned out to have — the producer often cannot know: `inviteToRole`
+	 * emits one single-recipient send per invitee, so each entry is built believing it is alone.
+	 * The count is the REST of the batch, so 307 recipients read as one name and 306 others.
+	 *
+	 * Written by the producer rather than assembled by the feedback layer because a plural is
+	 * not a suffix: "was emailed" has to become "were emailed", and a producer is also the only
+	 * place with locale. Optional — a group without one still collapses, but falls back to
+	 * appending a count to the singular message. */
+	collapsed?: string;
+};
 
 export type Result<Type = undefined> = {
 	data?: Type;
 	error?: DBError;
 	/** Optional notifications produced by the action — emails queued, etc.
-	 * The feedback layer renders one banner per entry. */
+	 * The feedback layer renders one banner per entry, except that entries sharing a `group`
+	 * collapse into one once there are more than a few of them. */
 	notified?: Notification[];
 };
 
@@ -114,6 +136,22 @@ export type PendingEmailVerification =
 			resend_after: string;
 			delivery: 'queued' | 'sent' | 'failed' | 'unknown' | null;
 	  };
+
+/** What the call-for-bids form knows before it sends anything.
+ *
+ * `eligible` is how many volunteers would actually receive the message — the same predicate
+ * the fan-out uses, which the client cannot reproduce because it cannot see who has a
+ * verified address or who has silenced the notice. Counting a role's volunteers here instead
+ * would promise a number the feedback banners then contradict.
+ *
+ * `last_sent` / `last_sender` answer "has a colleague already done this?". There is
+ * deliberately no rate limit — an editor decides when their community needs asking — so these
+ * inform that judgment rather than gating it. Null when the venue has never asked. */
+export type CallForBidsStatus = {
+	eligible: number;
+	last_sent: string | null;
+	last_sender: string | null;
+};
 
 /** What `ensure_scholar` found when asked to repair the caller's own scholar row.
  * `orcid_conflict` is the one that needs a person: another scholar row already holds
@@ -599,6 +637,26 @@ export default abstract class CRUD {
 	 * deliberately no way to email an arbitrary address, and no way to supply a body —
 	 * both would make the branded pipeline an open relay. */
 	abstract emailScholars(scholars: ScholarID[], event: EmailType, args: string[]): Promise<Result>;
+
+	/** Write a short personal note to the volunteers of one biddable role, asking them to
+	 * come and bid.
+	 *
+	 * The note is the only prose a caller ever supplies to the mail pipeline, and it arrives
+	 * as one bounded template ARGUMENT rather than a body: `queue_call_for_bids` owns the
+	 * subject, the attribution, the "why you got this" line and the link, and the registry
+	 * escapes the note and defangs any URL scheme in it at send time.
+	 *
+	 * Unlike `emailScholars`, this authorizes against the venue — the caller must be one of
+	 * its admins or hold its priority-0 role — because a caller who supplies prose cannot be
+	 * given `queue_email`'s benefit of the doubt. Recipients are resolved server-side and
+	 * never named by the caller. */
+	abstract callForBids(role: RoleID, note: string): Promise<Result>;
+
+	/** What the call-for-bids form needs before anything is sent: how many people would
+	 * actually receive it, and when the venue last asked. Both need privileges the client
+	 * lacks — the count depends on verified-address and opt-out state, and the mail log is
+	 * readable by venue admins alone. */
+	abstract getCallForBidsStatus(role: RoleID): Promise<Result<CallForBidsStatus>>;
 
 	/** Add a conflict */
 	abstract declareConflict(
