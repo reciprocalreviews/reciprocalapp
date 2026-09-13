@@ -16,6 +16,11 @@ export default defineConfig({
 		}
 	],
 	test: {
-		include: ['src/**/*.unit.ts']
+		include: ['src/**/*.unit.ts'],
+		// Transforming modules is most of a unit run; this persists the result under
+		// node_modules so a rerun reuses it. Local only — CI's `npm ci` wipes
+		// node_modules, so every CI run starts cold regardless. If a transform ever
+		// looks stale (the cache key cannot see plugin options), `vitest --clearCache`.
+		fsModuleCache: true
 	}
 });

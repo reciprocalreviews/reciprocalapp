@@ -1,6 +1,6 @@
 {
 	"name": "reciprocalapp",
-	"version": "0.5.4",
+	"version": "0.5.5",
 	"private": true,
 	"prepare": "svelte-kit sync",
 	"scripts": {
@@ -34,7 +34,7 @@
 		"scale:check": "docker exec -i supabase_db_reciprocalapp psql -U postgres -d postgres < scripts/scale-check.sql"
 	},
 	"engines": {
-		"node": ">=22.0.0"
+		"node": ">=22.12.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1",
@@ -54,7 +54,7 @@
 		"typescript": "^6",
 		"vercel": "^59",
 		"vite": "^8",
-		"vitest": "^4"
+		"vitest": "^5"
 	},
 	"type": "module",
 	"dependencies": {

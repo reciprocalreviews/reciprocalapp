@@ -53,7 +53,7 @@ jobs:
       # before any test runs. Pinning also stops CI drifting ahead of local.
       - uses: supabase/setup-cli@v2
         with:
-          version: 2.111.0
+          version: 2.117.0
 
       - name: Check the required secrets are present
         env:
