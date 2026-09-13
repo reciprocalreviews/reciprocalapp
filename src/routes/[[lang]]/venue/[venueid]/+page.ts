@@ -2,7 +2,7 @@ import { NO_VENUE_ID } from '$lib/data/venuePath';
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { db, venue } = await parent();
+	const { db, venue, scholar } = await parent();
 
 	// The URL segment may be the venue's web address, so the id comes from the venue the
 	// layout resolved, never from the param — every query below is keyed on a uuid column.
@@ -28,8 +28,19 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// See how many transactions the venue is part of.
 	const { data: transactionCount } = await db.getVenueTransactionCount(venueid);
 
-	// See how many submissions are in the venue, for display.
-	const { data: submissionCount } = await db.getVenueSubmissionCount(venueid);
+	// See how many submissions this scholar would find in the venue, for display.
+	// The tile links straight to the submissions list, so it counts what that list
+	// will actually show: the conflicted submissions and the aged-out done ones are
+	// hidden there, and counting them here made the number a promise the list broke.
+	const { data: conflicts } =
+		scholar === null ? { data: [] } : await db.getScholarConflicts(scholar.id);
+	const doneCutoff =
+		venue === null ? null : new Date(Date.now() - venue.done_visibility_days * 24 * 60 * 60 * 1000);
+	const { data: submissionCount } = await db.getVenueSubmissionCount(
+		venueid,
+		(conflicts ?? []).map((conflict) => conflict.submissionid),
+		doneCutoff
+	);
 
 	// Get all the submission types
 	const { data: types } = await db.getVenueSubmissionTypes(venueid);

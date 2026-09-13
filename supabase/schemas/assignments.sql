@@ -61,37 +61,6 @@ create index "idx_assignments_completed" on public.assignments using "btree" (co
 
 --------------------------------------
 -- Functions
--- True if the current scholar is an ACCEPTED VOLUNTEER on the role that approves
--- the given role, anywhere in the venue. This is NOT the same rule as
--- public.can_approve_assignment below, and the name says so on purpose: this one
--- is venue-wide and volunteer-based, with no admin branch, no priority-0 editor
--- branch, and no submission. It is the USING clause of the assignments UPDATE
--- policy, where an AE must be able to approve a bid on a submission they hold no
--- assignment on — so it cannot be narrowed to match the other rule without
--- revoking that. See migration 20260816010000 for the full reasoning.
-create or replace function public.isRoleApproverVolunteer (_roleid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
-set
-	"search_path" to '' as $$
-	select (
-		exists (
-			select id
-			from public.volunteers
-			where
-				scholarid = (select auth.uid()) and
-				roleid=(select approver from public.roles where id=_roleid) and
-				accepted = 'accepted'
-		)
-	)
-$$;
-
-alter function public.isRoleApproverVolunteer (uuid) OWNER to "postgres";
-
-grant all on FUNCTION public.isRoleApproverVolunteer (uuid) to "anon";
-
-grant all on FUNCTION public.isRoleApproverVolunteer (uuid) to "authenticated";
-
-grant all on FUNCTION public.isRoleApproverVolunteer (uuid) to "service_role";
-
 -- The single definition of "may this scholar approve an assignment for this role
 -- on this submission" — a venue admin, the submission's priority-0 editor, or the
 -- holder of the approving role, each requiring an APPROVED ASSIGNMENT on this
@@ -136,13 +105,13 @@ from
 grant
 execute on function public.can_approve_assignment (uuid, uuid) to authenticated;
 
--- A THIRD rule in this family, and again deliberately not the same question as the two
+-- The second rule in this family, and deliberately not the same question as the one
 -- above: "may I take this submission?", not "may I approve it for someone else?".
 --
 -- It exists because the venue's own editors could not seat themselves. The priority-0
--- role has no approver, so isRoleApproverVolunteer is never true for it, and
--- can_approve_assignment's editor branch requires an approved priority-0 assignment on
--- the very submission being claimed — which is self-perpetuating. That left isAdmin() as
+-- role has no approver, so the approver branch of can_approve_assignment is never true
+-- for it, and its editor branch requires an approved priority-0 assignment on the very
+-- submission being claimed — which is self-perpetuating. That left isAdmin() as
 -- the only way anyone became the first editor on a submission, so an Editor-role
 -- volunteer who was not also a venue admin could be told a submission needed them and be
 -- unable to do anything about it.
@@ -257,40 +226,6 @@ grant all on FUNCTION public.isAssigned (_submissionid uuid) to "authenticated";
 
 grant all on FUNCTION public.isAssigned (_submissionid uuid) to "service_role";
 
--- True if the current scholar is an accepted volunteer on any role in the
--- approver chain ABOVE the given role (its approver, that role's approver, and
--- so on). These are the scholars empowered to make/oversee assignments to the
--- role, so they may see its assignments. Walks roles.approver upward with a
--- depth guard to tolerate accidental cycles.
-create or replace function public.isInApproverChain (_roleid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
-set
-	"search_path" to '' as $$
-	with recursive chain as (
-		select approver as roleid, 1 as depth
-		from public.roles
-		where id = _roleid and approver is not null
-		union all
-		select r.approver, c.depth + 1
-		from public.roles r
-		join chain c on r.id = c.roleid
-		where r.approver is not null and c.depth < 50
-	)
-	select exists (
-		select 1
-		from public.volunteers v
-		join chain c on c.roleid = v.roleid
-		where v.scholarid = (select auth.uid()) and v.accepted = 'accepted'
-	);
-$$;
-
-alter function public.isInApproverChain (_roleid uuid) OWNER to "postgres";
-
-grant all on FUNCTION public.isInApproverChain (_roleid uuid) to "anon";
-
-grant all on FUNCTION public.isInApproverChain (_roleid uuid) to "authenticated";
-
-grant all on FUNCTION public.isInApproverChain (_roleid uuid) to "service_role";
-
 -- True if the current scholar has a declared conflict of interest on the given
 -- submission. plpgsql (not sql) so the body's reference to public.conflicts is
 -- resolved at run time, since the conflicts table loads after this file.
@@ -387,15 +322,6 @@ select
 						auth.uid ()
 				)
 		)
-		or exists (
-			select
-				assignments.id
-			from
-				public.assignments
-			where
-				assignments.submission=submissions.id
-				and public.isRoleApproverVolunteer (assignments.role)
-		)
 		-- The venue's editors, whether or not they are venue admins and whether or not
 		-- they are assigned to this submission yet. Every other branch above requires a
 		-- foothold ON the submission, so a priority-0 volunteer who was not also an admin
@@ -448,8 +374,9 @@ for update
 	);
 
 -- Assignment visibility: the assigned scholar always sees their own assignment.
--- Otherwise, only the approver chain for the role (and venue admins) may see it,
--- and never if that viewer is conflicted on the submission.
+-- Otherwise, only whoever may approve it on this submission may see it -- a venue
+-- admin, the submission's editor, or the holder of the approving role on it -- and
+-- never if that viewer is conflicted on the submission.
 create policy "assignees and approvers can see assignments" on public.assignments for
 select
 	to authenticated using (
@@ -461,13 +388,11 @@ select
 						auth.uid () as "uid"
 				)
 			)
-			-- The approver chain for the role, or venue admins, may see it,
-			-- unless they are conflicted on the submission.
+			-- Whoever may approve this assignment may see it, unless they are
+			-- conflicted on the submission. can_approve_assignment covers venue
+			-- admins itself.
 			or (
-				(
-					public.isInApproverChain (role)
-					or public.isAdmin (venue)
-				)
+				public.can_approve_assignment (submission, role)
 				and not public.isConflicted (submission)
 			)
 			-- Open review: when the venue is not anonymous, the submission's
@@ -497,7 +422,7 @@ for update
 						auth.uid () as "uid"
 				)
 			)
-			or public.isRoleApproverVolunteer (role)
+			or public.can_approve_assignment (submission, role)
 		)
 	);
 
@@ -514,13 +439,16 @@ create policy "admins, approvers and volunteers can create assignments" on "publ
 with
 	check (
 		(
-			-- If the current scholar is an admin, they can create any assignment.
-			public.isAdmin (venue)
-			-- If the current scholar has an assigment to the role that is the approver for the new assignment's role.
-			or (
-				public.isRoleApproverVolunteer (role)
-				and isAssigned (submission)
-			)
+			-- Whoever may approve an assignment for this role on this submission may
+			-- create one. Covers venue admins and the submission's editor.
+			--
+			-- The old rule paired a venue-wide approver check with isAssigned, which
+			-- asks only for an approved assignment in SOME role on the submission --
+			-- so a scholar seated as a plain reviewer, who also volunteered in the
+			-- approving role venue-wide, could seat further reviewers alongside
+			-- themselves. The approver seated here may still seat anyone in the roles
+			-- they approve, including themselves.
+			public.can_approve_assignment (submission, role)
 			-- If the venue permits bidding and the volunteer has the role for which this assignment is being created.
 			or (
 				bid

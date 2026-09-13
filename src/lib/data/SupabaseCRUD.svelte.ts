@@ -1084,11 +1084,37 @@ export default class SupabaseCRUD extends CRUD {
 		return { data: all };
 	}
 
-	async getVenueSubmissionCount(venue: VenueID): Promise<ReadResult<number | null>> {
-		return this.count(
-			'LoadSubmission',
-			this.client.from('submissions').select('*', { count: 'exact', head: true }).eq('venue', venue)
-		);
+	/** The number of the venue's submissions the current scholar would actually find
+	 * in the submissions list. RLS decides what is visible, but the list drops two
+	 * further categories on the client (sortSubmissions.ts), so a raw count promised
+	 * rows that were never rendered. Both exclusions are applied here rather than
+	 * counting rows and subtracting: the point of a head count is not to fetch them.
+	 *
+	 * The list's other filters — the search box and the needs-editor checkbox — are
+	 * deliberately NOT applied. Those are interactive state, not facts about what
+	 * this scholar may see. */
+	async getVenueSubmissionCount(
+		venue: VenueID,
+		conflicted: SubmissionID[] = [],
+		doneCutoff: Date | null = null
+	): Promise<ReadResult<number | null>> {
+		let query = this.client
+			.from('submissions')
+			.select('*', { count: 'exact', head: true })
+			.eq('venue', venue);
+
+		// Submissions this scholar has declared a conflict on are hidden from the list.
+		if (conflicted.length > 0) query = query.not('id', 'in', `(${conflicted.join(',')})`);
+
+		// Done submissions age out of the list after the venue's visibility window.
+		// completed_at is null for anything still reviewing, and for done submissions
+		// that predate the column, both of which the list keeps.
+		if (doneCutoff !== null)
+			query = query.or(
+				`status.eq.reviewing,completed_at.is.null,completed_at.gte.${doneCutoff.toISOString()}`
+			);
+
+		return this.count('LoadSubmission', query);
 	}
 
 	async getVenueSubmissionTypes(venue: VenueID): Promise<ReadResult<SubmissionType[] | null>> {

@@ -739,7 +739,14 @@ export default abstract class CRUD {
 	abstract getVenueSubmissionExternalIDs(
 		venue: VenueID
 	): Promise<ReadResult<Pick<SubmissionRow, 'externalid'>[] | null>>;
-	abstract getVenueSubmissionCount(venue: VenueID): Promise<ReadResult<number | null>>;
+	/** How many of the venue's submissions this scholar would find in the submissions
+	 * list: RLS-visible, minus the ones they have a conflict on and the done ones past
+	 * the venue's visibility window, both of which the list itself hides. */
+	abstract getVenueSubmissionCount(
+		venue: VenueID,
+		conflicted?: SubmissionID[],
+		doneCutoff?: Date | null
+	): Promise<ReadResult<number | null>>;
 
 	abstract getVenueSubmissionTypes(venue: VenueID): Promise<ReadResult<SubmissionType[] | null>>;
 	abstract getCompensationByTypes(

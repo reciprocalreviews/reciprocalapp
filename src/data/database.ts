@@ -1332,13 +1332,11 @@ export type Database = {
       isassigned: { Args: { _submissionid: string }; Returns: boolean }
       isauthor: { Args: { _submissionid: string }; Returns: boolean }
       isconflicted: { Args: { _submissionid: string }; Returns: boolean }
-      isinapproverchain: { Args: { _roleid: string }; Returns: boolean }
       isminter: {
         Args: { _currencyid: string; _scholarid: string }
         Returns: boolean
       }
       ispriorityzero: { Args: { _venueid: string }; Returns: boolean }
-      isroleapprovervolunteer: { Args: { _roleid: string }; Returns: boolean }
       issteward: { Args: never; Returns: boolean }
       mark_submission_done: {
         Args: {
