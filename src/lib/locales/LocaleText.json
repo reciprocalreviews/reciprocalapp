@@ -402,6 +402,16 @@
             "BulkImportSubmissions": {
               "type": "string"
             },
+            "CallForBids": {
+              "type": "string"
+            },
+            "CallForBidsStatus": {
+              "type": "string"
+            },
+            "CallForBidsUnverified": {
+              "description": "The one call-for-bids failure a person can fix themselves, so it says what to do rather than that something went wrong.",
+              "type": "string"
+            },
             "CannotDemoteSelf": {
               "description": "RR013: stepping down is an act another steward performs.",
               "type": "string"
@@ -947,7 +957,10 @@
             "ProposeThanks",
             "ApproveThanks",
             "DeclineThanks",
-            "LoadThanks"
+            "LoadThanks",
+            "CallForBids",
+            "CallForBidsUnverified",
+            "CallForBidsStatus"
           ],
           "type": "object"
         },
@@ -1055,7 +1068,15 @@
         "notification": {
           "additionalProperties": false,
           "properties": {
+            "andOthers": {
+              "description": "The fallback when a batch collapsed but its producer supplied no plural form: wraps the ALREADY-LOCALIZED first notification and counts the rest. Reads less well than a purpose-written plural, and exists so that a producer which groups without writing one still reports the true size rather than silently speaking for people it does not mention. `{count}` is again the rest of the batch.",
+              "type": "string"
+            },
             "emailed": {
+              "type": "string"
+            },
+            "emailedMany": {
+              "description": "`emailed`, said of a whole batch: the plural form used when one send reached more people than are worth listing. `{count}` is the REST of them, so a send to 307 reads as one name and \"306 others\". Written as its own sentence rather than assembled from the singular, because \"was emailed\" has to become \"were emailed\" and editing a verb inside already-translated prose is not something a substitution can do.",
               "type": "string"
             },
             "emailedStewards": {
@@ -1081,6 +1102,8 @@
           },
           "required": [
             "emailed",
+            "emailedMany",
+            "andOthers",
             "emailedStewards",
             "volunteered",
             "volunteeredWithTokens",
@@ -3296,6 +3319,9 @@
                         "AvailabilityReminder": {
                           "type": "string"
                         },
+                        "CallForBids": {
+                          "type": "string"
+                        },
                         "CompensationChanged": {
                           "type": "string"
                         },
@@ -3362,6 +3388,7 @@
                       },
                       "required": [
                         "AvailabilityReminder",
+                        "CallForBids",
                         "CompensationChanged",
                         "CompensationRequested",
                         "ConflictDeclared",
@@ -6116,6 +6143,10 @@
                     "addCompensation": {
                       "$ref": "#/definitions/ButtonText"
                     },
+                    "callForBids": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Sends the call for bids. A confirm button: the mail goes to everyone in the role at once and cannot be recalled."
+                    },
                     "createRole": {
                       "$ref": "#/definitions/ButtonText"
                     },
@@ -6156,6 +6187,7 @@
                   },
                   "required": [
                     "createRole",
+                    "callForBids",
                     "removeAdmin",
                     "addAdmin",
                     "priorityUp",
@@ -6217,6 +6249,22 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "callForBidsLast": {
+                      "description": "When the venue last asked, and who asked. Plain information, not a warning: there is no rate limit, and this exists so two co-chairs do not unknowingly send the same nudge an hour apart. Takes `{name}` and `{when}`.",
+                      "type": "string"
+                    },
+                    "callForBidsNobody": {
+                      "description": "Shown in place of the form when nobody would receive it.",
+                      "type": "string"
+                    },
+                    "callForBidsRecipients": {
+                      "description": "How many of the role's volunteers would actually receive a call for bids. Not the same as the role's volunteer count, and deliberately so: someone with no verified address, someone who has silenced the notice, and the sender themselves are all excluded, and reporting the larger number would promise more than the send delivers. Takes `{count}`.",
+                      "type": "string"
+                    },
+                    "callForBidsUnverified": {
+                      "description": "Why the send is refused when the sender has verified no contact address. A call for bids replies to its sender, so there is nowhere for an answer to go.",
+                      "type": "string"
+                    },
                     "consult": {
                       "type": "string"
                     },
@@ -6249,7 +6297,11 @@
                     "notLoaded",
                     "inviteUnmatched",
                     "inviteAlready",
-                    "invited"
+                    "invited",
+                    "callForBidsRecipients",
+                    "callForBidsLast",
+                    "callForBidsUnverified",
+                    "callForBidsNobody"
                   ],
                   "type": "object"
                 },
@@ -6275,6 +6327,34 @@
                       },
                       "required": [
                         "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
+                    "callForBids": {
+                      "additionalProperties": false,
+                      "description": "The call for bids itself — the editor's own words, and the only prose anybody writes into RR's mail. The note explains the two things the pipeline does to it that a writer would not expect: a link is rendered inert, because branded mail must not carry a caller's URL, and the whole note arrives as one paragraph.",
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "note": {
+                          "description": "The note to show below the text field",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "note",
                         "placeholder"
                       ],
                       "type": "object"
@@ -6326,6 +6406,7 @@
                     "newRoleName",
                     "adminScholar",
                     "invite",
+                    "callForBids",
                     "roleName",
                     "roleDescription",
                     "compensationRationale",
@@ -6395,6 +6476,10 @@
                     "adminsDescription": {
                       "type": "string"
                     },
+                    "callForBids": {
+                      "description": "Introduces the call-for-bids form: who it reaches and that it is the editor's own words, not an automated notice.",
+                      "type": "string"
+                    },
                     "createRole": {
                       "type": "string"
                     },
@@ -6432,6 +6517,7 @@
                     "roleOpen",
                     "roleInvited",
                     "volunteersCount",
+                    "callForBids",
                     "invited",
                     "declined",
                     "volunteering",

@@ -94,7 +94,10 @@ const handler = async (request: Request): Promise<Response> => {
 				subject,
 				message,
 				parsed.origin ?? undefined,
-				replyTo
+				replyTo,
+				// Whether anyone is actually copied, so the footer only offers Reply All when
+				// there is a group for it to reach.
+				cc.length > 0
 			);
 
 			// Post to the resend API using the API key

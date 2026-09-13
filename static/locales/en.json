@@ -54,6 +54,8 @@
 	},
 	"notification": {
 		"emailed": "{recipient} was emailed \"{subject}\"",
+		"emailedMany": "{recipient} and {count} others were emailed \"{subject}\"",
+		"andOthers": "{message} — and {count} others",
 		"emailedStewards": "The stewards were emailed \"{subject}\"",
 		"volunteered": "Thank you for volunteering!",
 		"volunteeredWithTokens": "Thank you for volunteering! {amount} welcome tokens have been added to your balance.",
@@ -1318,7 +1320,8 @@
 					"TransactionsPending": "proposed transactions are waiting for my approval",
 					"VenueApproved": "a venue I proposed or supported is approved or declined",
 					"VenueDeactivated": "one of my venues is switched off or becomes active again",
-					"VolunteerPaused": "a volunteer at one of my venues pauses or resumes"
+					"VolunteerPaused": "a volunteer at one of my venues pauses or resumes",
+					"CallForBids": "a venue I volunteer for asks me to bid on submissions"
 				}
 			},
 			"status": {
@@ -1684,7 +1687,11 @@
 				"notLoaded": "Couldn't load venue's roles.",
 				"inviteUnmatched": "No one here matches {queries}.",
 				"inviteAlready": "{queries} already has a record for this role, so they can't be added again.",
-				"invited": "Invitations sent!"
+				"invited": "Invitations sent!",
+				"callForBidsRecipients": "**{count} volunteers** in this role will receive this. Anyone who has paused, hasn't verified a contact address, or has turned these off won't.",
+				"callForBidsLast": "{name} last asked this venue's volunteers to bid on {when}.",
+				"callForBidsUnverified": "A call for bids replies to you, so it needs a verified contact address. Add one on your profile and try again.",
+				"callForBidsNobody": "Nobody in this role can be emailed yet — they've paused, they haven't verified a contact address, or they've turned these off."
 			},
 			"button": {
 				"createRole": {
@@ -1755,6 +1762,11 @@
 					"tip": "Delete this role",
 					"label": "Delete $delete",
 					"warn": "Delete this role, its volunteers, assignments, and compensation?"
+				},
+				"callForBids": {
+					"tip": "Ask this role's volunteers to bid on submissions",
+					"label": "Ask for bids",
+					"warn": "Send to everyone in this role? It cannot be recalled."
 				}
 			},
 			"field": {
@@ -1792,6 +1804,12 @@
 					"label": "papers willing to review (optional cap)",
 					"placeholder": "e.g., 4",
 					"invalid": "Must be a whole number, or empty for no cap"
+				},
+				"callForBids": {
+					"label": "your message",
+					"placeholder": "We're short on reviews this cycle — please take a look at what's open.",
+					"note": "Written in your own words, and replies come back to you. Links are shown as plain text rather than made clickable, and the whole note arrives as one paragraph.",
+					"invalid": "Write something, and keep it under 1000 characters."
 				}
 			},
 			"fieldset": {
@@ -1849,7 +1867,8 @@
 				"invited": "You've been invited to this role. Accept to start volunteering, or decline to let the venue know you're not available.",
 				"declined": "You declined this role. Would you like to accept it?",
 				"volunteering": "Thanks for volunteering for this role!",
-				"stopped": "You stopped volunteering for this role."
+				"stopped": "You stopped volunteering for this role.",
+				"callForBids": "Ask this role's volunteers to bid. This goes out as an email in your own words, from you — replies come back to your contact address, not to the stewards."
 			}
 		},
 		"tasks": {
@@ -2120,6 +2139,9 @@
 		"ProposeThanks": "Unable to send your thanks.",
 		"ApproveThanks": "Unable to approve the thank-you note.",
 		"DeclineThanks": "Unable to decline the thank-you note.",
-		"LoadThanks": "Unable to load thank-you notes."
+		"LoadThanks": "Unable to load thank-you notes.",
+		"CallForBids": "Unable to send your call for bids.",
+		"CallForBidsUnverified": "A call for bids replies to you, so it needs a verified contact address.",
+		"CallForBidsStatus": "Unable to check who would receive a call for bids."
 	}
 }

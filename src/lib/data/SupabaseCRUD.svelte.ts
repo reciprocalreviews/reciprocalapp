@@ -40,6 +40,7 @@ import { renderEmail, type EmailType, type OptionalEmailType } from '../../email
 import type Locale from '../locales/Locale';
 import CRUD, {
 	type BulkImportResult,
+	type CallForBidsStatus,
 	type Charge,
 	type ChargeCoverage,
 	type EnsureScholarOutcome,
@@ -3574,6 +3575,8 @@ export default class SupabaseCRUD extends CRUD {
 			data: undefined,
 			notified: [
 				{
+					// No `group`: the steward inbox is one address, so this always produces exactly
+					// one notification and there is never a batch of them to collapse.
 					message: this.locale.notification.emailedStewards.replace('{subject}', subject)
 				}
 			]
@@ -3608,14 +3611,87 @@ export default class SupabaseCRUD extends CRUD {
 		const { subject } = renderEmail(template, args);
 		const recipients = Array.isArray(data) ? (data as { name?: string; email: string }[]) : [];
 		const notificationTemplate = this.locale.notification.emailed;
+		// The plural, for when this batch collapses. `{count}` is deliberately left in it: how
+		// many entries the group ends up with is not knowable here, because inviteToRole reaches
+		// this method once per invitee and each call sees a single recipient.
+		const manyTemplate = this.locale.notification.emailedMany;
 		return {
 			data: undefined,
 			notified: recipients.map((recipient) => ({
 				message: notificationTemplate
 					.replace('{recipient}', recipient.name?.trim() ? recipient.name : recipient.email)
+					.replace('{subject}', subject),
+				// Everyone reached by one send is one piece of news, so the banners collapse once
+				// there are more than a few. Keyed by TEMPLATE rather than by call, which is what
+				// makes inviteToRole's loop of single-recipient sends collapse too: fifty pasted
+				// invitees are fifty separate calls here, each returning one notification, and they
+				// are recognizable as one batch only by sharing this key.
+				group: template,
+				collapsed: manyTemplate
+					.replace('{recipient}', recipient.name?.trim() ? recipient.name : recipient.email)
 					.replace('{subject}', subject)
 			}))
 		};
+	}
+
+	/**
+	 * Write a call for bids to the volunteers of one biddable role.
+	 *
+	 * The note never becomes a body. It is passed as one argument to `queue_call_for_bids`,
+	 * which builds the rest of the template's arguments server-side and leaves subject and
+	 * message null, so the registry renders the mail at send time exactly as it does for
+	 * every other notice — escaping the note and defanging any URL scheme in it.
+	 *
+	 * The RPC authorizes against the venue rather than trusting the interface, and returns
+	 * the recipients it actually wrote to, which is not the same as the role's volunteers:
+	 * anyone unverified, silenced, paused, or the sender themselves is skipped. Reporting
+	 * the role's count instead would have the banner claim more than was sent.
+	 */
+	async callForBids(role: RoleID, note: string): Promise<Result> {
+		const { data, error } = await this.client.rpc('queue_call_for_bids', {
+			_role: role,
+			_note: note
+		});
+		if (error)
+			// The one failure a person can fix themselves, so it gets its own message rather
+			// than the generic one. The hint is set by the RPC, the way
+			// request_email_verification marks its cooldown.
+			return this.error(
+				error.hint === 'unverified' ? 'CallForBidsUnverified' : 'CallForBids',
+				error
+			);
+
+		// Rendered locally only to label the notifications; this copy is never delivered. The
+		// subject's only argument is the venue's title, which the RPC returns for exactly this.
+		const result = (data ?? {}) as {
+			recipients?: { name?: string; email: string }[];
+			venue?: string;
+		};
+		const { subject } = renderEmail('CallForBids', [result.venue ?? '']);
+		const recipients = result.recipients ?? [];
+		const notificationTemplate = this.locale.notification.emailed;
+		const manyTemplate = this.locale.notification.emailedMany;
+		return {
+			data: undefined,
+			notified: recipients.map((recipient) => ({
+				message: notificationTemplate
+					.replace('{recipient}', recipient.name?.trim() ? recipient.name : recipient.email)
+					.replace('{subject}', subject),
+				// The batch this whole mechanism exists for: a biddable role routinely holds more
+				// volunteers than Resend will take on a single send, and every one of them was
+				// getting a banner of their own.
+				group: 'CallForBids',
+				collapsed: manyTemplate
+					.replace('{recipient}', recipient.name?.trim() ? recipient.name : recipient.email)
+					.replace('{subject}', subject)
+			}))
+		};
+	}
+
+	async getCallForBidsStatus(role: RoleID): Promise<Result<CallForBidsStatus>> {
+		const { data, error } = await this.client.rpc('call_for_bids_status', { _role: role });
+		if (error) return this.error('CallForBidsStatus', error);
+		return { data: data as unknown as CallForBidsStatus };
 	}
 
 	async declareConflict(

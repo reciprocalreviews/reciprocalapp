@@ -413,6 +413,40 @@ export const Emails = {
 		optional: true,
 		section: 'venues'
 	},
+	// $1 venue title, $2 sender name, $3 the sender's own word for their job at the venue,
+	// $4 the note they wrote, $5 the role the recipient volunteers for, $6 venue path.
+	//
+	// The one notice RR sends that a person composes rather than an event triggers. Bidding
+	// only works if volunteers come and bid, and every other template here fires on something
+	// having ALREADY happened -- a bid arriving, a role changing, a payout. Nothing said "we
+	// are short of bids this week and would like you to look", so a program chair's only
+	// recourse was to export the volunteer list and mail it from outside RR, losing the
+	// opt-out, the mail log, the delivery tracking and the data download in one step.
+	//
+	// $4 is the editor's own words, and it is an ARGUMENT rather than a body on purpose: the
+	// subject, the attribution, the "why you got this" line and the link are all owned here
+	// and rendered at send time, and escapeArg escapes it and defangs any URL scheme in it.
+	// So a caller chooses what one paragraph says and nothing else -- not the subject, not the
+	// recipients, not a link. That is a stricter contract than queue_thanks_emails, the only
+	// other template a person writes into, which takes a fully pre-rendered subject and body.
+	//
+	// Reply-To is the sender's own verified address rather than stewards@, because this is a
+	// person asking their community for help and a reply is the answer to it. That is the same
+	// reasoning NewVolunteer uses, and the footer names whichever address a reply reaches.
+	CallForBids: {
+		subject: 'Bids needed for $1',
+		paragraphs: [
+			'$2, $3 of $1, writes:',
+			'$4',
+			'You are receiving this because you volunteer as $5 for $1. You can bid on the submissions that match your expertise here: {origin}/venue/$6/submissions'
+		],
+		// A courtesy, and on by default: it is infrequent, it comes from a venue this scholar
+		// chose to volunteer for, and it is about the very work they volunteered to do. The
+		// notices that ship OFF are the ones too frequent to impose; a venue asking for bids a
+		// few times a cycle is not one of them.
+		optional: true,
+		section: 'reviewing'
+	},
 	// $1 title, $2 venue path, $3 submission id.
 	ConflictDeclared: {
 		subject: 'A conflict was declared on "$1"',

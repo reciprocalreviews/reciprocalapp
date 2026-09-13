@@ -58,7 +58,11 @@
 		</Banner>
 	{/if}
 
-	<section aria-live="assertive">
+	<!-- Polite, not assertive. Banner.svelte already marks errors `role="alert"` and everything
+	     else `role="status"`, which are assertive and polite respectively; an assertive wrapper
+	     overrode both, so a batch of successes interrupted a screen reader and was read out one
+	     entry at a time. Errors keep interrupting, because they still carry their own role. -->
+	<section aria-live="polite">
 		{#each feedback as item, index (index)}
 			<Banner
 				level={item.level}
@@ -66,7 +70,17 @@
 				dismiss={() => removeError(index)}
 				testid="feedback-{item.level}"
 			>
-				{item.message}
+				<!-- `item.message` is already localized by the data layer, so a collapsed banner is
+				     wrapped rather than rebuilt. No `markdown`, so a name or subject in it renders
+				     as text rather than as markup. -->
+				{#if item.others !== undefined}
+					<Text
+						path={(l) => l.notification.andOthers}
+						inputs={{ message: item.message, count: item.others.toString() }}
+					/>
+				{:else}
+					{item.message}
+				{/if}
 			</Banner>
 		{/each}
 	</section>
