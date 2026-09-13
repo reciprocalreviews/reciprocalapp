@@ -19,7 +19,7 @@
 	import Text from '$lib/locales/Text.svelte';
 	import { validInteger, validURL } from '$lib/validation';
 	import { getLocaleContext } from '$routes/Contexts';
-	import { addFeedback, handle } from '$routes/feedback.svelte';
+	import { handle } from '$routes/feedback.svelte';
 	import type { PageData } from './$types';
 	import Roles from './Roles.svelte';
 
@@ -306,11 +306,9 @@
 					<Paragraph text={(l) => l.page.venue.paragraph.missingCompensation} />
 
 					<TextField
-						strings={(l) => ({
-							placeholder: 'The ID associated with the manuscript in your reviewing system',
-							label: 'Manuscript ID'
-						})}
+						strings={(l) => l.page.venue.field.compensationManuscript}
 						bind:text={compensationManuscript}
+						testid="compensation-manuscript"
 					></TextField>
 					<Options
 						strings={(l) => l.page.venue.options.compensationRole}
@@ -319,29 +317,45 @@
 							value: role.id
 						}))}
 						bind:value={compensationRole}
+						testid="compensation-role"
 					/>
 					<TextField
-						strings={(l) => ({ placeholder: 'Message to the scholar responsible', label: 'Note' })}
+						strings={(l) => l.page.venue.field.compensationNote}
 						bind:text={compensationNote}
+						testid="compensation-note"
 					></TextField>
 					<Button
 						active={compensationManuscript.length > 0 && compensationRole.length > 0}
 						strings={(l) => l.page.venue.button.requestCompensation}
-						action={() =>
-							handle(
-								db().requestCompensation(
-									scholar.id,
-									venue.id,
-									compensationManuscript,
-									compensationRole,
-									compensationNote
+						testid="request-compensation"
+						action={async () => {
+							// The confirmation goes through handle()'s own `success` argument rather
+							// than a separate addFeedback. That argument is suppressed whenever the
+							// action already named who was told, so a request that emailed its
+							// approvers reports the people rather than saying it twice — and the
+							// generic line still appears when nobody could be emailed.
+							//
+							// Awaited rather than chained off .then(), because handle() RESOLVES
+							// false on failure instead of rejecting: the old chain announced success
+							// on a request that had just errored, and cleared the three fields with
+							// it, so a failed submission lost what had been typed into them.
+							if (
+								await handle(
+									db().requestCompensation(
+										scholar.id,
+										venue.id,
+										compensationManuscript,
+										compensationRole,
+										compensationNote
+									),
+									locale().page.venue.feedback.compensationRequested
 								)
-							).then(() => {
+							) {
 								compensationManuscript = '';
 								compensationRole = '';
 								compensationNote = '';
-								addFeedback('Compensation request sent.', 'success');
-							})}
+							}
+						}}
 					/>
 				</Form>
 			{/if}

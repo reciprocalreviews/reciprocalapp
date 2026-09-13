@@ -799,6 +799,10 @@ export type LocaleText = {
 				adminMints: string;
 				typesNotLoaded: string;
 				rolesNotLoaded: string;
+				/** Confirms a compensation request. The fallback for when nobody could be
+				 * emailed: `handle()` suppresses it whenever the request named who was told,
+				 * since that is the same news and names the person. */
+				compensationRequested: string;
 				inactive: string;
 				inactivePrompt: string;
 			};
@@ -809,6 +813,12 @@ export type LocaleText = {
 				typeName: TextFieldText;
 				typeDescription: TextFieldText;
 				cost: TextFieldText;
+				/** The compensation request's two text fields. They were written as English
+				 * literals inline in the component, so this form was the one place a scholar
+				 * could not have been shown their own language even once another locale
+				 * existed. */
+				compensationManuscript: TextFieldText;
+				compensationNote: TextFieldText;
 			};
 			card: {
 				setup: CardText;
