@@ -32,6 +32,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **A confirmation's warning is no longer cut off.** A long one now wraps instead of running past the edge of the page, which had been hiding the end of the sentence saying what cannot be undone.
 - **An email that replies to a person no longer offers Reply All when it copies nobody.** The footer promised a group that did not exist on any message with a single recipient.
 - **Confirmations no longer appear in the colour used for failures.** Every success banner shared a rule with the beta notice and arrived in the same plum as an error, so a completed action and a refused one looked alike.
+- **A failed compensation request no longer reports success and clears the form.** It announced the request as sent whatever happened and emptied all three fields with it, so a mistyped manuscript ID had to be retyped from scratch; a successful one also said so twice, once generically and once naming who was emailed.
+- **The compensation request form is now translatable.** Its two field labels and its confirmation were written in English inside the page, so they were the one part of a venue that could never be shown in another language.
 
 ## 0.5.4 - 2026-09-05
 

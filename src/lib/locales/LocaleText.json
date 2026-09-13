@@ -5180,6 +5180,10 @@
                       "description": "Shown to everyone who is neither an admin of this venue nor a minter of its currency, when the two sets overlap. The platform permits the arrangement and discloses it, so the community rather than the database is the check on it. Takes {currency}.",
                       "type": "string"
                     },
+                    "compensationRequested": {
+                      "description": "Confirms a compensation request. The fallback for when nobody could be emailed: `handle()` suppresses it whenever the request named who was told, since that is the same news and names the person.",
+                      "type": "string"
+                    },
                     "inactive": {
                       "type": "string"
                     },
@@ -5217,6 +5221,7 @@
                     "adminMints",
                     "typesNotLoaded",
                     "rolesNotLoaded",
+                    "compensationRequested",
                     "inactive",
                     "inactivePrompt"
                   ],
@@ -5225,6 +5230,13 @@
                 "field": {
                   "additionalProperties": false,
                   "properties": {
+                    "compensationManuscript": {
+                      "$ref": "#/definitions/TextFieldText",
+                      "description": "The compensation request's two text fields. They were written as English literals inline in the component, so this form was the one place a scholar could not have been shown their own language even once another locale existed."
+                    },
+                    "compensationNote": {
+                      "$ref": "#/definitions/TextFieldText"
+                    },
                     "cost": {
                       "$ref": "#/definitions/TextFieldText"
                     },
@@ -5288,7 +5300,9 @@
                     "description",
                     "typeName",
                     "typeDescription",
-                    "cost"
+                    "cost",
+                    "compensationManuscript",
+                    "compensationNote"
                   ],
                   "type": "object"
                 },
