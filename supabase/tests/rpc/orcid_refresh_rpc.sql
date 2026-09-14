@@ -181,6 +181,30 @@ select
 select
 	tests.clear_authentication ();
 
+-- Put every scholar who ALREADY has an iD inside the cooldown, so the only thing left
+-- for backfill to find is the cold scholar created below.
+--
+-- This used to lean on the clamp test above having swept them all up, which was true
+-- only while the seed held fewer scholars with iDs than one batch (20). It stopped being
+-- true the moment supabase/seed.sql grew a roster worth looking at, and the assertion
+-- quietly turned into "backfill returns its limit" rather than "backfill finds the one
+-- profile nobody has ever fetched". Establish the precondition instead of assuming it:
+-- the test is then about backfill, at any seed size.
+insert into
+	public.orcid_profiles (scholar, orcid, fetch_attempted_at, fetch_status)
+select
+	s.id,
+	s.orcid,
+	now(),
+	'pending'
+from
+	public.scholars s
+where
+	s.orcid is not null
+on conflict (scholar) do update
+set
+	fetch_attempted_at = now();
+
 select
 	tests.create_scholar ('orcid_rpc_cold@test.local') as cold \gset
 
