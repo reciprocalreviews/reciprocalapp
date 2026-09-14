@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
@@ -275,6 +275,118 @@ test('an invited scholar accepts the invitation from the role card', async ({ pa
 			)
 		)
 		.toBe(1);
+});
+
+/** Send `author2` an invitation to the invite-only Editor role, as the editor. Shared by the two
+ * task-list tests below; the role-card tests above inline the same steps. */
+async function inviteAuthor2ToEditor(page: Page, inviteeID: string) {
+	await login(EDITOR_EMAIL, page);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
+	await page.waitForLoadState('networkidle');
+	await page.getByTestId('role-Editor').click();
+	await page.getByTestId('role-invite-field-Editor').fill(INVITEE_EMAIL);
+	await page.getByTestId(`role-invite-match-Editor-${SEED.scholars.author2.id}`).click();
+	await expect(
+		page.getByTestId(`role-invite-invitee-Editor-${SEED.scholars.author2.id}`)
+	).toBeVisible();
+	await page.getByTestId('role-invite-button-Editor').click();
+	await expect
+		.poll(() =>
+			sql(
+				`select accepted::text from public.volunteers v join public.roles r on r.id = v.roleid where v.scholarid = '${inviteeID}' and r.venueid = '${VENUE_ID}' and r.name = 'Editor';`
+			)
+		)
+		.toBe('invited');
+	// Success toasts intercept the logout button.
+	const dismissButtons = page.locator('[data-testid="feedback-success"] button');
+	while ((await dismissButtons.count()) > 0) {
+		await dismissButtons.first().click();
+	}
+	await logout(page);
+}
+
+/** The Tasks row on the invitee's own profile for the Editor invitation. Matched by the role's
+ * whole name, since earlier tests may have left a pending Associate Editor invitation too and
+ * "Editor" is a substring of that. */
+function editorInvitationRow(page: Page) {
+	return page
+		.locator('tr[data-testid^="invitation-"]')
+		.filter({ has: page.locator('strong', { hasText: /^Editor$/ }) });
+}
+
+test('an invited scholar accepts the invitation from the task list on their profile', async ({
+	page
+}) => {
+	const inviteeID = sql(`select id from public.scholars where email = '${INVITEE_EMAIL}';`);
+
+	// As in the role-card test: clear every volunteer row and any earlier welcome grant, so
+	// this acceptance is the invitee's first role at the venue and the grant fires.
+	sql(`delete from public.volunteers where scholarid = '${inviteeID}';`);
+	sql(
+		`delete from public.transactions where to_scholar = '${inviteeID}' and purpose = 'Welcome tokens for accepting role invite';`
+	);
+
+	await inviteAuthor2ToEditor(page, inviteeID);
+
+	// The invitee finds the invitation among the tasks on their own profile — the path a
+	// scholar reaches from the invitation email, and the one reported as doing nothing.
+	await login(INVITEE_EMAIL, page);
+	await page.goto(`/scholar/${inviteeID}`);
+	await page.waitForLoadState('networkidle');
+
+	// Accept is a confirm button: first click enters confirm mode, second commits.
+	const accept = editorInvitationRow(page).getByTestId(/^invitation-accept-\d+$/);
+	await accept.click();
+	await accept.click();
+
+	await expect
+		.poll(() =>
+			sql(
+				`select accepted::text || ',' || active::text from public.volunteers v join public.roles r on r.id = v.roleid where v.scholarid = '${inviteeID}' and r.venueid = '${VENUE_ID}' and r.name = 'Editor';`
+			)
+		)
+		.toBe('accepted,true');
+
+	// The page says so, the task is gone, and the welcome grant was minted exactly once.
+	await expect(page.getByTestId('feedback-success').first()).toBeVisible();
+	await expect(editorInvitationRow(page)).toHaveCount(0);
+	await expect
+		.poll(() =>
+			Number(
+				sql(
+					`select count(*) from public.transactions where to_scholar = '${inviteeID}' and purpose = 'Welcome tokens for accepting role invite';`
+				)
+			)
+		)
+		.toBe(1);
+});
+
+test('an invited scholar declines the invitation from the task list on their profile', async ({
+	page
+}) => {
+	const inviteeID = sql(`select id from public.scholars where email = '${INVITEE_EMAIL}';`);
+	sql(
+		`delete from public.volunteers where scholarid = '${inviteeID}' and roleid in (select id from public.roles where venueid = '${VENUE_ID}' and name = 'Editor');`
+	);
+
+	await inviteAuthor2ToEditor(page, inviteeID);
+
+	await login(INVITEE_EMAIL, page);
+	await page.goto(`/scholar/${inviteeID}`);
+	await page.waitForLoadState('networkidle');
+
+	const decline = editorInvitationRow(page).getByTestId(/^invitation-decline-\d+$/);
+	await decline.click();
+	await decline.click();
+
+	await expect
+		.poll(() =>
+			sql(
+				`select accepted::text from public.volunteers v join public.roles r on r.id = v.roleid where v.scholarid = '${inviteeID}' and r.venueid = '${VENUE_ID}' and r.name = 'Editor';`
+			)
+		)
+		.toBe('declined');
+	await expect(editorInvitationRow(page)).toHaveCount(0);
 });
 
 test('an active volunteer updates their expertise', async ({ page, context }) => {

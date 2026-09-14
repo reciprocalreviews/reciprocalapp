@@ -3,6 +3,7 @@ import type { ScholarRow } from '$data/types';
 import { hasAuthCookie } from '$lib/auth/hasAuthCookie';
 import { requiresAuth } from '$lib/auth/requiresAuth';
 import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
+import { withStableClientInfo } from '$lib/data/hydrationFetch';
 import type { LocaleText } from '$lib/locales/Locale';
 import en from '$locales/en.json';
 import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
@@ -27,19 +28,25 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
 	 */
 	depends('supabase:auth');
 
+	// Kit's `fetch`, so that during SSR every response is inlined into the HTML and, during
+	// hydration, answered from there. That only works if the browser's request hashes the
+	// same as the server's did — see hydrationFetch.ts for the header that used to break it,
+	// and why this page was inert for a second per read until it was fixed.
+	const hydratable = withStableClientInfo(fetch);
+
 	const supabase = isBrowser()
 		? createBrowserClient<Database, 'public'>(
 				PUBLIC_SUPABASE_URL,
 				PUBLIC_SUPABASE_PUBLISHABLE_KEY,
 				{
 					global: {
-						fetch
+						fetch: hydratable
 					}
 				}
 			)
 		: createServerClient<Database, 'public'>(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
 				global: {
-					fetch
+					fetch: hydratable
 				},
 				cookies: {
 					getAll() {

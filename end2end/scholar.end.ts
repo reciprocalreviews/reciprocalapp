@@ -266,3 +266,32 @@ test('a scholar can silence an optional notification', async ({ page, context })
 	sql(`delete from public.notification_settings where scholar = '${AUTHOR1_ID}';`);
 	await logout(page);
 });
+
+test('a freshly loaded profile hydrates from the HTML, not from seventeen more reads', async ({
+	page,
+	context
+}) => {
+	// The server has already answered every read this page makes and inlined the responses
+	// into the HTML for hydration to reuse. Until hydrationFetch.ts pinned X-Client-Info,
+	// none of them matched, so the browser re-ran all seventeen in sequence — during which
+	// every server-rendered button looked ready and did nothing. A scholar trying to accept
+	// a role invitation reported exactly that. This is the regression test for it: hydration
+	// must not read from PostgREST what the server already read.
+	await login(AUTHOR2_EMAIL, page, context);
+
+	const reads: string[] = [];
+	page.on('request', (request) => {
+		const url = request.url();
+		if (url.includes('/rest/v1/') && request.method() !== 'POST')
+			reads.push(`${request.method()} ${url.slice(url.indexOf('/rest/v1/'))}`);
+	});
+
+	await page.goto(`/scholar/${AUTHOR2_ID}`);
+	// The body carries `hydrating` until the root layout mounts; its removal is the moment
+	// handlers are wired, which is what a person's click depends on.
+	await page.locator('body:not(.hydrating)').waitFor();
+	await page.waitForLoadState('networkidle');
+
+	expect(reads, `hydration re-read from PostgREST:\n${reads.join('\n')}`).toEqual([]);
+	await logout(page);
+});

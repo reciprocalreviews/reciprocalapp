@@ -367,9 +367,17 @@
 			legend {
 				font-style: italic;
 			}
+
+			/* Between the HTML arriving and the app mounting, every button below is drawn but
+			   wired to nothing, and a click is dropped without a trace. The class is removed by
+			   the root layout the moment handlers exist (see +layout.svelte); until then the
+			   cursor says "wait" rather than "press". */
+			body.hydrating button {
+				cursor: progress;
+			}
 		</style>
 	</head>
-	<body data-sveltekit-preload-data="hover">
+	<body data-sveltekit-preload-data="hover" class="hydrating">
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>

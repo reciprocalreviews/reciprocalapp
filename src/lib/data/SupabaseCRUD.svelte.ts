@@ -923,16 +923,20 @@ export default class SupabaseCRUD extends CRUD {
 	async getScholarTokenCount(scholar: ScholarID): Promise<ReadResult<number>> {
 		// A count rather than the rows: this runs in the root layout load, so on
 		// every navigation, and a scholar can hold hundreds of individual token
-		// rows. `head: true` asks Postgres for the count without the payload.
-		const { count, error } = await this.client
+		// rows. As an aggregate in the BODY rather than `head: true` with the count
+		// in a header, because SvelteKit inlines a server-side response for
+		// hydration to reuse only when there is a body to inline — a HEAD was one of
+		// the reads the browser had to repeat before any button worked (see
+		// hydrationFetch.ts).
+		const { data, error } = await this.client
 			.from('tokens')
-			.select('id', { count: 'exact', head: true })
+			.select('id.count()')
 			.eq('scholar', scholar);
 		if (error) {
 			console.error(error);
 			return { data: 0, error: { message: this.locale.error.LoadToken, details: error } };
 		}
-		return { data: count ?? 0 };
+		return { data: data[0]?.count ?? 0 };
 	}
 
 	async getScholarConflicts(scholar: ScholarID): Promise<ReadResult<ConflictRow[] | null>> {
@@ -3519,13 +3523,14 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async getScholarTransactionCount(scholar: ScholarID): Promise<ReadResult<number | null>> {
-		return this.count(
-			'LoadTransaction',
-			this.client
-				.from('transactions')
-				.select('*', { count: 'exact', head: true })
-				.or(`from_scholar.eq.${scholar},to_scholar.eq.${scholar}`)
-		);
+		// An aggregate rather than a HEAD count, for the same reason as
+		// getScholarTokenCount: this is on the scholar page's hydration path.
+		const { data, error } = await this.client
+			.from('transactions')
+			.select('id.count()')
+			.or(`from_scholar.eq.${scholar},to_scholar.eq.${scholar}`);
+		if (error) return { data: null, ...this.error('LoadTransaction', error) };
+		return { data: data[0]?.count ?? 0 };
 	}
 
 	async getVenueTransactionCount(venue: VenueID): Promise<ReadResult<number | null>> {
