@@ -26,20 +26,17 @@ const COLD = SEED.scholars.editor;
 test('a mirrored record shows who a scholar is, without leaving the page', async ({ page }) => {
 	await page.goto(`/scholar/${FULL.id}`);
 
-	await expect(page.getByTestId('orcid-affiliation')).toHaveText(
-		'Professor, Department of Rigor, University of Test'
-	);
-	await expect(page.getByTestId('orcid-education')).toContainText('Ph.D. Reproducibility');
-	await expect(page.getByTestId('orcid-keywords')).toContainText('peer review');
+	const mirror = FULL.orcidProfile;
+	await expect(page.getByTestId('orcid-affiliation')).toHaveText(mirror.affiliation);
+	await expect(page.getByTestId('orcid-education')).toContainText(mirror.education);
+	await expect(page.getByTestId('orcid-keywords')).toContainText(mirror.keyword);
 
-	// The count spans the whole record, not the few works kept: 37 works, of which three
+	// The count spans the whole record, not just the few works kept, of which three
 	// are listed.
-	await expect(page.getByTestId('orcid-works')).toContainText('37 works, 2009–2025');
-	await expect(page.getByTestId('orcid-works')).toContainText(
-		'On the Reproducibility of Reviewing'
-	);
+	await expect(page.getByTestId('orcid-works')).toContainText(mirror.works);
+	await expect(page.getByTestId('orcid-works')).toContainText(mirror.work);
 
-	await expect(page.getByTestId('orcid-links')).toContainText('Faculty website');
+	await expect(page.getByTestId('orcid-links')).toContainText(mirror.link);
 });
 
 test('the section says where it came from', async ({ page }) => {

@@ -97,7 +97,9 @@ test('an editor the venue knows is matched and seated', async ({ page, context }
 
 	await page
 		.getByTestId('bulk-import-paste')
-		.fill(`title,externalid,handling editor\nPre-launch paper,${external},Scholar Lee`);
+		.fill(
+			`title,externalid,handling editor\nPre-launch paper,${external},${SEED.scholars.editor.name}`
+		);
 	await page.getByTestId('bulk-import-parse').click();
 
 	await page

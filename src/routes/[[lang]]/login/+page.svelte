@@ -88,6 +88,22 @@
 		})();
 	});
 
+	/** The same scholars, with the ones that can actually do something first.
+	 *
+	 * The query orders by name, which was fine when the seed held nine people and
+	 * is not now that it holds two dozen: the account you want is wherever the
+	 * alphabet happened to put it. Nearly every flow worth exercising locally
+	 * starts as a steward, a venue admin or a minter, so those rise to the top and
+	 * everyone else keeps the alphabetical order beneath them — `sort` is stable,
+	 * so comparing only on whether a row is labelled leaves the rest alone. */
+	const devSignIns = $derived(
+		[...devScholars].sort(
+			(a, b) =>
+				((devLabels.get(a.id)?.length ?? 0) > 0 ? 0 : 1) -
+				((devLabels.get(b.id)?.length ?? 0) > 0 ? 0 : 1)
+		)
+	);
+
 	/** Sign in as a seeded scholar using the password every seeded user shares
 	 * (supabase/seed.sql sets it for all of them).
 	 *
@@ -172,7 +188,7 @@
 					<th>{locale().page.login.table.email}</th>
 					<th>{locale().page.login.table.roles}</th>
 				{/snippet}
-				{#each devScholars as scholar, index}
+				{#each devSignIns as scholar, index}
 					{@const address = scholar.email}
 					{#if address !== null}
 						{@const label = scholar.name ?? address}

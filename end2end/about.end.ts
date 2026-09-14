@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
+import { SEED } from './test-utils';
 
 /** The seeded steward (supabase/seed.sql). */
-const STEWARD_EMAIL = 'editor@uni.edu';
+const STEWARD_EMAIL = SEED.scholars.editor.email;
 /** A seeded scholar who is not a steward, promoted and demoted below. */
-const CANDIDATE_NAME = 'Ann Thesis';
+const CANDIDATE_NAME = SEED.scholars.author2.name;
 
 test('the about page shows stewards', async ({ page }) => {
 	await page.goto('/about');

@@ -4,11 +4,12 @@ import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
 const VENUE_PATH = SEED.venuePath;
-const SUBMISSION_EXTERNAL_ID = 'TOK-2025-001';
-const SUBMISSION_ID = SEED.submissions.tok001;
-const SUBMISSION_002 = 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c13'; // TOK-2025-002
+const SUBMISSION_EXTERNAL_ID = SEED.submissions.tok001.externalId;
+const SUBMISSION_ID = SEED.submissions.tok001.id;
+const SUBMISSION_002 = SEED.submissions.tok002.id;
 const REVIEWER_ROLE = SEED.roles.reviewer;
-const MANNY_ID = SEED.scholars.r4.id;
+/** The reviewer-only scholar `filters.uniqueReviewer` picks out. */
+const BIDDER_ID = SEED.scholars.r4.id;
 
 const APPROVE_BID_TIP = 'Accept this bid, assigning this scholar to this role for this submission';
 const APPROVE_ANYWAY_TIP = 'Assign this scholar despite the load warning';
@@ -17,7 +18,7 @@ const UNASSIGN_TIP = 'Remove this assignment';
 test('AE assigns two reviewer bids and bidding closes', async ({ page, context }) => {
 	await login('ae@uni.edu', page, context);
 
-	// Submissions list shows TOK-2025-001.
+	// Submissions list shows the submission.
 	await page.goto(`/venue/${VENUE_PATH}/submissions`);
 	await expect(page.getByText(SUBMISSION_EXTERNAL_ID)).toBeVisible();
 
@@ -26,7 +27,7 @@ test('AE assigns two reviewer bids and bidding closes', async ({ page, context }
 	await page.waitForLoadState('networkidle');
 
 	// Two pending bids waiting for assignment, plus one already-approved Reviewer
-	// (Rigor Russ from the seed) producing one Unassign button.
+	// from the seed, producing one Unassign button.
 	await expect(page.getByRole('button', { name: APPROVE_BID_TIP })).toHaveCount(2);
 	await expect(page.getByRole('button', { name: UNASSIGN_TIP })).toHaveCount(1);
 
@@ -52,21 +53,21 @@ test('over-cap bidder shows load indicator and requires confirm to assign', asyn
 	page,
 	context
 }) => {
-	// Put Manny Script at 1 active assignment with cap=1 on Reviewer so that
-	// their existing bid on TOK-2025-001 renders as over-cap. Resets any
+	// Put that bidder at 1 active assignment with cap=1 on Reviewer so that
+	// their existing bid on the submission renders as over-cap. Resets any
 	// state the previous test in this file may have left behind so the test
 	// is self-contained.
 	sql(
-		`update public.volunteers set papers = 1 where scholarid = '${MANNY_ID}' and roleid = '${REVIEWER_ROLE}';`
+		`update public.volunteers set papers = 1 where scholarid = '${BIDDER_ID}' and roleid = '${REVIEWER_ROLE}';`
 	);
 	sql(
-		`update public.assignments set bid = true, approved = false where scholar = '${MANNY_ID}' and submission = '${SUBMISSION_ID}';`
+		`update public.assignments set bid = true, approved = false where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_ID}';`
 	);
 	sql(
-		`delete from public.assignments where scholar = '${MANNY_ID}' and submission = '${SUBMISSION_002}';`
+		`delete from public.assignments where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_002}';`
 	);
 	sql(
-		`insert into public.assignments (venue, submission, scholar, role, bid, approved, completed) values ('${VENUE_ID}', '${SUBMISSION_002}', '${MANNY_ID}', '${REVIEWER_ROLE}', false, true, false);`
+		`insert into public.assignments (venue, submission, scholar, role, bid, approved, completed) values ('${VENUE_ID}', '${SUBMISSION_002}', '${BIDDER_ID}', '${REVIEWER_ROLE}', false, true, false);`
 	);
 
 	try {
@@ -74,33 +75,33 @@ test('over-cap bidder shows load indicator and requires confirm to assign', asyn
 		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 		await page.waitForLoadState('networkidle');
 
-		// Manny's bid row exists; the load indicator on it reads "1 / 1" and is
-		// over-cap (CSS class flags it red/bold).
-		const mannyRow = page.locator('tr:has-text("Manny")');
-		const load = mannyRow.locator('[data-testid="papers-load"]');
+		// That reviewer's bid row exists; the load indicator on it reads "1 / 1" and
+		// is over-cap (CSS class flags it red/bold).
+		const bidRow = page.locator(`tr:has-text("${SEED.filters.uniqueReviewer}")`);
+		const load = bidRow.locator('[data-testid="papers-load"]');
 		await expect(load).toHaveText('1 / 1');
 		await expect(load).toHaveClass(/over-cap/);
 
 		// The approve button on the over-cap bid is now Button's warn-style
 		// confirm — its accessible name comes from the approveAnyway tip, not
 		// the regular approveBid tip.
-		const approveAnyway = mannyRow.getByRole('button', { name: APPROVE_ANYWAY_TIP });
+		const approveAnyway = bidRow.getByRole('button', { name: APPROVE_ANYWAY_TIP });
 		await expect(approveAnyway).toBeVisible();
 
 		// First click enters confirm mode; the assignment should NOT yet be approved.
 		await approveAnyway.click();
 		expect(
 			sql(
-				`select approved::text from public.assignments where scholar = '${MANNY_ID}' and submission = '${SUBMISSION_ID}';`
+				`select approved::text from public.assignments where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_ID}';`
 			)
 		).toBe('false');
 
 		// Second click commits — assignment flips to approved.
-		await mannyRow.getByRole('button', { name: 'Assign over cap?' }).click();
+		await bidRow.getByRole('button', { name: 'Assign over cap?' }).click();
 		await expect
 			.poll(() =>
 				sql(
-					`select approved::text from public.assignments where scholar = '${MANNY_ID}' and submission = '${SUBMISSION_ID}';`
+					`select approved::text from public.assignments where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_ID}';`
 				)
 			)
 			.toBe('true');
@@ -113,16 +114,16 @@ test('over-cap bidder shows load indicator and requires confirm to assign', asyn
 		}
 		await logout(page);
 	} finally {
-		// Restore Manny to a seed-equivalent state so downstream tests in the
+		// Restore that bidder to a seed-equivalent state so downstream tests in the
 		// full suite don't see leftover approvals or an unexpected papers cap.
 		sql(
-			`update public.volunteers set papers = null where scholarid = '${MANNY_ID}' and roleid = '${REVIEWER_ROLE}';`
+			`update public.volunteers set papers = null where scholarid = '${BIDDER_ID}' and roleid = '${REVIEWER_ROLE}';`
 		);
 		sql(
-			`update public.assignments set bid = true, approved = false where scholar = '${MANNY_ID}' and submission = '${SUBMISSION_ID}';`
+			`update public.assignments set bid = true, approved = false where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_ID}';`
 		);
 		sql(
-			`delete from public.assignments where scholar = '${MANNY_ID}' and submission = '${SUBMISSION_002}';`
+			`delete from public.assignments where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_002}';`
 		);
 	}
 });

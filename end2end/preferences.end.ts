@@ -6,11 +6,27 @@ const VENUE_ID = SEED.venue;
 const VENUE_PATH = SEED.venuePath;
 const EDITOR_EMAIL = SEED.scholars.editor.email;
 const VOLUNTEER_EMAIL = SEED.scholars.r1.email; // already a Reviewer in the seed
-const SUBMISSION_ID = SEED.submissions.tok001;
+const SUBMISSION_ID = SEED.submissions.tok001.id;
 
 function cleanupPreferenceLevels() {
 	sql(`delete from public.preference_levels where venueid = '${VENUE_ID}';`);
 }
+
+/**
+ * Put the seed's three preference levels back.
+ *
+ * Every test in this file starts by clearing them, because each one is about
+ * building the list up from nothing. The seed now ships the venue with a bid
+ * vocabulary, though, so without this the file would hand whatever runs next a
+ * venue that has none — a state the seed deliberately no longer has, and a
+ * difference that would depend on spec ordering to show up.
+ */
+test.afterAll(() => {
+	cleanupPreferenceLevels();
+	sql(
+		`insert into public.preference_levels (venueid, label, rank) values ('${VENUE_ID}', 'Preferred', 0), ('${VENUE_ID}', 'If necessary', 1), ('${VENUE_ID}', 'No', 2);`
+	);
+});
 
 test('editor adds, edits, reorders, and deletes preference levels', async ({ page, context }) => {
 	cleanupPreferenceLevels();

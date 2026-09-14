@@ -44,25 +44,78 @@ export function asScholar(scholar: string, statement: string): string {
 }
 
 /**
- * Stable identifiers seeded by `supabase/seed.sql`. Referencing these by name
- * (e.g. `SEED.scholars.editor.email`) instead of redeclaring raw UUIDs in every
+ * Stable identifiers and content seeded by `supabase/seed.sql`. Referencing these by
+ * name (e.g. `SEED.scholars.editor.email`) instead of redeclaring raw UUIDs in every
  * file keeps the suite readable and makes seed changes a single-file edit.
+ *
+ * That applies to the seed's *user-visible text* as much as to its ids. A spec that
+ * types `'Ann Thesis'` or `'Windmill'` into a filter has quietly made the seed's prose
+ * part of the contract, and then nobody can improve how the local database reads
+ * without a red suite to wade through first. So: no scholar name, submission title,
+ * manuscript ID, venue title, currency name or mirrored ORCID string appears as a
+ * literal in `end2end/` — it comes from here, and rewriting the seed's copy means
+ * editing this file and nothing else.
+ *
+ * Ids, auth emails, ORCID iDs and amounts are a different matter: they are the seed's
+ * *internal* values, tests depend on them directly, and they are meant to stay put.
  */
 export const SEED = {
-	/** "Transactions on Knowledge" */
 	venue: 'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 	/** The seed venue's web address. Venue URLs are built from this, not from the id: the
 	 * id form only redirects to it, and a suite that navigates by id would be testing the
 	 * redirect over and over instead of the pages. Use `venue` for SQL, this for URLs. */
 	venuePath: 'knowledge',
-	/** Epistemology */
+	/** The venue's title, as it renders. */
+	venueTitle: 'Transactions on Knowledge',
 	currency: 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+	/** The currency's name, as it renders. */
+	currencyName: 'Epistemology',
+	/** Every seeded submission's manuscript ID begins with this, and nothing else on a
+	 * submissions page does — which is how a spec asserts that IDs are being withheld. */
+	submissionIdPrefix: 'TOK-2025-',
 	roles: {
 		reviewer: 'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81'
 	},
 	submissions: {
-		/** TOK-2025-001 — full-workflow submission (reviewing, with bids) */
-		tok001: 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12'
+		/** The full-workflow submission: reviewing, one approved reviewer and two open bids. */
+		tok001: {
+			id: 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c12',
+			externalId: 'TOK-2025-001',
+			title: 'A Study on the Effectiveness of Peer Review Incentives in Academic Publishing'
+		},
+		tok002: {
+			id: 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c13',
+			externalId: 'TOK-2025-002',
+			title: 'A Windmill Study on the Failures of Peer Review'
+		},
+		tok003: {
+			id: 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c14',
+			externalId: 'TOK-2025-003',
+			title: 'A Reverse Engineering of Authorship from Reference Counts'
+		}
+	},
+	/**
+	 * Text fragments whose *matching behaviour* the filter specs are built on, named for
+	 * the behaviour rather than the words. Renaming a seeded scholar or retitling a
+	 * submission means re-checking these hold, not just pasting the new spelling in:
+	 *
+	 *  - `uniqueAuthor` matches exactly one scholar, who authors submissions and reviews none
+	 *  - `uniqueReviewer` matches exactly one scholar, who reviews and authors nothing
+	 *  - `authorAndReviewer` matches exactly one scholar, who does both
+	 *  - `sharedPrefix` matches SEVERAL scholars including `scholars.author2` — the
+	 *    ambiguity is the point, since it is what makes picking the right one a real choice
+	 *  - `uniqueInvitee` extends `sharedPrefix` by a letter and matches only
+	 *    `scholars.r5`, so a search can mix it with an iD and an email and still
+	 *    resolve to exactly three people
+	 *  - `uniqueTitleWord` appears in exactly one submission title and no manuscript ID
+	 */
+	filters: {
+		uniqueAuthor: 'Foot',
+		uniqueReviewer: 'Manny',
+		authorAndReviewer: 'Rigor',
+		sharedPrefix: 'Ann',
+		uniqueInvitee: 'Anne',
+		uniqueTitleWord: 'Windmill'
 	},
 	scholars: {
 		editor: {
@@ -93,7 +146,17 @@ export const SEED = {
 			email: 'r1@uni.edu',
 			id: '7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
 			orcid: '0000-0001-2345-6789',
-			name: 'Rigor Russ'
+			name: 'Rigor Russ',
+			/** The one seeded scholar with a full ORCID mirror, as the profile renders it. */
+			orcidProfile: {
+				affiliation: 'Professor, Department of Rigor, University of Test',
+				education: 'Ph.D. Reproducibility',
+				keyword: 'peer review',
+				/** The count spans the whole record, not the few works kept. */
+				works: '37 works, 2009–2025',
+				work: 'On the Reproducibility of Reviewing',
+				link: 'Faculty website'
+			}
 		},
 		r2: {
 			email: 'r2@uni.edu',

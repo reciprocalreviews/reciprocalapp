@@ -487,8 +487,9 @@ test('an id URL redirects to the venue web address, on every subpage', async ({
 
 	// The query string survives the redirect — the copy-paste snippets in settings hand
 	// reviewing platforms links with one on.
-	await page.goto(`/venue/${VENUE_ID}/submissions?filter=TOK-2025-001`);
-	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions?filter=TOK-2025-001`);
+	const filter = SEED.submissions.tok001.externalId;
+	await page.goto(`/venue/${VENUE_ID}/submissions?filter=${filter}`);
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions?filter=${filter}`);
 });
 
 test('editor changes the venue web address, is warned, and the old address stops working', async ({

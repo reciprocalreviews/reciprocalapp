@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { sql } from './test-utils';
+import { SEED, sql } from './test-utils';
 
 // A format-valid ORCID iD unique to this test; the dev-only mock ORCID sign-in creates a
 // brand-new scholar for it (custom OIDC can't run locally — see Auth.svelte.ts).
@@ -50,8 +50,8 @@ test('the local sign-in list signs in a seeded scholar in one click', async ({ p
 	// put you in touch with the stewards, so a bare /steward/ matches twice.
 	const seeded = page.getByRole('table');
 	await expect(seeded.getByText(/steward/)).toBeVisible();
-	await expect(seeded.getByText(/admin of Transactions on Knowledge/)).toBeVisible();
-	await expect(seeded.getByText(/minter of Epistemology/)).toBeVisible();
+	await expect(seeded.getByText(`admin of ${SEED.venueTitle}`)).toBeVisible();
+	await expect(seeded.getByText(`minter of ${SEED.currencyName}`)).toBeVisible();
 
 	// Pick the editor by address rather than by position. Sign-in uses the
 	// scholar's *contact* email, which the email-verification spec changes for

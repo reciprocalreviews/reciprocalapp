@@ -423,8 +423,8 @@ test('volunteer filter on /venue/[id]/volunteers narrows the table by name, emai
 	const reviewerRowsUnfiltered = await page.locator('tr[data-testid^="volunteer-row-2-"]').count();
 	expect(reviewerRowsUnfiltered).toBeGreaterThan(1);
 
-	// Set a filter that uniquely picks out r1 by name (Rigor Russ).
-	await page.getByTestId('volunteer-filter').fill('Rigor');
+	// Set a filter that uniquely picks out r1 by name.
+	await page.getByTestId('volunteer-filter').fill(SEED.filters.authorAndReviewer);
 
 	await expect
 		.poll(async () => page.locator('tr[data-testid^="volunteer-row-2-"]').count())
@@ -446,8 +446,9 @@ test('expertise keywords narrow the volunteers table, and say how many claim eac
 	await page.waitForLoadState('networkidle');
 
 	// The chip's key is the lowercased tag, and its label is the spelling the most
-	// volunteers wrote — most of the seed writes "peer review", two write "Peer
-	// review", so the lowercase one wins. The count is a pattern rather than a
+	// volunteers wrote. The seed writes "peer review" in lowercase throughout, so
+	// that is the label — a tie would break toward the capitalized spelling, which
+	// is why the seed does not mix them. The count is a pattern rather than a
 	// number: the e2e database is shared, and other specs add reviewers.
 	const chip = page.getByTestId('volunteer-tag-peer review');
 	await expect(chip).toBeVisible();
@@ -490,7 +491,7 @@ test('each role section says how many volunteers it is showing', async ({ page, 
 	);
 
 	// It tracks the search box, not just the initial load.
-	await page.getByTestId('volunteer-filter').fill('Rigor');
+	await page.getByTestId('volunteer-filter').fill(SEED.filters.authorAndReviewer);
 	await expect.poll(sectionCount).toBe(1);
 	expect(await page.locator('tr[data-testid^="volunteer-row-2-"]').count()).toBe(1);
 });
@@ -654,7 +655,7 @@ test('the invite field matches several scholars at once and invites them in one 
 }) => {
 	const byOrcid = SEED.scholars.author2;
 	const byEmail = SEED.scholars.author1;
-	const byName = SEED.scholars.r5; // Anne Notation
+	const byName = SEED.scholars.r5;
 	sql(
 		`delete from public.volunteers where scholarid in ('${byOrcid.id}', '${byEmail.id}', '${byName.id}') and roleid in (select id from public.roles where venueid = '${VENUE_ID}' and name = 'Editor');`
 	);
@@ -670,7 +671,7 @@ test('the invite field matches several scholars at once and invites them in one 
 	// Three entries, three kinds of entry, one round of matches — an ORCID iD, an email
 	// address, and a name, all searched at once. Searching several names at a time is the
 	// whole point of the field taking a comma-separated list.
-	await field.fill(`${byOrcid.orcid}, ${byEmail.email}, Anne`);
+	await field.fill(`${byOrcid.orcid}, ${byEmail.email}, ${SEED.filters.uniqueInvitee}`);
 
 	for (const scholar of [byOrcid, byEmail, byName]) {
 		const match = page.getByTestId(`role-invite-match-Editor-${scholar.id}`);
@@ -700,8 +701,8 @@ test('a name matching several scholars offers all of them, and invites only the 
 	page,
 	context
 }) => {
-	const chosen = SEED.scholars.author2; // Ann Thesis
-	const other = SEED.scholars.r5; // Anne Notation
+	const chosen = SEED.scholars.author2;
+	const other = SEED.scholars.r5;
 	sql(
 		`delete from public.volunteers where scholarid in ('${chosen.id}', '${other.id}') and roleid in (select id from public.roles where venueid = '${VENUE_ID}' and name = 'Editor');`
 	);
@@ -712,8 +713,8 @@ test('a name matching several scholars offers all of them, and invites only the 
 
 	await page.getByTestId('role-Editor').click();
 
-	// "Ann" is ambiguous, which is why choosing is a step rather than a guess.
-	await page.getByTestId('role-invite-field-Editor').fill('Ann');
+	// The fragment is ambiguous, which is why choosing is a step rather than a guess.
+	await page.getByTestId('role-invite-field-Editor').fill(SEED.filters.sharedPrefix);
 	await expect(page.getByTestId(`role-invite-match-Editor-${chosen.id}`)).toBeVisible();
 	await expect(page.getByTestId(`role-invite-match-Editor-${other.id}`)).toBeVisible();
 
@@ -851,12 +852,12 @@ test('an editor restricts a role, and the public roster stops naming its volunte
 	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
 	await page.waitForLoadState('networkidle');
 
-	// "Anne Notation" volunteers for Reviewer and nothing else, so their name
-	// disappearing is a fact about this setting rather than about one of the exempt
-	// roles. Several seed scholars hold the Editor or Associate Editor role as well,
-	// and those rosters stay public whatever Reviewer is set to.
+	// r5 volunteers for Reviewer and nothing else, so their name disappearing is a
+	// fact about this setting rather than about one of the exempt roles. Several seed
+	// scholars hold the Editor or Associate Editor role as well, and those rosters
+	// stay public whatever Reviewer is set to.
 	await expect(
-		page.getByText('Anne Notation'),
+		page.getByText(SEED.scholars.r5.name),
 		'Expect a signed-out visitor not to see a reviewer-only volunteer by name'
 	).toHaveCount(0);
 	await expect(page.getByTestId('volunteer-row-2-0'), 'Expect no reviewer rows at all').toHaveCount(

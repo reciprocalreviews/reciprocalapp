@@ -451,7 +451,7 @@ values
 	(
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'Epistemology',
-		'',
+		'One token is one referee report''s worth of labor: the reading, the checking, and the writing that a single careful review takes. Authors spend them to have work reviewed; referees earn them by reviewing. Only the minters this community trusts to count can make more.',
 		'{"7ff8621a-cbe0-4789-bbee-f008d38c4ac7"}'
 	);
 
@@ -461,7 +461,8 @@ set
 	"name"='Rigor Russ',
 	"email"='r1@uni.edu',
 	"available"='true',
-	"steward"='false'
+	"steward"='false',
+	"status"='Two or three reviews a term, no more. I would rather write one report I can defend than four I cannot.'
 where
 	id='7ff8621a-cbe0-4789-bbee-f008d38c4ac7';
 
@@ -471,7 +472,8 @@ set
 	"name"='Reese Urcher',
 	"email"='r2@uni.edu',
 	"available"='true',
-	"steward"='false'
+	"steward"='false',
+	"status"='On sabbatical and reading widely this year, so send me things a little outside my area — I actually have the time to be careful with them.'
 where
 	id='7ff8621a-cbe0-4789-bbee-f008d38c4ac8';
 
@@ -481,7 +483,8 @@ set
 	"name"='Sai Entist',
 	"email"='r3@uni.edu',
 	"available"='true',
-	"steward"='false'
+	"steward"='false',
+	"status"='Available, and glad to take the methods-heavy submissions nobody else bids on. Fair warning: I will ask to see your data.'
 where
 	id='7ff8621a-cbe0-4789-bbee-f008d38c4ac9';
 
@@ -492,7 +495,7 @@ set
 	"email"='author1@uni.edu',
 	"available"='true',
 	"steward"='false',
-	"status"='I can review as many things as you send me!'
+	"status"='Mostly submitting rather than reviewing at the moment, but I will always take one if an editor is stuck.'
 where
 	id='b8a805bf-0aae-4443-9185-de019a8715cb';
 
@@ -503,7 +506,7 @@ set
 	"email"='editor@uni.edu',
 	"available"='true',
 	"steward"='true',
-	"status"='I am an editor and steward. I can review as many things as you send me, and I can also help you with any questions or issues you have about the platform. Feel free to reach out to me!'
+	"status"='Editor-in-chief. If a submission has been sitting longer than it should, or a decision does not make sense to you, write to me directly — that is what the role is for.'
 where
 	id='d181d165-8b6a-4d79-ad28-a9aece21d813';
 
@@ -513,7 +516,8 @@ set
 	"name"='Grant Seeker',
 	"email"='ae@uni.edu',
 	"available"='true',
-	"steward"='false'
+	"steward"='false',
+	"status"='Associate editor for methods and measurement. Slow in grant season, quick the rest of the year.'
 where
 	id='b8a805bf-0aae-4443-9185-de019a8715db';
 
@@ -523,7 +527,8 @@ set
 	"name"='Ann Thesis',
 	"email"='author2@uni.edu',
 	"available"='true',
-	"steward"='false'
+	"steward"='false',
+	"status"='Finishing a dissertation, so I am keeping reviews close to my own work: knowledge claims drawn from small-n studies.'
 where
 	id='b8a805bf-0aae-4443-9185-de019a8715ec';
 
@@ -533,7 +538,8 @@ set
 	"name"='Manny Script',
 	"email"='r4@uni.edu',
 	"available"='true',
-	"steward"='false'
+	"steward"='false',
+	"status"='Available. New to this venue and would like a few submissions to calibrate against more experienced referees.'
 where
 	id='7ff8621a-cbe0-4789-bbee-f008d38c4aca';
 
@@ -543,10 +549,16 @@ set
 	"name"='Anne Notation',
 	"email"='r5@uni.edu',
 	"available"='true',
-	"steward"='false'
+	"steward"='false',
+	"status"='Available, though teaching means I need three weeks rather than two. Say so in the invitation if that is too slow and I will decline cleanly rather than be late.'
 where
 	id='7ff8621a-cbe0-4789-bbee-f008d38c4acb';
 
+-- The venue below is the only one the seed creates, and its description reads like
+-- a real aims-and-scope rather than a disclaimer. That is deliberate: it is what
+-- makes the venue pages worth looking at when judging the interface. The fact that
+-- none of this is real is carried by the cast of characters, and by the banner at
+-- the top of this file -- NOT by the copy, which has to stand in for a real venue's.
 insert into
 	public.venues (
 		"id",
@@ -563,7 +575,7 @@ values
 	(
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'Transactions on Knowledge',
-		'This is a mock venue, for local testing. It accepts any fake submissions that the developers want to submit, on any topic, as long as it helps them ensure the platform is functioning correctly and reflects the needs of the community. Have any idea for how to improve the platform? Submit to the actual editors, not this fake venue instance.',
+		'Transactions on Knowledge publishes empirical and theoretical work on how knowledge is made, certified, and circulated — including work on peer review itself. We take submissions from any discipline, on one condition: state the claim plainly enough that somebody can argue with it. Every submission goes to three referees, and every referee is paid for the labor.',
 		'https://tok.science.org',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 		'20',
@@ -652,7 +664,7 @@ values
 		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'Research Article',
-		'This is a new submission of a research article.',
+		'An original research contribution that this venue has not seen before. Handled by an editor, an associate editor, and three referees.',
 		null,
 		10
 	),
@@ -660,7 +672,7 @@ values
 		'2b7f9c3a-1d4e-4f6a-8b2c-3e5a7d9f1c00',
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'Research Article - Revision',
-		'This is a resubmission of a research article that was previously reviewed.',
+		'A revision of an article this venue has already reviewed. It costs less because the referees are usually the same ones, and reading a revision is less work than reading it cold.',
 		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
 		4
 	);
@@ -1001,7 +1013,7 @@ values
 		'd181d165-8b6a-4d79-ad28-a9aece21d813',
 		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
 		'2025-10-19 22:07:17.336976+00',
-		'Peer review, academic publishing, incentives',
+		'peer review, research ethics, editorial process',
 		'true',
 		'accepted'
 	),
@@ -1010,7 +1022,7 @@ values
 		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
 		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
 		'2025-10-19 22:07:17.336976+00',
-		'Knowledge representation, peer review, academic publishing',
+		'peer review, replication, research methods',
 		'true',
 		'accepted'
 	),
@@ -1019,7 +1031,7 @@ values
 		'7ff8621a-cbe0-4789-bbee-f008d38c4ac8',
 		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
 		'2025-10-19 22:07:17.336976+00',
-		'Knowledge representation, peer review, academic publishing',
+		'peer review, history of science, testimony',
 		'true',
 		'accepted'
 	),
@@ -1028,7 +1040,7 @@ values
 		'7ff8621a-cbe0-4789-bbee-f008d38c4ac9',
 		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
 		'2025-10-19 22:07:17.336976+00',
-		'Knowledge representation, peer review, academic publishing',
+		'peer review, research methods, measurement',
 		'true',
 		'accepted'
 	),
@@ -1037,7 +1049,7 @@ values
 		'b8a805bf-0aae-4443-9185-de019a8715db',
 		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
 		'2025-10-19 22:07:26.125662+00',
-		'Peer review',
+		'peer review, editorial process, measurement',
 		'true',
 		'accepted'
 	),
@@ -1046,7 +1058,7 @@ values
 		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
 		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
 		'2025-10-19 22:07:17.336976+00',
-		'Manuscript drafting, peer review',
+		'peer review, knowledge representation, citation analysis',
 		'true',
 		'accepted'
 	),
@@ -1055,7 +1067,7 @@ values
 		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
 		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
 		'2025-10-19 22:07:17.336976+00',
-		'Annotation, peer review, editorial process',
+		'annotation, knowledge representation, peer review',
 		'true',
 		'accepted'
 	),
@@ -1116,7 +1128,7 @@ values
 		null,
 		'{"ec74e036-ad38-11f0-97ff-9b4690da85ed"}',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'Venue gift',
+		'Welcome grant for joining the editorial board',
 		'approved'
 	),
 	(
@@ -1129,7 +1141,7 @@ values
 		null,
 		'{"ec74e0b8-ad38-11f0-9802-3f3bd3aa0e75"}',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'Venue gift',
+		'Compensation for handling TOK-2025-002',
 		'approved'
 	),
 	(
@@ -1142,7 +1154,7 @@ values
 		null,
 		'{"ec74e0e0-ad38-11f0-9803-cf3d40db77f3"}',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'Venue gift',
+		'Compensation for handling TOK-2025-003',
 		'approved'
 	),
 	(
@@ -1155,7 +1167,7 @@ values
 		null,
 		'{"ec74e05e-ad38-11f0-9800-6fcd74da877e"}',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'Venue gift',
+		'Thanks for stepping in as emergency referee over the winter break',
 		'approved'
 	),
 	(
@@ -1168,7 +1180,7 @@ values
 		null,
 		'{"ec74e086-ad38-11f0-9801-7f99e92ce9a0"}',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
-		'Venue gift',
+		'Honorarium for compiling the annual editorial report',
 		'approved'
 	),
 	-- Pre-staged for manually testing the decline-transaction flow (#114).
@@ -1217,7 +1229,7 @@ values
 		array[15]::integer[],
 		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
 		'A Study on the Effectiveness of Peer Review Incentives in Academic Publishing',
-		'Peer review, academic publishing, field study',
+		'peer review, incentives, field study',
 		'reviewing'
 	),
 	(
@@ -1230,7 +1242,7 @@ values
 		array[15]::integer[],
 		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
 		'A Windmill Study on the Failures of Peer Review',
-		'Engineering',
+		'mechanism design, peer review',
 		'reviewing'
 	),
 	(
@@ -1243,7 +1255,7 @@ values
 		array[15]::integer[],
 		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
 		'A Reverse Engineering of Authorship from Reference Counts',
-		'Peer review, academic publishing, log analysis',
+		'citation analysis, authorship, log analysis',
 		'reviewing'
 	),
 	-- TOK-2025-004 is pre-staged for manually testing the mark-submission-done
@@ -1261,8 +1273,8 @@ values
 		array['b8a805bf-0aae-4443-9185-de019a8715cb']::uuid[],
 		array[15]::integer[],
 		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
-		'Ready-to-Complete Submission (manual test for mark-done)',
-		'Peer review, completion flow',
+		'On the Impossibility of Knowing Whether a Review Was Read',
+		'epistemology, reader response',
 		'reviewing'
 	);
 
@@ -1523,4 +1535,2215 @@ values
 		now(),
 		null,
 		'ok'
+	);
+
+--------------------------------------
+-- A community, rather than a cast of nine
+--
+-- Everything above is the smallest database that makes the app work. Everything
+-- below is the amount of it you need to JUDGE the app: rosters long enough to
+-- scroll, expertise varied enough that the keyword chips rank into something,
+-- submissions in more than one state, and a ledger with a history instead of six
+-- rows stamped the same afternoon.
+--
+-- Nothing down here is load-bearing for a test. It is deliberately additive: no
+-- row below changes a count, a balance or an assignment that anything above
+-- depends on. In particular it adds NO steward, NO venue admin, NO minter, and
+-- no accepted active holder of the priority-0 Editor role, each of which the
+-- suite assumes there is exactly one of.
+--------------------------------------
+-- The scholars. Inserted set-wise rather than as one 36-column literal apiece
+-- (the pattern scripts/scale-fixture.sql uses), because fifteen more copies of
+-- the block at the top of this file would be most of the file. The
+-- on_auth_user_created trigger reads `orcid` and `name` out of raw_user_meta_data
+-- and writes the public.scholars row itself, so that is where the identity goes.
+insert into
+	auth.users (
+		instance_id,
+		id,
+		aud,
+		role,
+		email,
+		encrypted_password,
+		email_confirmed_at,
+		last_sign_in_at,
+		raw_app_meta_data,
+		raw_user_meta_data,
+		created_at,
+		updated_at,
+		confirmation_token,
+		recovery_token,
+		email_change_token_new,
+		email_change,
+		is_super_admin,
+		is_sso_user,
+		is_anonymous
+	)
+values
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000001',
+		'authenticated',
+		'authenticated',
+		'r.eree@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000001", "orcid": "0000-0001-2346-0001", "name": "Ref Eree", "email": "r.eree@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000002',
+		'authenticated',
+		'authenticated',
+		'e.bargo@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000002", "orcid": "0000-0001-2346-0002", "name": "Em Bargo", "email": "e.bargo@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000003',
+		'authenticated',
+		'authenticated',
+		'p.print@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000003", "orcid": "0000-0001-2346-0003", "name": "Perry Print", "email": "p.print@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000004',
+		'authenticated',
+		'authenticated',
+		'a.stract@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000004", "orcid": "0000-0001-2346-0004", "name": "Abe Stract", "email": "a.stract@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000005',
+		'authenticated',
+		'authenticated',
+		'r.buttal@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000005", "orcid": "0000-0001-2346-0005", "name": "Rex Buttal", "email": "r.buttal@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000006',
+		'authenticated',
+		'authenticated',
+		'o.access@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000006", "orcid": "0000-0001-2346-0006", "name": "Owen Access", "email": "o.access@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000007',
+		'authenticated',
+		'authenticated',
+		'e.size@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000007", "orcid": "0000-0001-2346-0007", "name": "Effie Size", "email": "e.size@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000008',
+		'authenticated',
+		'authenticated',
+		'n.hypothesis@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000008", "orcid": "0000-0001-2346-0008", "name": "Nell Hypothesis", "email": "n.hypothesis@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000009',
+		'authenticated',
+		'authenticated',
+		'l.revue@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000009", "orcid": "0000-0001-2346-0009", "name": "Lita Revue", "email": "l.revue@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000010',
+		'authenticated',
+		'authenticated',
+		't.yure@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000010", "orcid": "0000-0001-2346-0010", "name": "Ten Yure", "email": "t.yure@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000011',
+		'authenticated',
+		'authenticated',
+		'c.spondence@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000011", "orcid": "0000-0001-2346-0011", "name": "Cora Spondence", "email": "c.spondence@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000012',
+		'authenticated',
+		'authenticated',
+		's.tation@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000012", "orcid": "0000-0001-2346-0012", "name": "Sy Tation", "email": "s.tation@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000013',
+		'authenticated',
+		'authenticated',
+		'p.freed@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000013", "orcid": "0000-0001-2346-0013", "name": "Prue Freed", "email": "p.freed@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000014',
+		'authenticated',
+		'authenticated',
+		'e.barr@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000014", "orcid": "0000-0001-2346-0014", "name": "Errol Barr", "email": "e.barr@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'f0000000-ad50-11f0-9000-000000000015',
+		'authenticated',
+		'authenticated',
+		's.batical@uni.edu',
+		extensions.crypt ('password', extensions.gen_salt ('bf')),
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'{"provider":"email","providers":["email"]}',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000015", "orcid": "0000-0001-2346-0015", "name": "Sab Batical", "email": "s.batical@uni.edu", "email_verified": true, "phone_verified": false}',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'',
+		'',
+		'',
+		'',
+		false,
+		false,
+		false
+	);
+
+-- The identity row the email provider expects, one per account, matching the
+-- shape of the nine above.
+insert into
+	auth.identities (
+		provider_id,
+		user_id,
+		identity_data,
+		provider,
+		last_sign_in_at,
+		created_at,
+		updated_at,
+		id
+	)
+values
+	(
+		'f0000000-ad50-11f0-9000-000000000001',
+		'f0000000-ad50-11f0-9000-000000000001',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000001", "email": "r.eree@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000001'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000002',
+		'f0000000-ad50-11f0-9000-000000000002',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000002", "email": "e.bargo@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000002'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000003',
+		'f0000000-ad50-11f0-9000-000000000003',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000003", "email": "p.print@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000003'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000004',
+		'f0000000-ad50-11f0-9000-000000000004',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000004", "email": "a.stract@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000004'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000005',
+		'f0000000-ad50-11f0-9000-000000000005',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000005", "email": "r.buttal@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000005'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000006',
+		'f0000000-ad50-11f0-9000-000000000006',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000006", "email": "o.access@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000006'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000007',
+		'f0000000-ad50-11f0-9000-000000000007',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000007", "email": "e.size@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000007'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000008',
+		'f0000000-ad50-11f0-9000-000000000008',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000008", "email": "n.hypothesis@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000008'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000009',
+		'f0000000-ad50-11f0-9000-000000000009',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000009", "email": "l.revue@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000009'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000010',
+		'f0000000-ad50-11f0-9000-000000000010',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000010", "email": "t.yure@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000010'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000011',
+		'f0000000-ad50-11f0-9000-000000000011',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000011", "email": "c.spondence@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000011'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000012',
+		'f0000000-ad50-11f0-9000-000000000012',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000012", "email": "s.tation@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000012'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000013',
+		'f0000000-ad50-11f0-9000-000000000013',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000013", "email": "p.freed@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000013'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000014',
+		'f0000000-ad50-11f0-9000-000000000014',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000014", "email": "e.barr@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000014'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000015',
+		'f0000000-ad50-11f0-9000-000000000015',
+		'{"sub": "f0000000-ad50-11f0-9000-000000000015", "email": "s.batical@uni.edu", "email_verified": true, "phone_verified": false}',
+		'email',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'2026-01-12 09:00:00+00',
+		'f0000009-ad50-11f0-9000-000000000015'
+	);
+
+-- handle_new_scholar copies only id, orcid and name, so the contact address and
+-- the availability statement are set here. Every one of them says something: a
+-- roster where most of the column is blank tells you nothing about how the
+-- populated case reads.
+update public.scholars
+set
+	"email"='r.eree@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Reviewing steadily. I keep a two-week turnaround and I would rather you asked me than assumed I was busy.'
+where
+	id='f0000000-ad50-11f0-9000-000000000001';
+
+update public.scholars
+set
+	"email"='e.bargo@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Available for anything touching access and licensing. Less useful to you on statistics.'
+where
+	id='f0000000-ad50-11f0-9000-000000000002';
+
+update public.scholars
+set
+	"email"='p.print@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Glad to review, and glad to review preprints that have already been posted — I do not think that compromises anything.'
+where
+	id='f0000000-ad50-11f0-9000-000000000003';
+
+update public.scholars
+set
+	"email"='a.stract@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Interested in work where the writing is doing real argumentative labor, not just reporting numbers.'
+where
+	id='f0000000-ad50-11f0-9000-000000000004';
+
+update public.scholars
+set
+	"email"='r.buttal@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Available. I write long reports and I mean them kindly; say so if that is not what you want.'
+where
+	id='f0000000-ad50-11f0-9000-000000000005';
+
+update public.scholars
+set
+	"email"='o.access@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Associate editor. I will push authors to share data, and I will not hold a decision hostage over it.'
+where
+	id='f0000000-ad50-11f0-9000-000000000006';
+
+update public.scholars
+set
+	"email"='e.size@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Send me the quantitative submissions. I am the person who checks whether the interval means what the abstract says it means.'
+where
+	id='f0000000-ad50-11f0-9000-000000000007';
+
+update public.scholars
+set
+	"email"='n.hypothesis@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Available, with a standing interest in anything that failed to replicate and says so plainly.'
+where
+	id='f0000000-ad50-11f0-9000-000000000008';
+
+update public.scholars
+set
+	"email"='l.revue@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Happy to take review articles and meta-analyses, which I notice nobody bids on.'
+where
+	id='f0000000-ad50-11f0-9000-000000000009';
+
+update public.scholars
+set
+	"email"='t.yure@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Associate editor. Going up for promotion this year, so I am handling fewer submissions than usual and saying so up front.'
+where
+	id='f0000000-ad50-11f0-9000-000000000010';
+
+update public.scholars
+set
+	"email"='c.spondence@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Available. I am usually the one who notices when a submission is really a comment on an earlier paper.'
+where
+	id='f0000000-ad50-11f0-9000-000000000011';
+
+update public.scholars
+set
+	"email"='s.tation@uni.edu',
+	"available"='false',
+	"steward"='false',
+	"status"='Stepping back from reviewing for a year. I will say when I am back rather than leaving this ambiguous.'
+where
+	id='f0000000-ad50-11f0-9000-000000000012';
+
+update public.scholars
+set
+	"email"='p.freed@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Available and fast. I will read your supplementary material, which I gather is unusual.'
+where
+	id='f0000000-ad50-11f0-9000-000000000013';
+
+update public.scholars
+set
+	"email"='e.barr@uni.edu',
+	"available"='false',
+	"steward"='false',
+	"status"='Not yet decided about this venue — I would like to see how the compensation actually works in practice first.'
+where
+	id='f0000000-ad50-11f0-9000-000000000014';
+
+update public.scholars
+set
+	"email"='s.batical@uni.edu',
+	"available"='true',
+	"steward"='false',
+	"status"='Associate editor, on leave from teaching this year, which means I have more time for this than I normally would.'
+where
+	id='f0000000-ad50-11f0-9000-000000000015';
+
+-- Volunteer records. Reviewer and Associate Editor only: the Editor role is
+-- priority 0, and the suite assumes exactly one accepted, active holder of it.
+-- Five of these claim no `peer review` expertise, which is what keeps that chip
+-- a filter rather than a label on everything.
+insert into
+	public.volunteers (
+		"id",
+		"scholarid",
+		"roleid",
+		"created_at",
+		"expertise",
+		"active",
+		"accepted"
+	)
+values
+	(
+		'f0000001-ad50-11f0-9000-000000000001',
+		'f0000000-ad50-11f0-9000-000000000001',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2026-01-12 09:30:00+00',
+		'peer review, research integrity, editorial process',
+		'true',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000002',
+		'f0000000-ad50-11f0-9000-000000000002',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2026-01-12 09:30:00+00',
+		'open access, embargoes, science communication',
+		'true',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000003',
+		'f0000000-ad50-11f0-9000-000000000003',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2026-01-12 09:30:00+00',
+		'preprints, open access, peer review',
+		'true',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000004',
+		'f0000000-ad50-11f0-9000-000000000004',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2026-01-12 09:30:00+00',
+		'science communication, qualitative methods',
+		'true',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000005',
+		'f0000000-ad50-11f0-9000-000000000005',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2026-01-12 09:30:00+00',
+		'peer review, research ethics, retraction',
+		'true',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000006',
+		'f0000000-ad50-11f0-9000-000000000006',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		'2026-01-12 09:30:00+00',
+		'open access, data sharing, peer review',
+		'true',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000007',
+		'f0000000-ad50-11f0-9000-000000000007',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2026-01-12 09:30:00+00',
+		'statistics, effect sizes, research methods',
+		'true',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000008',
+		'f0000000-ad50-11f0-9000-000000000008',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2026-01-12 09:30:00+00',
+		'statistics, replication, peer review',
+		'true',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000009',
+		'f0000000-ad50-11f0-9000-000000000009',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2026-01-12 09:30:00+00',
+		'peer review, bibliometrics, citation analysis',
+		'true',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000010',
+		'f0000000-ad50-11f0-9000-000000000010',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		'2026-01-12 09:30:00+00',
+		'research integrity, measurement, peer review',
+		'true',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000011',
+		'f0000000-ad50-11f0-9000-000000000011',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2026-01-12 09:30:00+00',
+		'editorial process, peer review, retraction',
+		'true',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000012',
+		'f0000000-ad50-11f0-9000-000000000012',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2026-01-12 09:30:00+00',
+		'bibliometrics, citation analysis',
+		'false',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000013',
+		'f0000000-ad50-11f0-9000-000000000013',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2026-01-12 09:30:00+00',
+		'peer review, reproducibility, research methods',
+		'true',
+		'accepted'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000014',
+		'f0000000-ad50-11f0-9000-000000000014',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		'2026-01-12 09:30:00+00',
+		'statistics, sampling, measurement',
+		'false',
+		'invited'
+	),
+	(
+		'f0000001-ad50-11f0-9000-000000000015',
+		'f0000000-ad50-11f0-9000-000000000015',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		'2026-01-12 09:30:00+00',
+		'peer review, editorial process, qualitative methods',
+		'true',
+		'accepted'
+	);
+
+-- Six more ORCID mirrors. The three shapes the block above sets out still hold:
+-- most of these are full records, one was read and found to hold nothing public,
+-- and the scholars with no row at all are still the majority of the venue.
+insert into
+	public.orcid_profiles (
+		scholar,
+		orcid,
+		employment_role,
+		employment_department,
+		employment_organization,
+		education_role,
+		education_organization,
+		education_year,
+		keywords,
+		works,
+		work_count,
+		work_first_year,
+		work_last_year,
+		links,
+		fetched_at,
+		works_fetched_at,
+		fetch_status
+	)
+values
+	(
+		'f0000000-ad50-11f0-9000-000000000001',
+		'0000-0001-2346-0001',
+		'Senior Lecturer',
+		'School of Information',
+		'Northgate University',
+		'Ph.D. Information Science',
+		'Northgate University',
+		2014,
+		array[
+			'peer review',
+			'research integrity',
+			'scholarly communication'
+		],
+		'[
+			{"title":"Referee Fatigue in Small Fields","year":2025,"journal":"Transactions on Knowledge","doi":null,"url":null},
+			{"title":"What Editors Do When Nobody Bids","year":2022,"journal":"Journal of Editorial Practice","doi":null,"url":null}
+		]'::jsonb,
+		19,
+		2014,
+		2025,
+		'[{"kind":"url","label":"Personal site","value":"https://example.test/eree","url":"https://example.test/eree"}]'::jsonb,
+		now(),
+		now(),
+		'ok'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000003',
+		'0000-0001-2346-0003',
+		'Assistant Professor',
+		'Department of Science and Technology Studies',
+		'Bellhaven College',
+		'Ph.D. Science and Technology Studies',
+		'Marram University',
+		2019,
+		array['preprints', 'open access', 'priority disputes'],
+		'[
+			{"title":"The Preprint and the Postprint","year":2026,"journal":"Open Scholarship Review","doi":null,"url":null},
+			{"title":"Who Gets to Be First","year":2023,"journal":null,"doi":null,"url":null}
+		]'::jsonb,
+		11,
+		2019,
+		2026,
+		'[{"kind":"url","label":"Lab page","value":"https://example.test/print","url":"https://example.test/print"}]'::jsonb,
+		now(),
+		now(),
+		'ok'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000007',
+		'0000-0001-2346-0007',
+		'Professor',
+		'Department of Statistics',
+		'Marram University',
+		'Ph.D. Statistics',
+		'Northgate University',
+		2003,
+		array[
+			'effect sizes',
+			'statistical reporting',
+			'research methods'
+		],
+		'[
+			{"title":"Intervals Nobody Reports","year":2025,"journal":"Journal of Quantitative Methods","doi":null,"url":null},
+			{"title":"A Second Look at Seventeen Meta-Analyses","year":2021,"journal":"Journal of Quantitative Methods","doi":null,"url":null},
+			{"title":"Teaching Uncertainty","year":2016,"journal":null,"doi":null,"url":null}
+		]'::jsonb,
+		64,
+		2003,
+		2025,
+		'[{"kind":"url","label":"Faculty page","value":"https://example.test/size","url":"https://example.test/size"}]'::jsonb,
+		now(),
+		now(),
+		'ok'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000009',
+		'0000-0001-2346-0009',
+		'Research Fellow',
+		'Centre for Bibliometrics',
+		'Bellhaven College',
+		'Ph.D. Library and Information Science',
+		'Bellhaven College',
+		2021,
+		array['bibliometrics', 'citation analysis'],
+		'[
+			{"title":"Citation Cartels Revisited","year":2026,"journal":"Transactions on Knowledge","doi":null,"url":null}
+		]'::jsonb,
+		7,
+		2021,
+		2026,
+		'[]'::jsonb,
+		now(),
+		now(),
+		'ok'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000015',
+		'0000-0001-2346-0015',
+		'Associate Professor',
+		'Department of Philosophy',
+		'Northgate University',
+		'Ph.D. Philosophy',
+		'Bellhaven College',
+		2011,
+		array[
+			'epistemology',
+			'testimony',
+			'philosophy of science'
+		],
+		'[
+			{"title":"Knowing Through Others","year":2024,"journal":"Mind and Method","doi":null,"url":null},
+			{"title":"The Epistemology of Refereeing","year":2020,"journal":"Mind and Method","doi":null,"url":null}
+		]'::jsonb,
+		28,
+		2011,
+		2024,
+		'[{"kind":"url","label":"Department profile","value":"https://example.test/batical","url":"https://example.test/batical"}]'::jsonb,
+		now(),
+		now(),
+		'ok'
+	),
+	(
+		'f0000000-ad50-11f0-9000-000000000011',
+		'0000-0001-2346-0011',
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		'{}',
+		'[]'::jsonb,
+		null,
+		null,
+		null,
+		'[]'::jsonb,
+		now(),
+		null,
+		'ok'
+	);
+
+-- The tokens those compensations are made of. Minted straight to the recipient,
+-- exactly as the token blocks above do: a direct insert logs a MINT in
+-- public.token_events, which replays consistently and which
+-- end2end/global-teardown.ts tolerates. Moving existing tokens instead would
+-- log unattributed MOVES, which it does not.
+insert into
+	public.tokens (id, currency, scholar, venue)
+values
+	(
+		'f0000004-ad50-11f0-9000-000000000001',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000002',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000003',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000004',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000005',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000006',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000007',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000008',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000009',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000010',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000011',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000001',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000012',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000001',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000013',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000001',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000014',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000001',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000015',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000001',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000016',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000001',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000017',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000001',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000018',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000001',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000019',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000001',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000020',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000001',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000021',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000003',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000022',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000003',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000023',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000003',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000024',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000003',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000025',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000003',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000026',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000003',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000027',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000003',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000028',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000003',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000029',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000003',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000030',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000003',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000031',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000032',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000033',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000034',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000035',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000036',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000037',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000038',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000039',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000040',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000041',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000008',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000042',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000008',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000043',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000008',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000044',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000008',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000045',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000008',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000046',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000008',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000047',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000008',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000048',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000008',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000049',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000008',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000050',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'f0000000-ad50-11f0-9000-000000000008',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000051',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000052',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000053',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000054',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000055',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000056',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000057',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000058',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000059',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000060',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000061',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000062',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000063',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000064',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000065',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000066',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000067',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000068',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000069',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	),
+	(
+		'f0000004-ad50-11f0-9000-000000000070',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null
+	);
+
+-- Compensation actually paid, spread across the year, so the venue ledger reads
+-- as a history rather than as one afternoon's worth of identical rows.
+insert into
+	public.transactions (
+		"id",
+		"created_at",
+		"creator",
+		"from_scholar",
+		"from_venue",
+		"to_scholar",
+		"to_venue",
+		"tokens",
+		"currency",
+		"purpose",
+		"status"
+	)
+values
+	(
+		'f0000003-ad50-11f0-9000-000000000001',
+		now()-interval '22 days',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4aca',
+		null,
+		'{"f0000004-ad50-11f0-9000-000000000001","f0000004-ad50-11f0-9000-000000000002","f0000004-ad50-11f0-9000-000000000003","f0000004-ad50-11f0-9000-000000000004","f0000004-ad50-11f0-9000-000000000005","f0000004-ad50-11f0-9000-000000000006","f0000004-ad50-11f0-9000-000000000007","f0000004-ad50-11f0-9000-000000000008","f0000004-ad50-11f0-9000-000000000009","f0000004-ad50-11f0-9000-000000000010"}',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'Compensation for reviewing TOK-2025-005',
+		'approved'
+	),
+	(
+		'f0000003-ad50-11f0-9000-000000000002',
+		now()-interval '15 days',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000000-ad50-11f0-9000-000000000001',
+		null,
+		'{"f0000004-ad50-11f0-9000-000000000011","f0000004-ad50-11f0-9000-000000000012","f0000004-ad50-11f0-9000-000000000013","f0000004-ad50-11f0-9000-000000000014","f0000004-ad50-11f0-9000-000000000015","f0000004-ad50-11f0-9000-000000000016","f0000004-ad50-11f0-9000-000000000017","f0000004-ad50-11f0-9000-000000000018","f0000004-ad50-11f0-9000-000000000019","f0000004-ad50-11f0-9000-000000000020"}',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'Compensation for reviewing TOK-2025-006',
+		'approved'
+	),
+	(
+		'f0000003-ad50-11f0-9000-000000000003',
+		now()-interval '8 days',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000000-ad50-11f0-9000-000000000003',
+		null,
+		'{"f0000004-ad50-11f0-9000-000000000021","f0000004-ad50-11f0-9000-000000000022","f0000004-ad50-11f0-9000-000000000023","f0000004-ad50-11f0-9000-000000000024","f0000004-ad50-11f0-9000-000000000025","f0000004-ad50-11f0-9000-000000000026","f0000004-ad50-11f0-9000-000000000027","f0000004-ad50-11f0-9000-000000000028","f0000004-ad50-11f0-9000-000000000029","f0000004-ad50-11f0-9000-000000000030"}',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'Compensation for reviewing TOK-2025-007',
+		'approved'
+	),
+	(
+		'f0000003-ad50-11f0-9000-000000000004',
+		now()-interval '2 days',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		null,
+		'{"f0000004-ad50-11f0-9000-000000000031","f0000004-ad50-11f0-9000-000000000032","f0000004-ad50-11f0-9000-000000000033","f0000004-ad50-11f0-9000-000000000034","f0000004-ad50-11f0-9000-000000000035","f0000004-ad50-11f0-9000-000000000036","f0000004-ad50-11f0-9000-000000000037","f0000004-ad50-11f0-9000-000000000038","f0000004-ad50-11f0-9000-000000000039","f0000004-ad50-11f0-9000-000000000040"}',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'Compensation for handling TOK-2025-008',
+		'approved'
+	),
+	(
+		'f0000003-ad50-11f0-9000-000000000005',
+		now()-interval '2 days',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000000-ad50-11f0-9000-000000000008',
+		null,
+		'{"f0000004-ad50-11f0-9000-000000000041","f0000004-ad50-11f0-9000-000000000042","f0000004-ad50-11f0-9000-000000000043","f0000004-ad50-11f0-9000-000000000044","f0000004-ad50-11f0-9000-000000000045","f0000004-ad50-11f0-9000-000000000046","f0000004-ad50-11f0-9000-000000000047","f0000004-ad50-11f0-9000-000000000048","f0000004-ad50-11f0-9000-000000000049","f0000004-ad50-11f0-9000-000000000050"}',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'Compensation for reviewing TOK-2025-008',
+		'approved'
+	),
+	(
+		'f0000003-ad50-11f0-9000-000000000006',
+		now()-interval '1 day',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		null,
+		'{"f0000004-ad50-11f0-9000-000000000051","f0000004-ad50-11f0-9000-000000000052","f0000004-ad50-11f0-9000-000000000053","f0000004-ad50-11f0-9000-000000000054","f0000004-ad50-11f0-9000-000000000055","f0000004-ad50-11f0-9000-000000000056","f0000004-ad50-11f0-9000-000000000057","f0000004-ad50-11f0-9000-000000000058","f0000004-ad50-11f0-9000-000000000059","f0000004-ad50-11f0-9000-000000000060","f0000004-ad50-11f0-9000-000000000061","f0000004-ad50-11f0-9000-000000000062","f0000004-ad50-11f0-9000-000000000063","f0000004-ad50-11f0-9000-000000000064","f0000004-ad50-11f0-9000-000000000065","f0000004-ad50-11f0-9000-000000000066","f0000004-ad50-11f0-9000-000000000067","f0000004-ad50-11f0-9000-000000000068","f0000004-ad50-11f0-9000-000000000069","f0000004-ad50-11f0-9000-000000000070"}',
+		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
+		'Compensation for two reviews delivered over the summer',
+		'approved'
+	);
+
+-- Ten more submissions, four of them done. Until now every seeded submission was
+-- `reviewing`, so the completed state -- and the venue's done_visibility window
+-- -- had nothing to render. Each carries one payment per author, pointing at the
+-- venue's original submission payment the way the four above do.
+insert into
+	public.submissions (
+		id,
+		venue,
+		externalid,
+		previousid,
+		submission_type,
+		authors,
+		payments,
+		transactions,
+		title,
+		expertise,
+		status,
+		completed_at
+	)
+values
+	(
+		'f0000002-ad50-11f0-9000-000000000005',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-005',
+		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		array['7ff8621a-cbe0-4789-bbee-f008d38c4ac7']::uuid[],
+		array[15]::integer[],
+		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
+		'Citation Cartels and the Small Worlds That Sustain Them',
+		'bibliometrics, citation analysis, network analysis',
+		'done',
+		now()-interval '23 days'
+	),
+	(
+		'f0000002-ad50-11f0-9000-000000000006',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-006',
+		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		array['b8a805bf-0aae-4443-9185-de019a8715ec']::uuid[],
+		array[15]::integer[],
+		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
+		'What Reviewers Say When They Are Told Nobody Will Read It',
+		'peer review, research ethics, qualitative methods',
+		'done',
+		now()-interval '16 days'
+	),
+	(
+		'f0000002-ad50-11f0-9000-000000000007',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-007',
+		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		array[
+			'f0000000-ad50-11f0-9000-000000000003',
+			'b8a805bf-0aae-4443-9185-de019a8715cb'
+		]::uuid[],
+		array[15, 15]::integer[],
+		array[
+			'06125654-ad39-11f0-9804-177447a4d1ee',
+			'06125654-ad39-11f0-9804-177447a4d1ee'
+		]::uuid[],
+		'Preprints, Priority, and the Shrinking Value of Being First',
+		'preprints, open access, science communication',
+		'done',
+		now()-interval '9 days'
+	),
+	(
+		'f0000002-ad50-11f0-9000-000000000008',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-008',
+		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		array['f0000000-ad50-11f0-9000-000000000008']::uuid[],
+		array[15]::integer[],
+		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
+		'A Failure to Replicate Seventeen Findings About Replication',
+		'replication, statistics, research methods',
+		'done',
+		now()-interval '3 days'
+	),
+	(
+		'f0000002-ad50-11f0-9000-000000000009',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-009',
+		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		array['f0000000-ad50-11f0-9000-000000000013']::uuid[],
+		array[15]::integer[],
+		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
+		'Who Reads the Supplementary Material?',
+		'open science, data sharing, reader response',
+		'reviewing',
+		null
+	),
+	(
+		'f0000002-ad50-11f0-9000-000000000010',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-010',
+		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		array[
+			'f0000000-ad50-11f0-9000-000000000011',
+			'f0000000-ad50-11f0-9000-000000000005'
+		]::uuid[],
+		array[15, 15]::integer[],
+		array[
+			'06125654-ad39-11f0-9804-177447a4d1ee',
+			'06125654-ad39-11f0-9804-177447a4d1ee'
+		]::uuid[],
+		'Retraction Notices as a Genre',
+		'retraction, research integrity, science communication',
+		'reviewing',
+		null
+	),
+	(
+		'f0000002-ad50-11f0-9000-000000000011',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-011',
+		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		array['f0000000-ad50-11f0-9000-000000000009']::uuid[],
+		array[15]::integer[],
+		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
+		'Measurement Without a Referent: Impact Factors Considered as Folklore',
+		'bibliometrics, measurement, history of science',
+		'reviewing',
+		null
+	),
+	(
+		'f0000002-ad50-11f0-9000-000000000012',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-012',
+		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		array['7ff8621a-cbe0-4789-bbee-f008d38c4ac8']::uuid[],
+		array[15]::integer[],
+		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
+		'Testimony, Trust, and the Limits of Reviewing Outside Your Field',
+		'testimony, peer review, epistemology',
+		'reviewing',
+		null
+	),
+	(
+		'f0000002-ad50-11f0-9000-000000000013',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-013',
+		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		array[
+			'f0000000-ad50-11f0-9000-000000000014',
+			'f0000000-ad50-11f0-9000-000000000007'
+		]::uuid[],
+		array[15, 15]::integer[],
+		array[
+			'06125654-ad39-11f0-9804-177447a4d1ee',
+			'06125654-ad39-11f0-9804-177447a4d1ee'
+		]::uuid[],
+		'Sampling Frames in Studies of Scholarly Behavior',
+		'sampling, statistics, research methods',
+		'reviewing',
+		null
+	),
+	(
+		'f0000002-ad50-11f0-9000-000000000014',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'TOK-2025-014',
+		null,
+		'17ca2095-e231-4d5e-a9be-95c7de79a9a5',
+		array['b8a805bf-0aae-4443-9185-de019a8715cb']::uuid[],
+		array[15]::integer[],
+		array['06125654-ad39-11f0-9804-177447a4d1ee']::uuid[],
+		'An Argument That Peer Review Cannot Be Studied by Peer Review',
+		'peer review, epistemology, philosophy of science',
+		'reviewing',
+		null
+	);
+
+-- Staffing for the ten submissions above: an editor, an associate editor and two
+-- referees each, so their detail pages render a full assignment table. The
+-- referees are drawn from the Reviewer roster rather than repeated, so the
+-- per-scholar load indicators differ from one another.
+insert into
+	public.assignments (
+		id,
+		venue,
+		submission,
+		scholar,
+		role,
+		bid,
+		approved,
+		completed
+	)
+values
+	(
+		'f0000005-ad50-11f0-9000-000000000001',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000005',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000002',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000005',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000003',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000005',
+		'f0000000-ad50-11f0-9000-000000000005',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000004',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000005',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac8',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000005',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000006',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000006',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000006',
+		'f0000000-ad50-11f0-9000-000000000006',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000007',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000006',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000008',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000006',
+		'f0000000-ad50-11f0-9000-000000000001',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000009',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000007',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000010',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000007',
+		'f0000000-ad50-11f0-9000-000000000010',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000011',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000007',
+		'f0000000-ad50-11f0-9000-000000000011',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000012',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000007',
+		'f0000000-ad50-11f0-9000-000000000005',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000013',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000008',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000014',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000008',
+		'f0000000-ad50-11f0-9000-000000000015',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000015',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000008',
+		'f0000000-ad50-11f0-9000-000000000007',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000016',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000008',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac8',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		true
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000017',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000009',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000018',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000009',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000019',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000009',
+		'f0000000-ad50-11f0-9000-000000000009',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000020',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000009',
+		'f0000000-ad50-11f0-9000-000000000011',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000021',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000010',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000022',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000010',
+		'f0000000-ad50-11f0-9000-000000000006',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000023',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000010',
+		'f0000000-ad50-11f0-9000-000000000013',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000024',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000010',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000025',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000011',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000026',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000011',
+		'f0000000-ad50-11f0-9000-000000000010',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000027',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000011',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac8',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000028',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000011',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000029',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000012',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000030',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000012',
+		'f0000000-ad50-11f0-9000-000000000015',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000031',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000012',
+		'f0000000-ad50-11f0-9000-000000000001',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000032',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000012',
+		'f0000000-ad50-11f0-9000-000000000003',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000033',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000013',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000034',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000013',
+		'b8a805bf-0aae-4443-9185-de019a8715db',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000035',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000013',
+		'f0000000-ad50-11f0-9000-000000000005',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000036',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000013',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000037',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000014',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000038',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000014',
+		'f0000000-ad50-11f0-9000-000000000006',
+		'ed5e1cd4-ad37-11f0-83e7-8742b968ac75',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000039',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000014',
+		'f0000000-ad50-11f0-9000-000000000008',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	),
+	(
+		'f0000005-ad50-11f0-9000-000000000040',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000002-ad50-11f0-9000-000000000014',
+		'f0000000-ad50-11f0-9000-000000000009',
+		'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		false,
+		true,
+		false
+	);
+
+-- The venue's bid vocabulary. The table was empty, which meant every bid in the
+-- seed was an undifferentiated "yes" and the preference column had nothing in
+-- it. end2end/preferences.end.ts clears these before it runs and restores them
+-- after, so seeding them costs that spec nothing.
+insert into
+	public.preference_levels (id, venueid, label, rank)
+values
+	(
+		'f0000006-ad50-11f0-9000-000000000001',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'Preferred',
+		0
+	),
+	(
+		'f0000006-ad50-11f0-9000-000000000002',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'If necessary',
+		1
+	),
+	(
+		'f0000006-ad50-11f0-9000-000000000003',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'No',
+		2
+	);
+
+-- Thank-you notes, in all three states the vetting lifecycle has. The table was
+-- empty, so the author's view, the editor's vetting queue and the reviewer's
+-- delivered note were all unreachable without writing one by hand first.
+insert into
+	public.thanks (
+		id,
+		submission,
+		venue,
+		author,
+		message,
+		status,
+		approver,
+		decline_reason,
+		created_at
+	)
+values
+	(
+		'f0000007-ad50-11f0-9000-000000000001',
+		'f0000002-ad50-11f0-9000-000000000005',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
+		'Whoever read this one: you caught an error in the second model that I had walked past four times. The paper is materially better for it. Thank you.',
+		'approved',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		null,
+		now()-interval '21 days'
+	),
+	(
+		'f0000007-ad50-11f0-9000-000000000002',
+		'f0000002-ad50-11f0-9000-000000000006',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'b8a805bf-0aae-4443-9185-de019a8715ec',
+		'Three careful reports inside a month, on a paper that argues with most of the field. I did not expect that and I am grateful for it.',
+		'proposed',
+		null,
+		null,
+		now()-interval '14 days'
+	),
+	(
+		'f0000007-ad50-11f0-9000-000000000003',
+		'f0000002-ad50-11f0-9000-000000000008',
+		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
+		'f0000000-ad50-11f0-9000-000000000008',
+		'Thanks to reviewer 2 in particular, who I am fairly sure is the person who reviewed my last submission as well.',
+		'declined',
+		'd181d165-8b6a-4d79-ad28-a9aece21d813',
+		'Kindly meant, but it speculates about who a referee was, which is exactly what the note must not do. Happy to pass on a version without the last clause.',
+		now()-interval '1 day'
+	);
+
+-- Endorsements on the venue proposal. Also empty until now, so the proposal page
+-- showed a petition nobody had signed.
+insert into
+	public.supporters (id, scholarid, message, proposalid, created_at)
+values
+	(
+		'f0000008-ad50-11f0-9000-000000000001',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac8',
+		'I have refereed for this venue for six years without being asked once whether I had the time. Worth trying something else.',
+		'82246928-ad37-11f0-a071-bb5db9b6e698',
+		'2026-01-20 11:00:00+00'
+	),
+	(
+		'f0000008-ad50-11f0-9000-000000000002',
+		'f0000000-ad50-11f0-9000-000000000007',
+		'Supportive, with one reservation: the compensation has to be visible to authors or it will read as a fee.',
+		'82246928-ad37-11f0-a071-bb5db9b6e698',
+		'2026-01-21 09:30:00+00'
+	),
+	(
+		'f0000008-ad50-11f0-9000-000000000003',
+		'f0000000-ad50-11f0-9000-000000000015',
+		'Yes.',
+		'82246928-ad37-11f0-a071-bb5db9b6e698',
+		'2026-01-21 16:45:00+00'
+	),
+	(
+		'f0000008-ad50-11f0-9000-000000000004',
+		'7ff8621a-cbe0-4789-bbee-f008d38c4acb',
+		'',
+		'82246928-ad37-11f0-a071-bb5db9b6e698',
+		'2026-01-23 14:05:00+00'
 	);

@@ -4,12 +4,12 @@ import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
 const VENUE_PATH = SEED.venuePath;
-const SUBMISSION_ID = SEED.submissions.tok001; // TOK-2025-001
+const SUBMISSION_ID = SEED.submissions.tok001.id;
 const EDITOR_EMAIL = SEED.scholars.editor.email;
 const EDITOR_ID = SEED.scholars.editor.id;
-const AUTHOR_EMAIL = SEED.scholars.author1.email; // author of TOK-2025-001
+const AUTHOR_EMAIL = SEED.scholars.author1.email; // author of the submission above
 const CONFLICT_DECLARER_EMAIL = SEED.scholars.r3.email; // Reviewer volunteer with no assignments
-const ASSIGNED_REVIEWER_NAME = SEED.scholars.r1.name; // r1, the approved Reviewer on TOK-2025-001
+const ASSIGNED_REVIEWER_NAME = SEED.scholars.r1.name; // the approved Reviewer on it
 const REVIEWER_ROLE_ID = SEED.roles.reviewer;
 
 test('editor manually adds a single submission with themselves as the sole author', async ({
@@ -174,7 +174,7 @@ test('scholar declares a conflict on a submission and it disappears from their s
 	const declarerID = sql(
 		`select id from public.scholars where email = '${CONFLICT_DECLARER_EMAIL}';`
 	);
-	// Reset state: clear prior conflicts and put TOK-2025-001's Reviewer bids
+	// Reset state: clear prior conflicts and put the submission's Reviewer bids
 	// back to bid-not-approved so the submission is visible in the bidding
 	// list (reviewerAssignment.end.ts may have approved them earlier in the
 	// shared-DB suite, which would hide the submission from new bidders).
@@ -190,10 +190,10 @@ test('scholar declares a conflict on a submission and it disappears from their s
 	await page.waitForLoadState('networkidle');
 
 	// The declarer is a plain Reviewer volunteer, so the venue's anonymized roles
-	// withhold TOK-2025-001's manuscript ID from them. The title is what they
+	// withhold the submission's manuscript ID from them. The title is what they
 	// recognize the submission by — which is the whole basis on which a scholar
 	// declares a conflict — so the row is addressed by title here.
-	const SUBMISSION_TITLE = 'A Study on the Effectiveness of Peer Review Incentives';
+	const SUBMISSION_TITLE = SEED.submissions.tok001.title;
 
 	// The submission should be in the list with a declare-conflict button.
 	await expect(page.getByText(SUBMISSION_TITLE).first()).toBeVisible();
@@ -290,8 +290,8 @@ test('reviewer-anonymity flag actually hides assignees from authors', async ({ p
 	await login(AUTHOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 
-	// As the author, with anonymity on, the assigned reviewer's name (r1,
-	// Rigor Russ) is NOT visible on the page — RLS at
+	// As the author, with anonymity on, the assigned reviewer's name is NOT
+	// visible on the page — RLS at
 	// supabase/schemas/assignments.sql L199-226 hides the assignment row.
 	await expect(page.getByText(ASSIGNED_REVIEWER_NAME)).toHaveCount(0);
 

@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
-const CURRENCY_ID = SEED.currency; // Epistemology
+const CURRENCY_ID = SEED.currency;
 const AUTHOR1_EMAIL = SEED.scholars.author1.email;
-const AUTHOR1_ID = SEED.scholars.author1.id; // holds 100 Epistemology tokens (seed)
+const AUTHOR1_ID = SEED.scholars.author1.id; // holds 100 tokens in the seed
 const AUTHOR2_EMAIL = SEED.scholars.author2.email;
 const AUTHOR2_ID = SEED.scholars.author2.id;
 const AUTHOR2_ORCID = SEED.scholars.author2.orcid;
@@ -43,7 +43,7 @@ test('the logged in scholar should see many things', async ({ page, context }) =
 });
 
 test("a scholar cannot see another scholar's token balance (#109)", async ({ page, context }) => {
-	// Balances are private. AUTHOR1 holds 100 Epistemology tokens in the seed, and
+	// Balances are private. AUTHOR1 holds 100 tokens in the seed, and
 	// before #109 any signed-in scholar could read them — the profile rendered
 	// everyone's holdings, and the tokens table itself was readable by all.
 	await login(AUTHOR2_EMAIL, page, context);
@@ -155,7 +155,7 @@ test('scholar edits their availability and status, persisting on reload', async 
 
 /**
  * Shared body for the two scholar-to-scholar gift tests: author1 gifts two
- * Epistemology tokens to author2 (looked up by `recipient`, an ORCID or email),
+ * tokens to author2 (looked up by `recipient`, an ORCID or email),
  * then we verify the gift appears in author2's transaction history and that
  * author2's balance increased by two.
  */

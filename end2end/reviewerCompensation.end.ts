@@ -5,7 +5,7 @@ import { asScholar, SEED, sql } from './test-utils';
 const VENUE_ID = SEED.venue;
 const VENUE_PATH = SEED.venuePath;
 const CURRENCY_ID = SEED.currency;
-const SUBMISSION_ID = SEED.submissions.tok001;
+const SUBMISSION_ID = SEED.submissions.tok001.id;
 const REVIEWER_ROLE_ID = SEED.roles.reviewer;
 // Only a venue's admins or a priority-0 role holder may move its reserve, and the
 // mover may not be the recipient (transfer_tokens, supabase/schemas/transactions.sql).
@@ -22,7 +22,7 @@ test('AE compensates a reviewer and tokens transfer immediately', async ({ page,
 	await page.waitForLoadState('networkidle');
 
 	// At least one approved-but-incomplete Reviewer assignment is present
-	// (r1, Rigor Russ in the seed; possibly more after reviewerAssignment.end.ts
+	// (r1 in the seed; possibly more after reviewerAssignment.end.ts
 	// approves additional bids). Click the first one — the RPC behavior is
 	// identical regardless of which assignment we target.
 	const completeButton = page.getByTestId('complete-assignment').first();

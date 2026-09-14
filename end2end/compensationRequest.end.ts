@@ -17,7 +17,7 @@ const VENUE_PATH = SEED.venuePath;
 const VOLUNTEER = SEED.scholars.r1; // an accepted Reviewer with an approved assignment
 /** The seed submission's ID in the venue's own reviewing system, which is what this form asks
  * for — not RR's own id. */
-const MANUSCRIPT = 'TOK-2025-001';
+const MANUSCRIPT = SEED.submissions.tok001.externalId;
 
 test('a request reports who was told, not a second generic confirmation', async ({
 	page,

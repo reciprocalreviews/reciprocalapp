@@ -3,8 +3,8 @@ import { login, logout } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const VENUE_PATH = SEED.venuePath;
-const AUTHOR1_ORCID = SEED.scholars.author1.orcid; // Foot Note (author1@uni.edu)
-const AUTHOR2_ORCID = SEED.scholars.author2.orcid; // Ann Thesis (author2@uni.edu)
+const AUTHOR1_ORCID = SEED.scholars.author1.orcid;
+const AUTHOR2_ORCID = SEED.scholars.author2.orcid;
 
 test('the author form lists the submitter, finds co-authors by name, and flags a repeat', async ({
 	page,
@@ -30,13 +30,13 @@ test('the author form lists the submitter, finds co-authors by name, and flags a
 
 	// A co-author can be found by name, for the common case where the submitter
 	// knows who they wrote the paper with but not their ORCID.
-	await page.getByTestId('author-orcid-1').fill('Ann');
+	await page.getByTestId('author-orcid-1').fill(SEED.filters.sharedPrefix);
 	await expect(page.getByTestId('author-no-matches-1')).toHaveCount(0);
-	// Several seeded scholars contain "Ann" — Ann Thesis, Anne Notation, and
-	// Manny Script — so pick the intended one by name rather than by position.
-	// Which one sorts first is a collation detail, not something this test is about.
+	// Several seeded scholars match that fragment, deliberately, so pick the intended
+	// one by name rather than by position. Which one sorts first is a collation
+	// detail, not something this test is about.
 	await expect(page.getByTestId('author-match-1-0')).toBeVisible();
-	const match = page.getByRole('button', { name: 'Ann Thesis' });
+	const match = page.getByRole('button', { name: SEED.scholars.author2.name });
 	await match.click();
 	await expect(page.getByTestId('author-orcid-1')).toHaveValue(AUTHOR2_ORCID);
 	// Choosing a match resolves the row outright — no second lookup round trip,
