@@ -31,6 +31,42 @@ export function orcidAPIURL(id: string, section: ORCIDSection): string {
 	return `${ORCID_PUBLIC_API}/${id}/${section}`;
 }
 
+/**
+ * The headers for a public-API read, with an optional bearer token.
+ *
+ * A token is not required: the public API answers anonymously, and that path is the tested
+ * default. Registering a free Public API client raises the daily read cap from 25k per IP --
+ * shared with whoever else is on the egress IP -- to 100k that are ours. See #173.
+ *
+ * **An invalid token is worse than no token.** Measured against the live API: a request with
+ * no `Authorization` header returns 200, and the same request with a bad bearer returns 401.
+ * So a mistyped, expired, revoked, or wrong-environment token turns every read into a failure
+ * rather than degrading to the tier that works. The caller is responsible for noticing a 401
+ * and retrying without the token; this function only decides what to send.
+ *
+ * Pure, and deliberately here rather than in the edge function: this module is re-exported
+ * into the app and vitest, which is the only place any of this can be tested. Reading the
+ * token from the environment stays in the function, because a Deno global here breaks the
+ * Vite build of the whole app.
+ */
+export function orcidHeaders(token?: string | null): Record<string, string> {
+	const headers: Record<string, string> = {
+		Accept: 'application/json',
+		// Measured at 13-21x on real records, and the only bandwidth lever there is: ORCID
+		// sends no ETag and ignores If-Modified-Since, so a conditional fetch is not
+		// available. Deno's fetch decompresses transparently.
+		'Accept-Encoding': 'gzip',
+		// So ORCID can get in touch rather than block us.
+		'User-Agent': 'ReciprocalReviews (+https://reciprocal.reviews)'
+	};
+	// Trimmed, and an empty or whitespace-only value is treated as absent: a secret set to
+	// the empty string is how an unconfigured environment usually presents itself, and
+	// sending `Bearer ` would fail every read.
+	const bearer = token?.trim();
+	if (bearer !== undefined && bearer.length > 0) headers.Authorization = `Bearer ${bearer}`;
+	return headers;
+}
+
 /** How many works are kept. The rest of the record is reduced to a count and a span:
  * an assigner is scanning for topical fit, and five recent titles answer that better
  * than a bibliography they would have to read past. */

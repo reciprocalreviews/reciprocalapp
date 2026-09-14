@@ -283,7 +283,11 @@ partially refreshed row is strictly better than one emptied by an unrelated fail
   watching.
 - **Not writable by anyone.** No INSERT, UPDATE or DELETE policy exists, and the table-wide
   grants are explicitly revoked from `anon` and `authenticated` before the SELECT grant —
-  Supabase's default privileges hand out ALL on every new table in `public` first.
+  Supabase's default privileges hand out ALL on every new table in `public` first. That
+  SELECT grant **names its columns** and leaves `fetch_detail` out: its comment always said
+  it was never rendered to a visitor, but a table-wide grant made it readable by anyone over
+  PostgREST, and not-rendered is not not-readable. `getORCIDProfile` names its columns for
+  the same reason — a `select()` reaching for `*` is now refused outright.
 - **Not warmed by anonymous visitors.** `request_orcid_refresh` is `authenticated`-only, so
   an anonymous visitor to a cold profile sees the ORCID link and nothing else. The editors
   this exists for are always signed in, and leaving anon out closes a crawler-driven path
@@ -298,9 +302,33 @@ function checks `isSteward()`.
 
 **Rate limits.** The anonymous public API allows 12 requests a second and 25k reads a day
 **per IP**, and edge egress IPs are shared. Registering a free Public API client raises the
-daily cap to 100k and makes the budget ours rather than the IP's; the code adds an
-`Authorization` header only if an `orcid_public_token` vault secret exists, so the
-secret-free path stays the tested default.
+daily cap to 100k and makes the budget ours rather than the IP's.
+
+The token is the `ORCID_PUBLIC_TOKEN` **function secret** — `Deno.env.get`, as `resend` reads
+`RESEND_API_KEY` — and deliberately not a vault secret. The vault holds what the _database_
+needs, and `supabase db push` copies vault values to the remote project with no opt-out
+(supabase/cli#3815), which has already clobbered a hosted secret once. Nothing in CI sets it;
+like `RESEND_API_KEY` it is a Dashboard entry, so `npm run orcid:token` exists to mint a token
+and prove it reads before anyone deploys it. Absent is the tested default and the path every
+test exercises.
+
+**A bad token is worse than no token, and the code is built around that.** Measured against
+the live API: a read with no `Authorization` header returns 200, and the same read with a bad
+bearer returns 401 — so a mistyped, expired, revoked, or sandbox-issued token would otherwise
+break every read rather than degrade. On a 401 the function retries that request anonymously,
+records the refusal in `fetch_detail`, logs it, and stops sending the token for the rest of
+the batch rather than paying a doubled round trip per request. A wrong secret therefore costs
+one extra request per cold start and nothing else.
+
+**Staging gets no token.** It authenticates against the ORCID _sandbox_, but the mirror always
+reads production `pub.orcid.org`, so a sandbox token would 401 every read — and staging's
+sandbox iDs resolve to nothing on production regardless.
+
+`fetch_rate_limited_at` records when ORCID last answered with 429, in its own column because
+`fetch_status = 'error'` counts 500s, timeouts and parse failures too, and only the 429 says
+the daily budget is the problem. `orcid_mirror_health()` aggregates it for the steward card on
+`/about`; the warning there appears only when the count is non-zero, since a permanent
+"0 rate limited" line would stop being read long before the day it mattered.
 
 ## Email pipeline
 

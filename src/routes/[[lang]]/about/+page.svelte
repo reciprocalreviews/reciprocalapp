@@ -14,6 +14,7 @@
 	import type { LocaleText } from '$lib/locales/Locale';
 	import { validEmail, validORCID } from '$lib/validation';
 	import { getLocaleContext } from '$routes/Contexts';
+	import type { ORCIDMirrorHealth } from '$lib/data/CRUD';
 	import { addFeedback, handle } from '$routes/feedback.svelte';
 
 	let { data } = $props();
@@ -30,6 +31,19 @@
 	/** Disables the button for the round trip, so a steward cannot queue several batches
 	 * by pressing repeatedly before the first answers. */
 	let refreshingORCID = $state(false);
+	/** The mirror's state, read once for a steward and again after each refresh. Null until
+	 * it arrives, or when the read failed — in which case the card simply shows the control
+	 * without a status line, since a steward can still press it. */
+	let orcidHealth = $state<ORCIDMirrorHealth | null>(null);
+
+	$effect(() => {
+		if (!isSteward) return;
+		void db()
+			.getORCIDMirrorHealth()
+			.then(({ data }) => {
+				orcidHealth = data ?? null;
+			});
+	});
 
 	function validSteward(text: string): ((l: LocaleText) => string) | undefined {
 		return validEmail(text) || validORCID(text)
@@ -119,6 +133,30 @@
 				testid="refresh-orcid-card"
 				expand
 			>
+				{#if orcidHealth}
+					<!-- Plain counts rather than a chart: this answers one question, which is
+					     whether anything needs doing. -->
+					<Paragraph
+						text={() =>
+							locale()
+								.page.about.feedback.orcidHealth.replace('{read}', orcidHealth!.read.toString())
+								.replace('{never}', orcidHealth!.never_read.toString())
+								.replace('{failed}', orcidHealth!.failed.toString())}
+					/>
+					<!-- Shown only when it has actually happened. A permanent "0 rate limited"
+					     line would be noise on every visit and would stop being read long
+					     before the day it mattered. -->
+					{#if orcidHealth.rate_limited > 0}
+						<Feedback
+							testid="orcid-rate-limited"
+							text={() =>
+								locale().page.about.feedback.orcidRateLimited.replace(
+									'{count}',
+									orcidHealth!.rate_limited.toString()
+								)}
+						/>
+					{/if}
+				{/if}
 				<Button
 					strings={(l) => l.page.about.button.refreshORCID}
 					active={!refreshingORCID}
@@ -131,6 +169,11 @@
 						if (claimed === false) return;
 						// The count is the point: a steward who sees only "done" cannot tell a
 						// batch from the end of the queue, and would stop after one press.
+						void db()
+							.getORCIDMirrorHealth()
+							.then(({ data }) => {
+								orcidHealth = data ?? null;
+							});
 						addFeedback(
 							claimed === 0
 								? locale().page.about.feedback.orcidCurrent

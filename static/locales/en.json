@@ -1456,7 +1456,9 @@
 				"stewardsNotLoaded": "Unable to load active stewards.",
 				"noStewards": "No one is currently stewarding the platform.",
 				"orcidRefreshed": "Refreshing {count} ORCID profiles. Press again to continue.",
-				"orcidCurrent": "Every ORCID profile is already up to date."
+				"orcidCurrent": "Every ORCID profile is already up to date.",
+				"orcidHealth": "{read} read, {never} never read, {failed} failing.",
+				"orcidRateLimited": "ORCID has been limiting how fast we read: {count} profiles hit a limit this week. Registering an API client would raise the cap."
 			},
 			"paragraph": {
 				"community": "We are a volunteer community of academics interested in keeping peer review sustainable, for ourselves and our communities. You can learn more about who's contributing and how to contribute yourself on [GitHub](https://github.com/reciprocalreviews).",
@@ -2177,6 +2179,7 @@
 		"LoadCurrency": "Unable to load currency data.",
 		"LoadScholar": "Unable to load scholar data.",
 		"BackfillORCIDProfiles": "Unable to refresh ORCID profiles.",
+		"LoadORCIDMirrorHealth": "Unable to read ORCID mirror status.",
 		"EnsureScholar": "Unable to set up your scholar profile.",
 		"LoadSubmission": "Unable to load submission data.",
 		"LoadTransaction": "Unable to load transaction data.",

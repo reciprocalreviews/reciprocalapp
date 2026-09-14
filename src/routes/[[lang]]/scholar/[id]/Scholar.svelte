@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type {
 		AssignmentRow,
-		ORCIDProfileRow,
+		PublicORCIDProfile,
 		CurrencyID,
 		CurrencyRow,
 		NotificationSettingRow,
@@ -102,7 +102,7 @@
 		pendingEmail: PendingEmailVerification | null;
 		/** The mirrored slice of this scholar's public ORCID record, or null when RR has
 		 * not read it. Null is the common case on a cold cache and renders as nothing. */
-		orcid: ORCIDProfileRow | null;
+		orcid: PublicORCIDProfile | null;
 	} = $props();
 
 	const db = getDB();

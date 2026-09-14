@@ -19,7 +19,7 @@ with
 	schema extensions;
 
 select
-	plan (13);
+	plan (16);
 
 select
 	private.orcid_batch_size () as batch \gset
@@ -198,6 +198,62 @@ select
 		public.backfill_orcid_profiles (5),
 		1,
 		'a steward can backfill a profile that has never been fetched'
+	);
+
+-- ---- Mirror health --------------------------------------------------------------
+-- The counts a steward reads to decide whether the mirror needs attention. `failed` alone
+-- cannot answer that: it counts 500s and timeouts as well as 429s, and only the 429 says
+-- "we are exhausting ORCID's anonymous budget and should register an API client" (#173).
+select
+	tests.authenticate_as (:'b');
+
+select
+	throws_ok (
+		$$ select public.orcid_mirror_health() $$,
+		'RR006',
+		null,
+		'a scholar who is not a steward cannot read mirror health'
+	);
+
+select
+	tests.clear_authentication ();
+
+update public.orcid_profiles
+set
+	fetch_status = 'error',
+	fetch_rate_limited_at = now()
+where
+	scholar = :'a';
+
+select
+	tests.authenticate_as (:'steward');
+
+select
+	is (
+		(public.orcid_mirror_health () ->> 'rate_limited')::integer,
+		1,
+		'a recent 429 is counted'
+	);
+
+select
+	tests.clear_authentication ();
+
+-- Windowed, not lifetime: a burst six months ago is history, and a steward needs to know
+-- about pressure now.
+update public.orcid_profiles
+set
+	fetch_rate_limited_at = now() - interval '30 days'
+where
+	scholar = :'a';
+
+select
+	tests.authenticate_as (:'steward');
+
+select
+	is (
+		(public.orcid_mirror_health () ->> 'rate_limited')::integer,
+		0,
+		'a rate limit from a month ago is not counted'
 	);
 
 select

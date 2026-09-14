@@ -1292,6 +1292,12 @@ export type LocaleText = {
 				change: string;
 			};
 			feedback: {
+				/** The mirror's state, shown to a steward beside the refresh control. {read},
+				 * {never} and {failed} are counts of scholars. */
+				orcidHealth: string;
+				/** Shown only when ORCID has actually been refusing reads. {count} is how many
+				 * profiles hit a rate limit in the last week. */
+				orcidRateLimited: string;
 				/** {count} is how many profiles this press claimed. */
 				orcidRefreshed: string;
 				orcidCurrent: string;
@@ -1922,6 +1928,7 @@ export type LocaleText = {
 		LoadCurrency: string;
 		LoadScholar: string;
 		BackfillORCIDProfiles: string;
+		LoadORCIDMirrorHealth: string;
 		EnsureScholar: string;
 		LoadSubmission: string;
 		LoadTransaction: string;

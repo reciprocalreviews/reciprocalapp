@@ -5,6 +5,13 @@ export type ScholarRow = Tables['scholars']['Row'];
 export type ScholarID = ScholarRow['id'];
 /** The mirrored slice of a scholar's public ORCID record. See supabase/schemas/orcid_profiles.sql. */
 export type ORCIDProfileRow = Tables['orcid_profiles']['Row'];
+/** What a client can actually read of one.
+ *
+ * `fetch_detail` holds our own diagnostics -- HTTP statuses, parse errors, whether an API
+ * token was refused -- and is not granted to anon or authenticated, so no browser query can
+ * return it. The type says so, rather than letting application code reference a column that
+ * would come back undefined at best and refuse the whole query at worst. */
+export type PublicORCIDProfile = Omit<ORCIDProfileRow, 'fetch_detail'>;
 export type ProposalRow = Tables['proposals']['Row'];
 export type ProposalID = ProposalRow['id'];
 export type SupporterRow = Tables['supporters']['Row'];

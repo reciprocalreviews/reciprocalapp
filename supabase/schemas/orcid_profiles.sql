@@ -67,9 +67,19 @@ create table if not exists public.orcid_profiles (
 	fetch_status text not null default 'pending',
 	-- Consecutive failures, for backoff. Reset to zero on success.
 	fetch_failures smallint not null default 0,
-	-- Diagnostics for whoever is looking at the row. NEVER rendered to a visitor, for
-	-- the same reason emails.delivery_detail is not.
-	fetch_detail text
+	-- Diagnostics for whoever is looking at the row. Never rendered to a visitor, and --
+	-- unlike every other column here -- never granted to one either: the SELECT grant below
+	-- names its columns and leaves this one out, because "not rendered" and "not readable"
+	-- are different things and PostgREST hands out whatever is granted. Same reason
+	-- pending_email_verification omits delivery_detail.
+	fetch_detail text,
+	-- When ORCID last answered a read for this scholar with 429.
+	--
+	-- Its own column rather than something parsed back out of fetch_detail: 'error'
+	-- conflates a 429 with a 500, a timeout and a parse failure, and only the 429 answers
+	-- the question a steward is actually asking -- are we exhausting the anonymous daily
+	-- budget, and should this project register an API client (#173). Null means never.
+	fetch_rate_limited_at timestamptz
 );
 
 alter table public.orcid_profiles owner to "postgres";
@@ -120,9 +130,34 @@ from
 	anon,
 	authenticated;
 
+-- Columns, not the whole table. Everything here is already public at orcid.org with one
+-- exception: fetch_detail carries our own diagnostics -- HTTP statuses, parse errors, and
+-- whether an API token was refused -- which are nobody else's business and would otherwise
+-- be readable by anyone over PostgREST.
 grant
 select
-	on table public.orcid_profiles to anon,
+	(
+		scholar,
+		orcid,
+		employment_role,
+		employment_department,
+		employment_organization,
+		education_role,
+		education_organization,
+		education_year,
+		keywords,
+		works,
+		work_count,
+		work_first_year,
+		work_last_year,
+		links,
+		fetched_at,
+		works_fetched_at,
+		fetch_attempted_at,
+		fetch_status,
+		fetch_failures,
+		fetch_rate_limited_at
+	) on table public.orcid_profiles to anon,
 	authenticated;
 
 grant all on table public.orcid_profiles to service_role;
@@ -374,3 +409,58 @@ from
 -- check inside is the gate; the grant only decides who may reach it.
 grant
 execute on function public.backfill_orcid_profiles (integer) to authenticated;
+
+/**
+ * How the mirror is doing, for a steward deciding whether it needs attention.
+ *
+ * The counts exist because `fetch_status = 'error'` cannot answer the only operational
+ * question there is: a 429 means we are exhausting ORCID's anonymous daily budget and should
+ * register an API client (#173), while a 500 or a timeout means ORCID had a bad minute and
+ * the backoff will handle it. They are different problems with different responses, and the
+ * status column alone conflates them.
+ *
+ * Steward-gated to match the card that renders it, not because the numbers are secret --
+ * `orcid_profiles` is world-readable and anyone could count these rows themselves. It is an
+ * operational view, and it belongs where the other operational controls are.
+ */
+create or replace function public.orcid_mirror_health () returns jsonb language plpgsql security definer
+set
+	search_path='' as $$
+declare
+	_result jsonb;
+begin
+	if not public.isSteward() then
+		raise exception 'Only a steward can read ORCID mirror health' using errcode = 'RR006';
+	end if;
+
+	select jsonb_build_object(
+		-- The denominator: scholars who HAVE an iD, so an erased tombstone or a seeded
+		-- fixture is not counted as a profile we are failing to read.
+		'scholars', count(*) filter (where s.orcid is not null),
+		'read', count(*) filter (where p.fetch_status = 'ok' and p.fetched_at is not null),
+		'never_read', count(*) filter (where s.orcid is not null and p.scholar is null),
+		'pending', count(*) filter (where p.fetch_status = 'pending'),
+		'not_found', count(*) filter (where p.fetch_status = 'not_found'),
+		'failed', count(*) filter (where p.fetch_status = 'error'),
+		-- The number that decides whether to act. Windowed rather than lifetime: a burst
+		-- six months ago is history, and a steward needs to know about pressure now.
+		'rate_limited', count(*) filter (where p.fetch_rate_limited_at > now() - interval '7 days'),
+		'oldest_read', min(p.fetched_at)
+	) into _result
+	from public.scholars s
+	left join public.orcid_profiles p on p.scholar = s.id;
+
+	return _result;
+end;
+$$;
+
+alter function public.orcid_mirror_health () owner to "postgres";
+
+revoke
+execute on function public.orcid_mirror_health ()
+from
+	public,
+	anon;
+
+grant
+execute on function public.orcid_mirror_health () to authenticated;

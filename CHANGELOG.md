@@ -13,6 +13,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **Scholar profiles now show a slice of their ORCID record**: current affiliation, keywords, recent publications, and education. Editors picking reviewers no longer have to open orcid.org to find out who someone is.
 - **The volunteers roster and the assignment table now carry that context too.** Each half of an expertise cell is marked by whose claim it is — the Reciprocal Reviews logo on what a volunteer told your venue, the ORCID iD mark on what their public record says — and ORCID keywords export as their own CSV column.
 - **Stewards can populate ORCID profiles from the About page.** It works through the oldest records a batch at a time and says how many it took, so you can press it again until none are left.
+- **The About page now shows how the ORCID mirror is doing** — how many profiles have been read, how many never have, and how many are failing — and says so when ORCID has been limiting how fast we may read.
 
 ### Changed
 
@@ -21,6 +22,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **The venue proposal form's payment checkbox now matches venue settings.** It reads **Token-based venue** and starts checked, where before it read payment-free and started unchecked, pointing the same setting opposite ways in the two places.
 - **A bulk import row that is already in the venue now names and links the manuscript it matched.** The notice said only that something here had that ID, which left an ID two different papers share looking exactly like a queue re-exported with last month's rows still in it.
 - **Confirmations for an action that emails many people are now one message rather than one each.** Asking three hundred volunteers to bid would have filled the page with three hundred separate confirmations, each needing its own dismissal; now one names somebody and counts the rest.
+- Reciprocal Reviews can now read ORCID with an API token where one is configured, raising how much it may read each day. Without one it reads exactly as before.
 - **Assigning someone now shows you who you just named, before you commit.** The field took an email or ORCID iD silently and only reported a bad one after you pressed the button.
 - Updated internal tooling for stability.
 

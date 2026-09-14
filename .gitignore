@@ -13,3 +13,9 @@ vite.config.ts.timestamp-*
 /src/routes/updates/updates.json
 /src/routes/updates/date.json
 /playwright-report
+
+# Deno writes one of these next to a function's deno.json whenever anyone runs `deno check`
+# on it. It pins npm versions the edge runtime then cannot resolve, so a committed lockfile
+# breaks the function at boot with "Could not find '@supabase/postgrest-js@...'". None of
+# the functions has ever committed one; this keeps it that way.
+supabase/functions/**/deno.lock

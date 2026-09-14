@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { SEED } from './test-utils';
+import { login, logout } from '../src/routes/login';
+import { SEED, sql } from './test-utils';
 
 /**
  * The mirrored slice of a scholar's public ORCID record.
@@ -95,4 +96,58 @@ test('ORCID keywords are marked as ORCID\u2019s wherever they appear', async ({ 
 	await expect(keywords.locator('svg.mark')).toHaveCount(1);
 	// Announced, not a title attribute: a `title` on a span is not reliably read out.
 	await expect(keywords).toContainText('From ORCID');
+});
+
+test('a steward sees how the mirror is doing, and can refresh it', async ({ page, context }) => {
+	// The only operational surface the mirror has. Without it there is no way to populate
+	// the mirror at all — running the function in a SQL editor is refused for want of an
+	// auth.uid() — and no way to tell whether ORCID is refusing reads.
+	await login(SEED.scholars.editor.email, page, context);
+	await page.goto('/about');
+
+	const card = page.getByTestId('refresh-orcid-card');
+	await expect(card).toBeVisible();
+	// The control has to be reachable without opening anything: a Card hides its children
+	// until expanded, and this one's only child is the button.
+	await expect(page.getByTestId('refresh-orcid-button')).toBeVisible();
+	// Counts, not just "done" — a steward who sees only "done" cannot tell a batch from the
+	// end of the queue.
+	await expect(card).toContainText('never read');
+
+	await logout(page);
+});
+
+test('a scholar who is not a steward sees no ORCID controls', async ({ page, context }) => {
+	await login(SEED.scholars.author1.email, page, context);
+	await page.goto('/about');
+	await expect(page.getByTestId('refresh-orcid-card')).toHaveCount(0);
+	await expect(page.getByTestId('refresh-orcid-button')).toHaveCount(0);
+	await logout(page);
+});
+
+test('the rate-limit warning appears only when ORCID has actually been limiting reads', async ({
+	page,
+	context
+}) => {
+	// A permanent "0 rate limited" line would be noise on every visit and would stop being
+	// read long before the day it mattered.
+	await login(SEED.scholars.editor.email, page, context);
+	await page.goto('/about');
+	await expect(page.getByTestId('orcid-rate-limited')).toHaveCount(0);
+
+	try {
+		// One statement on one line: sql() hands it straight to `docker exec`, where
+		// embedded newlines and tabs break the shell quoting.
+		const insert =
+			`insert into public.orcid_profiles (scholar, orcid, fetch_status, fetch_rate_limited_at) ` +
+			`values ('${SEED.scholars.r1.id}', '${SEED.scholars.r1.orcid}', 'error', now()) ` +
+			`on conflict (scholar) do update set fetch_status = 'error', fetch_rate_limited_at = now()`;
+		sql(insert);
+		await page.reload();
+		await expect(page.getByTestId('orcid-rate-limited')).toBeVisible();
+	} finally {
+		// Restored: the suite shares one seeded database.
+		sql(`delete from public.orcid_profiles where scholar = '${SEED.scholars.r1.id}'`);
+	}
+	await logout(page);
 });

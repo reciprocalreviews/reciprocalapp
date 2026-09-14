@@ -15,6 +15,7 @@ import {
 	buildProfile,
 	MAX_WORKS,
 	orcidAPIURL,
+	orcidHeaders,
 	parseEducations,
 	parseEmployments,
 	parsePerson,
@@ -298,4 +299,36 @@ test('builds section urls', () => {
 	expect(orcidAPIURL('0000-0001-7461-4783', 'works')).toBe(
 		'https://pub.orcid.org/v3.0/0000-0001-7461-4783/works'
 	);
+});
+
+describe('orcidHeaders', () => {
+	test('sends no Authorization when there is no token', () => {
+		// The tested default. An unconfigured project reads anonymously and everything works.
+		expect('Authorization' in orcidHeaders()).toBe(false);
+		expect('Authorization' in orcidHeaders(undefined)).toBe(false);
+		expect('Authorization' in orcidHeaders(null)).toBe(false);
+	});
+
+	test('treats an empty or blank token as absent', () => {
+		// How an unconfigured environment usually presents itself. Sending `Bearer ` would
+		// turn every read into a 401, which is strictly worse than sending nothing.
+		expect('Authorization' in orcidHeaders('')).toBe(false);
+		expect('Authorization' in orcidHeaders('   ')).toBe(false);
+	});
+
+	test('sends a bearer when there is one, trimmed', () => {
+		expect(orcidHeaders('abc123').Authorization).toBe('Bearer abc123');
+		// A secret pasted with a stray newline still works, as with the vault secrets.
+		expect(orcidHeaders('  abc123\n').Authorization).toBe('Bearer abc123');
+	});
+
+	test('always asks for gzip and identifies itself', () => {
+		// gzip is the only bandwidth lever: ORCID sends no ETag and ignores
+		// If-Modified-Since, so a conditional fetch is not available.
+		for (const headers of [orcidHeaders(), orcidHeaders('abc123')]) {
+			expect(headers['Accept-Encoding']).toBe('gzip');
+			expect(headers['User-Agent']).toContain('ReciprocalReviews');
+			expect(headers.Accept).toBe('application/json');
+		}
+	});
 });
