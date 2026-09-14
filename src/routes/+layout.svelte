@@ -26,6 +26,9 @@
 	setDB(() => db);
 
 	onMount(() => {
+		// Handlers exist from here on; stop telling the cursor to wait (see app.html).
+		document.body.classList.remove('hydrating');
+
 		// Listen to auth state changes and invalidate the auth context when they happen.
 		const { data } = db.client.auth.onAuthStateChange((event, _session) => {
 			if (_session?.expires_at !== claims?.exp) {
