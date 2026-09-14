@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RoleID, RoleRow, ScholarID } from '$data/types';
+	import type { ORCIDProfileRow, RoleID, RoleRow, ScholarID } from '$data/types';
 	import { venuePath as toVenuePath } from '$lib/data/venuePath';
 	import Button from '$lib/components/Button.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
@@ -19,14 +19,18 @@
 	import Options from '$lib/components/Options.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Row from '$lib/components/Row.svelte';
+	import ORCIDKeywords from '$lib/components/ORCIDKeywords.svelte';
+	import VenueExpertise from '$lib/components/VenueExpertise.svelte';
+	import ScholarField from '$lib/components/ScholarField.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
+	import { ScholarSearch } from '$lib/components/ScholarSearch.svelte';
 	import Status from '$lib/components/Status.svelte';
 	import Subheader from '$lib/components/Subheader.svelte';
 	import Table from '$lib/components/Table.svelte';
-	import TextField from '$lib/components/TextField.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import Tokens from '$lib/components/Tokens.svelte';
 	import VenueLink from '$lib/components/VenueLink.svelte';
+	import { affiliationLine, worksStat } from '$lib/data/orcidProfileView';
 	import canApproveAssignment from '$lib/data/canApproveAssignment';
 	import canClaimEditor from '$lib/data/canClaimEditor';
 	import canViewSubmission from '$lib/data/canViewSubmission';
@@ -90,6 +94,18 @@
 
 	function nameOf(scholarID: string): string {
 		return assignmentScholars.find((s) => s.id === scholarID)?.name ?? '';
+	}
+
+	// Warm the mirror for whoever reads this page next. Never awaited, browser-only, and
+	// bounded in the database: the claim stamps a cooldown before any fetch happens, so ten
+	// editors opening the same submission produce one refresh between them rather than ten.
+	$effect(() => {
+		db().requestORCIDRefresh(assignmentScholars.map((s) => s.id));
+	});
+
+	/** The mirrored ORCID columns for one assignee, or null when RR has not read them. */
+	function profileOf(scholarID: string) {
+		return assignmentScholars.find((s) => s.id === scholarID)?.orcid_profiles ?? null;
 	}
 
 	/** The lookups the assignee/bid sorts need. Declared once so both call sites
@@ -236,6 +252,55 @@
 	/** State for the assignment form */
 	let newAssignmentRole = $state<RoleID | undefined>(undefined);
 	let newAssignmentScholar = $state<string>('');
+	/** Owned here rather than left inside the field, because the Add button is enabled by
+	 * whether the text resolved to somebody and the duplicate check needs their id. That
+	 * resolution now happens on blur, so the form can say "no scholar with that email or
+	 * ORCID" while it is still the field's fault, instead of accepting the text and
+	 * reporting it only after the button is pressed. */
+	const newAssignmentSearch = new ScholarSearch(getDB());
+
+	/** The mirrored record for whoever the field has just resolved to.
+	 *
+	 * This is the one surface where the cache is genuinely likely to be COLD: an editor can
+	 * type the iD of somebody nobody on this platform has ever looked at. So unlike the
+	 * table, which renders what it has and moves on, this asks and then looks again once.
+	 *
+	 * It deliberately does NOT gate the Add button. Assigning has to work when ORCID is
+	 * unreachable, when the record is private, and when it simply has not been read yet. */
+	let newAssignmentProfile = $state<ORCIDProfileRow | null>(null);
+
+	$effect(() => {
+		const id = newAssignmentSearch.id;
+		newAssignmentProfile = null;
+		if (id === undefined) return;
+
+		// Cancelled on teardown and whenever the field resolves to somebody else, so a slow
+		// answer cannot land in a form that has moved on -- the same discipline
+		// ScholarSearch keeps with its own sequence counter.
+		let live = true;
+		let timer: ReturnType<typeof setTimeout> | undefined;
+
+		const read = async () => {
+			const { data } = await db().getORCIDProfile(id);
+			if (!live) return;
+			if (data) newAssignmentProfile = data;
+			return data;
+		};
+
+		void read().then((found) => {
+			if (!live || (found && found.fetch_status !== 'pending')) return;
+			// Nothing cached, or a claim still in flight. Ask, then look once more rather
+			// than polling: if it is still not there, the ORCID link alone is the honest
+			// answer and the editor has lost nothing.
+			db().requestORCIDRefresh([id]);
+			timer = setTimeout(() => void read(), 2500);
+		});
+
+		return () => {
+			live = false;
+			clearTimeout(timer);
+		};
+	});
 	let newAssignmentSubmitting = $state(false);
 	let newAssignmentError: ((l: LocaleText) => string) | undefined = $state(undefined);
 
@@ -279,6 +344,44 @@
 		return balanceByScholar.get(scholar) ?? 0;
 	}
 </script>
+
+<!--
+	Who a candidate is, under their name: the line an editor used to have to open
+	orcid.org in another tab for. Short form, which drops the department -- it is the
+	least discriminating part of an affiliation and this is the narrowest cell on the
+	page. Renders nothing at all when RR has no mirror for them.
+-->
+{#snippet orcidContext(scholarID: string)}
+	{@const profile = profileOf(scholarID)}
+	{@const affiliation = affiliationLine(profile, true)}
+	{@const stat = worksStat(profile)}
+	{#if affiliation || stat}
+		<span class="orcid-context" data-testid="assignment-orcid">
+			{#if affiliation}<span class="affiliation">{affiliation}</span>{/if}
+			{#if stat}<span class="works">{stat}</span>{/if}
+		</span>
+	{/if}
+{/snippet}
+
+<!--
+	The venue's own expertise statement first, then ORCID's keywords, marked as ORCID's.
+	The order is the point: `volunteers.expertise` is what this scholar wrote FOR THIS
+	VENUE about reviewing, and it is the claim a reviewing table should lead with. The
+	ORCID keywords describe a research career, written for a different audience and
+	possibly years ago, so they follow and say whose they are — see ORCIDKeywords for
+	why the mark is on the chips rather than on a rule above them.
+-->
+{#snippet expertiseCell(scholarID: string, expertise: string | undefined)}
+	{@const topics = profileOf(scholarID)?.keywords ?? []}
+	<!-- Each side labelled by whose claim it is: the platform's own mark on what the
+	     volunteer told THIS venue, ORCID's on what their public record says. Either can
+	     therefore stand alone without being read as the other, which is what lets a missing
+	     side simply not render rather than needing a placeholder to explain itself.
+	     EmptyLabel survives for the cell with neither, where it is the honest answer. -->
+	{#if expertise}<VenueExpertise>{expertise}</VenueExpertise>{/if}
+	<ORCIDKeywords keywords={topics} />
+	{#if !expertise && topics.length === 0}{EmptyLabel}{/if}
+{/snippet}
 
 {#snippet loadIndicator(scholarID: string, roleID: string)}
 	{@const cap = papersCapFor(scholarID, roleID)}
@@ -498,25 +601,46 @@
 						}))
 					]}
 				/>
-				<TextField
+				<ScholarField
 					bind:text={newAssignmentScholar}
+					search={newAssignmentSearch}
 					strings={(l) => l.page.submission.field.newAssignment}
+					testid="new-assignment-scholar"
 					valid={(emailOrORCID) =>
 						emailOrORCID.length > 0 && !validEmail(emailOrORCID) && !validORCID(emailOrORCID)
 							? (l) => l.page.submission.field.newAssignment.invalid
 							: undefined}
-				></TextField>
+				/>
+				<!--
+					Who you just named, before you commit to assigning them. The field itself
+					already resolves to a ScholarLink; this adds the part an editor previously
+					had to open orcid.org for. Absent silently when RR has nothing.
+				-->
+				{#if newAssignmentSearch.id !== undefined}
+					{@const affiliation = affiliationLine(newAssignmentProfile)}
+					{@const stat = worksStat(newAssignmentProfile)}
+					{@const topics = newAssignmentProfile?.keywords ?? []}
+					{#if affiliation || stat || topics.length > 0}
+						<div class="assignment-orcid" data-testid="new-assignment-orcid">
+							{#if affiliation}<span>{affiliation}</span>{/if}
+							{#if stat}<span class="works">{stat}</span>{/if}
+							<ORCIDKeywords keywords={topics} />
+						</div>
+					{/if}
+				{/if}
 				<Button
 					testid="new-assignment"
 					strings={(l) => l.page.submission.button.createAssignment}
 					active={!newAssignmentSubmitting &&
 						newAssignmentRole !== undefined &&
-						(validEmail(newAssignmentScholar) || validORCID(newAssignmentScholar))}
+						newAssignmentSearch.id !== undefined}
 					action={async () => {
 						newAssignmentSubmitting = true;
 						const role = roles.find((role) => role.id === newAssignmentRole);
 
-						const { data: scholarID } = await db().findScholar(newAssignmentScholar);
+						// Already resolved, on blur. The button cannot be pressed until it is,
+						// so this is a narrowing rather than a lookup.
+						const scholarID = newAssignmentSearch.id;
 
 						if (role === undefined) {
 							newAssignmentError = (l) => l.page.submission.feedback.invalidRole;
@@ -547,11 +671,20 @@
 						).then(() => {
 							newAssignmentRole = undefined;
 							newAssignmentScholar = '';
+							// Otherwise the field clears but stays resolved to the scholar just
+							// added, leaving the Add button live over an empty box.
+							newAssignmentSearch.reset();
+							newAssignmentError = undefined;
 							newAssignmentSubmitting = false;
 						});
 					}}>+ assignee</Button
 				>
-				{#if newAssignmentError !== undefined}<Feedback error text={newAssignmentError} />{/if}
+				{#if newAssignmentSearch.notFound}
+					<!-- ScholarMatches shows "no matches" only for an empty NAME search; a
+					     well-formed iD or address that matches nobody renders as nothing at
+					     all there, which reads as though the field accepted it. -->
+					<Feedback error text={(l) => l.page.submission.feedback.scholarNotFound} />
+				{:else if newAssignmentError !== undefined}<Feedback error text={newAssignmentError} />{/if}
 			</Form>
 		{/if}
 
@@ -607,11 +740,10 @@
 								{:else}
 									<Status good={false} label={(l) => l.page.submission.status.unassigned} />
 								{/if}
+								{@render orcidContext(assignment.scholar)}
 							</div>
 						</td>
-						<td
-							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
-						>
+						<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
 						{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} /></td>{/if}
 						<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 						<td>
@@ -670,11 +802,10 @@
 									{#if bidLabel !== undefined}
 										<em data-testid="bid-preference-label">{bidLabel}</em>
 									{/if}
+									{@render orcidContext(assignment.scholar)}
 								</div>
 							</td>
-							<td
-								>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
-							>
+							<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
 							{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} /></td>{/if}
 							<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 							<td>
@@ -716,6 +847,22 @@
 <style>
 	.unapproved {
 		font-style: italic;
+	}
+
+	.assignment-orcid {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-half);
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
+	}
+
+	.orcid-context {
+		display: flex;
+		flex-direction: column;
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
 	}
 
 	.scholar-cell {

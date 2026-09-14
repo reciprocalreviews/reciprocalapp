@@ -9,7 +9,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(17);
+select plan(19);
 
 select tests.clear_authentication();
 select tests.create_scholar('era_subject@test.local') as subject \gset
@@ -43,6 +43,11 @@ values ('NewVolunteer', :'other', null, :'ven', 'era_other@test.local',
         array['era_subject@test.local'], 'era_subject@test.local', '[]'::jsonb);
 
 -- ---- Export ---------------------------------------------------------------------
+-- The ORCID mirror, seeded as the owner so there is something for erasure to destroy.
+-- Inserted before the subject erases themselves, below.
+insert into public.orcid_profiles (scholar, orcid, employment_organization, keywords, fetch_status)
+values (:'subject', '0000-0001-9999-9999', 'University of Test', array['testing'], 'ok');
+
 select tests.authenticate_as(:'subject');
 
 select isnt(
@@ -178,6 +183,25 @@ select is(
 	(select steward from public.scholars where id = :'steward'),
 	false,
 	'erasing a steward revokes their stewardship'
+);
+
+-- ---- The ORCID mirror goes with the identity --------------------------------------
+-- The foreign key is ON DELETE CASCADE, and that is not what removes this: erasure
+-- anonymises the scholar row in place rather than deleting it, so no cascade fires. If
+-- the explicit delete in forget_scholar were dropped, this row would survive with the
+-- erased scholar's affiliation and publication history still attached to their uuid.
+select is(
+	(select count(*)::int from public.orcid_profiles where scholar = :'subject'),
+	0,
+	'erasure destroys the ORCID mirror, which no cascade would have removed'
+);
+
+-- The iD is nulled too, so nothing can re-fetch the row back: claim_orcid_refresh skips a
+-- scholar with no iD, which is the guard that makes the delete above stick.
+select is(
+	(select orcid from public.scholars where id = :'subject'),
+	null,
+	'the erased scholar has no iD left to re-fetch a mirror with'
 );
 
 select * from finish();

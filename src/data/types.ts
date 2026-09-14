@@ -3,6 +3,8 @@ import type { Database } from './database';
 type Tables = Database['public']['Tables'];
 export type ScholarRow = Tables['scholars']['Row'];
 export type ScholarID = ScholarRow['id'];
+/** The mirrored slice of a scholar's public ORCID record. See supabase/schemas/orcid_profiles.sql. */
+export type ORCIDProfileRow = Tables['orcid_profiles']['Row'];
 export type ProposalRow = Tables['proposals']['Row'];
 export type ProposalID = ProposalRow['id'];
 export type SupporterRow = Tables['supporters']['Row'];

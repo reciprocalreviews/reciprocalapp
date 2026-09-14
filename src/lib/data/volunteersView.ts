@@ -12,8 +12,21 @@ export type ViewVolunteer = {
 	/** Free text. Comma-separated by convention only; nothing enforces it. */
 	expertise: string;
 	active: boolean;
-	scholars: { name: string | null; email: string | null };
+	scholars: {
+		name: string | null;
+		email: string | null;
+		/** The mirrored ORCID record, or null when RR has not read it. Its keywords are
+		 * SEARCHABLE but never ranked -- see `tags` below for why that line is drawn
+		 * where it is. */
+		orcid_profiles?: { keywords: string[] | null } | null;
+	};
 };
+
+/** One volunteer's mirrored ORCID keywords. Not merged with `expertiseTags`: they answer
+ * different questions, and this one is not a claim about reviewing for this venue. */
+export function orcidKeywords(volunteer: ViewVolunteer): string[] {
+	return volunteer.scholars.orcid_profiles?.keywords ?? [];
+}
 
 /** One expertise chip: the key it groups on, the spelling to show, and how many
  * of the search-matched volunteers claim it. */
@@ -71,14 +84,20 @@ export function volunteersView(context: VolunteersViewContext) {
 		return text !== null && text !== undefined && text.toLowerCase().includes(trimmedFilter);
 	}
 
-	/** An empty search keeps everyone; otherwise the three things the row shows —
-	 * name, expertise, email — are what can be matched. */
+	/** An empty search keeps everyone; otherwise what the row shows — name, expertise,
+	 * email — is what can be matched, plus the mirrored ORCID keywords.
+	 *
+	 * This is the ONE place the two kinds of keyword meet, and it is the right one:
+	 * typing a term into a search box asks "who is associated with this", which an ORCID
+	 * keyword answers perfectly well. It does not assert that they will review it. That
+	 * is why the keywords are findable here and still absent from `tags` below. */
 	function matchesFilter(volunteer: ViewVolunteer): boolean {
 		if (trimmedFilter === '') return true;
 		return (
 			matches(volunteer.scholars.name) ||
 			matches(volunteer.expertise) ||
-			matches(volunteer.scholars.email)
+			matches(volunteer.scholars.email) ||
+			orcidKeywords(volunteer).some((keyword) => matches(keyword))
 		);
 	}
 
@@ -91,6 +110,21 @@ export function volunteersView(context: VolunteersViewContext) {
 	}
 
 	/** The expertise chips to offer, most claimed first.
+	 *
+	 * Counts VENUE-AUTHORED expertise only. ORCID keywords are deliberately not folded in,
+	 * and this is not an oversight to tidy up later:
+	 *
+	 *   - Provenance. `volunteers.expertise` is what a scholar wrote for THIS venue about
+	 *     REVIEWING. Merging would make a chip assert that "machine learning" from a career
+	 *     profile means "will review ML papers here", which is the claim the venue-authored
+	 *     field exists to make and the ORCID one does not.
+	 *   - Volume. Venue expertise runs to three or six terms; ORCID keyword lists routinely
+	 *     pass twenty. With TAG_LIMIT at 12, merging would let ORCID keywords dominate the
+	 *     ranking and push the review-relevant chips off the visible list outright.
+	 *   - Coverage. Many scholars have no ORCID keywords at all, so a merged list would
+	 *     quietly under-represent them against whoever happened to curate their record.
+	 *
+	 * They are searchable instead, in matchesFilter above.
 	 *
 	 * Counted over the volunteers the search box already matched — so the chips
 	 * re-count as you type — but NOT over the current selection. Narrowing the

@@ -508,6 +508,83 @@ export type Database = {
           },
         ]
       }
+      orcid_profiles: {
+        Row: {
+          education_organization: string | null
+          education_role: string | null
+          education_year: number | null
+          employment_department: string | null
+          employment_organization: string | null
+          employment_role: string | null
+          fetch_attempted_at: string
+          fetch_detail: string | null
+          fetch_failures: number
+          fetch_status: string
+          fetched_at: string | null
+          keywords: string[]
+          links: Json
+          orcid: string
+          scholar: string
+          work_count: number | null
+          work_first_year: number | null
+          work_last_year: number | null
+          works: Json
+          works_fetched_at: string | null
+        }
+        Insert: {
+          education_organization?: string | null
+          education_role?: string | null
+          education_year?: number | null
+          employment_department?: string | null
+          employment_organization?: string | null
+          employment_role?: string | null
+          fetch_attempted_at?: string
+          fetch_detail?: string | null
+          fetch_failures?: number
+          fetch_status?: string
+          fetched_at?: string | null
+          keywords?: string[]
+          links?: Json
+          orcid: string
+          scholar: string
+          work_count?: number | null
+          work_first_year?: number | null
+          work_last_year?: number | null
+          works?: Json
+          works_fetched_at?: string | null
+        }
+        Update: {
+          education_organization?: string | null
+          education_role?: string | null
+          education_year?: number | null
+          employment_department?: string | null
+          employment_organization?: string | null
+          employment_role?: string | null
+          fetch_attempted_at?: string
+          fetch_detail?: string | null
+          fetch_failures?: number
+          fetch_status?: string
+          fetched_at?: string | null
+          keywords?: string[]
+          links?: Json
+          orcid?: string
+          scholar?: string
+          work_count?: number | null
+          work_first_year?: number | null
+          work_last_year?: number | null
+          works?: Json
+          works_fetched_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcid_profiles_scholar_fkey"
+            columns: ["scholar"]
+            isOneToOne: true
+            referencedRelation: "scholars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       preference_levels: {
         Row: {
           created_at: string
@@ -1289,6 +1366,7 @@ export type Database = {
           scholar: string
         }[]
       }
+      backfill_orcid_profiles: { Args: { _limit?: number }; Returns: number }
       bulk_import_submissions: {
         Args: { _import_note: string; _submissions: Json; _venueid: string }
         Returns: Json
@@ -1458,6 +1536,10 @@ export type Database = {
       request_email_verification: {
         Args: { _email: string }
         Returns: undefined
+      }
+      request_orcid_refresh: {
+        Args: { _force?: boolean; _scholars: string[] }
+        Returns: number
       }
       scholar_balances: {
         Args: { _currency: string; _scholars: string[] }

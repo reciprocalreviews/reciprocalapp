@@ -292,6 +292,14 @@ enabled = true
 verify_jwt = false
 entrypoint = "./functions/resend/index.ts"
 
+[functions.orcid]
+enabled = true
+# Off for the same reason as the other two: the platform JWT gate rejects the newer
+# opaque API keys outright, so _shared/auth.ts requireSecretKey is the only gate.
+verify_jwt = false
+import_map = "./functions/orcid/deno.json"
+entrypoint = "./functions/orcid/index.ts"
+
 [functions.remind]
 enabled = true
 verify_jwt = false
@@ -330,6 +338,9 @@ schema_paths = [
     "./schemas/thanks.sql",
     "./schemas/emails.sql",
     "./schemas/email_verifications.sql",
+    # After emails.sql, which declares private.get_secret, and after scholars.sql,
+    # which it has a foreign key to.
+    "./schemas/orcid_profiles.sql",
     "./schemas/audit_log.sql",
     "./schemas/reconciliations.sql",
     "./schemas/erasures.sql",

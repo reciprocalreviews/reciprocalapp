@@ -100,6 +100,7 @@ jobs:
       # stops arriving. Deploy them in the same job so schema and functions never drift.
       - run: supabase functions deploy resend
       - run: supabase functions deploy remind
+      - run: supabase functions deploy orcid
 
   vercel:
     runs-on: ubuntu-latest

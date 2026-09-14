@@ -12,7 +12,15 @@
 	import Tags from '$lib/components/Tags.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import toCSV from '$lib/data/toCSV';
-	import { expertiseTags, TAG_LIMIT, volunteersView } from '$lib/data/volunteersView';
+	import ORCIDKeywords from '$lib/components/ORCIDKeywords.svelte';
+	import VenueExpertise from '$lib/components/VenueExpertise.svelte';
+	import { getDB } from '$lib/data/CRUD';
+	import {
+		expertiseTags,
+		orcidKeywords,
+		TAG_LIMIT,
+		volunteersView
+	} from '$lib/data/volunteersView';
 	import { anyWithheld, withholdingFor } from '$lib/data/withheldVolunteers';
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
@@ -27,6 +35,7 @@
 	let selectedTags = $state<{ key: string; label: string }[]>([]);
 	let showAllTags = $state(false);
 	const locale = getLocaleContext();
+	const db = getDB();
 
 	/** The list's rules — search matching, how the expertise keywords are ranked,
 	 * and the row ordering — live in $lib/data/volunteersView so they are testable
@@ -78,16 +87,34 @@
 				)
 	);
 
+	// Warm the mirror for whoever opens this roster next. Never awaited; the database
+	// clamps the batch and a cooldown stops repeat readers re-asking.
+	$effect(() => {
+		if (commitments !== null) db().requestORCIDRefresh(commitments.map((c) => c.scholarid));
+	});
+
 	function exportCSV() {
 		if (commitments === null) return;
 
-		const headers = ['Name', 'Email', 'ORCID', 'Role', 'Expertise', 'Papers cap', 'Active'];
+		const headers = [
+			'Name',
+			'Email',
+			'ORCID',
+			'Role',
+			'Expertise',
+			// Its own column, never appended to Expertise: that column is what the volunteer
+			// wrote for this venue, and merging the two would export a claim it never made.
+			'ORCID keywords',
+			'Papers cap',
+			'Active'
+		];
 		const rows = commitments.map((c) => [
 			c.scholars.name ?? '',
 			c.scholars.email ?? '',
 			c.scholars.orcid ?? '',
 			c.roles.name ?? '',
 			c.expertise,
+			orcidKeywords(c).join(', '),
 			c.papers === null ? '' : c.papers.toString(),
 			c.active ? 'Yes' : 'No'
 		]);
@@ -233,6 +260,7 @@
 						{/if}
 						{#each rows as volunteer, volunteerIndex (volunteer.id)}
 							{@const expertise = expertiseTags(volunteer.expertise)}
+							{@const mirrored = orcidKeywords(volunteer)}
 							<tr data-testid="volunteer-row-{roleIndex}-{volunteerIndex}">
 								<td
 									><Status
@@ -246,10 +274,24 @@
 								>
 								<td><ScholarLink id={volunteer.scholarid} /></td>
 								<td
-									><Tags
-										>{#each expertise as topic}<Tag wrap>{topic}</Tag>{:else}<em>{EmptyLabel}</em
-											>{/each}</Tags
-									></td
+									><!-- The venue's own expertise, ALWAYS answered — an em-dash when the
+									     volunteer wrote none, whether or not ORCID has keywords for them.
+									     Rendered as a Tags row only when there is something to put in it:
+									     Tags is a block-level flex div, so an empty one still took a line
+									     box and left a gap above whatever followed. -->
+									{#if expertise.length > 0}
+										<VenueExpertise
+											>{#each expertise as topic}<Tag wrap>{topic}</Tag>{/each}</VenueExpertise
+										>
+									{/if}
+									<!-- ORCID's keywords, below the venue's own and marked as ORCID's. Not
+									     clickable: the chips above are filters over what volunteers wrote
+									     for THIS venue about reviewing, and these describe a research
+									     career. Searchable but never ranked — see volunteersView's `tags`. -->
+									<ORCIDKeywords
+										keywords={mirrored}
+									/>{#if expertise.length === 0 && mirrored.length === 0}<em>{EmptyLabel}</em
+										>{/if}</td
 								>
 								<td>{volunteer.papers === null ? EmptyLabel : volunteer.papers}</td>
 							</tr>

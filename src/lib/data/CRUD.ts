@@ -7,6 +7,7 @@ import {
 	type RoleID,
 	type ScholarID,
 	type ScholarRow,
+	type ORCIDProfileRow,
 	type SupporterID,
 	type VenueID,
 	type VolunteerID,
@@ -157,6 +158,22 @@ export type CallForBidsStatus = {
 /** What `ensure_scholar` found when asked to repair the caller's own scholar row.
  * `orcid_conflict` is the one that needs a person: another scholar row already holds
  * this account's ORCID iD, so two accounts are claiming one researcher. */
+/** A scholar as a list renders them: who they are, plus the mirrored ORCID columns that
+ * fit in a table cell. `orcid_profiles` is null when RR has not read their record, which
+ * is the common case on a cold cache and must render as nothing. */
+export type ScholarCard = Pick<ScholarRow, 'id' | 'name' | 'orcid'> & {
+	orcid_profiles: Pick<
+		ORCIDProfileRow,
+		| 'employment_role'
+		| 'employment_organization'
+		| 'keywords'
+		| 'work_count'
+		| 'work_first_year'
+		| 'work_last_year'
+		| 'fetched_at'
+	> | null;
+};
+
 export type EnsureScholarOutcome = 'exists' | 'created' | 'orcid_conflict' | 'no_account';
 
 export type Charge = { scholar: string; payment: number | undefined };
@@ -705,6 +722,28 @@ export default abstract class CRUD {
 		ids: ScholarID[]
 	): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>>;
 	abstract getStewards(): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>>;
+
+	/** The mirrored slice of a scholar's public ORCID record, or null when RR has not read
+	 * it. Only the profile page asks for the whole row; the list surfaces embed the few
+	 * columns they show and leave the two jsonb payloads behind. */
+	abstract getORCIDProfile(id: ScholarID): Promise<ReadResult<ORCIDProfileRow | null>>;
+	/** Names plus the handful of mirrored ORCID columns a list shows, in one round trip.
+	 * Deliberately omits `works` and `links`: those are the two jsonb payloads, and leaving
+	 * them out is what holds a list's added weight to a few hundred bytes a row. */
+	abstract getScholarCards(ids: ScholarID[]): Promise<ReadResult<ScholarCard[] | null>>;
+	/** Ask the database to refresh these scholars' mirrors if they are stale.
+	 *
+	 * Deliberately returns nothing and is never awaited: the page renders whatever the
+	 * cache holds right now, possibly nothing, and this lands for the next reader. It is
+	 * also deliberately not wrapped in handle() — ORCID being unreachable is not news a
+	 * reader can act on, and a notification about it would be noise on every page. */
+	abstract requestORCIDRefresh(ids: ScholarID[]): void;
+	/** Refresh the ORCID mirrors that are stalest, and answer how many were claimed.
+	 *
+	 * Steward-only, and the database enforces it. Bounded per call by ORCID's rate limits
+	 * rather than by anything here, so it is meant to be run repeatedly: each run takes the
+	 * oldest slice, and a run that claims nothing means everything is current. */
+	abstract backfillORCIDProfiles(limit?: number): Promise<Result<number>>;
 
 	abstract getVenue(id: VenueID): Promise<ReadResult<VenueRow | null>>;
 	/** Resolve a venue from a URL path segment, which is its web address once it has one

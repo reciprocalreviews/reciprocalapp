@@ -88,7 +88,10 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: assignmentScholars } =
 		assignmentScholarIDs.length === 0
 			? { data: [] }
-			: await db.getScholarNames(assignmentScholarIDs);
+			: // Widened from getScholarNames to carry the mirrored ORCID columns the table
+				// shows under each name. Same round trip: the profile travels as a PostgREST
+				// embed, and a scholar RR has not read comes back with a null one.
+				await db.getScholarCards(assignmentScholarIDs);
 
 	// Get the venue's preference levels (may be empty) for rendering bid labels.
 	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);

@@ -16,8 +16,9 @@ test('the read-only scholar profile page should show volunteering roles', async 
 	await expect(page.getByTestId('admin-0')).toBeVisible();
 	await expect(page.getByTestId('commitment-0')).toBeVisible();
 
-	// A visitor can reach the scholar's ORCID profile, which is where the publications
-	// and affiliations RR doesn't reproduce actually live.
+	// A visitor can reach the scholar's ORCID profile, which is where everything RR does
+	// not mirror still lives. RR now shows a narrow, review-relevant slice of it inline
+	// (see orcid.end.ts); this link is the way out to the rest.
 	const orcid = page.getByTestId('scholar-orcid');
 	await expect(orcid).toBeVisible();
 	await expect(orcid).toHaveAttribute('href', `https://orcid.org/${SEED.scholars.editor.orcid}`);

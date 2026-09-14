@@ -10,6 +10,9 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **RR now emails you when things happen that you would otherwise have to go looking for.** Tokens arriving, a submission of yours finishing review, a role, venue administration, or minting authority granted or taken away, a bid or a conflict on a paper you edit, and an invitation you sent being answered.
 - **A venue's editors can now ask a role's volunteers to bid, in their own words.** The form sits on any biddable role's card, says how many people will receive the message before it goes, and sets replies to come back to whoever sent it.
 - **A role can now choose who its volunteers are listed to:** everyone, only people who have completed work at the venue, or only the people who staff the role. Every role starts at everyone, as before, and the number of volunteers stays public whichever you pick — as do invite-only roles and the venue's editor role, which are listed either way.
+- **Scholar profiles now show a slice of their ORCID record**: current affiliation, keywords, recent publications, and education. Editors picking reviewers no longer have to open orcid.org to find out who someone is.
+- **The volunteers roster and the assignment table now carry that context too.** Each half of an expertise cell is marked by whose claim it is — the Reciprocal Reviews logo on what a volunteer told your venue, the ORCID iD mark on what their public record says — and ORCID keywords export as their own CSV column.
+- **Stewards can populate ORCID profiles from the About page.** It works through the oldest records a batch at a time and says how many it took, so you can press it again until none are left.
 
 ### Changed
 
@@ -18,6 +21,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **The venue proposal form's payment checkbox now matches venue settings.** It reads **Token-based venue** and starts checked, where before it read payment-free and started unchecked, pointing the same setting opposite ways in the two places.
 - **A bulk import row that is already in the venue now names and links the manuscript it matched.** The notice said only that something here had that ID, which left an ID two different papers share looking exactly like a queue re-exported with last month's rows still in it.
 - **Confirmations for an action that emails many people are now one message rather than one each.** Asking three hundred volunteers to bid would have filled the page with three hundred separate confirmations, each needing its own dismissal; now one names somebody and counts the rest.
+- **Assigning someone now shows you who you just named, before you commit.** The field took an email or ORCID iD silently and only reported a bad one after you pressed the button.
 - Updated internal tooling for stability.
 
 ### Fixed

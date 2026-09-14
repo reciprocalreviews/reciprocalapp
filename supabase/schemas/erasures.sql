@@ -85,6 +85,9 @@ declare
 	_copied int;
 	_audit int;
 	_old_email text;
+	-- How many ORCID mirror rows went with them. Always 0 or 1; reported because the
+	-- receipt is what an erasure request is answered with.
+	_orcid integer := 0;
 begin
 	if _scholar is null then
 		raise exception 'forget_scholar requires a scholar id';
@@ -151,6 +154,22 @@ begin
 	-- A pending verification holds an address that was never even confirmed.
 	delete from public.email_verifications where scholar = _scholar;
 
+	-- The ORCID mirror: a cached copy of their name's worth of public record --
+	-- affiliation, keywords, recent publications. A hard DELETE rather than a scrub,
+	-- and the one table here that gets one, because it is DERIVED: nothing references
+	-- it and it can be rebuilt by re-fetching, so there is no reason to keep a husk.
+	--
+	-- The foreign key is ON DELETE CASCADE and that is NOT enough on its own. Erasure
+	-- anonymises the scholar row in place rather than deleting it, so no cascade ever
+	-- fires -- the same reason email_verifications is deleted by hand above.
+	--
+	-- The scholars UPDATE below nulls `orcid`, which is what stops the row coming back:
+	-- claim_orcid_refresh skips a scholar with no iD, and the edge function re-reads the
+	-- iD before writing, so a batch claimed moments before this runs writes nothing.
+	with dropped as (
+		delete from public.orcid_profiles where scholar = _scholar returning 1
+	) select count(*) into _orcid from dropped;
+
 	-- Queued and sent mail carries the address and, in `args`, rendered values that
 	-- can include their name. The row stays as evidence that a message was sent;
 	-- its contents do not.
@@ -216,7 +235,8 @@ begin
 		-- de-addressed, and the receipt should not imply that mail about other people was
 		-- emptied out.
 		'emails_uncopied', _copied,
-		'audit_payloads_scrubbed', _audit
+		'audit_payloads_scrubbed', _audit,
+		'orcid_profile_deleted', _orcid
 	);
 end;
 $$;
@@ -325,7 +345,13 @@ begin
 		-- Which notices they have silenced. Small, but it is a preference they set, and so
 		-- part of what the platform holds about them.
 		'notification_settings', (select coalesce(jsonb_agg(to_jsonb(n)), '[]'::jsonb)
-			from public.notification_settings n where n.scholar = _target)
+			from public.notification_settings n where n.scholar = _target),
+		-- The ORCID mirror. Arguably redundant -- it is a copy of their own public ORCID
+		-- record, which they can get from ORCID -- but the promise is everything the
+		-- platform holds about them, the platform holds this, and an export that quietly
+		-- omitted a section their profile page displays would be a broken promise found
+		-- by whoever compared the two.
+		'orcid_profile', (select to_jsonb(p) from public.orcid_profiles p where p.scholar = _target)
 	);
 end;
 $$;
