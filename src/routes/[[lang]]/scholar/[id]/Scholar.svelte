@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type {
 		AssignmentRow,
+		ORCIDProfileRow,
 		CurrencyID,
 		CurrencyRow,
 		NotificationSettingRow,
@@ -22,6 +23,8 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Gift from '$lib/components/Gift.svelte';
+	import ORCIDProfile from '$lib/components/ORCIDProfile.svelte';
+	import ORCIDiD from '$lib/components/ORCIDiD.svelte';
 	import {
 		ScholarLabel,
 		SettingsLabel,
@@ -30,7 +33,6 @@
 		TokenLabel,
 		VenueLabel
 	} from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Status from '$lib/components/Status.svelte';
@@ -40,7 +42,6 @@
 	import Tokens from '$lib/components/Tokens.svelte';
 	import VerifyEmail from '$lib/components/VerifyEmail.svelte';
 	import { getDB, type PendingEmailVerification } from '$lib/data/CRUD';
-	import { orcidURL } from '$lib/data/ORCID';
 	import { handle } from '$routes/feedback.svelte';
 	import type Scholar from '$lib/data/Scholar.svelte';
 	import Text from '$lib/locales/Text.svelte';
@@ -65,7 +66,8 @@
 		approvals,
 		compensating,
 		notifications,
-		pendingEmail
+		pendingEmail,
+		orcid
 	}: {
 		scholar: Scholar;
 		commitments: {
@@ -98,6 +100,9 @@
 		/** What this scholar is waiting to verify, if anything (#27). Like `notifications`,
 		 * only ever populated for the scholar themselves: the RPC answers for auth.uid(). */
 		pendingEmail: PendingEmailVerification | null;
+		/** The mirrored slice of this scholar's public ORCID record, or null when RR has
+		 * not read it. Null is the common case on a cold cache and renders as nothing. */
+		orcid: ORCIDProfileRow | null;
 	} = $props();
 
 	const db = getDB();
@@ -145,6 +150,16 @@
 		})).filter((group) => group.controls.length > 0)
 	);
 	let anonymous = $derived(editable && scholar.getName() === null);
+
+	// Ask for a refresh if the mirror is stale, and never wait for it: this render shows
+	// whatever the cache already holds, and the answer lands for the next reader. In an
+	// effect rather than in `load` because a server load on Vercel can be frozen before a
+	// floating promise resolves, and awaiting it would put ORCID's availability on the
+	// critical path of a page that already runs a dozen queries. The database decides what
+	// "stale" means and rate-limits the asking.
+	$effect(() => {
+		db().requestORCIDRefresh([scholar.getID()]);
+	});
 </script>
 
 <Page
@@ -165,12 +180,18 @@
 		<Feedback inline={false} text={(l) => l.page.scholar.feedback.noName} />
 	{/if}
 	{#snippet details()}
-		{@const orcid = scholar.getORCID()}
-		<!-- The iD is this scholar's identity here, and the way out to the publications and
-		     affiliations RR deliberately doesn't reproduce. Absent for a seeded account and
-		     for an erased tombstone, both of which have no profile to point at. -->
-		{#if orcid}
-			<Link to={orcidURL(orcid)} testid="scholar-orcid">orcid.org/{orcid}</Link>
+		{@const orcidID = scholar.getORCID()}
+		<!-- The iD is this scholar's identity here, and the way out to the parts of an ORCID
+		     record RR does not mirror. RR now reproduces a narrow, review-relevant slice of
+		     it below -- affiliation, keywords, recent works -- so that an editor choosing a
+		     reviewer need not leave the page; everything else still lives at the other end
+		     of this link. Absent for a seeded account and for an erased tombstone, both of
+		     which have no profile to point at.
+
+		     Rendered as the full https URI behind the green iD icon, which is what ORCID's
+		     display guidelines ask for. -->
+		{#if orcidID}
+			<ORCIDiD id={orcidID} testid="scholar-orcid" />
 		{/if}
 		<Status
 			good={scholar.isAvailable()}
@@ -204,6 +225,12 @@
 	{:else}
 		<Paragraph text={() => scholar.getStatus()} />
 	{/if}
+
+	<!-- Deliberately outside the `editable` gate that hides Dashboard and Tasks: this
+	     section is for whoever is READING the profile, which is usually not its owner.
+	     `own` governs one thing only -- whether a record RR could not read is reported,
+	     which is news to the scholar and an accusation to anyone else. -->
+	<ORCIDProfile profile={orcid} own={editable} />
 
 	{#if editable && scholar.getEmail() === null}
 		<Feedback

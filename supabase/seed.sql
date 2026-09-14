@@ -1442,3 +1442,85 @@ where
 		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
 		'7ff8621a-cbe0-4789-bbee-f008d38c4ac9'
 	);
+
+--------------------------------------
+-- ORCID profile mirror
+--
+-- Seeded rather than fetched: `npm run start:test` excludes the edge runtime, so the
+-- `orcid` function cannot run and nothing here reaches the network. That is deliberate --
+-- a test suite whose assertions depend on a third party's API is a suite that goes red
+-- when that third party has a bad afternoon.
+--
+-- Three shapes, because the interesting cases are the empty ones:
+--   Rigor Russ  -- a full record, for asserting the section renders
+--   Reese Urcher -- a row that was READ and found to hold nothing public, which must
+--                   render as nothing rather than as a heading with blanks under it
+--   everyone else -- no row at all, the cold-cache case, which must render as nothing
+--                   AND must not break the page
+insert into
+	public.orcid_profiles (
+		scholar,
+		orcid,
+		employment_role,
+		employment_department,
+		employment_organization,
+		education_role,
+		education_organization,
+		education_year,
+		keywords,
+		works,
+		work_count,
+		work_first_year,
+		work_last_year,
+		links,
+		fetched_at,
+		works_fetched_at,
+		fetch_status
+	)
+values
+	(
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac7',
+		'0000-0001-2345-6789',
+		'Professor',
+		'Department of Rigor',
+		'University of Test',
+		'Ph.D. Reproducibility',
+		'Institute of Test',
+		2009,
+		array[
+			'peer review',
+			'research methods',
+			'reproducibility'
+		],
+		'[
+			{"title":"On the Reproducibility of Reviewing","year":2025,"journal":"Journal of Rigor","doi":"10.1234/rigor.2025","url":"https://doi.org/10.1234/rigor.2025"},
+			{"title":"Measuring Reviewer Load","year":2023,"journal":"Journal of Rigor","doi":"10.1234/load.2023","url":"https://doi.org/10.1234/load.2023"},
+			{"title":"A Theory of Token Economies","year":2021,"journal":null,"doi":null,"url":null}
+		]'::jsonb,
+		37,
+		2009,
+		2025,
+		'[{"kind":"url","label":"Faculty website","value":"https://example.test/rigor","url":"https://example.test/rigor"}]'::jsonb,
+		now(),
+		now(),
+		'ok'
+	),
+	(
+		'7ff8621a-cbe0-4789-bbee-f008d38c4ac8',
+		'0000-0001-2345-6790',
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		'{}',
+		'[]'::jsonb,
+		null,
+		null,
+		null,
+		'[]'::jsonb,
+		now(),
+		null,
+		'ok'
+	);

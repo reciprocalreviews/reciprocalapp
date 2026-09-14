@@ -14,7 +14,7 @@
 	import type { LocaleText } from '$lib/locales/Locale';
 	import { validEmail, validORCID } from '$lib/validation';
 	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { addFeedback, handle } from '$routes/feedback.svelte';
 
 	let { data } = $props();
 	let { stewards } = $derived(data);
@@ -27,6 +27,9 @@
 	let isSteward = $derived(data.scholar?.steward === true);
 
 	let newSteward = $state('');
+	/** Disables the button for the round trip, so a steward cannot queue several batches
+	 * by pressing repeatedly before the first answers. */
+	let refreshingORCID = $state(false);
 
 	function validSteward(text: string): ((l: LocaleText) => string) | undefined {
 		return validEmail(text) || validORCID(text)
@@ -92,6 +95,53 @@
 						}}
 					/>
 				</Form>
+			</Card>
+			<!--
+				The ORCID mirror's bootstrap, and its maintenance. Without a control here the
+				only way to populate it is a hand-rolled authenticated REST call: a steward
+				running the RPC in a SQL editor is refused, because there is no auth.uid() in
+				that session and the function checks isSteward().
+
+				No `warn` on the button. It is safe, idempotent, and meant to be pressed
+				repeatedly until it reports nothing left, so a confirm step would be friction
+				for nothing.
+
+				`expand`, unlike its sibling: a Card hides its children until it is opened, and
+				this one's only child IS the control — collapsed it showed a heading and no way
+				to act on it. The card only renders for stewards, so everyone who can see it can
+				use it.
+			-->
+			<Card
+				subheader
+				group="steward"
+				icon={ScholarLabel}
+				strings={(l) => l.page.about.card.refreshORCID}
+				testid="refresh-orcid-card"
+				expand
+			>
+				<Button
+					strings={(l) => l.page.about.button.refreshORCID}
+					active={!refreshingORCID}
+					testid="refresh-orcid-button"
+					action={async () => {
+						refreshingORCID = true;
+						// handle() resolves false on failure, having already posted the error.
+						const claimed = await handle(db().backfillORCIDProfiles());
+						refreshingORCID = false;
+						if (claimed === false) return;
+						// The count is the point: a steward who sees only "done" cannot tell a
+						// batch from the end of the queue, and would stop after one press.
+						addFeedback(
+							claimed === 0
+								? locale().page.about.feedback.orcidCurrent
+								: locale().page.about.feedback.orcidRefreshed.replace(
+										'{count}',
+										claimed.toString()
+									),
+							'success'
+						);
+					}}
+				/>
 			</Card>
 		</Cards>
 	{/if}

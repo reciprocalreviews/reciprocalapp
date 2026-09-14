@@ -22,7 +22,16 @@ export const load: LayoutLoad = async ({ parent, params }) => {
 	// that it could not load — which is what that message was written for.
 	if (scholar === null && failure === undefined) error(404, 'No such scholar');
 
+	// The mirrored ORCID record. Read here rather than in +page.ts because the profile
+	// header shows it, and read with the full row -- this is the one page that renders the
+	// works and links, which every list query deliberately leaves behind.
+	//
+	// The failure is discarded on purpose: a profile whose ORCID mirror could not be read
+	// is a profile, not an error. The section simply does not render.
+	const { data: orcid } = await db.getORCIDProfile(params.id);
+
 	return {
-		scholar
+		scholar,
+		orcid: orcid ?? null
 	};
 };

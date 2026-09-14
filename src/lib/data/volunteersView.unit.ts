@@ -5,7 +5,8 @@ import {
 	volunteersView,
 	type ExpertiseTag,
 	type ViewVolunteer,
-	type VolunteersViewContext
+	type VolunteersViewContext,
+	orcidKeywords
 } from './volunteersView';
 
 function volunteer(
@@ -344,5 +345,54 @@ describe('sortedAndFiltered', () => {
 		const rows = [volunteer({ name: 'Zoe Zeta' }), volunteer({ name: 'Ann Adams' })];
 		view().sortedAndFiltered(rows);
 		expect(names(rows)).toEqual(['Zoe Zeta', 'Ann Adams']);
+	});
+});
+
+describe('ORCID keywords', () => {
+	/** A volunteer with venue-authored expertise and a separate ORCID keyword list.
+	 * Named apart from the file's own `volunteer` helper, which builds a different shape. */
+	function mirrored(expertise: string, keywords: string[]): ViewVolunteer {
+		return {
+			expertise,
+			active: true,
+			scholars: { name: 'Someone', email: null, orcid_profiles: { keywords } }
+		};
+	}
+
+	test('the search box matches an ORCID keyword', () => {
+		const rows = [mirrored('databases', ['human-computer interaction'])];
+		const view = volunteersView({ filter: 'human-computer', selected: new Map() });
+		expect(view.sortedAndFiltered(rows)).toHaveLength(1);
+	});
+
+	test('ORCID keywords do NOT become chips, and do not change the counts', () => {
+		// The regression test for the merge decision. If somebody ever folds ORCID
+		// keywords into tags(), this is what fails: a twenty-keyword ORCID record would
+		// otherwise dominate the ranking and push the venue's own expertise off the
+		// twelve-chip list entirely.
+		const noise = Array.from({ length: 20 }, (_, i) => `orcid topic ${i}`);
+		const rows = [mirrored('databases', noise), mirrored('databases', noise)];
+		const view = volunteersView({ filter: '', selected: new Map() });
+		const tags = view.tags(rows);
+		expect(tags).toEqual([{ key: 'databases', label: 'databases', count: 2 }]);
+		expect(tags.some((tag) => tag.key.startsWith('orcid topic'))).toBe(false);
+	});
+
+	test('selecting a chip never filters on an ORCID keyword', () => {
+		const rows = [mirrored('databases', ['machine learning'])];
+		const view = volunteersView({
+			filter: '',
+			selected: new Map([['machine learning', 'machine learning']])
+		});
+		expect(view.sortedAndFiltered(rows)).toHaveLength(0);
+	});
+
+	test('a volunteer with no mirrored record is unaffected', () => {
+		const rows: ViewVolunteer[] = [
+			{ expertise: 'databases', active: true, scholars: { name: 'Someone', email: null } }
+		];
+		const view = volunteersView({ filter: 'databases', selected: new Map() });
+		expect(view.sortedAndFiltered(rows)).toHaveLength(1);
+		expect(orcidKeywords(rows[0])).toEqual([]);
 	});
 });

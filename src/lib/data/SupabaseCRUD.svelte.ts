@@ -18,6 +18,7 @@ import type {
 	RoleRow,
 	ScholarID,
 	ScholarRow,
+	ORCIDProfileRow,
 	SubmissionID,
 	SubmissionRow,
 	SubmissionType,
@@ -51,6 +52,7 @@ import CRUD, {
 	type PendingEmailVerification,
 	type ReadResult,
 	type Result,
+	type ScholarCard,
 	type SubmissionBlocker
 } from './CRUD';
 import Scholar from './Scholar.svelte';
@@ -209,10 +211,17 @@ export type VenueSettingsVolunteer = QueryData<
 >[number];
 
 function venueCommitmentsQuery(client: SupabaseClient<Database>, venue: VenueID) {
-	return client
-		.from('volunteers')
-		.select('*, scholars (name, email, orcid), roles!inner(name, venueid)')
-		.eq('roles.venueid', venue);
+	return (
+		client
+			.from('volunteers')
+			// The mirrored ORCID columns travel as a nested embed through the scholars join,
+			// so the roster stays one round trip. Only the keywords and the affiliation: the
+			// two jsonb payloads are deliberately left behind on every list query.
+			.select(
+				'*, scholars (name, email, orcid, orcid_profiles(keywords, employment_role, employment_organization)), roles!inner(name, venueid)'
+			)
+			.eq('roles.venueid', venue)
+	);
 }
 export type VenueCommitment = QueryData<ReturnType<typeof venueCommitmentsQuery>>[number];
 
@@ -767,6 +776,46 @@ export default class SupabaseCRUD extends CRUD {
 			'LoadScholar',
 			this.client.from('scholars').select('id, name').eq('steward', true).order('name')
 		);
+	}
+
+	async getORCIDProfile(id: ScholarID): Promise<ReadResult<ORCIDProfileRow | null>> {
+		return this.row(
+			'LoadScholar',
+			this.client.from('orcid_profiles').select().eq('scholar', id).maybeSingle()
+		);
+	}
+
+	async getScholarCards(ids: ScholarID[]): Promise<ReadResult<ScholarCard[] | null>> {
+		// A one-to-one embed, which PostgREST derives from the foreign key. A scholar with
+		// no mirror row comes back with orcid_profiles: null rather than being dropped, so
+		// widening this query cannot make a row disappear from a list.
+		return this.rows(
+			'LoadScholar',
+			this.client
+				.from('scholars')
+				.select(
+					'id, name, orcid, orcid_profiles(employment_role, employment_organization, keywords, work_count, work_first_year, work_last_year, fetched_at)'
+				)
+				.in('id', ids)
+		);
+	}
+
+	requestORCIDRefresh(ids: ScholarID[]): void {
+		if (ids.length === 0) return;
+		// Floating on purpose. Nothing on the page waits for this, nothing branches on
+		// whether it worked, and a rejected promise here must not reach the feedback bus:
+		// the refresh is for the NEXT reader, and this one has already been served.
+		// Wrapped in Promise.resolve because a PostgrestBuilder is a PromiseLike: it has
+		// .then but no .catch, so an unhandled rejection would escape.
+		void Promise.resolve(
+			this.client.rpc('request_orcid_refresh', { _scholars: [...new Set(ids)] })
+		).catch(() => undefined);
+	}
+
+	async backfillORCIDProfiles(limit: number = 100): Promise<Result<number>> {
+		const { data, error } = await this.client.rpc('backfill_orcid_profiles', { _limit: limit });
+		if (error) return this.error('BackfillORCIDProfiles', error);
+		return { data: data ?? 0 };
 	}
 
 	async getScholarAdminVenues(

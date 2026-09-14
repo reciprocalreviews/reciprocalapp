@@ -1,0 +1,81 @@
+{
+	"last-modified-date": {
+		"value": 1523818107888
+	},
+	"affiliation-group": [
+		{
+			"last-modified-date": {
+				"value": 1523818107888
+			},
+			"external-ids": {
+				"external-id": []
+			},
+			"summaries": [
+				{
+					"education-summary": {
+						"created-date": {
+							"value": 1523818107888
+						},
+						"last-modified-date": {
+							"value": 1523818107888
+						},
+						"source": {
+							"source-orcid": {
+								"uri": "https://orcid.org/0000-0001-7461-4783",
+								"path": "0000-0001-7461-4783",
+								"host": "orcid.org"
+							},
+							"source-client-id": null,
+							"source-name": {
+								"value": "Amy J. Ko"
+							},
+							"assertion-origin-orcid": null,
+							"assertion-origin-client-id": null,
+							"assertion-origin-name": null
+						},
+						"put-code": 5687466,
+						"department-name": "Human-Computer Interaction Institute",
+						"role-title": "Ph.D. Human-Computer Interaction",
+						"start-date": {
+							"year": {
+								"value": "2002"
+							},
+							"month": {
+								"value": "08"
+							},
+							"day": {
+								"value": "05"
+							}
+						},
+						"end-date": {
+							"year": {
+								"value": "2008"
+							},
+							"month": {
+								"value": "05"
+							},
+							"day": {
+								"value": "10"
+							}
+						},
+						"organization": {
+							"name": "Carnegie Mellon University",
+							"address": {
+								"city": "Pittsburgh",
+								"region": "PA",
+								"country": "US"
+							},
+							"disambiguated-organization": null
+						},
+						"url": null,
+						"external-ids": null,
+						"display-index": "0",
+						"visibility": "public",
+						"path": "/0000-0001-7461-4783/education/5687466"
+					}
+				}
+			]
+		}
+	],
+	"path": "/0000-0001-7461-4783/educations"
+}

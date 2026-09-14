@@ -14,7 +14,8 @@
 		size = undefined,
 		name = undefined,
 		showResolved = true,
-		testid = undefined
+		testid = undefined,
+		search: provided = undefined
 	}: {
 		text: string;
 		strings: (l: Locale) => TextFieldText | NotedTextFieldText;
@@ -24,10 +25,19 @@
 		name?: string | undefined;
 		showResolved?: boolean;
 		testid?: string;
+		/** A search the caller owns, for when it needs the resolved scholar itself —
+		 * to enable a button on it, or to check it against rows already on the page.
+		 * Omitted, this component makes its own and keeps it private, which is all
+		 * a field that only has to resolve its own text needs. */
+		search?: ScholarSearch | undefined;
 	} = $props();
 
 	const db = getDB();
-	const search = new ScholarSearch(db);
+	// Not $derived: a ScholarSearch holds the debounce timer and the sequence counter
+	// for a search in flight, so rebuilding it mid-search would strand both. A caller
+	// hands one in for the life of the field or not at all.
+	// svelte-ignore state_referenced_locally
+	const search = provided ?? new ScholarSearch(db);
 
 	function chooseMatch(match: ScholarMatch) {
 		if (match.orcid !== null) text = match.orcid;

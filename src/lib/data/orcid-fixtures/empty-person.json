@@ -1,0 +1,28 @@
+{
+	"name": {
+		"given-names": {
+			"value": "Nobody"
+		},
+		"family-name": null,
+		"credit-name": null
+	},
+	"other-names": {
+		"other-name": []
+	},
+	"biography": null,
+	"researcher-urls": {
+		"researcher-url": []
+	},
+	"emails": {
+		"email": []
+	},
+	"addresses": {
+		"address": []
+	},
+	"keywords": {
+		"keyword": []
+	},
+	"external-identifiers": {
+		"external-identifier": []
+	}
+}

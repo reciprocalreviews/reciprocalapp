@@ -399,6 +399,9 @@
             "ApproveTransaction": {
               "type": "string"
             },
+            "BackfillORCIDProfiles": {
+              "type": "string"
+            },
             "BulkImportSubmissions": {
               "type": "string"
             },
@@ -946,6 +949,7 @@
             "LoadVenue",
             "LoadCurrency",
             "LoadScholar",
+            "BackfillORCIDProfiles",
             "EnsureScholar",
             "LoadSubmission",
             "LoadTransaction",
@@ -1133,11 +1137,15 @@
                     "addSteward": {
                       "$ref": "#/definitions/ButtonText"
                     },
+                    "refreshORCID": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
                     "removeSteward": {
                       "$ref": "#/definitions/ConfirmButtonText"
                     }
                   },
                   "required": [
+                    "refreshORCID",
                     "addSteward",
                     "removeSteward"
                   ],
@@ -1148,9 +1156,14 @@
                   "properties": {
                     "addSteward": {
                       "$ref": "#/definitions/CardText"
+                    },
+                    "refreshORCID": {
+                      "$ref": "#/definitions/CardText",
+                      "description": "The steward control that populates the ORCID mirror. Re-runnable rather than a one-time bootstrap: ORCID's rate limits mean it works in batches."
                     }
                   },
                   "required": [
+                    "refreshORCID",
                     "addSteward"
                   ],
                   "type": "object"
@@ -1162,11 +1175,20 @@
                       "description": "Shown when the platform has no stewards at all, which is distinct from failing to load the list.",
                       "type": "string"
                     },
+                    "orcidCurrent": {
+                      "type": "string"
+                    },
+                    "orcidRefreshed": {
+                      "description": "{count} is how many profiles this press claimed.",
+                      "type": "string"
+                    },
                     "stewardsNotLoaded": {
                       "type": "string"
                     }
                   },
                   "required": [
+                    "orcidRefreshed",
+                    "orcidCurrent",
                     "stewardsNotLoaded",
                     "noStewards"
                   ],
@@ -3282,6 +3304,9 @@
                 "header": {
                   "additionalProperties": false,
                   "properties": {
+                    "orcid": {
+                      "type": "string"
+                    },
                     "settings": {
                       "type": "string"
                     },
@@ -3299,6 +3324,7 @@
                     }
                   },
                   "required": [
+                    "orcid",
                     "submissions",
                     "tokens",
                     "settings",
@@ -6034,6 +6060,23 @@
               ],
               "type": "object"
             },
+            "expertise": {
+              "additionalProperties": false,
+              "description": "Who a group of expertise keywords came from. Rendered as a screen-reader-only label beside a brand mark: the Reciprocal Reviews logo for what a volunteer told this venue, the ORCID mark for what their public record says. Naming both sides is what lets either one stand alone without being mistaken for the other.",
+              "properties": {
+                "orcid": {
+                  "type": "string"
+                },
+                "venue": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "venue",
+                "orcid"
+              ],
+              "type": "object"
+            },
             "gift": {
               "additionalProperties": false,
               "properties": {
@@ -6156,6 +6199,53 @@
                 "slider",
                 "options",
                 "fieldset"
+              ],
+              "type": "object"
+            },
+            "orcid": {
+              "additionalProperties": false,
+              "description": "The mirrored slice of a scholar's public ORCID record, shown wherever an editor needs to know who somebody is. See DESIGN.md's Scholar route section.",
+              "properties": {
+                "affiliation": {
+                  "type": "string"
+                },
+                "education": {
+                  "type": "string"
+                },
+                "header": {
+                  "type": "string"
+                },
+                "keywords": {
+                  "type": "string"
+                },
+                "links": {
+                  "type": "string"
+                },
+                "problem": {
+                  "description": "Shown only to the scholar themselves. On a public profile the same words read as an accusation, and a visitor can do nothing about it.",
+                  "type": "string"
+                },
+                "provenance": {
+                  "description": "{date} is when the record was last read. This line is load-bearing rather than decorative: it is what keeps the section from reading as Reciprocal Reviews' own claim about a person.",
+                  "type": "string"
+                },
+                "provenanceOwn": {
+                  "type": "string"
+                },
+                "works": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "header",
+                "provenance",
+                "provenanceOwn",
+                "affiliation",
+                "education",
+                "keywords",
+                "works",
+                "links",
+                "problem"
               ],
               "type": "object"
             },
@@ -6941,6 +7031,8 @@
             }
           },
           "required": [
+            "orcid",
+            "expertise",
             "gift",
             "transactions",
             "roles",

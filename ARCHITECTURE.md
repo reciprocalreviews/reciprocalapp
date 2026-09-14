@@ -1,6 +1,6 @@
 # Architecture
 
-_Last revised: 2026-08-28_
+_Last revised: 2026-09-13_
 
 This document describes the implementation of the Reciprocal Reviews platform — what runs where, how requests flow, and the conventions contributors should follow when extending it. For the user-facing design and rationale, see [DESIGN.md](DESIGN.md). The two documents are intended to stay in sync; changes to either should be audited against the other.
 
@@ -214,6 +214,94 @@ The mirror of that rule applies to components that cache **server** data: cache 
 
 `handle()` **awaits** that `invalidateAll()`, so it resolves only once the load functions have rerun and the page data reflects the write. That matters to anything that reads a prop straight after saving: while it returned early, every caller was handed "success" while its props were still the pre-write values, and a component that synced from them at that moment showed the old text until the refetch landed and then flipped to the new one. Because the data is current by the time the promise settles, a component may take its value back from the prop on success — which is also how it learns when the server kept something other than what was typed, as `VerifyEmail` does by leaving the stored address alone until the new one is verified.
 
+## ORCID profile mirror
+
+`public.orcid_profiles` caches the narrow slice of a scholar's **public** ORCID record that
+DESIGN.md's Scholar route describes. One row per scholar, keyed on the scholar rather than
+the iD so PostgREST can embed it from any query that already has `scholars` in it.
+
+**Why a cache at all, rather than fetching on view.** Three of the four surfaces that show
+it are lists — the volunteers roster, the assignment table, the assignment form — and a
+list cannot fetch per row. Fetching on view would also put a third party's availability on
+the critical path of a page that already runs a dozen queries.
+
+**Where the fetch runs.** `supabase/functions/orcid/`, called from Postgres over `pg_net`,
+authorized by the same `secret_key` vault secret and `requireSecretKey` gate as `resend`
+and `remind`. Two alternatives were weighed and rejected: a SvelteKit `+server.ts` route
+cannot write the table, because nothing under `src/` holds a privileged key and adding one
+would be the first server-side secret in the app; and `pg_net` straight from the database
+would put ORCID's deeply nested JSON into plpgsql, where vitest cannot reach it. The shape
+is `send_email()`'s, deliberately: a database event fires a best-effort post and never rolls
+back its caller.
+
+The parser lives in `supabase/functions/_shared/orcidProfile.ts` and is re-exported from
+`src/lib/data/orcidProfile.ts`, the same split as `_shared/emailShell.ts` — Deno bundles
+only what is under `supabase/functions`, and vitest collects only `src/**/*.unit.ts`. The
+shared module must stay dependency-free pure TypeScript; a Deno global in it breaks the
+Vite build of the whole app. The edge function is a thin shell around it on purpose: there
+is no test harness for edge functions in this repo, so logic that lives there is logic
+nothing checks.
+
+**Claiming, and why the order matters.** `private.claim_orcid_refresh` stamps
+`fetch_attempted_at` **before** asking the function for anything. That is what makes the
+six-hour cooldown a stampede guard rather than a hope: ten editors opening the same roster
+claim once between them. `public.request_orcid_refresh` is the authenticated entry point,
+clamped to one batch; `public.backfill_orcid_profiles` is the steward-gated bootstrap,
+which takes the oldest never-fetched slice and is re-runnable until it returns 0. `_force`
+bypasses the staleness clocks but never the cooldown, so no caller can turn any of this
+into a flood.
+
+**Two clocks.** Profile sections refresh at 30 days, works at 90. Works are the only
+expensive fetch — 787KB uncompressed for a prolific record against 8.3KB for the other
+three sections combined — so they are asked for per scholar only when their own clock has
+expired. `Accept-Encoding: gzip` cuts that 13–21×, and it is the only bandwidth lever
+there is: ORCID sends no `ETag`, no `Last-Modified`, and ignores `If-Modified-Since`.
+
+**The counting trap.** `/works` returns groups, and each group holds one summary per source
+that claimed the work — Crossref, Scopus, the scholar themselves. `work_count` is the number
+of GROUPS. A real record measured here holds 46 works across 50 summaries, so counting
+summaries would report a number visibly wrong to the person it describes. The preferred
+summary within a group is picked by how much of what RR displays it carries, then by
+put-code, because row order within a group is not guaranteed between responses.
+
+**Failure is always terminal in the row**, so the cooldown always advances: `ok`,
+`not_found` (404/409, cached rather than retried forever), or `error` with a failure count
+driving backoff. Partial success is per-section — if `/person` answers and `/employments`
+fails, the keywords are written and the employment columns are left alone, because a
+partially refreshed row is strictly better than one emptied by an unrelated failure.
+
+**Deliberately not:**
+
+- **Not audited.** `log_audit_event()`'s no-op skip compares whole rows and
+  `fetch_attempted_at` changes on every refresh, so this would instantly become the audit
+  log's highest-volume writer — into a table already documented as more sensitive than any
+  it records. Nobody will ever ask who changed one of these rows; the answer is always the
+  edge function. And the recovery argument does not apply: this is the one table in the
+  schema that a restore can simply re-fetch.
+- **Not in the realtime publication.** `SupabaseRealtime` calls `invalidateAll()` on
+  changes, so a batch refresh would reload every subscribed client for data nobody is
+  watching.
+- **Not writable by anyone.** No INSERT, UPDATE or DELETE policy exists, and the table-wide
+  grants are explicitly revoked from `anon` and `authenticated` before the SELECT grant —
+  Supabase's default privileges hand out ALL on every new table in `public` first.
+- **Not warmed by anonymous visitors.** `request_orcid_refresh` is `authenticated`-only, so
+  an anonymous visitor to a cold profile sees the ORCID link and nothing else. The editors
+  this exists for are always signed in, and leaving anon out closes a crawler-driven path
+  into ORCID's daily budget.
+- **No cron job.** The read-driven claim plus the steward backfill covers it; see Scheduled
+  jobs below.
+
+**Populating it.** `backfill_orcid_profiles` is steward-gated and reachable from a card on
+`/about`. It needs a UI because the obvious alternative does not work: a steward running the
+function in a SQL editor is refused, since there is no `auth.uid()` in that session and the
+function checks `isSteward()`.
+
+**Rate limits.** The anonymous public API allows 12 requests a second and 25k reads a day
+**per IP**, and edge egress IPs are shared. Registering a free Public API client raises the
+daily cap to 100k and makes the budget ours rather than the IP's; the code adds an
+`Authorization` header only if an `orcid_public_token` vault secret exists, so the
+secret-free path stays the tested default.
+
 ## Email pipeline
 
 Email is **application email** — transactional, reminder, and contact-email verification — all sharing one branded visual identity, and all replyable: a send carries `Reply-To: stewards@reciprocal.reviews` (see Addresses below) unless the row names its own, which the new-volunteer notice and the call for bids do. The branded footer follows the header rather than repeating a fixed sentence, so a message that replies to a person says so and names `stewards@` separately as the route to support; `renderBrandedEmail`'s `replyTo` argument is trailing and optional, so the `remind` cron keeps the default without changing. Its `copied` argument is trailing for the same reason, and decides whether the footer mentions **Reply All** at all. That clause used to be unconditional, which was true of the only message carrying its own `Reply-To` at the time — the new-volunteer notice, addressed to one holder of a venue's top role and copying the rest. It is false of a call for bids, which is N private copies on purpose, and false of a new-volunteer notice at a venue with a single holder. Only the `resend` consumer knows the row's `cc`, so it is the one caller that answers the question. This is the same rule the custom footer exists to serve: a footer the reader would believe, pointing at a group that does not exist, is worse than no footer at all. (Supabase GoTrue no longer sends auth email: sign-in is ORCID and email verification is app-level, so the auth-email path is dormant — see below.) Templates are English only: there is no mechanism yet to solicit a scholar's language preference.
@@ -274,6 +362,12 @@ To add a new email: add a key to the `Emails` map in `templates.ts`, then send i
 **Residual, deliberately deferred:** `queue_email` does not yet verify that the caller has a _relationship_ to each recipient, so a scholar can send a real template to a scholar they have no business emailing. That is bounded — no arbitrary prose, no external addresses, no attacker-supplied links — and attributable via `emails.sender`. Per-event authorization is a follow-up.
 
 ### Edge function authorization
+
+`orcid` is the third, and it differs from the other two in one way worth stating: it accepts
+only scholar ids and iDs the database itself chose, and writes only to a derived cache, so
+it would not be an open relay even if the gate failed the way `resend` would. The gate still
+applies — an open endpoint that fans out to a third party's API on request is still somebody
+else's rate limit to spend.
 
 Both functions are called only by the database — `resend` from the `send_on_email_insert` trigger, `remind` from the `remind-daily` cron — and both refuse callers that do not present one of the project's **secret** keys.
 
@@ -585,6 +679,10 @@ Behaviour is covered by [supabase/tests/invariants/token_events.sql](supabase/te
 
 ### audit_log
 
+`orcid_profiles` is deliberately **not** audited — see ORCID profile mirror above for why a
+derived table whose claim stamp changes on every refresh is the wrong thing to copy whole
+rows of into the most sensitive table in the schema.
+
 The general counterpart, covering the 15 mutable state tables plus `transactions`. Each row holds the whole `before` and `after` as `jsonb`, the acting scholar, and the transaction id that wrote it. Two things motivate it:
 
 - **Forensics.** `venues.admins`, `currencies.minters`, and `scholars.steward` are privilege-bearing columns edited by read-modify-write on an array — lossy under concurrency and invisible afterward. Nothing else can say when someone gained admin on a venue, or who granted it. `transactions` is included for the same reason: the row records who _declined_ a transaction but never who approved it. `scholars.steward` now has that history, and gets it for free: `set_steward` needs no auditing code of its own, because `log_audit_event` records `auth.uid()` — the **caller**, since `SECURITY DEFINER` changes the current user but not the JWT claim. The pgTAP suite asserts the attribution explicitly, that being the most plausible way the feature could quietly lose its trail while still appearing to work.
@@ -625,9 +723,24 @@ Conservation is also callable on its own, as [`public.conservation_violations(_c
 
 ### Scheduled jobs
 
+The ORCID mirror deliberately adds **no** job here. Refreshing is driven by reads — a page
+that renders a scholar asks for a refresh afterwards, and the claim's cooldown bounds how
+often that can reach ORCID — plus `backfill_orcid_profiles` for the initial population,
+which a steward runs and re-runs until it returns 0. A sweep would burn the daily budget on
+accounts nobody is looking at, and would be one more thing a restored database could fire at
+the outside world.
+
 Four `pg_cron` jobs now run: `remind-daily` at 22:00 UTC, `reconcile-ledger` at 22:15, `reconcile-ledger-full` weekly, and `reconcile-email-delivery` every five minutes at :03 past — staggered so they never contend. Both live in `cron.job`, which is **cluster state outside every schema dump** — captured separately by [dump.sh](supabase/dr/dump.sh) into `cron.json` and by `quarantine.sql` before a restore. That is not theoretical: `remind-daily` was silently lost once by a `supabase db diff` run (see `supabase/migrations/20260517230819_restore_remind_cron.sql`).
 
 ## Data rights
+
+`export_scholar_data` includes the ORCID mirror, and `forget_scholar` deletes it. The delete
+is explicit and has to be: the foreign key is `on delete cascade`, but erasure **anonymises
+the scholar row in place rather than deleting it**, so no cascade ever fires — the same
+reason `email_verifications` is deleted by hand there. Two guards stop a refresh claimed
+moments earlier from writing the row back afterwards: `claim_orcid_refresh` skips a scholar
+with a null iD, and the edge function re-reads `scholars.orcid` before writing and skips one
+whose iD has changed or gone.
 
 The terms page has promised data portability and erasure since it was written; [20260808050000](supabase/migrations/20260808050000_erasure_and_export.sql) is the machinery behind them.
 
@@ -667,6 +780,14 @@ Point-in-time recovery is **not** enabled. Instead the append-only logs do the s
 One ordering rule matters enough to state here. **Replay must happen before anything else writes, including before re-arming.** `seq` is an identity column, so after a restore it resumes from the restored maximum and any intervening write takes the very numbers the tail is carrying; deduplicating on `seq` would then discard the tail's real rows as duplicates. `rearm.sql`'s reminder stamping is enough to trigger this, and did on the first test — the replay reported success having applied the wrong rows. `replay.sql` now refuses to run when `audit_log` has moved past the watermark.
 
 ## Testing
+
+`orcidProfile.ts` and `orcidProfileView.ts` are on the extracted-pure-logic list, which is
+what that list is for: the first parses ORCID's nested JSON against committed fixtures
+captured once from the live API, and the second owns the line-joining and the
+`hasAnything` predicate that decides whether a section renders at all. Neither touches the
+network. `supabase/tests/rls/orcid_profiles_rls.sql` proves the table is unwritable by every
+client role including the scholar's own, `rpc/orcid_refresh_rpc.sql` covers the claim and
+the cooldown, and `invariants/erasure.sql` covers the delete that no cascade would perform.
 
 - **Unit.** Vitest, node environment, no DOM. Files matching `src/**/*.unit.ts`, co-located with the module under test. Run with `npm run test:unit`.
 

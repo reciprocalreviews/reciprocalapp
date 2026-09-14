@@ -1,0 +1,1024 @@
+{
+	"last-modified-date": {
+		"value": 1786371858070
+	},
+	"group": [
+		{
+			"last-modified-date": {
+				"value": 1781773474079
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1007/978-3-032-22196-4_18",
+						"external-id-normalized": {
+							"value": "10.1007/978-3-032-22196-4_18",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": {
+							"value": "https://doi.org/10.1007/978-3-032-22196-4_18"
+						},
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 218079227,
+					"created-date": {
+						"value": 1781773474079
+					},
+					"last-modified-date": {
+						"value": 1781773474079
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0001-9884-1913",
+							"path": "0000-0001-9884-1913",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Crossref"
+						},
+						"assertion-origin-orcid": null,
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": null
+					},
+					"title": {
+						"title": {
+							"value": "How Students Tackle Coding Tasks in\u00a0Formative Assessment"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1007/978-3-032-22196-4_18",
+								"external-id-normalized": {
+									"value": "10.1007/978-3-032-22196-4_18",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1007/978-3-032-22196-4_18"
+								},
+								"external-id-relationship": "self"
+							}
+						]
+					},
+					"url": {
+						"value": "https://doi.org/10.1007/978-3-032-22196-4_18"
+					},
+					"type": "book-chapter",
+					"publication-date": {
+						"year": {
+							"value": "2027"
+						},
+						"month": null,
+						"day": null
+					},
+					"journal-title": null,
+					"visibility": "public",
+					"path": "/0000-0001-7461-4783/work/218079227",
+					"display-index": "1"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1781281922396
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1145/3811022",
+						"external-id-normalized": {
+							"value": "10.1145/3811022",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": {
+							"value": "https://doi.org/10.1145/3811022"
+						},
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 212981933,
+					"created-date": {
+						"value": 1777300544339
+					},
+					"last-modified-date": {
+						"value": 1781281922396
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0001-9884-1913",
+							"path": "0000-0001-9884-1913",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Crossref"
+						},
+						"assertion-origin-orcid": null,
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": null
+					},
+					"title": {
+						"title": {
+							"value": "Justice-Centered Educational Programming Language Design"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1145/3811022",
+								"external-id-normalized": {
+									"value": "10.1145/3811022",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1145/3811022"
+								},
+								"external-id-relationship": "self"
+							}
+						]
+					},
+					"url": {
+						"value": "https://doi.org/10.1145/3811022"
+					},
+					"type": "journal-article",
+					"publication-date": {
+						"year": {
+							"value": "2026"
+						},
+						"month": {
+							"value": "12"
+						},
+						"day": {
+							"value": "31"
+						}
+					},
+					"journal-title": {
+						"value": "ACM Transactions on Computing Education"
+					},
+					"visibility": "public",
+					"path": "/0000-0001-7461-4783/work/212981933",
+					"display-index": "1"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1786371858070
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1145/3765964.3811642",
+						"external-id-normalized": {
+							"value": "10.1145/3765964.3811642",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": {
+							"value": "https://doi.org/10.1145/3765964.3811642"
+						},
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 223220910,
+					"created-date": {
+						"value": 1786371858070
+					},
+					"last-modified-date": {
+						"value": 1786371858070
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0001-9884-1913",
+							"path": "0000-0001-9884-1913",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Crossref"
+						},
+						"assertion-origin-orcid": null,
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": null
+					},
+					"title": {
+						"title": {
+							"value": "Adolescent Identity Expression through Transdisciplinary, Computational, Creative Writing"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1145/3765964.3811642",
+								"external-id-normalized": {
+									"value": "10.1145/3765964.3811642",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1145/3765964.3811642"
+								},
+								"external-id-relationship": "self"
+							}
+						]
+					},
+					"url": {
+						"value": "https://doi.org/10.1145/3765964.3811642"
+					},
+					"type": "conference-paper",
+					"publication-date": {
+						"year": {
+							"value": "2026"
+						},
+						"month": {
+							"value": "08"
+						},
+						"day": {
+							"value": "11"
+						}
+					},
+					"journal-title": null,
+					"visibility": "public",
+					"path": "/0000-0001-7461-4783/work/223220910",
+					"display-index": "1"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1763573881996
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1145/3713043.3727051",
+						"external-id-normalized": {
+							"value": "10.1145/3713043.3727051",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": {
+							"value": "https://doi.org/10.1145/3713043.3727051"
+						},
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 186507001,
+					"created-date": {
+						"value": 1750687136655
+					},
+					"last-modified-date": {
+						"value": 1750687136655
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0001-9884-1913",
+							"path": "0000-0001-9884-1913",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Crossref"
+						},
+						"assertion-origin-orcid": null,
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": null
+					},
+					"title": {
+						"title": {
+							"value": "Scratch Copilot: Supporting Youth Creative Coding with AI"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1145/3713043.3727051",
+								"external-id-normalized": {
+									"value": "10.1145/3713043.3727051",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1145/3713043.3727051"
+								},
+								"external-id-relationship": "self"
+							}
+						]
+					},
+					"url": {
+						"value": "https://doi.org/10.1145/3713043.3727051"
+					},
+					"type": "conference-paper",
+					"publication-date": {
+						"year": {
+							"value": "2025"
+						},
+						"month": {
+							"value": "06"
+						},
+						"day": {
+							"value": "23"
+						}
+					},
+					"journal-title": null,
+					"visibility": "public",
+					"path": "/0000-0001-7461-4783/work/186507001",
+					"display-index": "1"
+				},
+				{
+					"put-code": 197388676,
+					"created-date": {
+						"value": 1763573881996
+					},
+					"last-modified-date": {
+						"value": 1763573881996
+					},
+					"source": {
+						"source-orcid": {
+							"uri": "https://orcid.org/0000-0001-7461-4783",
+							"path": "0000-0001-7461-4783",
+							"host": "orcid.org"
+						},
+						"source-client-id": null,
+						"source-name": {
+							"value": "Amy J. Ko"
+						},
+						"assertion-origin-orcid": null,
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": null
+					},
+					"title": {
+						"title": {
+							"value": "Scratch Copilot: Supporting Youth Creative Coding with AI"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1145/3713043.3727051",
+								"external-id-normalized": {
+									"value": "10.1145/3713043.3727051",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1145/3713043.3727051"
+								},
+								"external-id-relationship": "self"
+							}
+						]
+					},
+					"url": {
+						"value": "http://dx.doi.org/10.1145/3713043.3727051"
+					},
+					"type": "conference-paper",
+					"publication-date": {
+						"year": {
+							"value": "2025"
+						},
+						"month": {
+							"value": "06"
+						},
+						"day": {
+							"value": "23"
+						}
+					},
+					"journal-title": {
+						"value": "Proceedings of the 24th Interaction Design and Children"
+					},
+					"visibility": "public",
+					"path": "/0000-0001-7461-4783/work/197388676",
+					"display-index": "0"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1768859792544
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1145/3706598.3713196",
+						"external-id-normalized": {
+							"value": "10.1145/3706598.3713196",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": {
+							"value": "https://doi.org/10.1145/3706598.3713196"
+						},
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 182814502,
+					"created-date": {
+						"value": 1745470872562
+					},
+					"last-modified-date": {
+						"value": 1745470872562
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0001-9884-1913",
+							"path": "0000-0001-9884-1913",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Crossref"
+						},
+						"assertion-origin-orcid": null,
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": null
+					},
+					"title": {
+						"title": {
+							"value": "Wordplay: Accessible, Multilingual, Interactive Typography"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1145/3706598.3713196",
+								"external-id-normalized": {
+									"value": "10.1145/3706598.3713196",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1145/3706598.3713196"
+								},
+								"external-id-relationship": "self"
+							}
+						]
+					},
+					"url": {
+						"value": "https://doi.org/10.1145/3706598.3713196"
+					},
+					"type": "conference-paper",
+					"publication-date": {
+						"year": {
+							"value": "2025"
+						},
+						"month": {
+							"value": "04"
+						},
+						"day": {
+							"value": "26"
+						}
+					},
+					"journal-title": null,
+					"visibility": "public",
+					"path": "/0000-0001-7461-4783/work/182814502",
+					"display-index": "1"
+				},
+				{
+					"put-code": 202937975,
+					"created-date": {
+						"value": 1768859792544
+					},
+					"last-modified-date": {
+						"value": 1768859792544
+					},
+					"source": {
+						"source-orcid": {
+							"uri": "https://orcid.org/0000-0001-7461-4783",
+							"path": "0000-0001-7461-4783",
+							"host": "orcid.org"
+						},
+						"source-client-id": null,
+						"source-name": {
+							"value": "Amy J. Ko"
+						},
+						"assertion-origin-orcid": null,
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": null
+					},
+					"title": {
+						"title": {
+							"value": "Wordplay: Accessible, Multilingual, Interactive Typography"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1145/3706598.3713196",
+								"external-id-normalized": {
+									"value": "10.1145/3706598.3713196",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1145/3706598.3713196"
+								},
+								"external-id-relationship": "self"
+							}
+						]
+					},
+					"url": {
+						"value": "http://dx.doi.org/10.1145/3706598.3713196"
+					},
+					"type": "conference-paper",
+					"publication-date": {
+						"year": {
+							"value": "2025"
+						},
+						"month": {
+							"value": "04"
+						},
+						"day": {
+							"value": "26"
+						}
+					},
+					"journal-title": {
+						"value": "Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems"
+					},
+					"visibility": "public",
+					"path": "/0000-0001-7461-4783/work/202937975",
+					"display-index": "0"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1763573846941
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1145/3626253.3635364",
+						"external-id-normalized": {
+							"value": "10.1145/3626253.3635364",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": {
+							"value": "https://doi.org/10.1145/3626253.3635364"
+						},
+						"external-id-relationship": "self"
+					},
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1145/3641555.3705091",
+						"external-id-normalized": {
+							"value": "10.1145/3641555.3705091",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": {
+							"value": "https://doi.org/10.1145/3641555.3705091"
+						},
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 178379425,
+					"created-date": {
+						"value": 1739925675025
+					},
+					"last-modified-date": {
+						"value": 1739925675025
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0001-9884-1913",
+							"path": "0000-0001-9884-1913",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Crossref"
+						},
+						"assertion-origin-orcid": null,
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": null
+					},
+					"title": {
+						"title": {
+							"value": "Disability and Accessibility in Computer Science Education"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1145/3641555.3705091",
+								"external-id-normalized": {
+									"value": "10.1145/3641555.3705091",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1145/3641555.3705091"
+								},
+								"external-id-relationship": "self"
+							}
+						]
+					},
+					"url": {
+						"value": "https://doi.org/10.1145/3641555.3705091"
+					},
+					"type": "conference-paper",
+					"publication-date": {
+						"year": {
+							"value": "2025"
+						},
+						"month": {
+							"value": "02"
+						},
+						"day": {
+							"value": "18"
+						}
+					},
+					"journal-title": null,
+					"visibility": "public",
+					"path": "/0000-0001-7461-4783/work/178379425",
+					"display-index": "1"
+				},
+				{
+					"put-code": 155526840,
+					"created-date": {
+						"value": 1710521788408
+					},
+					"last-modified-date": {
+						"value": 1710521788408
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0001-9884-1913",
+							"path": "0000-0001-9884-1913",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Crossref"
+						},
+						"assertion-origin-orcid": null,
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": null
+					},
+					"title": {
+						"title": {
+							"value": "Disability and Accessibility in Computer Science Education"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1145/3626253.3635364",
+								"external-id-normalized": {
+									"value": "10.1145/3626253.3635364",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1145/3626253.3635364"
+								},
+								"external-id-relationship": "self"
+							}
+						]
+					},
+					"url": {
+						"value": "https://doi.org/10.1145/3626253.3635364"
+					},
+					"type": "conference-paper",
+					"publication-date": {
+						"year": {
+							"value": "2024"
+						},
+						"month": {
+							"value": "03"
+						},
+						"day": {
+							"value": "14"
+						}
+					},
+					"journal-title": null,
+					"visibility": "public",
+					"path": "/0000-0001-7461-4783/work/155526840",
+					"display-index": "0"
+				},
+				{
+					"put-code": 197388668,
+					"created-date": {
+						"value": 1763573846941
+					},
+					"last-modified-date": {
+						"value": 1763573846941
+					},
+					"source": {
+						"source-orcid": {
+							"uri": "https://orcid.org/0000-0001-7461-4783",
+							"path": "0000-0001-7461-4783",
+							"host": "orcid.org"
+						},
+						"source-client-id": null,
+						"source-name": {
+							"value": "Amy J. Ko"
+						},
+						"assertion-origin-orcid": null,
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": null
+					},
+					"title": {
+						"title": {
+							"value": "Disability and Accessibility in Computer Science Education"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1145/3641555.3705091",
+								"external-id-normalized": {
+									"value": "10.1145/3641555.3705091",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1145/3641555.3705091"
+								},
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1145/3626253.3635364",
+								"external-id-normalized": {
+									"value": "10.1145/3626253.3635364",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1145/3626253.3635364"
+								},
+								"external-id-relationship": "self"
+							}
+						]
+					},
+					"url": {
+						"value": "https://doi.org/10.1145/3641555.3705091"
+					},
+					"type": "conference-paper",
+					"publication-date": {
+						"year": {
+							"value": "2025"
+						},
+						"month": {
+							"value": "02"
+						},
+						"day": {
+							"value": "18"
+						}
+					},
+					"journal-title": null,
+					"visibility": "public",
+					"path": "/0000-0001-7461-4783/work/197388668",
+					"display-index": "0"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1670866559687
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1145/3478431.3499395",
+						"external-id-normalized": {
+							"value": "10.1145/3478431.3499395",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": {
+							"value": "https://doi.org/10.1145/3478431.3499395"
+						},
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 124556029,
+					"created-date": {
+						"value": 1670866559687
+					},
+					"last-modified-date": {
+						"value": 1670866559687
+					},
+					"source": {
+						"source-orcid": {
+							"uri": "https://orcid.org/0000-0001-7461-4783",
+							"path": "0000-0001-7461-4783",
+							"host": "orcid.org"
+						},
+						"source-client-id": null,
+						"source-name": {
+							"value": "Amy J. Ko"
+						},
+						"assertion-origin-orcid": null,
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": null
+					},
+					"title": {
+						"title": {
+							"value": "\"A Key to Reducing Inequities in Like, AI, is by Reducing Inequities Everywhere First\""
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1145/3478431.3499395",
+								"external-id-normalized": {
+									"value": "10.1145/3478431.3499395",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1145/3478431.3499395"
+								},
+								"external-id-relationship": "self"
+							}
+						]
+					},
+					"url": {
+						"value": "http://dx.doi.org/10.1145/3478431.3499395"
+					},
+					"type": "conference-paper",
+					"publication-date": {
+						"year": {
+							"value": "2022"
+						},
+						"month": {
+							"value": "02"
+						},
+						"day": {
+							"value": "22"
+						}
+					},
+					"journal-title": {
+						"value": "Proceedings of the 53rd ACM Technical Symposium on Computer Science Education"
+					},
+					"visibility": "public",
+					"path": "/0000-0001-7461-4783/work/124556029",
+					"display-index": "1"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1672622385059
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1145/3427594",
+						"external-id-normalized": {
+							"value": "10.1145/3427594",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": {
+							"value": "https://doi.org/10.1145/3427594"
+						},
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 105837117,
+					"created-date": {
+						"value": 1641487887460
+					},
+					"last-modified-date": {
+						"value": 1672622385059
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0001-9884-1913",
+							"path": "0000-0001-9884-1913",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Crossref"
+						},
+						"assertion-origin-orcid": null,
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": null
+					},
+					"title": {
+						"title": {
+							"value": "On the Role of Design in K-12 Computing Education"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1145/3427594",
+								"external-id-normalized": {
+									"value": "10.1145/3427594",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": {
+									"value": "https://doi.org/10.1145/3427594"
+								},
+								"external-id-relationship": "self"
+							}
+						]
+					},
+					"url": {
+						"value": "https://doi.org/10.1145/3427594"
+					},
+					"type": "journal-article",
+					"publication-date": {
+						"year": {
+							"value": "2021"
+						},
+						"month": {
+							"value": "03"
+						},
+						"day": {
+							"value": "31"
+						}
+					},
+					"journal-title": {
+						"value": "ACM Transactions on Computing Education"
+					},
+					"visibility": "public",
+					"path": "/0000-0001-7461-4783/work/105837117",
+					"display-index": "0"
+				}
+			]
+		}
+	],
+	"path": "/0000-0001-7461-4783/works"
+}

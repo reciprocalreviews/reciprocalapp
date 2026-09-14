@@ -1257,7 +1257,8 @@
 				"tokens": "Tokens",
 				"settings": "Settings",
 				"tasks": "Tasks",
-				"volunteering": "Volunteering"
+				"volunteering": "Volunteering",
+				"orcid": "From ORCID"
 			},
 			"feedback": {
 				"notLoaded": "Unable to load scholar profile.",
@@ -1453,7 +1454,9 @@
 			},
 			"feedback": {
 				"stewardsNotLoaded": "Unable to load active stewards.",
-				"noStewards": "No one is currently stewarding the platform."
+				"noStewards": "No one is currently stewarding the platform.",
+				"orcidRefreshed": "Refreshing {count} ORCID profiles. Press again to continue.",
+				"orcidCurrent": "Every ORCID profile is already up to date."
 			},
 			"paragraph": {
 				"community": "We are a volunteer community of academics interested in keeping peer review sustainable, for ourselves and our communities. You can learn more about who's contributing and how to contribute yourself on [GitHub](https://github.com/reciprocalreviews).",
@@ -1468,6 +1471,10 @@
 				"addSteward": {
 					"header": "Add a steward",
 					"note": "Search by name, or enter an ORCID iD or email address. Stewards can approve venues, create currencies, and appoint other stewards."
+				},
+				"refreshORCID": {
+					"header": "Refresh ORCID profiles",
+					"note": "Reads scholars' public ORCID records, so editors can see who a reviewer is without leaving Reciprocal Reviews. ORCID limits how fast we may read, so this works through the oldest records a batch at a time."
 				}
 			},
 			"field": {
@@ -1486,6 +1493,10 @@
 					"tip": "Remove this scholar as a steward",
 					"label": "$delete",
 					"warn": "Remove this steward?"
+				},
+				"refreshORCID": {
+					"tip": "Read the oldest ORCID records again",
+					"label": "Refresh ORCID profiles"
 				}
 			}
 		},
@@ -1933,6 +1944,21 @@
 				"venue": "Concern",
 				"role": "Role"
 			}
+		},
+		"orcid": {
+			"header": "From ORCID",
+			"provenance": "From their ORCID record, last read {date}.",
+			"provenanceOwn": "From your ORCID record, last read {date}.",
+			"affiliation": "Affiliation",
+			"education": "Education",
+			"keywords": "Keywords",
+			"works": "Recent work",
+			"links": "Elsewhere",
+			"problem": "Reciprocal Reviews could not read your ORCID record. Anything you have marked private on ORCID stays private here, so this may be nothing to fix."
+		},
+		"expertise": {
+			"venue": "Told to this venue",
+			"orcid": "From ORCID"
 		}
 	},
 	"component": {
@@ -2150,6 +2176,7 @@
 		"LoadVenue": "Unable to load venue data.",
 		"LoadCurrency": "Unable to load currency data.",
 		"LoadScholar": "Unable to load scholar data.",
+		"BackfillORCIDProfiles": "Unable to refresh ORCID profiles.",
 		"EnsureScholar": "Unable to set up your scholar profile.",
 		"LoadSubmission": "Unable to load submission data.",
 		"LoadTransaction": "Unable to load transaction data.",

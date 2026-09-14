@@ -1,0 +1,278 @@
+{
+	"last-modified-date": {
+		"value": 1703884508735
+	},
+	"name": {
+		"created-date": {
+			"value": 1523818011115
+		},
+		"last-modified-date": {
+			"value": 1569259268728
+		},
+		"given-names": {
+			"value": "Amy"
+		},
+		"family-name": {
+			"value": "Ko"
+		},
+		"credit-name": {
+			"value": "Amy J. Ko"
+		},
+		"source": null,
+		"visibility": "public",
+		"path": "0000-0001-7461-4783"
+	},
+	"other-names": {
+		"last-modified-date": null,
+		"other-name": [],
+		"path": "/0000-0001-7461-4783/other-names"
+	},
+	"biography": null,
+	"researcher-urls": {
+		"last-modified-date": {
+			"value": 1558987094126
+		},
+		"researcher-url": [
+			{
+				"created-date": {
+					"value": 1558987094126
+				},
+				"last-modified-date": {
+					"value": 1558987094126
+				},
+				"source": {
+					"source-orcid": {
+						"uri": "https://orcid.org/0000-0001-7461-4783",
+						"path": "0000-0001-7461-4783",
+						"host": "orcid.org"
+					},
+					"source-client-id": null,
+					"source-name": {
+						"value": "Amy J. Ko"
+					},
+					"assertion-origin-orcid": null,
+					"assertion-origin-client-id": null,
+					"assertion-origin-name": null
+				},
+				"url-name": "Faculty website",
+				"url": {
+					"value": "http://faculty.washington.edu/ajko"
+				},
+				"visibility": "public",
+				"path": "/0000-0001-7461-4783/researcher-urls/1742299",
+				"put-code": 1742299,
+				"display-index": 1
+			}
+		],
+		"path": "/0000-0001-7461-4783/researcher-urls"
+	},
+	"emails": {
+		"last-modified-date": {
+			"value": 1703884508735
+		},
+		"email": [
+			{
+				"created-date": {
+					"value": 1523818011344
+				},
+				"last-modified-date": {
+					"value": 1703884508735
+				},
+				"source": {
+					"source-orcid": {
+						"uri": "https://orcid.org/0000-0001-7461-4783",
+						"path": "0000-0001-7461-4783",
+						"host": "orcid.org"
+					},
+					"source-client-id": null,
+					"source-name": {
+						"value": "Amy J. Ko"
+					},
+					"assertion-origin-orcid": null,
+					"assertion-origin-client-id": null,
+					"assertion-origin-name": null
+				},
+				"email": "ajko@uw.edu",
+				"path": null,
+				"visibility": "public",
+				"verified": true,
+				"primary": true,
+				"put-code": null
+			}
+		],
+		"path": "/0000-0001-7461-4783/email"
+	},
+	"addresses": {
+		"last-modified-date": {
+			"value": 1558987060369
+		},
+		"address": [
+			{
+				"created-date": {
+					"value": 1558987060369
+				},
+				"last-modified-date": {
+					"value": 1558987060369
+				},
+				"source": {
+					"source-orcid": {
+						"uri": "https://orcid.org/0000-0001-7461-4783",
+						"path": "0000-0001-7461-4783",
+						"host": "orcid.org"
+					},
+					"source-client-id": null,
+					"source-name": {
+						"value": "Amy J. Ko"
+					},
+					"assertion-origin-orcid": null,
+					"assertion-origin-client-id": null,
+					"assertion-origin-name": null
+				},
+				"country": {
+					"value": "US"
+				},
+				"visibility": "public",
+				"path": "/0000-0001-7461-4783/address/1271301",
+				"put-code": 1271301,
+				"display-index": 1
+			}
+		],
+		"path": "/0000-0001-7461-4783/address"
+	},
+	"keywords": {
+		"last-modified-date": {
+			"value": 1699053025793
+		},
+		"keyword": [
+			{
+				"created-date": {
+					"value": 1699053010196
+				},
+				"last-modified-date": {
+					"value": 1699053025793
+				},
+				"source": {
+					"source-orcid": {
+						"uri": "https://orcid.org/0000-0001-7461-4783",
+						"path": "0000-0001-7461-4783",
+						"host": "orcid.org"
+					},
+					"source-client-id": null,
+					"source-name": {
+						"value": "Amy J. Ko"
+					},
+					"assertion-origin-orcid": null,
+					"assertion-origin-client-id": null,
+					"assertion-origin-name": null
+				},
+				"content": "computing education",
+				"visibility": "public",
+				"path": "/0000-0001-7461-4783/keywords/3536630",
+				"put-code": 3536630,
+				"display-index": 3
+			},
+			{
+				"created-date": {
+					"value": 1699053019041
+				},
+				"last-modified-date": {
+					"value": 1699053025793
+				},
+				"source": {
+					"source-orcid": {
+						"uri": "https://orcid.org/0000-0001-7461-4783",
+						"path": "0000-0001-7461-4783",
+						"host": "orcid.org"
+					},
+					"source-client-id": null,
+					"source-name": {
+						"value": "Amy J. Ko"
+					},
+					"assertion-origin-orcid": null,
+					"assertion-origin-client-id": null,
+					"assertion-origin-name": null
+				},
+				"content": "human-computer interaction",
+				"visibility": "public",
+				"path": "/0000-0001-7461-4783/keywords/3536631",
+				"put-code": 3536631,
+				"display-index": 2
+			},
+			{
+				"created-date": {
+					"value": 1699053025788
+				},
+				"last-modified-date": {
+					"value": 1699053025788
+				},
+				"source": {
+					"source-orcid": {
+						"uri": "https://orcid.org/0000-0001-7461-4783",
+						"path": "0000-0001-7461-4783",
+						"host": "orcid.org"
+					},
+					"source-client-id": null,
+					"source-name": {
+						"value": "Amy J. Ko"
+					},
+					"assertion-origin-orcid": null,
+					"assertion-origin-client-id": null,
+					"assertion-origin-name": null
+				},
+				"content": "software engineering",
+				"visibility": "public",
+				"path": "/0000-0001-7461-4783/keywords/3536632",
+				"put-code": 3536632,
+				"display-index": 1
+			}
+		],
+		"path": "/0000-0001-7461-4783/keywords"
+	},
+	"external-identifiers": {
+		"last-modified-date": {
+			"value": 1598315257016
+		},
+		"external-identifier": [
+			{
+				"created-date": {
+					"value": 1598315257016
+				},
+				"last-modified-date": {
+					"value": 1598315257016
+				},
+				"source": {
+					"source-orcid": null,
+					"source-client-id": {
+						"uri": "https://orcid.org/client/0000-0002-5982-8983",
+						"path": "0000-0002-5982-8983",
+						"host": "orcid.org"
+					},
+					"source-name": {
+						"value": "Scopus - Elsevier"
+					},
+					"assertion-origin-orcid": {
+						"uri": "https://orcid.org/0000-0001-7461-4783",
+						"path": "0000-0001-7461-4783",
+						"host": "orcid.org"
+					},
+					"assertion-origin-client-id": null,
+					"assertion-origin-name": {
+						"value": "Amy J. Ko"
+					}
+				},
+				"external-id-type": "Scopus Author ID",
+				"external-id-value": "57212136972",
+				"external-id-url": {
+					"value": "http://www.scopus.com/inward/authorDetails.url?authorID=57212136972&partnerID=MN8TOARS"
+				},
+				"external-id-relationship": "self",
+				"visibility": "public",
+				"path": "/0000-0001-7461-4783/external-identifiers/1788618",
+				"put-code": 1788618,
+				"display-index": 0
+			}
+		],
+		"path": "/0000-0001-7461-4783/external-identifiers"
+	},
+	"path": "/0000-0001-7461-4783/person"
+}

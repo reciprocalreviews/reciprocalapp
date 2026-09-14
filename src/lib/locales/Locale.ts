@@ -1013,6 +1013,7 @@ export type LocaleText = {
 			};
 			subtitle: string;
 			header: {
+				orcid: string;
 				submissions: string;
 				tokens: string;
 				settings: string;
@@ -1291,6 +1292,9 @@ export type LocaleText = {
 				change: string;
 			};
 			feedback: {
+				/** {count} is how many profiles this press claimed. */
+				orcidRefreshed: string;
+				orcidCurrent: string;
 				stewardsNotLoaded: string;
 				/** Shown when the platform has no stewards at all, which is distinct
 				 * from failing to load the list. */
@@ -1299,12 +1303,16 @@ export type LocaleText = {
 			/** Stands in for the name of a steward who has erased their account. */
 			anonymous: string;
 			card: {
+				/** The steward control that populates the ORCID mirror. Re-runnable rather
+				 * than a one-time bootstrap: ORCID's rate limits mean it works in batches. */
+				refreshORCID: CardText;
 				addSteward: CardText;
 			};
 			field: {
 				steward: TextFieldText;
 			};
 			button: {
+				refreshORCID: ButtonText;
 				addSteward: ButtonText;
 				removeSteward: ConfirmButtonText;
 			};
@@ -1411,6 +1419,32 @@ export type LocaleText = {
 		};
 	};
 	view: {
+		/** The mirrored slice of a scholar's public ORCID record, shown wherever an editor
+		 * needs to know who somebody is. See DESIGN.md's Scholar route section. */
+		orcid: {
+			header: string;
+			/** {date} is when the record was last read. This line is load-bearing rather
+			 * than decorative: it is what keeps the section from reading as Reciprocal
+			 * Reviews' own claim about a person. */
+			provenance: string;
+			provenanceOwn: string;
+			affiliation: string;
+			education: string;
+			keywords: string;
+			works: string;
+			links: string;
+			/** Shown only to the scholar themselves. On a public profile the same words
+			 * read as an accusation, and a visitor can do nothing about it. */
+			problem: string;
+		};
+		/** Who a group of expertise keywords came from. Rendered as a screen-reader-only
+		 * label beside a brand mark: the Reciprocal Reviews logo for what a volunteer told
+		 * this venue, the ORCID mark for what their public record says. Naming both sides
+		 * is what lets either one stand alone without being mistaken for the other. */
+		expertise: {
+			venue: string;
+			orcid: string;
+		};
 		gift: {
 			noTokens: string;
 			button: {
@@ -1887,6 +1921,7 @@ export type LocaleText = {
 		LoadVenue: string;
 		LoadCurrency: string;
 		LoadScholar: string;
+		BackfillORCIDProfiles: string;
 		EnsureScholar: string;
 		LoadSubmission: string;
 		LoadTransaction: string;
