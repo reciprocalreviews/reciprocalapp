@@ -1,4 +1,4 @@
-import type { ORCIDProfileRow } from '$data/types';
+import type { PublicORCIDProfile } from '$data/types';
 import type { ORCIDLink, ORCIDWork } from './orcidProfile';
 
 /**
@@ -14,7 +14,7 @@ import type { ORCIDLink, ORCIDWork } from './orcidProfile';
  */
 
 /** What a list query selects: everything but the two jsonb payloads. */
-export type ProfileSummary = Partial<ORCIDProfileRow> | null | undefined;
+export type ProfileSummary = Partial<PublicORCIDProfile> | null | undefined;
 
 /** Join the parts of a line, dropping the missing ones. Written once because doing it
  * inline is how you get a line that reads ", University of Washington" for somebody whose

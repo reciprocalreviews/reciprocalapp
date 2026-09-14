@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ORCIDProfileRow, RoleID, RoleRow, ScholarID } from '$data/types';
+	import type { PublicORCIDProfile, RoleID, RoleRow, ScholarID } from '$data/types';
 	import { venuePath as toVenuePath } from '$lib/data/venuePath';
 	import Button from '$lib/components/Button.svelte';
 	import EditableText from '$lib/components/EditableText.svelte';
@@ -267,7 +267,7 @@
 	 *
 	 * It deliberately does NOT gate the Add button. Assigning has to work when ORCID is
 	 * unreachable, when the record is private, and when it simply has not been read yet. */
-	let newAssignmentProfile = $state<ORCIDProfileRow | null>(null);
+	let newAssignmentProfile = $state<PublicORCIDProfile | null>(null);
 
 	$effect(() => {
 		const id = newAssignmentSearch.id;

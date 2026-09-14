@@ -624,6 +624,9 @@
             "LoadNotificationSettings": {
               "type": "string"
             },
+            "LoadORCIDMirrorHealth": {
+              "type": "string"
+            },
             "LoadPendingEmailVerification": {
               "type": "string"
             },
@@ -950,6 +953,7 @@
             "LoadCurrency",
             "LoadScholar",
             "BackfillORCIDProfiles",
+            "LoadORCIDMirrorHealth",
             "EnsureScholar",
             "LoadSubmission",
             "LoadTransaction",
@@ -1178,6 +1182,14 @@
                     "orcidCurrent": {
                       "type": "string"
                     },
+                    "orcidHealth": {
+                      "description": "The mirror's state, shown to a steward beside the refresh control. {read}, {never} and {failed} are counts of scholars.",
+                      "type": "string"
+                    },
+                    "orcidRateLimited": {
+                      "description": "Shown only when ORCID has actually been refusing reads. {count} is how many profiles hit a rate limit in the last week.",
+                      "type": "string"
+                    },
                     "orcidRefreshed": {
                       "description": "{count} is how many profiles this press claimed.",
                       "type": "string"
@@ -1187,6 +1199,8 @@
                     }
                   },
                   "required": [
+                    "orcidHealth",
+                    "orcidRateLimited",
                     "orcidRefreshed",
                     "orcidCurrent",
                     "stewardsNotLoaded",

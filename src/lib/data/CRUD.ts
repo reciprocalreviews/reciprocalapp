@@ -8,6 +8,7 @@ import {
 	type ScholarID,
 	type ScholarRow,
 	type ORCIDProfileRow,
+	type PublicORCIDProfile,
 	type SupporterID,
 	type VenueID,
 	type VolunteerID,
@@ -172,6 +173,25 @@ export type ScholarCard = Pick<ScholarRow, 'id' | 'name' | 'orcid'> & {
 		| 'work_last_year'
 		| 'fetched_at'
 	> | null;
+};
+
+/** The mirror's operational state.
+ *
+ * `rate_limited` counts the last seven days and is the number that matters: ORCID's
+ * anonymous budget is 25k reads a day shared across an egress IP, and a non-zero count here
+ * is the signal to register an API client (#173). `failed` cannot answer that on its own,
+ * because it counts 500s and timeouts too. */
+export type ORCIDMirrorHealth = {
+	/** Scholars who have an ORCID iD at all — the denominator. */
+	scholars: number;
+	read: number;
+	never_read: number;
+	pending: number;
+	not_found: number;
+	failed: number;
+	rate_limited: number;
+	/** The least recently refreshed profile, or null when none has been read. */
+	oldest_read: string | null;
 };
 
 export type EnsureScholarOutcome = 'exists' | 'created' | 'orcid_conflict' | 'no_account';
@@ -726,7 +746,7 @@ export default abstract class CRUD {
 	/** The mirrored slice of a scholar's public ORCID record, or null when RR has not read
 	 * it. Only the profile page asks for the whole row; the list surfaces embed the few
 	 * columns they show and leave the two jsonb payloads behind. */
-	abstract getORCIDProfile(id: ScholarID): Promise<ReadResult<ORCIDProfileRow | null>>;
+	abstract getORCIDProfile(id: ScholarID): Promise<ReadResult<PublicORCIDProfile | null>>;
 	/** Names plus the handful of mirrored ORCID columns a list shows, in one round trip.
 	 * Deliberately omits `works` and `links`: those are the two jsonb payloads, and leaving
 	 * them out is what holds a list's added weight to a few hundred bytes a row. */
@@ -744,6 +764,9 @@ export default abstract class CRUD {
 	 * rather than by anything here, so it is meant to be run repeatedly: each run takes the
 	 * oldest slice, and a run that claims nothing means everything is current. */
 	abstract backfillORCIDProfiles(limit?: number): Promise<Result<number>>;
+	/** How the ORCID mirror is doing, for a steward deciding whether it needs attention.
+	 * Steward-only, enforced in the database. */
+	abstract getORCIDMirrorHealth(): Promise<Result<ORCIDMirrorHealth>>;
 
 	abstract getVenue(id: VenueID): Promise<ReadResult<VenueRow | null>>;
 	/** Resolve a venue from a URL path segment, which is its web address once it has one

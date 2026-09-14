@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ORCIDProfileRow } from '$data/types';
+	import type { PublicORCIDProfile } from '$data/types';
 	import {
 		affiliationLine,
 		educationLine,
@@ -22,7 +22,7 @@
 		/** Whether the viewer is the scholar themselves. Governs one thing only: whether a
 		 * failed or missing record is reported. */
 		own = false
-	}: { profile: ORCIDProfileRow | null; own?: boolean } = $props();
+	}: { profile: PublicORCIDProfile | null; own?: boolean } = $props();
 
 	const locale = getLocaleContext();
 

@@ -519,6 +519,7 @@ export type Database = {
           fetch_attempted_at: string
           fetch_detail: string | null
           fetch_failures: number
+          fetch_rate_limited_at: string | null
           fetch_status: string
           fetched_at: string | null
           keywords: string[]
@@ -541,6 +542,7 @@ export type Database = {
           fetch_attempted_at?: string
           fetch_detail?: string | null
           fetch_failures?: number
+          fetch_rate_limited_at?: string | null
           fetch_status?: string
           fetched_at?: string | null
           keywords?: string[]
@@ -563,6 +565,7 @@ export type Database = {
           fetch_attempted_at?: string
           fetch_detail?: string | null
           fetch_failures?: number
+          fetch_rate_limited_at?: string | null
           fetch_status?: string
           fetched_at?: string | null
           keywords?: string[]
@@ -1492,6 +1495,7 @@ export type Database = {
         Args: { _event: string; _scholar: string }
         Returns: boolean
       }
+      orcid_mirror_health: { Args: never; Returns: Json }
       pending_email_verification: { Args: never; Returns: Json }
       propose_thanks: {
         Args: { _message: string; _submission: string }

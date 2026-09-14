@@ -18,7 +18,7 @@ import type {
 	RoleRow,
 	ScholarID,
 	ScholarRow,
-	ORCIDProfileRow,
+	PublicORCIDProfile,
 	SubmissionID,
 	SubmissionRow,
 	SubmissionType,
@@ -52,6 +52,7 @@ import CRUD, {
 	type PendingEmailVerification,
 	type ReadResult,
 	type Result,
+	type ORCIDMirrorHealth,
 	type ScholarCard,
 	type SubmissionBlocker
 } from './CRUD';
@@ -778,10 +779,23 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
-	async getORCIDProfile(id: ScholarID): Promise<ReadResult<ORCIDProfileRow | null>> {
+	/** The columns a client may read. Named rather than a wildcard, and that is now load
+	 * bearing rather than only good manners: `fetch_detail` is deliberately not granted to
+	 * anon or authenticated, so a `select()` asking for every column is refused outright. */
+	private static readonly ORCID_PROFILE_COLUMNS =
+		'scholar, orcid, employment_role, employment_department, employment_organization, ' +
+		'education_role, education_organization, education_year, keywords, works, work_count, ' +
+		'work_first_year, work_last_year, links, fetched_at, works_fetched_at, ' +
+		'fetch_attempted_at, fetch_status, fetch_failures, fetch_rate_limited_at';
+
+	async getORCIDProfile(id: ScholarID): Promise<ReadResult<PublicORCIDProfile | null>> {
 		return this.row(
 			'LoadScholar',
-			this.client.from('orcid_profiles').select().eq('scholar', id).maybeSingle()
+			this.client
+				.from('orcid_profiles')
+				.select(SupabaseCRUD.ORCID_PROFILE_COLUMNS)
+				.eq('scholar', id)
+				.maybeSingle()
 		);
 	}
 
@@ -816,6 +830,12 @@ export default class SupabaseCRUD extends CRUD {
 		const { data, error } = await this.client.rpc('backfill_orcid_profiles', { _limit: limit });
 		if (error) return this.error('BackfillORCIDProfiles', error);
 		return { data: data ?? 0 };
+	}
+
+	async getORCIDMirrorHealth(): Promise<Result<ORCIDMirrorHealth>> {
+		const { data, error } = await this.client.rpc('orcid_mirror_health');
+		if (error) return this.error('LoadORCIDMirrorHealth', error);
+		return { data: data as unknown as ORCIDMirrorHealth };
 	}
 
 	async getScholarAdminVenues(

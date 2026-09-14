@@ -6,6 +6,7 @@ import {
 	buildProfile,
 	emptyProfile,
 	orcidAPIURL,
+	orcidHeaders,
 	type ORCIDSection
 } from '../_shared/orcidProfile.ts';
 
@@ -36,34 +37,68 @@ const REQUEST_TIMEOUT_MS = 5000;
  * consortium record should degrade rather than exhaust the function's memory. */
 const MAX_BYTES = 8 * 1024 * 1024;
 
+/**
+ * A Public API bearer token, if this project has one (#173).
+ *
+ * Optional by design. Without it reads are anonymous and capped at 25k a day PER IP, shared
+ * with whoever else is on the egress IP; with it, 100k a day that are ours. The secret-free
+ * path stays the tested default, so an unconfigured project behaves exactly as it did before
+ * this existed.
+ *
+ * Read from the environment rather than the database vault, like `resend`'s RESEND_API_KEY:
+ * the vault holds what the DATABASE needs, and `supabase db push` copies vault values to the
+ * remote project with no opt-out, which has already clobbered a hosted secret once. Nothing
+ * in CI sets this -- it is a Dashboard entry, exactly as RESEND_API_KEY is -- which is why
+ * `scripts/orcid-token.js` exists to check a credential before it is deployed.
+ */
+const ORCID_PUBLIC_TOKEN = Deno.env.get('ORCID_PUBLIC_TOKEN');
+
+/** Set once ORCID has refused the token, so the rest of the batch reads anonymously rather
+ * than re-learning the same 401 on every request. Module scope rather than per invocation:
+ * the edge runtime reuses an instance, so a bad secret costs one extra round trip per cold
+ * start rather than one per batch. */
+let tokenRejected = false;
+/** The refusal itself, carried onto the rows written afterwards so it is visible somewhere
+ * a steward will look and not only in the function log. */
+let tokenRejectionDetail: string | undefined;
+
 type Requested = { scholar: string; orcid: string; works: boolean };
 
 type SectionResult =
 	| { status: 'ok'; payload: unknown }
 	| { status: 'not_found' }
-	| { status: 'error'; detail: string };
+	// Distinct from 'error' so the caller can retry anonymously rather than give up: a 401
+	// means the TOKEN was refused, not that the record is unreadable.
+	| { status: 'unauthorized'; detail: string }
+	| { status: 'error'; detail: string; rateLimited?: boolean };
 
-async function fetchSection(orcid: string, section: ORCIDSection): Promise<SectionResult> {
+async function fetchSection(
+	orcid: string,
+	section: ORCIDSection,
+	token?: string
+): Promise<SectionResult> {
 	try {
 		const response = await fetch(orcidAPIURL(orcid, section), {
-			headers: {
-				Accept: 'application/json',
-				// Measured at 13-21x on real records, and the only bandwidth lever there is:
-				// ORCID sends no ETag and ignores If-Modified-Since, so a conditional fetch
-				// is not available. Deno's fetch decompresses transparently.
-				'Accept-Encoding': 'gzip',
-				// So ORCID can get in touch rather than block us.
-				'User-Agent': 'ReciprocalReviews (+https://reciprocal.reviews)'
-			},
+			headers: orcidHeaders(token),
 			signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
 		});
 
 		// A record that does not exist, or was deactivated. Terminal, and cached as such:
 		// retrying it every six hours forever would spend the daily budget on a certainty.
 		if (response.status === 404 || response.status === 409) return { status: 'not_found' };
+
+		// The token was refused. Only meaningful when we sent one -- an anonymous read never
+		// 401s, which is precisely the hazard: a bad token turns a working request into a
+		// failing one.
+		if (response.status === 401 && token !== undefined)
+			return { status: 'unauthorized', detail: `${section}: the ORCID token was refused` };
 		if (!response.ok)
 			return {
 				status: 'error',
+				// Flagged rather than parsed back out of the text later: 'error' conflates a
+				// 429 with a 500, a timeout and a parse failure, and only the 429 answers
+				// the question "do we need to register an API client" (#173).
+				rateLimited: response.status === 429,
 				detail: `${section}: HTTP ${response.status}${
 					response.headers.get('Retry-After')
 						? ` retry-after ${response.headers.get('Retry-After')}`
@@ -94,19 +129,45 @@ async function fetchScholar(requested: Requested) {
 	if (requested.works) sections.push('works');
 
 	const results = new Map<ORCIDSection, SectionResult>();
-	for (const section of sections)
-		results.set(section, await fetchSection(requested.orcid, section));
+	for (const section of sections) {
+		// Send the token only while it is still believed good.
+		const token = tokenRejected ? undefined : ORCID_PUBLIC_TOKEN;
+		let result = await fetchSection(requested.orcid, section, token);
+
+		if (result.status === 'unauthorized') {
+			// The single most important behaviour in this file. An anonymous read of the
+			// public API returns 200 where the same read with a bad bearer returns 401 --
+			// measured -- so a mistyped, expired, revoked, or sandbox-issued token would
+			// otherwise turn a working feature into a wholly broken one. Fall back to the
+			// tier that works, loudly, and stop sending the token.
+			if (!tokenRejected) {
+				tokenRejected = true;
+				console.error(
+					'orcid: ORCID_PUBLIC_TOKEN was refused; falling back to anonymous reads. ' +
+						'Check it with scripts/orcid-token.js — a sandbox token does not work against production.'
+				);
+			}
+			tokenRejectionDetail = result.detail;
+			result = await fetchSection(requested.orcid, section, undefined);
+		}
+
+		results.set(section, result);
+	}
 
 	// Every section saying "no such record" is the record being gone. One section saying it
 	// while others answer is not, so it is only terminal when they agree.
 	if ([...results.values()].every((r) => r.status === 'not_found'))
-		return { status: 'not_found' as const, update: {}, worksRead: false };
+		return { status: 'not_found' as const, update: {}, worksRead: false, rateLimited: false };
 
 	const payloads: Record<string, unknown> = {};
 	const failures: string[] = [];
+	let rateLimited = false;
 	for (const [section, result] of results) {
 		if (result.status === 'ok') payloads[section] = result.payload;
-		else if (result.status === 'error') failures.push(result.detail);
+		else if (result.status === 'error') {
+			failures.push(result.detail);
+			if (result.rateLimited) rateLimited = true;
+		}
 		// A single not_found among answers is treated as "nothing there", which the
 		// parser renders as absence anyway.
 	}
@@ -121,6 +182,7 @@ async function fetchScholar(requested: Requested) {
 			status: 'error' as const,
 			update: {},
 			worksRead: false,
+			rateLimited: false,
 			detail: `parse: ${error instanceof Error ? error.message : error}`
 		};
 	}
@@ -146,7 +208,14 @@ async function fetchScholar(requested: Requested) {
 		status: failures.length > 0 ? ('error' as const) : ('ok' as const),
 		update,
 		worksRead: 'works' in payloads,
-		detail: failures.length > 0 ? failures.join('; ') : undefined
+		rateLimited,
+		// A refused token is worth recording on the row even when every read then
+		// succeeded anonymously: the function log is not somewhere anyone looks, and this
+		// is the only durable trace that the secret needs attention.
+		detail:
+			[tokenRejectionDetail, failures.length > 0 ? failures.join('; ') : undefined]
+				.filter((d) => d !== undefined)
+				.join('; ') || undefined
 	};
 }
 
@@ -167,7 +236,10 @@ async function writeScholar(
 	if (!scholar || scholar.orcid !== requested.orcid) return 'skipped';
 
 	const now = new Date().toISOString();
-	const base: Record<string, unknown> = {
+	// Typed rather than Record<string, unknown>. The loose type is why `deno check` has
+	// reported TS2345 on the upsert below since this file was written, and -- more to the
+	// point -- why a misspelled column name would have been written silently into nothing.
+	const base: Database['public']['Tables']['orcid_profiles']['Insert'] = {
 		scholar: requested.scholar,
 		orcid: requested.orcid,
 		fetch_status: result.status,
@@ -197,6 +269,7 @@ async function writeScholar(
 		});
 	} else {
 		Object.assign(base, result.update);
+		if (result.rateLimited) base.fetch_rate_limited_at = now;
 		if (result.status === 'ok') {
 			base.fetched_at = now;
 			base.fetch_failures = 0;

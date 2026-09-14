@@ -20,7 +20,7 @@ with
 	schema extensions;
 
 select
-	plan (9);
+	plan (12);
 
 select
 	tests.create_scholar ('orcid_self@test.local') as self \gset
@@ -119,6 +119,39 @@ select
 		'42501',
 		null,
 		'anon cannot insert a profile'
+	);
+
+-- ---- Column privileges ---------------------------------------------------------
+-- Every column here is already public at orcid.org, with one exception. `fetch_detail`
+-- carries OUR diagnostics -- HTTP statuses, parse errors, whether an API token was refused
+-- -- and its comment always said it was never rendered to a visitor. But the grant used to
+-- be table-wide, and not-rendered is not the same as not-readable: PostgREST hands out
+-- whatever is granted, so anyone could read it with one request.
+select
+	tests.authenticate_as (:'other');
+
+select
+	lives_ok (
+		$$ select employment_organization, keywords, work_count, fetch_status, fetch_rate_limited_at from public.orcid_profiles $$,
+		'a client can read every public column, including the rate-limit stamp'
+	);
+
+select
+	throws_ok (
+		$$ select fetch_detail from public.orcid_profiles $$,
+		'42501',
+		null,
+		'a client cannot read fetch_detail'
+	);
+
+-- The one that actually bites in practice: application code reaching for `*`. This is why
+-- getORCIDProfile names its columns.
+select
+	throws_ok (
+		$$ select * from public.orcid_profiles $$,
+		'42501',
+		null,
+		'a wildcard select is refused, because it reaches fetch_detail'
 	);
 
 -- ---- The row dies with the account ---------------------------------------------
