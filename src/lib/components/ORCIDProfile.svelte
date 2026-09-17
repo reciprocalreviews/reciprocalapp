@@ -74,7 +74,13 @@
 				<span class="stat">{stat}</span>
 				{#if recent.length > 0}
 					<ul>
-						{#each recent as work (work.title)}
+						<!-- Unkeyed on purpose, and it matters. A work has no id, so the only key
+						     available is its own content — and an ORCID record may legally hold the same
+						     title twice. A duplicate key THROWS in Svelte, in production as well as in
+						     development, and the throw escapes hydration, which leaves the page drawn and
+						     styled with every button on it wired to nothing. Nothing reorders here, so a
+						     key would buy nothing and risk that. -->
+						{#each recent as work}
 							<li>
 								{#if work.url}<Link to={work.url}>{work.title}</Link>{:else}{work.title}{/if}
 								<span class="meta">
@@ -91,7 +97,10 @@
 			<dt>{locale().view.orcid.links}</dt>
 			<dd data-testid="orcid-links">
 				<span class="tags">
-					{#each elsewhere as link (link.label + link.value)}
+					<!-- Unkeyed, for the reason above. This is the list that actually broke: a real
+					     record carried its ResearcherID twice, `label + value` collided, and that
+					     scholar's whole profile page went inert. -->
+					{#each elsewhere as link}
 						{#if link.url}<Link to={link.url}>{link.label}</Link>{:else}{link.label}: {link.value}{/if}
 					{/each}
 				</span>

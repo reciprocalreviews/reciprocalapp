@@ -264,6 +264,24 @@ summaries would report a number visibly wrong to the person it describes. The pr
 summary within a group is picked by how much of what RR displays it carries, then by
 put-code, because row order within a group is not guaranteed between responses.
 
+**The duplicate trap**, which is the counting trap's sibling and cost a scholar a working
+page. An ORCID record may legally hold the same work in two groups and the same external
+identifier twice, and real records do — one measured profile carried its ResearcherID twice
+over. The lists rendered from it are therefore **unkeyed** `{#each}` blocks, on purpose:
+neither a work nor a link has an id, so the only key available is its own content, and a
+duplicate key throws in Svelte — in production as well as in development. That throw escapes
+hydration, and what it leaves is a page drawn, styled, complete, and wired to nothing, with
+every button on it silently dead. See Hydration failure below for the net under that.
+
+`workKey`/`linkKey` in [orcidProfile.ts](supabase/functions/_shared/orcidProfile.ts) are the
+single answer to what counts as the same entry, used by the parser when the mirror is written
+and by [orcidProfileView.ts](src/lib/data/orcidProfileView.ts) when it is read — the second
+because rows mirrored before the parser deduplicated are still in the table, and works are on a
+slow refresh clock. Both are deliberately conservative: two works with different DOIs are never
+merged, and without a DOI it takes title, year AND journal to match, because "Editorial" is a
+real title a person may hold several distinct instances of. `work_count` is untouched by any of
+this — it is still the number of groups, which is how many works the record holds.
+
 **Failure is always terminal in the row**, so the cooldown always advances: `ok`,
 `not_found` (404/409, cached rather than retried forever), or `error` with a failure count
 driving backoff. Partial success is per-section — if `/person` answers and `/employments`
@@ -636,6 +654,33 @@ every load, and collapsed and regrew on every client-side navigation.
 
 `Button` carries one invariant worth stating: a button whose locale entry has a `warn` string confirms before it acts, replacing itself with a cancel/confirm pair that only commits on the second click. For the duration of an `action` that returns a promise, the primary button and both halves of the confirm pair are disabled and `act()` refuses re-entry — so the least reversible actions in the platform commit exactly once per confirmation, however many times the button is pressed. Call sites therefore do not need their own in-flight flag; `active` is for validity, not for busy-ness. Add a local flag only to change a button's label while it works (as `EditableText` does) or to gate other controls alongside it.
 
+### Hydration failure
+
+A component that throws while a page is hydrating takes the entire root mount down with it, and
+nothing in SvelteKit catches it. There is no error page, no banner, and no console message
+beyond an unhandled rejection whose production text is a bare `https://svelte.dev/e/...` URL.
+What the reader is left with is whatever the server sent — complete, styled, and wired to
+nothing, with `:active` still depressing buttons because that is CSS. It is the most deceptive
+failure this app can produce, and a scholar spent weeks inside one, clicking a button that could
+not possibly respond.
+
+The net is an inline script in [app.html](src/app.html), and it is inline and dependency-free on
+purpose: it must survive the thing that broke. `body` carries a `hydrating` class that the root
+layout removes on mount; if the class is still there ten seconds later, the app never mounted,
+and the script builds and shows a notice saying so.
+
+Two better-looking approaches were measured and do not work, recorded here so they are not tried
+again. A `<svelte:boundary>` around the page cannot contain a hydration-time throw in Svelte
+5.57: it discards the half-hydrated DOM and renders its fallback into nothing, leaving the
+document EMPTY — a blank page is not an improvement on a page that lies. That also rules out
+having the watchdog merely reveal a notice the server rendered, because the failure can take
+that notice with it; the element has to be built from nothing at the moment it is needed. The
+consequence is the one hardcoded English string in the app: the locale arrives through Svelte,
+and the whole point of the notice is that it appears when Svelte is what broke.
+
+`kit.experimental.handleRenderingErrors` is the eventual replacement to watch, but it is built
+on the same boundary mechanism, so it needs measuring before it is trusted.
+
 ## Build and release
 
 - `npm run build` runs [scripts/maybe-updates.js](scripts/maybe-updates.js) first, which invokes `npm run updates` only when `$CI` is set. CI builds regenerate `src/routes/[[lang]]/updates/updates.json` from [CHANGELOG.md](CHANGELOG.md) via [scripts/updates.js](scripts/updates.js); local builds reuse whatever was last committed, so the file doesn't churn on every dev rebuild. Run `npm run updates` manually if you want to regenerate it locally.
@@ -822,6 +867,13 @@ the cooldown, and `invariants/erasure.sql` covers the delete that no cascade wou
   There is no component-testing setup, and the unit layer is not the place to re-test what the pgTAP suites and Playwright already cover. Its job is the pure logic in between — which means logic has to be **reachable** to be tested, and most of the interesting rules used to live inside `.svelte` files where nothing could import them. So the sort/filter and validation rules are extracted into plain modules that the components then import: [sortSubmissions.ts](src/lib/data/sortSubmissions.ts) (search matching, the author-visibility gate, payment status, the sort pipeline), [sortAssignees.ts](src/lib/data/sortAssignees.ts) (assignee and bid ordering), [charges.ts](src/lib/data/charges.ts), [bulkImportRows.ts](src/lib/data/bulkImportRows.ts), [columnMapping.ts](src/lib/data/columnMapping.ts) (matching a CSV's own headers to the importer's fields), [matchPersonName.ts](src/lib/data/matchPersonName.ts) (resolving a written name to one of a venue's volunteers), [volunteersView.ts](src/lib/data/volunteersView.ts) (the volunteers list's search, how its expertise keywords are ranked, and the order its rows appear in), [toCSV.ts](src/lib/data/toCSV.ts), [canViewSubmission.ts](src/lib/data/canViewSubmission.ts), [inviteList.ts](src/lib/data/inviteList.ts) (what a comma-separated list of addresses, ORCID iDs, and names currently matches, which entries are still waiting on an answer, and which entry a chosen scholar came from), [postgrestFilter.ts](src/lib/data/postgrestFilter.ts) (quoting a value into a filter built as a string), and [interpolate.ts](src/lib/locales/interpolate.ts) — the last being the single substitution pass every user-visible string goes through. Each takes its page's reactive reads as an explicit context argument (including `now`, so time-dependent rules are deterministic) rather than closing over them. When adding logic to a component that has a rule in it — an ordering, a permission, an arithmetic — put the rule in a module and let the component call it.
 
 - **Integration.** Playwright, Chromium only. Files in `end2end/`. Run with `npm run test:end` — it brings up its own stack via `emu` (`sync` → `build` → `start:test` → `preview`), so no manual setup is needed. `start:test` deliberately excludes the edge runtime: nothing in `end2end/` needs it, because every email assertion reads the `emails` table directly with the `sql()` helper (the verification token is pulled out of `emails.args`) rather than a delivered message, and `send_email()`'s pg_net POST is best-effort and swallows its own failure. **CI and local run the identical command**, which is what stops the two from drifting — they used to differ, and the local variant chained `npm start`, whose trailing `supabase functions serve` blocks forever, so `vite preview` never started and the suite timed out after ten minutes while CI stayed green. If you want mail logged to the console while developing, run `npm start` in a separate terminal.
+- **Asserting that a page is alive.** There is no component-testing setup, so the guard against a
+  page that renders but never mounts is an end-to-end one, and the assertion is
+  `await expect(page.locator('body')).not.toHaveClass(/hydrating/)`. It is deliberately
+  message-independent — Svelte's production error text is a bare URL — and it is the same
+  signal the watchdog in [app.html](src/app.html) reads. `end2end/orcid.end.ts` pairs it with a
+  click that has to reach a confirm step, because the class going away only proves the root
+  mounted, not that the handlers below it are attached.
 - **Combined.** `npm test` runs end2end, then unit, then the pgTAP suites — all three against the one local database, in that order. That is why an e2e test that corrupts shared state is not a local problem: it is the next suite's failure. See the token-ledger rule below.
 - **What gates a pull request.** `ci.yml` (generated types + schema drift), `rls.yml` (all pgTAP), `vitest.yml`, and `locales.yml`. The last two were `workflow_call`-only and so ran first on the push to `dev` — i.e. after review had already passed, which meant a unit test could not actually block the change it was written for. Neither needs Supabase or a browser, so gating on them costs about a minute. Playwright still runs only on the push to `dev`, where the shard matrix is worth its runtime. [pr-target.yml](.github/workflows/pr-target.yml) also runs, but only for pull requests proposing to change `main`; it is not a required check, because a ruleset that requires one requires it of direct pushes too, and `npm run deploy` pushes the release commit to `main` directly.
 

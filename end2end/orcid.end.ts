@@ -132,6 +132,13 @@ test('the rate-limit warning appears only when ORCID has actually been limiting 
 	await page.goto('/about');
 	await expect(page.getByTestId('orcid-rate-limited')).toHaveCount(0);
 
+	// Captured so the row can be put back as it was. It used to be DELETED afterwards, which
+	// is not the same thing: r1 is the one scholar the seed gives a full mirror, so deleting
+	// it left every later test in this file looking at a scholar with no ORCID record at all.
+	const before = sql(
+		`select fetch_status::text || '|' || coalesce(fetch_rate_limited_at::text, '') from public.orcid_profiles where scholar = '${SEED.scholars.r1.id}'`
+	);
+
 	try {
 		// One statement on one line: sql() hands it straight to `docker exec`, where
 		// embedded newlines and tabs break the shell quoting.
@@ -144,7 +151,94 @@ test('the rate-limit warning appears only when ORCID has actually been limiting 
 		await expect(page.getByTestId('orcid-rate-limited')).toBeVisible();
 	} finally {
 		// Restored: the suite shares one seeded database.
-		sql(`delete from public.orcid_profiles where scholar = '${SEED.scholars.r1.id}'`);
+		if (before.length === 0) {
+			sql(`delete from public.orcid_profiles where scholar = '${SEED.scholars.r1.id}'`);
+		} else {
+			const [status, limited] = before.split('|');
+			sql(
+				`update public.orcid_profiles set fetch_status = '${status}', fetch_rate_limited_at = ${limited.length > 0 ? `'${limited}'` : 'null'} where scholar = '${SEED.scholars.r1.id}'`
+			);
+		}
 	}
 	await logout(page);
+});
+
+test('a record that lists something twice still leaves the page working', async ({
+	page,
+	context
+}) => {
+	/**
+	 * The regression this suite exists to prevent from recurring, and it is worth stating
+	 * plainly because the symptom was so quiet.
+	 *
+	 * The works and links lists used to be keyed `{#each}` blocks, keyed on their own
+	 * content because neither a work nor a link has an id. An ORCID record may legally list
+	 * the same identifier or the same paper twice — one real record carried its ResearcherID
+	 * twice over — and a duplicate key THROWS in Svelte, in production as well as in
+	 * development. The throw escaped hydration, so the server-rendered page stayed on screen:
+	 * complete, styled, and wired to nothing. A scholar clicked Accept on an invitation for
+	 * weeks and watched it depress and do nothing, because `:active` is CSS and needs no
+	 * JavaScript at all.
+	 *
+	 * So this asserts the page is ALIVE, not that it looks right.
+	 */
+	const linksBefore = sql(
+		`select links::text from public.orcid_profiles where scholar = '${FULL.id}'`
+	);
+	const worksBefore = sql(
+		`select works::text from public.orcid_profiles where scholar = '${FULL.id}'`
+	);
+	const quote = (value: string) => value.replaceAll("'", "''");
+
+	try {
+		// Transcribed from the record that broke: the same identifier either side of another.
+		// One statement on one line; sql() hands it to `docker exec`, where newlines break
+		// the shell quoting.
+		const links =
+			`[{"kind":"identifier","label":"ResearcherID","value":"D-1001-2018","url":null},` +
+			`{"kind":"identifier","label":"Scopus Author ID","value":"56732624800","url":null},` +
+			`{"kind":"identifier","label":"ResearcherID","value":"D-1001-2018","url":null}]`;
+		// And the same trap in the other list: one paper the record holds twice.
+		const works =
+			`[{"title":"On the Reproducibility of Reviewing","year":2025,"journal":"Journal of Rigor","doi":"10.1234/rigor.2025","url":null},` +
+			`{"title":"Measuring Reviewer Load","year":2023,"journal":"Journal of Rigor","doi":"10.1234/load.2023","url":null},` +
+			`{"title":"Measuring Reviewer Load","year":2023,"journal":"Journal of Rigor","doi":"10.1234/load.2023","url":null}]`;
+		sql(
+			`update public.orcid_profiles set links = '${links}'::jsonb, works = '${works}'::jsonb where scholar = '${FULL.id}'`
+		);
+
+		await login(FULL.email, page, context);
+		await page.goto(`/scholar/${FULL.id}`);
+		await page.waitForLoadState('networkidle');
+
+		// 1. The app mounted at all. The root layout removes this class in onMount, so it
+		//    outlives a hydration throw — and it is message-independent, which matters
+		//    because Svelte's production error text is a bare URL.
+		await expect(page.locator('body')).not.toHaveClass(/hydrating/);
+
+		// 2. The reported symptom, exactly. Accept is a confirm button, so a first click has
+		//    only to reach the confirm step: no network, no state, purely proof that the
+		//    handler is attached. Asserted on the ellipsis Button appends to any warning
+		//    button rather than on a locale string.
+		const accept = page.getByTestId('invitation-accept-0');
+		await expect(accept).toHaveText(/…$/);
+		await accept.click();
+		await expect(accept).not.toHaveText(/…$/);
+
+		// 3. And each entry shown ONCE. Survival and correctness are different claims, and
+		//    only this one fails if the lists are unkeyed but nothing deduplicates them.
+		const shown = await page.getByTestId('orcid-links').innerText();
+		expect(shown.match(/ResearcherID/g)).toHaveLength(1);
+		await expect(page.getByTestId('orcid-works').locator('li')).toHaveCount(2);
+	} finally {
+		// Restored: the suite shares one seeded database, and this row is read by the
+		// volunteers roster and the assignment table too. Guarded, because a jsonb literal
+		// is parsed whether or not any row matches — an empty capture would fail here and
+		// bury whatever the test was actually reporting.
+		if (linksBefore.length > 0 && worksBefore.length > 0)
+			sql(
+				`update public.orcid_profiles set links = '${quote(linksBefore)}'::jsonb, works = '${quote(worksBefore)}'::jsonb where scholar = '${FULL.id}'`
+			);
+		await logout(page);
+	}
 });

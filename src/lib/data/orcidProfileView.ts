@@ -1,5 +1,5 @@
 import type { PublicORCIDProfile } from '$data/types';
-import type { ORCIDLink, ORCIDWork } from './orcidProfile';
+import { distinct, linkKey, workKey, type ORCIDLink, type ORCIDWork } from './orcidProfile';
 
 /**
  * How a mirrored ORCID record reads on the page.
@@ -72,15 +72,22 @@ export function worksStat(profile: ProfileSummary): string | null {
 	return first === last ? `${works}, ${first}` : `${works}, ${first}–${last}`;
 }
 
-/** The works to render. Absent on a list query, which does not select the column. */
+/**
+ * The works to render. Absent on a list query, which does not select the column.
+ *
+ * Deduplicated here as well as in the parser, by the same `workKey`/`linkKey`, because rows
+ * mirrored before the parser started doing it are still in the table and works refresh on a
+ * slow clock. Without this those profiles would go on showing the same paper twice until their
+ * next refresh came round.
+ */
 export function works(profile: ProfileSummary): ORCIDWork[] {
 	const value = profile?.works;
-	return Array.isArray(value) ? (value as unknown as ORCIDWork[]) : [];
+	return Array.isArray(value) ? distinct(value as unknown as ORCIDWork[], workKey) : [];
 }
 
 export function links(profile: ProfileSummary): ORCIDLink[] {
 	const value = profile?.links;
-	return Array.isArray(value) ? (value as unknown as ORCIDLink[]) : [];
+	return Array.isArray(value) ? distinct(value as unknown as ORCIDLink[], linkKey) : [];
 }
 
 export function keywords(profile: ProfileSummary): string[] {

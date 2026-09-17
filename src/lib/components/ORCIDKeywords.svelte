@@ -38,7 +38,10 @@
 		     and without it a screen reader gets a bare list of words with nothing saying
 		     whose they are. -->
 		<span class="label">{locale().view.expertise.orcid}</span>
-		{#each keywords as keyword (keyword)}<Tag {wrap}>{keyword}</Tag>{/each}
+		<!-- Unkeyed: the only key available is the keyword itself, and a duplicate key throws
+		     hard enough to take the whole page down. `parseKeywords` deduplicates, so this is
+		     belt and braces — but the key bought nothing, and <Tag> holds no state. -->
+		{#each keywords as keyword}<Tag {wrap}>{keyword}</Tag>{/each}
 	</span>
 {/if}
 

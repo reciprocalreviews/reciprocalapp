@@ -96,6 +96,85 @@ describe('works', () => {
 		expect([workFirstYear, workLastYear]).toEqual([2011, 2011]);
 	});
 
+	/** A helper for the dedupe tests below: one group holding one summary. */
+	const group = (title: string, year: number | null, doi?: string) => ({
+		'work-summary': [
+			{
+				title: { title: { value: title } },
+				'publication-date': year === null ? null : { year: { value: String(year) } },
+				'journal-title': { value: 'TOCE' },
+				'external-ids':
+					doi === undefined
+						? null
+						: { 'external-id': [{ 'external-id-type': 'doi', 'external-id-value': doi }] }
+			}
+		]
+	});
+
+	test('a paper the record holds twice is one work, but still counts twice', () => {
+		// ORCID groups by shared external id, so the same paper deposited twice without
+		// matching ids is two groups. That is the record's own shape, not a fault in it:
+		// `workCount` reports what the record holds, which is the number its owner would
+		// recognise, while the list shows each work once.
+		const parsed = parseWorks({ group: [group('Editorial', 2024), group('Editorial', 2024)] });
+		expect(parsed.works).toHaveLength(1);
+		expect(parsed.workCount).toBe(2);
+	});
+
+	test('the copy kept is the newest one', () => {
+		// Sorting before deduplicating is what makes this true, and it is the reason the two
+		// steps are in that order: the published version outranks the preprint.
+		const parsed = parseWorks({
+			group: [
+				group('A Lightweight Web Tool', 2023, '10.1/x'),
+				group('A Lightweight Web Tool', 2025, '10.1/x')
+			]
+		});
+		expect(parsed.works.map((w) => w.year)).toEqual([2025]);
+	});
+
+	test('one DOI in two spellings is one work', () => {
+		const parsed = parseWorks({
+			group: [
+				group('Preprint', 2024, '10.1109/ACCESS.2024.3521237'),
+				group('Published', 2025, '10.1109/access.2024.3521237')
+			]
+		});
+		expect(parsed.works.map((w) => w.title)).toEqual(['Published']);
+	});
+
+	test('two works with different DOIs are kept, however alike they read', () => {
+		const parsed = parseWorks({
+			group: [group('Ball Point Game', 2025, '10.1/a'), group('Ball Point Game', 2025, '10.1/b')]
+		});
+		expect(parsed.works).toHaveLength(2);
+	});
+
+	test('deduplicating before slicing keeps MAX_WORKS distinct works', () => {
+		// The point of doing it in this order: six groups of which two are the same work
+		// should still fill the list, rather than showing four and an echo.
+		const parsed = parseWorks({
+			group: [
+				group('F', 2026),
+				group('F', 2026),
+				group('E', 2025),
+				group('D', 2024),
+				group('C', 2023),
+				group('B', 2022),
+				group('A', 2021)
+			]
+		});
+		expect(parsed.works.map((w) => w.title)).toEqual(['F', 'E', 'D', 'C', 'B']);
+	});
+
+	test('the span still covers a work the record holds twice', () => {
+		// `years` is computed before the dedupe for exactly this reason.
+		const parsed = parseWorks({
+			group: [group('New', 2025), group('Old', 2001), group('Old', 2001)]
+		});
+		expect([parsed.workFirstYear, parsed.workLastYear]).toEqual([2001, 2025]);
+	});
+
 	test('a work with no title is dropped rather than rendered blank', () => {
 		const { works, workCount } = parseWorks({
 			group: [
@@ -242,6 +321,48 @@ describe('person', () => {
 			}
 		});
 		expect(links[0].label).toBe('https://x.test');
+	});
+
+	test('an identifier the record lists twice is read once', () => {
+		// Transcribed from the record that broke a profile page: ResearcherID D-1001-2018,
+		// entered twice, either side of a Scopus id. ORCID permits this — nothing is wrong
+		// with the record — so the parser has to tolerate it.
+		const { links } = parsePerson({
+			'external-identifiers': {
+				'external-identifier': [
+					{ 'external-id-type': 'ResearcherID', 'external-id-value': 'D-1001-2018' },
+					{ 'external-id-type': 'Scopus Author ID', 'external-id-value': '56732624800' },
+					{ 'external-id-type': 'ResearcherID', 'external-id-value': 'D-1001-2018' }
+				]
+			}
+		});
+		expect(links.map((l) => l.label)).toEqual(['ResearcherID', 'Scopus Author ID']);
+	});
+
+	test('two registries issuing the same string are two identifiers', () => {
+		const { links } = parsePerson({
+			'external-identifiers': {
+				'external-identifier': [
+					{ 'external-id-type': 'ResearcherID', 'external-id-value': '12345' },
+					{ 'external-id-type': 'Scopus Author ID', 'external-id-value': '12345' }
+				]
+			}
+		});
+		expect(links).toHaveLength(2);
+	});
+
+	test('one address listed twice is one link, named or not', () => {
+		// The label is not part of a url's identity, because a url with no name is labelled
+		// with itself — so the same address can arrive under two spellings.
+		const { links } = parsePerson({
+			'researcher-urls': {
+				'researcher-url': [
+					{ 'url-name': 'Home page', url: { value: 'https://x.test' } },
+					{ 'url-name': null, url: { value: 'https://x.test' } }
+				]
+			}
+		});
+		expect(links.map((l) => l.label)).toEqual(['Home page']);
 	});
 
 	test('reads no email, whatever the record publishes', () => {

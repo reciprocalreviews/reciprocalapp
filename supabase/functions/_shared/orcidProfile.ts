@@ -89,6 +89,71 @@ export type ORCIDLink = {
 	url: string | null;
 };
 
+/**
+ * What makes two works, or two outbound links, the same thing.
+ *
+ * ORCID lets a record hold the same paper in two groups and the same external identifier
+ * twice, and both are legal rather than malformed — a preprint and its published version
+ * carry different DOIs, and an identifier entered by two sources is entered twice. So the
+ * duplicates have to be tolerated, and tolerating them means having ONE answer to what
+ * counts as the same entry. These two functions are it, used by the parser when the mirror
+ * is written and by the view when it is rendered, so the stored list and the shown list can
+ * never disagree.
+ *
+ * They exist because the profile section once keyed its `{#each}` blocks on this content.
+ * A duplicate key throws in Svelte — in production as well as in development — and the
+ * throw escapes hydration, which leaves the whole page drawn, styled, and wired to nothing:
+ * every button on it silently dead. The blocks are unkeyed now, so a duplicate can no longer
+ * break a page; these keep it from being SHOWN twice. See ARCHITECTURE.md, "The duplicate
+ * trap".
+ */
+export function workKey(work: ORCIDWork): string {
+	// A DOI is the work's own identity, so two works with DIFFERENT DOIs are never the same
+	// work however alike they read.
+	const doi = normalize(work.doi);
+	if (doi.length > 0) return `doi|${doi}`;
+	// Without one, title alone is too blunt: "Editorial" is a real title that a person may
+	// hold several distinct instances of. Year and journal are what tell those apart.
+	return `work|${normalize(work.title)}|${work.year ?? ''}|${normalize(work.journal)}`;
+}
+
+export function linkKey(link: ORCIDLink): string {
+	// An identifier is its type AND its value: two different registries may well issue the
+	// same string, and collapsing those would hide one of them.
+	if (link.kind === 'identifier')
+		return `identifier|${normalize(link.label)}|${normalize(link.value)}`;
+	// A url is just the url. The label is not part of its identity, because `parseLinks`
+	// falls back to the url itself when the record gives no name — so the same address
+	// listed twice, once named and once not, is one link with two spellings.
+	return `url|${normalize(link.value)}`;
+}
+
+/**
+ * Trimmed, internally collapsed, and case-folded, so two spellings of one string compare equal.
+ * Only ever used to build the keys above.
+ *
+ * Tolerant of a value that is not a string, which the types say cannot happen and the database
+ * cannot promise: these columns are jsonb, and the keys are now computed while the page renders.
+ * A throw here would be the exact failure this whole change exists to remove — a page that
+ * renders and does nothing — so a malformed row loses its distinctness rather than the page.
+ */
+function normalize(value: unknown): string {
+	return typeof value === 'string' ? value.trim().replace(/\s+/g, ' ').toLowerCase() : '';
+}
+
+/** Keep the first of each. Order is meaningful in both lists — works are newest first,
+ * links are in the order the record gives them — so this preserves it. Exported because the
+ * view deduplicates the rows already mirrored, and the two must agree on how. */
+export function distinct<T>(items: T[], key: (item: T) => string): T[] {
+	const seen = new Set<string>();
+	return items.filter((item) => {
+		const k = key(item);
+		if (seen.has(k)) return false;
+		seen.add(k);
+		return true;
+	});
+}
+
 export type ORCIDProfile = {
 	employmentRole: string | null;
 	employmentDepartment: string | null;
@@ -217,7 +282,10 @@ function parseLinks(person: Json): ORCIDLink[] {
 		links.push({ kind: 'identifier', label: type, value, url: text(node['external-id-url']) });
 	}
 
-	return links;
+	// ORCID does not stop a record listing the same identifier or the same address twice,
+	// and real records do — one measured profile carried its ResearcherID twice over. Same
+	// reasoning as parseKeywords above, which has always done this.
+	return distinct(links, linkKey);
 }
 
 export function parsePerson(payload: unknown): Pick<ORCIDProfile, 'keywords' | 'links'> {
@@ -398,15 +466,26 @@ export function parseWorks(
 		});
 	}
 
+	// Computed BEFORE the dedupe below, so the span still covers every work in the record.
+	// A record whose oldest work it holds twice has not suddenly started later.
 	const years = parsed.map((work) => work.year).filter((y): y is number => y !== null);
 
 	return {
 		// Newest first, and undated works last rather than sorted as though they were
 		// year zero. Sorted before slicing, so "recent" means recent in the record and
 		// not merely first in whatever order ORCID answered in.
-		works: [...parsed]
-			.sort((a, b) => (b.year ?? -Infinity) - (a.year ?? -Infinity))
-			.slice(0, MAX_WORKS),
+		//
+		// Then deduplicated, and the order of those three steps is the whole point: sorting
+		// first makes the surviving copy the newest one — the published version rather than
+		// the preprint — and deduplicating before slicing is what makes the five kept works
+		// five DISTINCT works rather than four and an echo.
+		works: distinct(
+			[...parsed].sort((a, b) => (b.year ?? -Infinity) - (a.year ?? -Infinity)),
+			workKey
+		).slice(0, MAX_WORKS),
+		// Deliberately the number of groups, not the number of works kept and not the number
+		// left after the dedupe above: this is how many works the RECORD holds, which is the
+		// number its owner would recognise.
 		workCount: groups.length,
 		workFirstYear: years.length > 0 ? Math.min(...years) : null,
 		workLastYear: years.length > 0 ? Math.max(...years) : null

@@ -378,6 +378,49 @@
 		</style>
 	</head>
 	<body data-sveltekit-preload-data="hover" class="hydrating">
+		<!--
+			The last resort, and deliberately outside Svelte.
+
+			A component that throws while the page is hydrating takes the whole root mount down with
+			it, and leaves the reader whatever the server sent: a page that is drawn, styled, and
+			wired to nothing. Every button is dead, the browser still depresses them because :active
+			is CSS, and nobody is told anything at all. A scholar lost a working profile page that way
+			and spent weeks clicking a button that could not possibly respond.
+
+			Two things were tried before this and are recorded so they are not tried again. A
+			<svelte:boundary> around the page does not work: when it catches a throw during HYDRATION
+			it discards the half-hydrated DOM and renders its fallback into nothing, emptying the
+			document. Nor can this reveal a notice the server rendered, for the same reason — the
+			failure can take that notice with it. So the element is BUILT here, out of nothing, by
+			code that has already run by the time anything can go wrong.
+
+			The class below is removed by the root layout on mount. If it is still here ten seconds
+			later the app never mounted, and ten seconds is long enough that a slow connection still
+			working is never accused of having failed.
+
+			The English is hardcoded, which is the one thing here that is not how this app does
+			things. It has to be: the locale arrives through Svelte, and the whole point of this
+			notice is that it is shown when Svelte is what broke. English is the only locale today,
+			and a sentence the reader can act on beats a correct system that says nothing.
+		-->
+		<script>
+			setTimeout(function () {
+				if (!document.body.classList.contains('hydrating')) return;
+				var notice = document.createElement('div');
+				notice.id = 'hydration-failed';
+				notice.setAttribute('data-testid', 'hydration-failed');
+				notice.setAttribute('role', 'alert');
+				// The same tokens the rest of the page uses, which are defined in the style block
+				// above rather than by Svelte — so they are available even now.
+				notice.style.cssText =
+					'position:fixed;inset-block-start:0;inset-inline:0;z-index:100;text-align:center;' +
+					'padding:var(--spacing);background:var(--error-color-faded);color:var(--error-color);' +
+					'border-block-end:var(--thick-border-width, 3px) solid var(--error-color)';
+				notice.textContent =
+					'This page did not finish loading, so its buttons will not respond. Reload the page, and write to stewards@reciprocal.reviews if it keeps happening.';
+				document.body.appendChild(notice);
+			}, 10000);
+		</script>
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>
