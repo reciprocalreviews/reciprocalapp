@@ -10,6 +10,7 @@
 		action = undefined,
 		dismiss = undefined,
 		detail = undefined,
+		small = false,
 		testid = undefined
 	}: {
 		/** Determines the banner's color. */
@@ -22,11 +23,20 @@
 		dismiss?: () => void;
 		/** An optional monospace detail line (e.g. a database error message). */
 		detail?: string;
+		/** A quieter rendering for a banner that is not competing for attention — the beta
+		 * notice in the footer, which is read once and then lives at the bottom of the page.
+		 * The colour is unchanged; only the type size and padding shrink. */
+		small?: boolean;
 		testid?: string;
 	} = $props();
 </script>
 
-<div class="banner {level}" role={level === 'error' ? 'alert' : 'status'} data-testid={testid}>
+<div
+	class="banner {level}"
+	class:small
+	role={level === 'error' ? 'alert' : 'status'}
+	data-testid={testid}
+>
 	<div class="body">
 		<span>{@render children()}</span>
 		{#if detail}
@@ -50,6 +60,11 @@
 		padding: var(--spacing);
 		color: var(--background-color);
 		border-block-end: var(--border-width) solid var(--border-color);
+	}
+
+	.small {
+		font-size: var(--small-font-size);
+		padding: var(--spacing-half);
 	}
 
 	.body {

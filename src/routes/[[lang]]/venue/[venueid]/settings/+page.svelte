@@ -8,7 +8,6 @@
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Note from '$lib/components/Note.svelte';
 	import {
-		ErrorLabel,
 		MinterLabel,
 		ScholarLabel,
 		SettingsLabel,
@@ -25,7 +24,8 @@
 	import { getDB } from '$lib/data/CRUD.js';
 	import { PLATFORMS } from '$lib/data/reviewingPlatforms';
 	import Text from '$lib/locales/Text.svelte';
-	import { validInteger } from '$lib/validation.js';
+	import { isntEmpty, validInteger, validURL } from '$lib/validation.js';
+	import { venueBarName } from '$lib/data/venueBarLinks';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import PreferenceLevels from '../PreferenceLevels.svelte';
@@ -108,32 +108,22 @@
 </script>
 
 {#if venue === null || currency === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
+	<Page band={false} title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.settings.feedback.unknownVenue} />
 	</Page>
 {:else if !scholar}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
+	<Page band={false} title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.settings.feedback.logIn} />
 	</Page>
 {:else if !venue.admins.includes(scholar.id)}
-	<Page icon={ErrorLabel} title={venue.title}>
-		{#snippet subtitle()}<Text path={(l) => l.page.settings.subtitle} />{/snippet}
+	<Page band={false} title={`${locale().page.settings.title} — ${venueBarName(venue)}`}>
 		<Feedback error text={(l) => l.page.settings.feedback.adminsOnly} />
 	</Page>
 {:else}
-	<Page
-		icon={VenueLabel}
-		title={venue.title}
-		edit={{
-			placeholder: (l) => l.page.venue.field.name.placeholder,
-			valid: (text) => (text.length > 0 ? undefined : (l) => l.page.venue.field.name.invalid),
-			update: (text) => db().editVenueTitle(venue.id, text)
-		}}
-	>
-		{#snippet subtitle()}<Text path={(l) => l.page.settings.subtitle} />{/snippet}
+	<Page band={false} title={`${locale().page.settings.title} — ${venueBarName(venue)}`}>
 		<Paragraph text={(l) => l.page.settings.paragraph.welcome} />
 
-		<!-- Step 1: Choose a web address -->
+		<!-- Step 1: Choose the venue's names and address -->
 		<Subheader
 			id="web-address"
 			icon={VenueLabel}
@@ -142,6 +132,41 @@
 		/>
 
 		<Tip><Text path={(l) => l.page.settings.tip.webAddress} /></Tip>
+
+		<!-- The title used to be edited in this page's own header band, and the web address
+		     used to be this step on its own. Both are answers to "what is this venue
+		     called", so they are one step now — and the band is gone, because the venue bar
+		     above names the venue on every route inside it (#176). Deliberately not a new
+		     entry in STEPS_IN_ORDER: that would renumber every step below it for no reason a
+		     reader could see. -->
+		<EditableText
+			text={venue.title}
+			strings={(l) => l.page.venue.field.name}
+			valid={(text) => (isntEmpty(text) ? undefined : (l) => l.page.venue.field.name.invalid)}
+			edit={(text) => db().editVenueTitle(venue.id, text)}
+			testid="venue-title"
+		/>
+
+		<!-- What the venue bar shows in place of a title that will not fit there. -->
+		<EditableText
+			text={venue.short_title}
+			strings={(l) => l.page.settings.field.shortName}
+			valid={(text) =>
+				text.trim().length <= 20 ? undefined : (l) => l.page.settings.field.shortName.invalid}
+			edit={(text) => db().editVenueShortTitle(venue.id, text.trim())}
+			testid="venue-short-title"
+		/>
+
+		<!-- Moved here from the venue's own page, where it sat in a sub-banner that no
+		     longer exists. The address is still SHOWN there, in the body; this is where it
+		     is changed, with the rest of the venue's metadata. -->
+		<EditableText
+			text={venue.url}
+			strings={(l) => l.page.venue.field.url}
+			valid={(text) => (validURL(text) ? undefined : (l) => l.page.venue.field.url.invalid)}
+			edit={(text) => db().editVenueURL(venue.id, text)}
+			testid="venue-url"
+		/>
 
 		<WebAddress {venue} />
 

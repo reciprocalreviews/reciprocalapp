@@ -22,11 +22,13 @@ test('editor edits venue title, description, and URL', async ({ page, context })
 		`select description from public.venues where id = '${VENUE_ID}';`
 	);
 	const originalUrl = sql(`select url from public.venues where id = '${VENUE_ID}';`);
+	const originalShortTitle = sql(`select short_title from public.venues where id = '${VENUE_ID}';`);
 
 	try {
 		await login(EDITOR_EMAIL, page, context);
 
-		// Description and URL live on /venue/[id].
+		// The description is prose about the venue, so it is still edited in place on
+		// /venue/[id].
 		await page.goto(`/venue/${VENUE_PATH}`);
 		await page.waitForLoadState('networkidle');
 
@@ -38,6 +40,12 @@ test('editor edits venue title, description, and URL', async ({ page, context })
 		await page.getByTestId('venue-description-toggle').click();
 		await expect(page.getByText(newDescription)).toBeVisible();
 
+		// Title, short name and URL are all settings now (#176). They used to be edited
+		// from the page's own title band, which no longer exists inside a venue: the venue
+		// bar names the venue instead, and metadata is changed where metadata is changed.
+		await page.goto(`/venue/${VENUE_PATH}/settings`);
+		await page.waitForLoadState('networkidle');
+
 		await page.getByTestId('venue-url-toggle').click();
 		await page.getByTestId('venue-url').fill(newUrl);
 		await page.getByTestId('venue-url-toggle').click();
@@ -46,23 +54,31 @@ test('editor edits venue title, description, and URL', async ({ page, context })
 			.poll(() => sql(`select url from public.venues where id = '${VENUE_ID}';`))
 			.toBe(newUrl);
 
-		// Title lives in the page header (Nav.svelte) on any venue route. Edit it
-		// from /venue/[id]/settings.
-		await page.goto(`/venue/${VENUE_PATH}/settings`);
-		await page.waitForLoadState('networkidle');
+		const newShortTitle = `E2E${Date.now() % 10000}`;
+		await page.getByTestId('venue-short-title-toggle').click();
+		await page.getByTestId('venue-short-title').fill(newShortTitle);
+		await page.getByTestId('venue-short-title-toggle').click();
+		await expect
+			.poll(() => sql(`select short_title from public.venues where id = '${VENUE_ID}';`))
+			.toBe(newShortTitle);
+
+		// The short name exists to be what the venue bar shows, so assert it there rather
+		// than only in the database.
+		await expect(page.getByTestId('venue-bar-home')).toContainText(newShortTitle);
 
 		const newTitle = `Renamed by e2e ${Date.now()}`;
-		await page.getByTestId('page-title-edit-toggle').click();
-		await page.getByTestId('page-title-edit').fill(newTitle);
-		await page.getByTestId('page-title-edit-toggle').click();
-		await page.waitForTimeout(500);
-		expect(sql(`select title from public.venues where id = '${VENUE_ID}';`)).toBe(newTitle);
+		await page.getByTestId('venue-title-toggle').click();
+		await page.getByTestId('venue-title').fill(newTitle);
+		await page.getByTestId('venue-title-toggle').click();
+		await expect
+			.poll(() => sql(`select title from public.venues where id = '${VENUE_ID}';`))
+			.toBe(newTitle);
 	} finally {
 		// Restore the originals so subsequent manual testing finds the seeded
 		// venue intact. Pg-escape single quotes by doubling them.
 		const esc = (s: string) => s.replaceAll("'", "''");
 		sql(
-			`update public.venues set title = '${esc(originalTitle)}', description = '${esc(originalDescription)}', url = '${esc(originalUrl)}' where id = '${VENUE_ID}';`
+			`update public.venues set title = '${esc(originalTitle)}', short_title = '${esc(originalShortTitle)}', description = '${esc(originalDescription)}', url = '${esc(originalUrl)}' where id = '${VENUE_ID}';`
 		);
 	}
 });

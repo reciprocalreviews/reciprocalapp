@@ -6,11 +6,9 @@
 		DownLabel,
 		EmptyLabel,
 		PrivateLabel,
-		SubmissionLabel,
 		UnknownLabel,
 		UpLabel
 	} from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Column from '$lib/components/Row.svelte';
@@ -34,6 +32,7 @@
 	import { submissionsView } from '$lib/data/sortSubmissions';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
 	import { getAuth } from '$routes/Auth.svelte';
+	import { venueBarName } from '$lib/data/venueBarLinks';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import { type PageData } from './$types';
@@ -232,9 +231,7 @@
 </script>
 
 {#if venue && conflicts}
-	<Page icon={SubmissionLabel} title={(l) => l.page.submissions.title}>
-		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
-
+	<Page band={false} title={`${locale().page.submissions.title} — ${venueBarName(venue)}`}>
 		<!-- Provide a clear link to the new submission page. -->
 		<Paragraph text={(l) => l.page.submissions.paragraph.newSubmission} />
 

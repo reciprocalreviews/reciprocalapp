@@ -62,8 +62,12 @@ export type LocaleText = {
 		empty: string;
 	};
 	header: {
+		/** The accessible name of the brand mark, which links home. It is no longer visible
+		 * text: the mark replaced the word (#176). */
 		home: string;
 		venues: string;
+		/** Names the control that holds the header links that do not fit on a narrow screen. */
+		menu: ButtonText;
 		saved: string;
 		/** Accessible name for the header's total token balance. */
 		balance: string;
@@ -91,6 +95,10 @@ export type LocaleText = {
 		beta: {
 			/** Lead text explaining that the platform is in beta and wants feedback. */
 			lead: string;
+			/** Puts the notice away for good. Its own string rather than the notification
+			 * dismisser's, whose tip says "notification" — and the tip is what a screen
+			 * reader announces. */
+			dismiss: ButtonText;
 		};
 		update: {
 			/** Message shown when a new version has been deployed. */
@@ -279,7 +287,6 @@ export type LocaleText = {
 		};
 		volunteers: {
 			title: string;
-			subtitle: string;
 			unavailableTitle: string;
 			feedback: {
 				unknownVenue: string;
@@ -334,7 +341,6 @@ export type LocaleText = {
 		};
 		venueTransactions: {
 			title: string;
-			subtitle: string;
 			feedback: {
 				transactionsNotLoaded: string;
 			};
@@ -786,8 +792,16 @@ export type LocaleText = {
 		};
 		venue: {
 			title: string;
-			subtitle: string;
 			unknownTitle: string;
+			/** The bar of common links shown on every route inside a venue (#176). Its route
+			 * labels are not here: they reuse each destination page's own `title`, so the bar
+			 * and the page it reaches can never drift apart. */
+			bar: {
+				/** Names the control holding the links that do not fit on a narrow screen. */
+				menu: ButtonText;
+				/** The link out to the venue's own website. */
+				website: string;
+			};
 			header: {
 				submissionTypes: string;
 				roles: string;
@@ -855,7 +869,6 @@ export type LocaleText = {
 		};
 		settings: {
 			title: string;
-			subtitle: string;
 			tip: {
 				/** Explains the venue's web address: what it is for, and that changing one
 				 * releases the old address immediately rather than redirecting from it. */
@@ -933,6 +946,10 @@ export type LocaleText = {
 				/** The venue's web address. `invalid` states the format rule, since the field
 				 * is where someone learns it. */
 				webAddress: TextFieldText & { invalid: string };
+				/** The venue's short display name, shown in the venue bar where the full title
+				 * would not fit. `invalid` states the length cap, since the field is where
+				 * someone meets it. */
+				shortName: TextFieldText & { invalid: string };
 				inactiveMessage: TextFieldText;
 				welcomeTokens: TextFieldText;
 				preferenceLevelLabel: TextFieldText & { invalid: string };
@@ -1829,6 +1846,7 @@ export type LocaleText = {
 		ScholarNotFound: string;
 		EditVenueAddEditorAlreadyEditor: string;
 		EditVenueTitle: string;
+		EditVenueShortTitle: string;
 		EditVenueURL: string;
 		EditVenueSlug: string;
 		/** The web address someone asked for belongs to another venue. Raised by the unique

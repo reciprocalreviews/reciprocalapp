@@ -469,6 +469,10 @@ export default abstract class CRUD {
 	abstract editVenueAdmins(id: VenueID, admins: string[]): Promise<Result>;
 	abstract addVenueAdmin(id: VenueID, emailOrORCID: string): Promise<Result>;
 	abstract editVenueTitle(id: VenueID, title: string): Promise<Result>;
+	/** Set or change the venue's short display name — the one the venue bar shows when the
+	 * full title would not fit. Empty means the venue has not chosen one, and the title is
+	 * shown instead; nothing about it is unique, so unlike an address it cannot be taken. */
+	abstract editVenueShortTitle(id: VenueID, shortTitle: string): Promise<Result>;
 	abstract editVenueURL(id: VenueID, url: string): Promise<Result>;
 	/** Set or change the venue's web address. Changing one releases the old address
 	 * immediately: nothing reserves it, nothing redirects from it, and every link that

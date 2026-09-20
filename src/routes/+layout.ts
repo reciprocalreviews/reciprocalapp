@@ -1,6 +1,7 @@
 import type { Database } from '$data/database';
 import type { ScholarRow } from '$data/types';
 import { hasAuthCookie } from '$lib/auth/hasAuthCookie';
+import { readBetaDismissed } from '$lib/data/betaDismissal';
 import { requiresAuth } from '$lib/auth/requiresAuth';
 import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
 import { withStableClientInfo } from '$lib/data/hydrationFetch';
@@ -128,5 +129,8 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
 		}
 	} else scholar = null;
 
-	return { claims, db, scholar, tokens, locale };
+	// Derived from the cookies the server load already returns rather than read there, so
+	// the beta notice can be absent from the very first byte for someone who put it away.
+	// A `localStorage` flag would be invisible to the server and would flash on every load.
+	return { claims, db, scholar, tokens, locale, betaDismissed: readBetaDismissed(data.cookies) };
 };

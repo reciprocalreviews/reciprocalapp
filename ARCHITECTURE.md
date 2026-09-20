@@ -164,7 +164,7 @@ All database I/O — both the write path and the page-load read path — goes th
 - The interface is [src/lib/data/CRUD.ts](src/lib/data/CRUD.ts).
 - The Supabase implementation is [src/lib/data/SupabaseCRUD.svelte.ts](src/lib/data/SupabaseCRUD.svelte.ts). The root [src/routes/+layout.ts](src/routes/+layout.ts) builds a single instance, returns it as the `db` load datum, and the root `+layout.svelte` exposes that same instance via `setDB()` / `getDB()`.
 - **Writes** return `Result<T> = { data?: T; error?: DBError; notified?: Notification[] }`. The `handle()` helper in `src/routes/feedback.svelte.ts` wraps calls and posts errors to the global feedback bus, so component code is typically `await handle(db().someMethod(...))`.
-- **A batch of notifications becomes one banner.** Each `Notification` may carry a `group` key, and [notifications.ts](src/lib/data/notifications.ts) collapses a group of more than `GROUP_MAX` (3) into a single banner naming its first entry and counting the rest — the same rule DESIGN.md already applies to mail, where a bulk import sends one message rather than one per row. It exists because `handle()` posted one banner per entry into a stack with no cap and no auto-dismiss, inside the sticky header: a call for bids to a three-hundred-volunteer role produced three hundred bars, pushed `main` below all of them, inflated the `--nav-height` that `Page.svelte` and `scroll-padding-block-start` depend on, and covered the nav controls — which is why three e2e tests still drain the stack by hand before clicking logout. The key is the email template name, set in `queueEmail`, so `inviteToRole`'s loop of single-recipient sends collapses as one batch even though each send resolves separately. Collapsing never yields zero banners: only two of the app's ~76 `handle()` call sites pass a success string, so for the rest these notifications are the only evidence the action did anything. The count matters as much as the name — `queue_email` skips scholars with no verified address and anyone who opted out, so who was emailed is not who was asked, and the number is how that difference stays visible. The collapsed wording is written by the **producer**, not assembled by the feedback layer: a plural is not a suffix — "was emailed" has to become "were emailed" — and the producer is also the only place with locale. It travels on the notification as `collapsed`, still carrying its `{count}` placeholder, because the batch size is not knowable where it is built (`inviteToRole` reaches `queueEmail` once per invitee, each call seeing one recipient); the feedback layer fills the count once it has seen the whole batch. A group whose producer supplied no plural still collapses, falling back to appending a count to the singular — worse prose, but it never shows one message speaking silently for three hundred people. The rules are a pure function so they can be tested without a component or a stubbed `$app/navigation`.
+- **A batch of notifications becomes one banner.** Each `Notification` may carry a `group` key, and [notifications.ts](src/lib/data/notifications.ts) collapses a group of more than `GROUP_MAX` (3) into a single banner naming its first entry and counting the rest — the same rule DESIGN.md already applies to mail, where a bulk import sends one message rather than one per row. It exists because `handle()` posted one banner per entry into a stack with no cap and no auto-dismiss, inside the sticky header: a call for bids to a three-hundred-volunteer role produced three hundred bars, pushed `main` below all of them, inflated the `--nav-height` that `Page.svelte` and `scroll-padding-block-start` depend on, and covered the nav controls — a hazard that still applies to every banner in this stack, though no longer to the beta notice, which moved to the footer in #176 precisely because it was charging that stack a permanent band — which is why three e2e tests still drain the stack by hand before clicking logout. The key is the email template name, set in `queueEmail`, so `inviteToRole`'s loop of single-recipient sends collapses as one batch even though each send resolves separately. Collapsing never yields zero banners: only two of the app's ~76 `handle()` call sites pass a success string, so for the rest these notifications are the only evidence the action did anything. The count matters as much as the name — `queue_email` skips scholars with no verified address and anyone who opted out, so who was emailed is not who was asked, and the number is how that difference stays visible. The collapsed wording is written by the **producer**, not assembled by the feedback layer: a plural is not a suffix — "was emailed" has to become "were emailed" — and the producer is also the only place with locale. It travels on the notification as `collapsed`, still carrying its `{count}` placeholder, because the batch size is not knowable where it is built (`inviteToRole` reaches `queueEmail` once per invitee, each call seeing one recipient); the feedback layer fills the count once it has seen the whole batch. A group whose producer supplied no plural still collapses, falling back to appending a count to the singular — worse prose, but it never shows one message speaking silently for three hundred people. The rules are a pure function so they can be tested without a component or a stubbed `$app/navigation`.
 - **Reads used by load functions** return `ReadResult<T> = { data: T; error?: DBError }` — `data` is always present (null on a missing row or a failed query) so loads can destructure `data` with the same nullability the raw query builder gave them. Read failures are logged by the implementation, not surfaced. Load functions obtain the instance via `const { db } = await parent()` and call `db.getX(...)`; they never touch the query builder ([#137](https://github.com/reciprocalreviews/reciprocalapp/issues/137)).
 - The raw Supabase client is **not** returned as load data. It is reachable only through `db.client`, the single sanctioned escape hatch, used only by auth (`+layout.svelte`, `getClaims()`) and realtime ([src/lib/data/SupabaseRealtime.ts](src/lib/data/SupabaseRealtime.ts)).
 
@@ -630,11 +630,52 @@ The root layout [src/routes/+layout.svelte](src/routes/+layout.svelte) sets up f
 - `setAuth()` / `getAuth()` — authenticated session and scholar
 
 The chrome uses no context channel of its own. Breadcrumbs travel in load data — any
-`+page.ts` or `+layout.ts` may return `breadcrumbs`, built with the helpers in
+`+page.ts` or `+layout.ts` may return `breadcrumbs`, typed by
 [breadcrumbs.ts](src/lib/data/breadcrumbs.ts) — and the root layout reads them off
-`page.data`. The page's title band is rendered in flow by
-[Page.svelte](src/lib/components/Page.svelte), which pins it below the nav using the
-`--nav-height` that [measure.ts](src/lib/components/measure.ts) observes.
+`page.data`. That file used to build venue and submission trails too; the venue bar names
+the venue on every route inside one and links to its submissions permanently, which was
+everything those crumbs said, so what remains reaches scholars, currencies and help
+articles (#176).
+
+There are **two sticky bands**, and which component draws the second one depends on where
+you are. The first is always `<Nav>`, measured into `--nav-height`. The second is
+[Page.svelte](src/lib/components/Page.svelte)'s title band on most routes and
+[VenueBar.svelte](src/routes/[[lang]]/venue/[venueid]/VenueBar.svelte) inside a venue,
+and either way it pins below the nav at `top: var(--nav-height, 0px)` and measures itself
+into `--page-header-height` via [measure.ts](src/lib/components/measure.ts). Both
+fallbacks are deliberately `0px`: a sticky box whose natural position is _above_ its
+threshold is pushed down to meet it, so a fallback larger than the real nav height opens a
+visible gap on every first paint that then closes on hydration. `scroll-padding-block-start`
+in `app.html` sums the two, and needs to know nothing about which component supplied the
+second.
+
+There is a **third**, at the other end: the beta notice, pinned to the bottom of the
+viewport in [Footer.svelte](src/lib/components/Footer.svelte) and measured into
+`--bottom-chrome`. That property is spent twice — as `padding-block-end` on the footer, so
+its links are never underneath the bar, and as `scroll-padding-block-end`, so nothing
+scrolled to lands under it. `body`'s `min-height` subtracts it as well, or the flex column
+fills the viewport and parks the footer under the bar on any page short enough for `main`
+to be absorbing slack. That is the pair #156 retired, reinstated because a `fixed` bar
+occludes even though it cannot float mid-screen the way the `sticky` footer did.
+
+Its fallback is `0px`, the **opposite** of the rule the two top bands follow, and for the
+same underlying reason: those are always there, so guessing high only over-reserves, while
+the notice is absent for anyone who has dismissed it and a non-zero fallback would charge
+every page a strip of nothing. Guess in the direction that is wrong less often.
+
+`--bottom-chrome` is also the one place `measure.ts` writes a real **layout height** rather
+than an offset, which its comment used to promise it never did. It is still safe, but for a
+different reason — the only gap it opens is below the footer, where there is nothing to
+shift — and that distinction is worth keeping before feeding a measured property into
+anything above the fold.
+
+What that arrangement rests on is an invariant worth stating plainly: **exactly one
+element writes `--page-header-height` per rendered route.** Two `ResizeObserver`s on one
+custom property fight, and the jitter that produces is invisible to every test we have. It
+is held by `Page`'s `band` prop — every `<Page>` under `/venue/` passes `band={false}`,
+error branches included, because they render below the bar — and by the venue layout
+rendering the bar only in the branch where children render. `measure`'s `destroy()`
+removes the property, so leaving a venue hands ownership back cleanly.
 
 Both were once mutable contexts that `Page` wrote from an `$effect`, and that is worth
 remembering before reaching for the pattern again: an `$effect` does not run during SSR,
@@ -658,7 +699,63 @@ every load, and collapsed and regrew on every client-side navigation.
 
 ## UI components
 
-[src/lib/components/](src/lib/components/) is the shared design system: `Button`, `Card`, `Cards`, `Form`, `TextField`, `Slider`, `Tag`, `Tags`, `Page`, `Nav`, `Footer`, `Feedback`, `Loading`, `Dialog`, and so on. New UI should compose these rather than introducing one-off styling. One of them is not generic: `Logo` draws the brand mark with `currentColor`, and its path data is duplicated in [static/brand/logo.svg](static/brand/logo.svg) for the copies that leave the app — change the geometry in both. Components accept locale-path functions where they take user-visible text.
+[src/lib/components/](src/lib/components/) is the shared design system: `Button`, `Card`, `Cards`, `Form`, `TextField`, `Slider`, `Tag`, `Tags`, `Page`, `Nav`, `Overflow`, `Footer`, `Feedback`, `Loading`, `Dialog`, and so on. New UI should compose these rather than introducing one-off styling. One of them is not generic: `Logo` draws the brand mark with `currentColor`, and its path data is duplicated in [static/brand/logo.svg](static/brand/logo.svg) for the copies that leave the app — change the geometry in both. Components accept locale-path functions where they take user-visible text.
+
+Two of them carry invariants worth stating alongside `Button`'s.
+
+`Page`'s **`band`** chooses _where_ the title renders, never whether there is one:
+`<svelte:head><title>` is identical either way, and so are the `page-header` and
+`page-title-edit` test ids, which mean "the page's title" rather than "the band". With
+`band={false}` the heading, subtitle and details render inside the text column instead,
+which is why converting a page is a one-word change. `icon` and `wobble` are ignored in
+that mode. See Global context above for the `--page-header-height` rule it exists to hold.
+
+**`Overflow`** holds the items that do not fit a narrow chrome row, and **a measurement
+decides which those are**. It began as a `max-width: 48rem` media query, which collapsed
+every link at 700px although the row had room for all of them — and no one number could be
+right anyway, since an admin's venue bar carries six links and a stranger's three. The
+query survives only as the _server's_ guess: the browser paints the server's HTML before
+any measurement can run, so without it a phone paints the whole row and then collapses it.
+The arithmetic lives in [fit.ts](src/lib/components/fit.ts) rather than in the component,
+because the interesting part is an off-by-one — the control that reveals the collapsed
+items exists only WHEN something is collapsed, so charging for its width unconditionally
+gives up an item that then sits behind a control that exists because it left.
+
+Five things about it are load-bearing, and four were found by watching numbers rather than
+by reading code:
+
+- **One list, split.** Items arrive as data and render through one snippet into two keyed
+  blocks over disjoint slices, so each exists exactly once. An inline copy plus a menu copy
+  would put two elements behind every test id in the chrome.
+- **The closed panel is hidden with `visibility`, not `display`**, so the items in it are
+  still laid out and still have widths. That is what lets one list be split rather than
+  kept alongside a hidden measuring copy.
+- **The panel and the idle control are absolutely positioned**, so neither takes part in
+  the row's height — and the control's width is known before it is ever offered.
+- **The rows declare their height** (`--chrome-row-height`). A link and the control that
+  replaces it are not the same height, so left to its content a bar measured 48px collapsed
+  and 44px not — and those heights are `--nav-height` and `--page-header-height`. That is a
+  vertical shift of the whole page on a resize, arriving through the component whose
+  invariant is that it only moves things sideways.
+- **The row stops shrinking for the length of a measurement** (`data-fitting`). Everything
+  in these rows that can absorb — a breadcrumb, a venue's name, the spacer that pushes the
+  account group right — grinds itself down instead of letting the row report being full,
+  which is why `scrollWidth > clientWidth` is useless here. **Each call site pins its own
+  shrinkables under that attribute, and one that forgets silently stops the menu working**,
+  with no error and no tell at desktop width. The selectors need `:global` on the attribute
+  half, or Svelte's CSS pruner drops them as unused and takes the freeze with them.
+
+Two measurement details are easy to get wrong and were: the span of the row is taken from
+its children's edges rather than from `scrollWidth` (browsers disagree about whether that
+includes end padding, exactly at the boundary being decided), the walk descends through
+`display: contents` wrappers (or it measures a row that contains nothing), and out-of-flow
+children are excluded (or the idle control, parked at the row's end, makes a wider row
+measure as needing more).
+
+`<details>` was rejected because its content is hidden when closed and revealing it at wide
+widths needs `::details-content`; a `popover` was rejected because positioning it under its
+own button needs CSS anchor positioning. The tradeoff, stated rather than discovered: with
+scripting off below 48rem the collapsed items cannot be reached.
 
 `Button` carries one invariant worth stating: a button whose locale entry has a `warn` string confirms before it acts, replacing itself with a cancel/confirm pair that only commits on the second click. For the duration of an `action` that returns a promise, the primary button and both halves of the confirm pair are disabled and `act()` refuses re-entry — so the least reversible actions in the platform commit exactly once per confirmation, however many times the button is pressed. Call sites therefore do not need their own in-flight flag; `active` is for validity, not for busy-ness. Add a local flag only to change a button's label while it works (as `EditableText` does) or to gate other controls alongside it.
 

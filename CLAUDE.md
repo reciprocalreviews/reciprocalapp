@@ -76,7 +76,9 @@ The root layout (`src/routes/+layout.svelte`) sets up four pieces of context con
 - `setDB()` — database instance
 - `setLocaleContext()` — locale strings
 - `addFeedback()` / `getFeedback()` — error/success notifications (a module-level store in `src/routes/feedback.svelte.ts`, not a context)
-- `setBreadcrumbs()` / page headers — navigation
+- `setAuth()` / `getAuth()` — authenticated session and scholar
+
+Navigation uses no context of its own: breadcrumbs travel in load data (any `+page.ts` or `+layout.ts` may return `breadcrumbs`), and the page title band is rendered in flow by `Page.svelte`. There is no `setBreadcrumbs()`. Inside a venue the band is `VenueBar.svelte` instead, so every `<Page>` under `/venue/` passes `band={false}` — see ARCHITECTURE.md § Global context for why only one of them may render at a time.
 
 ### State
 
