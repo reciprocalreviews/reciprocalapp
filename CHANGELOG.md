@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.5.6 - 2026-09-20
 
+### Changed
+
+- **Updated internal tooling.** Svelte, Prettier, Vitest, the Vercel CLI, and the Node type definitions all moved up a patch or minor release; TypeScript stays on 6, because Svelte's type checker does not yet run on 7.
+
 ### Fixed
 
 - **An editor no longer sees every submission their venue has received as a task.** A submission now appears on their list only when it is waiting on them — nobody is reviewing it yet, or every reviewer is settled and it can be marked done. A venue seats its editor on every submission it receives, so the whole catalogue used to sit in one person's list as reviews they owed.
