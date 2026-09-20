@@ -348,6 +348,13 @@ If scholar ID corresponds to the authenticated user, it should also allow the sc
 - [x] _`scholar`_: Indicate whether they are available to review (`scholar.available`)
 - [x] _`scholar`_: Explain their reviewing availability (`scholar.status`)
 - [x] _`scholar`_: Allow editing of the scholar's preferred email address. (`scholar.email`)
+- [x] _`scholar`_: See the work **actually waiting on them** — invitations to answer, transactions to approve, assignments to carry out, assignments to approve, and completed work whose compensation they owe.
+
+  Three rules keep that list honest, and each exists because the list was failing it:
+
+  - **Each row is named by the venue's own name for the role** — Editor, Associate Editor, whatever a venue calls it — not by a fixed label. A venue's roles are whatever it says they are, and a role that involves no reviewing should not be announced as a review.
+  - **Work you have finished and requested compensation for leaves your list.** It is waiting on whoever approves it, and it appears on _their_ list instead. Nothing you can do moves it, so listing it only teaches you to ignore the list.
+  - **Holding a role on a submission is not the same as owing work on it.** A venue with a single editor seats that editor on every submission it receives, and that seat lasts until the submission is marked done — so it is a standing responsibility, not a task. An editor's submission appears only when the submission is genuinely waiting on the editor: **nobody is reviewing it yet**, so review cannot start until they recruit or approve someone, or **every reviewer is settled**, so it is theirs to mark done. A paper whose reviewers are simply at work is waiting on the reviewers, and is not listed.
 
 > [!IMPORTANT]
 > The functionality below is specific to compensation
@@ -612,6 +619,9 @@ The same per-venue frequency governs three further reminders, which exist becaus
 - [x] Remind an author of a proposed charge they have not yet approved — typically a co-author's share of a submission cost, which no one else can pay and which may hold up the submission's review.
 - [x] Remind the people who can compensate an assignment (venue admins, the submission's priority-0 editors, and the holder of the role's approving role) that a scholar has **requested compensation** for finished work. Only requested work is chased: an approved, uncompensated assignment is normally just a review still in progress, and nagging about those would train approvers to ignore the reminder.
 - [x] Remind a submission's priority-0 editors when every non-editor assignment on it has been compensated, so the submission is ready to be marked done — the step that also settles the editors' own compensation, and the one with no other prompt to perform it.
+
+  The editor's task list on their own profile shows these same two situations continuously, and the two deliberately differ in one place: this **email** stays silent about a paper nobody has reviewed yet, since it requires at least one compensated assignment before it will write, while the **page** lists it as needing reviewers. A reminder that arrives unbidden has to be worth the interruption; a list you went looking for does not, and the editor of an unstaffed paper is the person who can do something about it.
+
 - [x] Remind a venue's editors and admins of submissions still waiting for an editor. This is the same argument as the three above applied to the _beginning_ of the process rather than the end: a submission nobody is editing cannot have any assignment approved on it and cannot be marked done, so a missed notice stalls it before review starts. It is a separate reminder from the one above rather than a case of it, because that one draws its recipients from the submission's own editors and a submission with none has nobody to write to.
 
 RR will also send transactional emails in response to user actions:

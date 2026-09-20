@@ -48,7 +48,7 @@ import type {
 	ProposalSupporter,
 	ScholarInvitee,
 	ScholarMatch,
-	ScholarReview,
+	ScholarTask,
 	ScholarVolunteering,
 	TokenBalance,
 	TransactionListRow,
@@ -790,7 +790,10 @@ export default abstract class CRUD {
 	): Promise<ReadResult<CurrencyRow[] | null>>;
 
 	abstract getVenueRoles(venue: VenueID): Promise<ReadResult<RoleRow[] | null>>;
-	abstract getRolesByApprover(roleIDs: RoleID[]): Promise<ReadResult<RoleRow[] | null>>;
+	/** The roles the SIGNED-IN scholar approves on. Answers for auth.uid(), and is kept
+	 * separate from getScholarTasks on purpose: the two used to share one array, so
+	 * narrowing the task list deleted the approver's rows. */
+	abstract getScholarApproverRoles(): Promise<ReadResult<{ role: RoleID }[] | null>>;
 
 	// Balances are count(*) over `tokens`, one row per token, so these are all
 	// counts rather than reads. Fetching the rows and taking `.length` in the
@@ -933,7 +936,10 @@ export default abstract class CRUD {
 	abstract getActiveAssignmentsForScholars(
 		scholarIDs: ScholarID[]
 	): Promise<ReadResult<Pick<AssignmentRow, 'scholar' | 'venue'>[] | null>>;
-	abstract getScholarReviews(scholar: ScholarID): Promise<ReadResult<ScholarReview[] | null>>;
+	/** The work actually waiting on the SIGNED-IN scholar, for their profile's Tasks
+	 * table. Answers for auth.uid() rather than a given scholar; an editor's standing
+	 * seat on a submission counts only when the submission is waiting on the editor. */
+	abstract getScholarTasks(): Promise<ReadResult<ScholarTask[] | null>>;
 	abstract getAssignmentsForApproval(
 		roleIDs: RoleID[]
 	): Promise<ReadResult<AssignmentForApproval[] | null>>;

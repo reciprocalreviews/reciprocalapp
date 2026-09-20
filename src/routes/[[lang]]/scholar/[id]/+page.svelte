@@ -20,7 +20,7 @@
 		minting,
 		pending,
 		outgoingPending,
-		reviews,
+		tasks,
 		approvals,
 		compensating,
 		notifications,
@@ -92,7 +92,7 @@
 		{pending}
 		{outgoingPending}
 		{venues}
-		{reviews}
+		{tasks}
 		{approvals}
 		{compensating}
 		{notifications}
