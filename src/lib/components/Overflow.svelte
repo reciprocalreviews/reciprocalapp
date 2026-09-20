@@ -100,6 +100,14 @@
 		display: contents;
 	}
 
+	/* The panel has to be `contents` too, not just the wrapper. Left as a block it stayed
+	   one flex item holding all the collapsible links, so they lost the row's `gap` and
+	   ran together — "TransactionsWebsite". Flattened, each link is its own flex item and
+	   is spaced like the ones that never collapse. */
+	.panel {
+		display: contents;
+	}
+
 	.toggle {
 		display: none;
 	}

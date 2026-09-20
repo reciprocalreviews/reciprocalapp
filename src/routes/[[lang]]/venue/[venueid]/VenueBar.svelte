@@ -83,6 +83,11 @@
 		z-index: 1;
 
 		width: 100%;
+		/* With the padding below, `width: 100%` alone measured 1312px inside a 1280px
+		   viewport and gave the whole document a horizontal scrollbar — which on a sticky
+		   row is worse than it sounds, because scrolling sideways slides the chrome out of
+		   view (#156). There is no global box-sizing reset in this project. */
+		box-sizing: border-box;
 		display: flex;
 		flex-direction: row;
 		/* Not `wrap`. Growing a second row is the thing this bar exists to stop. */

@@ -1011,10 +1011,12 @@
 			},
 			"field": {
 				"name": {
+					"label": "Name",
 					"placeholder": "Name",
 					"invalid": "Title cannot be empty."
 				},
 				"url": {
+					"label": "Website",
 					"placeholder": "https://...",
 					"invalid": "Must be a valid URL"
 				},
@@ -1112,7 +1114,7 @@
 		"settings": {
 			"title": "Settings",
 			"header": {
-				"webAddress": "Choose a web address",
+				"webAddress": "Name this venue",
 				"policies": "Decide policies",
 				"compensation": "Compensation",
 				"roles": "Roles",
@@ -1236,7 +1238,7 @@
 				"reviewQuality": "The platform releases compensation when an assignment is marked complete — it does **not** judge whether a review was actually good. That editorial bar is yours to define. Before launch, agree on **what counts as a creditable review** (depth, timeliness, constructiveness) and **who signs off** before tokens are released.\n\nThree existing controls let you enforce that policy:\n\n- **Approver role** (Step 3, per role) — designate which role approves assignments to another role, so a human checks the work before it's credited.\n- **Compensation approval** — compensation transactions are approved before tokens move, giving editors a checkpoint to withhold credit for inadequate reviews.\n- **Vet thank-you notes** (Step 4) — optionally require an admin or editor to approve author thank-you notes before reviewers see them."
 			},
 			"tip": {
-				"webAddress": "Pick the address this venue lives at. It goes in every link anyone sends about the venue — emails, breadcrumbs, and the snippets in step 6 — so choose something people will recognize and can read aloud. You can change it later, but the old address is released the moment you do: nothing redirects from it, and every link that used it breaks.",
+				"webAddress": "Give the venue its full name, the short one the venue bar shows in place of it, and a link to its own website. Then pick the address this venue lives at here. It goes in every link anyone sends about the venue — emails and the snippets in step 6 — so choose something people will recognize and can read aloud. You can change it later, but the old address is released the moment you do: nothing redirects from it, and every link that used it breaks.",
 				"policies": "This is the most consequential step on the page. Spend real time on it before touching anything below.",
 				"inactive": "Check the inactive message in the settings below, so your community knows you're busy configuring things.",
 				"compensation": "It is critical that you think carefully about the compensation structure for your venue. Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter newcomers from contributring. See [Setting welcome & compensation](#policies) in Step 1 for the balance rules and a worked example.",

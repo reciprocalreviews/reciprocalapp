@@ -199,6 +199,16 @@
 		align-items: baseline;
 	}
 
+	/* An editable title's pencil sits beside the FIRST line of the title, not stretched
+	   down the side of it. `EditableText` aligns its inline variant to `stretch`, which is
+	   right for the one-line fields it was built for and wrong for a heading: a submission
+	   title runs to three lines in the text column, and the control grew into a teal bar
+	   the height of the whole heading. Scoped to headings so every other inline editable
+	   keeps the alignment it was tuned for. */
+	.page-header-title :global(.editable.inline) {
+		align-items: flex-start;
+	}
+
 	.emoji {
 		font-family: 'Noto Emoji', 'Josefin Sans', sans-serif;
 		font-size: 80%;
