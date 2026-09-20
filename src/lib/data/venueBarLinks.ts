@@ -14,6 +14,11 @@ import { venuePath } from './venuePath';
  *
  * The labels are the destination pages' own titles rather than strings of the bar's own,
  * so a renamed page renames its link and the two can never disagree.
+ *
+ * The array is in the order the bar gives them up. `Overflow` collapses from the END, so
+ * this order IS the rule about which links a narrow screen keeps longest — there is no
+ * flag saying so, because a flag and an order would be two statements of one fact and they
+ * would drift.
  */
 
 export type VenueBarLink = {
@@ -22,9 +27,6 @@ export type VenueBarLink = {
 	label: string;
 	/** True for the venue's own website, which leaves the app. */
 	external: boolean;
-	/** True for the links that collapse behind the menu on a narrow screen. The first few
-	 * are the ones people use daily; these are the ones they visit on purpose. */
-	overflow: boolean;
 };
 
 export type VenueBarVenue = {
@@ -55,14 +57,12 @@ export function venueBarLinks(
 		{
 			href: `${path}/submissions`,
 			label: locale.page.submissions.title,
-			external: false,
-			overflow: false
+			external: false
 		},
 		{
 			href: `${path}/volunteers`,
 			label: locale.page.volunteers.title,
-			external: false,
-			overflow: false
+			external: false
 		}
 	];
 
@@ -72,8 +72,7 @@ export function venueBarLinks(
 		links.push({
 			href: `${path}/transactions`,
 			label: locale.page.venueTransactions.title,
-			external: false,
-			overflow: true
+			external: false
 		});
 
 	// Everyone else gets a page that only says they may not be here.
@@ -81,8 +80,7 @@ export function venueBarLinks(
 		links.push({
 			href: `${path}/settings`,
 			label: locale.page.settings.title,
-			external: false,
-			overflow: true
+			external: false
 		});
 
 	// A venue that has not said where it lives has nothing to point at, and `url` defaults
@@ -91,8 +89,7 @@ export function venueBarLinks(
 		links.push({
 			href: venue.url,
 			label: locale.page.venue.bar.website,
-			external: true,
-			overflow: true
+			external: true
 		});
 
 	return links;

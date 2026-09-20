@@ -38,7 +38,10 @@ describe('venueBarName', () => {
 });
 
 describe('venueBarLinks', () => {
-	test('an admin sees every link', () => {
+	test('an admin sees every link, in the order the bar gives them up', () => {
+		// Order is load-bearing rather than cosmetic: `Overflow` collapses from the END, so
+		// this array is what says Submissions and Volunteers survive a narrow screen
+		// longest. There is no flag marking the collapsible ones — the order is the rule.
 		expect(labels(venue(), ADMIN)).toEqual([
 			'Submissions',
 			'Volunteers',
@@ -78,13 +81,5 @@ describe('venueBarLinks', () => {
 	test('only the venue website leaves the app', () => {
 		const links = venueBarLinks(venue(), ADMIN, locale);
 		expect(links.filter((l) => l.external).map((l) => l.href)).toEqual(['https://tok.science.org']);
-	});
-
-	test('the everyday links stay in the row; the rest may collapse', () => {
-		const links = venueBarLinks(venue(), ADMIN, locale);
-		expect(links.filter((l) => !l.overflow).map((l) => l.label)).toEqual([
-			'Submissions',
-			'Volunteers'
-		]);
 	});
 });

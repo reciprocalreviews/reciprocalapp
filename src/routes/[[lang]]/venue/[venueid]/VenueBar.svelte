@@ -3,7 +3,12 @@
 	import Overflow from '$lib/components/Overflow.svelte';
 	import measure from '$lib/components/measure';
 	import { VenueLabel } from '$lib/components/Labels';
-	import { venueBarLinks, venueBarName, type VenueBarVenue } from '$lib/data/venueBarLinks';
+	import {
+		venueBarLinks,
+		venueBarName,
+		type VenueBarLink,
+		type VenueBarVenue
+	} from '$lib/data/venueBarLinks';
 	import { venuePath } from '$lib/data/venuePath';
 	import { getLocaleContext } from '$routes/Contexts';
 
@@ -35,7 +40,14 @@
 	const links = $derived(venueBarLinks(venue, scholarID, locale()));
 	const name = $derived(venueBarName(venue));
 	const home = $derived(`/venue/${venuePath(venue)}`);
+
+	/** The row whose width decides what fits. */
+	let row = $state<HTMLElement | undefined>(undefined);
 </script>
+
+{#snippet barLink(link: VenueBarLink)}
+	<Link size="small" to={link.href}>{link.label}</Link>
+{/snippet}
 
 <!--
 	The lower of two sticky bands, in the DOM position Page.svelte's title block used to
@@ -48,26 +60,26 @@
 	passes `band={false}` — two ResizeObservers on one custom property fight, and what
 	that produces is a jitter no test would catch.
 -->
-<nav class="venue-bar" use:measure={'--page-header-height'} data-testid="venue-bar">
+<nav class="venue-bar" bind:this={row} use:measure={'--page-header-height'} data-testid="venue-bar">
 	<!-- The short name, which is what this column of the bar is for: "ToK" fits where
 	     "Transactions on Knowledge" does not, and the landing page still spells the full
 	     title out. A venue that never chose one falls back to its title, so this truncates
-	     rather than pushing the links off the end. -->
-	<Link size="small" to={home} icon={VenueLabel} testid="venue-bar-home">
-		<span class="name">{name}</span>
-	</Link>
-	{#each links.filter((link) => !link.overflow) as link}
-		<div class="link">
-			<Link size="small" to={link.href}>{link.label}</Link>
-		</div>
-	{/each}
-	<Overflow strings={(l) => l.page.venue.bar.menu} testid="venue-menu">
-		{#each links.filter((link) => link.overflow) as link}
-			<div class="link">
-				<Link size="small" to={link.href}>{link.label}</Link>
-			</div>
-		{/each}
-	</Overflow>
+	     rather than pushing the links off the end. Wrapped, so the freeze below can reach
+	     it: the `<a>` inside is Link.svelte's and this component's scoped styles do not
+	     land on it. -->
+	<div class="home">
+		<Link size="small" to={home} icon={VenueLabel} testid="venue-bar-home">
+			<span class="name">{name}</span>
+		</Link>
+	</div>
+	<Overflow
+		strings={(l) => l.page.venue.bar.menu}
+		testid="venue-menu"
+		items={links}
+		key={(link) => link.href}
+		item={barLink}
+		{row}
+	/>
 </nav>
 
 <style>
@@ -94,18 +106,71 @@
 		flex-wrap: nowrap;
 		align-items: center;
 		gap: var(--spacing);
+		/* Declared, not discovered. What is in this row changes with the width — links
+		   leave, the ☰ arrives, and they are not the same height — and this row's height is
+		   `--page-header-height`, the sticky offset for the page below it. A row that grew
+		   a few pixels when it collapsed would move the whole page vertically on a resize,
+		   which is the one failure Page.svelte and breadcrumbs.ts exist to prevent. */
+		min-height: var(--chrome-row-height);
 		padding: var(--spacing-half) var(--spacing);
-		background: var(--salient-color-faded);
-		border-block-end: var(--border-color) solid var(--border-width);
+		/* The same turquoise every other page's title band is painted with. It was the
+		   faded tint until the two were seen side by side on one contact sheet, where a
+		   pale band inside a venue and a saturated one everywhere else read as two
+		   different kinds of thing rather than as the same piece of chrome. No bottom
+		   border: that was drawn to separate a pale band from the page, and a saturated
+		   one separates itself. */
+		background: var(--salient-color);
 		/* Deliberately no `overflow: clip`: the overflow menu's panel has to escape this
 		   box. `position: sticky` above already makes this the containing block it is
 		   positioned against, so opening the menu cannot change this bar's own height —
 		   which matters, because that height is what `--page-header-height` carries. */
 	}
 
-	.link {
-		display: inline-block;
-		flex: none;
+	/* The one item here with no length limit worth relying on, so it is the one allowed to
+	   shrink — and therefore the one that has to be pinned while Overflow measures. Without
+	   the second rule the bar absorbs every pixel of overflow by grinding this label down,
+	   never reports being full, and no link ever collapses. */
+	.home {
+		flex: 0 1 auto;
+		/* A floor rather than zero. Allowed to shrink all the way, this collapsed to no
+		   width at all and its label wrapped into a second line, which grew the bar — and
+		   the bar's height is a sticky offset for the page under it. It truncates now, and
+		   the ellipsis on `.name` is what makes truncation legible. */
+		min-width: 4rem;
+		white-space: nowrap;
+	}
+
+	/* `:global` on the attribute half is load-bearing, not stylistic: `data-fitting` is
+	   written by JavaScript during a measurement, so Svelte's CSS pruner cannot see it and
+	   drops the whole rule as unused — silently, and with it the freeze. */
+	:global(.venue-bar[data-fitting]) .home {
+		flex-shrink: 0;
+	}
+
+	/* White on the turquoise, the way Banner.svelte does it and for the same reason: the
+	   colours a link inherits are chosen against the page's own ground and do not survive
+	   a saturated one. The third rule is the one that is easy to miss — Link.svelte paints
+	   the route you are on with `--text-color`, which is black. */
+	.venue-bar :global(a) {
+		color: var(--background-color);
+	}
+
+	.venue-bar :global(a .underline) {
+		text-decoration-color: var(--background-color);
+	}
+
+	.venue-bar :global(a[aria-current]) {
+		color: var(--background-color);
+	}
+
+	/* Which leaves the app's own convention to say where you are: every other link keeps
+	   its underline, and the current one drops it. No new tab vocabulary. */
+
+	/* The overflow toggle is a faded-turquoise chip by default, which is invisible on
+	   turquoise. */
+	.venue-bar :global(button) {
+		background: transparent;
+		color: var(--background-color);
 	}
 
 	/* The one item here with no length limit worth relying on: a venue that chose no short

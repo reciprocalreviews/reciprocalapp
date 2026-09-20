@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import Banners from '$lib/components/Banners.svelte';
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
@@ -21,6 +22,36 @@
 	let auth = getAuth();
 
 	let pending = $derived(getPendingActions());
+
+	/** Whether the reader is already on the page the mark links to. */
+	let home = $derived(page.url.pathname === '/');
+
+	/** The row whose width decides what fits. */
+	let row = $state<HTMLElement | undefined>(undefined);
+
+	/**
+	 * What the account menu offers, as a list rather than as markup: `Overflow` has to be
+	 * able to put some of these in the row and the rest behind its control, and a snippet
+	 * is not something you can measure or move one child of. Ordered by how readily they
+	 * are given up — the row collapses from the end.
+	 */
+	type Account =
+		| { id: 'profile'; to: string; label: string }
+		| { id: 'login'; to: string; label: string }
+		| { id: 'logout' };
+
+	const account = $derived<Account[]>(
+		auth().isAuthenticated()
+			? [
+					{
+						id: 'profile',
+						to: `/scholar/${auth().getUserID()}`,
+						label: locale().header.link.profile
+					},
+					{ id: 'logout' }
+				]
+			: [{ id: 'login', to: '/login', label: locale().header.link.login }]
+	);
 
 	const { breadcrumbs, tokens = 0 }: { breadcrumbs: [string, string][]; tokens?: number } =
 		$props();
@@ -63,14 +94,47 @@
 	$effect(() => () => clearTimeout(flash));
 </script>
 
+{#snippet accountItem(entry: Account)}
+	{#if entry.id === 'logout'}
+		<Button
+			small
+			testid="logout-button"
+			strings={(l) => l.component.header.logout}
+			action={() => {
+				auth().signOut();
+				goto('/login');
+			}}
+		/>
+	{:else}
+		<Link size="small" to={entry.to}>{entry.label}</Link>
+	{/if}
+{/snippet}
+
 <header use:measure={'--nav-height'}>
-	<div class="nav">
+	<div class="nav" bind:this={row}>
 		<!-- The mark, where the word "Home" used to be. A link to a static landing page is
 		     not worth a word of a row that has to fit on a phone, but the mark still has to
-		     be somewhere, and the one place every page agrees on is here. -->
-		<a class="home" href="/" title={locale().header.home} aria-label={locale().header.home}>
+		     be somewhere, and the one place every page agrees on is here.
+
+		     It stops being a link once you are home, by the same rule `Link.svelte` applies
+		     to every other link in the chrome: no `href`, and `aria-current` instead. The
+		     element stays put either way, so the row does not change width between routes. -->
+		<a
+			class="home"
+			class:inactive={home}
+			href={home ? null : '/'}
+			aria-current={home ? 'page' : null}
+			title={locale().header.home}
+			aria-label={locale().header.home}
+		>
 			<Logo size="1.5em" testid="nav-logo" />
 		</a>
+		<!-- Venues sits here, with the navigation, rather than off in the account group on
+		     the right: it is a route into the platform's content, not something about you.
+		     It never collapses — it is one short word, and it is the only way in. -->
+		<div class="link">
+			<Link size="small" to="/venues"><Text path={(l) => l.header.venues} /></Link>
+		</div>
 		{#each breadcrumbs as [url, label]}
 			<small>&gt;</small>
 			<div class="link crumb">
@@ -82,6 +146,12 @@
 				>
 			</div>
 		{/each}
+		<!-- What used to be `margin-inline-start: auto` on the account group. An auto margin
+		     cannot be switched off for the length of a measurement, and a row whose free
+		     space is spent on one reports its full width as needed — so the overflow would
+		     measure as always fitting and nothing would ever collapse. A spacer is the same
+		     layout and can be told to stand aside. -->
+		<div class="slack" aria-hidden="true"></div>
 		<div class="authenticated">
 			{#if pending > 0}
 				<div class="feedback">
@@ -104,33 +174,14 @@
 					<span class="star">{TokenLabel}</span>{Math.round(balance.current)}
 				</a>
 			{/if}
-			<Overflow strings={(l) => l.header.menu} testid="site-menu">
-				<div class="link">
-					<Link size="small" to="/venues"><Text path={(l) => l.header.venues} /></Link>
-				</div>
-				{#if auth().isAuthenticated()}
-					<div class="link">
-						<Link size="small" to="/scholar/{auth().getUserID()}"
-							><Text path={(l) => l.header.link.profile} /></Link
-						>
-					</div>
-					<div class="link">
-						<Button
-							small
-							testid="logout-button"
-							strings={(l) => l.component.header.logout}
-							action={() => {
-								auth().signOut();
-								goto('/login');
-							}}
-						/>
-					</div>
-				{:else}
-					<div class="link">
-						<Link size="small" to="/login"><Text path={(l) => l.header.link.login} /></Link>
-					</div>
-				{/if}
-			</Overflow>
+			<Overflow
+				strings={(l) => l.header.menu}
+				testid="site-menu"
+				items={account}
+				key={(entry) => entry.id}
+				item={accountItem}
+				{row}
+			/>
 		</div>
 	</div>
 	<Banners />
@@ -166,6 +217,13 @@
 		gap: calc(var(--spacing) / 2);
 		align-items: center;
 		background: var(--background-color);
+		/* Declared, not discovered. What is in this row changes with the width — Logout
+		   collapses into the overflow and the ☰ takes its place, and a small Button and the
+		   ☰ are not the same height — and this row's height IS `--nav-height`, the sticky
+		   offset for every band below it. A row that grew a few pixels when it collapsed
+		   would move the whole page vertically on a resize, which is the failure
+		   Page.svelte and breadcrumbs.ts both exist to prevent. */
+		min-height: var(--chrome-row-height);
 		/* The containing block for the overflow panel, which is absolutely positioned so
 		   that opening it cannot change the height measured into `--nav-height`. */
 		position: relative;
@@ -173,6 +231,28 @@
 
 	.link {
 		display: inline-block;
+		flex: none;
+	}
+
+	/* Takes the slack the account group used to claim with `margin-inline-start: auto`. */
+	.slack {
+		flex: 1 1 0;
+		min-width: 0;
+	}
+
+	/* The freeze, and the contract Overflow.svelte depends on: for the length of one
+	   unpainted measurement, nothing in this row absorbs. Anything added here that can
+	   shrink has to be named below too, or the row measures as always fitting, no link ever
+	   collapses, and there is no error and no tell at desktop width to say so. */
+	/* `:global` on the attribute half is load-bearing, not stylistic: `data-fitting` is
+	   written by JavaScript during a measurement, so Svelte's CSS pruner cannot see it and
+	   drops the whole rule as unused — silently, and with it the freeze. */
+	:global(.nav[data-fitting]) .slack {
+		display: none;
+	}
+
+	:global(.nav[data-fitting]) .crumb {
+		flex-shrink: 0;
 	}
 
 	.home {
@@ -182,10 +262,17 @@
 		flex: none;
 	}
 
+	/* On the landing page the mark is where you already are, so it stops offering to take
+	   you there — no pointer, and no focus ring on something that does nothing. */
+	.home.inactive {
+		cursor: default;
+	}
+
 	/* A breadcrumb label is venue- and scholar-authored, so it has no length limit worth
 	   relying on. In a row that no longer wraps it is the one item that has to be allowed
 	   to lose rather than push everything else off the end. */
 	.crumb {
+		flex: 0 1 auto;
 		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -204,9 +291,11 @@
 		flex-direction: row;
 		flex-wrap: nowrap;
 		gap: var(--spacing);
-		margin-inline-start: auto;
 		align-items: center;
 		flex: none;
+		/* The containing block for the overflow's panel and for its idle control, both of
+		   which are absolutely positioned so that neither takes part in the row's height. */
+		position: relative;
 	}
 
 	/* The header token balance. Styled like the Tokens pill but compact — no

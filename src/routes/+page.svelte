@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { NEWSLETTER_URL } from '$lib/community';
-	import Logo from '$lib/components/Logo.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import tokenChip from '$lib/components/tokenChip';
@@ -10,9 +9,10 @@
 	const locale = getLocaleContext();
 </script>
 
+<!-- No brand mark beside the title. The nav carries one on every page now (#176), and two
+     copies of it on the one page where the wordmark is also the heading read as a mistake
+     rather than as emphasis. No other banded title carries a mark either. -->
 <Page title={(l) => l.page.home.title}>
-	{#snippet icon()}<Logo />{/snippet}
-
 	<!-- The thesis the rest of the page argues for. It used to be the Page subtitle,
 	     which the sticky header renders — where it sat beside the chrome rather than in
 	     the argument, and stayed on screen long after it had been read. -->

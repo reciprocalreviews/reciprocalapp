@@ -155,6 +155,16 @@
 				--spacing-half: 0.5rem;
 				--roundedness: 0.25rem;
 				--thick-border-width: 4px;
+				/* The height of a row of chrome — the nav and the venue bar — declared rather
+				   than left to whatever happens to be in it. What IS in those rows changes
+				   with the viewport: a link collapses into the overflow menu and the ☰
+				   takes its place, and a small Button, a small Link and the ☰ are not the
+				   same height. Both rows are measured into sticky offsets for everything
+				   below them (`--nav-height`, `--page-header-height`), so a row that grew
+				   three pixels when it collapsed would move every page vertically on a
+				   resize. Tall enough for the tallest of them; over-declaring costs a few
+				   pixels of chrome, under-declaring costs the invariant. */
+				--chrome-row-height: 3rem;
 				--page-width: 45rem;
 			}
 
