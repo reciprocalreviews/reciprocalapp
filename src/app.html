@@ -172,6 +172,13 @@
 			 * for the first paint before the observers report and whenever script is off.
 			 *
 			 * The end value is 0: the footer is in normal flow and covers nothing.
+			 *
+			 * `--page-header-height` names the second band by its position, not by which
+			 * component draws it. Inside a venue that band is VenueBar.svelte rather than
+			 * Page.svelte's title block, and it measures itself into this same property —
+			 * so this calc is unchanged and stays literally true. What that relies on is
+			 * that only one of them renders at a time: every `<Page>` under `/venue/`
+			 * passes `band={false}`.
 			 */
 			html {
 				scroll-padding-block-start: calc(var(--nav-height, 8rem) + var(--page-header-height, 6rem));

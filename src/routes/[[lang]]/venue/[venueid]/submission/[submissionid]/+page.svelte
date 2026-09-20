@@ -9,9 +9,7 @@
 	import {
 		EditLabel,
 		EmptyLabel,
-		ErrorLabel,
 		ScholarLabel,
-		SubmissionLabel,
 		UnknownLabel,
 		VenueLabel
 	} from '$lib/components/Labels';
@@ -397,16 +395,16 @@
 {/snippet}
 
 {#if submission === null || venue === null || roles === null || scholar === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.submission.title}>
+	<Page band={false} title={(l) => l.page.submission.title}>
 		<Feedback error text={(l) => l.page.submission.feedback.notLoaded}></Feedback>
 	</Page>
 {:else if !canView}
-	<Page icon={ErrorLabel} title={(l) => l.page.submission.title}>
+	<Page band={false} title={(l) => l.page.submission.title}>
 		<Feedback error text={(l) => l.page.submission.feedback.confidential}></Feedback>
 	</Page>
 {:else}
 	<Page
-		icon={SubmissionLabel}
+		band={false}
 		title={submission.title}
 		edit={// Only editors can update the submission title.
 		isEditor

@@ -6,6 +6,7 @@
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import ScholarLink from '$lib/components/ScholarLink.svelte';
 	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
+	import VenueBar from './VenueBar.svelte';
 	import { NO_VENUE_ID, venuePath } from '$lib/data/venuePath';
 	import Text from '$lib/locales/Text.svelte';
 	import type { Snippet } from 'svelte';
@@ -42,8 +43,11 @@
 		<Paragraph text={(l) => l.page.venue.paragraph.notFound} />
 	</Page>
 {:else if venue.inactive !== null && !venue.admins.includes(data.scholar?.id ?? '')}
+	<!-- A dead end: no bar, because there is nothing here to navigate, and a banded title
+	     because nothing else on the page names the venue. The details row stays — on a page
+	     that only says "you cannot come in", the website and the admins to ask are the
+	     whole of what it can usefully offer. -->
 	<Page icon={VenueLabel} title={venue.title}>
-		{#snippet subtitle()}<Text path={(l) => l.page.venue.subtitle} />{/snippet}
 		{#snippet details()}
 			<Link to={venue.url}>{venue.url}</Link>
 			<Text path={(l) => l.shorthand.admin} />
@@ -59,6 +63,7 @@
 		/>
 	</Page>
 {:else}
+	<VenueBar {venue} scholarID={data.scholar?.id ?? null} />
 	{#if venue.inactive !== null}
 		<Feedback
 			error

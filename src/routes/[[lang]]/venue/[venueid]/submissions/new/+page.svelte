@@ -4,7 +4,6 @@
 	import Page from '$lib/components/Page.svelte';
 	import { type PageData } from './$types';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { ErrorLabel, SubmissionLabel } from '$lib/components/Labels';
 
 	let { data }: { data: PageData } = $props();
 
@@ -17,11 +16,11 @@
 </script>
 
 {#if venue === null || submissionTypes === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.newSubmission.title}>
+	<Page band={false} title={(l) => l.page.newSubmission.title}>
 		<Feedback error text={(l) => l.page.newSubmission.feedback.notLoaded}></Feedback>
 	</Page>
 {:else}
-	<Page icon={SubmissionLabel} title={(l) => l.page.newSubmission.title}>
+	<Page band={false} title={(l) => l.page.newSubmission.title}>
 		<NewSubmission {venue} {submissionTypes} {priorSubmissions} {initialManuscript} {scholarORCID}
 		></NewSubmission>
 	</Page>

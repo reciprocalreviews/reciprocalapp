@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/components/Button.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { EmptyLabel, ErrorLabel, ScholarLabel, VenueLabel } from '$lib/components/Labels.js';
+	import { EmptyLabel, ScholarLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Row from '$lib/components/Row.svelte';
@@ -22,6 +22,7 @@
 		volunteersView
 	} from '$lib/data/volunteersView';
 	import { anyWithheld, withholdingFor } from '$lib/data/withheldVolunteers';
+	import { venueBarName } from '$lib/data/venueBarLinks';
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 
@@ -136,16 +137,15 @@
 </script>
 
 {#if venue === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.venue.unknownTitle}>
+	<Page band={false} title={(l) => l.page.venue.unknownTitle}>
 		<Feedback text={(l) => l.page.volunteers.feedback.unknownVenue}></Feedback>
 	</Page>
 {:else if commitments === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.volunteers.unavailableTitle}>
+	<Page band={false} title={(l) => l.page.volunteers.unavailableTitle}>
 		<Feedback text={(l) => l.page.volunteers.feedback.volunteersNotLoaded}></Feedback>
 	</Page>
 {:else}
-	<Page icon={VenueLabel} title={venue.title}>
-		{#snippet subtitle()}<Text path={(l) => l.page.volunteers.subtitle} />{/snippet}
+	<Page band={false} title={`${locale().page.volunteers.title} — ${venueBarName(venue)}`}>
 		<Paragraph text={(l) => l.page.volunteers.paragraph.intro} />
 
 		<TextField

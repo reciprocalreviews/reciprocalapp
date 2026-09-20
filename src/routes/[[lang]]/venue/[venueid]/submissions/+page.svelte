@@ -6,11 +6,9 @@
 		DownLabel,
 		EmptyLabel,
 		PrivateLabel,
-		SubmissionLabel,
 		UnknownLabel,
 		UpLabel
 	} from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Column from '$lib/components/Row.svelte';
@@ -232,9 +230,7 @@
 </script>
 
 {#if venue && conflicts}
-	<Page icon={SubmissionLabel} title={(l) => l.page.submissions.title}>
-		{#snippet details()}<Link to={venue.url}>{venue.url}</Link>{/snippet}
-
+	<Page band={false} title={(l) => l.page.submissions.title}>
 		<!-- Provide a clear link to the new submission page. -->
 		<Paragraph text={(l) => l.page.submissions.paragraph.newSubmission} />
 

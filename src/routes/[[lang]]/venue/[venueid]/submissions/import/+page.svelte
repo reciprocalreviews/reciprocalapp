@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Page from '$lib/components/Page.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	import { ErrorLabel, SubmissionLabel } from '$lib/components/Labels';
 	import { type PageData } from './$types';
 	import BulkImport from './BulkImport.svelte';
 	import { getAuth } from '$routes/Auth.svelte';
@@ -20,15 +19,15 @@
 </script>
 
 {#if venue === null || submissionTypes === null || submissionTypes.length === 0}
-	<Page icon={ErrorLabel} title={(l) => l.page.bulkImport.title}>
+	<Page band={false} title={(l) => l.page.bulkImport.title}>
 		<Feedback error text={(l) => l.page.bulkImport.feedback.notLoaded} />
 	</Page>
 {:else if !isAdmin}
-	<Page icon={ErrorLabel} title={(l) => l.page.bulkImport.title}>
+	<Page band={false} title={(l) => l.page.bulkImport.title}>
 		<Feedback error text={(l) => l.page.bulkImport.feedback.notAdmin} />
 	</Page>
 {:else}
-	<Page icon={SubmissionLabel} title={(l) => l.page.bulkImport.title}>
+	<Page band={false} title={(l) => l.page.bulkImport.title}>
 		<BulkImport {venue} {submissionTypes} {existingSubmissions} {roles} {commitments} />
 	</Page>
 {/if}

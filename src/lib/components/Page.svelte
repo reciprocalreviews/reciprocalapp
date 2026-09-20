@@ -14,6 +14,7 @@
 		details,
 		children,
 		wobble = false,
+		band = true,
 		edit
 	}: {
 		icon?: string | Snippet;
@@ -22,6 +23,20 @@
 		details?: Snippet;
 		children: Snippet;
 		wobble?: boolean;
+		/**
+		 * Whether the title renders as the full-bleed sticky band, or in the text column
+		 * with the rest of the page. It chooses WHERE the title goes, never whether there
+		 * is one: `<svelte:head><title>` is identical either way.
+		 *
+		 * False on every route inside a venue, where the venue bar is the band and this
+		 * one would be a second copy of the same information (#176).
+		 *
+		 * Two things follow from passing false, and both are deliberate. `icon` and
+		 * `wobble` are ignored — a mark in an in-column heading reads as decoration, and
+		 * an attention animation on a heading that is not chrome has nothing to attract
+		 * attention away from. And `--page-header-height` is NOT written; see below.
+		 */
+		band?: boolean;
 		edit?:
 			| {
 					valid: undefined | ((text: string) => ((l: LocaleText) => string) | undefined);
@@ -68,15 +83,21 @@
 	it still pins below the nav via the measured `--nav-height`. It also belongs in
 	`main` rather than inside the banner landmark, where the page's `h1` used to sit.
 -->
-<div class="page-header" use:measure={'--page-header-height'}>
-	<h1 class="page-header-title" class:wobble data-testid="page-header">
+<!-- One heading, rendered in one of two places. Keeping it a single snippet is what
+     makes `band` a one-word change at a call site: the title, its editor, the subtitle
+     and the details row are identical either way, and so are `page-header` and
+     `page-title-edit`, which mean "the page's title" rather than "the band". -->
+{#snippet heading()}
+	<h1 class="page-header-title" class:wobble={band && wobble} data-testid="page-header">
 		<!-- The header is baseline-aligned (.page-header-title beats the h1 rule
 		     below it), and an svg has no baseline of its own — it would align by
 		     its bottom edge and tower over the text. The span supplies one. -->
-		{#if typeof icon === 'string'}
-			<span class="emoji">{icon}</span>
-		{:else}
-			<span class="mark">{@render icon()}</span>
+		{#if band}
+			{#if typeof icon === 'string'}
+				<span class="emoji">{icon}</span>
+			{:else}
+				<span class="mark">{@render icon()}</span>
+			{/if}
 		{/if}
 		{#if edit}
 			<EditableText
@@ -96,15 +117,43 @@
 			{@render details?.()}
 		</div>
 	{/if}
-</div>
+{/snippet}
+
+{#if band}
+	<div class="page-header" use:measure={'--page-header-height'}>
+		{@render heading()}
+	</div>
+{/if}
 
 <section class="page">
 	<div class="content">
+		{#if !band}
+			<div class="page-heading">{@render heading()}</div>
+		{/if}
 		{@render children()}
 	</div>
 </section>
 
 <style>
+	/* The in-column heading. The global `h1` rule in app.html paints every h1 as the
+	   full-bleed teal band, which is right for chrome and wrong for a heading sitting in
+	   the text column with the paragraphs it introduces — so it is undone here rather
+	   than made conditional there, where every other page depends on it. */
+	.page-heading :global(h1) {
+		background: none;
+		color: var(--text-color);
+		padding: 0;
+		border-radius: 0;
+	}
+
+	/* Likewise the details row: its border and side padding are a band's, and the
+	   `.content` column already supplies the inset. */
+	.page-heading .details {
+		padding-left: 0;
+		padding-right: 0;
+		border-block-end: none;
+	}
+
 	.page-header {
 		/* Pinned below the nav, which is sticky at the top of the viewport. Its height
 		   varies with banners and row wrapping, so it is measured rather than guessed.
@@ -122,7 +171,14 @@
 
 		   Note this is the opposite of how `--nav-height` is defaulted for
 		   `scroll-padding-block-start` in app.html, where guessing low would let an
-		   anchored heading land underneath the chrome. Same variable, opposite risk. */
+		   anchored heading land underneath the chrome. Same variable, opposite risk.
+
+		   `--page-header-height` means "the height of the band pinned below the nav", and
+		   EXACTLY ONE element may write it per rendered route — two ResizeObservers on one
+		   custom property fight, and the jitter that produces is invisible to every test we
+		   have. Inside a venue the band is VenueBar.svelte, which measures it instead, so
+		   every `<Page>` under `/venue/` has to pass `band={false}`. `measure`'s destroy()
+		   releases the property, so leaving a venue hands ownership back cleanly. */
 		position: sticky;
 		top: var(--nav-height, 0px);
 		z-index: 1;

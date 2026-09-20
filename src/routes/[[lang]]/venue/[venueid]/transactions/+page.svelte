@@ -4,13 +4,13 @@
 	import Cards from '$lib/components/Cards.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Gift from '$lib/components/Gift.svelte';
-	import { ErrorLabel, VenueLabel } from '$lib/components/Labels.js';
 	import Page from '$lib/components/Page.svelte';
 	import Paragraph from '$lib/components/Paragraph.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import Tip from '$lib/components/Tip.svelte';
 	import Transactions from '$lib/components/Transactions.svelte';
 	import { getDB } from '$lib/data/CRUD.js';
+	import { venueBarName } from '$lib/data/venueBarLinks';
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts.js';
 	import { handle } from '$routes/feedback.svelte';
@@ -30,9 +30,7 @@
 	so a venue that had spent its whole reserve rendered the "could not be loaded"
 	error page instead of its transactions. -->
 {#if venue && transactions && venues && currencies && scholar && tokens !== null && count !== null}
-	<Page icon={VenueLabel} title={venue.title}>
-		{#snippet subtitle()}<Text path={(l) => l.page.venueTransactions.subtitle} />{/snippet}
-
+	<Page band={false} title={`${locale().page.venueTransactions.title} — ${venueBarName(venue)}`}>
 		<Paragraph
 			text={(l) => l.page.venueTransactions.paragraph.count}
 			inputs={{ count: count.toString() }}
@@ -112,7 +110,7 @@
 		/>
 	</Page>
 {:else}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
+	<Page band={false} title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.venueTransactions.feedback.transactionsNotLoaded}
 		></Feedback>
 	</Page>

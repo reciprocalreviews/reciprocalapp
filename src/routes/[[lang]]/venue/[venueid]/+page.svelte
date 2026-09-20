@@ -7,7 +7,7 @@
 	import EditableText from '$lib/components/EditableText.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
 	import Form from '$lib/components/Form.svelte';
-	import { ErrorLabel, ScholarLabel, TokenLabel, VenueLabel } from '$lib/components/Labels';
+	import { ScholarLabel, TokenLabel } from '$lib/components/Labels';
 	import Link from '$lib/components/Link.svelte';
 	import Options from '$lib/components/Options.svelte';
 	import Page from '$lib/components/Page.svelte';
@@ -16,8 +16,7 @@
 	import Table from '$lib/components/Table.svelte';
 	import TextField from '$lib/components/TextField.svelte';
 	import { getDB } from '$lib/data/CRUD';
-	import Text from '$lib/locales/Text.svelte';
-	import { validInteger, validURL } from '$lib/validation';
+	import { validInteger } from '$lib/validation';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import type { PageData } from './$types';
@@ -73,24 +72,20 @@
 </script>
 
 {#if venue === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.venue.unknownTitle}>
+	<Page band={false} title={(l) => l.page.venue.unknownTitle}>
 		<Paragraph text={(l) => l.page.venue.paragraph.notFound} />
 	</Page>
 {:else}
-	<Page icon={VenueLabel} title={venue.title}>
-		{#snippet subtitle()}<Text path={(l) => l.page.venue.subtitle} />{/snippet}
+	<!-- The venue's full title, in the column rather than in a band. The bar above shows
+	     the SHORT name, so this is the one page where the whole name is always spelled
+	     out — which is exactly what a landing page is for. -->
+	<Page band={false} title={venue.title}>
 		{#snippet details()}
-			{#if isAdmin}
-				<EditableText
-					text={venue.url}
-					strings={(l) => l.page.venue.field.url}
-					valid={(text) => (validURL(text) ? undefined : (l) => l.page.venue.field.url.invalid)}
-					edit={(text) => db().editVenueURL(venue.id, text)}
-					testid="venue-url"
-				/>
-			{:else}
-				<Link to={venue.url}>{venue.url}</Link>
-			{/if}
+			<!-- Read-only, for everyone. Editing the address moved to settings with the rest
+			     of the venue's metadata, but the address itself is worth stating here: it is
+			     the first thing someone deciding whether this is the right venue looks for,
+			     and the bar's link to it says only "Website". -->
+			<Link to={venue.url}>{venue.url}</Link>
 		{/snippet}
 
 		<!-- Show the description -->
