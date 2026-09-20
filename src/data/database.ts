@@ -1545,6 +1545,12 @@ export type Database = {
         Args: { _force?: boolean; _scholars: string[] }
         Returns: number
       }
+      scholar_approver_roles: {
+        Args: never
+        Returns: {
+          role: string
+        }[]
+      }
       scholar_balances: {
         Args: { _currency: string; _scholars: string[] }
         Returns: {
@@ -1557,6 +1563,19 @@ export type Database = {
         Returns: {
           name: string
           orcid: string
+        }[]
+      }
+      scholar_tasks: {
+        Args: never
+        Returns: {
+          assignment: string
+          priority: number
+          role: string
+          role_name: string
+          state: string
+          submission: string
+          title: string
+          venue: string
         }[]
       }
       set_steward: {

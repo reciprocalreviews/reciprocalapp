@@ -6776,6 +6776,25 @@
                 "cell": {
                   "additionalProperties": false,
                   "properties": {
+                    "editor": {
+                      "additionalProperties": false,
+                      "description": "Why an editor's submission is on their list. An editor is seated on every submission their venue receives, so the seat alone is not a task; these say which of the two things the submission is actually waiting on them for.",
+                      "properties": {
+                        "ready": {
+                          "description": "Every seated reviewer is settled, so it can be marked done.",
+                          "type": "string"
+                        },
+                        "unstaffed": {
+                          "description": "Nobody is seated in a reviewing role yet.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "unstaffed",
+                        "ready"
+                      ],
+                      "type": "object"
+                    },
                     "kind": {
                       "additionalProperties": false,
                       "properties": {
@@ -6792,9 +6811,6 @@
                           "description": "Completed work whose compensation awaits this approver.",
                           "type": "string"
                         },
-                        "review": {
-                          "type": "string"
-                        },
                         "transaction": {
                           "type": "string"
                         }
@@ -6802,7 +6818,6 @@
                       "required": [
                         "invitation",
                         "transaction",
-                        "review",
                         "pendingAssignment",
                         "pendingCompensation",
                         "outgoingTransaction"
@@ -6815,6 +6830,7 @@
                   },
                   "required": [
                     "kind",
+                    "editor",
                     "pendingTransactionsAfter"
                   ],
                   "type": "object"

@@ -10,6 +10,7 @@
 		TransactionRow,
 		VenueRow
 	} from '$data/types';
+	import type { ScholarTask } from '$lib/data/SupabaseCRUD.svelte';
 	import {
 		NotificationPreferences,
 		defaultFor,
@@ -62,7 +63,7 @@
 		pending,
 		outgoingPending,
 		venues,
-		reviews,
+		tasks,
 		approvals,
 		compensating,
 		notifications,
@@ -90,7 +91,7 @@
 		pending: TransactionRow[] | null;
 		outgoingPending: TransactionRow[] | null;
 		venues: VenueRow[] | null;
-		reviews: (AssignmentRow & { submissions: SubmissionRow })[] | null;
+		tasks: ScholarTask[] | null;
 		approvals: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
 		compensating: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
 		/** This scholar's own notification preferences. Only ever populated for the scholar
@@ -270,7 +271,7 @@
 			{minting}
 			{pending}
 			{outgoingPending}
-			{reviews}
+			{tasks}
 			{approvals}
 			{compensating}
 		></Tasks>

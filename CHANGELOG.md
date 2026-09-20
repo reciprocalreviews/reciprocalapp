@@ -2,6 +2,14 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.6 - 2026-09-20
+
+### Fixed
+
+- **An editor no longer sees every submission their venue has received as a task.** A submission now appears on their list only when it is waiting on them — nobody is reviewing it yet, or every reviewer is settled and it can be marked done. A venue seats its editor on every submission it receives, so the whole catalogue used to sit in one person's list as reviews they owed.
+- **Work you have requested compensation for now leaves your task list.** It is waiting on whoever approves it, and shows up on their list instead.
+- **A task now says which role it is.** Every row read "Review", whatever the venue called the role or whether it involved reviewing at all; each now carries the venue's own name for it.
+
 ## 0.5.5 - 2026-09-13
 
 ### Added

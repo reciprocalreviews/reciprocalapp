@@ -243,16 +243,6 @@ function proposalSupportersQuery(client: SupabaseClient<Database>, proposal: Pro
 }
 export type ProposalSupporter = QueryData<ReturnType<typeof proposalSupportersQuery>>[number];
 
-function scholarReviewsQuery(client: SupabaseClient<Database>, scholar: ScholarID) {
-	return client
-		.from('assignments')
-		.select('*, submissions(*)')
-		.eq('scholar', scholar)
-		.eq('completed', false)
-		.eq('approved', true);
-}
-export type ScholarReview = QueryData<ReturnType<typeof scholarReviewsQuery>>[number];
-
 function assignmentsForApprovalQuery(client: SupabaseClient<Database>, roleIDs: RoleID[]) {
 	return client
 		.from('assignments')
@@ -310,6 +300,12 @@ function transactionListQuery(client: SupabaseClient<Database>, withCount: boole
 export type TransactionListRow = QueryData<ReturnType<typeof transactionListQuery>>[number];
 
 export type TokenBalance = Database['public']['Functions']['scholar_balances']['Returns'][number];
+
+/** One row of the Tasks table on a scholar's profile: an assignment of the signed-in
+ * scholar's that is actually waiting on them. `state` is 'assigned' for ordinary work,
+ * or 'unstaffed' / 'ready' for an editor's seat. See public.scholar_tasks for the rule
+ * and why an editor's seat is not, by itself, a task. */
+export type ScholarTask = Database['public']['Functions']['scholar_tasks']['Returns'][number];
 
 /** Total supply of a currency and how many scholars and venues hold any of it.
  * `currency_holder_counts` returns Json, so the shape is named here. */
@@ -898,8 +894,11 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
-	async getScholarReviews(scholar: ScholarID): Promise<ReadResult<ScholarReview[] | null>> {
-		return this.rows('LoadAssignment', scholarReviewsQuery(this.client, scholar));
+	/** Answers for auth.uid() rather than a given scholar: the Tasks table is drawn only
+	 * on your own profile, and the rule needs to aggregate over assignments the caller
+	 * may not select. See public.scholar_tasks. */
+	async getScholarTasks(): Promise<ReadResult<ScholarTask[] | null>> {
+		return this.rows('LoadAssignment', this.client.rpc('scholar_tasks'));
 	}
 
 	/** How many tokens the scholar holds, per currency. The scholar page used to
@@ -1870,8 +1869,11 @@ export default class SupabaseCRUD extends CRUD {
 		return { data: undefined };
 	}
 
-	async getRolesByApprover(roleIDs: RoleID[]): Promise<ReadResult<RoleRow[] | null>> {
-		return this.rows('LoadRole', this.client.from('roles').select('*').in('approver', roleIDs));
+	/** The roles auth.uid() approves on. Deliberately NOT derived from getScholarTasks:
+	 * the profile load used to map the rendered task array to role ids, so narrowing what
+	 * the table displays deleted the approver's rows. See public.scholar_approver_roles. */
+	async getScholarApproverRoles(): Promise<ReadResult<{ role: RoleID }[] | null>> {
+		return this.rows('LoadRole', this.client.rpc('scholar_approver_roles'));
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────

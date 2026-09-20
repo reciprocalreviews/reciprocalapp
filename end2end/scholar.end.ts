@@ -28,9 +28,6 @@ test('the logged in scholar should see many things', async ({ page, context }) =
 	// Log in as editor
 	await login('editor@uni.edu', page, context);
 
-	// Expect a seeded review
-	await expect(page.getByTestId('review-0')).toBeVisible();
-
 	// Expected two volunteer rows
 	await expect(page.getByTestId('admin-0')).toBeVisible();
 	await expect(page.getByTestId('commitment-0')).toBeVisible();
@@ -39,6 +36,116 @@ test('the logged in scholar should see many things', async ({ page, context }) =
 	await expect(page.getByTestId('currency-0')).toBeVisible();
 
 	// Log out
+	await logout(page);
+});
+
+/**
+ * Set `completed` on every approved non-editor assignment of a submission.
+ *
+ * Flipping the boolean directly rather than calling complete_assignment is deliberate:
+ * it moves no tokens, so the ledger invariants the global teardown checks never see it.
+ */
+function setReviewersCompleted(submission: string, completed: boolean): void {
+	sql(
+		`update public.assignments a set completed = ${completed} from public.roles r where a.role = r.id and a.submission = '${submission}' and r.priority > 0 and a.approved`
+	);
+}
+
+/** Which of a submission's approved non-editor assignments are currently settled. */
+function settledReviewers(submission: string): string[] {
+	return sql(
+		`select a.id from public.assignments a join public.roles r on r.id = a.role where a.submission = '${submission}' and r.priority > 0 and a.approved and a.completed`
+	)
+		.split('\n')
+		.map((id) => id.trim())
+		.filter(Boolean);
+}
+
+test("an editor's seat becomes a task only once the submission waits on them", async ({
+	page,
+	context
+}) => {
+	// The heart of the fix. A venue with a sole editor seats that editor on every
+	// submission it receives, and the seat lives until the submission is marked done — so
+	// "I hold a priority-0 assignment" cannot mean "this is a task", or a venue's whole
+	// catalogue lands in one person's list. It is a task only when the submission is
+	// actually waiting on the editor.
+	//
+	// Both directions are driven here rather than assumed. Other specs in the suite
+	// settle and unsettle assignments, so neither starting state survives to this point,
+	// and a spec that asserted one would pass or fail on test order.
+	const submission = SEED.submissions.tok004.id;
+	const title = SEED.submissions.tok004.title;
+	const row = () => page.getByTestId(/^task-\d+$/).filter({ hasText: title });
+
+	await login(SEED.scholars.editor.email, page, context);
+
+	const wasSettled = settledReviewers(submission);
+	try {
+		// Reviewers still working: the submission is waiting on them, not on the editor.
+		setReviewersCompleted(submission, false);
+		await page.reload();
+		await expect(row()).toHaveCount(0);
+
+		// Every reviewer settled: now only the editor can move it, so it is their task.
+		setReviewersCompleted(submission, true);
+		await page.reload();
+		await expect(row()).toHaveCount(1);
+		// The Kind cell is the venue's own role name, not a fixed "Review".
+		await expect(row()).toContainText(SEED.roles.editorName);
+	} finally {
+		setReviewersCompleted(submission, false);
+		if (wasSettled.length > 0)
+			sql(
+				`update public.assignments set completed = true where id in ('${wasSettled.join("','")}')`
+			);
+	}
+
+	await logout(page);
+});
+
+test("work whose compensation has been requested leaves the reviewer's task list", async ({
+	page,
+	context
+}) => {
+	// A reviewer who has finished and asked to be paid is waiting on an approver, not on
+	// themselves — but the paper sat in their own list until somebody else acted, because
+	// `completed` only flips when the approver pays. The request timestamp is the only
+	// signal that the work is done, and the reminder function has always read it that way.
+	const title = SEED.submissions.tok001.title;
+	const row = () => page.getByTestId(/^task-\d+$/).filter({ hasText: title });
+
+	await login(SEED.scholars.r1.email, page, context);
+
+	// Force the starting state rather than trusting the seed to have survived the suite:
+	// r1's seat on tok001 approved, unsettled, and not yet claimed for compensation.
+	const before = sql(
+		`select completed || '|' || coalesce(compensation_requested_at::text, '') from public.assignments where id = '${SEED.assignments.tok001Reviewer}'`
+	);
+	sql(
+		`update public.assignments set completed = false, compensation_requested_at = null where id = '${SEED.assignments.tok001Reviewer}'`
+	);
+
+	try {
+		await page.reload();
+		await expect(row()).toHaveCount(1);
+		await expect(row()).toContainText(SEED.roles.reviewerName);
+
+		sql(
+			`update public.assignments set compensation_requested_at = now() where id = '${SEED.assignments.tok001Reviewer}'`
+		);
+		await page.reload();
+		await expect(row()).toHaveCount(0);
+	} finally {
+		// '|' rather than a space: sql() trims its output, so a null timestamp would
+		// leave the separator off the end entirely and the two fields indistinguishable.
+		const [completed, requested] = before.split('|');
+		const stamp = requested === '' ? 'null' : `'${requested}'`;
+		sql(
+			`update public.assignments set completed = ${completed === 't'}, compensation_requested_at = ${stamp} where id = '${SEED.assignments.tok001Reviewer}'`
+		);
+	}
+
 	await logout(page);
 });
 

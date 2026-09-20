@@ -1930,10 +1930,13 @@
 				"kind": {
 					"invitation": "Invitation",
 					"transaction": "Transaction",
-					"review": "Review",
 					"pendingAssignment": "Pending assignment",
 					"pendingCompensation": "Compensation to approve",
 					"outgoingTransaction": "Pending approval"
+				},
+				"editor": {
+					"unstaffed": "needs reviewers",
+					"ready": "ready to be marked done"
 				},
 				"pendingTransactionsAfter": "pending transactions to approve"
 			},

@@ -263,6 +263,12 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 		// Only assignments whose scholar explicitly requested compensation:
 		// approved-but-uncompleted alone means a review in progress, and nagging
 		// approvers about those would teach them to ignore the reminder.
+		//
+		// public.scholar_tasks draws the same line for the profile's Tasks table, and
+		// family 4 below shares its "ready to be marked done" test. They are separate
+		// definitions on purpose: this runs as service_role across every scholar from
+		// bulk-fetched rows, so it cannot call a function keyed on auth.uid(). Change
+		// one of the three and check the others.
 
 		const pendingCompensation = assignments.filter(
 			(a) => a.approved && !a.completed && a.compensation_requested_at !== null

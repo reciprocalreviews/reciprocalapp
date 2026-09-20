@@ -74,7 +74,13 @@ export const SEED = {
 	 * submissions page does — which is how a spec asserts that IDs are being withheld. */
 	submissionIdPrefix: 'TOK-2025-',
 	roles: {
-		reviewer: 'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81'
+		reviewer: 'f3209eee-ad37-11f0-a9a2-7ba7c65d0a81',
+		/** The reviewer role's name, as the Tasks table's Kind cell renders it. */
+		reviewerName: 'Reviewer',
+		/** The venue's priority-0 role and its name. The Tasks table labels a row with the
+		 * venue's own role name, so a spec asserting an editor's row asserts this. */
+		editor: 'ed5e1cd4-ad37-11f0-83e7-8742b968ac99',
+		editorName: 'Editor'
 	},
 	submissions: {
 		/** The full-workflow submission: reviewing, one approved reviewer and two open bids. */
@@ -92,7 +98,24 @@ export const SEED = {
 			id: 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c14',
 			externalId: 'TOK-2025-003',
 			title: 'A Reverse Engineering of Authorship from Reference Counts'
+		},
+		/** Reviewing, with its associate editor already compensated and exactly one
+		 * reviewer still open — so settling that one reviewer is what makes the submission
+		 * ready for its editor to close. */
+		tok004: {
+			id: 'c61a1f5a-ad3a-11f0-9805-3f4d2f5e3c15',
+			externalId: 'TOK-2025-004',
+			title: 'On the Impossibility of Knowing Whether a Review Was Read'
 		}
+	},
+	/** Assignment rows a spec needs to drive directly. Settling or un-settling one of
+	 * these changes whose task list a submission appears on, which is how the Tasks specs
+	 * exercise scholar_tasks without editing the seed. */
+	assignments: {
+		/** r1's Reviewer seat on tok004: the last open work on that submission. */
+		tok004Reviewer: 'fefed1e4-ad3a-11f0-9807-1f8d6e4b5c2a',
+		/** r1's Reviewer seat on tok001, which is still mid-review. */
+		tok001Reviewer: 'fefed1e4-ad3a-11f0-9807-1f8d6e4b5c23'
 	},
 	/**
 	 * Text fragments whose *matching behaviour* the filter specs are built on, named for

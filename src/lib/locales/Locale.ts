@@ -1704,11 +1704,19 @@ export type LocaleText = {
 				kind: {
 					invitation: string;
 					transaction: string;
-					review: string;
 					pendingAssignment: string;
 					/** Completed work whose compensation awaits this approver. */
 					pendingCompensation: string;
 					outgoingTransaction: string;
+				};
+				/** Why an editor's submission is on their list. An editor is seated on every
+				 * submission their venue receives, so the seat alone is not a task; these say
+				 * which of the two things the submission is actually waiting on them for. */
+				editor: {
+					/** Nobody is seated in a reviewing role yet. */
+					unstaffed: string;
+					/** Every seated reviewer is settled, so it can be marked done. */
+					ready: string;
 				};
 				pendingTransactionsAfter: string;
 			};
