@@ -12,8 +12,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - **Updated internal tooling.** Svelte, Prettier, Vitest, the Vercel CLI, and the Node type definitions all moved up a patch or minor release; TypeScript stays on 6, because Svelte's type checker does not yet run on 7.
 - **Every page inside a venue now carries one bar of common links instead of a title band of its own.** Its submissions, volunteers, transactions, settings and website are one click from anywhere in the venue, where some of them used to be two or three (#176).
-- **The site header is now a single row that never wraps.** The logo stands in for the old "Home" link, and on a narrow screen the links that do not fit collapse behind a menu rather than growing a second and third line — the fixed bands took nearly half a phone's screen inside a venue and now take about an eighth (#176).
-- **The beta notice moved to the footer, where it can be dismissed for good.** It stays dismissed on later visits (#176).
+- **The site header is now a single row that never wraps.** The logo stands in for the old "Home" link, and only the links that genuinely do not fit collapse behind a menu, at whatever width that turns out to be — the fixed bands took nearly half a phone's screen inside a venue and now take about an eighth (#176).
+- **The beta notice now sits at the bottom of the screen and can be dismissed for good.** It stays dismissed on later visits, and nothing on the page is ever hidden behind it (#176).
 - **A venue's title and website are now edited in its settings**, alongside its new short name and web address, rather than in the header of the venue's own page (#176).
 
 ### Fixed

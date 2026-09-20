@@ -64,8 +64,14 @@ const SCREENS = [
 		id: 'site-menu',
 		group: 'Site',
 		name: 'Site menu open',
-		route: '/',
+		// Narrower than the other phone frames, and that IS the finding: signed in, with a
+		// breadcrumb, the site row still fits a 390px phone without giving anything up. It
+		// takes 320 to fill it. The old breakpoint collapsed this row at 768.
+		route: '/help/your-data',
+		as: ADMIN,
 		only: 'phone',
+		width: 320,
+		note: 'Signed in, this row still fits a 390px phone. It takes 320 to fill it.',
 		act: async (page) => page.getByTestId('site-menu').click()
 	},
 	{
@@ -465,7 +471,7 @@ const PAGE_HEAD = `<title>Header Contact Sheet</title>
 <div class="wrap">
 	<h1>Every screen #176 touched</h1>
 	<p class="lede">
-		Thirty-four frames of the running app on seeded data, desktop beside phone, so the
+		__FRAMES__ frames of the running app on seeded data, desktop beside phone, so the
 		chrome can be judged as one system rather than one route at a time. The figure under
 		each frame is <strong>how much of the viewport the fixed bands take</strong> — the nav,
 		the venue bar, and the page title band where one still exists. That number is what the
@@ -591,8 +597,11 @@ function renderSheet(frames) {
 					.filter(([width]) => shots[width])
 					.map(([width, dimensions]) => {
 						const shot = shots[width];
-						const caption = `${escapeHtml(meta.name)} \u2014 ${width}, ${persona}`;
-						return `<figure class="frame ${width}"><button class="shot" type="button" data-src="contact-sheet/${shot.file}" data-caption="${caption}" aria-label="Enlarge ${escapeHtml(meta.name)}, ${width}"><img src="contact-sheet/${shot.file}" alt="${escapeHtml(meta.name)} at ${width} width" loading="lazy" /></button><figcaption><span class="dim">${dimensions}</span><span class="pct" title="Share of the viewport taken by fixed chrome">${shot.percent}%</span></figcaption></figure>`;
+						const size = meta.width
+							? `${meta.width}\u00d7${dimensions.split('\u00d7')[1]}`
+							: dimensions;
+						const caption = `${escapeHtml(meta.name)} \u2014 ${size}, ${persona}`;
+						return `<figure class="frame ${width}"><button class="shot" type="button" data-src="contact-sheet/${shot.file}" data-caption="${caption}" aria-label="Enlarge ${escapeHtml(meta.name)}, ${width}"><img src="contact-sheet/${shot.file}" alt="${escapeHtml(meta.name)} at ${width} width" loading="lazy" /></button><figcaption><span class="dim">${size}</span><span class="pct" title="Share of the viewport taken by fixed chrome">${shot.percent}%</span></figcaption></figure>`;
 					})
 					.join('');
 				return `<article class="screen" data-group="${escapeHtml(group)}"><div class="screen-head"><h3>${escapeHtml(meta.name)}</h3><p class="who">${persona}</p><code class="route">${escapeHtml(meta.route)}</code>${note}</div><div class="frames">${figures}</div></article>`;
@@ -671,6 +680,10 @@ for (const viewport of WIDTHS) {
 		const { page } = await contextFor(screen.as);
 		const file = `${screen.id}-${viewport.key}.png`;
 		try {
+			// A cell may ask for its own width when the state it is there to show only exists
+			// at one — see `site-menu`, whose whole point is how narrow that has become.
+			if (screen.width)
+				await page.setViewportSize({ width: screen.width, height: viewport.height });
 			await page.goto(BASE + screen.route, { waitUntil: 'networkidle' });
 			if (screen.act && (await screen.act(page)) === 'skip') {
 				console.log(`  skipped ${screen.id} (${viewport.key}): nothing to open`);
@@ -685,6 +698,9 @@ for (const viewport of WIDTHS) {
 			);
 		} catch (error) {
 			console.log(`  FAILED ${screen.id} (${viewport.key}): ${error.message.split('\n')[0]}`);
+		} finally {
+			if (screen.width)
+				await page.setViewportSize({ width: viewport.width, height: viewport.height });
 		}
 	}
 	for (const { ctx } of contexts.values()) await ctx.close();
