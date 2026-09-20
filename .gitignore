@@ -19,3 +19,7 @@ vite.config.ts.timestamp-*
 # breaks the function at boot with "Could not find '@supabase/postgrest-js@...'". None of
 # the functions has ever committed one; this keeps it that way.
 supabase/functions/**/deno.lock
+
+# The contact sheet is a local artifact: real screenshots of a seeded stack, regenerated
+# on demand by `npm run contact-sheet`.
+contact-sheet/

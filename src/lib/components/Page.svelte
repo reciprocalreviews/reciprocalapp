@@ -263,6 +263,15 @@
 	.details {
 		display: flex;
 		flex-direction: row;
+		/* Wraps, unlike the two chrome rows above it, which must not. This row is
+		   metadata rather than chrome — a submission's type, manuscript ID and status —
+		   and on a phone those do not fit side by side. In the band it merely LOOKED
+		   fine, because `.page-header` clips overflow: the status chip was being cut off
+		   rather than fitting. In the text column there is nothing to clip it, so it ran
+		   off the side of the document and took the sticky bars with it when scrolled.
+		   Wrapping is the honest answer in both places; the band is measured, so its
+		   sticky offset follows. */
+		flex-wrap: wrap;
 		gap: var(--spacing);
 		align-items: baseline;
 		font-size: var(--small-font-size);
