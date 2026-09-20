@@ -77,13 +77,18 @@
             "beta": {
               "additionalProperties": false,
               "properties": {
+                "dismiss": {
+                  "$ref": "#/definitions/ButtonText",
+                  "description": "Puts the notice away for good. Its own string rather than the notification dismisser's, whose tip says \"notification\" — and the tip is what a screen reader announces."
+                },
                 "lead": {
                   "description": "Lead text explaining that the platform is in beta and wants feedback.",
                   "type": "string"
                 }
               },
               "required": [
-                "lead"
+                "lead",
+                "dismiss"
               ],
               "type": "object"
             },
@@ -1043,6 +1048,7 @@
               "type": "object"
             },
             "home": {
+              "description": "The accessible name of the brand mark, which links home. It is no longer visible text: the mark replaced the word (#176).",
               "type": "string"
             },
             "link": {
@@ -1061,6 +1067,10 @@
               ],
               "type": "object"
             },
+            "menu": {
+              "$ref": "#/definitions/ButtonText",
+              "description": "Names the control that holds the header links that do not fit on a narrow screen."
+            },
             "saved": {
               "type": "string"
             },
@@ -1071,6 +1081,7 @@
           "required": [
             "home",
             "venues",
+            "menu",
             "saved",
             "balance",
             "link",
@@ -4005,9 +4016,6 @@
                   ],
                   "type": "object"
                 },
-                "subtitle": {
-                  "type": "string"
-                },
                 "template": {
                   "additionalProperties": false,
                   "description": "Email-template snippets editors copy into their reviewing platform (#113). Each entry's `body` is interpolated with `{origin}` (the environment's own base URL, so a snippet copied from a local or staging venue links back to it), `{venue}` (the venue's title), `{venuepath}` (the segment the venue is addressed by — its web address once it has one, its id until then), and `{manuscriptVar}` (the selected platform's submission-id syntax).\n\n`{role}` is deliberately NOT interpolated: an editor pastes these once per role, and reviewing platforms differ too much in how they expose role names for us to guess. The tip above the snippets says so — this list previously claimed otherwise, which read as a bug.",
@@ -4124,7 +4132,6 @@
               },
               "required": [
                 "title",
-                "subtitle",
                 "tip",
                 "card",
                 "header",
@@ -5187,6 +5194,25 @@
             "venue": {
               "additionalProperties": false,
               "properties": {
+                "bar": {
+                  "additionalProperties": false,
+                  "description": "The bar of common links shown on every route inside a venue (#176). Its route labels are not here: they reuse each destination page's own `title`, so the bar and the page it reaches can never drift apart.",
+                  "properties": {
+                    "menu": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Names the control holding the links that do not fit on a narrow screen."
+                    },
+                    "website": {
+                      "description": "The link out to the venue's own website.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "menu",
+                    "website"
+                  ],
+                  "type": "object"
+                },
                 "button": {
                   "additionalProperties": false,
                   "properties": {
@@ -5463,9 +5489,6 @@
                   ],
                   "type": "object"
                 },
-                "subtitle": {
-                  "type": "string"
-                },
                 "title": {
                   "type": "string"
                 },
@@ -5475,8 +5498,8 @@
               },
               "required": [
                 "title",
-                "subtitle",
                 "unknownTitle",
+                "bar",
                 "header",
                 "button",
                 "feedback",
@@ -5539,9 +5562,6 @@
                   ],
                   "type": "object"
                 },
-                "subtitle": {
-                  "type": "string"
-                },
                 "tip": {
                   "additionalProperties": false,
                   "properties": {
@@ -5560,7 +5580,6 @@
               },
               "required": [
                 "title",
-                "subtitle",
                 "feedback",
                 "paragraph",
                 "card",
@@ -5976,9 +5995,6 @@
                   ],
                   "type": "object"
                 },
-                "subtitle": {
-                  "type": "string"
-                },
                 "title": {
                   "type": "string"
                 },
@@ -5988,7 +6004,6 @@
               },
               "required": [
                 "title",
-                "subtitle",
                 "unavailableTitle",
                 "feedback",
                 "button",

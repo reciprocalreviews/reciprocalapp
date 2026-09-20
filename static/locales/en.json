@@ -15,6 +15,10 @@
 	"header": {
 		"home": "Home",
 		"venues": "Venues",
+		"menu": {
+			"tip": "Show the rest of the site links",
+			"label": "☰"
+		},
 		"saved": "saved",
 		"balance": "Your total tokens across all currencies",
 		"link": {
@@ -37,7 +41,11 @@
 	},
 	"banner": {
 		"beta": {
-			"lead": "We're in **beta**. [Report issues](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose) or [write the stewards](/contact) with thoughts."
+			"lead": "We're in **beta**. [Report issues](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose) or [write the stewards](/contact) with thoughts.",
+			"dismiss": {
+				"tip": "Hide the beta notice from now on",
+				"label": "Got it"
+			}
 		},
 		"update": {
 			"message": "A new version is available.",
@@ -425,7 +433,6 @@
 				"expertise": "Expertise",
 				"papers": "Papers cap"
 			},
-			"subtitle": "Volunteers",
 			"paragraph": {
 				"intro": "Search for a volunteer by name, email, or expertise, or narrow the list to the expertise keywords volunteers have listed. Within each role, volunteers who have stopped are listed last."
 			}
@@ -435,7 +442,6 @@
 			"feedback": {
 				"transactionsNotLoaded": "Unable to load transactions for this venue."
 			},
-			"subtitle": "Transactions",
 			"paragraph": {
 				"count": "There are **{count}** transactions involving this venue visible to you."
 			},
@@ -1076,7 +1082,13 @@
 				}
 			},
 			"unknownTitle": "Unknown venue",
-			"subtitle": "Venue",
+			"bar": {
+				"menu": {
+					"tip": "Show the rest of this venue’s links",
+					"label": "☰"
+				},
+				"website": "Website"
+			},
 			"options": {
 				"compensationRole": {
 					"label": "role"
@@ -1223,7 +1235,6 @@
 				"minters": "First decide on a **currency** — the shared token economy your venue runs on:\n\n- **Join an existing currency** to share an economy with a related venue (e.g. a sibling conference or journal in the same community). Tokens earned in one venue can then be spent in the other. The existing currency already has its own **minters**, so you don't appoint any — you inherit theirs.\n- **Start your own currency** if your venue's economy should stand alone. Only then do you choose minters.\n\n**Minters** can create new tokens, so choose them as carefully as you choose editors:\n\n- Pick **trusted, long-tenured members** of the community who understand its reviewing economy.\n- Appoint **more than one** so minting doesn't stall if someone steps away (avoid a single point of failure).\n- Choose people **willing to monitor the token supply** and mint gradually as the community grows, rather than in large batches.\n- Make sure they understand the **balance rules** in *Setting welcome & compensation* above — over-minting collapses the same way over-generous welcome gifts do.\n\nMinting happens on the currency page, where the mint form shows a warning about creating too many tokens.",
 				"reviewQuality": "The platform releases compensation when an assignment is marked complete — it does **not** judge whether a review was actually good. That editorial bar is yours to define. Before launch, agree on **what counts as a creditable review** (depth, timeliness, constructiveness) and **who signs off** before tokens are released.\n\nThree existing controls let you enforce that policy:\n\n- **Approver role** (Step 3, per role) — designate which role approves assignments to another role, so a human checks the work before it's credited.\n- **Compensation approval** — compensation transactions are approved before tokens move, giving editors a checkpoint to withhold credit for inadequate reviews.\n- **Vet thank-you notes** (Step 4) — optionally require an admin or editor to approve author thank-you notes before reviewers see them."
 			},
-			"subtitle": "Settings",
 			"tip": {
 				"webAddress": "Pick the address this venue lives at. It goes in every link anyone sends about the venue — emails, breadcrumbs, and the snippets in step 6 — so choose something people will recognize and can read aloud. You can change it later, but the old address is released the moment you do: nothing redirects from it, and every link that used it breaks.",
 				"policies": "This is the most consequential step on the page. Spend real time on it before touching anything below.",

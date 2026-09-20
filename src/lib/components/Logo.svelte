@@ -14,7 +14,8 @@
 
 	let {
 		size = '1em',
-		shadow = true
+		shadow = true,
+		testid = 'logo'
 	}: {
 		/** Any CSS length. Defaults to 1em so the mark scales with whatever text it sits in. */
 		size?: string;
@@ -23,6 +24,10 @@
 		 * the favicon (static/brand/favicon.svg), which renders at 16–32px where the
 		 * 3% offset is literally sub-pixel and only blurs the strokes. */
 		shadow?: boolean;
+		/** Overridable because the mark is now rendered twice on one page — once in the
+		 * nav, once as the home page's own icon — and two elements answering to the same
+		 * test id is a Playwright strict-mode failure rather than an ambiguity it resolves. */
+		testid?: string;
 	} = $props();
 
 	const ARROWS = [
@@ -40,7 +45,7 @@
 	fill="currentColor"
 	aria-hidden="true"
 	focusable="false"
-	data-testid="logo"
+	data-testid={testid}
 	xmlns="http://www.w3.org/2000/svg"
 >
 	{#if shadow}

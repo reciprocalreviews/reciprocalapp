@@ -11,7 +11,7 @@
 	import { setLocaleContext } from './Contexts';
 
 	let { data, children } = $props();
-	let { db, scholar, claims, locale, tokens } = $derived(data);
+	let { db, scholar, claims, locale, tokens, betaDismissed } = $derived(data);
 
 	// The raw Supabase client is reached only through the CRUD instance's
 	// sanctioned `client` escape hatch (auth + realtime); see #137.
@@ -83,7 +83,7 @@
 <main>
 	{@render children()}
 </main>
-<Footer />
+<Footer {betaDismissed} />
 
 <style>
 	main {

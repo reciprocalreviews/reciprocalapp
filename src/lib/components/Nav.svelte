@@ -10,8 +10,10 @@
 	import { getPendingActions } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
 	import Dots from './Dots.svelte';
-	import { ScholarLabel, SubmissionLabel, TokenLabel, VenueLabel } from './Labels';
+	import { ScholarLabel, TokenLabel } from './Labels';
 	import Link from './Link.svelte';
+	import Logo from './Logo.svelte';
+	import Overflow from './Overflow.svelte';
 	import measure from './measure';
 
 	const locale = getLocaleContext();
@@ -59,33 +61,24 @@
 	});
 
 	$effect(() => () => clearTimeout(flash));
-
-	const routes = $derived([
-		{ path: '/', label: locale().header.home },
-		{ path: '/venues', label: locale().header.venues }
-	]);
 </script>
 
 <header use:measure={'--nav-height'}>
 	<div class="nav">
-		{#each routes as route}
-			<div class="link">
-				<Link size="small" to={route.path}>{route.label}</Link>
-			</div>
-		{/each}
+		<!-- The mark, where the word "Home" used to be. A link to a static landing page is
+		     not worth a word of a row that has to fit on a phone, but the mark still has to
+		     be somewhere, and the one place every page agrees on is here. -->
+		<a class="home" href="/" title={locale().header.home} aria-label={locale().header.home}>
+			<Logo size="1.5em" testid="nav-logo" />
+		</a>
 		{#each breadcrumbs as [url, label]}
 			<small>&gt;</small>
-			<div class="link">
-				<Link
-					size="small"
-					to={url}
-					icon={url.startsWith('/venue')
-						? VenueLabel
-						: url.startsWith('/scholar')
-							? ScholarLabel
-							: url.startsWith('/submission')
-								? SubmissionLabel
-								: null}>{label}</Link
+			<div class="link crumb">
+				<!-- Venue and submission crumbs used to be built here too; the venue bar names
+				     the venue on every route inside one, so what is left reaches scholars,
+				     currencies and help articles. -->
+				<Link size="small" to={url} icon={url.startsWith('/scholar') ? ScholarLabel : null}
+					>{label}</Link
 				>
 			</div>
 		{/each}
@@ -97,6 +90,9 @@
 				</div>
 			{/if}
 			{#if auth().isAuthenticated()}
+				<!-- Outside the overflow on purpose. The balance is the one thing in this row
+				     that changes on its own, so it is the one thing worth keeping in view at
+				     every width. -->
 				<a
 					class="balance"
 					class:changed
@@ -107,27 +103,34 @@
 				>
 					<span class="star">{TokenLabel}</span>{Math.round(balance.current)}
 				</a>
-				<div class="link">
-					<Link size="small" to="/scholar/{auth().getUserID()}"
-						><Text path={(l) => l.header.link.profile} /></Link
-					>
-				</div>
-				<div class="link">
-					<Button
-						small
-						testid="logout-button"
-						strings={(l) => l.component.header.logout}
-						action={() => {
-							auth().signOut();
-							goto('/login');
-						}}
-					/>
-				</div>
-			{:else}
-				<div class="link">
-					<Link size="small" to="/login"><Text path={(l) => l.header.link.login} /></Link>
-				</div>
 			{/if}
+			<Overflow strings={(l) => l.header.menu} testid="site-menu">
+				<div class="link">
+					<Link size="small" to="/venues"><Text path={(l) => l.header.venues} /></Link>
+				</div>
+				{#if auth().isAuthenticated()}
+					<div class="link">
+						<Link size="small" to="/scholar/{auth().getUserID()}"
+							><Text path={(l) => l.header.link.profile} /></Link
+						>
+					</div>
+					<div class="link">
+						<Button
+							small
+							testid="logout-button"
+							strings={(l) => l.component.header.logout}
+							action={() => {
+								auth().signOut();
+								goto('/login');
+							}}
+						/>
+					</div>
+				{:else}
+					<div class="link">
+						<Link size="small" to="/login"><Text path={(l) => l.header.link.login} /></Link>
+					</div>
+				{/if}
+			</Overflow>
 		</div>
 	</div>
 	<Banners />
@@ -154,15 +157,39 @@
 		padding-bottom: calc(var(--spacing) / 2);
 		display: flex;
 		flex-direction: row;
-		flex-wrap: wrap;
+		/* Deliberately not `wrap`, which is what this row did until #176. Wrapping is how a
+		   crowded header answered a narrow screen by growing a second and third line, until
+		   the fixed chrome was half the viewport on a phone. Now the links that do not fit
+		   collapse into `Overflow` instead, and the one thing left that can genuinely run
+		   long — a breadcrumb label — truncates below. */
+		flex-wrap: nowrap;
 		gap: calc(var(--spacing) / 2);
-		row-gap: var(--spacing);
 		align-items: center;
 		background: var(--background-color);
+		/* The containing block for the overflow panel, which is absolutely positioned so
+		   that opening it cannot change the height measured into `--nav-height`. */
+		position: relative;
 	}
 
 	.link {
 		display: inline-block;
+	}
+
+	.home {
+		display: inline-flex;
+		align-items: center;
+		color: var(--salient-color);
+		flex: none;
+	}
+
+	/* A breadcrumb label is venue- and scholar-authored, so it has no length limit worth
+	   relying on. In a row that no longer wraps it is the one item that has to be allowed
+	   to lose rather than push everything else off the end. */
+	.crumb {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.feedback {
@@ -175,10 +202,11 @@
 	.authenticated {
 		display: flex;
 		flex-direction: row;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		gap: var(--spacing);
 		margin-inline-start: auto;
 		align-items: center;
+		flex: none;
 	}
 
 	/* The header token balance. Styled like the Tokens pill but compact — no

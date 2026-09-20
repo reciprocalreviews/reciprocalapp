@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { updated } from '$app/state';
 	import { PUBLIC_ENV } from '$env/static/public';
-	import { BETA } from '$lib/constants';
 	import Text from '$lib/locales/Text.svelte';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { getFeedback, removeError } from '$routes/feedback.svelte';
@@ -24,13 +23,10 @@
 	let updateDismissed = $state(false);
 </script>
 
+<!-- The beta notice used to head this stack. It moved to the footer (#176): it says the
+     same thing on the thousandth visit as on the first, and here it was charging every page
+     a band of the sticky header for it. -->
 <div class="banners">
-	{#if BETA}
-		<Banner level="beta" testid="banner-beta">
-			<Text markdown path={(l) => l.banner.beta.lead} />
-		</Banner>
-	{/if}
-
 	{#if updated.current && !updateDismissed}
 		<Banner
 			level="update"
