@@ -4,9 +4,17 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.5.6 - 2026-09-20
 
+### Added
+
+- **A venue can now go by a short name.** The bar at the top of every page inside it shows that name in place of a title that would not fit — "ToK" rather than "Transactions on Knowledge" — and a venue's admins set it in settings (#176).
+
 ### Changed
 
 - **Updated internal tooling.** Svelte, Prettier, Vitest, the Vercel CLI, and the Node type definitions all moved up a patch or minor release; TypeScript stays on 6, because Svelte's type checker does not yet run on 7.
+- **Every page inside a venue now carries one bar of common links instead of a title band of its own.** Its submissions, volunteers, transactions, settings and website are one click from anywhere in the venue, where some of them used to be two or three (#176).
+- **The site header is now a single row that never wraps.** The logo stands in for the old "Home" link, and on a narrow screen the links that do not fit collapse behind a menu rather than growing a second and third line — the fixed bands took nearly half a phone's screen inside a venue and now take about an eighth (#176).
+- **The beta notice moved to the footer, where it can be dismissed for good.** It stays dismissed on later visits (#176).
+- **A venue's title and website are now edited in its settings**, alongside its new short name and web address, rather than in the header of the venue's own page (#176).
 
 ### Fixed
 
