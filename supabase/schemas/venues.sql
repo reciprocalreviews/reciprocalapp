@@ -9,6 +9,12 @@ create table if not exists public.venues (
 	description text default ''::text not null,
 	-- A link to the venue's official web page
 	url text default ''::text not null,
+	-- A short display name, shown in the venue bar where the full title does not fit:
+	-- "TOCE" for "ACM Transactions on Computing Education". Empty until a venue chooses
+	-- one, in which case the title is shown instead. Unlike `slug` this is display text
+	-- rather than a URL segment, so spaces, capitals and punctuation are all legitimate
+	-- ("ACM TOCE", "SIGCSE TS") and nothing here has to be unique.
+	short_title text default ''::text not null,
 	-- The venue's web address: the path segment it is reached by, in place of its id.
 	-- Null until the venue chooses one. Released the moment it is changed — nothing
 	-- reserves a former address, so links to it break.
@@ -41,6 +47,10 @@ create table if not exists public.venues (
 	transaction_reminder_time timestamp with time zone,
 	-- There must be at least one admin
 	constraint venues_admins_check check (cardinality(admins)>0),
+	-- A display cap, not a naming rule: no lower bound, because empty is the unset
+	-- state, and no format rule, because this is prose rather than an address. Twenty
+	-- characters is generous for an acronym and refuses a pasted full title.
+	constraint venues_short_title_check check (length(short_title)<=20),
 	-- Four characters minimum: three-letter acronyms are the ones most likely to be
 	-- contested, and handing the first arrival a name a dozen communities have equal claim
 	-- to is not a race worth running. Lowercase only, so an address is the same address

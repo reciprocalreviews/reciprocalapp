@@ -933,6 +933,10 @@ export type LocaleText = {
 				/** The venue's web address. `invalid` states the format rule, since the field
 				 * is where someone learns it. */
 				webAddress: TextFieldText & { invalid: string };
+				/** The venue's short display name, shown in the venue bar where the full title
+				 * would not fit. `invalid` states the length cap, since the field is where
+				 * someone meets it. */
+				shortName: TextFieldText & { invalid: string };
 				inactiveMessage: TextFieldText;
 				welcomeTokens: TextFieldText;
 				preferenceLevelLabel: TextFieldText & { invalid: string };
@@ -1829,6 +1833,7 @@ export type LocaleText = {
 		ScholarNotFound: string;
 		EditVenueAddEditorAlreadyEditor: string;
 		EditVenueTitle: string;
+		EditVenueShortTitle: string;
 		EditVenueURL: string;
 		EditVenueSlug: string;
 		/** The web address someone asked for belongs to another venue. Raised by the unique

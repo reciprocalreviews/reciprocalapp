@@ -563,6 +563,7 @@ insert into
 	public.venues (
 		"id",
 		"title",
+		"short_title",
 		"description",
 		"url",
 		"currency",
@@ -575,6 +576,7 @@ values
 	(
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6',
 		'Transactions on Knowledge',
+		'ToK',
 		'Transactions on Knowledge publishes empirical and theoretical work on how knowledge is made, certified, and circulated — including work on peer review itself. We take submissions from any discipline, on one condition: state the claim plainly enough that somebody can argue with it. Every submission goes to three referees, and every referee is paid for the labor.',
 		'https://tok.science.org',
 		'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',

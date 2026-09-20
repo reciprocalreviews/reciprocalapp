@@ -564,6 +564,9 @@
             "EditVenuePaymentFree": {
               "type": "string"
             },
+            "EditVenueShortTitle": {
+              "type": "string"
+            },
             "EditVenueSlug": {
               "type": "string"
             },
@@ -853,6 +856,7 @@
             "ScholarNotFound",
             "EditVenueAddEditorAlreadyEditor",
             "EditVenueTitle",
+            "EditVenueShortTitle",
             "EditVenueURL",
             "EditVenueSlug",
             "VenueAddressTaken",
@@ -3830,6 +3834,29 @@
                       ],
                       "type": "object"
                     },
+                    "shortName": {
+                      "additionalProperties": false,
+                      "description": "The venue's short display name, shown in the venue bar where the full title would not fit. `invalid` states the length cap, since the field is where someone meets it.",
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
                     "webAddress": {
                       "additionalProperties": false,
                       "description": "The venue's web address. `invalid` states the format rule, since the field is where someone learns it.",
@@ -3859,6 +3886,7 @@
                   },
                   "required": [
                     "webAddress",
+                    "shortName",
                     "inactiveMessage",
                     "welcomeTokens",
                     "preferenceLevelLabel",

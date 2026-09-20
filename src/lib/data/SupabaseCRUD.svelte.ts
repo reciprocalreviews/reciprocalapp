@@ -1024,6 +1024,10 @@ export default class SupabaseCRUD extends CRUD {
 		return this.updateVenue(id, { title }, 'EditVenueTitle');
 	}
 
+	async editVenueShortTitle(id: VenueID, short_title: string) {
+		return this.updateVenue(id, { short_title }, 'EditVenueShortTitle');
+	}
+
 	async editVenueURL(id: VenueID, url: string) {
 		return this.updateVenue(id, { url }, 'EditVenueURL');
 	}

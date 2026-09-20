@@ -1146,6 +1146,11 @@
 					"placeholder": "acm-chi",
 					"invalid": "Use 4 to 40 characters: lowercase letters, numbers, and single hyphens between them, starting with a letter."
 				},
+				"shortName": {
+					"label": "Short name",
+					"placeholder": "TOCE",
+					"invalid": "Use 20 characters or fewer. Leave it empty to show the full title."
+				},
 				"inactiveMessage": {
 					"label": "inactive message",
 					"placeholder": "e.g., We're currently configuring the venue.",
@@ -2086,6 +2091,7 @@
 		"ScholarNotFound": "Unable to find scholar by this email or ORCID",
 		"EditVenueAddEditorAlreadyEditor": "Scholar is already an editor",
 		"EditVenueTitle": "Unable to edit the venue title",
+		"EditVenueShortTitle": "Unable to edit the venue short name",
 		"EditVenueURL": "Unable to edit the venue URL",
 		"EditVenueSlug": "Unable to set the venue's web address",
 		"VenueAddressTaken": "Another venue already uses that web address. Pick a different one.",
