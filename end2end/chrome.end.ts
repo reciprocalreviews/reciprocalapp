@@ -80,6 +80,16 @@ test('the venue bar reaches a venue from every route inside it', async ({ page }
 	await expect(page.getByTestId('venue-bar').locator('a[aria-current="page"]')).toContainText(
 		'Volunteers'
 	);
+
+	// And now that the venue's own name is NOT where you are, it carries the same underline
+	// every other link in the bar does. `.name` is an inline-block so it can ellipsize, and
+	// an inline-block does not inherit text-decoration — so the name silently read as the
+	// current route on every page inside the venue.
+	const underlined = await page.evaluate(() => {
+		const name = document.querySelector('[data-testid="venue-bar-home"] .name');
+		return name ? getComputedStyle(name).textDecorationLine : 'missing';
+	});
+	expect(underlined).toBe('underline');
 });
 
 test('an admin gets settings in the bar', async ({ page, context }) => {
@@ -139,6 +149,19 @@ test('the chrome collapses instead of wrapping on a phone', async ({ page }) => 
 	// Opening the menu must not grow the bar: its height is measured into
 	// `--page-header-height`, which is a sticky offset for everything below it.
 	expect((await bar.boundingBox())?.height ?? 0).toBeCloseTo(barHeight, 0);
+
+	// The open menu has to be READABLE, which `toBeVisible` cannot tell you: painting the
+	// venue bar turquoise made its links white, and that rule reached into the panel too —
+	// white on a white panel, so the menu opened blank while every link in it was
+	// technically visible.
+	const readable = await page.evaluate(() => {
+		// This bar's own panel. The site header has one too, and at this width it is empty.
+		const panel = document.querySelector('[data-testid="venue-bar"] [data-overflow-panel]');
+		const link = panel?.querySelector('a');
+		if (!panel || !link) return false;
+		return getComputedStyle(panel).backgroundColor !== getComputedStyle(link).color;
+	});
+	expect(readable).toBe(true);
 
 	await page.keyboard.press('Escape');
 	await expect(bar.getByRole('link', { name: 'Transactions' })).toBeHidden();

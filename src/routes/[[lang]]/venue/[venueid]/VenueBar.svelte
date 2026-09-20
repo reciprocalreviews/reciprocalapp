@@ -104,7 +104,11 @@
 		flex-direction: row;
 		/* Not `wrap`. Growing a second row is the thing this bar exists to stop. */
 		flex-wrap: nowrap;
-		align-items: center;
+		/* Baselines, not boxes. `Link` appends a 🌐 to an external link as a `<sub>`, which
+		   hangs below the text and makes that link's box taller than its neighbours' — so
+		   centring the boxes pushed "Website" a couple of pixels above the words beside it.
+		   Page.svelte's title band aligns on baselines for the same reason. */
+		align-items: baseline;
 		gap: var(--spacing);
 		/* Declared, not discovered. What is in this row changes with the width — links
 		   leave, the ☰ arrives, and they are not the same height — and this row's height is
@@ -155,6 +159,14 @@
 		color: var(--background-color);
 	}
 
+	/* ...except inside the overflow panel, which is its own surface. Left white-on-white
+	   the open menu was simply blank. Painting the panel to match the bar keeps one rule
+	   for the links and makes the menu read as part of the bar it drops out of. */
+	.venue-bar :global([data-overflow-panel]) {
+		background: var(--salient-color);
+		border-color: var(--background-color);
+	}
+
 	.venue-bar :global(a .underline) {
 		text-decoration-color: var(--background-color);
 	}
@@ -167,16 +179,23 @@
 	   its underline, and the current one drops it. No new tab vocabulary. */
 
 	/* The overflow toggle is a faded-turquoise chip by default, which is invisible on
-	   turquoise. */
+	   turquoise. It is a glyph rather than a word, so it centres in the row rather than
+	   sitting on the baseline the words share. */
 	.venue-bar :global(button) {
 		background: transparent;
 		color: var(--background-color);
+		align-self: center;
 	}
 
 	/* The one item here with no length limit worth relying on: a venue that chose no short
 	   name falls back to a title its editors wrote. It loses, rather than pushing the
 	   links it sits beside off the end of a row that no longer wraps. */
 	.name {
+		/* `inline-block` is what makes the ellipsis possible, and it also stops
+		   `text-decoration` propagating into this box — so `Link`'s underline, which says
+		   "this goes somewhere", never painted here and the venue's name read as the
+		   current route on every page. Inheriting it explicitly is the way back. */
+		text-decoration: inherit;
 		display: inline-block;
 		max-width: 12rem;
 		overflow: hidden;

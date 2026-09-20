@@ -310,7 +310,11 @@
 		data-testid={testid}
 		onclick={() => (open = !open)}>☰</button
 	>
-	<div class="panel" bind:this={panel}>
+	<!-- `data-overflow-panel` is a deliberate hook, not decoration: the panel is a surface
+	     of its own, and a row with a coloured ground has to be able to say what this one
+	     looks like. Without it the venue bar's white-on-turquoise link colour applied here
+	     too, over a white panel, and the open menu was blank. -->
+	<div class="panel" data-overflow-panel bind:this={panel}>
 		{#each items.slice(visible) as entry (key(entry))}
 			<div class="item" data-overflow-key={key(entry)}>{@render item(entry)}</div>
 		{/each}
