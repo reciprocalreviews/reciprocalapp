@@ -37,7 +37,12 @@ import {
 } from '../../data/types';
 import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
-import type { AuthError, PostgrestError, PostgrestResponse } from '@supabase/supabase-js';
+import type {
+	AuthError,
+	PostgrestError,
+	PostgrestResponse,
+	PostgrestSingleResponse
+} from '@supabase/supabase-js';
 import type { EmailType, OptionalEmailType } from '../../email/templates';
 import type SupabaseCRUD from './SupabaseCRUD.svelte';
 import type {
@@ -729,6 +734,15 @@ export default abstract class CRUD {
 		currency: CurrencyID,
 		page?: number
 	): Promise<PostgrestResponse<TransactionListRow>>;
+	/** One row of those lists, by id, in the same shape they return.
+	 *
+	 * The lists sort proposed transactions to the front, so approving or declining
+	 * one moves it — out of the loaded pages entirely, on a table with history. The
+	 * transaction view refetches the row it just acted on through this and keeps it
+	 * where it was, so the reader sees what their decision did. */
+	abstract getTransaction(
+		id: TransactionID
+	): Promise<PostgrestSingleResponse<TransactionListRow | null>>;
 
 	abstract getScholarRow(id: ScholarID): Promise<ReadResult<ScholarRow | null>>;
 	/** Create the signed-in scholar's row if it is somehow missing, and report what

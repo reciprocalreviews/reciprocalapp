@@ -13,8 +13,7 @@
 </script>
 
 <span class="token" class:debit
-	><span class="star">{TokenLabel}</span>
-	{amount}
+	><span class="value"><span class="star">{TokenLabel}</span> {amount}</span>
 	{#if currency}<span class="currency">{currency.name}</span>
 	{/if}
 	{#if amount === 1}{locale().widget.tokens.single}{:else}{locale().widget.tokens.plural}{/if}</span
