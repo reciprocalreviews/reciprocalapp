@@ -6966,6 +6966,9 @@
                     "actions": {
                       "type": "string"
                     },
+                    "date": {
+                      "type": "string"
+                    },
                     "from": {
                       "type": "string"
                     },
@@ -6987,12 +6990,26 @@
                   },
                   "required": [
                     "status",
+                    "date",
                     "tokens",
                     "scholar",
                     "from",
                     "to",
                     "purpose",
                     "actions"
+                  ],
+                  "type": "object"
+                },
+                "note": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "sortOrder": {
+                      "description": "What order the table is in. The list is not purely reverse-chronological: proposed transactions come first, whatever their date, so work waiting on an approver is never stranded behind pagination. Nothing else on screen can say that.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "sortOrder"
                   ],
                   "type": "object"
                 },
@@ -7054,6 +7071,7 @@
                 "field",
                 "status",
                 "headers",
+                "note",
                 "error",
                 "paragraph"
               ],

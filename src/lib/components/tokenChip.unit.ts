@@ -7,21 +7,21 @@ const TOKENS = { single: 'token', plural: 'tokens' };
 describe('tokenChip', () => {
 	test('renders the star, the amount, and the plural unit', () => {
 		expect(tokenChip(TOKENS, 10).html).toBe(
-			'<span class="token"><span class="star">★</span> 10 tokens</span>'
+			'<span class="token"><span class="value"><span class="star">★</span> 10</span> tokens</span>'
 		);
 	});
 
 	test('uses the singular unit for exactly one', () => {
-		expect(tokenChip(TOKENS, 1).html).toContain(' 1 token</span>');
+		expect(tokenChip(TOKENS, 1).html).toContain(' 1</span> token</span>');
 	});
 
 	test('uses the plural unit for zero', () => {
-		expect(tokenChip(TOKENS, 0).html).toContain(' 0 tokens</span>');
+		expect(tokenChip(TOKENS, 0).html).toContain(' 0</span> tokens</span>');
 	});
 
 	test('names a currency when given one', () => {
 		expect(tokenChip(TOKENS, 2, { currency: 'Kudos' }).html).toBe(
-			'<span class="token"><span class="star">★</span> 2 <span class="currency">Kudos</span> tokens</span>'
+			'<span class="token"><span class="value"><span class="star">★</span> 2</span> <span class="currency">Kudos</span> tokens</span>'
 		);
 	});
 

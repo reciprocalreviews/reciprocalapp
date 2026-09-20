@@ -287,8 +287,21 @@
 				padding: var(--spacing-half);
 				border-radius: var(--roundedness);
 				background-color: var(--salient-color-faded);
+				/* The chip wraps, so each line gets its own background and padding rather
+				   than one box straddling the break. */
 				box-decoration-break: clone;
-				/* An amount and its unit are one value; wrapping between them reads as two. */
+				/* The chip may wrap, because the currency name inside it is venue-authored
+				   and can be long: "★ 25 Computing Education Tokens" held on one line sets a
+				   minimum width that a table column then has to find room for, and the
+				   transactions table is already the widest thing on the platform. Only the
+				   star and the amount are held together, below — they are one value, and
+				   wrapping between them reads as two. The unit word is free to follow the
+				   name, since the name already separates it from the amount. */
+				white-space: normal;
+			}
+
+			/* The star and the amount: never split. */
+			.token .value {
 				white-space: nowrap;
 			}
 

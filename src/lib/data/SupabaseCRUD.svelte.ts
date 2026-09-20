@@ -3493,16 +3493,38 @@ export default class SupabaseCRUD extends CRUD {
 		return { error: undefined, data: undefined };
 	}
 
-	// The three paginated transaction lists all sort by created_at and then by
-	// seq. The tiebreaker is not optional: created_at defaults to now(), which is
-	// transaction START time, so every row a single RPC writes carries an
-	// identical timestamp — create_submission inserts one charge per author that
-	// way. Sorting on created_at alone leaves those rows in an order the planner
-	// may choose differently per query, and a LIMIT/OFFSET over an unstable sort
-	// can return one row on two pages while skipping another entirely.
+	// The three paginated transaction lists all sort by status, then created_at,
+	// then seq.
+	//
+	// STATUS FIRST is what keeps an approver's work reachable. Proposed rows are a
+	// minority on a table that only ever grows, so ordering by date alone buried an
+	// old unapproved transaction behind however many pages of settled history had
+	// accumulated since it was proposed — and a reader has no way to know it is down
+	// there. Sorting them to the front costs the date ordering nothing: within each
+	// status the list is still newest first.
+	//
+	// Ascending means proposed → approved → declined because PostgreSQL orders an
+	// enum by the position its labels were DECLARED in, not alphabetically, and
+	// transaction_status was created as ('proposed', 'approved', 'canceled') with
+	// the third later renamed to 'declined' — a rename keeps its position. Nothing
+	// in this file can see that, so supabase/tests/invariants/transaction_status_order.sql
+	// asserts it: adding a label with `alter type ... add value` appends it to the
+	// END of the order regardless of where it reads in the type, and a label added
+	// before 'proposed' would silently invert every transaction list on the platform.
+	//
+	// SEQ LAST is not optional: created_at defaults to now(), which is transaction
+	// START time, so every row a single RPC writes carries an identical timestamp —
+	// create_submission inserts one charge per author that way. Sorting on
+	// created_at alone leaves those rows in an order the planner may choose
+	// differently per query, and a LIMIT/OFFSET over an unstable sort can return one
+	// row on two pages while skipping another entirely.
+	//
+	// Transactions.svelte re-sorts the pages it has merged and must mirror this
+	// order exactly, or rows shuffle across the boundaries the server cut them on.
 	async getScholarTransactions(scholar: ScholarID, page: number = 0) {
 		return await transactionListQuery(this.client, page === 0)
 			.or(`from_scholar.eq.${scholar},to_scholar.eq.${scholar}`)
+			.order('status', { ascending: true })
 			.order('created_at', { ascending: false })
 			.order('seq', { ascending: false })
 			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
@@ -3511,6 +3533,7 @@ export default class SupabaseCRUD extends CRUD {
 	async getVenueTransactions(venue: VenueID, page: number = 0) {
 		return await transactionListQuery(this.client, page === 0)
 			.or(`from_venue.eq.${venue},to_venue.eq.${venue}`)
+			.order('status', { ascending: true })
 			.order('created_at', { ascending: false })
 			.order('seq', { ascending: false })
 			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
@@ -3519,9 +3542,18 @@ export default class SupabaseCRUD extends CRUD {
 	async getCurrencyTransactions(currency: CurrencyID, page: number = 0) {
 		return await transactionListQuery(this.client, page === 0)
 			.eq('currency', currency)
+			.order('status', { ascending: true })
 			.order('created_at', { ascending: false })
 			.order('seq', { ascending: false })
 			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+	}
+
+	/** One list row, refetched by id after the viewer approved or declined it —
+	 * see getTransaction in CRUD for why the row cannot simply be looked up in the
+	 * pages already loaded. `transactionListQuery` rather than a `select('*')`: the
+	 * `tokens` array is one uuid per token moved, and a mint can carry thousands. */
+	async getTransaction(id: TransactionID) {
+		return await transactionListQuery(this.client, false).eq('id', id).maybeSingle();
 	}
 
 	async getScholarTransactionCount(scholar: ScholarID): Promise<ReadResult<number | null>> {

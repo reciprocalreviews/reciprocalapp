@@ -323,3 +323,61 @@ test('editor cannot insert an already-approved venue→editor transaction (anti-
 	}
 	expect(sql(`select count(*) from public.transactions where purpose = '${purpose}';`)).toBe('0');
 });
+
+test('an unapproved transaction from the distant past is on the first page, above settled history', async ({
+	page,
+	context
+}) => {
+	// The list pages ten rows at a time from the server, so ordering it by date
+	// alone put a proposal nobody had answered behind however many pages of
+	// settled history had accumulated since — and nothing on screen said it was
+	// down there. The three list queries therefore sort proposed rows to the
+	// front whatever their date (SupabaseCRUD, getVenueTransactions and friends).
+	const recipientID = sql(`select id from public.scholars where email = '${RECIPIENT_EMAIL}';`);
+	const purpose = `e2e ancient proposal ${Date.now()}`;
+	sql(
+		`insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status, created_at) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${recipientID}', null, array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[2]), '${CURRENCY_ID}', '${purpose}', 'proposed', '2024-02-02T10:00:00Z');`
+	);
+
+	// The premise: it really is buried. A full page of newer transactions sits
+	// above it when the list is ordered by date, so its appearing on the first
+	// page cannot be an accident of a short table.
+	const newer = Number(
+		sql(
+			`select count(*) from public.transactions where (from_venue = '${VENUE_ID}' or to_venue = '${VENUE_ID}') and created_at > '2024-02-02T10:00:00Z';`
+		)
+	);
+	expect(newer).toBeGreaterThanOrEqual(10);
+
+	await login(MINTER_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
+	await page.waitForLoadState('networkidle');
+
+	// Present on the first page, without paging, and actionable.
+	const row = page.locator(`tr:has(td:has-text(${JSON.stringify(purpose)}))`);
+	await expect(row).toHaveCount(1);
+	await expect(row.locator('[data-testid$="-approve"]')).toHaveCount(1);
+
+	// And above every settled row: the whole point is that an approver reads the top
+	// of the table and finds their outstanding work there. Stated as "nothing
+	// proposed appears below something settled" rather than as two indexes, because
+	// a first page that happens to be entirely proposed — which a busy venue's is,
+	// since every submission charge starts that way — satisfies the rule too.
+	const statuses = await page.locator('[data-testid$="-status"]').allInnerTexts();
+	const firstSettled = statuses.findIndex((status) => status !== 'proposed');
+	if (firstSettled !== -1) expect(statuses.slice(firstSettled)).not.toContain('proposed');
+});
+
+test('the control that pages the list is legible', async ({ page, context }) => {
+	// It renders its own label rather than leaving it to Button, which drops
+	// `strings().label` whenever a child snippet is passed. The snippet here is
+	// empty unless a fetch is in flight, so the control was a blank square that
+	// only a tooltip explained.
+	await login(MINTER_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
+	await page.waitForLoadState('networkidle');
+
+	const loadMore = page.getByRole('button', { name: 'Load more transactions' });
+	await expect(loadMore).toBeVisible();
+	await expect(loadMore).toHaveText(/Load more transactions/);
+});

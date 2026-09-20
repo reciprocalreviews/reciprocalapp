@@ -1511,12 +1511,20 @@ export type LocaleText = {
 			};
 			headers: {
 				status: string;
+				date: string;
 				tokens: string;
 				scholar: string;
 				from: string;
 				to: string;
 				purpose: string;
 				actions: string;
+			};
+			note: {
+				/** What order the table is in. The list is not purely
+				 * reverse-chronological: proposed transactions come first, whatever
+				 * their date, so work waiting on an approver is never stranded behind
+				 * pagination. Nothing else on screen can say that. */
+				sortOrder: string;
 			};
 			error: {
 				unknownVenue: string;

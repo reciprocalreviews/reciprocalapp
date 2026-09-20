@@ -1685,12 +1685,16 @@
 			},
 			"headers": {
 				"status": "Status",
+				"date": "Date",
 				"tokens": "Tokens",
 				"scholar": "Creator",
 				"from": "From",
 				"to": "To",
 				"purpose": "Purpose",
 				"actions": "Actions"
+			},
+			"note": {
+				"sortOrder": "Transactions awaiting approval come first, whatever their date, then the most recent."
 			},
 			"cell": {
 				"minted": "minted",

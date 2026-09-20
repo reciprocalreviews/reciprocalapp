@@ -29,7 +29,8 @@ export default function tokenChip(
 
 	return html(
 		`<span class="token${debit ? ' debit' : ''}">` +
-			`<span class="star">${TokenLabel}</span> ${amount}${name} ${unit}` +
+			`<span class="value"><span class="star">${TokenLabel}</span> ${amount}</span>` +
+			`${name} ${unit}` +
 			`</span>`
 	);
 }

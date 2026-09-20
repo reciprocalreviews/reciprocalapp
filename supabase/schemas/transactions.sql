@@ -199,16 +199,21 @@ add constraint transactions_seq_key unique (seq);
 -- actually issue. Before these, every transaction list was a sequential scan
 -- plus a sort.
 --
--- currency + created_at covers getCurrencyTransactions' filter AND its sort, so
--- an ordered Index Scan can satisfy the ORDER BY with no Sort node; seq makes the
--- pagination stable. On a near-empty table the planner still prefers a bitmap
--- scan plus a sort, which is correct at that size — check the ordered path with
--- `set enable_bitmapscan = off` before concluding the index is unused.
-create index transactions_currency_created_index on public.transactions using btree (currency, created_at desc, seq desc);
+-- currency + status + created_at covers getCurrencyTransactions' filter AND its
+-- whole sort, so an ordered Index Scan can satisfy the ORDER BY with no Sort
+-- node; seq makes the pagination stable. Status is in the list because the query
+-- sorts proposed transactions to the front whatever their date — see the comment
+-- on the three list methods in SupabaseCRUD. On a near-empty table the planner
+-- still prefers a bitmap scan plus a sort, which is correct at that size — check
+-- the ordered path with `set enable_bitmapscan = off` before concluding the index
+-- is unused.
+create index transactions_currency_status_created_index on public.transactions using btree (currency, status, created_at desc, seq desc);
 
 -- The scholar and venue lists filter `from_x = $1 OR to_x = $1`, satisfied as a
--- BitmapOr over these. Partial because the from/to columns are mutually
--- exclusive by CHECK, so roughly half the table is null in each.
+-- BitmapOr over these, and then sort — a bitmap scan destroys index order, so
+-- they cannot be covered the way the currency list is without duplicating a
+-- composite across all four from/to columns. Partial because the from/to columns
+-- are mutually exclusive by CHECK, so roughly half the table is null in each.
 create index transactions_from_scholar_index on public.transactions using btree (from_scholar)
 where
 	from_scholar is not null;

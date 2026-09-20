@@ -36,8 +36,11 @@
 		strings={(l) => l.view.transactions.button.approve}
 		testid={testid + '-' + index + '-approve'}
 		action={async () => {
-			if ((await handle(db().approveTransaction(userid, transaction.id))) !== false)
-				await onChange?.(transaction.id);
+			// Read the id ONCE, before awaiting. `handle()` invalidates the page, and the
+			// list this row sits in reorders when a transaction is decided, so `transaction`
+			// may be a different row by the time the await resolves.
+			const id = transaction.id;
+			if ((await handle(db().approveTransaction(userid, id))) !== false) await onChange?.(id);
 		}}
 	/>
 	<Button
@@ -58,10 +61,10 @@
 			testid={testid + '-' + index + '-decline-confirm'}
 			active={declineReason.length > 0}
 			action={async () => {
-				if (
-					(await handle(db().declineTransaction(userid, transaction.id, declineReason))) !== false
-				)
-					await onChange?.(transaction.id);
+				// The id before the await, for the reason above.
+				const id = transaction.id;
+				if ((await handle(db().declineTransaction(userid, id, declineReason))) !== false)
+					await onChange?.(id);
 				showDecline = false;
 			}}
 		/>
