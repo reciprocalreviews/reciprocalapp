@@ -3,6 +3,7 @@
 	import { dismissBeta } from '$lib/data/betaDismissal';
 	import Text from '$lib/locales/Text.svelte';
 	import Banner from './Banner.svelte';
+	import measure from './measure';
 	import Link from './Link.svelte';
 
 	let {
@@ -27,20 +28,26 @@
 <footer>
 	<!-- The beta notice, which used to head the banner stack inside the sticky header. It
 	     was true and useful once and then charged every page a band of the viewport
-	     forever (#176). Down here it is still on every page, still says the same thing,
-	     and costs nothing above the fold — and it can be put away for good. -->
+	     forever (#176). Pinned to the bottom of the viewport rather than to the bottom of
+	     the document: at the end of a long page it was never seen, which is no way to run
+	     a notice that asks for feedback. It can still be put away for good.
+
+	     Still a child of <footer> though it is fixed, so "in the footer, not the header"
+	     stays a true thing to assert about it. -->
 	{#if BETA && !dismissed}
-		<Banner
-			level="beta"
-			small
-			testid="banner-beta"
-			dismiss={() => {
-				dismissed = true;
-				dismissBeta();
-			}}
-		>
-			<Text markdown path={(l) => l.banner.beta.lead} />
-		</Banner>
+		<div class="beta" use:measure={'--bottom-chrome'}>
+			<Banner
+				level="beta"
+				small
+				testid="banner-beta"
+				dismiss={() => {
+					dismissed = true;
+					dismissBeta();
+				}}
+			>
+				<Text markdown path={(l) => l.banner.beta.lead} />
+			</Banner>
+		</div>
 	{/if}
 	<div class="links">
 		<Link size="extra-small" to="/about"><Text path={(l) => l.footer.link.about} /></Link>
@@ -60,13 +67,39 @@
 		margin-block-start: var(--spacing);
 		border-block-start: var(--border-color) solid var(--border-width);
 		background: var(--background-color);
+		/* Room for the pinned notice, so it never covers these links.
+		
+		   On the footer rather than on `main`: `body` is a `min-height: 100dvh` flex column
+		   with `main { flex: 1 }`, so on a short page `main` absorbs the slack and the
+		   footer is ALREADY at the viewport bottom — padding inside `main` would not move it
+		   out from under the bar. This is half of the pair #156 deleted; the other half is
+		   `scroll-padding-block-end` in app.html. */
+		padding-block-end: var(--bottom-chrome, 0px);
 		/* Not sticky. It used to be, and on a short page — or on mobile the moment the
 		   URL bar hides and the viewport grows — its natural position ended up above
 		   the bottom edge and it appeared to float mid-screen (#156). The flex column
 		   on `body` keeps it at the bottom without pinning it over the content.
 
-		   That is also why the beta notice is safe here and was not safe in the header:
-		   nothing measures this element, so nothing moves when it is dismissed. */
+		   `fixed` cannot recur that failure, because it is anchored to the viewport
+		   unconditionally rather than only while content remains below it. What it CAN do is
+		   occlude, which is what the padding above and the scroll padding in app.html are
+		   for — the same pair, and for the same reason, as the ones #156 retired. */
+	}
+
+	.beta {
+		position: fixed;
+		bottom: 0;
+		/* `inset-inline`, not `width: 100vw`: the viewport unit includes the scrollbar, and
+		   a bar wider than the document gives the page a horizontal scrollbar — which on a
+		   page with sticky rows slides the chrome itself out of view (#156). */
+		inset-inline: 0;
+		/* Above the nav's 2 and below the hydration notice's 100 in app.html. A modal
+		   `<dialog>` uses showModal(), so the top layer covers this whatever the value —
+		   which is right: the notice should not sit over a dialog. */
+		z-index: 3;
+		/* A no-op today, because app.html's viewport meta has no `viewport-fit=cover`, and
+		   correct the moment it does. */
+		padding-bottom: env(safe-area-inset-bottom, 0px);
 	}
 
 	.links {

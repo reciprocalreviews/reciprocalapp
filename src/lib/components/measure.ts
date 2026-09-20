@@ -10,10 +10,16 @@ import type { Action } from 'svelte/action';
  * change as the page is used: banners appear and are dismissed, the nav row
  * wraps on a narrow screen, a long title runs to a second line.
  *
- * This runs only after hydration, and that is deliberately safe rather than
- * merely tolerable: it writes a sticky offset and a scroll padding, never a
- * layout height, so nothing it does can move content. Until it first reports,
- * and whenever script is off, the `var()` fallbacks in the CSS stand in.
+ * This runs only after hydration, and for two of its three callers that is safe rather
+ * than merely tolerable: a sticky offset and a scroll padding are not layout, so nothing
+ * they do can move content. The third is the beta notice's `--bottom-chrome`, which the
+ * footer spends as `padding-block-end` — a real layout height, written late. It is still
+ * safe, but for a different reason: the only gap it opens is BELOW the footer, where there
+ * is nothing to shift. Keep that distinction in mind before feeding a measured property
+ * into anything above the fold.
+ *
+ * Until it first reports, and whenever script is off, the `var()` fallbacks in the CSS
+ * stand in.
  */
 const measure: Action<HTMLElement, string> = (node, property) => {
 	let current = property;

@@ -22,6 +22,26 @@ test('the beta notice lives in the footer and stays dismissed', async ({ page })
 	await expect(page.locator('footer').getByTestId('banner-beta')).toBeVisible();
 	await expect(page.locator('header').getByTestId('banner-beta')).toHaveCount(0);
 
+	// Pinned to the viewport's bottom rather than the document's, which is the difference
+	// between a notice that is read and one that is never reached on a long page.
+	const pinned = await beta.evaluate(
+		(node) => Math.round(node.getBoundingClientRect().bottom) === window.innerHeight
+	);
+	expect(pinned).toBe(true);
+
+	// And it reserves its own space, so the footer's links are never underneath it — those
+	// links are what somebody who is stuck comes down here for. Asserted at the end of the
+	// document, which is the only place they are on screen at all on a page this long.
+	await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+	const clear = await page.evaluate(() => {
+		const bar = document.querySelector('[data-testid="banner-beta"]');
+		const links = document.querySelector('footer .links');
+		if (!bar || !links) return false;
+		return links.getBoundingClientRect().bottom <= bar.getBoundingClientRect().top + 1;
+	});
+	expect(clear).toBe(true);
+	await page.evaluate(() => window.scrollTo(0, 0));
+
 	await beta.getByRole('button').click();
 	await expect(beta).toHaveCount(0);
 
@@ -74,6 +94,24 @@ test('an admin gets settings in the bar', async ({ page, context }) => {
 	await logout(page);
 });
 
+test('nothing collapses while the row has room for it', async ({ page }) => {
+	// The regression this exists to catch. The menu used to decide by `max-width: 48rem`,
+	// so at 700px every collapsible link hid although they all fit — and no single width
+	// could be right anyway, since an admin's bar carries six links and a stranger's three.
+	await page.setViewportSize({ width: 900, height: 800 });
+	await page.goto(`/venue/${VENUE}`);
+	await page.waitForLoadState('networkidle');
+
+	const bar = page.getByTestId('venue-bar');
+	await expect(bar.getByRole('link', { name: 'Transactions' })).toBeVisible();
+	await expect(page.getByTestId('venue-menu')).toBeHidden();
+
+	// Still true at a width the old breakpoint collapsed everything at.
+	await page.setViewportSize({ width: 700, height: 800 });
+	await expect(bar.getByRole('link', { name: 'Transactions' })).toBeVisible();
+	await expect(page.getByTestId('venue-menu')).toBeHidden();
+});
+
 test('the chrome collapses instead of wrapping on a phone', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 800 });
 	await page.goto(`/venue/${VENUE}`);
@@ -104,4 +142,14 @@ test('the chrome collapses instead of wrapping on a phone', async ({ page }) => 
 
 	await page.keyboard.press('Escape');
 	await expect(bar.getByRole('link', { name: 'Transactions' })).toBeHidden();
+
+	// Nor may collapsing itself change it. A link and the control that replaces it are not
+	// the same height, so left to its content the bar measured one height with the menu and
+	// another without — a vertical shift of the whole page on every resize, which is what
+	// `--chrome-row-height` is declared to prevent. Widening until nothing is collapsed is
+	// the way to catch that: same bar, no menu, and it must be the same height.
+	await page.setViewportSize({ width: 900, height: 800 });
+	await expect(bar.getByRole('link', { name: 'Transactions' })).toBeVisible();
+	await expect(page.getByTestId('venue-menu')).toBeHidden();
+	expect((await bar.boundingBox())?.height ?? 0).toBeCloseTo(barHeight, 0);
 });

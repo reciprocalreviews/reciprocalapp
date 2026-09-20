@@ -181,7 +181,17 @@
 			 * page supplies a subtitle or details. The fallbacks are typical values, used
 			 * for the first paint before the observers report and whenever script is off.
 			 *
-			 * The end value is 0: the footer is in normal flow and covers nothing.
+			 * The end value is `--bottom-chrome`, the beta notice pinned to the bottom of
+			 * the viewport (#176). It used to be 0, on the grounds that the footer is in
+			 * normal flow and covers nothing — true until something down there stopped
+			 * being in normal flow. This is one half of the pair #156 retired; the other is
+			 * `padding-block-end` on the footer itself.
+			 *
+			 * Its fallback is 0, which is the OPPOSITE of the rule the two start values
+			 * follow, and deliberately so. Those bands are always there, so guessing high
+			 * only over-reserves. The notice is dismissible and absent for anyone who has
+			 * dismissed it, so a non-zero fallback would charge every page a strip of
+			 * nothing. Guess in the direction that is wrong less often.
 			 *
 			 * `--page-header-height` names the second band by its position, not by which
 			 * component draws it. Inside a venue that band is VenueBar.svelte rather than
@@ -192,7 +202,7 @@
 			 */
 			html {
 				scroll-padding-block-start: calc(var(--nav-height, 8rem) + var(--page-header-height, 6rem));
-				scroll-padding-block-end: 0;
+				scroll-padding-block-end: var(--bottom-chrome, 0px);
 			}
 
 			body {
@@ -210,9 +220,16 @@
 				   a short page (#156). `dvh` rather than `svh`/`lvh` because it tracks the
 				   viewport as a mobile URL bar hides — which is the moment the footer was
 				   reported detaching. The body's app wrapper is `display: contents`, so
-				   header/main/footer are the flex items here. */
-				min-height: 100vh;
-				min-height: 100dvh;
+				   header/main/footer are the flex items here.
+
+				   Less whatever is pinned over the bottom of the viewport (#176). Without
+				   the subtraction the column fills the whole viewport, which parks the
+				   footer's own links underneath the beta notice on any page short enough for
+				   `main` to be absorbing slack — and those links are what someone who is
+				   stuck comes down here for. The footer's `padding-block-end` covers the
+				   other case, a page long enough to scroll. */
+				min-height: calc(100vh - var(--bottom-chrome, 0px));
+				min-height: calc(100dvh - var(--bottom-chrome, 0px));
 				display: flex;
 				flex-direction: column;
 			}
