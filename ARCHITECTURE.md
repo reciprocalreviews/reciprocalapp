@@ -733,6 +733,21 @@ the row, and these rows' heights are the sticky offsets described under Global c
 `end2end/chrome.end.ts` asserts it by measurement — a zero-width inline probe in each box,
 compared — since neither `toBeVisible` nor a screenshot at this size can see three pixels.
 
+Its companion, learned the same way: **a row aligned on baselines cannot also centre
+itself.** Baseline alignment places the group at the top of the line and gives every spare
+pixel to the bottom, so a band taller than its own words — which each of these is, since
+their heights are declared — sits all of them high. The venue bar's words were 5px above
+centre, and the baseline assertion above passed throughout, because the row was uniformly
+wrong. So a chrome band is **two boxes**: the outer one declares the height and centres its
+single child, and the inner one aligns the items on their baselines and is **exactly one
+line tall**, because a row left to size itself is as tall as whatever `<sub>` hangs lowest
+in it and centring that box still leaves the words high. The inner row is also what
+`Overflow` measures and what carries its `[data-fitting]` freeze, so moving one moves both.
+The control `Overflow` collapses into sets `align-self: center` on its own wrapper rather
+than on the button inside it: the wrapper is the row's flex item, and a rule on the button
+centres it within the wrapper while leaving the wrapper in the baseline group, which pushes
+every word in the row down by the difference between its ascent and theirs.
+
 **`Overflow`** holds the items that do not fit a narrow chrome row, and **a measurement
 decides which those are**. It began as a `max-width: 48rem` media query, which collapsed
 every link at 700px although the row had room for all of them — and no one number could be

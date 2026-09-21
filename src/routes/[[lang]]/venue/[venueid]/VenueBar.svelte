@@ -60,26 +60,38 @@
 	passes `band={false}` — two ResizeObservers on one custom property fight, and what
 	that produces is a jitter no test would catch.
 -->
-<nav class="venue-bar" bind:this={row} use:measure={'--page-header-height'} data-testid="venue-bar">
-	<!-- The short name, which is what this column of the bar is for: "ToK" fits where
-	     "Transactions on Knowledge" does not, and the landing page still spells the full
-	     title out. A venue that never chose one falls back to its title, so this truncates
-	     rather than pushing the links off the end. Wrapped, so the freeze below can reach
-	     it: the `<a>` inside is Link.svelte's and this component's scoped styles do not
-	     land on it. -->
-	<div class="home">
-		<Link size="small" to={home} icon={VenueLabel} testid="venue-bar-home">
-			<span class="name">{name}</span>
-		</Link>
+<nav class="venue-bar" use:measure={'--page-header-height'} data-testid="venue-bar">
+	<!-- Two boxes, because the band has two jobs that one box cannot do at once. The nav
+	     is the band: it declares the height and centres what is in it. This row is the
+	     line of words: it sits its items on one baseline, and it is exactly one line tall
+	     so that centring it centres the WORDS rather than a box the 🌐 has deepened. One
+	     box doing both put the whole row 9.6px high in the band, since a baseline-aligned
+	     container has no way to centre its group and gave every spare pixel to the bottom.
+
+	     It is also what `Overflow` measures — the space the items actually have, which is
+	     the nav's width less its padding, so the arithmetic is the same and it no longer
+	     has to subtract padding that belongs to somebody else. -->
+	<div class="row" bind:this={row}>
+		<!-- The short name, which is what this column of the bar is for: "ToK" fits where
+		     "Transactions on Knowledge" does not, and the landing page still spells the full
+		     title out. A venue that never chose one falls back to its title, so this truncates
+		     rather than pushing the links off the end. Wrapped, so the freeze below can reach
+		     it: the `<a>` inside is Link.svelte's and this component's scoped styles do not
+		     land on it. -->
+		<div class="home">
+			<Link size="small" to={home} icon={VenueLabel} testid="venue-bar-home">
+				<span class="name">{name}</span>
+			</Link>
+		</div>
+		<Overflow
+			strings={(l) => l.page.venue.bar.menu}
+			testid="venue-menu"
+			items={links}
+			key={(link) => link.href}
+			item={barLink}
+			{row}
+		/>
 	</div>
-	<Overflow
-		strings={(l) => l.page.venue.bar.menu}
-		testid="venue-menu"
-		items={links}
-		key={(link) => link.href}
-		item={barLink}
-		{row}
-	/>
 </nav>
 
 <style>
@@ -104,12 +116,11 @@
 		flex-direction: row;
 		/* Not `wrap`. Growing a second row is the thing this bar exists to stop. */
 		flex-wrap: nowrap;
-		/* Baselines, not boxes. `Link` appends a 🌐 to an external link as a `<sub>`, which
-		   hangs below the text and makes that link's box taller than its neighbours' — so
-		   centring the boxes pushed "Website" a couple of pixels above the words beside it.
-		   Page.svelte's title band aligns on baselines for the same reason. */
-		align-items: baseline;
-		gap: var(--spacing);
+		/* The band centres its one child. Baselines are the row's job, one level in: a
+		   container aligned on baselines places that group at the top of the line and gives
+		   every spare pixel to the bottom, so asking one box to do both left the whole row
+		   sitting 9.6px high in a band half as tall again as the words in it. */
+		align-items: center;
 		/* Declared, not discovered. What is in this row changes with the width — links
 		   leave, the ☰ arrives, and they are not the same height — and this row's height is
 		   `--page-header-height`, the sticky offset for the page below it. A row that grew
@@ -130,6 +141,26 @@
 		   which matters, because that height is what `--page-header-height` carries. */
 	}
 
+	/* The line of words, and exactly one line tall. The height is what makes the centring
+	   above mean what it looks like it means: left to its content this box is as tall as
+	   its tallest item, and "Website"'s 🌐 hangs below the baseline, so centring the BOX
+	   would sit every word about 3.5px above the middle of the band. Sized from the font
+	   the links are set in rather than from a number, so it follows `--small-font-size`.
+	   The 🌐 and the ☰ overflow this box by design; the nav clips nothing. */
+	.row {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: nowrap;
+		align-items: baseline;
+		gap: var(--spacing);
+		width: 100%;
+		/* A flex item's floor is its content, not zero, and `.home` cannot shrink below a
+		   parent that will not. */
+		min-width: 0;
+		font-size: var(--small-font-size);
+		height: 1lh;
+	}
+
 	/* The one item here with no length limit worth relying on, so it is the one allowed to
 	   shrink — and therefore the one that has to be pinned while Overflow measures. Without
 	   the second rule the bar absorbs every pixel of overflow by grinding this label down,
@@ -146,8 +177,11 @@
 
 	/* `:global` on the attribute half is load-bearing, not stylistic: `data-fitting` is
 	   written by JavaScript during a measurement, so Svelte's CSS pruner cannot see it and
-	   drops the whole rule as unused — silently, and with it the freeze. */
-	:global(.venue-bar[data-fitting]) .home {
+	   drops the whole rule as unused — silently, and with it the freeze. It is written on
+	   whichever element is passed to `Overflow` as its row, which is `.row` and not the
+	   nav — moving it and leaving this selector behind would drop the freeze just as
+	   quietly as the pruner would. */
+	:global(.row[data-fitting]) .home {
 		flex-shrink: 0;
 	}
 

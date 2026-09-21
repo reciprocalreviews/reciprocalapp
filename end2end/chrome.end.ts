@@ -130,6 +130,31 @@ test('the venue bar reaches a venue from every route inside it', async ({ page }
 			.boundingBox()
 			.then((b) => b?.height)
 	).toBeCloseTo(48, 0);
+
+	// And WHERE that one line sits in the band, which is a different question from whether
+	// the words agree with each other and was wrong for longer. Every word sat 5px above
+	// centre: the band is 48px and its words 22.4px, and a container aligned on baselines
+	// puts that group at the top of the line and gives the whole surplus to the bottom.
+	// The assertion above passed throughout, because the row was uniformly wrong.
+	//
+	// Measured on the text rather than on any box, deliberately: the row's box is as tall
+	// as "Website"'s 🌐 hanging below the baseline, so an arrangement that centres the BOX
+	// still leaves every word about 3.5px high and looks like this bug.
+	const fromCentre = await page.evaluate(() => {
+		const bar = document.querySelector('[data-testid="venue-bar"]');
+		const name = bar?.querySelector('.name');
+		if (!bar || !name) return null;
+		const band = bar.getBoundingClientRect();
+		const probe = document.createElement('span');
+		probe.textContent = 'x';
+		probe.style.cssText = 'display:inline;font:inherit;';
+		name.appendChild(probe);
+		const text = probe.getBoundingClientRect();
+		probe.remove();
+		return (text.top + text.bottom) / 2 - (band.top + band.bottom) / 2;
+	});
+	expect(fromCentre).not.toBeNull();
+	expect(Math.abs(fromCentre as number)).toBeLessThan(1);
 });
 
 test('an admin gets settings in the bar', async ({ page, context }) => {

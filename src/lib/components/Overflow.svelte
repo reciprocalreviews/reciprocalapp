@@ -344,6 +344,13 @@
 		position: relative;
 		display: flex;
 		align-items: center;
+		/* This box is the row's flex item, not the ☰ inside it, so this is where a row
+		   aligned on baselines has to be told that the control is a glyph rather than a
+		   word. Said on the button instead, it only centred the button within this box and
+		   left the control in the baseline group — which in a row of words pushed every one
+		   of them down by the difference between its ascent and theirs. Harmless in a row
+		   that centres its items, which is what the site header does. */
+		align-self: center;
 	}
 
 	/* Nothing is collapsed, so the control is not offered — but it stays laid out, out of
