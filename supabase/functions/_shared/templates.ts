@@ -220,12 +220,19 @@ export const Emails = {
 		// One submission or two hundred, this is the same subscription to a reader.
 		silencedBy: 'SubmissionsNeedEditors'
 	},
+	// One digest for everyone an import seated, whatever role the file named them in and
+	// whichever of the two seating paths reached them -- so it can claim neither. It used
+	// to call every recipient the venue's editor and explain that they were assigned
+	// because they were its ONLY editor, which was false for anyone the file named by
+	// name, and for anyone holding some other role (#181). The key is kept for the same
+	// reason the prose changed: public.emails.event holds it on every row already sent,
+	// and a queued row is rendered by this name at send time.
 	SubmissionsAssignedEditor: {
-		subject: 'You are editing newly imported submissions',
+		subject: 'You have new assignments on imported submissions',
 		paragraphs: [
-			"$1 submission(s) were imported into $2, and you are the venue's editor for all of them.",
+			'$1 submission(s) were imported into $2 and assigned to you.',
 			'{origin}/venue/$3/submissions',
-			"You were assigned automatically because you are the venue's only editor. Remove yourself from any that someone else should handle."
+			"You were seated either because the import file named you, or because you are the only person in one of the venue's roles. Remove yourself from anything someone else should handle."
 		]
 	},
 	SubmissionsNeedEditors: {

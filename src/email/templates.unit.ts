@@ -155,6 +155,57 @@ describe('NewVolunteer', () => {
 	});
 });
 
+describe('SubmissionsAssignedEditor', () => {
+	const args = ['3', 'Transactions on Knowledge', 'knowledge'];
+
+	// One digest goes to everyone a bulk import seated, in whatever roles the file named
+	// them. It used to call all of them the venue's editor, so an associate editor was
+	// told they were editing the papers they had been asked to review (#181). Same rule as
+	// NewVolunteer above, reaching the opposite conclusion: there the role is data and is
+	// passed in, here the digest covers several roles at once and so names none.
+	it('names no role at all', () => {
+		const { subject, message } = renderEmail('SubmissionsAssignedEditor', args);
+		expect(`${subject} ${message}`).not.toMatch(/editor/i);
+	});
+
+	// The other half of #181. Both seating paths -- named in the file, and the fallback
+	// that seats a venue's sole editor -- feed this one message, and the recipient may
+	// have arrived by either or by both, so it offers them rather than asserting one.
+	it('gives both reasons someone may have been seated, and claims neither', () => {
+		const { message } = renderEmail('SubmissionsAssignedEditor', args);
+		expect(message).toContain('named you');
+		expect(message).toContain('only person');
+		expect(message).not.toContain("you are the venue's only");
+	});
+
+	it('names the venue and how many submissions arrived', () => {
+		const { message } = renderEmail('SubmissionsAssignedEditor', args);
+		expect(message).toContain('Transactions on Knowledge');
+		expect(message).toContain('3 submission(s)');
+	});
+
+	it("links to the venue's submissions list", () => {
+		const { message } = renderEmail('SubmissionsAssignedEditor', args, 'http://localhost:5173');
+		expect(message).toContain('http://localhost:5173/venue/knowledge/submissions');
+	});
+
+	it('defangs a link hiding in the venue title', () => {
+		const { message } = renderEmail('SubmissionsAssignedEditor', [
+			'3',
+			'https://evil.example',
+			'knowledge'
+		]);
+		expect(message).toContain('https[:]//evil.example');
+		expect(message).not.toContain('https://evil.example');
+	});
+
+	it('substitutes every placeholder', () => {
+		const { subject, message } = renderEmail('SubmissionsAssignedEditor', args);
+		expect(subject).not.toMatch(/\$\d/);
+		expect(message).not.toMatch(/\$\d/);
+	});
+});
+
 describe('optional notices', () => {
 	// The registry decides what a scholar may silence, and the settings interface is
 	// generated from it. A template marked optional with no label would render a control

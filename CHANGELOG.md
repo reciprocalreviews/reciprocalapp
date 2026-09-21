@@ -22,6 +22,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **Work you have requested compensation for now leaves your task list.** It is waiting on whoever approves it, and shows up on their list instead.
 - **A task now says which role it is.** Every row read "Review", whatever the venue called the role or whether it involved reviewing at all; each now carries the venue's own name for it.
 - **The examples shown in empty fields no longer assume who you are or where you publish.** A contact address suggested `you@university.edu`, and the venue settings fields suggested two real journals; they now show a neutral address and an invented venue (#180).
+- **The email announcing a bulk import no longer tells you that you are the venue's only editor.** It said that to everyone it seated, whatever role the file named them in, and it counted seats rather than papers — so one submission that seated you twice was announced as two (#181).
 
 ## 0.5.5 - 2026-09-13
 
