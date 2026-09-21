@@ -599,7 +599,7 @@ values
 	(
 		'82246928-ad37-11f0-a071-bb5db9b6e698',
 		'Transactions on Knowledge',
-		'https://toce.acm.edu',
+		'https://transactions-on-knowledge.example.org',
 		'{"editor@uni.edu"}',
 		'500',
 		'c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6'
