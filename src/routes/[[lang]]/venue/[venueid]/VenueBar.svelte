@@ -187,20 +187,42 @@
 		align-self: center;
 	}
 
+	/* The home link's own box, so that the name below can be a BLOCK and still sit on the
+	   row's baseline. A clipped box has to stop being inline-level for that to be possible
+	   at all, and a block only gets a baseline its parent can use if its parent is looking
+	   for one — hence the flex context here rather than one level up on `.home`, which
+	   lands the baseline just as well and grows the bar from 48px to 64px. This bar's
+	   height IS `--page-header-height`, so that is disqualifying rather than untidy.
+
+	   A flex container ignores `vertical-align` on its items, so the 📚 `Link` appends
+	   stops hanging below the text and sits on the baseline with it, about two pixels up.
+	   That is the intended reading: the glyph belongs to the venue's name. "Website"'s 🌐
+	   is a different link and still hangs, where it marks a link that leaves the site. */
+	.venue-bar .home :global(a) {
+		display: flex;
+		align-items: baseline;
+	}
+
 	/* The one item here with no length limit worth relying on: a venue that chose no short
 	   name falls back to a title its editors wrote. It loses, rather than pushing the
 	   links it sits beside off the end of a row that no longer wraps. */
 	.name {
-		/* `inline-block` is what makes the ellipsis possible, and it also stops
-		   `text-decoration` propagating into this box — so `Link`'s underline, which says
-		   "this goes somewhere", never painted here and the venue's name read as the
-		   current route on every page. Inheriting it explicitly is the way back. */
+		/* A block, and not an inline-block, for a reason no amount of `vertical-align`
+		   could fix. `text-overflow: ellipsis` needs `overflow: hidden`, and an INLINE-level
+		   box whose overflow is not `visible` takes its baseline from its bottom margin edge
+		   rather than from its text (CSS 2.1 §10.8.1) — so while this was an inline-block it
+		   had no usable baseline, and sat 3.45px below every other word in the bar. Removing
+		   the `vertical-align: bottom` it used to carry moved it 7.39px the other way. As a
+		   flex item of the rule above it is block-level, where that clause does not apply.
+
+		   `display: block` also stops `text-decoration` propagating in, exactly as
+		   `inline-block` did, so `Link`'s underline still has to be inherited explicitly or
+		   the venue's name reads as the current route on every page inside the venue. */
 		text-decoration: inherit;
-		display: inline-block;
+		display: block;
 		max-width: 12rem;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		vertical-align: bottom;
 	}
 </style>

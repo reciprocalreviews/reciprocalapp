@@ -719,6 +719,20 @@ passes one, so a placeholder longer than that is clipped with no warning anywher
 characters, or pass `stretch` to make the field fill its container and measure nothing.
 DESIGN.md § Interface governs what a placeholder may _say_; this is what it may _be_.
 
+One rule cuts across the chrome rows rather than belonging to any component in it:
+**a box that ellipsizes cannot sit on a shared baseline while it is inline-level.**
+`text-overflow: ellipsis` requires `overflow: hidden`, and an inline-level box whose
+overflow is not `visible` takes its baseline from its bottom margin edge rather than from
+its text (CSS 2.1 §10.8.1) — so in a row aligned on baselines it lands wherever its own
+height puts it, and no value of `vertical-align` recovers it. The venue bar's name sat
+3.45px below every link beside it for two commits this way, including the one named for
+putting that row on one baseline. The fix is to make its parent a flex container and the
+clipped box block-level, where that clause does not apply; put the flex on the element
+closest to the text, because doing it a level up lands the baseline too and quietly grows
+the row, and these rows' heights are the sticky offsets described under Global context.
+`end2end/chrome.end.ts` asserts it by measurement — a zero-width inline probe in each box,
+compared — since neither `toBeVisible` nor a screenshot at this size can see three pixels.
+
 **`Overflow`** holds the items that do not fit a narrow chrome row, and **a measurement
 decides which those are**. It began as a `max-width: 48rem` media query, which collapsed
 every link at 700px although the row had room for all of them — and no one number could be

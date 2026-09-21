@@ -82,14 +82,54 @@ test('the venue bar reaches a venue from every route inside it', async ({ page }
 	);
 
 	// And now that the venue's own name is NOT where you are, it carries the same underline
-	// every other link in the bar does. `.name` is an inline-block so it can ellipsize, and
-	// an inline-block does not inherit text-decoration — so the name silently read as the
+	// every other link in the bar does. `.name` is clipped so it can ellipsize, and a box
+	// that clips does not inherit text-decoration — so the name silently read as the
 	// current route on every page inside the venue.
 	const underlined = await page.evaluate(() => {
 		const name = document.querySelector('[data-testid="venue-bar-home"] .name');
 		return name ? getComputedStyle(name).textDecorationLine : 'missing';
 	});
 	expect(underlined).toBe('underline');
+
+	// The bar sits its words on ONE baseline, and until now nothing checked that they
+	// landed there. The commit named for the rule asserted text-decoration and panel
+	// contrast instead, and the venue's own name sat 3.45px below every link beside it
+	// through that commit and the one after it: `text-overflow: ellipsis` needs
+	// `overflow: hidden`, and an inline-level box that clips takes its baseline from its
+	// bottom margin edge rather than its text.
+	//
+	// `toBeVisible` cannot see a baseline and neither can a screenshot diff at this size,
+	// so measure: a zero-width inline probe appended to a box joins that box's own line,
+	// and two probes agree only if the two lines do.
+	const offset = await page.evaluate(() => {
+		const bar = document.querySelector('[data-testid="venue-bar"]');
+		const name = bar?.querySelector('.name');
+		const link = bar?.querySelector('[data-overflow-key] a span:not(.cling)');
+		if (!name || !link) return null;
+		const baselineOf = (element: Element) => {
+			const probe = document.createElement('span');
+			probe.textContent = 'x';
+			probe.style.cssText = 'display:inline;font:inherit;';
+			element.appendChild(probe);
+			const bottom = probe.getBoundingClientRect().bottom;
+			probe.remove();
+			return bottom;
+		};
+		return baselineOf(name) - baselineOf(link);
+	});
+	expect(offset).not.toBeNull();
+	expect(Math.abs(offset as number)).toBeLessThan(1);
+
+	// Measured alongside it, because the arrangement that fixes the baseline one level up
+	// — flexing `.home` rather than the anchor inside it — also reads as aligned while
+	// growing the bar from 48px to 64px. This bar's height is `--page-header-height`, the
+	// sticky offset for everything below it, so that near miss has to fail here.
+	expect(
+		await page
+			.getByTestId('venue-bar')
+			.boundingBox()
+			.then((b) => b?.height)
+	).toBeCloseTo(48, 0);
 });
 
 test('an admin gets settings in the bar', async ({ page, context }) => {
