@@ -289,13 +289,13 @@
 				},
 				"editors": {
 					"label": "editors",
-					"placeholder": "email1@email.com, email2@email.com",
+					"placeholder": "you@example.com, colleague@example.com",
 					"invalid": "Must be a list of comma-separated email addresses.",
 					"unknown": "No Reciprocal Reviews account uses {addresses} yet. You can still propose: they'll be emailed an invitation, and can be added to the venue once they sign up."
 				},
 				"minters": {
 					"label": "minters",
-					"placeholder": "email1@email.com, email2@email.com",
+					"placeholder": "you@example.com, colleague@example.com",
 					"invalid": "Must be a list of at least one comma-separated email address.",
 					"unknown": "No Reciprocal Reviews account uses {addresses} yet. You can still propose: the steward who approves this venue holds its currency until someone here can mint."
 				},
@@ -1157,12 +1157,12 @@
 			"field": {
 				"webAddress": {
 					"label": "Web address",
-					"placeholder": "acm-chi",
+					"placeholder": "tok-2027",
 					"invalid": "Use 4 to 40 characters: lowercase letters, numbers, and single hyphens between them, starting with a letter."
 				},
 				"shortName": {
 					"label": "Short name",
-					"placeholder": "TOCE",
+					"placeholder": "ToK",
 					"invalid": "Use 20 characters or fewer. Leave it empty to show the full title."
 				},
 				"inactiveMessage": {
@@ -2039,7 +2039,7 @@
 			"field": {
 				"email": {
 					"label": "contact email",
-					"placeholder": "you@university.edu",
+					"placeholder": "you@example.com",
 					"invalid": "Must be a valid email"
 				}
 			},

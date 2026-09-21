@@ -1,6 +1,6 @@
 # Design
 
-_Last revised: 2026-09-13_
+_Last revised: 2026-09-20_
 
 This document is a design specification for the Reciprocol Reviews (RR) platform. We intend it to specify the conceptual interaction design that people will experience when using the platform and rationale for those choices, as well as aspects of the design that are unresolved. It's primary purpose is to provide contributors with a high level checklist for implementation, but also a long term archive for _why_ it is designed the way it is. This document will _not_ specify low-level design details, like user interface mockups or visual design it; it will stay at the high level interaction flow and user-facing features, describing key pages, functionality, data, and features.
 
@@ -89,6 +89,14 @@ We use a few stylistic conventions in this document that have particular meaning
 - `- [ ]` and `- [x]` are GitHub Flavored Markdown task list items, and we use them to mark design requirements as **pending** (`[ ]`) or **done** (`[x]`). GitHub renders these as actual checkboxes when this document is viewed on github.com. Tasks can be followed by a GitHub issue number, corresponding to the issue in this repository representing the work on the feature.
 - `- [ ] role` indicates that a particular functionality is only available to scholars with a particular role for a `Venue`.
 - ` `` ` Backticks are used to represent specific routes in the application or specific concepts in the application. They don't necessarily represent identifiers in code, but rather specific concepts in the application design.
+
+## Interface
+
+Most of what follows is organized by route, because most design decisions belong to one place in the application. A few do not: they are commitments RR makes everywhere, and a contributor writing a new form has no route section to consult for them. They are collected here.
+
+**A placeholder demonstrates format, not identity.** The example shown in an empty field says what a valid entry looks like and nothing more. A contact field reading `you@university.edu` does demonstrate the format, but it also tells an independent, industry, retired or unaffiliated researcher that RR was built for somebody else — while accepting their address perfectly well. Sample addresses use `example.com`, which is reserved for the purpose and cannot belong to anyone. Where a field has no format to demonstrate, the placeholder is empty rather than an echo of the label, which costs a screen reader a repetition and tells a sighted reader nothing. This is the input-side companion to _absence renders as absence_ under `Scholar` below: RR does not fill a blank with a guess about a person, whether the blank is one it is rendering or one it is asking someone to fill. ([#180](https://github.com/reciprocalreviews/reciprocalapp/issues/180))
+
+**The interface names no real venue.** Examples in forms and prose use an invented one — `Transactions on Knowledge`, shortened to `ToK`, reached at `tok-2027`. RR is asking every venue in academia to adopt it, and naming two of them in its own settings form reads either as an endorsement it has not earned or as a claim that they are already here. This document and the changelog name real venues freely, and should: they are writing _about_ the project, where a concrete venue makes a user story legible. The application is speaking _as_ the product, to someone who may run one of the venues it did not name.
 
 ## Data
 

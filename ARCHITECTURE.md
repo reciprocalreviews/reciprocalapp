@@ -701,7 +701,7 @@ every load, and collapsed and regrew on every client-side navigation.
 
 [src/lib/components/](src/lib/components/) is the shared design system: `Button`, `Card`, `Cards`, `Form`, `TextField`, `Slider`, `Tag`, `Tags`, `Page`, `Nav`, `Overflow`, `Footer`, `Feedback`, `Loading`, `Dialog`, and so on. New UI should compose these rather than introducing one-off styling. One of them is not generic: `Logo` draws the brand mark with `currentColor`, and its path data is duplicated in [static/brand/logo.svg](static/brand/logo.svg) for the copies that leave the app — change the geometry in both. Components accept locale-path functions where they take user-visible text.
 
-Two of them carry invariants worth stating alongside `Button`'s.
+Three of them carry invariants worth stating alongside `Button`'s.
 
 `Page`'s **`band`** chooses _where_ the title renders, never whether there is one:
 `<svelte:head><title>` is identical either way, and so are the `page-header` and
@@ -709,6 +709,15 @@ Two of them carry invariants worth stating alongside `Button`'s.
 `band={false}` the heading, subtitle and details render inside the text column instead,
 which is why converting a page is a one-word change. `icon` and `wobble` are ignored in
 that mode. See Global context above for the `--page-header-height` rule it exists to hold.
+
+**`TextField`** sizes itself from its own content, and **the placeholder is what it
+measures when the field is empty** — a hidden ruler span holds the placeholder text and the
+input takes its width. The ceiling is not the ruler, though: the input's `max-width:
+fit-content` resolves against its `size` attribute, which is 20 characters unless a caller
+passes one, so a placeholder longer than that is clipped with no warning anywhere —
+`transactions-on-knowledge` renders as `transactions-on-know`. Keep a placeholder under 20
+characters, or pass `stretch` to make the field fill its container and measure nothing.
+DESIGN.md § Interface governs what a placeholder may _say_; this is what it may _be_.
 
 **`Overflow`** holds the items that do not fit a narrow chrome row, and **a measurement
 decides which those are**. It began as a `max-width: 48rem` media query, which collapsed
