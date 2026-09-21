@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
-import { SEED } from './test-utils';
+import { SEED, sql } from './test-utils';
 
 const VENUE_PATH = SEED.venuePath;
 
@@ -95,6 +95,9 @@ test('an editor the venue knows is matched and seated', async ({ page, context }
 
 	const external = `import-person-${Date.now()}`;
 
+	// Cleared so the poll below reads this import's digest and not an earlier test's.
+	sql(`delete from public.emails where event = 'SubmissionsAssignedEditor';`);
+
 	await page
 		.getByTestId('bulk-import-paste')
 		.fill(
@@ -112,6 +115,19 @@ test('an editor the venue knows is matched and seated', async ({ page, context }
 
 	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
 	await expect(page.getByText(external)).toBeVisible();
+
+	// The digest counts SUBMISSIONS, not the assignment rows the import wrote -- one
+	// row can seat the same person twice, and this is the only check that the number
+	// the database now reports is the number the email carries (#181). The subject and
+	// body are null until the resend function renders them, so the argument is what
+	// there is to read.
+	await expect
+		.poll(() =>
+			sql(
+				`select args->>0 from public.emails where event = 'SubmissionsAssignedEditor' order by time_sent desc limit 1;`
+			)
+		)
+		.toBe('1');
 
 	await logout(page);
 });

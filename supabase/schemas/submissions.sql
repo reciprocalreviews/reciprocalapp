@@ -341,7 +341,7 @@ alter publication supabase_realtime
 add table submissions;
 
 --------------------------------------
--- RPC (authoritative definition from migration 20260910000000_bulk_import_skip_duplicates)
+-- RPC (authoritative definition from migration 20260921000000_bulk_import_seats_by_submission)
 create or replace function public.bulk_import_submissions (
 	_venueid uuid,
 	_submissions jsonb,
@@ -585,11 +585,6 @@ begin
             end if;
 
             _seated := _seated + 1;
-            _seated_by := jsonb_set(
-                _seated_by,
-                array[_entry_person::text],
-                to_jsonb(coalesce((_seated_by->>_entry_person::text)::integer, 0) + 1)
-            );
         end loop;
 
         -- The venue's sole editor is still seated, except on a row that named
@@ -601,11 +596,6 @@ begin
             insert into public.assignments (venue, submission, scholar, role, bid, approved)
             values (_venueid, _new_submission_id, _editor, _editor_role, false, true);
             _seated := _seated + 1;
-            _seated_by := jsonb_set(
-                _seated_by,
-                array[_editor::text],
-                to_jsonb(coalesce((_seated_by->>_editor::text)::integer, 0) + 1)
-            );
         end if;
 
         -- A submission with nobody in the venue's top-priority role is waiting for an
@@ -623,6 +613,24 @@ begin
         where id = (_row->>'submission_type')::uuid;
         _mint_amount := _mint_amount + coalesce(_type_cost, 0);
     end loop;
+
+    -- Who now holds what, counted by DISTINCT SUBMISSION rather than by assignment.
+    -- The digest this feeds tells a scholar how many submissions they were given, and
+    -- the two seating paths above are independently reachable on one row: the venue's
+    -- sole editor, also named in the file for some other role, takes both seats and
+    -- would otherwise be told two papers arrived when one did. That is the same hazard
+    -- _waiting states above, which is why it is counted per row rather than derived
+    -- from _seated. Derived here, after the loop, rather than incremented inside it:
+    -- the rows are the answer, and counting them twice in two places is how the two
+    -- numbers came to disagree.
+    select coalesce(jsonb_object_agg(x.scholar::text, x.submissions), '{}'::jsonb)
+        into _seated_by
+    from (
+        select a.scholar, count(distinct a.submission) as submissions
+        from public.assignments a
+        where a.submission = any(_submission_ids)
+        group by a.scholar
+    ) x;
 
     if _mint_amount > 0 then
         _tokens := array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[_mint_amount]);
