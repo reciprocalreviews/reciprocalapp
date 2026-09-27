@@ -2,12 +2,25 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.7 - 2026-09-27
+
+### Added
+
+- **Volunteers now get a Monday email listing the submissions open for bidding in their roles.** Up to seven per venue, ranked by how many people each is missing and then by how well it matches the expertise they gave, and only when the list has changed; turn it off under Notifications on your profile.
+
+### Changed
+
+- **Every email's call to action is now a button.** Emails you can turn off also end with a link to your notification settings.
+
+### Fixed
+
+- **Thank-you notes and declined proposals are now emailed with wording only Reciprocal Reviews writes.** Their emails used to be composed in the browser and accepted as sent, so an author could have mailed a venue's editors any subject, text and links under the platform's name.
+
 ## 0.5.6 - 2026-09-20
 
 ### Added
 
 - **A venue can now go by a short name.** The bar at the top of every page inside it shows that name in place of a title that would not fit — "ToK" rather than "Transactions on Knowledge" — and a venue's admins set it in settings (#176).
-- **Volunteers now get a Monday email listing the submissions open for bidding in their roles.** Up to seven per venue, ranked by how many people each is missing and then by how well it matches the expertise they gave, and only when the list has changed; turn it off under Notifications on your profile.
 
 ### Changed
 
@@ -16,7 +29,6 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **The site header is now a single row that never wraps.** The logo stands in for the old "Home" link, and only the links that genuinely do not fit collapse behind a menu, at whatever width that turns out to be — the fixed bands took nearly half a phone's screen inside a venue and now take about an eighth (#176).
 - **The beta notice now sits at the bottom of the screen and can be dismissed for good.** It stays dismissed on later visits, and nothing on the page is ever hidden behind it (#176).
 - **A venue's title and website are now edited in its settings**, alongside its new short name and web address, rather than in the header of the venue's own page (#176).
-- **Every email's call to action is now a button.** Emails you can turn off also end with a link to your notification settings.
 
 ### Fixed
 
@@ -26,7 +38,6 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **The examples shown in empty fields no longer assume who you are or where you publish.** A contact address suggested `you@university.edu`, and the venue settings fields suggested two real journals; they now show a neutral address and an invented venue (#180).
 - **The email announcing a bulk import no longer tells you that you are the venue's only editor.** It said that to everyone it seated, whatever role the file named them in, and it counted seats rather than papers — so one submission that seated you twice was announced as two (#181).
 - **The bar at the top of every page inside a venue now reads as one centred row.** The venue's name hung a few pixels below the links beside it, every word in the row sat above the middle of the band, and a long name made the whole bar taller on a phone.
-- **Thank-you notes and declined proposals are now emailed with wording only Reciprocal Reviews writes.** Their emails used to be composed in the browser and accepted as sent, so an author could have mailed a venue's editors any subject, text and links under the platform's name.
 
 ## 0.5.5 - 2026-09-13
 
