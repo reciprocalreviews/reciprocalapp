@@ -315,7 +315,11 @@ begin
         'message', new.message,
         'event', new.event,
         'args', new.args,
-        'origin', _origin
+        'origin', _origin,
+        -- Who the message is to, so an optional notice's footer can link to the recipient's
+        -- own notification settings (settingsUrlFor in _shared/templates.ts). Null for mail
+        -- with no scholar, such as the steward inbox, which then gets no such link.
+        'scholar', new.scholar
       )
     ) into _request_id;
 

@@ -19,7 +19,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan (16);
+select plan (17);
 
 alter table public.emails disable trigger send_on_email_insert;
 
@@ -54,7 +54,7 @@ values (:'muted', 'VenueApproved', false);
 
 select tests.authenticate_as(:'other');
 select throws_ok (
-	$$ select public.decline_venue_proposal('00000000-0000-4000-8000-0000000000c1', 's', 'm') $$,
+	$$ select public.decline_venue_proposal('00000000-0000-4000-8000-0000000000c1') $$,
 	'Only stewards can decline venue proposals',
 	'1. a non-steward cannot decline a proposal'
 );
@@ -64,9 +64,7 @@ select throws_ok (
 select tests.authenticate_as(:'steward');
 
 select lives_ok (
-	$$ select public.decline_venue_proposal('00000000-0000-4000-8000-0000000000c1',
-	                                        'A venue proposal was not taken forward',
-	                                        'The proposal to bring "Journal of Declines" ...') $$,
+	$$ select public.decline_venue_proposal('00000000-0000-4000-8000-0000000000c1') $$,
 	'2. a steward can decline a proposal'
 );
 
@@ -91,6 +89,13 @@ select is (
 	(select count(*)::int from public.emails
 	 where event = 'ProposalDeclined' and scholar = :'muted'), 0,
 	'6. the supporter who silenced the outcome preference is not'
+);
+
+select is (
+	(select count(*)::int from public.emails
+	 where event = 'ProposalDeclined'
+	   and subject is null and message is null and args = '["Journal of Declines"]'::jsonb), 3,
+	'6b. each notice is rendered at send time from the title on the row, not from caller copy'
 );
 
 -- Back to owner context: notification_allowed is revoked from `authenticated`, since it

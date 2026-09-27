@@ -22,6 +22,7 @@
 	import type LocaleText from '$lib/locales/Locale';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { getAuth } from '../../Auth.svelte';
+	import { NEXT_COOKIE, safeNext } from '$lib/auth/next';
 
 	let auth = getAuth();
 	const db = getDB();
@@ -38,6 +39,15 @@
 			? (l: LocaleText) => l.page.login.feedback.orcidError
 			: undefined
 	);
+
+	// Where to land after signing in, when a link asked for somewhere other than the
+	// scholar's own profile -- the notification-settings link in email footers does.
+	let next = $derived(safeNext(page.url.searchParams.get('next')));
+
+	/** The page to go to once signed in as this scholar. */
+	function home(scholar: string | null): string {
+		return next ?? `/scholar/${scholar}`;
+	}
 
 	// An error raised by an action on this page takes precedence over one carried in the
 	// URL, so a fresh failure replaces the stale query-param message.
@@ -119,7 +129,7 @@
 		const response = await auth().signInWithPassword(scholar.email, SEED_PASSWORD);
 		if (typeof response === 'string') {
 			error = undefined;
-			goto(`/scholar/${response}`);
+			goto(home(response));
 		} else {
 			console.error(response);
 			error = (l) => l.page.login.feedback.signInError;
@@ -129,12 +139,18 @@
 	// When the user is authenticated, redirect to their home page.
 	$effect(() => {
 		if (auth().isAuthenticated()) {
-			goto(`/scholar/${auth().getUserID()}`);
+			goto(home(auth().getUserID()));
 		}
 	});
 
 	/** Real ORCID sign-in (production): redirect to the custom-OIDC provider. */
 	async function signInWithORCID() {
+		// ORCID returns to /auth/callback, not here, so the return path rides along in a
+		// short-lived cookie that only the callback reads. See NEXT_COOKIE.
+		const secure = page.url.protocol === 'https:' ? '; Secure' : '';
+		document.cookie = next
+			? `${NEXT_COOKIE}=${encodeURIComponent(next)}; Path=/auth/callback; Max-Age=600; SameSite=Lax${secure}`
+			: `${NEXT_COOKIE}=; Path=/auth/callback; Max-Age=0; SameSite=Lax${secure}`;
 		const authError = await auth().signInWithORCID(`${page.url.origin}/auth/callback`);
 		if (authError) {
 			console.error(authError);
@@ -153,7 +169,7 @@
 		const response = await auth().signInWithMockORCID(id, name);
 		if (typeof response === 'string') {
 			error = undefined;
-			goto(`/scholar/${response}`);
+			goto(home(response));
 		} else {
 			console.error(response);
 			error = (l) => l.page.login.feedback.mockOrcidError;
@@ -241,7 +257,7 @@
 					const response = await auth().signInWithPassword(email, password);
 					if (typeof response === 'string') {
 						error = undefined;
-						goto(`/scholar/${response}`);
+						goto(home(response));
 					} else {
 						console.error(response);
 						error = (l) => l.page.login.feedback.signInError;

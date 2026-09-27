@@ -2,7 +2,7 @@ import z from 'zod';
 import { requireSecretKey } from '../_shared/auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { FROM_EMAIL, renderBrandedEmail, SUPPORT_EMAIL } from '../_shared/emailShell.ts';
-import { Emails, renderEmail, type EmailType } from '../_shared/templates.ts';
+import { Emails, renderEmail, settingsUrlFor, type EmailType } from '../_shared/templates.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const isLocal = Deno.env.get('PUBLIC_SUPABASE_URL')?.includes('127.0.0.1') ?? false;
@@ -31,7 +31,10 @@ const ResendBodySchema = z.object({
 	// this function refuses callers without a project secret key — so it is
 	// trusted enough to appear in link positions. Absent, links go to
 	// production, which is what they always did.
-	origin: z.string().nullish()
+	origin: z.string().nullish(),
+	// The recipient's scholar id, when the message has one. Used only to link an optional
+	// notice's footer to that scholar's notification settings.
+	scholar: z.string().uuid().nullish()
 });
 
 export type ResendBody = z.infer<typeof ResendBodySchema>;
@@ -73,6 +76,12 @@ const handler = async (request: Request): Promise<Response> => {
 			message = rendered.message;
 		}
 
+		// Where the recipient can turn this notice off, for one they can. Built from the event
+		// and the scholar, never from the body, so pre-rendered mail gets it too.
+		const settingsUrl = parsed.event
+			? settingsUrlFor(parsed.event, parsed.scholar, parsed.origin ?? undefined)
+			: undefined;
+
 		let returnData;
 
 		if (isLocal) {
@@ -82,6 +91,7 @@ const handler = async (request: Request): Promise<Response> => {
 			console.log('reply-to:', replyTo ?? SUPPORT_EMAIL);
 			console.log('subject:', subject);
 			console.log('message:', message);
+			if (settingsUrl) console.log('settings:', settingsUrl);
 			console.log('---');
 
 			returnData = null;
@@ -97,35 +107,50 @@ const handler = async (request: Request): Promise<Response> => {
 				replyTo,
 				// Whether anyone is actually copied, so the footer only offers Reply All when
 				// there is a group for it to reach.
-				cc.length > 0
+				cc.length > 0,
+				settingsUrl
 			);
 
 			// Post to the resend API using the API key
-			const res = await fetch('https://api.resend.com/emails', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${RESEND_API_KEY}`
-				},
-				body: JSON.stringify({
-					from: FROM_EMAIL,
-					// Mail is sent by a robot, but a reply has to reach people. Without this
-					// header every reply to a notification — a question about a proposal, a
-					// disputed transaction — is delivered to an unmonitored mailbox and lost.
-					// Most mail's replies belong with the stewards; a notice ABOUT a specific
-					// person carries that person instead, so its reader can hit Reply and
-					// answer them rather than filing a support request.
-					reply_to: replyTo ?? SUPPORT_EMAIL,
-					to: to,
-					// Spread rather than `cc: cc`. Resend treats `cc: []` as a malformed
-					// field rather than an absent one, and an absent header is what every
-					// single-recipient email has always sent.
-					...(cc.length > 0 ? { cc } : {}),
-					subject: subject,
-					html,
-					text
-				})
-			});
+			const post = () =>
+				fetch('https://api.resend.com/emails', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${RESEND_API_KEY}`
+					},
+					body: JSON.stringify({
+						from: FROM_EMAIL,
+						// Mail is sent by a robot, but a reply has to reach people. Without this
+						// header every reply to a notification — a question about a proposal, a
+						// disputed transaction — is delivered to an unmonitored mailbox and lost.
+						// Most mail's replies belong with the stewards; a notice ABOUT a specific
+						// person carries that person instead, so its reader can hit Reply and
+						// answer them rather than filing a support request.
+						reply_to: replyTo ?? SUPPORT_EMAIL,
+						to: to,
+						// Spread rather than `cc: cc`. Resend treats `cc: []` as a malformed
+						// field rather than an absent one, and an absent header is what every
+						// single-recipient email has always sent.
+						...(cc.length > 0 ? { cc } : {}),
+						subject: subject,
+						html,
+						text
+					})
+				});
+
+			// Resend allows 10 requests a second per team, and a fan-out -- a call for bids, the
+			// Monday digest, an import -- can post more than that at once. A 429 means nothing
+			// was sent, so it is safe to try once more after the wait Resend asks for. Only once,
+			// and briefly: pg_net gives this whole request five seconds, and a longer wait would
+			// be recorded as a timeout on a message that might then be sent anyway.
+			let res = await post();
+			if (res.status === 429) {
+				const asked = Number(res.headers.get('retry-after'));
+				const wait = Math.min(Number.isFinite(asked) && asked > 0 ? asked * 1000 : 1000, 1200);
+				await new Promise((resolve) => setTimeout(resolve, wait + Math.random() * 300));
+				res = await post();
+			}
 
 			// Resend answers 4xx/5xx with a JSON body explaining why — an unverified sender
 			// domain, a rejected recipient, a rate limit, a bad key. `fetch` does not throw

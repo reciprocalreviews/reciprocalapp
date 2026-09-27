@@ -310,3 +310,35 @@ describe('generated SQL seed', () => {
 		expect(applied).toContain('create table if not exists public.notification_preferences');
 	});
 });
+
+describe('calls to action', () => {
+	// Every link a reader is meant to follow is a button, so the prompt looks the same in every
+	// email and a long body can't bury it. A bare URL paragraph, or a sentence ending in one,
+	// renders as small inline text instead; this catches a new template written that way.
+	const BUTTON = /^<rr-button href="[^"\s]+">[^<]+<\/rr-button>$/;
+
+	for (const [name, email] of Object.entries(Emails) as [EmailType, Email][]) {
+		const trusted = (email.urlArgs ?? []).map((n) => `$${n}`);
+		it(`${name} puts every link in a button`, () => {
+			for (const paragraph of email.paragraphs) {
+				if (BUTTON.test(paragraph)) continue;
+				// A link written as words inside a sentence (a venue's name) is a reference,
+				// not a call to action, and stays inline.
+				const outsideAnchors = paragraph.replace(/<a [^>]*>[^<]*<\/a>/g, '');
+				expect(outsideAnchors, paragraph).not.toContain('{origin}');
+				for (const arg of trusted) expect(outsideAnchors, paragraph).not.toContain(arg);
+			}
+		});
+	}
+
+	it('renders a button with the origin and arguments in its link', () => {
+		const { message } = renderEmail(
+			'NewBid',
+			['A title', 'Reviewer', 'knowledge', 'abc'],
+			'https://rr.test'
+		);
+		expect(message).toContain(
+			'<rr-button href="https://rr.test/venue/knowledge/submission/abc">Open the submission</rr-button>'
+		);
+	});
+});

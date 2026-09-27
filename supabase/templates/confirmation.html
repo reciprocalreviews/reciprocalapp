@@ -62,9 +62,31 @@
 								<p style="margin: 0 0 16px 0">
 									Confirm this email address to finish setting up your Reciprocal Reviews account:
 								</p>
-								<p style="margin: 0 0 16px 0">
-									<a href="{{ .ConfirmationURL }}" style="color: #007284">Confirm your email</a>
-								</p>
+								<!-- A button, like every call to action in the application emails (see BUTTON in
+								     supabase/functions/_shared/emailShell.ts); the table cell carries the fill. -->
+								<table
+									role="presentation"
+									cellpadding="0"
+									cellspacing="0"
+									style="margin: 0 0 24px 0"
+								>
+									<tr>
+										<td style="background-color: #007284; border-radius: 6px">
+											<a
+												href="{{ .ConfirmationURL }}"
+												style="
+													display: inline-block;
+													padding: 10px 20px;
+													color: #ffffff;
+													font-weight: 700;
+													text-decoration: none;
+													border-radius: 6px;
+												"
+												>Confirm your email</a
+											>
+										</td>
+									</tr>
+								</table>
 								<p style="margin: 0 0 8px 0">Or enter this confirmation code:</p>
 								<p style="margin: 0 0 24px 0; font-size: 24px; font-weight: 700; color: #007284">
 									code: {{ .Token }}

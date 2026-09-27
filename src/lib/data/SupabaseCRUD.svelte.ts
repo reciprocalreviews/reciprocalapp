@@ -1485,23 +1485,10 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async deleteVenueProposal(proposal: ProposalID): Promise<Result> {
-		// Read the title before the RPC, because the notice names the venue and the row is gone
-		// by the time the RPC returns.
-		const { data: row } = await this.client
-			.from('proposals')
-			.select('title')
-			.eq('id', proposal)
-			.single();
-
-		// Rendered here and fanned out server-side, the same division queue_thanks_emails uses:
-		// the registry is TypeScript, and the database chooses the recipients so the caller
-		// cannot. Declining and deleting happen in one transaction — see the note on the RPC.
-		const { subject, message } = renderEmail('ProposalDeclined', [row?.title ?? '']);
-		const { error } = await this.client.rpc('decline_venue_proposal', {
-			_proposal_id: proposal,
-			_subject: subject,
-			_message: message
-		});
+		// The database chooses the recipients and reads the title from the proposal, and the
+		// body is rendered at send time, so nothing here decides what the email says.
+		// Declining and deleting happen in one transaction — see the note on the RPC.
+		const { error } = await this.client.rpc('decline_venue_proposal', { _proposal_id: proposal });
 		if (error) return this.error('DeleteProposal');
 		else return {};
 	}
@@ -2443,23 +2430,16 @@ export default class SupabaseCRUD extends CRUD {
 	// Thanks (#22): author thank-you notes to reviewers
 	// ─────────────────────────────────────────────────────────────────────────
 
-	/** Fan a rendered thank-you email out to an audience the caller may not be
-	 * able to see (queue_thanks_emails resolves recipients server-side to keep
-	 * reviewers anonymous). Best-effort: a failure here doesn't undo the note's
-	 * state change, matching the rest of the email pipeline. */
+	/** Queue a note's emails to an audience the caller may not be able to see
+	 * (queue_thanks_emails resolves recipients server-side to keep reviewers anonymous, and
+	 * reads every value the email shows from the note itself, so the caller supplies no
+	 * content). Best-effort: a failure here doesn't undo the note's state change, matching
+	 * the rest of the email pipeline. */
 	private async queueThanksEmails(
 		thanksID: ThanksID,
-		audience: 'recipients' | 'vetters' | 'author' | 'author_shared',
-		template: EmailType,
-		args: string[]
+		audience: 'recipients' | 'vetters' | 'author' | 'author_shared'
 	) {
-		const { subject, message } = renderEmail(template, args);
-		await this.client.rpc('queue_thanks_emails', {
-			_thanks_id: thanksID,
-			_audience: audience,
-			_subject: subject,
-			_message: message
-		});
+		await this.client.rpc('queue_thanks_emails', { _thanks_id: thanksID, _audience: audience });
 	}
 
 	async proposeThanks(
@@ -2477,21 +2457,8 @@ export default class SupabaseCRUD extends CRUD {
 		if (error) return this.error('ProposeThanks', error);
 		const status = (stringField(data, 'status') as ThanksStatus | null) ?? 'proposed';
 		const thanksID = stringField(data, 'thanks_id');
-		const venue = stringField(data, 'venue');
-		if (thanksID && venue) {
-			const path = await this.venuePathOf(venue);
-			if (status === 'approved')
-				await this.queueThanksEmails(thanksID, 'recipients', 'ThanksReceived', [
-					message,
-					path,
-					submission
-				]);
-			else
-				await this.queueThanksEmails(thanksID, 'vetters', 'ThanksPendingReview', [
-					path,
-					submission
-				]);
-		}
+		if (thanksID)
+			await this.queueThanksEmails(thanksID, status === 'approved' ? 'recipients' : 'vetters');
 		return { error: undefined, data: { status } };
 	}
 
@@ -2499,33 +2466,20 @@ export default class SupabaseCRUD extends CRUD {
 		// The RPC authorizes (venue admin / editor) and flips the note to approved,
 		// returning the venue, submission, and note text so we can render and
 		// deliver the note to its (server-resolved) reviewers.
-		const { data, error } = await this.client.rpc('approve_thanks', { _id: id });
+		const { error } = await this.client.rpc('approve_thanks', { _id: id });
 		if (error) return this.error('ApproveThanks', error);
-		const venue = stringField(data, 'venue');
-		const submission = stringField(data, 'submission');
-		const note = stringField(data, 'message');
-		if (venue && submission && note !== null) {
-			const path = await this.venuePathOf(venue);
-			await this.queueThanksEmails(id, 'recipients', 'ThanksReceived', [note, path, submission]);
-			// And tell the author it was shared. declineThanks has always written back to them;
-			// the approve path did not, so the one outcome an author was never told about was
-			// the one they were hoping for.
-			await this.queueThanksEmails(id, 'author_shared', 'ThanksShared', [path, submission]);
-		}
+		await this.queueThanksEmails(id, 'recipients');
+		// And tell the author it was shared. declineThanks has always written back to them;
+		// the approve path did not, so the one outcome an author was never told about was
+		// the one they were hoping for.
+		await this.queueThanksEmails(id, 'author_shared');
 		return { error: undefined, data: undefined };
 	}
 
 	async declineThanks(id: ThanksID, reason: string): Promise<Result<undefined>> {
-		const { data, error } = await this.client.rpc('decline_thanks', { _id: id, _reason: reason });
+		const { error } = await this.client.rpc('decline_thanks', { _id: id, _reason: reason });
 		if (error) return this.error('DeclineThanks', error);
-		const venue = stringField(data, 'venue');
-		const submission = stringField(data, 'submission');
-		if (venue && submission)
-			await this.queueThanksEmails(id, 'author', 'ThanksDeclined', [
-				reason,
-				await this.venuePathOf(venue),
-				submission
-			]);
+		await this.queueThanksEmails(id, 'author');
 		return { error: undefined, data: undefined };
 	}
 

@@ -6,6 +6,7 @@
  * passed in as a context object. */
 
 import familyName from './familyName';
+import { expertiseKey, expertiseTags } from './expertise';
 
 /** Only the volunteer fields the view logic reads. */
 export type ViewVolunteer = {
@@ -48,22 +49,17 @@ export type VolunteersViewContext = {
 /** How many chips to show before the list is folded behind "show all". */
 export const TAG_LIMIT = 12;
 
-/** One volunteer's expertise as tags: split on commas, trimmed, empties dropped.
+/** One volunteer's expertise as tags: split on commas, trimmed, empties dropped. A free
+ * function rather than a method on the view, because the expertise column renders the same
+ * tags with no filter or selection in play.
  *
- * A free function rather than a method on the view, because the expertise column
- * renders the same tags with no filter or selection in play. */
-export function expertiseTags(expertise: string): string[] {
-	return expertise
-		.split(',')
-		.map((tag) => tag.trim())
-		.filter((tag) => tag.length > 0);
-}
+ * Defined in ./expertise.ts. The weekly bidding digest matches on the same rule in SQL, and
+ * the two are tested against the same cases, so a chip here is what that email calls a match. */
+export { expertiseTags };
 
 /** Case is a spelling difference, not a different expertise, so "Peer Review"
  * and "peer review" group under one key. */
-function keyOf(tag: string): string {
-	return tag.toLowerCase();
-}
+const keyOf = expertiseKey;
 
 /** The spelling to show for a tag: the one the most volunteers wrote, ties broken
  * alphabetically.

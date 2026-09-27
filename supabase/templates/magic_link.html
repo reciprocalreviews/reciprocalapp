@@ -64,11 +64,31 @@
 									code: {{ .Token }}
 								</p>
 								<p style="margin: 0 0 16px 0">Or follow this link to sign in directly:</p>
-								<p style="margin: 0 0 16px 0">
-									<a href="{{ .ConfirmationURL }}" style="color: #007284"
-										>Sign in to Reciprocal Reviews</a
-									>
-								</p>
+								<!-- A button, like every call to action in the application emails (see BUTTON in
+								     supabase/functions/_shared/emailShell.ts); the table cell carries the fill. -->
+								<table
+									role="presentation"
+									cellpadding="0"
+									cellspacing="0"
+									style="margin: 0 0 24px 0"
+								>
+									<tr>
+										<td style="background-color: #007284; border-radius: 6px">
+											<a
+												href="{{ .ConfirmationURL }}"
+												style="
+													display: inline-block;
+													padding: 10px 20px;
+													color: #ffffff;
+													font-weight: 700;
+													text-decoration: none;
+													border-radius: 6px;
+												"
+												>Sign in to Reciprocal Reviews</a
+											>
+										</td>
+									</tr>
+								</table>
 								<p style="margin: 0">
 									If you didn't request this, you can safely ignore this email.
 								</p>

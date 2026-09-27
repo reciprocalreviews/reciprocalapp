@@ -338,6 +338,9 @@ schema_paths = [
     "./schemas/thanks.sql",
     "./schemas/emails.sql",
     "./schemas/email_verifications.sql",
+    # After emails.sql and notification_settings.sql, whose tables and predicate its
+    # functions use.
+    "./schemas/bidding_digests.sql",
     # After emails.sql, which declares private.get_secret, and after scholars.sql,
     # which it has a foreign key to.
     "./schemas/orcid_profiles.sql",
