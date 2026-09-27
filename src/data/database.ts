@@ -1,1647 +1,917 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
+  
+  "graphql_public": {
+          Tables: {
+            [_ in never]: never
+          }
+          Views: {
+            [_ in never]: never
+          }
+          Functions: {
+            "graphql":
+{ Args: { "extensions"?: Json,"operationName"?: string,"query"?: string,"variables"?: Json }; Returns: Json
+                           }
+          }
+          Enums: {
+            [_ in never]: never
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
+        },"public": {
+          Tables: {
+            "assignments": {
+                  Row: {
+                    "approved": boolean,"bid": boolean,"compensation_requested_at": string | null,"completed": boolean,"created_at": string,"id": string,"preferenceid": string | null,"role": string,"scholar": string,"submission": string,"venue": string
+                  }
+                  Insert: {
+                    "approved"?: boolean,"bid"?: boolean,"compensation_requested_at"?: string | null,"completed"?: boolean,"created_at"?: string,"id"?: string,"preferenceid"?: string | null,"role": string,"scholar": string,"submission": string,"venue": string
+                  }
+                  Update: {
+                    "approved"?: boolean,"bid"?: boolean,"compensation_requested_at"?: string | null,"completed"?: boolean,"created_at"?: string,"id"?: string,"preferenceid"?: string | null,"role"?: string,"scholar"?: string,"submission"?: string,"venue"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "assignments_preferenceid_fkey"
+      columns: ["preferenceid"]
+isOneToOne: false
+      referencedRelation: "preference_levels"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "assignments_role_fkey"
+      columns: ["role"]
+isOneToOne: false
+      referencedRelation: "roles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "assignments_scholar_fkey"
+      columns: ["scholar"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "assignments_submission_fkey"
+      columns: ["submission"]
+isOneToOne: false
+      referencedRelation: "submissions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "assignments_venue_fkey"
+      columns: ["venue"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
     }
-    Views: {
-      [_ in never]: never
+                  ]
+                },"audit_log": {
+                  Row: {
+                    "actor": string | null,"after": Json | null,"at": string,"before": Json | null,"op": string,"row_id": string | null,"seq": number,"tbl": string,"xid": unknown
+                  }
+                  Insert: {
+                    "actor"?: string | null,"after"?: Json | null,"at"?: string,"before"?: Json | null,"op": string,"row_id"?: string | null,"seq"?: never,"tbl": string,"xid"?: unknown
+                  }
+                  Update: {
+                    "actor"?: string | null,"after"?: Json | null,"at"?: string,"before"?: Json | null,"op"?: string,"row_id"?: string | null,"seq"?: never,"tbl"?: string,"xid"?: unknown
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"compensation": {
+                  Row: {
+                    "amount": number | null,"rationale": string,"role": string,"submission_type": string
+                  }
+                  Insert: {
+                    "amount"?: number | null,"rationale"?: string,"role": string,"submission_type": string
+                  }
+                  Update: {
+                    "amount"?: number | null,"rationale"?: string,"role"?: string,"submission_type"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "compensation_role_fkey"
+      columns: ["role"]
+isOneToOne: false
+      referencedRelation: "roles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "compensation_submission_type_fkey"
+      columns: ["submission_type"]
+isOneToOne: false
+      referencedRelation: "submission_types"
+      referencedColumns: ["id"]
     }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
+                  ]
+                },"conflicts": {
+                  Row: {
+                    "reason": string,"scholarid": string,"submissionid": string
+                  }
+                  Insert: {
+                    "reason"?: string,"scholarid": string,"submissionid": string
+                  }
+                  Update: {
+                    "reason"?: string,"scholarid"?: string,"submissionid"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "conflicts_scholarid_fkey"
+      columns: ["scholarid"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conflicts_submissionid_fkey"
+      columns: ["submissionid"]
+isOneToOne: false
+      referencedRelation: "submissions"
+      referencedColumns: ["id"]
     }
-    Enums: {
-      [_ in never]: never
+                  ]
+                },"currencies": {
+                  Row: {
+                    "description": string,"id": string,"minters": (string)[],"name": string
+                  }
+                  Insert: {
+                    "description"?: string,"id"?: string,"minters"?: (string)[],"name"?: string
+                  }
+                  Update: {
+                    "description"?: string,"id"?: string,"minters"?: (string)[],"name"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"email_verifications": {
+                  Row: {
+                    "candidate_email": string,"created_at": string,"email_id": string | null,"expires_at": string,"scholar": string,"token_hash": string,"verified_at": string | null
+                  }
+                  Insert: {
+                    "candidate_email": string,"created_at"?: string,"email_id"?: string | null,"expires_at"?: string,"scholar": string,"token_hash": string,"verified_at"?: string | null
+                  }
+                  Update: {
+                    "candidate_email"?: string,"created_at"?: string,"email_id"?: string | null,"expires_at"?: string,"scholar"?: string,"token_hash"?: string,"verified_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "email_verifications_email_fkey"
+      columns: ["email_id"]
+isOneToOne: false
+      referencedRelation: "emails"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "email_verifications_scholar_fkey"
+      columns: ["scholar"]
+isOneToOne: true
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
     }
-    CompositeTypes: {
-      [_ in never]: never
+                  ]
+                },"emails": {
+                  Row: {
+                    "args": NonNullable<Json>,"cc": (string)[] | null,"delivery": string | null,"delivery_at": string | null,"delivery_detail": string | null,"email": string,"event": string,"id": string,"message": string | null,"reply_to": string | null,"request_id": number | null,"scholar": string | null,"sender": string | null,"subject": string | null,"time_sent": string,"venue": string | null
+                  }
+                  Insert: {
+                    "args"?: NonNullable<Json>,"cc"?: (string)[] | null,"delivery"?: string | null,"delivery_at"?: string | null,"delivery_detail"?: string | null,"email": string,"event": string,"id"?: string,"message"?: string | null,"reply_to"?: string | null,"request_id"?: number | null,"scholar"?: string | null,"sender"?: string | null,"subject"?: string | null,"time_sent"?: string,"venue"?: string | null
+                  }
+                  Update: {
+                    "args"?: NonNullable<Json>,"cc"?: (string)[] | null,"delivery"?: string | null,"delivery_at"?: string | null,"delivery_detail"?: string | null,"email"?: string,"event"?: string,"id"?: string,"message"?: string | null,"reply_to"?: string | null,"request_id"?: number | null,"scholar"?: string | null,"sender"?: string | null,"subject"?: string | null,"time_sent"?: string,"venue"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "emails_scholar_fkey"
+      columns: ["scholar"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "emails_sender_fkey"
+      columns: ["sender"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "emails_venue_fkey"
+      columns: ["venue"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
     }
-  }
-  public: {
-    Tables: {
-      assignments: {
-        Row: {
-          approved: boolean
-          bid: boolean
-          compensation_requested_at: string | null
-          completed: boolean
-          created_at: string
-          id: string
-          preferenceid: string | null
-          role: string
-          scholar: string
-          submission: string
-          venue: string
-        }
-        Insert: {
-          approved?: boolean
-          bid?: boolean
-          compensation_requested_at?: string | null
-          completed?: boolean
-          created_at?: string
-          id?: string
-          preferenceid?: string | null
-          role: string
-          scholar: string
-          submission: string
-          venue: string
-        }
-        Update: {
-          approved?: boolean
-          bid?: boolean
-          compensation_requested_at?: string | null
-          completed?: boolean
-          created_at?: string
-          id?: string
-          preferenceid?: string | null
-          role?: string
-          scholar?: string
-          submission?: string
-          venue?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "assignments_preferenceid_fkey"
-            columns: ["preferenceid"]
-            isOneToOne: false
-            referencedRelation: "preference_levels"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assignments_role_fkey"
-            columns: ["role"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assignments_scholar_fkey"
-            columns: ["scholar"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assignments_submission_fkey"
-            columns: ["submission"]
-            isOneToOne: false
-            referencedRelation: "submissions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assignments_venue_fkey"
-            columns: ["venue"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      audit_log: {
-        Row: {
-          actor: string | null
-          after: Json | null
-          at: string
-          before: Json | null
-          op: string
-          row_id: string | null
-          seq: number
-          tbl: string
-          xid: unknown
-        }
-        Insert: {
-          actor?: string | null
-          after?: Json | null
-          at?: string
-          before?: Json | null
-          op: string
-          row_id?: string | null
-          seq?: never
-          tbl: string
-          xid?: unknown
-        }
-        Update: {
-          actor?: string | null
-          after?: Json | null
-          at?: string
-          before?: Json | null
-          op?: string
-          row_id?: string | null
-          seq?: never
-          tbl?: string
-          xid?: unknown
-        }
-        Relationships: []
-      }
-      compensation: {
-        Row: {
-          amount: number | null
-          rationale: string
-          role: string
-          submission_type: string
-        }
-        Insert: {
-          amount?: number | null
-          rationale?: string
-          role: string
-          submission_type: string
-        }
-        Update: {
-          amount?: number | null
-          rationale?: string
-          role?: string
-          submission_type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "compensation_role_fkey"
-            columns: ["role"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "compensation_submission_type_fkey"
-            columns: ["submission_type"]
-            isOneToOne: false
-            referencedRelation: "submission_types"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      conflicts: {
-        Row: {
-          reason: string
-          scholarid: string
-          submissionid: string
-        }
-        Insert: {
-          reason?: string
-          scholarid: string
-          submissionid: string
-        }
-        Update: {
-          reason?: string
-          scholarid?: string
-          submissionid?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "conflicts_scholarid_fkey"
-            columns: ["scholarid"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conflicts_submissionid_fkey"
-            columns: ["submissionid"]
-            isOneToOne: false
-            referencedRelation: "submissions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      currencies: {
-        Row: {
-          description: string
-          id: string
-          minters: string[]
-          name: string
-        }
-        Insert: {
-          description?: string
-          id?: string
-          minters?: string[]
-          name?: string
-        }
-        Update: {
-          description?: string
-          id?: string
-          minters?: string[]
-          name?: string
-        }
-        Relationships: []
-      }
-      email_verifications: {
-        Row: {
-          candidate_email: string
-          created_at: string
-          email_id: string | null
-          expires_at: string
-          scholar: string
-          token_hash: string
-          verified_at: string | null
-        }
-        Insert: {
-          candidate_email: string
-          created_at?: string
-          email_id?: string | null
-          expires_at?: string
-          scholar: string
-          token_hash: string
-          verified_at?: string | null
-        }
-        Update: {
-          candidate_email?: string
-          created_at?: string
-          email_id?: string | null
-          expires_at?: string
-          scholar?: string
-          token_hash?: string
-          verified_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "email_verifications_email_fkey"
-            columns: ["email_id"]
-            isOneToOne: false
-            referencedRelation: "emails"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "email_verifications_scholar_fkey"
-            columns: ["scholar"]
-            isOneToOne: true
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      emails: {
-        Row: {
-          args: Json
-          cc: string[] | null
-          delivery: string | null
-          delivery_at: string | null
-          delivery_detail: string | null
-          email: string
-          event: string
-          id: string
-          message: string | null
-          reply_to: string | null
-          request_id: number | null
-          scholar: string | null
-          sender: string | null
-          subject: string | null
-          time_sent: string
-          venue: string | null
-        }
-        Insert: {
-          args?: Json
-          cc?: string[] | null
-          delivery?: string | null
-          delivery_at?: string | null
-          delivery_detail?: string | null
-          email: string
-          event: string
-          id?: string
-          message?: string | null
-          reply_to?: string | null
-          request_id?: number | null
-          scholar?: string | null
-          sender?: string | null
-          subject?: string | null
-          time_sent?: string
-          venue?: string | null
-        }
-        Update: {
-          args?: Json
-          cc?: string[] | null
-          delivery?: string | null
-          delivery_at?: string | null
-          delivery_detail?: string | null
-          email?: string
-          event?: string
-          id?: string
-          message?: string | null
-          reply_to?: string | null
-          request_id?: number | null
-          scholar?: string | null
-          sender?: string | null
-          subject?: string | null
-          time_sent?: string
-          venue?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "emails_scholar_fkey"
-            columns: ["scholar"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "emails_sender_fkey"
-            columns: ["sender"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "emails_venue_fkey"
-            columns: ["venue"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      erasures: {
-        Row: {
-          completed_at: string | null
-          id: string
-          note: string | null
-          requested_at: string
-          subject: string
-        }
-        Insert: {
-          completed_at?: string | null
-          id?: string
-          note?: string | null
-          requested_at?: string
-          subject: string
-        }
-        Update: {
-          completed_at?: string | null
-          id?: string
-          note?: string | null
-          requested_at?: string
-          subject?: string
-        }
-        Relationships: []
-      }
-      exchanges: {
-        Row: {
-          approved: string | null
-          approvers: string[]
-          currency_from: string
-          currency_to: string
-          id: string
-          kind: Database["public"]["Enums"]["exchange_proposal_kind"] | null
-          proposed: string
-          ratio: number
-        }
-        Insert: {
-          approved?: string | null
-          approvers?: string[]
-          currency_from: string
-          currency_to: string
-          id?: string
-          kind?: Database["public"]["Enums"]["exchange_proposal_kind"] | null
-          proposed?: string
-          ratio: number
-        }
-        Update: {
-          approved?: string | null
-          approvers?: string[]
-          currency_from?: string
-          currency_to?: string
-          id?: string
-          kind?: Database["public"]["Enums"]["exchange_proposal_kind"] | null
-          proposed?: string
-          ratio?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "exchanges_currency_from_fkey"
-            columns: ["currency_from"]
-            isOneToOne: false
-            referencedRelation: "currencies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "exchanges_currency_to_fkey"
-            columns: ["currency_to"]
-            isOneToOne: false
-            referencedRelation: "currencies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      notification_preferences: {
-        Row: {
-          default_on: boolean
-          key: string
-        }
-        Insert: {
-          default_on?: boolean
-          key: string
-        }
-        Update: {
-          default_on?: boolean
-          key?: string
-        }
-        Relationships: []
-      }
-      notification_settings: {
-        Row: {
-          created_at: string
-          enabled: boolean
-          event: string
-          scholar: string
-        }
-        Insert: {
-          created_at?: string
-          enabled: boolean
-          event: string
-          scholar: string
-        }
-        Update: {
-          created_at?: string
-          enabled?: boolean
-          event?: string
-          scholar?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notification_settings_event_fkey"
-            columns: ["event"]
-            isOneToOne: false
-            referencedRelation: "notification_preferences"
-            referencedColumns: ["key"]
-          },
-          {
-            foreignKeyName: "notification_settings_scholar_fkey"
-            columns: ["scholar"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      optional_emails: {
-        Row: {
-          event: string
-          preference: string
-        }
-        Insert: {
-          event: string
-          preference: string
-        }
-        Update: {
-          event?: string
-          preference?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "optional_emails_preference_fkey"
-            columns: ["preference"]
-            isOneToOne: false
-            referencedRelation: "notification_preferences"
-            referencedColumns: ["key"]
-          },
-        ]
-      }
-      orcid_profiles: {
-        Row: {
-          education_organization: string | null
-          education_role: string | null
-          education_year: number | null
-          employment_department: string | null
-          employment_organization: string | null
-          employment_role: string | null
-          fetch_attempted_at: string
-          fetch_detail: string | null
-          fetch_failures: number
-          fetch_rate_limited_at: string | null
-          fetch_status: string
-          fetched_at: string | null
-          keywords: string[]
-          links: Json
-          orcid: string
-          scholar: string
-          work_count: number | null
-          work_first_year: number | null
-          work_last_year: number | null
-          works: Json
-          works_fetched_at: string | null
-        }
-        Insert: {
-          education_organization?: string | null
-          education_role?: string | null
-          education_year?: number | null
-          employment_department?: string | null
-          employment_organization?: string | null
-          employment_role?: string | null
-          fetch_attempted_at?: string
-          fetch_detail?: string | null
-          fetch_failures?: number
-          fetch_rate_limited_at?: string | null
-          fetch_status?: string
-          fetched_at?: string | null
-          keywords?: string[]
-          links?: Json
-          orcid: string
-          scholar: string
-          work_count?: number | null
-          work_first_year?: number | null
-          work_last_year?: number | null
-          works?: Json
-          works_fetched_at?: string | null
-        }
-        Update: {
-          education_organization?: string | null
-          education_role?: string | null
-          education_year?: number | null
-          employment_department?: string | null
-          employment_organization?: string | null
-          employment_role?: string | null
-          fetch_attempted_at?: string
-          fetch_detail?: string | null
-          fetch_failures?: number
-          fetch_rate_limited_at?: string | null
-          fetch_status?: string
-          fetched_at?: string | null
-          keywords?: string[]
-          links?: Json
-          orcid?: string
-          scholar?: string
-          work_count?: number | null
-          work_first_year?: number | null
-          work_last_year?: number | null
-          works?: Json
-          works_fetched_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "orcid_profiles_scholar_fkey"
-            columns: ["scholar"]
-            isOneToOne: true
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      preference_levels: {
-        Row: {
-          created_at: string
-          id: string
-          label: string
-          rank: number
-          venueid: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          label: string
-          rank: number
-          venueid: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          label?: string
-          rank?: number
-          venueid?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "preference_levels_venueid_fkey"
-            columns: ["venueid"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      proposals: {
-        Row: {
-          census: number
-          currency: string | null
-          editors: string[]
-          id: string
-          minters: string[]
-          payment_free: boolean
-          title: string
-          url: string
-          venue: string | null
-        }
-        Insert: {
-          census: number
-          currency?: string | null
-          editors?: string[]
-          id?: string
-          minters?: string[]
-          payment_free?: boolean
-          title?: string
-          url?: string
-          venue?: string | null
-        }
-        Update: {
-          census?: number
-          currency?: string | null
-          editors?: string[]
-          id?: string
-          minters?: string[]
-          payment_free?: boolean
-          title?: string
-          url?: string
-          venue?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "proposals_currency_fkey"
-            columns: ["currency"]
-            isOneToOne: false
-            referencedRelation: "currencies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "proposals_venue_fkey"
-            columns: ["venue"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      reconciliations: {
-        Row: {
-          duration_ms: number | null
-          id: string
-          ok: boolean
-          ran_at: string
-          result: Json
-        }
-        Insert: {
-          duration_ms?: number | null
-          id?: string
-          ok: boolean
-          ran_at?: string
-          result: Json
-        }
-        Update: {
-          duration_ms?: number | null
-          id?: string
-          ok?: boolean
-          ran_at?: string
-          result?: Json
-        }
-        Relationships: []
-      }
-      roles: {
-        Row: {
-          anonymous_authors: boolean
-          approver: string | null
-          biddable: boolean
-          description: string
-          desired_assignments: number
-          id: string
-          invited: boolean
-          name: string
-          priority: number
-          venueid: string
-          volunteer_visibility: Database["public"]["Enums"]["volunteer_visibility"]
-        }
-        Insert: {
-          anonymous_authors?: boolean
-          approver?: string | null
-          biddable?: boolean
-          description?: string
-          desired_assignments?: number
-          id?: string
-          invited: boolean
-          name?: string
-          priority?: number
-          venueid: string
-          volunteer_visibility?: Database["public"]["Enums"]["volunteer_visibility"]
-        }
-        Update: {
-          anonymous_authors?: boolean
-          approver?: string | null
-          biddable?: boolean
-          description?: string
-          desired_assignments?: number
-          id?: string
-          invited?: boolean
-          name?: string
-          priority?: number
-          venueid?: string
-          volunteer_visibility?: Database["public"]["Enums"]["volunteer_visibility"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "roles_approver_fkey"
-            columns: ["approver"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "roles_venueid_fkey"
-            columns: ["venueid"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      scholars: {
-        Row: {
-          available: boolean
-          created_at: string
-          email: string | null
-          id: string
-          name: string | null
-          orcid: string | null
-          status: string
-          status_reminder_time: string | null
-          status_time: string | null
-          steward: boolean
-        }
-        Insert: {
-          available?: boolean
-          created_at?: string
-          email?: string | null
-          id: string
-          name?: string | null
-          orcid?: string | null
-          status?: string
-          status_reminder_time?: string | null
-          status_time?: string | null
-          steward?: boolean
-        }
-        Update: {
-          available?: boolean
-          created_at?: string
-          email?: string | null
-          id?: string
-          name?: string | null
-          orcid?: string | null
-          status?: string
-          status_reminder_time?: string | null
-          status_time?: string | null
-          steward?: boolean
-        }
-        Relationships: []
-      }
-      submission_types: {
-        Row: {
-          description: string
-          id: string
-          name: string
-          revision_of: string | null
-          submission_cost: number
-          venue: string
-        }
-        Insert: {
-          description?: string
-          id?: string
-          name?: string
-          revision_of?: string | null
-          submission_cost?: number
-          venue: string
-        }
-        Update: {
-          description?: string
-          id?: string
-          name?: string
-          revision_of?: string | null
-          submission_cost?: number
-          venue?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "submission_types_revision_of_fkey"
-            columns: ["revision_of"]
-            isOneToOne: false
-            referencedRelation: "submission_types"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "submission_types_venue_fkey"
-            columns: ["venue"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      submissions: {
-        Row: {
-          authors: string[]
-          completed_at: string | null
-          created_at: string
-          expertise: string | null
-          externalid: string
-          id: string
-          imported: boolean
-          note: string | null
-          payments: number[]
-          previous: string | null
-          previousid: string | null
-          status: Database["public"]["Enums"]["submission_status"]
-          submission_type: string
-          title: string
-          transactions: string[]
-          venue: string
-        }
-        Insert: {
-          authors: string[]
-          completed_at?: string | null
-          created_at?: string
-          expertise?: string | null
-          externalid: string
-          id?: string
-          imported?: boolean
-          note?: string | null
-          payments: number[]
-          previous?: string | null
-          previousid?: string | null
-          status?: Database["public"]["Enums"]["submission_status"]
-          submission_type: string
-          title?: string
-          transactions: string[]
-          venue: string
-        }
-        Update: {
-          authors?: string[]
-          completed_at?: string | null
-          created_at?: string
-          expertise?: string | null
-          externalid?: string
-          id?: string
-          imported?: boolean
-          note?: string | null
-          payments?: number[]
-          previous?: string | null
-          previousid?: string | null
-          status?: Database["public"]["Enums"]["submission_status"]
-          submission_type?: string
-          title?: string
-          transactions?: string[]
-          venue?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "submissions_previous_fkey"
-            columns: ["previous"]
-            isOneToOne: false
-            referencedRelation: "submissions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "submissions_submission_type_fkey"
-            columns: ["submission_type"]
-            isOneToOne: false
-            referencedRelation: "submission_types"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "submissions_venue_fkey"
-            columns: ["venue"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      supporters: {
-        Row: {
-          created_at: string
-          id: string
-          message: string
-          proposalid: string
-          scholarid: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          message?: string
-          proposalid: string
-          scholarid: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          message?: string
-          proposalid?: string
-          scholarid?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "supporters_proposalid_fkey"
-            columns: ["proposalid"]
-            isOneToOne: false
-            referencedRelation: "proposals"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "supporters_scholarid_fkey"
-            columns: ["scholarid"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      thanks: {
-        Row: {
-          approver: string | null
-          author: string
-          created_at: string
-          decline_reason: string | null
-          id: string
-          message: string
-          status: Database["public"]["Enums"]["thanks_status"]
-          submission: string
-          venue: string
-        }
-        Insert: {
-          approver?: string | null
-          author: string
-          created_at?: string
-          decline_reason?: string | null
-          id?: string
-          message: string
-          status?: Database["public"]["Enums"]["thanks_status"]
-          submission: string
-          venue: string
-        }
-        Update: {
-          approver?: string | null
-          author?: string
-          created_at?: string
-          decline_reason?: string | null
-          id?: string
-          message?: string
-          status?: Database["public"]["Enums"]["thanks_status"]
-          submission?: string
-          venue?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "thanks_approver_fkey"
-            columns: ["approver"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "thanks_author_fkey"
-            columns: ["author"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "thanks_submission_fkey"
-            columns: ["submission"]
-            isOneToOne: false
-            referencedRelation: "submissions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "thanks_venue_fkey"
-            columns: ["venue"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      token_events: {
-        Row: {
-          actor: string | null
-          at: string
-          currency: string
-          op: Database["public"]["Enums"]["token_op"]
-          prev_scholar: string | null
-          prev_venue: string | null
-          scholar: string | null
-          seq: number
-          token: string
-          txn: string | null
-          venue: string | null
-          xid: unknown
-        }
-        Insert: {
-          actor?: string | null
-          at?: string
-          currency: string
-          op: Database["public"]["Enums"]["token_op"]
-          prev_scholar?: string | null
-          prev_venue?: string | null
-          scholar?: string | null
-          seq?: never
-          token: string
-          txn?: string | null
-          venue?: string | null
-          xid?: unknown
-        }
-        Update: {
-          actor?: string | null
-          at?: string
-          currency?: string
-          op?: Database["public"]["Enums"]["token_op"]
-          prev_scholar?: string | null
-          prev_venue?: string | null
-          scholar?: string | null
-          seq?: never
-          token?: string
-          txn?: string | null
-          venue?: string | null
-          xid?: unknown
-        }
-        Relationships: []
-      }
-      tokens: {
-        Row: {
-          currency: string
-          id: string
-          scholar: string | null
-          venue: string | null
-        }
-        Insert: {
-          currency: string
-          id?: string
-          scholar?: string | null
-          venue?: string | null
-        }
-        Update: {
-          currency?: string
-          id?: string
-          scholar?: string | null
-          venue?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tokens_currency_fkey"
-            columns: ["currency"]
-            isOneToOne: false
-            referencedRelation: "currencies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tokens_scholar_fkey"
-            columns: ["scholar"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tokens_venue_fkey"
-            columns: ["venue"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      transactions: {
-        Row: {
-          amount: number
-          created_at: string
-          creator: string
-          currency: string
-          decline_reason: string | null
-          decliner: string | null
-          from_scholar: string | null
-          from_venue: string | null
-          id: string
-          purpose: string
-          seq: number
-          status: Database["public"]["Enums"]["transaction_status"]
-          to_scholar: string | null
-          to_venue: string | null
-          tokens: string[]
-        }
-        Insert: {
-          amount?: number
-          created_at?: string
-          creator: string
-          currency: string
-          decline_reason?: string | null
-          decliner?: string | null
-          from_scholar?: string | null
-          from_venue?: string | null
-          id?: string
-          purpose: string
-          seq?: number
-          status: Database["public"]["Enums"]["transaction_status"]
-          to_scholar?: string | null
-          to_venue?: string | null
-          tokens: string[]
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          creator?: string
-          currency?: string
-          decline_reason?: string | null
-          decliner?: string | null
-          from_scholar?: string | null
-          from_venue?: string | null
-          id?: string
-          purpose?: string
-          seq?: number
-          status?: Database["public"]["Enums"]["transaction_status"]
-          to_scholar?: string | null
-          to_venue?: string | null
-          tokens?: string[]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transactions_creator_fkey"
-            columns: ["creator"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transactions_currency_fkey"
-            columns: ["currency"]
-            isOneToOne: false
-            referencedRelation: "currencies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transactions_decliner_fkey"
-            columns: ["decliner"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transactions_from_scholar_fkey"
-            columns: ["from_scholar"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transactions_from_venue_fkey"
-            columns: ["from_venue"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transactions_to_scholar_fkey"
-            columns: ["to_scholar"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transactions_to_venue_fkey"
-            columns: ["to_venue"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      venues: {
-        Row: {
-          admins: string[]
-          anonymous_assignments: boolean
-          currency: string
-          description: string
-          done_visibility_days: number
-          id: string
-          inactive: string | null
-          payment_free: boolean
-          short_title: string
-          slug: string | null
-          title: string
-          transaction_reminder_frequency_days: number
-          transaction_reminder_time: string | null
-          url: string
-          vet_thanks: boolean
-          welcome_amount: number
-        }
-        Insert: {
-          admins?: string[]
-          anonymous_assignments?: boolean
-          currency: string
-          description?: string
-          done_visibility_days?: number
-          id?: string
-          inactive?: string | null
-          payment_free?: boolean
-          short_title?: string
-          slug?: string | null
-          title?: string
-          transaction_reminder_frequency_days?: number
-          transaction_reminder_time?: string | null
-          url?: string
-          vet_thanks?: boolean
-          welcome_amount: number
-        }
-        Update: {
-          admins?: string[]
-          anonymous_assignments?: boolean
-          currency?: string
-          description?: string
-          done_visibility_days?: number
-          id?: string
-          inactive?: string | null
-          payment_free?: boolean
-          short_title?: string
-          slug?: string | null
-          title?: string
-          transaction_reminder_frequency_days?: number
-          transaction_reminder_time?: string | null
-          url?: string
-          vet_thanks?: boolean
-          welcome_amount?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "venues_currency_fkey"
-            columns: ["currency"]
-            isOneToOne: false
-            referencedRelation: "currencies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      volunteers: {
-        Row: {
-          accepted: Database["public"]["Enums"]["invited"]
-          active: boolean
-          created_at: string
-          expertise: string
-          id: string
-          papers: number | null
-          roleid: string
-          scholarid: string
-        }
-        Insert: {
-          accepted?: Database["public"]["Enums"]["invited"]
-          active?: boolean
-          created_at?: string
-          expertise: string
-          id?: string
-          papers?: number | null
-          roleid: string
-          scholarid: string
-        }
-        Update: {
-          accepted?: Database["public"]["Enums"]["invited"]
-          active?: boolean
-          created_at?: string
-          expertise?: string
-          id?: string
-          papers?: number | null
-          roleid?: string
-          scholarid?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "volunteers_roleid_fkey"
-            columns: ["roleid"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "volunteers_scholarid_fkey"
-            columns: ["scholarid"]
-            isOneToOne: false
-            referencedRelation: "scholars"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+                  ]
+                },"erasures": {
+                  Row: {
+                    "completed_at": string | null,"id": string,"note": string | null,"requested_at": string,"subject": string
+                  }
+                  Insert: {
+                    "completed_at"?: string | null,"id"?: string,"note"?: string | null,"requested_at"?: string,"subject": string
+                  }
+                  Update: {
+                    "completed_at"?: string | null,"id"?: string,"note"?: string | null,"requested_at"?: string,"subject"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"exchanges": {
+                  Row: {
+                    "approved": string | null,"approvers": (string)[],"currency_from": string,"currency_to": string,"id": string,"kind": Database["public"]['Enums']["exchange_proposal_kind"] | null,"proposed": string,"ratio": number
+                  }
+                  Insert: {
+                    "approved"?: string | null,"approvers"?: (string)[],"currency_from": string,"currency_to": string,"id"?: string,"kind"?: Database["public"]['Enums']["exchange_proposal_kind"] | null,"proposed"?: string,"ratio": number
+                  }
+                  Update: {
+                    "approved"?: string | null,"approvers"?: (string)[],"currency_from"?: string,"currency_to"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["exchange_proposal_kind"] | null,"proposed"?: string,"ratio"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "exchanges_currency_from_fkey"
+      columns: ["currency_from"]
+isOneToOne: false
+      referencedRelation: "currencies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "exchanges_currency_to_fkey"
+      columns: ["currency_to"]
+isOneToOne: false
+      referencedRelation: "currencies"
+      referencedColumns: ["id"]
     }
-    Views: {
-      [_ in never]: never
+                  ]
+                },"notification_preferences": {
+                  Row: {
+                    "default_on": boolean,"key": string
+                  }
+                  Insert: {
+                    "default_on"?: boolean,"key": string
+                  }
+                  Update: {
+                    "default_on"?: boolean,"key"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"notification_settings": {
+                  Row: {
+                    "created_at": string,"enabled": boolean,"event": string,"scholar": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"enabled": boolean,"event": string,"scholar": string
+                  }
+                  Update: {
+                    "created_at"?: string,"enabled"?: boolean,"event"?: string,"scholar"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notification_settings_event_fkey"
+      columns: ["event"]
+isOneToOne: false
+      referencedRelation: "notification_preferences"
+      referencedColumns: ["key"]
+    },{
+      foreignKeyName: "notification_settings_scholar_fkey"
+      columns: ["scholar"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
     }
-    Functions: {
-      _backfill_shortfall_mints: { Args: never; Returns: number }
-      _move_tokens: {
-        Args: {
-          _amount: number
-          _currency: string
-          _from_scholar: string
-          _from_venue: string
-          _mint_creator?: string
-          _mint_purpose?: string
-          _mint_shortfall?: boolean
-          _shortfall_message?: string
-          _to_scholar: string
-          _to_venue: string
-        }
-        Returns: string[]
-      }
-      _notify_new_volunteer: {
-        Args: { _roleid: string; _scholarid: string; _venueid: string }
-        Returns: number
-      }
-      _welcome_volunteer: {
-        Args: {
-          _reason: string
-          _roleid: string
-          _scholar: string
-          _welcomer: string
-        }
-        Returns: number
-      }
-      accept_role_invite: {
-        Args: {
-          _response: Database["public"]["Enums"]["invited"]
-          _volunteer_id: string
-        }
-        Returns: Json
-      }
-      approve_thanks: { Args: { _id: string }; Returns: Json }
-      approve_transaction: { Args: { _transaction_id: string }; Returns: Json }
-      approve_venue_proposal: { Args: { _proposal_id: string }; Returns: Json }
-      authors_can_cover: {
-        Args: { _amounts: number[]; _currency: string; _scholars: string[] }
-        Returns: {
-          covered: boolean
-          scholar: string
-        }[]
-      }
-      backfill_orcid_profiles: { Args: { _limit?: number }; Returns: number }
-      bulk_import_submissions: {
-        Args: { _import_note: string; _submissions: Json; _venueid: string }
-        Returns: Json
-      }
-      call_for_bids_status: { Args: { _role: string }; Returns: Json }
-      can_approve_assignment: {
-        Args: { _role: string; _submission: string }
-        Returns: boolean
-      }
-      can_claim_editor_role: {
-        Args: { _role: string; _submission: string }
-        Returns: boolean
-      }
-      can_see_balances: { Args: { _currency: string }; Returns: boolean }
-      can_see_volunteer: { Args: { _volunteer: string }; Returns: boolean }
-      complete_assignment: {
-        Args: {
-          _assignment_id: string
-          _mint_purpose_template: string
-          _payment_purpose_template: string
-        }
-        Returns: Json
-      }
-      conservation_violations: {
-        Args: { _currency?: string }
-        Returns: {
-          actual: number
-          currency: string
-          expected: number
-          holder: string
-          kind: string
-        }[]
-      }
-      create_role: {
-        Args: { _description?: string; _name: string; _venue: string }
-        Returns: {
-          anonymous_authors: boolean
-          approver: string | null
-          biddable: boolean
-          description: string
-          desired_assignments: number
-          id: string
-          invited: boolean
-          name: string
-          priority: number
-          venueid: string
-          volunteer_visibility: Database["public"]["Enums"]["volunteer_visibility"]
-        }
-        SetofOptions: {
-          from: "*"
-          to: "roles"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      create_submission: {
-        Args: {
-          _authors: string[]
-          _expertise: string
-          _external_id: string
-          _note: string
-          _payments: number[]
-          _previous: string
-          _previous_id: string
-          _purpose: string
-          _submission_type: string
-          _title: string
-          _venue: string
-        }
-        Returns: Json
-      }
-      create_volunteer: {
-        Args: {
-          _accepted: boolean
-          _compensate: boolean
-          _papers: number
-          _roleid: string
-          _scholarid: string
-        }
-        Returns: Json
-      }
-      currency_holder_counts: { Args: { _currency: string }; Returns: Json }
-      decline_thanks: { Args: { _id: string; _reason: string }; Returns: Json }
-      decline_venue_proposal: {
-        Args: { _message: string; _proposal_id: string; _subject: string }
-        Returns: number
-      }
-      ensure_scholar: { Args: never; Returns: string }
-      erase_scholar: {
-        Args: { _note?: string; _scholar?: string }
-        Returns: Json
-      }
-      export_scholar_data: { Args: { _scholar?: string }; Returns: Json }
-      forget_scholar: { Args: { _scholar: string }; Returns: Json }
-      isadmin: { Args: { _venueid: string }; Returns: boolean }
-      isassigned: { Args: { _submissionid: string }; Returns: boolean }
-      isauthor: { Args: { _submissionid: string }; Returns: boolean }
-      isconflicted: { Args: { _submissionid: string }; Returns: boolean }
-      isminter: {
-        Args: { _currencyid: string; _scholarid: string }
-        Returns: boolean
-      }
-      ispriorityzero: { Args: { _venueid: string }; Returns: boolean }
-      issteward: { Args: never; Returns: boolean }
-      mark_submission_done: {
-        Args: {
-          _mint_purpose_template: string
-          _payment_purpose_template: string
-          _submission_id: string
-        }
-        Returns: Json
-      }
-      mint_tokens: {
-        Args: {
-          _amount: number
-          _currency: string
-          _purpose: string
-          _to_venue: string
-        }
-        Returns: Json
-      }
-      notification_allowed: {
-        Args: { _event: string; _scholar: string }
-        Returns: boolean
-      }
-      orcid_mirror_health: { Args: never; Returns: Json }
-      pending_email_verification: { Args: never; Returns: Json }
-      propose_thanks: {
-        Args: { _message: string; _submission: string }
-        Returns: Json
-      }
-      queue_call_for_bids: {
-        Args: { _note: string; _role: string }
-        Returns: Json
-      }
-      queue_email: {
-        Args: {
-          _args?: string[]
-          _event: string
-          _proposal?: string
-          _scholars?: string[]
-        }
-        Returns: Json
-      }
-      queue_reminder_email: {
-        Args: { _args: string[]; _event: string; _scholar: string }
-        Returns: number
-      }
-      queue_steward_email: {
-        Args: { _args?: string[]; _event: string }
-        Returns: undefined
-      }
-      queue_thanks_emails: {
-        Args: {
-          _audience: string
-          _message: string
-          _subject: string
-          _thanks_id: string
-        }
-        Returns: number
-      }
-      reconcile_email_delivery: { Args: never; Returns: Json }
-      reconcile_ledger: { Args: { _since?: string }; Returns: Json }
-      replay_audit_log: {
-        Args: { _dry_run?: boolean; _from_seq?: number }
-        Returns: Json
-      }
-      request_email_verification: {
-        Args: { _email: string }
-        Returns: undefined
-      }
-      request_orcid_refresh: {
-        Args: { _force?: boolean; _scholars: string[] }
-        Returns: number
-      }
-      scholar_approver_roles: {
-        Args: never
-        Returns: {
-          role: string
-        }[]
-      }
-      scholar_balances: {
-        Args: { _currency: string; _scholars: string[] }
-        Returns: {
-          count: number
-          scholar: string
-        }[]
-      }
-      scholar_identity: {
-        Args: { _meta: Json }
-        Returns: {
-          name: string
-          orcid: string
-        }[]
-      }
-      scholar_tasks: {
-        Args: never
-        Returns: {
-          assignment: string
-          priority: number
-          role: string
-          role_name: string
-          state: string
-          submission: string
-          title: string
-          venue: string
-        }[]
-      }
-      set_steward: {
-        Args: { _scholar: string; _steward: boolean }
-        Returns: Json
-      }
-      site_origin: { Args: never; Returns: string }
-      steward_inbox: { Args: never; Returns: string }
-      submission_has_editor: { Args: { _submission: string }; Returns: boolean }
-      tokens_as_of: {
-        Args: { _at?: string }
-        Returns: {
-          currency: string
-          scholar: string
-          token: string
-          venue: string
-        }[]
-      }
-      transfer_tokens: {
-        Args: {
-          _amount: number
-          _currency: string
-          _from: string
-          _from_kind: string
-          _purpose: string
-          _to: string
-          _to_kind: string
-          _transaction: string
-        }
-        Returns: Json
-      }
-      venue_submission_editors: {
-        Args: { _venue: string }
-        Returns: {
-          has_editor: boolean
-          submission: string
-        }[]
-      }
-      venue_volunteer_counts: {
-        Args: { _venue: string }
-        Returns: {
-          role: string
-          volunteer_count: number
-        }[]
-      }
-      verify_email: { Args: { _token: string }; Returns: Json }
+                  ]
+                },"optional_emails": {
+                  Row: {
+                    "event": string,"preference": string
+                  }
+                  Insert: {
+                    "event": string,"preference": string
+                  }
+                  Update: {
+                    "event"?: string,"preference"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "optional_emails_preference_fkey"
+      columns: ["preference"]
+isOneToOne: false
+      referencedRelation: "notification_preferences"
+      referencedColumns: ["key"]
     }
-    Enums: {
-      exchange_proposal_kind: "create" | "modify" | "merge"
-      invited: "invited" | "accepted" | "declined"
-      submission_status: "reviewing" | "done"
-      thanks_status: "proposed" | "approved" | "declined"
-      token_op: "mint" | "move" | "burn"
-      transaction_status: "proposed" | "approved" | "declined"
-      volunteer_visibility: "all" | "completed" | "none"
+                  ]
+                },"orcid_profiles": {
+                  Row: {
+                    "education_organization": string | null,"education_role": string | null,"education_year": number | null,"employment_department": string | null,"employment_organization": string | null,"employment_role": string | null,"fetch_attempted_at": string,"fetch_detail": string | null,"fetch_failures": number,"fetch_rate_limited_at": string | null,"fetch_status": string,"fetched_at": string | null,"keywords": (string)[],"links": NonNullable<Json>,"orcid": string,"scholar": string,"work_count": number | null,"work_first_year": number | null,"work_last_year": number | null,"works": NonNullable<Json>,"works_fetched_at": string | null
+                  }
+                  Insert: {
+                    "education_organization"?: string | null,"education_role"?: string | null,"education_year"?: number | null,"employment_department"?: string | null,"employment_organization"?: string | null,"employment_role"?: string | null,"fetch_attempted_at"?: string,"fetch_detail"?: string | null,"fetch_failures"?: number,"fetch_rate_limited_at"?: string | null,"fetch_status"?: string,"fetched_at"?: string | null,"keywords"?: (string)[],"links"?: NonNullable<Json>,"orcid": string,"scholar": string,"work_count"?: number | null,"work_first_year"?: number | null,"work_last_year"?: number | null,"works"?: NonNullable<Json>,"works_fetched_at"?: string | null
+                  }
+                  Update: {
+                    "education_organization"?: string | null,"education_role"?: string | null,"education_year"?: number | null,"employment_department"?: string | null,"employment_organization"?: string | null,"employment_role"?: string | null,"fetch_attempted_at"?: string,"fetch_detail"?: string | null,"fetch_failures"?: number,"fetch_rate_limited_at"?: string | null,"fetch_status"?: string,"fetched_at"?: string | null,"keywords"?: (string)[],"links"?: NonNullable<Json>,"orcid"?: string,"scholar"?: string,"work_count"?: number | null,"work_first_year"?: number | null,"work_last_year"?: number | null,"works"?: NonNullable<Json>,"works_fetched_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "orcid_profiles_scholar_fkey"
+      columns: ["scholar"]
+isOneToOne: true
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
     }
-    CompositeTypes: {
-      [_ in never]: never
+                  ]
+                },"preference_levels": {
+                  Row: {
+                    "created_at": string,"id": string,"label": string,"rank": number,"venueid": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"label": string,"rank": number,"venueid": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"label"?: string,"rank"?: number,"venueid"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "preference_levels_venueid_fkey"
+      columns: ["venueid"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
     }
-  }
+                  ]
+                },"proposals": {
+                  Row: {
+                    "census": number,"currency": string | null,"editors": (string)[],"id": string,"minters": (string)[],"payment_free": boolean,"title": string,"url": string,"venue": string | null
+                  }
+                  Insert: {
+                    "census": number,"currency"?: string | null,"editors"?: (string)[],"id"?: string,"minters"?: (string)[],"payment_free"?: boolean,"title"?: string,"url"?: string,"venue"?: string | null
+                  }
+                  Update: {
+                    "census"?: number,"currency"?: string | null,"editors"?: (string)[],"id"?: string,"minters"?: (string)[],"payment_free"?: boolean,"title"?: string,"url"?: string,"venue"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "proposals_currency_fkey"
+      columns: ["currency"]
+isOneToOne: false
+      referencedRelation: "currencies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "proposals_venue_fkey"
+      columns: ["venue"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"reconciliations": {
+                  Row: {
+                    "duration_ms": number | null,"id": string,"ok": boolean,"ran_at": string,"result": NonNullable<Json>
+                  }
+                  Insert: {
+                    "duration_ms"?: number | null,"id"?: string,"ok": boolean,"ran_at"?: string,"result": NonNullable<Json>
+                  }
+                  Update: {
+                    "duration_ms"?: number | null,"id"?: string,"ok"?: boolean,"ran_at"?: string,"result"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"roles": {
+                  Row: {
+                    "anonymous_authors": boolean,"approver": string | null,"biddable": boolean,"description": string,"desired_assignments": number,"id": string,"invited": boolean,"name": string,"priority": number,"venueid": string,"volunteer_visibility": Database["public"]['Enums']["volunteer_visibility"]
+                  }
+                  Insert: {
+                    "anonymous_authors"?: boolean,"approver"?: string | null,"biddable"?: boolean,"description"?: string,"desired_assignments"?: number,"id"?: string,"invited": boolean,"name"?: string,"priority"?: number,"venueid": string,"volunteer_visibility"?: Database["public"]['Enums']["volunteer_visibility"]
+                  }
+                  Update: {
+                    "anonymous_authors"?: boolean,"approver"?: string | null,"biddable"?: boolean,"description"?: string,"desired_assignments"?: number,"id"?: string,"invited"?: boolean,"name"?: string,"priority"?: number,"venueid"?: string,"volunteer_visibility"?: Database["public"]['Enums']["volunteer_visibility"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "roles_approver_fkey"
+      columns: ["approver"]
+isOneToOne: false
+      referencedRelation: "roles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "roles_venueid_fkey"
+      columns: ["venueid"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"scholars": {
+                  Row: {
+                    "available": boolean,"created_at": string,"email": string | null,"id": string,"name": string | null,"orcid": string | null,"status": string,"status_reminder_time": string | null,"status_time": string | null,"steward": boolean
+                  }
+                  Insert: {
+                    "available"?: boolean,"created_at"?: string,"email"?: string | null,"id": string,"name"?: string | null,"orcid"?: string | null,"status"?: string,"status_reminder_time"?: string | null,"status_time"?: string | null,"steward"?: boolean
+                  }
+                  Update: {
+                    "available"?: boolean,"created_at"?: string,"email"?: string | null,"id"?: string,"name"?: string | null,"orcid"?: string | null,"status"?: string,"status_reminder_time"?: string | null,"status_time"?: string | null,"steward"?: boolean
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"submission_types": {
+                  Row: {
+                    "description": string,"id": string,"name": string,"revision_of": string | null,"submission_cost": number,"venue": string
+                  }
+                  Insert: {
+                    "description"?: string,"id"?: string,"name"?: string,"revision_of"?: string | null,"submission_cost"?: number,"venue": string
+                  }
+                  Update: {
+                    "description"?: string,"id"?: string,"name"?: string,"revision_of"?: string | null,"submission_cost"?: number,"venue"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "submission_types_revision_of_fkey"
+      columns: ["revision_of"]
+isOneToOne: false
+      referencedRelation: "submission_types"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "submission_types_venue_fkey"
+      columns: ["venue"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"submissions": {
+                  Row: {
+                    "authors": (string)[],"completed_at": string | null,"created_at": string,"expertise": string | null,"externalid": string,"id": string,"imported": boolean,"note": string | null,"payments": (number)[],"previous": string | null,"previousid": string | null,"status": Database["public"]['Enums']["submission_status"],"submission_type": string,"title": string,"transactions": (string)[],"venue": string
+                  }
+                  Insert: {
+                    "authors": (string)[],"completed_at"?: string | null,"created_at"?: string,"expertise"?: string | null,"externalid": string,"id"?: string,"imported"?: boolean,"note"?: string | null,"payments": (number)[],"previous"?: string | null,"previousid"?: string | null,"status"?: Database["public"]['Enums']["submission_status"],"submission_type": string,"title"?: string,"transactions": (string)[],"venue": string
+                  }
+                  Update: {
+                    "authors"?: (string)[],"completed_at"?: string | null,"created_at"?: string,"expertise"?: string | null,"externalid"?: string,"id"?: string,"imported"?: boolean,"note"?: string | null,"payments"?: (number)[],"previous"?: string | null,"previousid"?: string | null,"status"?: Database["public"]['Enums']["submission_status"],"submission_type"?: string,"title"?: string,"transactions"?: (string)[],"venue"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "submissions_previous_fkey"
+      columns: ["previous"]
+isOneToOne: false
+      referencedRelation: "submissions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "submissions_submission_type_fkey"
+      columns: ["submission_type"]
+isOneToOne: false
+      referencedRelation: "submission_types"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "submissions_venue_fkey"
+      columns: ["venue"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"supporters": {
+                  Row: {
+                    "created_at": string,"id": string,"message": string,"proposalid": string,"scholarid": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"message"?: string,"proposalid": string,"scholarid": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"message"?: string,"proposalid"?: string,"scholarid"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "supporters_proposalid_fkey"
+      columns: ["proposalid"]
+isOneToOne: false
+      referencedRelation: "proposals"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "supporters_scholarid_fkey"
+      columns: ["scholarid"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"thanks": {
+                  Row: {
+                    "approver": string | null,"author": string,"created_at": string,"decline_reason": string | null,"id": string,"message": string,"status": Database["public"]['Enums']["thanks_status"],"submission": string,"venue": string
+                  }
+                  Insert: {
+                    "approver"?: string | null,"author": string,"created_at"?: string,"decline_reason"?: string | null,"id"?: string,"message": string,"status"?: Database["public"]['Enums']["thanks_status"],"submission": string,"venue": string
+                  }
+                  Update: {
+                    "approver"?: string | null,"author"?: string,"created_at"?: string,"decline_reason"?: string | null,"id"?: string,"message"?: string,"status"?: Database["public"]['Enums']["thanks_status"],"submission"?: string,"venue"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "thanks_approver_fkey"
+      columns: ["approver"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "thanks_author_fkey"
+      columns: ["author"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "thanks_submission_fkey"
+      columns: ["submission"]
+isOneToOne: false
+      referencedRelation: "submissions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "thanks_venue_fkey"
+      columns: ["venue"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"token_events": {
+                  Row: {
+                    "actor": string | null,"at": string,"currency": string,"op": Database["public"]['Enums']["token_op"],"prev_scholar": string | null,"prev_venue": string | null,"scholar": string | null,"seq": number,"token": string,"txn": string | null,"venue": string | null,"xid": unknown
+                  }
+                  Insert: {
+                    "actor"?: string | null,"at"?: string,"currency": string,"op": Database["public"]['Enums']["token_op"],"prev_scholar"?: string | null,"prev_venue"?: string | null,"scholar"?: string | null,"seq"?: never,"token": string,"txn"?: string | null,"venue"?: string | null,"xid"?: unknown
+                  }
+                  Update: {
+                    "actor"?: string | null,"at"?: string,"currency"?: string,"op"?: Database["public"]['Enums']["token_op"],"prev_scholar"?: string | null,"prev_venue"?: string | null,"scholar"?: string | null,"seq"?: never,"token"?: string,"txn"?: string | null,"venue"?: string | null,"xid"?: unknown
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"tokens": {
+                  Row: {
+                    "currency": string,"id": string,"scholar": string | null,"venue": string | null
+                  }
+                  Insert: {
+                    "currency": string,"id"?: string,"scholar"?: string | null,"venue"?: string | null
+                  }
+                  Update: {
+                    "currency"?: string,"id"?: string,"scholar"?: string | null,"venue"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "tokens_currency_fkey"
+      columns: ["currency"]
+isOneToOne: false
+      referencedRelation: "currencies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tokens_scholar_fkey"
+      columns: ["scholar"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tokens_venue_fkey"
+      columns: ["venue"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"transactions": {
+                  Row: {
+                    "amount": number,"created_at": string,"creator": string,"currency": string,"decline_reason": string | null,"decliner": string | null,"from_scholar": string | null,"from_venue": string | null,"id": string,"purpose": string,"seq": number,"status": Database["public"]['Enums']["transaction_status"],"to_scholar": string | null,"to_venue": string | null,"tokens": (string)[]
+                  }
+                  Insert: {
+                    "amount"?: never,"created_at"?: string,"creator": string,"currency": string,"decline_reason"?: string | null,"decliner"?: string | null,"from_scholar"?: string | null,"from_venue"?: string | null,"id"?: string,"purpose": string,"seq"?: number,"status": Database["public"]['Enums']["transaction_status"],"to_scholar"?: string | null,"to_venue"?: string | null,"tokens": (string)[]
+                  }
+                  Update: {
+                    "amount"?: never,"created_at"?: string,"creator"?: string,"currency"?: string,"decline_reason"?: string | null,"decliner"?: string | null,"from_scholar"?: string | null,"from_venue"?: string | null,"id"?: string,"purpose"?: string,"seq"?: number,"status"?: Database["public"]['Enums']["transaction_status"],"to_scholar"?: string | null,"to_venue"?: string | null,"tokens"?: (string)[]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "transactions_creator_fkey"
+      columns: ["creator"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "transactions_currency_fkey"
+      columns: ["currency"]
+isOneToOne: false
+      referencedRelation: "currencies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "transactions_decliner_fkey"
+      columns: ["decliner"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "transactions_from_scholar_fkey"
+      columns: ["from_scholar"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "transactions_from_venue_fkey"
+      columns: ["from_venue"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "transactions_to_scholar_fkey"
+      columns: ["to_scholar"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "transactions_to_venue_fkey"
+      columns: ["to_venue"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venues": {
+                  Row: {
+                    "admins": (string)[],"anonymous_assignments": boolean,"currency": string,"description": string,"done_visibility_days": number,"id": string,"inactive": string | null,"payment_free": boolean,"short_title": string,"slug": string | null,"title": string,"transaction_reminder_frequency_days": number,"transaction_reminder_time": string | null,"url": string,"vet_thanks": boolean,"welcome_amount": number
+                  }
+                  Insert: {
+                    "admins"?: (string)[],"anonymous_assignments"?: boolean,"currency": string,"description"?: string,"done_visibility_days"?: number,"id"?: string,"inactive"?: string | null,"payment_free"?: boolean,"short_title"?: string,"slug"?: string | null,"title"?: string,"transaction_reminder_frequency_days"?: number,"transaction_reminder_time"?: string | null,"url"?: string,"vet_thanks"?: boolean,"welcome_amount": number
+                  }
+                  Update: {
+                    "admins"?: (string)[],"anonymous_assignments"?: boolean,"currency"?: string,"description"?: string,"done_visibility_days"?: number,"id"?: string,"inactive"?: string | null,"payment_free"?: boolean,"short_title"?: string,"slug"?: string | null,"title"?: string,"transaction_reminder_frequency_days"?: number,"transaction_reminder_time"?: string | null,"url"?: string,"vet_thanks"?: boolean,"welcome_amount"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venues_currency_fkey"
+      columns: ["currency"]
+isOneToOne: false
+      referencedRelation: "currencies"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"volunteers": {
+                  Row: {
+                    "accepted": Database["public"]['Enums']["invited"],"active": boolean,"created_at": string,"expertise": string,"id": string,"papers": number | null,"roleid": string,"scholarid": string
+                  }
+                  Insert: {
+                    "accepted"?: Database["public"]['Enums']["invited"],"active"?: boolean,"created_at"?: string,"expertise": string,"id"?: string,"papers"?: number | null,"roleid": string,"scholarid": string
+                  }
+                  Update: {
+                    "accepted"?: Database["public"]['Enums']["invited"],"active"?: boolean,"created_at"?: string,"expertise"?: string,"id"?: string,"papers"?: number | null,"roleid"?: string,"scholarid"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "volunteers_roleid_fkey"
+      columns: ["roleid"]
+isOneToOne: false
+      referencedRelation: "roles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "volunteers_scholarid_fkey"
+      columns: ["scholarid"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
+          }
+          Views: {
+            [_ in never]: never
+          }
+          Functions: {
+            "_backfill_shortfall_mints":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"_move_tokens":
+{ Args: { "_amount": number,"_currency": string,"_from_scholar": string,"_from_venue": string,"_mint_creator"?: string,"_mint_purpose"?: string,"_mint_shortfall"?: boolean,"_shortfall_message"?: string,"_to_scholar": string,"_to_venue": string }; Returns: (string)[]
+                           },
+"_notify_new_volunteer":
+{ Args: { "_roleid": string,"_scholarid": string,"_venueid": string }; Returns: number
+                           },
+"_welcome_volunteer":
+{ Args: { "_reason": string,"_roleid": string,"_scholar": string,"_welcomer": string }; Returns: number
+                           },
+"accept_role_invite":
+{ Args: { "_response": Database["public"]['Enums']["invited"],"_volunteer_id": string }; Returns: Json
+                           },
+"approve_thanks":
+{ Args: { "_id": string }; Returns: Json
+                           },
+"approve_transaction":
+{ Args: { "_transaction_id": string }; Returns: Json
+                           },
+"approve_venue_proposal":
+{ Args: { "_proposal_id": string }; Returns: Json
+                           },
+"authors_can_cover":
+{ Args: { "_amounts": (number)[],"_currency": string,"_scholars": (string)[] }; Returns: {
+              "covered": boolean,"scholar": string
+            }[]
+                           },
+"backfill_orcid_profiles":
+{ Args: { "_limit"?: number }; Returns: number
+                           },
+"bulk_import_submissions":
+{ Args: { "_import_note": string,"_submissions": Json,"_venueid": string }; Returns: Json
+                           },
+"call_for_bids_status":
+{ Args: { "_role": string }; Returns: Json
+                           },
+"can_approve_assignment":
+{ Args: { "_role": string,"_submission": string }; Returns: boolean
+                           },
+"can_claim_editor_role":
+{ Args: { "_role": string,"_submission": string }; Returns: boolean
+                           },
+"can_see_balances":
+{ Args: { "_currency": string }; Returns: boolean
+                           },
+"can_see_volunteer":
+{ Args: { "_volunteer": string }; Returns: boolean
+                           },
+"complete_assignment":
+{ Args: { "_assignment_id": string,"_mint_purpose_template": string,"_payment_purpose_template": string }; Returns: Json
+                           },
+"conservation_violations":
+{ Args: { "_currency"?: string }; Returns: {
+              "actual": number,"currency": string,"expected": number,"holder": string,"kind": string
+            }[]
+                           },
+"create_role":
+{ Args: { "_description"?: string,"_name": string,"_venue": string }; Returns: {
+              "anonymous_authors": boolean,
+"approver": string | null,
+"biddable": boolean,
+"description": string,
+"desired_assignments": number,
+"id": string,
+"invited": boolean,
+"name": string,
+"priority": number,
+"venueid": string,
+"volunteer_visibility": Database["public"]['Enums']["volunteer_visibility"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "roles"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"create_submission":
+{ Args: { "_authors": (string)[],"_expertise": string,"_external_id": string,"_note": string,"_payments": (number)[],"_previous": string,"_previous_id": string,"_purpose": string,"_submission_type": string,"_title": string,"_venue": string }; Returns: Json
+                           },
+"create_volunteer":
+{ Args: { "_accepted": boolean,"_compensate": boolean,"_papers": number,"_roleid": string,"_scholarid": string }; Returns: Json
+                           },
+"currency_holder_counts":
+{ Args: { "_currency": string }; Returns: Json
+                           },
+"decline_thanks":
+{ Args: { "_id": string,"_reason": string }; Returns: Json
+                           },
+"decline_venue_proposal":
+{ Args: { "_message": string,"_proposal_id": string,"_subject": string }; Returns: number
+                           },
+"ensure_scholar":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"erase_scholar":
+{ Args: { "_note"?: string,"_scholar"?: string }; Returns: Json
+                           },
+"export_scholar_data":
+{ Args: { "_scholar"?: string }; Returns: Json
+                           },
+"forget_scholar":
+{ Args: { "_scholar": string }; Returns: Json
+                           },
+"isadmin":
+{ Args: { "_venueid": string }; Returns: boolean
+                           },
+"isassigned":
+{ Args: { "_submissionid": string }; Returns: boolean
+                           },
+"isauthor":
+{ Args: { "_submissionid": string }; Returns: boolean
+                           },
+"isconflicted":
+{ Args: { "_submissionid": string }; Returns: boolean
+                           },
+"isminter":
+{ Args: { "_currencyid": string,"_scholarid": string }; Returns: boolean
+                           },
+"ispriorityzero":
+{ Args: { "_venueid": string }; Returns: boolean
+                           },
+"issteward":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"mark_submission_done":
+{ Args: { "_mint_purpose_template": string,"_payment_purpose_template": string,"_submission_id": string }; Returns: Json
+                           },
+"mint_tokens":
+{ Args: { "_amount": number,"_currency": string,"_purpose": string,"_to_venue": string }; Returns: Json
+                           },
+"notification_allowed":
+{ Args: { "_event": string,"_scholar": string }; Returns: boolean
+                           },
+"orcid_mirror_health":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"pending_email_verification":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"propose_thanks":
+{ Args: { "_message": string,"_submission": string }; Returns: Json
+                           },
+"queue_call_for_bids":
+{ Args: { "_note": string,"_role": string }; Returns: Json
+                           },
+"queue_email":
+{ Args: { "_args"?: (string)[],"_event": string,"_proposal"?: string,"_scholars"?: (string)[] }; Returns: Json
+                           },
+"queue_reminder_email":
+{ Args: { "_args": (string)[],"_event": string,"_scholar": string }; Returns: number
+                           },
+"queue_steward_email":
+{ Args: { "_args"?: (string)[],"_event": string }; Returns: undefined
+                           },
+"queue_thanks_emails":
+{ Args: { "_audience": string,"_message": string,"_subject": string,"_thanks_id": string }; Returns: number
+                           },
+"reconcile_email_delivery":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"reconcile_ledger":
+{ Args: { "_since"?: string }; Returns: Json
+                           },
+"replay_audit_log":
+{ Args: { "_dry_run"?: boolean,"_from_seq"?: number }; Returns: Json
+                           },
+"request_email_verification":
+{ Args: { "_email": string }; Returns: undefined
+                           },
+"request_orcid_refresh":
+{ Args: { "_force"?: boolean,"_scholars": (string)[] }; Returns: number
+                           },
+"scholar_approver_roles":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "role": string
+            }[]
+                           },
+"scholar_balances":
+{ Args: { "_currency": string,"_scholars": (string)[] }; Returns: {
+              "count": number,"scholar": string
+            }[]
+                           },
+"scholar_identity":
+{ Args: { "_meta": Json }; Returns: {
+              "name": string,"orcid": string
+            }[]
+                           },
+"scholar_tasks":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "assignment": string,"priority": number,"role": string,"role_name": string,"state": string,"submission": string,"title": string,"venue": string
+            }[]
+                           },
+"set_steward":
+{ Args: { "_scholar": string,"_steward": boolean }; Returns: Json
+                           },
+"site_origin":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"steward_inbox":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"submission_has_editor":
+{ Args: { "_submission": string }; Returns: boolean
+                           },
+"tokens_as_of":
+{ Args: { "_at"?: string }; Returns: {
+              "currency": string,"scholar": string,"token": string,"venue": string
+            }[]
+                           },
+"transfer_tokens":
+{ Args: { "_amount": number,"_currency": string,"_from": string,"_from_kind": string,"_purpose": string,"_to": string,"_to_kind": string,"_transaction": string }; Returns: Json
+                           },
+"venue_submission_editors":
+{ Args: { "_venue": string }; Returns: {
+              "has_editor": boolean,"submission": string
+            }[]
+                           },
+"venue_volunteer_counts":
+{ Args: { "_venue": string }; Returns: {
+              "role": string,"volunteer_count": number
+            }[]
+                           },
+"verify_email":
+{ Args: { "_token": string }; Returns: Json
+                           }
+          }
+          Enums: {
+            "exchange_proposal_kind": "create"|"modify"|"merge","invited": "invited"|"accepted"|"declined","submission_status": "reviewing"|"done","thanks_status": "proposed"|"approved"|"declined","token_op": "mint"|"move"|"burn","transaction_status": "proposed"|"approved"|"declined","volunteer_visibility": "all"|"completed"|"none"
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
+        }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
 
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
@@ -1649,129 +919,112 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+    ? R
     : never
+  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Insert: infer I
+    }
+    ? I
     : never
+  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Update: infer U
+    }
+    ? U
     : never
+  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never) = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never) = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
-  public: {
-    Enums: {
-      exchange_proposal_kind: ["create", "modify", "merge"],
-      invited: ["invited", "accepted", "declined"],
-      submission_status: ["reviewing", "done"],
-      thanks_status: ["proposed", "approved", "declined"],
-      token_op: ["mint", "move", "burn"],
-      transaction_status: ["proposed", "approved", "declined"],
-      volunteer_visibility: ["all", "completed", "none"],
-    },
-  },
+  "graphql_public": {
+          Enums: {
+            
+          }
+        },"public": {
+          Enums: {
+            "exchange_proposal_kind": ["create", "modify", "merge"],"invited": ["invited", "accepted", "declined"],"submission_status": ["reviewing", "done"],"thanks_status": ["proposed", "approved", "declined"],"token_op": ["mint", "move", "burn"],"transaction_status": ["proposed", "approved", "declined"],"volunteer_visibility": ["all", "completed", "none"]
+          }
+        }
 } as const
 
