@@ -205,12 +205,13 @@ execute on function public.approve_venue_proposal (uuid) to authenticated;
 -- dead; deleting first leaves nobody to address. Doing both here makes that ordering
 -- impossible to get wrong.
 --
--- The subject and message are rendered by the caller and passed in, exactly as
--- public.queue_thanks_emails takes them: the template registry is TypeScript and the database
--- cannot render from it. The safety property that replaces "accepts no body" is the same one
--- that function relies on -- the caller chooses no recipient. Addresses come from the row and
--- from scholars.email, and a steward is the only caller who gets this far.
-create or replace function public.decline_venue_proposal (_proposal_id uuid, _subject text, _message text) returns integer language plpgsql security definer
+-- The steward names the proposal and nothing else. The one argument ProposalDeclined renders,
+-- the proposal's title, is read from the row here and the body is rendered from the registry at
+-- send time, so it is escaped like every other email's. This used to take a subject and message
+-- rendered by the caller -- stewards only, but a caller-authored body is exactly what the rest
+-- of the pipeline refuses to accept, and there is no reason for this to be the exception.
+-- Addresses come from the row and from scholars.email; the caller chooses no recipient.
+create or replace function public.decline_venue_proposal (_proposal_id uuid) returns integer language plpgsql security definer
 set
 	"search_path" to 'public',
 	'pg_temp' as $function$
@@ -233,8 +234,8 @@ begin
 	end if;
 
 	-- The supporters, who are scholars and so have a preference to honour.
-	insert into public.emails (event, scholar, sender, venue, email, subject, message)
-	select 'ProposalDeclined', s.id, _caller, null, s.email, _subject, _message
+	insert into public.emails (event, scholar, sender, venue, email, args)
+	select 'ProposalDeclined', s.id, _caller, null, s.email, jsonb_build_array(_proposal.title)
 	from public.supporters p
 	join public.scholars s on s.id = p.scholarid
 	where p.proposalid = _proposal_id
@@ -247,8 +248,8 @@ begin
 	-- there is no scholar to hold one, which is the same reason ProposalCreatedEditors is
 	-- sent to them unconditionally. Anyone listed who also supported is skipped, so a person
 	-- who is both does not get two copies.
-	insert into public.emails (event, scholar, sender, venue, email, subject, message)
-	select 'ProposalDeclined', null, _caller, null, e, _subject, _message
+	insert into public.emails (event, scholar, sender, venue, email, args)
+	select 'ProposalDeclined', null, _caller, null, e, jsonb_build_array(_proposal.title)
 	from unnest(_proposal.editors) as e
 	where e is not null
 		and e <> ''
@@ -268,18 +269,18 @@ begin
 end;
 $function$;
 
-alter function public.decline_venue_proposal (uuid, text, text) OWNER to "postgres";
+alter function public.decline_venue_proposal (uuid) OWNER to "postgres";
 
 -- Explicitly revoked, not merely un-granted: Supabase's ALTER DEFAULT PRIVILEGES hands anon
 -- EXECUTE on every function created in `public` at creation time.
 revoke
-execute on function public.decline_venue_proposal (uuid, text, text)
+execute on function public.decline_venue_proposal (uuid)
 from
 	public,
 	anon;
 
 grant
-execute on function public.decline_venue_proposal (uuid, text, text) to authenticated;
+execute on function public.decline_venue_proposal (uuid) to authenticated;
 
 grant all on table "public"."proposals" to "anon";
 

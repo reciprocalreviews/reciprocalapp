@@ -68,6 +68,16 @@ function replyToFooter(replyTo: string, copied: boolean): string {
  * than imported from templates.ts to keep this module dependency-free, as the
  * header above promises. */
 const DEFAULT_ORIGIN = 'https://reciprocal.reviews';
+
+/**
+ * The sentence an optional notice adds to its footer: where to turn it off. Only a notice a
+ * scholar can silence carries it -- offering a way out of a charge or a verification would be
+ * a link to a control that doesn't exist. The URL is built by `settingsUrlFor` in templates.ts
+ * from trusted parts, and escaped here anyway because it lands in an `href`.
+ */
+function settingsFooter(settingsUrl: string): string {
+	return ` You can turn off emails like this in your <a href="${escapeHtml(settingsUrl)}" style="color: ${MUTED_COLOR};">notification settings</a>.`;
+}
 const FONT_STACK =
 	"'Quicksand', 'Josefin Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
@@ -82,11 +92,43 @@ export function escapeHtml(text: string): string {
 }
 
 /**
+ * A call to action, as the whole of one block: `<rr-button href="https://…">Label</rr-button>`.
+ *
+ * Written as a pseudo-tag rather than a syntax like `[Label](url)` on purpose: it starts with
+ * `<`, which `escapeArg` in templates.ts escapes in every argument, so only a template's own
+ * text can produce one. A scholar-supplied title can never become a branded button.
+ */
+const BUTTON = /^<rr-button href="(https?:\/\/[^"\s]+)">([^<]+)<\/rr-button>$/;
+
+/** A bulletproof button: a table cell carries the fill, because several clients ignore
+ * padding and background on a bare `<a>`. */
+function buttonHtml(href: string, label: string): string {
+	return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 0 24px 0;"><tr><td style="background-color: ${BRAND_COLOR}; border-radius: 6px;"><a href="${href}" style="display: inline-block; padding: 10px 20px; color: #ffffff; font-weight: 700; text-decoration: none; border-radius: 6px;">${label}</a></td></tr></table>`;
+}
+
+/** Every line of the block starts with "• ": a list, with real bullets and a hanging indent
+ * so a wrapped title lines up under its first word rather than under the bullet. */
+function isList(block: string): boolean {
+	return block.split('\n').every((line) => line.startsWith('• '));
+}
+
+function listHtml(block: string): string {
+	const items = block
+		.split('\n')
+		.map((line) => `<li style="margin: 0 0 6px 0; padding-left: 4px;">${line.slice(2)}</li>`)
+		.join('');
+	return `<ul style="margin: 0 0 16px 0; padding: 0 0 0 22px;">${items}</ul>`;
+}
+
+/**
  * Convert a plain/semi-HTML body into branded paragraph markup. The body is
  * split on blank lines into <p> blocks; bare https:// URLs become links. Any
  * inline tags the templates already embed (<a>, <strong>) pass through
  * untouched — interpolated argument values are escaped upstream in
  * src/email/templates.ts before they reach this code.
+ *
+ * Two kinds of block are not paragraphs: a list (every line starts with "• ") and a
+ * button (see BUTTON).
  */
 export function paragraphsToHtml(body: string): string {
 	return body
@@ -94,6 +136,8 @@ export function paragraphsToHtml(body: string): string {
 		.map((block) => block.trim())
 		.filter((block) => block.length > 0)
 		.map((block) => {
+			const button = block.match(BUTTON);
+			if (button) return buttonHtml(button[1], button[2]);
 			// Auto-link bare URLs that aren't already inside an href attribute. The
 			// URL stops short of trailing sentence punctuation: `[^\s<]+` is greedy,
 			// so "visit https://x.com." used to link to "https://x.com." and 404.
@@ -102,6 +146,7 @@ export function paragraphsToHtml(body: string): string {
 				(_match, prefix, url) =>
 					`${prefix}<a href="${url}" style="color: ${BRAND_COLOR};">${url}</a>`
 			);
+			if (isList(block)) return listHtml(linked);
 			// Preserve single newlines within a paragraph as line breaks.
 			return `<p style="margin: 0 0 16px 0;">${linked.replace(/\n/g, '<br />')}</p>`;
 		})
@@ -113,8 +158,16 @@ export function htmlToText(html: string): string {
 	return (
 		html
 			.replace(/<style[\s\S]*?<\/style>/gi, '')
-			.replace(/<\/(p|div|tr|h[1-6])>/gi, '\n\n')
+			.replace(/<\/(p|div|tr|ul|h[1-6])>/gi, '\n\n')
+			.replace(/<li[^>]*>/gi, '• ')
+			.replace(/<\/li>/gi, '\n')
 			.replace(/<br\s*\/?>/gi, '\n')
+			// A web link whose text is not its own address would lose its destination once the
+			// tags go, so it is kept beside the text: "notification settings (https://…)". Links
+			// that ARE their address (auto-linked URLs) and mailto links read fine as they are.
+			.replace(/<a\s[^>]*href="(https?:[^"]*)"[^>]*>([^<]*)<\/a>/gi, (_match, href, label) =>
+				label === href ? label : `${label} (${href})`
+			)
 			.replace(/<[^>]+>/g, '')
 			.replace(/&nbsp;/g, ' ')
 			// The ampersand is decoded LAST, mirroring escapeHtml where it is escaped
@@ -144,7 +197,8 @@ export function wrapEmail({
 	bodyHtml,
 	origin = DEFAULT_ORIGIN,
 	replyTo,
-	copied = false
+	copied = false,
+	settingsUrl
 }: {
 	subject: string;
 	bodyHtml: string;
@@ -159,6 +213,9 @@ export function wrapEmail({
 	/** Whether the message actually copies anyone, so the footer only offers Reply All when
 	 * there is somebody for it to reach. */
 	copied?: boolean;
+	/** Where the recipient can silence this notice, for an optional one. Adds one sentence
+	 * to the footer; absent for consequential mail. */
+	settingsUrl?: string;
 }): string {
 	return `<!doctype html>
 <html lang="en">
@@ -185,7 +242,7 @@ ${bodyHtml}
 						</tr>
 						<tr>
 							<td style="padding: 20px 32px; border-top: 1px solid ${BORDER_COLOR}; color: ${MUTED_COLOR}; font-size: 12px; line-height: 1.5;">
-								${replyTo ? replyToFooter(replyTo, copied) : STEWARD_FOOTER}
+								${replyTo ? replyToFooter(replyTo, copied) : STEWARD_FOOTER}${settingsUrl ? settingsFooter(settingsUrl) : ''}
 							</td>
 						</tr>
 					</table>
@@ -210,8 +267,18 @@ export function renderBrandedEmail(
 	replyTo?: string,
 	// Also trailing and optional: only the consumer that knows the row's `cc` can answer this,
 	// and every other caller sends to one recipient.
-	copied: boolean = false
+	copied: boolean = false,
+	// Trailing and optional for the same reason: only a caller that knows the row's scholar
+	// and event can say where that scholar turns it off. See `settingsUrlFor`.
+	settingsUrl?: string
 ): { html: string; text: string } {
-	const html = wrapEmail({ subject, bodyHtml: paragraphsToHtml(body), origin, replyTo, copied });
+	const html = wrapEmail({
+		subject,
+		bodyHtml: paragraphsToHtml(body),
+		origin,
+		replyTo,
+		copied,
+		settingsUrl
+	});
 	return { html, text: htmlToText(html) };
 }

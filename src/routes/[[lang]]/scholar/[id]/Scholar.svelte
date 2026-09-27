@@ -47,6 +47,7 @@
 	import type Scholar from '$lib/data/Scholar.svelte';
 	import Text from '$lib/locales/Text.svelte';
 	import { getAuth } from '$routes/Auth.svelte';
+	import { page } from '$app/state';
 	import { getLocaleContext } from '$routes/Contexts';
 	import Commitments from './Commitments.svelte';
 	import Tasks from './Tasks.svelte';
@@ -160,6 +161,24 @@
 	// "stale" means and rate-limits the asking.
 	$effect(() => {
 		db().requestORCIDRefresh([scholar.getID()]);
+	});
+
+	// The footer of an optional email links to one group of these controls
+	// (/scholar/{id}#notifications-reviewing), and the link arrives before the group does: the
+	// controls render only once the page knows this is the reader's own profile, so the
+	// browser's own jump to the fragment finds nothing. Scroll once, when the target first
+	// exists.
+	let scrolledTo = '';
+	$effect(() => {
+		// Re-run when anything that decides whether the controls render changes.
+		void editable;
+		void notifications;
+		const hash = page.url.hash;
+		if (!hash.startsWith('#notifications-') || hash === scrolledTo) return;
+		const target = document.getElementById(hash.slice(1));
+		if (target === null) return;
+		scrolledTo = hash;
+		target.scrollIntoView({ block: 'start' });
 	});
 </script>
 

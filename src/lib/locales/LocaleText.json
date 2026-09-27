@@ -3379,6 +3379,9 @@
                         "AvailabilityReminder": {
                           "type": "string"
                         },
+                        "BiddingDigest": {
+                          "type": "string"
+                        },
                         "CallForBids": {
                           "type": "string"
                         },
@@ -3448,6 +3451,7 @@
                       },
                       "required": [
                         "AvailabilityReminder",
+                        "BiddingDigest",
                         "CallForBids",
                         "CompensationChanged",
                         "CompensationRequested",

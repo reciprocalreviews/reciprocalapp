@@ -388,6 +388,112 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 	return reminders;
 }
 
+/** How many scholars to read per page of bidding_digest_candidates. Each row is one scholar's
+ * finished digest -- at most seven items per venue -- so a page is a few hundred kilobytes
+ * even for volunteers at many venues. */
+const DIGEST_PAGE = 200;
+
+/** The gap between queued digests. Each queued row is posted to Resend almost at once by the
+ * send_on_email_insert trigger, and Resend allows 10 requests a second per team; about six a
+ * second leaves the rest for everything else being sent at the same moment. */
+const DIGEST_SPACING_MS = 160;
+
+/** When to stop starting new sends. The edge runtime answers 504 after 150 seconds without a
+ * response (and stops a free-plan function at 150s of wall clock), so a run hands back well
+ * before that. The `bidding-digest-weekly` schedule runs every five minutes on Monday
+ * afternoon, so the next run carries on; nobody is sent twice. */
+const DIGEST_BUDGET_MS = 110_000;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * The Monday bidding digest (the `bidding-digest-weekly` cron). One email per available
+ * volunteer listing what is open for bidding in their roles, skipped when the list is the
+ * same as the last one they were sent.
+ *
+ * public.bidding_digest_candidates decides everything -- who, what, in what order, the cap,
+ * and whether the list changed -- and returns the scholars who have waited longest first.
+ * public.queue_bidding_digest sends or skips under a lock, and stamps who it sent;
+ * public.mark_bidding_digests_checked stamps who had nothing to send. Everyone stamped drops
+ * out of the next page, so there is no cursor: this reads the front of the queue until it
+ * brings nobody new. It only feeds one to the other, at a pace Resend will accept.
+ */
+async function sendBiddingDigests(supabase: SupabaseClient<Database>): Promise<{
+	attempted: number;
+	queued: number;
+	rejected: number;
+	deferred: boolean;
+}> {
+	const started = Date.now();
+	let attempted = 0;
+	let queued = 0;
+	let rejected = 0;
+	// Scholars already handled this run. Normally they drop out of the next page by being
+	// stamped; one whose send failed does not, and this keeps them from being retried in a loop.
+	const seen = new Set<string>();
+
+	for (;;) {
+		const read = await supabase.rpc('bidding_digest_candidates', { _limit: DIGEST_PAGE });
+		const page = read.data as
+			{ scholar: string; fingerprint: string | null; total: number; digest: unknown }[] | null;
+		if (read.error || page === null) {
+			console.error('Could not read bidding digest candidates', read.error);
+			rejected++;
+			break;
+		}
+
+		const fresh = page.filter((row) => !seen.has(row.scholar));
+		if (fresh.length === 0) break;
+
+		const idle: string[] = [];
+		for (const row of fresh) {
+			// Null when there is nothing to send, or the list is the one they were last sent.
+			if (row.digest === null || row.fingerprint === null) {
+				seen.add(row.scholar);
+				idle.push(row.scholar);
+				continue;
+			}
+
+			if (Date.now() - started > DIGEST_BUDGET_MS) {
+				await markChecked(supabase, idle);
+				console.warn('Bidding digest stopped at its time budget; the next run continues.');
+				return { attempted, queued, rejected, deferred: true };
+			}
+
+			seen.add(row.scholar);
+			attempted++;
+			const { data, error } = await supabase.rpc('queue_bidding_digest', {
+				_scholar: row.scholar,
+				_args: [JSON.stringify(row.digest), `${row.total} submission${row.total === 1 ? '' : 's'}`],
+				_fingerprint: row.fingerprint
+			});
+			if (error) {
+				rejected++;
+				console.error('Could not queue a bidding digest', row.scholar, error);
+			} else {
+				queued += data ?? 0;
+				if ((data ?? 0) > 0) await sleep(DIGEST_SPACING_MS);
+				// Zero means the database declined it after all -- they became unavailable, or
+				// silenced it, since the page was read. Either way there is nothing to send.
+				else idle.push(row.scholar);
+			}
+		}
+		await markChecked(supabase, idle);
+
+		// Every scholar in the window gets a row, so a short page is the end.
+		if (page.length < DIGEST_PAGE) break;
+	}
+
+	return { attempted, queued, rejected, deferred: false };
+}
+
+/** Stamp the scholars a run reached with nothing to send. */
+async function markChecked(supabase: SupabaseClient<Database>, scholars: string[]) {
+	if (scholars.length === 0) return;
+	const { error } = await supabase.rpc('mark_bidding_digests_checked', { _scholars: scholars });
+	if (error) console.error('Could not mark bidding digests checked', error);
+}
+
 const handler = async (request: Request): Promise<Response> => {
 	// Only the cron job may trigger reminders. Without this check anyone holding the
 	// (public) anon key could fire the daily run repeatedly, spamming scholars with
@@ -406,6 +512,22 @@ const handler = async (request: Request): Promise<Response> => {
 				}
 			}
 		);
+
+		// The Monday cron names its job in the body; the daily one sends an empty body. A body
+		// that isn't JSON is the daily run, as it always was.
+		const body = await request.json().catch(() => ({}));
+		if (body?.job === 'bidding-digest') {
+			// `deferred` means the run stopped at its time budget with scholars left to reach;
+			// the next hourly run on Monday picks them up.
+			const { attempted, queued, rejected, deferred } = await sendBiddingDigests(supabase);
+			return new Response(
+				JSON.stringify({ job: 'bidding-digest', attempted, queued, rejected, deferred }),
+				{
+					status: rejected > 0 ? 502 : 200,
+					headers: { 'Content-Type': 'application/json' }
+				}
+			);
+		}
 
 		// Nothing here needs the origin any more. Templates own their links and the origin is
 		// substituted at send time from the `site_url` vault secret, exactly as it is for

@@ -1097,6 +1097,7 @@ export type LocaleText = {
 				 * to me" — so they are fragments, not sentences, and start lowercase. */
 				label: {
 					AvailabilityReminder: string;
+					BiddingDigest: string;
 					CallForBids: string;
 					CompensationChanged: string;
 					CompensationRequested: string;

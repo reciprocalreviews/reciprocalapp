@@ -13,6 +13,17 @@ export type Email = {
 	 */
 	urlArgs?: number[];
 	/**
+	 * The 1-based position of an argument holding a `BiddingDigestPayload` as JSON, rendered
+	 * as a grouped list by `formatBiddingDigest` rather than substituted as text.
+	 *
+	 * A variable-length list cannot be one escaped argument (its links would be defanged) and
+	 * cannot be pre-rendered by the producer (then the producer, not this registry, would own
+	 * the markup and the escaping). So the list travels as data and is formatted here, at send
+	 * time, where every scholar-supplied string is escaped and every link is built from the
+	 * trusted origin.
+	 */
+	digestArg?: number;
+	/**
 	 * A courtesy notice a scholar may silence from their profile settings.
 	 *
 	 * Absent means the email is consequential — a charge, a decline, a verification, an
@@ -78,7 +89,7 @@ export const Emails = {
 		paragraphs: [
 			'The venue "$1" has been approved and is now live on Reciprocal Reviews!',
 			'If you are an editor, you can configure it with your reviewing platform:',
-			'{origin}/venue/$2',
+			'<rr-button href="{origin}/venue/$2">Open the venue</rr-button>',
 			"If you're a supporter, the editors will likely communicate the timeline for launch separately."
 		],
 		// News about a proposal you made or backed. An editor has work to do here, but a
@@ -92,7 +103,7 @@ export const Emails = {
 		paragraphs: [
 			'A proposal was created for "$1".',
 			'Review it and discuss it with the other stewards:',
-			'{origin}/venues/proposal/$2',
+			'<rr-button href="{origin}/venues/proposal/$2">Review the proposal</rr-button>',
 			'Consider reachnig out to the proposals to discuss the proposal further.'
 		]
 	},
@@ -105,13 +116,22 @@ export const Emails = {
 			'The full result is stored in the reconciliations table; the most recent row names which checks failed. supabase/dr/ has the tools for investigating, including tokens_as_of() for comparing current balances against any past moment.'
 		]
 	},
+	// $1 the date (UTC), $2 how many volunteers due a digest were not reached. To the steward
+	// inbox, from public.report_bidding_digest_backlog, run by cron after Monday's last digest run.
+	BiddingDigestBacklog: {
+		subject: 'The bidding digest did not reach everyone on $1',
+		paragraphs: [
+			'The Monday bidding digest ran out of time before it reached $2 volunteer(s) who were due one. They will be first in line next Monday, so nobody misses it twice, but they heard nothing this week.',
+			"The digest sends about six emails a second, to stay under Resend's rate limit, in runs every five minutes from 12:00 to 15:55 UTC. If this happens again, the number of volunteers has outgrown that window: widen the bidding-digest-weekly schedule, or move the digest to Resend's batch endpoint. ARCHITECTURE.md, under Application emails, describes both."
+		]
+	},
 	ProposalCreatedEditors: {
 		subject: 'Proposal created for your academic venue',
 		paragraphs: [
 			'A proposal was created for your academic venue "$1" to help make its peer review more sustainable:',
-			'{origin}/venues/proposal/$2',
+			'<rr-button href="{origin}/venues/proposal/$2">See the proposal</rr-button>',
 			"Learn more about Reciprocal Reviews to see if it's a good fit for your academic community.",
-			'{origin}'
+			'<rr-button href="{origin}">Learn about Reciprocal Reviews</rr-button>'
 		]
 	},
 	// The counterpart VenueApproved never had. A proposal emails its listed editors and its
@@ -127,7 +147,7 @@ export const Emails = {
 		paragraphs: [
 			'The proposal to bring "$1" onto Reciprocal Reviews was reviewed and has not been taken forward, and the proposal has been closed.',
 			'If you think that was a mistake, or the venue is ready now, you can reply to this message to reach the stewards, or propose it again:',
-			'{origin}/venues/proposal'
+			'<rr-button href="{origin}/venues/proposal">Propose a venue</rr-button>'
 		],
 		silencedBy: 'VenueApproved'
 	},
@@ -135,7 +155,7 @@ export const Emails = {
 		subject: 'Your are assigned a submission',
 		paragraphs: [
 			'<a href="mailto:$2">$1</a> assigned you as $3 for this submission:',
-			'{origin}/venue/$4/submission/$5',
+			'<rr-button href="{origin}/venue/$4/submission/$5">Open the submission</rr-button>',
 			'Complete your assignment and you will receive compensation.'
 		]
 	},
@@ -143,14 +163,14 @@ export const Emails = {
 		subject: 'You were removed from a submission',
 		paragraphs: [
 			'<a href="mailto:$2">$1</a> removed you as $3 for this submission:',
-			'{origin}/venue/$4/submission/$5'
+			'<rr-button href="{origin}/venue/$4/submission/$5">Open the submission</rr-button>'
 		]
 	},
 	RoleInvite: {
 		subject: 'You were invited to a reviewing role',
 		paragraphs: [
 			'You have been invited to the $1 role for <a href="{origin}/venue/$2">$3</a>. You can accept or decline on your profile:',
-			'{origin}/scholar/$4'
+			'<rr-button href="{origin}/scholar/$4">Accept or decline</rr-button>'
 		]
 	},
 	// A scholar volunteered for one of a venue's open roles. Sent to the holders of the
@@ -173,9 +193,8 @@ export const Emails = {
 		paragraphs: [
 			'$1 volunteered for the $2 role at $3.',
 			'Their profile — reviewing status, availability, and what else they have taken on:',
-			'{origin}/scholar/$4',
-			'Everyone volunteering at the venue:',
-			'{origin}/venue/$5/volunteers',
+			'<rr-button href="{origin}/scholar/$4">See their profile</rr-button>',
+			'<rr-button href="{origin}/venue/$5/volunteers">See all volunteers</rr-button>',
 			'You and everyone else in the $6 role at $3 are copied on this message.'
 		],
 		optional: true,
@@ -184,9 +203,10 @@ export const Emails = {
 	CompensationRequested: {
 		subject: 'Compensation requested for volunteer work',
 		paragraphs: [
-			"A scholar requested compensation for <a href='{origin}/venue/$1/submission/$2'>this submission</a>. Here's the note they included:",
+			"A scholar requested compensation for their work on a submission. Here's the note they included:",
 			'"$3"',
-			"If this is a valid request, approve the assignment, evaluate their work, and if it meets your venue's standards, mark the work complete so they are compensated."
+			"If this is a valid request, approve the assignment, evaluate their work, and if it meets your venue's standards, mark the work complete so they are compensated.",
+			'<rr-button href="{origin}/venue/$1/submission/$2">Open the submission</rr-button>'
 		],
 		// Sent to the whole approver union -- venue admins, the submission's priority-0
 		// editors, and the holder of the role's approving role -- so for most recipients it
@@ -199,14 +219,14 @@ export const Emails = {
 		paragraphs: [
 			'You were listed as a paying author on the submission "$1" to $2, with a charge of $3 tokens.',
 			'The charge is only proposed — nothing moves until you approve it, and the editor may wait for every author to pay before proceeding with review. Review and approve it here:',
-			'{origin}/scholar/$4'
+			'<rr-button href="{origin}/scholar/$4">Review the charge</rr-button>'
 		]
 	},
 	SubmissionAssignedEditor: {
 		subject: 'You are editing a new submission',
 		paragraphs: [
 			'A new submission, "$1", arrived at $2, and you are the venue\'s editor for it.',
-			'{origin}/venue/$3/submission/$4',
+			'<rr-button href="{origin}/venue/$3/submission/$4">Open the submission</rr-button>',
 			"You were assigned automatically because you are the venue's only editor. If someone else should handle it, you can remove yourself and assign them from the submission page."
 		]
 	},
@@ -214,7 +234,7 @@ export const Emails = {
 		subject: 'A submission is waiting for an editor',
 		paragraphs: [
 			'A new submission, "$1", arrived at $2 and has no editor yet. Nobody was assigned automatically, because the venue has more than one editor — or none.',
-			'{origin}/venue/$3/submission/$4',
+			'<rr-button href="{origin}/venue/$3/submission/$4">Open the submission</rr-button>',
 			"Whoever takes it on can claim it from that page, or from the venue's submissions list. Until someone does, nothing else in the review can proceed."
 		],
 		// One submission or two hundred, this is the same subscription to a reader.
@@ -231,7 +251,7 @@ export const Emails = {
 		subject: 'You have new assignments on imported submissions',
 		paragraphs: [
 			'$1 submission(s) were imported into $2 and assigned to you.',
-			'{origin}/venue/$3/submissions',
+			'<rr-button href="{origin}/venue/$3/submissions">See the submissions</rr-button>',
 			"You were seated either because the import file named you, or because you are the only person in one of the venue's roles. Remove yourself from anything someone else should handle."
 		]
 	},
@@ -239,7 +259,7 @@ export const Emails = {
 		subject: 'Submissions are waiting for an editor',
 		paragraphs: [
 			'$1 submission(s) at $2 have no editor yet.',
-			'{origin}/venue/$3/submissions',
+			'<rr-button href="{origin}/venue/$3/submissions">See the submissions</rr-button>',
 			'You can claim them from that list, or assign someone else to the editor role on each.'
 		],
 		// Broadcast to every editor and admin of the venue, none of whom is being asked
@@ -252,7 +272,7 @@ export const Emails = {
 		subject: 'You were paid for your $1 work',
 		paragraphs: [
 			'The approver of your $1 assignment marked your work complete and paid you $2 tokens for it. The tokens have been transferred to your account.',
-			'You can view the submission here: {origin}/venue/$3/submission/$4'
+			'<rr-button href="{origin}/venue/$3/submission/$4">View the submission</rr-button>'
 		]
 	},
 	VenueOutOfTokens: {
@@ -260,7 +280,7 @@ export const Emails = {
 		paragraphs: [
 			'An approver at $5 tried to pay $1 tokens for $2 work on a submission, but the venue is short $3 tokens.',
 			'A proposed mint transaction sized exactly to the shortfall has been recorded so if you decide to approve it, it is a one click approval. If you approve it, then approver can retry the payment:',
-			'{origin}/venue/$4/transactions'
+			'<rr-button href="{origin}/venue/$4/transactions">Review the mint</rr-button>'
 		]
 	},
 	// The counterpart to the two declined templates below. Approving and declining a proposed
@@ -275,7 +295,8 @@ export const Emails = {
 		subject: 'Your transaction was approved',
 		paragraphs: [
 			'Your proposed transaction for <strong>$2</strong> $3 tokens — "$1" — was approved by <a href="mailto:$5">$4</a>.',
-			'The tokens have moved. You can see the record here: $6'
+			'The tokens have moved.',
+			'<rr-button href="$6">See the record</rr-button>'
 		],
 		// $6 is the whole link, built by the application from the page's own origin and the
 		// transaction's ids -- see TransactionDeclinedVenue below.
@@ -288,7 +309,7 @@ export const Emails = {
 		paragraphs: [
 			'Your proposed transaction for <strong>$2</strong> $3 tokens at <strong>$4</strong> — "$1" — was declined by <a href="mailto:$6">$5</a>.',
 			'Reason given: $7',
-			'You can review and follow up on this here: $8'
+			'<rr-button href="$8">Review the transaction</rr-button>'
 		],
 		// $8 is the whole link, so it must stay clickable. Without this the
 		// defanging meant for caller-supplied values mangled it to `https[:]//…`
@@ -302,7 +323,7 @@ export const Emails = {
 		paragraphs: [
 			'Your proposed transaction for <strong>$2</strong> $3 tokens — "$1" — was declined by <a href="mailto:$5">$4</a>.',
 			'Reason given: $6',
-			'You can review and follow up on this here: $7'
+			'<rr-button href="$7">Review the transaction</rr-button>'
 		],
 		// $7 is the whole link — see TransactionDeclinedVenue above.
 		urlArgs: [7]
@@ -315,7 +336,7 @@ export const Emails = {
 		subject: 'A thank-you note awaits your review',
 		paragraphs: [
 			'An author submitted a thank-you note to share with the reviewers of a submission. Please review it before it is shared:',
-			'{origin}/venue/$1/submission/$2'
+			'<rr-button href="{origin}/venue/$1/submission/$2">Review the note</rr-button>'
 		],
 		// Goes to every admin and priority-0 editor of the venue; any one of them can vet it.
 		optional: true,
@@ -326,8 +347,8 @@ export const Emails = {
 		paragraphs: [
 			'An author of a submission you reviewed sent their thanks:',
 			'"$1"',
-			'Thank you for your reviewing work. You can view the submission here:',
-			'{origin}/venue/$2/submission/$3'
+			'Thank you for your reviewing work.',
+			'<rr-button href="{origin}/venue/$2/submission/$3">View the submission</rr-button>'
 		],
 		// Gratitude, asking nothing. The clearest courtesy in the registry -- and the one a
 		// reviewer who would rather not hear from authors most needs to be able to decline.
@@ -341,8 +362,7 @@ export const Emails = {
 		subject: 'Your thank-you note was shared',
 		paragraphs: [
 			'The thank-you note you wrote was reviewed and has been shared with the reviewers of your submission.',
-			'You can see it here:',
-			'{origin}/venue/$1/submission/$2'
+			'<rr-button href="{origin}/venue/$1/submission/$2">See the note</rr-button>'
 		],
 		optional: true,
 		section: 'community'
@@ -352,8 +372,7 @@ export const Emails = {
 		paragraphs: [
 			'The thank-you note you submitted for a submission was reviewed and not approved for sharing.',
 			'Reason given: $1',
-			'You can review and revise it here:',
-			'{origin}/venue/$2/submission/$3'
+			'<rr-button href="{origin}/venue/$2/submission/$3">Revise the note</rr-button>'
 		]
 	},
 	// Sent to the address being REPLACED, at the moment a new one is verified. The address
@@ -390,8 +409,8 @@ export const Emails = {
 		subject: 'Reviewing is complete for "$1"',
 		paragraphs: [
 			'Reviewing is complete for your submission "$1" at $2.',
-			'You can see it here, and if you would like to, write a note of thanks to the people who reviewed it — they are anonymous to you, and the note reaches all of them:',
-			'{origin}/venue/$3/submission/$4'
+			'If you would like to, you can write a note of thanks to the people who reviewed it. They are anonymous to you, and the note reaches all of them.',
+			'<rr-button href="{origin}/venue/$3/submission/$4">Open the submission</rr-button>'
 		],
 		optional: true,
 		section: 'reviewing'
@@ -404,7 +423,7 @@ export const Emails = {
 		subject: 'A submission was taken on',
 		paragraphs: [
 			'$2 is now editing "$1", so it no longer needs an editor.',
-			'{origin}/venue/$3/submission/$4'
+			'<rr-button href="{origin}/venue/$3/submission/$4">Open the submission</rr-button>'
 		],
 		optional: true,
 		section: 'venues'
@@ -414,8 +433,8 @@ export const Emails = {
 		subject: 'A new bid on "$1"',
 		paragraphs: [
 			'Someone bid for the $2 role on "$1".',
-			'You can approve or decline the bid from the submission:',
-			'{origin}/venue/$3/submission/$4'
+			'You can approve or decline the bid from the submission.',
+			'<rr-button href="{origin}/venue/$3/submission/$4">Open the submission</rr-button>'
 		],
 		optional: true,
 		section: 'venues'
@@ -445,7 +464,8 @@ export const Emails = {
 		paragraphs: [
 			'$2, $3 of $1, writes:',
 			'$4',
-			'You are receiving this because you volunteer as $5 for $1. You can bid on the submissions that match your expertise here: {origin}/venue/$6/submissions'
+			'You are receiving this because you volunteer as $5 for $1. You can bid on the submissions that match your expertise.',
+			'<rr-button href="{origin}/venue/$6/submissions">Bid on submissions</rr-button>'
 		],
 		// A courtesy, and on by default: it is infrequent, it comes from a venue this scholar
 		// chose to volunteer for, and it is about the very work they volunteered to do. The
@@ -454,12 +474,33 @@ export const Emails = {
 		optional: true,
 		section: 'reviewing'
 	},
+	// $1 a BiddingDigestPayload as JSON (see digestArg), $2 how many submissions it covers,
+	// already worded ("1 submission", "12 submissions") by the producer.
+	//
+	// The weekly nudge that bidding otherwise lacks. CallForBids is an editor asking; this is
+	// the platform noticing, once a week, that submissions in roles a scholar volunteers for
+	// still need people, so a volunteer who forgot, or never knew something new arrived,
+	// hears about it without anyone having to ask. Built by the `remind` cron from
+	// public.bidding_digest_candidates, and never sent twice with the same list.
+	BiddingDigest: {
+		subject: '$2 open for bids in roles you volunteer for',
+		paragraphs: [
+			'These submissions still need people in roles you volunteer for. The ones missing the most people come first, and among those, the closest to the expertise you gave when you volunteered.',
+			'$1',
+			'You are receiving this because you volunteer for these roles and your profile says you are available to review. It comes on Mondays, and only when the list has changed since the last one.'
+		],
+		digestArg: 1,
+		// On by default: it is the thing a volunteer signed up for, arrives at most weekly, and
+		// is the whole remedy for bids that never come because nobody looked.
+		optional: true,
+		section: 'reviewing'
+	},
 	// $1 title, $2 venue path, $3 submission id.
 	ConflictDeclared: {
 		subject: 'A conflict was declared on "$1"',
 		paragraphs: [
 			'A scholar declared a conflict of interest with "$1", so they will not be assignable to it.',
-			'{origin}/venue/$2/submission/$3'
+			'<rr-button href="{origin}/venue/$2/submission/$3">Open the submission</rr-button>'
 		],
 		// Default OFF. An editor assigning a paper wants this; every other editor and admin at
 		// a busy venue does not, and conflicts are declared far more often than papers are
@@ -480,8 +521,8 @@ export const Emails = {
 		paragraphs: [
 			'An administrator of $2 added you to its $1 role. There was no invitation to accept — administrators can seat people directly in the roles they run.',
 			'Your profile shows what you now hold, and you can stop volunteering for it at any time:',
-			'{origin}/scholar/$4',
-			'The venue is here: {origin}/venue/$3'
+			'<rr-button href="{origin}/scholar/$4">See your profile</rr-button>',
+			'<rr-button href="{origin}/venue/$3">Open the venue</rr-button>'
 		]
 	},
 
@@ -500,7 +541,8 @@ export const Emails = {
 		paragraphs: [
 			'$3 transferred $1 $2 tokens to you.',
 			'For: "$4"',
-			'They are in your account now: {origin}/scholar/$5'
+			'They are in your account now.',
+			'<rr-button href="{origin}/scholar/$5">See your balance</rr-button>'
 		],
 		optional: true,
 		section: 'tokens'
@@ -511,7 +553,7 @@ export const Emails = {
 		paragraphs: [
 			'$1 new $2 tokens were minted into the reserve of $3.',
 			'Minting changes the supply every balance in the currency is denominated in, so the venue and currency records are the place to see what it was for:',
-			'{origin}/venue/$4/transactions'
+			'<rr-button href="{origin}/venue/$4/transactions">See the transactions</rr-button>'
 		],
 		// Default OFF. Useful to a minter watching supply, and too frequent at an active venue
 		// to impose on every admin who never asked to watch it.
@@ -528,8 +570,8 @@ export const Emails = {
 		subject: 'A transaction awaits your approval',
 		paragraphs: [
 			'A transaction for <strong>$2</strong> $3 tokens — "$1" — has been proposed and is waiting for your approval.',
-			'Nothing moves until you approve it. You can review it here:',
-			'{origin}/scholar/$4'
+			'Nothing moves until you approve it.',
+			'<rr-button href="{origin}/scholar/$4">Review the transaction</rr-button>'
 		]
 	},
 	// $1 currency name, $2 currency id. Consequential: it is a privilege grant, and the same
@@ -539,7 +581,7 @@ export const Emails = {
 		paragraphs: [
 			'You were made a minter of $1 on Reciprocal Reviews.',
 			"Minters decide when new tokens enter a currency, which makes this authority over the supply that every holder's balance is denominated in. Venues short of tokens will ask you to approve a mint.",
-			'{origin}/currency/$2'
+			'<rr-button href="{origin}/currency/$2">Open the currency</rr-button>'
 		]
 	},
 	// $1 currency name.
@@ -568,7 +610,7 @@ export const Emails = {
 		subject: '$1 accepted the $2 role at $3',
 		paragraphs: [
 			'$1 accepted your invitation to the $2 role at $3.',
-			'Everyone volunteering at the venue: {origin}/venue/$4/volunteers'
+			'<rr-button href="{origin}/venue/$4/volunteers">See all volunteers</rr-button>'
 		],
 		optional: true,
 		section: 'venues'
@@ -577,7 +619,7 @@ export const Emails = {
 		subject: '$1 declined the $2 role at $3',
 		paragraphs: [
 			'$1 declined your invitation to the $2 role at $3.',
-			'Everyone volunteering at the venue: {origin}/venue/$4/volunteers'
+			'<rr-button href="{origin}/venue/$4/volunteers">See all volunteers</rr-button>'
 		],
 		// The answer to a question is one subscription, whichever way it comes back.
 		silencedBy: 'InviteAccepted'
@@ -587,7 +629,7 @@ export const Emails = {
 		subject: '$1 paused volunteering at $3',
 		paragraphs: [
 			'$1 is no longer available for the $2 role at $3, so they will not appear as assignable.',
-			'{origin}/venue/$4/volunteers'
+			'<rr-button href="{origin}/venue/$4/volunteers">See all volunteers</rr-button>'
 		],
 		// Default OFF. Real capacity news for whoever is assigning papers this week, and too
 		// frequent at a venue with many volunteers to impose on everybody who runs it.
@@ -597,7 +639,10 @@ export const Emails = {
 	},
 	VolunteerResumed: {
 		subject: '$1 resumed volunteering at $3',
-		paragraphs: ['$1 is available again for the $2 role at $3.', '{origin}/venue/$4/volunteers'],
+		paragraphs: [
+			'$1 is available again for the $2 role at $3.',
+			'<rr-button href="{origin}/venue/$4/volunteers">See all volunteers</rr-button>'
+		],
 		silencedBy: 'VolunteerPaused'
 	},
 	// $1 venue title, $2 venue path, $3 the message the venue is displaying.
@@ -606,7 +651,7 @@ export const Emails = {
 		paragraphs: [
 			'$1 has been switched off on Reciprocal Reviews. It is not accepting submissions, and this is the message it is showing:',
 			'"$3"',
-			'{origin}/venue/$2'
+			'<rr-button href="{origin}/venue/$2">Open the venue</rr-button>'
 		],
 		optional: true,
 		section: 'venues'
@@ -615,7 +660,7 @@ export const Emails = {
 		subject: '$1 is active again',
 		paragraphs: [
 			'$1 is live again on Reciprocal Reviews and is accepting submissions.',
-			'{origin}/venue/$2'
+			'<rr-button href="{origin}/venue/$2">Open the venue</rr-button>'
 		],
 		// VenueApproved fires when a steward approves a proposal, which DESIGN.md is explicit
 		// is NOT the moment a venue launches. This is that moment, and it shares the
@@ -627,7 +672,8 @@ export const Emails = {
 		subject: 'Compensation changed for the $1 role at $3',
 		paragraphs: [
 			'The compensation for the $1 role at $3 is now $2 tokens per submission.',
-			"This applies to work compensated from now on. The venue's roles and rates: {origin}/venue/$4"
+			'This applies to work compensated from now on.',
+			'<rr-button href="{origin}/venue/$4">See roles and rates</rr-button>'
 		],
 		optional: true,
 		section: 'venues'
@@ -638,7 +684,7 @@ export const Emails = {
 		subject: 'You are now an administrator of $1',
 		paragraphs: [
 			"You were made an administrator of $1 on Reciprocal Reviews. Administrators configure a venue's roles and compensation, approve its transactions, and can assign anyone to any submission.",
-			'{origin}/venue/$2'
+			'<rr-button href="{origin}/venue/$2">Open the venue</rr-button>'
 		]
 	},
 	VenueAdminRemoved: {
@@ -655,7 +701,7 @@ export const Emails = {
 		subject: 'The $1 role at $2 was deleted',
 		paragraphs: [
 			'The $1 role at $2 was deleted, and the volunteer records in it went with it. You are no longer volunteering for it.',
-			"The venue's remaining roles: {origin}/venue/$3"
+			'<rr-button href="{origin}/venue/$3">See the remaining roles</rr-button>'
 		]
 	},
 	// $1 role name, $2 venue title, $3 venue path. Consequential: at priority 0 a role carries
@@ -664,7 +710,7 @@ export const Emails = {
 		subject: 'The $1 role at $2 is now its top role',
 		paragraphs: [
 			"The $1 role at $2 is now the venue's top-priority role. Its holders are the venue's editors: new submissions are assigned to them, they approve assignments, and they mark submissions done.",
-			'{origin}/venue/$3'
+			'<rr-button href="{origin}/venue/$3">Open the venue</rr-button>'
 		]
 	},
 	// $1 venue title, $2 the new path, $3 the old one. Consequential: every link anyone has
@@ -675,7 +721,7 @@ export const Emails = {
 		paragraphs: [
 			'The Reciprocal Reviews address of $1 changed from /venue/$3 to /venue/$2.',
 			"Any links you have already put into your reviewing platform's email templates point at the old address and will no longer resolve. The transaction templates on the venue page carry the new ones:",
-			'{origin}/venue/$2'
+			'<rr-button href="{origin}/venue/$2">Open the venue</rr-button>'
 		]
 	},
 
@@ -686,7 +732,7 @@ export const Emails = {
 		subject: 'Someone supported your proposal for $1',
 		paragraphs: [
 			'$2 added their support to your proposal to bring $1 onto Reciprocal Reviews. Stewards weigh community support when deciding on a proposal.',
-			'{origin}/venues/proposal/$3'
+			'<rr-button href="{origin}/venues/proposal/$3">See the proposal</rr-button>'
 		],
 		optional: true,
 		section: 'community'
@@ -696,7 +742,7 @@ export const Emails = {
 		subject: 'You are now a Reciprocal Reviews steward',
 		paragraphs: [
 			"You were made a steward of Reciprocal Reviews. Stewards approve and decline venue proposals, appoint other stewards, and receive the platform's integrity alerts.",
-			'{origin}/about'
+			'<rr-button href="{origin}/about">Read about stewards</rr-button>'
 		]
 	},
 	StewardRemoved: {
@@ -727,7 +773,7 @@ export const Emails = {
 		paragraphs: [
 			"This is a friendly reminder to update your reviewing status on Reciprocal Reviews. Here's the last thing you wrote:",
 			'"$1"',
-			'You can update it here: {origin}/scholar/$2'
+			'<rr-button href="{origin}/scholar/$2">Update your status</rr-button>'
 		],
 		// The purest courtesy the platform sends: a periodic nudge about a field nobody is
 		// waiting on. It was also, before this, the only mail with no venue-level cadence to
@@ -740,7 +786,7 @@ export const Emails = {
 		subject: 'Approve proposed transactions',
 		paragraphs: [
 			'You have $1 proposed transaction(s) that require your approval.',
-			'Please review and approve them here: {origin}/scholar/$2'
+			'<rr-button href="{origin}/scholar/$2">Review transactions</rr-button>'
 		],
 		// Goes to a venue's admins and its currency's minters together, so for any one of them
 		// it is the group's queue rather than a personal obligation.
@@ -752,7 +798,7 @@ export const Emails = {
 		subject: 'Approve your submission charge',
 		paragraphs: [
 			"You have $1 proposed charge(s) awaiting your approval — typically your share of a submission's cost. The submission may not proceed to review until every author has paid.",
-			'Review and approve here: {origin}/scholar/$2'
+			'<rr-button href="{origin}/scholar/$2">Review charges</rr-button>'
 		]
 		// Consequential, like the SubmissionCharged notice it chases. Nobody opts out of being
 		// told they owe money, and this is the reminder that exists precisely because the
@@ -763,7 +809,7 @@ export const Emails = {
 		subject: 'Compensation requests await your approval',
 		paragraphs: [
 			'$1 submission(s) at $2 have completed work whose compensation is awaiting your approval.',
-			'{origin}/venue/$3/submissions'
+			'<rr-button href="{origin}/venue/$3/submissions">See the submissions</rr-button>'
 		],
 		// The same news as CompensationRequested, arriving later. One control governs both.
 		silencedBy: 'CompensationRequested'
@@ -773,7 +819,7 @@ export const Emails = {
 		subject: 'Submissions may be ready to mark done',
 		paragraphs: [
 			'$1 submission(s) at $2 have all of their reviewing work compensated and may be ready to be marked done, which also settles editor compensation.',
-			'{origin}/venue/$3/submissions'
+			'<rr-button href="{origin}/venue/$3/submissions">See the submissions</rr-button>'
 		],
 		optional: true,
 		section: 'venues'
@@ -790,7 +836,7 @@ export const Emails = {
 		subject: 'Verify your Reciprocal Reviews contact email',
 		paragraphs: [
 			'Confirm this address to receive Reciprocal Reviews notifications. This link expires in 24 hours:',
-			'$1',
+			'<rr-button href="$1">Verify your email</rr-button>',
 			'If you did not request this, you can safely ignore this email.'
 		],
 		// $1 is the whole verification link, so it must stay clickable. It is safe to trust
@@ -911,6 +957,107 @@ function defangURLs(value: string): string {
 	return value.replace(/\b(https?|ftp):\/\//gi, '$1[:]//');
 }
 
+/**
+ * The digest list a BiddingDigest carries: exactly what public.bidding_digest_candidates returns
+ * in its `digest` column, already ranked and capped (supabase/schemas/bidding_digests.sql).
+ */
+export type BiddingDigestPayload = {
+	groups: {
+		venue: string;
+		path: string;
+		role: string;
+		items: { title: string; matches: string[] }[];
+		more: number;
+	}[];
+};
+
+/** A slug or a uuid -- what `coalesce(slug, id::text)` can produce, and nothing that could
+ * climb out of the path it is placed in. */
+const VENUE_PATH = /^[a-z0-9-]+$/;
+
+function isCount(value: unknown): value is number {
+	return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+/**
+ * Render a digest payload as body text: one block per venue and role, one line per submission,
+ * and the link to bid. Throws on anything malformed, so a bad payload fails delivery visibly
+ * (the `resend` function answers 400 and the row is marked failed) instead of mailing
+ * something half-rendered.
+ *
+ * Every string in the payload came from a scholar -- venue and role names, titles, expertise
+ * keywords -- so each is escaped and defanged exactly as an ordinary argument would be. Only
+ * the link is built here, from the origin and a path checked against VENUE_PATH.
+ */
+export function formatBiddingDigest(json: string, base: string): string {
+	const payload = JSON.parse(json) as BiddingDigestPayload;
+	const text = (value: unknown) => {
+		if (typeof value !== 'string') throw new Error('BiddingDigest: expected a string');
+		return defangURLs(escapeArg(value));
+	};
+	if (!payload || !Array.isArray(payload.groups) || payload.groups.length === 0)
+		throw new Error('BiddingDigest: no groups');
+
+	return payload.groups
+		.map((group) => {
+			if (typeof group.path !== 'string' || !VENUE_PATH.test(group.path))
+				throw new Error('BiddingDigest: bad venue path');
+			if (!isCount(group.more) || !Array.isArray(group.items))
+				throw new Error('BiddingDigest: bad group');
+			const lines = group.items.map((item) => {
+				if (!Array.isArray(item.matches)) throw new Error('BiddingDigest: bad item');
+				// A title is one line whatever its author typed, or it would split the list.
+				const title =
+					item.title === '' ? 'Untitled submission' : text(item.title.replace(/\s+/g, ' '));
+				const matches =
+					item.matches.length > 0 ? ` (matches ${item.matches.map(text).join(', ')})` : '';
+				return `• ${title}${matches}`;
+			});
+			// Blocks, not lines: the shell renders the bullets as a real list and the link as a
+			// button (see paragraphsToHtml), so the call to action stays visible below a long list.
+			// A venue's title and a role's name can both be blank (each defaults to ''), which
+			// would leave "Bid at" pointing at nothing, so each falls back to plain words.
+			const venue =
+				typeof group.venue === 'string' && group.venue.trim() !== ''
+					? text(group.venue.trim())
+					: 'this venue';
+			const role =
+				typeof group.role === 'string' && group.role.trim() !== ''
+					? ` · ${text(group.role.trim())}`
+					: '';
+			return [
+				`<strong>${venue}</strong>${role}`,
+				lines.join('\n'),
+				...(group.more > 0 ? [`…and ${group.more} more on the bidding page.`] : []),
+				`<rr-button href="${base}/venue/${group.path}/submissions">Bid at ${venue}</rr-button>`
+			].join('\n\n');
+		})
+		.join('\n\n');
+}
+
+/**
+ * Where a recipient of this event can turn it off, or undefined when they can't: the event is
+ * consequential, or the mail has no scholar to point at (a steward notice, a proposal's editors).
+ *
+ * Goes through /login with a return path, because the controls only render on the scholar's
+ * own profile while signed in, and mail is often read where the reader isn't. The anchor is the
+ * section of the GOVERNING preference, so a template silenced by another lands on the control
+ * that actually silences it.
+ */
+export function settingsUrlFor(
+	event: string,
+	scholar: string | null | undefined,
+	origin: string = DEFAULT_ORIGIN
+): string | undefined {
+	if (!scholar || !(event in Emails)) return undefined;
+	const preference = preferenceFor(event as EmailType);
+	if (!preference) return undefined;
+	const section = (Emails[preference] as Email).section;
+	const base = (origin || DEFAULT_ORIGIN).replace(/\/+$/, '');
+	const next = `/scholar/${encodeURIComponent(scholar)}#notifications-${section}`;
+	return `${base}/login?next=${encodeURIComponent(next)}`;
+}
+
 /** Where the application lives, when the caller doesn't say. Production, so a
  * project that never configured the `site_url` vault secret keeps sending the
  * links it always sent. */
@@ -924,6 +1071,7 @@ export function renderEmail(
 	// Get the email template.
 	const email = Emails[template];
 	const urlArgs = new Set<number>((email as Email).urlArgs ?? []);
+	const digestArg = (email as Email).digestArg;
 
 	// The origin is substituted into the template text, NOT passed through the
 	// argument path: every argument has its URL scheme defanged unless the
@@ -955,7 +1103,12 @@ export function renderEmail(
 	const subject = substitute(email.subject.replaceAll('{origin}', base), (value) => value);
 	const message = substitute(
 		email.paragraphs.join('\n\n').replaceAll('{origin}', base),
-		(value, position) => (urlArgs.has(position) ? escapeArg(value) : defangURLs(escapeArg(value)))
+		(value, position) =>
+			position === digestArg
+				? formatBiddingDigest(value, base)
+				: urlArgs.has(position)
+					? escapeArg(value)
+					: defangURLs(escapeArg(value))
 	);
 
 	// The "automated email" footer is added by the branded shell at send time

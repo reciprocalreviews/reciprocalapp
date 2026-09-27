@@ -1352,7 +1352,8 @@
 					"VenueApproved": "a venue I proposed or supported is approved or declined",
 					"VenueDeactivated": "one of my venues is switched off or becomes active again",
 					"VolunteerPaused": "a volunteer at one of my venues pauses or resumes",
-					"CallForBids": "a venue I volunteer for asks me to bid on submissions"
+					"CallForBids": "a venue I volunteer for asks me to bid on submissions",
+					"BiddingDigest": "submissions are open for bidding in roles I volunteer for (sent Mondays)"
 				}
 			},
 			"status": {

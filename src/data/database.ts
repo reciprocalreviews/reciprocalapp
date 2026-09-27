@@ -79,6 +79,25 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"bidding_digests": {
+                  Row: {
+                    "checked_at": string | null,"fingerprint": string | null,"scholar": string,"sent_at": string | null
+                  }
+                  Insert: {
+                    "checked_at"?: string | null,"fingerprint"?: string | null,"scholar": string,"sent_at"?: string | null
+                  }
+                  Update: {
+                    "checked_at"?: string | null,"fingerprint"?: string | null,"scholar"?: string,"sent_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "bidding_digests_scholar_fkey"
+      columns: ["scholar"]
+isOneToOne: true
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"compensation": {
                   Row: {
                     "amount": number | null,"rationale": string,"role": string,"submission_type": string
@@ -706,6 +725,11 @@ isOneToOne: false
 "backfill_orcid_profiles":
 { Args: { "_limit"?: number }; Returns: number
                            },
+"bidding_digest_candidates":
+{ Args: { "_cap"?: number,"_limit"?: number,"_min_interval"?: string }; Returns: {
+              "digest": Json,"fingerprint": string,"scholar": string,"total": number
+            }[]
+                           },
 "bulk_import_submissions":
 { Args: { "_import_note": string,"_submissions": Json,"_venueid": string }; Returns: Json
                            },
@@ -765,7 +789,7 @@ isOneToOne: false
 { Args: { "_id": string,"_reason": string }; Returns: Json
                            },
 "decline_venue_proposal":
-{ Args: { "_message": string,"_proposal_id": string,"_subject": string }; Returns: number
+{ Args: { "_proposal_id": string }; Returns: number
                            },
 "ensure_scholar":
 { Args: Record<PropertyKey, never>; Returns: string
@@ -800,6 +824,9 @@ isOneToOne: false
 "issteward":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"mark_bidding_digests_checked":
+{ Args: { "_scholars": (string)[] }; Returns: number
+                           },
 "mark_submission_done":
 { Args: { "_mint_purpose_template": string,"_payment_purpose_template": string,"_submission_id": string }; Returns: Json
                            },
@@ -818,6 +845,9 @@ isOneToOne: false
 "propose_thanks":
 { Args: { "_message": string,"_submission": string }; Returns: Json
                            },
+"queue_bidding_digest":
+{ Args: { "_args": (string)[],"_fingerprint": string,"_min_interval"?: string,"_scholar": string }; Returns: number
+                           },
 "queue_call_for_bids":
 { Args: { "_note": string,"_role": string }; Returns: Json
                            },
@@ -831,7 +861,7 @@ isOneToOne: false
 { Args: { "_args"?: (string)[],"_event": string }; Returns: undefined
                            },
 "queue_thanks_emails":
-{ Args: { "_audience": string,"_message": string,"_subject": string,"_thanks_id": string }; Returns: number
+{ Args: { "_audience": string,"_thanks_id": string }; Returns: number
                            },
 "reconcile_email_delivery":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -841,6 +871,9 @@ isOneToOne: false
                            },
 "replay_audit_log":
 { Args: { "_dry_run"?: boolean,"_from_seq"?: number }; Returns: Json
+                           },
+"report_bidding_digest_backlog":
+{ Args: { "_min_interval"?: string }; Returns: number
                            },
 "request_email_verification":
 { Args: { "_email": string }; Returns: undefined

@@ -168,7 +168,7 @@ select
 		join pg_namespace n on n.oid = p.pronamespace
 		where n.nspname = 'public'
 			and p.prokind = 'f'
-			and p.proname in ('tokens_as_of', 'reconcile_ledger', 'reconcile_email_delivery', 'conservation_violations', 'replay_audit_log', 'site_origin')
+			and p.proname in ('tokens_as_of', 'reconcile_ledger', 'reconcile_email_delivery', 'conservation_violations', 'replay_audit_log', 'site_origin', 'bidding_digest_candidates', 'queue_bidding_digest', 'mark_bidding_digests_checked', 'report_bidding_digest_backlog')
 			and (
 				has_function_privilege('anon', p.oid, 'execute')
 				or has_function_privilege('authenticated', p.oid, 'execute')

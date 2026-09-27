@@ -172,25 +172,25 @@ add table thanks;
 --------------------------------------
 -- Functions
 --
--- queue_thanks_emails: resolve the right recipients for a note and queue
--- already-rendered emails to them. The bodies are rendered from the localizable
--- template registry (src/email/templates.ts) in the application layer and passed
--- in; this function only fans them out — to recipients the caller may not be
--- permitted to see — by inserting rows into public.emails, which the resend
--- function then brands and delivers. sender is left null so a recipient cannot
--- read the author's id off the email row. Authorization is per audience, and is
--- what stops an author from bypassing vetting to message reviewers directly:
+-- queue_thanks_emails: resolve the right recipients for a note and queue its emails to them.
+--
+-- The caller names the note and the audience, and nothing else. The arguments each template
+-- renders -- the note's own text, the decline reason, the venue path, the submission -- are
+-- read from the note's row here, and the body is rendered from the registry at send time, so
+-- every value is escaped and any URL in it defanged like every other email's. This function
+-- used to take a subject and message rendered by the caller, which let an author calling the
+-- RPC directly send branded mail with any subject, body and links to a venue's editors (and,
+-- where vetting is off, to its reviewers).
+--
+-- sender is left null so a recipient cannot read the author's id off the email row.
+-- Authorization is per audience, and is what stops an author from bypassing vetting to
+-- message reviewers directly:
 --   'recipients' -> the submission's approved assignees (excluding the author);
 --                   allowed only for an approved note, by a venue admin / editor,
 --                   or by the author themselves when the venue vetting is off.
 --   'vetters'    -> venue admins + priority-0 editors; the author notifies them.
 --   'author'     -> the note's author; a venue admin / editor notifies them.
-create or replace function public.queue_thanks_emails (
-	_thanks_id uuid,
-	_audience text,
-	_subject text,
-	_message text
-) returns integer language plpgsql security definer
+create or replace function public.queue_thanks_emails (_thanks_id uuid, _audience text) returns integer language plpgsql security definer
 set
 	search_path=public,
 	pg_temp as $function$
@@ -199,6 +199,7 @@ declare
 	_t public.thanks;
 	_vet boolean;
 	_count integer;
+	_path text;
 begin
 	_caller := (select auth.uid());
 	if _caller is null then
@@ -209,7 +210,7 @@ begin
 	if not found then
 		raise exception 'Thank-you note not found';
 	end if;
-	select vet_thanks into _vet from public.venues where id = _t.venue;
+	select vet_thanks, coalesce(slug, id::text) into _vet, _path from public.venues where id = _t.venue;
 
 	if _audience = 'recipients' then
 		if _t.status <> 'approved' then
@@ -222,8 +223,9 @@ begin
 		) then
 			raise exception 'You are not authorized to deliver this note';
 		end if;
-		insert into public.emails (event, scholar, sender, venue, email, subject, message)
-		select 'ThanksReceived', s.id, null, _t.venue, s.email, _subject, _message
+		insert into public.emails (event, scholar, sender, venue, email, args)
+		select 'ThanksReceived', s.id, null, _t.venue, s.email,
+			jsonb_build_array(_t.message, _path, _t.submission::text)
 		from (
 			select distinct a.scholar
 			from public.assignments a
@@ -236,8 +238,9 @@ begin
 		if _caller <> _t.author then
 			raise exception 'You are not authorized to notify vetters';
 		end if;
-		insert into public.emails (event, scholar, sender, venue, email, subject, message)
-		select 'ThanksPendingReview', s.id, null, _t.venue, s.email, _subject, _message
+		insert into public.emails (event, scholar, sender, venue, email, args)
+		select 'ThanksPendingReview', s.id, null, _t.venue, s.email,
+			jsonb_build_array(_path, _t.submission::text)
 		from (
 			select unnest(admins) as scholar from public.venues where id = _t.venue
 			union
@@ -258,8 +261,9 @@ begin
 		if not (public.isAdmin(_t.venue) or public.isPriorityZero(_t.venue)) then
 			raise exception 'You are not authorized to notify the author';
 		end if;
-		insert into public.emails (event, scholar, sender, venue, email, subject, message)
-		select 'ThanksShared', s.id, null, _t.venue, s.email, _subject, _message
+		insert into public.emails (event, scholar, sender, venue, email, args)
+		select 'ThanksShared', s.id, null, _t.venue, s.email,
+			jsonb_build_array(_path, _t.submission::text)
 		from public.scholars s
 		where s.id = _t.author and s.email is not null
 			and public.notification_allowed(s.id, 'ThanksShared');
@@ -268,8 +272,9 @@ begin
 		if not (public.isAdmin(_t.venue) or public.isPriorityZero(_t.venue)) then
 			raise exception 'You are not authorized to notify the author';
 		end if;
-		insert into public.emails (event, scholar, sender, venue, email, subject, message)
-		select 'ThanksDeclined', s.id, null, _t.venue, s.email, _subject, _message
+		insert into public.emails (event, scholar, sender, venue, email, args)
+		select 'ThanksDeclined', s.id, null, _t.venue, s.email,
+			jsonb_build_array(coalesce(_t.decline_reason, ''), _path, _t.submission::text)
 		from public.scholars s
 		where s.id = _t.author and s.email is not null
 			and public.notification_allowed(s.id, 'ThanksDeclined');
@@ -284,12 +289,13 @@ end;
 $function$;
 
 revoke
-execute on function public.queue_thanks_emails (uuid, text, text, text)
+execute on function public.queue_thanks_emails (uuid, text)
 from
-	public;
+	public,
+	anon;
 
 grant
-execute on function public.queue_thanks_emails (uuid, text, text, text) to authenticated;
+execute on function public.queue_thanks_emails (uuid, text) to authenticated;
 
 --------------------------------------
 -- RPCs (defined in migration 20260628000000_author_thanks.sql)

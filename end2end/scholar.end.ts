@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { login, logout } from '../src/routes/login';
+import { login, logout, SEED_PASSWORD } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const CURRENCY_ID = SEED.currency;
@@ -8,6 +8,8 @@ const AUTHOR1_ID = SEED.scholars.author1.id; // holds 100 tokens in the seed
 const AUTHOR2_EMAIL = SEED.scholars.author2.email;
 const AUTHOR2_ID = SEED.scholars.author2.id;
 const AUTHOR2_ORCID = SEED.scholars.author2.orcid;
+const R2_EMAIL = SEED.scholars.r2.email;
+const R2_ID = SEED.scholars.r2.id;
 
 test('the read-only scholar profile page should show volunteering roles', async ({ page }) => {
 	await page.goto('/scholar/d181d165-8b6a-4d79-ad28-a9aece21d813');
@@ -400,5 +402,57 @@ test('a freshly loaded profile hydrates from the HTML, not from seventeen more r
 	await page.waitForLoadState('networkidle');
 
 	expect(reads, `hydration re-read from PostgREST:\n${reads.join('\n')}`).toEqual([]);
+	await logout(page);
+});
+
+/** Sign in from whatever /login URL the page is already on, so a `next` it carries survives.
+ * The shared `login` helper navigates to a bare /login first, which is what this avoids. */
+async function signInHere(page: import('@playwright/test').Page, email: string) {
+	await page.waitForSelector('body:not(.hydrating)');
+	await page.getByTestId('email-input').fill(email);
+	await page.getByTestId('password-input').fill(SEED_PASSWORD);
+	await page.getByTestId('password-submit').click({ timeout: 20000 });
+}
+
+test('the settings link in an optional email lands on its control after signing in', async ({
+	page
+}) => {
+	// Every optional email's footer links here, through /login, because the controls only
+	// render on a scholar's own profile while signed in. The weekly bidding digest is on by
+	// default and lives in the reviewing group.
+	sql(`delete from public.notification_settings where scholar = '${R2_ID}';`);
+
+	const next = `/scholar/${R2_ID}#notifications-reviewing`;
+	await page.goto(`/login?next=${encodeURIComponent(next)}`, { waitUntil: 'domcontentloaded' });
+	await signInHere(page, R2_EMAIL);
+
+	await page.waitForURL((url) => url.pathname === `/scholar/${R2_ID}`);
+	expect(new URL(page.url()).hash).toBe('#notifications-reviewing');
+
+	const checkbox = page.getByTestId('notify-BiddingDigest');
+	await checkbox.waitFor();
+	await expect(checkbox).toBeChecked();
+	await expect(page.locator('#notifications-reviewing')).toBeInViewport();
+
+	await checkbox.click();
+	await expect
+		.poll(() =>
+			sql(
+				`select enabled from public.notification_settings where scholar = '${R2_ID}' and event = 'BiddingDigest';`
+			)
+		)
+		.toBe('f');
+
+	sql(`delete from public.notification_settings where scholar = '${R2_ID}';`);
+	await logout(page);
+});
+
+test('a return path to another site is ignored', async ({ page }) => {
+	await page.goto(`/login?next=${encodeURIComponent('//evil.example/phish')}`, {
+		waitUntil: 'domcontentloaded'
+	});
+	await signInHere(page, R2_EMAIL);
+	await page.waitForURL((url) => url.pathname === `/scholar/${R2_ID}`);
+	expect(page.url()).not.toContain('evil.example');
 	await logout(page);
 });
