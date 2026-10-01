@@ -725,6 +725,9 @@ isOneToOne: false
 "backfill_orcid_profiles":
 { Args: { "_limit"?: number }; Returns: number
                            },
+"bid_notice_recipients":
+{ Args: { "_role": string,"_submission": string }; Returns: string[]
+                           },
 "bidding_digest_candidates":
 { Args: { "_cap"?: number,"_limit"?: number,"_min_interval"?: string }; Returns: {
               "digest": Json,"fingerprint": string,"scholar": string,"total": number
