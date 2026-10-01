@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.8 - 2026-10-01
+
+### Fixed
+
+- **A new bid is now emailed only to the people who can approve it.** That is whoever holds the approving role on that submission, or its editor if no one does, or the venue's admins if it has no editor; before, every bid mailed every admin and every volunteer in the venue's top role.
+
 ## 0.5.7 - 2026-09-27
 
 ### Added
