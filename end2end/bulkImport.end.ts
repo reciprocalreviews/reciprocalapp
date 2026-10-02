@@ -253,7 +253,7 @@ test('a manuscript already in the venue is skipped, and the rest still imports',
 
 // A file whose every row is already here has nothing to write, so the button stays
 // inactive rather than sending a batch the database would answer with nothing. The
-// skip line is what explains why.
+// "all already in the system" line is what explains why.
 test('a file that is entirely already imported cannot be submitted', async ({ page, context }) => {
 	await login('editor@uni.edu', page, context);
 
@@ -273,7 +273,8 @@ test('a file that is entirely already imported cannot be submitted', async ({ pa
 	await page.getByTestId('bulk-import-parse').click();
 
 	await expect(page.getByTestId('import-row-0-skipped')).toBeVisible();
-	await expect(page.getByText('1 of these are already in this venue')).toBeVisible();
+	await expect(page.getByText('All submissions are already in the system')).toBeVisible();
+	await expect(page.getByText('1 of these are already in this venue')).toHaveCount(0);
 	await expect(page.getByTestId('bulk-import-submit')).toBeDisabled();
 
 	// Naming the manuscript is only half of it: the link has to reach the paper the

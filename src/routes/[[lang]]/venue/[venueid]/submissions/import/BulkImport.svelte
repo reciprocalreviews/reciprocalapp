@@ -197,6 +197,11 @@
 
 	const duplicates = $derived(duplicateAcrossRows(rows, skipped));
 
+	/** Every row is already at this venue, so there is nothing to import. Suppressed
+	 * while importing for the same reason rowSkipped is: the refetch on success makes
+	 * the just-imported batch look already present until the navigation. */
+	const allSkipped = $derived(!importing && skipped.size > 0 && importable.length === 0);
+
 	/** Whether to say this row is already here. Suppressed while importing for the
 	 * same reason rowError is: `handle` refetches the page's data on success, which
 	 * lands the just-imported IDs in `existingSubmissions` while this table is still
@@ -973,21 +978,28 @@
 
 <h3><Text path={(l) => l.page.bulkImport.header.submit} /></h3>
 
-<Paragraph
-	text={(l) =>
-		l.page.bulkImport.paragraph.mintSummary
-			.replaceAll('{count}', importable.length.toString())
-			.replaceAll('{total}', mintAmount.toString())}
-/>
-
-<!-- Said once for the batch as well as on each row: the table can run to hundreds
-     of rows, and how many of them this import is actually going to write is the
-     number the editor is deciding on. -->
-{#if skipped.size > 0}
+<!-- When every row is already here there is nothing to import, and the submit
+     button is inactive; say that rather than "importing 0 submissions" so the text
+     matches the button. -->
+{#if allSkipped}
+	<Paragraph text={(l) => l.page.bulkImport.paragraph.allSkipped} />
+{:else}
 	<Paragraph
 		text={(l) =>
-			l.page.bulkImport.paragraph.skipping.replaceAll('{count}', skipped.size.toString())}
+			l.page.bulkImport.paragraph.mintSummary
+				.replaceAll('{count}', importable.length.toString())
+				.replaceAll('{total}', mintAmount.toString())}
 	/>
+
+	<!-- Said once for the batch as well as on each row: the table can run to hundreds
+	     of rows, and how many of them this import is actually going to write is the
+	     number the editor is deciding on. -->
+	{#if !importing && skipped.size > 0}
+		<Paragraph
+			text={(l) =>
+				l.page.bulkImport.paragraph.skipping.replaceAll('{count}', skipped.size.toString())}
+		/>
+	{/if}
 {/if}
 
 <!-- Importing without editors should be something the editor decided, not

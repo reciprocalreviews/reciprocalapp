@@ -1699,6 +1699,10 @@
                 "paragraph": {
                   "additionalProperties": false,
                   "properties": {
+                    "allSkipped": {
+                      "description": "Shown instead of `skipping` (and the mint summary) when every row is already at this venue, so there is nothing to import -- the reason the submit button is inactive.",
+                      "type": "string"
+                    },
                     "intro": {
                       "type": "string"
                     },
@@ -1718,6 +1722,7 @@
                     "intro",
                     "mintSummary",
                     "skipping",
+                    "allSkipped",
                     "unseated"
                   ],
                   "type": "object"
