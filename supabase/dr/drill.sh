@@ -146,21 +146,29 @@ else
 	say "extensions SKIPPED — backup predates extension capture"
 fi
 
-# session_replication_role suppresses user triggers for the session, so a restore
-# cannot manufacture audit_log/token_events rows dated today. See RECOVERY.md § 4.
-# No --no-privileges here either: stripping grants at restore time is the same
-# outage as stripping them at dump time.
-pgrun '{ echo "set session_replication_role = replica;"; \
-	pg_restore --no-owner -f - /work/public.dump; } \
-	| psql "$PGURL" -q -v ON_ERROR_STOP=0' >/dev/null 2>&1
-say "public schema + data"
+# A full restore into a Supabase stack emits a dozen or so errors that do not
+# matter (platform-owned default privileges, schemas that already exist), so
+# they are not fatal; but they are printed, counted and deduplicated, because
+# the ones that DO matter — a constraint that failed validation — are otherwise
+# invisible.
+errors() {
+	grep -h 'ERROR:' "$WORK/$1" 2>/dev/null | sort | uniq -c | sed 's/^ */    /' || true
+}
 
+# Auth data BEFORE public, and the order is load-bearing. public.dump is a full
+# restore, so its post-data section adds every foreign key and VALIDATES it
+# against what is there at that moment. scholars_id_fkey references auth.users;
+# restore public first and auth.users is empty, the constraint fails validation,
+# and ON_ERROR_STOP=0 carries on without it. Every row count still matches and
+# deleting an account cascades to nothing. auth.dump is data-only and nothing in
+# auth references public, so it has no reason to wait.
 if [ -f "$WORK/auth.dump" ]; then
 	if pgrun 'psql "$PGURL" -tAc "select to_regclass('"'"'auth.users'"'"') is not null"' | grep -q t; then
 		pgrun '{ echo "set session_replication_role = replica;"; \
 			pg_restore --data-only --no-owner --no-privileges -f - /work/auth.dump; } \
-			| psql "$PGURL" -q -v ON_ERROR_STOP=0' >/dev/null 2>&1
+			| psql "$PGURL" -q -v ON_ERROR_STOP=0' >/dev/null 2>"$WORK/restore-auth.log"
 		say "auth data"
+		errors restore-auth.log
 		AUTH_RESTORED=1
 	else
 		say "auth SKIPPED — target has no auth schema (not a full Supabase project)"
@@ -169,6 +177,16 @@ if [ -f "$WORK/auth.dump" ]; then
 else
 	AUTH_RESTORED=0
 fi
+
+# session_replication_role suppresses user triggers for the session, so a restore
+# cannot manufacture audit_log/token_events rows dated today. See RECOVERY.md § 4.
+# No --no-privileges here either: stripping grants at restore time is the same
+# outage as stripping them at dump time.
+pgrun '{ echo "set session_replication_role = replica;"; \
+	pg_restore --no-owner -f - /work/public.dump; } \
+	| psql "$PGURL" -q -v ON_ERROR_STOP=0' >/dev/null 2>"$WORK/restore-public.log"
+say "public schema + data"
+errors restore-public.log
 
 # Triggers we own that live on platform tables. Applied last, because the trigger
 # function has to exist (public) and so does the table it fires on (auth). After
@@ -190,6 +208,7 @@ q() { pgrun "psql \"\$PGURL\" -tAc \"$1\"" 2>/dev/null | tr -d '[:space:]'; }
 
 # Must match manifest.sql's definition exactly, or the comparison is meaningless.
 GRANT_FP_SQL="select md5(string_agg(t, '|' order by t)) from (select grantee||':'||table_name||':'||privilege_type as t from information_schema.role_table_grants where table_schema='public' and grantee in ('anon','authenticated') union all select grantee||':'||table_name||':'||column_name||':'||privilege_type from information_schema.role_column_grants where table_schema='public' and grantee in ('anon','authenticated')) x"
+FK_FP_SQL="select md5(string_agg(t, '|' order by t)) from (select connamespace::regnamespace::text||'.'||(select relname from pg_class where oid=conrelid)||':'||conname||':'||pg_get_constraintdef(oid) as t from pg_constraint where contype='f' and connamespace::regnamespace::text in ('public','private')) x"
 
 # Every table the manifest recorded, compared exactly. This is the assertion that
 # makes the drill meaningful: "the restore finished" is a feeling, this is a fact.
@@ -244,6 +263,14 @@ if [ -n "$want" ]; then
 	check "grant fingerprint" "$want" "$(q "$GRANT_FP_SQL")"
 	check "anon can read" "1" "$(q "select case when has_table_privilege('anon','public.venues','SELECT') then 1 else 0 end")"
 fi
+
+# Foreign keys. A full restore adds them last and validates each one; one that
+# fails validation is silently not created, and nothing above can tell. The
+# named check works on every backup; the fingerprint only on those whose
+# manifest carries it.
+check "fk: scholars_id_fkey" "1" "$(q "select count(*) from pg_constraint where conname='scholars_id_fkey' and conrelid='public.scholars'::regclass")"
+want=$(jq -r '.db.fk_fingerprint // empty' "$WORK/manifest.json")
+[ -n "$want" ] && check "foreign-key fingerprint" "$want" "$(q "$FK_FP_SQL")"
 
 want=$(jq -r '.db.rls_policy_count // empty' "$WORK/manifest.json")
 [ -n "$want" ] && check "RLS policies" "$want" "$(q "select count(*) from pg_policies where schemaname='public'")"

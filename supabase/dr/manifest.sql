@@ -194,6 +194,31 @@ select
 							and grantee in ('anon', 'authenticated')
 					) x
 			),
+			-- Foreign keys, as an exact fingerprint.
+			--
+			-- Recorded because a full pg_restore adds every FK in its post-data
+			-- section, VALIDATING it against whatever is there at that moment, and a
+			-- constraint that fails validation is simply not created. The first drill
+			-- after orcid_profiles landed restored public before auth.users had any
+			-- rows, so scholars_id_fkey was dropped on the floor: every row count
+			-- matched, and deleting an account no longer cascaded to anything.
+			--
+			-- drill.sh recomputes this identically; keep the two definitions in step.
+			'fk_fingerprint',
+			(
+				select
+					md5(string_agg(t, '|' order by t))
+				from
+					(
+						select
+							connamespace::regnamespace::text||'.'||(select relname from pg_class where oid=conrelid)||':'||conname||':'||pg_get_constraintdef(oid) as t
+						from
+							pg_constraint
+						where
+							contype='f'
+							and connamespace::regnamespace::text in ('public', 'private')
+					) x
+			),
 			-- A blunt but effective check that RLS survived the round trip: policies
 			-- are carried by the schema dump, and a count mismatch means it did not.
 			'rls_policy_count',
