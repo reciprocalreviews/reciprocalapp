@@ -24,3 +24,17 @@ export function safeNext(value: string | null | undefined): string | null {
  * /auth/callback rather than to /login. A cookie rather than a query parameter on the
  * callback URL, because the identity provider only accepts redirect URLs it has registered. */
 export const NEXT_COOKIE = 'rr_next';
+
+/** A link to sign in that comes back to `url` afterwards -- for every "Log in" the app offers
+ * and every redirect to the login page, so that someone who arrived from an email or a shared
+ * link lands where it pointed rather than on their own profile (#191). Plain `/login` from the
+ * landing page, which is no destination, and from the login page itself, so a return path
+ * never nests inside another. */
+export function loginHref(url: URL | string): string {
+	const { pathname, search, hash } =
+		typeof url === 'string' ? new URL(url, 'https://rr.invalid') : url;
+	const path = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, '') || '/';
+	if (path === '/' || path === '/login' || path.startsWith('/login/')) return '/login';
+	const next = safeNext(pathname + search + hash);
+	return next ? `/login?next=${encodeURIComponent(next)}` : '/login';
+}

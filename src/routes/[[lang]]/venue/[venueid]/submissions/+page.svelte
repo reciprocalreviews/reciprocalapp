@@ -297,7 +297,13 @@
 		{#if submissions === null}
 			<Feedback error text={(l) => l.page.submissions.feedback.notLoaded}></Feedback>
 		{:else if submissions.length === 0}
-			<Feedback text={(l) => l.page.submissions.feedback.noSubmissions}></Feedback>
+			<!-- Signed out, every venue looks empty, so say what would change that. -->
+			<Feedback
+				text={(l) =>
+					uid === null
+						? l.page.submissions.feedback.logIn
+						: l.page.submissions.feedback.noSubmissions}
+			></Feedback>
 		{:else}
 			{@const sorted = view.sortedAndFiltered(submissions)}
 			{#if sorted.length === 0}

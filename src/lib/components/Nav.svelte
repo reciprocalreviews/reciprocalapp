@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { loginHref } from '$lib/auth/next';
 	import Banners from '$lib/components/Banners.svelte';
 	import Text from '$lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
@@ -50,7 +51,9 @@
 					},
 					{ id: 'logout' }
 				]
-			: [{ id: 'login', to: '/login', label: locale().header.link.login }]
+			: // Back to this page afterwards, not to the profile: whoever is signing in from
+				// here most likely wanted to do something on it.
+				[{ id: 'login', to: loginHref(page.url), label: locale().header.link.login }]
 	);
 
 	const { breadcrumbs, tokens = 0 }: { breadcrumbs: [string, string][]; tokens?: number } =

@@ -440,7 +440,8 @@
 		"venueTransactions": {
 			"title": "Transactions",
 			"feedback": {
-				"transactionsNotLoaded": "Unable to load transactions for this venue."
+				"transactionsNotLoaded": "Unable to load transactions for this venue.",
+				"logIn": "[Log in](/login) to see this venue's transactions."
 			},
 			"paragraph": {
 				"count": "There are **{count}** transactions involving this venue visible to you."
@@ -715,6 +716,7 @@
 			"feedback": {
 				"notLoaded": "Unable to load submissions.",
 				"noSubmissions": "This venue has no submissions (or none visible to you).",
+				"logIn": "[Log in](/login) to see the submissions you can review or bid on.",
 				"noneFiltered": "All submissions filtered.",
 				"scholarNotFound": "No scholar found with that email or ORCID.",
 				"batchReady": "Found them. Use the assign buttons in that role's column below."
@@ -864,6 +866,7 @@
 			},
 			"feedback": {
 				"notLoaded": "This submission does not exist or is not visible to you.",
+				"logIn": "[Log in](/login) to see this submission.",
 				"confidential": "This submission is confidential to you.",
 				"missingAuthors": "Unable to find authors.",
 				"noAuthors": "No visible authors found.",

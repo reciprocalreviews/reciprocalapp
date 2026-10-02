@@ -343,6 +343,8 @@ export type LocaleText = {
 			title: string;
 			feedback: {
 				transactionsNotLoaded: string;
+				/** Shown instead of the error to a visitor who isn't signed in, since that is why nothing loaded. */
+				logIn: string;
 			};
 			paragraph: {
 				count: string;
@@ -606,6 +608,8 @@ export type LocaleText = {
 			feedback: {
 				notLoaded: string;
 				noSubmissions: string;
+				/** Shown instead of noSubmissions to a visitor who isn't signed in: they see none because they aren't, not because there are none. */
+				logIn: string;
 				noneFiltered: string;
 				/** No scholar matched the email or ORCID typed into the batch form. */
 				scholarNotFound: string;
@@ -700,6 +704,8 @@ export type LocaleText = {
 			};
 			feedback: {
 				notLoaded: string;
+				/** Shown instead of notLoaded to a visitor who isn't signed in, who is usually following a link from an email. */
+				logIn: string;
 				confidential: string;
 				missingAuthors: string;
 				noAuthors: string;

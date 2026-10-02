@@ -2,11 +2,13 @@ import { describe, expect, test } from 'vitest';
 // Ranking, matching, the cap and the fingerprint are decided in SQL and tested in
 // supabase/tests/rpc/bidding_digest.sql. What is tested here is how a digest renders.
 import { HostileDigest, ReeseDigest, TwoVenueDigest, totalOf } from './biddingDigest.fixtures';
-import { renderEmail, settingsUrlFor, type BiddingDigestPayload } from './templates';
+import { renderEmail, settingsUrlFor, signInUrl, type BiddingDigestPayload } from './templates';
 import { htmlToText, renderBrandedEmail } from './emailShell';
 import { expertiseKey, expertiseTags } from '../lib/data/expertise';
 
 const ORIGIN = 'https://rr.test';
+/** Every button goes through sign-in on its way to the page (#191). */
+const via = (path: string) => signInUrl(ORIGIN, path);
 
 function render(payload: BiddingDigestPayload) {
 	const total = totalOf(payload);
@@ -41,20 +43,19 @@ describe('BiddingDigest template', () => {
 		);
 		expect(text).toContain('• Retraction Notices as a Genre\n');
 		expect(text).not.toContain('needs');
-		expect(text).toContain('Bid at ToK (https://rr.test/venue/knowledge/submissions)');
+		expect(text).toContain(`Bid at ToK (${via('/venue/knowledge/submissions')})`);
 	});
 	test('renders the list as a list and the link as a button', () => {
 		const { html } = render(ReeseDigest);
 		expect(html.match(/<li /g)).toHaveLength(7);
-		expect(html).toMatch(
-			/<td style="background-color: #007284;[^"]*"><a href="https:\/\/rr.test\/venue\/knowledge\/submissions"/
-		);
+		expect(html).toMatch(/<td style="background-color: #007284;[^"]*"><a href="([^"]*)"/);
+		expect(html).toContain(`<a href="${via('/venue/knowledge/submissions')}"`);
 	});
 	test('gives each venue its own list and button, and counts what the cap left out', () => {
 		const { text } = render(TwoVenueDigest);
 		expect(text).toContain('…and 7 more on the bidding page.');
 		expect(text.indexOf('Annals of Doubt · Referee')).toBeLessThan(text.indexOf('ToK · Reviewer'));
-		expect(text).toContain('Bid at Annals of Doubt (https://rr.test/venue/doubt/submissions)');
+		expect(text).toContain(`Bid at Annals of Doubt (${via('/venue/doubt/submissions')})`);
 	});
 	test('renders scholar-supplied strings inert', () => {
 		const { html } = render(HostileDigest);
@@ -94,7 +95,7 @@ describe('BiddingDigest template', () => {
 			]
 		};
 		const { text } = render(blank);
-		expect(text).toContain('Bid at this venue (https://rr.test/venue/knowledge/submissions)');
+		expect(text).toContain(`Bid at this venue (${via('/venue/knowledge/submissions')})`);
 		expect(text).toContain('• Untitled submission');
 		expect(text).not.toContain(' · ');
 	});

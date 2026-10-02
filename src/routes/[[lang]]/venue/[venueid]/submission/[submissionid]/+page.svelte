@@ -394,7 +394,13 @@
 	{/if}
 {/snippet}
 
-{#if submission === null || venue === null || roles === null || scholar === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
+<!-- Signed out, nothing here loads: submissions are readable only by the people they involve.
+     Say so rather than "does not exist", since this is usually someone following an email. -->
+{#if scholar === null}
+	<Page band={false} title={(l) => l.page.submission.title}>
+		<Feedback text={(l) => l.page.submission.feedback.logIn}></Feedback>
+	</Page>
+{:else if submission === null || venue === null || roles === null || scholar === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
 	<Page band={false} title={(l) => l.page.submission.title}>
 		<Feedback error text={(l) => l.page.submission.feedback.notLoaded}></Feedback>
 	</Page>

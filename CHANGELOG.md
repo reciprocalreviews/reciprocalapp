@@ -7,6 +7,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Fixed
 
 - **A new bid is now emailed only to the people who can approve it.** That is whoever holds the approving role on that submission, or its editor if no one does, or the venue's admins if it has no editor; before, every bid mailed every admin and every volunteer in the venue's top role.
+- **Email buttons now work when you're signed out.** They ask you to sign in and then take you where they pointed, as does every "Log in" link in the app; before, an invitation's "Accept or decline" landed on a profile with nothing to click, and a submission link said the submission didn't exist. (#191)
 
 ## 0.5.7 - 2026-09-27
 
