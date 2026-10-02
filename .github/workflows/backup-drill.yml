@@ -45,7 +45,10 @@ jobs:
     name: Restore and verify
     runs-on: ubuntu-latest
     steps:
+      # Full history: test-ref.sh walks it to find the tests that match the backup.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       # Pinned rather than `latest`. With `latest`, setup-cli resolves the release
       # through the GitHub API on every job; a dev push and a main merge fire ~10
@@ -136,8 +139,23 @@ jobs:
           set -euo pipefail
           printf '%s' '${{ secrets.BACKUP_AGE_IDENTITY }}' > /tmp/identity.txt
           chmod 600 /tmp/identity.txt
-          AGE_IDENTITY=/tmp/identity.txt ./supabase/dr/drill.sh | tee /tmp/drill.out
+          AGE_IDENTITY=/tmp/identity.txt MANIFEST_OUT=/tmp/manifest.json ./supabase/dr/drill.sh | tee /tmp/drill.out
           shred -u /tmp/identity.txt 2>/dev/null || rm -f /tmp/identity.txt
+
+      - name: Use the tests that match the backup
+        # The suite at HEAD expects every migration on HEAD, and the backup only
+        # has the ones production had applied when it was taken. A migration that
+        # deploys between the backup and the drill would otherwise fail the drill
+        # on version skew (2026-10-01: bid_notice_recipients, deployed two hours
+        # after the backup). See supabase/dr/test-ref.sh.
+        id: tests
+        run: |
+          set -euo pipefail
+          ref=$(./supabase/dr/test-ref.sh /tmp/manifest.json)
+          rm -rf supabase/tests
+          git checkout "$ref" -- supabase/tests
+          echo "ref=$(git rev-parse --short "$ref")" >> "$GITHUB_OUTPUT"
+          echo "running supabase/tests from $(git log -1 --format='%h %s' "$ref")"
 
       - name: Prove policies and grants survived
         # Row counts say the data came back. This says the SECURITY came back —
@@ -149,6 +167,8 @@ jobs:
         run: |
           {
             echo "### Backup drill — \`${{ steps.fetch.outputs.prefix }}\`"
+            echo
+            echo "RLS suite run from \`${{ steps.tests.outputs.ref || 'HEAD' }}\`, the newest commit matching the backup's migrations."
             echo
             echo '```'
             sed -e 's/\x1b\[[0-9;]*m//g' /tmp/drill.out 2>/dev/null || echo "(drill produced no output)"

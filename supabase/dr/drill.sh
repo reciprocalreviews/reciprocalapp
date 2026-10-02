@@ -18,6 +18,7 @@
 #   AGE_IDENTITY    path to the age private key, if BACKUP_DIR is encrypted.
 #   PG_IMAGE        client image (default postgres:17).
 #   KEEP            set to 1 to leave the decrypted working copy in place.
+#   MANIFEST_OUT    if set, copy the decrypted manifest.json here.
 #
 # The elapsed time this prints is the closest thing you have to a real recovery
 # time objective. Record it in RECOVERY.md after each drill; an RTO nobody has
@@ -78,6 +79,11 @@ if ls "$WORK"/*.age >/dev/null 2>&1; then
 fi
 
 [ -f "$WORK/manifest.json" ] || { echo "no manifest.json — cannot verify a restore without one" >&2; exit 1; }
+
+# Hand the decrypted manifest to the caller, if asked: the workflow needs its
+# migration list to choose which commit's tests to run (see test-ref.sh). It
+# holds counts, versions and fingerprints — nothing about any scholar.
+[ -z "${MANIFEST_OUT:-}" ] || cp "$WORK/manifest.json" "$MANIFEST_OUT"
 
 # ---- Integrity, before touching the target ------------------------------------
 # macOS's sha256sum has no -c, and Linux has no shasum by default, so pick
