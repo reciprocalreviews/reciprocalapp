@@ -554,6 +554,7 @@
 				"intro": "Import a batch of free submissions that pre-date this venue's launch on Reciprocal Reviews. These submissions will have no authors or payments, but reviewers can bid on them to earn tokens. Submitting this form will also propose a mint transaction sized to fund reviewer compensation, which a minter must approve before reviewers will receive tokens.",
 				"mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens, summed from each submission's type cost.",
 				"skipping": "**{count}** of these are already in this venue and will be skipped.",
+				"allSkipped": "All submissions are already in the system.",
 				"unseated": "**{count}** of these will import with no {role}."
 			},
 			"note": {

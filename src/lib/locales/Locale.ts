@@ -437,6 +437,10 @@ export type LocaleText = {
 				 * written, so the size of the batch is a decision rather than a
 				 * discovery. `{count}` rows. */
 				skipping: string;
+				/** Shown instead of `skipping` (and the mint summary) when every row is
+				 * already at this venue, so there is nothing to import -- the reason the
+				 * submit button is inactive. */
+				allSkipped: string;
 				/** Says how many submissions will import with nobody in a role,
 				 * because the names in that column matched no volunteer. `{count}`
 				 * submissions, `{role}` the venue's own name for the role. */
