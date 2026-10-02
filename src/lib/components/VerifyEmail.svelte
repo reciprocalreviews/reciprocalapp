@@ -26,9 +26,7 @@
 	const db = getDB();
 
 	let email = $state('');
-	let sent = $state(false);
 	let unchanged = $state(false);
-	let sentTo = $state('');
 	let error = $state<undefined | ((l: LocaleText) => string)>(undefined);
 
 	/** Whether to show the address field even though something is already pending —
@@ -102,7 +100,6 @@
 		// insensitively since verified addresses are stored lowercased.
 		if (current !== null && trimmed.toLowerCase() === current.trim().toLowerCase()) {
 			error = undefined;
-			sent = false;
 			unchanged = true;
 			return {};
 		}
@@ -111,16 +108,15 @@
 		const result = await db().requestEmailVerification(trimmed);
 		if (result.error) {
 			error = errorFor(result);
-			sent = false;
 			return { error: result.error };
 		}
 		error = undefined;
-		sent = true;
-		sentTo = trimmed;
 		entering = false;
-		// Refresh the load data so the pending block below shows the NEW created_at, and
-		// therefore counts down from the right moment. This component calls the CRUD method
-		// directly rather than through handle(), which is what normally does this.
+		// Refresh the load data so the pending block below appears (it is the only
+		// confirmation of a send — a separate "sent" notice beside it said the same thing
+		// twice, #188) and shows the NEW created_at, so it counts down from the right moment.
+		// This component calls the CRUD method directly rather than through handle(), which
+		// is what normally does this.
 		await invalidateAll();
 		return {};
 	}
@@ -235,14 +231,6 @@
 	<Feedback
 		testid="verify-email-unchanged"
 		text={(l) => l.component.verifyEmail.feedback.unchanged}
-	/>
-{/if}
-
-{#if sent}
-	<Feedback
-		testid="verify-email-sent"
-		text={(l) => l.component.verifyEmail.feedback.sent}
-		inputs={{ email: sentTo }}
 	/>
 {/if}
 

@@ -2063,7 +2063,6 @@
 				}
 			},
 			"feedback": {
-				"sent": "We sent a verification link to {email} (valid 24 hours). It becomes your contact email once you verify it.",
 				"pending": "We sent a verification link to {email}. It works until {expires} — follow it and that becomes your contact email.",
 				"expired": "The link we sent to {email} expired before it was used. Send yourself another; there is no limit.",
 				"undelivered": "We couldn't deliver the verification link to {email}. Check it for a typo and try again — if it keeps failing, tell the stewards.",

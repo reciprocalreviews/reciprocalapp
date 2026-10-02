@@ -43,7 +43,9 @@ test('an unverified scholar sees the banner and can verify a new contact email',
 	await expect(page.getByTestId('email-onboarding')).toBeVisible();
 	await page.getByTestId('verify-email-input').fill(newEmail);
 	await page.getByTestId('verify-email-submit').click();
-	await expect(page.getByTestId('verify-email-sent')).toBeVisible();
+	await expect(page.getByTestId('verify-email-pending')).toContainText(newEmail);
+	// One confirmation, not two (#188): the pending notice is the only "we sent it" message.
+	await expect(page.getByText(/We sent a verification link/)).toHaveCount(1);
 
 	// A verification email is queued to the new address, but scholars.email is NOT
 	// updated yet — only verifying the token commits it.
@@ -133,7 +135,7 @@ test('a pending verification survives a reload, and can be sent again', async ({
 	const pendingEmail = `pending${Date.now()}@uni.edu`;
 	await page.getByTestId('verify-email-input').fill(pendingEmail);
 	await page.getByTestId('verify-email-submit').click();
-	await expect(page.getByTestId('verify-email-sent')).toBeVisible();
+	await expect(page.getByTestId('verify-email-pending')).toContainText(pendingEmail);
 
 	// The regression test for the whole persistence change. "We sent you a link" used to be
 	// a boolean in component memory, so a reload showed the same empty form again with no
@@ -159,7 +161,7 @@ test('a pending verification survives a reload, and can be sent again', async ({
 	const resend = page.getByTestId('verify-email-resend');
 	await expect(resend).toBeEnabled();
 	await resend.click();
-	await expect(page.getByTestId('verify-email-sent')).toBeVisible();
+	await expect(page.getByTestId('verify-email-pending')).toContainText(pendingEmail);
 
 	// A second link went out to the same address, and the cooldown restarted.
 	await expect
@@ -185,7 +187,7 @@ test('a verification email that never went out says so', async ({ page, context 
 	const undelivered = `undelivered${Date.now()}@uni.edu`;
 	await page.getByTestId('verify-email-input').fill(undelivered);
 	await page.getByTestId('verify-email-submit').click();
-	await expect(page.getByTestId('verify-email-sent')).toBeVisible();
+	await expect(page.getByTestId('verify-email-pending')).toContainText(undelivered);
 
 	// Written directly rather than by actually breaking delivery. The suite runs without an
 	// edge runtime, so every send in it genuinely fails — but the reconciler that would
@@ -267,7 +269,7 @@ test('changing an email trims whitespace and sends; an unchanged address sends n
 
 	// A verification email is queued to the TRIMMED address; scholars.email is unchanged
 	// until it's verified.
-	await expect(page.getByTestId('verify-email-sent')).toBeVisible();
+	await expect(page.getByTestId('verify-email-pending')).toContainText(newEmail);
 	await expect
 		.poll(() =>
 			sql(

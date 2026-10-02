@@ -1798,7 +1798,6 @@ export type LocaleText = {
 				different: ButtonText;
 			};
 			feedback: {
-				sent: string;
 				/** A link is out and still live — shown on every visit, not just the one
 				 * that sent it, since the request now outlives the page that made it. */
 				pending: string;

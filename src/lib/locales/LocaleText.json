@@ -269,9 +269,6 @@
                       "description": "A link is out and still live — shown on every visit, not just the one that sent it, since the request now outlives the page that made it.",
                       "type": "string"
                     },
-                    "sent": {
-                      "type": "string"
-                    },
                     "signedOut": {
                       "description": "The session ended between loading the page and submitting.",
                       "type": "string"
@@ -289,7 +286,6 @@
                     }
                   },
                   "required": [
-                    "sent",
                     "pending",
                     "expired",
                     "undelivered",
