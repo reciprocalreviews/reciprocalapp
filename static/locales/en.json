@@ -1285,7 +1285,7 @@
 			"feedback": {
 				"notLoaded": "Unable to load scholar profile.",
 				"submissionsNotLoaded": "Unable to load this scholar's submissions.",
-				"noStatus": "This scholar has not shared their reviewing status.",
+				"noStatus": "This scholar hasn't provided additional detail about their availability.",
 				"tokensNotLoaded": "Unable to load this scholar's tokens.",
 				"noTasks": "You have no pending tasks.",
 				"commitmentsNotLoaded": "Unable to load editing volunteering commitments.",
@@ -1293,7 +1293,7 @@
 				"notVolunteeringThird": "No roles to show for this scholar. Venues choose whether to list their volunteers publicly, so there may be roles here that are not shown.",
 				"volunteeringFirst": "These are your volunteer roles.",
 				"volunteeringThird": "These are this scholar's volunteer roles.",
-				"noName": "Welcome! Edit your name above to set it, then share your reviewing status below so others know your availability.",
+				"noName": "Welcome! Edit your name above to set it, then mark whether you're available and add any detail below so others know whether to reach out.",
 				"addEmail": "Add a contact email so editors can reach you and you can receive notifications. We'll send a link to verify it, and won't email you anything else until you do."
 			},
 			"field": {
@@ -1303,7 +1303,7 @@
 					"invalid": "Name must be at least 1 character"
 				},
 				"status": {
-					"placeholder": "Explain your current reviewing status to others."
+					"placeholder": "Describe any context about your availability to review to help others decide whether to reach out. Describe your expertise in your volunteering roles for each venue."
 				},
 				"email": {
 					"label": "email",

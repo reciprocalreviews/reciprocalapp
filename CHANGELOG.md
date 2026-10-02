@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.5.8 - 2026-10-01
 
+### Changed
+
+- **The status box on your profile now says what it's for:** any detail about your availability to review, with expertise described per venue in your volunteering roles. (#189)
+
 ### Fixed
 
 - **A new bid is now emailed only to the people who can approve it.** That is whoever holds the approving role on that submission, or its editor if no one does, or the venue's admins if it has no editor; before, every bid mailed every admin and every volunteer in the venue's top role.
