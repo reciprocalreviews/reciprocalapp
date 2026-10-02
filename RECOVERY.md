@@ -485,6 +485,7 @@ _security_ came back.
 | 2026-08-04 | local stack           | 8s      | first drill                       |
 | 2026-08-08 | **hosted production** | **33s** | first hosted rehearsal; 1 scholar |
 | 2026-09-02 | **hosted production** | **23s** | first fully automated CI drill    |
+| 2026-10-01 | **hosted production** | **21s** | restore lost `scholars_id_fkey`   |
 
 Update after each run.
 
@@ -546,6 +547,21 @@ compares, so nothing had ever checked it was still there.
 whatever schema they sit, and `drill.sh` restores them after the public and auth
 restores. Found by the first drill that got far enough to run the RLS suite
 against a restore, where it failed all 41 files on one missing fixture.
+
+**Restore order decides which foreign keys exist.** `drill.sh` restored
+`public.dump` in full, then `auth.dump`. A full restore adds foreign keys in its
+post-data section and _validates_ each one against the rows present at that
+moment — and at that moment `auth.users` was empty, so `scholars_id_fkey` failed
+validation and was simply not created. The error went to `/dev/null`, every row
+count matched, the drill printed `PASSED`, and the result was a database where
+**deleting an account cascaded to nothing**. The incident procedure above is not
+affected: it applies the schema first and loads data with `--data-only`.
+
+`drill.sh` now restores auth data before `public`, prints (deduplicated) restore
+errors instead of discarding them, and asserts `scholars_id_fkey` by name plus an
+`fk_fingerprint` the manifest now records. Found by the 2026-10-01 drill, the
+first to run `orcid_profiles_rls.sql`, whose last assertion deletes an auth user
+and expects the cascade.
 
 ### The drill needs a private key — use a second recipient
 
