@@ -109,6 +109,11 @@
 			testid="venue-transaction"
 		/>
 	</Page>
+{:else if scholar === null}
+	<!-- Transactions are readable only when signed in, so this is not a failure to load. -->
+	<Page band={false} title={(l) => l.page.venueTransactions.title}>
+		<Feedback text={(l) => l.page.venueTransactions.feedback.logIn}></Feedback>
+	</Page>
 {:else}
 	<Page band={false} title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.venueTransactions.feedback.transactionsNotLoaded}

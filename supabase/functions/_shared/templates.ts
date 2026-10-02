@@ -1054,8 +1054,49 @@ export function settingsUrlFor(
 	if (!preference) return undefined;
 	const section = (Emails[preference] as Email).section;
 	const base = (origin || DEFAULT_ORIGIN).replace(/\/+$/, '');
-	const next = `/scholar/${encodeURIComponent(scholar)}#notifications-${section}`;
+	return signInUrl(base, `/scholar/${encodeURIComponent(scholar)}#notifications-${section}`);
+}
+
+/** A link that signs the reader in, if they aren't already, and then takes them to `next` -- a
+ * path on this site. The login page sends a reader who is already signed in straight on. */
+export function signInUrl(base: string, next: string): string {
 	return `${base}/login?next=${encodeURIComponent(next)}`;
+}
+
+/**
+ * Paths a reader can use without signing in, so a button to one is left as it is. Mirrors the
+ * public prefixes in src/lib/auth/requiresAuth.ts, which an edge function cannot import; a unit
+ * test holds the two together. `/verify` matters most: the email-verification link has to work
+ * from a signed-out inbox.
+ */
+export const PUBLIC_PATHS = [
+	'/login',
+	'/about',
+	'/help',
+	'/contact',
+	'/brand',
+	'/terms',
+	'/updates',
+	'/verify'
+];
+
+/**
+ * Send every button that leads into the application through sign-in (#191). Nearly every page
+ * an email points at -- a submission, a venue's transactions, the reader's own profile with the
+ * invitation to accept on it -- shows nothing useful to someone signed out, and mail is often
+ * read where the reader isn't signed in: the button looked broken. Done here, over the rendered
+ * message, rather than in each template, so a new template cannot forget it; the digest's buttons
+ * are built at send time and pass through here too.
+ */
+function throughSignIn(message: string, base: string): string {
+	return message.replace(/<rr-button href="([^"]*)">/g, (button, href: string) => {
+		if (!href.startsWith(`${base}/`)) return button;
+		const path = href.slice(base.length);
+		const bare = path.replace(/[?#].*$/, '');
+		if (PUBLIC_PATHS.some((prefix) => bare === prefix || bare.startsWith(`${prefix}/`)))
+			return button;
+		return `<rr-button href="${signInUrl(base, path)}">`;
+	});
 }
 
 /** Where the application lives, when the caller doesn't say. Production, so a
@@ -1101,14 +1142,15 @@ export function renderEmail(
 	// Resolve {origin} in the template BEFORE arguments are substituted, so an
 	// argument value that happens to contain the literal text isn't expanded.
 	const subject = substitute(email.subject.replaceAll('{origin}', base), (value) => value);
-	const message = substitute(
-		email.paragraphs.join('\n\n').replaceAll('{origin}', base),
-		(value, position) =>
+	const message = throughSignIn(
+		substitute(email.paragraphs.join('\n\n').replaceAll('{origin}', base), (value, position) =>
 			position === digestArg
 				? formatBiddingDigest(value, base)
 				: urlArgs.has(position)
 					? escapeArg(value)
 					: defangURLs(escapeArg(value))
+		),
+		base
 	);
 
 	// The "automated email" footer is added by the branded shell at send time

@@ -5,12 +5,15 @@ import {
 	OptionalEmails,
 	preferenceFor,
 	renderEmail,
+	signInUrl,
+	PUBLIC_PATHS,
 	type Email,
 	type EmailType
 } from './templates';
 import { readFileSync } from 'node:fs';
 import { seedSQL } from './notificationSeeds';
 import en from '../../static/locales/en.json';
+import { PUBLIC_PREFIXES } from '../lib/auth/requiresAuth';
 
 describe('renderEmail', () => {
 	it('escapes markup in argument values', () => {
@@ -29,7 +32,7 @@ describe('renderEmail', () => {
 
 	it('leaves template-owned URLs intact', () => {
 		const { message } = renderEmail('VenueApproved', ['A venue', 'venue-id']);
-		expect(message).toContain('https://reciprocal.reviews/venue/venue-id');
+		expect(message).toContain(signInUrl('https://reciprocal.reviews', '/venue/venue-id'));
 	});
 
 	it('sends links to the origin it is given', () => {
@@ -41,14 +44,14 @@ describe('renderEmail', () => {
 			['A venue', 'venue-id'],
 			'http://localhost:5173'
 		);
-		expect(message).toContain('http://localhost:5173/venue/venue-id');
+		expect(message).toContain(signInUrl('http://localhost:5173', '/venue/venue-id'));
 		expect(message).not.toContain('reciprocal.reviews');
 	});
 
 	it('falls back to production when no origin is given', () => {
 		// An unconfigured project keeps sending the links it always sent.
 		const { message } = renderEmail('VenueApproved', ['A venue', 'venue-id']);
-		expect(message).toContain('https://reciprocal.reviews/venue/venue-id');
+		expect(message).toContain(signInUrl('https://reciprocal.reviews', '/venue/venue-id'));
 	});
 
 	it('ignores a trailing slash on the origin', () => {
@@ -57,7 +60,7 @@ describe('renderEmail', () => {
 			['A venue', 'venue-id'],
 			'http://localhost:5173/'
 		);
-		expect(message).toContain('http://localhost:5173/venue/venue-id');
+		expect(message).toContain(signInUrl('http://localhost:5173', '/venue/venue-id'));
 		expect(message).not.toContain('5173//venue');
 	});
 
@@ -81,7 +84,7 @@ describe('renderEmail', () => {
 			'reason',
 			'https://reciprocal.reviews/scholar/abc/transactions'
 		]);
-		expect(message).toContain('https://reciprocal.reviews/scholar/abc/transactions');
+		expect(message).toContain(signInUrl('https://reciprocal.reviews', '/scholar/abc/transactions'));
 		expect(message).not.toContain('[:]');
 	});
 
@@ -111,7 +114,8 @@ describe('renderEmail', () => {
 	it('leaves an unknown placeholder as written rather than rendering undefined', () => {
 		const { message } = renderEmail('VenueApproved', ['Only one arg']);
 		expect(message).not.toContain('undefined');
-		expect(message).toContain('$2');
+		// In the button's return path, so encoded along with the rest of it.
+		expect(message).toContain(signInUrl('https://reciprocal.reviews', '/venue/$2'));
 	});
 });
 
@@ -136,8 +140,8 @@ describe('NewVolunteer', () => {
 
 	it('links to the volunteer and to the venue roster', () => {
 		const { message } = renderEmail('NewVolunteer', args, 'http://localhost:5173');
-		expect(message).toContain('http://localhost:5173/scholar/scholar-id');
-		expect(message).toContain('http://localhost:5173/venue/venue-id/volunteers');
+		expect(message).toContain(signInUrl('http://localhost:5173', '/scholar/scholar-id'));
+		expect(message).toContain(signInUrl('http://localhost:5173', '/venue/venue-id/volunteers'));
 	});
 
 	// The name is the one value here a scholar chooses, and it lands in genuinely branded
@@ -186,7 +190,7 @@ describe('SubmissionsAssignedEditor', () => {
 
 	it("links to the venue's submissions list", () => {
 		const { message } = renderEmail('SubmissionsAssignedEditor', args, 'http://localhost:5173');
-		expect(message).toContain('http://localhost:5173/venue/knowledge/submissions');
+		expect(message).toContain(signInUrl('http://localhost:5173', '/venue/knowledge/submissions'));
 	});
 
 	it('defangs a link hiding in the venue title', () => {
@@ -338,7 +342,44 @@ describe('calls to action', () => {
 			'https://rr.test'
 		);
 		expect(message).toContain(
-			'<rr-button href="https://rr.test/venue/knowledge/submission/abc">Open the submission</rr-button>'
+			`<rr-button href="${signInUrl('https://rr.test', '/venue/knowledge/submission/abc')}">Open the submission</rr-button>`
 		);
+	});
+});
+
+describe('buttons go through sign-in', () => {
+	// Mail is often read where the reader isn't signed in, and almost every page it points at
+	// shows them nothing useful until they are -- the invitation's Accept/Decline button landed
+	// on a read-only profile and looked broken (#191).
+	const ORIGIN = 'https://rr.test';
+
+	it('sends an invitation to the profile where it can be accepted, via sign-in', () => {
+		const { message } = renderEmail('RoleInvite', ['Reviewer', 'knowledge', 'ToK', 'abc'], ORIGIN);
+		expect(message).toContain(
+			`<rr-button href="${ORIGIN}/login?next=${encodeURIComponent('/scholar/abc')}">Accept or decline</rr-button>`
+		);
+	});
+
+	for (const [name, email] of Object.entries(Emails) as [EmailType, Email][]) {
+		if (email.digestArg !== undefined) continue; // Rendered from a payload; tested in biddingDigest.unit.ts.
+		it(`${name} sends every in-app button through sign-in`, () => {
+			const args = Array.from({ length: 12 }, (_, i) => `arg${i + 1}`);
+			const { message } = renderEmail(name, args, ORIGIN);
+			for (const [, href] of message.matchAll(/<rr-button href="([^"]*)">/g)) {
+				if (!href.startsWith(`${ORIGIN}/`)) continue;
+				const path = href.slice(ORIGIN.length).replace(/[?#].*$/, '');
+				if (PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`))) continue;
+				expect(href, name).toMatch(new RegExp(`^${ORIGIN}/login\\?next=%2F`));
+			}
+		});
+	}
+
+	it('leaves the verification link alone, since it is followed signed out', () => {
+		const { message } = renderEmail('VerifyEmail', [`${ORIGIN}/verify/abc123`], ORIGIN);
+		expect(message).toContain(`<rr-button href="${ORIGIN}/verify/abc123">`);
+	});
+
+	it('agrees with the app about which pages are public', () => {
+		expect([...PUBLIC_PATHS].sort()).toEqual([...PUBLIC_PREFIXES].sort());
 	});
 });

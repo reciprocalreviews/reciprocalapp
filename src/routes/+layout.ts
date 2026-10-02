@@ -1,6 +1,7 @@
 import type { Database } from '$data/database';
 import type { ScholarRow } from '$data/types';
 import { hasAuthCookie } from '$lib/auth/hasAuthCookie';
+import { loginHref } from '$lib/auth/next';
 import { readBetaDismissed } from '$lib/data/betaDismissal';
 import { requiresAuth } from '$lib/auth/requiresAuth';
 import SupabaseCRUD from '$lib/data/SupabaseCRUD.svelte';
@@ -86,7 +87,8 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
 	// live case (token dying while the page is open) is handled by the SIGNED_OUT listener in
 	// +layout.svelte.
 	if (!userID && hasAuthCookie(data.cookies) && requiresAuth(url.pathname)) {
-		redirect(302, '/login');
+		// With the way back, so signing in again returns to the page that was asked for.
+		redirect(302, loginHref(url));
 	}
 
 	// If there's a user, return scholar, plus their total token balance for the

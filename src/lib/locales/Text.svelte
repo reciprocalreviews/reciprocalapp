@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { loginHref } from '$lib/auth/next';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { marked } from 'marked';
 	import type { Html } from './html';
@@ -35,7 +37,12 @@
 </script>
 
 {#if markdown}
-	{@html marked(text)}
+	<!-- Every "[Log in](/login)" in the locale file comes back to the page it was read on, so
+	     the strings needn't each know where they are. -->
+	{@html marked(text, { async: false }).replaceAll(
+		'href="/login"',
+		`href="${loginHref(page.url)}"`
+	)}
 {:else}
 	{text}
 {/if}

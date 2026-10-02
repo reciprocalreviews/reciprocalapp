@@ -456,3 +456,32 @@ test('a return path to another site is ignored', async ({ page }) => {
 	expect(page.url()).not.toContain('evil.example');
 	await logout(page);
 });
+
+// #191: a signed-out reader following an email to a submission used to be told it did not
+// exist. They are now asked to sign in -- by a link, and by the header's, that both come back.
+test('a signed-out reader is asked to sign in, and comes back to the submission', async ({
+	page
+}) => {
+	const path = `/venue/${SEED.venuePath}/submission/${SEED.submissions.tok001.id}`;
+	await page.goto(path, { waitUntil: 'domcontentloaded' });
+	await page.waitForSelector('body:not(.hydrating)');
+
+	const back = `/login?next=${encodeURIComponent(path)}`;
+	await expect(page.locator(`a[href="${back}"]`)).toHaveCount(2); // the prompt, and the header
+	await page.locator(`a[href="${back}"]`).first().click();
+	await page.waitForURL((url) => url.pathname === '/login');
+
+	await signInHere(page, SEED.scholars.editor.email);
+	await page.waitForURL((url) => url.pathname === path);
+	await expect(page.getByText(SEED.submissions.tok001.title).first()).toBeVisible();
+	await logout(page);
+});
+
+test('a signed-in reader passes through the login page without stopping', async ({ page }) => {
+	await login(R2_EMAIL, page);
+	const path = `/venue/${SEED.venuePath}/submissions`;
+	// Redirected by the load, so the very first document is already the destination.
+	await page.goto(`/login?next=${encodeURIComponent(path)}`, { waitUntil: 'domcontentloaded' });
+	expect(new URL(page.url()).pathname).toBe(path);
+	await logout(page);
+});
