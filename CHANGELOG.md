@@ -6,7 +6,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Changed
 
-- Upgraded to SvelteKit 3 and `@sveltejs/adapter-vercel` 7, and updated `vercel` to 62 and the Supabase CLI to 2.119.0, along with minor updates to `@types/node`, `vite` and `vitest`.
+- **Updated internal tooling.** SvelteKit and its Vercel adapter moved up a major release, the Vercel CLI to 62, and Vite, Vitest, the Supabase CLI, and the Node type definitions a patch or minor release; TypeScript stays on 6, because Svelte's type checker does not yet run on 7.
 
 ## 0.5.8 - 2026-10-01
 
