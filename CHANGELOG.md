@@ -2,6 +2,17 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.10 - 2026-10-04
+
+### Added
+
+- **Editors can decline a bid, and must say why.** The explanation is emailed to the bidder with the editor's name and shown beside their bid; leaving a bid unanswered is still fine. (#195)
+
+### Fixed
+
+- **Reviewers can no longer approve their own bids or mark their own assignments complete.** Only someone who approves the role can.
+- **In open-review venues, authors now see only who is assigned to their submission, not who bid on it.**
+
 ## 0.5.9 - 2026-10-04
 
 ### Changed

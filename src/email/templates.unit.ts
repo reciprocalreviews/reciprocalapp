@@ -159,6 +159,53 @@ describe('NewVolunteer', () => {
 	});
 });
 
+describe('BidDeclined', () => {
+	const args = [
+		'Grace Hopper',
+		'grace@example.org',
+		'Reviewer',
+		'On Compilers',
+		'Your record is outside this paper’s area.',
+		'toce',
+		'submission-id'
+	];
+
+	it('names who declined, the role, the submission, and why', () => {
+		const { subject, message } = renderEmail('BidDeclined', args);
+		expect(subject).toContain('On Compilers');
+		expect(message).toContain('mailto:grace@example.org');
+		expect(message).toContain('Grace Hopper');
+		expect(message).toContain('Reviewer');
+		expect(message).toContain('outside this paper');
+	});
+
+	it('links to the submission', () => {
+		const { message } = renderEmail('BidDeclined', args, 'http://localhost:5173');
+		expect(message).toContain(
+			signInUrl('http://localhost:5173', '/venue/toce/submission/submission-id')
+		);
+	});
+
+	// The reason is an approver's free text landing in branded mail; it must not carry markup
+	// or a live link.
+	it('escapes and defangs the reason', () => {
+		const reason = '<b>no</b> see https://evil.example';
+		const { message } = renderEmail('BidDeclined', [...args.slice(0, 4), reason, ...args.slice(5)]);
+		expect(message).not.toContain('<b>no</b>');
+		expect(message).toContain('https[:]//evil.example');
+	});
+
+	it('cannot be silenced', () => {
+		expect(preferenceFor('BidDeclined')).toBeUndefined();
+	});
+
+	it('substitutes every placeholder', () => {
+		const { subject, message } = renderEmail('BidDeclined', args);
+		expect(subject).not.toMatch(/\$\d/);
+		expect(message).not.toMatch(/\$\d/);
+	});
+});
+
 describe('SubmissionsAssignedEditor', () => {
 	const args = ['3', 'Transactions on Knowledge', 'knowledge'];
 

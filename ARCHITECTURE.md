@@ -581,6 +581,56 @@ It is `SECURITY DEFINER`, and here that is load-bearing rather than habitual, fo
 
 A third near-copy, in `SupabaseCRUD.requestCompensation`, picked email recipients by a rule that omitted the priority-0 editor branch and treated admins as a fallback rather than a first-class branch, so the two people most able to act on a compensation request were often the two who never heard about it; it now uses the same three-branch union.
 
+### Declining a bid, and who writes which assignment column
+
+[20261004000000](supabase/migrations/20261004000000_decline_bids.sql) gives a bid a third state (#195).
+
+**States.** A bid is one of:
+
+- **pending**: `bid and not approved and declined_at is null`.
+- **approved**.
+- **declined**: `declined_at`, `declined_by` and `decline_reason` are all set.
+
+**Constraints.** Three check constraints keep these states coherent:
+
+- A decline always has a reason, 1–1000 characters after trimming.
+- Only an unapproved, uncompleted bid can be declined.
+- `declined_by` is `on delete set null`, so the decline outlives an erased approver.
+
+**Columns, not a separate table.** The decline lives in columns on the row so that every existing "pending bid" filter can see it with no join:
+
+- the submission page,
+- the submissions list's bid count,
+- `assignmentsForApprovalQuery` (the approver's profile list).
+
+The cost is that the SELECT policy's open-review branch had to be narrowed to `approved` rows. Otherwise authors would have read the reasons their reviewers' fellow bidders were turned down.
+
+**Two embeds needed fixing.** `declined_by` is a second foreign key from `assignments` to `scholars`, so PostgREST no longer resolves `scholars(*)` on its own. The two embeds that used it now name `scholars!assignments_scholar_fkey`.
+
+**`decline_bid(_assignment, _reason)`** is SECURITY DEFINER and the only intended writer of the decline columns. How it works:
+
+- It authorizes with `can_approve_assignment` and also refuses a conflicted approver.
+- It returns `RR017` when the bid is no longer pending, so two approvers answering at once cannot both win. The client maps that to `BidNotPending`.
+- `SupabaseCRUD.declineBid` then sends the `BidDeclined` template to the bidder. That template is consequential (not `optional`), names the approver with a mailto as `AssignmentApproved` does, and carries the reason as an escaped argument.
+
+**Withdrawing and reversing.**
+
+- The DELETE policy now requires `declined_at is null`. A bidder cannot remove a declined bid, and so cannot re-bid.
+- An approver reverses a decline by approving the bid. No separate action exists for it.
+
+**`enforce_assignment_updates`** is a BEFORE UPDATE trigger. It closes a gap older than declining. The UPDATE policy admits the assignee's own row, and RLS cannot be column-specific, so an assignee could approve their own bid or complete their own assignment. The trigger enforces per column:
+
+- `scholar`, `role`, `submission`, `venue` and `bid` are immutable (`RR018`).
+- `approved`, `completed` and the decline columns require `can_approve_assignment` (`RR018`).
+- The assignee keeps `preferenceid` and `compensation_requested_at`.
+- Flipping `approved` to true clears the decline columns. That is how the reversal above works without the decline-only-bids check refusing it.
+
+The trigger is SECURITY INVOKER and only enforces when `current_user = 'authenticated'`:
+
+- **Which writes it guards:** direct client writes, the one path with no other check.
+- **Which writes it leaves alone:** the definer RPCs that legitimately write the row (`complete_assignment`, `mark_submission_done`, `decline_bid`). They run as `postgres` and authorize the caller themselves.
+- **Tests:** [supabase/tests/rls/bid_decline_rls.sql](supabase/tests/rls/bid_decline_rls.sql) and the UPDATE section of `assignments_rls.sql` cover both rules.
+
 ### Resubmission links and per-type cost
 
 A submission records its predecessor two ways: `submissions.previous` is an internal foreign key (`on delete set null`) to another submission, preferred wherever the chain is displayed; `submissions.previousid` is the legacy free-text external manuscript ID, retained for predecessors not on the platform (and matched against `externalid` within the same venue only as a fallback). Individual submissions set `previous` from a dropdown of the author's own prior submissions in the venue — choosing one mirrors its external ID into the (then read-only) `previousid` field **and auto-selects the matching revision submission type** (the `submission_types` row whose `revision_of` points at the predecessor's type). A typed external ID that matches one of the author's priors does the same best-effort. `bulk_import_submissions` best-effort resolves each row's `previousid` to an on-platform `previous` (exact `externalid` match within the venue).

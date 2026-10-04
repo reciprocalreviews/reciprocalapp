@@ -16,6 +16,7 @@
 	import Link from '#lib/components/Link.svelte';
 	import Options from '#lib/components/Options.svelte';
 	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
 	import Row from '#lib/components/Row.svelte';
 	import ORCIDKeywords from '#lib/components/ORCIDKeywords.svelte';
 	import VenueExpertise from '#lib/components/VenueExpertise.svelte';
@@ -25,6 +26,7 @@
 	import Status from '#lib/components/Status.svelte';
 	import Subheader from '#lib/components/Subheader.svelte';
 	import Table from '#lib/components/Table.svelte';
+	import TextField from '#lib/components/TextField.svelte';
 	import Tip from '#lib/components/Tip.svelte';
 	import Tokens from '#lib/components/Tokens.svelte';
 	import VenueLink from '#lib/components/VenueLink.svelte';
@@ -112,6 +114,19 @@
 		getBalance,
 		nameOf
 	});
+
+	/** The bid whose decline form is open, and the explanation being written for it. Local
+	 * state rather than anything derived from load data, so a realtime refetch mid-sentence
+	 * does not wipe what the approver has typed. */
+	let decliningID = $state<string | null>(null);
+	let declineReason = $state('');
+
+	function validDeclineReason(text: string) {
+		const length = text.trim().length;
+		return length === 0 || length > 1000
+			? (l: LocaleText) => l.page.submission.field.declineReason.invalid
+			: undefined;
+	}
 
 	function sortAssignees<T extends { scholar: string }>(items: T[]): T[] {
 		return sortAssigneesBy(items, assigneeContext);
@@ -711,9 +726,16 @@
 				{@const assigned = sortAssignees(
 					assignments.filter((a) => role.id === a.role && !(a.bid && !a.approved))
 				)}
-				<!-- The bidding assignments are those that match this role and aren't approved. -->
+				<!-- Pending bids match this role and are neither approved nor declined. Declined
+				     bids are listed apart: they have been answered, so they are not asking for
+				     anything, but an approver may still change their mind. -->
 				{@const bidded = sortBids(
-					assignments.filter((a) => role.id === a.role && a.bid && !a.approved)
+					assignments.filter(
+						(a) => role.id === a.role && a.bid && !a.approved && a.declined_at === null
+					)
+				)}
+				{@const declined = assignments.filter(
+					(a) => role.id === a.role && a.bid && !a.approved && a.declined_at !== null
 				)}
 				{@const isApprover = canApproveAssignment(
 					submission.id,
@@ -784,7 +806,7 @@
 						</td>
 					</tr>
 				{:else}
-					{#if bidded.length === 0}
+					{#if bidded.length === 0 && (declined.length === 0 || !isApprover)}
 						<tr><td>{role.name}</td><td colspan="5">{EmptyLabel}</td></tr>
 					{/if}
 				{/each}
@@ -824,8 +846,99 @@
 												return handle(db().approveAssignment(assignment, true, role, scholar.id));
 											}}
 										/>
+										<Button
+											testid="decline-bid"
+											strings={(l) => l.page.submission.button.declineBid}
+											active={decliningID !== assignment.id}
+											action={() => {
+												decliningID = assignment.id;
+												declineReason = '';
+												return undefined;
+											}}
+										/>
 									{/if}
 								</Row>
+							</td>
+						</tr>
+						{#if decliningID === assignment.id}
+							<tr>
+								<td colspan={canSeeBalances ? 6 : 5}>
+									<Form>
+										<Paragraph text={(l) => l.page.submission.declineBidPrompt} />
+										<!-- Forms align their children to the start, which shrinks a field to
+										     its content; an explanation needs room, so this one spans the form. -->
+										<div class="decline-reason-field">
+											<TextField
+												bind:text={declineReason}
+												strings={(l) => l.page.submission.field.declineReason}
+												testid="decline-bid-reason"
+												inline={false}
+												stretch
+												valid={validDeclineReason}
+											></TextField>
+										</div>
+										<Button
+											testid="decline-bid-confirm"
+											strings={(l) => l.page.submission.button.confirmDecline}
+											active={validDeclineReason(declineReason) === undefined}
+											action={async () => {
+												const result = await handle(
+													db().declineBid(assignment, declineReason, role, scholar.id)
+												);
+												if (result !== false) {
+													decliningID = null;
+													declineReason = '';
+												}
+											}}
+										/>
+									</Form>
+								</td>
+							</tr>
+						{/if}
+					{/each}
+				{/if}
+
+				<!-- Declined bids, for approvers: who declined and why, so a second approver does
+				     not answer the same bid again, and a way to assign the bidder after all. -->
+				{#if declined.length > 0 && isApprover}
+					{#each declined as assignment}
+						{@const volunteer = getVolunteer(role.id, assignment.scholar)}
+						<tr class="declined" data-testid="declined-bid">
+							<td>{role.name}</td>
+							<td class="unapproved">
+								<div class="scholar-cell">
+									<ScholarLink id={assignment.scholar} />
+									<Status good={false} label={(l) => l.page.submission.status.declined} />
+								</div>
+							</td>
+							<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
+							{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} /></td>{/if}
+							<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
+							<td>
+								<Row>
+									<Button
+										testid="approve-declined-bid"
+										strings={(l) => l.page.submission.button.approveDeclined}
+										action={() =>
+											handle(db().approveAssignment(assignment, true, role, scholar.id))}
+									/>
+								</Row>
+							</td>
+						</tr>
+						<!-- The reason gets a row of its own, spanning the table, so a long
+						     explanation doesn't widen the Scholar column and reflow every row. -->
+						<tr class="declined-reason-row" data-testid="declined-bid-reason">
+							<td></td>
+							<td colspan={canSeeBalances ? 5 : 4}>
+								<div class="decline-explanation">
+									{#if assignment.declined_by !== null}
+										<span class="declined-by">
+											{locale().page.submission.cell.declinedBy}
+											<ScholarLink id={assignment.declined_by} />
+										</span>
+									{/if}
+									<blockquote class="decline-reason">{assignment.decline_reason}</blockquote>
+								</div>
 							</td>
 						</tr>
 					{/each}
@@ -851,6 +964,44 @@
 <style>
 	.unapproved {
 		font-style: italic;
+	}
+
+	.decline-reason-field {
+		width: 100%;
+	}
+
+	.decline-explanation {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-half);
+		max-width: 65ch;
+	}
+
+	/* The reason row belongs to the declined row above it, so it takes that row's stripe
+	   rather than its own, and drops the gap between them. The pair is always two rows,
+	   so the striping of every row after it is unchanged. */
+	tr.declined:nth-child(even) + tr.declined-reason-row {
+		background: var(--alternating-color);
+	}
+
+	tr.declined:nth-child(odd) + tr.declined-reason-row {
+		background: none;
+	}
+
+	tr.declined-reason-row td {
+		padding-top: 0;
+	}
+
+	.declined-by {
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
+	}
+
+	.decline-reason {
+		margin: 0;
+		padding-inline-start: var(--spacing);
+		border-inline-start: 3px solid var(--inactive-color);
+		font-size: var(--small-font-size);
 	}
 
 	.assignment-orcid {

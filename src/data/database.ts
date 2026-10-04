@@ -25,16 +25,22 @@ export type Database = {
           Tables: {
             "assignments": {
                   Row: {
-                    "approved": boolean,"bid": boolean,"compensation_requested_at": string | null,"completed": boolean,"created_at": string,"id": string,"preferenceid": string | null,"role": string,"scholar": string,"submission": string,"venue": string
+                    "approved": boolean,"bid": boolean,"compensation_requested_at": string | null,"completed": boolean,"created_at": string,"decline_reason": string | null,"declined_at": string | null,"declined_by": string | null,"id": string,"preferenceid": string | null,"role": string,"scholar": string,"submission": string,"venue": string
                   }
                   Insert: {
-                    "approved"?: boolean,"bid"?: boolean,"compensation_requested_at"?: string | null,"completed"?: boolean,"created_at"?: string,"id"?: string,"preferenceid"?: string | null,"role": string,"scholar": string,"submission": string,"venue": string
+                    "approved"?: boolean,"bid"?: boolean,"compensation_requested_at"?: string | null,"completed"?: boolean,"created_at"?: string,"decline_reason"?: string | null,"declined_at"?: string | null,"declined_by"?: string | null,"id"?: string,"preferenceid"?: string | null,"role": string,"scholar": string,"submission": string,"venue": string
                   }
                   Update: {
-                    "approved"?: boolean,"bid"?: boolean,"compensation_requested_at"?: string | null,"completed"?: boolean,"created_at"?: string,"id"?: string,"preferenceid"?: string | null,"role"?: string,"scholar"?: string,"submission"?: string,"venue"?: string
+                    "approved"?: boolean,"bid"?: boolean,"compensation_requested_at"?: string | null,"completed"?: boolean,"created_at"?: string,"decline_reason"?: string | null,"declined_at"?: string | null,"declined_by"?: string | null,"id"?: string,"preferenceid"?: string | null,"role"?: string,"scholar"?: string,"submission"?: string,"venue"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "assignments_declined_by_fkey"
+      columns: ["declined_by"]
+isOneToOne: false
+      referencedRelation: "scholars"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "assignments_preferenceid_fkey"
       columns: ["preferenceid"]
 isOneToOne: false
@@ -787,6 +793,9 @@ isOneToOne: false
                            },
 "currency_holder_counts":
 { Args: { "_currency": string }; Returns: Json
+                           },
+"decline_bid":
+{ Args: { "_assignment": string,"_reason": string }; Returns: Json
                            },
 "decline_thanks":
 { Args: { "_id": string,"_reason": string }; Returns: Json

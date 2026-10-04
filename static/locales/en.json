@@ -848,6 +848,7 @@
 				"conflicted": "conflicted",
 				"bids": "bids",
 				"biddingClosed": "bidding closed",
+				"declined": "bid declined",
 				"anonymized": "anonymized"
 			},
 			"paragraph": {
@@ -917,6 +918,18 @@
 				"claimEditor": {
 					"tip": "Take on this submission as the venue's editor",
 					"label": "edit this submission"
+				},
+				"declineBid": {
+					"tip": "Decline this bid and explain why to the bidder",
+					"label": "Decline"
+				},
+				"confirmDecline": {
+					"tip": "Decline this bid and email your explanation to the bidder",
+					"label": "Decline and explain"
+				},
+				"approveDeclined": {
+					"tip": "Assign this scholar after all, withdrawing the decline",
+					"label": "Assign anyway"
 				}
 			},
 			"field": {
@@ -928,6 +941,11 @@
 				"note": {
 					"label": "Note",
 					"placeholder": "Anything for editors and reviewers to know"
+				},
+				"declineReason": {
+					"label": "why you are declining",
+					"placeholder": "e.g., your expertise is in a different area than this paper",
+					"invalid": "Explain in 1–1000 characters"
 				}
 			},
 			"status": {
@@ -937,7 +955,8 @@
 				"completed": "Completed",
 				"assigned": "Assigned",
 				"unassigned": "Unassigned",
-				"bidder": "Bidder"
+				"bidder": "Bidder",
+				"declined": "Bid declined"
 			},
 			"subtitle": "Submission",
 			"options": {
@@ -1001,8 +1020,10 @@
 				"declinedToPay": "declined to pay",
 				"nonPaying": "non-paying co-author",
 				"anonymized": "anonymized",
-				"you": "you"
+				"you": "you",
+				"declinedBy": "declined by"
 			},
+			"declineBidPrompt": "You don't have to answer a bid, and leaving it is fine. But if you decline it, tell the bidder why: your explanation is emailed to them with your name, and they will see it beside their bid.",
 			"tip": {
 				"newAssignment": "Add a new assignment to this submission. These are restricted to the roles for which you have assignment privileges."
 			}
@@ -2201,6 +2222,8 @@
 		"CompleteAssignmentInsufficientTokens": "The venue doesn't have enough tokens to pay this compensation. A proposed mint transaction has been recorded and the venue's minter has been notified.",
 		"CompleteAssignmentRPC": "Unable to complete this assignment.",
 		"DeleteAssignment": "Unable to delete this assignment",
+		"DeclineBid": "Unable to decline this bid",
+		"BidNotPending": "This bid has already been answered.",
 		"EmailScholar": "Unable to email this scholar",
 		"ApproveProposalNoSupporters": "Unable to retrieve supports of proposal for notification.",
 		"DeclareConflict": "Unable to declare a conflict with this submission.",

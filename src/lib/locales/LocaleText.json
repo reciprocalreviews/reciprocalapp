@@ -403,6 +403,9 @@
             "BackfillORCIDProfiles": {
               "type": "string"
             },
+            "BidNotPending": {
+              "type": "string"
+            },
             "BulkImportSubmissions": {
               "type": "string"
             },
@@ -469,6 +472,9 @@
               "type": "string"
             },
             "DeclareConflict": {
+              "type": "string"
+            },
+            "DeclineBid": {
               "type": "string"
             },
             "DeclineThanks": {
@@ -950,6 +956,8 @@
             "CompleteAssignmentInsufficientTokens",
             "CompleteAssignmentRPC",
             "DeleteAssignment",
+            "DeclineBid",
+            "BidNotPending",
             "EmailScholar",
             "ApproveProposalNoSupporters",
             "DeclareConflict",
@@ -4167,6 +4175,10 @@
                     "approveBid": {
                       "$ref": "#/definitions/ButtonText"
                     },
+                    "approveDeclined": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Approves a bid that was declined, reversing the decline."
+                    },
                     "claimEditor": {
                       "$ref": "#/definitions/ButtonText",
                       "description": "Take on this submission as the venue's editor."
@@ -4174,8 +4186,16 @@
                     "complete": {
                       "$ref": "#/definitions/ConfirmButtonText"
                     },
+                    "confirmDecline": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Sends the decline and its reason to the bidder."
+                    },
                     "createAssignment": {
                       "$ref": "#/definitions/ButtonText"
+                    },
+                    "declineBid": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Opens the reason form for declining a pending bid."
                     },
                     "markDone": {
                       "$ref": "#/definitions/ConfirmButtonText",
@@ -4193,7 +4213,10 @@
                     "approveBid",
                     "approveAnyway",
                     "markDone",
-                    "claimEditor"
+                    "claimEditor",
+                    "declineBid",
+                    "confirmDecline",
+                    "approveDeclined"
                   ],
                   "type": "object"
                 },
@@ -4201,6 +4224,10 @@
                   "additionalProperties": false,
                   "properties": {
                     "anonymized": {
+                      "type": "string"
+                    },
+                    "declinedBy": {
+                      "description": "Precedes the approver who declined a bid, in the declined bid's row.",
                       "type": "string"
                     },
                     "declinedToPay": {
@@ -4225,9 +4252,14 @@
                     "declinedToPay",
                     "nonPaying",
                     "anonymized",
-                    "you"
+                    "you",
+                    "declinedBy"
                   ],
                   "type": "object"
+                },
+                "declineBidPrompt": {
+                  "description": "Above the reason field when declining a bid. Declining is optional, so this says so, and that the reason goes to the bidder.",
+                  "type": "string"
                 },
                 "feedback": {
                   "additionalProperties": false,
@@ -4306,6 +4338,28 @@
                 "field": {
                   "additionalProperties": false,
                   "properties": {
+                    "declineReason": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
                     "newAssignment": {
                       "additionalProperties": false,
                       "properties": {
@@ -4334,6 +4388,7 @@
                   },
                   "required": [
                     "newAssignment",
+                    "declineReason",
                     "note"
                   ],
                   "type": "object"
@@ -4427,6 +4482,9 @@
                     "completed": {
                       "type": "string"
                     },
+                    "declined": {
+                      "type": "string"
+                    },
                     "done": {
                       "type": "string"
                     },
@@ -4447,7 +4505,8 @@
                     "completed",
                     "assigned",
                     "unassigned",
-                    "bidder"
+                    "bidder",
+                    "declined"
                   ],
                   "type": "object"
                 },
@@ -4590,6 +4649,7 @@
                 "subtitle",
                 "tip",
                 "cell",
+                "declineBidPrompt",
                 "header",
                 "feedback",
                 "button",
@@ -4688,6 +4748,10 @@
                     "conflicted": {
                       "type": "string"
                     },
+                    "declined": {
+                      "description": "Shown to a bidder in place of the unbid button once an approver has declined their bid; the approver's reason follows it.",
+                      "type": "string"
+                    },
                     "you": {
                       "type": "string"
                     }
@@ -4698,6 +4762,7 @@
                     "conflicted",
                     "bids",
                     "biddingClosed",
+                    "declined",
                     "anonymized"
                   ],
                   "type": "object"

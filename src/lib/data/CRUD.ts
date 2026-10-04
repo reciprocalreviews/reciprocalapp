@@ -653,6 +653,16 @@ export default abstract class CRUD {
 		approver: ScholarID
 	): Promise<Result>;
 
+	/** Decline a pending bid, with the explanation the bidder is owed. Declining is optional --
+	 * an approver may leave a bid unanswered -- but a decline is never silent: the reason is
+	 * required, stored on the bid, and emailed to the bidder along with who declined. */
+	abstract declineBid(
+		assignment: AssignmentRow,
+		reason: string,
+		role: RoleRow,
+		decliner: ScholarID
+	): Promise<Result>;
+
 	/** Create a new assignment record. `preferenceid` is meaningful only on bids
 	 * and only when the venue has defined preference levels. */
 	/** Create an assignment. When `approved` is true and `approver` is someone other than the

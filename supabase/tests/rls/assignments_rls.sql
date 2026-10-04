@@ -10,7 +10,11 @@
 --           (can_approve_assignment, which covers venue admins); OR a bidder
 --           (bid=true) who is an active, accepted volunteer on the assignment's
 --           role; OR an editor claiming an unclaimed submission.
---   UPDATE  the assigned scholar, or whoever may approve it on this submission.
+--   UPDATE  the assigned scholar, or whoever may approve it on this submission --
+--           and then per column (enforce_assignment_updates): the assignee may set
+--           only preferenceid and compensation_requested_at; approved, completed
+--           and the decline columns need can_approve_assignment; scholar, role,
+--           submission, venue and bid never change.
 --
 --   Volunteering in a role that approves another role is NOT enough on its own for
 --   any of these: the approver must be seated on the submission in question.
@@ -20,7 +24,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(23);
+select plan(29);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -240,11 +244,59 @@ select throws_ok(
 );
 
 -- ---- UPDATE -------------------------------------------------------------------
--- The assigned scholar can update their own assignment.
+-- The assigned scholar can update the columns that are theirs.
 select tests.authenticate_as(:'assignee');
 select lives_ok(
+	$$ update public.assignments set compensation_requested_at = now() where id = $$ || quote_literal(:'asg'),
+	'the assigned scholar can request compensation on their own assignment'
+);
+
+-- But not the ones that are an approver's. The UPDATE policy admits the assignee's own
+-- row with no column limit, so before enforce_assignment_updates an assignee could mark
+-- their own work complete, or approve their own bid.
+select throws_ok(
 	$$ update public.assignments set completed = true where id = $$ || quote_literal(:'asg'),
-	'the assigned scholar can update their own assignment'
+	'RR018',
+	null,
+	'the assigned scholar cannot complete their own assignment'
+);
+
+select throws_ok(
+	$$ update public.assignments set role = $$ || quote_literal(:'roleapprover') || $$ where id = $$ || quote_literal(:'asg'),
+	'RR018',
+	null,
+	'the assigned scholar cannot move their assignment to another role'
+);
+
+-- A bidder cannot approve their own bid.
+select tests.clear_authentication();
+select tests.create_assignment(:'ven', :'sub', :'bidder', :'rolechild', false, true) as selfbid \gset
+select tests.authenticate_as(:'bidder');
+select throws_ok(
+	$$ update public.assignments set approved = true where id = $$ || quote_literal(:'selfbid'),
+	'RR018',
+	null,
+	'a bidder cannot approve their own bid'
+);
+
+select lives_ok(
+	$$ update public.assignments set preferenceid = null where id = $$ || quote_literal(:'selfbid'),
+	'a bidder can still change their own bid preference'
+);
+
+-- Not even an approver may change who or what an assignment is about.
+select tests.authenticate_as(:'approver');
+select throws_ok(
+	$$ update public.assignments set scholar = $$ || quote_literal(:'outsider') || $$ where id = $$ || quote_literal(:'asg'),
+	'RR018',
+	null,
+	'an approver cannot reassign an assignment to someone else'
+);
+
+-- An approver completes it. (Later checks rely on completed = true.)
+select lives_ok(
+	$$ update public.assignments set completed = true where id = $$ || quote_literal(:'asg'),
+	'an approver can complete the assignment'
 );
 
 -- An approver (isRoleApproverVolunteer on the role) can update the assignment.
