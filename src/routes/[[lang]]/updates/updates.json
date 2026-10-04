@@ -1,13 +1,29 @@
 [
 	{
+		"version": "0.5.9",
+		"date": "2026-10-04",
+		"changes": {
+			"added": [],
+			"fixed": [],
+			"changed": [
+				"Upgraded to SvelteKit 3 and `@sveltejs/adapter-vercel` 7, and updated `vercel` to 62 and the Supabase CLI to 2.119.0, along with minor updates to `@types/node`, `vite` and `vitest`."
+			],
+			"removed": []
+		}
+	},
+	{
 		"version": "0.5.8",
 		"date": "2026-10-01",
 		"changes": {
 			"added": [],
 			"fixed": [
-				"**A new bid is now emailed only to the people who can approve it.** That is whoever holds the approving role on that submission, or its editor if no one does, or the venue's admins if it has no editor; before, every bid mailed every admin and every volunteer in the venue's top role."
+				"**A new bid is now emailed only to the people who can approve it.** That is whoever holds the approving role on that submission, or its editor if no one does, or the venue's admins if it has no editor; before, every bid mailed every admin and every volunteer in the venue's top role.",
+				"**Email buttons now work when you're signed out.** They ask you to sign in and then take you where they pointed, as does every \"Log in\" link in the app; before, an invitation's \"Accept or decline\" landed on a profile with nothing to click, and a submission link said the submission didn't exist. (#191)",
+				"**Asking to verify a contact email now shows one message, not two.** The notice that the link is on its way is where you resend it and see when you can. (#188)"
 			],
-			"changed": [],
+			"changed": [
+				"**The status box on your profile now says what it's for:** any detail about your availability to review, with expertise described per venue in your volunteering roles. (#189)"
+			],
 			"removed": []
 		}
 	},

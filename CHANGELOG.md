@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.9 - 2026-10-04
+
+### Changed
+
+- Upgraded to SvelteKit 3 and `@sveltejs/adapter-vercel` 7, and updated `vercel` to 62 and the Supabase CLI to 2.119.0, along with minor updates to `@types/node`, `vite` and `vitest`.
+
 ## 0.5.8 - 2026-10-01
 
 ### Changed
