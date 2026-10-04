@@ -17,7 +17,7 @@ npm run locale       # Validate all locale JSON files against schema
 
 ## Tech Stack
 
-- **Frontend:** Svelte 5 (runes) + SvelteKit 2, TypeScript strict mode
+- **Frontend:** Svelte 5 (runes) + SvelteKit 3, TypeScript strict mode
 - **Database/Auth:** Supabase (PostgreSQL + Auth via email/OTP)
 - **Hosting:** Vercel via `@sveltejs/adapter-vercel`
 - **Testing:** Vitest (unit) + Playwright (integration, Chromium only)
