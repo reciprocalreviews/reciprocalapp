@@ -294,6 +294,10 @@ test('an unmatched editor is listed, linked from the submissions page, and can b
 }) => {
 	await login('editor@uni.edu', page, context);
 	const external = `import-unmatched-page-${Date.now()}`;
+	// The import also proposes a mint to fund the submission. Left behind, it is one more
+	// proposed transaction at the top of the venue's list, and enough of those push the
+	// currency suite's "ancient proposal is still on the first page" row off page one.
+	const startedAt = sql(`select now();`);
 	try {
 		await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
 		await page.waitForLoadState('networkidle');
@@ -336,6 +340,9 @@ test('an unmatched editor is listed, linked from the submissions page, and can b
 			.toBe('1');
 	} finally {
 		sql(`delete from public.submissions where externalid = '${external}';`);
+		sql(
+			`delete from public.transactions where to_venue = '${SEED.venue}' and status = 'proposed' and created_at >= '${startedAt}';`
+		);
 	}
 	await logout(page);
 });

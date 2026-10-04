@@ -61,7 +61,9 @@
 
 	async function match(group: Group, scholar: string) {
 		if (venue === null) return;
-		const result = await handle(db().matchAssignments(venue.id, group.name, group.role.id, scholar));
+		const result = await handle(
+			db().matchAssignments(venue.id, group.name, group.role.id, scholar)
+		);
 		if (typeof result !== 'object') return;
 		const who = candidatesFor(group.role).find((c) => c.id === scholar)?.name ?? group.name;
 		const text = locale().page.unmatched.feedback;
@@ -104,8 +106,7 @@
 						<Row>
 							{#if candidates.length === 0}
 								<Feedback
-									text={(l) =>
-										l.page.unmatched.noCandidates.replaceAll('{role}', group.role.name)}
+									text={(l) => l.page.unmatched.noCandidates.replaceAll('{role}', group.role.name)}
 								/>
 							{:else}
 								<Options
