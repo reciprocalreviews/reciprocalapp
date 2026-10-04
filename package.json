@@ -55,7 +55,7 @@
 		"ts-json-schema-generator": "^2",
 		"tslib": "^2",
 		"typescript": "^6",
-		"vercel": "^60",
+		"vercel": "^62",
 		"vite": "^8",
 		"vitest": "^5"
 	},
