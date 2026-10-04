@@ -92,9 +92,12 @@
 		gap: 0;
 	}
 
+	/* Stacked flush, like the banners above them. Each banner draws its own bottom border,
+	   which already separates one from the next; a gap here let the page show through
+	   between them in the sticky header. */
 	section {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing);
+		gap: 0;
 	}
 </style>

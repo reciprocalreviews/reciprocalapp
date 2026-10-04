@@ -556,7 +556,8 @@
 				"mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens, summed from each submission's type cost.",
 				"skipping": "**{count}** of these are already in this venue and will be skipped.",
 				"allSkipped": "All submissions are already in the system.",
-				"unseated": "**{count}** of these will import with no {role}."
+				"unseatedOne": "**{role}:** 1 name matches nobody at this venue. It will be kept as an unmatched assignment, so the person can be matched once they join and accept the role.",
+				"unseatedMany": "**{role}:** {count} names match nobody at this venue. They will be kept as unmatched assignments, so each person can be matched once they join and accept the role."
 			},
 			"note": {
 				"csv": "Upload or paste a CSV with a header row, exported from whatever system you review in. Any column names will do — you match them to fields in the next step. Line breaks inside quoted fields are read correctly.",
@@ -692,12 +693,12 @@
 			},
 			"person": {
 				"ambiguous": "Several people match this name. Choose one:",
-				"unmatched": "No matching scholar",
-				"noRole": "No role at this venue has an accepted, active volunteer to seat.",
+				"unmatched": "No matching scholar — kept as an unmatched assignment",
+				"noRole": "This venue has no roles to seat anyone in.",
 				"note": "For each role, choose the column naming who holds it. Leave a role unmatched to seat nobody in it; a row naming nobody falls back to the venue’s editor, if it has exactly one.",
 				"header": "Match editors",
 				"doubleSeated": "This row seats the same person in two roles. That is allowed — but they will be paid for both.",
-				"unmatchedNote": "A name nobody at this venue matches does not stop the import: that submission arrives with nobody in the role, and is flagged as waiting for an editor. A name matching several people does need choosing before you can import."
+				"unmatchedNote": "A name nobody at this venue matches does not stop the import: it is kept as an unmatched assignment, which can be matched to that person once they join. A submission whose editor is unmatched is flagged as waiting for an editor. A name matching several people does need choosing before you can import."
 			},
 			"type": {
 				"header": "Match types",
@@ -854,6 +855,39 @@
 			"paragraph": {
 				"newSubmission": "Have a submission to pay for? Pay for a [new submission](submissions/new).",
 				"bulkImport": "Importing pre-launch submissions? [Import submissions in bulk](submissions/import)."
+			},
+			"unmatched": "Some assignments from imports aren’t matched to a scholar yet (**{count}**). [Match them](/venue/{venue}/submissions/unmatched)."
+		},
+		"unmatched": {
+			"title": "Unmatched assignments",
+			"note": "An import kept these names because they matched nobody at the venue. Once a person joins and accepts the role, choose them here to assign them on every submission listed under their name. You see the assignments you could approve.",
+			"empty": "Nothing to match. Every name from your imports has been matched or dismissed.",
+			"headers": {
+				"name": "Name in import",
+				"role": "Role",
+				"count": "Submissions",
+				"scholar": "Match to"
+			},
+			"options": {
+				"scholar": {}
+			},
+			"choose": "— choose a scholar —",
+			"noCandidates": "Nobody holds the {role} role yet. Invite this person to it, then match them here.",
+			"button": {
+				"match": {
+					"tip": "Assign this scholar on every submission listed under this name",
+					"label": "Match"
+				},
+				"dismiss": {
+					"tip": "Forget these assignments; the submissions stay as they are",
+					"label": "Dismiss",
+					"warn": "Dismiss these assignments?"
+				}
+			},
+			"feedback": {
+				"matchedOne": "Matched {name} to 1 assignment.",
+				"matchedMany": "Matched {name} to {count} assignments.",
+				"skipped": "Left {skipped} alone, because they author or are conflicted on the submission, or someone else already holds the role."
 			}
 		},
 		"submission": {
@@ -880,7 +914,8 @@
 				"completionInsufficient": "The venue does not have enough tokens to compensate every editor. A mint transaction has been proposed; once a minter approves it, retry.",
 				"completionNotEditor": "Only an approved editor (priority-0 role) can mark this submission done.",
 				"completionSucceeded": "Submission marked done and editor(s) compensated.",
-				"needsEditor": "No one is editing this submission yet. Until someone does, no assignment on it can be approved and it cannot be marked done."
+				"needsEditor": "No one is editing this submission yet. Until someone does, only venue admins can approve or pay for work on it, and it can’t be marked done.",
+				"unmatched": "Unmatched from import: {list}. Once each person joins and accepts the role, they can be [matched](/venue/{venue}/submissions/unmatched)."
 			},
 			"button": {
 				"createAssignment": {
@@ -930,6 +965,22 @@
 				"approveDeclined": {
 					"tip": "Assign this scholar after all, withdrawing the decline",
 					"label": "Assign anyway"
+				},
+				"confirmDeclineClaim": {
+					"tip": "Decline this request and email your explanation to the scholar",
+					"label": "Decline and explain"
+				},
+				"approveDeclinedClaim": {
+					"tip": "Pay for this work after all, withdrawing the decline",
+					"label": "Approve and pay anyway"
+				},
+				"payClaim": {
+					"tip": "Confirm this scholar did this work, and pay them for it",
+					"label": "Approve and pay"
+				},
+				"declineClaim": {
+					"tip": "Decline this request for compensation and explain why",
+					"label": "Decline"
 				}
 			},
 			"field": {
@@ -956,7 +1007,8 @@
 				"assigned": "Assigned",
 				"unassigned": "Unassigned",
 				"bidder": "Bidder",
-				"declined": "Bid declined"
+				"claim": "Requests compensation",
+				"declined": "Declined"
 			},
 			"subtitle": "Submission",
 			"options": {
@@ -1024,6 +1076,7 @@
 				"declinedBy": "declined by"
 			},
 			"declineBidPrompt": "You don't have to answer a bid, and leaving it is fine. But if you decline it, tell the bidder why: your explanation is emailed to them with your name, and they will see it beside their bid.",
+			"declineClaimPrompt": "Tell them why you're declining this request for compensation. Your explanation is emailed to them with your name.",
 			"tip": {
 				"newAssignment": "Add a new assignment to this submission. These are restricted to the roles for which you have assignment privileges."
 			}
@@ -1092,7 +1145,7 @@
 				"adminMints": "This venue's admin is also its [currency](/currency/{currency})'s minter. Consider volunteering to be the currency's minter to help reduce the risk of perceived or actual self-dealing.",
 				"typesNotLoaded": "Couldn't load venue's submission types.",
 				"rolesNotLoaded": "Couldn't load venue's roles.",
-				"compensationRequested": "Compensation request sent.",
+				"compensationRequested": "Compensation request sent. It waits for an approver — the submission’s editor or a venue admin — to approve and pay it, even if no one has assigned you to the submission here yet.",
 				"inactive": "This venue is currently **inactive**, so only admins can see its details. Here is the message from the admins: *{message}*",
 				"inactivePrompt": "This venue is currently **inactive**. Only you and other admins can see it, along with the message set in the [venue settings](/venue/{venue}/settings). Visit the settings to activate the venue."
 			},
@@ -1119,7 +1172,8 @@
 			"options": {
 				"compensationRole": {
 					"label": "role"
-				}
+				},
+				"chooseRole": "— choose a role —"
 			},
 			"headers": {
 				"type": "Type",
@@ -2216,6 +2270,14 @@
 		"CreateAssignment": "Unable to create this assignment",
 		"CompensationSubmissionNotFound": "Unable to find the submission for compensation request",
 		"CompensationAssignmentCheck": "Could not check for an existing request.",
+		"CompensationAlreadyPaid": "You have already been compensated for this work.",
+		"CompensationDeclined": "This request was declined. See the explanation you were sent.",
+		"CompensationEditorRole": "Editors are compensated when they mark a submission done, not by request.",
+		"CompensationNotEligible": "You can only request compensation in a role you volunteer for, and not on your own submission.",
+		"LoadUnmatchedAssignments": "Unable to load unmatched assignments",
+		"MatchAssignments": "Unable to match these assignments",
+		"MatchAssignmentsNotVolunteer": "That scholar must accept this role before they can be matched to it.",
+		"DismissUnmatchedAssignment": "Unable to dismiss this assignment",
 		"CompleteAssignmentNotFound": "Unable to find this assignment",
 		"CompleteAssignmentRoleNotFound": "Unable to find this assignment's role",
 		"CompleteAssignmentVenueNotFound": "Unable to find this assignment's venue",

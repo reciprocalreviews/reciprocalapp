@@ -173,7 +173,7 @@ test('AE declines a bid with an explanation the bidder sees, then assigns them a
 			.toBe(REASON);
 
 		// The approver now sees it as declined, with the reason, and no longer as pending.
-		await expect(page.getByTestId('declined-bid')).toContainText('Bid declined');
+		await expect(page.getByTestId('declined-bid')).toContainText('Declined');
 		await expect(page.getByTestId('declined-bid-reason')).toContainText(REASON);
 		await expect(
 			page

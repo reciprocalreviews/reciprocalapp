@@ -71,9 +71,15 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get the venue's preference levels (may be empty).
 	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
+	// How many assignments from imports this viewer could match, for the notice that links
+	// to the page listing them. RLS counts only the rows the viewer could approve.
+	const { data: unmatchedCount } =
+		uid === null ? { data: 0 } : await db.countUnmatchedAssignments(venueid);
+
 	return {
 		venue,
 		submissions,
+		unmatchedCount,
 		volunteering,
 		roles,
 		assignments,

@@ -229,7 +229,7 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 	const { data: assignments, error: assignmentsError } = await supabase
 		.from('assignments')
 		.select(
-			'id, venue, submission, scholar, role, approved, completed, compensation_requested_at, roles!role(priority, approver)'
+			'id, venue, submission, scholar, role, approved, completed, compensation_requested_at, declined_at, roles!role(priority, approver)'
 		)
 		.in('venue', dueVenueIds);
 
@@ -262,7 +262,9 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 		// ---- Family 3: requested-but-unpaid compensation → the approver chain --
 		// Only assignments whose scholar explicitly requested compensation:
 		// approved-but-uncompleted alone means a review in progress, and nagging
-		// approvers about those would teach them to ignore the reminder.
+		// approvers about those would teach them to ignore the reminder. A claim --
+		// a request with no approved assignment behind it, filed on a submission
+		// nobody could seat the scholar on -- counts too, unless it was declined.
 		//
 		// public.scholar_tasks draws the same line for the profile's Tasks table, and
 		// family 4 below shares its "ready to be marked done" test. They are separate
@@ -271,7 +273,7 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 		// one of the three and check the others.
 
 		const pendingCompensation = assignments.filter(
-			(a) => a.approved && !a.completed && a.compensation_requested_at !== null
+			(a) => !a.completed && a.compensation_requested_at !== null && a.declined_at === null
 		);
 		const compensation: ByScholarVenue = new Map();
 		for (const assignment of pendingCompensation)

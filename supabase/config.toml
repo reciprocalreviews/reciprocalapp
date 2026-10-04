@@ -335,6 +335,8 @@ schema_paths = [
     "./schemas/submissions.sql",
     "./schemas/assignments.sql",
     "./schemas/conflicts.sql",
+    # After assignments.sql and conflicts.sql, which match_assignments reads.
+    "./schemas/unmatched_assignments.sql",
     "./schemas/thanks.sql",
     "./schemas/emails.sql",
     "./schemas/email_verifications.sql",

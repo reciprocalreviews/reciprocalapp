@@ -28,6 +28,8 @@ import {
 	type SubmissionTypeID,
 	type SubmissionType,
 	type CompensationRow,
+	type UnmatchedAssignmentID,
+	type UnmatchedAssignmentRow,
 	type PreferenceLevelID,
 	type PreferenceLevelRow,
 	type ThanksRow,
@@ -224,8 +226,11 @@ export type ImportedSubmission = {
 	 *
 	 * At most one entry per role, and at most one in a priority-0 role: both are
 	 * refused by the database, not merely by the form. The keys are the RPC's own,
-	 * so this passes through without re-mapping. */
-	people: { person: ScholarID; person_role: RoleID }[];
+	 * so this passes through without re-mapping.
+	 *
+	 * A name that matched nobody is passed as `name` instead of `person`, and kept
+	 * as an unmatched assignment for an approver to match once that person joins. */
+	people: ({ person: ScholarID; person_role: RoleID } | { name: string; person_role: RoleID })[];
 };
 
 export type BulkImportResult = {
@@ -242,7 +247,14 @@ export type BulkImportResult = {
 	 * the venue's sole editor, also named in the file for another role -- and the
 	 * message this feeds counts papers, not seats (#181). */
 	seatedBy: Record<ScholarID, number>;
+	/** How many named people matched nobody and are kept as unmatched assignments. */
+	unmatched: number;
 };
+
+/** What matchAssignments did: the submissions the scholar is now assigned to, and how
+ * many of the name's rows were left alone because the scholar is an author of, or
+ * conflicted on, the submission, or because someone else already holds the role. */
+export type MatchAssignmentsResult = { matched: SubmissionID[]; skipped: number };
 
 /** A non-editor assignment that is approved but not yet completed, returned
  * by markSubmissionDone when the submission can't be completed yet. */
@@ -684,7 +696,10 @@ export default abstract class CRUD {
 		preferenceid: PreferenceLevelID | null
 	): Promise<Result>;
 
-	/** Request compensation for a manuscript the scholar has volunteered for */
+	/** Request compensation for work on a manuscript, found by the venue's own manuscript
+	 * ID. With no assignment to stamp, this files a claim -- an unapproved assignment any
+	 * approver may approve and pay, or decline -- so work on a submission nobody on the
+	 * platform could seat the scholar on can still be paid. */
 	abstract requestCompensation(
 		scholar: ScholarID,
 		venue: VenueID,
@@ -977,6 +992,25 @@ export default abstract class CRUD {
 	abstract getAssignmentsAwaitingCompensation(
 		roleIDs: RoleID[]
 	): Promise<ReadResult<AssignmentAwaitingCompensation[] | null>>;
+
+	/** Assignments an import could not match to a scholar, at a venue or on one of its
+	 * submissions. RLS limits them to the ones the viewer could approve. */
+	abstract getUnmatchedAssignments(
+		venue: VenueID,
+		submission?: SubmissionID
+	): Promise<ReadResult<UnmatchedAssignmentRow[] | null>>;
+	/** How many of those the viewer could match, for the notice on the submissions page. */
+	abstract countUnmatchedAssignments(venue: VenueID): Promise<ReadResult<number>>;
+	/** Assign a scholar on every unmatched assignment held under this name and role at the
+	 * venue that the caller could approve, and tell them. */
+	abstract matchAssignments(
+		venue: VenueID,
+		name: string,
+		role: RoleID,
+		scholar: ScholarID
+	): Promise<Result<MatchAssignmentsResult>>;
+	/** Drop an unmatched assignment nobody will claim. */
+	abstract dismissUnmatchedAssignment(id: UnmatchedAssignmentID): Promise<Result>;
 
 	abstract getScholarConflicts(scholar: ScholarID): Promise<ReadResult<ConflictRow[] | null>>;
 

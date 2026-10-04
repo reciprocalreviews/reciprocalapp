@@ -33,6 +33,7 @@
 	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
+	import { venuePath } from '#lib/data/venuePath.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import { type PageData } from './$types';
@@ -58,7 +59,9 @@
 		/** Venue-defined preference levels (empty if not configured) */
 		preferenceLevels,
 		/** Names of scholars referenced as authors or assigned reviewers, for the filter */
-		scholars
+		scholars,
+		/** How many assignments from imports this viewer could match */
+		unmatchedCount
 	} = $derived(data);
 
 	/** A payment-free venue has no currency, so its submissions have nothing to
@@ -234,6 +237,18 @@
 	<Page band={false} title={`${locale().page.submissions.title} — ${venueBarName(venue)}`}>
 		<!-- Provide a clear link to the new submission page. -->
 		<Paragraph text={(l) => l.page.submissions.paragraph.newSubmission} />
+
+		<!-- The list itself is on its own page: both it and the submissions below can run
+		     to hundreds of rows. -->
+		{#if unmatchedCount > 0}
+			<Feedback
+				testid="unmatched-notice"
+				text={(l) =>
+					l.page.submissions.unmatched
+						.replaceAll('{count}', unmatchedCount.toString())
+						.replaceAll('{venue}', venuePath(venue))}
+			/>
+		{/if}
 
 		{#if isAdmin}
 			<Paragraph text={(l) => l.page.submissions.paragraph.bulkImport} />

@@ -26,10 +26,14 @@ create table if not exists public.assignments (
 	-- When the scholar requested compensation for this assignment (null until
 	-- they do). Distinguishes finished work awaiting an approver from a review
 	-- still in progress, so the daily remind function can nag approvers about
-	-- the former without nagging them about the latter. Stamped by the scholar
-	-- themselves (their own-row UPDATE policy permits it).
+	-- the former without nagging them about the latter. Written by
+	-- public.request_compensation, which also creates the row when the scholar has
+	-- none: an unapproved, non-bid row carrying this stamp is a CLAIM, work done for
+	-- a submission nobody on the platform seated them on (typically an imported one
+	-- whose editor has not joined yet), waiting for an approver to approve and pay it
+	-- in one step (complete_assignment) or decline it (decline_bid).
 	compensation_requested_at timestamp with time zone default null,
-	-- When an approver declined this bid (null unless declined). A bid has three states:
+	-- When an approver declined this bid or claim (null unless declined). A bid has three states:
 	-- pending (bid, not approved, not declined), approved, and declined. Declining is a
 	-- courtesy an approver may extend -- a bid sets no expectation of a reply, so leaving it
 	-- alone is always allowed -- but a decline is an explicit signal to a person, so it is
@@ -48,7 +52,10 @@ create table if not exists public.assignments (
 	constraint assignments_decline_only_bids_check check (
 		declined_at is null
 		or (
-			bid
+			(
+				bid
+				or compensation_requested_at is not null
+			)
 			and not approved
 			and not completed
 		)
@@ -864,7 +871,10 @@ begin
 		raise exception 'You are not authorized to decline this bid';
 	end if;
 
-	if not _a.bid or _a.approved or _a.completed or _a.declined_at is not null then
+	-- A pending claim (see compensation_requested_at) is answered the same way: it is
+	-- also somebody asking an approver for something, and a no needs a reason.
+	if not (_a.bid or _a.compensation_requested_at is not null)
+		or _a.approved or _a.completed or _a.declined_at is not null then
 		raise exception 'This bid is no longer pending' using errcode = 'RR017';
 	end if;
 
@@ -899,6 +909,139 @@ from
 
 grant
 execute on function public.decline_bid (uuid, text) to authenticated;
+
+-- request_compensation: a scholar says they finished work on a submission and asks to
+-- be paid for it.
+--
+-- Found by the venue's own manuscript ID, because that is what the venue's reviewing
+-- system shows the scholar, and scoped to the venue, because manuscript IDs are only
+-- unique within one. SECURITY DEFINER because the scholar may not be able to see the
+-- submission at all: a backlog submission imported before its editor joined has nobody
+-- on the platform who could have seated them, and reviewers in a role without bidding
+-- see nothing they are not assigned to.
+--
+-- With an assignment already in place, this only stamps compensation_requested_at.
+-- Without one, it files a CLAIM: an unapproved, non-bid assignment stamped the same
+-- way, which any approver may approve and pay in one step (complete_assignment) or
+-- decline with a reason (decline_bid). Filing one requires being an accepted volunteer
+-- in the role -- active or not, since this is past work -- and not an author of the
+-- submission. A claim cannot be filed in a priority-0 role: an editor seat carries
+-- authority over the submission, and editors are paid by marking it done.
+--
+-- Returns the submission and everyone who may act on the request, the union of
+-- can_approve_assignment's three branches minus the requester and anyone conflicted.
+-- Computed here because the requester cannot see the other assignments that answer it.
+create or replace function public.request_compensation (_venue uuid, _externalid text, _role uuid) returns jsonb language plpgsql security definer
+set
+	search_path to '' as $$
+declare
+	_caller uuid;
+	_submission uuid;
+	_priority integer;
+	_a public.assignments;
+	_recipients uuid[];
+begin
+	_caller := (select auth.uid());
+	if _caller is null then
+		raise exception 'Authentication required';
+	end if;
+
+	select s.id into _submission
+	from public.submissions s
+	where s.venue = _venue and s.externalid = btrim(coalesce(_externalid, ''));
+	if _submission is null then
+		raise exception 'No submission with that manuscript ID at this venue'
+			using errcode = 'RR020';
+	end if;
+
+	select r.priority into _priority
+	from public.roles r
+	where r.id = _role and r.venueid = _venue;
+	if _priority is null then
+		raise exception 'That role does not belong to this venue';
+	end if;
+
+	select * into _a
+	from public.assignments a
+	where a.submission = _submission and a.role = _role and a.scholar = _caller
+	limit 1
+	for update;
+
+	if found then
+		if _a.completed then
+			raise exception 'This work has already been compensated' using errcode = 'RR021';
+		end if;
+		if _a.declined_at is not null then
+			raise exception 'This request was declined' using errcode = 'RR022';
+		end if;
+		update public.assignments
+		set compensation_requested_at = coalesce(compensation_requested_at, now())
+		where id = _a.id;
+	else
+		if _priority = 0 then
+			raise exception 'Editors are compensated by marking a submission done'
+				using errcode = 'RR023';
+		end if;
+
+		if not exists (
+			select 1
+			from public.volunteers v
+			where v.roleid = _role
+				and v.scholarid = _caller
+				and v.accepted = 'accepted'
+		) then
+			raise exception 'Only volunteers in this role can request compensation for it'
+				using errcode = 'RR024';
+		end if;
+
+		if exists (
+			select 1 from public.submissions s
+			where s.id = _submission and _caller = any (s.authors)
+		) then
+			raise exception 'Authors cannot request compensation for their own submission'
+				using errcode = 'RR024';
+		end if;
+
+		insert into public.assignments (venue, submission, scholar, role, bid, approved, compensation_requested_at)
+		values (_venue, _submission, _caller, _role, false, false, now());
+	end if;
+
+	select coalesce(array_agg(distinct x.scholar), array[]::uuid[]) into _recipients
+	from (
+		select a.scholar
+		from public.assignments a
+		join public.roles target on target.id = _role
+		where a.submission = _submission and a.approved and a.role = target.approver
+		union
+		select a.scholar
+		from public.assignments a
+		join public.roles r on r.id = a.role
+		where a.submission = _submission and a.approved and r.priority = 0
+		union
+		select unnest(v.admins)
+		from public.venues v
+		where v.id = _venue
+	) x
+	where x.scholar <> _caller
+		and not exists (
+			select 1 from public.conflicts c
+			where c.submissionid = _submission and c.scholarid = x.scholar
+		);
+
+	return jsonb_build_object('submission', _submission, 'recipients', to_jsonb(_recipients));
+end;
+$$;
+
+alter function public.request_compensation (uuid, text, uuid) OWNER to "postgres";
+
+revoke
+execute on function public.request_compensation (uuid, text, uuid)
+from
+	public,
+	anon;
+
+grant
+execute on function public.request_compensation (uuid, text, uuid) to authenticated;
 
 grant all on table public.assignments to "anon";
 
@@ -946,7 +1089,11 @@ begin
     if _assignment.completed then
         raise exception 'Assignment is already completed';
     end if;
-    if not _assignment.approved then
+    -- A claim is the one unapproved assignment that may be completed: the scholar has
+    -- said the work is done, so approving it and paying for it are one decision, and the
+    -- update below records both. That includes a declined claim, which is how an approver
+    -- changes their mind -- approving clears the decline (enforce_assignment_updates).
+    if not _assignment.approved and _assignment.compensation_requested_at is null then
         raise exception 'Assignment must be approved before it can be completed';
     end if;
 
@@ -1053,8 +1200,8 @@ begin
 
     perform set_config('app.txn', '', true);
 
-    -- Mark the assignment completed.
-    update public.assignments set completed = true where id = _assignment_id;
+    -- Mark the assignment completed, approving a claim along the way.
+    update public.assignments set approved = true, completed = true where id = _assignment_id;
 
     return jsonb_build_object(
         'status', 'transferred',

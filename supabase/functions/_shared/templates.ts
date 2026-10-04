@@ -184,6 +184,18 @@ export const Emails = {
 			'<rr-button href="{origin}/venue/$6/submission/$7">Open the submission</rr-button>'
 		]
 	},
+	// BidDeclined's counterpart for a compensation claim: a request to be paid for work on
+	// a submission nobody seated the scholar on. Same arguments, so declineBid only picks
+	// the template; the link is to the venue because a claimant may not be able to see
+	// the submission at all.
+	ClaimDeclined: {
+		subject: 'Your compensation request for "$4" was declined',
+		paragraphs: [
+			'<a href="mailto:$2">$1</a> declined your request for compensation as $3 on "$4", and explained:',
+			'$5',
+			'<rr-button href="{origin}/venue/$6">Open the venue</rr-button>'
+		]
+	},
 	RoleInvite: {
 		subject: 'You were invited to a reviewing role',
 		paragraphs: [

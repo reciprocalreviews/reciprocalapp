@@ -373,6 +373,9 @@ declare
     _entry_priority integer;
     _row_roles uuid[];
     _row_priority_zero boolean;
+    _row_editor_seated boolean;
+    _entry_name text;
+    _unmatched integer := 0;
     _seated_by jsonb := '{}'::jsonb;
     _waiting integer := 0;
     _skipped integer := 0;
@@ -515,6 +518,7 @@ begin
         -- editor.
         _row_roles := array[]::uuid[];
         _row_priority_zero := false;
+        _row_editor_seated := false;
 
         if jsonb_typeof(coalesce(_row->'people', '[]'::jsonb)) <> 'array' then
             raise exception 'A row''s people must be a list of person and role pairs';
@@ -524,10 +528,15 @@ begin
         loop
             _entry_person := nullif(_entry->>'person', '')::uuid;
             _entry_role := nullif(_entry->>'person_role', '')::uuid;
+            _entry_name := nullif(btrim(coalesce(_entry->>'name', '')), '');
 
             -- A blank cell in one role's column says nothing about the other roles on
             -- the same row, so it is skipped rather than refused.
-            continue when _entry_person is null;
+            continue when _entry_person is null and _entry_name is null;
+
+            if _entry_person is not null and _entry_name is not null then
+                raise exception 'An entry names either a scholar or an unmatched name, not both';
+            end if;
 
             if _entry_role is null then
                 raise exception 'A named person needs a role to be seated in';
@@ -561,6 +570,26 @@ begin
                 raise exception 'A submission can have only one editor';
             end if;
 
+            -- A name the platform does not know yet is kept as an unmatched assignment
+            -- rather than thrown away, so whoever approves it can match it once the person
+            -- joins (public.match_assignments). It still occupies the role for the two
+            -- checks above, and an unmatched editor still suppresses the sole-editor
+            -- fallback below -- the file says someone else edits this paper -- but it does
+            -- not count as assigned: nobody can act on the submission yet, so it is still
+            -- waiting for an editor.
+            if _entry_person is null then
+                insert into public.unmatched_assignments (venue, submission, role, name)
+                values (_venueid, _new_submission_id, _entry_role, _entry_name);
+
+                _row_roles := _row_roles || _entry_role;
+                if _entry_priority = 0 then
+                    _row_priority_zero := true;
+                end if;
+
+                _unmatched := _unmatched + 1;
+                continue;
+            end if;
+
             -- Seating is not a way to hand out a role. Priority-0 holders can approve
             -- any assignment on the submission, edit its author list and mark it done,
             -- and every seat is a claim on the venue's tokens, so the person must
@@ -582,6 +611,7 @@ begin
             _row_roles := _row_roles || _entry_role;
             if _entry_priority = 0 then
                 _row_priority_zero := true;
+                _row_editor_seated := true;
             end if;
 
             _seated := _seated + 1;
@@ -596,6 +626,7 @@ begin
             insert into public.assignments (venue, submission, scholar, role, bid, approved)
             values (_venueid, _new_submission_id, _editor, _editor_role, false, true);
             _seated := _seated + 1;
+            _row_editor_seated := true;
         end if;
 
         -- A submission with nobody in the venue's top-priority role is waiting for an
@@ -603,7 +634,7 @@ begin
         -- row rather than derived from _seated, which counts assignments: a row can
         -- carry two of them -- an associate editor named by the file and the venue's
         -- sole editor -- and subtracting one from the other would report nonsense.
-        if not _row_priority_zero and _editor is null then
+        if not _row_editor_seated then
             _waiting := _waiting + 1;
         end if;
 
@@ -666,6 +697,7 @@ begin
         'seated', _seated,
         'seated_by', _seated_by,
         'waiting', _waiting,
+        'unmatched', _unmatched,
         'skipped', _skipped
     );
 end;

@@ -49,8 +49,12 @@ test('a request reports who was told, not a second generic confirmation', async 
 
 		// Somebody was emailed, so the banners name them. The generic line is suppressed —
 		// it used to appear as well, which was the same news twice and the less useful telling.
-		await expect(banners).toHaveCount(1);
-		await expect(banners.first()).toContainText('was emailed');
+		// Two people: the venue's admin and the associate editor who approves reviewers on
+		// this submission. The recipients are worked out by request_compensation now; the
+		// client used to read them from assignments the reviewer cannot see, and so only
+		// ever found the admin.
+		await expect(banners).toHaveCount(2);
+		for (const text of await banners.allInnerTexts()) expect(text).toContain('was emailed');
 		expect((await banners.allInnerTexts()).join(' | ')).not.toContain('Compensation request sent.');
 	} finally {
 		sql(`delete from public.emails where event = 'CompensationRequested';`);
@@ -83,5 +87,59 @@ test('a failed request neither claims success nor discards what was typed', asyn
 	await expect(page.getByTestId('compensation-manuscript')).toHaveValue(unknown);
 	await expect(page.getByTestId('compensation-note')).toHaveValue('Please pay me.');
 
+	await logout(page);
+});
+
+test('a reviewer claims work on a submission nobody seated them on, and an admin answers it', async ({
+	page,
+	context
+}) => {
+	// A backlog submission imported before its editor joined: nobody on the platform could
+	// have seated the reviewer on it, and they cannot see it. The request still has to land.
+	const manuscript = `TOK-CLAIM-${Date.now()}`;
+	const submission = sql(
+		`insert into public.submissions (venue, externalid, authors, payments, transactions, title, submission_type, imported) select '${SEED.venue}', '${manuscript}', '{}', '{}', '{}', 'An unseated backlog paper', submission_type, true from public.submissions where id = '${SEED.submissions.tok001.id}' returning id;`
+	);
+	const REASON = 'There is no review from you on record for this manuscript.';
+	const claimState = () =>
+		sql(
+			`select approved::text || '|' || coalesce(decline_reason, '') from public.assignments where submission = '${submission}' and scholar = '${VOLUNTEER.id}';`
+		);
+
+	try {
+		await login(VOLUNTEER.email, page, context);
+		await page.goto(`/venue/${VENUE_PATH}`);
+		await page.waitForLoadState('networkidle');
+		await page.getByTestId('compensation-manuscript').fill(manuscript);
+		await page.getByTestId('compensation-role').selectOption({ label: 'Reviewer' });
+		await page.getByTestId('request-compensation').click();
+		await expect(page.getByTestId('compensation-manuscript')).toHaveValue('');
+		await expect.poll(claimState).toBe('false|');
+		await logout(page);
+
+		// The venue's admin is the only approver while nobody edits the paper.
+		await login(SEED.scholars.editor.email, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${submission}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId('claim')).toBeVisible();
+		await expect(page.getByTestId('pay-claim')).toBeVisible();
+
+		await page.getByTestId('decline-bid').click();
+		await page.getByTestId('decline-bid-reason').fill(REASON);
+		await page.getByTestId('decline-bid-confirm').click();
+		await expect.poll(claimState).toBe(`false|${REASON}`);
+		await expect
+			.poll(() =>
+				sql(
+					`select count(*) from public.emails where event = 'ClaimDeclined' and scholar = '${VOLUNTEER.id}';`
+				)
+			)
+			.toBe('1');
+	} finally {
+		sql(`delete from public.submissions where id = '${submission}';`);
+		sql(
+			`delete from public.emails where event in ('CompensationRequested', 'ClaimDeclined') and args->>1 = '${submission}' or (event = 'ClaimDeclined' and scholar = '${VOLUNTEER.id}');`
+		);
+	}
 	await logout(page);
 });

@@ -122,9 +122,17 @@ export const load: PageLoad = async ({ parent, params }) => {
 		elsewhereActiveCounts[row.scholar] = (elsewhereActiveCounts[row.scholar] ?? 0) + 1;
 	}
 
+	// Assignments the import could not match to a scholar on this submission. RLS shows
+	// only the ones this viewer could approve, and an empty list otherwise.
+	const { data: unmatched } =
+		venue === null || submission === null
+			? { data: [] }
+			: await db.getUnmatchedAssignments(venue.id, submission.id);
+
 	return {
 		submission,
 		venue,
+		unmatched: unmatched ?? [],
 		authors,
 		previous: previous !== null && previous.length > 0 ? previous[0] : null,
 		transactions,

@@ -443,10 +443,12 @@ export type LocaleText = {
 				 * already at this venue, so there is nothing to import -- the reason the
 				 * submit button is inactive. */
 				allSkipped: string;
-				/** Says how many submissions will import with nobody in a role,
-				 * because the names in that column matched no volunteer. `{count}`
-				 * submissions, `{role}` the venue's own name for the role. */
-				unseated: string;
+				/** One name in a role's column matched no volunteer and will be kept as an
+				 * unmatched assignment. `{role}` is the venue's own name for the role. */
+				unseatedOne: string;
+				/** Several names in a role's column matched no volunteer. `{count}` names,
+				 * `{role}` the venue's own name for the role. */
+				unseatedMany: string;
 			};
 			note: {
 				csv: string;
@@ -683,6 +685,31 @@ export type LocaleText = {
 				newSubmission: string;
 				bulkImport: string;
 			};
+			/** Above the list when the viewer can match assignments an import could not.
+			 * `{count}` of them, `{venue}` the venue's path for the link. */
+			unmatched: string;
+		};
+		/** The page listing assignments an import could not match to a scholar. */
+		unmatched: {
+			title: string;
+			note: string;
+			/** Nothing the viewer could match is waiting. */
+			empty: string;
+			headers: { name: string; role: string; count: string; scholar: string };
+			options: { scholar: OptionsText };
+			/** The empty choice in the scholar picker. */
+			choose: string;
+			/** Nobody holds the role yet, so there is no one to match. `{role}`. */
+			noCandidates: string;
+			button: { match: ButtonText; dismiss: ButtonText };
+			feedback: {
+				/** `{name}` matched to exactly one assignment. */
+				matchedOne: string;
+				/** `{name}` matched to `{count}` assignments. */
+				matchedMany: string;
+				/** Appended when rows were left: `{skipped}`. */
+				skipped: string;
+			};
 		};
 		submission: {
 			title: string;
@@ -703,6 +730,8 @@ export type LocaleText = {
 			/** Above the reason field when declining a bid. Declining is optional, so this says
 			 * so, and that the reason goes to the bidder. */
 			declineBidPrompt: string;
+			/** Above the reason field when declining a compensation claim. */
+			declineClaimPrompt: string;
 			header: {
 				authors: string;
 				venue: string;
@@ -734,6 +763,9 @@ export type LocaleText = {
 				/** Nobody holds the venue's editor role on this submission yet, so nothing on it
 				 * can be approved and it cannot be marked done. */
 				needsEditor: string;
+				/** The import's names for this submission that match no scholar yet: `{list}` of
+				 * "name (role)", and `{venue}` the venue's path for the link. */
+				unmatched: string;
 			};
 			button: {
 				createAssignment: ButtonText;
@@ -757,6 +789,14 @@ export type LocaleText = {
 				confirmDecline: ButtonText;
 				/** Approves a bid that was declined, reversing the decline. */
 				approveDeclined: ButtonText;
+				/** Sends the decline of a compensation claim and its reason to the claimant. */
+				confirmDeclineClaim: ButtonText;
+				/** Pays a claim that was declined, reversing the decline. */
+				approveDeclinedClaim: ButtonText;
+				/** Approves a compensation claim and pays it in one step. */
+				payClaim: ButtonText;
+				/** Opens the reason form for declining a compensation claim. */
+				declineClaim: ButtonText;
 			};
 			field: {
 				newAssignment: TextFieldText & { invalid: string };
@@ -771,6 +811,8 @@ export type LocaleText = {
 				assigned: string;
 				unassigned: string;
 				bidder: string;
+				/** Someone asking to be paid for work nobody seated them on. */
+				claim: string;
 				declined: string;
 			};
 			options: {
@@ -877,6 +919,8 @@ export type LocaleText = {
 			};
 			options: {
 				compensationRole: OptionsText;
+				/** The empty choice in the compensation role picker. */
+				chooseRole: string;
 			};
 			headers: {
 				type: string;
@@ -1974,6 +2018,14 @@ export type LocaleText = {
 		CreateAssignment: string;
 		CompensationSubmissionNotFound: string;
 		CompensationAssignmentCheck: string;
+		CompensationAlreadyPaid: string;
+		CompensationDeclined: string;
+		CompensationEditorRole: string;
+		CompensationNotEligible: string;
+		LoadUnmatchedAssignments: string;
+		MatchAssignments: string;
+		MatchAssignmentsNotVolunteer: string;
+		DismissUnmatchedAssignment: string;
 		CompleteAssignmentNotFound: string;
 		CompleteAssignmentRoleNotFound: string;
 		CompleteAssignmentVenueNotFound: string;

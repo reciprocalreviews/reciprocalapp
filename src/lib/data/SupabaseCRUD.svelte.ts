@@ -28,6 +28,8 @@ import type {
 	TransactionID,
 	TransactionRow,
 	TransactionStatus,
+	UnmatchedAssignmentID,
+	UnmatchedAssignmentRow,
 	VenueID,
 	VenueRow,
 	VolunteerID,
@@ -48,6 +50,7 @@ import CRUD, {
 	type EnsureScholarOutcome,
 	type ImportedSubmission,
 	type MarkSubmissionDoneOutcome,
+	type MatchAssignmentsResult,
 	type Notification,
 	type PendingEmailVerification,
 	type ReadResult,
@@ -187,6 +190,20 @@ export function rpcErrorKey(
 	return (code !== undefined && map[code]) || fallback;
 }
 
+/** Like rpcErrorKey, but builds the whole failure. When the code maps to a localized
+ * message, that message is the whole story, so the raw database error is left off the
+ * banner rather than repeated beneath it in monospace; an unmapped failure keeps it,
+ * since then the details are all anyone has to go on. */
+export function rpcError(
+	crud: { error: SupabaseCRUD['error'] },
+	error: PostgrestError,
+	fallback: keyof Locale['error'],
+	map: Record<string, keyof Locale['error']>
+) {
+	const key = rpcErrorKey(error, fallback, map);
+	return key === fallback ? crud.error(key, error) : crud.error(key);
+}
+
 // --- Typed query factories for embedded/joined reads ---
 // Reads with embedded resources (PostgREST `select('*, related(...)')`) or
 // column aggregates produce row shapes that aren't a plain generated Row type.
@@ -259,14 +276,16 @@ export type AssignmentForApproval = QueryData<
 >[number];
 
 /** Assignments on the given roles whose scholar has requested compensation but
- * hasn't been paid — the approver's "work awaiting your approval" task list. */
+ * hasn't been paid — the approver's "work awaiting your approval" task list. Includes
+ * claims (requests with no approved assignment behind them), which an approver
+ * approves and pays in one step, and leaves out anything already declined. */
 function assignmentsAwaitingCompensationQuery(client: SupabaseClient<Database>, roleIDs: RoleID[]) {
 	return client
 		.from('assignments')
 		.select('*, scholars!assignments_scholar_fkey(*), submissions(*)')
 		.in('role', roleIDs)
-		.eq('approved', true)
 		.eq('completed', false)
+		.is('declined_at', null)
 		.not('compensation_requested_at', 'is', null);
 }
 export type AssignmentAwaitingCompensation = QueryData<
@@ -2197,6 +2216,7 @@ export default class SupabaseCRUD extends CRUD {
 			seated: number;
 			seated_by: Record<ScholarID, number> | null;
 			waiting: number;
+			unmatched: number;
 			skipped: number;
 		};
 
@@ -2246,7 +2266,8 @@ export default class SupabaseCRUD extends CRUD {
 				transactionID: result.transaction_id,
 				mintAmount: result.mint_amount,
 				seatedBy,
-				skipped: result.skipped ?? 0
+				skipped: result.skipped ?? 0,
+				unmatched: result.unmatched ?? 0
 			},
 			notified: notifications
 		};
@@ -2563,105 +2584,43 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async requestCompensation(
-		scholarID: ScholarID,
+		_scholar: ScholarID,
 		venueID: VenueID,
 		externalManuscriptID: string,
 		roleID: RoleID,
 		note: string
 	): Promise<Result> {
-		// Is there a submission that this scholar can view with this manuscript ID?
-		const { data: submissionData, error: submissionError } = await this.client
-			.from('submissions')
-			.select()
-			.eq('externalid', externalManuscriptID);
+		// The RPC finds the submission within this venue, stamps the scholar's assignment
+		// or files a claim when they have none, and says who may act on it. It has to be
+		// the database's job: the scholar often cannot see the submission -- nobody could
+		// have seated them on a backlog paper whose editor has not joined -- and never
+		// sees the other assignments that decide who approves it.
+		const { data, error } = await this.client.rpc('request_compensation', {
+			_venue: venueID,
+			_externalid: externalManuscriptID,
+			_role: roleID
+		});
+		if (error)
+			return rpcError(this, error, 'CompensationAssignmentCheck', {
+				RR020: 'CompensationSubmissionNotFound',
+				RR021: 'CompensationAlreadyPaid',
+				RR022: 'CompensationDeclined',
+				RR023: 'CompensationEditorRole',
+				RR024: 'CompensationNotEligible'
+			});
 
-		if (submissionData === null || submissionData.length === 0)
-			return this.error('CompensationSubmissionNotFound', submissionError);
+		const submission = stringField(data, 'submission');
+		const recipients = stringArrayField(data, 'recipients');
+		if (submission === null || recipients === null)
+			return this.error('CompensationAssignmentCheck');
 
-		const submission = submissionData[0];
+		// No one to notify is possible when the requester is the venue's only admin.
+		// The request still stands.
+		if (recipients.length === 0) return { data: undefined };
 
-		// Is there an assignment for this scholar, venue, role, and submission?
-		const { data: assignmentData, error: assignmentError } = await this.client
-			.from('assignments')
-			.select()
-			.eq('scholar', scholarID)
-			.eq('venue', venueID)
-			.eq('role', roleID)
-			.eq('submission', submission.id);
-
-		if (assignmentError) return this.error('CompensationAssignmentCheck', assignmentError);
-
-		if (assignmentData.length === 0) {
-			const result = await this.createAssignment(submission.id, scholarID, roleID, false, false);
-			if (result.error) return result;
-		}
-
-		// Stamp the request on the assignment (the scholar's own row, which the
-		// assignments UPDATE policy permits). The stamp is what lets the daily
-		// remind function nag approvers about finished work awaiting compensation
-		// without nagging them about reviews still in progress.
-		const { error: stampError } = await this.client
-			.from('assignments')
-			.update({ compensation_requested_at: new Date().toISOString() })
-			.eq('scholar', scholarID)
-			.eq('venue', venueID)
-			.eq('role', roleID)
-			.eq('submission', submission.id);
-		if (stampError) return this.error('CompensationAssignmentCheck', stampError);
-
-		// Notify whoever can act on this request, not the requester themselves.
-		// "Can act on it" is exactly canApproveAssignment.ts — the same three
-		// branches, unioned, rather than the near-miss this used to be. It
-		// previously omitted the priority-0 editor branch entirely, and treated
-		// admins as a fallback consulted only when no approver was assigned, so
-		// the two people most able to act on a request were often the two who
-		// never heard about it.
-		const recipients = new Set<ScholarID>();
-
-		const { data: roles, error: rolesError } = await this.client
-			.from('roles')
-			.select('id, priority, approver')
-			.eq('venueid', venueID);
-		if (rolesError) return this.error('CompensationAssignmentCheck', rolesError);
-
-		const { data: submissionAssignments, error: approverError } = await this.client
-			.from('assignments')
-			.select('scholar, role')
-			.eq('submission', submission.id)
-			.eq('approved', true);
-		if (approverError) return this.error('CompensationAssignmentCheck', approverError);
-
-		const requestedRole = roles?.find((r) => r.id === roleID) ?? null;
-		const editorRoleIDs = new Set((roles ?? []).filter((r) => r.priority === 0).map((r) => r.id));
-
-		for (const a of submissionAssignments ?? []) {
-			// Branch 2: the priority-0 editor of this submission approves any role.
-			if (editorRoleIDs.has(a.role)) recipients.add(a.scholar);
-			// Branch 3: whoever holds the role that approves the requested role.
-			if (requestedRole?.approver !== null && a.role === requestedRole?.approver)
-				recipients.add(a.scholar);
-		}
-
-		// Branch 1: venue admins can always approve, so they are always notified —
-		// a union member, not a fallback.
-		const { data: adminVenue, error: adminVenueError } = await this.client
-			.from('venues')
-			.select('admins')
-			.eq('id', venueID)
-			.single();
-		if (adminVenueError) return this.error('CompensationAssignmentCheck', adminVenueError);
-		for (const admin of adminVenue.admins) recipients.add(admin);
-
-		// A scholar cannot action their own request, so never mail it to them.
-		recipients.delete(scholarID);
-
-		// No one left to notify — possible when the requester is the venue's only
-		// admin. Don't error: the assignment was still created.
-		if (recipients.size === 0) return { data: undefined, error: undefined };
-
-		return this.emailScholars([...recipients], 'CompensationRequested', [
+		return this.emailScholars(recipients, 'CompensationRequested', [
 			await this.venuePathOf(venueID),
-			submission.id,
+			submission,
 			note
 		]);
 	}
@@ -3086,12 +3045,14 @@ export default class SupabaseCRUD extends CRUD {
 			_assignment: assignment.id,
 			_reason: reason
 		});
-		if (error)
-			return this.error(rpcErrorKey(error, 'DeclineBid', { RR017: 'BidNotPending' }), error);
+		if (error) return rpcError(this, error, 'DeclineBid', { RR017: 'BidNotPending' });
 
 		const scholar = await this.getScholar(decliner);
 		if (scholar === null) return { data: undefined };
-		const { notified } = await this.emailScholars([assignment.scholar], 'BidDeclined', [
+		// A claim (a compensation request with no bid behind it) is declined the same way,
+		// but the news is about a request for payment, not a bid.
+		const template = assignment.bid ? 'BidDeclined' : 'ClaimDeclined';
+		const { notified } = await this.emailScholars([assignment.scholar], template, [
 			scholar.getName() ?? '',
 			scholar.getEmail() ?? '',
 			role.name,
@@ -3198,6 +3159,71 @@ export default class SupabaseCRUD extends CRUD {
 		roleIDs: RoleID[]
 	): Promise<ReadResult<AssignmentAwaitingCompensation[] | null>> {
 		return this.rows('LoadAssignment', assignmentsAwaitingCompensationQuery(this.client, roleIDs));
+	}
+
+	async getUnmatchedAssignments(
+		venue: VenueID,
+		submission?: SubmissionID
+	): Promise<ReadResult<UnmatchedAssignmentRow[] | null>> {
+		const query = this.client.from('unmatched_assignments').select().eq('venue', venue);
+		return this.rows(
+			'LoadUnmatchedAssignments',
+			(submission === undefined ? query : query.eq('submission', submission))
+				.order('name')
+				.order('created_at')
+		);
+	}
+
+	async countUnmatchedAssignments(venue: VenueID): Promise<ReadResult<number>> {
+		const { count, error } = await this.client
+			.from('unmatched_assignments')
+			.select('id', { count: 'exact', head: true })
+			.eq('venue', venue);
+		if (error) return { data: 0, error: this.error('LoadUnmatchedAssignments', error).error };
+		return { data: count ?? 0 };
+	}
+
+	async matchAssignments(
+		venue: VenueID,
+		name: string,
+		role: RoleID,
+		scholar: ScholarID
+	): Promise<Result<MatchAssignmentsResult>> {
+		const { data, error } = await this.client.rpc('match_assignments', {
+			_venue: venue,
+			_name: name,
+			_role: role,
+			_scholar: scholar
+		});
+		if (error)
+			return rpcError(this, error, 'MatchAssignments', {
+				RR019: 'MatchAssignmentsNotVolunteer'
+			});
+
+		const matched = stringArrayField(data, 'matched');
+		const skipped = numberField(data, 'skipped');
+		if (matched === null || skipped === null) return this.error('MatchAssignments');
+
+		// The same digest an import sends to the people it assigned: this is the rest of
+		// that import, arriving once the person could be found.
+		if (matched.length === 0) return { data: { matched, skipped } };
+		const { data: venueRow } = await this.client
+			.from('venues')
+			.select('id, title, slug')
+			.eq('id', venue)
+			.single();
+		if (venueRow === null) return { data: { matched, skipped } };
+		const { notified } = await this.emailScholars([scholar], 'SubmissionsAssignedEditor', [
+			matched.length.toString(),
+			venueRow.title,
+			venuePath(venueRow)
+		]);
+		return { data: { matched, skipped }, notified };
+	}
+
+	async dismissUnmatchedAssignment(id: UnmatchedAssignmentID): Promise<Result> {
+		const { error } = await this.client.from('unmatched_assignments').delete().eq('id', id);
+		return this.errorOrEmpty('DismissUnmatchedAssignment', error);
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────
