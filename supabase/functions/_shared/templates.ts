@@ -166,6 +166,24 @@ export const Emails = {
 			'<rr-button href="{origin}/venue/$4/submission/$5">Open the submission</rr-button>'
 		]
 	},
+	// $1 decliner name, $2 decliner email, $3 role, $4 submission title, $5 the reason they
+	// gave, $6 venue path, $7 submission id.
+	//
+	// A bid sets no expectation of a reply, so leaving one unanswered is fine and sends
+	// nothing. Declining one is different: it is an explicit answer to a person, so it never
+	// goes out without the approver's reason, and it names the approver with a mailto, as
+	// AssignmentApproved does, so the decision is accountable and the bidder can ask about it.
+	// Consequential rather than optional: it is the answer to something the bidder asked for.
+	//
+	// $5 is the approver's own words and is escaped and defanged like every argument.
+	BidDeclined: {
+		subject: 'Your bid on "$4" was declined',
+		paragraphs: [
+			'<a href="mailto:$2">$1</a> declined your bid for the $3 role on "$4", and explained:',
+			'$5',
+			'<rr-button href="{origin}/venue/$6/submission/$7">Open the submission</rr-button>'
+		]
+	},
 	RoleInvite: {
 		subject: 'You were invited to a reviewing role',
 		paragraphs: [

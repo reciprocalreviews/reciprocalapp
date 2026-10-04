@@ -600,6 +600,9 @@ export type LocaleText = {
 				conflicted: string;
 				bids: string;
 				biddingClosed: string;
+				/** Shown to a bidder in place of the unbid button once an approver has declined
+				 * their bid; the approver's reason follows it. */
+				declined: string;
 				/** Hover text on the lock that stands in for an author list or a
 				 * manuscript ID withheld from a role that cannot see author
 				 * information. */
@@ -694,7 +697,12 @@ export type LocaleText = {
 				nonPaying: string;
 				anonymized: string;
 				you: string;
+				/** Precedes the approver who declined a bid, in the declined bid's row. */
+				declinedBy: string;
 			};
+			/** Above the reason field when declining a bid. Declining is optional, so this says
+			 * so, and that the reason goes to the bidder. */
+			declineBidPrompt: string;
 			header: {
 				authors: string;
 				venue: string;
@@ -743,9 +751,16 @@ export type LocaleText = {
 				markDone: ConfirmButtonText;
 				/** Take on this submission as the venue's editor. */
 				claimEditor: ButtonText;
+				/** Opens the reason form for declining a pending bid. */
+				declineBid: ButtonText;
+				/** Sends the decline and its reason to the bidder. */
+				confirmDecline: ButtonText;
+				/** Approves a bid that was declined, reversing the decline. */
+				approveDeclined: ButtonText;
 			};
 			field: {
 				newAssignment: TextFieldText & { invalid: string };
+				declineReason: TextFieldText & { invalid: string };
 				note: TextFieldText;
 			};
 			status: {
@@ -756,6 +771,7 @@ export type LocaleText = {
 				assigned: string;
 				unassigned: string;
 				bidder: string;
+				declined: string;
 			};
 			options: {
 				submissionType: OptionsText;
@@ -1964,6 +1980,8 @@ export type LocaleText = {
 		CompleteAssignmentInsufficientTokens: string;
 		CompleteAssignmentRPC: string;
 		DeleteAssignment: string;
+		DeclineBid: string;
+		BidNotPending: string;
 		EmailScholar: string;
 		ApproveProposalNoSupporters: string;
 		DeclareConflict: string;

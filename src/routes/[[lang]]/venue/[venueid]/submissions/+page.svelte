@@ -511,8 +511,17 @@
 											)}
 											{@const approvedAssignments =
 												roleAssignments?.filter((a) => a.approved) ?? []}
-											{@const bids = roleAssignments?.filter((a) => a.bid && !a.approved) ?? []}
+											{@const bids =
+												roleAssignments?.filter(
+													(a) => a.bid && !a.approved && a.declined_at === null
+												) ?? []}
 											{@const scholarsBid = bids?.find((a) => a.scholar === uid)}
+											<!-- A declined bid is answered, so it is not counted among the
+											     bids waiting on an approver, and its bidder sees the answer
+											     in place of the bid buttons. -->
+											{@const scholarsDeclinedBid = roleAssignments?.find(
+												(a) => a.scholar === uid && a.bid && !a.approved && a.declined_at !== null
+											)}
 											{@const scholarAlreadyAssigned = approvedAssignments.some(
 												(a) => a.scholar === uid
 											)}
@@ -572,7 +581,14 @@
 													</div>
 												{/if}
 
-												{#if submission.authors.includes(uid) || conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id)}
+												{#if scholarsDeclinedBid !== undefined}
+													<div data-testid={`bid-declined-${index}-${roleIndex}`}>
+														<strong>{locale().page.submissions.cell.declined}</strong>
+														<blockquote class="decline-reason">
+															{scholarsDeclinedBid.decline_reason}
+														</blockquote>
+													</div>
+												{:else if submission.authors.includes(uid) || conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id)}
 													<!-- Can't bid if conflicted -->
 													<div><strong>{locale().page.submissions.cell.conflicted}</strong></div>
 												{:else if biddingOpen}
@@ -663,5 +679,13 @@
 <style>
 	.highlight {
 		background: var(--salient-color-faded);
+	}
+
+	.decline-reason {
+		margin: 0;
+		padding-inline-start: var(--spacing-half);
+		border-inline-start: 3px solid var(--inactive-color);
+		font-size: var(--small-font-size);
+		font-style: italic;
 	}
 </style>

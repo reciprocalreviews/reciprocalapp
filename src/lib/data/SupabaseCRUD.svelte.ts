@@ -244,11 +244,15 @@ function proposalSupportersQuery(client: SupabaseClient<Database>, proposal: Pro
 export type ProposalSupporter = QueryData<ReturnType<typeof proposalSupportersQuery>>[number];
 
 function assignmentsForApprovalQuery(client: SupabaseClient<Database>, roleIDs: RoleID[]) {
-	return client
-		.from('assignments')
-		.select('*, scholars(*), submissions(*)')
-		.in('role', roleIDs)
-		.eq('approved', false);
+	return (
+		client
+			.from('assignments')
+			.select('*, scholars!assignments_scholar_fkey(*), submissions(*)')
+			.in('role', roleIDs)
+			.eq('approved', false)
+			// A declined bid has been answered, so it is not waiting on the approver.
+			.is('declined_at', null)
+	);
 }
 export type AssignmentForApproval = QueryData<
 	ReturnType<typeof assignmentsForApprovalQuery>
@@ -259,7 +263,7 @@ export type AssignmentForApproval = QueryData<
 function assignmentsAwaitingCompensationQuery(client: SupabaseClient<Database>, roleIDs: RoleID[]) {
 	return client
 		.from('assignments')
-		.select('*, scholars(*), submissions(*)')
+		.select('*, scholars!assignments_scholar_fkey(*), submissions(*)')
 		.in('role', roleIDs)
 		.eq('approved', true)
 		.eq('completed', false)
@@ -3067,6 +3071,35 @@ export default class SupabaseCRUD extends CRUD {
 			notified = emailResult.notified;
 		}
 
+		return { data: undefined, notified };
+	}
+
+	async declineBid(
+		assignment: AssignmentRow,
+		reason: string,
+		role: RoleRow,
+		decliner: ScholarID
+	): Promise<Result> {
+		// The RPC authorizes (the same rule as approving), checks the bid is still pending,
+		// and records who declined and why. The email is sent here, as approveAssignment's is.
+		const { error } = await this.client.rpc('decline_bid', {
+			_assignment: assignment.id,
+			_reason: reason
+		});
+		if (error)
+			return this.error(rpcErrorKey(error, 'DeclineBid', { RR017: 'BidNotPending' }), error);
+
+		const scholar = await this.getScholar(decliner);
+		if (scholar === null) return { data: undefined };
+		const { notified } = await this.emailScholars([assignment.scholar], 'BidDeclined', [
+			scholar.getName() ?? '',
+			scholar.getEmail() ?? '',
+			role.name,
+			await this.submissionTitle(assignment.submission),
+			reason.trim(),
+			await this.venuePathOf(assignment.venue),
+			assignment.submission
+		]);
 		return { data: undefined, notified };
 	}
 
