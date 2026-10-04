@@ -7,11 +7,15 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Added
 
 - **Editors can decline a bid, and must say why.** The explanation is emailed to the bidder with the editor's name and shown beside their bid; leaving a bid unanswered is still fine. (#195)
+- **Bulk imports keep the names of people who haven't joined yet, as unmatched assignments.** Once someone joins and accepts the role, whoever approves those assignments can match them all at once from a new Unmatched assignments page.
+- **Reviewers can request compensation for a submission nobody assigned them to,** such as an imported one whose editor hasn't joined. The request waits for an editor or admin to approve and pay it, or to decline it with a reason.
 
 ### Fixed
 
 - **Reviewers can no longer approve their own bids or mark their own assignments complete.** Only someone who approves the role can.
 - **In open-review venues, authors now see only who is assigned to their submission, not who bid on it.**
+- **Compensation requests now reach everyone who can approve them,** including the associate editor seated on the submission, and a manuscript ID no longer matches a submission at another venue.
+- **Several notifications at once now stack as one block,** without the page showing through between them.
 
 ## 0.5.9 - 2026-10-04
 

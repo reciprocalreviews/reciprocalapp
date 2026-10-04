@@ -319,11 +319,18 @@
 					></TextField>
 					<Options
 						strings={(l) => l.page.venue.options.compensationRole}
-						options={roles.map((role) => ({
-							label: role.name,
-							value: role.id
-						}))}
-						bind:value={compensationRole}
+						options={[
+							// An honest empty choice. Without it a select whose value matches no
+							// option shows its first option while holding nothing, and picking that
+							// option changes nothing, so the button stayed off with no visible reason.
+							{ label: locale().page.venue.options.chooseRole, value: undefined },
+							...roles.map((role) => ({
+								label: role.name,
+								value: role.id
+							}))
+						]}
+						value={compensationRole === '' ? undefined : compensationRole}
+						onChange={(value) => (compensationRole = value ?? '')}
 						testid="compensation-role"
 					/>
 					<TextField
@@ -358,8 +365,9 @@
 									locale().page.venue.feedback.compensationRequested
 								)
 							) {
+								// The role stays: a reviewer requesting for several papers is
+								// usually requesting in the same role each time.
 								compensationManuscript = '';
-								compensationRole = '';
 								compensationNote = '';
 							}
 						}}

@@ -84,7 +84,9 @@
 		/** The viewer's own accepted volunteer records in this venue */
 		viewerVolunteering,
 		/** Thank-you notes for this submission, filtered by RLS to the viewer */
-		thanks
+		thanks,
+		/** Assignments the import could not match to a scholar, that this viewer could approve */
+		unmatched
 	} = $derived(data);
 
 	/** How this venue is addressed in links from here. Empty when the venue failed to load,
@@ -134,6 +136,24 @@
 
 	function sortBids<T extends { scholar: string; preferenceid: string | null }>(items: T[]): T[] {
 		return sortBidsBy(items, { ...assigneeContext, preferenceLevels });
+	}
+
+	type Request = {
+		bid: boolean;
+		approved: boolean;
+		completed: boolean;
+		compensation_requested_at: string | null;
+	};
+
+	/** A compensation request with no approved assignment behind it: someone did the
+	 * work on a submission nobody could seat them on, and asks an approver to pay for it. */
+	function isClaim(a: Request): boolean {
+		return !a.approved && !a.completed && a.compensation_requested_at !== null;
+	}
+
+	/** Something an approver is being asked to answer: a pending bid or a claim. */
+	function isRequest(a: Request): boolean {
+		return (a.bid && !a.approved) || isClaim(a);
 	}
 
 	function preferenceLabelFor(preferenceid: string | null): string | undefined {
@@ -592,9 +612,26 @@
 
 		<Subheader icon={EditLabel} text={(l) => l.page.submission.header.assignments}></Subheader>
 
+		<!-- People the import named who have not joined yet, in one notice. They are matched
+		     from the venue's unmatched assignments page once each person joins. -->
+		{#if unmatched.length > 0}
+			<Feedback
+				testid="unmatched-on-submission"
+				text={(l) =>
+					l.page.submission.feedback.unmatched
+						.replaceAll(
+							'{list}',
+							unmatched
+								.map((u) => `**${u.name}** (${roles.find((r) => r.id === u.role)?.name ?? ''})`)
+								.join(', ')
+						)
+						.replaceAll('{venue}', venuePath)}
+			/>
+		{/if}
+
 		<!-- Nobody is editing this submission yet, and this viewer is one of the venue's
-		     editors, so offer to take it. Until someone does, no assignment on it can be
-		     approved and it cannot be marked done — and before can_claim_editor_role only a
+		     editors, so offer to take it. Until someone does, only venue admins can approve
+		     work on it and it cannot be marked done — and before can_claim_editor_role only a
 		     venue admin could seat the first editor. -->
 		{#if editorRole && canClaimEditor(editorRole, scholar?.id ?? null, viewerVolunteering, submissionHasEditor)}
 			<Feedback text={(l) => l.page.submission.feedback.needsEditor} />
@@ -719,23 +756,23 @@
 
 			<!-- Sort roles by priority -->
 			{#each roles.toSorted((a, b) => a.priority - b.priority) as role}
-				<!-- An assignment is "assigned" if it's anything other than a pending bid:
-				     directly admin-assigned (bid=false), or a bid that's been approved
+				<!-- An assignment is "assigned" if it's anything other than a pending bid or
+				     claim: directly admin-assigned (bid=false), or a bid that's been approved
 				     (bid=true, approved=true). Approving a bid only flips `approved`;
 				     `bid` stays true, so we can't filter on `!bid` alone. -->
 				{@const assigned = sortAssignees(
-					assignments.filter((a) => role.id === a.role && !(a.bid && !a.approved))
+					assignments.filter((a) => role.id === a.role && !isRequest(a))
 				)}
-				<!-- Pending bids match this role and are neither approved nor declined. Declined
-				     bids are listed apart: they have been answered, so they are not asking for
-				     anything, but an approver may still change their mind. -->
+				<!-- Pending bids and claims match this role and are neither approved nor declined.
+				     A claim is a compensation request with no approved assignment behind it, filed
+				     on a submission nobody could seat its claimant on. Declined ones are listed
+				     apart: they have been answered, so they are not asking for anything, but an
+				     approver may still change their mind. -->
 				{@const bidded = sortBids(
-					assignments.filter(
-						(a) => role.id === a.role && a.bid && !a.approved && a.declined_at === null
-					)
+					assignments.filter((a) => role.id === a.role && isRequest(a) && a.declined_at === null)
 				)}
 				{@const declined = assignments.filter(
-					(a) => role.id === a.role && a.bid && !a.approved && a.declined_at !== null
+					(a) => role.id === a.role && isRequest(a) && a.declined_at !== null
 				)}
 				{@const isApprover = canApproveAssignment(
 					submission.id,
@@ -824,7 +861,15 @@
 							<td>
 								<div class="scholar-cell">
 									<ScholarLink id={assignment.scholar} />
-									<Status good={false} label={(l) => l.page.submission.status.bidder} />
+									{#if isClaim(assignment)}
+										<Status
+											good={false}
+											testid="claim"
+											label={(l) => l.page.submission.status.claim}
+										/>
+									{:else}
+										<Status good={false} label={(l) => l.page.submission.status.bidder} />
+									{/if}
 									{#if bidLabel !== undefined}
 										<em data-testid="bid-preference-label">{bidLabel}</em>
 									{/if}
@@ -836,7 +881,25 @@
 							<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 							<td>
 								<Row>
-									{#if assignment.bid}
+									{#if isClaim(assignment)}
+										<!-- The claimant says the work is done, so approving and paying
+										     are one decision. -->
+										<Button
+											testid="pay-claim"
+											strings={(l) => l.page.submission.button.payClaim}
+											action={() => handle(db().completeAssignment(assignment.id, scholar.id))}
+										/>
+										<Button
+											testid="decline-bid"
+											strings={(l) => l.page.submission.button.declineClaim}
+											active={decliningID !== assignment.id}
+											action={() => {
+												decliningID = assignment.id;
+												declineReason = '';
+												return undefined;
+											}}
+										/>
+									{:else if assignment.bid}
 										<Button
 											strings={overCap
 												? (l) => l.page.submission.button.approveAnyway
@@ -864,7 +927,12 @@
 							<tr>
 								<td colspan={canSeeBalances ? 6 : 5}>
 									<Form>
-										<Paragraph text={(l) => l.page.submission.declineBidPrompt} />
+										<Paragraph
+											text={(l) =>
+												isClaim(assignment)
+													? l.page.submission.declineClaimPrompt
+													: l.page.submission.declineBidPrompt}
+										/>
 										<!-- Forms align their children to the start, which shrinks a field to
 										     its content; an explanation needs room, so this one spans the form. -->
 										<div class="decline-reason-field">
@@ -879,7 +947,10 @@
 										</div>
 										<Button
 											testid="decline-bid-confirm"
-											strings={(l) => l.page.submission.button.confirmDecline}
+											strings={(l) =>
+												isClaim(assignment)
+													? l.page.submission.button.confirmDeclineClaim
+													: l.page.submission.button.confirmDecline}
 											active={validDeclineReason(declineReason) === undefined}
 											action={async () => {
 												const result = await handle(
@@ -916,12 +987,22 @@
 							<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 							<td>
 								<Row>
-									<Button
-										testid="approve-declined-bid"
-										strings={(l) => l.page.submission.button.approveDeclined}
-										action={() =>
-											handle(db().approveAssignment(assignment, true, role, scholar.id))}
-									/>
+									{#if isClaim(assignment)}
+										<!-- The claimant said the work is done, so changing one's mind means
+										     paying for it, not just assigning them. -->
+										<Button
+											testid="pay-declined-claim"
+											strings={(l) => l.page.submission.button.approveDeclinedClaim}
+											action={() => handle(db().completeAssignment(assignment.id, scholar.id))}
+										/>
+									{:else}
+										<Button
+											testid="approve-declined-bid"
+											strings={(l) => l.page.submission.button.approveDeclined}
+											action={() =>
+												handle(db().approveAssignment(assignment, true, role, scholar.id))}
+										/>
+									{/if}
 								</Row>
 							</td>
 						</tr>

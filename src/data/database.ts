@@ -649,6 +649,37 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"unmatched_assignments": {
+                  Row: {
+                    "created_at": string,"id": string,"name": string,"role": string,"submission": string,"venue": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"name": string,"role": string,"submission": string,"venue": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"name"?: string,"role"?: string,"submission"?: string,"venue"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "unmatched_assignments_role_fkey"
+      columns: ["role"]
+isOneToOne: false
+      referencedRelation: "roles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "unmatched_assignments_submission_fkey"
+      columns: ["submission"]
+isOneToOne: false
+      referencedRelation: "submissions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "unmatched_assignments_venue_fkey"
+      columns: ["venue"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"venues": {
                   Row: {
                     "admins": (string)[],"anonymous_assignments": boolean,"currency": string,"description": string,"done_visibility_days": number,"id": string,"inactive": string | null,"payment_free": boolean,"short_title": string,"slug": string | null,"title": string,"transaction_reminder_frequency_days": number,"transaction_reminder_time": string | null,"url": string,"vet_thanks": boolean,"welcome_amount": number
@@ -842,6 +873,9 @@ isOneToOne: false
 "mark_submission_done":
 { Args: { "_mint_purpose_template": string,"_payment_purpose_template": string,"_submission_id": string }; Returns: Json
                            },
+"match_assignments":
+{ Args: { "_name": string,"_role": string,"_scholar": string,"_venue": string }; Returns: Json
+                           },
 "mint_tokens":
 { Args: { "_amount": number,"_currency": string,"_purpose": string,"_to_venue": string }; Returns: Json
                            },
@@ -886,6 +920,9 @@ isOneToOne: false
                            },
 "report_bidding_digest_backlog":
 { Args: { "_min_interval"?: string }; Returns: number
+                           },
+"request_compensation":
+{ Args: { "_externalid": string,"_role": string,"_venue": string }; Returns: Json
                            },
 "request_email_verification":
 { Args: { "_email": string }; Returns: undefined

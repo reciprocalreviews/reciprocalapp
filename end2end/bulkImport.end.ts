@@ -286,3 +286,56 @@ test('a file that is entirely already imported cannot be submitted', async ({ pa
 
 	await logout(page);
 });
+
+// A name the import could not match is kept, and can be matched later from its own page.
+test('an unmatched editor is listed, linked from the submissions page, and can be matched', async ({
+	page,
+	context
+}) => {
+	await login('editor@uni.edu', page, context);
+	const external = `import-unmatched-page-${Date.now()}`;
+	try {
+		await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+		await page.waitForLoadState('networkidle');
+		// A misspelling of a real editor, as an export from another system might carry.
+		await page
+			.getByTestId('bulk-import-paste')
+			.fill(`title,externalid,handling editor\nPre-launch paper,${external},Scholar Leigh`);
+		await page.getByTestId('bulk-import-parse').click();
+		await page
+			.locator('[data-testid^="role-column-"]')
+			.first()
+			.selectOption({ label: 'handling editor' });
+		await page.getByTestId('bulk-import-submit').click();
+		await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+
+		// The submissions page says so in one line, and links to the list.
+		const notice = page.getByTestId('unmatched-notice');
+		await expect(notice).toBeVisible();
+		await notice.getByRole('link').click();
+		await page.waitForURL(`**/venue/${VENUE_PATH}/submissions/unmatched`);
+		await page.waitForLoadState('networkidle');
+
+		const row = page.locator('tr', { hasText: 'Scholar Leigh' });
+		await expect(row).toBeVisible();
+		await row.locator('select').selectOption({ label: SEED.scholars.editor.name });
+		await row.getByRole('button', { name: /Assign this scholar/ }).click();
+
+		await expect(
+			page
+				.getByTestId('feedback-success')
+				.filter({ hasText: 'Matched Scholar Lee to 1 assignment.' })
+		).toBeVisible({ timeout: 10_000 });
+		await expect(row).toHaveCount(0);
+		await expect
+			.poll(() =>
+				sql(
+					`select count(*) from public.assignments a join public.submissions s on s.id = a.submission where s.externalid = '${external}' and a.scholar = '${SEED.scholars.editor.id}' and a.approved;`
+				)
+			)
+			.toBe('1');
+	} finally {
+		sql(`delete from public.submissions where externalid = '${external}';`);
+	}
+	await logout(page);
+});

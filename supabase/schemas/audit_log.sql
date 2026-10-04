@@ -114,7 +114,7 @@ $$;
 
 alter function public.log_audit_event () OWNER to "postgres";
 
--- Attached by loop rather than sixteen hand-written statements: the list is the
+-- Attached by loop rather than seventeen hand-written statements: the list is the
 -- documentation, and adding a table later is a one-line change that cannot be
 -- half-applied.
 do $$
@@ -123,7 +123,8 @@ declare
 	_audited text[] := array[
 		'assignments', 'compensation', 'conflicts', 'currencies', 'exchanges',
 		'preference_levels', 'proposals', 'roles', 'scholars', 'submission_types',
-		'submissions', 'supporters', 'thanks', 'transactions', 'venues', 'volunteers'
+		'submissions', 'supporters', 'thanks', 'transactions', 'unmatched_assignments', 'venues',
+		'volunteers'
 	];
 begin
 	foreach _t in array _audited loop

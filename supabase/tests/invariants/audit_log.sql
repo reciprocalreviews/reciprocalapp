@@ -124,8 +124,8 @@ select is(
 		join pg_class c on c.oid = t.tgrelid
 		join pg_namespace n on n.oid = c.relnamespace
 		where n.nspname = 'public' and t.tgname like '%\_audit' and not t.tgisinternal),
-	16,
-	'all sixteen audited tables carry the trigger'
+	17,
+	'all seventeen audited tables carry the trigger'
 );
 
 -- tokens is covered by token_events instead; emails is already immutable and

@@ -21,7 +21,7 @@
 	import ScholarLink from '#lib/components/ScholarLink.svelte';
 	import Table from '#lib/components/Table.svelte';
 	import TextField from '#lib/components/TextField.svelte';
-	import { getDB } from '#lib/data/CRUD.js';
+	import { getDB, type ImportedSubmission } from '#lib/data/CRUD.js';
 	import type { VenueCommitment } from '#lib/data/SupabaseCRUD.svelte.js';
 	import {
 		alreadyPresent,
@@ -272,16 +272,11 @@
 					.map(([, label]) => label)
 	);
 
-	/** Roles somebody could actually be seated in: the venue's own roles that have
-	 * at least one accepted, active volunteer. A role nobody holds cannot receive
-	 * a seat, so offering it would only produce rows that fail. */
-	const seatableRoles = $derived(
-		roles
-			.filter((role) =>
-				commitments.some((c) => c.roleid === role.id && c.active && c.accepted === 'accepted')
-			)
-			.sort((a, b) => a.priority - b.priority)
-	);
+	/** Every role at the venue, in priority order. A role nobody holds yet still gets
+	 * a column: the backlog this form exists for names editors who have not joined,
+	 * and each of those names is kept as an unmatched assignment to be matched once
+	 * they do, rather than thrown away. */
+	const seatableRoles = $derived(roles.toSorted((a, b) => a.priority - b.priority));
 
 	/** The distinct values in the matched type column, with how many rows carry
 	 * each. Empty when no type column is matched. */
@@ -384,10 +379,11 @@
 	 * ambiguous name does not carry over, and applying it here refused the import
 	 * outright in exactly the case the feature exists for: a backlog whose editors
 	 * have not signed up yet, where every row names somebody the platform has
-	 * never heard of. Those submissions import unseated and carry the venue's
-	 * existing waiting-for-an-editor flag, which is what that flag is for. The
-	 * count is reported before submitting, since importing without editors should
-	 * be a thing the editor decided rather than noticed later. */
+	 * never heard of. Each such name is kept as an unmatched assignment that whoever
+	 * approves it matches by hand once the person joins; until then an unmatched editor
+	 * leaves the submission waiting for an editor. The count is reported
+	 * before submitting, since importing without editors should be a thing the
+	 * editor decided rather than noticed later. */
 	const unmatchedByRole = $derived(
 		matchedRoles
 			.map((role) => ({
@@ -1008,7 +1004,10 @@
 {#each unmatchedByRole as { role, count } (role.id)}
 	<Paragraph
 		text={(l) =>
-			l.page.bulkImport.paragraph.unseated
+			(count === 1
+				? l.page.bulkImport.paragraph.unseatedOne
+				: l.page.bulkImport.paragraph.unseatedMany
+			)
 				.replaceAll('{count}', count.toString())
 				.replaceAll('{role}', role.name)}
 	/>
@@ -1049,10 +1048,16 @@
 									expertise: r.expertise.trim() === '' ? null : r.expertise.trim(),
 									submission_type: r.submissionType,
 									note: r.note.trim() === '' ? null : r.note.trim(),
-									// Only a confidently resolved name is sent. Anything else
+									// A confidently resolved name seats its scholar; a name that
+									// matched nobody is kept as an unmatched assignment. An ambiguous one
 									// already blocked the submit button above.
-									people: Object.entries(personMatches[index]).flatMap(([role, m]) =>
-										m.status === 'resolved' ? [{ person: m.id, person_role: role }] : []
+									people: Object.entries(personMatches[index]).flatMap(
+										([role, m]): ImportedSubmission['people'] =>
+											m.status === 'resolved'
+												? [{ person: m.id, person_role: role }]
+												: m.status === 'unmatched'
+													? [{ name: (r.people[role] ?? '').trim(), person_role: role }]
+													: []
 									)
 								}
 							];
