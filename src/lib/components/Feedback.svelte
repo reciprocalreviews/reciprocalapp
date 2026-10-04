@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { Html } from '$lib/locales/html';
-	import type LocaleText from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
+	import type { Html } from '#lib/locales/html.js';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
 
 	const {
 		error = false,

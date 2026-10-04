@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { updated } from '$app/state';
-	import { PUBLIC_ENV } from '$env/static/public';
-	import Text from '$lib/locales/Text.svelte';
+	import { PUBLIC_ENV } from '$app/env/public';
+	import Text from '#lib/locales/Text.svelte';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { getFeedback, removeError } from '$routes/feedback.svelte';
 	import Banner from './Banner.svelte';
@@ -31,7 +31,10 @@
 		<Banner
 			level="update"
 			testid="banner-update"
-			action={{ strings: (l) => l.banner.update.refresh, do: () => location.reload() }}
+			action={{
+				strings: (l) => l.banner.update.refresh,
+				do: () => location.reload()
+			}}
 			dismiss={() => (updateDismissed = true)}
 		>
 			<Text path={(l) => l.banner.update.message} />

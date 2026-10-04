@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ScholarMatch } from '$lib/data/SupabaseCRUD.svelte';
+	import type { ScholarMatch } from '#lib/data/SupabaseCRUD.svelte.js';
 	import Button from './Button.svelte';
 	import Feedback from './Feedback.svelte';
 	import Loading from './Loading.svelte';

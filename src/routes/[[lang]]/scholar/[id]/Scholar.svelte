@@ -10,22 +10,22 @@
 		TransactionRow,
 		VenueRow
 	} from '$data/types';
-	import type { ScholarTask } from '$lib/data/SupabaseCRUD.svelte';
+	import type { ScholarTask } from '#lib/data/SupabaseCRUD.svelte.js';
 	import {
 		NotificationPreferences,
 		defaultFor,
 		type NotificationSection
-	} from '$lib/../email/templates';
-	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import Dashboard from '$lib/components/Dashboard.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Gift from '$lib/components/Gift.svelte';
-	import ORCIDProfile from '$lib/components/ORCIDProfile.svelte';
-	import ORCIDiD from '$lib/components/ORCIDiD.svelte';
+	} from '../../../../email/templates';
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Cards from '#lib/components/Cards.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
+	import Dashboard from '#lib/components/Dashboard.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Gift from '#lib/components/Gift.svelte';
+	import ORCIDProfile from '#lib/components/ORCIDProfile.svelte';
+	import ORCIDiD from '#lib/components/ORCIDiD.svelte';
 	import {
 		ScholarLabel,
 		SettingsLabel,
@@ -33,19 +33,19 @@
 		ThanksLabel,
 		TokenLabel,
 		VenueLabel
-	} from '$lib/components/Labels';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Status from '$lib/components/Status.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import Tokens from '$lib/components/Tokens.svelte';
-	import VerifyEmail from '$lib/components/VerifyEmail.svelte';
-	import { getDB, type PendingEmailVerification } from '$lib/data/CRUD';
+	} from '#lib/components/Labels.js';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Status from '#lib/components/Status.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import SubmissionLink from '#lib/components/SubmissionLink.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import Tokens from '#lib/components/Tokens.svelte';
+	import VerifyEmail from '#lib/components/VerifyEmail.svelte';
+	import { getDB, type PendingEmailVerification } from '#lib/data/CRUD.js';
 	import { handle } from '$routes/feedback.svelte';
-	import type Scholar from '$lib/data/Scholar.svelte';
-	import Text from '$lib/locales/Text.svelte';
+	import type Scholar from '#lib/data/Scholar.svelte.js';
+	import Text from '#lib/locales/Text.svelte';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { page } from '$app/state';
 	import { getLocaleContext } from '$routes/Contexts';

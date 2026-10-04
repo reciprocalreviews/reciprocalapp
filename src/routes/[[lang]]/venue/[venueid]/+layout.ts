@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { venuePath } from '$lib/data/venuePath';
+import { venuePath } from '#lib/data/venuePath.js';
 import type { LayoutLoad } from './$types.js';
 
 export const load: LayoutLoad = async ({ parent, params, url }) => {

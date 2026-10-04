@@ -1,38 +1,38 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import Button from '$lib/components/Button.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
 	import {
 		DownLabel,
 		EmptyLabel,
 		PrivateLabel,
 		UnknownLabel,
 		UpLabel
-	} from '$lib/components/Labels';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Column from '$lib/components/Row.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import Status from '$lib/components/Status.svelte';
-	import SubmissionPreview from '$lib/components/SubmissionLink.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import Options from '$lib/components/Options.svelte';
-	import type Locale from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
-	import { validEmail, validORCID } from '$lib/validation';
-	import { getDB } from '$lib/data/CRUD';
-	import { alreadyAssigned } from '$lib/data/assignees';
-	import canApproveAssignment from '$lib/data/canApproveAssignment';
-	import canClaimEditor from '$lib/data/canClaimEditor';
-	import isRoleApprover from '$lib/data/isRoleApprover';
-	import { submissionsView } from '$lib/data/sortSubmissions';
-	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
+	} from '#lib/components/Labels.js';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Column from '#lib/components/Row.svelte';
+	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import Status from '#lib/components/Status.svelte';
+	import SubmissionPreview from '#lib/components/SubmissionLink.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import Options from '#lib/components/Options.svelte';
+	import type Locale from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { validEmail, validORCID } from '#lib/validation.js';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { alreadyAssigned } from '#lib/data/assignees.js';
+	import canApproveAssignment from '#lib/data/canApproveAssignment.js';
+	import canClaimEditor from '#lib/data/canClaimEditor.js';
+	import isRoleApprover from '#lib/data/isRoleApprover.js';
+	import { submissionsView } from '#lib/data/sortSubmissions.js';
+	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
 	import { getAuth } from '$routes/Auth.svelte';
-	import { venueBarName } from '$lib/data/venueBarLinks';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import { type PageData } from './$types';

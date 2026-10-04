@@ -1,18 +1,18 @@
 <script lang="ts">
 	import type { RoleID, RoleRow, VolunteerVisibility } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { DeleteLabel, SettingsLabel } from '$lib/components/Labels';
-	import Options from '$lib/components/Options.svelte';
-	import Slider from '$lib/components/Slider.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import { getDB } from '$lib/data/CRUD';
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { DeleteLabel, SettingsLabel } from '#lib/components/Labels.js';
+	import Options from '#lib/components/Options.svelte';
+	import Slider from '#lib/components/Slider.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
-	import { isntEmpty } from '$lib/validation';
+	import { isntEmpty } from '#lib/validation.js';
 
 	let {
 		role,

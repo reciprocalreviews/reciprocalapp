@@ -30,7 +30,7 @@ export const NEXT_COOKIE = 'rr_next';
  * link lands where it pointed rather than on their own profile (#191). Plain `/login` from the
  * landing page, which is no destination, and from the login page itself, so a return path
  * never nests inside another. */
-export function loginHref(url: URL | string): string {
+export function loginHref(url: Pick<URL, 'pathname' | 'search' | 'hash'> | string): string {
 	const { pathname, search, hash } =
 		typeof url === 'string' ? new URL(url, 'https://rr.invalid') : url;
 	const path = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, '') || '/';

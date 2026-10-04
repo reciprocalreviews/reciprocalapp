@@ -1,6 +1,6 @@
 import { invalidateAll } from '$app/navigation';
-import { type DBError, type Result } from '$lib/data/CRUD';
-import { collapseNotifications } from '$lib/data/notifications';
+import { type DBError, type Result } from '#lib/data/CRUD.js';
+import { collapseNotifications } from '#lib/data/notifications.js';
 import type { AuthError, PostgrestError } from '@supabase/supabase-js';
 
 export type Level = 'error' | 'warning' | 'success';

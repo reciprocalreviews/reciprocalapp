@@ -1,14 +1,14 @@
 <script lang="ts">
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { ErrorLabel, VenueLabel } from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { ErrorLabel, VenueLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
 	import VenueBar from './VenueBar.svelte';
-	import { NO_VENUE_ID, venuePath } from '$lib/data/venuePath';
-	import Text from '$lib/locales/Text.svelte';
+	import { NO_VENUE_ID, venuePath } from '#lib/data/venuePath.js';
+	import Text from '#lib/locales/Text.svelte';
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 

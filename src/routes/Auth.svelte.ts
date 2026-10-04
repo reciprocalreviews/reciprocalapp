@@ -1,5 +1,5 @@
 import type { ScholarRow } from '$data/types';
-import Authentication from '$lib/auth/Authentication';
+import Authentication from '#lib/auth/Authentication.js';
 import type { AuthError, SupabaseClient } from '@supabase/supabase-js';
 import { getContext, setContext } from 'svelte';
 

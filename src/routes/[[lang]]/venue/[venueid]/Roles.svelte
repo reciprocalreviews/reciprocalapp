@@ -8,22 +8,22 @@
 		VenueRow,
 		VolunteerRow
 	} from '$data/types';
-	import { venuePath } from '$lib/data/venuePath';
-	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import { DeleteLabel, ScholarLabel } from '$lib/components/Labels';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Slider from '$lib/components/Slider.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import Tokens from '$lib/components/Tokens.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import { isntEmpty } from '$lib/validation';
+	import { venuePath } from '#lib/data/venuePath.js';
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Cards from '#lib/components/Cards.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import { DeleteLabel, ScholarLabel } from '#lib/components/Labels.js';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Slider from '#lib/components/Slider.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import Tokens from '#lib/components/Tokens.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { isntEmpty } from '#lib/validation.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import AdminsCard from './AdminsCard.svelte';

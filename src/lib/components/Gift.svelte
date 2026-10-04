@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { CurrencyID, CurrencyRow, ScholarID, VenueID, VenueRow } from '$data/types';
-	import { type Result } from '$lib/data/CRUD';
-	import { ORCIDRegex } from '$lib/data/ORCID';
-	import { validEmail, validORCID } from '$lib/validation';
+	import { type Result } from '#lib/data/CRUD.js';
+	import { ORCIDRegex } from '#lib/data/ORCID.js';
+	import { validEmail, validORCID } from '#lib/validation.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';

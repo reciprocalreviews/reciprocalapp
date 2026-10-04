@@ -1,5 +1,5 @@
 import { articles } from '$routes/[[lang]]/help/articles';
-import { venuePath } from '$lib/data/venuePath';
+import { venuePath } from '#lib/data/venuePath.js';
 import type { RequestHandler } from './$types';
 
 /** A sitemap of the pages that are meant to be found.

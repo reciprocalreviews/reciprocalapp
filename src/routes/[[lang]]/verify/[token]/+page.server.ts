@@ -1,4 +1,4 @@
-import type { PendingEmailVerification } from '$lib/data/CRUD';
+import type { PendingEmailVerification } from '#lib/data/CRUD.js';
 import type { PageServerLoad } from './$types';
 
 // Consume the contact-email verification token (#27). Done in a SERVER load, called

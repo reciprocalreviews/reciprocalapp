@@ -1,5 +1,5 @@
-import type LocaleText from '$lib/locales/Locale';
-import { escapeHTML, html, type Html } from '$lib/locales/html';
+import type LocaleText from '#lib/locales/Locale.js';
+import { escapeHTML, html, type Html } from '#lib/locales/html.js';
 import { TokenLabel } from './Labels';
 
 /** The token chip as markup, for use inside a localized sentence.

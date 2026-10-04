@@ -1,12 +1,12 @@
 <script lang="ts">
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { VenueLabel } from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import VenueLink from '$lib/components/VenueLink.svelte';
-	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
-	import Text from '$lib/locales/Text.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { VenueLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import VenueLink from '#lib/components/VenueLink.svelte';
+	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
+	import Text from '#lib/locales/Text.svelte';
 	import { getAuth } from '$routes/Auth.svelte';
 
 	let { data } = $props();

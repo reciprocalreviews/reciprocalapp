@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { NEWSLETTER_URL } from '$lib/community';
-	import Page from '$lib/components/Page.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import tokenChip from '$lib/components/tokenChip';
-	import Text from '$lib/locales/Text.svelte';
+	import { NEWSLETTER_URL } from '#lib/community.js';
+	import Page from '#lib/components/Page.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import tokenChip from '#lib/components/tokenChip.js';
+	import Text from '#lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 
 	const locale = getLocaleContext();

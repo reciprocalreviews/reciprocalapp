@@ -1,6 +1,6 @@
-import type CRUD from '$lib/data/CRUD';
-import type { ScholarMatch } from '$lib/data/SupabaseCRUD.svelte';
-import { validEmail, validORCID } from '$lib/validation';
+import type CRUD from '#lib/data/CRUD.js';
+import type { ScholarMatch } from '#lib/data/SupabaseCRUD.svelte.js';
+import { validEmail, validORCID } from '#lib/validation.js';
 
 /** How far along the ORCID/email lookup is for one field. */
 export type ScholarState =

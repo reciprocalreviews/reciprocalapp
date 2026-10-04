@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { CurrencyRow } from '$data/types';
-	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { ScholarLabel } from '$lib/components/Labels';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import Tag from '$lib/components/Tag.svelte';
-	import VenueLink from '$lib/components/VenueLink.svelte';
-	import Text from '$lib/locales/Text.svelte';
+	import CurrencyLink from '#lib/components/CurrencyLink.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { ScholarLabel } from '#lib/components/Labels.js';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import Tag from '#lib/components/Tag.svelte';
+	import VenueLink from '#lib/components/VenueLink.svelte';
+	import Text from '#lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 
 	let {

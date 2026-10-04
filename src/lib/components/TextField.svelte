@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type Locale from '$lib/locales/Locale';
-	import type { LocaleText, NotedTextFieldText, TextFieldText } from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
+	import type Locale from '#lib/locales/Locale.js';
+	import type { LocaleText, NotedTextFieldText, TextFieldText } from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { tick } from 'svelte';
 	import Tip from './Tip.svelte';

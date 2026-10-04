@@ -1,20 +1,20 @@
 <script lang="ts">
-	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import { IdeaLabel, ScholarLabel } from '$lib/components/Labels.js';
-	import Link from '$lib/components/Link.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import ScholarField from '$lib/components/ScholarField.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import type { LocaleText } from '$lib/locales/Locale';
-	import { validEmail, validORCID } from '$lib/validation';
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Cards from '#lib/components/Cards.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import { IdeaLabel, ScholarLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import ScholarField from '#lib/components/ScholarField.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import type { LocaleText } from '#lib/locales/Locale.js';
+	import { validEmail, validORCID } from '#lib/validation.js';
 	import { getLocaleContext } from '$routes/Contexts';
-	import type { ORCIDMirrorHealth } from '$lib/data/CRUD';
+	import type { ORCIDMirrorHealth } from '#lib/data/CRUD.js';
 	import { addFeedback, handle } from '$routes/feedback.svelte';
 
 	let { data } = $props();

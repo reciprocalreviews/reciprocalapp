@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
+	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
 
 	let { children } = $props();
 

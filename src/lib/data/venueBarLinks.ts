@@ -1,4 +1,4 @@
-import type { LocaleText } from '$lib/locales/Locale';
+import type { LocaleText } from '#lib/locales/Locale.js';
 import { venuePath } from './venuePath';
 
 /**

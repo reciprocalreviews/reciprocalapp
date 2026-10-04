@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { venuePath } from '$lib/data/venuePath';
-	import Card from '$lib/components/Card.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import CopyButton from '$lib/components/CopyButton.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Note from '$lib/components/Note.svelte';
+	import { venuePath } from '#lib/data/venuePath.js';
+	import Card from '#lib/components/Card.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
+	import CopyButton from '#lib/components/CopyButton.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Note from '#lib/components/Note.svelte';
 	import {
 		MinterLabel,
 		ScholarLabel,
@@ -14,18 +14,18 @@
 		TaskLabel,
 		TokenLabel,
 		VenueLabel
-	} from '$lib/components/Labels.js';
-	import Options from '$lib/components/Options.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Slider from '$lib/components/Slider.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import { getDB } from '$lib/data/CRUD.js';
-	import { PLATFORMS } from '$lib/data/reviewingPlatforms';
-	import Text from '$lib/locales/Text.svelte';
-	import { isntEmpty, validInteger, validURL } from '$lib/validation.js';
-	import { venueBarName } from '$lib/data/venueBarLinks';
+	} from '#lib/components/Labels.js';
+	import Options from '#lib/components/Options.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Slider from '#lib/components/Slider.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { PLATFORMS } from '#lib/data/reviewingPlatforms.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { isntEmpty, validInteger, validURL } from '#lib/validation.js';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import PreferenceLevels from '../PreferenceLevels.svelte';

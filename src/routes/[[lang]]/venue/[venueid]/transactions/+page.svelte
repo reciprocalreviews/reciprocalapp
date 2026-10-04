@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { type CurrencyID } from '$data/types.js';
-	import Card from '$lib/components/Card.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Gift from '$lib/components/Gift.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Slider from '$lib/components/Slider.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import Transactions from '$lib/components/Transactions.svelte';
-	import { getDB } from '$lib/data/CRUD.js';
-	import { venueBarName } from '$lib/data/venueBarLinks';
-	import Text from '$lib/locales/Text.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Cards from '#lib/components/Cards.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Gift from '#lib/components/Gift.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Slider from '#lib/components/Slider.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import Transactions from '#lib/components/Transactions.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
+	import Text from '#lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts.js';
 	import { handle } from '$routes/feedback.svelte';
 

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { getDB, type PendingEmailVerification, type Result } from '$lib/data/CRUD';
-	import type LocaleText from '$lib/locales/Locale';
-	import { validEmail } from '$lib/validation';
+	import { getDB, type PendingEmailVerification, type Result } from '#lib/data/CRUD.js';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import { validEmail } from '#lib/validation.js';
 	import Button from './Button.svelte';
 	import EditableText from './EditableText.svelte';
 	import Feedback from './Feedback.svelte';

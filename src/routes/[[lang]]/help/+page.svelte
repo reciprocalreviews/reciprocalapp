@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { IdeaLabel } from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
+	import { IdeaLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
 	import { articles } from './articles';
 </script>
 

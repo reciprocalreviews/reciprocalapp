@@ -1,5 +1,5 @@
 import en from '$locales/en.json';
-import type { LocaleText } from '$lib/locales/Locale';
+import type { LocaleText } from '#lib/locales/Locale.js';
 import { describe, expect, test } from 'vitest';
 import { venueBarLinks, venueBarName, type VenueBarVenue } from './venueBarLinks';
 

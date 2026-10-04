@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { RoleRow, ScholarID, VolunteerRow } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import { getDB } from '$lib/data/CRUD';
+	import Button from '#lib/components/Button.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 

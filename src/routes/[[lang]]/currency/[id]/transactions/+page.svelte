@@ -1,11 +1,11 @@
 <script lang="ts">
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { ErrorLabel, TokenLabel } from '$lib/components/Labels';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Transactions from '$lib/components/Transactions.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import Text from '$lib/locales/Text.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { ErrorLabel, TokenLabel } from '#lib/components/Labels.js';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Transactions from '#lib/components/Transactions.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import Text from '#lib/locales/Text.svelte';
 
 	let { data } = $props();
 	let { currency, transactions, count, venues } = $derived(data);

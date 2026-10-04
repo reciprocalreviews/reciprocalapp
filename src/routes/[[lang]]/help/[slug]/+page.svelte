@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { IdeaLabel } from '$lib/components/Labels';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
+	import { IdeaLabel } from '#lib/components/Labels.js';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
 	import { marked } from 'marked';
 
 	let { data } = $props();

@@ -1,15 +1,15 @@
 <script lang="ts">
 	import type { ScholarID, VenueRow } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import { DeleteLabel } from '$lib/components/Labels';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import ScholarField from '$lib/components/ScholarField.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import type { LocaleText } from '$lib/locales/Locale';
-	import { validEmail, validORCID } from '$lib/validation';
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import { DeleteLabel } from '#lib/components/Labels.js';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import ScholarField from '#lib/components/ScholarField.svelte';
+	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import type { LocaleText } from '#lib/locales/Locale.js';
+	import { validEmail, validORCID } from '#lib/validation.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 

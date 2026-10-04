@@ -7,19 +7,19 @@
 		SubmissionRow,
 		TransactionRow
 	} from '$data/types';
-	import type { ScholarTask } from '$lib/data/SupabaseCRUD.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { EmptyLabel, TaskLabel } from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import VenueLink from '$lib/components/VenueLink.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import Text from '$lib/locales/Text.svelte';
+	import type { ScholarTask } from '#lib/data/SupabaseCRUD.svelte.js';
+	import Button from '#lib/components/Button.svelte';
+	import CurrencyLink from '#lib/components/CurrencyLink.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { EmptyLabel, TaskLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import SubmissionLink from '#lib/components/SubmissionLink.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import VenueLink from '#lib/components/VenueLink.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import Text from '#lib/locales/Text.svelte';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';

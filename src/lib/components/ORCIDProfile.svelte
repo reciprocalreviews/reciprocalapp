@@ -9,7 +9,7 @@
 		shouldReportProblem,
 		works,
 		worksStat
-	} from '$lib/data/orcidProfileView';
+	} from '#lib/data/orcidProfileView.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import Feedback from './Feedback.svelte';
 	import { ScholarLabel } from './Labels';

@@ -1,4 +1,4 @@
-import type { Breadcrumb } from '$lib/data/breadcrumbs';
+import type { Breadcrumb } from '#lib/data/breadcrumbs.js';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
