@@ -1,35 +1,35 @@
 <script lang="ts">
 	import type { ScholarID } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import Dashboard from '$lib/components/Dashboard.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Cards from '#lib/components/Cards.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
+	import Dashboard from '#lib/components/Dashboard.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
 	import {
 		MinterLabel,
 		plural,
 		ScholarLabel,
 		TokenLabel,
 		VenueLabel
-	} from '$lib/components/Labels';
-	import Note from '$lib/components/Note.svelte';
-	import Options from '$lib/components/Options.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import Slider from '$lib/components/Slider.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import ScholarField from '$lib/components/ScholarField.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import SourceLink from '$lib/components/VenueLink.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import type LocaleText from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
-	import { validEmail, validORCID } from '$lib/validation';
+	} from '#lib/components/Labels.js';
+	import Note from '#lib/components/Note.svelte';
+	import Options from '#lib/components/Options.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import Slider from '#lib/components/Slider.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import ScholarField from '#lib/components/ScholarField.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import SourceLink from '#lib/components/VenueLink.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { validEmail, validORCID } from '#lib/validation.js';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { handle } from '$routes/feedback.svelte';
 	import type { PageData } from './$types';

@@ -1,7 +1,7 @@
 <!-- svelte-ignore state_referenced_locally -->
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { venuePath } from '$lib/data/venuePath';
+	import { venuePath } from '#lib/data/venuePath.js';
 	import type {
 		RoleRow,
 		SubmissionRow,
@@ -9,20 +9,20 @@
 		SubmissionTypeID,
 		VenueRow
 	} from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import FileInput from '$lib/components/FileInput.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import { SubmissionLabel } from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
-	import Note from '$lib/components/Note.svelte';
-	import Options from '$lib/components/Options.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import type { VenueCommitment } from '$lib/data/SupabaseCRUD.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import FileInput from '#lib/components/FileInput.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import { SubmissionLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Note from '#lib/components/Note.svelte';
+	import Options from '#lib/components/Options.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import type { VenueCommitment } from '#lib/data/SupabaseCRUD.svelte.js';
 	import {
 		alreadyPresent,
 		distinctTypeValues,
@@ -33,18 +33,18 @@
 		rowsFromParsed,
 		type ImportRow,
 		type TypeAssignments
-	} from '$lib/data/bulkImportRows';
+	} from '#lib/data/bulkImportRows.js';
 	import {
 		guessMapping,
 		unmappedHeaders,
 		type ColumnMapping,
 		type ImportField,
 		type RoleColumns
-	} from '$lib/data/columnMapping';
-	import { matchPersonName, type Candidate, type PersonMatch } from '$lib/data/matchPersonName';
-	import parseCSV from '$lib/data/parseCSV';
-	import type LocaleText from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
+	} from '#lib/data/columnMapping.js';
+	import { matchPersonName, type Candidate, type PersonMatch } from '#lib/data/matchPersonName.js';
+	import parseCSV from '#lib/data/parseCSV.js';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { addFeedback, handle } from '$routes/feedback.svelte';
 	import { tick } from 'svelte';

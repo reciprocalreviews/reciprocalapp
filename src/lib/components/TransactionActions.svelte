@@ -4,7 +4,7 @@
 	import Dialog from './Dialog.svelte';
 	import Paragraph from './Paragraph.svelte';
 	import TextField from './TextField.svelte';
-	import { getDB } from '$lib/data/CRUD';
+	import { getDB } from '#lib/data/CRUD.js';
 	import { handle } from '../../routes/feedback.svelte';
 
 	let {

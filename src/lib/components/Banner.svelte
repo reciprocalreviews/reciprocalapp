@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type LocaleText from '$lib/locales/Locale';
-	import type { ButtonText } from '$lib/locales/Locale';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import type { ButtonText } from '#lib/locales/Locale.js';
 	import type { Snippet } from 'svelte';
 	import Button from './Button.svelte';
 

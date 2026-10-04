@@ -1,6 +1,6 @@
 import { type BrowserContext, type Page } from '@playwright/test';
 
-// Relative, not the `$lib` alias: this module is loaded by Playwright through
+// Relative, not the `#lib` alias: this module is loaded by Playwright through
 // Node, not through Vite, so nothing is around to resolve the alias. Playwright
 // maps it from the `paths` in `.svelte-kit/tsconfig.json`, which only exists
 // after `svelte-kit sync` — so on a fresh checkout the whole suite failed to

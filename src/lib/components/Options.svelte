@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type LocaleText from '$lib/locales/Locale';
-	import type { OptionsText } from '$lib/locales/Locale';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import type { OptionsText } from '#lib/locales/Locale.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import Tip from './Tip.svelte';
 

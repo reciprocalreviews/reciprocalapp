@@ -1,10 +1,10 @@
 <script lang="ts">
-	import Button from '$lib/components/Button.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { getDB } from '$lib/data/CRUD';
+	import Button from '#lib/components/Button.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
 	import type { VenueRow } from '$data/types';
-	import { slugifyTitle, validVenueSlug } from '$lib/validation';
+	import { slugifyTitle, validVenueSlug } from '#lib/validation.js';
 	import { handle } from '$routes/feedback.svelte';
 
 	let { venue }: { venue: VenueRow } = $props();

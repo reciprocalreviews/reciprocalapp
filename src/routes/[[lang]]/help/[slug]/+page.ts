@@ -1,4 +1,4 @@
-import type { Breadcrumb } from '$lib/data/breadcrumbs';
+import type { Breadcrumb } from '#lib/data/breadcrumbs.js';
 import { error } from '@sveltejs/kit';
 import { getArticle } from '../articles';
 import type { PageLoad } from './$types';

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { RoleRow } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { getDB, type CallForBidsStatus } from '$lib/data/CRUD';
-	import { noteIsSendable } from '$lib/data/callForBids';
+	import Button from '#lib/components/Button.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import { getDB, type CallForBidsStatus } from '#lib/data/CRUD.js';
+	import { noteIsSendable } from '#lib/data/callForBids.js';
 	import { handle } from '$routes/feedback.svelte';
 
 	/** Lets a venue's editor or admin write a short personal note to the volunteers of one

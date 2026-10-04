@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { isUUID } from '$lib/validation';
+import { isUUID } from '#lib/validation.js';
 import type { LayoutLoad } from './$types';
 
 export const load: LayoutLoad = async ({ parent, params }) => {

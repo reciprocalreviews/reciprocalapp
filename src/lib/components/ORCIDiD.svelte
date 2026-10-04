@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { orcidURL } from '$lib/data/ORCID';
+	import { orcidURL } from '#lib/data/ORCID.js';
 	import Link from './Link.svelte';
 	import ORCIDMark from './ORCIDMark.svelte';
 

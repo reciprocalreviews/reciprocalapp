@@ -1,7 +1,7 @@
 <script lang="ts" generics="Item">
 	import { page } from '$app/state';
-	import type LocaleText from '$lib/locales/Locale';
-	import type { ButtonText } from '$lib/locales/Locale';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import type { ButtonText } from '#lib/locales/Locale.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { untrack, type Snippet } from 'svelte';
 	import { clickOutside } from './clickOutside';

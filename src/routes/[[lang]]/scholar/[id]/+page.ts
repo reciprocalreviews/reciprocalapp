@@ -2,7 +2,7 @@ import type {
 	AssignmentAwaitingCompensation,
 	AssignmentForApproval,
 	ScholarTask
-} from '$lib/data/SupabaseCRUD.svelte';
+} from '#lib/data/SupabaseCRUD.svelte.js';
 import type { RoleID } from '$data/types';
 import type { PageLoad } from './$types';
 

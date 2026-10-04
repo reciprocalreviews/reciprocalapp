@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { Result } from '$lib/data/CRUD';
-	import type LocaleText from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
+	import type { Result } from '#lib/data/CRUD.js';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
 	import { handle } from '../../routes/feedback.svelte';
 
 	let {

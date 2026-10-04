@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { BETA } from '$lib/constants';
-	import { dismissBeta } from '$lib/data/betaDismissal';
-	import Text from '$lib/locales/Text.svelte';
+	import { BETA } from '#lib/constants.js';
+	import { dismissBeta } from '#lib/data/betaDismissal.js';
+	import Text from '#lib/locales/Text.svelte';
 	import Banner from './Banner.svelte';
 	import measure from './measure';
 	import Link from './Link.svelte';

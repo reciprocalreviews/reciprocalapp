@@ -1,15 +1,15 @@
 <script lang="ts">
-	import Link from '$lib/components/Link.svelte';
-	import Overflow from '$lib/components/Overflow.svelte';
-	import measure from '$lib/components/measure';
-	import { VenueLabel } from '$lib/components/Labels';
+	import Link from '#lib/components/Link.svelte';
+	import Overflow from '#lib/components/Overflow.svelte';
+	import measure from '#lib/components/measure.js';
+	import { VenueLabel } from '#lib/components/Labels.js';
 	import {
 		venueBarLinks,
 		venueBarName,
 		type VenueBarLink,
 		type VenueBarVenue
-	} from '$lib/data/venueBarLinks';
-	import { venuePath } from '$lib/data/venuePath';
+	} from '#lib/data/venueBarLinks.js';
+	import { venuePath } from '#lib/data/venuePath.js';
 	import { getLocaleContext } from '$routes/Contexts';
 
 	/**

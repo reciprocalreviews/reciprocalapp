@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { RoleRow, ScholarID, VenueRow } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import Loading from '$lib/components/Loading.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { getDB } from '$lib/data/CRUD';
+	import Button from '#lib/components/Button.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import Loading from '#lib/components/Loading.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
 	import {
 		consume,
 		type Invitee,
@@ -18,7 +18,7 @@
 		spokenFor,
 		unanswered,
 		unmatched
-	} from '$lib/data/inviteList';
+	} from '#lib/data/inviteList.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import { SvelteMap } from 'svelte/reactivity';

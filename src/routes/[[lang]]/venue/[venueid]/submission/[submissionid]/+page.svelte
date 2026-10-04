@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { PublicORCIDProfile, RoleID, RoleRow, ScholarID } from '$data/types';
-	import { venuePath as toVenuePath } from '$lib/data/venuePath';
-	import Button from '$lib/components/Button.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
+	import { venuePath as toVenuePath } from '#lib/data/venuePath.js';
+	import Button from '#lib/components/Button.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
 	import Thanks from './Thanks.svelte';
 	import {
 		EditLabel,
@@ -12,35 +12,35 @@
 		ScholarLabel,
 		UnknownLabel,
 		VenueLabel
-	} from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
-	import Options from '$lib/components/Options.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Row from '$lib/components/Row.svelte';
-	import ORCIDKeywords from '$lib/components/ORCIDKeywords.svelte';
-	import VenueExpertise from '$lib/components/VenueExpertise.svelte';
-	import ScholarField from '$lib/components/ScholarField.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import { ScholarSearch } from '$lib/components/ScholarSearch.svelte';
-	import Status from '$lib/components/Status.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import Tokens from '$lib/components/Tokens.svelte';
-	import VenueLink from '$lib/components/VenueLink.svelte';
-	import { affiliationLine, worksStat } from '$lib/data/orcidProfileView';
-	import canApproveAssignment from '$lib/data/canApproveAssignment';
-	import canClaimEditor from '$lib/data/canClaimEditor';
-	import canViewSubmission from '$lib/data/canViewSubmission';
-	import { getDB, NullUUID } from '$lib/data/CRUD';
+	} from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Options from '#lib/components/Options.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Row from '#lib/components/Row.svelte';
+	import ORCIDKeywords from '#lib/components/ORCIDKeywords.svelte';
+	import VenueExpertise from '#lib/components/VenueExpertise.svelte';
+	import ScholarField from '#lib/components/ScholarField.svelte';
+	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import { ScholarSearch } from '#lib/components/ScholarSearch.svelte.js';
+	import Status from '#lib/components/Status.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import Tokens from '#lib/components/Tokens.svelte';
+	import VenueLink from '#lib/components/VenueLink.svelte';
+	import { affiliationLine, worksStat } from '#lib/data/orcidProfileView.js';
+	import canApproveAssignment from '#lib/data/canApproveAssignment.js';
+	import canClaimEditor from '#lib/data/canClaimEditor.js';
+	import canViewSubmission from '#lib/data/canViewSubmission.js';
+	import { getDB, NullUUID } from '#lib/data/CRUD.js';
 	import {
 		sortAssignees as sortAssigneesBy,
 		sortBids as sortBidsBy
-	} from '$lib/data/sortAssignees';
-	import Scholar from '$lib/data/Scholar.svelte';
-	import type LocaleText from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
-	import { validEmail, validORCID } from '$lib/validation';
+	} from '#lib/data/sortAssignees.js';
+	import Scholar from '#lib/data/Scholar.svelte.js';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { validEmail, validORCID } from '#lib/validation.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
 	import { type PageData } from './$types';

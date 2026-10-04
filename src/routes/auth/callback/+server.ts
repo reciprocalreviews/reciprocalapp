@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { NEXT_COOKIE, safeNext } from '$lib/auth/next';
+import { NEXT_COOKIE, safeNext } from '#lib/auth/next.js';
 
 // ORCID OIDC redirect target. `signInWithOAuth` sends the browser to ORCID (via
 // Supabase), which returns here with a PKCE `code`. hooks.server.ts builds

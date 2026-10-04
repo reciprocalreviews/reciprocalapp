@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import NewSubmission from '../NewSubmission.svelte';
-	import Page from '$lib/components/Page.svelte';
+	import Page from '#lib/components/Page.svelte';
 	import { type PageData } from './$types';
-	import Feedback from '$lib/components/Feedback.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
 
 	let { data }: { data: PageData } = $props();
 

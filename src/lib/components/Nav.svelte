@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { loginHref } from '$lib/auth/next';
-	import Banners from '$lib/components/Banners.svelte';
-	import Text from '$lib/locales/Text.svelte';
+	import { loginHref } from '#lib/auth/next.js';
+	import Banners from '#lib/components/Banners.svelte';
+	import Text from '#lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { untrack } from 'svelte';
 	import { Tween } from 'svelte/motion';

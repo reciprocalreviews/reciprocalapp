@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.9 - 2026-10-04
+
+### Changed
+
+- **Updated internal tooling.** SvelteKit and its Vercel adapter moved up a major release, the Vercel CLI to 62, and Vite, Vitest, the Supabase CLI, and the Node type definitions a patch or minor release; TypeScript stays on 6, because Svelte's type checker does not yet run on 7.
+
 ## 0.5.8 - 2026-10-01
 
 ### Changed

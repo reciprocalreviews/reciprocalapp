@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type LocaleText from '$lib/locales/Locale';
-	import type { SliderText } from '$lib/locales/Locale';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import type { SliderText } from '#lib/locales/Locale.js';
 	import { getLocaleContext } from '$routes/Contexts';
 
 	interface Props {

@@ -1,5 +1,5 @@
-import type { Breadcrumb } from '$lib/data/breadcrumbs';
-import { TokenLabel } from '$lib/components/Labels';
+import type { Breadcrumb } from '#lib/data/breadcrumbs.js';
+import { TokenLabel } from '#lib/components/Labels.js';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {

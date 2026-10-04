@@ -1,4 +1,4 @@
-import { NO_VENUE_ID } from '$lib/data/venuePath';
+import { NO_VENUE_ID } from '#lib/data/venuePath.js';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {

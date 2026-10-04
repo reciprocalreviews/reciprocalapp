@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type Locale from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
+	import type Locale from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
 
 	let {
 		label,

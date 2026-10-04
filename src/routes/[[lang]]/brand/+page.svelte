@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type LocaleText from '$lib/locales/Locale';
-	import Logo from '$lib/components/Logo.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import Text from '$lib/locales/Text.svelte';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import Logo from '#lib/components/Logo.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import Text from '#lib/locales/Text.svelte';
 	const REPO = 'https://github.com/reciprocalreviews/reciprocalapp/tree/main/static/brand';
 
 	/** Read off the `:root` block in src/app.html. Listed rather than read from

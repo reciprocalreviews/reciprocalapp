@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { IdeaLabel } from '$lib/components/Labels';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import markdownToSegments from '$lib/data/markdownSegments';
+	import { IdeaLabel } from '#lib/components/Labels.js';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import markdownToSegments from '#lib/data/markdownSegments.js';
 	import updates from './updates.json';
 
 	// Get the dated updates in reverse chronological order.

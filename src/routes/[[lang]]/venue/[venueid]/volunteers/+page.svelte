@@ -1,29 +1,29 @@
 <script lang="ts">
-	import Button from '$lib/components/Button.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { EmptyLabel, ScholarLabel } from '$lib/components/Labels.js';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Row from '$lib/components/Row.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import Status from '$lib/components/Status.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import Tag from '$lib/components/Tag.svelte';
-	import Tags from '$lib/components/Tags.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import toCSV from '$lib/data/toCSV';
-	import ORCIDKeywords from '$lib/components/ORCIDKeywords.svelte';
-	import VenueExpertise from '$lib/components/VenueExpertise.svelte';
-	import { getDB } from '$lib/data/CRUD';
+	import Button from '#lib/components/Button.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { EmptyLabel, ScholarLabel } from '#lib/components/Labels.js';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Row from '#lib/components/Row.svelte';
+	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import Status from '#lib/components/Status.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import Tag from '#lib/components/Tag.svelte';
+	import Tags from '#lib/components/Tags.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import toCSV from '#lib/data/toCSV.js';
+	import ORCIDKeywords from '#lib/components/ORCIDKeywords.svelte';
+	import VenueExpertise from '#lib/components/VenueExpertise.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
 	import {
 		expertiseTags,
 		orcidKeywords,
 		TAG_LIMIT,
 		volunteersView
-	} from '$lib/data/volunteersView';
-	import { anyWithheld, withholdingFor } from '$lib/data/withheldVolunteers';
-	import { venueBarName } from '$lib/data/venueBarLinks';
-	import Text from '$lib/locales/Text.svelte';
+	} from '#lib/data/volunteersView.js';
+	import { anyWithheld, withholdingFor } from '#lib/data/withheldVolunteers.js';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
+	import Text from '#lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 
 	let { data } = $props();

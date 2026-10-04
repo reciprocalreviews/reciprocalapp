@@ -5,30 +5,30 @@
 <!-- svelte-ignore state_referenced_locally -->
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { venuePath } from '$lib/data/venuePath';
+	import { venuePath } from '#lib/data/venuePath.js';
 	import type { SubmissionType, SubmissionTypeID, VenueRow } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import Note from '$lib/components/Note.svelte';
-	import Options from '$lib/components/Options.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import ScholarMatches from '$lib/components/ScholarMatches.svelte';
-	import { ScholarSearch } from '$lib/components/ScholarSearch.svelte';
-	import Slider from '$lib/components/Slider.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import type { ScholarMatch } from '$lib/data/SupabaseCRUD.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import Note from '#lib/components/Note.svelte';
+	import Options from '#lib/components/Options.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import ScholarMatches from '#lib/components/ScholarMatches.svelte';
+	import { ScholarSearch } from '#lib/components/ScholarSearch.svelte.js';
+	import Slider from '#lib/components/Slider.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import type { ScholarMatch } from '#lib/data/SupabaseCRUD.svelte.js';
 	import {
 		duplicateScholars,
 		validCharge,
 		validCharges,
 		validChargeFormat
-	} from '$lib/data/charges';
-	import type Locale from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
-	import { isntEmpty, validORCID } from '$lib/validation';
+	} from '#lib/data/charges.js';
+	import type Locale from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { isntEmpty, validORCID } from '#lib/validation.js';
 	import { getAuth } from '$routes/Auth.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { getDB } from '$lib/data/CRUD';
-	import type { ScholarMatch } from '$lib/data/SupabaseCRUD.svelte';
-	import type Locale from '$lib/locales/Locale';
-	import type { LocaleText, NotedTextFieldText, TextFieldText } from '$lib/locales/Locale';
+	import { getDB } from '#lib/data/CRUD.js';
+	import type { ScholarMatch } from '#lib/data/SupabaseCRUD.svelte.js';
+	import type Locale from '#lib/locales/Locale.js';
+	import type { LocaleText, NotedTextFieldText, TextFieldText } from '#lib/locales/Locale.js';
 	import ScholarMatches from './ScholarMatches.svelte';
 	import { ScholarSearch } from './ScholarSearch.svelte';
 	import TextField from './TextField.svelte';

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { CardText, LocaleText } from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
+	import type { CardText, LocaleText } from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
 	import type { Snippet } from 'svelte';
 	import Circle from './Circle.svelte';

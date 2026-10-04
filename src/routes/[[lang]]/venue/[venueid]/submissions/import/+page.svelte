@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Page from '$lib/components/Page.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
 	import { type PageData } from './$types';
 	import BulkImport from './BulkImport.svelte';
 	import { getAuth } from '$routes/Auth.svelte';

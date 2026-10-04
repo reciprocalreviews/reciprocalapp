@@ -1,12 +1,12 @@
 <script lang="ts">
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { IdeaLabel, ScholarLabel } from '$lib/components/Labels.js';
-	import Link from '$lib/components/Link.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import Text from '$lib/locales/Text.svelte';
-	import { DISCUSSIONS_URL, ISSUES_URL, NEWSLETTER_URL, SUPPORT_EMAIL } from '$lib/community';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { IdeaLabel, ScholarLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import Text from '#lib/locales/Text.svelte';
+	import { DISCUSSIONS_URL, ISSUES_URL, NEWSLETTER_URL, SUPPORT_EMAIL } from '#lib/community.js';
 
 	let { data } = $props();
 	let { stewards } = $derived(data);

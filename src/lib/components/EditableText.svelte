@@ -3,9 +3,9 @@
 	import Button from './Button.svelte';
 	import TextField from './TextField.svelte';
 	import { handle } from '../../routes/feedback.svelte';
-	import type { Result } from '$lib/data/CRUD';
-	import { type LocaleText, type TextFieldText } from '$lib/locales/Locale';
-	import type Locale from '$lib/locales/Locale';
+	import type { Result } from '#lib/data/CRUD.js';
+	import { type LocaleText, type TextFieldText } from '#lib/locales/Locale.js';
+	import type Locale from '#lib/locales/Locale.js';
 
 	type Props = {
 		text: string;

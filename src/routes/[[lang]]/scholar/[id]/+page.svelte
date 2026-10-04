@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { ErrorLabel } from '$lib/components/Labels';
-	import { getDB } from '$lib/data/CRUD';
-	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { ErrorLabel } from '#lib/components/Labels.js';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
 	import { default as ScholarView } from './Scholar.svelte';
-	import Page from '$lib/components/Page.svelte';
+	import Page from '#lib/components/Page.svelte';
 
 	let { data } = $props();
 

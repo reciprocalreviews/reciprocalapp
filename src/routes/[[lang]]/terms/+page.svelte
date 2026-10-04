@@ -6,10 +6,10 @@
 		SettingsLabel,
 		UnknownLabel,
 		VenueLabel
-	} from '$lib/components/Labels';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
+	} from '#lib/components/Labels.js';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
 </script>
 
 <Page icon={UnknownLabel} title={(l) => l.page.terms.title}>

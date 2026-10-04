@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { goto, invalidate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
-	import { requiresAuth } from '$lib/auth/requiresAuth';
-	import Footer from '$lib/components/Footer.svelte';
-	import Nav from '$lib/components/Nav.svelte';
-	import { setDB } from '$lib/data/CRUD';
-	import getRealtimeChannel from '$lib/data/SupabaseRealtime';
+	import { requiresAuth } from '#lib/auth/requiresAuth.js';
+	import Footer from '#lib/components/Footer.svelte';
+	import Nav from '#lib/components/Nav.svelte';
+	import { setDB } from '#lib/data/CRUD.js';
+	import getRealtimeChannel from '#lib/data/SupabaseRealtime.js';
 	import { onMount } from 'svelte';
 	import SupabaseAuth, { setAuth } from './Auth.svelte';
 	import { setLocaleContext } from './Contexts';

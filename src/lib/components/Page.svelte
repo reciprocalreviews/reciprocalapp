@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { type Result } from '$lib/data/CRUD';
-	import type LocaleText from '$lib/locales/Locale';
+	import { type Result } from '#lib/data/CRUD.js';
+	import type LocaleText from '#lib/locales/Locale.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { onMount, type Snippet } from 'svelte';
 	import EditableText from './EditableText.svelte';

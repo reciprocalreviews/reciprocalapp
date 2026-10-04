@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { ScholarLabel } from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import VerifyEmail from '$lib/components/VerifyEmail.svelte';
-	import Text from '$lib/locales/Text.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { ScholarLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import VerifyEmail from '#lib/components/VerifyEmail.svelte';
+	import Text from '#lib/locales/Text.svelte';
 	import { getAuth } from '../../../Auth.svelte';
 
 	let { data } = $props();

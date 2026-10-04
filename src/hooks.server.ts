@@ -1,9 +1,8 @@
+import type { Handle } from '@sveltejs/kit/hooks';
 import { createServerClient } from '@supabase/ssr';
-import { type Handle } from '@sveltejs/kit';
+import { hasAuthCookie } from '#lib/auth/hasAuthCookie.js';
 
-import { hasAuthCookie } from '$lib/auth/hasAuthCookie';
-
-import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
+import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$app/env/public';
 
 /**
  * Routes whose HTML is the same for every anonymous visitor, and which are therefore

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { ErrorLabel } from '$lib/components/Labels';
-	import Page from '$lib/components/Page.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { ErrorLabel } from '#lib/components/Labels.js';
+	import Page from '#lib/components/Page.svelte';
 
 	// Until this file existed, every `error()` thrown from a load rendered SvelteKit's
 	// bare fallback: no navigation, no branding, no locale. That is what /help/<slug>
