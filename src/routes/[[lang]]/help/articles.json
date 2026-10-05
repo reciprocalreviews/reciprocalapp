@@ -5,6 +5,11 @@
 		"summary": "The problem the platform is trying to solve, and how tokens fit in."
 	},
 	{
+		"slug": "who-to-contact",
+		"title": "Who to contact",
+		"summary": "Venue questions go to the venue's editors, platform questions to the stewards, and bugs to GitHub."
+	},
+	{
 		"slug": "proposing-a-venue",
 		"title": "Proposing a venue",
 		"summary": "How to bring a conference or journal onto the platform, and what happens next."

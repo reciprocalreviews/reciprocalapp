@@ -9,6 +9,11 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 - **Editors can decline a bid, and must say why.** The explanation is emailed to the bidder with the editor's name and shown beside their bid; leaving a bid unanswered is still fine. (#195)
 - **Bulk imports keep the names of people who haven't joined yet, as unmatched assignments.** Once someone joins and accepts the role, whoever approves those assignments can match them all at once from a new Unmatched assignments page.
 - **Reviewers can request compensation for a submission nobody assigned them to,** such as an imported one whose editor hasn't joined. The request waits for an editor or admin to approve and pay it, or to decline it with a reason.
+- **Each venue's page now says who to ask about it,** listing its admins with their email addresses, and a new help article explains who to contact for what.
+
+### Changed
+
+- **Replying to an email about a venue now reaches that venue's admins instead of the Reciprocal Reviews stewards,** and the email names the venue. The contact page and every email now say that the stewards help only with the platform itself, and that bugs and feature requests go to GitHub.
 
 ### Fixed
 

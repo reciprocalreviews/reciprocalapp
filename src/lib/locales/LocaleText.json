@@ -1916,10 +1916,18 @@
                 "header": {
                   "additionalProperties": false,
                   "properties": {
+                    "defects": {
+                      "description": "Bugs and feature requests, which belong on GitHub.",
+                      "type": "string"
+                    },
                     "elsewhere": {
                       "type": "string"
                     },
                     "stewards": {
+                      "type": "string"
+                    },
+                    "venues": {
+                      "description": "Questions about one journal or conference, which its editors answer.",
                       "type": "string"
                     },
                     "write": {
@@ -1927,8 +1935,10 @@
                     }
                   },
                   "required": [
+                    "venues",
                     "write",
                     "stewards",
+                    "defects",
                     "elsewhere"
                   ],
                   "type": "object"
@@ -1942,9 +1952,6 @@
                     "help": {
                       "type": "string"
                     },
-                    "issues": {
-                      "type": "string"
-                    },
                     "newsletter": {
                       "type": "string"
                     }
@@ -1952,7 +1959,6 @@
                   "required": [
                     "help",
                     "discussions",
-                    "issues",
                     "newsletter"
                   ],
                   "type": "object"
@@ -1960,6 +1966,10 @@
                 "paragraph": {
                   "additionalProperties": false,
                   "properties": {
+                    "defects": {
+                      "description": "Sends bugs and feature requests to GitHub. Takes {issues}.",
+                      "type": "string"
+                    },
                     "elsewhere": {
                       "description": "Where to go for things that aren't a support request.",
                       "type": "string"
@@ -1972,15 +1982,21 @@
                       "description": "Introduces the steward list below.",
                       "type": "string"
                     },
+                    "venues": {
+                      "description": "Sends questions about a venue to its editors rather than the stewards, who do not run venues and cannot answer for them. Comes first because it is the question the steward inbox most often receives by mistake.",
+                      "type": "string"
+                    },
                     "write": {
-                      "description": "What the steward inbox is for. Takes {email}.",
+                      "description": "What the steward inbox is for: the platform itself. Takes {email}.",
                       "type": "string"
                     }
                   },
                   "required": [
+                    "venues",
                     "write",
                     "expectations",
                     "stewards",
+                    "defects",
                     "elsewhere"
                   ],
                   "type": "object"
@@ -5748,6 +5764,10 @@
                     "notFound": {
                       "type": "string"
                     },
+                    "questions": {
+                      "description": "Precedes the venue's admins, with mailto links: questions about the venue go to them, not the platform's stewards. Takes {title}, the venue's short name.",
+                      "type": "string"
+                    },
                     "submissionTypes": {
                       "type": "string"
                     }
@@ -5758,7 +5778,8 @@
                     "missingCompensation",
                     "noDescription",
                     "description",
-                    "allVolunteers"
+                    "allVolunteers",
+                    "questions"
                   ],
                   "type": "object"
                 },

@@ -113,3 +113,15 @@ test('an editor should see editor specific things', async ({ page, context }) =>
 
 	await logout(page);
 });
+
+test('a venue page says its admins, not the stewards, answer questions about it', async ({
+	page
+}) => {
+	// People wrote to the platform's stewards with questions about a venue, because nothing on
+	// the venue said who ran it or how to reach them. Shown to everyone, signed in or not.
+	await page.goto('/venue/c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6');
+
+	const contact = page.getByTestId('venue-contact');
+	await expect(contact).toContainText('not the Reciprocal Reviews stewards');
+	await expect(contact.locator('a[href^="mailto:"]').first()).toBeVisible();
+});

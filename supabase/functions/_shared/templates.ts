@@ -418,7 +418,7 @@ export const Emails = {
 		subject: 'Your Reciprocal Reviews contact email was changed',
 		paragraphs: [
 			'The contact address for your Reciprocal Reviews account was changed to $1. Notifications will go there from now on, and this address will stop receiving them.',
-			'If you made this change, there is nothing to do. If you did not, reply to this message and a steward will see it.'
+			'If you made this change, there is nothing to do. If you did not, reply to this message and the stewards will see it.'
 		]
 	},
 	// ---- Submissions in motion -----------------------------------------------------------

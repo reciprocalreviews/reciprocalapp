@@ -37,7 +37,9 @@ create table if not exists public.emails (
 	-- which is what every message sent before this column existed carried and what the
 	-- `resend` function still substitutes. Never accepted from a caller either: it points
 	-- replies at an address, so a caller-supplied value would be a redirect sitting inside
-	-- genuinely branded mail.
+	-- genuinely branded mail. A row about a venue that names none gets the venue's own
+	-- address on insert (resolve_venue_reply_to below), so questions about a venue reach
+	-- the people who run it rather than the platform's stewards.
 	reply_to text,
 	-- ---- Delivery outcome -----------------------------------------------------------
 	-- Everything above records what we MEANT to send. These four record what happened to
@@ -175,8 +177,9 @@ select
 --
 -- `cc` and `reply_to` are MORE recipient surface, so they tighten this rule rather than
 -- loosen it: neither may ever be written from a value that crossed the API. Neither
--- queue_email nor queue_steward_email accepts a parameter for either, and the only writer
--- is public._notify_new_volunteer, which resolves every address from scholars.email.
+-- queue_email nor queue_steward_email accepts a parameter for either. The writers are
+-- public._notify_new_volunteer, public.queue_call_for_bids and the resolve_venue_reply_to
+-- trigger, and each resolves every address from scholars.email.
 revoke insert on table public.emails
 from
 	authenticated,
@@ -319,7 +322,13 @@ begin
         -- Who the message is to, so an optional notice's footer can link to the recipient's
         -- own notification settings (settingsUrlFor in _shared/templates.ts). Null for mail
         -- with no scholar, such as the steward inbox, which then gets no such link.
-        'scholar', new.scholar
+        'scholar', new.scholar,
+        -- The venue the message is about, so the footer can name it and send questions about
+        -- it to its editors rather than the stewards. Its short name where it has one, as the
+        -- venue bar shows it (venueBarName). Both null for mail that is not about a venue,
+        -- which keeps the steward footer.
+        'venue_title', (select coalesce(nullif(btrim(v.short_title), ''), v.title) from public.venues v where v.id = new.venue),
+        'venue_path', (select coalesce(v.slug, v.id::text) from public.venues v where v.id = new.venue)
       )
     ) into _request_id;
 
@@ -368,6 +377,61 @@ from
 create or replace trigger send_on_email_insert
 after insert on public.emails for each row
 execute function public.send_email ();
+
+--------------------------------------
+-- venue_reply_to: where a reply to mail about a venue should go.
+--
+-- The venue's first administrator with a verified contact address, or null when none has
+-- one. Mail about a venue used to reply to stewards@ like everything else, and its footer
+-- said a steward would read the reply, so people wrote to the platform's stewards with
+-- questions about a journal's reviewing that only its editors could answer. One address
+-- because reply_to holds one, and the first because it is the longest-standing, the rule
+-- _notify_new_volunteer uses for whom it addresses. The footer links the venue's page,
+-- which lists the rest.
+--
+-- Security invoker: it reads venues.admins and scholars.email, both world-readable, and
+-- its only caller below already runs as the table owner.
+create or replace function public.venue_reply_to (_venue uuid) returns text language sql stable
+set
+	"search_path" to '' as $$
+	select s.email
+	from public.venues v
+	cross join lateral unnest(v.admins) with ordinality as a (scholar, position)
+	join public.scholars s on s.id = a.scholar
+	where v.id = _venue and s.email is not null
+	order by a.position
+	limit 1;
+$$;
+
+alter function public.venue_reply_to (uuid) OWNER to "postgres";
+
+-- resolve_venue_reply_to: give a row about a venue that venue's reply address.
+--
+-- A trigger rather than a line in each producer, because the producers are many --
+-- queue_email, queue_reminder_email, queue_thanks_emails, create_volunteer -- and the rule
+-- is one: mail about a venue answers to the venue. A producer added later inherits it by
+-- setting `venue`. A row that already names a reply_to keeps it (a call for bids replies to
+-- the editor who wrote it).
+--
+-- NewVolunteer is the exception. Its reply path is the new volunteer, so that answering it
+-- is the welcome; one with no verified address has no reply path, and the notice goes to
+-- the venue's editors, who would only be replying to themselves.
+create or replace function public.resolve_venue_reply_to () returns trigger language plpgsql
+set
+	"search_path" to '' as $$
+begin
+	if new.venue is not null and new.reply_to is null and new.event is distinct from 'NewVolunteer' then
+		new.reply_to := public.venue_reply_to(new.venue);
+	end if;
+	return new;
+end;
+$$;
+
+alter function public.resolve_venue_reply_to () OWNER to "postgres";
+
+create or replace trigger resolve_venue_reply_to_on_email_insert
+before insert on public.emails for each row
+execute function public.resolve_venue_reply_to ();
 
 --------------------------------------
 -- reconcile_email_delivery: turn pg_net's asynchronous answers into durable verdicts on
@@ -512,11 +576,20 @@ execute on function public.reconcile_email_delivery () to service_role;
 
 --------------------------------------
 -- RPC (authoritative definition from migration 20260719030000_queue_email_rpc)
+--
+-- `_venue` names the venue a message is about. It sets the row's `venue`, which gives the
+-- message the venue's reply address (resolve_venue_reply_to) and a footer naming the venue,
+-- and makes the row readable by that venue's admins through the SELECT policy. It is not
+-- authorized against the caller, and the residual is the one this function already
+-- carries: a caller who tags mail with an unrelated venue chooses no prose and no address,
+-- only that replies to their fixed template go to that venue's first admin, and
+-- emails.sender records who did it.
 create or replace function public.queue_email (
 	_event text,
 	_args text[] default '{}',
 	_scholars uuid[] default null,
-	_proposal uuid default null
+	_proposal uuid default null,
+	_venue uuid default null
 ) returns jsonb language plpgsql security definer
 set
 	"search_path" to 'public',
@@ -552,7 +625,7 @@ begin
 	-- and always sends -- so a template missing from the seed fails toward delivering mail.
 	if _scholars is not null then
 		insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
-		select _event, s.id, _caller, null, s.email, null, null, to_jsonb(_args)
+		select _event, s.id, _caller, _venue, s.email, null, null, to_jsonb(_args)
 		from public.scholars s
 		where s.id = any(_scholars) and s.email is not null
 			and public.notification_allowed(s.id, _event);
@@ -584,16 +657,16 @@ begin
 end;
 $$;
 
-alter function public.queue_email (text, text[], uuid[], uuid) OWNER to "postgres";
+alter function public.queue_email (text, text[], uuid[], uuid, uuid) OWNER to "postgres";
 
 revoke
-execute on function public.queue_email (text, text[], uuid[], uuid)
+execute on function public.queue_email (text, text[], uuid[], uuid, uuid)
 from
 	public,
 	anon;
 
 grant
-execute on function public.queue_email (text, text[], uuid[], uuid) to authenticated;
+execute on function public.queue_email (text, text[], uuid[], uuid, uuid) to authenticated;
 
 --------------------------------------
 -- The alias, defined once.
@@ -680,7 +753,14 @@ execute on function public.queue_steward_email (text, text[]) to authenticated;
 -- `reply_to` is left null deliberately. The cron used to set it to stewards@ explicitly, and
 -- null already resolves to exactly that (see send_email), so the reminders keep the reply
 -- path they had -- the one thing about them most likely to be answered with a question.
-create or replace function public.queue_reminder_email (_event text, _args text[], _scholar uuid) returns integer language plpgsql security definer
+-- A reminder about one venue passes `_venue`, and then the question goes to that venue
+-- instead (resolve_venue_reply_to), since it is about the venue's work, not the platform.
+create or replace function public.queue_reminder_email (
+	_event text,
+	_args text[],
+	_scholar uuid,
+	_venue uuid default null
+) returns integer language plpgsql security definer
 set
 	"search_path" to 'public',
 	'pg_temp' as $$
@@ -697,7 +777,7 @@ begin
 	end if;
 
 	insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
-	select _event, s.id, null, null, s.email, null, null, to_jsonb(_args)
+	select _event, s.id, null, _venue, s.email, null, null, to_jsonb(_args)
 	from public.scholars s
 	where s.id = _scholar
 		and s.email is not null
@@ -708,7 +788,7 @@ begin
 end;
 $$;
 
-alter function public.queue_reminder_email (text, text[], uuid) OWNER to "postgres";
+alter function public.queue_reminder_email (text, text[], uuid, uuid) OWNER to "postgres";
 
 -- Explicitly revoked, not merely un-granted: Supabase's ALTER DEFAULT PRIVILEGES hands anon
 -- and authenticated EXECUTE on every function created in `public` at creation time, and
@@ -716,11 +796,11 @@ alter function public.queue_reminder_email (text, text[], uuid) OWNER to "postgr
 -- would hand any signed-in user a way to send branded mail to any scholar, with no caller
 -- recorded against it -- strictly worse than queue_email, which at least stamps `sender`.
 revoke
-execute on function public.queue_reminder_email (text, text[], uuid)
+execute on function public.queue_reminder_email (text, text[], uuid, uuid)
 from
 	public,
 	anon,
 	authenticated;
 
 grant
-execute on function public.queue_reminder_email (text, text[], uuid) to service_role;
+execute on function public.queue_reminder_email (text, text[], uuid, uuid) to service_role;

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Feedback from '#lib/components/Feedback.svelte';
-	import { IdeaLabel, ScholarLabel } from '#lib/components/Labels.js';
+	import { IdeaLabel, ScholarLabel, VenueLabel } from '#lib/components/Labels.js';
 	import Link from '#lib/components/Link.svelte';
 	import Page from '#lib/components/Page.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
@@ -13,6 +13,12 @@
 </script>
 
 <Page icon={ScholarLabel} title={(l) => l.page.contact.title}>
+	<!-- First, because it is the question the steward inbox most often receives by mistake:
+	     the stewards run the platform, not the journals and conferences on it. -->
+	<Subheader icon={VenueLabel} text={(l) => l.page.contact.header.venues} />
+
+	<Paragraph text={(l) => l.page.contact.paragraph.venues} />
+
 	<Subheader icon="✉️" text={(l) => l.page.contact.header.write} />
 
 	<Paragraph text={(l) => l.page.contact.paragraph.write} inputs={{ email: SUPPORT_EMAIL }} />
@@ -38,6 +44,10 @@
 		<Feedback text={(l) => l.page.contact.feedback.stewardsNotLoaded} />
 	{/if}
 
+	<Subheader icon="🐞" text={(l) => l.page.contact.header.defects} />
+
+	<Paragraph text={(l) => l.page.contact.paragraph.defects} inputs={{ issues: ISSUES_URL }} />
+
 	<Subheader icon={IdeaLabel} text={(l) => l.page.contact.header.elsewhere} />
 
 	<Paragraph text={(l) => l.page.contact.paragraph.elsewhere} />
@@ -47,7 +57,6 @@
 		<li>
 			<Link to={DISCUSSIONS_URL}><Text path={(l) => l.page.contact.link.discussions} /></Link>
 		</li>
-		<li><Link to={ISSUES_URL}><Text path={(l) => l.page.contact.link.issues} /></Link></li>
 		<li><Link to={NEWSLETTER_URL}><Text path={(l) => l.page.contact.link.newsletter} /></Link></li>
 	</ul>
 </Page>

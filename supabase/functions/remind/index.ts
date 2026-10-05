@@ -22,6 +22,8 @@ type PendingReminder = {
 	scholar: string;
 	event: EmailType;
 	args: string[];
+	/** The venue the reminder is about, when it is about one; its replies then go there. */
+	venue?: string;
 };
 
 async function getStaleStatusReminder(
@@ -140,7 +142,9 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 				reminders.push({
 					scholar,
 					event,
-					args: [submissions.size.toString(), venueTitleOf(venue), venuePathOf(venue)]
+					args: [submissions.size.toString(), venueTitleOf(venue), venuePathOf(venue)],
+					// About one venue's work, so a reply belongs with that venue.
+					venue
 				});
 	};
 
@@ -553,7 +557,8 @@ const handler = async (request: Request): Promise<Response> => {
 			const { data, error } = await supabase.rpc('queue_reminder_email', {
 				_event: reminder.event,
 				_args: reminder.args,
-				_scholar: reminder.scholar
+				_scholar: reminder.scholar,
+				_venue: reminder.venue
 			});
 			if (error) {
 				rejected++;

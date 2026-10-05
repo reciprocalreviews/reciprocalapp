@@ -898,10 +898,10 @@ isOneToOne: false
 { Args: { "_note": string,"_role": string }; Returns: Json
                            },
 "queue_email":
-{ Args: { "_args"?: (string)[],"_event": string,"_proposal"?: string,"_scholars"?: (string)[] }; Returns: Json
+{ Args: { "_args"?: (string)[],"_event": string,"_proposal"?: string,"_scholars"?: (string)[],"_venue"?: string }; Returns: Json
                            },
 "queue_reminder_email":
-{ Args: { "_args": (string)[],"_event": string,"_scholar": string }; Returns: number
+{ Args: { "_args": (string)[],"_event": string,"_scholar": string,"_venue"?: string }; Returns: number
                            },
 "queue_steward_email":
 { Args: { "_args"?: (string)[],"_event": string }; Returns: undefined
@@ -969,6 +969,9 @@ isOneToOne: false
                            },
 "transfer_tokens":
 { Args: { "_amount": number,"_currency": string,"_from": string,"_from_kind": string,"_purpose": string,"_to": string,"_to_kind": string,"_transaction": string }; Returns: Json
+                           },
+"venue_reply_to":
+{ Args: { "_venue": string }; Returns: string
                            },
 "venue_submission_editors":
 { Args: { "_venue": string }; Returns: {
