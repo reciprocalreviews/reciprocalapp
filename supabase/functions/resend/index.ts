@@ -1,8 +1,19 @@
 import z from 'zod';
 import { requireSecretKey } from '../_shared/auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
-import { FROM_EMAIL, renderBrandedEmail, SUPPORT_EMAIL } from '../_shared/emailShell.ts';
-import { Emails, renderEmail, settingsUrlFor, type EmailType } from '../_shared/templates.ts';
+import {
+	FROM_EMAIL,
+	renderBrandedEmail,
+	SUPPORT_EMAIL,
+	type EmailVenue
+} from '../_shared/emailShell.ts';
+import {
+	DEFAULT_ORIGIN,
+	Emails,
+	renderEmail,
+	settingsUrlFor,
+	type EmailType
+} from '../_shared/templates.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const isLocal = Deno.env.get('PUBLIC_SUPABASE_URL')?.includes('127.0.0.1') ?? false;
@@ -34,7 +45,12 @@ const ResendBodySchema = z.object({
 	origin: z.string().nullish(),
 	// The recipient's scholar id, when the message has one. Used only to link an optional
 	// notice's footer to that scholar's notification settings.
-	scholar: z.string().uuid().nullish()
+	scholar: z.string().uuid().nullish(),
+	// The venue the message is about, when it is about one: its title and the path segment
+	// of its page, read by send_email() from the row's `venue`. Used only by the footer, which
+	// names the venue and sends questions about it to its editors.
+	venue_title: z.string().nullish(),
+	venue_path: z.string().nullish()
 });
 
 export type ResendBody = z.infer<typeof ResendBodySchema>;
@@ -59,6 +75,13 @@ const handler = async (request: Request): Promise<Response> => {
 		const { to } = parsed;
 		const cc = parsed.cc ?? [];
 		const replyTo = parsed.reply_to ?? undefined;
+		const venue: EmailVenue | undefined =
+			parsed.venue_title && parsed.venue_path
+				? {
+						title: parsed.venue_title,
+						url: `${(parsed.origin || DEFAULT_ORIGIN).replace(/\/+$/, '')}/venue/${encodeURIComponent(parsed.venue_path)}`
+					}
+				: undefined;
 
 		// Render from the template registry when the queuing code did not supply a body.
 		// An unknown event is a programming error, not something to deliver blank.
@@ -89,6 +112,7 @@ const handler = async (request: Request): Promise<Response> => {
 			console.log('to: ', to);
 			if (cc.length > 0) console.log('cc: ', cc.join(', '));
 			console.log('reply-to:', replyTo ?? SUPPORT_EMAIL);
+			if (venue) console.log('venue:', venue.title, venue.url);
 			console.log('subject:', subject);
 			console.log('message:', message);
 			if (settingsUrl) console.log('settings:', settingsUrl);
@@ -108,7 +132,8 @@ const handler = async (request: Request): Promise<Response> => {
 				// Whether anyone is actually copied, so the footer only offers Reply All when
 				// there is a group for it to reach.
 				cc.length > 0,
-				settingsUrl
+				settingsUrl,
+				venue
 			);
 
 			// Post to the resend API using the API key
@@ -124,9 +149,9 @@ const handler = async (request: Request): Promise<Response> => {
 						// Mail is sent by a robot, but a reply has to reach people. Without this
 						// header every reply to a notification — a question about a proposal, a
 						// disputed transaction — is delivered to an unmonitored mailbox and lost.
-						// Most mail's replies belong with the stewards; a notice ABOUT a specific
-						// person carries that person instead, so its reader can hit Reply and
-						// answer them rather than filing a support request.
+						// Mail about a venue replies to the venue (resolve_venue_reply_to), a notice
+						// ABOUT a specific person carries that person, and the rest belongs with
+						// the stewards.
 						reply_to: replyTo ?? SUPPORT_EMAIL,
 						to: to,
 						// Spread rather than `cc: cc`. Resend treats `cc: []` as a malformed

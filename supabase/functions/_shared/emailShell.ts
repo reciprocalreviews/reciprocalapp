@@ -7,8 +7,8 @@
 // are hand-authored to mirror this same shell (auth emails are rendered by
 // GoTrue, not this code), so keep the two visually in sync when editing.
 //
-// Exactly one thing varies between messages: the footer sentence about where a reply goes,
-// which follows the Reply-To the message actually carries. See `replyToFooter` below.
+// Exactly one thing varies between messages: the footer, which follows the Reply-To the
+// message actually carries and the venue it is about, if any. See `footer` below.
 //
 // English only: we have no way to solicit a scholar's language preference yet.
 
@@ -22,8 +22,9 @@ const BORDER_COLOR = '#bbbbbb'; // --border-color
 /**
  * The shared steward inbox — a Google Group in collaborative-inbox mode, so mail
  * sent here reaches every steward and can be assigned and resolved among them.
- * This is the platform's front door: it is the `Reply-To` on every email we send
- * (see the `resend` and `remind` functions) and the address named on /contact.
+ * It is for the platform itself, not for the venues on it: it is the `Reply-To` on
+ * email that is not about a venue (see the `resend` function and resolve_venue_reply_to
+ * in supabase/schemas/emails.sql) and the address named on /contact.
  */
 export const SUPPORT_EMAIL = 'stewards@reciprocal.reviews';
 
@@ -34,14 +35,59 @@ export const SUPPORT_EMAIL = 'stewards@reciprocal.reviews';
  */
 export const FROM_EMAIL = 'Reciprocal Reviews <notifications@reciprocal.reviews>';
 
+/** Where defects and feature requests go. Named in every footer, because a bug report sent
+ * to the steward inbox is one nobody else can see, follow, or add to. */
+export const ISSUES_URL = 'https://github.com/reciprocalreviews/reciprocalapp/issues';
+
+/** The venue a message is about: its short name (or its title, when it has none), which a
+ * scholar chose and so is escaped here, and the absolute URL of its page, which lists the
+ * people who run it. */
+export type EmailVenue = { title: string; url: string };
+
 const WORDMARK = 'Reciprocal Reviews';
-// Says who to talk to, not just who sent it. Every email is a potential support
-// conversation, and this is the only place the recipient is told that replying works.
-const STEWARD_FOOTER = `Sent by Reciprocal Reviews. Reply to this email and a steward will see it, or write <a href="mailto:${SUPPORT_EMAIL}" style="color: ${MUTED_COLOR};">${SUPPORT_EMAIL}</a>.`;
+
+function mailto(address: string): string {
+	const escaped = escapeHtml(address);
+	return `<a href="mailto:${escaped}" style="color: ${MUTED_COLOR};">${escaped}</a>`;
+}
+
+const SUPPORT_LINK = mailto(SUPPORT_EMAIL);
+const ISSUES_CLAUSE = ` Report bugs or suggest features on <a href="${ISSUES_URL}" style="color: ${MUTED_COLOR};">GitHub</a>.`;
+
+// Says who to talk to, not just who sent it, and what about. Every email is a potential
+// support conversation, and this is the only place the recipient is told that replying
+// works. It used to promise only that "a steward will see it", which was wrong twice over:
+// the inbox reaches every steward, and people took it as an invitation to ask the stewards
+// about the venues the platform hosts, which the stewards do not run.
+const STEWARD_FOOTER = `Sent by Reciprocal Reviews. Replying to this email reaches all of the Reciprocal Reviews stewards at ${SUPPORT_LINK}, who help with the platform itself. Send questions about a journal or conference to its editors.${ISSUES_CLAUSE}`;
 
 /**
- * The footer for a message that carries its OWN `Reply-To` — currently a notice about a
- * specific person, addressed so its reader can answer them directly.
+ * The footer for a message about a venue. It names the venue and sends questions about it to
+ * its editors, because a reader whose notice is about ACM TOCE reasonably assumes that
+ * whoever sent it can answer for ACM TOCE.
+ *
+ * With a reply address, the reply already goes to the venue (resolve_venue_reply_to), or to
+ * the editor who wrote the message. Without one -- no admin has a verified address -- a reply
+ * falls back to the stewards, so the footer says that they can help only with the platform,
+ * and points at the venue's page instead.
+ */
+function venueFooter(venue: EmailVenue, replyTo: string | undefined, copied: boolean): string {
+	const title = escapeHtml(venue.title);
+	// The venue's page is where its editors are listed, so "its editors" is the link.
+	const editors = `<a href="${escapeHtml(venue.url)}" style="color: ${MUTED_COLOR};">its editors</a>`;
+	const sent = `Sent by Reciprocal Reviews for ${title}.`;
+	const route = replyTo
+		? ` Replying to this email goes to ${mailto(replyTo)}${replyAllClause(copied)}. Send questions about ${title} to ${editors}, not the Reciprocal Reviews stewards; write ${SUPPORT_LINK} only for help with the platform itself.`
+		: ` Send questions about ${title} to ${editors}. Replying to this email reaches all of the Reciprocal Reviews stewards at ${SUPPORT_LINK}, who can help with the platform itself but not with ${title}.`;
+	return `${sent}${route}${ISSUES_CLAUSE}`;
+}
+
+function replyAllClause(copied: boolean): string {
+	return copied ? ' — Reply All also reaches everyone copied on it' : '';
+}
+
+/**
+ * The footer for a message that carries its OWN `Reply-To` and is not about a venue.
  *
  * The steward wording would be false here, and *quietly* false: the reader would believe a
  * reply had reached support when it had actually gone to a stranger. So name the real reply
@@ -59,9 +105,13 @@ const STEWARD_FOOTER = `Sent by Reciprocal Reviews. Reply to this email and a st
  * The address arrives as data and lands in an `href`, so it is escaped.
  */
 function replyToFooter(replyTo: string, copied: boolean): string {
-	const address = escapeHtml(replyTo);
-	const replyAll = copied ? ' — Reply All also reaches everyone copied on it' : '';
-	return `Sent by Reciprocal Reviews. Replying to this email goes to <a href="mailto:${address}" style="color: ${MUTED_COLOR};">${address}</a>${replyAll}. For help with Reciprocal Reviews, write <a href="mailto:${SUPPORT_EMAIL}" style="color: ${MUTED_COLOR};">${SUPPORT_EMAIL}</a>.`;
+	return `Sent by Reciprocal Reviews. Replying to this email goes to ${mailto(replyTo)}${replyAllClause(copied)}. For help with the Reciprocal Reviews platform itself, write ${SUPPORT_LINK}.${ISSUES_CLAUSE}`;
+}
+
+/** Which footer a message gets. */
+function footer(replyTo: string | undefined, copied: boolean, venue: EmailVenue | undefined) {
+	if (venue) return venueFooter(venue, replyTo, copied);
+	return replyTo ? replyToFooter(replyTo, copied) : STEWARD_FOOTER;
 }
 
 /** Where the wordmark links when no origin is supplied. Declared here rather
@@ -198,7 +248,8 @@ export function wrapEmail({
 	origin = DEFAULT_ORIGIN,
 	replyTo,
 	copied = false,
-	settingsUrl
+	settingsUrl,
+	venue
 }: {
 	subject: string;
 	bodyHtml: string;
@@ -216,6 +267,9 @@ export function wrapEmail({
 	/** Where the recipient can silence this notice, for an optional one. Adds one sentence
 	 * to the footer; absent for consequential mail. */
 	settingsUrl?: string;
+	/** The venue this message is about, if any, so the footer can name it and send questions
+	 * about it to its editors rather than the stewards. */
+	venue?: EmailVenue;
 }): string {
 	return `<!doctype html>
 <html lang="en">
@@ -242,7 +296,7 @@ ${bodyHtml}
 						</tr>
 						<tr>
 							<td style="padding: 20px 32px; border-top: 1px solid ${BORDER_COLOR}; color: ${MUTED_COLOR}; font-size: 12px; line-height: 1.5;">
-								${replyTo ? replyToFooter(replyTo, copied) : STEWARD_FOOTER}${settingsUrl ? settingsFooter(settingsUrl) : ''}
+								${footer(replyTo, copied, venue)}${settingsUrl ? settingsFooter(settingsUrl) : ''}
 							</td>
 						</tr>
 					</table>
@@ -261,16 +315,17 @@ export function renderBrandedEmail(
 	subject: string,
 	body: string,
 	origin: string = DEFAULT_ORIGIN,
-	// Trailing and optional so the `remind` cron keeps compiling against the
-	// three-argument form. Every reminder's reply path genuinely IS the stewards, so it
-	// wants the default footer; a per-message Reply-To reminder would pass this.
+	// Trailing and optional: only a message that names its own Reply-To passes it, and
+	// everything else replies to the stewards.
 	replyTo?: string,
 	// Also trailing and optional: only the consumer that knows the row's `cc` can answer this,
 	// and every other caller sends to one recipient.
 	copied: boolean = false,
 	// Trailing and optional for the same reason: only a caller that knows the row's scholar
 	// and event can say where that scholar turns it off. See `settingsUrlFor`.
-	settingsUrl?: string
+	settingsUrl?: string,
+	// Trailing and optional too: only the consumer that reads the row's venue can name it.
+	venue?: EmailVenue
 ): { html: string; text: string } {
 	const html = wrapEmail({
 		subject,
@@ -278,7 +333,8 @@ export function renderBrandedEmail(
 		origin,
 		replyTo,
 		copied,
-		settingsUrl
+		settingsUrl,
+		venue
 	});
 	return { html, text: htmlToText(html) };
 }

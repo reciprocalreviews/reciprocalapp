@@ -20,7 +20,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(23);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -145,6 +145,94 @@ select throws_ok(
 	'P0001',
 	null,
 	'a caller cannot forge a verification email with a link of their choosing'
+);
+
+-- ---- Reply-To for mail about a venue ------------------------------------------
+-- Mail about a venue answers to the venue: its first admin with a verified address, set on
+-- insert by resolve_venue_reply_to. Before this, every venue notice replied to stewards@,
+-- and people wrote to the platform's stewards with questions only a venue's editors could
+-- answer.
+select tests.clear_authentication();
+select tests.create_scholar() as noaddr \gset
+-- create_scholar always gives an address; this admin has never verified one.
+update public.scholars set email = null where id = :'noaddr';
+select tests.create_venue(:'cur', array[:'noaddr']::uuid[]) as unreachable \gset
+select tests.create_venue(:'cur', array[:'noaddr', :'vadmin']::uuid[]) as second \gset
+select tests.authenticate_as(:'sender');
+
+select public.queue_email('SubmissionCharged', array['Paper','A Venue','1','x'], array[:'recipient'::uuid], null, :'ven');
+select tests.clear_authentication();
+select results_eq(
+	$$ select venue::text, reply_to from public.emails
+	   where event = 'SubmissionCharged' and sender = $$ || quote_literal(:'sender') || $$
+	   order by time_sent desc limit 1 $$,
+	$$ values ($$ || quote_literal(:'ven') || $$, 'email_vadmin@test.local') $$,
+	'queue_email with a venue replies to that venue''s admin'
+);
+
+select tests.authenticate_as(:'sender');
+select public.queue_email('TokensReceived', array['1','Tokens','x','y','z'], array[:'recipient'::uuid], null);
+select tests.clear_authentication();
+select results_eq(
+	$$ select venue, reply_to from public.emails
+	   where event = 'TokensReceived' and sender = $$ || quote_literal(:'sender') || $$ $$,
+	$$ values (null::uuid, null::text) $$,
+	'mail about no venue still replies to the stewards'
+);
+
+-- Skipping an admin with no verified address is what makes the reply reach a person.
+select tests.authenticate_as(:'sender');
+select public.queue_email('RoleDeleted', array['Role','Second','x'], array[:'recipient'::uuid], null, :'second');
+select public.queue_email('RoleDeleted', array['Role','Nobody','x'], array[:'recipient'::uuid], null, :'unreachable');
+select tests.clear_authentication();
+select is(
+	(select reply_to from public.emails where event = 'RoleDeleted' and venue = :'second'),
+	'email_vadmin@test.local',
+	'the first admin WITH a verified address receives replies'
+);
+select is(
+	(select reply_to from public.emails where event = 'RoleDeleted' and venue = :'unreachable'),
+	null,
+	'a venue whose admins have no verified address falls back to the stewards'
+);
+
+-- A second, venue-blind entry point would let mail about a venue skip all of this.
+select hasnt_function(
+	'public', 'queue_email', array['text', 'text[]', 'uuid[]', 'uuid'],
+	'the venue-blind four-argument queue_email is gone'
+);
+
+-- A message that names its own reply path keeps it: a call for bids replies to its author.
+insert into public.emails (event, scholar, sender, venue, email, reply_to, subject, message)
+values ('CallForBids', :'recipient', :'sender', :'ven', 'email_recipient@test.local',
+        'email_sender@test.local', 'S', 'M')
+returning id as ownreply \gset
+select is(
+	(select reply_to from public.emails where id = :'ownreply'),
+	'email_sender@test.local',
+	'an explicit reply_to is not replaced by the venue''s'
+);
+
+-- NewVolunteer goes to the venue's editors; with no volunteer address there is nobody to
+-- reply to, and the editors would only be replying to themselves.
+insert into public.emails (event, scholar, sender, venue, email, subject, message)
+values ('NewVolunteer', :'recipient', :'sender', :'ven', 'email_recipient@test.local', 'S', 'M')
+returning id as newvol \gset
+select is(
+	(select reply_to from public.emails where id = :'newvol'),
+	null,
+	'a new-volunteer notice is not given the venue''s reply address'
+);
+
+select is(
+	public.queue_reminder_email('SubmissionsReady', array['1','A Venue','x'], :'recipient'::uuid, :'ven'),
+	1,
+	'queue_reminder_email queues a reminder about a venue'
+);
+select is(
+	(select reply_to from public.emails where event = 'SubmissionsReady' and venue = :'ven'),
+	'email_vadmin@test.local',
+	'a reminder about a venue replies to that venue''s admin'
 );
 
 -- Anonymous visitors have no insert policy and are denied.

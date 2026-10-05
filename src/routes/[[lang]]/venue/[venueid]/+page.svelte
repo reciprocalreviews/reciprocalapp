@@ -21,6 +21,7 @@
 	import { handle } from '$routes/feedback.svelte';
 	import type { PageData } from './$types';
 	import Roles from './Roles.svelte';
+	import VenueContact from './VenueContact.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const {
@@ -106,6 +107,8 @@
 				inputs={venue.description.length === 0 ? {} : { description: venue.description }}
 			/>
 		{/if}
+
+		<VenueContact {venue} />
 
 		<!-- Name the admin/minter overlap to everyone who isn't one of them. -->
 		{#if showPayment && adminMints && !isAdmin && !isMinter && currency}

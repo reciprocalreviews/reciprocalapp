@@ -935,6 +935,9 @@ export type LocaleText = {
 				noDescription: string;
 				description: string;
 				allVolunteers: string;
+				/** Precedes the venue's admins, with mailto links: questions about the venue go
+				 * to them, not the platform's stewards. Takes {title}, the venue's short name. */
+				questions: string;
 			};
 		};
 		settings: {
@@ -1422,24 +1425,33 @@ export type LocaleText = {
 		contact: {
 			title: string;
 			header: {
+				/** Questions about one journal or conference, which its editors answer. */
+				venues: string;
 				write: string;
 				stewards: string;
+				/** Bugs and feature requests, which belong on GitHub. */
+				defects: string;
 				elsewhere: string;
 			};
 			paragraph: {
-				/** What the steward inbox is for. Takes {email}. */
+				/** Sends questions about a venue to its editors rather than the stewards, who
+				 * do not run venues and cannot answer for them. Comes first because it is the
+				 * question the steward inbox most often receives by mistake. */
+				venues: string;
+				/** What the steward inbox is for: the platform itself. Takes {email}. */
 				write: string;
 				/** Sets expectations about who reads it and how fast. */
 				expectations: string;
 				/** Introduces the steward list below. */
 				stewards: string;
+				/** Sends bugs and feature requests to GitHub. Takes {issues}. */
+				defects: string;
 				/** Where to go for things that aren't a support request. */
 				elsewhere: string;
 			};
 			link: {
 				help: string;
 				discussions: string;
-				issues: string;
 				newsletter: string;
 			};
 			feedback: {

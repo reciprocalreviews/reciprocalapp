@@ -288,12 +288,20 @@ The purpose of the contact page is to be a **front door**: one place a person wh
 knows to go, that reaches a specific set of named people rather than an anonymous support
 queue. It should:
 
-- [x] Name the shared steward inbox, `stewards@reciprocal.reviews`, and say what it is for
+- [x] Send questions about a venue to that venue's editors first, before anything else on
+      the page. The stewards run the platform, not the journals and conferences on it, and
+      the steward inbox was receiving questions about a journal (ACM TOCE) that only its
+      editors could answer. Each venue's page names its admins with their verified addresses
+      for the same reason.
+- [x] Name the shared steward inbox, `stewards@reciprocal.reviews`, and say what it is for:
+      the platform itself — accounts, data, venue proposals, how tokens work
+- [x] Send bugs and feature requests to GitHub issues, where others can see, follow and add
+      to them; a report in an inbox is one nobody else can find
 - [x] List the current stewards by name, linking to their profiles, so the address visibly
       resolves to people who will read the message
 - [x] Set expectations: stewards are volunteers, and a reply may take days
 - [x] Point elsewhere for things that are not support requests: help articles, community
-      discussion, the issue tracker, the newsletter
+      discussion, the newsletter
 
 Design rationale: the alternative shapes were a personal email address, which is warm but
 does not scale past one steward and disappears when that person does; and a ticketing
@@ -558,7 +566,14 @@ All emails RR sends — contact-email verification and the transactional and rem
 Every link an email asks you to follow is a **button**, the same in every email, so the thing to do next is never a line of small text lost in a long message. Buttons go through sign-in, so they work from an inbox where you aren't signed in; if you are, you pass straight through ([#191](https://github.com/reciprocalreviews/reciprocalapp/issues/191)). And every email you can turn off ends by saying where: a link through sign-in to the matching group of controls on your profile. Consequential mail has no such link, because there is nothing to turn off.
 
 Every email RR sends is **replyable**. Mail is sent from `notifications@reciprocal.reviews`,
-and by default carries `Reply-To: stewards@reciprocal.reviews`. A notification is therefore a
+and by default carries `Reply-To: stewards@reciprocal.reviews`. Mail **about a venue** — a
+charge, an assignment, a payment, a role change — instead replies to that venue's first admin
+with a verified address, and its footer names the venue by its short name and sends questions
+about it to its editors, linking the venue's page. A reply to a venue notice used to reach the
+stewards under a footer promising "a steward will see it", and people took that as an
+invitation to ask the platform about a journal it does not run. Only when no admin has a
+verified address does venue mail fall back to the stewards, and its footer then says they can
+help with the platform but not with the venue. A notification is therefore a
 valid starting point for a conversation: a scholar who does not understand why they were
 charged, or an editor with a question about a proposal, can answer the email they are looking
 at instead of hunting for a contact address. Without this, every reply to an RR notification
@@ -568,7 +583,8 @@ A notice whose whole point is to start a conversation with a **specific person**
 that person instead — currently just the new-volunteer notice below, which carries the
 newcomer's own address so a Reply is the welcome rather than a support request. The footer
 follows the header rather than repeating a fixed promise: it names whichever address a reply
-will actually reach, and names `stewards@` separately as the route to help. A footer that
+will actually reach, names `stewards@` separately as the route to help with the platform itself,
+and sends bugs and feature requests to GitHub. A footer that
 said "a steward will see it" on a message that replies to a stranger would be worse than no
 footer at all, because the reader would believe it.
 

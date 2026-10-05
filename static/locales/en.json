@@ -41,7 +41,7 @@
 	},
 	"banner": {
 		"beta": {
-			"lead": "We're in **beta**. [Report issues](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose) or [write the stewards](/contact) with thoughts.",
+			"lead": "We're in **beta**. [Report bugs and suggest features](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose) on GitHub, or [write the stewards](/contact) with thoughts.",
 			"dismiss": {
 				"tip": "Hide the beta notice from now on",
 				"label": "Got it"
@@ -97,7 +97,7 @@
 			"title": "Oops.",
 			"missing": "Not found.",
 			"notFound": "There's nothing at this address. The link may be mistyped, or point to something that no longer exists.",
-			"unexpected": "Something went wrong on our end. Try again in a moment, and [write to the stewards](/contact) if it keeps happening."
+			"unexpected": "Something went wrong on our end. Try again in a moment, and [report it on GitHub](https://github.com/reciprocalreviews/reciprocalapp/issues/new/choose) if it keeps happening."
 		},
 		"brand": {
 			"title": "Brand",
@@ -1187,7 +1187,8 @@
 				"missingCompensation": "Are you **missing compensation** for a role you accepted? It's possible it hasn't been entered by the scholar responsible. You can request compensation for it here, and the scholar responsible will be notified.",
 				"noDescription": "*No description.*",
 				"description": "{description}",
-				"allVolunteers": "See [all volunteers]({volunteersLink}) for this venue."
+				"allVolunteers": "See [all volunteers]({volunteersLink}) for this venue.",
+				"questions": "Send questions about {title} to its administrators, not the Reciprocal Reviews stewards:"
 			}
 		},
 		"settings": {
@@ -1603,20 +1604,23 @@
 		"contact": {
 			"title": "Contact",
 			"header": {
-				"write": "Write to us",
-				"stewards": "Who you're writing to",
+				"venues": "Questions about a journal or conference",
+				"write": "Questions about Reciprocal Reviews",
+				"stewards": "Stewards",
+				"defects": "Bugs and feature requests",
 				"elsewhere": "Elsewhere"
 			},
 			"paragraph": {
-				"write": "Email [{email}](mailto:{email}). That reaches all of the stewards at once. Write with questions about a venue proposal, a transaction that looks wrong, tokens, your account, or getting a copy of your data or having it deleted.",
-				"expectations": "The stewards are working scholars doing this alongside their jobs, so a reply may take a few days. You can also reply directly to any email Reciprocal Reviews sends you, and it will arrive in the same place.",
+				"venues": "Each journal and conference on Reciprocal Reviews is run by its own editors, and only they can answer questions about it: its submissions, reviewing, assignments, deadlines, decisions, or what it pays in tokens. Write to them directly. Every venue's page lists its admins, and replying to an email we send you about a venue reaches its editors. The stewards don't run venues and can't answer for them.",
+				"write": "For questions about the platform itself, email [{email}](mailto:{email}), which reaches all of the stewards at once. Write about your account, getting a copy of your data or having it deleted, proposing a new venue, or how tokens work across the platform.",
+				"expectations": "The stewards are working scholars doing this alongside their jobs, so a reply may take a few days. Replying to an email Reciprocal Reviews sends you reaches them too, unless the email is about a venue, in which case it reaches that venue's editors.",
 				"stewards": "Stewards maintain the platform and review new venue proposals. These are the people who will read your message:",
-				"elsewhere": "Not a question for the stewards?"
+				"defects": "Found something broken, or have an idea for a feature? [Open an issue on GitHub]({issues}), where others can see it, follow it, and add to it. Please don't email these to the stewards: a report in an inbox is one nobody else can find.",
+				"elsewhere": "Other places to find answers and news:"
 			},
 			"link": {
 				"help": "Read the help articles",
 				"discussions": "Ask the community",
-				"issues": "Report a defect or suggest an improvement",
 				"newsletter": "Subscribe to our newsletter"
 			},
 			"feedback": {
@@ -1627,7 +1631,7 @@
 			"title": "Help",
 			"paragraph": {
 				"intro": "Answers to the questions we're asked most often.",
-				"more": "Didn't find what you needed? [Write to the stewards](/contact) and we'll answer, and probably add an article."
+				"more": "Didn't find what you needed? Questions about a journal or conference go to its editors; questions about the platform itself go to [the stewards](/contact), who'll answer and probably add an article."
 			},
 			"feedback": {
 				"missing": "There's no such article. Try the list on the [help page](/help)."
@@ -1680,9 +1684,9 @@
 				"retention": "We keep your personal data for as long as you have a Reciprocal Reviews account. If you delete your account, we delete your preferences and venue links. Your token transactions stay in the record so venues can verify past reviews, but they are no longer linked to you.\n\nVenues you have joined may keep their own records of you and your past reviews. Deleting your Reciprocal Reviews account does not affect what those venues store, but it does stop them from updating or querying your token balance.",
 				"security": "We use reasonable physical, technical, and administrative safeguards to protect your data, and we require any service providers we use to do the same. Transmission over the internet is never fully secure, so we cannot guarantee data is safe in transit.",
 				"privacyEmail": "We email you only in response to legitimate activity: actions you take on the site, submissions you make, or reviewing and editing you have agreed to.",
-				"rights": "Under GDPR and similar laws, you have the right to:\n\n1. **Access** your personal data and information about how we process it.\n2. **Correct** inaccurate or incomplete data.\n3. **Delete** your data.\n4. **Restrict** how we process your data.\n5. **Receive** your data in a portable, machine-readable format.\n6. **Object** to processing, including for any direct marketing.\n7. **Not be subject** to decisions made solely by automated processing.\n\nTo exercise any of these rights, [open an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/) and we will respond.",
+				"rights": "Under GDPR and similar laws, you have the right to:\n\n1. **Access** your personal data and information about how we process it.\n2. **Correct** inaccurate or incomplete data.\n3. **Delete** your data.\n4. **Restrict** how we process your data.\n5. **Receive** your data in a portable, machine-readable format.\n6. **Object** to processing, including for any direct marketing.\n7. **Not be subject** to decisions made solely by automated processing.\n\nTo exercise any of these rights, [write to the stewards](/contact) and we will respond.",
 				"international": "Venues you have joined may operate outside your country of residence, where data protection standards differ. By joining a venue, you accept that your data may be shared with that venue as needed to support peer review.",
-				"contact": "For privacy questions or requests, [open an issue](https://github.com/reciprocalreviews/reciprocalapp/issues/). Please include enough information for us to identify you and answer your request. If you believe we have handled your data improperly, contact us first so we can address it. You also have the right to complain to a data protection authority — see [edpb.europa.eu](https://edpb.europa.eu/about-edpb/board/members_en) for EU authorities or [ico.org.uk](https://ico.org.uk) for the UK.",
+				"contact": "For privacy questions or requests, [write to the stewards](/contact). Please include enough information for us to identify you and answer your request. If you believe we have handled your data improperly, contact us first so we can address it. You also have the right to complain to a data protection authority — see [edpb.europa.eu](https://edpb.europa.eu/about-edpb/board/members_en) for EU authorities or [ico.org.uk](https://ico.org.uk) for the UK.",
 				"privacyChanges": "We may update this privacy section to reflect new practices or legal requirements. Material changes will be noted on the [Updates](/updates) page."
 			}
 		},

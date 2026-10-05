@@ -1017,9 +1017,9 @@ export default class SupabaseCRUD extends CRUD {
 			const removed = [...was].filter((scholar) => !now.has(scholar));
 			const path = venuePath(before);
 			if (added.length > 0)
-				await this.emailScholars(added, 'VenueAdminAdded', [before.title, path]);
+				await this.emailScholars(added, 'VenueAdminAdded', [before.title, path], id);
 			if (removed.length > 0)
-				await this.emailScholars(removed, 'VenueAdminRemoved', [before.title]);
+				await this.emailScholars(removed, 'VenueAdminRemoved', [before.title], id);
 		}
 
 		return result;
@@ -1698,12 +1698,17 @@ export default class SupabaseCRUD extends CRUD {
 		]);
 		audience.delete(creator);
 		if (audience.size > 0 && venueRow.data !== null)
-			await this.emailScholars([...audience], 'TokensMinted', [
-				amount.toString(),
-				currencyRow.data?.name ?? '',
-				venueRow.data.title,
-				venuePath(venueRow.data)
-			]);
+			await this.emailScholars(
+				[...audience],
+				'TokensMinted',
+				[
+					amount.toString(),
+					currencyRow.data?.name ?? '',
+					venueRow.data.title,
+					venuePath(venueRow.data)
+				],
+				to
+			);
 
 		return { data: tokenIDs };
 	}
@@ -1842,7 +1847,7 @@ export default class SupabaseCRUD extends CRUD {
 				.eq('id', isTop.venueid)
 				.single();
 			if (venue !== null)
-				await this.emailVolunteersOf(isTop.id, 'RolePriorityChanged', [
+				await this.emailVolunteersOf(isTop.venueid, isTop.id, 'RolePriorityChanged', [
 					isTop.name,
 					venue.title,
 					venuePath(venue)
@@ -1874,11 +1879,12 @@ export default class SupabaseCRUD extends CRUD {
 		// afterwards would explain where it went.
 		const recipients = [...new Set((volunteers ?? []).map((v) => v.scholarid))];
 		if (role?.venues && recipients.length > 0)
-			await this.emailScholars(recipients, 'RoleDeleted', [
-				role.name,
-				role.venues.title,
-				venuePath(role.venues)
-			]);
+			await this.emailScholars(
+				recipients,
+				'RoleDeleted',
+				[role.name, role.venues.title, venuePath(role.venues)],
+				role.venueid
+			);
 
 		return { data: undefined };
 	}
@@ -2051,12 +2057,12 @@ export default class SupabaseCRUD extends CRUD {
 		for (const [index, author] of authors.entries()) {
 			const payment = charges[index]?.payment ?? 0;
 			if (author === creator || payment === 0) continue;
-			const emailResult = await this.emailScholars([author], 'SubmissionCharged', [
-				submissionTitle,
-				venueRow.title,
-				payment.toString(),
-				author
-			]);
+			const emailResult = await this.emailScholars(
+				[author],
+				'SubmissionCharged',
+				[submissionTitle, venueRow.title, payment.toString(), author],
+				venue
+			);
 			if (emailResult.notified) notifications.push(...emailResult.notified);
 		}
 
@@ -2067,12 +2073,12 @@ export default class SupabaseCRUD extends CRUD {
 		const editor = stringField(data, 'editor');
 		const editorResult =
 			editor !== null
-				? await this.emailScholars([editor], 'SubmissionAssignedEditor', [
-						submissionTitle,
-						venueRow.title,
-						venuePath(venueRow),
-						submissionID
-					])
+				? await this.emailScholars(
+						[editor],
+						'SubmissionAssignedEditor',
+						[submissionTitle, venueRow.title, venuePath(venueRow), submissionID],
+						venue
+					)
 				: await this.emailEditorsOf(venue, venueRow.admins, 'SubmissionNeedsEditor', [
 						submissionTitle,
 						venueRow.title,
@@ -2133,6 +2139,7 @@ export default class SupabaseCRUD extends CRUD {
 	/** Email everyone volunteering for a role. Used where the news is about the role itself —
 	 * its compensation, its priority, its deletion — rather than about one person in it. */
 	private async emailVolunteersOf(
+		venue: VenueID,
 		role: RoleID,
 		template: EmailType,
 		args: string[],
@@ -2148,7 +2155,7 @@ export default class SupabaseCRUD extends CRUD {
 			(scholar) => scholar !== except
 		);
 		if (recipients.length === 0) return {};
-		return this.emailScholars(recipients, template, args);
+		return this.emailScholars(recipients, template, args, venue);
 	}
 
 	private async emailEditorsOf(
@@ -2177,7 +2184,7 @@ export default class SupabaseCRUD extends CRUD {
 			...new Set([...(volunteers ?? []).map((v) => v.scholarid), ...admins])
 		].filter((scholar) => scholar !== except);
 		if (recipients.length === 0) return {};
-		return this.emailScholars(recipients, template, args);
+		return this.emailScholars(recipients, template, args, venue);
 	}
 
 	async bulkImportSubmissions(
@@ -2237,11 +2244,12 @@ export default class SupabaseCRUD extends CRUD {
 				.single();
 			if (venueRow !== null) {
 				for (const [scholar, count] of Object.entries(seatedBy)) {
-					const seatedResult = await this.emailScholars([scholar], 'SubmissionsAssignedEditor', [
-						count.toString(),
-						venueRow.title,
-						venuePath(venueRow)
-					]);
+					const seatedResult = await this.emailScholars(
+						[scholar],
+						'SubmissionsAssignedEditor',
+						[count.toString(), venueRow.title, venuePath(venueRow)],
+						venue
+					);
 					if (seatedResult.notified) notifications.push(...seatedResult.notified);
 				}
 
@@ -2333,13 +2341,18 @@ export default class SupabaseCRUD extends CRUD {
 				.eq('id', data.currency_id)
 				.single();
 			if (currency !== null && currency.minters.length > 0) {
-				await this.emailScholars(currency.minters, 'VenueOutOfTokens', [
-					data.total_amount.toString(),
-					'editor',
-					data.shortfall.toString(),
-					await this.venuePathOf(data.venue_id),
-					data.venue_title
-				]);
+				await this.emailScholars(
+					currency.minters,
+					'VenueOutOfTokens',
+					[
+						data.total_amount.toString(),
+						'editor',
+						data.shortfall.toString(),
+						await this.venuePathOf(data.venue_id),
+						data.venue_title
+					],
+					data.venue_id
+				);
 			}
 			return {
 				data: {
@@ -2358,12 +2371,12 @@ export default class SupabaseCRUD extends CRUD {
 		// venue.
 		const donePath = await this.venuePathOf(data.venue_id);
 		for (const payout of data.payouts) {
-			const result = await this.emailScholars([payout.scholar_id], 'WorkCompensated', [
-				payout.role_name,
-				payout.amount.toString(),
-				donePath,
-				data.submission_id
-			]);
+			const result = await this.emailScholars(
+				[payout.scholar_id],
+				'WorkCompensated',
+				[payout.role_name, payout.amount.toString(), donePath, data.submission_id],
+				data.venue_id
+			);
 			if (result.notified) notifications.push(...result.notified);
 		}
 
@@ -2376,12 +2389,12 @@ export default class SupabaseCRUD extends CRUD {
 		// the thank-you feature had no trigger at all. Best effort, after the fact: the
 		// submission is done and the tokens have moved.
 		if (submission !== null && submission.authors.length > 0)
-			await this.emailScholars(submission.authors, 'SubmissionDone', [
-				submission.title,
-				submission.venues?.title ?? '',
-				donePath,
-				data.submission_id
-			]);
+			await this.emailScholars(
+				submission.authors,
+				'SubmissionDone',
+				[submission.title, submission.venues?.title ?? '', donePath, data.submission_id],
+				data.venue_id
+			);
 
 		return {
 			data: {
@@ -2573,7 +2586,7 @@ export default class SupabaseCRUD extends CRUD {
 			.eq('id', role)
 			.single();
 		if (roleRow?.venues)
-			await this.emailVolunteersOf(role, 'CompensationChanged', [
+			await this.emailVolunteersOf(roleRow.venueid, role, 'CompensationChanged', [
 				roleRow.name,
 				(amount ?? 0).toString(),
 				roleRow.venues.title,
@@ -2618,11 +2631,12 @@ export default class SupabaseCRUD extends CRUD {
 		// The request still stands.
 		if (recipients.length === 0) return { data: undefined };
 
-		return this.emailScholars(recipients, 'CompensationRequested', [
-			await this.venuePathOf(venueID),
-			submission,
-			note
-		]);
+		return this.emailScholars(
+			recipients,
+			'CompensationRequested',
+			[await this.venuePathOf(venueID), submission, note],
+			venueID
+		);
 	}
 
 	async getCompensationByTypes(
@@ -2760,12 +2774,12 @@ export default class SupabaseCRUD extends CRUD {
 			if (error) return { error };
 			if (data) {
 				ids.push(data);
-				const inviteResult = await this.emailScholars([invitee], 'RoleInvite', [
-					role.name,
-					venuePath(venue),
-					venue.title,
-					invitee
-				]);
+				const inviteResult = await this.emailScholars(
+					[invitee],
+					'RoleInvite',
+					[role.name, venuePath(venue), venue.title, invitee],
+					venue.id
+				);
 				if (inviteResult.notified) notified.push(...inviteResult.notified);
 			}
 		}
@@ -2939,12 +2953,12 @@ export default class SupabaseCRUD extends CRUD {
 				this.client.rpc('bid_notice_recipients', { _submission: submission, _role: roleid })
 			]);
 			if (venue !== null && recipients !== null && recipients.length > 0)
-				await this.emailScholars(recipients, 'NewBid', [
-					await this.submissionTitle(submission),
-					role.name,
-					venuePath(venue),
-					submission
-				]);
+				await this.emailScholars(
+					recipients,
+					'NewBid',
+					[await this.submissionTitle(submission), role.name, venuePath(venue), submission],
+					venue.id
+				);
 			return { data: undefined };
 		}
 
@@ -2989,13 +3003,18 @@ export default class SupabaseCRUD extends CRUD {
 		const assigner = await this.getScholar(approver);
 		if (assigner === null) return { data: undefined };
 
-		const { notified } = await this.emailScholars([scholar], 'AssignmentApproved', [
-			assigner.getName() ?? '',
-			assigner.getEmail() ?? '',
-			role.name,
-			await this.venuePathOf(role.venueid),
-			submission
-		]);
+		const { notified } = await this.emailScholars(
+			[scholar],
+			'AssignmentApproved',
+			[
+				assigner.getName() ?? '',
+				assigner.getEmail() ?? '',
+				role.name,
+				await this.venuePathOf(role.venueid),
+				submission
+			],
+			role.venueid
+		);
 		return { data: undefined, notified };
 	}
 
@@ -3025,7 +3044,8 @@ export default class SupabaseCRUD extends CRUD {
 					role.name,
 					await this.venuePathOf(assignment.venue),
 					assignment.submission
-				]
+				],
+				assignment.venue
 			);
 			notified = emailResult.notified;
 		}
@@ -3052,15 +3072,20 @@ export default class SupabaseCRUD extends CRUD {
 		// A claim (a compensation request with no bid behind it) is declined the same way,
 		// but the news is about a request for payment, not a bid.
 		const template = assignment.bid ? 'BidDeclined' : 'ClaimDeclined';
-		const { notified } = await this.emailScholars([assignment.scholar], template, [
-			scholar.getName() ?? '',
-			scholar.getEmail() ?? '',
-			role.name,
-			await this.submissionTitle(assignment.submission),
-			reason.trim(),
-			await this.venuePathOf(assignment.venue),
-			assignment.submission
-		]);
+		const { notified } = await this.emailScholars(
+			[assignment.scholar],
+			template,
+			[
+				scholar.getName() ?? '',
+				scholar.getEmail() ?? '',
+				role.name,
+				await this.submissionTitle(assignment.submission),
+				reason.trim(),
+				await this.venuePathOf(assignment.venue),
+				assignment.submission
+			],
+			assignment.venue
+		);
 		return { data: undefined, notified };
 	}
 
@@ -3101,24 +3126,34 @@ export default class SupabaseCRUD extends CRUD {
 				.eq('id', data.currency_id)
 				.single();
 			if (currency !== null && currency.minters.length > 0) {
-				await this.emailScholars(currency.minters, 'VenueOutOfTokens', [
-					data.amount.toString(),
-					data.role_name,
-					data.shortfall.toString(),
-					await this.venuePathOf(data.venue_id),
-					data.venue_title
-				]);
+				await this.emailScholars(
+					currency.minters,
+					'VenueOutOfTokens',
+					[
+						data.amount.toString(),
+						data.role_name,
+						data.shortfall.toString(),
+						await this.venuePathOf(data.venue_id),
+						data.venue_title
+					],
+					data.venue_id
+				);
 			}
 			return this.error('CompleteAssignmentInsufficientTokens');
 		}
 
 		// Tokens have moved. Tell the scholar.
-		return this.emailScholars([data.scholar_id], 'WorkCompensated', [
-			data.role_name,
-			data.amount.toString(),
-			await this.venuePathOf(data.venue_id),
-			data.submission_id
-		]);
+		return this.emailScholars(
+			[data.scholar_id],
+			'WorkCompensated',
+			[
+				data.role_name,
+				data.amount.toString(),
+				await this.venuePathOf(data.venue_id),
+				data.submission_id
+			],
+			data.venue_id
+		);
 	}
 
 	async deleteAssignment(assignment: AssignmentID): Promise<Result> {
@@ -3213,11 +3248,12 @@ export default class SupabaseCRUD extends CRUD {
 			.eq('id', venue)
 			.single();
 		if (venueRow === null) return { data: { matched, skipped } };
-		const { notified } = await this.emailScholars([scholar], 'SubmissionsAssignedEditor', [
-			matched.length.toString(),
-			venueRow.title,
-			venuePath(venueRow)
-		]);
+		const { notified } = await this.emailScholars(
+			[scholar],
+			'SubmissionsAssignedEditor',
+			[matched.length.toString(), venueRow.title, venuePath(venueRow)],
+			venue
+		);
 		return { data: { matched, skipped }, notified };
 	}
 
@@ -3341,13 +3377,12 @@ export default class SupabaseCRUD extends CRUD {
 			]);
 			const giverName =
 				(giver.data && 'title' in giver.data ? giver.data.title : giver.data?.name) ?? '';
-			await this.emailScholars([toEntity], 'TokensReceived', [
-				amount.toString(),
-				currencyRow.data?.name ?? '',
-				giverName,
-				purpose,
-				toEntity
-			]);
+			await this.emailScholars(
+				[toEntity],
+				'TokensReceived',
+				[amount.toString(), currencyRow.data?.name ?? '', giverName, purpose, toEntity],
+				fromKind === 'venueid' ? fromEntity : null
+			);
 		}
 
 		return { data: { transaction: transactionID, tokens: tokenIDs } };
@@ -3404,14 +3439,19 @@ export default class SupabaseCRUD extends CRUD {
 				venueID && venueRow.data !== null
 					? `${origin}/venue/${venuePath(venueRow.data)}/transactions`
 					: `${origin}/scholar/${transaction.creator}/transactions`;
-			await this.emailScholars([transaction.creator], 'TransactionApproved', [
-				transaction.purpose,
-				transaction.amount.toString(),
-				currencyRow.data?.name ?? '',
-				approverRow.data?.name ?? '',
-				approverRow.data?.email ?? '',
-				link
-			]);
+			await this.emailScholars(
+				[transaction.creator],
+				'TransactionApproved',
+				[
+					transaction.purpose,
+					transaction.amount.toString(),
+					currencyRow.data?.name ?? '',
+					approverRow.data?.name ?? '',
+					approverRow.data?.email ?? '',
+					link
+				],
+				venueID
+			);
 		}
 
 		return { error: undefined, data: undefined };
@@ -3504,7 +3544,8 @@ export default class SupabaseCRUD extends CRUD {
 		await this.emailScholars(
 			[transaction.creator],
 			venueID ? 'TransactionDeclinedVenue' : 'TransactionDeclined',
-			args
+			args,
+			venueID
 		);
 
 		return { error: undefined, data: undefined };
@@ -3693,8 +3734,15 @@ export default class SupabaseCRUD extends CRUD {
 	/** Email scholars by id. Recipient resolution — including skipping scholars with no
 	 * verified contact email, which is what enforces "never notify an unverified
 	 * address" (#27) — happens inside the RPC, not here. */
-	async emailScholars(scholars: ScholarID[], template: EmailType, args: string[]): Promise<Result> {
-		return this.queueEmail(template, args, { scholars });
+	async emailScholars(
+		scholars: ScholarID[],
+		template: EmailType,
+		args: string[],
+		/** The venue the message is about, if any. Its replies then go to that venue's admins
+		 * rather than the stewards, and its footer names the venue (resolve_venue_reply_to). */
+		venue: VenueID | null = null
+	): Promise<Result> {
+		return this.queueEmail(template, args, { scholars, venue });
 	}
 
 	/**
@@ -3739,13 +3787,14 @@ export default class SupabaseCRUD extends CRUD {
 	private async queueEmail(
 		template: EmailType,
 		args: string[],
-		target: { scholars?: ScholarID[]; proposal?: ProposalID }
+		target: { scholars?: ScholarID[]; proposal?: ProposalID; venue?: VenueID | null }
 	): Promise<Result> {
 		const { data, error } = await this.client.rpc('queue_email', {
 			_event: template,
 			_args: args,
 			_scholars: target.scholars ?? undefined,
-			_proposal: target.proposal ?? undefined
+			_proposal: target.proposal ?? undefined,
+			_venue: target.venue ?? undefined
 		});
 		if (error) return this.error('EmailScholar', error);
 

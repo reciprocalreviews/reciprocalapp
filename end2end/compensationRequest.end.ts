@@ -56,6 +56,14 @@ test('a request reports who was told, not a second generic confirmation', async 
 		await expect(banners).toHaveCount(2);
 		for (const text of await banners.allInnerTexts()) expect(text).toContain('was emailed');
 		expect((await banners.allInnerTexts()).join(' | ')).not.toContain('Compensation request sent.');
+
+		// A request is about this venue, so a reply to it belongs with the venue, not the
+		// stewards: it carries the venue and that venue's admin as its Reply-To.
+		expect(
+			sql(
+				`select count(*) from public.emails where event = 'CompensationRequested' and (venue is null or reply_to is null or reply_to is distinct from public.venue_reply_to(venue));`
+			)
+		).toBe('0');
 	} finally {
 		sql(`delete from public.emails where event = 'CompensationRequested';`);
 	}
