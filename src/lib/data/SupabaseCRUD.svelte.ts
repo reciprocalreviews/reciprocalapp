@@ -2956,8 +2956,8 @@ export default class SupabaseCRUD extends CRUD {
 		// A bid is a request rather than an assignment, so it notifies the people who can answer
 		// it rather than the person who made it. Without this an editor found out a bid had
 		// arrived by opening the submission. Who that is — the holder of the approving role on
-		// this submission, else its editor, else the venue's admins — is resolved server-side,
-		// since the bidder cannot see the approvers' assignments.
+		// this submission, and no one if none is seated — is resolved server-side, since the
+		// bidder cannot see the approvers' assignments.
 		if (bid) {
 			const [{ data: venue }, { data: recipients }] = await Promise.all([
 				this.client.from('venues').select('id, slug').eq('id', role.venueid).single(),
