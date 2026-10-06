@@ -311,6 +311,13 @@ export default abstract class CRUD {
 
 	abstract updateSubmissionNote(submissionID: SubmissionID, note: string | null): Promise<Result>;
 
+	/** Close or reopen bidding on a submission that is still under review. Authorized for
+	 * priority-0 editors only. Existing bids are untouched; closing only blocks new ones. */
+	abstract updateSubmissionBiddingClosed(
+		submissionID: SubmissionID,
+		closed: boolean
+	): Promise<Result>;
+
 	/** Mark a submission as done. Authorized for priority-0 editors only.
 	 * Validates that every non-editor approved assignment is already
 	 * compensated, then atomically compensates every uncompleted priority-0

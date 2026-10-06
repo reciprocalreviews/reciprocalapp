@@ -303,6 +303,33 @@ from
 grant
 execute on function public.submission_has_editor (uuid) to authenticated;
 
+-- Whether the submission's editor has closed bidding on it.
+--
+-- The assignments INSERT policy needs this, and cannot read public.submissions itself:
+-- the submissions SELECT policy reads public.assignments, so the policy would recurse.
+-- SECURITY DEFINER, so it sees past both. It discloses one bit, about a submission whose
+-- id the caller already holds.
+create or replace function public.submission_bidding_closed (_submission uuid) returns boolean language sql security definer stable
+set
+	"search_path" to '' as $$
+	select coalesce(
+		(select s.bidding_closed from public.submissions s where s.id = _submission),
+		false
+	);
+$$;
+
+alter function public.submission_bidding_closed (uuid) OWNER to "postgres";
+
+-- The INSERT policy is granted to authenticated only, so anon needs no EXECUTE.
+revoke
+execute on function public.submission_bidding_closed (uuid)
+from
+	public,
+	anon;
+
+grant
+execute on function public.submission_bidding_closed (uuid) to authenticated;
+
 -- The list form, and the one the application actually calls. SECURITY INVOKER, so the
 -- scan of public.submissions runs under the caller's own policy: a caller gets exactly
 -- one row per submission they may already see, each carrying that one bit.
@@ -532,28 +559,49 @@ select
 					auth.uid ()
 			)=any (authors)
 		)
-		or exists (
-			select
-				volunteers.id
-			from
-				public.volunteers
-			where
-				volunteers.scholarid=(
-					select
-						auth.uid ()
-				)
-				and volunteers.accepted='accepted'::invited
-				and volunteers.roleid=any (
-					array(
+		or (
+			-- An accepted volunteer on a biddable role, deciding what to bid on...
+			exists (
+				select
+					volunteers.id
+				from
+					public.volunteers
+				where
+					volunteers.scholarid=(
 						select
-							roles.id
-						from
-							public.roles
-						where
-							roles.venueid=submissions.venue
-							and roles.biddable=true
+							auth.uid ()
 					)
+					and volunteers.accepted='accepted'::invited
+					and volunteers.roleid=any (
+						array(
+							select
+								roles.id
+							from
+								public.roles
+							where
+								roles.venueid=submissions.venue
+								and roles.biddable=true
+						)
+					)
+			)
+			-- ...but only while the submission is open for bidding, unless the bidder
+			-- already has an assignment on it (a pending bid, say), which should not
+			-- point at a submission they can no longer open.
+			and (
+				not submissions.bidding_closed
+				or exists (
+					select
+						assignments.id
+					from
+						public.assignments
+					where
+						assignments.submission=submissions.id
+						and assignments.scholar=(
+							select
+								auth.uid ()
+						)
 				)
+			)
 		)
 		or exists (
 			select
@@ -725,6 +773,8 @@ with
 							)
 					)
 				)
+				-- The editor may close bidding on a submission that is still under review.
+				and not public.submission_bidding_closed (submission)
 			)
 			-- An editor of the venue claiming a submission nobody is editing yet. See
 			-- public.can_claim_editor_role above for why this branch has to exist and
@@ -743,8 +793,9 @@ with
 	);
 
 -- The submissions UPDATE policy lets authors edit their submission, but authors
--- must NOT be able to change the author list (authors/payments/transactions);
--- only a priority-0 assigned scholar on the paper may. RLS using-clauses cannot
+-- must NOT be able to change the author list (authors/payments/transactions) or
+-- close bidding (bidding_closed); only a priority-0 assigned scholar on the paper
+-- may. RLS using-clauses cannot
 -- be column-specific, so enforce the author-list lock with a BEFORE UPDATE
 -- trigger (mirrors the revoke-update lock on submissions.status/completed_at).
 create or replace function public.enforce_submission_author_edits () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
@@ -755,6 +806,7 @@ begin
 		new.authors is distinct from old.authors
 		or new.payments is distinct from old.payments
 		or new.transactions is distinct from old.transactions
+		or new.bidding_closed is distinct from old.bidding_closed
 	) and not exists (
 		select 1
 		from public.assignments a
@@ -764,7 +816,7 @@ begin
 			and a.approved = true
 			and r.priority = 0
 	) then
-		raise exception 'Only priority-0 assigned scholars may change the author list';
+		raise exception 'Only priority-0 assigned scholars may change the author list or close bidding';
 	end if;
 	return new;
 end;

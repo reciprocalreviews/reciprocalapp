@@ -15,10 +15,11 @@
  * the venue's editors may read every submission because an unclaimed one has no
  * assignment to hang a permission on. Gating on "assigned" alone would lock every
  * bidder out of the page they bid from, and every editor out of the page they are
- * being asked to take.
+ * being asked to take. Branch 3 lapses once the submission's editor closes
+ * bidding on it, except for a bidder who already holds an assignment there.
  */
 
-export type ViewableSubmission = { id: string; authors: string[] };
+export type ViewableSubmission = { id: string; authors: string[]; bidding_closed: boolean };
 
 export type SubmissionViewerContext = {
 	/** The signed-in scholar, or null when anonymous. */
@@ -52,12 +53,16 @@ export default function canViewSubmission(
 	if (submission.authors.includes(uid)) return true;
 
 	// 3. An accepted volunteer on any biddable role in the venue — a potential
-	//    bidder, who has to read the submission to decide whether to bid.
+	//    bidder, who has to read the submission to decide whether to bid. Only while
+	//    it is open for bidding, unless they already hold an assignment on it, such
+	//    as a pending bid.
 	const biddableRoleIDs = new Set((context.roles ?? []).filter((r) => r.biddable).map((r) => r.id));
 	if (
 		(context.viewerVolunteering ?? []).some(
 			(v) => v.accepted === 'accepted' && biddableRoleIDs.has(v.roleid)
-		)
+		) &&
+		(!submission.bidding_closed ||
+			(context.assignments ?? []).some((a) => a.submission === submission.id && a.scholar === uid))
 	)
 		return true;
 

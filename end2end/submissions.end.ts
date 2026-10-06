@@ -46,6 +46,52 @@ test('a reviewer can bid on a paper and then see an unbid button', async ({ page
 	}
 });
 
+test('an editor closes bidding on a submission, and bidders no longer see it', async ({
+	page,
+	context
+}) => {
+	// TOK-2025-010: under review, edited by editor@uni.edu, and one Reviewer seat short, so
+	// the bidder would otherwise see bid buttons on it.
+	const SUBMISSION_ID = 'f0000002-ad50-11f0-9000-000000000010';
+	const TITLE = 'Retraction Notices as a Genre';
+	// Reopen as the owner, past the trigger that keeps the column to the editor.
+	const reopen = () =>
+		sql(
+			`begin; alter table public.submissions disable trigger enforce_submission_author_edits; update public.submissions set bidding_closed = false where id = '${SUBMISSION_ID}'; alter table public.submissions enable trigger enforce_submission_author_edits; commit;`
+		);
+	reopen();
+
+	try {
+		await login('editor@uni.edu', page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId('submission-bidding-closed-status')).toHaveCount(0);
+		const open = page.getByTestId('submission-open-for-bidding');
+		await expect(open).toBeChecked();
+		await open.click();
+		await expect(open).not.toBeChecked();
+		await expect(page.getByTestId('submission-bidding-closed-status')).toBeVisible();
+		expect(
+			sql(`select bidding_closed from public.submissions where id = '${SUBMISSION_ID}';`)
+		).toBe('t');
+		await logout(page);
+
+		// The bidder, who holds no assignment on it, no longer sees it in the list...
+		await login(BIDDER_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId(/^bid-/).first()).toBeVisible();
+		await expect(page.locator('tr', { hasText: TITLE })).toHaveCount(0);
+		// ...nor can they open it.
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByText(TITLE)).toHaveCount(0);
+		await logout(page);
+	} finally {
+		reopen();
+	}
+});
+
 test('editor filters submissions by author name, reviewer name, title, and external ID', async ({
 	page,
 	context

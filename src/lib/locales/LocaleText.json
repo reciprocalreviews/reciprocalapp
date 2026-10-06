@@ -821,6 +821,9 @@
             "UpdateScholarStatus": {
               "type": "string"
             },
+            "UpdateSubmissionBiddingClosed": {
+              "type": "string"
+            },
             "UpdateSubmissionExpertise": {
               "type": "string"
             },
@@ -968,6 +971,7 @@
             "BulkImportSubmissions",
             "UpdateSubmissionExpertise",
             "UpdateSubmissionTitle",
+            "UpdateSubmissionBiddingClosed",
             "UpdateSubmissionNote",
             "MarkSubmissionDoneRPC",
             "ApproveAssignment",
@@ -4330,6 +4334,19 @@
                   ],
                   "type": "object"
                 },
+                "checkbox": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "openForBidding": {
+                      "description": "Editor toggle, checked by default; unchecking closes bidding on a submission still under review and hides it from bidders.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "openForBidding"
+                  ],
+                  "type": "object"
+                },
                 "declineBidPrompt": {
                   "description": "Above the reason field when declining a bid. Declining is optional, so this says so, and that the reason goes to the bidder.",
                   "type": "string"
@@ -4561,6 +4578,10 @@
                     "bidder": {
                       "type": "string"
                     },
+                    "biddingClosed": {
+                      "description": "Beside the submission's status when its editor has closed bidding on it.",
+                      "type": "string"
+                    },
                     "claim": {
                       "description": "Someone asking to be paid for work nobody seated them on.",
                       "type": "string"
@@ -4593,7 +4614,8 @@
                     "unassigned",
                     "bidder",
                     "claim",
-                    "declined"
+                    "declined",
+                    "biddingClosed"
                   ],
                   "type": "object"
                 },
@@ -4743,6 +4765,7 @@
                 "button",
                 "field",
                 "status",
+                "checkbox",
                 "options",
                 "headers",
                 "thanks"
@@ -4840,6 +4863,10 @@
                       "description": "Shown to a bidder in place of the unbid button once an approver has declined their bid; the approver's reason follows it.",
                       "type": "string"
                     },
+                    "notOpenForBidding": {
+                      "description": "Shown in place of the bid buttons when the submission's editor has closed bidding on it, whether or not seats remain.",
+                      "type": "string"
+                    },
                     "you": {
                       "type": "string"
                     }
@@ -4850,6 +4877,7 @@
                     "conflicted",
                     "bids",
                     "biddingClosed",
+                    "notOpenForBidding",
                     "declined",
                     "anonymized"
                   ],

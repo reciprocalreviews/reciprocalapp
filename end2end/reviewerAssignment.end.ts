@@ -44,7 +44,10 @@ test('AE assigns two reviewer bids and bidding closes', async ({ page, context }
 	// Back on the submissions list, bidding for that submission's Reviewer role
 	// should now be closed (3 approved Reviewer assignments meets desired=3).
 	await page.goto(`/venue/${VENUE_PATH}/submissions`);
-	await expect(page.getByText('bidding closed')).toBeVisible();
+	// Scoped to the row: a done submission's cells read "bidding closed" too.
+	await expect(
+		page.locator('tr', { hasText: SUBMISSION_EXTERNAL_ID }).getByText('bidding closed')
+	).toBeVisible();
 
 	await logout(page);
 });

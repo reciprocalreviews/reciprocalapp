@@ -9,7 +9,8 @@
 --   INSERT  whoever may approve an assignment for this role on this submission
 --           (can_approve_assignment, which covers venue admins); OR a bidder
 --           (bid=true) who is an active, accepted volunteer on the assignment's
---           role; OR an editor claiming an unclaimed submission.
+--           role, on a submission whose bidding is not closed; OR an editor
+--           claiming an unclaimed submission.
 --   UPDATE  the assigned scholar, or whoever may approve it on this submission --
 --           and then per column (enforce_assignment_updates): the assignee may set
 --           only preferenceid and compensation_requested_at; approved, completed
@@ -24,7 +25,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(29);
+select plan(30);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -210,7 +211,26 @@ select throws_ok(
 	'holding the child role on a submission does not let a venue-wide approver seat others there'
 );
 
--- An active accepted volunteer on the role can create their own bid (bid=true).
+-- Not while the submission's editor has closed bidding on it. (Set as the owner,
+-- past the trigger that keeps the column to the editor; submissions_rls.sql tests that.)
+select tests.clear_authentication();
+alter table public.submissions disable trigger enforce_submission_author_edits;
+update public.submissions set bidding_closed = true where id = :'sub';
+select tests.authenticate_as(:'bidder');
+select throws_ok(
+	$$ insert into public.assignments (venue, submission, scholar, role, bid)
+	   values ( $$ || quote_literal(:'ven') || $$, $$ || quote_literal(:'sub') || $$,
+	            $$ || quote_literal(:'bidder') || $$, $$ || quote_literal(:'rolechild') || $$, true ) $$,
+	'42501',
+	null,
+	'a volunteer cannot bid on a submission whose bidding is closed'
+);
+select tests.clear_authentication();
+update public.submissions set bidding_closed = false where id = :'sub';
+alter table public.submissions enable trigger enforce_submission_author_edits;
+
+-- Once bidding reopens, an active accepted volunteer on the role can create their
+-- own bid (bid=true).
 select tests.authenticate_as(:'bidder');
 select lives_ok(
 	$$ insert into public.assignments (venue, submission, scholar, role, bid)

@@ -459,13 +459,13 @@ isOneToOne: false
                   ]
                 },"submissions": {
                   Row: {
-                    "authors": (string)[],"completed_at": string | null,"created_at": string,"expertise": string | null,"externalid": string,"id": string,"imported": boolean,"note": string | null,"payments": (number)[],"previous": string | null,"previousid": string | null,"status": Database["public"]['Enums']["submission_status"],"submission_type": string,"title": string,"transactions": (string)[],"venue": string
+                    "authors": (string)[],"bidding_closed": boolean,"completed_at": string | null,"created_at": string,"expertise": string | null,"externalid": string,"id": string,"imported": boolean,"note": string | null,"payments": (number)[],"previous": string | null,"previousid": string | null,"status": Database["public"]['Enums']["submission_status"],"submission_type": string,"title": string,"transactions": (string)[],"venue": string
                   }
                   Insert: {
-                    "authors": (string)[],"completed_at"?: string | null,"created_at"?: string,"expertise"?: string | null,"externalid": string,"id"?: string,"imported"?: boolean,"note"?: string | null,"payments": (number)[],"previous"?: string | null,"previousid"?: string | null,"status"?: Database["public"]['Enums']["submission_status"],"submission_type": string,"title"?: string,"transactions": (string)[],"venue": string
+                    "authors": (string)[],"bidding_closed"?: boolean,"completed_at"?: string | null,"created_at"?: string,"expertise"?: string | null,"externalid": string,"id"?: string,"imported"?: boolean,"note"?: string | null,"payments": (number)[],"previous"?: string | null,"previousid"?: string | null,"status"?: Database["public"]['Enums']["submission_status"],"submission_type": string,"title"?: string,"transactions": (string)[],"venue": string
                   }
                   Update: {
-                    "authors"?: (string)[],"completed_at"?: string | null,"created_at"?: string,"expertise"?: string | null,"externalid"?: string,"id"?: string,"imported"?: boolean,"note"?: string | null,"payments"?: (number)[],"previous"?: string | null,"previousid"?: string | null,"status"?: Database["public"]['Enums']["submission_status"],"submission_type"?: string,"title"?: string,"transactions"?: (string)[],"venue"?: string
+                    "authors"?: (string)[],"bidding_closed"?: boolean,"completed_at"?: string | null,"created_at"?: string,"expertise"?: string | null,"externalid"?: string,"id"?: string,"imported"?: boolean,"note"?: string | null,"payments"?: (number)[],"previous"?: string | null,"previousid"?: string | null,"status"?: Database["public"]['Enums']["submission_status"],"submission_type"?: string,"title"?: string,"transactions"?: (string)[],"venue"?: string
                   }
                   Relationships: [
                     {
@@ -958,6 +958,9 @@ isOneToOne: false
                            },
 "steward_inbox":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"submission_bidding_closed":
+{ Args: { "_submission": string }; Returns: boolean
                            },
 "submission_has_editor":
 { Args: { "_submission": string }; Returns: boolean

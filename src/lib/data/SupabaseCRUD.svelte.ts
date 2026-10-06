@@ -2307,6 +2307,17 @@ export default class SupabaseCRUD extends CRUD {
 		return this.updateSubmission(submissionID, { note }, 'UpdateSubmissionNote');
 	}
 
+	async updateSubmissionBiddingClosed(
+		submissionID: SubmissionID,
+		closed: boolean
+	): Promise<Result> {
+		return this.updateSubmission(
+			submissionID,
+			{ bidding_closed: closed },
+			'UpdateSubmissionBiddingClosed'
+		);
+	}
+
 	async markSubmissionDone(submissionID: SubmissionID): Promise<Result<MarkSubmissionDoneOutcome>> {
 		// Read the authors and title before the RPC, so the notice below can name the paper.
 		const { data: submission } = await this.client

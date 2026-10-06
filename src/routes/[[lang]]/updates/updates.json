@@ -1,16 +1,35 @@
 [
 	{
+		"version": "0.5.11",
+		"date": "2026-10-05",
+		"changes": {
+			"added": [
+				"**Editors can close bidding on a submission that's still under review,** for example when every seat has a reviewer but some haven't registered yet. Reviewers then see \"not open for bidding\" in place of the bid buttons, and the weekly bidding digest leaves the submission out."
+			],
+			"fixed": ["**Submissions that are done no longer offer bid buttons.**"],
+			"changed": [],
+			"removed": []
+		}
+	},
+	{
 		"version": "0.5.10",
 		"date": "2026-10-04",
 		"changes": {
 			"added": [
-				"**Editors can decline a bid, and must say why.** The explanation is emailed to the bidder with the editor's name and shown beside their bid; leaving a bid unanswered is still fine. (#195)"
+				"**Editors can decline a bid, and must say why.** The explanation is emailed to the bidder with the editor's name and shown beside their bid; leaving a bid unanswered is still fine. (#195)",
+				"**Bulk imports keep the names of people who haven't joined yet, as unmatched assignments.** Once someone joins and accepts the role, whoever approves those assignments can match them all at once from a new Unmatched assignments page.",
+				"**Reviewers can request compensation for a submission nobody assigned them to,** such as an imported one whose editor hasn't joined. The request waits for an editor or admin to approve and pay it, or to decline it with a reason.",
+				"**Each venue's page now says who to ask about it,** listing its admins with their email addresses, and a new help article explains who to contact for what."
 			],
 			"fixed": [
 				"**Reviewers can no longer approve their own bids or mark their own assignments complete.** Only someone who approves the role can.",
-				"**In open-review venues, authors now see only who is assigned to their submission, not who bid on it.**"
+				"**In open-review venues, authors now see only who is assigned to their submission, not who bid on it.**",
+				"**Compensation requests now reach everyone who can approve them,** including the associate editor seated on the submission, and a manuscript ID no longer matches a submission at another venue.",
+				"**Several notifications at once now stack as one block,** without the page showing through between them."
 			],
-			"changed": [],
+			"changed": [
+				"**Replying to an email about a venue now reaches that venue's admins instead of the Reciprocal Reviews stewards,** and the email names the venue. The contact page and every email now say that the stewards help only with the platform itself, and that bugs and feature requests go to GitHub."
+			],
 			"removed": []
 		}
 	},

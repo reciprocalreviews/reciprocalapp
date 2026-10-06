@@ -3,8 +3,8 @@
 --
 --   WHO      available volunteers of a biddable role, with a verified address, who have not
 --            silenced BiddingDigest -- and nobody paused, pending, unavailable or muted.
---   WHAT     submissions still under review at an active venue whose role wants more people
---            than it has approved -- never one the scholar wrote, declared a conflict on, or
+--   WHAT     submissions still under review at an active venue, with bidding not closed by
+--            their editor, whose role wants more people than it has approved -- never one the scholar wrote, declared a conflict on, or
 --            already holds any assignment on.
 --   ORDER    most people missing first, then the closer expertise match, then oldest; capped,
 --            with the rest counted.
@@ -86,6 +86,7 @@ select tests.create_submission(:'ven', :'stype', array[:'author']::uuid[]) as s_
 select tests.create_submission(:'ven', :'stype', array[:'rev']::uuid[])    as s_authored \gset
 select tests.create_submission(:'ven', :'stype', array[:'author']::uuid[]) as s_bid      \gset
 select tests.create_submission(:'ven', :'stype', array[:'author']::uuid[]) as s_seated   \gset
+select tests.create_submission(:'ven', :'stype', array[:'author']::uuid[]) as s_closed   \gset
 
 -- Missing 2, matching, newest of the three: the match outranks age.
 update public.submissions set title = 'Open', expertise = ' Statistics , sampling,statistics',
@@ -110,6 +111,10 @@ select tests.create_assignment(:'ven', :'s_bid', :'rev', :'bidrole', false, true
 -- Seated in ANOTHER role on it: still excluded.
 update public.submissions set title = 'Seated' where id = :'s_seated';
 select tests.create_assignment(:'ven', :'s_seated', :'rev', :'quietrole') \gset
+-- Seats open, but its editor has closed bidding on it.
+alter table public.submissions disable trigger enforce_submission_author_edits;
+update public.submissions set title = 'Bidding closed', bidding_closed = true where id = :'s_closed';
+alter table public.submissions enable trigger enforce_submission_author_edits;
 
 -- A switched-off venue whose open submission must never appear.
 select tests.create_venue(:'cur', array[:'admin']::uuid[]) as offven \gset
@@ -145,7 +150,7 @@ select is_empty (
 select is (
 	pg_temp.titles (:'rev'),
 	array['Open', 'Open two', 'Open three', 'Partial'],
-	'need first, then match, then oldest; and nothing full, done, conflicted, authored, bid, seated or switched off'
+	'need first, then match, then oldest; and nothing full, done, conflicted, authored, bid, seated, closed to bidding or switched off'
 );
 
 select is (

@@ -2,6 +2,16 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.11 - 2026-10-05
+
+### Added
+
+- **Editors can uncheck "Open for bidding" on a submission that's still under review,** for example when every seat has a reviewer but some haven't registered yet. Bidders who haven't bid on it then no longer see it, and the weekly bidding digest leaves it out.
+
+### Fixed
+
+- **Submissions that are done no longer offer bid buttons.**
+
 ## 0.5.10 - 2026-10-04
 
 ### Added

@@ -2,6 +2,7 @@
 	import type { PublicORCIDProfile, RoleID, RoleRow, ScholarID } from '$data/types';
 	import { venuePath as toVenuePath } from '#lib/data/venuePath.js';
 	import Button from '#lib/components/Button.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
 	import EditableText from '#lib/components/EditableText.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import Form from '#lib/components/Form.svelte';
@@ -478,6 +479,13 @@
 				<Status good={false} label={(l) => l.page.submission.status.done} />
 			{:else}
 				<Status label={(l) => l.page.submission.status.reviewing} />
+				{#if submission.bidding_closed}
+					<Status
+						neutral
+						label={(l) => l.page.submission.status.biddingClosed}
+						testid="submission-bidding-closed-status"
+					/>
+				{/if}
 			{/if}
 		{/snippet}
 
@@ -487,6 +495,15 @@
 		     The button is inactive until every non-editor assignment is
 		     compensated, with an explanation of what's left. -->
 		{#if isEditor && !done}
+			<!-- Unchecking closes bidding while the submission stays under review, e.g.
+			     when every seat has a reviewer but some haven't registered yet. Bidders
+			     then no longer see the submission at all. -->
+			<Checkbox
+				on={!submission.bidding_closed}
+				change={(on) => db().updateSubmissionBiddingClosed(submission.id, !on)}
+				label={(l) => l.page.submission.checkbox.openForBidding}
+				testid="submission-open-for-bidding"
+			/>
 			{#if completionBlockers.length > 0}
 				<Feedback
 					text={(l) =>

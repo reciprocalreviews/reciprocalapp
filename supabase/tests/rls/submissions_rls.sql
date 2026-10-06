@@ -1,7 +1,8 @@
 -- RLS tests for public.submissions.
 --
 -- Authorization model under test:
---   SELECT  authors, accepted volunteers on a biddable role at the venue, and
+--   SELECT  authors, accepted volunteers on a biddable role at the venue (only
+--           while it is open for bidding, unless they hold an assignment on it), and
 --           scholars with an approved assignment to the submission. Approving a
 --           role does NOT by itself confer sight of the submissions that role is
 --           assigned to -- the approver must be seated on the submission.
@@ -13,13 +14,14 @@
 --           column level: even a permitted updater (an author) gets 42501.
 --   AUTHOR-LIST LOCK  the enforce_submission_author_edits trigger forbids any
 --           non-priority-0 actor (e.g. an author) from changing
---           authors/payments/transactions; a priority-0 assigned scholar may.
+--           authors/payments/transactions or bidding_closed; a priority-0
+--           assigned scholar may.
 
 \ir ../_helpers/helpers.sql.inc
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(26);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -207,6 +209,52 @@ select is(
 	(select cardinality(authors) from public.submissions where id = :'sub_main'),
 	2,
 	'the priority-0 author-list edit took effect'
+);
+
+-- The same trigger keeps an author from closing bidding on their own submission.
+select tests.authenticate_as(:'author');
+select throws_ok(
+	$$ update public.submissions set bidding_closed = true where id = $$ || quote_literal(:'sub_main'),
+	null,
+	null,
+	'an author cannot close bidding on their submission (trigger raises)'
+);
+
+-- The editor can.
+select tests.authenticate_as(:'prio0');
+select lives_ok(
+	$$ update public.submissions set bidding_closed = true where id = $$ || quote_literal(:'sub_main'),
+	'a priority-0 assigned scholar can close bidding'
+);
+select tests.clear_authentication();
+select is(
+	(select bidding_closed from public.submissions where id = :'sub_main'),
+	true,
+	'closing bidding took effect'
+);
+
+-- ---- SELECT once bidding is closed ---------------------------------------------
+-- A bidder with no assignment on it no longer sees it...
+select tests.authenticate_as(:'bidder');
+select is_empty(
+	$$ select 1 from public.submissions where id = $$ || quote_literal(:'sub_main'),
+	'a volunteer on a biddable role cannot see a submission closed to bidding'
+);
+
+-- ...while a scholar seated on it still does.
+select tests.authenticate_as(:'assigned');
+select isnt_empty(
+	$$ select 1 from public.submissions where id = $$ || quote_literal(:'sub_main'),
+	'a seated scholar still sees a submission closed to bidding'
+);
+
+-- A bidder whose bid is still pending keeps sight of the submission it is on.
+select tests.clear_authentication();
+select tests.create_assignment(:'ven', :'sub_main', :'bidder', :'biddable_role', false, true) as asn_bid \gset
+select tests.authenticate_as(:'bidder');
+select isnt_empty(
+	$$ select 1 from public.submissions where id = $$ || quote_literal(:'sub_main'),
+	'a bidder with a pending bid still sees a submission closed to bidding'
 );
 
 -- ---- INSERT -------------------------------------------------------------------
