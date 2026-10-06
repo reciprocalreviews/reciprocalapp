@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import canViewSubmission, { type SubmissionViewerContext } from './canViewSubmission';
 
-const SUBMISSION = { id: 's1', authors: ['author'] };
+const SUBMISSION = { id: 's1', authors: ['author'], bidding_closed: false };
+const CLOSED = { ...SUBMISSION, bidding_closed: true };
 
 function context(over: Partial<SubmissionViewerContext> = {}): SubmissionViewerContext {
 	return {
@@ -44,6 +45,36 @@ describe('canViewSubmission', () => {
 			canViewSubmission(
 				SUBMISSION,
 				context({ viewerVolunteering: [{ roleid: 'reviewer', accepted: 'accepted' }] })
+			)
+		).toBe(true);
+	});
+
+	test('an accepted volunteer on a biddable role cannot once bidding is closed', () => {
+		expect(
+			canViewSubmission(
+				CLOSED,
+				context({ viewerVolunteering: [{ roleid: 'reviewer', accepted: 'accepted' }] })
+			)
+		).toBe(false);
+	});
+
+	test('a bidder who already bid can still, once bidding is closed', () => {
+		expect(
+			canViewSubmission(
+				CLOSED,
+				context({
+					viewerVolunteering: [{ roleid: 'reviewer', accepted: 'accepted' }],
+					assignments: [{ submission: 's1', scholar: 'viewer', role: 'reviewer', approved: false }]
+				})
+			)
+		).toBe(true);
+	});
+
+	test('the editor can still, once bidding is closed', () => {
+		expect(
+			canViewSubmission(
+				CLOSED,
+				context({ viewerVolunteering: [{ roleid: 'chief', accepted: 'accepted' }] })
 			)
 		).toBe(true);
 	});

@@ -125,7 +125,8 @@ alter function private.bidding_digest_recipients (interval) OWNER to "postgres";
 --
 -- A candidate needs all of:
 --   - the volunteer is active and has accepted the role, and the role is biddable;
---   - the venue is not switched off, and the submission is still under review;
+--   - the venue is not switched off, the submission is still under review, and its editor
+--     has not closed bidding on it;
 --   - the role still wants people: fewer approved assignments than desired_assignments.
 --     Pending bids do not count, as on the submissions page;
 --   - the scholar says they are available, has a verified address, and has not silenced
@@ -195,6 +196,7 @@ set
 		from public.roles r
 		join public.venues ve on ve.id = r.venueid and ve.inactive is null
 		join public.submissions sub on sub.venue = ve.id and sub.status = 'reviewing'
+			and not sub.bidding_closed
 		where r.biddable
 	),
 	candidates as (

@@ -582,10 +582,14 @@
 											{/if}
 
 											<!-- Show bidding if the role is biddable. Bidding closes when the
-											     number of *approved* assignments reaches the role's desired count;
-											     pending bids don't count toward closure. -->
+											     number of *approved* assignments reaches the role's desired count
+											     (pending bids don't count toward closure), when the submission is
+											     done, or when its editor has closed bidding on it. -->
 											{#if role.biddable && !scholarAlreadyAssigned}
-												{@const biddingOpen = approvedAssignments.length < role.desired_assignments}
+												{@const biddingOpen =
+													!submission.bidding_closed &&
+													submission.status !== 'done' &&
+													approvedAssignments.length < role.desired_assignments}
 
 												<!-- Approvers always see the pending bid count, regardless of whether
 												     bidding is open or closed, so they can act on outstanding bids. -->
@@ -672,6 +676,10 @@
 															action={() => handle(db().deleteAssignment(scholarsBid.id))}
 														/>
 													{/if}
+												{:else if submission.bidding_closed}
+													<div data-testid={`not-open-for-bidding-${index}-${roleIndex}`}>
+														<strong>{locale().page.submissions.cell.notOpenForBidding}</strong>
+													</div>
 												{:else}
 													<div><strong>{locale().page.submissions.cell.biddingClosed}</strong></div>
 												{/if}

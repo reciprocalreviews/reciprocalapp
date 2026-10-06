@@ -602,6 +602,9 @@ export type LocaleText = {
 				conflicted: string;
 				bids: string;
 				biddingClosed: string;
+				/** Shown in place of the bid buttons when the submission's editor has closed
+				 * bidding on it, whether or not seats remain. */
+				notOpenForBidding: string;
 				/** Shown to a bidder in place of the unbid button once an approver has declined
 				 * their bid; the approver's reason follows it. */
 				declined: string;
@@ -814,6 +817,13 @@ export type LocaleText = {
 				/** Someone asking to be paid for work nobody seated them on. */
 				claim: string;
 				declined: string;
+				/** Beside the submission's status when its editor has closed bidding on it. */
+				biddingClosed: string;
+			};
+			checkbox: {
+				/** Editor toggle, checked by default; unchecking closes bidding on a submission
+				 * still under review and hides it from bidders. */
+				openForBidding: string;
 			};
 			options: {
 				submissionType: OptionsText;
@@ -2024,6 +2034,7 @@ export type LocaleText = {
 		BulkImportSubmissions: string;
 		UpdateSubmissionExpertise: string;
 		UpdateSubmissionTitle: string;
+		UpdateSubmissionBiddingClosed: string;
 		UpdateSubmissionNote: string;
 		MarkSubmissionDoneRPC: string;
 		ApproveAssignment: string;
