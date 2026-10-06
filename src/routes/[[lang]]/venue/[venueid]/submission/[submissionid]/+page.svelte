@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PublicORCIDProfile, RoleID, RoleRow, ScholarID } from '$data/types';
 	import { venuePath as toVenuePath } from '#lib/data/venuePath.js';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import Button from '#lib/components/Button.svelte';
 	import Checkbox from '#lib/components/Checkbox.svelte';
 	import EditableText from '#lib/components/EditableText.svelte';
@@ -408,6 +409,14 @@
 	venue's own reviewing system. Said plainly when there is none, so the editor knows
 	to find another way rather than wondering whether it failed to load.
 -->
+<!-- Under any row whose buttons include Assign: the same reminder as above the table, in
+     brief, where the approver's eye is when they click. -->
+{#snippet assignNote()}
+	<p class="assign-note" data-testid="assign-note">
+		<Text path={(l) => l.page.submission.cell.compensationOnly} />
+	</p>
+{/snippet}
+
 {#snippet assigneeEmail(scholarID: string)}
 	{@const email = assigneeEmails.find((s) => s.id === scholarID)?.email ?? null}
 	<span class="assignee-email" data-testid="assignee-email">
@@ -651,6 +660,20 @@
 
 		<Subheader icon={EditLabel} text={(l) => l.page.submission.header.assignments}></Subheader>
 
+		<!-- Assigning here only records the work for compensation. Approvers kept assuming it
+		     was the whole job, so whoever can assign here is reminded, above every control that
+		     does it, to assign the person in the venue's own reviewing system too. -->
+		{#if rolesScholarCanApprove.length > 0 && venue !== null}
+			<Feedback
+				testid="compensation-only"
+				text={(l) =>
+					venue.review_system_url
+						? l.page.submission.feedback.compensationOnlyLinked
+						: l.page.submission.feedback.compensationOnly}
+				inputs={{ venue: venueBarName(venue), system: venue.review_system_url ?? '' }}
+			/>
+		{/if}
+
 		<!-- People the import named who have not joined yet, in one notice. They are matched
 		     from the venue's unmatched assignments page once each person joins. -->
 		{#if unmatched.length > 0}
@@ -882,6 +905,9 @@
 									{EmptyLabel}
 								{/if}
 							</Row>
+							{#if isApprover && !assignment.completed && !assignment.approved}
+								{@render assignNote()}
+							{/if}
 						</td>
 					</tr>
 				{:else}
@@ -963,6 +989,9 @@
 										/>
 									{/if}
 								</Row>
+								{#if !isClaim(assignment) && assignment.bid}
+									{@render assignNote()}
+								{/if}
 							</td>
 						</tr>
 						{#if decliningID === assignment.id}
@@ -1046,6 +1075,9 @@
 										/>
 									{/if}
 								</Row>
+								{#if !isClaim(assignment)}
+									{@render assignNote()}
+								{/if}
 							</td>
 						</tr>
 						<!-- The reason gets a row of its own, spanning the table, so a long
@@ -1137,6 +1169,13 @@
 	}
 
 	.assignee-email {
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
+	}
+
+	.assign-note {
+		margin: var(--spacing-half) 0 0 0;
+		max-width: 22ch;
 		font-size: var(--small-font-size);
 		color: var(--inactive-color);
 	}

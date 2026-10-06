@@ -50,6 +50,15 @@ export function validURL(text: string) {
 	);
 }
 
+/** A venue's reviewing system address: empty (none), or an http(s) URL with none of the
+ * characters `venues_review_system_url_check` refuses — whitespace, parentheses, angle
+ * brackets, quotes, backticks and backslashes — since it is rendered as a markdown link
+ * inside a localized sentence. Mirrors that constraint, so the field says no before the
+ * database does. */
+export function validReviewSystemURL(text: string) {
+	return text === '' || (validURL(text) && !/[\s()<>"'`\\]/.test(text));
+}
+
 /** Anchored and non-negative. Callers pass the accepted text to parseInt() and
  * write the result to `not null` integer columns (venue welcome amount,
  * submission cost), so an unanchored `[0-9]+` was actively harmful: "abc12"

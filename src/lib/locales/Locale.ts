@@ -729,6 +729,9 @@ export type LocaleText = {
 				you: string;
 				/** Precedes the approver who declined a bid, in the declined bid's row. */
 				declinedBy: string;
+				/** Under the buttons of any row with an Assign button: the compensation-only
+				 * reminder, in brief. */
+				compensationOnly: string;
 				/** Under an accepted assignee's name, for approvers, when the scholar has no
 				 * verified contact address to show there. */
 				noEmail: string;
@@ -772,6 +775,13 @@ export type LocaleText = {
 				/** The import's names for this submission that match no scholar yet: `{list}` of
 				 * "name (role)", and `{venue}` the venue's path for the link. */
 				unmatched: string;
+				/** Above wherever an approver assigns someone: assigning in RR only records the
+				 * work for compensation, so they must also assign the person in the venue's own
+				 * reviewing system. `{venue}` is the venue's short name. */
+				compensationOnly: string;
+				/** The same, when the venue has given its reviewing system's address:
+				 * `{system}` is that URL, linked. */
+				compensationOnlyLinked: string;
 			};
 			button: {
 				createAssignment: ButtonText;
@@ -1036,6 +1046,9 @@ export type LocaleText = {
 				 * would not fit. `invalid` states the length cap, since the field is where
 				 * someone meets it. */
 				shortName: TextFieldText & { invalid: string };
+				/** The optional address of the venue's reviewing system, linked from the pages
+				 * where approvers assign. `invalid` says what the database refuses. */
+				reviewSystemURL: TextFieldText & { invalid: string };
 				inactiveMessage: TextFieldText;
 				welcomeTokens: TextFieldText;
 				preferenceLevelLabel: TextFieldText & { invalid: string };
@@ -1071,6 +1084,8 @@ export type LocaleText = {
 				doneVisibility: SliderText;
 			};
 			paragraph: {
+				/** Above the reviewing system URL field: what it is and where it is shown. */
+				reviewSystemURL: string;
 				/** Top-of-page blurb framing the page as a series of numbered
 				 * setup steps the admin works through in order. */
 				welcome: string;
@@ -1943,6 +1958,7 @@ export type LocaleText = {
 		EditVenueTitle: string;
 		EditVenueShortTitle: string;
 		EditVenueURL: string;
+		EditVenueReviewSystemURL: string;
 		EditVenueSlug: string;
 		/** The web address someone asked for belongs to another venue. Raised by the unique
 		 * index, which is what actually decides a contested address — the field's own

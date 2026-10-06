@@ -54,6 +54,25 @@ test('editor edits venue title, description, and URL', async ({ page, context })
 			.poll(() => sql(`select url from public.venues where id = '${VENUE_ID}';`))
 			.toBe(newUrl);
 
+		// The optional reviewing system address: set it, then clear it back to null.
+		const reviewSystem = 'https://mc.manuscriptcentral.com/tok?a=1&b=2';
+		await page.getByTestId('venue-review-system-url-toggle').click();
+		await page.getByTestId('venue-review-system-url').fill(reviewSystem);
+		await page.getByTestId('venue-review-system-url-toggle').click();
+		await expect
+			.poll(() => sql(`select review_system_url from public.venues where id = '${VENUE_ID}';`))
+			.toBe(reviewSystem);
+		await page.getByTestId('venue-review-system-url-toggle').click();
+		await page.getByTestId('venue-review-system-url').fill('');
+		await page.getByTestId('venue-review-system-url-toggle').click();
+		await expect
+			.poll(() =>
+				sql(
+					`select coalesce(review_system_url, 'null') from public.venues where id = '${VENUE_ID}';`
+				)
+			)
+			.toBe('null');
+
 		const newShortTitle = `E2E${Date.now() % 10000}`;
 		await page.getByTestId('venue-short-title-toggle').click();
 		await page.getByTestId('venue-short-title').fill(newShortTitle);
@@ -78,7 +97,7 @@ test('editor edits venue title, description, and URL', async ({ page, context })
 		// venue intact. Pg-escape single quotes by doubling them.
 		const esc = (s: string) => s.replaceAll("'", "''");
 		sql(
-			`update public.venues set title = '${esc(originalTitle)}', short_title = '${esc(originalShortTitle)}', description = '${esc(originalDescription)}', url = '${esc(originalUrl)}' where id = '${VENUE_ID}';`
+			`update public.venues set title = '${esc(originalTitle)}', short_title = '${esc(originalShortTitle)}', description = '${esc(originalDescription)}', url = '${esc(originalUrl)}', review_system_url = null where id = '${VENUE_ID}';`
 		);
 	}
 });

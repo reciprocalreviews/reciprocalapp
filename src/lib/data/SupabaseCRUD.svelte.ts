@@ -1061,6 +1061,10 @@ export default class SupabaseCRUD extends CRUD {
 		return this.updateVenue(id, { url }, 'EditVenueURL');
 	}
 
+	async editVenueReviewSystemURL(id: VenueID, url: string | null) {
+		return this.updateVenue(id, { review_system_url: url }, 'EditVenueReviewSystemURL');
+	}
+
 	/**
 	 * Set or change the venue's web address.
 	 *

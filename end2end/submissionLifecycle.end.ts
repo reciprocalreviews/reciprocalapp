@@ -321,7 +321,7 @@ test('approver-role hierarchy: AE approves a Reviewer bid; a non-approver does n
 	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 	await expect(
 		page.getByRole('button', {
-			name: 'Accept this bid, assigning this scholar to this role for this submission'
+			name: 'Accept this bid for compensation. Also assign them in your reviewing system.'
 		})
 	).toHaveCount(0);
 
@@ -342,7 +342,7 @@ test('approver-role hierarchy: AE approves a Reviewer bid; a non-approver does n
 
 	const approveButton = page
 		.getByRole('button', {
-			name: 'Accept this bid, assigning this scholar to this role for this submission'
+			name: 'Accept this bid for compensation. Also assign them in your reviewing system.'
 		})
 		.first();
 	await expect(approveButton).toBeVisible();

@@ -278,6 +278,16 @@
 		{#if uid && assignableRoles.length > 0}
 			<Form>
 				<Tip><Text path={(l) => l.page.submissions.tip.batchAssign} /></Tip>
+				<!-- The same reminder as above a submission's assignments: this only records the
+				     work for compensation. -->
+				<Feedback
+					testid="compensation-only"
+					text={(l) =>
+						venue.review_system_url
+							? l.page.submission.feedback.compensationOnlyLinked
+							: l.page.submission.feedback.compensationOnly}
+					inputs={{ venue: venueBarName(venue), system: venue.review_system_url ?? '' }}
+				/>
 				<Options
 					strings={(l) => l.page.submissions.options.batchRole}
 					bind:value={batchRole}
