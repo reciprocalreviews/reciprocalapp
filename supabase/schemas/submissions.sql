@@ -48,10 +48,11 @@ create table submissions (
 	-- When the submission was marked done (null while still under review).
 	-- Set by the mark_submission_done RPC; cannot be reverted.
 	completed_at timestamp with time zone default null,
-	-- True when the editor has closed bidding on this submission while it is still
-	-- under review -- typically because every seat has a reviewer, but some of them
-	-- have not yet registered, so their assignments are still pending. Blocks new
-	-- bids in every role (see the assignments INSERT policy); existing bids stay.
+	-- True when bidding on this submission has been closed while it is still under
+	-- review -- typically because every seat has a reviewer, but some of them have
+	-- not yet registered, so their assignments are still pending. Blocks new bids in
+	-- every role (see the assignments INSERT policy); existing bids stay. Written only
+	-- by set_submission_open_for_bidding, by anyone who may answer bids on it.
 	bidding_closed boolean not null default false,
 	-- True when the row came from bulk_import_submissions rather than an author
 	-- submitting through the app. Imported rows are exempt from the non-empty
@@ -81,9 +82,9 @@ grant all on table public.submissions to "service_role";
 -- mark_submission_done RPC (SECURITY DEFINER) may write them. A column-level
 -- revoke is ineffective while authenticated holds the TABLE-level UPDATE granted
 -- by `grant all` above, so remove the table-level UPDATE and re-grant only the
--- editable columns. (The author list and bidding_closed among these are further
--- gated to priority-0 assigned scholars by the enforce_submission_author_edits
--- trigger.)
+-- editable columns. (The author list among these is further gated to priority-0
+-- assigned scholars by the enforce_submission_author_edits trigger.) bidding_closed
+-- is left out too: set_submission_open_for_bidding writes it.
 revoke
 update on public.submissions
 from
@@ -100,8 +101,7 @@ update (
 	payments,
 	transactions,
 	title,
-	expertise,
-	bidding_closed
+	expertise
 ) on public.submissions to authenticated;
 
 -- `grant all` above also confers TABLE-level DELETE; deletion is denied to

@@ -635,11 +635,11 @@ The trigger is SECURITY INVOKER and only enforces when `current_user = 'authenti
 
 ### Closing bidding on a submission
 
-`submissions.bidding_closed` (default false) is set from the editor's **Open for bidding** checkbox, through the ordinary column UPDATE grant on `submissions`. Three rules read it, and all three are in the database, because the UI only hides buttons:
+`submissions.bidding_closed` (default false) is set from the **Open for bidding** checkbox through the RPC `set_submission_open_for_bidding(_submission, _open)`. Three rules read it, and all three are in the database, because the UI only hides buttons:
 
 - **New bids.** The bid branch of the `assignments` INSERT policy adds `not public.submission_bidding_closed(submission)`. It cannot read `submissions` inline: the `submissions` SELECT policy reads `assignments`, so the planner reports infinite recursion. `submission_bidding_closed` is a one-bit `SECURITY DEFINER` predicate, the `submission_has_editor` shape, granted to `authenticated` only since the INSERT policy is.
 - **Sight.** The bidder branch of the `submissions` SELECT policy (an accepted volunteer on a biddable role) now also requires the submission to be open for bidding, or the caller to hold any assignment on it. That reads the policy's own row, so it needs no helper. [canViewSubmission.ts](src/lib/data/canViewSubmission.ts) mirrors it.
-- **Who may change it.** Authors pass the `submissions` UPDATE policy, so the `enforce_submission_author_edits` trigger guards `bidding_closed` alongside the author list: only an approved priority-0 assignee may change it. The trigger fires for the owner too (`auth.uid()` is null), so fixtures that set the column directly disable it for the statement.
+- **Who may change it.** Anyone who may answer bids on the submission: `set_submission_open_for_bidding` requires `can_approve_assignment` for some biddable role at the venue, so a venue admin, the submission's editor, or the holder of a bid-approving role seated on it, such as its Associate Editor. It is an RPC rather than a column grant because the `submissions` UPDATE policy admits only authors and editors, and widening it to approvers would also hand them the title, type and expertise. So `bidding_closed` is left out of the client column grant, like `status`, and the RPC is the only client path that writes it. The submission page shows the checkbox on the same test, through [canApproveAssignment.ts](src/lib/data/canApproveAssignment.ts).
 
 The Monday digest's `open_seats` also leaves closed submissions out (see Notifications). Existing bids are untouched: closing blocks only new ones.
 

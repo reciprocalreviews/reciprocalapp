@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.12 - 2026-10-06
+
+### Fixed
+
+- **Associate Editors, and anyone else who can approve or decline bids on a submission, can now check or uncheck "Open for bidding."** Before, only the submission's editor could.
+
 ## 0.5.11 - 2026-10-05
 
 ### Added

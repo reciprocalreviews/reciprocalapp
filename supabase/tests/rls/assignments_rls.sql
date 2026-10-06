@@ -211,10 +211,9 @@ select throws_ok(
 	'holding the child role on a submission does not let a venue-wide approver seat others there'
 );
 
--- Not while the submission's editor has closed bidding on it. (Set as the owner,
--- past the trigger that keeps the column to the editor; submissions_rls.sql tests that.)
+-- Not while bidding on the submission is closed. (Set as the owner; who may set it is
+-- tested in rpc/submission_open_for_bidding.sql.)
 select tests.clear_authentication();
-alter table public.submissions disable trigger enforce_submission_author_edits;
 update public.submissions set bidding_closed = true where id = :'sub';
 select tests.authenticate_as(:'bidder');
 select throws_ok(
@@ -227,7 +226,6 @@ select throws_ok(
 );
 select tests.clear_authentication();
 update public.submissions set bidding_closed = false where id = :'sub';
-alter table public.submissions enable trigger enforce_submission_author_edits;
 
 -- Once bidding reopens, an active accepted volunteer on the role can create their
 -- own bid (bid=true).

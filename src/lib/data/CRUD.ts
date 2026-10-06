@@ -312,7 +312,9 @@ export default abstract class CRUD {
 	abstract updateSubmissionNote(submissionID: SubmissionID, note: string | null): Promise<Result>;
 
 	/** Close or reopen bidding on a submission that is still under review. Authorized for
-	 * priority-0 editors only. Existing bids are untouched; closing only blocks new ones. */
+	 * anyone who may approve bids on the submission: a venue admin, its editor, or the
+	 * holder of a bid-approving role seated on it. Existing bids are untouched; closing
+	 * only blocks new ones. */
 	abstract updateSubmissionBiddingClosed(
 		submissionID: SubmissionID,
 		closed: boolean

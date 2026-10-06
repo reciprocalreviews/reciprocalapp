@@ -275,6 +275,10 @@
 			: []
 	);
 
+	/** Whether the scholar may answer bids here — approve or decline them in some biddable
+	 * role — which is also who may open and close the submission's bidding. */
+	let canAnswerBids = $derived(rolesScholarCanApprove.some((r) => r.biddable));
+
 	let scholarAssignmentRoles = $derived(
 		scholarAssignments !== undefined && roles !== null
 			? scholarAssignments
@@ -494,16 +498,19 @@
 		     status to done in one atomic action; reopening is forbidden.
 		     The button is inactive until every non-editor assignment is
 		     compensated, with an explanation of what's left. -->
-		{#if isEditor && !done}
-			<!-- Unchecking closes bidding while the submission stays under review, e.g.
-			     when every seat has a reviewer but some haven't registered yet. Bidders
-			     then no longer see the submission at all. -->
+		<!-- Anyone who may answer bids here may open or close bidding. Unchecking closes it
+		     while the submission stays under review, e.g. when every seat has a reviewer but
+		     some haven't registered yet. Bidders then no longer see the submission at all. -->
+		{#if canAnswerBids && !done}
 			<Checkbox
 				on={!submission.bidding_closed}
 				change={(on) => db().updateSubmissionBiddingClosed(submission.id, !on)}
 				label={(l) => l.page.submission.checkbox.openForBidding}
 				testid="submission-open-for-bidding"
 			/>
+		{/if}
+
+		{#if isEditor && !done}
 			{#if completionBlockers.length > 0}
 				<Feedback
 					text={(l) =>

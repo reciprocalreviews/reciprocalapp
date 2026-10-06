@@ -2311,11 +2311,11 @@ export default class SupabaseCRUD extends CRUD {
 		submissionID: SubmissionID,
 		closed: boolean
 	): Promise<Result> {
-		return this.updateSubmission(
-			submissionID,
-			{ bidding_closed: closed },
-			'UpdateSubmissionBiddingClosed'
-		);
+		const { error } = await this.client.rpc('set_submission_open_for_bidding', {
+			_submission: submissionID,
+			_open: !closed
+		});
+		return this.errorOrEmpty('UpdateSubmissionBiddingClosed', error);
 	}
 
 	async markSubmissionDone(submissionID: SubmissionID): Promise<Result<MarkSubmissionDoneOutcome>> {
