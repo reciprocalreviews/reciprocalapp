@@ -41,6 +41,13 @@ test('AE assigns two reviewer bids and bidding closes', async ({ page, context }
 	await expect(page.getByRole('button', { name: APPROVE_BID_TIP })).toHaveCount(0);
 	await expect(page.getByRole('button', { name: UNASSIGN_TIP })).toHaveCount(3);
 
+	// Each accepted reviewer's address is under their name, so the AE can invite them in
+	// the venue's own reviewing system.
+	await expect(page.getByTestId('assignee-email')).toHaveCount(3);
+	await expect(
+		page.getByTestId('assignee-email').getByRole('link', { name: SEED.scholars.r1.email })
+	).toHaveAttribute('href', `mailto:${SEED.scholars.r1.email}`);
+
 	// Back on the submissions list, bidding for that submission's Reviewer role
 	// should now be closed (3 approved Reviewer assignments meets desired=3).
 	await page.goto(`/venue/${VENUE_PATH}/submissions`);
@@ -50,6 +57,20 @@ test('AE assigns two reviewer bids and bidding closes', async ({ page, context }
 	).toBeVisible();
 
 	await logout(page);
+
+	// An author of a venue that names its reviewers sees who was assigned, but not their
+	// addresses: those are for the approvers who must invite them.
+	sql(`update public.venues set anonymous_assignments = false where id = '${VENUE_ID}';`);
+	try {
+		await login(SEED.scholars.author1.email, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByRole('link', { name: SEED.scholars.r1.name })).toBeVisible();
+		await expect(page.getByTestId('assignee-email')).toHaveCount(0);
+		await logout(page);
+	} finally {
+		sql(`update public.venues set anonymous_assignments = true where id = '${VENUE_ID}';`);
+	}
 });
 
 test('over-cap bidder shows load indicator and requires confirm to assign', async ({

@@ -92,6 +92,14 @@ export const load: PageLoad = async ({ parent, params }) => {
 				// embed, and a scholar RR has not read comes back with a null one.
 				await db.getScholarCards(assignmentScholarIDs);
 
+	// Contact addresses of those whose bids were accepted, so an approver can invite them
+	// in a venue's own reviewing system. The page shows them only to approvers.
+	const acceptedIDs = Array.from(
+		new Set(assignments?.filter((a) => a.approved).map((a) => a.scholar) ?? [])
+	);
+	const { data: assigneeEmails } =
+		acceptedIDs.length === 0 ? { data: [] } : await db.getScholarEmails(acceptedIDs);
+
 	// Get the venue's preference levels (may be empty) for rendering bid labels.
 	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
@@ -143,6 +151,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		balances,
 		submissionTypes,
 		assignmentScholars: assignmentScholars ?? [],
+		assigneeEmails: assigneeEmails ?? [],
 		preferenceLevels,
 		venueActiveCounts,
 		elsewhereActiveCounts,

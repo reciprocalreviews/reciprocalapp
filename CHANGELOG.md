@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.13 - 2026-10-06
+
+### Added
+
+- **Whoever can approve bids on a submission now sees each assigned reviewer's verified email under their name,** so they can invite them in the venue's own reviewing system. Authors and other reviewers don't see it.
+
 ## 0.5.12 - 2026-10-06
 
 ### Fixed

@@ -4310,6 +4310,10 @@
                     "declinedToPay": {
                       "type": "string"
                     },
+                    "noEmail": {
+                      "description": "Under an accepted assignee's name, for approvers, when the scholar has no verified contact address to show there.",
+                      "type": "string"
+                    },
                     "nonPaying": {
                       "type": "string"
                     },
@@ -4330,7 +4334,8 @@
                     "nonPaying",
                     "anonymized",
                     "you",
-                    "declinedBy"
+                    "declinedBy",
+                    "noEmail"
                   ],
                   "type": "object"
                 },
