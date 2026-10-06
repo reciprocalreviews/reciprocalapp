@@ -4336,6 +4336,10 @@
                     "anonymized": {
                       "type": "string"
                     },
+                    "compensationOnly": {
+                      "description": "Under the buttons of any row with an Assign button: the compensation-only reminder, in brief.",
+                      "type": "string"
+                    },
                     "declinedBy": {
                       "description": "Precedes the approver who declined a bid, in the declined bid's row.",
                       "type": "string"
@@ -4368,6 +4372,7 @@
                     "anonymized",
                     "you",
                     "declinedBy",
+                    "compensationOnly",
                     "noEmail"
                   ],
                   "type": "object"

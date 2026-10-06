@@ -409,6 +409,14 @@
 	venue's own reviewing system. Said plainly when there is none, so the editor knows
 	to find another way rather than wondering whether it failed to load.
 -->
+<!-- Under any row whose buttons include Assign: the same reminder as above the table, in
+     brief, where the approver's eye is when they click. -->
+{#snippet assignNote()}
+	<p class="assign-note" data-testid="assign-note">
+		<Text path={(l) => l.page.submission.cell.compensationOnly} />
+	</p>
+{/snippet}
+
 {#snippet assigneeEmail(scholarID: string)}
 	{@const email = assigneeEmails.find((s) => s.id === scholarID)?.email ?? null}
 	<span class="assignee-email" data-testid="assignee-email">
@@ -897,6 +905,9 @@
 									{EmptyLabel}
 								{/if}
 							</Row>
+							{#if isApprover && !assignment.completed && !assignment.approved}
+								{@render assignNote()}
+							{/if}
 						</td>
 					</tr>
 				{:else}
@@ -978,6 +989,9 @@
 										/>
 									{/if}
 								</Row>
+								{#if !isClaim(assignment) && assignment.bid}
+									{@render assignNote()}
+								{/if}
 							</td>
 						</tr>
 						{#if decliningID === assignment.id}
@@ -1061,6 +1075,9 @@
 										/>
 									{/if}
 								</Row>
+								{#if !isClaim(assignment)}
+									{@render assignNote()}
+								{/if}
 							</td>
 						</tr>
 						<!-- The reason gets a row of its own, spanning the table, so a long
@@ -1152,6 +1169,13 @@
 	}
 
 	.assignee-email {
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
+	}
+
+	.assign-note {
+		margin: var(--spacing-half) 0 0 0;
+		max-width: 22ch;
 		font-size: var(--small-font-size);
 		color: var(--inactive-color);
 	}

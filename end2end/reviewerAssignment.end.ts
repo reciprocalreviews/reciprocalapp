@@ -102,6 +102,24 @@ test('approvers are reminded that assigning is only for compensation, linked to 
 		await page.reload();
 		await page.waitForLoadState('networkidle');
 		await expect(reminder.getByRole('link')).toHaveAttribute('href', REVIEW_SYSTEM);
+
+		// And in brief under every row whose buttons include Assign, and only those. TOK-2025-002
+		// has pending work for this Associate Editor to assign (TOK-2025-001's bids are approved
+		// by the first test in this file).
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_002}`);
+		await page.waitForLoadState('networkidle');
+		// Every kind of Assign, by its tip: a bid, an unapproved direct assignment, a declined
+		// bid, or the confirming one over a bidder's cap.
+		const assignButtons = page.getByRole('button', {
+			name: /^(Accept this bid for compensation|Assign for compensation|Assign this scholar)/
+		});
+		await expect(assignButtons.first()).toBeVisible();
+		const assignCount = await assignButtons.count();
+		expect(assignCount).toBeGreaterThan(0);
+		await expect(page.getByTestId('assign-note')).toHaveCount(assignCount);
+		await expect(page.getByTestId('assign-note').first()).toHaveText(
+			'Compensation only. Also assign in your reviewing system.'
+		);
 		await logout(page);
 
 		// The batch-assign form on the submissions list carries it too.

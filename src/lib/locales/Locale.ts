@@ -729,6 +729,9 @@ export type LocaleText = {
 				you: string;
 				/** Precedes the approver who declined a bid, in the declined bid's row. */
 				declinedBy: string;
+				/** Under the buttons of any row with an Assign button: the compensation-only
+				 * reminder, in brief. */
+				compensationOnly: string;
 				/** Under an accepted assignee's name, for approvers, when the scholar has no
 				 * verified contact address to show there. */
 				noEmail: string;

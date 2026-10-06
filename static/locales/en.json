@@ -1081,6 +1081,7 @@
 				"anonymized": "anonymized",
 				"you": "you",
 				"declinedBy": "declined by",
+				"compensationOnly": "Compensation only. Also assign in your reviewing system.",
 				"noEmail": "no verified email"
 			},
 			"declineBidPrompt": "You don't have to answer a bid, and leaving it is fine. But if you decline it, tell the bidder why: your explanation is emailed to them with your name, and they will see it beside their bid.",
