@@ -8,6 +8,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - **Editors can uncheck "Open for bidding" on a submission that's still under review,** for example when every seat has a reviewer but some haven't registered yet. Bidders who haven't bid on it then no longer see it, and the weekly bidding digest leaves it out.
 
+### Changed
+
+- **A new bid is now emailed only to whoever approves that role on the submission, such as its associate editor.** If no one is seated in that role yet, no one is emailed; before, the bid went to the submission's editor, or failing that the venue's admins.
+
 ### Fixed
 
 - **Submissions that are done no longer offer bid buttons.**

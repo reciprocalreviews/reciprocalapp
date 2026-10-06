@@ -143,12 +143,14 @@ execute on function public.can_approve_assignment (uuid, uuid) to authenticated;
 -- edits the venue. Mailing every admin and priority-0 volunteer about every bid buried
 -- the people who could act on it in mail about submissions they had nothing to do with.
 --
--- The first tier with anyone in it wins: whoever holds the bid-on role's approving role
--- on this submission; failing that, the submission's priority-0 editor, who may approve
--- any role on it; failing that, the venue's admins, so a bid is never left unseen. Each
--- tier is the branch of can_approve_assignment above that describes it. The bidder and
--- anyone conflicted on the submission are dropped before a tier is chosen, so a tier
--- emptied by them falls through rather than silencing the notice.
+-- Only whoever holds the bid-on role's approving role on this submission -- the
+-- approver branch of can_approve_assignment above -- minus the bidder and anyone
+-- conflicted on the submission. There is deliberately no fallback. It used to fall to the
+-- submission's priority-0 editor and then the venue's admins, which mailed an
+-- editor-in-chief seated on every submission about every bid on a submission that had no
+-- associate editor yet. With nobody to tell, nobody is told: the bid waits in the
+-- submission's pending count for whoever seats an approver, and a role with no approver
+-- configured sends no bid mail at all.
 --
 -- SECURITY DEFINER because the bidder cannot see the approvers' assignments, and gated
 -- on the caller having bid for this role on this submission, so it cannot be used to
@@ -159,40 +161,18 @@ set
 	search_path to '' as $$
 begin
 	return query
-	with
-		candidates as (
-			select a.scholar, 1 as tier
-			from public.assignments a
-			join public.roles target on target.id = _role
-			where a.submission = _submission
-			  and a.approved
-			  and a.role = target.approver
-			union all
-			select a.scholar, 2 as tier
-			from public.assignments a
-			join public.roles r on r.id = a.role
-			where a.submission = _submission
-			  and a.approved
-			  and r.priority = 0
-			union all
-			select unnest(v.admins), 3 as tier
-			from public.submissions s
-			join public.venues v on v.id = s.venue
-			where s.id = _submission
-		),
-		eligible as (
-			select c.scholar, c.tier
-			from candidates c
-			where c.scholar <> (select auth.uid())
-			  and not exists (
-				select 1
-				from public.conflicts x
-				where x.submissionid = _submission and x.scholarid = c.scholar
-			  )
-		)
-	select distinct e.scholar
-	from eligible e
-	where e.tier = (select min(tier) from eligible)
+	select distinct a.scholar
+	from public.assignments a
+	join public.roles target on target.id = _role
+	where a.submission = _submission
+	  and a.approved
+	  and a.role = target.approver
+	  and a.scholar <> (select auth.uid())
+	  and not exists (
+		select 1
+		from public.conflicts x
+		where x.submissionid = _submission and x.scholarid = a.scholar
+	  )
 	  and exists (
 		select 1
 		from public.assignments b
