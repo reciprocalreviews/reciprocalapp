@@ -111,10 +111,8 @@ select tests.create_assignment(:'ven', :'s_bid', :'rev', :'bidrole', false, true
 -- Seated in ANOTHER role on it: still excluded.
 update public.submissions set title = 'Seated' where id = :'s_seated';
 select tests.create_assignment(:'ven', :'s_seated', :'rev', :'quietrole') \gset
--- Seats open, but its editor has closed bidding on it.
-alter table public.submissions disable trigger enforce_submission_author_edits;
+-- Seats open, but bidding on it has been closed.
 update public.submissions set title = 'Bidding closed', bidding_closed = true where id = :'s_closed';
-alter table public.submissions enable trigger enforce_submission_author_edits;
 
 -- A switched-off venue whose open submission must never appear.
 select tests.create_venue(:'cur', array[:'admin']::uuid[]) as offven \gset

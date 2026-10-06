@@ -14,8 +14,10 @@
 --           column level: even a permitted updater (an author) gets 42501.
 --   AUTHOR-LIST LOCK  the enforce_submission_author_edits trigger forbids any
 --           non-priority-0 actor (e.g. an author) from changing
---           authors/payments/transactions or bidding_closed; a priority-0
---           assigned scholar may.
+--           authors/payments/transactions; a priority-0 assigned scholar may.
+--   BIDDING  bidding_closed is out of the column grant, so no client may write it
+--           directly, not even the editor; set_submission_open_for_bidding does
+--           (see rpc/submission_open_for_bidding.sql).
 
 \ir ../_helpers/helpers.sql.inc
 
@@ -211,22 +213,27 @@ select is(
 	'the priority-0 author-list edit took effect'
 );
 
--- The same trigger keeps an author from closing bidding on their own submission.
+-- bidding_closed is not in the column grant: no direct write, by an author or even
+-- the editor. The RPC is the only client path.
 select tests.authenticate_as(:'author');
 select throws_ok(
 	$$ update public.submissions set bidding_closed = true where id = $$ || quote_literal(:'sub_main'),
+	'42501',
 	null,
-	null,
-	'an author cannot close bidding on their submission (trigger raises)'
+	'an author cannot write bidding_closed directly'
 );
 
--- The editor can.
 select tests.authenticate_as(:'prio0');
-select lives_ok(
+select throws_ok(
 	$$ update public.submissions set bidding_closed = true where id = $$ || quote_literal(:'sub_main'),
-	'a priority-0 assigned scholar can close bidding'
+	'42501',
+	null,
+	'nor can the editor: bidding_closed is written only by the RPC'
 );
+
+-- Close it as the owner for the visibility cases below.
 select tests.clear_authentication();
+update public.submissions set bidding_closed = true where id = :'sub_main';
 select is(
 	(select bidding_closed from public.submissions where id = :'sub_main'),
 	true,

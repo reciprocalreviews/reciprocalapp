@@ -953,6 +953,9 @@ isOneToOne: false
 "set_steward":
 { Args: { "_scholar": string,"_steward": boolean }; Returns: Json
                            },
+"set_submission_open_for_bidding":
+{ Args: { "_open": boolean,"_submission": string }; Returns: undefined
+                           },
 "site_origin":
 { Args: Record<PropertyKey, never>; Returns: string
                            },

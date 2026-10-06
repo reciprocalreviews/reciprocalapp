@@ -310,6 +310,53 @@ from
 grant
 execute on function public.submission_bidding_closed (uuid) to authenticated;
 
+-- Open or close bidding on a submission that is still under review.
+--
+-- Whoever may answer bids on the submission may do this: whoever passes
+-- can_approve_assignment for some biddable role at its venue -- a venue admin, the
+-- submission's priority-0 editor, or the holder of a bid-approving role seated on it,
+-- such as its Associate Editor. The flag is the submission's, so closing it closes
+-- bidding in every role.
+--
+-- An RPC rather than a column grant because the submissions UPDATE policy admits
+-- authors and editors only, and widening it to approvers would hand them the title,
+-- type and expertise as well. bidding_closed is therefore left out of the column grant,
+-- like status, and this is the only client path that writes it.
+create or replace function public.set_submission_open_for_bidding (_submission uuid, _open boolean) returns void language plpgsql security definer
+set
+	"search_path" to '' as $$
+begin
+	if (select auth.uid()) is null then
+		raise exception 'Authentication required' using errcode = '42501';
+	end if;
+
+	if not exists (
+		select 1
+		from public.submissions s
+		join public.roles r on r.venueid = s.venue
+		where s.id = _submission
+			and r.biddable
+			and public.can_approve_assignment(_submission, r.id)
+	) then
+		raise exception 'Only someone who may answer bids on this submission may open or close its bidding'
+			using errcode = '42501';
+	end if;
+
+	update public.submissions set bidding_closed = not _open where id = _submission;
+end;
+$$;
+
+alter function public.set_submission_open_for_bidding (uuid, boolean) OWNER to "postgres";
+
+revoke
+execute on function public.set_submission_open_for_bidding (uuid, boolean)
+from
+	public,
+	anon;
+
+grant
+execute on function public.set_submission_open_for_bidding (uuid, boolean) to authenticated;
+
 -- The list form, and the one the application actually calls. SECURITY INVOKER, so the
 -- scan of public.submissions runs under the caller's own policy: a caller gets exactly
 -- one row per submission they may already see, each carrying that one bit.
@@ -773,9 +820,8 @@ with
 	);
 
 -- The submissions UPDATE policy lets authors edit their submission, but authors
--- must NOT be able to change the author list (authors/payments/transactions) or
--- close bidding (bidding_closed); only a priority-0 assigned scholar on the paper
--- may. RLS using-clauses cannot
+-- must NOT be able to change the author list (authors/payments/transactions);
+-- only a priority-0 assigned scholar on the paper may. RLS using-clauses cannot
 -- be column-specific, so enforce the author-list lock with a BEFORE UPDATE
 -- trigger (mirrors the revoke-update lock on submissions.status/completed_at).
 create or replace function public.enforce_submission_author_edits () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
@@ -786,7 +832,6 @@ begin
 		new.authors is distinct from old.authors
 		or new.payments is distinct from old.payments
 		or new.transactions is distinct from old.transactions
-		or new.bidding_closed is distinct from old.bidding_closed
 	) and not exists (
 		select 1
 		from public.assignments a
@@ -796,7 +841,7 @@ begin
 			and a.approved = true
 			and r.priority = 0
 	) then
-		raise exception 'Only priority-0 assigned scholars may change the author list or close bidding';
+		raise exception 'Only priority-0 assigned scholars may change the author list';
 	end if;
 	return new;
 end;

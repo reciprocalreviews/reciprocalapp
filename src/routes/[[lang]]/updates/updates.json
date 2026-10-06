@@ -1,5 +1,17 @@
 [
 	{
+		"version": "0.5.12",
+		"date": "2026-10-06",
+		"changes": {
+			"added": [],
+			"fixed": [
+				"**Associate Editors, and anyone else who can approve or decline bids on a submission, can now check or uncheck \"Open for bidding.\"** Before, only the submission's editor could."
+			],
+			"changed": [],
+			"removed": []
+		}
+	},
+	{
 		"version": "0.5.11",
 		"date": "2026-10-05",
 		"changes": {

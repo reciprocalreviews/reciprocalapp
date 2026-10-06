@@ -54,11 +54,8 @@ test('an editor closes bidding on a submission, and bidders no longer see it', a
 	// the bidder would otherwise see bid buttons on it.
 	const SUBMISSION_ID = 'f0000002-ad50-11f0-9000-000000000010';
 	const TITLE = 'Retraction Notices as a Genre';
-	// Reopen as the owner, past the trigger that keeps the column to the editor.
 	const reopen = () =>
-		sql(
-			`begin; alter table public.submissions disable trigger enforce_submission_author_edits; update public.submissions set bidding_closed = false where id = '${SUBMISSION_ID}'; alter table public.submissions enable trigger enforce_submission_author_edits; commit;`
-		);
+		sql(`update public.submissions set bidding_closed = false where id = '${SUBMISSION_ID}';`);
 	reopen();
 
 	try {
@@ -86,6 +83,44 @@ test('an editor closes bidding on a submission, and bidders no longer see it', a
 		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 		await page.waitForLoadState('networkidle');
 		await expect(page.getByText(TITLE)).toHaveCount(0);
+		await logout(page);
+	} finally {
+		reopen();
+	}
+});
+
+test("the submission's Associate Editor can open and close bidding; a seated reviewer cannot", async ({
+	page,
+	context
+}) => {
+	// TOK-2025-010's Associate Editor approves its Reviewer bids, so may also close bidding.
+	const SUBMISSION_ID = 'f0000002-ad50-11f0-9000-000000000010';
+	const closed = () =>
+		sql(`select bidding_closed from public.submissions where id = '${SUBMISSION_ID}';`);
+	const reopen = () =>
+		sql(`update public.submissions set bidding_closed = false where id = '${SUBMISSION_ID}';`);
+	reopen();
+
+	try {
+		await login('o.access@uni.edu', page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
+		const open = page.getByTestId('submission-open-for-bidding');
+		await expect(open).toBeChecked();
+		await open.click();
+		await expect(page.getByTestId('submission-bidding-closed-status')).toBeVisible();
+		await expect.poll(closed).toBe('t');
+		await open.click();
+		await expect(page.getByTestId('submission-bidding-closed-status')).toHaveCount(0);
+		await expect.poll(closed).toBe('f');
+		await logout(page);
+
+		// r1 reviews TOK-2025-010 but approves nothing on it.
+		await login('r1@uni.edu', page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByText('Retraction Notices as a Genre').first()).toBeVisible();
+		await expect(page.getByTestId('submission-open-for-bidding')).toHaveCount(0);
 		await logout(page);
 	} finally {
 		reopen();
