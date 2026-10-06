@@ -7,6 +7,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Added
 
 - **Whoever can approve bids on a submission now sees each assigned reviewer's verified email under their name,** so they can invite them in the venue's own reviewing system. Authors and other reviewers don't see it.
+- **Wherever someone can assign reviewers, a reminder now says that assigning in Reciprocal Reviews is only for compensation** and that they also need to assign the person in the venue's reviewing system. Admins can add that system's address in venue settings, and the reminder then links to it.
 
 ## 0.5.12 - 2026-10-06
 

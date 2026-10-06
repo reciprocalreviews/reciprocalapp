@@ -8,6 +8,7 @@ import {
 	validEmailsOrORCIDs,
 	validInteger,
 	validORCID,
+	validReviewSystemURL,
 	validURL,
 	validVenueSlug
 } from './validation';
@@ -235,5 +236,26 @@ describe('slugifyTitle', () => {
 		['AI', 'ai']
 	])('slugifyTitle(%s) is %s', (title, expected) => {
 		expect(slugifyTitle(title)).toBe(expected);
+	});
+});
+
+describe('validReviewSystemURL', () => {
+	test('accepts no address at all', () => {
+		expect(validReviewSystemURL('')).toBe(true);
+	});
+
+	test('accepts an http(s) address', () => {
+		expect(validReviewSystemURL('https://mc.manuscriptcentral.com/toce')).toBe(true);
+		expect(validReviewSystemURL('https://openreview.net/group?id=ICLR.cc/2027&tab=x')).toBe(true);
+	});
+
+	test('refuses anything but http(s)', () => {
+		expect(validReviewSystemURL('javascript:alert(1)')).toBe(false);
+		expect(validReviewSystemURL('mc.manuscriptcentral.com/toce')).toBe(false);
+	});
+
+	test('refuses characters that would end a link or an attribute early', () => {
+		for (const bad of [' ', '(', ')', '<', '>', '"', "'", '`', '\\'])
+			expect(validReviewSystemURL(`https://example.com/a${bad}b`)).toBe(false);
 	});
 });

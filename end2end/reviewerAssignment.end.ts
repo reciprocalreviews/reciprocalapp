@@ -11,7 +11,8 @@ const REVIEWER_ROLE = SEED.roles.reviewer;
 /** The reviewer-only scholar `filters.uniqueReviewer` picks out. */
 const BIDDER_ID = SEED.scholars.r4.id;
 
-const APPROVE_BID_TIP = 'Accept this bid, assigning this scholar to this role for this submission';
+const APPROVE_BID_TIP =
+	'Accept this bid for compensation. Also assign them in your reviewing system.';
 const APPROVE_ANYWAY_TIP = 'Assign this scholar despite the load warning';
 const UNASSIGN_TIP = 'Remove this assignment';
 
@@ -70,6 +71,55 @@ test('AE assigns two reviewer bids and bidding closes', async ({ page, context }
 		await logout(page);
 	} finally {
 		sql(`update public.venues set anonymous_assignments = true where id = '${VENUE_ID}';`);
+	}
+});
+
+test('approvers are reminded that assigning is only for compensation, linked to the reviewing system when given', async ({
+	page,
+	context
+}) => {
+	// Query string with & on purpose: the address is escaped on its way into markdown, and
+	// the link must still reach it intact.
+	const REVIEW_SYSTEM = 'https://mc.manuscriptcentral.com/tok?a=1&b=2';
+	const setSystem = (url: string | null) =>
+		sql(
+			`update public.venues set review_system_url = ${url === null ? 'null' : `'${url}'`} where id = '${VENUE_ID}';`
+		);
+	setSystem(null);
+
+	try {
+		// The Associate Editor, above the bids they answer: the reminder, unlinked.
+		await login('ae@uni.edu', page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
+		const reminder = page.getByTestId('compensation-only');
+		await expect(reminder).toBeVisible();
+		await expect(reminder).toContainText('Assigning here is only for compensation.');
+		await expect(reminder.getByRole('link')).toHaveCount(0);
+
+		// Once the venue gives its reviewing system's address, the reminder links to it.
+		setSystem(REVIEW_SYSTEM);
+		await page.reload();
+		await page.waitForLoadState('networkidle');
+		await expect(reminder.getByRole('link')).toHaveAttribute('href', REVIEW_SYSTEM);
+		await logout(page);
+
+		// The batch-assign form on the submissions list carries it too.
+		await login('editor@uni.edu', page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId('compensation-only')).toBeVisible();
+		await logout(page);
+
+		// A bidder, who assigns nobody, is not shown it.
+		await login(SEED.scholars.r4.email, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByText(SEED.submissions.tok001.title).first()).toBeVisible();
+		await expect(page.getByTestId('compensation-only')).toHaveCount(0);
+		await logout(page);
+	} finally {
+		setSystem(null);
 	}
 });
 

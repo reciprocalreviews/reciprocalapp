@@ -14,7 +14,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(13);
+select plan(18);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -98,6 +98,42 @@ select is(
 	(select title from public.venues where id = :'ven'),
 	'Admin Updated',
 	'a non-steward non-admin cannot update a venue (no-op)'
+);
+
+-- ---- review_system_url ----------------------------------------------------------
+-- Optional, admin-editable, and only an http(s) address that cannot end a markdown link
+-- or an HTML attribute early, since it is rendered as a link inside a sentence.
+select tests.authenticate_as(:'admin');
+select lives_ok(
+	$$ update public.venues set review_system_url = 'https://mc.manuscriptcentral.com/toce?a=1&b=2' where id = $$ || quote_literal(:'ven'),
+	'a venue admin can set the reviewing system URL'
+);
+select throws_ok(
+	$$ update public.venues set review_system_url = 'javascript:alert(1)' where id = $$ || quote_literal(:'ven'),
+	'23514',
+	null,
+	'a javascript: address is refused'
+);
+select throws_ok(
+	$$ update public.venues set review_system_url = 'https://example.com/a)b' where id = $$ || quote_literal(:'ven'),
+	'23514',
+	null,
+	'an address that would end a markdown link early is refused'
+);
+
+select tests.authenticate_as(:'outsider');
+update public.venues set review_system_url = 'https://evil.example' where id = :'ven';
+select tests.clear_authentication();
+select is(
+	(select review_system_url from public.venues where id = :'ven'),
+	'https://mc.manuscriptcentral.com/toce?a=1&b=2',
+	'a non-admin cannot change the reviewing system URL (no-op)'
+);
+
+select tests.authenticate_as(:'admin');
+select lives_ok(
+	$$ update public.venues set review_system_url = null where id = $$ || quote_literal(:'ven'),
+	'a venue admin can clear the reviewing system URL'
 );
 
 -- ---- DELETE -------------------------------------------------------------------

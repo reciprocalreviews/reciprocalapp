@@ -586,6 +586,9 @@
             "EditVenuePaymentFree": {
               "type": "string"
             },
+            "EditVenueReviewSystemURL": {
+              "type": "string"
+            },
             "EditVenueShortTitle": {
               "type": "string"
             },
@@ -892,6 +895,7 @@
             "EditVenueTitle",
             "EditVenueShortTitle",
             "EditVenueURL",
+            "EditVenueReviewSystemURL",
             "EditVenueSlug",
             "VenueAddressTaken",
             "VenueAddressInvalid",
@@ -3915,6 +3919,29 @@
                       ],
                       "type": "object"
                     },
+                    "reviewSystemURL": {
+                      "additionalProperties": false,
+                      "description": "The optional address of the venue's reviewing system, linked from the pages where approvers assign. `invalid` says what the database refuses.",
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
                     "shortName": {
                       "additionalProperties": false,
                       "description": "The venue's short display name, shown in the venue bar where the full title would not fit. `invalid` states the length cap, since the field is where someone meets it.",
@@ -3968,6 +3995,7 @@
                   "required": [
                     "webAddress",
                     "shortName",
+                    "reviewSystemURL",
                     "inactiveMessage",
                     "welcomeTokens",
                     "preferenceLevelLabel",
@@ -4059,12 +4087,17 @@
                       "description": "Body of the Step 1 \"review quality\" card (#65): deciding what counts as a creditable review and which controls enforce it.",
                       "type": "string"
                     },
+                    "reviewSystemURL": {
+                      "description": "Above the reviewing system URL field: what it is and where it is shown.",
+                      "type": "string"
+                    },
                     "welcome": {
                       "description": "Top-of-page blurb framing the page as a series of numbered setup steps the admin works through in order.",
                       "type": "string"
                     }
                   },
                   "required": [
+                    "reviewSystemURL",
                     "welcome",
                     "policies",
                     "economics",
@@ -4366,6 +4399,14 @@
                     "alreadyAssigned": {
                       "type": "string"
                     },
+                    "compensationOnly": {
+                      "description": "Above wherever an approver assigns someone: assigning in RR only records the work for compensation, so they must also assign the person in the venue's own reviewing system. `{venue}` is the venue's short name.",
+                      "type": "string"
+                    },
+                    "compensationOnlyLinked": {
+                      "description": "The same, when the venue has given its reviewing system's address: `{system}` is that URL, linked.",
+                      "type": "string"
+                    },
                     "completionBlocked": {
                       "description": "Shown when the editor can't yet mark done — lists what's still pending. {count} is substituted.",
                       "type": "string"
@@ -4435,7 +4476,9 @@
                     "completionNotEditor",
                     "completionSucceeded",
                     "needsEditor",
-                    "unmatched"
+                    "unmatched",
+                    "compensationOnly",
+                    "compensationOnlyLinked"
                   ],
                   "type": "object"
                 },

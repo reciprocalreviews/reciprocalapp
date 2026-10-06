@@ -702,7 +702,7 @@ Keep it a **static** import. A dynamic `import()` is not in the root layout's st
 
 Every string passes through [interpolate.ts](src/lib/locales/interpolate.ts) — the one choke point — which makes two replacements in order: `$name` from the locale's own `shorthand` table, then `{name}` from the caller's `inputs`. An unrecognized key is left literally as `$name` or `{name}`, so a missing string shows up as a visible placeholder rather than a hole in a sentence.
 
-`<Text markdown>` renders its result through `marked` and `{@html}`, and `marked` passes raw HTML through untouched. That makes an input _markup_, not text — and several inputs are authored by users: `venue.description`, `proposal.title`, `proposal.url`. Before this was addressed, a venue description of `<img src=x onerror=…>` executed for every visitor to that venue.
+`<Text markdown>` renders its result through `marked` and `{@html}`, and `marked` passes raw HTML through untouched. That makes an input _markup_, not text — and several inputs are authored by users: `venue.description`, `proposal.title`, `proposal.url`, `venue.review_system_url`. The last is also constrained in the database (`venues_review_system_url_check`: http(s) only, with no whitespace, parentheses, angle brackets, quotes or backslashes), because it is substituted into a markdown link destination, where escaping alone can't stop a `)` from ending the link early. Before this was addressed, a venue description of `<img src=x onerror=…>` executed for every visitor to that venue.
 
 So **inputs are escaped by default in the markdown path**. A value that genuinely is markup the platform generated must say so by arriving as `Html` from [html.ts](src/lib/locales/html.ts):
 

@@ -9,6 +9,11 @@ create table if not exists public.venues (
 	description text default ''::text not null,
 	-- A link to the venue's official web page
 	url text default ''::text not null,
+	-- An optional link to the system where the venue's editors assign reviewers to
+	-- manuscripts (ScholarOne, OpenReview, ...). Assigning someone in RR only records the
+	-- work for compensation, so the pages where approvers assign link here to remind them
+	-- to assign the person there too. Null when the venue has not given one.
+	review_system_url text default null,
 	-- A short display name, shown in the venue bar where the full title does not fit:
 	-- "TOCE" for "ACM Transactions on Computing Education". Empty until a venue chooses
 	-- one, in which case the title is shown instead. Unlike `slug` this is display text
@@ -51,6 +56,13 @@ create table if not exists public.venues (
 	-- state, and no format rule, because this is prose rather than an address. Twenty
 	-- characters is generous for an acronym and refuses a pasted full title.
 	constraint venues_short_title_check check (length(short_title)<=20),
+	-- http(s) only, so never javascript:, and none of the characters that would let the
+	-- value end a markdown link or an HTML attribute early: it is rendered as a link
+	-- inside a localized sentence.
+	constraint venues_review_system_url_check check (
+		review_system_url is null
+		or review_system_url~'^https?://[^[:space:]()<>"''`\\]+$'
+	),
 	-- Four characters minimum: three-letter acronyms are the ones most likely to be
 	-- contested, and handing the first arrival a name a dozen communities have equal claim
 	-- to is not a race worth running. Lowercase only, so an address is the same address

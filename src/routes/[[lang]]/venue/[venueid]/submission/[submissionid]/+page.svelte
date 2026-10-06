@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PublicORCIDProfile, RoleID, RoleRow, ScholarID } from '$data/types';
 	import { venuePath as toVenuePath } from '#lib/data/venuePath.js';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import Button from '#lib/components/Button.svelte';
 	import Checkbox from '#lib/components/Checkbox.svelte';
 	import EditableText from '#lib/components/EditableText.svelte';
@@ -650,6 +651,20 @@
 		{/if}
 
 		<Subheader icon={EditLabel} text={(l) => l.page.submission.header.assignments}></Subheader>
+
+		<!-- Assigning here only records the work for compensation. Approvers kept assuming it
+		     was the whole job, so whoever can assign here is reminded, above every control that
+		     does it, to assign the person in the venue's own reviewing system too. -->
+		{#if rolesScholarCanApprove.length > 0 && venue !== null}
+			<Feedback
+				testid="compensation-only"
+				text={(l) =>
+					venue.review_system_url
+						? l.page.submission.feedback.compensationOnlyLinked
+						: l.page.submission.feedback.compensationOnly}
+				inputs={{ venue: venueBarName(venue), system: venue.review_system_url ?? '' }}
+			/>
+		{/if}
 
 		<!-- People the import named who have not joined yet, in one notice. They are matched
 		     from the venue's unmatched assignments page once each person joins. -->

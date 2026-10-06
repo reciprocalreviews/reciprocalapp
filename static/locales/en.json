@@ -916,7 +916,9 @@
 				"completionNotEditor": "Only an approved editor (priority-0 role) can mark this submission done.",
 				"completionSucceeded": "Submission marked done and editor(s) compensated.",
 				"needsEditor": "No one is editing this submission yet. Until someone does, only venue admins can approve or pay for work on it, and it can’t be marked done.",
-				"unmatched": "Unmatched from import: {list}. Once each person joins and accepts the role, they can be [matched](/venue/{venue}/submissions/unmatched)."
+				"unmatched": "Unmatched from import: {list}. Once each person joins and accepts the role, they can be [matched](/venue/{venue}/submissions/unmatched).",
+				"compensationOnly": "**Assigning here is only for compensation.** Also assign them in {venue}'s reviewing system, so they can get the manuscript and submit their review.",
+				"compensationOnlyLinked": "**Assigning here is only for compensation.** Also assign them in [{venue}'s reviewing system]({system}), so they can get the manuscript and submit their review."
 			},
 			"button": {
 				"createAssignment": {
@@ -934,11 +936,11 @@
 					"warn": "Mark complete and pay"
 				},
 				"approve": {
-					"tip": "Assign this scholar to this role",
+					"tip": "Assign for compensation. Also assign them in your reviewing system.",
 					"label": "Assign"
 				},
 				"approveBid": {
-					"tip": "Accept this bid, assigning this scholar to this role for this submission",
+					"tip": "Accept this bid for compensation. Also assign them in your reviewing system.",
 					"label": "Assign"
 				},
 				"approveAnyway": {
@@ -1251,6 +1253,11 @@
 					"placeholder": "ToK",
 					"invalid": "Use 20 characters or fewer. Leave it empty to show the full title."
 				},
+				"reviewSystemURL": {
+					"label": "Reviewing system URL",
+					"placeholder": "https://",
+					"invalid": "Must be an http(s) address with no spaces, quotes or brackets"
+				},
 				"inactiveMessage": {
 					"label": "inactive message",
 					"placeholder": "e.g., We're currently configuring the venue.",
@@ -1316,6 +1323,7 @@
 				}
 			},
 			"paragraph": {
+				"reviewSystemURL": "Where your editors assign reviewers to manuscripts, such as your ScholarOne or OpenReview site. Optional. When set, it's linked beside Reciprocal Reviews' assign buttons, reminding editors to assign reviewers there too.",
 				"welcome": "Welcome, venue admin! This page walks you through configuring your venue as a sequence of numbered steps. Work through each section in order. Start with **Step 1** below to align on the policies that the rest of the settings encode, then move down the page recording each decision. The last step is always **Activate** — flip the venue on to open it for volunteering.",
 				"policies": "Before changing any settings below, get community alignment on each of these decisions. The settings on this page just encode them; getting them wrong is hard to walk back once volunteers start participating.\n\n- The venue's **purpose and scope** — what topics, what kinds of submissions you accept\n- The **submission types** you'll accept (e.g., full papers, posters, revisions)\n- The **roles** scholars take on (Editor, Associate Editor, Reviewer, …) and how many people each submission needs in each role\n- The other **editors / admins** who can configure this venue with you\n- Which **external reviewing platform** (HotCRP, OJS, ScholarOne, etc.) handles your peer review, so the email-template snippets in Step 6 use the right syntax\n\nThe most consequential choices — the token economy, how reviewing is organized, what counts as a creditable review, and who can mint — are expanded in the cards below.",
 				"economics": "Tokens only work if they stay scarce enough to be worth earning. The economy has two failure modes:\n\n- **Too many tokens** — if welcome gifts are generous and submission costs are low, everyone already has enough to submit, so no one needs to review. Reviewing stalls and quality and timeliness suffer.\n- **Too few tokens** — if costs are high and tokens are hard to earn, authors can't accumulate enough to submit, and publishing slows down.\n\nTwo rules keep you in balance:\n\n1. **Per-role compensation for a submission must sum to no more than its submission cost.** Otherwise every reviewed submission injects net-new tokens and the supply inflates until reviewing has no value.\n2. **Mint tokens roughly in proportion to the number of active scholars**, topping up only as the community grows — not in large speculative batches.\n\n**For example.** A journal pays **10** tokens for a review, **10** for an associate-editor recommendation, and **1** for an editor-in-chief decision: **21** tokens paid out per submission. It sets the **submission cost to 40** (comfortably above the 21 paid out, so the venue reserve grows slightly) and the **welcome gift to 30**, so a newcomer can submit after reviewing just once (30 + 10 = 40). Tune these numbers to your community's reviewing load, but always check the two rules above before you change them.",
@@ -2195,6 +2203,7 @@
 		"EditVenueTitle": "Unable to edit the venue title",
 		"EditVenueShortTitle": "Unable to edit the venue short name",
 		"EditVenueURL": "Unable to edit the venue URL",
+		"EditVenueReviewSystemURL": "Unable to edit the venue's reviewing system URL",
 		"EditVenueSlug": "Unable to set the venue's web address",
 		"VenueAddressTaken": "Another venue already uses that web address. Pick a different one.",
 		"VenueAddressInvalid": "That web address isn't allowed. Use 4 to 40 characters: lowercase letters, numbers, and single hyphens between them, starting with a letter.",

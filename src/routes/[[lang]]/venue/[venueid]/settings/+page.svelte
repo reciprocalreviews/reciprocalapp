@@ -24,7 +24,7 @@
 	import { getDB } from '#lib/data/CRUD.js';
 	import { PLATFORMS } from '#lib/data/reviewingPlatforms.js';
 	import Text from '#lib/locales/Text.svelte';
-	import { isntEmpty, validInteger, validURL } from '#lib/validation.js';
+	import { isntEmpty, validInteger, validReviewSystemURL, validURL } from '#lib/validation.js';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
@@ -166,6 +166,21 @@
 			valid={(text) => (validURL(text) ? undefined : (l) => l.page.venue.field.url.invalid)}
 			edit={(text) => db().editVenueURL(venue.id, text)}
 			testid="venue-url"
+		/>
+
+		<!-- Where editors assign reviewers outside RR. Linked from the pages where approvers
+		     assign, since assigning in RR only records the work for compensation. -->
+		<Paragraph text={(l) => l.page.settings.paragraph.reviewSystemURL} />
+		<EditableText
+			text={venue.review_system_url ?? ''}
+			strings={(l) => l.page.settings.field.reviewSystemURL}
+			valid={(text) =>
+				validReviewSystemURL(text.trim())
+					? undefined
+					: (l) => l.page.settings.field.reviewSystemURL.invalid}
+			edit={(text) =>
+				db().editVenueReviewSystemURL(venue.id, text.trim() === '' ? null : text.trim())}
+			testid="venue-review-system-url"
 		/>
 
 		<WebAddress {venue} />

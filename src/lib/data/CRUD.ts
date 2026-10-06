@@ -498,6 +498,8 @@ export default abstract class CRUD {
 	 * shown instead; nothing about it is unique, so unlike an address it cannot be taken. */
 	abstract editVenueShortTitle(id: VenueID, shortTitle: string): Promise<Result>;
 	abstract editVenueURL(id: VenueID, url: string): Promise<Result>;
+	/** Set or clear (null) the address of the venue's reviewing system. */
+	abstract editVenueReviewSystemURL(id: VenueID, url: string | null): Promise<Result>;
 	/** Set or change the venue's web address. Changing one releases the old address
 	 * immediately: nothing reserves it, nothing redirects from it, and every link that
 	 * used it breaks. The interface warns before doing it. */
