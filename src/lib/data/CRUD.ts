@@ -796,6 +796,11 @@ export default abstract class CRUD {
 	abstract getScholarNames(
 		ids: ScholarID[]
 	): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>>;
+	/** Verified contact addresses, null where a scholar has none. For approvers who must
+	 * reach an accepted bidder outside RR, e.g. to invite them in a venue's own system. */
+	abstract getScholarEmails(
+		ids: ScholarID[]
+	): Promise<ReadResult<Pick<ScholarRow, 'id' | 'email'>[] | null>>;
 	abstract getStewards(): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>>;
 
 	/** The mirrored slice of a scholar's public ORCID record, or null when RR has not read

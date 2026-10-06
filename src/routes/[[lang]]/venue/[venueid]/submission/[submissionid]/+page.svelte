@@ -76,6 +76,8 @@
 		submissionTypes,
 		/** Names of scholars referenced by assignments, for stable sorting */
 		assignmentScholars,
+		/** Contact addresses of accepted assignees, shown only to approvers */
+		assigneeEmails,
 		/** Venue-defined preference levels, ordered by rank */
 		preferenceLevels,
 		/** Per-scholar count of active (approved, uncompleted) assignments in this venue */
@@ -399,6 +401,19 @@
 			{#if stat}<span class="works">{stat}</span>{/if}
 		</span>
 	{/if}
+{/snippet}
+
+<!--
+	An accepted assignee's verified address, for approvers who must invite them in a
+	venue's own reviewing system. Said plainly when there is none, so the editor knows
+	to find another way rather than wondering whether it failed to load.
+-->
+{#snippet assigneeEmail(scholarID: string)}
+	{@const email = assigneeEmails.find((s) => s.id === scholarID)?.email ?? null}
+	<span class="assignee-email" data-testid="assignee-email">
+		{#if email}<a href="mailto:{email}">{email}</a>{:else}{locale().page.submission.cell
+				.noEmail}{/if}
+	</span>
 {/snippet}
 
 <!--
@@ -827,6 +842,9 @@
 								{:else}
 									<Status good={false} label={(l) => l.page.submission.status.unassigned} />
 								{/if}
+								{#if isApprover && assignment.approved && assignment.scholar !== scholar.id}
+									{@render assigneeEmail(assignment.scholar)}
+								{/if}
 								{@render orcidContext(assignment.scholar)}
 							</div>
 						</td>
@@ -1114,6 +1132,11 @@
 		flex-direction: column;
 		align-items: flex-start;
 		gap: var(--spacing-half);
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
+	}
+
+	.assignee-email {
 		font-size: var(--small-font-size);
 		color: var(--inactive-color);
 	}

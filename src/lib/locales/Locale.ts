@@ -729,6 +729,9 @@ export type LocaleText = {
 				you: string;
 				/** Precedes the approver who declined a bid, in the declined bid's row. */
 				declinedBy: string;
+				/** Under an accepted assignee's name, for approvers, when the scholar has no
+				 * verified contact address to show there. */
+				noEmail: string;
 			};
 			/** Above the reason field when declining a bid. Declining is optional, so this says
 			 * so, and that the reason goes to the bidder. */

@@ -788,6 +788,12 @@ export default class SupabaseCRUD extends CRUD {
 		return this.rows('LoadScholar', this.client.from('scholars').select('id, name').in('id', ids));
 	}
 
+	async getScholarEmails(
+		ids: ScholarID[]
+	): Promise<ReadResult<Pick<ScholarRow, 'id' | 'email'>[] | null>> {
+		return this.rows('LoadScholar', this.client.from('scholars').select('id, email').in('id', ids));
+	}
+
 	async getStewards(): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>> {
 		// Ordered, because this list is public (/about) and heap order is not stable:
 		// Postgres moves a row's physical position on every UPDATE, so an unordered
