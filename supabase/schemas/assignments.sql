@@ -1005,9 +1005,15 @@ execute on function public.decline_bid (uuid, text) to authenticated;
 -- submission. A claim cannot be filed in a priority-0 role: an editor seat carries
 -- authority over the submission, and editors are paid by marking it done.
 --
--- Returns the submission and everyone who may act on the request, the union of
--- can_approve_assignment's three branches minus the requester and anyone conflicted.
--- Computed here because the requester cannot see the other assignments that answer it.
+-- Returns the submission and who to tell: the scholar seated in the role's approving
+-- role on the submission, as a new bid tells (bid_notice_recipients); failing that, its
+-- priority-0 editors; failing that, the venue's admins. Each tier leaves out the
+-- requester and anyone conflicted before asking whether it is empty, so a conflicted
+-- approver hands the request on rather than swallowing it. Unlike a bid, a request is
+-- pay owed for finished work, so it falls back rather than reaching nobody. Also returns
+-- the submission's title, the role's name and the requester's name, for the email.
+-- Computed here because the requester cannot see the other assignments that answer it,
+-- and often not the submission either.
 create or replace function public.request_compensation (_venue uuid, _externalid text, _role uuid) returns jsonb language plpgsql security definer
 set
 	search_path to '' as $$
@@ -1017,6 +1023,9 @@ declare
 	_priority integer;
 	_a public.assignments;
 	_recipients uuid[];
+	_title text;
+	_role_name text;
+	_requester text;
 begin
 	_caller := (select auth.uid());
 	if _caller is null then
@@ -1083,29 +1092,56 @@ begin
 		values (_venue, _submission, _caller, _role, false, false, now());
 	end if;
 
-	select coalesce(array_agg(distinct x.scholar), array[]::uuid[]) into _recipients
-	from (
-		select a.scholar
-		from public.assignments a
-		join public.roles target on target.id = _role
-		where a.submission = _submission and a.approved and a.role = target.approver
-		union
-		select a.scholar
+	-- The scholar seated in the role's approving role on this submission.
+	select coalesce(array_agg(distinct a.scholar), array[]::uuid[]) into _recipients
+	from public.assignments a
+	join public.roles target on target.id = _role
+	where a.submission = _submission and a.approved and a.role = target.approver
+		and a.scholar <> _caller
+		and not exists (
+			select 1 from public.conflicts c
+			where c.submissionid = _submission and c.scholarid = a.scholar
+		);
+
+	-- Failing that, the submission's editors.
+	if cardinality(_recipients) = 0 then
+		select coalesce(array_agg(distinct a.scholar), array[]::uuid[]) into _recipients
 		from public.assignments a
 		join public.roles r on r.id = a.role
 		where a.submission = _submission and a.approved and r.priority = 0
-		union
-		select unnest(v.admins)
-		from public.venues v
-		where v.id = _venue
-	) x
-	where x.scholar <> _caller
-		and not exists (
-			select 1 from public.conflicts c
-			where c.submissionid = _submission and c.scholarid = x.scholar
-		);
+			and a.scholar <> _caller
+			and not exists (
+				select 1 from public.conflicts c
+				where c.submissionid = _submission and c.scholarid = a.scholar
+			);
+	end if;
 
-	return jsonb_build_object('submission', _submission, 'recipients', to_jsonb(_recipients));
+	-- Failing that, the venue's admins.
+	if cardinality(_recipients) = 0 then
+		select coalesce(array_agg(distinct x.scholar), array[]::uuid[]) into _recipients
+		from (
+			select unnest(v.admins) as scholar
+			from public.venues v
+			where v.id = _venue
+		) x
+		where x.scholar <> _caller
+			and not exists (
+				select 1 from public.conflicts c
+				where c.submissionid = _submission and c.scholarid = x.scholar
+			);
+	end if;
+
+	select s.title into _title from public.submissions s where s.id = _submission;
+	select r.name into _role_name from public.roles r where r.id = _role;
+	select sc.name into _requester from public.scholars sc where sc.id = _caller;
+
+	return jsonb_build_object(
+		'submission', _submission,
+		'recipients', to_jsonb(_recipients),
+		'title', _title,
+		'role', _role_name,
+		'requester', _requester
+	);
 end;
 $$;
 

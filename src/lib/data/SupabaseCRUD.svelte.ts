@@ -2645,7 +2645,9 @@ export default class SupabaseCRUD extends CRUD {
 
 		const submission = stringField(data, 'submission');
 		const recipients = stringArrayField(data, 'recipients');
-		if (submission === null || recipients === null)
+		const title = stringField(data, 'title');
+		const role = stringField(data, 'role');
+		if (submission === null || recipients === null || title === null || role === null)
 			return this.error('CompensationAssignmentCheck');
 
 		// No one to notify is possible when the requester is the venue's only admin.
@@ -2655,7 +2657,15 @@ export default class SupabaseCRUD extends CRUD {
 		return this.emailScholars(
 			recipients,
 			'CompensationRequested',
-			[await this.venuePathOf(venueID), submission, note],
+			[
+				await this.venuePathOf(venueID),
+				submission,
+				note.trim(),
+				// Null for a scholar who has not given a name yet.
+				stringField(data, 'requester')?.trim() || 'A scholar',
+				role,
+				title
+			],
 			venueID
 		);
 	}

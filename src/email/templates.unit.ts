@@ -206,6 +206,51 @@ describe('BidDeclined', () => {
 	});
 });
 
+describe('CompensationRequested', () => {
+	const args = (note: string) => [
+		'toce',
+		'submission-id',
+		note,
+		'Grace Hopper',
+		'Reviewer',
+		'On Compilers'
+	];
+
+	it('names who asked, for which role, on which submission', () => {
+		const { subject, message } = renderEmail('CompensationRequested', args('Done in March.'));
+		expect(subject).toBe('Grace Hopper requested compensation for "On Compilers"');
+		expect(message).toContain('Grace Hopper requested compensation for their work as Reviewer');
+		expect(message).toContain('On Compilers');
+	});
+
+	it('quotes the note when there is one', () => {
+		const { message } = renderEmail('CompensationRequested', args('Done in March.'));
+		expect(message).toContain('Their note: "Done in March."');
+	});
+
+	// The note is optional, and used to arrive as an empty pair of quotation marks.
+	it('leaves out the note paragraph when the note is blank', () => {
+		for (const note of ['', '   ']) {
+			const { message } = renderEmail('CompensationRequested', args(note));
+			expect(message).not.toContain('Their note');
+			expect(message).toContain('mark the work complete');
+		}
+	});
+
+	it('links to the submission', () => {
+		const { message } = renderEmail('CompensationRequested', args(''), 'http://localhost:5173');
+		expect(message).toContain(
+			signInUrl('http://localhost:5173', '/venue/toce/submission/submission-id')
+		);
+	});
+
+	it('substitutes every placeholder', () => {
+		const { subject, message } = renderEmail('CompensationRequested', args('A note.'));
+		expect(subject).not.toMatch(/\$\d/);
+		expect(message).not.toMatch(/\$\d/);
+	});
+});
+
 describe('SubmissionsAssignedEditor', () => {
 	const args = ['3', 'Transactions on Knowledge', 'knowledge'];
 

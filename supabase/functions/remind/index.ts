@@ -248,21 +248,6 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 			approvedBySubmission.get(a.submission)!.push(a);
 		}
 
-		/** The scholars who can compensate an assignment: venue admins, approved
-		 * priority-0 assignees on the submission, and approved holders of the
-		 * role's approver on the submission — the same union as
-		 * can_approve_assignment, minus the assignee themselves. */
-		const approversOf = (assignment: (typeof assignments)[number]): Set<string> => {
-			const recipients = new Set<string>(venueById.get(assignment.venue)?.admins ?? []);
-			for (const other of approvedBySubmission.get(assignment.submission) ?? []) {
-				if (other.roles?.priority === 0) recipients.add(other.scholar);
-				if (assignment.roles?.approver !== null && other.role === assignment.roles?.approver)
-					recipients.add(other.scholar);
-			}
-			recipients.delete(assignment.scholar);
-			return recipients;
-		};
-
 		// ---- Family 3: requested-but-unpaid compensation → the approver chain --
 		// Only assignments whose scholar explicitly requested compensation:
 		// approved-but-uncompleted alone means a review in progress, and nagging
@@ -279,6 +264,41 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 		const pendingCompensation = assignments.filter(
 			(a) => !a.completed && a.compensation_requested_at !== null && a.declined_at === null
 		);
+
+		// Who is told, as request_compensation decides it: whoever is seated in the role's
+		// approving role on the submission; failing that, its priority-0 editors; failing
+		// that, the venue's admins. Each tier leaves out the requester and anyone conflicted
+		// on the submission before asking whether it is empty. Change one and change both.
+		const pendingSubmissions = [...new Set(pendingCompensation.map((a) => a.submission))];
+		const { data: conflicts, error: conflictsError } =
+			pendingSubmissions.length === 0
+				? { data: [], error: null }
+				: await supabase
+						.from('conflicts')
+						.select('submissionid, scholarid')
+						.in('submissionid', pendingSubmissions);
+		if (conflicts === null) console.error('Error fetching conflicts for reminders', conflictsError);
+		const conflicted = new Set((conflicts ?? []).map((c) => `${c.submissionid}|${c.scholarid}`));
+
+		const approversOf = (assignment: (typeof assignments)[number]): string[] => {
+			const eligible = (scholar: string) =>
+				scholar !== assignment.scholar && !conflicted.has(`${assignment.submission}|${scholar}`);
+			const seated = approvedBySubmission.get(assignment.submission) ?? [];
+			const approver = assignment.roles?.approver ?? null;
+			const tiers = [
+				seated
+					.filter((other) => approver !== null && other.role === approver)
+					.map((o) => o.scholar),
+				seated.filter((other) => other.roles?.priority === 0).map((o) => o.scholar),
+				venueById.get(assignment.venue)?.admins ?? []
+			];
+			for (const tier of tiers) {
+				const recipients = [...new Set(tier.filter(eligible))];
+				if (recipients.length > 0) return recipients;
+			}
+			return [];
+		};
+
 		const compensation: ByScholarVenue = new Map();
 		for (const assignment of pendingCompensation)
 			for (const approver of approversOf(assignment))
