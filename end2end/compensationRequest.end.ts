@@ -49,11 +49,10 @@ test('a request reports who was told, not a second generic confirmation', async 
 
 		// Somebody was emailed, so the banners name them. The generic line is suppressed —
 		// it used to appear as well, which was the same news twice and the less useful telling.
-		// Two people: the venue's admin and the associate editor who approves reviewers on
-		// this submission. The recipients are worked out by request_compensation now; the
-		// client used to read them from assignments the reviewer cannot see, and so only
-		// ever found the admin.
-		await expect(banners).toHaveCount(2);
+		// One person: the associate editor who approves reviewers on this submission. The
+		// venue's admin, who is also its editor, is not told -- the request is the AE's to
+		// answer, as a new bid is. The recipients are worked out by request_compensation.
+		await expect(banners).toHaveCount(1);
 		for (const text of await banners.allInnerTexts()) expect(text).toContain('was emailed');
 		expect((await banners.allInnerTexts()).join(' | ')).not.toContain('Compensation request sent.');
 
@@ -64,6 +63,21 @@ test('a request reports who was told, not a second generic confirmation', async 
 				`select count(*) from public.emails where event = 'CompensationRequested' and (venue is null or reply_to is null or reply_to is distinct from public.venue_reply_to(venue));`
 			)
 		).toBe('0');
+
+		// The email says who asked, for what, and on which submission, and carries the note.
+		expect(
+			sql(
+				`select scholar || '|' || (args->>2) || '|' || (args->>3) || '|' || (args->>4) || '|' || (args->>5) from public.emails where event = 'CompensationRequested';`
+			)
+		).toBe(
+			[
+				SEED.scholars.ae.id,
+				'I reviewed this in March.',
+				VOLUNTEER.name,
+				'Reviewer',
+				SEED.submissions.tok001.title
+			].join('|')
+		);
 	} finally {
 		sql(`delete from public.emails where event = 'CompensationRequested';`);
 	}
@@ -124,6 +138,14 @@ test('a reviewer claims work on a submission nobody seated them on, and an admin
 		await expect(page.getByTestId('compensation-manuscript')).toHaveValue('');
 		await expect.poll(claimState).toBe('false|');
 		await logout(page);
+
+		// With nobody seated on the paper, the request falls back to the venue's admin. It
+		// was filed without a note, so the email has none to quote.
+		expect(
+			sql(
+				`select scholar || '|' || (args->>2) from public.emails where event = 'CompensationRequested' and args->>1 = '${submission}';`
+			)
+		).toBe(`${SEED.scholars.editor.id}|`);
 
 		// The venue's admin is the only approver while nobody edits the paper.
 		await login(SEED.scholars.editor.email, page, context);

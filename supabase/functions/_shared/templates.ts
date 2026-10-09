@@ -24,6 +24,12 @@ export type Email = {
 	 */
 	digestArg?: number;
 	/**
+	 * 1-based positions of arguments a sender may leave blank. A paragraph mentioning one of
+	 * them is left out when it is, so an optional field the sender skipped does not arrive
+	 * as an empty quotation. Keep each such argument in a paragraph of its own.
+	 */
+	omitWhenBlank?: number[];
+	/**
 	 * A courtesy notice a scholar may silence from their profile settings.
 	 *
 	 * Absent means the email is consequential — a charge, a decline, a verification, an
@@ -230,17 +236,21 @@ export const Emails = {
 		optional: true,
 		section: 'venues'
 	},
+	// $1 is the venue's path, $2 the submission's id, $3 the requester's note (optional),
+	// $4 the requester's name, $5 the role, $6 the submission's title. The note comes third
+	// because it always has; the rest were added after it.
 	CompensationRequested: {
-		subject: 'Compensation requested for volunteer work',
+		subject: '$4 requested compensation for "$6"',
 		paragraphs: [
-			"A scholar requested compensation for their work on a submission. Here's the note they included:",
-			'"$3"',
+			'$4 requested compensation for their work as $5 on "$6".',
+			'Their note: "$3"',
 			"If this is a valid request, approve the assignment, evaluate their work, and if it meets your venue's standards, mark the work complete so they are compensated.",
 			'<rr-button href="{origin}/venue/$1/submission/$2">Open the submission</rr-button>'
 		],
-		// Sent to the whole approver union -- venue admins, the submission's priority-0
-		// editors, and the holder of the role's approving role -- so for most recipients it
-		// is news about a group's work rather than an obligation of their own.
+		omitWhenBlank: [3],
+		// Sent to whoever approves the role on the submission, as a new bid is, and only
+		// failing them to its editors and then the venue's admins (request_compensation).
+		// Optional all the same: the weekly CompensationPending reminder defers to it.
 		optional: true,
 		section: 'venues'
 	},
@@ -1140,9 +1150,15 @@ export function renderEmail(
 	origin: string = DEFAULT_ORIGIN
 ): { subject: string; message: string } {
 	// Get the email template.
-	const email = Emails[template];
-	const urlArgs = new Set<number>((email as Email).urlArgs ?? []);
-	const digestArg = (email as Email).digestArg;
+	const email: Email = Emails[template];
+	const urlArgs = new Set<number>(email.urlArgs ?? []);
+	const digestArg = email.digestArg;
+	const blank = new Set(
+		(email.omitWhenBlank ?? []).filter((n) => (args[n - 1] ?? '').trim() === '')
+	);
+	const paragraphs = email.paragraphs.filter(
+		(paragraph) => ![...paragraph.matchAll(/\$(\d+)/g)].some((match) => blank.has(Number(match[1])))
+	);
 
 	// The origin is substituted into the template text, NOT passed through the
 	// argument path: every argument has its URL scheme defanged unless the
@@ -1173,7 +1189,7 @@ export function renderEmail(
 	// argument value that happens to contain the literal text isn't expanded.
 	const subject = substitute(email.subject.replaceAll('{origin}', base), (value) => value);
 	const message = throughSignIn(
-		substitute(email.paragraphs.join('\n\n').replaceAll('{origin}', base), (value, position) =>
+		substitute(paragraphs.join('\n\n').replaceAll('{origin}', base), (value, position) =>
 			position === digestArg
 				? formatBiddingDigest(value, base)
 				: urlArgs.has(position)

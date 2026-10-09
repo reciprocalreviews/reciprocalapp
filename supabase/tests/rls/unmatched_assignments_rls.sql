@@ -172,11 +172,11 @@ select throws_ok(
 	'a claimant cannot approve their own claim'
 );
 
--- On M-1 the associate editor approves reviewers, so they hear about it too.
-select results_eq(
-	format($$ select r from jsonb_array_elements_text(public.request_compensation(%L, 'M-1', %L) -> 'recipients') r order by r $$, :'ven', :'rolereviewer'),
-	format($$ select r from unnest(array[%L, %L]) r order by r $$, :'admin', :'ae'),
-	'the holder of the approving role on the submission hears about a claim alongside the admins'
+-- On M-1 the associate editor approves reviewers, so they alone hear about it.
+select is(
+	public.request_compensation(:'ven', 'M-1', :'rolereviewer') -> 'recipients',
+	jsonb_build_array(:'ae'),
+	'the holder of the approving role on the submission hears about a claim, and the admins do not'
 );
 
 -- ---- Matching ------------------------------------------------------------------

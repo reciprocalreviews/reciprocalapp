@@ -1154,7 +1154,7 @@
 				"adminMints": "This venue's admin is also its [currency](/currency/{currency})'s minter. Consider volunteering to be the currency's minter to help reduce the risk of perceived or actual self-dealing.",
 				"typesNotLoaded": "Couldn't load venue's submission types.",
 				"rolesNotLoaded": "Couldn't load venue's roles.",
-				"compensationRequested": "Compensation request sent. It waits for an approver — the submission’s editor or a venue admin — to approve and pay it, even if no one has assigned you to the submission here yet.",
+				"compensationRequested": "Compensation request sent. It waits for whoever approves your role on the submission to approve and pay it, even if no one has assigned you to the submission here yet.",
 				"inactive": "This venue is currently **inactive**, so only admins can see its details. Here is the message from the admins: *{message}*",
 				"inactivePrompt": "This venue is currently **inactive**. Only you and other admins can see it, along with the message set in the [venue settings](/venue/{venue}/settings). Visit the settings to activate the venue."
 			},
