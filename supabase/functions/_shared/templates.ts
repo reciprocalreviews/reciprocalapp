@@ -158,7 +158,7 @@ export const Emails = {
 		silencedBy: 'VenueApproved'
 	},
 	AssignmentApproved: {
-		subject: 'Your are assigned a submission',
+		subject: 'You have been assigned a submission',
 		paragraphs: [
 			'<a href="mailto:$2">$1</a> assigned you as $3 for this submission:',
 			'<rr-button href="{origin}/venue/$4/submission/$5">Open the submission</rr-button>',
