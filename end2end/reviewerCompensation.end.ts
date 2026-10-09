@@ -105,3 +105,40 @@ test('when the venue is out of tokens, Complete surfaces an error and queues a p
 			);
 	}
 });
+
+test('an assignee who never volunteered shows their real balance, not 0', async ({
+	page,
+	context
+}) => {
+	// A scholar can be assigned without a volunteer record (an admin seats them directly).
+	// The page used to fetch balances only for volunteers, so such an assignee read 0 tokens
+	// even right after being paid. author2 holds tokens and has no Reviewer volunteer row.
+	const ASSIGNEE = SEED.scholars.author2;
+	expect(
+		Number(
+			sql(
+				`select count(*) from public.volunteers where scholarid = '${ASSIGNEE.id}' and roleid = '${REVIEWER_ROLE_ID}';`
+			)
+		)
+	).toBe(0);
+	const balance = Number(
+		sql(
+			`select count(*) from public.tokens where scholar = '${ASSIGNEE.id}' and currency = '${CURRENCY_ID}';`
+		)
+	);
+	expect(balance).toBeGreaterThan(0);
+
+	const assignmentID = sql(
+		`insert into public.assignments (venue, submission, scholar, role, bid, approved, completed) values ('${VENUE_ID}', '${SUBMISSION_ID}', '${ASSIGNEE.id}', '${REVIEWER_ROLE_ID}', false, true, false) returning id;`
+	);
+	try {
+		await login(EDITOR.email, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
+
+		const row = page.locator('tr', { hasText: ASSIGNEE.name });
+		await expect(row.locator('.token .value')).toHaveText(new RegExp(`\\b${balance}$`));
+	} finally {
+		sql(`delete from public.assignments where id = '${assignmentID}';`);
+	}
+});
