@@ -70,14 +70,17 @@ export const load: PageLoad = async ({ parent, params }) => {
 					roles.map((r) => r.id)
 				);
 
-	// Get the token balances of each volunteer in the venue's currency, so we can sort by them.
+	// Get the token balances of each volunteer and each assignee in the venue's currency, so we
+	// can sort by them. Assignees too: a scholar can be assigned without ever volunteering, and
+	// leaving them out showed their balance as 0 even after they were paid.
+	const balanceScholarIDs = Array.from(
+		new Set([
+			...(volunteers ?? []).map((v) => v.scholarid),
+			...(assignments ?? []).map((a) => a.scholar)
+		])
+	);
 	const { data: balances } =
-		volunteers === null || venue === null
-			? { data: null }
-			: await db.getTokenBalances(
-					venue.currency,
-					volunteers.map((v) => v.scholarid)
-				);
+		venue === null ? { data: null } : await db.getTokenBalances(venue.currency, balanceScholarIDs);
 
 	// Get the submission types in case we need to change it.
 	const { data: submissionTypes } = await db.getVenueSubmissionTypes(venueid);

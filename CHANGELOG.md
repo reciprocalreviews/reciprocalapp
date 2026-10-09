@@ -7,6 +7,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Fixed
 
 - **A compensation request is now emailed only to whoever approves that role on the submission, such as its Associate Editor,** and to its editor or the venue's admins only when no one is seated in that role. The weekly reminder follows the same rule, and the email now names who asked, their role, and the submission, and leaves out the note when there isn't one.
+- **A submission's assignment table now shows the real token balance of a scholar who was assigned without volunteering.** Before, it showed 0, even right after they were paid.
 
 ## 0.5.13 - 2026-10-06
 
