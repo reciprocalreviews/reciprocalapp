@@ -17,7 +17,7 @@
 #                  handed the offline one. If unset, output is left UNENCRYPTED and
 #                  the script says so loudly — only appropriate for a local drill.
 #   OUT_DIR        where to write (default ./dr-out). Must not already exist.
-#   PG_IMAGE       client image (default postgres:17).
+#   PG_IMAGE       client image (default public.ecr.aws/docker/library/postgres:17).
 #   PGSSLMODE      default `require`. Set `disable` for a local stack.
 #   LABEL          free text recorded in the manifest (e.g. "nightly", "pre-migration").
 #
@@ -48,7 +48,8 @@ DR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 : "${DB_URL:?DB_URL is required (use the SESSION-mode pooler URI on port 5432)}"
 OUT_DIR="${OUT_DIR:-dr-out}"
-PG_IMAGE="${PG_IMAGE:-postgres:17}"
+PG_IMAGE="${PG_IMAGE:-public.ecr.aws/docker/library/postgres:17}"
+ALPINE_IMAGE="${ALPINE_IMAGE:-public.ecr.aws/docker/library/alpine:3}"
 AGE_RECIPIENT="${AGE_RECIPIENT:-}"
 PGSSLMODE="${PGSSLMODE:-require}"
 LABEL="${LABEL:-manual}"
@@ -293,7 +294,7 @@ else
 			-v "$OUT_ABS:/out" \
 			-e AGE_ARGS="$AGE_ARGS" \
 			-e UIDGID="$(id -u):$(id -g)" \
-			alpine:3 sh -c '
+			"$ALPINE_IMAGE" sh -c '
 				set -e
 				apk add --no-cache age >/dev/null
 				for f in /out/*; do

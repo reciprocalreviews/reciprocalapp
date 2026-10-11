@@ -7,6 +7,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Changed
 
 - Updated dependencies, including SvelteKit, Svelte, Vite, Playwright, and the Supabase and Vercel CLIs.
+- Updated internal backup tooling so that Docker Hub's rate limits no longer cause scheduled backups to fail.
 
 ## 0.5.14 - 2026-10-08
 
