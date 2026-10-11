@@ -326,6 +326,16 @@
 	 * candidate on every call: four hundred rows across three roles against sixty
 	 * volunteers is tens of thousands of calls, re-run on every keystroke in any
 	 * cell. The distinct names in a column are far fewer than its rows. */
+	/** True when any row names someone in a role column, matched or not. Seating
+	 * people is then part of the import, so submitting first confirms they agreed:
+	 * an unmatched name is still a person who will be seated once matched. The
+	 * venue's automatic editor seat is not a name in the file and does not count. */
+	const namesPeople = $derived(
+		rows.some((row) =>
+			Object.keys(roleColumns).some((role) => (row.people[role] ?? '').trim() !== '')
+		)
+	);
+
 	const personMatches = $derived.by(() => {
 		const memo = new Map<string, Map<string, PersonMatch>>();
 		return rows.map((row) => {
@@ -1017,7 +1027,9 @@
 	<TextField strings={(l) => l.page.bulkImport.field.importNote} size={60} bind:text={importNote} />
 
 	<Button
-		strings={(l) => l.page.bulkImport.button.submit}
+		strings={namesPeople
+			? (l) => l.page.bulkImport.button.submitNamed
+			: (l) => l.page.bulkImport.button.submit}
 		testid="bulk-import-submit"
 		active={allRowsValid && !importing}
 		action={async () => {

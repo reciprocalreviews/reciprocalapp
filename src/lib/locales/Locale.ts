@@ -525,6 +525,10 @@ export type LocaleText = {
 				applyDefault: ButtonText;
 				parseCSV: ButtonText;
 				submit: ButtonText;
+				/** Used in place of `submit` when any row names a person in a role
+				 * column, so the importer confirms that everyone named agreed to the
+				 * work before they are seated. */
+				submitNamed: ConfirmButtonText;
 			};
 			column: {
 				title: string;
@@ -633,7 +637,10 @@ export type LocaleText = {
 			};
 			button: {
 				batchFind: ButtonText;
-				batchAssign: ButtonText;
+				/** Confirms the scholar agreed before seating them. */
+				batchAssign: ConfirmButtonText;
+				/** `batchAssign` without the confirmation, for seating oneself. */
+				batchAssignSelf: ButtonText;
 				sortPaymentFirst: ButtonText;
 				sortPaymentLast: ButtonText;
 				sortTitleAsc: ButtonText;
@@ -784,16 +791,25 @@ export type LocaleText = {
 				compensationOnlyLinked: string;
 			};
 			button: {
-				createAssignment: ButtonText;
+				/** Confirms the scholar agreed before seating them: approvers were
+				 * assigning people who had not yet said yes. */
+				createAssignment: ConfirmButtonText;
+				/** `createAssignment` without the confirmation, for seating oneself. */
+				createAssignmentSelf: ButtonText;
 				unassign: ConfirmButtonText;
 				complete: ConfirmButtonText;
-				approve: ButtonText;
+				/** Assigns an unapproved assignment the scholar did not bid for, so
+				 * it confirms they agreed. */
+				approve: ConfirmButtonText;
 				approveBid: ButtonText;
 				/** Confirm-style variant used in place of `approve` / `approveBid`
 				 * when assigning would push the scholar past their stated
 				 * paper-count cap. Button's built-in warn pattern turns this into
 				 * a two-click confirmation. */
 				approveAnyway: ConfirmButtonText;
+				/** `approveAnyway` for an assignment the scholar did not bid for:
+				 * one confirmation asks both questions. */
+				approveAnywayAgreed: ConfirmButtonText;
 				/** Editor button that compensates the editor(s) and marks the
 				 * submission done in one atomic action. */
 				markDone: ConfirmButtonText;

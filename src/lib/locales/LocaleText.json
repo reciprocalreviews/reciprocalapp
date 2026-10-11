@@ -1473,6 +1473,10 @@
                     },
                     "submit": {
                       "$ref": "#/definitions/ButtonText"
+                    },
+                    "submitNamed": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Used in place of `submit` when any row names a person in a role column, so the importer confirms that everyone named agreed to the work before they are seated."
                     }
                   },
                   "required": [
@@ -1480,7 +1484,8 @@
                     "removeRow",
                     "applyDefault",
                     "parseCSV",
-                    "submit"
+                    "submit",
+                    "submitNamed"
                   ],
                   "type": "object"
                 },
@@ -4256,11 +4261,16 @@
                   "additionalProperties": false,
                   "properties": {
                     "approve": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Assigns an unapproved assignment the scholar did not bid for, so it confirms they agreed."
                     },
                     "approveAnyway": {
                       "$ref": "#/definitions/ConfirmButtonText",
                       "description": "Confirm-style variant used in place of `approve` / `approveBid` when assigning would push the scholar past their stated paper-count cap. Button's built-in warn pattern turns this into a two-click confirmation."
+                    },
+                    "approveAnywayAgreed": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "`approveAnyway` for an assignment the scholar did not bid for: one confirmation asks both questions."
                     },
                     "approveBid": {
                       "$ref": "#/definitions/ButtonText"
@@ -4289,7 +4299,12 @@
                       "description": "Sends the decline of a compensation claim and its reason to the claimant."
                     },
                     "createAssignment": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Confirms the scholar agreed before seating them: approvers were assigning people who had not yet said yes."
+                    },
+                    "createAssignmentSelf": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "`createAssignment` without the confirmation, for seating oneself."
                     },
                     "declineBid": {
                       "$ref": "#/definitions/ButtonText",
@@ -4313,11 +4328,13 @@
                   },
                   "required": [
                     "createAssignment",
+                    "createAssignmentSelf",
                     "unassign",
                     "complete",
                     "approve",
                     "approveBid",
                     "approveAnyway",
+                    "approveAnywayAgreed",
                     "markDone",
                     "claimEditor",
                     "declineBid",
@@ -4832,7 +4849,12 @@
                   "additionalProperties": false,
                   "properties": {
                     "batchAssign": {
-                      "$ref": "#/definitions/ButtonText"
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Confirms the scholar agreed before seating them."
+                    },
+                    "batchAssignSelf": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "`batchAssign` without the confirmation, for seating oneself."
                     },
                     "batchFind": {
                       "$ref": "#/definitions/ButtonText"
@@ -4878,6 +4900,7 @@
                   "required": [
                     "batchFind",
                     "batchAssign",
+                    "batchAssignSelf",
                     "sortPaymentFirst",
                     "sortPaymentLast",
                     "sortTitleAsc",

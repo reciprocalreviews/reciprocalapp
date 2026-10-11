@@ -583,13 +583,16 @@
 													<span><strong>0</strong> {locale().page.submissions.cell.assigned}</span>
 												{/each}
 
-												<!-- Batch assign: one click per submission once the scholar and
-												     role are resolved above. Hidden where they already hold this
+												<!-- Batch assign: one confirmed click per submission once the scholar
+												     and role are resolved above. The confirmation asks whether they
+												     agreed; seating yourself needs no such question. Hidden where they already hold this
 												     role, since a duplicate would just add a second row. -->
 												{#if batchScholarID !== null && batchRole === role.id && !alreadyAssigned(assignments, submission.id, batchScholarID, role.id)}
 													<Button
 														testid={`batch-assign-${index}-${roleIndex}`}
-														strings={(l) => l.page.submissions.button.batchAssign}
+														strings={batchScholarID === uid
+															? (l) => l.page.submissions.button.batchAssignSelf
+															: (l) => l.page.submissions.button.batchAssign}
 														action={() =>
 															handle(
 																db().createAssignment(
