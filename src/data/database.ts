@@ -27,6 +27,7 @@ export type Database = {
                   Row: {
                     "approved": boolean,"bid": boolean,"compensation_requested_at": string | null,"completed": boolean,"created_at": string,"decline_reason": string | null,"declined_at": string | null,"declined_by": string | null,"id": string,"preferenceid": string | null,"role": string,"scholar": string,"submission": string,"venue": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "approved"?: boolean,"bid"?: boolean,"compensation_requested_at"?: string | null,"completed"?: boolean,"created_at"?: string,"decline_reason"?: string | null,"declined_at"?: string | null,"declined_by"?: string | null,"id"?: string,"preferenceid"?: string | null,"role": string,"scholar": string,"submission": string,"venue": string
                   }
@@ -76,6 +77,7 @@ isOneToOne: false
                   Row: {
                     "actor": string | null,"after": Json | null,"at": string,"before": Json | null,"op": string,"row_id": string | null,"seq": number,"tbl": string,"xid": unknown
                   }
+                  ComputedFields: never
                   Insert: {
                     "actor"?: string | null,"after"?: Json | null,"at"?: string,"before"?: Json | null,"op": string,"row_id"?: string | null,"seq"?: never,"tbl": string,"xid"?: unknown
                   }
@@ -89,6 +91,7 @@ isOneToOne: false
                   Row: {
                     "checked_at": string | null,"fingerprint": string | null,"scholar": string,"sent_at": string | null
                   }
+                  ComputedFields: never
                   Insert: {
                     "checked_at"?: string | null,"fingerprint"?: string | null,"scholar": string,"sent_at"?: string | null
                   }
@@ -108,6 +111,7 @@ isOneToOne: true
                   Row: {
                     "amount": number | null,"rationale": string,"role": string,"submission_type": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "amount"?: number | null,"rationale"?: string,"role": string,"submission_type": string
                   }
@@ -133,6 +137,7 @@ isOneToOne: false
                   Row: {
                     "reason": string,"scholarid": string,"submissionid": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "reason"?: string,"scholarid": string,"submissionid": string
                   }
@@ -158,6 +163,7 @@ isOneToOne: false
                   Row: {
                     "description": string,"id": string,"minters": (string)[],"name": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "description"?: string,"id"?: string,"minters"?: (string)[],"name"?: string
                   }
@@ -171,6 +177,7 @@ isOneToOne: false
                   Row: {
                     "candidate_email": string,"created_at": string,"email_id": string | null,"expires_at": string,"scholar": string,"token_hash": string,"verified_at": string | null
                   }
+                  ComputedFields: never
                   Insert: {
                     "candidate_email": string,"created_at"?: string,"email_id"?: string | null,"expires_at"?: string,"scholar": string,"token_hash": string,"verified_at"?: string | null
                   }
@@ -196,6 +203,7 @@ isOneToOne: true
                   Row: {
                     "args": NonNullable<Json>,"cc": (string)[] | null,"delivery": string | null,"delivery_at": string | null,"delivery_detail": string | null,"email": string,"event": string,"id": string,"message": string | null,"reply_to": string | null,"request_id": number | null,"scholar": string | null,"sender": string | null,"subject": string | null,"time_sent": string,"venue": string | null
                   }
+                  ComputedFields: never
                   Insert: {
                     "args"?: NonNullable<Json>,"cc"?: (string)[] | null,"delivery"?: string | null,"delivery_at"?: string | null,"delivery_detail"?: string | null,"email": string,"event": string,"id"?: string,"message"?: string | null,"reply_to"?: string | null,"request_id"?: number | null,"scholar"?: string | null,"sender"?: string | null,"subject"?: string | null,"time_sent"?: string,"venue"?: string | null
                   }
@@ -227,6 +235,7 @@ isOneToOne: false
                   Row: {
                     "completed_at": string | null,"id": string,"note": string | null,"requested_at": string,"subject": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "completed_at"?: string | null,"id"?: string,"note"?: string | null,"requested_at"?: string,"subject": string
                   }
@@ -240,6 +249,7 @@ isOneToOne: false
                   Row: {
                     "approved": string | null,"approvers": (string)[],"currency_from": string,"currency_to": string,"id": string,"kind": Database["public"]['Enums']["exchange_proposal_kind"] | null,"proposed": string,"ratio": number
                   }
+                  ComputedFields: never
                   Insert: {
                     "approved"?: string | null,"approvers"?: (string)[],"currency_from": string,"currency_to": string,"id"?: string,"kind"?: Database["public"]['Enums']["exchange_proposal_kind"] | null,"proposed"?: string,"ratio": number
                   }
@@ -265,6 +275,7 @@ isOneToOne: false
                   Row: {
                     "default_on": boolean,"key": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "default_on"?: boolean,"key": string
                   }
@@ -278,6 +289,7 @@ isOneToOne: false
                   Row: {
                     "created_at": string,"enabled": boolean,"event": string,"scholar": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"enabled": boolean,"event": string,"scholar": string
                   }
@@ -303,6 +315,7 @@ isOneToOne: false
                   Row: {
                     "event": string,"preference": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "event": string,"preference": string
                   }
@@ -322,6 +335,7 @@ isOneToOne: false
                   Row: {
                     "education_organization": string | null,"education_role": string | null,"education_year": number | null,"employment_department": string | null,"employment_organization": string | null,"employment_role": string | null,"fetch_attempted_at": string,"fetch_detail": string | null,"fetch_failures": number,"fetch_rate_limited_at": string | null,"fetch_status": string,"fetched_at": string | null,"keywords": (string)[],"links": NonNullable<Json>,"orcid": string,"scholar": string,"work_count": number | null,"work_first_year": number | null,"work_last_year": number | null,"works": NonNullable<Json>,"works_fetched_at": string | null
                   }
+                  ComputedFields: never
                   Insert: {
                     "education_organization"?: string | null,"education_role"?: string | null,"education_year"?: number | null,"employment_department"?: string | null,"employment_organization"?: string | null,"employment_role"?: string | null,"fetch_attempted_at"?: string,"fetch_detail"?: string | null,"fetch_failures"?: number,"fetch_rate_limited_at"?: string | null,"fetch_status"?: string,"fetched_at"?: string | null,"keywords"?: (string)[],"links"?: NonNullable<Json>,"orcid": string,"scholar": string,"work_count"?: number | null,"work_first_year"?: number | null,"work_last_year"?: number | null,"works"?: NonNullable<Json>,"works_fetched_at"?: string | null
                   }
@@ -341,6 +355,7 @@ isOneToOne: true
                   Row: {
                     "created_at": string,"id": string,"label": string,"rank": number,"venueid": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"id"?: string,"label": string,"rank": number,"venueid": string
                   }
@@ -360,6 +375,7 @@ isOneToOne: false
                   Row: {
                     "census": number,"currency": string | null,"editors": (string)[],"id": string,"minters": (string)[],"payment_free": boolean,"title": string,"url": string,"venue": string | null
                   }
+                  ComputedFields: never
                   Insert: {
                     "census": number,"currency"?: string | null,"editors"?: (string)[],"id"?: string,"minters"?: (string)[],"payment_free"?: boolean,"title"?: string,"url"?: string,"venue"?: string | null
                   }
@@ -385,6 +401,7 @@ isOneToOne: false
                   Row: {
                     "duration_ms": number | null,"id": string,"ok": boolean,"ran_at": string,"result": NonNullable<Json>
                   }
+                  ComputedFields: never
                   Insert: {
                     "duration_ms"?: number | null,"id"?: string,"ok": boolean,"ran_at"?: string,"result": NonNullable<Json>
                   }
@@ -398,6 +415,7 @@ isOneToOne: false
                   Row: {
                     "anonymous_authors": boolean,"approver": string | null,"biddable": boolean,"description": string,"desired_assignments": number,"id": string,"invited": boolean,"name": string,"priority": number,"venueid": string,"volunteer_visibility": Database["public"]['Enums']["volunteer_visibility"]
                   }
+                  ComputedFields: never
                   Insert: {
                     "anonymous_authors"?: boolean,"approver"?: string | null,"biddable"?: boolean,"description"?: string,"desired_assignments"?: number,"id"?: string,"invited": boolean,"name"?: string,"priority"?: number,"venueid": string,"volunteer_visibility"?: Database["public"]['Enums']["volunteer_visibility"]
                   }
@@ -423,6 +441,7 @@ isOneToOne: false
                   Row: {
                     "available": boolean,"created_at": string,"email": string | null,"id": string,"name": string | null,"orcid": string | null,"status": string,"status_reminder_time": string | null,"status_time": string | null,"steward": boolean
                   }
+                  ComputedFields: never
                   Insert: {
                     "available"?: boolean,"created_at"?: string,"email"?: string | null,"id": string,"name"?: string | null,"orcid"?: string | null,"status"?: string,"status_reminder_time"?: string | null,"status_time"?: string | null,"steward"?: boolean
                   }
@@ -436,6 +455,7 @@ isOneToOne: false
                   Row: {
                     "description": string,"id": string,"name": string,"revision_of": string | null,"submission_cost": number,"venue": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "description"?: string,"id"?: string,"name"?: string,"revision_of"?: string | null,"submission_cost"?: number,"venue": string
                   }
@@ -461,6 +481,7 @@ isOneToOne: false
                   Row: {
                     "authors": (string)[],"bidding_closed": boolean,"completed_at": string | null,"created_at": string,"expertise": string | null,"externalid": string,"id": string,"imported": boolean,"note": string | null,"payments": (number)[],"previous": string | null,"previousid": string | null,"status": Database["public"]['Enums']["submission_status"],"submission_type": string,"title": string,"transactions": (string)[],"venue": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "authors": (string)[],"bidding_closed"?: boolean,"completed_at"?: string | null,"created_at"?: string,"expertise"?: string | null,"externalid": string,"id"?: string,"imported"?: boolean,"note"?: string | null,"payments": (number)[],"previous"?: string | null,"previousid"?: string | null,"status"?: Database["public"]['Enums']["submission_status"],"submission_type": string,"title"?: string,"transactions": (string)[],"venue": string
                   }
@@ -492,6 +513,7 @@ isOneToOne: false
                   Row: {
                     "created_at": string,"id": string,"message": string,"proposalid": string,"scholarid": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"id"?: string,"message"?: string,"proposalid": string,"scholarid": string
                   }
@@ -517,6 +539,7 @@ isOneToOne: false
                   Row: {
                     "approver": string | null,"author": string,"created_at": string,"decline_reason": string | null,"id": string,"message": string,"status": Database["public"]['Enums']["thanks_status"],"submission": string,"venue": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "approver"?: string | null,"author": string,"created_at"?: string,"decline_reason"?: string | null,"id"?: string,"message": string,"status"?: Database["public"]['Enums']["thanks_status"],"submission": string,"venue": string
                   }
@@ -554,6 +577,7 @@ isOneToOne: false
                   Row: {
                     "actor": string | null,"at": string,"currency": string,"op": Database["public"]['Enums']["token_op"],"prev_scholar": string | null,"prev_venue": string | null,"scholar": string | null,"seq": number,"token": string,"txn": string | null,"venue": string | null,"xid": unknown
                   }
+                  ComputedFields: never
                   Insert: {
                     "actor"?: string | null,"at"?: string,"currency": string,"op": Database["public"]['Enums']["token_op"],"prev_scholar"?: string | null,"prev_venue"?: string | null,"scholar"?: string | null,"seq"?: never,"token": string,"txn"?: string | null,"venue"?: string | null,"xid"?: unknown
                   }
@@ -567,6 +591,7 @@ isOneToOne: false
                   Row: {
                     "currency": string,"id": string,"scholar": string | null,"venue": string | null
                   }
+                  ComputedFields: never
                   Insert: {
                     "currency": string,"id"?: string,"scholar"?: string | null,"venue"?: string | null
                   }
@@ -598,6 +623,7 @@ isOneToOne: false
                   Row: {
                     "amount": number,"created_at": string,"creator": string,"currency": string,"decline_reason": string | null,"decliner": string | null,"from_scholar": string | null,"from_venue": string | null,"id": string,"purpose": string,"seq": number,"status": Database["public"]['Enums']["transaction_status"],"to_scholar": string | null,"to_venue": string | null,"tokens": (string)[]
                   }
+                  ComputedFields: never
                   Insert: {
                     "amount"?: never,"created_at"?: string,"creator": string,"currency": string,"decline_reason"?: string | null,"decliner"?: string | null,"from_scholar"?: string | null,"from_venue"?: string | null,"id"?: string,"purpose": string,"seq"?: number,"status": Database["public"]['Enums']["transaction_status"],"to_scholar"?: string | null,"to_venue"?: string | null,"tokens": (string)[]
                   }
@@ -653,6 +679,7 @@ isOneToOne: false
                   Row: {
                     "created_at": string,"id": string,"name": string,"role": string,"submission": string,"venue": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"id"?: string,"name": string,"role": string,"submission": string,"venue": string
                   }
@@ -684,6 +711,7 @@ isOneToOne: false
                   Row: {
                     "admins": (string)[],"anonymous_assignments": boolean,"currency": string,"description": string,"done_visibility_days": number,"id": string,"inactive": string | null,"payment_free": boolean,"review_system_url": string | null,"short_title": string,"slug": string | null,"title": string,"transaction_reminder_frequency_days": number,"transaction_reminder_time": string | null,"url": string,"vet_thanks": boolean,"welcome_amount": number
                   }
+                  ComputedFields: never
                   Insert: {
                     "admins"?: (string)[],"anonymous_assignments"?: boolean,"currency": string,"description"?: string,"done_visibility_days"?: number,"id"?: string,"inactive"?: string | null,"payment_free"?: boolean,"review_system_url"?: string | null,"short_title"?: string,"slug"?: string | null,"title"?: string,"transaction_reminder_frequency_days"?: number,"transaction_reminder_time"?: string | null,"url"?: string,"vet_thanks"?: boolean,"welcome_amount": number
                   }
@@ -703,6 +731,7 @@ isOneToOne: false
                   Row: {
                     "accepted": Database["public"]['Enums']["invited"],"active": boolean,"created_at": string,"expertise": string,"id": string,"papers": number | null,"roleid": string,"scholarid": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "accepted"?: Database["public"]['Enums']["invited"],"active"?: boolean,"created_at"?: string,"expertise": string,"id"?: string,"papers"?: number | null,"roleid": string,"scholarid": string
                   }
