@@ -124,11 +124,12 @@ create index submissions_venue_index on public.submissions using btree (venue);
 alter table public.submissions ENABLE row LEVEL SECURITY;
 
 -- Select policy is in assignments.sql, after assignments table is declared.
-create policy "anyone can create submissions, admins for imports" on "public"."submissions" as permissive for insert to authenticated
+create policy "anyone can create submissions, admins and editors for imports" on "public"."submissions" as permissive for insert to authenticated
 with
 	check (
 		(not imported)
 		or public.isadmin (venue)
+		or public.ispriorityzero (venue)
 	);
 
 -- No client path deletes a submission: deletion would destroy its assignment
@@ -348,7 +349,7 @@ alter publication supabase_realtime
 add table submissions;
 
 --------------------------------------
--- RPC (authoritative definition from migration 20260921000000_bulk_import_seats_by_submission)
+-- RPC (authoritative definition from migration 20261011000000_bulk_import_priority_zero)
 create or replace function public.bulk_import_submissions (
 	_venueid uuid,
 	_submissions jsonb,
@@ -393,8 +394,11 @@ begin
         raise exception 'Authentication required';
     end if;
 
-    if not public.isadmin(_venueid) then
-        raise exception 'Only venue admins can bulk import submissions';
+    -- The venue's priority-0 editors as well as its admins: they are the ones managing
+    -- submissions. Neither can spend anything here -- the mint below is only proposed,
+    -- and a minter still has to approve it.
+    if not (public.isadmin(_venueid) or public.ispriorityzero(_venueid)) then
+        raise exception 'Only venue admins and editors can bulk import submissions';
     end if;
 
     select currency into _currency

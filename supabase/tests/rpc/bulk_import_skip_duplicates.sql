@@ -233,14 +233,14 @@ select is(
 	'a refused batch leaves the venue untouched'
 );
 
--- A non-admin still cannot import, skip clause or not.
+-- Someone who is neither an admin nor an editor still cannot import, skip clause or not.
 select tests.authenticate_as(:'outsider');
 select throws_ok(
 	$$ select public.bulk_import_submissions( $$ || quote_literal(:'ven') || $$, $$
 		|| quote_literal('[{"externalid": "NOPE-1", "title": "Not yours", "submission_type": "' || :'stype' || '"}]')
-		|| $$::jsonb, 'Not an admin' ) $$,
-	'Only venue admins can bulk import submissions',
-	'a non-admin is still refused'
+		|| $$::jsonb, 'Not an admin or editor' ) $$,
+	'Only venue admins and editors can bulk import submissions',
+	'an outsider is still refused'
 );
 select tests.clear_authentication();
 

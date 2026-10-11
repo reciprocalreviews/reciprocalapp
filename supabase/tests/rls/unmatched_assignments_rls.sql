@@ -85,8 +85,8 @@ select throws_ok(
 		:'ven', :'stype', :'reviewer', :'rolereviewer'
 	),
 	'P0001',
-	'Only venue admins can bulk import submissions',
-	'only admins import'
+	'Only venue admins and editors can bulk import submissions',
+	'only admins and editors import'
 );
 
 -- ---- Who sees them: whoever could approve them ---------------------------------

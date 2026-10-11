@@ -111,6 +111,20 @@
 	/** True if the current user is an admin of this venue */
 	const isAdmin = $derived(uid !== null && venue !== null && venue.admins.includes(uid));
 
+	/** True if the current user holds the venue's priority-0 role, which lets them bulk
+	 * import alongside its admins and see manuscript IDs. For importing, an affordance
+	 * only: bulk_import_submissions re-checks with public.isPriorityZero. Non-admins' `volunteering` is active rows only, so an
+	 * editor who has paused volunteering won't see the link but can still use the page. */
+	const isEditor = $derived(
+		uid !== null &&
+			(volunteering ?? []).some(
+				(v) =>
+					v.scholarid === uid &&
+					v.accepted === 'accepted' &&
+					(roles ?? []).some((r) => r.id === v.roleid && r.priority === 0)
+			)
+	);
+
 	/** The roles to show, filtered by the which role the current scholar has */
 	const visibleRoles = $derived(
 		roles === null || volunteering === null
@@ -139,13 +153,14 @@
 					.filter((r) => r.isVisible)
 	);
 
-	/** Whether this scholar helps run the venue's reviewing — a venue admin, or
-	 * the approver of some role — as opposed to a scholar who is only bidding
-	 * here. The manuscript ID is gated on this rather than on author visibility,
+	/** Whether this scholar helps run the venue's reviewing — a venue admin, one of
+	 * its editors, or the approver of some role — as opposed to a scholar who is only
+	 * bidding here. The manuscript ID is gated on this rather than on author visibility,
 	 * because an editor at an anonymized venue still needs the ID to find the
 	 * submission in the system it came from. */
 	const isVenueApprover = $derived(
 		isAdmin ||
+			isEditor ||
 			(uid !== null && (roles ?? []).some((role) => isRoleApprover(role, volunteering ?? [], uid)))
 	);
 
@@ -250,7 +265,7 @@
 			/>
 		{/if}
 
-		{#if isAdmin}
+		{#if isAdmin || isEditor}
 			<Paragraph text={(l) => l.page.submissions.paragraph.bulkImport} />
 		{/if}
 

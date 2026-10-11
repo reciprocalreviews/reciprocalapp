@@ -565,7 +565,7 @@
 			},
 			"feedback": {
 				"notLoaded": "Unable to load the venue or submission types.",
-				"notAdmin": "Only venue admins can import submissions.",
+				"notAdmin": "Only venue admins and editors can import submissions.",
 				"raggedRows": "Some records had a different number of columns than the header, so columns may be misaligned and data dropped. Check the record starting at line {lines} — a comma inside a field must be wrapped in double quotes.",
 				"ignoredColumns": "These columns are not being imported: {columns}.",
 				"missingRequired": "Nothing is matched to {fields}, which every submission needs.",

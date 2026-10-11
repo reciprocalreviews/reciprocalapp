@@ -85,7 +85,7 @@ select policies_are(
 	'public', 'submissions',
 	array[
 		'admins, authors, assigned, and bidders can view submissions',
-		'anyone can create submissions, admins for imports',
+		'anyone can create submissions, admins and editors for imports',
 		'authors and editors can update submissions',
 		'submissions cannot be deleted'
 	]
