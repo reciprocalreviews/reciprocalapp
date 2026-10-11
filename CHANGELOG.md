@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.15 - 2026-10-11
+
+### Changed
+
+- Updated dependencies, including SvelteKit, Svelte, Vite, Playwright, and the Supabase and Vercel CLIs.
+
 ## 0.5.14 - 2026-10-08
 
 ### Fixed

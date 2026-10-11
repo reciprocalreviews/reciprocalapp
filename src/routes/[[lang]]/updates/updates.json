@@ -1,5 +1,30 @@
 [
 	{
+		"version": "0.5.15",
+		"date": "2026-10-11",
+		"changes": {
+			"added": [],
+			"fixed": [],
+			"changed": [
+				"Updated dependencies, including SvelteKit, Svelte, Vite, Playwright, and the Supabase and Vercel CLIs."
+			],
+			"removed": []
+		}
+	},
+	{
+		"version": "0.5.14",
+		"date": "2026-10-08",
+		"changes": {
+			"added": [],
+			"fixed": [
+				"**A compensation request is now emailed only to whoever approves that role on the submission, such as its Associate Editor,** and to its editor or the venue's admins only when no one is seated in that role. The weekly reminder follows the same rule, and the email now names who asked, their role, and the submission, and leaves out the note when there isn't one.",
+				"**A submission's assignment table now shows the real token balance of a scholar who was assigned without volunteering.** Before, it showed 0, even right after they were paid."
+			],
+			"changed": [],
+			"removed": []
+		}
+	},
+	{
 		"version": "0.5.13",
 		"date": "2026-10-06",
 		"changes": {
