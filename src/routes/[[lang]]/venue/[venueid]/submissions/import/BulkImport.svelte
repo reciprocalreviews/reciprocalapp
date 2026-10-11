@@ -18,9 +18,9 @@
 	import Note from '#lib/components/Note.svelte';
 	import Options from '#lib/components/Options.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
-	import ScholarLink from '#lib/components/ScholarLink.svelte';
 	import Table from '#lib/components/Table.svelte';
 	import TextField from '#lib/components/TextField.svelte';
+	import VolunteerPicker from '#lib/components/VolunteerPicker.svelte';
 	import { getDB, type ImportedSubmission } from '#lib/data/CRUD.js';
 	import type { VenueCommitment } from '#lib/data/SupabaseCRUD.svelte.js';
 	import {
@@ -41,7 +41,12 @@
 		type ImportField,
 		type RoleColumns
 	} from '#lib/data/columnMapping.js';
-	import { matchPersonName, type Candidate, type PersonMatch } from '#lib/data/matchPersonName.js';
+	import {
+		matchPersonName,
+		volunteersFor,
+		type PersonMatch,
+		type Volunteer
+	} from '#lib/data/matchPersonName.js';
 	import parseCSV from '#lib/data/parseCSV.js';
 	import type LocaleText from '#lib/locales/Locale.js';
 	import Text from '#lib/locales/Text.svelte';
@@ -309,14 +314,8 @@
 	 * search across every scholar on the platform, which is how you seat the wrong
 	 * Andrew. */
 	const candidatesByRole = $derived(
-		new Map<string, Candidate[]>(
-			seatableRoles.map((role) => [
-				role.id,
-				commitments
-					.filter((c) => c.roleid === role.id && c.active && c.accepted === 'accepted')
-					.map((c) => ({ id: c.scholarid, name: c.scholars?.name ?? '' }))
-					.filter((c) => c.name.length > 0)
-			])
+		new Map<string, Volunteer[]>(
+			seatableRoles.map((role) => [role.id, volunteersFor(commitments, role.id)])
 		)
 	);
 
@@ -874,31 +873,26 @@
 						bind:text={row.people[role.id]}
 						testid="import-row-{index}-person-{role.id}"
 					/>
-					{#if match.status === 'resolved'}
-						<ScholarLink id={match.id} size="small" />
-					{:else if match.status === 'ambiguous'}
-						<Feedback text={(l) => l.page.bulkImport.person.ambiguous} />
-						<div class="matches">
-							{#each match.candidates as candidate (candidate.id)}
-								<Button
-									small
-									strings={(l) => ({
-										label: candidate.name,
-										// The name goes in the tip as well as the label, because the
-										// tip is the button's aria-label: a column of buttons all
-										// announcing "Choose this scholar" is unusable by voice or
-										// screen reader.
-										tip: l.widget.scholarSearch.choose.tip.replace('{name}', candidate.name)
-									})}
-									action={() => (row.peopleChoices[role.id] = candidate.id)}
-								/>
-							{/each}
-						</div>
-					{:else if match.status === 'unmatched'}
+					{#if match.status === 'unmatched'}
 						<Feedback
 							error
 							testid="import-row-{index}-unmatched"
 							text={(l) => l.page.bulkImport.person.unmatched}
+						/>
+					{/if}
+					{#if match.status !== 'none'}
+						<!-- A choice pinned here can be undone; one the name resolved to on its
+						     own is changed by editing the name, which is what it came from. -->
+						<VolunteerPicker
+							testid="import-row-{index}-picker-{role.id}"
+							name={row.people[role.id] ?? ''}
+							role={role.name}
+							candidates={candidatesByRole.get(role.id) ?? []}
+							chosen={match.status === 'resolved' ? match.id : undefined}
+							choose={(id) => (row.peopleChoices[role.id] = id)}
+							clear={row.peopleChoices[role.id] === undefined
+								? undefined
+								: () => delete row.peopleChoices[role.id]}
 						/>
 					{/if}
 				</td>
@@ -1142,16 +1136,6 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: var(--spacing-half);
-	}
-
-	/* Copied from ScholarMatches, whose rule is scoped to that component: this
-	   file borrowed its markup for the candidate buttons but could not borrow its
-	   CSS, so they were stacking as unstyled block flow. */
-	.matches {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
 		gap: var(--spacing-half);
 	}
 </style>

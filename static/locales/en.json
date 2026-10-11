@@ -90,6 +90,22 @@
 				"tip": "Choose {name}",
 				"label": "Choose"
 			}
+		},
+		"volunteerPicker": {
+			"suggestions": "Closest names among {role} volunteers",
+			"ambiguous": "“{name}” could be any of these {role} volunteers",
+			"noSuggestions": "No {role} volunteer has a name close to this one.",
+			"search": {
+				"label": "Search {role} volunteers ({count})",
+				"placeholder": "name, email, or ORCID iD"
+			},
+			"more": "Showing {shown} of {count}. Keep typing to narrow.",
+			"noResults": "Nobody in {role} matches “{query}”. If they haven’t joined yet, invite them to the role first.",
+			"noORCID": "no ORCID iD",
+			"change": {
+				"tip": "Choose a different scholar",
+				"label": "Change"
+			}
 		}
 	},
 	"page": {
@@ -697,7 +713,6 @@
 				"skipped": "This manuscript is already in this venue and will be skipped:"
 			},
 			"person": {
-				"ambiguous": "Several people match this name. Choose one:",
 				"unmatched": "No matching scholar — kept as an unmatched assignment",
 				"noRole": "This venue has no roles to seat anyone in.",
 				"note": "For each role, choose the column naming who holds it. Leave a role unmatched to seat nobody in it; a row naming nobody falls back to the venue’s editor, if it has exactly one.",
@@ -879,10 +894,6 @@
 				"count": "Submissions",
 				"scholar": "Match to"
 			},
-			"options": {
-				"scholar": {}
-			},
-			"choose": "— choose a scholar —",
 			"noCandidates": "Nobody holds the {role} role yet. Invite this person to it, then match them here.",
 			"button": {
 				"match": {

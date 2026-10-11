@@ -9,6 +9,7 @@
 		underline = true,
 		icon = null,
 		testid,
+		newTab = false,
 		children
 	}: {
 		to: string;
@@ -17,6 +18,9 @@
 		underline?: boolean;
 		icon?: string | null;
 		testid?: string;
+		/** Open in a new tab even though the link is internal, for a page where leaving
+		 * would lose what the viewer was in the middle of. */
+		newTab?: boolean;
 		children: Snippet;
 	} = $props();
 
@@ -28,7 +32,8 @@
 	class:background
 	class:inactive
 	href={inactive ? null : to}
-	target={to.startsWith('http') ? '_blank' : null}
+	target={newTab || to.startsWith('http') ? '_blank' : null}
+	rel={newTab ? 'noopener' : null}
 	aria-current={inactive ? 'page' : null}
 	data-testid={testid}
 	><span class:underline>{@render children()}</span>{#if to.startsWith('http')}<sub class="cling"

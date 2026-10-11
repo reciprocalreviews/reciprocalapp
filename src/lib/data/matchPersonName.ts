@@ -13,7 +13,14 @@
  * reported rather than guessed: an ambiguous name is handed back with its
  * candidates for a person to choose between, and an unmatched one blocks the
  * import. There is no fuzzy or substring matching, because the cost of being
- * subtly wrong is much higher than the cost of one more click. */
+ * subtly wrong is much higher than the cost of one more click.
+ *
+ * suggestCandidates and searchCandidates, below, ARE fuzzy, and that is fine for the
+ * same reason: they only order and filter what a person chooses from, and the choice
+ * stays theirs. */
+
+import type { VenueCommitment } from './SupabaseCRUD.svelte';
+import { affiliationLine } from './orcidProfileView';
 
 /** A scholar the name could refer to. */
 export type Candidate = { id: string; name: string };
@@ -107,4 +114,123 @@ export function matchPersonName(name: string, candidates: Candidate[]): PersonMa
 	if (loose.length > 1) return { status: 'ambiguous', candidates: loose };
 
 	return { status: 'unmatched' };
+}
+
+/** A candidate with what a person needs to tell them apart from someone who shares their
+ * name: how to reach them, their ORCID iD, and where they work. */
+export type Volunteer = Candidate & {
+	email: string | null;
+	orcid: string | null;
+	affiliation: string | null;
+};
+
+/** How close two words are, from 0 to 1, and whether the agreement was more than an
+ * initial. A typo of a word counts as partly close, so "Leigh" still finds "Lee"; an
+ * initial counts half, but never on its own, or "A." would suggest every Ana. */
+function closeness(a: string, b: string): { score: number; whole: boolean } {
+	if (a === b) return { score: 1, whole: true };
+	if ((a.length === 1 || b.length === 1) && a[0] === b[0]) return { score: 0.5, whole: false };
+	if (a.length === 1 || b.length === 1) return { score: 0, whole: false };
+	const similarity = 1 - editDistance(a, b) / Math.max(a.length, b.length);
+	return similarity >= 0.4 ? { score: similarity, whole: true } : { score: 0, whole: false };
+}
+
+/** The number of single-letter insertions, deletions and substitutions between two words. */
+function editDistance(a: string, b: string): number {
+	let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
+	for (let i = 1; i <= a.length; i++) {
+		const current = [i];
+		for (let j = 1; j <= b.length; j++)
+			current[j] = Math.min(
+				previous[j] + 1,
+				current[j - 1] + 1,
+				previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+			);
+		previous = current;
+	}
+	return previous[b.length];
+}
+
+/** How close a candidate's name is to a written one, from 0 to 1: each written word
+ * pairs with the closest unpaired word of the candidate's name, and the total is
+ * divided by the longer name's length, so missing and extra words both cost. Zero
+ * unless at least one pairing is more than an initial. */
+function nameCloseness(written: string[], candidate: string[]): number {
+	const paired = new Array(candidate.length).fill(false);
+	let total = 0;
+	let whole = false;
+	for (const word of written) {
+		let best = -1;
+		let bestCloseness = { score: 0, whole: false };
+		candidate.forEach((other, i) => {
+			if (paired[i]) return;
+			const c = closeness(word, other);
+			if (c.score > bestCloseness.score) {
+				best = i;
+				bestCloseness = c;
+			}
+		});
+		if (best < 0) continue;
+		paired[best] = true;
+		total += bestCloseness.score;
+		whole ||= bestCloseness.whole;
+	}
+	return whole ? total / Math.max(written.length, candidate.length) : 0;
+}
+
+/** The candidates whose names are closest to a written one, closest first, for a
+ * person to choose between.
+ *
+ * Unlike matchPersonName this is fuzzy, and that is safe only because it decides
+ * nothing: it orders what a person sees, and the person picks. Ties are broken by
+ * name, so the same list always comes back in the same order. */
+export function suggestCandidates<C extends Candidate>(
+	name: string,
+	candidates: C[],
+	limit = 5
+): C[] {
+	const written = nameTokens(name);
+	if (written.length === 0) return [];
+	return candidates
+		.map((candidate) => ({ candidate, score: nameCloseness(written, nameTokens(candidate.name)) }))
+		.filter(({ score }) => score > 0)
+		.sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
+		.slice(0, limit)
+		.map(({ candidate }) => candidate);
+}
+
+/** The volunteers a search could mean, sorted by name. Every word typed must begin a
+ * word of the name or appear in the email address or ORCID iD, so "pet" finds both
+ * Petersens and "0000-0002" finds an iD. Accents and case are ignored, as they are for
+ * matching. */
+export function searchCandidates<C extends Volunteer>(query: string, candidates: C[]): C[] {
+	const words = nameTokens(query);
+	if (words.length === 0) return [];
+	return candidates
+		.filter((candidate) => {
+			const name = nameTokens(candidate.name);
+			const email = candidate.email?.toLowerCase() ?? '';
+			const orcid = candidate.orcid ?? '';
+			return words.every(
+				(word) =>
+					name.some((part) => part.startsWith(word)) || email.includes(word) || orcid.includes(word)
+			);
+		})
+		.sort((a, b) => a.name.localeCompare(b.name) || (a.email ?? '').localeCompare(b.email ?? ''));
+}
+
+/** A role's accepted, active volunteers, the only people the database will seat in it,
+ * with what tells them apart. Scholars with no name are left out, since there is
+ * nothing to match a written name against. */
+export function volunteersFor(commitments: VenueCommitment[], role: string): Volunteer[] {
+	return commitments
+		.filter((c) => c.roleid === role && c.active && c.accepted === 'accepted')
+		.map((c) => ({
+			id: c.scholarid,
+			name: c.scholars?.name ?? '',
+			email: c.scholars?.email ?? null,
+			orcid: c.scholars?.orcid ?? null,
+			affiliation: affiliationLine(c.scholars?.orcid_profiles, true)
+		}))
+		.filter((c) => c.name.length > 0);
 }

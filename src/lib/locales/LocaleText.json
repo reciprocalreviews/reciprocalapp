@@ -1784,10 +1784,6 @@
                 "person": {
                   "additionalProperties": false,
                   "properties": {
-                    "ambiguous": {
-                      "description": "Shown beside a name that matches more than one of the venue's volunteers, above the buttons offering each.",
-                      "type": "string"
-                    },
                     "doubleSeated": {
                       "description": "Warns that one row seats the same person in two roles, which is allowed but paid twice.",
                       "type": "string"
@@ -1814,7 +1810,6 @@
                     }
                   },
                   "required": [
-                    "ambiguous",
                     "unmatched",
                     "unmatchedNote",
                     "noRole",
@@ -5463,10 +5458,6 @@
                   ],
                   "type": "object"
                 },
-                "choose": {
-                  "description": "The empty choice in the scholar picker.",
-                  "type": "string"
-                },
                 "empty": {
                   "description": "Nothing the viewer could match is waiting.",
                   "type": "string"
@@ -5525,18 +5516,6 @@
                 "note": {
                   "type": "string"
                 },
-                "options": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "scholar": {
-                      "$ref": "#/definitions/OptionsText"
-                    }
-                  },
-                  "required": [
-                    "scholar"
-                  ],
-                  "type": "object"
-                },
                 "title": {
                   "type": "string"
                 }
@@ -5546,8 +5525,6 @@
                 "note",
                 "empty",
                 "headers",
-                "options",
-                "choose",
                 "noCandidates",
                 "button",
                 "feedback"
@@ -7606,13 +7583,63 @@
                 "plural"
               ],
               "type": "object"
+            },
+            "volunteerPicker": {
+              "additionalProperties": false,
+              "description": "Choosing one of a role's volunteers for a name written somewhere else, such as an import. Shared by the unmatched assignments page and the bulk import table. `{role}` is the role's name throughout.",
+              "properties": {
+                "ambiguous": {
+                  "description": "Above the volunteers who match the written name equally well. `{name}`.",
+                  "type": "string"
+                },
+                "change": {
+                  "$ref": "#/definitions/ButtonText",
+                  "description": "Clears a choice to pick someone else."
+                },
+                "more": {
+                  "description": "More results than are shown. `{shown}` of `{count}`.",
+                  "type": "string"
+                },
+                "noORCID": {
+                  "description": "Shown in place of a missing ORCID iD, so two lines line up when compared.",
+                  "type": "string"
+                },
+                "noResults": {
+                  "description": "The search found nobody. `{query}`.",
+                  "type": "string"
+                },
+                "noSuggestions": {
+                  "description": "No volunteer's name is close to the written one.",
+                  "type": "string"
+                },
+                "search": {
+                  "$ref": "#/definitions/TextFieldText",
+                  "description": "Searches the role's volunteers. `{count}` in the label is how many there are."
+                },
+                "suggestions": {
+                  "description": "Above the volunteers whose names are closest to the written one.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "suggestions",
+                "ambiguous",
+                "noSuggestions",
+                "search",
+                "more",
+                "noResults",
+                "noORCID",
+                "change"
+              ],
+              "type": "object"
             }
           },
           "required": [
             "card",
             "tokens",
             "subheader",
-            "scholarSearch"
+            "scholarSearch",
+            "volunteerPicker"
           ],
           "type": "object"
         }

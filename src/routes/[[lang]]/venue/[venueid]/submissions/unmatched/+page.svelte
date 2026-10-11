@@ -3,12 +3,12 @@
 	import Button from '#lib/components/Button.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import Note from '#lib/components/Note.svelte';
-	import Options from '#lib/components/Options.svelte';
 	import Page from '#lib/components/Page.svelte';
 	import Row from '#lib/components/Row.svelte';
 	import Table from '#lib/components/Table.svelte';
+	import VolunteerPicker from '#lib/components/VolunteerPicker.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
-	import { matchPersonName, type Candidate } from '#lib/data/matchPersonName.js';
+	import { matchPersonName, volunteersFor, type Volunteer } from '#lib/data/matchPersonName.js';
 	import Text from '#lib/locales/Text.svelte';
 	import { addFeedback, handle } from '$routes/feedback.svelte';
 	import { getLocaleContext } from '$routes/Contexts';
@@ -42,13 +42,14 @@
 		);
 	});
 
-	/** Who may be matched in a role: its accepted, active volunteers, the rule the
-	 * database enforces. */
-	function candidatesFor(role: RoleRow): Candidate[] {
-		return commitments
-			.filter((c) => c.roleid === role.id && c.active && c.accepted === 'accepted')
-			.map((c) => ({ id: c.scholarid, name: c.scholars?.name ?? '' }))
-			.filter((c) => c.name.length > 0);
+	/** Who may be matched in each role: its accepted, active volunteers, the rule the
+	 * database enforces. Built once per role rather than per row, since a large venue's
+	 * role can have thousands of them. */
+	const volunteersByRole = $derived(
+		new Map(roles.map((role) => [role.id, volunteersFor(commitments, role.id)]))
+	);
+	function candidatesFor(role: RoleRow): Volunteer[] {
+		return volunteersByRole.get(role.id) ?? [];
 	}
 
 	/** The viewer's pick per group, defaulting to a confident name match. */
@@ -103,34 +104,38 @@
 					<td class="name">{group.role.name}</td>
 					<td>{group.rows.length}</td>
 					<td>
-						<Row>
+						<div class="match">
 							{#if candidates.length === 0}
 								<Feedback
 									text={(l) => l.page.unmatched.noCandidates.replaceAll('{role}', group.role.name)}
 								/>
 							{:else}
-								<Options
+								<VolunteerPicker
 									testid="unmatched-{index}-scholar"
-									value={chosen}
-									options={[
-										{ label: locale().page.unmatched.choose, value: undefined },
-										...candidates.map((c) => ({ label: c.name, value: c.id }))
-									]}
-									onChange={(value) => (choices[group.key] = value)}
-								/>
-								<Button
-									testid="unmatched-{index}-match"
-									strings={(l) => l.page.unmatched.button.match}
-									active={chosen !== undefined}
-									action={() => (chosen === undefined ? undefined : match(group, chosen))}
+									name={group.name}
+									role={group.role.name}
+									{candidates}
+									{chosen}
+									choose={(id) => (choices[group.key] = id)}
+									clear={() => (choices[group.key] = undefined)}
 								/>
 							{/if}
-							<Button
-								testid="unmatched-{index}-dismiss"
-								strings={(l) => l.page.unmatched.button.dismiss}
-								action={() => dismiss(group)}
-							/>
-						</Row>
+							<Row>
+								{#if candidates.length > 0}
+									<Button
+										testid="unmatched-{index}-match"
+										strings={(l) => l.page.unmatched.button.match}
+										active={chosen !== undefined}
+										action={() => (chosen === undefined ? undefined : match(group, chosen))}
+									/>
+								{/if}
+								<Button
+									testid="unmatched-{index}-dismiss"
+									strings={(l) => l.page.unmatched.button.dismiss}
+									action={() => dismiss(group)}
+								/>
+							</Row>
+						</div>
 					</td>
 				</tr>
 			{/each}
@@ -142,5 +147,11 @@
 	/* A name or a role wrapping onto two lines reads as two different people. */
 	.name {
 		white-space: nowrap;
+	}
+
+	.match {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-half);
 	}
 </style>

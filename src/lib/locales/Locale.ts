@@ -168,6 +168,27 @@ export type LocaleText = {
 			 * aria-label, and a column of identically-named buttons is unusable. */
 			choose: ButtonText;
 		};
+		/** Choosing one of a role's volunteers for a name written somewhere else, such
+		 * as an import. Shared by the unmatched assignments page and the bulk import
+		 * table. `{role}` is the role's name throughout. */
+		volunteerPicker: {
+			/** Above the volunteers whose names are closest to the written one. */
+			suggestions: string;
+			/** Above the volunteers who match the written name equally well. `{name}`. */
+			ambiguous: string;
+			/** No volunteer's name is close to the written one. */
+			noSuggestions: string;
+			/** Searches the role's volunteers. `{count}` in the label is how many there are. */
+			search: TextFieldText;
+			/** More results than are shown. `{shown}` of `{count}`. */
+			more: string;
+			/** The search found nobody. `{query}`. */
+			noResults: string;
+			/** Shown in place of a missing ORCID iD, so two lines line up when compared. */
+			noORCID: string;
+			/** Clears a choice to pick someone else. */
+			change: ButtonText;
+		};
 	};
 	page: {
 		error: {
@@ -569,9 +590,6 @@ export type LocaleText = {
 				unmatched: string;
 			};
 			person: {
-				/** Shown beside a name that matches more than one of the venue's
-				 * volunteers, above the buttons offering each. */
-				ambiguous: string;
 				/** Shown beside a name matching nobody who holds that role. Kept very
 				 * short: it sits in a table cell barely wider than one word, and the
 				 * consequence is explained once above the table instead of once per
@@ -706,9 +724,6 @@ export type LocaleText = {
 			/** Nothing the viewer could match is waiting. */
 			empty: string;
 			headers: { name: string; role: string; count: string; scholar: string };
-			options: { scholar: OptionsText };
-			/** The empty choice in the scholar picker. */
-			choose: string;
 			/** Nobody holds the role yet, so there is no one to match. `{role}`. */
 			noCandidates: string;
 			button: { match: ButtonText; dismiss: ButtonText };
