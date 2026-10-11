@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.5.15 - 2026-10-11
 
+### Added
+
+- **A venue's editors can now bulk import submissions, not just its admins, and always see manuscript IDs in the submissions list.** The mint an import proposes still needs a minter's approval.
+
 ### Changed
 
 - Updated dependencies, including SvelteKit, Svelte, Vite, Playwright, and the Supabase and Vercel CLIs.

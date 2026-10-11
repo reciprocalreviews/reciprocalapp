@@ -45,6 +45,40 @@ test('admin can bulk import free submissions and a proposed mint transaction', a
 	await logout(page);
 });
 
+// The venue's priority-0 editors manage its submissions, so they may import whether or
+// not they also administer the venue. The seed's editor is also its admin; hand that to
+// the associate editor for the length of this test (a venue must keep one admin) so only
+// the editor role is left to let them in.
+test('an editor who is not an admin can find and use bulk import', async ({ page, context }) => {
+	const admins = sql(`select admins from public.venues where id = '${SEED.venue}';`);
+	sql(
+		`update public.venues set admins = array['${SEED.scholars.ae.id}']::uuid[] where id = '${SEED.venue}';`
+	);
+	try {
+		await login(SEED.scholars.editor.email, page, context);
+
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
+		await page.waitForLoadState('networkidle');
+		await page.getByRole('link', { name: 'Import submissions in bulk' }).click();
+		await page.waitForURL(`**/venue/${VENUE_PATH}/submissions/import`);
+		await page.waitForLoadState('networkidle');
+
+		const external = `import-editor-${Date.now()}`;
+		await page.getByTestId('import-row-0-title').fill('Imported by the editor');
+		await page.getByTestId('import-row-0-externalid').fill(external);
+		await page.getByTestId('bulk-import-submit').click();
+
+		// By manuscript ID, which the list shows an editor so they can find the paper in
+		// the venue's own reviewing system.
+		await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+		await expect(page.getByText(external)).toBeVisible();
+
+		await logout(page);
+	} finally {
+		sql(`update public.venues set admins = '${admins}' where id = '${SEED.venue}';`);
+	}
+});
+
 // An unmatched editor name must NOT stop the import. A backlog is exactly the case
 // where the people named in the file have not signed up yet, and refusing it there
 // made the feature useless where it mattered most — an unmatched name seats nobody,

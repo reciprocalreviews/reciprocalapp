@@ -3,7 +3,6 @@
 	import Feedback from '#lib/components/Feedback.svelte';
 	import { type PageData } from './$types';
 	import BulkImport from './BulkImport.svelte';
-	import { getAuth } from '$routes/Auth.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -12,17 +11,14 @@
 	let existingSubmissions = $derived(data.existingSubmissions);
 	let roles = $derived(data.roles);
 	let commitments = $derived(data.commitments);
-
-	const auth = getAuth();
-	const uid = $derived(auth().getUserID());
-	const isAdmin = $derived(uid !== null && venue !== null && venue.admins.includes(uid));
+	let mayImport = $derived(data.mayImport);
 </script>
 
 {#if venue === null || submissionTypes === null || submissionTypes.length === 0}
 	<Page band={false} title={(l) => l.page.bulkImport.title}>
 		<Feedback error text={(l) => l.page.bulkImport.feedback.notLoaded} />
 	</Page>
-{:else if !isAdmin}
+{:else if !mayImport}
 	<Page band={false} title={(l) => l.page.bulkImport.title}>
 		<Feedback error text={(l) => l.page.bulkImport.feedback.notAdmin} />
 	</Page>
