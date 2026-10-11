@@ -51,6 +51,7 @@ test('admin can bulk import free submissions and a proposed mint transaction', a
 // the editor role is left to let them in.
 test('an editor who is not an admin can find and use bulk import', async ({ page, context }) => {
 	const admins = sql(`select admins from public.venues where id = '${SEED.venue}';`);
+	const started = sql(`select now();`);
 	sql(
 		`update public.venues set admins = array['${SEED.scholars.ae.id}']::uuid[] where id = '${SEED.venue}';`
 	);
@@ -76,6 +77,12 @@ test('an editor who is not an admin can find and use bulk import', async ({ page
 		await logout(page);
 	} finally {
 		sql(`update public.venues set admins = '${admins}' where id = '${SEED.venue}';`);
+		// The import proposes a mint, and the venue's transactions list puts proposed rows
+		// first, ten to a page; one more would push currencyTransactions' buried proposal
+		// off the first page it asserts on.
+		sql(
+			`delete from public.transactions where to_venue = '${SEED.venue}' and status = 'proposed' and creator = '${SEED.scholars.editor.id}' and created_at >= '${started}';`
+		);
 	}
 });
 
