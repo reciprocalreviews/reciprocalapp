@@ -40,7 +40,7 @@ inputs:
   pg-image:
     description: Postgres client image. Must be >= the server's major version.
     required: false
-    default: postgres:17
+    default: public.ecr.aws/docker/library/postgres:17
 
 outputs:
   prefix:

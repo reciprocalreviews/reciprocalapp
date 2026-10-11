@@ -44,7 +44,8 @@ set -euo pipefail
 
 : "${DB_URL:?DB_URL is required (session-mode pooler URI on port 5432)}"
 OUT_DIR="${OUT_DIR:-dr-tail}"
-PG_IMAGE="${PG_IMAGE:-postgres:17}"
+PG_IMAGE="${PG_IMAGE:-public.ecr.aws/docker/library/postgres:17}"
+ALPINE_IMAGE="${ALPINE_IMAGE:-public.ecr.aws/docker/library/alpine:3}"
 AGE_RECIPIENT="${AGE_RECIPIENT:-}"
 PGSSLMODE="${PGSSLMODE:-require}"
 WINDOW_HOURS="${WINDOW_HOURS:-3}"
@@ -136,7 +137,7 @@ else
 			age $AGE_ARGS -o "$f.age" "$f" && rm -f "$f"
 		done
 	else
-		docker run --rm -v "$OUT_ABS:/out" -e AGE_ARGS="$AGE_ARGS" -e UIDGID="$(id -u):$(id -g)" alpine:3 sh -c '
+		docker run --rm -v "$OUT_ABS:/out" -e AGE_ARGS="$AGE_ARGS" -e UIDGID="$(id -u):$(id -g)" "$ALPINE_IMAGE" sh -c '
 			set -e; apk add --no-cache age >/dev/null
 			for f in /out/*; do case "$f" in *.age) continue ;; esac; age $AGE_ARGS -o "$f.age" "$f"; rm -f "$f"; done
 			chown -R "$UIDGID" /out'

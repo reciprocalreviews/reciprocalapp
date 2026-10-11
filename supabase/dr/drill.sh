@@ -16,7 +16,7 @@
 #                   if AGE_IDENTITY is set; already-decrypted also works.
 #   TARGET_DB_URL   required. A database you are willing to destroy.
 #   AGE_IDENTITY    path to the age private key, if BACKUP_DIR is encrypted.
-#   PG_IMAGE        client image (default postgres:17).
+#   PG_IMAGE        client image (default public.ecr.aws/docker/library/postgres:17).
 #   KEEP            set to 1 to leave the decrypted working copy in place.
 #   MANIFEST_OUT    if set, copy the decrypted manifest.json here.
 #
@@ -29,7 +29,8 @@ set -euo pipefail
 DR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${BACKUP_DIR:?BACKUP_DIR is required}"
 : "${TARGET_DB_URL:?TARGET_DB_URL is required — and it must be a database you can destroy}"
-PG_IMAGE="${PG_IMAGE:-postgres:17}"
+PG_IMAGE="${PG_IMAGE:-public.ecr.aws/docker/library/postgres:17}"
+ALPINE_IMAGE="${ALPINE_IMAGE:-public.ecr.aws/docker/library/alpine:3}"
 AGE_IDENTITY="${AGE_IDENTITY:-}"
 KEEP="${KEEP:-0}"
 
@@ -71,7 +72,7 @@ if ls "$WORK"/*.age >/dev/null 2>&1; then
 		for f in "$WORK"/*.age; do age -d -i "$AGE_IDENTITY" -o "${f%.age}" "$f" && rm -f "$f"; done
 	else
 		cp "$AGE_IDENTITY" "$WORK/.identity"
-		docker run --rm -v "$WORK:/work" -e UIDGID="$(id -u):$(id -g)" alpine:3 sh -c '
+		docker run --rm -v "$WORK:/work" -e UIDGID="$(id -u):$(id -g)" "$ALPINE_IMAGE" sh -c '
 			set -e; apk add --no-cache age >/dev/null
 			for f in /work/*.age; do age -d -i /work/.identity -o "${f%.age}" "$f"; rm -f "$f"; done
 			rm -f /work/.identity; chown -R "$UIDGID" /work'
