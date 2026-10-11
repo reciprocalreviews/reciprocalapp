@@ -300,3 +300,44 @@ test('AE declines a bid with an explanation the bidder sees, then assigns them a
 		reset();
 	}
 });
+
+test('assigning someone directly first asks whether they agreed', async ({ page, context }) => {
+	const SUBMISSION_003 = SEED.submissions.tok003.id;
+	const assignee = SEED.scholars.r5;
+	const forget = () =>
+		sql(
+			`delete from public.assignments where submission = '${SUBMISSION_003}' and scholar = '${assignee.id}' and role = '${REVIEWER_ROLE}';`
+		);
+	const count = () =>
+		sql(
+			`select count(*) from public.assignments where submission = '${SUBMISSION_003}' and scholar = '${assignee.id}' and role = '${REVIEWER_ROLE}';`
+		).trim();
+	forget();
+
+	try {
+		await login('editor@uni.edu', page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_003}`);
+		await page.waitForLoadState('networkidle');
+
+		await page.getByTestId('new-assignment-role').selectOption({ label: SEED.roles.reviewerName });
+		await page.getByTestId('new-assignment-scholar').fill(assignee.email);
+		await page.getByTestId('new-assignment-scholar').blur();
+		const assign = page.getByTestId('new-assignment');
+		await expect(assign).toBeEnabled();
+
+		// The first click only asks; cancelling it assigns nobody.
+		await assign.click();
+		await expect(assign).toHaveText('Scholar agreed, assign');
+		await page.getByRole('button', { name: '✖' }).click();
+		await expect(assign).toHaveText('+ assignee');
+		expect(count()).toBe('0');
+
+		// Asking and confirming assigns them.
+		await assign.click();
+		await assign.click();
+		await expect.poll(count).toBe('1');
+	} finally {
+		forget();
+		await logout(page);
+	}
+});

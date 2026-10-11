@@ -10,6 +10,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Changed
 
+- **Assigning someone who didn't bid now takes a second click confirming they agreed**, for example "Scholar agreed, assign", and so does a bulk import that names people. Approving a bid or assigning yourself still takes one click.
 - Updated dependencies, including SvelteKit, Svelte, Vite, Playwright, and the Supabase and Vercel CLIs.
 - Updated internal backup tooling so that Docker Hub's rate limits no longer cause scheduled backups to fail.
 

@@ -672,6 +672,11 @@
 				"submit": {
 					"tip": "Create the imported submissions and propose the mint transaction",
 					"label": "Import submissions"
+				},
+				"submitNamed": {
+					"tip": "Create the imported submissions, seat the people named, and propose the mint transaction",
+					"label": "Import submissions",
+					"warn": "Everyone named agreed, import"
 				}
 			},
 			"column": {
@@ -736,7 +741,12 @@
 					"label": "Find scholar"
 				},
 				"batchAssign": {
-					"tip": "Assign the scholar you found to this submission in this role",
+					"tip": "Assign the scholar you found to this submission in this role, once they have agreed",
+					"label": "+ assign",
+					"warn": "Agreed, assign"
+				},
+				"batchAssignSelf": {
+					"tip": "Assign yourself to this submission in this role",
 					"label": "+ assign"
 				},
 				"sortPaymentFirst": {
@@ -922,7 +932,12 @@
 			},
 			"button": {
 				"createAssignment": {
-					"tip": "Create a new assignment for this scholar and role",
+					"tip": "Create a new assignment for this scholar and role, once they have agreed",
+					"label": "+ assignee",
+					"warn": "Scholar agreed, assign"
+				},
+				"createAssignmentSelf": {
+					"tip": "Assign yourself in this role",
 					"label": "+ assignee"
 				},
 				"unassign": {
@@ -937,7 +952,8 @@
 				},
 				"approve": {
 					"tip": "Assign for compensation. Also assign them in your reviewing system.",
-					"label": "Assign"
+					"label": "Assign",
+					"warn": "Scholar agreed, assign"
 				},
 				"approveBid": {
 					"tip": "Accept this bid for compensation. Also assign them in your reviewing system.",
@@ -947,6 +963,11 @@
 					"tip": "Assign this scholar despite the load warning",
 					"label": "Assign",
 					"warn": "Assign over cap?"
+				},
+				"approveAnywayAgreed": {
+					"tip": "Assign for compensation despite the load warning. Also assign them in your reviewing system.",
+					"label": "Assign",
+					"warn": "Over cap, scholar agreed, assign"
 				},
 				"markDone": {
 					"tip": "Compensate every editor on this submission and mark it done. This cannot be undone.",

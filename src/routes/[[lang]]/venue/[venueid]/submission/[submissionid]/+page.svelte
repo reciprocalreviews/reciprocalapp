@@ -712,6 +712,7 @@
 				<Options
 					strings={(l) => l.page.submission.options.assignmentRole}
 					bind:value={newAssignmentRole}
+					testid="new-assignment-role"
 					options={[
 						...(isAdmin ? roles : rolesScholarCanApprove).map((role) => ({
 							label: role.name,
@@ -748,7 +749,9 @@
 				{/if}
 				<Button
 					testid="new-assignment"
-					strings={(l) => l.page.submission.button.createAssignment}
+					strings={newAssignmentSearch.id !== undefined && newAssignmentSearch.id === scholar?.id
+						? (l) => l.page.submission.button.createAssignmentSelf
+						: (l) => l.page.submission.button.createAssignment}
 					active={!newAssignmentSubmitting &&
 						newAssignmentRole !== undefined &&
 						newAssignmentSearch.id !== undefined}
@@ -894,7 +897,7 @@
 										{:else}
 											<Button
 												strings={overCap
-													? (l) => l.page.submission.button.approveAnyway
+													? (l) => l.page.submission.button.approveAnywayAgreed
 													: (l) => l.page.submission.button.approve}
 												action={() =>
 													handle(db().approveAssignment(assignment, true, role, scholar.id))}

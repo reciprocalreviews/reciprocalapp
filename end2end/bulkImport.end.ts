@@ -120,6 +120,8 @@ test('a name the venue does not know imports with nobody in that role', async ({
 	await expect(page.getByTestId('import-row-0-unmatched')).toBeVisible();
 	await expect(page.getByTestId('bulk-import-submit')).toBeEnabled();
 
+	// Naming people asks first whether they agreed; the same button confirms.
+	await page.getByTestId('bulk-import-submit').click();
 	await page.getByTestId('bulk-import-submit').click();
 	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
 	await expect(page.getByText(external)).toBeVisible();
@@ -152,6 +154,9 @@ test('an editor the venue knows is matched and seated', async ({ page, context }
 		.selectOption({ label: 'handling editor' });
 
 	await expect(page.getByTestId('import-row-0-unmatched')).toHaveCount(0);
+	await page.getByTestId('bulk-import-submit').click();
+	// Naming people asks first whether they agreed; the same button confirms.
+	await expect(page.getByTestId('bulk-import-submit')).toHaveText('Everyone named agreed, import');
 	await page.getByTestId('bulk-import-submit').click();
 
 	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
@@ -351,6 +356,8 @@ test('an unmatched editor is listed, linked from the submissions page, and can b
 			.locator('[data-testid^="role-column-"]')
 			.first()
 			.selectOption({ label: 'handling editor' });
+		// Naming people asks first whether they agreed; the same button confirms.
+		await page.getByTestId('bulk-import-submit').click();
 		await page.getByTestId('bulk-import-submit').click();
 		await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
 
