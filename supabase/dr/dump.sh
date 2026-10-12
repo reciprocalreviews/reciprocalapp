@@ -56,6 +56,7 @@ LABEL="${LABEL:-manual}"
 GIT_SHA="${GIT_SHA:-$(git -C "$DR_DIR" rev-parse HEAD 2>/dev/null || echo unknown)}"
 
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 1; }
+. "$DR_DIR/images.sh"
 
 # Check the recipients BEFORE dumping. age itself would catch a malformed key,
 # but only at the encryption step — after a full dump of production has already
@@ -121,6 +122,7 @@ say "sslmode:  $PGSSLMODE"
 say "out:      $OUT_ABS"
 
 # ---------------------------------------------------------------- preflight --
+pull_image "$PG_IMAGE"
 SERVER_VERSION="$(pgrun 'psql "$PGURL" -X -tAc "show server_version"' | tr -d '[:space:]')"
 [ -n "$SERVER_VERSION" ] || { echo "could not reach the database" >&2; exit 1; }
 say "server:   PostgreSQL $SERVER_VERSION"
@@ -285,6 +287,7 @@ else
 		done
 	else
 		say "(no local age binary; borrowing one from a container)"
+		pull_image "$ALPINE_IMAGE"
 		# This container runs as root, unlike the postgres ones above, because apk
 		# needs root to install. It therefore has to hand the files back: without
 		# the trailing chown the encrypted output would be root-owned and the
