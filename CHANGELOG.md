@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.17 - 2026-10-12
+
+### Added
+
+- **Admins, editors, and anyone whose role assigns others now see each volunteer's verified email on the volunteers page,** so they can reach a reviewer who hasn't bid. The roster's CSV export now includes emails only for them.
+
 ## 0.5.16 - 2026-10-12
 
 ### Fixed

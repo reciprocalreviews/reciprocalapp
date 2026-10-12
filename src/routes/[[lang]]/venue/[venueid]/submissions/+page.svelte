@@ -29,6 +29,7 @@
 	import canApproveAssignment from '#lib/data/canApproveAssignment.js';
 	import canClaimEditor from '#lib/data/canClaimEditor.js';
 	import isRoleApprover from '#lib/data/isRoleApprover.js';
+	import venueApprover from '#lib/data/isVenueApprover.js';
 	import { submissionsView } from '#lib/data/sortSubmissions.js';
 	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
 	import { getAuth } from '$routes/Auth.svelte';
@@ -176,11 +177,7 @@
 	 * bidding here. The manuscript ID is gated on this rather than on author visibility,
 	 * because an editor at an anonymized venue still needs the ID to find the
 	 * submission in the system it came from. */
-	const isVenueApprover = $derived(
-		isAdmin ||
-			isEditor ||
-			(uid !== null && (roles ?? []).some((role) => isRoleApprover(role, volunteering ?? [], uid)))
-	);
+	const isVenueApprover = $derived(venueApprover(venue, roles ?? [], volunteering ?? [], uid));
 
 	/** State of sorting and filtering */
 	let paymentSortPendingFirst = $state(true);
