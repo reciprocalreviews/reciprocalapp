@@ -36,6 +36,8 @@ KEEP="${KEEP:-0}"
 
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 1; }
 command -v jq >/dev/null || { echo "jq is required" >&2; exit 1; }
+. "$DR_DIR/images.sh"
+pull_image "$PG_IMAGE"
 
 START=$(date +%s)
 WORK="$(mktemp -d)"
@@ -71,6 +73,7 @@ if ls "$WORK"/*.age >/dev/null 2>&1; then
 	if command -v age >/dev/null 2>&1; then
 		for f in "$WORK"/*.age; do age -d -i "$AGE_IDENTITY" -o "${f%.age}" "$f" && rm -f "$f"; done
 	else
+		pull_image "$ALPINE_IMAGE"
 		cp "$AGE_IDENTITY" "$WORK/.identity"
 		docker run --rm -v "$WORK:/work" -e UIDGID="$(id -u):$(id -g)" "$ALPINE_IMAGE" sh -c '
 			set -e; apk add --no-cache age >/dev/null

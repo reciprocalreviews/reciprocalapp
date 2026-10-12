@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.18 - 2026-10-12
+
+### Fixed
+
+- Updated internal backup tooling so that a brief registry rate limit no longer fails a scheduled backup.
+
 ## 0.5.17 - 2026-10-12
 
 ### Added

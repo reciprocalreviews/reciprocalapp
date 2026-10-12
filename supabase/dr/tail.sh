@@ -42,6 +42,7 @@
 
 set -euo pipefail
 
+DR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${DB_URL:?DB_URL is required (session-mode pooler URI on port 5432)}"
 OUT_DIR="${OUT_DIR:-dr-tail}"
 PG_IMAGE="${PG_IMAGE:-public.ecr.aws/docker/library/postgres:17}"
@@ -51,6 +52,7 @@ PGSSLMODE="${PGSSLMODE:-require}"
 WINDOW_HOURS="${WINDOW_HOURS:-3}"
 
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 1; }
+. "$DR_DIR/images.sh"
 
 # Same preflight as dump.sh: a malformed recipient must fail now, not after the
 # export has been written to disk in plaintext. See the longer note there.
@@ -88,6 +90,7 @@ pgrun() {
 say() { printf '  %s\n' "$*"; }
 
 echo "==> Tailing the last ${WINDOW_HOURS}h"
+pull_image "$PG_IMAGE"
 
 # The cutoff is built once, here, and interpolated as a literal. An earlier
 # version passed WINDOW_HOURS into the container and referenced it inside the
@@ -137,6 +140,7 @@ else
 			age $AGE_ARGS -o "$f.age" "$f" && rm -f "$f"
 		done
 	else
+		pull_image "$ALPINE_IMAGE"
 		docker run --rm -v "$OUT_ABS:/out" -e AGE_ARGS="$AGE_ARGS" -e UIDGID="$(id -u):$(id -g)" "$ALPINE_IMAGE" sh -c '
 			set -e; apk add --no-cache age >/dev/null
 			for f in /out/*; do case "$f" in *.age) continue ;; esac; age $AGE_ARGS -o "$f.age" "$f"; rm -f "$f"; done

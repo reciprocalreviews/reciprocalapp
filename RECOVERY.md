@@ -212,7 +212,7 @@ AGE_RECIPIENT="$(grep -oE 'age1[0-9a-z]+' supabase/dr/backup-recipient.age.pub)"
 Omitting `AGE_RECIPIENT` leaves the output **unencrypted** and prints a loud
 warning. That's fine for a local drill and must never be uploaded.
 
-The script has two safety behaviors worth knowing:
+The script has three safety behaviors worth knowing:
 
 - It **refuses to write into an existing `OUT_DIR`**, so a half-populated
   directory from a failed run is never uploaded as though it were complete.
@@ -220,6 +220,9 @@ The script has two safety behaviors worth knowing:
   directory**, so plaintext copies of everyone's data are never left behind. The
   CI action independently re-checks that nothing unencrypted is about to be
   uploaded.
+- It **pulls its container images with up to five retries and backoff**, because
+  ECR Public throttles anonymous pulls per IP and GitHub runners share IPs. An
+  image already present locally is used without touching the registry.
 
 ### Verifying a backup by hand
 
