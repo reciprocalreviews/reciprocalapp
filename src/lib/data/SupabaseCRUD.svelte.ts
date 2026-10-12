@@ -44,6 +44,7 @@ import { renderEmail, type EmailType, type OptionalEmailType } from '../../email
 import type Locale from '../locales/Locale';
 import CRUD, {
 	type BulkImportResult,
+	type BidBudget,
 	type CallForBidsStatus,
 	type Charge,
 	type ChargeCoverage,
@@ -1374,6 +1375,11 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
+	async getBidBudget(role: RoleID): Promise<ReadResult<BidBudget | null>> {
+		const { data, error } = await this.client.rpc('my_bid_budget', { _role: role });
+		return { data: data?.[0] ?? null, ...(error ? this.error('LoadBidBudget', error) : {}) };
+	}
+
 	async getVenueSubmissionEditors(
 		venue: VenueID
 	): Promise<ReadResult<{ submission: SubmissionID; has_editor: boolean }[] | null>> {
@@ -1853,6 +1859,14 @@ export default class SupabaseCRUD extends CRUD {
 			{ desired_assignments: desiredAssignments },
 			'EditRoleDesiredAssignments'
 		);
+	}
+
+	async editRoleBidLimitPercent(id: RoleID, percent: number | null): Promise<Result> {
+		return this.updateRole(id, { bid_limit_percent: percent }, 'EditRoleBidLimit');
+	}
+
+	async editRoleBidLimitFloor(id: RoleID, floor: number): Promise<Result> {
+		return this.updateRole(id, { bid_limit_floor: floor }, 'EditRoleBidLimit');
 	}
 
 	async editRoleVolunteerVisibility(id: RoleID, visibility: VolunteerVisibility): Promise<Result> {
@@ -3006,7 +3020,11 @@ export default class SupabaseCRUD extends CRUD {
 			approved,
 			preferenceid
 		});
-		if (error) return this.error('CreateAssignment', error);
+		if (error)
+			return rpcError(this, error, 'CreateAssignment', {
+				RR025: 'BidLimitReached',
+				RR026: 'BidNotAllowed'
+			});
 
 		// A bid is a request rather than an assignment, so it notifies the people who can answer
 		// it rather than the person who made it. Without this an editor found out a bid had

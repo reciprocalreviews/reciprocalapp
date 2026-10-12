@@ -46,6 +46,104 @@ test('a reviewer can bid on a paper and then see an unbid button', async ({ page
 	}
 });
 
+test('a reviewer at their bid limit withdraws a bid to bid elsewhere', async ({
+	page,
+	context
+}) => {
+	const ROLE_ID = SEED.roles.reviewer;
+	const dropBids = () =>
+		sql(
+			`delete from public.assignments where scholar = '${BIDDER_ID}' and venue = '${VENUE_ID}' and bid = true and approved = false;`
+		);
+	dropBids();
+	// Other tests leave this scholar answered bids and add submissions, so the budget is
+	// sized from what is there: 1% (one bid per hundred under review) with a floor one
+	// above the bids that remain, and no papers cap.
+	const used = Number(
+		sql(
+			`select count(*) from public.assignments a join public.submissions s on s.id = a.submission where a.scholar = '${BIDDER_ID}' and a.role = '${ROLE_ID}' and a.bid and s.status = 'reviewing';`
+		)
+	);
+	const papers = sql(
+		`select coalesce(papers::text, 'null') from public.volunteers where scholarid = '${BIDDER_ID}' and roleid = '${ROLE_ID}';`
+	);
+	sql(
+		`update public.volunteers set papers = null where scholarid = '${BIDDER_ID}' and roleid = '${ROLE_ID}';`
+	);
+	sql(
+		`update public.roles set bid_limit_percent = 1, bid_limit_floor = ${used + 1} where id = '${ROLE_ID}';`
+	);
+	const budget = (n: number) => `${n} of ${used + 1}`;
+
+	try {
+		await login(BIDDER_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId('budget-Reviewer')).toContainText(budget(used));
+
+		await page
+			.getByTestId(/^bid-\d/)
+			.first()
+			.click();
+		await expect(page.getByTestId('budget-Reviewer')).toContainText(budget(used + 1));
+		await expect(page.getByTestId(/^bid-\d/)).toHaveCount(0);
+		await expect(page.getByTestId(/^limit-reached-/).first()).toBeVisible();
+
+		await page
+			.getByTestId(/^unbid-/)
+			.first()
+			.click();
+		await expect(page.getByTestId('budget-Reviewer')).toContainText(budget(used));
+		await expect(page.getByTestId(/^limit-reached-/)).toHaveCount(0);
+		await expect(page.getByTestId(/^bid-\d/).first()).toBeVisible();
+
+		await logout(page);
+	} finally {
+		sql(
+			`update public.roles set bid_limit_percent = 20, bid_limit_floor = 10 where id = '${ROLE_ID}';`
+		);
+		sql(
+			`update public.volunteers set papers = ${papers} where scholarid = '${BIDDER_ID}' and roleid = '${ROLE_ID}';`
+		);
+		dropBids();
+	}
+});
+
+test('a reviewer can withdraw a pending bid after bidding closes', async ({ page, context }) => {
+	// TOK-2025-010, as in the test below: under review and one Reviewer seat short.
+	const SUBMISSION_ID = 'f0000002-ad50-11f0-9000-000000000010';
+	const TITLE = 'Retraction Notices as a Genre';
+	const dropBid = () =>
+		sql(
+			`delete from public.assignments where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_ID}' and bid = true and approved = false;`
+		);
+	dropBid();
+	sql(
+		`insert into public.assignments (venue, submission, scholar, role, bid) values ('${VENUE_ID}', '${SUBMISSION_ID}', '${BIDDER_ID}', '${SEED.roles.reviewer}', true);`
+	);
+	sql(`update public.submissions set bidding_closed = true where id = '${SUBMISSION_ID}';`);
+
+	try {
+		await login(BIDDER_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
+		await page.waitForLoadState('networkidle');
+		const row = page.locator('tr', { hasText: TITLE });
+		await expect(row.getByTestId(/^not-open-for-bidding-/)).toBeVisible();
+		await row.getByTestId(/^unbid-/).click();
+		await expect
+			.poll(() =>
+				sql(
+					`select count(*) from public.assignments where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_ID}';`
+				)
+			)
+			.toBe('0');
+		await logout(page);
+	} finally {
+		sql(`update public.submissions set bidding_closed = false where id = '${SUBMISSION_ID}';`);
+		dropBid();
+	}
+});
+
 test('an editor closes bidding on a submission, and bidders no longer see it', async ({
 	page,
 	context

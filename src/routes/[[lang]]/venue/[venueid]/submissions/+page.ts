@@ -30,6 +30,20 @@ export const load: PageLoad = async ({ parent, params }) => {
 				? await db.getVolunteersByRoles(roleids)
 				: await db.getScholarActiveVolunteering(uid, roleids);
 
+	// The viewer's bid budget in each biddable role they volunteer for, keyed by role.
+	const bidRoles = (roles ?? []).filter(
+		(role) =>
+			role.biddable &&
+			(volunteering ?? []).some(
+				(v) => v.roleid === role.id && v.scholarid === uid && v.active && v.accepted === 'accepted'
+			)
+	);
+	const bidBudgets = Object.fromEntries(
+		await Promise.all(
+			bidRoles.map(async (role) => [role.id, (await db.getBidBudget(role.id)).data] as const)
+		)
+	);
+
 	// Get all selectable assignments for the venue, according to the RLS policy.
 	const { data: assignments } = uid === null ? { data: [] } : await db.getVenueAssignments(venueid);
 
@@ -81,6 +95,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		submissions,
 		unmatchedCount,
 		volunteering,
+		bidBudgets,
 		roles,
 		assignments,
 		submissionEditors,

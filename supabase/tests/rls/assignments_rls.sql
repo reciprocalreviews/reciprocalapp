@@ -73,6 +73,11 @@ select tests.create_volunteer(:'child_seated', :'roleapprover', 'accepted') as v
 select tests.create_submission_type(:'ven') as stype \gset
 select tests.create_submission(:'ven', :'stype', array[:'outsider']::uuid[]) as sub \gset
 
+-- A submission nobody holds rolechild on, for the bids below: public.enforce_bid_rules
+-- refuses a second seat in a role and a bid on a role that is already full, and on
+-- :sub the bidder is seated and rolechild is full.
+select tests.create_submission(:'ven', :'stype', array[:'outsider']::uuid[]) as bidsub \gset
+
 -- The assignment under test: assignee assigned to rolechild on sub (approved).
 select tests.create_assignment(:'ven', :'sub', :'assignee', :'rolechild', true, false) as asg \gset
 
@@ -214,25 +219,25 @@ select throws_ok(
 -- Not while bidding on the submission is closed. (Set as the owner; who may set it is
 -- tested in rpc/submission_open_for_bidding.sql.)
 select tests.clear_authentication();
-update public.submissions set bidding_closed = true where id = :'sub';
+update public.submissions set bidding_closed = true where id = :'bidsub';
 select tests.authenticate_as(:'bidder');
 select throws_ok(
 	$$ insert into public.assignments (venue, submission, scholar, role, bid)
-	   values ( $$ || quote_literal(:'ven') || $$, $$ || quote_literal(:'sub') || $$,
+	   values ( $$ || quote_literal(:'ven') || $$, $$ || quote_literal(:'bidsub') || $$,
 	            $$ || quote_literal(:'bidder') || $$, $$ || quote_literal(:'rolechild') || $$, true ) $$,
 	'42501',
 	null,
 	'a volunteer cannot bid on a submission whose bidding is closed'
 );
 select tests.clear_authentication();
-update public.submissions set bidding_closed = false where id = :'sub';
+update public.submissions set bidding_closed = false where id = :'bidsub';
 
 -- Once bidding reopens, an active accepted volunteer on the role can create their
 -- own bid (bid=true).
 select tests.authenticate_as(:'bidder');
 select lives_ok(
 	$$ insert into public.assignments (venue, submission, scholar, role, bid)
-	   values ( $$ || quote_literal(:'ven') || $$, $$ || quote_literal(:'sub') || $$,
+	   values ( $$ || quote_literal(:'ven') || $$, $$ || quote_literal(:'bidsub') || $$,
 	            $$ || quote_literal(:'bidder') || $$, $$ || quote_literal(:'rolechild') || $$, true ) $$,
 	'an active accepted volunteer can create a bid on the role'
 );

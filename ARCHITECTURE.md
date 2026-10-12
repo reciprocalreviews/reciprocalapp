@@ -642,7 +642,17 @@ The trigger is SECURITY INVOKER and only enforces when `current_user = 'authenti
 - **Sight.** The bidder branch of the `submissions` SELECT policy (an accepted volunteer on a biddable role) now also requires the submission to be open for bidding, or the caller to hold any assignment on it. That reads the policy's own row, so it needs no helper. [canViewSubmission.ts](src/lib/data/canViewSubmission.ts) mirrors it.
 - **Who may change it.** Anyone who may answer bids on the submission: `set_submission_open_for_bidding` requires `can_approve_assignment` for some biddable role at the venue, so a venue admin, the submission's editor, or the holder of a bid-approving role seated on it, such as its Associate Editor. It is an RPC rather than a column grant because the `submissions` UPDATE policy admits only authors and editors, and widening it to approvers would also hand them the title, type and expertise. So `bidding_closed` is left out of the client column grant, like `status`, and the RPC is the only client path that writes it. The submission page shows the checkbox on the same test, through [canApproveAssignment.ts](src/lib/data/canApproveAssignment.ts).
 
-The Monday digest's `open_seats` also leaves closed submissions out (see Notifications). Existing bids are untouched: closing blocks only new ones.
+The Monday digest's `open_seats` also leaves closed submissions out (see Notifications). Existing bids are untouched: closing blocks only new ones. The submissions page keeps a pending bid's Unbid button after bidding closes, because the bid still counts against its bidder's budget (below).
+
+### Bid budgets and the rules on placing a bid
+
+[20261011010000](supabase/migrations/20261011010000_bid_budgets.sql) caps how many submissions a volunteer may bid on per role, and moves the other bid rules the UI enforced into the database.
+
+- **The budget.** `_bid_limit(_role, _scholar)` returns `used` (bids in the role on submissions with `status = 'reviewing'`, in any state) and `bid_limit`: `greatest(bid_limit_floor, ceil(bid_limit_percent × submissions under review / 100))`, then `least` with three times the volunteer's `papers`. Null when `bid_limit_percent` is null. It answers for any scholar, so it is owner-only (the underscore puts it under `definer_grants.sql` check 3); clients call `my_bid_budget(_role)`, which passes `auth.uid()`.
+- **The trigger.** `enforce_bid_rules`, BEFORE INSERT on `assignments`, checks a bid a scholar places for themselves, unless they may approve it (`can_approve_assignment`). It raises `RR026` for a role that is not biddable, a submission not under review, a second row for the same submission, role and scholar, or a role whose approved count has reached `desired_assignments`; and `RR025` when `used >= bid_limit`. `createAssignment` maps these to `BidNotAllowed` and `BidLimitReached`.
+- **Why a trigger.** An RLS clause would refuse with a bare `42501`, and the client could not say which rule applied. A unique index would have to pass over duplicate bids already in the hosted data; the trigger only judges new rows, so old bids stay. Note it runs before the INSERT policy, so a bid failing both reports the trigger's code.
+- **Races.** It takes `pg_advisory_xact_lock` on the scholar and role before counting, so two bids placed at once cannot both take the last slot.
+- **Tests:** [supabase/tests/rls/bid_budget_rls.sql](supabase/tests/rls/bid_budget_rls.sql).
 
 ### Claims and unmatched assignments
 

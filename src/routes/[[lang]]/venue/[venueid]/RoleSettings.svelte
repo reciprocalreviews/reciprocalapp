@@ -27,6 +27,9 @@
 	const db = getDB();
 	const locale = getLocaleContext();
 
+	/** What turning the bid limit back on restores; the column's default. */
+	const DEFAULT_BID_LIMIT_PERCENT = 20;
+
 	/** Whether the visibility setting below currently decides anything. Invite-only
 	 * roles and the venue's editor role are exempt in the database, so the control
 	 * would otherwise sit there looking as though it worked. The stored value is
@@ -92,6 +95,37 @@
 		immediately={false}
 		change={(value) => handle(db().editRoleDesiredAssignments(role.id, value))}
 	/>
+
+	{#if role.biddable}
+		<Checkbox
+			on={role.bid_limit_percent !== null}
+			change={(on) => db().editRoleBidLimitPercent(role.id, on ? DEFAULT_BID_LIMIT_PERCENT : null)}
+			label={(l) => l.view.roles.checkbox.bidLimit}
+			testid="role-bid-limit-{role.name}"
+		/>
+		{#if role.bid_limit_percent !== null}
+			<Slider
+				min={5}
+				max={100}
+				value={role.bid_limit_percent}
+				step={5}
+				strings={(l) => l.view.roles.slider.bidLimitPercent}
+				immediately={false}
+				change={(value) => handle(db().editRoleBidLimitPercent(role.id, value))}
+			/>
+			<Slider
+				min={0}
+				max={50}
+				value={role.bid_limit_floor}
+				step={1}
+				strings={(l) => l.view.roles.slider.bidLimitFloor}
+				immediately={false}
+				change={(value) => handle(db().editRoleBidLimitFloor(role.id, value))}
+				testid="role-bid-limit-floor-{role.name}"
+			/>
+			<Tip>{locale().view.roles.tip.bidLimit}</Tip>
+		{/if}
+	{/if}
 
 	<Options
 		strings={(l) => l.view.roles.options.volunteerVisibility}
