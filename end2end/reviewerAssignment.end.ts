@@ -32,6 +32,13 @@ test('AE assigns two reviewer bids and bidding closes', async ({ page, context }
 	await expect(page.getByRole('button', { name: APPROVE_BID_TIP })).toHaveCount(2);
 	await expect(page.getByRole('button', { name: UNASSIGN_TIP })).toHaveCount(1);
 
+	// A bidder's address is there before their bid is accepted too, so the AE can ask them
+	// about it first.
+	await expect(page.getByTestId('assignee-email')).toHaveCount(3);
+	await expect(
+		page.getByTestId('assignee-email').getByRole('link', { name: SEED.scholars.r4.email })
+	).toHaveAttribute('href', `mailto:${SEED.scholars.r4.email}`);
+
 	// Assign the first bid; one fewer pending, one more Unassign.
 	await page.getByRole('button', { name: APPROVE_BID_TIP }).first().click();
 	await expect(page.getByRole('button', { name: APPROVE_BID_TIP })).toHaveCount(1);

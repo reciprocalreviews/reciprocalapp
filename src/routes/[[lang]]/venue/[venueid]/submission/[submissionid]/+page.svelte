@@ -944,6 +944,9 @@
 									{#if bidLabel !== undefined}
 										<em data-testid="bid-preference-label">{bidLabel}</em>
 									{/if}
+									{#if assignment.scholar !== scholar.id}
+										{@render assigneeEmail(assignment.scholar)}
+									{/if}
 									{@render orcidContext(assignment.scholar)}
 								</div>
 							</td>
