@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.16 - 2026-10-12
+
+### Fixed
+
+- **Whoever can approve bids on a submission now sees a bidder's verified email before accepting the bid,** not only after, so they can ask the bidder about it first.
+
 ## 0.5.15 - 2026-10-11
 
 ### Added
