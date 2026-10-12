@@ -124,16 +124,12 @@ export type Volunteer = Candidate & {
 	affiliation: string | null;
 };
 
-/** How close two words are, from 0 to 1, and whether the agreement was more than an
- * initial. A typo of a word counts as partly close, so "Leigh" still finds "Lee"; an
- * initial counts half, but never on its own, or "A." would suggest every Ana. */
-function closeness(a: string, b: string): { score: number; whole: boolean } {
-	if (a === b) return { score: 1, whole: true };
-	if ((a.length === 1 || b.length === 1) && a[0] === b[0]) return { score: 0.5, whole: false };
-	if (a.length === 1 || b.length === 1) return { score: 0, whole: false };
-	const similarity = 1 - editDistance(a, b) / Math.max(a.length, b.length);
-	return similarity >= 0.4 ? { score: similarity, whole: true } : { score: 0, whole: false };
-}
+/** How far a written name may be from a volunteer's, in single-letter edits, for the
+ * volunteer to be suggested. Two catches a dropped, doubled or swapped letter, which
+ * is what export typos look like, without suggesting everyone who merely shares a
+ * surname: a list of near strangers is worse than no list, because it invites a
+ * plausible wrong click. */
+const SUGGESTION_DISTANCE = 2;
 
 /** The number of single-letter insertions, deletions and substitutions between two words. */
 function editDistance(a: string, b: string): number {
@@ -151,50 +147,69 @@ function editDistance(a: string, b: string): number {
 	return previous[b.length];
 }
 
-/** How close a candidate's name is to a written one, from 0 to 1: each written word
- * pairs with the closest unpaired word of the candidate's name, and the total is
- * divided by the longer name's length, so missing and extra words both cost. Zero
- * unless at least one pairing is more than an initial. */
-function nameCloseness(written: string[], candidate: string[]): number {
+/** What it costs to turn one word into another: nothing for an initial that agrees
+ * with the word it abbreviates, otherwise the edit distance. */
+function wordDistance(a: string, b: string): number {
+	if ((a.length === 1 || b.length === 1) && a[0] === b[0]) return 0;
+	return editDistance(a, b);
+}
+
+/** How many single-letter edits separate two names, in any word order. Each word of
+ * the written name pairs with the closest unpaired word of the candidate's, longest
+ * words first so an initial cannot take a word a whole name needed. A word left over
+ * on either side costs its length, unless it is only an initial, since "Andrew J.
+ * Petersen" and "Andrew Petersen" are the same person. Infinite when no whole word
+ * pairs, so initials alone never suggest anyone. */
+function nameDistance(written: string[], candidate: string[]): number {
 	const paired = new Array(candidate.length).fill(false);
 	let total = 0;
 	let whole = false;
-	for (const word of written) {
+	for (const word of [...written].sort((a, b) => b.length - a.length)) {
 		let best = -1;
-		let bestCloseness = { score: 0, whole: false };
+		let bestDistance = Infinity;
 		candidate.forEach((other, i) => {
 			if (paired[i]) return;
-			const c = closeness(word, other);
-			if (c.score > bestCloseness.score) {
+			const distance = wordDistance(word, other);
+			if (distance < bestDistance) {
 				best = i;
-				bestCloseness = c;
+				bestDistance = distance;
 			}
 		});
-		if (best < 0) continue;
+		if (best < 0 || bestDistance >= word.length) {
+			total += word.length === 1 ? 0 : word.length;
+			continue;
+		}
 		paired[best] = true;
-		total += bestCloseness.score;
-		whole ||= bestCloseness.whole;
+		total += bestDistance;
+		whole ||= word.length > 1 && candidate[best].length > 1;
 	}
-	return whole ? total / Math.max(written.length, candidate.length) : 0;
+	candidate.forEach((word, i) => {
+		if (!paired[i] && word.length > 1) total += word.length;
+	});
+	return whole ? total : Infinity;
 }
 
-/** The candidates whose names are closest to a written one, closest first, for a
- * person to choose between.
+/** The candidates whose names are within a couple of typos of a written one, closest
+ * first, for a person to choose between. Often none: a name that is not nearly
+ * somebody's suggests nobody.
  *
- * Unlike matchPersonName this is fuzzy, and that is safe only because it decides
- * nothing: it orders what a person sees, and the person picks. Ties are broken by
- * name, so the same list always comes back in the same order. */
+ * Unlike matchPersonName this tolerates typos, and that is safe only because it
+ * decides nothing: it offers, and the person picks. Ties are broken by name, so the
+ * same list always comes back in the same order. */
 export function suggestCandidates<C extends Candidate>(
 	name: string,
 	candidates: C[],
-	limit = 5
+	limit = 3
 ): C[] {
 	const written = nameTokens(name);
 	if (written.length === 0) return [];
 	return candidates
-		.map((candidate) => ({ candidate, score: nameCloseness(written, nameTokens(candidate.name)) }))
-		.filter(({ score }) => score > 0)
-		.sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
+		.map((candidate) => ({
+			candidate,
+			distance: nameDistance(written, nameTokens(candidate.name))
+		}))
+		.filter(({ distance }) => distance <= SUGGESTION_DISTANCE)
+		.sort((a, b) => a.distance - b.distance || a.candidate.name.localeCompare(b.candidate.name))
 		.slice(0, limit)
 		.map(({ candidate }) => candidate);
 }

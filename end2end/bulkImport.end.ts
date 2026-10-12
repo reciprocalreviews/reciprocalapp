@@ -347,10 +347,10 @@ test('an unmatched editor is listed, linked from the submissions page, and can b
 	try {
 		await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
 		await page.waitForLoadState('networkidle');
-		// A misspelling of a real editor, as an export from another system might carry.
+		// A one-letter misspelling of a real editor, as an export from another system might carry.
 		await page
 			.getByTestId('bulk-import-paste')
-			.fill(`title,externalid,handling editor\nPre-launch paper,${external},Scholar Leigh`);
+			.fill(`title,externalid,handling editor\nPre-launch paper,${external},Scholar Lea`);
 		await page.getByTestId('bulk-import-parse').click();
 		await page
 			.locator('[data-testid^="role-column-"]')
@@ -368,10 +368,10 @@ test('an unmatched editor is listed, linked from the submissions page, and can b
 		await page.waitForURL(`**/venue/${VENUE_PATH}/submissions/unmatched`);
 		await page.waitForLoadState('networkidle');
 
-		const row = page.locator('tr', { hasText: 'Scholar Leigh' });
+		const row = page.locator('tr', { hasText: 'Scholar Lea' });
 		await expect(row).toBeVisible();
-		// The misspelling is suggested, with what tells same-named people apart and a
-		// profile link that opens in a new tab, so checking who it is keeps the choice.
+		// The misspelling is suggested on one line with the email, and a profile link
+		// that opens in a new tab, so checking who it is keeps the choice.
 		const choose = `[data-testid$="-scholar-choose-${SEED.scholars.editor.id}"]`;
 		const suggested = row.locator('li', { has: page.locator(choose) });
 		await expect(suggested).toContainText(SEED.scholars.editor.email);
@@ -381,6 +381,7 @@ test('an unmatched editor is listed, linked from the submissions page, and can b
 		);
 
 		// Searching by ORCID iD finds the same person, among a role's volunteers only.
+		await row.locator('[data-testid$="-scholar-search-open"]').click();
 		await row.locator('[data-testid$="-scholar-search"]').fill(SEED.scholars.editor.orcid);
 		await expect(row.locator('[data-testid*="-scholar-choose-"]')).toHaveCount(1);
 		await expect(row.locator(choose)).toHaveCount(1);

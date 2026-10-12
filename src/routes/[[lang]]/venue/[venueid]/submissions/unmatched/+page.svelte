@@ -94,16 +94,16 @@
 				<th><Text path={(l) => l.page.unmatched.headers.name} /></th>
 				<th><Text path={(l) => l.page.unmatched.headers.role} /></th>
 				<th><Text path={(l) => l.page.unmatched.headers.count} /></th>
-				<th><Text path={(l) => l.page.unmatched.headers.scholar} /></th>
+				<th class="cell"><Text path={(l) => l.page.unmatched.headers.scholar} /></th>
 			{/snippet}
 			{#each groups as group, index (group.key)}
 				{@const candidates = candidatesFor(group.role)}
 				{@const chosen = choiceFor(group)}
-				<tr data-testid="unmatched-{index}">
+				<tr class="group" data-testid="unmatched-{index}">
 					<td class="name">{group.name}</td>
 					<td class="name">{group.role.name}</td>
 					<td>{group.rows.length}</td>
-					<td>
+					<td class="cell">
 						<div class="match">
 							{#if candidates.length === 0}
 								<Feedback
@@ -153,5 +153,29 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-half);
+	}
+
+	/* On a phone the four columns do not fit, and the table scrolled the one that
+	   matters off-screen. The matching cell moves under the name instead. */
+	@media (max-width: 40rem) {
+		:global(table:has(.group)),
+		:global(tbody:has(.group)) {
+			display: block;
+		}
+
+		/* The headings only label columns, and there are no columns here; each row
+		   says its role, and its count reads as the number of submissions beside it. */
+		:global(thead:has(th.cell)) {
+			display: none;
+		}
+
+		.group {
+			display: grid;
+			grid-template-columns: 1fr auto auto;
+		}
+
+		.group .cell {
+			grid-column: 1 / -1;
+		}
 	}
 </style>

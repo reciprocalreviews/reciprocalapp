@@ -116,46 +116,48 @@ describe('suggestCandidates', () => {
 	const DANA = volunteer('dana', 'Dana Petersen');
 	const ANDREW = volunteer('andrew', 'Andrew Petersen');
 
-	test('ranks a misspelling of a surname above people who only share a given name', () => {
-		expect(suggestCandidates('Scholar Leigh', [EDITOR, LEE]).map((c) => c.id)).toEqual([
-			'lee',
-			'ed'
-		]);
+	test('suggests a name one typo away, but not people who only share a word of it', () => {
+		expect(suggestCandidates('Scholar Lea', [EDITOR, LEE])).toEqual([LEE]);
 	});
 
-	test('finds a one-letter typo and either name order', () => {
-		expect(suggestCandidates('Petersn, Andrew', [MUNOZ, ANDREW])[0]).toBe(ANDREW);
+	test('allows two typos and no more', () => {
+		expect(suggestCandidates('Andrw Petrsen', [ANDREW])).toEqual([ANDREW]);
+		expect(suggestCandidates('Andrw Ptrsn', [ANDREW])).toEqual([]);
+		expect(suggestCandidates('Scholar Leigh', [LEE])).toEqual([]);
 	});
 
-	test('prefers the candidate whose initial agrees', () => {
-		expect(suggestCandidates('A. Petersen', [DANA, ANDREW]).map((c) => c.id)).toEqual([
-			'andrew',
-			'dana'
-		]);
+	test('ignores word order', () => {
+		expect(suggestCandidates('Petersn, Andrew', [MUNOZ, ANDREW])).toEqual([ANDREW]);
 	});
 
-	test('never suggests on an initial alone', () => {
-		expect(suggestCandidates('A. Zhao', [MUNOZ, ANDREW])).toEqual([]);
+	test('lets an initial stand for the word it abbreviates', () => {
+		expect(suggestCandidates('A. Petersn', [DANA, ANDREW])).toEqual([ANDREW]);
+		expect(suggestCandidates('Andrew J. Petersn', [ANDREW])).toEqual([ANDREW]);
 	});
 
-	test('leaves out unrelated names', () => {
+	test('never suggests on initials alone', () => {
+		expect(suggestCandidates('A. P.', [ANDREW])).toEqual([]);
+	});
+
+	test('does not suggest someone who shares only a surname or a given name', () => {
+		expect(suggestCandidates('Sung Tanaka', [volunteer('e', 'Elena Tanaka')])).toEqual([]);
+		expect(suggestCandidates('Petersen', [DANA, ANDREW])).toEqual([]);
 		expect(suggestCandidates('Wenjing Zhao', [LEE, DANA, MUNOZ])).toEqual([]);
 	});
 
-	test('breaks ties by name, so the order is stable', () => {
-		const second = volunteer('lee2', 'Scholar Lee');
-		const aaron = volunteer('aaron', 'Aaron Petersen');
-		expect(suggestCandidates('Petersen', [DANA, ANDREW, aaron]).map((c) => c.id)).toEqual([
-			'aaron',
-			'andrew',
-			'dana'
+	test('puts the closest first, then breaks ties by name', () => {
+		const peterson = volunteer('peterson', 'Dana Peterson');
+		const exact = volunteer('exact', 'Dana Petersn');
+		expect(suggestCandidates('Dana Petersn', [peterson, DANA, exact]).map((c) => c.id)).toEqual([
+			'exact',
+			'dana',
+			'peterson'
 		]);
-		expect(suggestCandidates('Scholar Lee', [second, LEE])).toHaveLength(2);
 	});
 
-	test('respects the limit', () => {
-		const many = Array.from({ length: 10 }, (_, i) => volunteer(`${i}`, `Person ${i} Petersen`));
-		expect(suggestCandidates('Petersen', many, 3)).toHaveLength(3);
+	test('offers at most three by default', () => {
+		const many = Array.from({ length: 10 }, (_, i) => volunteer(`${i}`, 'Ana Petersen'));
+		expect(suggestCandidates('Ana Petersn', many)).toHaveLength(3);
 	});
 
 	test('suggests nothing for an empty name', () => {

@@ -178,6 +178,10 @@ export type LocaleText = {
 			ambiguous: string;
 			/** No volunteer's name is close to the written one. */
 			noSuggestions: string;
+			/** Opens the search, which stays closed until asked for so a long list of
+			 * names is not a long list of search boxes. `{role}`, and `{count}` in the
+			 * tip. */
+			openSearch: ButtonText;
 			/** Searches the role's volunteers. `{count}` in the label is how many there are. */
 			search: TextFieldText;
 			/** More results than are shown. `{shown}` of `{count}`. */
