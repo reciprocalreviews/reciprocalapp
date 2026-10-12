@@ -1,5 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import { matchPersonName, nameTokens, type Candidate } from './matchPersonName';
+import {
+	matchPersonName,
+	nameTokens,
+	searchCandidates,
+	suggestCandidates,
+	type Candidate,
+	type Volunteer
+} from './matchPersonName';
 
 const PETERSEN: Candidate = { id: 'p', name: 'Andrew Petersen' };
 const SOH: Candidate = { id: 's', name: 'Leen-Kiat Soh' };
@@ -91,5 +98,106 @@ describe('matchPersonName', () => {
 
 	test('reports unmatched when there are no candidates at all', () => {
 		expect(matchPersonName('Petersen, Andrew', [])).toEqual({ status: 'unmatched' });
+	});
+});
+
+function volunteer(
+	id: string,
+	name: string,
+	email: string | null = null,
+	orcid: string | null = null
+): Volunteer {
+	return { id, name, email, orcid, affiliation: null };
+}
+
+describe('suggestCandidates', () => {
+	const LEE = volunteer('lee', 'Scholar Lee');
+	const EDITOR = volunteer('ed', 'Scholar Editor');
+	const DANA = volunteer('dana', 'Dana Petersen');
+	const ANDREW = volunteer('andrew', 'Andrew Petersen');
+
+	test('ranks a misspelling of a surname above people who only share a given name', () => {
+		expect(suggestCandidates('Scholar Leigh', [EDITOR, LEE]).map((c) => c.id)).toEqual([
+			'lee',
+			'ed'
+		]);
+	});
+
+	test('finds a one-letter typo and either name order', () => {
+		expect(suggestCandidates('Petersn, Andrew', [MUNOZ, ANDREW])[0]).toBe(ANDREW);
+	});
+
+	test('prefers the candidate whose initial agrees', () => {
+		expect(suggestCandidates('A. Petersen', [DANA, ANDREW]).map((c) => c.id)).toEqual([
+			'andrew',
+			'dana'
+		]);
+	});
+
+	test('never suggests on an initial alone', () => {
+		expect(suggestCandidates('A. Zhao', [MUNOZ, ANDREW])).toEqual([]);
+	});
+
+	test('leaves out unrelated names', () => {
+		expect(suggestCandidates('Wenjing Zhao', [LEE, DANA, MUNOZ])).toEqual([]);
+	});
+
+	test('breaks ties by name, so the order is stable', () => {
+		const second = volunteer('lee2', 'Scholar Lee');
+		const aaron = volunteer('aaron', 'Aaron Petersen');
+		expect(suggestCandidates('Petersen', [DANA, ANDREW, aaron]).map((c) => c.id)).toEqual([
+			'aaron',
+			'andrew',
+			'dana'
+		]);
+		expect(suggestCandidates('Scholar Lee', [second, LEE])).toHaveLength(2);
+	});
+
+	test('respects the limit', () => {
+		const many = Array.from({ length: 10 }, (_, i) => volunteer(`${i}`, `Person ${i} Petersen`));
+		expect(suggestCandidates('Petersen', many, 3)).toHaveLength(3);
+	});
+
+	test('suggests nothing for an empty name', () => {
+		expect(suggestCandidates('  ', [LEE])).toEqual([]);
+	});
+});
+
+describe('searchCandidates', () => {
+	const ANDREW = volunteer(
+		'andrew',
+		'Andrew Petersen',
+		'apetersen@cs.example.edu',
+		'0000-0002-1825-0097'
+	);
+	const DANA = volunteer('dana', 'Dana Petersen', 'dana@example.org', null);
+	const ANA = volunteer('ana', 'Ana Muñoz', 'ana@example.org', '0000-0001-5109-3700');
+
+	test('matches the beginning of any word of the name, sorted by name', () => {
+		expect(searchCandidates('peters', [DANA, ANA, ANDREW]).map((c) => c.id)).toEqual([
+			'andrew',
+			'dana'
+		]);
+	});
+
+	test('needs every word typed', () => {
+		expect(searchCandidates('dan pet', [DANA, ANDREW])).toEqual([DANA]);
+	});
+
+	test('does not match the middle of a name word', () => {
+		expect(searchCandidates('ersen', [DANA, volunteer('a', 'Andrew Petersen')])).toEqual([]);
+	});
+
+	test('matches an email address or ORCID iD', () => {
+		expect(searchCandidates('cs.example', [DANA, ANDREW])).toEqual([ANDREW]);
+		expect(searchCandidates('0000-0001-5109', [ANA, ANDREW])).toEqual([ANA]);
+	});
+
+	test('ignores accents and case', () => {
+		expect(searchCandidates('MUNOZ', [ANA, DANA])).toEqual([ANA]);
+	});
+
+	test('returns nothing for an empty query', () => {
+		expect(searchCandidates('', [ANA])).toEqual([]);
 	});
 });

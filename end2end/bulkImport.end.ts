@@ -370,7 +370,24 @@ test('an unmatched editor is listed, linked from the submissions page, and can b
 
 		const row = page.locator('tr', { hasText: 'Scholar Leigh' });
 		await expect(row).toBeVisible();
-		await row.locator('select').selectOption({ label: SEED.scholars.editor.name });
+		// The misspelling is suggested, with what tells same-named people apart and a
+		// profile link that opens in a new tab, so checking who it is keeps the choice.
+		const choose = `[data-testid$="-scholar-choose-${SEED.scholars.editor.id}"]`;
+		const suggested = row.locator('li', { has: page.locator(choose) });
+		await expect(suggested).toContainText(SEED.scholars.editor.email);
+		await expect(suggested.getByRole('link', { name: SEED.scholars.editor.name })).toHaveAttribute(
+			'target',
+			'_blank'
+		);
+
+		// Searching by ORCID iD finds the same person, among a role's volunteers only.
+		await row.locator('[data-testid$="-scholar-search"]').fill(SEED.scholars.editor.orcid);
+		await expect(row.locator('[data-testid*="-scholar-choose-"]')).toHaveCount(1);
+		await expect(row.locator(choose)).toHaveCount(1);
+		await row.locator(choose).click();
+		await expect(row.locator('[data-testid$="-scholar-chosen"]')).toContainText(
+			SEED.scholars.editor.name
+		);
 		await row.getByRole('button', { name: /Assign this scholar/ }).click();
 
 		await expect(

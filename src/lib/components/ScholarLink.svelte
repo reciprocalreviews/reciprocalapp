@@ -7,7 +7,8 @@
 
 	let {
 		id,
-		size = 'normal'
+		size = 'normal',
+		newTab = false
 	}: {
 		/** A scholar id to look up, a Scholar already loaded, or just the id and name of
 		 * one — the row branch below reads only those two fields, so a caller that already
@@ -15,6 +16,9 @@
 		 * without the round trip and the `...` flash that looking one up costs. */
 		id: string | Scholar | Pick<ScholarRow, 'id' | 'name'>;
 		size?: 'small' | 'normal' | 'extra-small';
+		/** Open the profile in a new tab, so checking who someone is doesn't lose a
+		 * choice in progress. */
+		newTab?: boolean;
 	} = $props();
 
 	const db = getDB();
@@ -25,7 +29,7 @@
 		...
 	{:then scholar}
 		{#if scholar}
-			<Link {size} to="/scholar/{scholar.getID()}" icon={ScholarLabel}
+			<Link {size} {newTab} to="/scholar/{scholar.getID()}" icon={ScholarLabel}
 				>{scholar.getName() ?? scholar.getEmail()}</Link
 			>
 		{:else}
@@ -34,13 +38,13 @@
 	{:catch}<em>Error {id}</em>{/await}
 {:else if id instanceof Scholar}
 	<div class="scholar">
-		<Link {size} to="/scholar/{id.getID()}">{id.getName()}</Link><sub
+		<Link {size} {newTab} to="/scholar/{id.getID()}">{id.getName()}</Link><sub
 			class="cling"
 			style="text-decoration: none">{ScholarLabel}</sub
 		>
 	</div>
 {:else}
-	<Link {size} to="/scholar/{id.id}">{id.name}</Link><sub
+	<Link {size} {newTab} to="/scholar/{id.id}">{id.name}</Link><sub
 		class="cling"
 		style="text-decoration: none">{ScholarLabel}</sub
 	>
