@@ -3,6 +3,7 @@
 	import Button from '#lib/components/Button.svelte';
 	import EditableText from '#lib/components/EditableText.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Tip from '#lib/components/Tip.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
@@ -19,6 +20,9 @@
 
 	const db = getDB();
 	const locale = getLocaleContext();
+
+	/** How many bids each paper a volunteer offers to review allows; public._bid_limit's 3. */
+	const PAPERS_BID_MULTIPLE = 3;
 </script>
 
 {#if !role.invited && volunteer === undefined}
@@ -77,6 +81,14 @@
 				db().updateVolunteerPapers(volunteer.id, text === '' ? null : parseInt(text, 10))}
 			testid="volunteer-papers"
 		/>
+		{#if role.biddable && role.bid_limit_percent !== null && volunteer.papers !== null}
+			<Tip
+				>{locale().view.roles.tip.papersCapsBids.replace(
+					'{bids}',
+					(volunteer.papers * PAPERS_BID_MULTIPLE).toString()
+				)}</Tip
+			>
+		{/if}
 	{:else}
 		<p>
 			{locale().view.roles.paragraph.stopped}

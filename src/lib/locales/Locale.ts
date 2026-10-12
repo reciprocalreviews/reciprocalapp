@@ -619,6 +619,8 @@ export type LocaleText = {
 			title: string;
 			tip: {
 				bid: string;
+				/** A bidder's budget for one role: {used} of {limit} bids as {role}. */
+				bidBudget: string;
 				/** Explains the batch assignment form above the submissions table. */
 				batchAssign: string;
 			};
@@ -634,6 +636,9 @@ export type LocaleText = {
 				/** Shown to a bidder in place of the unbid button once an approver has declined
 				 * their bid; the approver's reason follows it. */
 				declined: string;
+				/** Shown in place of the bid buttons when the scholar has used their whole
+				 * bid budget for the role. */
+				bidLimitReached: string;
 				/** Hover text on the lock that stands in for an author list or a
 				 * manuscript ID withheld from a role that cannot see author
 				 * information. */
@@ -1707,6 +1712,12 @@ export type LocaleText = {
 				 * hide a roster that was public a moment ago — the visibility setting stops
 				 * being inert. Shown only when that setting is not `all`. */
 				invitedHidesRoster: string;
+				/** Explains the bid budget under its settings: what counts toward it, and
+				 * that a volunteer moves bids by withdrawing them. */
+				bidLimit: string;
+				/** Under a volunteer's papers field, when the role has a bid budget: the
+				 * number they give also caps their bids at {bids}. */
+				papersCapsBids: string;
 				/** Shown to admins on the first role in priority order. Priority zero is not
 				 * just presentation: it is what the database checks when deciding who may
 				 * approve assignments, edit an author list, and mark a submission done. */
@@ -1813,10 +1824,16 @@ export type LocaleText = {
 				invited: string;
 				anonymousAuthors: string;
 				biddable: string;
+				/** Whether the role caps how many submissions each volunteer may bid on. */
+				bidLimit: string;
 			};
 			slider: {
 				compensation: SliderText;
 				desiredAssignments: SliderText;
+				/** The bid budget, as a percent of the venue's submissions under review. */
+				bidLimitPercent: SliderText;
+				/** The bid budget's minimum, so a small venue's volunteers may bid on all of it. */
+				bidLimitFloor: SliderText;
 			};
 			options: {
 				approver: OptionsText;
@@ -2111,6 +2128,13 @@ export type LocaleText = {
 		DeleteAssignment: string;
 		DeclineBid: string;
 		BidNotPending: string;
+		/** A bid past the bidder's budget for the role (RR025). */
+		BidLimitReached: string;
+		/** A bid the submissions page does not offer: on a role that takes no bids, a
+		 * submission that is done, a role already full, or a second bid (RR026). */
+		BidNotAllowed: string;
+		EditRoleBidLimit: string;
+		LoadBidBudget: string;
 		EmailScholar: string;
 		ApproveProposalNoSupporters: string;
 		DeclareConflict: string;

@@ -36,6 +36,7 @@
 	import { venuePath } from '#lib/data/venuePath.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
+	import type { RoleID } from '$data/types';
 	import { type PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -46,6 +47,8 @@
 		submissions,
 		/** All volunteers for this venue (if an editor) and all accepted, active volunteers for everyone else */
 		volunteering,
+		/** The viewer's bid budget per biddable role they volunteer for */
+		bidBudgets,
 		/** All roles in this venue */
 		roles,
 		/** If an editor, all submission assignments; otherwise, all of the current scholar's assignments. */
@@ -91,6 +94,21 @@
 			? null
 			: new Set(submissionEditors.filter((s) => s.has_editor).map((s) => s.submission))
 	);
+
+	/** The viewer's bid budget for a role, or undefined if the role sets none. */
+	function bidBudget(role: RoleID): { used: number; limit: number } | undefined {
+		const budget = bidBudgets[role];
+		return budget === undefined || budget === null || budget.bid_limit === null
+			? undefined
+			: { used: budget.used, limit: budget.bid_limit };
+	}
+
+	/** Whether the viewer has used their whole bid budget for a role. Bids placed before
+	 * the budget existed can leave someone past it; they still may not bid again. */
+	function bidLimitReached(role: RoleID) {
+		const budget = bidBudget(role);
+		return budget !== undefined && budget.used >= budget.limit;
+	}
 
 	const sortedLevels = $derived([...(preferenceLevels ?? [])].sort((a, b) => a.rank - b.rank));
 
@@ -274,6 +292,21 @@
 				<Tip>
 					<Text path={(l) => l.page.submissions.tip.bid} inputs={{ role: role.name }} />
 				</Tip>
+				{@const budget = bidBudget(role.id)}
+				{#if budget !== undefined}
+					<div data-testid="budget-{role.name}">
+						<Tip>
+							<Text
+								path={(l) => l.page.submissions.tip.bidBudget}
+								inputs={{
+									used: budget.used.toString(),
+									limit: budget.limit.toString(),
+									role: role.name
+								}}
+							/>
+						</Tip>
+					</div>
+				{/if}
 			{/each}
 		{/if}
 
@@ -638,8 +671,46 @@
 												{:else if submission.authors.includes(uid) || conflicts.some((c) => c.scholarid === uid && c.submissionid === submission.id)}
 													<!-- Can't bid if conflicted -->
 													<div><strong>{locale().page.submissions.cell.conflicted}</strong></div>
+												{:else if scholarsBid !== undefined && submission.status !== 'done'}
+													<!-- The preference and unbid. A pending bid counts against the
+													     bidder's budget until it is withdrawn, so it stays withdrawable
+													     after bidding closes. -->
+													{#if sortedLevels.length > 0}
+														{@const currentLabel = sortedLevels.find(
+															(l) => l.id === scholarsBid.preferenceid
+														)?.label}
+														{#if currentLabel !== undefined}
+															<div data-testid={`bid-preference-${index}-${roleIndex}`}>
+																<em>{currentLabel}</em>
+															</div>
+														{/if}
+													{/if}
+													<Button
+														testid={`unbid-${index}-${roleIndex}`}
+														strings={(l) => ({
+															tip: l.page.submissions.button.unbid.tip.replace(
+																'{role}',
+																role?.description ?? 'in this role'
+															),
+															label: l.page.submissions.button.unbid.label
+														})}
+														action={() => handle(db().deleteAssignment(scholarsBid.id))}
+													/>
+													{#if submission.bidding_closed}
+														<div data-testid={`not-open-for-bidding-${index}-${roleIndex}`}>
+															<strong>{locale().page.submissions.cell.notOpenForBidding}</strong>
+														</div>
+													{:else if !biddingOpen}
+														<div>
+															<strong>{locale().page.submissions.cell.biddingClosed}</strong>
+														</div>
+													{/if}
 												{:else if biddingOpen}
-													{#if scholarsBid === undefined}
+													{#if bidLimitReached(role.id)}
+														<div data-testid={`limit-reached-${index}-${roleIndex}`}>
+															<strong>{locale().page.submissions.cell.bidLimitReached}</strong>
+														</div>
+													{:else}
 														{#if sortedLevels.length === 0}
 															<!-- No preference levels: legacy yes/no bid -->
 															<Button
@@ -680,29 +751,6 @@
 																/>
 															{/each}
 														{/if}
-													{:else if scholarsBid !== undefined && !scholarsBid.approved}
-														<!-- Show preference change buttons + unbid -->
-														{#if sortedLevels.length > 0}
-															{@const currentLabel = sortedLevels.find(
-																(l) => l.id === scholarsBid.preferenceid
-															)?.label}
-															{#if currentLabel !== undefined}
-																<div data-testid={`bid-preference-${index}-${roleIndex}`}>
-																	<em>{currentLabel}</em>
-																</div>
-															{/if}
-														{/if}
-														<Button
-															testid={`unbid-${index}-${roleIndex}`}
-															strings={(l) => ({
-																tip: l.page.submissions.button.unbid.tip.replace(
-																	'{role}',
-																	role?.description ?? 'in this role'
-																),
-																label: l.page.submissions.button.unbid.label
-															})}
-															action={() => handle(db().deleteAssignment(scholarsBid.id))}
-														/>
 													{/if}
 												{:else if submission.bidding_closed}
 													<div data-testid={`not-open-for-bidding-${index}-${roleIndex}`}>

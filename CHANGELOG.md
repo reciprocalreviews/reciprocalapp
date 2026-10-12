@@ -7,6 +7,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Added
 
 - **A venue's editors can now bulk import submissions, not just its admins, and always see manuscript IDs in the submissions list.** The mint an import proposes still needs a minter's approval.
+- **Volunteers now have a bid limit per role, by default 20% of the submissions under review and never fewer than 10 bids,** which editors can change or turn off in role settings. Every bid counts until its submission is done, so volunteers withdraw a bid to bid elsewhere, and bids already placed stay.
 
 ### Changed
 
@@ -17,6 +18,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Fixed
 
+- **A pending bid can now be withdrawn after an editor closes bidding on its submission.** The database also now refuses bids the submissions page never offered, such as on a done submission or a second bid on the same one.
 - **Venues with more than 1,000 volunteers now see all of them** on the volunteers and settings pages, when bulk importing, and when matching unmatched assignments. Before, everyone past the first thousand was silently left out.
 
 ## 0.5.14 - 2026-10-08

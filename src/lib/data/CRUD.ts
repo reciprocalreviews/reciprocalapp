@@ -163,6 +163,11 @@ export type CallForBidsStatus = {
 	last_sender: string | null;
 };
 
+/** The caller's bid budget for a role: how many of their bids are on submissions still
+ * under review, and how many they may have. `bid_limit` is null when the role has no
+ * budget. See public._bid_limit. */
+export type BidBudget = { used: number; bid_limit: number | null };
+
 /** What `ensure_scholar` found when asked to repair the caller's own scholar row.
  * `orcid_conflict` is the one that needs a person: another scholar row already holds
  * this account's ORCID iD, so two accounts are claiming one researcher. */
@@ -520,7 +525,12 @@ export default abstract class CRUD {
 	abstract editRoleBidding(id: RoleID, bidding: boolean): Promise<Result>;
 	abstract editRoleAnonymousAuthors(id: RoleID, anonymous: boolean): Promise<Result>;
 	abstract editRoleApprover(id: RoleID, approver: RoleID | null): Promise<Result>;
-	abstract editRoleDesiredAssignments(id: RoleID, bidLimit: number | null): Promise<Result>;
+	abstract editRoleDesiredAssignments(id: RoleID, desired: number): Promise<Result>;
+	/** The percent of the venue's submissions under review each volunteer may bid on, or
+	 * null for no bid budget. */
+	abstract editRoleBidLimitPercent(id: RoleID, percent: number | null): Promise<Result>;
+	/** The bid budget's minimum, so a small venue's volunteers may bid on everything. */
+	abstract editRoleBidLimitFloor(id: RoleID, floor: number): Promise<Result>;
 	/** Who may see this role's volunteers. Inert while the role is invite-only or at
 	 * priority 0 — see the volunteers SELECT policy for why those are exempt. */
 	abstract editRoleVolunteerVisibility(
@@ -983,6 +993,8 @@ export default abstract class CRUD {
 	): Promise<ReadResult<VolunteerRow[] | null>>;
 
 	abstract getVenueAssignments(venue: VenueID): Promise<ReadResult<AssignmentRow[] | null>>;
+	/** The signed-in scholar's own bid budget for a role. */
+	abstract getBidBudget(role: RoleID): Promise<ReadResult<BidBudget | null>>;
 	/** Which of a venue's submissions already have someone in its editor role. A boolean
 	 * per submission rather than the assignment rows themselves, because the venue's
 	 * editors can see its submissions but not its assignments. */
