@@ -523,6 +523,39 @@ test('editor exports volunteers as CSV with name, email, ORCID, role, expertise,
 	expect(csv).toMatch(/"(Yes|No)"/);
 });
 
+/** The volunteers CSV the signed-in viewer downloads, as text. */
+async function exportVolunteersCSV(page: Page) {
+	const downloadPromise = page.waitForEvent('download');
+	await page.getByTestId('volunteer-export-csv').click();
+	const fs = await import('fs');
+	return fs.readFileSync(await (await downloadPromise).path(), 'utf-8');
+}
+
+test("only those who assign others see volunteers' emails, on the page and in the export", async ({
+	page,
+	context
+}) => {
+	// The AE approves Reviewers without administering the venue, and needs to reach a
+	// reviewer who has not bid on anything.
+	await login(SEED.scholars.ae.email, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
+	await expect(
+		page.getByTestId('volunteer-email').getByRole('link', { name: SEED.scholars.r4.email })
+	).toHaveAttribute('href', `mailto:${SEED.scholars.r4.email}`);
+	expect(await exportVolunteersCSV(page)).toContain(SEED.scholars.r4.email);
+	await logout(page);
+
+	// A reviewer assigns nobody, so sees the roster without anyone's address.
+	await login(VOLUNTEER_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
+	await expect(page.locator('tr[data-testid^="volunteer-row-"]').first()).toBeVisible();
+	await expect(page.getByTestId('volunteer-email')).toHaveCount(0);
+	const csv = await exportVolunteersCSV(page);
+	expect(csv.split('\n', 1)[0]).not.toContain('Email');
+	expect(csv).not.toContain(SEED.scholars.r4.email);
+	await logout(page);
+});
+
 test('volunteer filter on /venue/[id]/volunteers narrows the table by name, email, or expertise', async ({
 	page,
 	context

@@ -2,9 +2,9 @@ import type { RoleRow, VolunteerRow } from '$data/types';
 
 export default function isRoleApprover(
 	// The role to check
-	role: RoleRow,
+	role: Pick<RoleRow, 'approver'>,
 	// The volunteers to check
-	volunteers: VolunteerRow[],
+	volunteers: Pick<VolunteerRow, 'scholarid' | 'roleid' | 'accepted'>[],
 	// The scholar to check
 	scholarID: string
 ): boolean {

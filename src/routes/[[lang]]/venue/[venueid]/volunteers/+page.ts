@@ -1,3 +1,4 @@
+import isVenueApprover from '#lib/data/isVenueApprover.js';
 import { NO_VENUE_ID } from '#lib/data/venuePath.js';
 import type { PageLoad } from './$types.js';
 
@@ -5,7 +6,7 @@ export const load: PageLoad = async ({ parent }) => {
 	// The venue comes from the layout rather than being fetched again here: the layout is
 	// what resolves a web address to a venue, and refetching by the URL segment would look
 	// up an address in an id column.
-	const { db, venue } = await parent();
+	const { db, venue, scholar } = await parent();
 
 	const venueid = venue?.id ?? NO_VENUE_ID;
 
@@ -21,8 +22,26 @@ export const load: PageLoad = async ({ parent }) => {
 	// whose roster is withheld, and would report the second as the first.
 	const { data: volunteerCounts } = await db.getVenueVolunteerCounts(venueid);
 
+	// Whether the viewer may see volunteers' addresses: those who assign others need to
+	// reach a volunteer who has not bid. Accepted records rather than active ones, since
+	// an editor who has paused taking new work still handles the papers they have.
+	const { data: viewerVolunteering } =
+		scholar === null || roles === null || roles.length === 0
+			? { data: null }
+			: await db.getScholarAcceptedVolunteering(
+					scholar.id,
+					roles.map((r) => r.id)
+				);
+	const canContact = isVenueApprover(
+		venue,
+		roles ?? [],
+		viewerVolunteering ?? [],
+		scholar?.id ?? null
+	);
+
 	return {
 		venue,
+		canContact,
 		commitments,
 		roles,
 		volunteerCounts

@@ -27,7 +27,7 @@
 	import { getLocaleContext } from '$routes/Contexts';
 
 	let { data } = $props();
-	const { venue, commitments, roles, volunteerCounts } = $derived(data);
+	const { venue, commitments, roles, volunteerCounts, canContact } = $derived(data);
 
 	let filter = $state('');
 	/** The selected expertise chips. Held as keys rather than labels, so a selection
@@ -97,9 +97,10 @@
 	function exportCSV() {
 		if (commitments === null) return;
 
+		// Addresses only for those who assign others, as in the table.
 		const headers = [
 			'Name',
-			'Email',
+			...(canContact ? ['Email'] : []),
 			'ORCID',
 			'Role',
 			'Expertise',
@@ -111,7 +112,7 @@
 		];
 		const rows = commitments.map((c) => [
 			c.scholars.name ?? '',
-			c.scholars.email ?? '',
+			...(canContact ? [c.scholars.email ?? ''] : []),
 			c.scholars.orcid ?? '',
 			c.roles.name ?? '',
 			c.expertise,
@@ -272,7 +273,17 @@
 												: l.page.volunteers.status.inactive}
 									/></td
 								>
-								<td><ScholarLink id={volunteer.scholarid} /></td>
+								<td
+									><ScholarLink id={volunteer.scholarid} />
+									<!-- For those who assign others, so they can reach a volunteer who has
+									     not bid on anything. -->
+									{#if canContact && volunteer.scholars.email}<span
+											class="volunteer-email"
+											data-testid="volunteer-email"
+											><a href="mailto:{volunteer.scholars.email}">{volunteer.scholars.email}</a
+											></span
+										>{/if}</td
+								>
 								<td
 									><!-- The venue's own expertise, ALWAYS answered — an em-dash when the
 									     volunteer wrote none, whether or not ORCID has keywords for them.
@@ -318,6 +329,12 @@
 {/if}
 
 <style>
+	.volunteer-email {
+		display: block;
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
+	}
+
 	.expertise {
 		display: flex;
 		flex-direction: column;
