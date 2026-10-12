@@ -7612,6 +7612,10 @@
                   "description": "No volunteer's name is close to the written one.",
                   "type": "string"
                 },
+                "openSearch": {
+                  "$ref": "#/definitions/ButtonText",
+                  "description": "Opens the search, which stays closed until asked for so a long list of names is not a long list of search boxes. `{role}`, and `{count}` in the tip."
+                },
                 "search": {
                   "$ref": "#/definitions/TextFieldText",
                   "description": "Searches the role's volunteers. `{count}` in the label is how many there are."
@@ -7625,6 +7629,7 @@
                 "suggestions",
                 "ambiguous",
                 "noSuggestions",
+                "openSearch",
                 "search",
                 "more",
                 "noResults",

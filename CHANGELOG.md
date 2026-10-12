@@ -11,9 +11,13 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Changed
 
 - **Assigning someone who didn't bid now takes a second click confirming they agreed**, for example "Scholar agreed, assign", and so does a bulk import that names people. Approving a bid or assigning yourself still takes one click.
-- **Matching an imported name to a scholar now suggests the closest names and lets you search a role's volunteers by name, email, or ORCID iD,** each shown with their email, ORCID iD, affiliation, and a profile link that opens in a new tab. This replaces an unsorted dropdown on the unmatched assignments page, and also helps choose between same-named people in a bulk import.
+- **Matching an imported name to a scholar now suggests up to three volunteers whose names are within a couple of typos, and lets you search a role's volunteers by name, email, or ORCID iD,** with a profile link that opens in a new tab and full details for whoever you choose. This replaces an unsorted dropdown on the unmatched assignments page, and also helps choose between same-named people in a bulk import.
 - Updated dependencies, including SvelteKit, Svelte, Vite, Playwright, and the Supabase and Vercel CLIs.
 - Updated internal backup tooling so that Docker Hub's rate limits no longer cause scheduled backups to fail.
+
+### Fixed
+
+- **Venues with more than 1,000 volunteers now see all of them** on the volunteers and settings pages, when bulk importing, and when matching unmatched assignments. Before, everyone past the first thousand was silently left out.
 
 ## 0.5.14 - 2026-10-08
 

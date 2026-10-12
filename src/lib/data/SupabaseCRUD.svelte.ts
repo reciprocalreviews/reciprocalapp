@@ -431,6 +431,32 @@ export default class SupabaseCRUD extends CRUD {
 		return { data, ...(error ? this.error(id, error) : {}) };
 	}
 
+	/** Run a list read in pages past PostgREST's `max_rows` (1000, see
+	 * supabase/config.toml), which otherwise silently truncates the result. `page`
+	 * must apply a total ORDER BY before its range, because paging without one has
+	 * no defined boundary and can both repeat and skip rows. A failed page returns
+	 * the error rather than the rows gathered so far: a partial list is the bug this
+	 * exists to prevent. */
+	private async allRows<Row>(
+		id: keyof Locale['error'],
+		page: (
+			from: number,
+			to: number
+		) => PromiseLike<{ data: Row[] | null; error: PostgrestError | null }>
+	): Promise<ReadResult<Row[] | null>> {
+		const size = 1000;
+		const all: Row[] = [];
+		for (let from = 0; ; from += size) {
+			const { data, error } = await page(from, from + size - 1);
+			if (error) return { data: null, ...this.error(id, error) };
+			if (data === null) break;
+			all.push(...data);
+			// A short page is the last one.
+			if (data.length < size) break;
+		}
+		return { data: all };
+	}
+
 	/** Run a single-row read (`.maybeSingle()`), log on failure, and resolve with
 	 * the row or null. */
 	private async row<Row>(
@@ -1313,17 +1339,26 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async getVenueVolunteers(venue: VenueID): Promise<ReadResult<VenueVolunteer[] | null>> {
-		return this.rows('LoadVolunteer', venueVolunteersQuery(this.client, venue));
+		return this.allRows('LoadVolunteer', (from, to) =>
+			venueVolunteersQuery(this.client, venue).order('id').range(from, to)
+		);
 	}
 
 	async getVenueSettingsVolunteers(
 		venue: VenueID
 	): Promise<ReadResult<VenueSettingsVolunteer[] | null>> {
-		return this.rows('LoadVolunteer', venueSettingsVolunteersQuery(this.client, venue));
+		return this.allRows('LoadVolunteer', (from, to) =>
+			venueSettingsVolunteersQuery(this.client, venue).order('id').range(from, to)
+		);
 	}
 
 	async getVenueCommitments(venue: VenueID): Promise<ReadResult<VenueCommitment[] | null>> {
-		return this.rows('LoadVolunteer', venueCommitmentsQuery(this.client, venue));
+		// Paged: a large venue's roster runs past `max_rows`, and a truncated one
+		// silently drops volunteers from the roster, from name matching in the bulk
+		// importer, and from the unmatched assignments picker.
+		return this.allRows('LoadVolunteer', (from, to) =>
+			venueCommitmentsQuery(this.client, venue).order('id').range(from, to)
+		);
 	}
 
 	async getVenueVolunteerCounts(

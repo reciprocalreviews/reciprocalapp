@@ -6,6 +6,7 @@
 		type Volunteer
 	} from '#lib/data/matchPersonName.js';
 	import Text from '#lib/locales/Text.svelte';
+	import { tick } from 'svelte';
 	import Button from './Button.svelte';
 	import Feedback from './Feedback.svelte';
 	import ORCIDiD from './ORCIDiD.svelte';
@@ -14,10 +15,15 @@
 
 	/** Choosing which of a role's volunteers a written name means. The volunteers are a
 	 * closed list, the same one the database will seat, so nothing here can choose
-	 * someone it would refuse. Names that tie are offered together, near misses are
-	 * ranked, and anyone else is a search away; each person carries their email, ORCID
-	 * iD and affiliation, and a profile link that opens in a new tab, so two people who
-	 * share a name can be told apart without losing the choice in progress. */
+	 * someone it would refuse.
+	 *
+	 * It is built to be repeated hundreds of times down a page — once per unmatched name,
+	 * once per cell of an import — so it stays short. Names that tie are offered with
+	 * everything that tells them apart; near misses get one line each, and only when
+	 * they are within a couple of typos; anyone else is behind a search that stays
+	 * closed until asked for. The person chosen gets their full email, ORCID iD and
+	 * affiliation, and every name links to a profile that opens in a new tab, so
+	 * checking who someone is never loses the choice in progress. */
 	let {
 		name,
 		role,
@@ -27,7 +33,7 @@
 		clear = undefined,
 		testid
 	}: {
-		/** The name as it was written, which suggestions are ranked against. */
+		/** The name as it was written, which suggestions are matched against. */
 		name: string;
 		/** The role's name, for the labels. */
 		role: string;
@@ -46,50 +52,69 @@
 	 * narrower query. */
 	const SHOWN = 10;
 
+	let searching = $state(false);
 	let query = $state('');
+	let field = $state<HTMLInputElement | HTMLTextAreaElement | undefined>(undefined);
 
 	const chosenVolunteer = $derived(candidates.find((c) => c.id === chosen));
 
 	const match = $derived(matchPersonName(name, candidates));
-	const ambiguous = $derived(match.status === 'ambiguous');
-	const suggestions = $derived(
+	/** The volunteers the name fits equally well, who need everything that tells
+	 * them apart, since their names do not. */
+	const tied = $derived(
 		match.status === 'ambiguous'
 			? candidates.filter((c) => match.candidates.some((m) => m.id === c.id))
-			: suggestCandidates(name, candidates)
+			: []
 	);
+	const suggestions = $derived(tied.length > 0 ? [] : suggestCandidates(name, candidates));
 	const results = $derived(searchCandidates(query, candidates));
+
+	async function openSearch() {
+		searching = true;
+		await tick();
+		field?.focus();
+	}
+
+	function pick(volunteer: Volunteer) {
+		query = '';
+		searching = false;
+		choose(volunteer.id);
+	}
 </script>
 
 {#snippet details(volunteer: Volunteer)}
 	<span class="details">
-		{#if volunteer.email}<span>{volunteer.email}</span>{/if}
-		{#if volunteer.orcid}<ORCIDiD id={volunteer.orcid} />{:else}<span
-				><Text path={(l) => l.widget.volunteerPicker.noORCID} /></span
-			>{/if}
-		{#if volunteer.affiliation}<span>{volunteer.affiliation}</span>{/if}
+		{#if volunteer.email}<span class="detail">{volunteer.email}</span>{/if}
+		<span class="detail">
+			{#if volunteer.orcid}<ORCIDiD id={volunteer.orcid} />{:else}<Text
+					path={(l) => l.widget.volunteerPicker.noORCID}
+				/>{/if}
+		</span>
+		{#if volunteer.affiliation}<span class="detail">{volunteer.affiliation}</span>{/if}
 	</span>
 {/snippet}
 
-{#snippet option(volunteer: Volunteer)}
+{#snippet chooseButton(volunteer: Volunteer)}
+	<Button
+		small
+		testid="{testid}-choose-{volunteer.id}"
+		strings={(l) => ({
+			label: l.widget.scholarSearch.choose.label,
+			// The tip is the button's aria-label, and a column of buttons that all
+			// say "Choose" is unusable by voice or screen reader.
+			tip: l.widget.scholarSearch.choose.tip.replace('{name}', volunteer.name)
+		})}
+		action={() => pick(volunteer)}
+	/>
+{/snippet}
+
+<!-- One line: the name, and the email beside it, which is usually enough to tell
+     near misses apart. The full details wait until someone is chosen. -->
+{#snippet line(volunteer: Volunteer)}
 	<li class="option">
-		<Button
-			small
-			testid="{testid}-choose-{volunteer.id}"
-			strings={(l) => ({
-				label: l.widget.scholarSearch.choose.label,
-				// The tip is the button's aria-label, and a column of buttons that all
-				// say "Choose" is unusable by voice or screen reader.
-				tip: l.widget.scholarSearch.choose.tip.replace('{name}', volunteer.name)
-			})}
-			action={() => {
-				query = '';
-				choose(volunteer.id);
-			}}
-		/>
-		<span class="who">
-			<ScholarLink id={volunteer} size="small" newTab />
-			{@render details(volunteer)}
-		</span>
+		{@render chooseButton(volunteer)}
+		<span class="name"><ScholarLink id={volunteer} size="small" newTab /></span>
+		{#if volunteer.email}<span class="email">{volunteer.email}</span>{/if}
 	</li>
 {/snippet}
 
@@ -97,7 +122,7 @@
 	{#if chosenVolunteer !== undefined}
 		<div class="chosen" data-testid="{testid}-chosen">
 			<span class="who">
-				<ScholarLink id={chosenVolunteer} size="small" newTab />
+				<span class="name"><ScholarLink id={chosenVolunteer} size="small" newTab /></span>
 				{@render details(chosenVolunteer)}
 			</span>
 			{#if clear !== undefined}
@@ -110,57 +135,90 @@
 			{/if}
 		</div>
 	{:else}
-		{#if query.trim() === ''}
-			{#if suggestions.length > 0}
-				<span class="heading">
-					<Text
-						path={(l) =>
-							ambiguous ? l.widget.volunteerPicker.ambiguous : l.widget.volunteerPicker.suggestions}
-						inputs={{ name, role }}
-					/>
-				</span>
-				<ul>
-					{#each suggestions as volunteer (volunteer.id)}
-						{@render option(volunteer)}
-					{/each}
-				</ul>
-			{:else}
-				<Feedback text={(l) => l.widget.volunteerPicker.noSuggestions} inputs={{ role }} />
-			{/if}
+		<!-- A search in progress replaces the offers rather than adding to them, so the
+		     same person is never listed twice. -->
+		{#if searching && query.trim() !== ''}
+			<!-- Nothing here; the results follow the field. -->
+		{:else if tied.length > 0}
+			<span class="heading">
+				<Text path={(l) => l.widget.volunteerPicker.ambiguous} inputs={{ name, role }} />
+			</span>
+			<ul>
+				{#each tied as volunteer (volunteer.id)}
+					<li class="option tied">
+						{@render chooseButton(volunteer)}
+						<span class="who">
+							<span class="name"><ScholarLink id={volunteer} size="small" newTab /></span>
+							{@render details(volunteer)}
+						</span>
+					</li>
+				{/each}
+			</ul>
+		{:else if suggestions.length > 0}
+			<span class="heading">
+				<Text path={(l) => l.widget.volunteerPicker.suggestions} inputs={{ role }} />
+			</span>
+			<ul>
+				{#each suggestions as volunteer (volunteer.id)}
+					{@render line(volunteer)}
+				{/each}
+			</ul>
+		{:else}
+			<span class="heading">
+				<Text path={(l) => l.widget.volunteerPicker.noSuggestions} inputs={{ role }} />
+			</span>
 		{/if}
-		<TextField
-			stretch
-			bind:text={query}
-			testid="{testid}-search"
-			strings={(l) => ({
-				...l.widget.volunteerPicker.search,
-				label: (l.widget.volunteerPicker.search.label ?? '')
-					.replaceAll('{role}', role)
-					.replaceAll('{count}', candidates.length.toString())
-			})}
-		/>
-		{#if query.trim() !== ''}
-			{#if results.length === 0}
-				<Feedback
-					testid="{testid}-no-results"
-					text={(l) => l.widget.volunteerPicker.noResults}
-					inputs={{ role, query: query.trim() }}
-				/>
-			{:else}
-				<ul>
-					{#each results.slice(0, SHOWN) as volunteer (volunteer.id)}
-						{@render option(volunteer)}
-					{/each}
-				</ul>
-				{#if results.length > SHOWN}
-					<span class="details">
-						<Text
-							path={(l) => l.widget.volunteerPicker.more}
-							inputs={{ shown: SHOWN.toString(), count: results.length.toString() }}
-						/>
-					</span>
+		{#if searching}
+			<TextField
+				stretch
+				bind:text={query}
+				bind:view={field}
+				testid="{testid}-search"
+				strings={(l) => ({
+					...l.widget.volunteerPicker.search,
+					label: (l.widget.volunteerPicker.search.label ?? '')
+						.replaceAll('{role}', role)
+						.replaceAll('{count}', candidates.length.toString())
+				})}
+			/>
+			{#if query.trim() !== ''}
+				{#if results.length === 0}
+					<Feedback
+						testid="{testid}-no-results"
+						text={(l) => l.widget.volunteerPicker.noResults}
+						inputs={{ role, query: query.trim() }}
+					/>
+				{:else}
+					<ul>
+						{#each results.slice(0, SHOWN) as volunteer (volunteer.id)}
+							{@render line(volunteer)}
+						{/each}
+					</ul>
+					{#if results.length > SHOWN}
+						<span class="heading">
+							<Text
+								path={(l) => l.widget.volunteerPicker.more}
+								inputs={{ shown: SHOWN.toString(), count: results.length.toString() }}
+							/>
+						</span>
+					{/if}
 				{/if}
 			{/if}
+		{:else}
+			<span class="open">
+				<Button
+					small
+					background={false}
+					testid="{testid}-search-open"
+					strings={(l) => ({
+						label: l.widget.volunteerPicker.openSearch.label.replaceAll('{role}', role),
+						tip: l.widget.volunteerPicker.openSearch.tip
+							.replaceAll('{role}', role)
+							.replaceAll('{count}', candidates.length.toString())
+					})}
+					action={openSearch}
+				/>
+			</span>
 		{/if}
 	{/if}
 </div>
@@ -188,19 +246,50 @@
 		display: flex;
 		gap: var(--spacing-half);
 		align-items: baseline;
+		padding: calc(var(--spacing-half) / 2) 0;
+		min-width: 0;
+	}
+
+	.option.tied {
 		padding: var(--spacing-half) 0;
 		border-top: var(--border-width) solid var(--border-color);
+	}
+
+	/* Links wrap by default (app.html), and a name broken across two lines reads as
+	   two people; the email beside it gives way instead. */
+	.name,
+	.name :global(a) {
+		white-space: nowrap;
+	}
+
+	.option .name {
+		flex: none;
+	}
+
+	/* Truncated rather than wrapped, so a near miss stays one line however long the
+	   address: the line is for recognizing someone, and the chosen card shows it all. */
+	.email {
+		font-size: var(--extra-small-font-size);
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.who {
 		display: flex;
 		flex-direction: column;
+		min-width: 0;
+	}
+
+	.open {
+		align-self: flex-start;
 	}
 
 	.chosen {
 		display: flex;
 		gap: var(--spacing-half);
-		align-items: baseline;
+		align-items: flex-start;
 		justify-content: space-between;
 		padding: var(--spacing-half);
 		border: var(--border-width) solid var(--salient-color);
@@ -208,12 +297,17 @@
 		background: var(--salient-color-faded);
 	}
 
-	/* The email, iD and affiliation are what tell two people with one name apart, so
-	   they are always visible, just quieter than the name. */
+	/* The email, iD and affiliation are what tell two people with one name apart. Each
+	   wraps to its own line as a whole, never mid-iD, which reads as two numbers. */
 	.details {
 		display: flex;
 		flex-wrap: wrap;
 		column-gap: var(--spacing-half);
 		font-size: var(--extra-small-font-size);
+	}
+
+	.detail {
+		flex: none;
+		max-width: 100%;
 	}
 </style>

@@ -92,9 +92,13 @@
 			}
 		},
 		"volunteerPicker": {
-			"suggestions": "Closest names among {role} volunteers",
+			"suggestions": "Close matches among {role} volunteers",
 			"ambiguous": "“{name}” could be any of these {role} volunteers",
 			"noSuggestions": "No {role} volunteer has a name close to this one.",
+			"openSearch": {
+				"tip": "Search all {count} {role} volunteers by name, email, or ORCID iD",
+				"label": "Search {role} volunteers"
+			},
 			"search": {
 				"label": "Search {role} volunteers ({count})",
 				"placeholder": "name, email, or ORCID iD"
