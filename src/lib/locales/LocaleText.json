@@ -4367,7 +4367,7 @@
                       "type": "string"
                     },
                     "compensationOnly": {
-                      "description": "Under the buttons of any row with an Assign button: the compensation-only reminder, in brief.",
+                      "description": "Under the buttons of any row with an Assign button: assign in the venue's reviewing system first, and only once the scholar has agreed.",
                       "type": "string"
                     },
                     "declinedBy": {
@@ -7624,6 +7624,10 @@
             "tokens": {
               "additionalProperties": false,
               "properties": {
+                "balance": {
+                  "description": "Plain text after a token chip showing a scholar's current holdings, whose unit is then `single` (\"★ 25 token balance\"), so a bare count beside an Assign button doesn't read as what assigning pays (#217).",
+                  "type": "string"
+                },
                 "plural": {
                   "type": "string"
                 },
@@ -7633,7 +7637,8 @@
               },
               "required": [
                 "single",
-                "plural"
+                "plural",
+                "balance"
               ],
               "type": "object"
             },

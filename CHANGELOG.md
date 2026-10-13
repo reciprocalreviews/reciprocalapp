@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.5.18 - 2026-10-12
 
+### Changed
+
+- **The note under a submission's Assign buttons now says to assign in the reviewing system first, and only after the scholar has agreed.** Each candidate's token count now reads as their current balance ("25 token balance"), since editors were taking it for what assigning would pay (#217).
+
 ### Fixed
 
 - Updated internal backup tooling so that a brief registry rate limit no longer fails a scheduled backup.

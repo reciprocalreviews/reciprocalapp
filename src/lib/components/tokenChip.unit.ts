@@ -2,7 +2,7 @@ import { marked } from 'marked';
 import { describe, expect, test } from 'vitest';
 import tokenChip from './tokenChip';
 
-const TOKENS = { single: 'token', plural: 'tokens' };
+const TOKENS = { single: 'token', plural: 'tokens', balance: 'balance' };
 
 describe('tokenChip', () => {
 	test('renders the star, the amount, and the plural unit', () => {

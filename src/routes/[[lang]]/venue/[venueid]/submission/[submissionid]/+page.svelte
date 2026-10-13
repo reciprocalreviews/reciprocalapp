@@ -875,7 +875,8 @@
 							</div>
 						</td>
 						<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
-						{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} /></td>{/if}
+						{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} balance /></td
+							>{/if}
 						<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 						<td>
 							<Row>
@@ -951,7 +952,8 @@
 								</div>
 							</td>
 							<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
-							{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} /></td>{/if}
+							{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} balance /></td
+								>{/if}
 							<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 							<td>
 								<Row>
@@ -1060,7 +1062,8 @@
 								</div>
 							</td>
 							<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
-							{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} /></td>{/if}
+							{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} balance /></td
+								>{/if}
 							<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 							<td>
 								<Row>

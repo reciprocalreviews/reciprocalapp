@@ -125,8 +125,10 @@ test('approvers are reminded that assigning is only for compensation, linked to 
 		expect(assignCount).toBeGreaterThan(0);
 		await expect(page.getByTestId('assign-note')).toHaveCount(assignCount);
 		await expect(page.getByTestId('assign-note').first()).toHaveText(
-			'Compensation only. Also assign in your reviewing system.'
+			'Assign in the reviewing system first, and only after the scholar has agreed.'
 		);
+		// The count beside those buttons is what the scholar holds, not what assigning pays.
+		await expect(page.getByRole('cell', { name: /token balance$/ }).first()).toBeVisible();
 		await logout(page);
 
 		// The batch-assign form on the submissions list carries it too.
