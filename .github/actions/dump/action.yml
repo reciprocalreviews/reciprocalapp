@@ -79,6 +79,11 @@ runs:
         echo "recipients: $rec"
         echo "recipient=$rec" >> "$GITHUB_OUTPUT"
 
+    - name: Load the DR images
+      uses: ./.github/actions/dr-images
+      with:
+        pg-image: ${{ inputs.pg-image }}
+
     - name: Dump and encrypt
       shell: bash
       env:

@@ -220,9 +220,12 @@ The script has three safety behaviors worth knowing:
   directory**, so plaintext copies of everyone's data are never left behind. The
   CI action independently re-checks that nothing unencrypted is about to be
   uploaded.
-- It **pulls its container images with up to five retries and backoff**, because
-  ECR Public throttles anonymous pulls per IP and GitHub runners share IPs. An
-  image already present locally is used without touching the registry.
+- It **pulls its container images with up to five retries and backoff, trying
+  ECR Public, Google's Docker Hub mirror (`mirror.gcr.io`), and Docker Hub in
+  turn**, because every registry throttles anonymous pulls per IP and GitHub
+  runners share IPs. An image already present locally is used without touching
+  any registry. In CI, the `dr-images` action loads both images from the Actions
+  cache first, so a registry is normally contacted only about once a week.
 
 ### Verifying a backup by hand
 
