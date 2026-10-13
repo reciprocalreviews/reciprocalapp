@@ -10,7 +10,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Fixed
 
-- Updated internal backup tooling so that a brief registry rate limit no longer fails a scheduled backup.
+- Updated internal backup tooling so that a container registry's rate or data limits no longer fail a scheduled backup.
 
 ## 0.5.17 - 2026-10-12
 

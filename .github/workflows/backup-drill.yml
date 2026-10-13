@@ -130,6 +130,9 @@ jobs:
             -c "grant usage on schema public to anon, authenticated, service_role;" \
             -c "truncate auth.users cascade;"
 
+      - name: Load the DR images
+        uses: ./.github/actions/dr-images
+
       - name: Drill
         env:
           BACKUP_DIR: backup
