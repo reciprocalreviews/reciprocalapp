@@ -150,6 +150,10 @@ export type LocaleText = {
 		tokens: {
 			single: string;
 			plural: string;
+			/** Plain text after a token chip showing a scholar's current holdings, whose unit
+			 * is then `single` ("★ 25 token balance"), so a bare count beside an Assign
+			 * button doesn't read as what assigning pays (#217). */
+			balance: string;
 		};
 		subheader: {
 			link: string;
@@ -760,8 +764,8 @@ export type LocaleText = {
 				you: string;
 				/** Precedes the approver who declined a bid, in the declined bid's row. */
 				declinedBy: string;
-				/** Under the buttons of any row with an Assign button: the compensation-only
-				 * reminder, in brief. */
+				/** Under the buttons of any row with an Assign button: assign in the venue's
+				 * reviewing system first, and only once the scholar has agreed. */
 				compensationOnly: string;
 				/** Under an accepted assignee's name, for approvers, when the scholar has no
 				 * verified contact address to show there. */
