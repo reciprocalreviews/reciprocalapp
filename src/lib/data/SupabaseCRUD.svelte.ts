@@ -2696,7 +2696,24 @@ export default class SupabaseCRUD extends CRUD {
 		const recipients = stringArrayField(data, 'recipients');
 		const title = stringField(data, 'title');
 		const role = stringField(data, 'role');
-		if (submission === null || recipients === null || title === null || role === null)
+		// Which tier of recipients the RPC chose, so the email can say whether the request is
+		// theirs to handle or only fell to them because no one closer to it was seated.
+		const tier = stringField(data, 'tier');
+		const template =
+			tier === 'approver'
+				? 'CompensationRequested'
+				: tier === 'editors'
+					? 'CompensationRequestedToEditors'
+					: tier === 'admins'
+						? 'CompensationRequestedToAdmins'
+						: null;
+		if (
+			submission === null ||
+			recipients === null ||
+			title === null ||
+			role === null ||
+			template === null
+		)
 			return this.error('CompensationAssignmentCheck');
 
 		// No one to notify is possible when the requester is the venue's only admin.
@@ -2705,7 +2722,7 @@ export default class SupabaseCRUD extends CRUD {
 
 		return this.emailScholars(
 			recipients,
-			'CompensationRequested',
+			template,
 			[
 				await this.venuePathOf(venueID),
 				submission,
@@ -2713,7 +2730,10 @@ export default class SupabaseCRUD extends CRUD {
 				// Null for a scholar who has not given a name yet.
 				stringField(data, 'requester')?.trim() || 'A scholar',
 				role,
-				title
+				title,
+				// Null when the role has no approving role, which only the fallback tiers see,
+				// and their templates do not mention it.
+				stringField(data, 'approver_role') ?? ''
 			],
 			venueID
 		);

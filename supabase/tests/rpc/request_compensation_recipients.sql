@@ -12,7 +12,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(14);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -34,6 +34,7 @@ select tests.create_role(:'ven', 1, :'editor_role', false, false) as lead_role \
 select tests.create_role(:'ven', 2, :'lead_role', false, false) as review_role \gset
 select tests.create_role(:'ven', 3, null, false, false) as open_role \gset
 update public.roles set name = 'Reviewer' where id = :'review_role';
+update public.roles set name = 'Lead' where id = :'lead_role';
 
 select tests.create_volunteer(:'reviewer', :'review_role', 'accepted') as v_reviewer \gset
 select tests.create_volunteer(:'reviewer', :'open_role', 'accepted') as v_open \gset
@@ -118,6 +119,32 @@ select is(
 	public.request_compensation(:'ven', :'sub_full'::text, :'open_role') -> 'recipients',
 	jsonb_build_array(:'editor'),
 	'a role with no approver configured goes to the submission''s editor'
+);
+
+-- ---- Which tier answered, so the email can say why it reached them --------------
+-- Each call repeats one above; a request that already stands is only stamped again.
+select is(
+	jsonb_build_array(:'full_result'::jsonb ->> 'tier', :'full_result'::jsonb ->> 'approver_role'),
+	jsonb_build_array('approver', 'Lead'),
+	'the approver tier is reported, with the approving role''s name'
+);
+
+select is(
+	public.request_compensation(:'ven', :'sub_editor'::text, :'review_role') ->> 'tier',
+	'editors',
+	'a request that fell to the editor says so'
+);
+
+select is(
+	public.request_compensation(:'ven', :'sub_empty'::text, :'review_role') ->> 'tier',
+	'admins',
+	'a request that fell to the admins says so'
+);
+
+select is(
+	public.request_compensation(:'ven', :'sub_full'::text, :'open_role') -> 'approver_role',
+	'null'::jsonb,
+	'a role with no approver configured has no approving role to name'
 );
 
 -- ---- The requester is never told -----------------------------------------------

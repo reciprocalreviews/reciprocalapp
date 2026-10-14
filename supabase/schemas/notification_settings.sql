@@ -318,6 +318,14 @@ values
 	('CompensationChanged', 'CompensationChanged'),
 	('CompensationPending', 'CompensationRequested'),
 	('CompensationRequested', 'CompensationRequested'),
+	(
+		'CompensationRequestedToAdmins',
+		'CompensationRequested'
+	),
+	(
+		'CompensationRequestedToEditors',
+		'CompensationRequested'
+	),
 	('ConflictDeclared', 'ConflictDeclared'),
 	('InviteAccepted', 'InviteAccepted'),
 	('InviteDeclined', 'InviteAccepted'),
@@ -358,6 +366,8 @@ where
 		'CompensationChanged',
 		'CompensationPending',
 		'CompensationRequested',
+		'CompensationRequestedToAdmins',
+		'CompensationRequestedToEditors',
 		'ConflictDeclared',
 		'InviteAccepted',
 		'InviteDeclined',

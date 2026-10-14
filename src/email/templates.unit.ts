@@ -213,7 +213,8 @@ describe('CompensationRequested', () => {
 		note,
 		'Grace Hopper',
 		'Reviewer',
-		'On Compilers'
+		'On Compilers',
+		'Associate Editor'
 	];
 
 	it('names who asked, for which role, on which submission', () => {
@@ -248,6 +249,92 @@ describe('CompensationRequested', () => {
 		const { subject, message } = renderEmail('CompensationRequested', args('A note.'));
 		expect(subject).not.toMatch(/\$\d/);
 		expect(message).not.toMatch(/\$\d/);
+	});
+});
+
+// A request goes to the role's seated approver, failing them to the submission's editors,
+// and failing them to the venue's admins. Each tier is told which it is, so an editor can
+// tell a request that is theirs from one that only fell to them.
+describe('CompensationRequested tiers', () => {
+	const args = [
+		'toce',
+		'submission-id',
+		'',
+		'Grace Hopper',
+		'Reviewer',
+		'On Compilers',
+		'Associate Editor'
+	];
+
+	it('tells the approver it is theirs to handle', () => {
+		const { message } = renderEmail('CompensationRequested', args);
+		expect(message).toContain(
+			"You're receiving this as the submission's Associate Editor, the role that approves Reviewer work."
+		);
+	});
+
+	it('tells an editor it fell to them', () => {
+		const { subject, message } = renderEmail('CompensationRequestedToEditors', args);
+		expect(subject).toBe('Grace Hopper requested compensation for "On Compilers"');
+		expect(message).toContain("as one of the submission's editors");
+		expect(message).toContain('no one assigned to it holds the role that approves Reviewer work');
+		expect(message).toContain('mark the work complete');
+	});
+
+	it('tells an admin it fell to them', () => {
+		const { message } = renderEmail('CompensationRequestedToAdmins', args);
+		expect(message).toContain("as one of the venue's admins");
+		expect(message).toContain('it has no editor');
+	});
+
+	it('works for a role with no approving role at all', () => {
+		const noApprover = [...args.slice(0, 6), ''];
+		for (const template of [
+			'CompensationRequestedToEditors',
+			'CompensationRequestedToAdmins'
+		] as const) {
+			const { subject, message } = renderEmail(template, noApprover);
+			expect(subject).not.toMatch(/\$\d/);
+			expect(message).not.toMatch(/\$\d/);
+		}
+	});
+});
+
+describe('CompensationPending', () => {
+	const args = (approver: string, editors: string, admins: string) => [
+		approver,
+		'Transactions on Knowledge',
+		'knowledge',
+		editors,
+		admins
+	];
+
+	it('counts only the requests awaiting the recipient as approver', () => {
+		const { message } = renderEmail('CompensationPending', args('2', '', ''));
+		expect(message).toContain('2 submission(s) at Transactions on Knowledge have completed work');
+		expect(message).not.toContain('fell to you');
+	});
+
+	it('says when requests fell to the recipient as an editor', () => {
+		const { message } = renderEmail('CompensationPending', args('', '3', ''));
+		expect(message).not.toContain('awaiting your approval');
+		expect(message).toContain(
+			'3 submission(s) at Transactions on Knowledge have compensation requests that fell to you as an editor'
+		);
+	});
+
+	it('says when requests fell to the recipient as an admin', () => {
+		const { message } = renderEmail('CompensationPending', args('', '', '1'));
+		expect(message).toContain("fell to you as one of the venue's admins");
+	});
+
+	it('counts each tier in one email', () => {
+		const { subject, message } = renderEmail('CompensationPending', args('1', '2', '3'));
+		expect(subject).not.toMatch(/\$\d/);
+		expect(message).not.toMatch(/\$\d/);
+		expect(message).toContain('1 submission(s)');
+		expect(message).toContain('2 submission(s)');
+		expect(message).toContain('3 submission(s)');
 	});
 });
 
