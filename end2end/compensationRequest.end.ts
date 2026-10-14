@@ -67,7 +67,7 @@ test('a request reports who was told, not a second generic confirmation', async 
 		// The email says who asked, for what, and on which submission, and carries the note.
 		expect(
 			sql(
-				`select scholar || '|' || (args->>2) || '|' || (args->>3) || '|' || (args->>4) || '|' || (args->>5) from public.emails where event = 'CompensationRequested';`
+				`select scholar || '|' || (args->>2) || '|' || (args->>3) || '|' || (args->>4) || '|' || (args->>5) || '|' || (args->>6) from public.emails where event = 'CompensationRequested';`
 			)
 		).toBe(
 			[
@@ -75,7 +75,8 @@ test('a request reports who was told, not a second generic confirmation', async 
 				'I reviewed this in March.',
 				VOLUNTEER.name,
 				'Reviewer',
-				SEED.submissions.tok001.title
+				SEED.submissions.tok001.title,
+				'Associate Editor'
 			].join('|')
 		);
 	} finally {
@@ -139,13 +140,14 @@ test('a reviewer claims work on a submission nobody seated them on, and an admin
 		await expect.poll(claimState).toBe('false|');
 		await logout(page);
 
-		// With nobody seated on the paper, the request falls back to the venue's admin. It
-		// was filed without a note, so the email has none to quote.
+		// With nobody seated on the paper, the request falls back to the venue's admin, in
+		// the template that tells them it fell to them. It was filed without a note, so the
+		// email has none to quote.
 		expect(
 			sql(
-				`select scholar || '|' || (args->>2) from public.emails where event = 'CompensationRequested' and args->>1 = '${submission}';`
+				`select event || '|' || scholar || '|' || (args->>2) from public.emails where event like 'CompensationRequested%' and args->>1 = '${submission}';`
 			)
-		).toBe(`${SEED.scholars.editor.id}|`);
+		).toBe(`CompensationRequestedToAdmins|${SEED.scholars.editor.id}|`);
 
 		// The venue's admin is the only approver while nobody edits the paper.
 		await login(SEED.scholars.editor.email, page, context);
@@ -168,7 +170,7 @@ test('a reviewer claims work on a submission nobody seated them on, and an admin
 	} finally {
 		sql(`delete from public.submissions where id = '${submission}';`);
 		sql(
-			`delete from public.emails where event in ('CompensationRequested', 'ClaimDeclined') and args->>1 = '${submission}' or (event = 'ClaimDeclined' and scholar = '${VOLUNTEER.id}');`
+			`delete from public.emails where event in ('CompensationRequested', 'CompensationRequestedToAdmins', 'ClaimDeclined') and args->>1 = '${submission}' or (event = 'ClaimDeclined' and scholar = '${VOLUNTEER.id}');`
 		);
 	}
 	await logout(page);

@@ -89,6 +89,21 @@ export const NotificationSectionKeys = ['tokens', 'reviewing', 'venues', 'commun
 
 export type NotificationSection = (typeof NotificationSectionKeys)[number];
 
+/**
+ * The body of a compensation request, with a paragraph saying why it reached this recipient.
+ * The three tiers request_compensation can choose share everything else, so it lives here
+ * once rather than drifting across three templates.
+ */
+function compensationRequestParagraphs(why: string): string[] {
+	return [
+		'$4 requested compensation for their work as $5 on "$6".',
+		'Their note: "$3"',
+		"If this is a valid request, approve the assignment, evaluate their work, and if it meets your venue's standards, mark the work complete so they are compensated.",
+		why,
+		'<rr-button href="{origin}/venue/$1/submission/$2">Open the submission</rr-button>'
+	];
+}
+
 export const Emails = {
 	VenueApproved: {
 		subject: 'Your venue has been approved',
@@ -237,22 +252,40 @@ export const Emails = {
 		section: 'venues'
 	},
 	// $1 is the venue's path, $2 the submission's id, $3 the requester's note (optional),
-	// $4 the requester's name, $5 the role, $6 the submission's title. The note comes third
-	// because it always has; the rest were added after it.
+	// $4 the requester's name, $5 the role, $6 the submission's title, $7 the name of the role
+	// that approves it. The note comes third because it always has; the rest were added after
+	// it. Sent to whoever is seated in that approving role on the submission, as a new bid is.
+	// When nobody is, request_compensation falls back to the submission's editors and then
+	// the venue's admins, and those tiers get the siblings below, which say so: an editor
+	// should be able to tell a request that is theirs from one that only fell to them.
 	CompensationRequested: {
 		subject: '$4 requested compensation for "$6"',
-		paragraphs: [
-			'$4 requested compensation for their work as $5 on "$6".',
-			'Their note: "$3"',
-			"If this is a valid request, approve the assignment, evaluate their work, and if it meets your venue's standards, mark the work complete so they are compensated.",
-			'<rr-button href="{origin}/venue/$1/submission/$2">Open the submission</rr-button>'
-		],
+		paragraphs: compensationRequestParagraphs(
+			"You're receiving this as the submission's $7, the role that approves $5 work."
+		),
 		omitWhenBlank: [3],
-		// Sent to whoever approves the role on the submission, as a new bid is, and only
-		// failing them to its editors and then the venue's admins (request_compensation).
-		// Optional all the same: the weekly CompensationPending reminder defers to it.
+		// Optional all the same: the weekly CompensationPending reminder and the fallback
+		// tiers' templates defer to it.
 		optional: true,
 		section: 'venues'
+	},
+	// Same arguments as CompensationRequested.
+	CompensationRequestedToEditors: {
+		subject: '$4 requested compensation for "$6"',
+		paragraphs: compensationRequestParagraphs(
+			"You're receiving this as one of the submission's editors, because no one assigned to it holds the role that approves $5 work. To hand requests like this to someone else, assign them to that role on the submission."
+		),
+		omitWhenBlank: [3],
+		silencedBy: 'CompensationRequested'
+	},
+	// Same arguments as CompensationRequested.
+	CompensationRequestedToAdmins: {
+		subject: '$4 requested compensation for "$6"',
+		paragraphs: compensationRequestParagraphs(
+			"You're receiving this as one of the venue's admins, because no one assigned to the submission holds the role that approves $5 work, and it has no editor."
+		),
+		omitWhenBlank: [3],
+		silencedBy: 'CompensationRequested'
 	},
 	SubmissionCharged: {
 		subject: 'A submission charge awaits your approval',
@@ -844,13 +877,19 @@ export const Emails = {
 		// told they owe money, and this is the reminder that exists precisely because the
 		// first notice can be missed.
 	},
-	// $1 is a count, $2 the venue's title, $3 its path.
+	// $2 is the venue's title, $3 its path. $1, $4 and $5 count submissions with pending
+	// requests by the tier that put them in front of this recipient, as request_compensation
+	// chooses it: their own approving role, its editors for want of an approver, and its admins
+	// for want of either. A count of zero is passed blank, and its paragraph is left out.
 	CompensationPending: {
 		subject: 'Compensation requests await your approval',
 		paragraphs: [
 			'$1 submission(s) at $2 have completed work whose compensation is awaiting your approval.',
+			"$4 submission(s) at $2 have compensation requests that fell to you as an editor, because no one assigned to them holds the role that approves the requester's work.",
+			"$5 submission(s) at $2 have compensation requests that fell to you as one of the venue's admins, because no one assigned to them holds the role that approves the requester's work, and they have no editor.",
 			'<rr-button href="{origin}/venue/$3/submissions">See the submissions</rr-button>'
 		],
+		omitWhenBlank: [1, 4, 5],
 		// The same news as CompensationRequested, arriving later. One control governs both.
 		silencedBy: 'CompensationRequested'
 	},

@@ -1182,6 +1182,8 @@ declare
 	_title text;
 	_role_name text;
 	_requester text;
+	_tier text;
+	_approver_role text;
 begin
 	_caller := (select auth.uid());
 	if _caller is null then
@@ -1248,7 +1250,10 @@ begin
 		values (_venue, _submission, _caller, _role, false, false, now());
 	end if;
 
-	-- The scholar seated in the role's approving role on this submission.
+	-- The scholar seated in the role's approving role on this submission. Which of the three
+	-- tiers answered is returned too, so the email can say whether the request is the
+	-- recipient's to handle or only fell to them because nobody closer to it was seated.
+	_tier := 'approver';
 	select coalesce(array_agg(distinct a.scholar), array[]::uuid[]) into _recipients
 	from public.assignments a
 	join public.roles target on target.id = _role
@@ -1261,6 +1266,7 @@ begin
 
 	-- Failing that, the submission's editors.
 	if cardinality(_recipients) = 0 then
+		_tier := 'editors';
 		select coalesce(array_agg(distinct a.scholar), array[]::uuid[]) into _recipients
 		from public.assignments a
 		join public.roles r on r.id = a.role
@@ -1274,6 +1280,7 @@ begin
 
 	-- Failing that, the venue's admins.
 	if cardinality(_recipients) = 0 then
+		_tier := 'admins';
 		select coalesce(array_agg(distinct x.scholar), array[]::uuid[]) into _recipients
 		from (
 			select unnest(v.admins) as scholar
@@ -1290,13 +1297,19 @@ begin
 	select s.title into _title from public.submissions s where s.id = _submission;
 	select r.name into _role_name from public.roles r where r.id = _role;
 	select sc.name into _requester from public.scholars sc where sc.id = _caller;
+	select ar.name into _approver_role
+	from public.roles r
+	join public.roles ar on ar.id = r.approver
+	where r.id = _role;
 
 	return jsonb_build_object(
 		'submission', _submission,
 		'recipients', to_jsonb(_recipients),
 		'title', _title,
 		'role', _role_name,
-		'requester', _requester
+		'requester', _requester,
+		'tier', _tier,
+		'approver_role', _approver_role
 	);
 end;
 $$;

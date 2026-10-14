@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.19 - 2026-10-13
+
+### Changed
+
+- **Compensation request emails and their weekly reminders now say why they reached you.** Each one says whether you hold the role that approves the work, or whether it fell to you as an editor or admin because no one in that role is assigned to the submission.
+
 ## 0.5.18 - 2026-10-12
 
 ### Changed

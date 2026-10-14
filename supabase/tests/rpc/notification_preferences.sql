@@ -23,7 +23,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan (18);
+select plan (20);
 
 alter table public.emails disable trigger send_on_email_insert;
 
@@ -182,6 +182,20 @@ select is (
 	(select preference from public.optional_emails where event = 'CompensationPending'),
 	'CompensationRequested',
 	'18. the compensation reminder is governed by the compensation preference'
+);
+
+-- So do the requests that fell to a submission's editors or a venue's admins: they are the
+-- same request, told to whoever it fell to.
+select is (
+	(select preference from public.optional_emails where event = 'CompensationRequestedToEditors'),
+	'CompensationRequested',
+	'19. a request that fell to the editors is governed by the compensation preference'
+);
+
+select is (
+	(select preference from public.optional_emails where event = 'CompensationRequestedToAdmins'),
+	'CompensationRequested',
+	'20. a request that fell to the admins is governed by the compensation preference'
 );
 
 select * from finish ();

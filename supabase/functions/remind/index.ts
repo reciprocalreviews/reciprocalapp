@@ -280,30 +280,70 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 		if (conflicts === null) console.error('Error fetching conflicts for reminders', conflictsError);
 		const conflicted = new Set((conflicts ?? []).map((c) => `${c.submissionid}|${c.scholarid}`));
 
-		const approversOf = (assignment: (typeof assignments)[number]): string[] => {
+		// Which tier answered is kept, so the reminder can say which requests are the
+		// recipient's to handle and which only fell to them for want of anyone closer.
+		type Tier = 'approver' | 'editors' | 'admins';
+		const approversOf = (
+			assignment: (typeof assignments)[number]
+		): { tier: Tier; recipients: string[] } | null => {
 			const eligible = (scholar: string) =>
 				scholar !== assignment.scholar && !conflicted.has(`${assignment.submission}|${scholar}`);
 			const seated = approvedBySubmission.get(assignment.submission) ?? [];
 			const approver = assignment.roles?.approver ?? null;
-			const tiers = [
-				seated
-					.filter((other) => approver !== null && other.role === approver)
-					.map((o) => o.scholar),
-				seated.filter((other) => other.roles?.priority === 0).map((o) => o.scholar),
-				venueById.get(assignment.venue)?.admins ?? []
+			const tiers: [Tier, string[]][] = [
+				[
+					'approver',
+					seated
+						.filter((other) => approver !== null && other.role === approver)
+						.map((o) => o.scholar)
+				],
+				['editors', seated.filter((other) => other.roles?.priority === 0).map((o) => o.scholar)],
+				['admins', venueById.get(assignment.venue)?.admins ?? []]
 			];
-			for (const tier of tiers) {
-				const recipients = [...new Set(tier.filter(eligible))];
-				if (recipients.length > 0) return recipients;
+			for (const [tier, scholars] of tiers) {
+				const recipients = [...new Set(scholars.filter(eligible))];
+				if (recipients.length > 0) return { tier, recipients };
 			}
-			return [];
+			return null;
 		};
 
-		const compensation: ByScholarVenue = new Map();
-		for (const assignment of pendingCompensation)
-			for (const approver of approversOf(assignment))
-				note(compensation, approver, assignment.venue, assignment.submission);
-		emit(compensation, 'CompensationPending');
+		const compensation: Record<Tier, ByScholarVenue> = {
+			approver: new Map(),
+			editors: new Map(),
+			admins: new Map()
+		};
+		for (const assignment of pendingCompensation) {
+			const chosen = approversOf(assignment);
+			if (chosen === null) continue;
+			for (const approver of chosen.recipients)
+				note(compensation[chosen.tier], approver, assignment.venue, assignment.submission);
+		}
+
+		// One reminder per scholar per venue, counting each tier separately. A submission
+		// counts once per tier it reached this scholar through; a count of zero is blank, so
+		// the template leaves its paragraph out.
+		const countOf = (tier: Tier, scholar: string, venue: string) =>
+			compensation[tier].get(scholar)?.get(venue)?.size ?? 0;
+		const blankIfZero = (count: number) => (count === 0 ? '' : count.toString());
+		const compensationRecipients = new Set<string>();
+		for (const index of Object.values(compensation))
+			for (const [scholar, venues] of index)
+				for (const venue of venues.keys()) compensationRecipients.add(`${scholar}|${venue}`);
+		for (const key of compensationRecipients) {
+			const [scholar, venue] = key.split('|');
+			reminders.push({
+				scholar,
+				event: 'CompensationPending',
+				args: [
+					blankIfZero(countOf('approver', scholar, venue)),
+					venueTitleOf(venue),
+					venuePathOf(venue),
+					blankIfZero(countOf('editors', scholar, venue)),
+					blankIfZero(countOf('admins', scholar, venue))
+				],
+				venue
+			});
+		}
 
 		// ---- Family 4: submissions ready to be marked done → priority-0 editors -
 		// "Ready" = still reviewing, at least one compensated non-editor
