@@ -107,7 +107,7 @@ function volunteer(
 	email: string | null = null,
 	orcid: string | null = null
 ): Volunteer {
-	return { id, name, email, orcid, affiliation: null };
+	return { id, name, email, orcid, profile: null };
 }
 
 describe('suggestCandidates', () => {

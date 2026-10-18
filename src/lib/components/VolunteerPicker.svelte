@@ -9,8 +9,8 @@
 	import { tick } from 'svelte';
 	import Button from './Button.svelte';
 	import Feedback from './Feedback.svelte';
-	import ORCIDiD from './ORCIDiD.svelte';
 	import ScholarLink from './ScholarLink.svelte';
+	import ScholarPreview from './ScholarPreview.svelte';
 	import TextField from './TextField.svelte';
 
 	/** Choosing which of a role's volunteers a written name means. The volunteers are a
@@ -21,8 +21,8 @@
 	 * once per cell of an import — so it stays short. Names that tie are offered with
 	 * everything that tells them apart; near misses get one line each, and only when
 	 * they are within a couple of typos; anyone else is behind a search that stays
-	 * closed until asked for. The person chosen gets their full email, ORCID iD and
-	 * affiliation, and every name links to a profile that opens in a new tab, so
+	 * closed until asked for. The person chosen gets the same ScholarPreview as every
+	 * other display, and every name links to a profile that opens in a new tab, so
 	 * checking who someone is never loses the choice in progress. */
 	let {
 		name,
@@ -82,16 +82,16 @@
 	}
 </script>
 
-{#snippet details(volunteer: Volunteer)}
-	<span class="details">
-		{#if volunteer.email}<span class="detail">{volunteer.email}</span>{/if}
-		<span class="detail">
-			{#if volunteer.orcid}<ORCIDiD id={volunteer.orcid} />{:else}<Text
-					path={(l) => l.widget.volunteerPicker.noORCID}
-				/>{/if}
-		</span>
-		{#if volunteer.affiliation}<span class="detail">{volunteer.affiliation}</span>{/if}
-	</span>
+<!-- Everything that tells two people with one name apart, for the tied and the chosen. -->
+{#snippet preview(volunteer: Volunteer)}
+	<ScholarPreview
+		scholar={volunteer}
+		email={volunteer.email}
+		orcid={volunteer.orcid}
+		profile={volunteer.profile}
+		size="small"
+		newTab
+	/>
 {/snippet}
 
 {#snippet chooseButton(volunteer: Volunteer)}
@@ -121,10 +121,7 @@
 <div class="picker" data-testid={testid}>
 	{#if chosenVolunteer !== undefined}
 		<div class="chosen" data-testid="{testid}-chosen">
-			<span class="who">
-				<span class="name"><ScholarLink id={chosenVolunteer} size="small" newTab /></span>
-				{@render details(chosenVolunteer)}
-			</span>
+			{@render preview(chosenVolunteer)}
 			{#if clear !== undefined}
 				<Button
 					small
@@ -147,10 +144,7 @@
 				{#each tied as volunteer (volunteer.id)}
 					<li class="option tied">
 						{@render chooseButton(volunteer)}
-						<span class="who">
-							<span class="name"><ScholarLink id={volunteer} size="small" newTab /></span>
-							{@render details(volunteer)}
-						</span>
+						{@render preview(volunteer)}
 					</li>
 				{/each}
 			</ul>
@@ -256,7 +250,8 @@
 	}
 
 	/* Links wrap by default (app.html), and a name broken across two lines reads as
-	   two people; the email beside it gives way instead. */
+	   two people; the email beside it gives way instead. ScholarPreview does the same
+	   for the tied and the chosen. */
 	.name,
 	.name :global(a) {
 		white-space: nowrap;
@@ -276,38 +271,16 @@
 		white-space: nowrap;
 	}
 
-	.who {
-		display: flex;
-		flex-direction: column;
-		min-width: 0;
-	}
-
 	.open {
 		align-self: flex-start;
 	}
 
+	/* The same plain preview as everywhere else; Change beside it is what says the name
+	   has been resolved, and that it can be undone. */
 	.chosen {
 		display: flex;
 		gap: var(--spacing-half);
 		align-items: flex-start;
 		justify-content: space-between;
-		padding: var(--spacing-half);
-		border: var(--border-width) solid var(--salient-color);
-		border-radius: var(--roundedness);
-		background: var(--salient-color-faded);
-	}
-
-	/* The email, iD and affiliation are what tell two people with one name apart. Each
-	   wraps to its own line as a whole, never mid-iD, which reads as two numbers. */
-	.details {
-		display: flex;
-		flex-wrap: wrap;
-		column-gap: var(--spacing-half);
-		font-size: var(--extra-small-font-size);
-	}
-
-	.detail {
-		flex: none;
-		max-width: 100%;
 	}
 </style>

@@ -5,7 +5,7 @@
 	import Page from '#lib/components/Page.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
 	import Row from '#lib/components/Row.svelte';
-	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import ScholarPreview from '#lib/components/ScholarPreview.svelte';
 	import Status from '#lib/components/Status.svelte';
 	import Table from '#lib/components/Table.svelte';
 	import Tag from '#lib/components/Tag.svelte';
@@ -274,15 +274,18 @@
 									/></td
 								>
 								<td
-									><ScholarLink id={volunteer.scholarid} />
-									<!-- For those who assign others, so they can reach a volunteer who has
-									     not bid on anything. -->
-									{#if canContact && volunteer.scholars.email}<span
-											class="volunteer-email"
-											data-testid="volunteer-email"
-											><a href="mailto:{volunteer.scholars.email}">{volunteer.scholars.email}</a
-											></span
-										>{/if}</td
+									><!-- The address for those who assign others, so they can reach a
+									     volunteer who has not bid on anything; the iD and ORCID line for
+									     everyone, as in the export. -->
+									<ScholarPreview
+										scholar={volunteer.scholars.name
+											? { id: volunteer.scholarid, name: volunteer.scholars.name }
+											: volunteer.scholarid}
+										email={canContact ? (volunteer.scholars.email ?? null) : undefined}
+										orcid={volunteer.scholars.orcid ?? null}
+										profile={volunteer.scholars.orcid_profiles}
+										testid="volunteer"
+									/></td
 								>
 								<td
 									><!-- The venue's own expertise, ALWAYS answered — an em-dash when the
@@ -329,12 +332,6 @@
 {/if}
 
 <style>
-	.volunteer-email {
-		display: block;
-		font-size: var(--small-font-size);
-		color: var(--inactive-color);
-	}
-
 	.expertise {
 		display: flex;
 		flex-direction: column;
