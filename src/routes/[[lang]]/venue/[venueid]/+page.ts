@@ -57,6 +57,15 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get all the venues one can gift to.
 	const { data: venues } = await db.getVenues();
 
+	// The viewer's own active assignments, so each role they volunteer for can show them
+	// the count editors see beside their cap.
+	const { data: myAssignments } =
+		scholar === null
+			? { data: null }
+			: await db.getScholarActiveAssignmentRoles(scholar.id, venueid);
+	const myActive: Record<string, number> = {};
+	for (const { role } of myAssignments ?? []) myActive[role] = (myActive[role] ?? 0) + 1;
+
 	// Get the venue's preference levels (may be empty if not configured).
 	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
@@ -72,6 +81,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		venues,
 		types,
 		compensation,
-		preferenceLevels
+		preferenceLevels,
+		myActive
 	};
 };

@@ -4315,6 +4315,10 @@
                       "$ref": "#/definitions/ConfirmButtonText",
                       "description": "Confirms the scholar agreed before seating them: approvers were assigning people who had not yet said yes."
                     },
+                    "createAssignmentOverCap": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "`createAssignment` when the scholar is at their papers cap: one confirmation asks both whether they agreed and whether to exceed it."
+                    },
                     "createAssignmentSelf": {
                       "$ref": "#/definitions/ButtonText",
                       "description": "`createAssignment` without the confirmation, for seating oneself."
@@ -4342,6 +4346,7 @@
                   "required": [
                     "createAssignment",
                     "createAssignmentSelf",
+                    "createAssignmentOverCap",
                     "unassign",
                     "complete",
                     "approve",
@@ -4860,6 +4865,10 @@
                       "$ref": "#/definitions/ConfirmButtonText",
                       "description": "Confirms the scholar agreed before seating them."
                     },
+                    "batchAssignOverCap": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "`batchAssign` when the scholar is at their papers cap."
+                    },
                     "batchAssignSelf": {
                       "$ref": "#/definitions/ButtonText",
                       "description": "`batchAssign` without the confirmation, for seating oneself."
@@ -4909,6 +4918,7 @@
                     "batchFind",
                     "batchAssign",
                     "batchAssignSelf",
+                    "batchAssignOverCap",
                     "sortPaymentFirst",
                     "sortPaymentLast",
                     "sortTitleAsc",
@@ -6340,6 +6350,10 @@
                     "active": {
                       "type": "string"
                     },
+                    "assigned": {
+                      "description": "Active assignments against the cap, shown to the venue's approvers.",
+                      "type": "string"
+                    },
                     "expertise": {
                       "type": "string"
                     },
@@ -6354,7 +6368,8 @@
                     "active",
                     "name",
                     "expertise",
-                    "papers"
+                    "papers",
+                    "assigned"
                   ],
                   "type": "object"
                 },
@@ -6666,6 +6681,55 @@
                 "slider",
                 "options",
                 "fieldset"
+              ],
+              "type": "object"
+            },
+            "load": {
+              "additionalProperties": false,
+              "description": "A scholar's active assignments, beside the papers cap they set, wherever an editor chooses whom to assign. Counts are true ones, not limited to what the viewer sees.",
+              "properties": {
+                "atCap": {
+                  "description": "At the cap, so another paper would exceed it. {used} and {cap}.",
+                  "type": "string"
+                },
+                "elsewhere": {
+                  "description": "Active assignments at other venues, editor seats excluded. {count}.",
+                  "type": "string"
+                },
+                "noCap": {
+                  "description": "No cap set. {used}.",
+                  "type": "string"
+                },
+                "notVolunteer": {
+                  "description": "Beside the assign controls when the scholar found has not volunteered for the role, so has set no cap for it.",
+                  "type": "string"
+                },
+                "otherRoles": {
+                  "description": "Active assignments in the venue's other roles. {count}.",
+                  "type": "string"
+                },
+                "overCap": {
+                  "description": "Past the cap already. {used} and {cap}.",
+                  "type": "string"
+                },
+                "underCap": {
+                  "description": "Under the cap. {used} and {cap}.",
+                  "type": "string"
+                },
+                "warning": {
+                  "description": "Beside the assign controls when the scholar found is at their cap. {used} and {cap}.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "underCap",
+                "atCap",
+                "overCap",
+                "noCap",
+                "otherRoles",
+                "elsewhere",
+                "warning",
+                "notVolunteer"
               ],
               "type": "object"
             },
@@ -7123,6 +7187,20 @@
                     "invited": {
                       "type": "string"
                     },
+                    "load": {
+                      "description": "A volunteer's own active assignments in the role, against their cap. {used} and {cap}. `loadAtCap` when they have reached it, shown as a warning like the one editors see, followed by `loadNote`; `loadNoCap`, with {used} only, when they set none.",
+                      "type": "string"
+                    },
+                    "loadAtCap": {
+                      "type": "string"
+                    },
+                    "loadNoCap": {
+                      "type": "string"
+                    },
+                    "loadNote": {
+                      "description": "Under the count: it is what editors see, and it only knows assignments recorded here, so invitations accepted in the venue's own reviewing system may be missing. Asks the volunteer to correct for that.",
+                      "type": "string"
+                    },
                     "roleInvited": {
                       "type": "string"
                     },
@@ -7152,7 +7230,11 @@
                     "invited",
                     "declined",
                     "volunteering",
-                    "stopped"
+                    "stopped",
+                    "load",
+                    "loadAtCap",
+                    "loadNoCap",
+                    "loadNote"
                   ],
                   "type": "object"
                 },
@@ -7547,6 +7629,7 @@
             }
           },
           "required": [
+            "load",
             "orcid",
             "expertise",
             "gift",

@@ -42,7 +42,8 @@
 		canInvite = undefined,
 		compensation,
 		types,
-		startCollapsed = false
+		startCollapsed = false,
+		myActive = undefined
 	}: {
 		venue: VenueRow;
 		scholar: ScholarID | undefined;
@@ -70,6 +71,9 @@
 		/** When true, per-role cards start collapsed regardless of viewer role.
 		 * Pending-invite cards still auto-expand so invitees see them. */
 		startCollapsed?: boolean;
+		/** The viewer's own active assignments per role, so a volunteer sees the count
+		 * editors see beside their cap. Omitted where no volunteer status is shown. */
+		myActive?: Record<RoleID, number> | undefined;
 	} = $props();
 
 	const db = getDB();
@@ -248,7 +252,12 @@
 				/>
 
 				{#if scholar}
-					<VolunteerStatus {role} {scholar} volunteer={scholarVolunteer} />
+					<VolunteerStatus
+						{role}
+						{scholar}
+						volunteer={scholarVolunteer}
+						active={myActive === undefined ? undefined : (myActive[role.id] ?? 0)}
+					/>
 				{:else if !role.invited}
 					<Feedback error inline text={(l) => l.view.roles.feedback.notInvited}></Feedback>
 				{/if}

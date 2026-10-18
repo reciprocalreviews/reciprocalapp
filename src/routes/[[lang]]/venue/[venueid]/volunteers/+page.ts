@@ -39,9 +39,18 @@ export const load: PageLoad = async ({ parent }) => {
 		scholar?.id ?? null
 	);
 
+	// How busy each volunteer already is, for those choosing whom to invite: this roster
+	// is where they scout. The same people as canContact, and the RPC answers no one else.
+	const { data: loads } = canContact
+		? await db.getAssignmentLoads(venueid, [
+				...new Set((commitments ?? []).map((c) => c.scholarid))
+			])
+		: { data: null };
+
 	return {
 		venue,
 		canContact,
+		loads: loads ?? [],
 		commitments,
 		roles,
 		volunteerCounts

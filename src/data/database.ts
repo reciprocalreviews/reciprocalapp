@@ -788,6 +788,11 @@ isOneToOne: false
 "approve_venue_proposal":
 { Args: { "_proposal_id": string }; Returns: Json
                            },
+"assignment_loads":
+{ Args: { "_scholars": (string)[],"_venue": string }; Returns: {
+              "count": number,"role": string,"scholar": string
+            }[]
+                           },
 "authors_can_cover":
 { Args: { "_amounts": (number)[],"_currency": string,"_scholars": (string)[] }; Returns: {
               "covered": boolean,"scholar": string

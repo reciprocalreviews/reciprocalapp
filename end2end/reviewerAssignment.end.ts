@@ -187,7 +187,7 @@ test('over-cap bidder shows load indicator and requires confirm to assign', asyn
 		// is over-cap (CSS class flags it red/bold).
 		const bidRow = page.locator(`tr:has-text("${SEED.filters.uniqueReviewer}")`);
 		const load = bidRow.locator('[data-testid="papers-load"]');
-		await expect(load).toHaveText('1 / 1');
+		await expect(load).toHaveText('1 / 1, at cap');
 		await expect(load).toHaveClass(/over-cap/);
 
 		// The approve button on the over-cap bid is now Button's warn-style
@@ -354,6 +354,65 @@ test('assigning someone directly first asks whether they agreed', async ({ page,
 		await expect.poll(count).toBe('1');
 	} finally {
 		forget();
+		await logout(page);
+	}
+});
+
+test('an associate editor sees a reviewer’s true load before inviting them past their cap', async ({
+	page,
+	context
+}) => {
+	// r1 is past their cap and reviews submissions handled by more than one associate editor,
+	// so the assignments ae@uni.edu may SELECT are fewer than r1 really has. The count the
+	// page shows must be the real one.
+	const r1 = SEED.scholars.r1;
+	const active = sql(
+		`select count(*) from public.assignments where scholar = '${r1.id}' and role = '${REVIEWER_ROLE}' and approved and not completed;`
+	).trim();
+	const visibleToAE = sql(
+		`select count(*) from public.assignments a where a.scholar = '${r1.id}' and a.role = '${REVIEWER_ROLE}' and a.approved and not a.completed and exists (select 1 from public.assignments e where e.submission = a.submission and e.scholar = '${SEED.scholars.ae.id}' and e.approved);`
+	).trim();
+	const cap = sql(
+		`select papers from public.volunteers where scholarid = '${r1.id}' and roleid = '${REVIEWER_ROLE}';`
+	).trim();
+	expect(Number(visibleToAE)).toBeLessThan(Number(active));
+	expect(Number(cap)).toBeLessThan(Number(active));
+	const shown = `${active} / ${cap}, over cap`;
+
+	await login(SEED.scholars.ae.email, page, context);
+	try {
+		// Before assigning: the "+ assignee" form shows the load, warns, and asks both
+		// questions in one confirmation.
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_002}`);
+		await page.waitForLoadState('networkidle');
+		await page.getByTestId('new-assignment-role').selectOption({ label: SEED.roles.reviewerName });
+		await page.getByTestId('new-assignment-scholar').fill(r1.email);
+		await page.getByTestId('new-assignment-scholar').blur();
+		await expect(page.getByTestId('new-assignment-load')).toHaveText(shown);
+		await expect(page.getByTestId('new-assignment-over-cap')).toBeVisible();
+		const assign = page.getByTestId('new-assignment');
+		await assign.click();
+		await expect(assign).toHaveText('Over cap, scholar agreed, assign');
+		await page.getByRole('button', { name: '✖' }).click();
+
+		// The roster, where editors scout for reviewers, shows the same count.
+		await page.goto(`/venue/${VENUE_PATH}/volunteers`);
+		await page.waitForLoadState('networkidle');
+		await expect(
+			page
+				.locator(`tr:has-text("${r1.email}")`)
+				.getByTestId('papers-load')
+				.filter({ hasText: `/ ${cap}` })
+		).toHaveText(shown);
+		await logout(page);
+
+		// And r1 sees the count editors see, with the reminder to correct for invitations
+		// RR never heard about.
+		await login(r1.email, page, context);
+		await page.goto(`/venue/${VENUE_PATH}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId('volunteer-load')).toContainText(`You have ${active} active`);
+	} finally {
 		await logout(page);
 	}
 });

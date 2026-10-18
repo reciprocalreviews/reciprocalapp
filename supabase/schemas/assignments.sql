@@ -512,6 +512,86 @@ from
 grant
 execute on function public.scholar_approver_roles () to authenticated;
 
+-- How much each of the given scholars is already reviewing, for the editors choosing them.
+--
+-- A reviewer's papers cap (volunteers.papers) means something only next to how many papers
+-- they already have. Counting that from the client undercounted: the assignments SELECT
+-- policy shows an associate editor only the submissions they handle, so a reviewer with
+-- four papers across the venue could read as one of one to the editor about to invite a
+-- fifth. That is how a reviewer came to be invited far past the cap they set.
+--
+-- SECURITY DEFINER so the count is the true one, and it returns ONLY counts: never which
+-- submissions, so it reveals no more than "this person is busy". Rows:
+--   (scholar, role, count) -- approved, uncompleted assignments in _venue in that role.
+--   (scholar, null, count) -- the same across every OTHER venue, editor seats excluded:
+--                             a sole editor is seated on every submission of their venue
+--                             for its whole life (see scholar_tasks), which is a standing
+--                             seat rather than papers to review.
+-- Zero counts are omitted. Ordered so the client can page past PostgREST's max_rows.
+--
+-- Only someone who helps run the venue's reviewing gets rows: an admin, or a scholar who
+-- volunteers for (accepted) or holds an active seat in the priority-0 role or a role that
+-- approves another. The volunteer half mirrors src/lib/data/isVenueApprover.ts, so an
+-- editor scouting the roster before any paper is theirs sees the same numbers; the seat
+-- half covers someone approving without a volunteer record. Anyone else gets none.
+create or replace function public.assignment_loads (_venue uuid, _scholars uuid[]) returns table (scholar uuid, role uuid, count integer) language sql security definer stable
+set
+	"search_path" to '' as $$
+	with approving as (
+		select held.id
+		from public.roles held
+		where held.venueid = _venue
+		  and (held.priority = 0 or exists (select 1 from public.roles r where r.approver = held.id))
+	),
+	allowed as (
+		select public.isAdmin(_venue) or exists (
+			select 1
+			from public.volunteers v
+			where v.scholarid = (select auth.uid())
+			  and v.accepted = 'accepted'
+			  and v.roleid in (select id from approving)
+		) or exists (
+			select 1
+			from public.assignments a
+			where a.scholar = (select auth.uid())
+			  and a.approved
+			  and not a.completed
+			  and a.role in (select id from approving)
+		) as ok
+	)
+	select a.scholar, a.role, count(*)::integer
+	from public.assignments a, allowed
+	where allowed.ok
+	  and a.venue = _venue
+	  and a.scholar = any (_scholars)
+	  and a.approved
+	  and not a.completed
+	group by a.scholar, a.role
+	union all
+	select a.scholar, null, count(*)::integer
+	from public.assignments a
+	join public.roles r on r.id = a.role, allowed
+	where allowed.ok
+	  and a.venue <> _venue
+	  and a.scholar = any (_scholars)
+	  and a.approved
+	  and not a.completed
+	  and r.priority > 0
+	group by a.scholar
+	order by 1, 2 nulls last;
+$$;
+
+alter function public.assignment_loads (uuid, uuid[]) OWNER to "postgres";
+
+revoke
+execute on function public.assignment_loads (uuid, uuid[])
+from
+	public,
+	anon;
+
+grant
+execute on function public.assignment_loads (uuid, uuid[]) to authenticated;
+
 create or replace function public.isAssigned (_submissionid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
 set
 	"search_path" to '' as $$

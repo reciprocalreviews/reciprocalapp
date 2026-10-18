@@ -371,6 +371,8 @@ export type LocaleText = {
 				name: string;
 				expertise: string;
 				papers: string;
+				/** Active assignments against the cap, shown to the venue's approvers. */
+				assigned: string;
 			};
 			paragraph: {
 				intro: string;
@@ -685,6 +687,8 @@ export type LocaleText = {
 				batchAssign: ConfirmButtonText;
 				/** `batchAssign` without the confirmation, for seating oneself. */
 				batchAssignSelf: ButtonText;
+				/** `batchAssign` when the scholar is at their papers cap. */
+				batchAssignOverCap: ConfirmButtonText;
 				sortPaymentFirst: ButtonText;
 				sortPaymentLast: ButtonText;
 				sortTitleAsc: ButtonText;
@@ -834,6 +838,9 @@ export type LocaleText = {
 				createAssignment: ConfirmButtonText;
 				/** `createAssignment` without the confirmation, for seating oneself. */
 				createAssignmentSelf: ButtonText;
+				/** `createAssignment` when the scholar is at their papers cap: one
+				 * confirmation asks both whether they agreed and whether to exceed it. */
+				createAssignmentOverCap: ConfirmButtonText;
 				unassign: ConfirmButtonText;
 				complete: ConfirmButtonText;
 				/** Assigns an unapproved assignment the scholar did not bid for, so
@@ -1607,6 +1614,28 @@ export type LocaleText = {
 		};
 	};
 	view: {
+		/** A scholar's active assignments, beside the papers cap they set, wherever an editor
+		 * chooses whom to assign. Counts are true ones, not limited to what the viewer sees. */
+		load: {
+			/** Under the cap. {used} and {cap}. */
+			underCap: string;
+			/** At the cap, so another paper would exceed it. {used} and {cap}. */
+			atCap: string;
+			/** Past the cap already. {used} and {cap}. */
+			overCap: string;
+			/** No cap set. {used}. */
+			noCap: string;
+			/** Active assignments in the venue's other roles. {count}. */
+			otherRoles: string;
+			/** Active assignments at other venues, editor seats excluded. {count}. */
+			elsewhere: string;
+			/** Beside the assign controls when the scholar found is at their cap. {used}
+			 * and {cap}. */
+			warning: string;
+			/** Beside the assign controls when the scholar found has not volunteered for
+			 * the role, so has set no cap for it. */
+			notVolunteer: string;
+		};
 		/** The mirrored slice of a scholar's public ORCID record, shown wherever an editor
 		 * needs to know who somebody is. See DESIGN.md's Scholar route section. */
 		orcid: {
@@ -1883,6 +1912,17 @@ export type LocaleText = {
 				declined: string;
 				volunteering: string;
 				stopped: string;
+				/** A volunteer's own active assignments in the role, against their cap.
+				 * {used} and {cap}. `loadAtCap` when they have reached it, shown as a warning
+				 * like the one editors see, followed by `loadNote`; `loadNoCap`, with {used}
+				 * only, when they set none. */
+				load: string;
+				loadAtCap: string;
+				loadNoCap: string;
+				/** Under the count: it is what editors see, and it only knows assignments
+				 * recorded here, so invitations accepted in the venue's own reviewing system
+				 * may be missing. Asks the volunteer to correct for that. */
+				loadNote: string;
 			};
 		};
 		tasks: {
