@@ -413,14 +413,14 @@ isOneToOne: false
                   ]
                 },"roles": {
                   Row: {
-                    "anonymous_authors": boolean,"approver": string | null,"bid_limit_floor": number,"bid_limit_percent": number | null,"biddable": boolean,"description": string,"desired_assignments": number,"id": string,"invited": boolean,"name": string,"priority": number,"venueid": string,"volunteer_visibility": Database["public"]['Enums']["volunteer_visibility"]
+                    "anonymous_authors": boolean,"approver": string | null,"biddable": boolean,"description": string,"desired_assignments": number,"id": string,"invited": boolean,"max_bids": number | null,"name": string,"priority": number,"venueid": string,"volunteer_visibility": Database["public"]['Enums']["volunteer_visibility"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "anonymous_authors"?: boolean,"approver"?: string | null,"bid_limit_floor"?: number,"bid_limit_percent"?: number | null,"biddable"?: boolean,"description"?: string,"desired_assignments"?: number,"id"?: string,"invited": boolean,"name"?: string,"priority"?: number,"venueid": string,"volunteer_visibility"?: Database["public"]['Enums']["volunteer_visibility"]
+                    "anonymous_authors"?: boolean,"approver"?: string | null,"biddable"?: boolean,"description"?: string,"desired_assignments"?: number,"id"?: string,"invited": boolean,"max_bids"?: number | null,"name"?: string,"priority"?: number,"venueid": string,"volunteer_visibility"?: Database["public"]['Enums']["volunteer_visibility"]
                   }
                   Update: {
-                    "anonymous_authors"?: boolean,"approver"?: string | null,"bid_limit_floor"?: number,"bid_limit_percent"?: number | null,"biddable"?: boolean,"description"?: string,"desired_assignments"?: number,"id"?: string,"invited"?: boolean,"name"?: string,"priority"?: number,"venueid"?: string,"volunteer_visibility"?: Database["public"]['Enums']["volunteer_visibility"]
+                    "anonymous_authors"?: boolean,"approver"?: string | null,"biddable"?: boolean,"description"?: string,"desired_assignments"?: number,"id"?: string,"invited"?: boolean,"max_bids"?: number | null,"name"?: string,"priority"?: number,"venueid"?: string,"volunteer_visibility"?: Database["public"]['Enums']["volunteer_visibility"]
                   }
                   Relationships: [
                     {
@@ -834,13 +834,12 @@ isOneToOne: false
 { Args: { "_description"?: string,"_name": string,"_venue": string }; Returns: {
               "anonymous_authors": boolean,
 "approver": string | null,
-"bid_limit_floor": number,
-"bid_limit_percent": number | null,
 "biddable": boolean,
 "description": string,
 "desired_assignments": number,
 "id": string,
 "invited": boolean,
+"max_bids": number | null,
 "name": string,
 "priority": number,
 "venueid": string,

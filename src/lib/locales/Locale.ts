@@ -630,9 +630,14 @@ export type LocaleText = {
 		submissions: {
 			title: string;
 			tip: {
+				/** The bidding prompt, one per biddable role: bid on what you are most
+				 * qualified to evaluate. {role} is the role's name. */
 				bid: string;
-				/** A bidder's budget for one role: {used} of {limit} bids as {role}. */
+				/** Follows the bidding prompt when the role has a limit, in bold: {used} of
+				 * {limit} bids. */
 				bidBudget: string;
+				/** Follows the budget: what counts toward it, and how to move a bid. */
+				bidBudgetNote: string;
 				/** Explains the batch assignment form above the submissions table. */
 				batchAssign: string;
 			};
@@ -1721,12 +1726,9 @@ export type LocaleText = {
 				 * hide a roster that was public a moment ago — the visibility setting stops
 				 * being inert. Shown only when that setting is not `all`. */
 				invitedHidesRoster: string;
-				/** Explains the bid budget under its settings: what counts toward it, and
-				 * that a volunteer moves bids by withdrawing them. */
+				/** Explains max bids under its setting: why to keep it small, what counts
+				 * toward it, and that a volunteer moves bids by withdrawing them. */
 				bidLimit: string;
-				/** Under a volunteer's papers field, when the role has a bid budget: the
-				 * number they give also caps their bids at {bids}. */
-				papersCapsBids: string;
 				/** Shown to admins on the first role in priority order. Priority zero is not
 				 * just presentation: it is what the database checks when deciding who may
 				 * approve assignments, edit an author list, and mark a submission done. */
@@ -1839,10 +1841,8 @@ export type LocaleText = {
 			slider: {
 				compensation: SliderText;
 				desiredAssignments: SliderText;
-				/** The bid budget, as a percent of the venue's submissions under review. */
-				bidLimitPercent: SliderText;
-				/** The bid budget's minimum, so a small venue's volunteers may bid on all of it. */
-				bidLimitFloor: SliderText;
+				/** The most submissions each volunteer may bid on in the role. */
+				maxBids: SliderText;
 			};
 			options: {
 				approver: OptionsText;

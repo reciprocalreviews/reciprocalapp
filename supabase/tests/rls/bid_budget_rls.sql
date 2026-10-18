@@ -1,11 +1,10 @@
 -- Bid budgets and the rules on placing a bid (public.enforce_bid_rules).
 --
--- A volunteer's budget for a role is the role's percent of the venue's submissions
--- under review, never below the role's floor, and at most three times the papers the
--- volunteer said they would review. Every bid on a submission under review counts --
--- pending, approved or declined. Bids already placed are never removed; a scholar over
--- budget just cannot bid again. Under test:
---   * the floor, the percent, the papers cap, and turning the budget off
+-- A volunteer's budget for a role is the role's max_bids. Every bid on a submission
+-- under review counts -- pending, approved or declined. Bids already placed are never
+-- removed; a scholar over budget just cannot bid again. Under test:
+--   * max_bids, raising and lowering it, that papers no longer caps it, the check
+--     constraint, and turning the limit off
 --   * done submissions give their bids back; declined and approved bids do not
 --   * RR026 for a role that is not biddable, a done submission, a second bid, a full role
 --   * whoever may approve the assignment is exempt
@@ -15,7 +14,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(25);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -36,9 +35,7 @@ select tests.create_role(:'ven', 2, :'editor', false, false) as unbiddable \gset
 select tests.create_volunteer(:'bidder', :'reviewer', 'accepted') as v_bidder \gset
 select tests.create_volunteer(:'bidder', :'unbiddable', 'accepted') as v_unbiddable \gset
 
--- Twelve submissions under review. With a floor of 3 and 10%, the limit is
--- max(3, ceil(1.2)) = 3.
-update public.roles set bid_limit_floor = 3, bid_limit_percent = 10 where id = :'reviewer';
+update public.roles set max_bids = 3 where id = :'reviewer';
 
 select tests.create_submission_type(:'ven') as stype \gset
 select tests.create_submission(:'ven', :'stype', array[:'author']::uuid[]) as s1 \gset
@@ -61,7 +58,7 @@ returns void language sql as $$
 	values (p_venue, p_submission, p_scholar, p_role, true);
 $$;
 
--- ---- The floor -----------------------------------------------------------------
+-- ---- Max bids ------------------------------------------------------------------
 select tests.authenticate_as(:'bidder');
 select lives_ok(
 	format('select tests.bid(%L, %L, %L, %L)', :'ven', :'s1', :'bidder', :'reviewer'),
@@ -70,7 +67,7 @@ select lives_ok(
 select lives_ok(
 	format('select tests.bid(%L, %L, %L, %L); select tests.bid(%L, %L, %L, %L)',
 		:'ven', :'s2', :'bidder', :'reviewer', :'ven', :'s3', :'bidder', :'reviewer'),
-	'bids up to the floor fit the budget'
+	'bids up to max bids fit the budget'
 );
 select results_eq(
 	format('select used, bid_limit from public.my_bid_budget(%L)', :'reviewer'),
@@ -81,28 +78,27 @@ select throws_ok(
 	format('select tests.bid(%L, %L, %L, %L)', :'ven', :'s4', :'bidder', :'reviewer'),
 	'RR025',
 	null,
-	'a bid past the floor is refused when the percent is lower'
+	'a bid past max bids is refused'
 );
 
--- ---- The percent ---------------------------------------------------------------
--- 50% of twelve is six.
+-- ---- Raising the limit --------------------------------------------------------
 select tests.clear_authentication();
-update public.roles set bid_limit_percent = 50 where id = :'reviewer';
+update public.roles set max_bids = 6 where id = :'reviewer';
 select tests.authenticate_as(:'bidder');
 select results_eq(
 	format('select bid_limit from public.my_bid_budget(%L)', :'reviewer'),
 	$$ values (6) $$,
-	'the percent sets the limit once it exceeds the floor'
+	'raising max bids raises the limit'
 );
 select lives_ok(
 	format('select tests.bid(%L, %L, %L, %L)', :'ven', :'s4', :'bidder', :'reviewer'),
-	'a bid within the percent fits'
+	'a bid within the raised limit fits'
 );
 
 -- ---- Over budget already -------------------------------------------------------
 -- Back to a limit of 3 with four bids placed: the bids stay, and no more may be placed.
 select tests.clear_authentication();
-update public.roles set bid_limit_percent = 10 where id = :'reviewer';
+update public.roles set max_bids = 3 where id = :'reviewer';
 select tests.authenticate_as(:'bidder');
 select results_eq(
 	format('select count(*)::integer from public.assignments where scholar = %L and role = %L', :'bidder', :'reviewer'),
@@ -117,7 +113,7 @@ select throws_ok(
 );
 
 -- ---- Done submissions give their bids back ------------------------------------
--- Two done: ten under review, limit max(3, 1) = 3, two bids still count.
+-- Two done: two bids still count against a limit of 3.
 select tests.clear_authentication();
 update public.submissions set status = 'done' where id in (:'s1', :'s2');
 select tests.authenticate_as(:'bidder');
@@ -150,33 +146,39 @@ select throws_ok(
 	'a declined bid does not free room for another'
 );
 
--- ---- The papers cap ------------------------------------------------------------
--- 100% of ten is ten, but one paper caps bids at three.
+-- ---- Papers no longer caps bids ------------------------------------------------
+-- The papers a volunteer offers to review once capped their bids at three times it.
 select tests.clear_authentication();
-update public.roles set bid_limit_percent = 100 where id = :'reviewer';
+update public.roles set max_bids = 10 where id = :'reviewer';
 update public.volunteers set papers = 1 where id = :'v_bidder';
 select tests.authenticate_as(:'bidder');
 select results_eq(
 	format('select bid_limit from public.my_bid_budget(%L)', :'reviewer'),
-	$$ values (3) $$,
-	'a volunteer''s papers cap limits bids to three times it'
+	$$ values (10) $$,
+	'a volunteer''s papers do not change the limit'
 );
-select tests.clear_authentication();
-update public.volunteers set papers = null where id = :'v_bidder';
-select tests.authenticate_as(:'bidder');
 select lives_ok(
 	format('select tests.bid(%L, %L, %L, %L)', :'ven', :'s6', :'bidder', :'reviewer'),
-	'without a papers cap, the percent alone decides'
+	'a volunteer may bid past three times their papers'
+);
+
+-- ---- Max bids is at least one --------------------------------------------------
+select tests.clear_authentication();
+select throws_ok(
+	format('update public.roles set max_bids = 0 where id = %L', :'reviewer'),
+	'23514',
+	null,
+	'max bids of zero is refused; turning the limit off is null'
 );
 
 -- ---- Turning the budget off ----------------------------------------------------
 select tests.clear_authentication();
-update public.roles set bid_limit_percent = null where id = :'reviewer';
+update public.roles set max_bids = null where id = :'reviewer';
 select tests.authenticate_as(:'bidder');
 select results_eq(
 	format('select bid_limit from public.my_bid_budget(%L)', :'reviewer'),
 	$$ values (null::integer) $$,
-	'a role without a percent has no budget'
+	'a role without max bids has no budget'
 );
 select lives_ok(
 	format('select tests.bid(%L, %L, %L, %L); select tests.bid(%L, %L, %L, %L)',

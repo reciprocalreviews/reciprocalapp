@@ -56,23 +56,17 @@ test('a reviewer at their bid limit withdraws a bid to bid elsewhere', async ({
 			`delete from public.assignments where scholar = '${BIDDER_ID}' and venue = '${VENUE_ID}' and bid = true and approved = false;`
 		);
 	dropBids();
-	// Other tests leave this scholar answered bids and add submissions, so the budget is
-	// sized from what is there: 1% (one bid per hundred under review) with a floor one
-	// above the bids that remain, and no papers cap.
+	// Other tests leave this scholar answered bids, so the limit is sized from what is
+	// there: one above the bids that remain.
 	const used = Number(
 		sql(
 			`select count(*) from public.assignments a join public.submissions s on s.id = a.submission where a.scholar = '${BIDDER_ID}' and a.role = '${ROLE_ID}' and a.bid and s.status = 'reviewing';`
 		)
 	);
-	const papers = sql(
-		`select coalesce(papers::text, 'null') from public.volunteers where scholarid = '${BIDDER_ID}' and roleid = '${ROLE_ID}';`
+	const maxBids = sql(
+		`select coalesce(max_bids::text, 'null') from public.roles where id = '${ROLE_ID}';`
 	);
-	sql(
-		`update public.volunteers set papers = null where scholarid = '${BIDDER_ID}' and roleid = '${ROLE_ID}';`
-	);
-	sql(
-		`update public.roles set bid_limit_percent = 1, bid_limit_floor = ${used + 1} where id = '${ROLE_ID}';`
-	);
+	sql(`update public.roles set max_bids = ${used + 1} where id = '${ROLE_ID}';`);
 	const budget = (n: number) => `${n} of ${used + 1}`;
 
 	try {
@@ -99,12 +93,7 @@ test('a reviewer at their bid limit withdraws a bid to bid elsewhere', async ({
 
 		await logout(page);
 	} finally {
-		sql(
-			`update public.roles set bid_limit_percent = 20, bid_limit_floor = 10 where id = '${ROLE_ID}';`
-		);
-		sql(
-			`update public.volunteers set papers = ${papers} where scholarid = '${BIDDER_ID}' and roleid = '${ROLE_ID}';`
-		);
+		sql(`update public.roles set max_bids = ${maxBids} where id = '${ROLE_ID}';`);
 		dropBids();
 	}
 });

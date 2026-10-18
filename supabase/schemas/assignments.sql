@@ -924,10 +924,8 @@ execute function public.enforce_assignment_updates ();
 -- counting it is what stops bidding, being declined and bidding again elsewhere. A
 -- submission marked done gives its bids back.
 --
--- The limit is the role's percent of the venue's submissions under review, but never
--- less than its floor, so a small venue's volunteers may bid on everything. When the
--- volunteer has stated how many papers they will review, the limit is also at most
--- three times that. Null when the role has no budget.
+-- The limit is the role's max_bids, a fixed number, so that volunteers bid on the
+-- submissions they are most qualified to review. Null when the role has no limit.
 --
 -- Owner-only: it answers for any scholar. Clients read their own through
 -- public.my_bid_budget; public.enforce_bid_rules reads it as the owner.
@@ -941,26 +939,7 @@ set
 			join public.submissions s on s.id = a.submission
 			where a.role = r.id and a.scholar = _scholar and a.bid and s.status = 'reviewing'
 		),
-		case
-			when r.bid_limit_percent is null then null
-			else least(
-				greatest(
-					r.bid_limit_floor,
-					ceil(
-						r.bid_limit_percent * (
-							select count(*)
-							from public.submissions s
-							where s.venue = r.venueid and s.status = 'reviewing'
-						) / 100.0
-					)::integer
-				),
-				(
-					select min(v.papers) * 3
-					from public.volunteers v
-					where v.roleid = r.id and v.scholarid = _scholar and v.active and v.accepted = 'accepted'
-				)
-			)
-		end
+		r.max_bids
 	from public.roles r
 	where r.id = _role;
 $$;

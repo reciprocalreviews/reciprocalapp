@@ -286,24 +286,24 @@
 
 		{#if uid}
 			{#each visibleRoles.filter((r) => r.biddable) as role}
+				{@const budget = bidBudget(role.id)}
+				<!-- The bidding prompt, and the bidder's budget when the role has a limit. -->
 				<Tip>
 					<Text path={(l) => l.page.submissions.tip.bid} inputs={{ role: role.name }} />
+					{#if budget !== undefined}
+						{' '}<span data-testid="budget-{role.name}"
+							><strong
+								><Text
+									path={(l) => l.page.submissions.tip.bidBudget}
+									inputs={{
+										used: budget.used.toString(),
+										limit: budget.limit.toString()
+									}}
+								/></strong
+							>{' '}<Text path={(l) => l.page.submissions.tip.bidBudgetNote} /></span
+						>
+					{/if}
 				</Tip>
-				{@const budget = bidBudget(role.id)}
-				{#if budget !== undefined}
-					<div data-testid="budget-{role.name}">
-						<Tip>
-							<Text
-								path={(l) => l.page.submissions.tip.bidBudget}
-								inputs={{
-									used: budget.used.toString(),
-									limit: budget.limit.toString(),
-									role: role.name
-								}}
-							/>
-						</Tip>
-					</div>
-				{/if}
 			{/each}
 		{/if}
 

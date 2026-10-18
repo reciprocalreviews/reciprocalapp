@@ -30,12 +30,12 @@ create table if not exists public.roles (
 	anonymous_authors boolean default true not null,
 	-- The number of assignments after which bidding should be turned off. Null for no limit.
 	desired_assignments integer not null default 1,
-	-- Each volunteer's bid budget for this role, as a percent of the venue's
-	-- submissions under review. Null for no budget. See public._bid_limit.
-	bid_limit_percent integer default 20,
-	-- Below this many submissions under review, the budget is this many bids, so a
-	-- small venue's volunteers may still bid on everything.
-	bid_limit_floor integer default 10 not null,
+	-- The most submissions each volunteer may bid on in this role at once, so they
+	-- bid on the ones they are most qualified to review. A fixed number rather than a
+	-- share of the submissions, since few people review more than a handful; a program
+	-- committee sizes it to its submission count. Null for no limit. See
+	-- public._bid_limit.
+	max_bids integer default 5,
 	-- Who may see this role's volunteers, when the viewer neither holds the record
 	-- nor staffs the role. Inert in two cases, both of them status a person cannot
 	-- award themselves: an invite-only role, where the invitation IS the vetting,
@@ -48,13 +48,10 @@ alter table only public.roles
 add constraint "roles_pkey" primary key (id);
 
 alter table only public.roles
-add constraint "roles_bid_limit_percent_check" check (
-	bid_limit_percent is null
-	or bid_limit_percent between 1 and 100
+add constraint "roles_max_bids_check" check (
+	max_bids is null
+	or max_bids>=1
 );
-
-alter table only public.roles
-add constraint "roles_bid_limit_floor_check" check (bid_limit_floor>=0);
 
 alter table only public.roles
 add constraint "roles_approver_fkey" foreign KEY ("approver") references public.roles (id) on delete set null;
