@@ -2,10 +2,11 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
-## 0.5.21 - 2026-10-18
+## 0.5.20 - 2026-10-18
 
 ### Changed
 
+- Updated dependencies, including SvelteKit 3.1, the Supabase CLI, and the Vercel CLI to 64.
 - **Anyone who chooses reviewers now sees each scholar's email, ORCID iD, and ORCID affiliation in one consistent preview, on a submission's bids, the volunteers page, and the import pages.** Declined bids now show these too, and the volunteers page shows every volunteer's ORCID iD to anyone who can view it.
 
 ## 0.5.19 - 2026-10-13
