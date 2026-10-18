@@ -7,14 +7,11 @@
 	import VenueLink from '#lib/components/VenueLink.svelte';
 	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
 	import Text from '#lib/locales/Text.svelte';
-	import { getAuth } from '$routes/Auth.svelte';
 
 	let { data } = $props();
 
 	let proposals = $derived(data.proposals);
 	let venues = $derived(data.venues);
-
-	const auth = getAuth();
 
 	// Kept on the list rather than the layout, which also covered the proposal form. A
 	// realtime tick calls invalidateAll(), and an invalidation that lands while a `goto`
@@ -26,12 +23,8 @@
 	]);
 </script>
 
-<Page icon={VenueLabel} title={(l) => l.page.venues.title}>
+<Page title={(l) => l.page.venues.title}>
 	<Text markdown path={(l) => l.page.venues.description} />
-
-	{#if auth().isAuthenticated()}<Link to="/venues/proposal"
-			><Text path={(l) => l.page.venues.link.propose} /></Link
-		>{/if}
 
 	<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.active} />
 

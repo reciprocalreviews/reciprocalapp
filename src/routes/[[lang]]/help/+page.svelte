@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { IdeaLabel } from '#lib/components/Labels.js';
 	import Link from '#lib/components/Link.svelte';
 	import Page from '#lib/components/Page.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
 	import { articles } from './articles';
 </script>
 
-<Page icon={IdeaLabel} title={(l) => l.page.help.title}>
+<Page title={(l) => l.page.help.title}>
 	<Paragraph text={(l) => l.page.help.paragraph.intro} />
 
 	<ul>

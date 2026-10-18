@@ -7,6 +7,7 @@
 		"edit": "✎",
 		"filter": "🔎",
 		"admin": "Admin",
+		"editor": "Editor",
 		"minter": "Minter",
 		"steward": "Steward",
 		"orcid": "ORCID",
@@ -27,6 +28,12 @@
 		},
 		"feedback": {
 			"testWarning": "This is a test environment for preview purposes. Data can be deleted at any time."
+		},
+		"context": {
+			"menu": {
+				"tip": "Show the rest of this section's links",
+				"label": "☰"
+			}
 		}
 	},
 	"footer": {
@@ -351,10 +358,8 @@
 				}
 			},
 			"paragraph": {
-				"reviewedBy": "Venues are reviewed and approved by the [stewards](/about#managers), to ensure that only official editors and conference steering committees create venues.",
-				"howToPropose": "To propose a venue, share a few details about the venue. Your proposal serves two purposes: it requests steward approval to create a venue, and it invites the community to support adopting Reciprocal Reviews.",
-				"communitySupport": "Once submitted, your proposal will appear publicly on the venues page for the community to see and support. The stewards won't reach out to the editors until there is sufficient community interest.",
-				"emailNotice": "**Note:** When you submit this proposal, an email will be sent to the editors you list below, notifying them of this proposal."
+				"intro": "Propose a venue to ask the [stewards](/about#managers) to create it — they approve only official editors and steering committees — and to invite the community to support adopting Reciprocal Reviews. Your proposal appears publicly on the venues page, and the stewards reach out to the editors once there is enough support.",
+				"emailNotice": "Submitting emails the editors you listed to tell them about this proposal."
 			}
 		},
 		"proposal": {
@@ -459,7 +464,7 @@
 				"assigned": "Assigned / cap"
 			},
 			"paragraph": {
-				"intro": "Search for a volunteer by name, email, or expertise, or narrow the list to the expertise keywords volunteers have listed. Within each role, volunteers who have stopped are listed last."
+				"intro": "Search by name, email, or expertise, or narrow the list by the expertise keywords volunteers have listed. Volunteers who have stopped are listed last in each role."
 			}
 		},
 		"venueTransactions": {
@@ -496,7 +501,7 @@
 				"submit": "Submit"
 			},
 			"paragraph": {
-				"intro": "Ready to create a new submission? This form is filled by one of the authors of a submission, to pay for a submission to be reviewed — or by an editor of the venue, recording a submission on the authors' behalf.\n\n**List every co-author who has a Reciprocal Reviews account**, even those not contributing tokens — this lets editors and the platform identify conflicts of interest with potential reviewers. Non-paying co-authors should be listed with a payment of 0; the paying authors split the venue's submission cost between them.\n\nEvery author you list must already have an account, since authors are identified by ORCID. A co-author without one simply can't be listed — leave them off and submit with the rest. They won't be charged, and the platform won't be able to detect conflicts of interest involving them.\n\nAfter filling out this form:\n\n- The submission will be created in the system.\n- Each paying author will need to confirm their payment, and will be emailed about it.\n- Once everyone has paid, the editor will proceed with review."
+				"intro": "An author fills this out to pay for a submission's review, or an editor records one on the authors' behalf.\n\n**List every co-author who has a Reciprocal Reviews account**, including those paying nothing (enter 0), so conflicts of interest with reviewers can be found. A co-author without an account can't be listed; leave them off.\n\nAfter you submit, each paying author is emailed to confirm their payment, and review begins once everyone has paid."
 			},
 			"feedback": {
 				"notLoaded": "Unable to load the venue and/or submission types for this page.",
@@ -577,7 +582,7 @@
 				"submit": "Submit"
 			},
 			"paragraph": {
-				"intro": "Import a batch of free submissions that pre-date this venue's launch on Reciprocal Reviews. These submissions will have no authors or payments, but reviewers can bid on them to earn tokens. Submitting this form will also propose a mint transaction sized to fund reviewer compensation, which a minter must approve before reviewers will receive tokens.",
+				"intro": "Import free submissions from before this venue joined Reciprocal Reviews. They have no authors or payments, but reviewers can bid on them. Importing also proposes a mint to fund reviewer compensation, which a minter must approve before anyone is paid.",
 				"mintSummary": "Importing **{count}** submissions will propose minting **{total}** tokens, summed from each submission's type cost.",
 				"skipping": "**{count}** of these are already in this venue and will be skipped.",
 				"allSkipped": "All submissions are already in the system.",
@@ -740,8 +745,8 @@
 		"submissions": {
 			"title": "Submissions",
 			"tip": {
-				"bid": "Bid on the submissions you are most qualified to evaluate as {role}. Whoever chooses volunteers for the role sees your bids.",
-				"bidBudget": "You have used {used} of {limit} bids.",
+				"bid": "Bid on the submissions you are most qualified to evaluate. Whoever chooses volunteers for each role sees your bids.",
+				"bidBudget": "{role}: {used} of {limit} bids used.",
 				"bidBudgetNote": "Bids on finished submissions don't count; to bid on another submission, withdraw a bid first.",
 				"batchAssign": "Assigning one person to several submissions? Choose a role and find the scholar here, then use the assign buttons that appear in that role's column."
 			},
@@ -895,15 +900,16 @@
 				"bidLimitReached": "bid limit reached",
 				"anonymized": "anonymized"
 			},
-			"paragraph": {
-				"newSubmission": "Have a submission to pay for? Pay for a [new submission](submissions/new).",
-				"bulkImport": "Importing pre-launch submissions? [Import submissions in bulk](submissions/import)."
-			},
-			"unmatched": "Some assignments from imports aren’t matched to a scholar yet (**{count}**). [Match them](/venue/{venue}/submissions/unmatched)."
+			"action": {
+				"newSubmission": "Pay for a submission",
+				"newSubmissionFree": "Register a submission",
+				"import": "Import submissions",
+				"match": "Match imported names"
+			}
 		},
 		"unmatched": {
 			"title": "Unmatched assignments",
-			"note": "An import kept these names because they matched nobody at the venue. Once a person joins and accepts the role, choose them here to assign them on every submission listed under their name. You see the assignments you could approve.",
+			"note": "These names from an import matched nobody at the venue. Once a person joins and accepts the role, choose them here to assign them on every submission listed under their name. You see only the assignments you could approve.",
 			"empty": "Nothing to match. Every name from your imports has been matched or dismissed.",
 			"headers": {
 				"name": "Name in import",
@@ -941,7 +947,7 @@
 			"feedback": {
 				"notLoaded": "This submission does not exist or is not visible to you.",
 				"logIn": "[Log in](/login) to see this submission.",
-				"confidential": "This submission is confidential to you.",
+				"confidential": "You don't have access to this submission.",
 				"missingAuthors": "Unable to find authors.",
 				"noAuthors": "No visible authors found.",
 				"noExpertise": "No expertise provided.",
@@ -954,7 +960,7 @@
 				"completionNotEditor": "Only an approved editor (priority-0 role) can mark this submission done.",
 				"completionSucceeded": "Submission marked done and editor(s) compensated.",
 				"needsEditor": "No one is editing this submission yet. Until someone does, only venue admins can approve or pay for work on it, and it can’t be marked done.",
-				"unmatched": "Unmatched from import: {list}. Once each person joins and accepts the role, they can be [matched](/venue/{venue}/submissions/unmatched).",
+				"unmatched": "Unmatched from import: {list}. Once each person joins and accepts the role, match them to their assignments here.",
 				"compensationOnly": "**Assigning here is only for compensation.** Also assign them in {venue}'s reviewing system, so they can get the manuscript and submit their review.",
 				"compensationOnlyLinked": "**Assigning here is only for compensation.** Also assign them in [{venue}'s reviewing system]({system}), so they can get the manuscript and submit their review."
 			},
@@ -1147,7 +1153,8 @@
 			"title": "Venue",
 			"header": {
 				"submissionTypes": "Submission types",
-				"roles": "Roles"
+				"roles": "Roles",
+				"contact": "Questions"
 			},
 			"field": {
 				"name": {
@@ -1199,17 +1206,12 @@
 				}
 			},
 			"feedback": {
-				"startReview": "🤝 [Pay](/venue/{venue}/submissions/new) tokens for a submitted manuscript",
-				"startReviewFree": "🤝 [Register](/venue/{venue}/submissions/new) a submitted manuscript",
-				"volunteer": "🤝 [Earn](#roles) tokens by volunteering.",
-				"volunteerFree": "Help out by [volunteering](#roles).",
-				"viewSettings": "Welcome admin! Check the [settings](/venue/{venue}/settings) page to edit venue compensation, roles, and anonymity.",
-				"adminMints": "This venue's admin is also its [currency](/currency/{currency})'s minter. Consider volunteering to be the currency's minter to help reduce the risk of perceived or actual self-dealing.",
+				"adminMints": "This venue's admin is also the minter of its currency. Volunteering to be a minter yourself helps reduce the risk of perceived or actual self-dealing.",
 				"typesNotLoaded": "Couldn't load venue's submission types.",
 				"rolesNotLoaded": "Couldn't load venue's roles.",
 				"compensationRequested": "Compensation request sent. It waits for whoever approves your role on the submission to approve and pay it, even if no one has assigned you to the submission here yet.",
-				"inactive": "This venue is currently **inactive**, so only admins can see its details. Here is the message from the admins: *{message}*",
-				"inactivePrompt": "This venue is currently **inactive**. Only you and other admins can see it, along with the message set in the [venue settings](/venue/{venue}/settings). Visit the settings to activate the venue."
+				"inactive": "This venue is **inactive**, so only its admins can see its details. Their message: *{message}*",
+				"inactivePrompt": "This venue is **inactive**, so only admins can see it. Everyone else sees the message you set in settings."
 			},
 			"card": {
 				"setup": {
@@ -1229,7 +1231,11 @@
 					"tip": "Show the rest of this venue’s links",
 					"label": "☰"
 				},
-				"website": "Website"
+				"website": "Website",
+				"inactive": {
+					"tip": "This venue is inactive and only admins can see it. Open settings to activate it.",
+					"label": "inactive"
+				}
 			},
 			"options": {
 				"compensationRole": {
@@ -1251,10 +1257,26 @@
 				"description": "{description}",
 				"allVolunteers": "See [all volunteers]({volunteersLink}) for this venue.",
 				"questions": "Send questions about {title} to its administrators, not the Reciprocal Reviews stewards:"
+			},
+			"action": {
+				"newSubmission": "Pay for a submission",
+				"newSubmissionFree": "Register a submission",
+				"volunteer": "Volunteer",
+				"activate": "Activate in settings",
+				"currency": "See the currency"
+			},
+			"stat": {
+				"welcome": "tokens for new volunteers",
+				"volunteers": "volunteers",
+				"submissions": "submissions visible to you",
+				"tokens": "tokens"
 			}
 		},
 		"settings": {
 			"title": "Settings",
+			"action": {
+				"activate": "Go to the Activate step"
+			},
 			"header": {
 				"webAddress": "Name this venue",
 				"policies": "Decide policies",
@@ -1378,7 +1400,7 @@
 			},
 			"paragraph": {
 				"reviewSystemURL": "Where your editors assign reviewers to manuscripts, such as your ScholarOne or OpenReview site. Optional. When set, it's linked beside Reciprocal Reviews' assign buttons, reminding editors to assign reviewers there too.",
-				"welcome": "Welcome, venue admin! This page walks you through configuring your venue as a sequence of numbered steps. Work through each section in order. Start with **Step 1** below to align on the policies that the rest of the settings encode, then move down the page recording each decision. The last step is always **Activate** — flip the venue on to open it for volunteering.",
+				"welcome": "Work through the numbered steps in order, recording each decision. The last step, **Activate**, opens the venue for volunteering.",
 				"policies": "Before changing any settings below, get community alignment on each of these decisions. The settings on this page just encode them; getting them wrong is hard to walk back once volunteers start participating.\n\n- The venue's **purpose and scope** — what topics, what kinds of submissions you accept\n- The **submission types** you'll accept (e.g., full papers, posters, revisions)\n- The **roles** scholars take on (Editor, Associate Editor, Reviewer, …) and how many people each submission needs in each role\n- The other **editors / admins** who can configure this venue with you\n- Which **external reviewing platform** (HotCRP, OJS, ScholarOne, etc.) handles your peer review, so the email-template snippets in Step 6 use the right syntax\n\nThe most consequential choices — the token economy, how reviewing is organized, what counts as a creditable review, and who can mint — are expanded in the cards below.",
 				"economics": "Tokens only work if they stay scarce enough to be worth earning. The economy has two failure modes:\n\n- **Too many tokens** — if welcome gifts are generous and submission costs are low, everyone already has enough to submit, so no one needs to review. Reviewing stalls and quality and timeliness suffer.\n- **Too few tokens** — if costs are high and tokens are hard to earn, authors can't accumulate enough to submit, and publishing slows down.\n\nTwo rules keep you in balance:\n\n1. **Per-role compensation for a submission must sum to no more than its submission cost.** Otherwise every reviewed submission injects net-new tokens and the supply inflates until reviewing has no value.\n2. **Mint tokens roughly in proportion to the number of active scholars**, topping up only as the community grows — not in large speculative batches.\n\n**For example.** A journal pays **10** tokens for a review, **10** for an associate-editor recommendation, and **1** for an editor-in-chief decision: **21** tokens paid out per submission. It sets the **submission cost to 40** (comfortably above the 21 paid out, so the venue reserve grows slightly) and the **welcome gift to 30**, so a newcomer can submit after reviewing just once (30 + 10 = 40). Tune these numbers to your community's reviewing load, but always check the two rules above before you change them.",
 				"anonymityAssignment": "How your community reviews is as consequential as how it pays. Two linked decisions:\n\n- **Anonymity model** — *open* (authors and reviewers see each other), *single-anonymous* (reviewers see authors but not the reverse), or *double-anonymous* (neither sees the other). More anonymity reduces bias but makes conflicts of interest harder to spot; open review increases accountability but can chill candid feedback. You set this per role — the **Visibility** step controls whether authors can see who's assigned, and each role's settings control whether that role sees author identities.\n- **Bidding vs. central assignment** — let reviewers **bid** on what they want to review, or assign work **centrally**. Bidding scales well and surfaces genuine interest; central assignment gives editors tighter control over load and expertise matching. If you enable bidding for a role (the **Roles** step), define the **preference labels** bidders choose from (the **Bid preference levels** step), e.g. \"Preferred\" / \"If necessary\".",
@@ -1530,6 +1552,12 @@
 				},
 				"erasing": "Erasing your account…",
 				"erased": "Your account has been erased. Thank you for your contributions."
+			},
+			"stat": {
+				"submissions": "submissions",
+				"tokens": "tokens in {count} currencies",
+				"tokensOne": "tokens in 1 currency",
+				"transactions": "transactions"
 			}
 		},
 		"currency": {
@@ -1608,8 +1636,7 @@
 			},
 			"paragraph": {
 				"mintersDescription": "These scholars are the minters for this currency. They can see and approve all transactions.",
-				"venuesDescription": "These are the venues that use this currency:",
-				"allTokens": "[See all transactions](/currency/{id}/transactions) in this currency."
+				"venuesDescription": "These are the venues that use this currency:"
 			},
 			"subtitle": "Currency"
 		},
@@ -1759,13 +1786,13 @@
 			}
 		},
 		"currencyTransactions": {
-			"subtitle": "Transactions",
+			"title": "Transactions",
 			"paragraph": {
 				"count": "There are **{count}** transactions with this currency visible to you."
 			}
 		},
 		"scholarTransactions": {
-			"subtitle": "Transactions",
+			"title": "Transactions",
 			"paragraph": {
 				"count": "There are **{count}** transactions involving this scholar visible to you."
 			}

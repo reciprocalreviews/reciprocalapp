@@ -1097,6 +1097,20 @@
               "description": "Accessible name for the header's total token balance.",
               "type": "string"
             },
+            "context": {
+              "additionalProperties": false,
+              "description": "The teal bar under the nav on every page outside a venue (contextBar.ts).",
+              "properties": {
+                "menu": {
+                  "$ref": "#/definitions/ButtonText",
+                  "description": "Names the control holding the bar's links that do not fit on a narrow screen."
+                }
+              },
+              "required": [
+                "menu"
+              ],
+              "type": "object"
+            },
             "feedback": {
               "additionalProperties": false,
               "properties": {
@@ -1147,7 +1161,8 @@
             "saved",
             "balance",
             "link",
-            "feedback"
+            "feedback",
+            "context"
           ],
           "type": "object"
         },
@@ -2215,9 +2230,6 @@
                 "paragraph": {
                   "additionalProperties": false,
                   "properties": {
-                    "allTokens": {
-                      "type": "string"
-                    },
                     "mintersDescription": {
                       "type": "string"
                     },
@@ -2227,8 +2239,7 @@
                   },
                   "required": [
                     "mintersDescription",
-                    "venuesDescription",
-                    "allTokens"
+                    "venuesDescription"
                   ],
                   "type": "object"
                 },
@@ -2295,12 +2306,12 @@
                   ],
                   "type": "object"
                 },
-                "subtitle": {
+                "title": {
                   "type": "string"
                 }
               },
               "required": [
-                "subtitle",
+                "title",
                 "paragraph"
               ],
               "type": "object"
@@ -3203,23 +3214,17 @@
                 "paragraph": {
                   "additionalProperties": false,
                   "properties": {
-                    "communitySupport": {
-                      "type": "string"
-                    },
                     "emailNotice": {
+                      "description": "Beside the submit button: submitting emails the listed editors.",
                       "type": "string"
                     },
-                    "howToPropose": {
-                      "type": "string"
-                    },
-                    "reviewedBy": {
+                    "intro": {
+                      "description": "The one lead: who approves venues, and what a proposal is for.",
                       "type": "string"
                     }
                   },
                   "required": [
-                    "reviewedBy",
-                    "howToPropose",
-                    "communitySupport",
+                    "intro",
                     "emailNotice"
                   ],
                   "type": "object"
@@ -3653,6 +3658,31 @@
                   ],
                   "type": "object"
                 },
+                "stat": {
+                  "additionalProperties": false,
+                  "description": "The owner's summary tiles. `tokens` takes {count}, the number of currencies; `tokensOne` is its singular.",
+                  "properties": {
+                    "submissions": {
+                      "type": "string"
+                    },
+                    "tokens": {
+                      "type": "string"
+                    },
+                    "tokensOne": {
+                      "type": "string"
+                    },
+                    "transactions": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "submissions",
+                    "tokens",
+                    "tokensOne",
+                    "transactions"
+                  ],
+                  "type": "object"
+                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -3691,6 +3721,7 @@
               "required": [
                 "title",
                 "tip",
+                "stat",
                 "subtitle",
                 "header",
                 "feedback",
@@ -3719,12 +3750,12 @@
                   ],
                   "type": "object"
                 },
-                "subtitle": {
+                "title": {
                   "type": "string"
                 }
               },
               "required": [
-                "subtitle",
+                "title",
                 "paragraph"
               ],
               "type": "object"
@@ -3732,6 +3763,19 @@
             "settings": {
               "additionalProperties": false,
               "properties": {
+                "action": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "activate": {
+                      "description": "The inactive alert's action: an anchor to the step that activates the venue.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "activate"
+                  ],
+                  "type": "object"
+                },
                 "button": {
                   "additionalProperties": false,
                   "properties": {
@@ -4253,6 +4297,7 @@
               },
               "required": [
                 "title",
+                "action",
                 "tip",
                 "card",
                 "header",
@@ -4459,6 +4504,7 @@
                       "type": "string"
                     },
                     "confidential": {
+                      "description": "The viewer may not see this submission.",
                       "type": "string"
                     },
                     "invalidRole": {
@@ -4858,6 +4904,35 @@
             "submissions": {
               "additionalProperties": false,
               "properties": {
+                "action": {
+                  "additionalProperties": false,
+                  "description": "The page's actions row.",
+                  "properties": {
+                    "import": {
+                      "description": "Admins and editors: bring in submissions that pre-date the venue's launch.",
+                      "type": "string"
+                    },
+                    "match": {
+                      "description": "Match the names an import could not, with the count waiting as a badge.",
+                      "type": "string"
+                    },
+                    "newSubmission": {
+                      "description": "Start a submission at a venue that charges for one.",
+                      "type": "string"
+                    },
+                    "newSubmissionFree": {
+                      "description": "The same, at a payment-free venue, where nothing is paid.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "newSubmission",
+                    "newSubmissionFree",
+                    "import",
+                    "match"
+                  ],
+                  "type": "object"
+                },
                 "button": {
                   "additionalProperties": false,
                   "properties": {
@@ -5181,22 +5256,6 @@
                   ],
                   "type": "object"
                 },
-                "paragraph": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "bulkImport": {
-                      "type": "string"
-                    },
-                    "newSubmission": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "newSubmission",
-                    "bulkImport"
-                  ],
-                  "type": "object"
-                },
                 "status": {
                   "additionalProperties": false,
                   "properties": {
@@ -5243,11 +5302,11 @@
                       "type": "string"
                     },
                     "bid": {
-                      "description": "The bidding prompt, one per biddable role: bid on what you are most qualified to evaluate. {role} is the role's name.",
+                      "description": "The bidding prompt, once for every biddable role the viewer can see: bid on what you are most qualified to evaluate.",
                       "type": "string"
                     },
                     "bidBudget": {
-                      "description": "Follows the bidding prompt when the role has a limit, in bold: {used} of {limit} bids.",
+                      "description": "One line per role with a bid limit, below the prompt: {role}, then {used} of {limit} bids.",
                       "type": "string"
                     },
                     "bidBudgetNote": {
@@ -5265,10 +5324,6 @@
                 },
                 "title": {
                   "type": "string"
-                },
-                "unmatched": {
-                  "description": "Above the list when the viewer can match assignments an import could not. `{count}` of them, `{venue}` the venue's path for the link.",
-                  "type": "string"
                 }
               },
               "required": [
@@ -5282,8 +5337,7 @@
                 "headers",
                 "field",
                 "status",
-                "paragraph",
-                "unmatched"
+                "action"
               ],
               "type": "object"
             },
@@ -5598,10 +5652,46 @@
             "venue": {
               "additionalProperties": false,
               "properties": {
+                "action": {
+                  "additionalProperties": false,
+                  "description": "The landing page's actions row.",
+                  "properties": {
+                    "activate": {
+                      "description": "The inactive alert's action.",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "The admin-mints disclosure's action, to the currency's page.",
+                      "type": "string"
+                    },
+                    "newSubmission": {
+                      "type": "string"
+                    },
+                    "newSubmissionFree": {
+                      "type": "string"
+                    },
+                    "volunteer": {
+                      "description": "Anchors to the roles below, where volunteering happens.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "newSubmission",
+                    "newSubmissionFree",
+                    "volunteer",
+                    "activate",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
                 "bar": {
                   "additionalProperties": false,
                   "description": "The bar of common links shown on every route inside a venue (#176). Its route labels are not here: they reuse each destination page's own `title`, so the bar and the page it reaches can never drift apart.",
                   "properties": {
+                    "inactive": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "A chip beside the venue's name, for admins only, while the venue is inactive. It is how the state stays visible on every page without an alert on each."
+                    },
                     "menu": {
                       "$ref": "#/definitions/ButtonText",
                       "description": "Names the control holding the links that do not fit on a narrow screen."
@@ -5613,7 +5703,8 @@
                   },
                   "required": [
                     "menu",
-                    "website"
+                    "website",
+                    "inactive"
                   ],
                   "type": "object"
                 },
@@ -5691,36 +5782,17 @@
                       "type": "string"
                     },
                     "inactivePrompt": {
+                      "description": "The alert admins see on the landing page and settings while the venue is inactive.",
                       "type": "string"
                     },
                     "rolesNotLoaded": {
                       "type": "string"
                     },
-                    "startReview": {
-                      "type": "string"
-                    },
-                    "startReviewFree": {
-                      "type": "string"
-                    },
                     "typesNotLoaded": {
-                      "type": "string"
-                    },
-                    "viewSettings": {
-                      "type": "string"
-                    },
-                    "volunteer": {
-                      "type": "string"
-                    },
-                    "volunteerFree": {
                       "type": "string"
                     }
                   },
                   "required": [
-                    "startReview",
-                    "startReviewFree",
-                    "volunteer",
-                    "volunteerFree",
-                    "viewSettings",
                     "adminMints",
                     "typesNotLoaded",
                     "rolesNotLoaded",
@@ -5812,6 +5884,10 @@
                 "header": {
                   "additionalProperties": false,
                   "properties": {
+                    "contact": {
+                      "description": "Above the venue's contact list, at the foot of the landing page.",
+                      "type": "string"
+                    },
                     "roles": {
                       "type": "string"
                     },
@@ -5821,7 +5897,8 @@
                   },
                   "required": [
                     "submissionTypes",
-                    "roles"
+                    "roles",
+                    "contact"
                   ],
                   "type": "object"
                 },
@@ -5903,6 +5980,31 @@
                   ],
                   "type": "object"
                 },
+                "stat": {
+                  "additionalProperties": false,
+                  "description": "The landing page's summary tiles.",
+                  "properties": {
+                    "submissions": {
+                      "type": "string"
+                    },
+                    "tokens": {
+                      "type": "string"
+                    },
+                    "volunteers": {
+                      "type": "string"
+                    },
+                    "welcome": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "welcome",
+                    "volunteers",
+                    "submissions",
+                    "tokens"
+                  ],
+                  "type": "object"
+                },
                 "title": {
                   "type": "string"
                 },
@@ -5915,6 +6017,8 @@
                 "unknownTitle",
                 "bar",
                 "header",
+                "action",
+                "stat",
                 "button",
                 "feedback",
                 "field",
@@ -6485,6 +6589,10 @@
             "edit": {
               "type": "string"
             },
+            "editor": {
+              "description": "Tags an action meant for a venue's editors, beside admin, minter and steward.",
+              "type": "string"
+            },
             "empty": {
               "type": "string"
             },
@@ -6507,6 +6615,7 @@
             "edit",
             "filter",
             "admin",
+            "editor",
             "minter",
             "steward",
             "orcid",

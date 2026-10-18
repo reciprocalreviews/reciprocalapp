@@ -1,8 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import ContextBar from '#lib/components/ContextBar.svelte';
+	import { currencyBar } from '#lib/data/contextBar.js';
 	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
+	import { getLocaleContext } from '$routes/Contexts';
 
-	let { children } = $props();
+	let { data, children } = $props();
+
+	const locale = getLocaleContext();
 
 	const currencyID = page.params.id;
 
@@ -13,4 +18,7 @@
 	]);
 </script>
 
+{#if data.currency}
+	<ContextBar bar={currencyBar(data.currency, locale())} menu={(l) => l.header.context.menu} />
+{/if}
 {@render children()}

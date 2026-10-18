@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { IdeaLabel } from '#lib/components/Labels.js';
 	import Page from '#lib/components/Page.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Text from '#lib/locales/Text.svelte';
 	import { marked } from 'marked';
 
 	let { data } = $props();
@@ -13,7 +13,8 @@
 	let html = $derived(marked(article.body.replace(/^#\s.*\n/, '')) as string);
 </script>
 
-<Page icon={IdeaLabel} title={article.title}>
+<Page title={article.title}>
+	{#snippet subtitle()}<Text path={(l) => l.page.help.title} />{/snippet}
 	<div class="article">
 		{@html html}
 	</div>

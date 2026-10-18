@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import Feedback from '#lib/components/Feedback.svelte';
-	import { ErrorLabel } from '#lib/components/Labels.js';
 	import { getDB } from '#lib/data/CRUD.js';
 	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
 	import { default as ScholarView } from './Scholar.svelte';
@@ -76,7 +75,7 @@
 </script>
 
 {#if state === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
+	<Page title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.scholar.feedback.notLoaded}></Feedback>
 	</Page>
 {:else}

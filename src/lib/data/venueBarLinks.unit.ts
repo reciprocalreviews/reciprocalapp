@@ -1,7 +1,7 @@
 import en from '$locales/en.json';
 import type { LocaleText } from '#lib/locales/Locale.js';
 import { describe, expect, test } from 'vitest';
-import { venueBarLinks, venueBarName, type VenueBarVenue } from './venueBarLinks';
+import { closedVenueBar, venueBarLinks, venueBarName, type VenueBarVenue } from './venueBarLinks';
 
 const locale = en as LocaleText;
 
@@ -81,5 +81,21 @@ describe('venueBarLinks', () => {
 	test('only the venue website leaves the app', () => {
 		const links = venueBarLinks(venue(), ADMIN, locale);
 		expect(links.filter((l) => l.external).map((l) => l.href)).toEqual(['https://tok.science.org']);
+	});
+});
+
+describe('closedVenueBar', () => {
+	test('offers only the venue website, since every page inside is the same dead end', () => {
+		expect(closedVenueBar(venue(), locale).links.map((l) => l.href)).toEqual([
+			'https://tok.science.org'
+		]);
+	});
+
+	test('offers nothing when the venue has no website', () => {
+		expect(closedVenueBar(venue({ url: '' }), locale).links).toEqual([]);
+	});
+
+	test('is named by the short name, like the venue bar', () => {
+		expect(closedVenueBar(venue(), locale).name).toBe('ToK');
 	});
 });

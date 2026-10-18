@@ -25,11 +25,14 @@
 		font-size: var(--small-font-size);
 	}
 
+	/* No box. A boxed tip was the default Feedback with a bulb in it, so help read as a
+	   notice and notices read as help; alerts now own the faded box, and help is quiet
+	   type. `border` survives as a rule in the margin, for the few tips that sit loose in
+	   a page rather than under the field they explain. */
 	.tip.border {
-		background: var(--salient-color-faded);
-		padding: var(--spacing-half);
-		border-radius: var(--roundedness);
-		border-left: var(--thick-border-width) solid var(--salient-color);
+		padding-inline-start: var(--spacing-half);
+		border-left: var(--border-width) solid var(--border-color);
+		color: var(--text-color);
 	}
 
 	.bulb {

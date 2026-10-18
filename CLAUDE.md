@@ -78,7 +78,7 @@ The root layout (`src/routes/+layout.svelte`) sets up four pieces of context con
 - `addFeedback()` / `getFeedback()` — error/success notifications (a module-level store in `src/routes/feedback.svelte.ts`, not a context)
 - `setAuth()` / `getAuth()` — authenticated session and scholar
 
-Navigation uses no context of its own: breadcrumbs travel in load data (any `+page.ts` or `+layout.ts` may return `breadcrumbs`), and the page title band is rendered in flow by `Page.svelte`. There is no `setBreadcrumbs()`. Inside a venue the band is `VenueBar.svelte` instead, so every `<Page>` under `/venue/` passes `band={false}` — see ARCHITECTURE.md § Global context for why only one of them may render at a time.
+Navigation uses no context of its own. Every route has one teal context bar under the nav (`ContextBar.svelte`, rules in `src/lib/data/contextBar.ts`): area layouts draw theirs (`VenueBar.svelte` inside a venue) and the root layout draws the site bar elsewhere. There are no breadcrumbs. Every page's title renders in the text column via `Page.svelte` — see ARCHITECTURE.md § Global context. Every page's top follows one order (title, actions, alerts, content); see DESIGN.md § Interface.
 
 ### State
 

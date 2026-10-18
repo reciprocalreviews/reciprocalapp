@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { IdeaLabel } from '#lib/components/Labels.js';
 	import Page from '#lib/components/Page.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
 	import Subheader from '#lib/components/Subheader.svelte';
@@ -42,7 +41,7 @@
 	</li>
 {/snippet}
 
-<Page icon={IdeaLabel} title={(l) => l.page.updates.title}>
+<Page title={(l) => l.page.updates.title}>
 	<Paragraph text={(l) => l.page.updates.paragraph.intro} />
 
 	{#each datedUpdates as update}

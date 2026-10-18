@@ -16,6 +16,7 @@
 		defaultFor,
 		type NotificationSection
 	} from '../../../../email/templates';
+	import Alert from '#lib/components/Alert.svelte';
 	import Button from '#lib/components/Button.svelte';
 	import Card from '#lib/components/Card.svelte';
 	import Cards from '#lib/components/Cards.svelte';
@@ -25,9 +26,9 @@
 	import Feedback from '#lib/components/Feedback.svelte';
 	import Gift from '#lib/components/Gift.svelte';
 	import ORCIDProfile from '#lib/components/ORCIDProfile.svelte';
+	import { shouldReportProblem } from '#lib/data/orcidProfileView.js';
 	import ORCIDiD from '#lib/components/ORCIDiD.svelte';
 	import {
-		ScholarLabel,
 		SettingsLabel,
 		SubmissionLabel,
 		ThanksLabel,
@@ -183,9 +184,7 @@
 </script>
 
 <Page
-	icon={ScholarLabel}
 	title={(l) => scholar.getName() ?? l.page.scholar.title}
-	wobble={anonymous}
 	edit={editable
 		? {
 				placeholder: (l) => l.page.scholar.field.name.placeholder,
@@ -196,9 +195,31 @@
 		: undefined}
 >
 	{#snippet subtitle()}<Text path={(l) => l.page.scholar.subtitle} />{/snippet}
-	{#if anonymous}
-		<Feedback inline={false} text={(l) => l.page.scholar.feedback.noName} />
-	{/if}
+	{#snippet alerts()}
+		{#if anonymous}
+			<Alert
+				tone="attention"
+				testid="scholar-no-name"
+				text={(l) => l.page.scholar.feedback.noName}
+			/>
+		{/if}
+		<!-- The form to add an address goes inside the alert asking for one, so the request
+		     and the way to answer it are one thing rather than two boxes apart. -->
+		{#if editable && scholar.getEmail() === null}
+			<Alert
+				tone="attention"
+				testid="email-onboarding"
+				text={(l) => l.page.scholar.feedback.addEmail}
+			>
+				<VerifyEmail pending={pendingEmail} />
+			</Alert>
+		{/if}
+		<!-- Reported only to the scholar it is about: to them it is news, to anyone else an
+		     accusation. -->
+		{#if editable && shouldReportProblem(orcid)}
+			<Alert tone="info" testid="orcid-problem" text={(l) => l.view.orcid.problem} />
+		{/if}
+	{/snippet}
 	{#snippet details()}
 		{@const orcidID = scholar.getORCID()}
 		<!-- The iD is this scholar's identity here, and the way out to the parts of an ORCID
@@ -252,31 +273,25 @@
 	     which is news to the scholar and an accusation to anyone else. -->
 	<ORCIDProfile profile={orcid} own={editable} />
 
-	{#if editable && scholar.getEmail() === null}
-		<Feedback
-			inline={false}
-			testid="email-onboarding"
-			text={(l) => l.page.scholar.feedback.addEmail}
-		/>
-		<VerifyEmail pending={pendingEmail} />
-	{/if}
-
 	{#if editable}
 		<Dashboard
 			stats={[
 				{
 					number: submissions?.length,
-					title: 'submissions',
+					title: locale().page.scholar.stat.submissions,
 					link: `#submissions`
 				},
 				{
 					number: Object.values(balances).reduce((sum, n) => sum + n, 0),
-					title: `Tokens in ${currencies?.length} ${currencies?.length === 1 ? 'currency' : 'currencies'}`,
+					title: (currencies?.length === 1
+						? locale().page.scholar.stat.tokensOne
+						: locale().page.scholar.stat.tokens
+					).replace('{count}', `${currencies?.length ?? 0}`),
 					link: `#tokens`
 				},
 				{
 					number: transactions ?? undefined,
-					title: 'Transactions',
+					title: locale().page.scholar.stat.transactions,
 					link: `/scholar/${scholar.getID()}/transactions`
 				}
 			]}

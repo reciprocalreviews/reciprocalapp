@@ -8,10 +8,11 @@
 	import EditableText from '#lib/components/EditableText.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import Form from '#lib/components/Form.svelte';
-	import { ErrorLabel, SettingsLabel, VenueLabel } from '#lib/components/Labels.js';
+	import { SettingsLabel } from '#lib/components/Labels.js';
 	import Link from '#lib/components/Link.svelte';
 	import Note from '#lib/components/Note.svelte';
 	import Page from '#lib/components/Page.svelte';
+	import Status from '#lib/components/Status.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
 	import TextField from '#lib/components/TextField.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
@@ -81,15 +82,19 @@
 </script>
 
 {#if proposal === null || supporters === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
+	<Page title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.proposal.feedback.notFound}></Feedback>
 	</Page>
 {:else}
-	<Page icon={VenueLabel} title={proposal.title}>
-		{#snippet subtitle()}<Text
-				path={(l) =>
-					approved ? l.page.proposal.subtitle.approved : l.page.proposal.subtitle.proposal}
-			/>{/snippet}
+	<Page title={proposal.title}>
+		{#snippet subtitle()}<Text path={(l) => l.page.proposal.subtitle.proposal} />{/snippet}
+		<!-- Approval is the proposal's state, so it is a chip beside the kind rather than a
+		     subtitle in place of it. -->
+		{#snippet details()}
+			{#if approved}
+				<Status label={(l) => l.page.proposal.subtitle.approved} testid="proposal-approved" />
+			{/if}
+		{/snippet}
 		{#if approved}
 			<Paragraph
 				text={(l) => l.page.proposal.paragraph.approved}

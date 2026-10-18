@@ -223,7 +223,7 @@
 </script>
 
 {#if !user}
-	<Feedback error text={(l) => l.page.newSubmission.feedback.notLoggedIn} />
+	<Feedback text={(l) => l.page.newSubmission.feedback.notLoggedIn} />
 {:else}
 	<Paragraph text={(l) => l.page.newSubmission.paragraph.intro} />
 

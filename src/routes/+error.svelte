@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import Feedback from '#lib/components/Feedback.svelte';
-	import { ErrorLabel } from '#lib/components/Labels.js';
 	import Page from '#lib/components/Page.svelte';
 
 	// Until this file existed, every `error()` thrown from a load rendered SvelteKit's
@@ -15,7 +14,7 @@
 	let missing = $derived(page.status === 404);
 </script>
 
-<Page icon={ErrorLabel} title={(l) => (missing ? l.page.error.missing : l.page.error.title)}>
+<Page title={(l) => (missing ? l.page.error.missing : l.page.error.title)}>
 	<Feedback error text={(l) => (missing ? l.page.error.notFound : l.page.error.unexpected)}
 	></Feedback>
 </Page>

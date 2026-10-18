@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import Action from '#lib/components/Action.svelte';
 	import Button from '#lib/components/Button.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import {
@@ -10,7 +11,6 @@
 		UpLabel
 	} from '#lib/components/Labels.js';
 	import Page from '#lib/components/Page.svelte';
-	import Paragraph from '#lib/components/Paragraph.svelte';
 	import Column from '#lib/components/Row.svelte';
 	import ScholarLink from '#lib/components/ScholarLink.svelte';
 	import Status from '#lib/components/Status.svelte';
@@ -303,47 +303,69 @@
 </script>
 
 {#if venue && conflicts}
-	<Page band={false} title={`${locale().page.submissions.title} — ${venueBarName(venue)}`}>
-		<!-- Provide a clear link to the new submission page. -->
-		<Paragraph text={(l) => l.page.submissions.paragraph.newSubmission} />
-
-		<!-- The list itself is on its own page: both it and the submissions below can run
-		     to hundreds of rows. -->
-		{#if unmatchedCount > 0}
-			<Feedback
-				testid="unmatched-notice"
-				text={(l) =>
-					l.page.submissions.unmatched
-						.replaceAll('{count}', unmatchedCount.toString())
-						.replaceAll('{venue}', venuePath(venue))}
+	<Page title={(l) => l.page.submissions.title} context={venueBarName(venue)}>
+		{#snippet actions()}
+			<Action
+				to="/venue/{venuePath(venue)}/submissions/new"
+				label={(l) =>
+					showPayment
+						? l.page.submissions.action.newSubmission
+						: l.page.submissions.action.newSubmissionFree}
+				testid="submissions-new"
 			/>
-		{/if}
+			{#if isAdmin || isEditor}
+				<Action
+					to="/venue/{venuePath(venue)}/submissions/import"
+					label={(l) => l.page.submissions.action.import}
+					group={isAdmin ? 'admin' : 'editor'}
+					testid="submissions-import"
+				/>
+			{/if}
+			<!-- Offered only while there is something to match: the list is on its own page,
+			     since it and the submissions below can each run to hundreds of rows. -->
+			{#if unmatchedCount > 0}
+				<Action
+					to="/venue/{venuePath(venue)}/submissions/unmatched"
+					label={(l) => l.page.submissions.action.match}
+					group="editor"
+					count={unmatchedCount}
+					testid="unmatched-notice"
+				/>
+			{/if}
+		{/snippet}
 
-		{#if isAdmin || isEditor}
-			<Paragraph text={(l) => l.page.submissions.paragraph.bulkImport} />
-		{/if}
-
+		<!-- One prompt for bidding, however many roles take bids, with each limited role's
+		     budget beneath it. One per role said the same sentence over again for an admin
+		     who can see every role. -->
 		{#if uid}
-			{#each visibleRoles.filter((r) => r.biddable) as role}
-				{@const budget = bidBudget(role.id)}
-				<!-- The bidding prompt, and the bidder's budget when the role has a limit. -->
+			{@const biddable = visibleRoles.filter((r) => r.biddable)}
+			{#if biddable.length > 0}
 				<Tip>
-					<Text path={(l) => l.page.submissions.tip.bid} inputs={{ role: role.name }} />
-					{#if budget !== undefined}
-						{' '}<span data-testid="budget-{role.name}"
-							><strong
-								><Text
-									path={(l) => l.page.submissions.tip.bidBudget}
-									inputs={{
-										used: budget.used.toString(),
-										limit: budget.limit.toString()
-									}}
-								/></strong
-							>{' '}<Text path={(l) => l.page.submissions.tip.bidBudgetNote} /></span
-						>
+					<Text path={(l) => l.page.submissions.tip.bid} />
+					{#if biddable.some((role) => bidBudget(role.id) !== undefined)}
+						<ul class="budgets">
+							{#each biddable as role (role.id)}
+								{@const budget = bidBudget(role.id)}
+								{#if budget !== undefined}
+									<li data-testid="budget-{role.name}">
+										<strong
+											><Text
+												path={(l) => l.page.submissions.tip.bidBudget}
+												inputs={{
+													role: role.name,
+													used: budget.used.toString(),
+													limit: budget.limit.toString()
+												}}
+											/></strong
+										>
+									</li>
+								{/if}
+							{/each}
+						</ul>
+						<Text path={(l) => l.page.submissions.tip.bidBudgetNote} />
 					{/if}
 				</Tip>
-			{/each}
+			{/if}
 		{/if}
 
 		<TextField
@@ -352,11 +374,15 @@
 			bind:text={filter}
 		></TextField>
 
-		<Checkbox
-			testid="submissions-needs-editor-filter"
-			label={(l) => l.page.submissions.checkbox.needsEditor}
-			bind:on={needsEditorOnly}
-		/>
+		<!-- Signed in only: a submission waiting for an editor is something an editor
+		     volunteer can claim, and nothing a signed-out reader can act on. -->
+		{#if uid}
+			<Checkbox
+				testid="submissions-needs-editor-filter"
+				label={(l) => l.page.submissions.checkbox.needsEditor}
+				bind:on={needsEditorOnly}
+			/>
+		{/if}
 
 		<!-- Assign one scholar across many submissions without opening each one. -->
 		{#if uid && assignableRoles.length > 0}
@@ -827,6 +853,11 @@
 {/if}
 
 <style>
+	.budgets {
+		margin-block: var(--spacing-half);
+		padding-inline-start: var(--spacing);
+	}
+
 	.highlight {
 		background: var(--salient-color-faded);
 	}

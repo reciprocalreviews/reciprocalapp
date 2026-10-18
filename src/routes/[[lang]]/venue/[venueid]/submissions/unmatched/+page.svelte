@@ -4,6 +4,7 @@
 	import Feedback from '#lib/components/Feedback.svelte';
 	import Note from '#lib/components/Note.svelte';
 	import Page from '#lib/components/Page.svelte';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import Row from '#lib/components/Row.svelte';
 	import Table from '#lib/components/Table.svelte';
 	import VolunteerPicker from '#lib/components/VolunteerPicker.svelte';
@@ -84,7 +85,7 @@
 	}
 </script>
 
-<Page band={false} title={(l) => l.page.unmatched.title}>
+<Page title={(l) => l.page.unmatched.title} context={venue ? venueBarName(venue) : undefined}>
 	<Note path={(l) => l.page.unmatched.note} />
 	{#if groups.length === 0}
 		<Feedback testid="unmatched-empty" text={(l) => l.page.unmatched.empty} />

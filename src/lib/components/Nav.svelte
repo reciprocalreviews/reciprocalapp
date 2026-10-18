@@ -12,7 +12,7 @@
 	import { getPendingActions } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
 	import Dots from './Dots.svelte';
-	import { ScholarLabel, TokenLabel } from './Labels';
+	import { TokenLabel } from './Labels';
 	import Link from './Link.svelte';
 	import Logo from './Logo.svelte';
 	import Overflow from './Overflow.svelte';
@@ -56,8 +56,7 @@
 				[{ id: 'login', to: loginHref(page.url), label: locale().header.link.login }]
 	);
 
-	const { breadcrumbs, tokens = 0 }: { breadcrumbs: [string, string][]; tokens?: number } =
-		$props();
+	const { tokens = 0 }: { tokens?: number } = $props();
 
 	/** Whether the viewer asked for less motion. The CSS guard below can only
 	 * stop the flash; the counting is JavaScript, so it has to be checked here
@@ -138,17 +137,6 @@
 		<div class="link">
 			<Link size="small" to="/venues"><Text path={(l) => l.header.venues} /></Link>
 		</div>
-		{#each breadcrumbs as [url, label]}
-			<small>&gt;</small>
-			<div class="link crumb">
-				<!-- Venue and submission crumbs used to be built here too; the venue bar names
-				     the venue on every route inside one, so what is left reaches scholars,
-				     currencies and help articles. -->
-				<Link size="small" to={url} icon={url.startsWith('/scholar') ? ScholarLabel : null}
-					>{label}</Link
-				>
-			</div>
-		{/each}
 		<!-- What used to be `margin-inline-start: auto` on the account group. An auto margin
 		     cannot be switched off for the length of a measurement, and a row whose free
 		     space is spent on one reports its full width as needed — so the overflow would
@@ -192,7 +180,7 @@
 
 <style>
 	header {
-		/* The upper of two sticky bands. The page's title block in Page.svelte pins
+		/* The upper of two sticky bands. The context bar (ContextBar.svelte) pins
 		   directly beneath it, offset by the height measured here into
 		   `--nav-height`. This one keeps the higher z-index so it stays on top if
 		   that measurement is ever momentarily stale. */
@@ -214,8 +202,8 @@
 		/* Deliberately not `wrap`, which is what this row did until #176. Wrapping is how a
 		   crowded header answered a narrow screen by growing a second and third line, until
 		   the fixed chrome was half the viewport on a phone. Now the links that do not fit
-		   collapse into `Overflow` instead, and the one thing left that can genuinely run
-		   long — a breadcrumb label — truncates below. */
+		   collapse into `Overflow` instead. Breadcrumbs used to trail the Venues link here;
+		   the teal context bar below names the area now. */
 		flex-wrap: nowrap;
 		gap: calc(var(--spacing) / 2);
 		align-items: center;
@@ -224,8 +212,7 @@
 		   collapses into the overflow and the ☰ takes its place, and a small Button and the
 		   ☰ are not the same height — and this row's height IS `--nav-height`, the sticky
 		   offset for every band below it. A row that grew a few pixels when it collapsed
-		   would move the whole page vertically on a resize, which is the failure
-		   Page.svelte and breadcrumbs.ts both exist to prevent. */
+		   would move the whole page vertically on a resize. */
 		min-height: var(--chrome-row-height);
 		/* The containing block for the overflow panel, which is absolutely positioned so
 		   that opening it cannot change the height measured into `--nav-height`. */
@@ -254,10 +241,6 @@
 		display: none;
 	}
 
-	:global(.nav[data-fitting]) .crumb {
-		flex-shrink: 0;
-	}
-
 	.home {
 		display: inline-flex;
 		align-items: center;
@@ -269,17 +252,6 @@
 	   you there — no pointer, and no focus ring on something that does nothing. */
 	.home.inactive {
 		cursor: default;
-	}
-
-	/* A breadcrumb label is venue- and scholar-authored, so it has no length limit worth
-	   relying on. In a row that no longer wraps it is the one item that has to be allowed
-	   to lose rather than push everything else off the end. */
-	.crumb {
-		flex: 0 1 auto;
-		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 
 	.feedback {

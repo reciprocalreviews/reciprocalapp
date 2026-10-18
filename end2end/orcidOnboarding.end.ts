@@ -32,7 +32,10 @@ test('mock ORCID sign-in onboards a new scholar with no email and shows the bann
 		'Onboarding Tester'
 	);
 
-	// The unverified-email banner prompts the new scholar to add an email.
+	// Sign-in lands on the new scholar's own profile, where the add-email alert asks for an
+	// address; everywhere else, the unverified-email banner does.
+	await expect(page.getByTestId('email-onboarding')).toBeVisible();
+	await page.goto('/');
 	await expect(page.getByTestId('banner-email')).toBeVisible();
 });
 

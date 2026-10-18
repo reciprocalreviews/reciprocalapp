@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { updated } from '$app/state';
+	import { page, updated } from '$app/state';
 	import { PUBLIC_ENV } from '$app/env/public';
 	import Text from '#lib/locales/Text.svelte';
 	import { getAuth } from '$routes/Auth.svelte';
@@ -18,6 +18,14 @@
 		const user = auth().user;
 		return auth().isAuthenticated() && user && user.email === null ? user : null;
 	});
+
+	/** Whether this is the scholar's own profile, where the add-email alert says the same
+	 * thing at greater length and with the form to do it — so the banner would only repeat
+	 * it, and link to the page it is already on. Matched with or without a locale prefix. */
+	let onOwnProfile = $derived(
+		unverifiedScholar !== null &&
+			page.url.pathname.replace(/\/$/, '').endsWith(`/scholar/${unverifiedScholar.id}`)
+	);
 
 	/** Locally hide the update banner once the scholar dismisses it. */
 	let updateDismissed = $state(false);
@@ -48,7 +56,7 @@
 		</Banner>
 	{/if}
 
-	{#if unverifiedScholar}
+	{#if unverifiedScholar && !onOwnProfile}
 		<Banner level="warning" testid="banner-email">
 			<Text path={(l) => l.banner.email.message} />
 			<Link to="/scholar/{unverifiedScholar.id}">

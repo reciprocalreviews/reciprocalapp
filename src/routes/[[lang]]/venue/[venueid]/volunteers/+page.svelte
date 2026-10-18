@@ -145,15 +145,15 @@
 </script>
 
 {#if venue === null}
-	<Page band={false} title={(l) => l.page.venue.unknownTitle}>
+	<Page title={(l) => l.page.venue.unknownTitle}>
 		<Feedback text={(l) => l.page.volunteers.feedback.unknownVenue}></Feedback>
 	</Page>
 {:else if commitments === null}
-	<Page band={false} title={(l) => l.page.volunteers.unavailableTitle}>
+	<Page title={(l) => l.page.volunteers.unavailableTitle}>
 		<Feedback text={(l) => l.page.volunteers.feedback.volunteersNotLoaded}></Feedback>
 	</Page>
 {:else}
-	<Page band={false} title={`${locale().page.volunteers.title} — ${venueBarName(venue)}`}>
+	<Page title={(l) => l.page.volunteers.title} context={venueBarName(venue)}>
 		<Paragraph text={(l) => l.page.volunteers.paragraph.intro} />
 
 		<TextField

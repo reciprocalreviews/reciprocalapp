@@ -56,6 +56,8 @@ export type LocaleText = {
 		edit: string;
 		filter: string;
 		admin: string;
+		/** Tags an action meant for a venue's editors, beside admin, minter and steward. */
+		editor: string;
 		minter: string;
 		steward: string;
 		orcid: string;
@@ -77,6 +79,11 @@ export type LocaleText = {
 		};
 		feedback: {
 			testWarning: string;
+		};
+		/** The teal bar under the nav on every page outside a venue (contextBar.ts). */
+		context: {
+			/** Names the control holding the bar's links that do not fit on a narrow screen. */
+			menu: ButtonText;
 		};
 	};
 	footer: {
@@ -632,10 +639,10 @@ export type LocaleText = {
 		submissions: {
 			title: string;
 			tip: {
-				/** The bidding prompt, one per biddable role: bid on what you are most
-				 * qualified to evaluate. {role} is the role's name. */
+				/** The bidding prompt, once for every biddable role the viewer can see: bid on
+				 * what you are most qualified to evaluate. */
 				bid: string;
-				/** Follows the bidding prompt when the role has a limit, in bold: {used} of
+				/** One line per role with a bid limit, below the prompt: {role}, then {used} of
 				 * {limit} bids. */
 				bidBudget: string;
 				/** Follows the budget: what counts toward it, and how to move a bid. */
@@ -739,13 +746,17 @@ export type LocaleText = {
 				 * on it can be approved and it cannot be marked done. */
 				needsEditor: string;
 			};
-			paragraph: {
+			/** The page's actions row. */
+			action: {
+				/** Start a submission at a venue that charges for one. */
 				newSubmission: string;
-				bulkImport: string;
+				/** The same, at a payment-free venue, where nothing is paid. */
+				newSubmissionFree: string;
+				/** Admins and editors: bring in submissions that pre-date the venue's launch. */
+				import: string;
+				/** Match the names an import could not, with the count waiting as a badge. */
+				match: string;
 			};
-			/** Above the list when the viewer can match assignments an import could not.
-			 * `{count}` of them, `{venue}` the venue's path for the link. */
-			unmatched: string;
 		};
 		/** The page listing assignments an import could not match to a scholar. */
 		unmatched: {
@@ -801,6 +812,7 @@ export type LocaleText = {
 				notLoaded: string;
 				/** Shown instead of notLoaded to a visitor who isn't signed in, who is usually following a link from an email. */
 				logIn: string;
+				/** The viewer may not see this submission. */
 				confidential: string;
 				missingAuthors: string;
 				noAuthors: string;
@@ -953,10 +965,33 @@ export type LocaleText = {
 				menu: ButtonText;
 				/** The link out to the venue's own website. */
 				website: string;
+				/** A chip beside the venue's name, for admins only, while the venue is inactive.
+				 * It is how the state stays visible on every page without an alert on each. */
+				inactive: ButtonText;
 			};
 			header: {
 				submissionTypes: string;
 				roles: string;
+				/** Above the venue's contact list, at the foot of the landing page. */
+				contact: string;
+			};
+			/** The landing page's actions row. */
+			action: {
+				newSubmission: string;
+				newSubmissionFree: string;
+				/** Anchors to the roles below, where volunteering happens. */
+				volunteer: string;
+				/** The inactive alert's action. */
+				activate: string;
+				/** The admin-mints disclosure's action, to the currency's page. */
+				currency: string;
+			};
+			/** The landing page's summary tiles. */
+			stat: {
+				welcome: string;
+				volunteers: string;
+				submissions: string;
+				tokens: string;
 			};
 			button: {
 				newSubmissionType: ButtonText;
@@ -964,11 +999,6 @@ export type LocaleText = {
 				requestCompensation: ButtonText;
 			};
 			feedback: {
-				startReview: string;
-				startReviewFree: string;
-				volunteer: string;
-				volunteerFree: string;
-				viewSettings: string;
 				/** Shown to everyone who is neither an admin of this venue nor a minter of its
 				 * currency, when the two sets overlap. The platform permits the arrangement
 				 * and discloses it, so the community rather than the database is the check on
@@ -981,6 +1011,8 @@ export type LocaleText = {
 				 * since that is the same news and names the person. */
 				compensationRequested: string;
 				inactive: string;
+				/** The alert admins see on the landing page and settings while the venue is
+				 * inactive. */
 				inactivePrompt: string;
 			};
 			field: {
@@ -1026,6 +1058,10 @@ export type LocaleText = {
 		};
 		settings: {
 			title: string;
+			action: {
+				/** The inactive alert's action: an anchor to the step that activates the venue. */
+				activate: string;
+			};
 			tip: {
 				/** Explains the venue's web address: what it is for, and that changing one
 				 * releases the old address immediately rather than redirecting from it. */
@@ -1190,6 +1226,14 @@ export type LocaleText = {
 			tip: {
 				status: string;
 			};
+			/** The owner's summary tiles. `tokens` takes {count}, the number of currencies;
+			 * `tokensOne` is its singular. */
+			stat: {
+				submissions: string;
+				tokens: string;
+				tokensOne: string;
+				transactions: string;
+			};
 			subtitle: string;
 			header: {
 				orcid: string;
@@ -1347,17 +1391,16 @@ export type LocaleText = {
 			paragraph: {
 				mintersDescription: string;
 				venuesDescription: string;
-				allTokens: string;
 			};
 		};
 		currencyTransactions: {
-			subtitle: string;
+			title: string;
 			paragraph: {
 				count: string;
 			};
 		};
 		scholarTransactions: {
-			subtitle: string;
+			title: string;
 			paragraph: {
 				count: string;
 			};
@@ -1459,9 +1502,9 @@ export type LocaleText = {
 				currency: OptionsText & { createNew: string; note: string };
 			};
 			paragraph: {
-				reviewedBy: string;
-				howToPropose: string;
-				communitySupport: string;
+				/** The one lead: who approves venues, and what a proposal is for. */
+				intro: string;
+				/** Beside the submit button: submitting emails the listed editors. */
 				emailNotice: string;
 			};
 		};

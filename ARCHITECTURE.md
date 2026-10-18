@@ -753,25 +753,29 @@ The root layout [src/routes/+layout.svelte](src/routes/+layout.svelte) sets up f
 - `getFeedback()` / `addFeedback()` — global error/success notification stack. Unlike its neighbours this is **not** a context: `src/routes/feedback.svelte.ts` holds the stack in module-level `$state`, so there is no `setFeedback()` to pair with it.
 - `setAuth()` / `getAuth()` — authenticated session and scholar
 
-The chrome uses no context channel of its own. Breadcrumbs travel in load data — any
-`+page.ts` or `+layout.ts` may return `breadcrumbs`, typed by
-[breadcrumbs.ts](src/lib/data/breadcrumbs.ts) — and the root layout reads them off
-`page.data`. That file used to build venue and submission trails too; the venue bar names
-the venue on every route inside one and links to its submissions permanently, which was
-everything those crumbs said, so what remains reaches scholars, currencies and help
-articles (#176).
+The chrome uses no context channel of its own. Under the nav, every route has one
+**context bar** ([ContextBar.svelte](src/lib/components/ContextBar.svelte)): a teal band
+naming the area you are in — a venue, the venue list, a scholar, a currency, or the site
+itself — and linking to the rest of it. What each bar holds is decided in
+[contextBar.ts](src/lib/data/contextBar.ts) and, for a venue,
+[venueBarLinks.ts](src/lib/data/venueBarLinks.ts). Each area's layout draws its own
+(`venues/+layout.svelte`, `scholar/[id]/+layout.svelte`, `currency/[id]/+layout.svelte`,
+and the venue layout through VenueBar), and the root layout draws the site bar on every
+route `areaDrawsBar` says no area claims, error pages included. The bar replaced the
+breadcrumbs that used to trail the nav, since the only places they went — a scholar, a
+currency, the help index — are what the bars name.
 
-There are **two sticky bands**, and which component draws the second one depends on where
-you are. The first is always `<Nav>`, measured into `--nav-height`. The second is
-[Page.svelte](src/lib/components/Page.svelte)'s title band on most routes and
-[VenueBar.svelte](src/routes/[[lang]]/venue/[venueid]/VenueBar.svelte) inside a venue,
-and either way it pins below the nav at `top: var(--nav-height, 0px)` and measures itself
-into `--page-header-height` via [measure.ts](src/lib/components/measure.ts). Both
-fallbacks are deliberately `0px`: a sticky box whose natural position is _above_ its
-threshold is pushed down to meet it, so a fallback larger than the real nav height opens a
-visible gap on every first paint that then closes on hydration. `scroll-padding-block-start`
-in `app.html` sums the two, and needs to know nothing about which component supplied the
-second.
+There are **two sticky bands**. The first is always `<Nav>`, measured into
+`--nav-height`. The second is the context bar, which pins below the nav at
+`top: var(--nav-height, 0px)` and measures itself into `--page-header-height` via
+[measure.ts](src/lib/components/measure.ts). Page titles render in the text column on
+every route, so [Page.svelte](src/lib/components/Page.svelte) draws no chrome at all.
+Until the page anatomy change, Page drew a sticky title band outside venues and wrote the
+same property; one app had two heading treatments, and the band's details row read as a
+second row of navigation. The `top` fallback is deliberately `0px`: a sticky box whose
+natural position is _above_ its threshold is pushed down to meet it, so a fallback larger
+than the real nav height opens a visible gap on every first paint that then closes on
+hydration. `scroll-padding-block-start` in `app.html` sums the two properties.
 
 There is a **third**, at the other end: the beta notice, pinned to the bottom of the
 viewport in [Footer.svelte](src/lib/components/Footer.svelte) and measured into
@@ -796,12 +800,16 @@ anything above the fold.
 What that arrangement rests on is an invariant worth stating plainly: **exactly one
 element writes `--page-header-height` per rendered route.** Two `ResizeObserver`s on one
 custom property fight, and the jitter that produces is invisible to every test we have. It
-is held by `Page`'s `band` prop — every `<Page>` under `/venue/` passes `band={false}`,
-error branches included, because they render below the bar — and by the venue layout
-rendering the bar only in the branch where children render. `measure`'s `destroy()`
-removes the property, so leaving a venue hands ownership back cleanly.
+is held by `areaDrawsBar`, which keeps the root layout's site bar off every route whose
+area layout draws one, and by the venue layout drawing exactly one bar in each of its branches: VenueBar where
+the page renders, a bar naming the closed venue and offering only its website for anyone
+an inactive venue keeps out, and the venue list's bar when no venue matched. That layout renders nothing
+else above its children: an inactive venue is shown to its admins by an `inactive` chip
+that VenueBar draws from its `inactive` prop, and by an `Alert` that the landing page and
+settings render in their own alerts zone. `measure`'s `destroy()`
+removes the property, so moving between areas hands ownership back cleanly.
 
-Both were once mutable contexts that `Page` wrote from an `$effect`, and that is worth
+The title and the old breadcrumbs were both once mutable contexts that `Page` wrote from an `$effect`, and that is worth
 remembering before reaching for the pattern again: an `$effect` does not run during SSR,
 and the layout renders `<Nav>` before its children, so a title handed upward could not
 appear in the server HTML at all. It arrived at hydration and pushed the page down on
@@ -825,14 +833,31 @@ every load, and collapsed and regrew on every client-side navigation.
 
 [src/lib/components/](src/lib/components/) is the shared design system: `Button`, `Card`, `Cards`, `Form`, `TextField`, `Slider`, `Tag`, `Tags`, `Page`, `Nav`, `Overflow`, `Footer`, `Feedback`, `Loading`, `Dialog`, and so on. New UI should compose these rather than introducing one-off styling. One of them is not generic: `Logo` draws the brand mark with `currentColor`, and its path data is duplicated in [static/brand/logo.svg](static/brand/logo.svg) for the copies that leave the app — change the geometry in both. Components accept locale-path functions where they take user-visible text.
 
+**A page's top follows one order**, and `Page` enforces it: the heading and its `details`,
+then the `actions` snippet, then the `alerts` snippet, then the page's children. Both
+snippets render in the text column even when the title is banded, so they never change the
+band's height, which is `--page-header-height`. Fill them with these:
+
+- **`Action`** is a link styled as a compact button, with an optional `group` (admin,
+  editor, minter, steward) rendered as the same `Tag` a `Card` uses and an optional
+  `count` badge for waiting work. A tool that acts in place, like Mark done, is a plain
+  `Button` in the same row.
+- **`Alert`** takes a `tone` of `problem`, `attention` or `info`, an optional `action`
+  snippet and optional `children` for detail such as a list of blockers. It shares
+  `Feedback`'s left rule and faded ground, so the two read as one vocabulary; `Feedback`
+  stays for inline results, empty states and load errors. Render an `Alert` only under a
+  condition — DESIGN.md § Interface has the rule.
+- **`Tip`** has no box. A boxed tip was indistinguishable from a default `Feedback`, so
+  help read as a notice and notices as help.
+
 Three of them carry invariants worth stating alongside `Button`'s.
 
-`Page`'s **`band`** chooses _where_ the title renders, never whether there is one:
-`<svelte:head><title>` is identical either way, and so are the `page-header` and
-`page-title-edit` test ids, which mean "the page's title" rather than "the band". With
-`band={false}` the heading, subtitle and details render inside the text column instead,
-which is why converting a page is a one-word change. `icon` and `wobble` are ignored in
-that mode. See Global context above for the `--page-header-height` rule it exists to hold.
+`Page`'s **`context`** names what the page belongs to — a venue's short name, a
+scholar, a currency — for the browser tab only: `<svelte:head><title>` reads
+"Submissions — ToK" while the heading reads "Submissions", since the context bar
+already names the owner on the page. Its **`subtitle`** is for naming the kind
+of thing a proper-named title is, and nothing else; DESIGN.md § Interface has the rule.
+`page-header` and `page-title-edit` are the title's test ids.
 
 **`TextField`** sizes itself from its own content, and **the placeholder is what it
 measures when the field is empty** — a hidden ruler span holds the placeholder text and the
@@ -900,7 +925,7 @@ by reading code:
   vertical shift of the whole page on a resize, arriving through the component whose
   invariant is that it only moves things sideways.
 - **The row stops shrinking for the length of a measurement** (`data-fitting`). Everything
-  in these rows that can absorb — a breadcrumb, a venue's name, the spacer that pushes the
+  in these rows that can absorb — an area's name in the context bar, the spacer that pushes the
   account group right — grinds itself down instead of letting the row report being full,
   which is why `scrollWidth > clientWidth` is useless here. **Each call site pins its own
   shrinkables under that attribute, and one that forgets silently stops the menu working**,

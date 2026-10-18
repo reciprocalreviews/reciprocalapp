@@ -35,8 +35,14 @@ test('an unverified scholar sees the banner and can verify a new contact email',
 	await page.goto(`/scholar/${R5.id}`);
 	await page.waitForLoadState('networkidle');
 
-	// The persistent unverified-email banner is shown.
+	// On their own profile the add-email alert is the prompt, so the banner, which would
+	// only repeat it, is not shown here. It is everywhere else.
+	await expect(page.getByTestId('email-onboarding')).toBeVisible();
+	await expect(page.getByTestId('banner-email')).toBeHidden();
+	await page.goto('/');
 	await expect(page.getByTestId('banner-email')).toBeVisible();
+	await page.goto(`/scholar/${R5.id}`);
+	await page.waitForLoadState('networkidle');
 
 	// The profile prompts for a contact email; request verification for a new address.
 	const newEmail = `verified${Date.now()}@uni.edu`;
@@ -80,8 +86,8 @@ test('an unverified scholar sees the banner and can verify a new contact email',
 		.poll(() => sql(`select email from public.scholars where id = '${R5.id}';`))
 		.toBe(newEmail);
 
-	// ...and the banner is gone on the next page load.
-	await page.goto(`/scholar/${R5.id}`);
+	// ...and the banner is gone on the next page load, away from the profile too.
+	await page.goto('/');
 	await expect(page.getByTestId('banner-email')).toBeHidden();
 });
 
