@@ -20,7 +20,7 @@
  * stays theirs. */
 
 import type { VenueCommitment } from './SupabaseCRUD.svelte';
-import { affiliationLine } from './orcidProfileView';
+import type { ProfileSummary } from './orcidProfileView';
 
 /** A scholar the name could refer to. */
 export type Candidate = { id: string; name: string };
@@ -121,7 +121,7 @@ export function matchPersonName(name: string, candidates: Candidate[]): PersonMa
 export type Volunteer = Candidate & {
 	email: string | null;
 	orcid: string | null;
-	affiliation: string | null;
+	profile: ProfileSummary;
 };
 
 /** How far a written name may be from a volunteer's, in single-letter edits, for the
@@ -245,7 +245,7 @@ export function volunteersFor(commitments: VenueCommitment[], role: string): Vol
 			name: c.scholars?.name ?? '',
 			email: c.scholars?.email ?? null,
 			orcid: c.scholars?.orcid ?? null,
-			affiliation: affiliationLine(c.scholars?.orcid_profiles, true)
+			profile: c.scholars?.orcid_profiles
 		}))
 		.filter((c) => c.name.length > 0);
 }

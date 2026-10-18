@@ -868,33 +868,35 @@
 			{#each matchedRoles as role (role.id)}
 				{@const match = personMatches[index][role.id] ?? { status: 'none' }}
 				<td class="person">
-					<TextField
-						strings={(l) => ({ ...l.page.bulkImport.field.person, label: '' })}
-						bind:text={row.people[role.id]}
-						testid="import-row-{index}-person-{role.id}"
-					/>
-					{#if match.status === 'unmatched'}
-						<Feedback
-							error
-							testid="import-row-{index}-unmatched"
-							text={(l) => l.page.bulkImport.person.unmatched}
+					<div class="person-stack">
+						<TextField
+							strings={(l) => ({ ...l.page.bulkImport.field.person, label: '' })}
+							bind:text={row.people[role.id]}
+							testid="import-row-{index}-person-{role.id}"
 						/>
-					{/if}
-					{#if match.status !== 'none'}
-						<!-- A choice pinned here can be undone; one the name resolved to on its
+						{#if match.status === 'unmatched'}
+							<Feedback
+								error
+								testid="import-row-{index}-unmatched"
+								text={(l) => l.page.bulkImport.person.unmatched}
+							/>
+						{/if}
+						{#if match.status !== 'none'}
+							<!-- A choice pinned here can be undone; one the name resolved to on its
 						     own is changed by editing the name, which is what it came from. -->
-						<VolunteerPicker
-							testid="import-row-{index}-picker-{role.id}"
-							name={row.people[role.id] ?? ''}
-							role={role.name}
-							candidates={candidatesByRole.get(role.id) ?? []}
-							chosen={match.status === 'resolved' ? match.id : undefined}
-							choose={(id) => (row.peopleChoices[role.id] = id)}
-							clear={row.peopleChoices[role.id] === undefined
-								? undefined
-								: () => delete row.peopleChoices[role.id]}
-						/>
-					{/if}
+							<VolunteerPicker
+								testid="import-row-{index}-picker-{role.id}"
+								name={row.people[role.id] ?? ''}
+								role={role.name}
+								candidates={candidatesByRole.get(role.id) ?? []}
+								chosen={match.status === 'resolved' ? match.id : undefined}
+								choose={(id) => (row.peopleChoices[role.id] = id)}
+								clear={row.peopleChoices[role.id] === undefined
+									? undefined
+									: () => delete row.peopleChoices[role.id]}
+							/>
+						{/if}
+					</div>
 				</td>
 			{/each}
 			<td>
@@ -1121,6 +1123,14 @@
 	   name and a short verdict beside it. */
 	.person {
 		min-width: 11em;
+	}
+
+	/* The name, what became of it, and the picker are three things; spaced as the
+	   unmatched page spaces the same three, so a cell reads as chunks, not one block. */
+	.person-stack {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-half);
 	}
 
 	.paste :global(textarea) {

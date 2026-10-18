@@ -543,6 +543,9 @@ test("only those who assign others see volunteers' emails, on the page and in th
 		page.getByTestId('volunteer-email').getByRole('link', { name: SEED.scholars.r4.email })
 	).toHaveAttribute('href', `mailto:${SEED.scholars.r4.email}`);
 	expect(await exportVolunteersCSV(page)).toContain(SEED.scholars.r4.email);
+	await expect(
+		page.getByTestId('volunteer-orcid').filter({ hasText: SEED.scholars.r4.orcid })
+	).toHaveAttribute('href', `https://orcid.org/${SEED.scholars.r4.orcid}`);
 	await logout(page);
 
 	// A reviewer assigns nobody, so sees the roster without anyone's address.
@@ -550,6 +553,10 @@ test("only those who assign others see volunteers' emails, on the page and in th
 	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
 	await expect(page.locator('tr[data-testid^="volunteer-row-"]').first()).toBeVisible();
 	await expect(page.getByTestId('volunteer-email')).toHaveCount(0);
+	// The iD stays: it is public on every profile, and the export has always carried it.
+	await expect(
+		page.getByTestId('volunteer-orcid').filter({ hasText: SEED.scholars.r4.orcid })
+	).toBeVisible();
 	const csv = await exportVolunteersCSV(page);
 	expect(csv.split('\n', 1)[0]).not.toContain('Email');
 	expect(csv).not.toContain(SEED.scholars.r4.email);

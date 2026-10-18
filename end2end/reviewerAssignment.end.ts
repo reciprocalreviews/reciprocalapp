@@ -38,6 +38,11 @@ test('AE assigns two reviewer bids and bidding closes', async ({ page, context }
 	await expect(
 		page.getByTestId('assignee-email').getByRole('link', { name: SEED.scholars.r4.email })
 	).toHaveAttribute('href', `mailto:${SEED.scholars.r4.email}`);
+	// And their ORCID iD, for a reviewing system that invites by iD rather than address.
+	await expect(page.getByTestId('assignee-orcid')).toHaveCount(3);
+	await expect(
+		page.getByTestId('assignee-orcid').filter({ hasText: SEED.scholars.r4.orcid })
+	).toHaveAttribute('href', `https://orcid.org/${SEED.scholars.r4.orcid}`);
 
 	// Assign the first bid; one fewer pending, one more Unassign.
 	await page.getByRole('button', { name: APPROVE_BID_TIP }).first().click();
@@ -55,6 +60,7 @@ test('AE assigns two reviewer bids and bidding closes', async ({ page, context }
 	await expect(
 		page.getByTestId('assignee-email').getByRole('link', { name: SEED.scholars.r1.email })
 	).toHaveAttribute('href', `mailto:${SEED.scholars.r1.email}`);
+	await expect(page.getByTestId('assignee-orcid')).toHaveCount(3);
 
 	// Back on the submissions list, bidding for that submission's Reviewer role
 	// should now be closed (3 approved Reviewer assignments meets desired=3).
@@ -75,6 +81,7 @@ test('AE assigns two reviewer bids and bidding closes', async ({ page, context }
 		await page.waitForLoadState('networkidle');
 		await expect(page.getByRole('link', { name: SEED.scholars.r1.name })).toBeVisible();
 		await expect(page.getByTestId('assignee-email')).toHaveCount(0);
+		await expect(page.getByTestId('assignee-orcid')).toHaveCount(0);
 		await logout(page);
 	} finally {
 		sql(`update public.venues set anonymous_assignments = true where id = '${VENUE_ID}';`);

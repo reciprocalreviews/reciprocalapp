@@ -92,6 +92,10 @@
 				"label": "Choose"
 			}
 		},
+		"scholarPreview": {
+			"noEmail": "no verified email",
+			"noORCID": "no ORCID iD"
+		},
 		"volunteerPicker": {
 			"suggestions": "Close matches among {role} volunteers",
 			"ambiguous": "“{name}” could be any of these {role} volunteers",
@@ -106,7 +110,6 @@
 			},
 			"more": "Showing {shown} of {count}. Keep typing to narrow.",
 			"noResults": "Nobody in {role} matches “{query}”. If they haven’t joined yet, invite them to the role first.",
-			"noORCID": "no ORCID iD",
 			"change": {
 				"tip": "Choose a different scholar",
 				"label": "Change"
@@ -1120,8 +1123,7 @@
 				"anonymized": "anonymized",
 				"you": "you",
 				"declinedBy": "declined by",
-				"compensationOnly": "Assign in the reviewing system first, and only after the scholar has agreed.",
-				"noEmail": "no verified email"
+				"compensationOnly": "Assign in the reviewing system first, and only after the scholar has agreed."
 			},
 			"declineBidPrompt": "You don't have to answer a bid, and leaving it is fine. But if you decline it, tell the bidder why: your explanation is emailed to them with your name, and they will see it beside their bid.",
 			"declineClaimPrompt": "Tell them why you're declining this request for compensation. Your explanation is emailed to them with your name.",

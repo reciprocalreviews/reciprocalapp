@@ -4377,10 +4377,6 @@
                     "declinedToPay": {
                       "type": "string"
                     },
-                    "noEmail": {
-                      "description": "Under an accepted assignee's name, for approvers, when the scholar has no verified contact address to show there.",
-                      "type": "string"
-                    },
                     "nonPaying": {
                       "type": "string"
                     },
@@ -4402,8 +4398,7 @@
                     "anonymized",
                     "you",
                     "declinedBy",
-                    "compensationOnly",
-                    "noEmail"
+                    "compensationOnly"
                   ],
                   "type": "object"
                 },
@@ -7585,6 +7580,25 @@
               ],
               "type": "object"
             },
+            "scholarPreview": {
+              "additionalProperties": false,
+              "description": "A scholar's name, linked to their profile, with the email address and ORCID iD someone needs to reach or invite them elsewhere. Shared by the bidding tables, the volunteer roster, and the import pickers.",
+              "properties": {
+                "noEmail": {
+                  "description": "In place of an email the viewer may see but the scholar has not verified, so the viewer knows to find another way rather than wondering if it failed to load.",
+                  "type": "string"
+                },
+                "noORCID": {
+                  "description": "In place of a missing ORCID iD, so two previews line up when compared.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "noEmail",
+                "noORCID"
+              ],
+              "type": "object"
+            },
             "scholarSearch": {
               "additionalProperties": false,
               "description": "The field that resolves typed text to a scholar, by ORCID iD, email address, or a search of names. Shared by every place one scholar names another: authors on a submission, venue admins, currency minters, and role invitations.",
@@ -7658,10 +7672,6 @@
                   "description": "More results than are shown. `{shown}` of `{count}`.",
                   "type": "string"
                 },
-                "noORCID": {
-                  "description": "Shown in place of a missing ORCID iD, so two lines line up when compared.",
-                  "type": "string"
-                },
                 "noResults": {
                   "description": "The search found nobody. `{query}`.",
                   "type": "string"
@@ -7691,7 +7701,6 @@
                 "search",
                 "more",
                 "noResults",
-                "noORCID",
                 "change"
               ],
               "type": "object"
@@ -7702,6 +7711,7 @@
             "tokens",
             "subheader",
             "scholarSearch",
+            "scholarPreview",
             "volunteerPicker"
           ],
           "type": "object"

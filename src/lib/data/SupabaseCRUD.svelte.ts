@@ -234,10 +234,11 @@ function venueCommitmentsQuery(client: SupabaseClient<Database>, venue: VenueID)
 		client
 			.from('volunteers')
 			// The mirrored ORCID columns travel as a nested embed through the scholars join,
-			// so the roster stays one round trip. Only the keywords and the affiliation: the
-			// two jsonb payloads are deliberately left behind on every list query.
+			// so the roster stays one round trip. Only the keywords and what ScholarPreview
+			// shows (affiliation, works count): the two jsonb payloads are deliberately left
+			// behind on every list query.
 			.select(
-				'*, scholars (name, email, orcid, orcid_profiles(keywords, employment_role, employment_organization)), roles!inner(name, venueid)'
+				'*, scholars (name, email, orcid, orcid_profiles(keywords, employment_role, employment_organization, work_count, work_first_year, work_last_year)), roles!inner(name, venueid)'
 			)
 			.eq('roles.venueid', venue)
 	);

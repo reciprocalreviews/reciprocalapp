@@ -172,6 +172,16 @@ export type LocaleText = {
 			 * aria-label, and a column of identically-named buttons is unusable. */
 			choose: ButtonText;
 		};
+		/** A scholar's name, linked to their profile, with the email address and ORCID iD
+		 * someone needs to reach or invite them elsewhere. Shared by the bidding tables,
+		 * the volunteer roster, and the import pickers. */
+		scholarPreview: {
+			/** In place of an email the viewer may see but the scholar has not verified, so
+			 * the viewer knows to find another way rather than wondering if it failed to load. */
+			noEmail: string;
+			/** In place of a missing ORCID iD, so two previews line up when compared. */
+			noORCID: string;
+		};
 		/** Choosing one of a role's volunteers for a name written somewhere else, such
 		 * as an import. Shared by the unmatched assignments page and the bulk import
 		 * table. `{role}` is the role's name throughout. */
@@ -192,8 +202,6 @@ export type LocaleText = {
 			more: string;
 			/** The search found nobody. `{query}`. */
 			noResults: string;
-			/** Shown in place of a missing ORCID iD, so two lines line up when compared. */
-			noORCID: string;
 			/** Clears a choice to pick someone else. */
 			change: ButtonText;
 		};
@@ -767,9 +775,6 @@ export type LocaleText = {
 				/** Under the buttons of any row with an Assign button: assign in the venue's
 				 * reviewing system first, and only once the scholar has agreed. */
 				compensationOnly: string;
-				/** Under an accepted assignee's name, for approvers, when the scholar has no
-				 * verified contact address to show there. */
-				noEmail: string;
 			};
 			/** Above the reason field when declining a bid. Declining is optional, so this says
 			 * so, and that the reason goes to the bidder. */

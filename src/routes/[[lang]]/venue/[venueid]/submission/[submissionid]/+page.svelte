@@ -24,6 +24,7 @@
 	import VenueExpertise from '#lib/components/VenueExpertise.svelte';
 	import ScholarField from '#lib/components/ScholarField.svelte';
 	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import ScholarPreview from '#lib/components/ScholarPreview.svelte';
 	import { ScholarSearch } from '#lib/components/ScholarSearch.svelte.js';
 	import Status from '#lib/components/Status.svelte';
 	import Subheader from '#lib/components/Subheader.svelte';
@@ -112,6 +113,23 @@
 	/** The mirrored ORCID columns for one assignee, or null when RR has not read them. */
 	function profileOf(scholarID: string) {
 		return assignmentScholars.find((s) => s.id === scholarID)?.orcid_profiles ?? null;
+	}
+
+	/** An assignee's id and name for ScholarPreview, or just the id for it to look up when
+	 * the card did not load or has no name. */
+	function cardOf(scholarID: string) {
+		const card = assignmentScholars.find((s) => s.id === scholarID);
+		return card?.name ? card : scholarID;
+	}
+
+	/** An assignee's ORCID iD, null when they have none. */
+	function orcidOf(scholarID: string) {
+		return assignmentScholars.find((s) => s.id === scholarID)?.orcid ?? null;
+	}
+
+	/** An assignee's verified address, null when they have none to show. */
+	function emailOf(scholarID: string) {
+		return assigneeEmails.find((s) => s.id === scholarID)?.email ?? null;
 	}
 
 	/** The lookups the assignee/bid sorts need. Declared once so both call sites
@@ -386,29 +404,6 @@
 	}
 </script>
 
-<!--
-	Who a candidate is, under their name: the line an editor used to have to open
-	orcid.org in another tab for. Short form, which drops the department -- it is the
-	least discriminating part of an affiliation and this is the narrowest cell on the
-	page. Renders nothing at all when RR has no mirror for them.
--->
-{#snippet orcidContext(scholarID: string)}
-	{@const profile = profileOf(scholarID)}
-	{@const affiliation = affiliationLine(profile, true)}
-	{@const stat = worksStat(profile)}
-	{#if affiliation || stat}
-		<span class="orcid-context" data-testid="assignment-orcid">
-			{#if affiliation}<span class="affiliation">{affiliation}</span>{/if}
-			{#if stat}<span class="works">{stat}</span>{/if}
-		</span>
-	{/if}
-{/snippet}
-
-<!--
-	An accepted assignee's verified address, for approvers who must invite them in a
-	venue's own reviewing system. Said plainly when there is none, so the editor knows
-	to find another way rather than wondering whether it failed to load.
--->
 <!-- Under any row whose buttons include Assign: the same reminder as above the table, in
      brief, where the approver's eye is when they click. -->
 {#snippet assignNote()}
@@ -417,12 +412,21 @@
 	</p>
 {/snippet}
 
-{#snippet assigneeEmail(scholarID: string)}
-	{@const email = assigneeEmails.find((s) => s.id === scholarID)?.email ?? null}
-	<span class="assignee-email" data-testid="assignee-email">
-		{#if email}<a href="mailto:{email}">{email}</a>{:else}{locale().page.submission.cell
-				.noEmail}{/if}
-	</span>
+<!--
+	An assignee or bidder, with the address and ORCID iD approvers need to ask them about a
+	bid or invite them in a venue's own reviewing system. Anyone else sees only the name:
+	`undefined` keeps ScholarPreview from rendering either. The address waits on acceptance
+	for a row that is not a bid, as it always has; the iD is public on the profile anyway.
+	The ORCID affiliation and works line shows to anyone who sees the row, as it always has.
+-->
+{#snippet assignee(scholarID: string, contact: boolean, withEmail = true)}
+	<ScholarPreview
+		scholar={cardOf(scholarID)}
+		email={contact && withEmail ? emailOf(scholarID) : undefined}
+		orcid={contact ? orcidOf(scholarID) : undefined}
+		profile={profileOf(scholarID)}
+		testid="assignee"
+	/>
 {/snippet}
 
 <!--
@@ -857,7 +861,11 @@
 						<td class={!assignment.approved ? 'unapproved' : undefined}>
 							<div class="scholar-cell">
 								{#if assignment.scholar === scholar.id}{locale().page.submission.cell
-										.you}{:else}<ScholarLink id={assignment.scholar} />{/if}
+										.you}{:else}{@render assignee(
+										assignment.scholar,
+										isApprover,
+										assignment.approved
+									)}{/if}
 								{#if assignment.completed}
 									<Status
 										testid="assignment-completed"
@@ -868,10 +876,6 @@
 								{:else}
 									<Status good={false} label={(l) => l.page.submission.status.unassigned} />
 								{/if}
-								{#if isApprover && assignment.approved && assignment.scholar !== scholar.id}
-									{@render assigneeEmail(assignment.scholar)}
-								{/if}
-								{@render orcidContext(assignment.scholar)}
 							</div>
 						</td>
 						<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
@@ -932,7 +936,7 @@
 							<td>{role.name}</td>
 							<td>
 								<div class="scholar-cell">
-									<ScholarLink id={assignment.scholar} />
+									{@render assignee(assignment.scholar, assignment.scholar !== scholar.id)}
 									{#if isClaim(assignment)}
 										<Status
 											good={false}
@@ -945,10 +949,6 @@
 									{#if bidLabel !== undefined}
 										<em data-testid="bid-preference-label">{bidLabel}</em>
 									{/if}
-									{#if assignment.scholar !== scholar.id}
-										{@render assigneeEmail(assignment.scholar)}
-									{/if}
-									{@render orcidContext(assignment.scholar)}
 								</div>
 							</td>
 							<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
@@ -1057,7 +1057,7 @@
 							<td>{role.name}</td>
 							<td class="unapproved">
 								<div class="scholar-cell">
-									<ScholarLink id={assignment.scholar} />
+									{@render assignee(assignment.scholar, assignment.scholar !== scholar.id)}
 									<Status good={false} label={(l) => l.page.submission.status.declined} />
 								</div>
 							</td>
@@ -1177,21 +1177,9 @@
 		color: var(--inactive-color);
 	}
 
-	.assignee-email {
-		font-size: var(--small-font-size);
-		color: var(--inactive-color);
-	}
-
 	.assign-note {
 		margin: var(--spacing-half) 0 0 0;
 		max-width: 22ch;
-		font-size: var(--small-font-size);
-		color: var(--inactive-color);
-	}
-
-	.orcid-context {
-		display: flex;
-		flex-direction: column;
 		font-size: var(--small-font-size);
 		color: var(--inactive-color);
 	}
