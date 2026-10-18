@@ -32,6 +32,8 @@ import {
 	type UnmatchedAssignmentRow,
 	type PreferenceLevelID,
 	type PreferenceLevelRow,
+	type DeclineReasonID,
+	type DeclineReasonRow,
 	type ThanksRow,
 	type ThanksID,
 	type NotificationSettingRow,
@@ -604,6 +606,16 @@ export default abstract class CRUD {
 		direction: -1 | 1
 	): Promise<Result>;
 	abstract deletePreferenceLevel(id: PreferenceLevelID): Promise<Result>;
+	/** Create a new decline reason for a venue, appended after the highest current rank. */
+	abstract createDeclineReason(venue: VenueID, text: string): Promise<Result<DeclineReasonRow>>;
+	abstract editDeclineReasonText(id: DeclineReasonID, text: string): Promise<Result>;
+	/** Swap the ranks of the reason and its neighbor in the given direction. */
+	abstract reorderDeclineReason(
+		reason: DeclineReasonRow,
+		reasons: DeclineReasonRow[],
+		direction: -1 | 1
+	): Promise<Result>;
+	abstract deleteDeclineReason(id: DeclineReasonID): Promise<Result>;
 	/** Invite each of these scholars to the role, as one batch: a volunteer record in the
 	 * `invited` state, and a message telling them so.
 	 *
@@ -691,10 +703,11 @@ export default abstract class CRUD {
 
 	/** Decline a pending bid, with the explanation the bidder is owed. Declining is optional --
 	 * an approver may leave a bid unanswered -- but a decline is never silent: the reason is
-	 * required, stored on the bid, and emailed to the bidder along with who declined. */
+	 * required, stored on the bid, and emailed to the bidder along with who declined. The
+	 * reason is one of the venue's decline reasons or the approver's own words. */
 	abstract declineBid(
 		assignment: AssignmentRow,
-		reason: string,
+		reason: DeclineReasonRow | string,
 		role: RoleRow,
 		decliner: ScholarID
 	): Promise<Result>;
@@ -964,6 +977,7 @@ export default abstract class CRUD {
 	abstract getVenuePreferenceLevels(
 		venue: VenueID
 	): Promise<ReadResult<PreferenceLevelRow[] | null>>;
+	abstract getVenueDeclineReasons(venue: VenueID): Promise<ReadResult<DeclineReasonRow[] | null>>;
 
 	abstract getVenueVolunteers(venue: VenueID): Promise<ReadResult<VenueVolunteer[] | null>>;
 	/** How many volunteers each of a venue's roles has, regardless of how many of them

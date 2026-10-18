@@ -470,6 +470,9 @@
             "CreateCompensation": {
               "type": "string"
             },
+            "CreateDeclineReason": {
+              "type": "string"
+            },
             "CreatePreferenceLevel": {
               "type": "string"
             },
@@ -503,6 +506,9 @@
             "DeleteAssignment": {
               "type": "string"
             },
+            "DeleteDeclineReason": {
+              "type": "string"
+            },
             "DeletePreferenceLevel": {
               "type": "string"
             },
@@ -526,6 +532,9 @@
               "type": "string"
             },
             "EditCurrencyMinters": {
+              "type": "string"
+            },
+            "EditDeclineReason": {
               "type": "string"
             },
             "EditPreferenceLevel": {
@@ -663,6 +672,9 @@
             "LoadCurrency": {
               "type": "string"
             },
+            "LoadDeclineReason": {
+              "type": "string"
+            },
             "LoadNotificationSettings": {
               "type": "string"
             },
@@ -754,6 +766,9 @@
               "type": "string"
             },
             "RemoveSupport": {
+              "type": "string"
+            },
+            "ReorderDeclineReason": {
               "type": "string"
             },
             "ReorderPreferenceLevel": {
@@ -949,6 +964,10 @@
             "EditPreferenceLevel",
             "ReorderPreferenceLevel",
             "DeletePreferenceLevel",
+            "CreateDeclineReason",
+            "EditDeclineReason",
+            "ReorderDeclineReason",
+            "DeleteDeclineReason",
             "InviteToRole",
             "AcceptRoleInvite",
             "EditCurrencyMinters",
@@ -1035,6 +1054,7 @@
             "LoadProposal",
             "LoadCompensation",
             "LoadPreferenceLevel",
+            "LoadDeclineReason",
             "LoadSubmissionType",
             "LoadConflict",
             "ProposeThanks",
@@ -3779,6 +3799,9 @@
                 "button": {
                   "additionalProperties": false,
                   "properties": {
+                    "addDeclineReason": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
                     "addPreferenceLevel": {
                       "$ref": "#/definitions/ButtonText"
                     },
@@ -3786,8 +3809,18 @@
                       "$ref": "#/definitions/ConfirmButtonText",
                       "description": "Change an address the venue already has. Confirmed, because the old address is released the moment this succeeds — nothing reserves it and nothing redirects from it, so every link anyone has sent stops working."
                     },
+                    "deleteDeclineReason": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Confirmed, though past declines keep their words: the reason's text was copied onto each decline that used it."
+                    },
                     "deletePreferenceLevel": {
                       "$ref": "#/definitions/ConfirmButtonText"
+                    },
+                    "moveDeclineReasonDown": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "moveDeclineReasonUp": {
+                      "$ref": "#/definitions/ButtonText"
                     },
                     "movePreferenceLevelDown": {
                       "$ref": "#/definitions/ButtonText"
@@ -3806,7 +3839,11 @@
                     "addPreferenceLevel",
                     "deletePreferenceLevel",
                     "movePreferenceLevelUp",
-                    "movePreferenceLevelDown"
+                    "movePreferenceLevelDown",
+                    "addDeclineReason",
+                    "deleteDeclineReason",
+                    "moveDeclineReasonUp",
+                    "moveDeclineReasonDown"
                   ],
                   "type": "object"
                 },
@@ -3910,6 +3947,10 @@
                     "logIn": {
                       "type": "string"
                     },
+                    "noDeclineReasons": {
+                      "description": "The venue offers no decline reasons, so approvers write each one.",
+                      "type": "string"
+                    },
                     "noPreferenceLevels": {
                       "type": "string"
                     },
@@ -3923,6 +3964,7 @@
                     "logIn",
                     "adminsOnly",
                     "noPreferenceLevels",
+                    "noDeclineReasons",
                     "addressCurrent",
                     "addressChecking",
                     "addressAvailable",
@@ -3934,8 +3976,53 @@
                 "field": {
                   "additionalProperties": false,
                   "properties": {
+                    "declineReasonText": {
+                      "additionalProperties": false,
+                      "description": "`invalid` states the length rule the database enforces.",
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
+                    },
                     "inactiveMessage": {
                       "$ref": "#/definitions/TextFieldText"
+                    },
+                    "newDeclineReason": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "invalid": {
+                          "description": "The optional validation error message",
+                          "type": "string"
+                        },
+                        "label": {
+                          "description": "The optional label to show above the text feild",
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "description": "The placeholder to show in the text field",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "invalid",
+                        "placeholder"
+                      ],
+                      "type": "object"
                     },
                     "newPreferenceLevel": {
                       "additionalProperties": false,
@@ -4061,7 +4148,9 @@
                     "inactiveMessage",
                     "welcomeTokens",
                     "preferenceLevelLabel",
-                    "newPreferenceLevel"
+                    "newPreferenceLevel",
+                    "declineReasonText",
+                    "newDeclineReason"
                   ],
                   "type": "object"
                 },
@@ -4073,6 +4162,10 @@
                       "type": "string"
                     },
                     "compensation": {
+                      "type": "string"
+                    },
+                    "declineReasons": {
+                      "description": "Section header for the venue's decline reasons (#218).",
                       "type": "string"
                     },
                     "policies": {
@@ -4108,6 +4201,7 @@
                     "compensation",
                     "visibility",
                     "preferenceLevels",
+                    "declineReasons",
                     "templates",
                     "bulkImport"
                   ],
@@ -4251,6 +4345,10 @@
                     "compensation": {
                       "type": "string"
                     },
+                    "declineReasons": {
+                      "description": "Explains decline reasons: what approvers do with them, that the bidder reads the words, and that leaving none requires a written reason.",
+                      "type": "string"
+                    },
                     "doneVisibility": {
                       "description": "Explains how done_visibility_days controls the list.",
                       "type": "string"
@@ -4286,6 +4384,7 @@
                     "roles",
                     "doneVisibility",
                     "preferenceLevels",
+                    "declineReasons",
                     "templates",
                     "bulkImport"
                   ],
@@ -4471,6 +4570,10 @@
                 },
                 "declineClaimPrompt": {
                   "description": "Above the reason field when declining a compensation claim.",
+                  "type": "string"
+                },
+                "declineOwnReason": {
+                  "description": "The last choice beside the venue's decline reasons: none of them fits, so the approver writes the reason themselves.",
                   "type": "string"
                 },
                 "feedback": {
@@ -4889,6 +4992,7 @@
                 "cell",
                 "declineBidPrompt",
                 "declineClaimPrompt",
+                "declineOwnReason",
                 "header",
                 "feedback",
                 "button",

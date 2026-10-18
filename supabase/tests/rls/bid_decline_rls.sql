@@ -9,12 +9,15 @@
 --     cannot clear their own decline; approving a declined bid clears it.
 --   * the DELETE policy: a declined bid cannot be deleted by its bidder.
 --   * the open-review SELECT branch: authors see who is assigned, not who bid.
+--   * venue decline reasons (#218): a chosen reason is copied onto the bid with its id,
+--     must be the venue's own, excludes a written one, and outlives edits to and deletion
+--     of the reason.
 
 \ir ../_helpers/helpers.sql.inc
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(19);
+select plan(29);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -46,6 +49,19 @@ insert into public.conflicts (submissionid, scholarid) values (:'sub', :'conflic
 
 -- The bid under test, pending.
 select tests.create_assignment(:'ven', :'sub', :'bidder', :'rolechild', false, true) as bid \gset
+
+-- Two more bids, declined with one of the venue's reasons.
+select tests.create_scholar('bd_bidder2@test.local') as bidder2 \gset
+select tests.create_scholar('bd_bidder3@test.local') as bidder3 \gset
+select tests.create_volunteer(:'bidder2', :'rolechild', 'accepted') as v_bidder2 \gset
+select tests.create_volunteer(:'bidder3', :'rolechild', 'accepted') as v_bidder3 \gset
+select tests.create_assignment(:'ven', :'sub', :'bidder2', :'rolechild', false, true) as bid2 \gset
+select tests.create_assignment(:'ven', :'sub', :'bidder3', :'rolechild', false, true) as bid3 \gset
+
+-- The venue's own default reason, and another venue's.
+select id as reason from public.decline_reasons where venueid = :'ven' and rank = 1 \gset
+select tests.create_venue(:'cur', array[:'admin']::uuid[]) as otherven \gset
+select id as otherreason from public.decline_reasons where venueid = :'otherven' and rank = 0 \gset
 
 -- ---- Open review hides bids from authors ---------------------------------------
 -- The venue is open review, so the author may see who is assigned...
@@ -194,6 +210,75 @@ select throws_ok(
 	'RR017',
 	null,
 	'an approved bid cannot be declined'
+);
+
+-- ---- Declining with a venue reason (#218) --------------------------------------
+select ok(
+	not has_function_privilege('anon', 'public.decline_bid(uuid,text,uuid)', 'execute'),
+	'an anonymous visitor cannot execute decline_bid'
+);
+
+select tests.authenticate_as(:'approver');
+select throws_ok(
+	format($$ select public.decline_bid(%L, null, %L) $$, :'bid2', :'otherreason'),
+	'P0001',
+	'That decline reason does not belong to this venue',
+	'another venue''s reason is refused'
+);
+
+select throws_ok(
+	format($$ select public.decline_bid(%L, 'and my own words', %L) $$, :'bid2', :'reason'),
+	'P0001',
+	'A decline gives the venue''s reason or the approver''s own, not both',
+	'a venue reason cannot be combined with the approver''s own words'
+);
+
+select lives_ok(
+	format($$ select public.decline_bid(%L, '', %L) $$, :'bid2', :'reason'),
+	'an approver can decline with one of the venue''s reasons'
+);
+
+select tests.clear_authentication();
+select results_eq(
+	format($$ select decline_reason, decline_reason_id from public.assignments where id = %L $$, :'bid2'),
+	format($$ values ('We selected a different scholar.', %L::uuid) $$, :'reason'),
+	'the reason''s text is copied onto the bid, with its id'
+);
+
+select tests.authenticate_as(:'approver');
+select lives_ok(
+	format($$ select public.decline_bid(%L, 'Your work is outside this area.') $$, :'bid3'),
+	'an approver can still write their own reason'
+);
+
+select tests.clear_authentication();
+select results_eq(
+	format($$ select decline_reason, decline_reason_id is null from public.assignments where id = %L $$, :'bid3'),
+	$$ values ('Your work is outside this area.', true) $$,
+	'a written reason is stored with no venue reason'
+);
+
+-- Editing, then deleting, the reason never rewrites what the bidder was told.
+update public.decline_reasons set text = 'We chose someone else.' where id = :'reason';
+delete from public.decline_reasons where id = :'reason';
+select results_eq(
+	format($$ select decline_reason, decline_reason_id is null from public.assignments where id = %L $$, :'bid2'),
+	$$ values ('We selected a different scholar.', true) $$,
+	'a deleted reason leaves the decline''s words in place'
+);
+
+-- Approving after all clears every decline column.
+select tests.authenticate_as(:'approver');
+select lives_ok(
+	format($$ update public.assignments set approved = true where id = %L $$, :'bid3'),
+	'an approver can approve a bid declined after all'
+);
+
+select tests.clear_authentication();
+select results_eq(
+	format($$ select decline_reason is null, decline_reason_id is null from public.assignments where id = %L $$, :'bid3'),
+	$$ values (true, true) $$,
+	'approving clears the reason and its id'
 );
 
 select * from finish();

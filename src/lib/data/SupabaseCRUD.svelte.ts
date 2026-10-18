@@ -11,6 +11,8 @@ import type {
 	CurrencyRow,
 	PreferenceLevelID,
 	PreferenceLevelRow,
+	DeclineReasonID,
+	DeclineReasonRow,
 	ProposalID,
 	ProposalRow,
 	Response,
@@ -1415,6 +1417,17 @@ export default class SupabaseCRUD extends CRUD {
 		// Paged: a roster's worth of scholars can run past PostgREST's max_rows.
 		return this.allRows('LoadAssignment', (from, to) =>
 			this.client.rpc('assignment_loads', { _venue: venue, _scholars: scholars }).range(from, to)
+		);
+	}
+
+	async getVenueDeclineReasons(venue: VenueID): Promise<ReadResult<DeclineReasonRow[] | null>> {
+		return this.rows(
+			'LoadDeclineReason',
+			this.client
+				.from('decline_reasons')
+				.select('*')
+				.eq('venueid', venue)
+				.order('rank', { ascending: true })
 		);
 	}
 
@@ -3020,6 +3033,75 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────
+	// Decline reasons
+	// ─────────────────────────────────────────────────────────────────────────
+
+	async createDeclineReason(venue: VenueID, text: string): Promise<Result<DeclineReasonRow>> {
+		// New reasons go at the end of the current rank order.
+		const { data: existing, error: existingError } = await this.client
+			.from('decline_reasons')
+			.select('rank')
+			.eq('venueid', venue)
+			.order('rank', { ascending: false })
+			.limit(1);
+		if (existingError) return this.error('CreateDeclineReason', existingError);
+		const rank = existing.length === 0 ? 0 : existing[0].rank + 1;
+
+		const { data, error } = await this.client
+			.from('decline_reasons')
+			.insert({ venueid: venue, text: text.trim(), rank })
+			.select()
+			.single();
+		if (error) return this.error('CreateDeclineReason', error);
+		return { data };
+	}
+
+	async editDeclineReasonText(id: DeclineReasonID, text: string): Promise<Result> {
+		const { error } = await this.client
+			.from('decline_reasons')
+			.update({ text: text.trim() })
+			.eq('id', id);
+		return this.errorOrEmpty('EditDeclineReason', error);
+	}
+
+	async reorderDeclineReason(
+		reason: DeclineReasonRow,
+		reasons: DeclineReasonRow[],
+		direction: -1 | 1
+	): Promise<Result> {
+		// The same sentinel swap as reorderPreferenceLevel, for the same (venueid, rank)
+		// unique constraint.
+		const sorted = [...reasons].sort((a, b) => a.rank - b.rank);
+		const index = sorted.findIndex((r) => r.id === reason.id);
+		const neighborIndex = index + direction;
+		if (index < 0 || neighborIndex < 0 || neighborIndex >= sorted.length) return {};
+		const neighbor = sorted[neighborIndex];
+
+		const sentinel = Math.max(...sorted.map((r) => r.rank)) + 1;
+		const { error: e1 } = await this.client
+			.from('decline_reasons')
+			.update({ rank: sentinel })
+			.eq('id', reason.id);
+		if (e1) return this.error('ReorderDeclineReason', e1);
+		const { error: e2 } = await this.client
+			.from('decline_reasons')
+			.update({ rank: reason.rank })
+			.eq('id', neighbor.id);
+		if (e2) return this.error('ReorderDeclineReason', e2);
+		const { error: e3 } = await this.client
+			.from('decline_reasons')
+			.update({ rank: neighbor.rank })
+			.eq('id', reason.id);
+		if (e3) return this.error('ReorderDeclineReason', e3);
+		return {};
+	}
+
+	async deleteDeclineReason(id: DeclineReasonID): Promise<Result> {
+		const { error } = await this.client.from('decline_reasons').delete().eq('id', id);
+		return this.errorOrEmpty('DeleteDeclineReason', error);
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
 	// Assignments
 	// ─────────────────────────────────────────────────────────────────────────
 
@@ -3170,17 +3252,22 @@ export default class SupabaseCRUD extends CRUD {
 
 	async declineBid(
 		assignment: AssignmentRow,
-		reason: string,
+		reason: DeclineReasonRow | string,
 		role: RoleRow,
 		decliner: ScholarID
 	): Promise<Result> {
 		// The RPC authorizes (the same rule as approving), checks the bid is still pending,
-		// and records who declined and why. The email is sent here, as approveAssignment's is.
-		const { error } = await this.client.rpc('decline_bid', {
-			_assignment: assignment.id,
-			_reason: reason
-		});
+		// and records who declined and why. The email is sent here, as approveAssignment's is,
+		// from the reason the RPC stored rather than what was sent, so the bidder reads
+		// exactly what the approvers see.
+		const { data: declined, error } = await this.client.rpc(
+			'decline_bid',
+			typeof reason === 'string'
+				? { _assignment: assignment.id, _reason: reason }
+				: { _assignment: assignment.id, _reason: '', _reason_id: reason.id }
+		);
 		if (error) return rpcError(this, error, 'DeclineBid', { RR017: 'BidNotPending' });
+		const storedReason = stringField(declined, 'reason') ?? '';
 
 		const scholar = await this.getScholar(decliner);
 		if (scholar === null) return { data: undefined };
@@ -3195,7 +3282,7 @@ export default class SupabaseCRUD extends CRUD {
 				scholar.getEmail() ?? '',
 				role.name,
 				await this.submissionTitle(assignment.submission),
-				reason.trim(),
+				storedReason,
 				await this.venuePathOf(assignment.venue),
 				assignment.submission
 			],

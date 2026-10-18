@@ -236,24 +236,25 @@ test('over-cap bidder shows load indicator and requires confirm to assign', asyn
 	}
 });
 
-test('AE declines a bid with an explanation the bidder sees, then assigns them anyway', async ({
+test('AE declines a bid with a venue reason the bidder sees, then assigns them anyway', async ({
 	page,
 	context
 }) => {
-	const REASON = 'Your expertise is in a different area than this paper.';
+	// The seed venue has the default reasons; the second is this one.
+	const REASON = 'We selected a different scholar.';
 	const DECLINE_TIP = 'Decline this bid and explain why to the bidder';
 	const CONFIRM_TIP = 'Decline this bid and email your explanation to the bidder';
 	const ASSIGN_ANYWAY_TIP = 'Assign this scholar after all, withdrawing the decline';
 	const bidState = () =>
 		sql(
-			`select approved::text || '|' || coalesce(decline_reason, '') from public.assignments where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_ID}';`
+			`select approved::text || '|' || coalesce(decline_reason, '') || '|' || (decline_reason_id is not null)::text from public.assignments where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_ID}';`
 		);
 
 	// Start from the seed's pending bid, whatever the tests above left behind. Runs as the
 	// owner, so enforce_assignment_updates does not apply.
 	const reset = () =>
 		sql(
-			`update public.assignments set bid = true, approved = false, declined_at = null, declined_by = null, decline_reason = null where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_ID}';`
+			`update public.assignments set bid = true, approved = false, declined_at = null, declined_by = null, decline_reason = null, decline_reason_id = null where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_ID}';`
 		);
 	reset();
 	sql(`delete from public.emails where event = 'BidDeclined' and scholar = '${BIDDER_ID}';`);
@@ -263,15 +264,21 @@ test('AE declines a bid with an explanation the bidder sees, then assigns them a
 		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 		await page.waitForLoadState('networkidle');
 
-		// Decline opens a form; nothing is sent until the reason is written and confirmed.
+		// Decline opens a form; nothing is sent until a reason is chosen and confirmed.
 		const bidRow = page.locator(`tr:has-text("${SEED.filters.uniqueReviewer}")`);
 		await bidRow.getByRole('button', { name: DECLINE_TIP }).click();
 		const confirm = page.getByRole('button', { name: CONFIRM_TIP });
 		await expect(confirm).toBeDisabled();
-		await page.getByTestId('decline-bid-reason').fill(REASON);
+
+		// Writing one's own requires the words; a venue reason is sent as it is.
+		await page.getByTestId('decline-reason-own').check();
+		await expect(confirm).toBeDisabled();
+		await page.getByTestId('decline-reasons').getByText(REASON).click();
+		await expect(page.getByTestId('decline-bid-reason')).toHaveCount(0);
+		await expect(confirm).toBeEnabled();
 		await confirm.click();
 
-		await expect.poll(bidState).toBe(`false|${REASON}`);
+		await expect.poll(bidState).toBe(`false|${REASON}|true`);
 		await expect
 			.poll(() =>
 				sql(
@@ -308,7 +315,7 @@ test('AE declines a bid with an explanation the bidder sees, then assigns them a
 		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 		await page.waitForLoadState('networkidle');
 		await page.getByTestId('declined-bid').getByRole('button', { name: ASSIGN_ANYWAY_TIP }).click();
-		await expect.poll(bidState).toBe('true|');
+		await expect.poll(bidState).toBe('true||false');
 
 		while ((await dismissButtons.count()) > 0) await dismissButtons.first().click();
 		await logout(page);

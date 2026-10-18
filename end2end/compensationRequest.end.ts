@@ -157,6 +157,8 @@ test('a reviewer claims work on a submission nobody seated them on, and an admin
 		await expect(page.getByTestId('pay-claim')).toBeVisible();
 
 		await page.getByTestId('decline-bid').click();
+		// None of the venue's reasons fits, so the approver writes their own.
+		await page.getByTestId('decline-reason-own').check();
 		await page.getByTestId('decline-bid-reason').fill(REASON);
 		await page.getByTestId('decline-bid-confirm').click();
 		await expect.poll(claimState).toBe(`false|${REASON}`);

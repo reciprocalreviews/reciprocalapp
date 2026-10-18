@@ -25,17 +25,23 @@ export type Database = {
           Tables: {
             "assignments": {
                   Row: {
-                    "approved": boolean,"bid": boolean,"compensation_requested_at": string | null,"completed": boolean,"created_at": string,"decline_reason": string | null,"declined_at": string | null,"declined_by": string | null,"id": string,"preferenceid": string | null,"role": string,"scholar": string,"submission": string,"venue": string
+                    "approved": boolean,"bid": boolean,"compensation_requested_at": string | null,"completed": boolean,"created_at": string,"decline_reason": string | null,"decline_reason_id": string | null,"declined_at": string | null,"declined_by": string | null,"id": string,"preferenceid": string | null,"role": string,"scholar": string,"submission": string,"venue": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "approved"?: boolean,"bid"?: boolean,"compensation_requested_at"?: string | null,"completed"?: boolean,"created_at"?: string,"decline_reason"?: string | null,"declined_at"?: string | null,"declined_by"?: string | null,"id"?: string,"preferenceid"?: string | null,"role": string,"scholar": string,"submission": string,"venue": string
+                    "approved"?: boolean,"bid"?: boolean,"compensation_requested_at"?: string | null,"completed"?: boolean,"created_at"?: string,"decline_reason"?: string | null,"decline_reason_id"?: string | null,"declined_at"?: string | null,"declined_by"?: string | null,"id"?: string,"preferenceid"?: string | null,"role": string,"scholar": string,"submission": string,"venue": string
                   }
                   Update: {
-                    "approved"?: boolean,"bid"?: boolean,"compensation_requested_at"?: string | null,"completed"?: boolean,"created_at"?: string,"decline_reason"?: string | null,"declined_at"?: string | null,"declined_by"?: string | null,"id"?: string,"preferenceid"?: string | null,"role"?: string,"scholar"?: string,"submission"?: string,"venue"?: string
+                    "approved"?: boolean,"bid"?: boolean,"compensation_requested_at"?: string | null,"completed"?: boolean,"created_at"?: string,"decline_reason"?: string | null,"decline_reason_id"?: string | null,"declined_at"?: string | null,"declined_by"?: string | null,"id"?: string,"preferenceid"?: string | null,"role"?: string,"scholar"?: string,"submission"?: string,"venue"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "assignments_decline_reason_id_fkey"
+      columns: ["decline_reason_id"]
+isOneToOne: false
+      referencedRelation: "decline_reasons"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "assignments_declined_by_fkey"
       columns: ["declined_by"]
 isOneToOne: false
@@ -172,6 +178,26 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"decline_reasons": {
+                  Row: {
+                    "created_at": string,"id": string,"rank": number,"text": string,"venueid": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"rank": number,"text": string,"venueid": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"rank"?: number,"text"?: string,"venueid"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "decline_reasons_venueid_fkey"
+      columns: ["venueid"]
+isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"email_verifications": {
                   Row: {
@@ -866,7 +892,7 @@ isOneToOne: false
 { Args: { "_currency": string }; Returns: Json
                            },
 "decline_bid":
-{ Args: { "_assignment": string,"_reason": string }; Returns: Json
+{ Args: { "_assignment": string,"_reason": string,"_reason_id"?: string }; Returns: Json
                            },
 "decline_thanks":
 { Args: { "_id": string,"_reason": string }; Returns: Json
