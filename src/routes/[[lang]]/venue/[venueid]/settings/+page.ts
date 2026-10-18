@@ -28,6 +28,9 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get the venue's preference levels (may be empty if not configured).
 	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
+	// Get the reasons approvers can choose from when declining (may be empty).
+	const { data: declineReasons } = await db.getVenueDeclineReasons(venueid);
+
 	return {
 		venue,
 		roles,
@@ -35,6 +38,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		currency,
 		types,
 		compensation,
-		preferenceLevels
+		preferenceLevels,
+		declineReasons
 	};
 };

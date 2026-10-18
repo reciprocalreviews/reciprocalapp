@@ -196,12 +196,14 @@ export const Emails = {
 	// AssignmentApproved does, so the decision is accountable and the bidder can ask about it.
 	// Consequential rather than optional: it is the answer to something the bidder asked for.
 	//
-	// $5 is the approver's own words and is escaped and defanged like every argument.
+	// $5 is the approver's own words or one of the venue's decline reasons. It is escaped and
+	// defanged like every argument, and quoted so it reads as the approver's words rather
+	// than the email's.
 	BidDeclined: {
 		subject: 'Your bid on "$4" was declined',
 		paragraphs: [
 			'<a href="mailto:$2">$1</a> declined your bid for the $3 role on "$4", and explained:',
-			'$5',
+			'"$5"',
 			'<rr-button href="{origin}/venue/$6/submission/$7">Open the submission</rr-button>'
 		]
 	},
@@ -213,7 +215,7 @@ export const Emails = {
 		subject: 'Your compensation request for "$4" was declined',
 		paragraphs: [
 			'<a href="mailto:$2">$1</a> declined your request for compensation as $3 on "$4", and explained:',
-			'$5',
+			'"$5"',
 			'<rr-button href="{origin}/venue/$6">Open the venue</rr-button>'
 		]
 	},

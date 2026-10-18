@@ -179,6 +179,11 @@ describe('BidDeclined', () => {
 		expect(message).toContain('outside this paper');
 	});
 
+	it("quotes the reason, apart from the email's own words", () => {
+		const { message } = renderEmail('BidDeclined', args);
+		expect(message).toContain('"Your record is outside this paper’s area."');
+	});
+
 	it('links to the submission', () => {
 		const { message } = renderEmail('BidDeclined', args, 'http://localhost:5173');
 		expect(message).toContain(

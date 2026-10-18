@@ -801,6 +801,9 @@ export type LocaleText = {
 			declineBidPrompt: string;
 			/** Above the reason field when declining a compensation claim. */
 			declineClaimPrompt: string;
+			/** The last choice beside the venue's decline reasons: none of them fits, so the
+			 * approver writes the reason themselves. */
+			declineOwnReason: string;
 			header: {
 				authors: string;
 				venue: string;
@@ -1076,6 +1079,9 @@ export type LocaleText = {
 				/** Explains what preference levels are for, and that leaving them
 				 * empty falls back to the plain Bid / Unbid pair. */
 				preferenceLevels: string;
+				/** Explains decline reasons: what approvers do with them, that the bidder
+				 * reads the words, and that leaving none requires a written reason. */
+				declineReasons: string;
 				/** Explains the email-templates section (#113): pick the reviewing
 				 * platform first, then paste each snippet into its email template. */
 				templates: string;
@@ -1107,6 +1113,8 @@ export type LocaleText = {
 				compensation: string;
 				visibility: string;
 				preferenceLevels: string;
+				/** Section header for the venue's decline reasons (#218). */
+				declineReasons: string;
 				/** Section header for the email-templates editor (#113). */
 				templates: string;
 				/** Section header for the bulk-import setup step. */
@@ -1122,6 +1130,8 @@ export type LocaleText = {
 				logIn: string;
 				adminsOnly: string;
 				noPreferenceLevels: string;
+				/** The venue offers no decline reasons, so approvers write each one. */
+				noDeclineReasons: string;
 				/** The venue already has a web address, shown above the field so the warning
 				 * on the change button has something concrete to refer to. Takes `{address}`. */
 				addressCurrent: string;
@@ -1150,6 +1160,9 @@ export type LocaleText = {
 				welcomeTokens: TextFieldText;
 				preferenceLevelLabel: TextFieldText & { invalid: string };
 				newPreferenceLevel: TextFieldText & { invalid: string };
+				/** `invalid` states the length rule the database enforces. */
+				declineReasonText: TextFieldText & { invalid: string };
+				newDeclineReason: TextFieldText & { invalid: string };
 			};
 			options: {
 				/** Label for the reviewing-platform selector above the email
@@ -1168,6 +1181,12 @@ export type LocaleText = {
 				deletePreferenceLevel: ConfirmButtonText;
 				movePreferenceLevelUp: ButtonText;
 				movePreferenceLevelDown: ButtonText;
+				addDeclineReason: ButtonText;
+				/** Confirmed, though past declines keep their words: the reason's text was
+				 * copied onto each decline that used it. */
+				deleteDeclineReason: ConfirmButtonText;
+				moveDeclineReasonUp: ButtonText;
+				moveDeclineReasonDown: ButtonText;
 			};
 			checkbox: {
 				inactive: string;
@@ -2147,6 +2166,10 @@ export type LocaleText = {
 		EditPreferenceLevel: string;
 		ReorderPreferenceLevel: string;
 		DeletePreferenceLevel: string;
+		CreateDeclineReason: string;
+		EditDeclineReason: string;
+		ReorderDeclineReason: string;
+		DeleteDeclineReason: string;
 		InviteToRole: string;
 		AcceptRoleInvite: string;
 		EditCurrencyMinters: string;
@@ -2246,6 +2269,7 @@ export type LocaleText = {
 		LoadProposal: string;
 		LoadCompensation: string;
 		LoadPreferenceLevel: string;
+		LoadDeclineReason: string;
 		LoadSubmissionType: string;
 		LoadConflict: string;
 		ProposeThanks: string;

@@ -32,11 +32,21 @@
 	import { handle } from '$routes/feedback.svelte';
 	import PreferenceLevels from '../PreferenceLevels.svelte';
 	import WebAddress from './WebAddress.svelte';
+	import DeclineReasons from './DeclineReasons.svelte';
 	import Roles from '../Roles.svelte';
 
 	let { data } = $props();
-	let { venue, scholar, roles, volunteers, currency, types, compensation, preferenceLevels } =
-		$derived(data);
+	let {
+		venue,
+		scholar,
+		roles,
+		volunteers,
+		currency,
+		types,
+		compensation,
+		preferenceLevels,
+		declineReasons
+	} = $derived(data);
 
 	const db = getDB();
 	const locale = getLocaleContext();
@@ -67,6 +77,7 @@
 	const ROLES = 'roles';
 	const VISIBILITY = 'visibility';
 	const PREFERENCE_LEVELS = 'preferenceLevels';
+	const DECLINE_REASONS = 'declineReasons';
 	const TEMPLATES = 'templates';
 	const BULK_IMPORT = 'bulkImport';
 	const STATUS = 'status';
@@ -82,6 +93,8 @@
 		ROLES,
 		VISIBILITY,
 		PREFERENCE_LEVELS,
+		// Not hidden with preference levels: claims are declined too, biddable roles or not.
+		DECLINE_REASONS,
 		TEMPLATES,
 		BULK_IMPORT,
 		STATUS
@@ -329,7 +342,19 @@
 			<PreferenceLevels {venue} levels={preferenceLevels ?? []} />
 		{/if}
 
-		<!-- Step 7: Email templates -->
+		<!-- Step 7: What approvers can say when they decline a bid or claim (#218) -->
+		<Subheader
+			id="decline-reasons"
+			icon={SettingsLabel}
+			number={stepNumber(DECLINE_REASONS)}
+			text={(l) => l.page.settings.header.declineReasons}
+		/>
+
+		<Tip><Text path={(l) => l.page.settings.tip.declineReasons} /></Tip>
+
+		<DeclineReasons {venue} reasons={declineReasons ?? []} />
+
+		<!-- Step 8: Email templates -->
 		<Subheader
 			id="templates"
 			icon={SettingsLabel}
@@ -365,7 +390,7 @@
 			</Card>
 		{/each}
 
-		<!-- Step 8: Bulk import -->
+		<!-- Step 9: Bulk import -->
 		<Subheader
 			id="bulk-import"
 			icon={SettingsLabel}
@@ -381,7 +406,7 @@
 			/>
 		</Tip>
 
-		<!-- Step 9: Activate (the last thing you do) -->
+		<!-- Step 10: Activate (the last thing you do) -->
 		<Subheader
 			id="status"
 			icon={SettingsLabel}

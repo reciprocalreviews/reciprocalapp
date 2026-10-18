@@ -1143,8 +1143,9 @@
 				"declinedBy": "declined by",
 				"compensationOnly": "Assign in the reviewing system first, and only after the scholar has agreed."
 			},
-			"declineBidPrompt": "You don't have to answer a bid, and leaving it is fine. But if you decline it, tell the bidder why: your explanation is emailed to them with your name, and they will see it beside their bid.",
-			"declineClaimPrompt": "Tell them why you're declining this request for compensation. Your explanation is emailed to them with your name.",
+			"declineBidPrompt": "You don't have to answer a bid, and leaving it is fine. But if you decline it, tell the bidder why: your reason is emailed to them with your name, and they will see it beside their bid.",
+			"declineClaimPrompt": "Tell them why you're declining this request for compensation. Your reason is emailed to them with your name.",
+			"declineOwnReason": "Write my own",
 			"tip": {
 				"newAssignment": "Add a new assignment to this submission. These are restricted to the roles for which you have assignment privileges."
 			}
@@ -1284,6 +1285,7 @@
 				"roles": "Roles",
 				"visibility": "Visibility",
 				"preferenceLevels": "Bid preference levels",
+				"declineReasons": "Decline reasons",
 				"templates": "Email templates",
 				"bulkImport": "Import existing submissions",
 				"status": "Activate"
@@ -1293,6 +1295,7 @@
 				"logIn": "[Log in](/login) to view this venue's settings.",
 				"adminsOnly": "Only admins of this venue can view this page.",
 				"noPreferenceLevels": "No preference levels defined. Bidders will see a single **Bid** button, and **Unbid** to take it back.",
+				"noDeclineReasons": "No decline reasons defined. Approvers will write a reason each time they decline.",
 				"addressCurrent": "This venue is at **{address}**.",
 				"addressChecking": "Checking…",
 				"addressAvailable": "**{address}** is free.",
@@ -1353,6 +1356,16 @@
 					"label": "new preference level",
 					"placeholder": "e.g., If necessary",
 					"invalid": "Label must not be empty"
+				},
+				"declineReasonText": {
+					"label": "reason",
+					"placeholder": "e.g., We selected a different scholar.",
+					"invalid": "Write a reason of 1–1000 characters"
+				},
+				"newDeclineReason": {
+					"label": "new decline reason",
+					"placeholder": "e.g., We selected a different scholar.",
+					"invalid": "Write a reason of 1–1000 characters"
 				}
 			},
 			"button": {
@@ -1381,6 +1394,23 @@
 				"movePreferenceLevelDown": {
 					"label": "Down",
 					"tip": "Move this level down (toward less preferred)."
+				},
+				"addDeclineReason": {
+					"label": "Add reason",
+					"tip": "Add a decline reason after the last one."
+				},
+				"deleteDeclineReason": {
+					"label": "Delete",
+					"tip": "Delete this decline reason. Past declines keep the words they were sent with.",
+					"warn": "Delete this reason?"
+				},
+				"moveDeclineReasonUp": {
+					"label": "Up",
+					"tip": "Show this reason earlier."
+				},
+				"moveDeclineReasonDown": {
+					"label": "Down",
+					"tip": "Show this reason later."
 				}
 			},
 			"checkbox": {
@@ -1408,13 +1438,14 @@
 				"reviewQuality": "The platform releases compensation when an assignment is marked complete — it does **not** judge whether a review was actually good. That editorial bar is yours to define. Before launch, agree on **what counts as a creditable review** (depth, timeliness, constructiveness) and **who signs off** before tokens are released.\n\nThree existing controls let you enforce that policy:\n\n- **Approver role** (Step 3, per role) — designate which role approves assignments to another role, so a human checks the work before it's credited.\n- **Compensation approval** — compensation transactions are approved before tokens move, giving editors a checkpoint to withhold credit for inadequate reviews.\n- **Vet thank-you notes** (Step 4) — optionally require an admin or editor to approve author thank-you notes before reviewers see them."
 			},
 			"tip": {
-				"webAddress": "Give the venue its full name, the short one the venue bar shows in place of it, and a link to its own website. Then pick the address this venue lives at here. It goes in every link anyone sends about the venue — emails and the snippets in step 6 — so choose something people will recognize and can read aloud. You can change it later, but the old address is released the moment you do: nothing redirects from it, and every link that used it breaks.",
+				"webAddress": "Give the venue its full name, the short one the venue bar shows in place of it, and a link to its own website. Then pick the address this venue lives at here. It goes in every link anyone sends about the venue — emails and the email-template snippets below — so choose something people will recognize and can read aloud. You can change it later, but the old address is released the moment you do: nothing redirects from it, and every link that used it breaks.",
 				"policies": "This is the most consequential step on the page. Spend real time on it before touching anything below.",
 				"inactive": "Check the inactive message in the settings below, so your community knows you're busy configuring things.",
 				"compensation": "It is critical that you think carefully about the compensation structure for your venue. Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter newcomers from contributring. See [Setting welcome & compensation](#policies) in Step 1 for the balance rules and a worked example.",
 				"roles": "Configure your venue's volunteer roles below, create roles such as **reviewer**, **program commitee**, **associate editor** to represent the different kinds of contributions volunteers can make to this venue. Ensure you set total compensation levels for each role to not be higher than the cost of a submission — see [Setting welcome & compensation](#policies) in Step 1 for why this matters.",
 				"doneVisibility": "Done submissions still appear in the submissions list for this many days after completion (and are sorted to the bottom). After that, they're hidden from the list but still accessible by direct link. Set to 0 to hide them as soon as they're done.",
 				"preferenceLevels": "Bidders pick from these labels when bidding on submissions to signal how interested they are. The order matters: the top label is the most preferred. Leave this empty and bidders get a single **Bid** button instead, with **Unbid** to take it back.",
+				"declineReasons": "When an approver declines a bid or a request for compensation, they pick one of these reasons or write their own. The scholar reads the reason word for word, with the approver's name, so keep it neutral and kind. Delete them all and approvers write a reason every time.",
 				"templates": "Paste these snippets into your reviewing platform's email templates so the system's automated emails carry the right Reciprocal Reviews link. Pick your platform first — the manuscript-id variable in the snippet body and the embedded URL will switch to that platform's syntax. Substitute the **{role}** placeholder yourself; reviewing platforms vary too much in how they expose role names.",
 				"bulkImport": "Have submissions already under review when you turn the venue on? [Bulk import them](/venue/{venue}/submissions/import) so reviewers can bid and earn tokens from day one. Imports are free; the form will propose a corresponding mint to fund the resulting compensation transactions, which a minter must approve."
 			},
@@ -2344,6 +2375,10 @@
 		"EditPreferenceLevel": "Unable to update preference level",
 		"ReorderPreferenceLevel": "Unable to reorder preference levels",
 		"DeletePreferenceLevel": "Unable to delete preference level",
+		"CreateDeclineReason": "Unable to create decline reason",
+		"EditDeclineReason": "Unable to update decline reason",
+		"ReorderDeclineReason": "Unable to reorder decline reasons",
+		"DeleteDeclineReason": "Unable to delete decline reason",
 		"InviteToRole": "Unable to invite to role",
 		"AcceptRoleInvite": "Unable to accept role invite",
 		"EditCurrencyMinters": "Unable to edit minters",
@@ -2430,6 +2465,7 @@
 		"LoadProposal": "Unable to load proposal data.",
 		"LoadCompensation": "Unable to load compensation data.",
 		"LoadPreferenceLevel": "Unable to load preference level data.",
+		"LoadDeclineReason": "Unable to load decline reasons.",
 		"LoadSubmissionType": "Unable to load submission type data.",
 		"LoadConflict": "Unable to load conflict data.",
 		"ProposeThanks": "Unable to send your thanks.",

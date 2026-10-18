@@ -43,7 +43,17 @@ create table if not exists public.assignments (
 	-- Who declined it. Nulled if that scholar is erased; the decline itself stands.
 	declined_by uuid default null,
 	-- The approver's explanation, sent to the bidder. Required whenever declined_at is set.
+	-- When the approver chose one of the venue's decline_reasons, this is a copy of its text
+	-- as it read then, so editing or deleting the reason later never rewrites what the
+	-- bidder was told.
 	decline_reason text default null,
+	-- Which of the venue's decline_reasons was chosen, if any; null when the approver wrote
+	-- their own, or when the reason has since been deleted. What makes declines countable.
+	decline_reason_id uuid default null,
+	constraint assignments_decline_reason_id_check check (
+		decline_reason_id is null
+		or declined_at is not null
+	),
 	constraint assignments_decline_shape_check check ((declined_at is null)=(decline_reason is null)),
 	constraint assignments_decline_reason_check check (
 		decline_reason is null
@@ -81,6 +91,9 @@ add constraint "assignments_venue_fkey" foreign KEY (venue) references public.ve
 
 alter table only public.assignments
 add constraint "assignments_declined_by_fkey" foreign KEY (declined_by) references public.scholars (id) on delete set null;
+
+alter table only public.assignments
+add constraint "assignments_decline_reason_id_fkey" foreign KEY (decline_reason_id) references public.decline_reasons (id) on delete set null;
 
 alter table only public.assignments
 add constraint "assignments_preferenceid_fkey" foreign KEY (preferenceid) references public.preference_levels (id) on delete set null;
@@ -960,6 +973,7 @@ begin
 		new.declined_at := null;
 		new.declined_by := null;
 		new.decline_reason := null;
+		new.decline_reason_id := null;
 	end if;
 
 	if current_user <> 'authenticated' then
@@ -972,8 +986,10 @@ begin
 			using errcode = 'RR018';
 	end if;
 
-	if (new.approved, new.completed, new.declined_at, new.declined_by, new.decline_reason)
-		is distinct from (old.approved, old.completed, old.declined_at, old.declined_by, old.decline_reason)
+	if (new.approved, new.completed, new.declined_at, new.declined_by, new.decline_reason,
+			new.decline_reason_id)
+		is distinct from (old.approved, old.completed, old.declined_at, old.declined_by, old.decline_reason,
+			old.decline_reason_id)
 		and not public.can_approve_assignment(old.submission, old.role) then
 		raise exception 'Only an approver of this role may approve, complete or decline this assignment'
 			using errcode = 'RR018';
@@ -1135,12 +1151,18 @@ execute function public.enforce_bid_rules ();
 -- The SECURITY DEFINER write path for the decline columns; enforce_assignment_updates
 -- above refuses them to direct client writes from anyone who cannot approve. Requires a
 -- reason because a decline is addressed to a person, and the reason is what makes it a
--- principled answer rather than a door shut in someone's face. Returns what the client
--- needs to send the BidDeclined notice.
+-- principled answer rather than a door shut in someone's face. The reason is either one of
+-- the venue's decline_reasons (_reason_id) or the approver's own words (_reason), never
+-- both. Returns what the client needs to send the BidDeclined notice, including exactly the
+-- reason that was stored.
 --
 -- RR017 when the bid is no longer pending (approved, completed, or already declined),
 -- which is the race two approvers answering the same bid would otherwise both win.
-create or replace function public.decline_bid (_assignment uuid, _reason text) returns jsonb language plpgsql security definer
+create or replace function public.decline_bid (
+	_assignment uuid,
+	_reason text,
+	_reason_id uuid default null
+) returns jsonb language plpgsql security definer
 set
 	search_path to '' as $$
 declare
@@ -1171,36 +1193,49 @@ begin
 	end if;
 
 	_trimmed := btrim(coalesce(_reason, ''));
-	if char_length(_trimmed) = 0 then
-		raise exception 'A declined bid needs an explanation for the bidder';
-	end if;
-	if char_length(_trimmed) > 1000 then
-		raise exception 'An explanation must be at most 1000 characters';
+	if _reason_id is not null then
+		if char_length(_trimmed) > 0 then
+			raise exception 'A decline gives the venue''s reason or the approver''s own, not both';
+		end if;
+		select r.text into _trimmed from public.decline_reasons r
+		where r.id = _reason_id and r.venueid = _a.venue;
+		if not found then
+			raise exception 'That decline reason does not belong to this venue';
+		end if;
+	else
+		if char_length(_trimmed) = 0 then
+			raise exception 'A declined bid needs an explanation for the bidder';
+		end if;
+		if char_length(_trimmed) > 1000 then
+			raise exception 'An explanation must be at most 1000 characters';
+		end if;
 	end if;
 
 	update public.assignments
-	set declined_at = now(), declined_by = _caller, decline_reason = _trimmed
+	set declined_at = now(), declined_by = _caller, decline_reason = _trimmed,
+		decline_reason_id = _reason_id
 	where id = _assignment;
 
 	return jsonb_build_object(
 		'venue', _a.venue,
 		'submission', _a.submission,
 		'scholar', _a.scholar,
-		'role', _a.role
+		'role', _a.role,
+		'reason', _trimmed
 	);
 end;
 $$;
 
-alter function public.decline_bid (uuid, text) OWNER to "postgres";
+alter function public.decline_bid (uuid, text, uuid) OWNER to "postgres";
 
 revoke
-execute on function public.decline_bid (uuid, text)
+execute on function public.decline_bid (uuid, text, uuid)
 from
 	public,
 	anon;
 
 grant
-execute on function public.decline_bid (uuid, text) to authenticated;
+execute on function public.decline_bid (uuid, text, uuid) to authenticated;
 
 -- request_compensation: a scholar says they finished work on a submission and asks to
 -- be paid for it.

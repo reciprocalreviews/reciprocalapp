@@ -106,6 +106,9 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get the venue's preference levels (may be empty) for rendering bid labels.
 	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
+	// Get the reasons an approver may choose from when declining a bid or claim.
+	const { data: declineReasons } = await db.getVenueDeclineReasons(venueid);
+
 	// Get thank-you notes for this submission. RLS returns only what the viewer
 	// may see (their own as author, all as a vetter, approved as a recipient).
 	const { data: thanks } =
@@ -141,6 +144,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		assignmentScholars: assignmentScholars ?? [],
 		assigneeEmails: assigneeEmails ?? [],
 		preferenceLevels,
+		declineReasons: declineReasons ?? [],
 		loads: loads ?? [],
 		viewerVolunteering,
 		thanks

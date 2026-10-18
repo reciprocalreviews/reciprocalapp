@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.5.20 - 2026-10-18
 
+### Added
+
+- **Venues now have decline reasons: when declining a bid or compensation request, approvers pick one of the venue's reasons or write their own.** Every venue starts with five neutral defaults that admins can edit, reorder, or delete in settings, and a venue with none still requires a written reason (#218).
+
 ### Changed
 
 - Updated dependencies, including SvelteKit 3.1, the Supabase CLI, and the Vercel CLI to 64.

@@ -22,6 +22,7 @@
 	import Options from '#lib/components/Options.svelte';
 	import Page from '#lib/components/Page.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Radio from '#lib/components/Radio.svelte';
 	import Row from '#lib/components/Row.svelte';
 	import ORCIDKeywords from '#lib/components/ORCIDKeywords.svelte';
 	import VenueExpertise from '#lib/components/VenueExpertise.svelte';
@@ -86,6 +87,8 @@
 		assigneeEmails,
 		/** Venue-defined preference levels, ordered by rank */
 		preferenceLevels,
+		/** Venue-defined reasons an approver may give for declining, ordered by rank */
+		declineReasons,
 		/** Candidates' active assignment counts, per role here and in other venues */
 		loads,
 		/** The viewer's own accepted volunteer records in this venue */
@@ -141,11 +144,29 @@
 		nameOf
 	});
 
-	/** The bid whose decline form is open, and the explanation being written for it. Local
-	 * state rather than anything derived from load data, so a realtime refetch mid-sentence
-	 * does not wipe what the approver has typed. */
+	/** The bid whose decline form is open, the venue reason chosen for it (a reason's id, or
+	 * OWN_REASON), and, under OWN_REASON, the reason being written. Local state rather than
+	 * anything derived from load data, so a realtime refetch mid-sentence does not wipe what
+	 * the approver has typed. */
 	let decliningID = $state<string | null>(null);
+	let declineChoice = $state('');
 	let declineReason = $state('');
+	const OWN_REASON = 'own';
+
+	function openDecline(id: string) {
+		decliningID = id;
+		declineChoice = '';
+		declineReason = '';
+		return undefined;
+	}
+
+	/** A venue with no reasons has nothing to choose from, so the approver writes their own. */
+	const writingOwnReason = $derived(
+		(declineReasons ?? []).length === 0 || declineChoice === OWN_REASON
+	);
+	const chosenDeclineReason = $derived(
+		(declineReasons ?? []).find((reason) => reason.id === declineChoice) ?? null
+	);
 
 	function validDeclineReason(text: string) {
 		const length = text.trim().length;
@@ -153,6 +174,12 @@
 			? (l: LocaleText) => l.page.submission.field.declineReason.invalid
 			: undefined;
 	}
+
+	const declineReady = $derived(
+		writingOwnReason
+			? validDeclineReason(declineReason) === undefined
+			: chosenDeclineReason !== null
+	);
 
 	function sortAssignees<T extends { scholar: string }>(items: T[]): T[] {
 		return sortAssigneesBy(items, assigneeContext);
@@ -1039,11 +1066,7 @@
 											testid="decline-bid"
 											strings={(l) => l.page.submission.button.declineClaim}
 											active={decliningID !== assignment.id}
-											action={() => {
-												decliningID = assignment.id;
-												declineReason = '';
-												return undefined;
-											}}
+											action={() => openDecline(assignment.id)}
 										/>
 									{:else if assignment.bid}
 										<Button
@@ -1059,11 +1082,7 @@
 											testid="decline-bid"
 											strings={(l) => l.page.submission.button.declineBid}
 											active={decliningID !== assignment.id}
-											action={() => {
-												decliningID = assignment.id;
-												declineReason = '';
-												return undefined;
-											}}
+											action={() => openDecline(assignment.id)}
 										/>
 									{/if}
 								</Row>
@@ -1082,31 +1101,60 @@
 													? l.page.submission.declineClaimPrompt
 													: l.page.submission.declineBidPrompt}
 										/>
+										{#if (declineReasons ?? []).length > 0}
+											<div class="decline-choices" role="radiogroup" data-testid="decline-reasons">
+												{#each declineReasons ?? [] as reason, index (reason.id)}
+													<Radio
+														bind:group={declineChoice}
+														value={reason.id}
+														label={() => reason.text}
+														testid="decline-reason-{index}"
+													/>
+												{/each}
+												<Radio
+													bind:group={declineChoice}
+													value={OWN_REASON}
+													label={(l) => l.page.submission.declineOwnReason}
+													testid="decline-reason-own"
+												/>
+											</div>
+										{/if}
 										<!-- Forms align their children to the start, which shrinks a field to
-										     its content; an explanation needs room, so this one spans the form. -->
-										<div class="decline-reason-field">
-											<TextField
-												bind:text={declineReason}
-												strings={(l) => l.page.submission.field.declineReason}
-												testid="decline-bid-reason"
-												inline={false}
-												stretch
-												valid={validDeclineReason}
-											></TextField>
-										</div>
+										     its content; an explanation needs room, so this one spans the form.
+										     Only for writing one's own: a venue reason is sent as it is. -->
+										{#if writingOwnReason}
+											<div class="decline-reason-field">
+												<TextField
+													bind:text={declineReason}
+													strings={(l) => l.page.submission.field.declineReason}
+													testid="decline-bid-reason"
+													inline={false}
+													stretch
+													valid={validDeclineReason}
+												></TextField>
+											</div>
+										{/if}
 										<Button
 											testid="decline-bid-confirm"
 											strings={(l) =>
 												isClaim(assignment)
 													? l.page.submission.button.confirmDeclineClaim
 													: l.page.submission.button.confirmDecline}
-											active={validDeclineReason(declineReason) === undefined}
+											active={declineReady}
 											action={async () => {
 												const result = await handle(
-													db().declineBid(assignment, declineReason, role, scholar.id)
+													db().declineBid(
+														assignment,
+														writingOwnReason || chosenDeclineReason === null
+															? declineReason
+															: chosenDeclineReason,
+														role,
+														scholar.id
+													)
 												);
 												if (result !== false) {
 													decliningID = null;
+													declineChoice = '';
 													declineReason = '';
 												}
 											}}
@@ -1202,6 +1250,13 @@
 
 	.decline-reason-field {
 		width: 100%;
+	}
+
+	.decline-choices {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-half);
 	}
 
 	.decline-explanation {
