@@ -5,38 +5,43 @@
 	import { onMount, type Snippet } from 'svelte';
 	import EditableText from './EditableText.svelte';
 	import Lead from './Lead.svelte';
-	import measure from './measure';
 
 	let {
-		icon = '',
 		title,
+		context,
 		subtitle,
 		details,
+		actions,
+		alerts,
 		children,
-		wobble = false,
-		band = true,
 		edit
 	}: {
-		icon?: string | Snippet;
 		title: string | ((l: LocaleText) => string);
+		/**
+		 * What the page belongs to, for the browser tab only: "Submissions" inside a venue is
+		 * "Submissions — ToK" in a tab bar of several venues, where the venue bar that names
+		 * it on the page is not visible. The heading stays the title alone.
+		 */
+		context?: string;
+		/**
+		 * What KIND of thing the title names — "Scholar", "Currency", a submission's type —
+		 * and only on a page whose title is a proper name. A page titled by what it is
+		 * ("Venues", "Submissions") has nothing to add, and its owner is the context bar's to say, not a subtitle's.
+		 */
 		subtitle?: Snippet;
 		details?: Snippet;
-		children: Snippet;
-		wobble?: boolean;
 		/**
-		 * Whether the title renders as the full-bleed sticky band, or in the text column
-		 * with the rest of the page. It chooses WHERE the title goes, never whether there
-		 * is one: `<svelte:head><title>` is identical either way.
-		 *
-		 * False on every route inside a venue, where the venue bar is the band and this
-		 * one would be a second copy of the same information (#176).
-		 *
-		 * Two things follow from passing false, and both are deliberate. `icon` and
-		 * `wobble` are ignored — a mark in an in-column heading reads as decoration, and
-		 * an attention animation on a heading that is not chrome has nothing to attract
-		 * attention away from. And `--page-header-height` is NOT written; see below.
+		 * What the viewer can go and do from here: a row of `Action`s, and the occasional
+		 * `Button` for a tool that acts in place. Participant actions first, role tools after.
 		 */
-		band?: boolean;
+		actions?: Snippet;
+		/**
+		 * `Alert`s about the current state, and only conditional ones — see Alert.svelte.
+		 * Rendered after the actions, so an alert's own action can point at a tool the row
+		 * above already offers without the two competing for first place.
+		 */
+		alerts?: Snippet;
+		children: Snippet;
 		edit?:
 			| {
 					valid: undefined | ((text: string) => ((l: LocaleText) => string) | undefined);
@@ -49,6 +54,7 @@
 	const locale = getLocaleContext();
 
 	let revisedTitle = $derived(typeof title === 'function' ? title(locale()) : title);
+	let tabTitle = $derived(context ? `${revisedTitle} — ${context}` : revisedTitle);
 
 	// Smoothly scroll the URL's hash target into the center of the viewport,
 	// both on initial load and whenever the hash changes (e.g., a Subheader
@@ -70,131 +76,52 @@
 </script>
 
 <svelte:head>
-	<title>{revisedTitle}</title>
+	<title>{tabTitle}</title>
 </svelte:head>
 
 <!--
-	The page's title band, rendered here in flow rather than pushed up into the nav's
-	sticky header through context. An `$effect` does not run during SSR, and the root
-	layout renders `<Nav>` before its children, so a title sent upward could not reach
-	the server HTML at all: it arrived at hydration and shoved `<main>` down every
-	load, and collapsed and regrew on every client-side navigation. Rendered here it
-	is server-rendered in document order, so the first paint is the final layout, and
-	it still pins below the nav via the measured `--nav-height`. It also belongs in
-	`main` rather than inside the banner landmark, where the page's `h1` used to sit.
+	Every page's title renders in the text column with the paragraphs it introduces. It used
+	to be a full-bleed sticky band everywhere but inside a venue, where the venue bar takes
+	that place; so one app had two heading treatments, and the band's details row read as a
+	second row of navigation. The only sticky chrome now is the nav, and the venue bar
+	inside a venue, which is the only writer of `--page-header-height`.
 -->
-<!-- One heading, rendered in one of two places. Keeping it a single snippet is what
-     makes `band` a one-word change at a call site: the title, its editor, the subtitle
-     and the details row are identical either way, and so are `page-header` and
-     `page-title-edit`, which mean "the page's title" rather than "the band". -->
-{#snippet heading()}
-	<h1 class="page-header-title" class:wobble={band && wobble} data-testid="page-header">
-		<!-- The header is baseline-aligned (.page-header-title beats the h1 rule
-		     below it), and an svg has no baseline of its own — it would align by
-		     its bottom edge and tower over the text. The span supplies one. -->
-		{#if band}
-			{#if typeof icon === 'string'}
-				<span class="emoji">{icon}</span>
-			{:else}
-				<span class="mark">{@render icon()}</span>
-			{/if}
-		{/if}
-		{#if edit}
-			<EditableText
-				text={revisedTitle}
-				valid={edit.valid}
-				edit={edit.update}
-				strings={(l) => ({ placeholder: edit!.placeholder(l) })}
-				testid="page-title-edit"
-			/>
-		{:else}
-			{revisedTitle}
-		{/if}
-	</h1>
-	{#if subtitle || details}
-		<div class="details">
-			{#if subtitle}<Lead>{@render subtitle()}</Lead>{/if}
-			{@render details?.()}
-		</div>
-	{/if}
-{/snippet}
-
-{#if band}
-	<div class="page-header" use:measure={'--page-header-height'}>
-		{@render heading()}
-	</div>
-{/if}
-
 <section class="page">
 	<div class="content">
-		{#if !band}
-			<div class="page-heading">{@render heading()}</div>
+		<div class="page-heading">
+			<h1 class="page-header-title" data-testid="page-header">
+				{#if edit}
+					<EditableText
+						text={revisedTitle}
+						valid={edit.valid}
+						edit={edit.update}
+						strings={(l) => ({ placeholder: edit!.placeholder(l) })}
+						testid="page-title-edit"
+					/>
+				{:else}
+					{revisedTitle}
+				{/if}
+			</h1>
+			{#if subtitle || details}
+				<div class="details">
+					{#if subtitle}<Lead>{@render subtitle()}</Lead>{/if}
+					{@render details?.()}
+				</div>
+			{/if}
+		</div>
+		<!-- The page's anatomy, in a fixed order on every page: what this is (above), what
+		     you can do here, what needs your attention, and then the page itself. -->
+		{#if actions}
+			<div class="actions" data-testid="page-actions">{@render actions()}</div>
+		{/if}
+		{#if alerts}
+			<div class="alerts" data-testid="page-alerts">{@render alerts()}</div>
 		{/if}
 		{@render children()}
 	</div>
 </section>
 
 <style>
-	/* The in-column heading. The global `h1` rule in app.html paints every h1 as the
-	   full-bleed teal band, which is right for chrome and wrong for a heading sitting in
-	   the text column with the paragraphs it introduces — so it is undone here rather
-	   than made conditional there, where every other page depends on it. */
-	.page-heading :global(h1) {
-		background: none;
-		color: var(--text-color);
-		padding: 0;
-		border-radius: 0;
-	}
-
-	/* Likewise the details row: its border and side padding are a band's, and the
-	   `.content` column already supplies the inset. */
-	.page-heading .details {
-		padding-left: 0;
-		padding-right: 0;
-		border-block-end: none;
-	}
-
-	.page-header {
-		/* Pinned below the nav, which is sticky at the top of the viewport. Its height
-		   varies with banners and row wrapping, so it is measured rather than guessed.
-		   The nav keeps a higher z-index, so it wins if this offset is ever stale.
-
-		   The fallback is 0, and it has to be: a sticky box whose natural position sits
-		   ABOVE its own threshold is pushed down to meet it. So a fallback larger than
-		   the real nav height opens a visible gap between the banners and this band on
-		   every first paint, which then closes on hydration — which is exactly what an
-		   8rem guess did here when the nav measured 103px. Zero can never overshoot,
-		   because the nav is never shorter than nothing, so the band sits at its natural
-		   position until the measurement arrives and nothing moves when it does. With
-		   scripting off the band scrolls under the nav instead of pinning below it,
-		   which is a far better failure than a gap on every load.
-
-		   Note this is the opposite of how `--nav-height` is defaulted for
-		   `scroll-padding-block-start` in app.html, where guessing low would let an
-		   anchored heading land underneath the chrome. Same variable, opposite risk.
-
-		   `--page-header-height` means "the height of the band pinned below the nav", and
-		   EXACTLY ONE element may write it per rendered route — two ResizeObservers on one
-		   custom property fight, and the jitter that produces is invisible to every test we
-		   have. Inside a venue the band is VenueBar.svelte, which measures it instead, so
-		   every `<Page>` under `/venue/` has to pass `band={false}`. `measure`'s destroy()
-		   releases the property, so leaving a venue hands ownership back cleanly. */
-		position: sticky;
-		top: var(--nav-height, 0px);
-		z-index: 1;
-
-		/* Deliberately the full width of `main`, not the text column: the h1 is a
-		   full-bleed band whose bottom corners are rounded against the nav above it.
-		   `--page-width` is applied to `.page` below instead. */
-		width: 100%;
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-half);
-		padding-top: 0;
-		background: var(--background-color);
-		overflow-x: clip;
-	}
-
 	.page-header-title {
 		align-items: baseline;
 	}
@@ -209,21 +136,6 @@
 		align-items: flex-start;
 	}
 
-	.emoji {
-		font-family: 'Noto Emoji', 'Josefin Sans', sans-serif;
-		font-size: 80%;
-		/* A flex item; without this a long title squeezes the icon. */
-		flex: none;
-	}
-
-	.mark {
-		/* Full size, unlike .emoji's 80%: the logo's strokes are thinner than an
-		   emoji glyph's, so at 80% it reads lighter than the wordmark beside it. */
-		font-size: 100%;
-		line-height: 1;
-		flex: none;
-	}
-
 	h1 {
 		display: flex;
 		gap: 0.5rem;
@@ -231,54 +143,44 @@
 		margin: 0;
 	}
 
-	@keyframes wobble {
-		0%,
-		100% {
-			transform: translateX(0);
-		}
-		20% {
-			transform: translateX(-5px);
-		}
-		40% {
-			transform: translateX(5px);
-		}
-		60% {
-			transform: translateX(-3px);
-		}
-		80% {
-			transform: translateX(3px);
-		}
-	}
-
-	.wobble {
-		animation: wobble 0.8s ease-in-out 0.3s 3;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.wobble {
-			animation: none;
-		}
+	.page-heading {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-half);
+		padding-block-start: var(--spacing);
 	}
 
 	.details {
 		display: flex;
 		flex-direction: row;
-		/* Wraps, unlike the two chrome rows above it, which must not. This row is
-		   metadata rather than chrome — a submission's type, manuscript ID and status —
-		   and on a phone those do not fit side by side. In the band it merely LOOKED
-		   fine, because `.page-header` clips overflow: the status chip was being cut off
-		   rather than fitting. In the text column there is nothing to clip it, so it ran
-		   off the side of the document and took the sticky bars with it when scrolled.
-		   Wrapping is the honest answer in both places; the band is measured, so its
-		   sticky offset follows. */
+		/* Wraps: this row is metadata — a submission's type, manuscript ID and status — and
+		   on a phone those do not fit side by side. */
 		flex-wrap: wrap;
 		gap: var(--spacing);
 		align-items: baseline;
 		font-size: var(--small-font-size);
-		padding-left: calc(var(--spacing) / 2);
-		padding-right: calc(var(--spacing) / 2);
-		padding-bottom: calc(var(--spacing) / 2);
-		border-block-end: var(--border-color) solid var(--border-width);
+	}
+
+	.actions {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--spacing-half);
+	}
+
+	/* A zone whose children are all conditional can render with nothing in it, and an empty
+	   flex item still costs the column a gap. `:has` rather than `:empty`, which the
+	   whitespace and anchors a Svelte block leaves behind defeat. */
+	.actions:not(:has(*)),
+	.alerts:not(:has(*)) {
+		display: none;
+	}
+
+	.alerts {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-half);
 	}
 
 	.page {
@@ -286,8 +188,8 @@
 		flex-direction: column;
 		gap: calc(2 * var(--spacing));
 		width: 100%;
-		/* The text column's cap, which used to sit on `main`. It moved down here so
-		   that `main` — and therefore the title band above — can span the viewport. */
+		/* The text column's cap. On `.page` rather than `main` so the bars of chrome above
+		   it can span the viewport. */
 		max-width: var(--page-width);
 		margin-inline: auto;
 	}

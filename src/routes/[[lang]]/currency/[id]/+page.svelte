@@ -60,7 +60,6 @@
 </script>
 
 <Page
-	icon={TokenLabel}
 	title={currency ? currency.name : 'Oops'}
 	edit={isMinter && currency !== null
 		? {
@@ -88,7 +87,12 @@
 
 		<Dashboard
 			stats={[
-				{ icon: TokenLabel, number: count ?? undefined, title: 'tokens', link: `#tokens` },
+				{
+					icon: TokenLabel,
+					number: count ?? undefined,
+					title: 'tokens',
+					link: `/currency/${currency.id}/transactions`
+				},
 				{
 					icon: ScholarLabel,
 					number: scholarCount ?? undefined,
@@ -104,11 +108,10 @@
 			]}
 		/>
 
-		<Subheader icon={TokenLabel} id="tokens" text={(l) => l.page.currency.header.tokens} />
-
-		<Paragraph text={(l) => l.page.currency.paragraph.allTokens} inputs={{ id: currency.id }} />
-
+		<!-- Only minters have anything under this heading: the tokens themselves are listed
+		     on the transactions page, which the actions row and the tokens tile both reach. -->
 		{#if user && isMinter && venues}
+			<Subheader icon={TokenLabel} id="tokens" text={(l) => l.page.currency.header.tokens} />
 			<Cards>
 				<Card
 					subheader

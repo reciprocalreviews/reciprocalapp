@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { venuePath } from '#lib/data/venuePath.js';
+	import Action from '#lib/components/Action.svelte';
+	import Alert from '#lib/components/Alert.svelte';
 	import Button from '#lib/components/Button.svelte';
 	import CurrencyLink from '#lib/components/CurrencyLink.svelte';
 	import Dashboard, { type Stat } from '#lib/components/Dashboard.svelte';
@@ -16,6 +18,7 @@
 	import Table from '#lib/components/Table.svelte';
 	import TextField from '#lib/components/TextField.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
+	import Text from '#lib/locales/Text.svelte';
 	import { validInteger } from '#lib/validation.js';
 	import { getLocaleContext } from '$routes/Contexts';
 	import { handle } from '$routes/feedback.svelte';
@@ -74,20 +77,65 @@
 </script>
 
 {#if venue === null}
-	<Page band={false} title={(l) => l.page.venue.unknownTitle}>
+	<Page title={(l) => l.page.venue.unknownTitle}>
 		<Paragraph text={(l) => l.page.venue.paragraph.notFound} />
 	</Page>
 {:else}
 	<!-- The venue's full title, in the column rather than in a band. The bar above shows
 	     the SHORT name, so this is the one page where the whole name is always spelled
 	     out — which is exactly what a landing page is for. -->
-	<Page band={false} title={venue.title}>
+	<Page title={venue.title}>
+		{#snippet subtitle()}<Text path={(l) => l.page.venue.title} />{/snippet}
 		{#snippet details()}
 			<!-- Read-only, for everyone. Editing the address moved to settings with the rest
 			     of the venue's metadata, but the address itself is worth stating here: it is
 			     the first thing someone deciding whether this is the right venue looks for,
 			     and the bar's link to it says only "Website". -->
 			<Link to={venue.url}>{venue.url}</Link>
+			{#if showPayment && currency}
+				<CurrencyLink {currency}>{TokenLabel} {currency.name}</CurrencyLink>
+			{/if}
+		{/snippet}
+
+		{#snippet actions()}
+			<!-- Starting a submission is the central task here, so it comes first. -->
+			<Action
+				to="/venue/{venuePath(venue)}/submissions/new"
+				label={(l) =>
+					showPayment ? l.page.venue.action.newSubmission : l.page.venue.action.newSubmissionFree}
+				testid="venue-new-submission"
+			/>
+			<Action to="#roles" label={(l) => l.page.venue.action.volunteer} />
+		{/snippet}
+
+		{#snippet alerts()}
+			{#if isAdmin && venue.inactive !== null}
+				<Alert
+					tone="attention"
+					text={(l) => l.page.venue.feedback.inactivePrompt}
+					testid="venue-inactive-prompt"
+				>
+					{#snippet action()}
+						<Action
+							to="/venue/{venuePath(venue)}/settings#status"
+							label={(l) => l.page.venue.action.activate}
+							group="admin"
+						/>
+					{/snippet}
+				</Alert>
+			{/if}
+			<!-- Name the admin/minter overlap to everyone who isn't one of them. -->
+			{#if showPayment && adminMints && !isAdmin && !isMinter && currency}
+				<Alert
+					tone="info"
+					testid="venue-admin-mints-notice"
+					text={(l) => l.page.venue.feedback.adminMints}
+				>
+					{#snippet action()}
+						<Action to="/currency/{currency.id}" label={(l) => l.page.venue.action.currency} />
+					{/snippet}
+				</Alert>
+			{/if}
 		{/snippet}
 
 		<!-- Show the description -->
@@ -109,56 +157,6 @@
 			/>
 		{/if}
 
-		<VenueContact {venue} />
-
-		<!-- Name the admin/minter overlap to everyone who isn't one of them. -->
-		{#if showPayment && adminMints && !isAdmin && !isMinter && currency}
-			<Feedback
-				warning
-				inline={false}
-				size="normal"
-				testid="venue-admin-mints-notice"
-				text={(l) => l.page.venue.feedback.adminMints}
-				inputs={{ currency: currency.id }}
-			/>
-		{/if}
-
-		{#if showPayment}
-			<!-- Currency context before the central prompt. -->
-			<p>
-				This venue uses {#if currency}the <CurrencyLink {currency}>
-						{TokenLabel} {currency.name}</CurrencyLink
-					>{:else}an unknown{/if}
-				currency.
-			</p>
-		{/if}
-
-		<!-- Prominent prompt to start peer review: this is the central task on this page. -->
-		<Feedback
-			inline={false}
-			size="normal"
-			text={(l) =>
-				(showPayment
-					? l.page.venue.feedback.startReview
-					: l.page.venue.feedback.startReviewFree
-				).replace('{venue}', venue.id)}
-		/>
-
-		<!-- Secondary prompt to earn tokens by volunteering. -->
-		<Feedback
-			inline={false}
-			size="normal"
-			text={(l) =>
-				showPayment ? l.page.venue.feedback.volunteer : l.page.venue.feedback.volunteerFree}
-		/>
-
-		{#if isAdmin}
-			<Feedback
-				inline={false}
-				text={(l) => l.page.venue.feedback.viewSettings.replace('{venue}', venue.id)}
-			/>
-		{/if}
-
 		<Dashboard
 			stats={[
 				...(showPayment
@@ -166,25 +164,25 @@
 							{
 								number: venue.welcome_amount ?? undefined,
 								icon: TokenLabel,
-								title: 'tokens for new volunteers'
+								title: locale().page.venue.stat.welcome
 							}
 						]
 					: []),
 				{
 					number: volunteerTotal,
-					title: 'volunteers',
+					title: locale().page.venue.stat.volunteers,
 					link: `/venue/${venuePath(venue)}/volunteers`
 				},
 				{
 					number: submissionCount ?? undefined,
-					title: 'submissions visible to you',
+					title: locale().page.venue.stat.submissions,
 					link: `/venue/${venuePath(venue)}/submissions`
 				},
 				...(showPayment
 					? [
 							{
 								number: tokens ?? undefined,
-								title: 'tokens',
+								title: locale().page.venue.stat.tokens,
 								link: `/venue/${venuePath(venue)}/transactions`
 							}
 						]
@@ -380,5 +378,11 @@
 				</Form>
 			{/if}
 		{/if}
+
+		<!-- Last, as a page's own reference section. Its purpose is that the admins can be
+		     found at all, which a heading of its own does better than a paragraph wedged
+		     between the description and the calls to action. -->
+		<Subheader id="contact" icon={ScholarLabel} text={(l) => l.page.venue.header.contact} />
+		<VenueContact {venue} />
 	</Page>
 {/if}

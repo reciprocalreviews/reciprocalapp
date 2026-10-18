@@ -6,12 +6,10 @@
 		hasAnything,
 		keywords,
 		links,
-		shouldReportProblem,
 		works,
 		worksStat
 	} from '#lib/data/orcidProfileView.js';
 	import { getLocaleContext } from '$routes/Contexts';
-	import Feedback from './Feedback.svelte';
 	import { ScholarLabel } from './Labels';
 	import Link from './Link.svelte';
 	import Subheader from './Subheader.svelte';
@@ -19,8 +17,9 @@
 
 	let {
 		profile,
-		/** Whether the viewer is the scholar themselves. Governs one thing only: whether a
-		 * failed or missing record is reported. */
+		/** Whether the viewer is the scholar themselves, which changes how the provenance
+		 * line is worded. A record RR could not read is reported by the scholar page, in its
+		 * alerts, and to the owner only — see `shouldReportProblem`. */
 		own = false
 	}: { profile: PublicORCIDProfile | null; own?: boolean } = $props();
 
@@ -121,10 +120,6 @@
 			)}
 		</p>
 	{/if}
-{/if}
-
-{#if own && shouldReportProblem(profile)}
-	<Feedback inline={false} testid="orcid-problem" text={(l) => l.view.orcid.problem} />
 {/if}
 
 <style>

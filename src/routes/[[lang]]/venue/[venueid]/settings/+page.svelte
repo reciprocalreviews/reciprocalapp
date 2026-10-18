@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { venuePath } from '#lib/data/venuePath.js';
+	import Action from '#lib/components/Action.svelte';
+	import Alert from '#lib/components/Alert.svelte';
 	import Card from '#lib/components/Card.svelte';
 	import Checkbox from '#lib/components/Checkbox.svelte';
 	import CopyButton from '#lib/components/CopyButton.svelte';
@@ -108,19 +110,34 @@
 </script>
 
 {#if venue === null || currency === null}
-	<Page band={false} title={(l) => l.page.error.title}>
+	<Page title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.settings.feedback.unknownVenue} />
 	</Page>
 {:else if !scholar}
-	<Page band={false} title={(l) => l.page.error.title}>
-		<Feedback error text={(l) => l.page.settings.feedback.logIn} />
+	<Page title={(l) => l.page.error.title}>
+		<!-- A prompt, not an error: nothing has gone wrong, the reader is just signed out. -->
+		<Feedback text={(l) => l.page.settings.feedback.logIn} />
 	</Page>
 {:else if !venue.admins.includes(scholar.id)}
-	<Page band={false} title={`${locale().page.settings.title} — ${venueBarName(venue)}`}>
+	<Page title={(l) => l.page.settings.title} context={venueBarName(venue)}>
 		<Feedback error text={(l) => l.page.settings.feedback.adminsOnly} />
 	</Page>
 {:else}
-	<Page band={false} title={`${locale().page.settings.title} — ${venueBarName(venue)}`}>
+	<Page title={(l) => l.page.settings.title} context={venueBarName(venue)}>
+		{#snippet alerts()}
+			{#if venue.inactive !== null}
+				<Alert
+					tone="attention"
+					text={(l) => l.page.venue.feedback.inactivePrompt}
+					testid="venue-inactive-prompt"
+				>
+					{#snippet action()}
+						<Action to="#status" label={(l) => l.page.settings.action.activate} />
+					{/snippet}
+				</Alert>
+			{/if}
+		{/snippet}
+
 		<Paragraph text={(l) => l.page.settings.paragraph.welcome} />
 
 		<!-- Step 1: Choose the venue's names and address -->

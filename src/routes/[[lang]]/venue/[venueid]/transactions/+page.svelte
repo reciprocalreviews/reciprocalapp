@@ -30,7 +30,7 @@
 	so a venue that had spent its whole reserve rendered the "could not be loaded"
 	error page instead of its transactions. -->
 {#if venue && transactions && venues && currencies && scholar && tokens !== null && count !== null}
-	<Page band={false} title={`${locale().page.venueTransactions.title} — ${venueBarName(venue)}`}>
+	<Page title={(l) => l.page.venueTransactions.title} context={venueBarName(venue)}>
 		<Paragraph
 			text={(l) => l.page.venueTransactions.paragraph.count}
 			inputs={{ count: count.toString() }}
@@ -111,11 +111,11 @@
 	</Page>
 {:else if scholar === null}
 	<!-- Transactions are readable only when signed in, so this is not a failure to load. -->
-	<Page band={false} title={(l) => l.page.venueTransactions.title}>
+	<Page title={(l) => l.page.venueTransactions.title}>
 		<Feedback text={(l) => l.page.venueTransactions.feedback.logIn}></Feedback>
 	</Page>
 {:else}
-	<Page band={false} title={(l) => l.page.error.title}>
+	<Page title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.venueTransactions.feedback.transactionsNotLoaded}
 		></Feedback>
 	</Page>

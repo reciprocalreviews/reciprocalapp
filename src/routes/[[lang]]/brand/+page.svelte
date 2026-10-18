@@ -31,8 +31,6 @@
 </script>
 
 <Page title={(l) => l.page.brand.title}>
-	{#snippet icon()}<Logo />{/snippet}
-
 	<p class="lead"><Text path={(l) => l.page.brand.lead} /></p>
 
 	<Subheader icon="🔄" text={(l) => l.page.brand.header.mark} />

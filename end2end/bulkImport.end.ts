@@ -60,7 +60,7 @@ test('an editor who is not an admin can find and use bulk import', async ({ page
 
 		await page.goto(`/venue/${VENUE_PATH}/submissions`);
 		await page.waitForLoadState('networkidle');
-		await page.getByRole('link', { name: 'Import submissions in bulk' }).click();
+		await page.getByTestId('submissions-import').getByRole('link').click();
 		await page.waitForURL(`**/venue/${VENUE_PATH}/submissions/import`);
 		await page.waitForLoadState('networkidle');
 

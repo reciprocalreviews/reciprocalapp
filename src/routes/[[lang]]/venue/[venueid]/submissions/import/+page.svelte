@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Page from '#lib/components/Page.svelte';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import { type PageData } from './$types';
 	import BulkImport from './BulkImport.svelte';
@@ -15,15 +16,15 @@
 </script>
 
 {#if venue === null || submissionTypes === null || submissionTypes.length === 0}
-	<Page band={false} title={(l) => l.page.bulkImport.title}>
+	<Page title={(l) => l.page.bulkImport.title}>
 		<Feedback error text={(l) => l.page.bulkImport.feedback.notLoaded} />
 	</Page>
 {:else if !mayImport}
-	<Page band={false} title={(l) => l.page.bulkImport.title}>
+	<Page title={(l) => l.page.bulkImport.title}>
 		<Feedback error text={(l) => l.page.bulkImport.feedback.notAdmin} />
 	</Page>
 {:else}
-	<Page band={false} title={(l) => l.page.bulkImport.title}>
+	<Page title={(l) => l.page.bulkImport.title} context={venueBarName(venue)}>
 		<BulkImport {venue} {submissionTypes} {existingSubmissions} {roles} {commitments} />
 	</Page>
 {/if}

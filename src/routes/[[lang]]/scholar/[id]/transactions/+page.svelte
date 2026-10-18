@@ -1,11 +1,9 @@
 <script lang="ts">
 	import Feedback from '#lib/components/Feedback.svelte';
-	import { ErrorLabel, ScholarLabel } from '#lib/components/Labels.js';
 	import Page from '#lib/components/Page.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
 	import Transactions from '#lib/components/Transactions.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
-	import Text from '#lib/locales/Text.svelte';
 
 	let { data } = $props();
 	let { scholar, transactions, count, venues, currencies } = $derived(data);
@@ -14,8 +12,12 @@
 </script>
 
 {#if scholar && transactions && venues && currencies && count !== null}
-	<Page icon={ScholarLabel} title={scholar.name ?? scholar.email ?? ((l) => l.page.scholar.title)}>
-		{#snippet subtitle()}<Text path={(l) => l.page.scholarTransactions.subtitle} />{/snippet}
+	<!-- Titled by what the page is. The scholar is named by the breadcrumb back to them, and
+	     in the tab. -->
+	<Page
+		title={(l) => l.page.scholarTransactions.title}
+		context={scholar.name ?? scholar.email ?? undefined}
+	>
 		<Paragraph
 			text={(l) => l.page.scholarTransactions.paragraph.count}
 			inputs={{ count: count.toString() }}
@@ -31,7 +33,7 @@
 		/>
 	</Page>
 {:else}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title}>
+	<Page title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.view.transactions.feedback.notLoaded}></Feedback>
 	</Page>
 {/if}

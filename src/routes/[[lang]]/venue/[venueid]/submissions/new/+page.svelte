@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import NewSubmission from '../NewSubmission.svelte';
 	import Page from '#lib/components/Page.svelte';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import { type PageData } from './$types';
 	import Feedback from '#lib/components/Feedback.svelte';
 
@@ -16,11 +17,11 @@
 </script>
 
 {#if venue === null || submissionTypes === null}
-	<Page band={false} title={(l) => l.page.newSubmission.title}>
+	<Page title={(l) => l.page.newSubmission.title}>
 		<Feedback error text={(l) => l.page.newSubmission.feedback.notLoaded}></Feedback>
 	</Page>
 {:else}
-	<Page band={false} title={(l) => l.page.newSubmission.title}>
+	<Page title={(l) => l.page.newSubmission.title} context={venueBarName(venue)}>
 		<NewSubmission {venue} {submissionTypes} {priorSubmissions} {initialManuscript} {scholarORCID}
 		></NewSubmission>
 	</Page>

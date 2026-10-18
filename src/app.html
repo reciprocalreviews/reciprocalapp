@@ -193,15 +193,14 @@
 			 * dismissed it, so a non-zero fallback would charge every page a strip of
 			 * nothing. Guess in the direction that is wrong less often.
 			 *
-			 * `--page-header-height` names the second band by its position, not by which
-			 * component draws it. Inside a venue that band is VenueBar.svelte rather than
-			 * Page.svelte's title block, and it measures itself into this same property —
-			 * so this calc is unchanged and stays literally true. What that relies on is
-			 * that only one of them renders at a time: every `<Page>` under `/venue/`
-			 * passes `band={false}`.
+			 * `--page-header-height` is the venue bar's, the one sticky band below the nav,
+			 * and only inside a venue. Page titles render in the column everywhere, so
+			 * outside a venue nothing writes it, and its fallback is 0 for that reason: a
+			 * guess here would reserve a strip of nothing above every anchored heading on
+			 * every page that has no second band.
 			 */
 			html {
-				scroll-padding-block-start: calc(var(--nav-height, 8rem) + var(--page-header-height, 6rem));
+				scroll-padding-block-start: calc(var(--nav-height, 8rem) + var(--page-header-height, 0px));
 				scroll-padding-block-end: var(--bottom-chrome, 0px);
 			}
 
@@ -265,10 +264,6 @@
 
 			h1 {
 				font-size: var(--header-font-size);
-				background: var(--salient-color);
-				color: var(--background-color);
-				padding: var(--spacing);
-				border-radius: 0 0 var(--roundedness) var(--roundedness);
 				margin-top: 0;
 				display: flex;
 				flex-direction: row;

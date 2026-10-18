@@ -1,4 +1,6 @@
+import { VenueLabel } from '#lib/components/Labels.js';
 import type { LocaleText } from '#lib/locales/Locale.js';
+import type { Bar } from './contextBar';
 import { venuePath } from './venuePath';
 
 /**
@@ -93,4 +95,22 @@ export function venueBarLinks(
 		});
 
 	return links;
+}
+
+/**
+ * The bar for an inactive venue, seen by anyone who does not administer it. Every page in
+ * the venue is the same dead end for them, so the bar names the venue and offers only the
+ * way out to its own website — linking to its submissions or volunteers would only lead
+ * back to the page they are on.
+ */
+export function closedVenueBar(venue: VenueBarVenue, locale: LocaleText): Bar {
+	return {
+		icon: VenueLabel,
+		name: venueBarName(venue),
+		href: `/venue/${venuePath(venue)}`,
+		links:
+			venue.url.length > 0
+				? [{ href: venue.url, label: locale.page.venue.bar.website, external: true }]
+				: []
+	};
 }

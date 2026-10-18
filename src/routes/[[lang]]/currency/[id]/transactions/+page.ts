@@ -1,5 +1,3 @@
-import type { Breadcrumb } from '#lib/data/breadcrumbs.js';
-import { TokenLabel } from '#lib/components/Labels.js';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
@@ -15,9 +13,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 		transactions === null ? { data: null } : await db.getTransactionVenues(transactions);
 
 	return {
-		breadcrumbs: currency
-			? ([[`/currency/${currency.id}`, `${TokenLabel} ${currency.name}`]] as Breadcrumb[])
-			: [],
 		currency,
 		transactions,
 		venues,

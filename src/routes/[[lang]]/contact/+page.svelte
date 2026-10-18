@@ -12,7 +12,7 @@
 	let { stewards } = $derived(data);
 </script>
 
-<Page icon={ScholarLabel} title={(l) => l.page.contact.title}>
+<Page title={(l) => l.page.contact.title}>
 	<!-- First, because it is the question the steward inbox most often receives by mistake:
 	     the stewards run the platform, not the journals and conferences on it. -->
 	<Subheader icon={VenueLabel} text={(l) => l.page.contact.header.venues} />

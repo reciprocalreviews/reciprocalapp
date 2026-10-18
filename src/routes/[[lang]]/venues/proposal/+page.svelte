@@ -5,11 +5,10 @@
 	import Checkbox from '#lib/components/Checkbox.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import Form from '#lib/components/Form.svelte';
-	import { VenueLabel } from '#lib/components/Labels.js';
 	import Options from '#lib/components/Options.svelte';
 	import Page from '#lib/components/Page.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
-	import Status from '#lib/components/Status.svelte';
+	import Note from '#lib/components/Note.svelte';
 	import TextField from '#lib/components/TextField.svelte';
 	import { parseAddresses } from '#lib/data/addresses.js';
 	import { getDB } from '#lib/data/CRUD.js';
@@ -117,11 +116,8 @@
 	}
 </script>
 
-<Page icon={VenueLabel} title={(l) => l.page.proposeVenue.title}>
-	<Paragraph text={(l) => l.page.proposeVenue.paragraph.reviewedBy} />
-	<Paragraph text={(l) => l.page.proposeVenue.paragraph.howToPropose} />
-	<Paragraph text={(l) => l.page.proposeVenue.paragraph.communitySupport} />
-	<Paragraph text={(l) => l.page.proposeVenue.paragraph.emailNotice} />
+<Page title={(l) => l.page.proposeVenue.title}>
+	<Paragraph text={(l) => l.page.proposeVenue.paragraph.intro} />
 
 	{#if auth().getUserID()}
 		<Form>
@@ -247,6 +243,9 @@
 			<hr />
 
 			<div class="form-footer">
+				<!-- Beside the button it is about, where it is read at the moment it matters,
+				     rather than in the preamble, before anyone has typed an address. -->
+				<Note path={(l) => l.page.proposeVenue.paragraph.emailNotice} />
 				<Button
 					strings={(l) => l.page.proposeVenue.button.propose}
 					action={propose}
@@ -263,7 +262,7 @@
 			</div>
 		</Form>
 	{:else}
-		<Status good={false} label={(l) => l.page.proposeVenue.status.notLoggedIn} />
+		<Feedback text={(l) => l.page.proposeVenue.status.notLoggedIn} />
 	{/if}
 </Page>
 
@@ -287,6 +286,8 @@
 	.form-footer {
 		display: flex;
 		justify-content: flex-end;
+		align-items: baseline;
+		gap: var(--spacing);
 		width: 100%;
 	}
 </style>

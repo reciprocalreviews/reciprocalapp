@@ -2,10 +2,12 @@
 	import { goto, invalidate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { requiresAuth } from '#lib/auth/requiresAuth.js';
+	import ContextBar from '#lib/components/ContextBar.svelte';
 	import Footer from '#lib/components/Footer.svelte';
 	import Nav from '#lib/components/Nav.svelte';
 	import { setDB } from '#lib/data/CRUD.js';
 	import getRealtimeChannel from '#lib/data/SupabaseRealtime.js';
+	import { areaDrawsBar, siteBar } from '#lib/data/contextBar.js';
 	import { onMount } from 'svelte';
 	import SupabaseAuth, { setAuth } from './Auth.svelte';
 	import { setLocaleContext } from './Contexts';
@@ -72,15 +74,15 @@
 			channel.unsubscribe();
 		};
 	});
-
-	// The trail shown in the nav, from whichever load supplied one. It used to be a
-	// mutable context that `Page` wrote from an `$effect` — which never runs during
-	// SSR, so the server rendered a nav with no trail and hydration inserted it.
-	let breadcrumbs = $derived(page.data.breadcrumbs ?? []);
 </script>
 
-<Nav {tokens} {breadcrumbs}></Nav>
+<Nav {tokens}></Nav>
 <main>
+	<!-- The site's own bar, on every page that is not inside an area with a bar of its own:
+	     venues, a venue, a scholar or a currency each draw theirs from their layout. -->
+	{#if !areaDrawsBar(page.route.id)}
+		<ContextBar bar={siteBar(locale)} menu={(l) => l.header.context.menu} />
+	{/if}
 	{@render children()}
 </main>
 <Footer {betaDismissed} />
@@ -94,9 +96,8 @@
 		   to the bottom of the viewport rather than floating up to meet short content
 		   (#156). Pairs with the flex column on `body` in app.html. */
 		flex: 1;
-		/* Deliberately full width, and deliberately no block-start margin. The page
-		   title bar is a full-bleed band that sits flush beneath the nav, so the text
-		   column's `--page-width` cap lives one level down, on `.page` in
-		   Page.svelte. */
+		/* Deliberately full width, and deliberately no block-start margin. The context
+		   bar is a full-bleed band that sits flush beneath the nav, so the text column's
+		   `--page-width` cap lives one level down, on `.page` in Page.svelte. */
 	}
 </style>

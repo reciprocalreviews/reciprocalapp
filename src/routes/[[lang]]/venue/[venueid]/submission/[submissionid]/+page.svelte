@@ -2,6 +2,8 @@
 	import type { PublicORCIDProfile, RoleID, RoleRow, ScholarID } from '$data/types';
 	import { venuePath as toVenuePath } from '#lib/data/venuePath.js';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
+	import Action from '#lib/components/Action.svelte';
+	import Alert from '#lib/components/Alert.svelte';
 	import Button from '#lib/components/Button.svelte';
 	import Checkbox from '#lib/components/Checkbox.svelte';
 	import EditableText from '#lib/components/EditableText.svelte';
@@ -494,20 +496,19 @@
 <!-- Signed out, nothing here loads: submissions are readable only by the people they involve.
      Say so rather than "does not exist", since this is usually someone following an email. -->
 {#if scholar === null}
-	<Page band={false} title={(l) => l.page.submission.title}>
+	<Page title={(l) => l.page.submission.title}>
 		<Feedback text={(l) => l.page.submission.feedback.logIn}></Feedback>
 	</Page>
 {:else if submission === null || venue === null || roles === null || scholar === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
-	<Page band={false} title={(l) => l.page.submission.title}>
+	<Page title={(l) => l.page.submission.title}>
 		<Feedback error text={(l) => l.page.submission.feedback.notLoaded}></Feedback>
 	</Page>
 {:else if !canView}
-	<Page band={false} title={(l) => l.page.submission.title}>
+	<Page title={(l) => l.page.submission.title}>
 		<Feedback error text={(l) => l.page.submission.feedback.confidential}></Feedback>
 	</Page>
 {:else}
 	<Page
-		band={false}
 		title={submission.title}
 		edit={// Only editors can update the submission title.
 		isEditor
@@ -537,7 +538,8 @@
 			{/if}
 			{submission.externalid}
 			{#if done}
-				<Status good={false} label={(l) => l.page.submission.status.done} />
+				<!-- Neutral: done is where a submission is meant to end up, not a problem. -->
+				<Status neutral label={(l) => l.page.submission.status.done} />
 			{:else}
 				<Status label={(l) => l.page.submission.status.reviewing} />
 				{#if submission.bidding_closed}
@@ -550,63 +552,115 @@
 			{/if}
 		{/snippet}
 
-		<!-- Only editors (priority-0) see the mark-done flow. The button
-		     compensates every editor on this submission and flips the
-		     status to done in one atomic action; reopening is forbidden.
-		     The button is inactive until every non-editor assignment is
-		     compensated, with an explanation of what's left. -->
-		<!-- Anyone who may answer bids here may open or close bidding. Unchecking closes it
-		     while the submission stays under review, e.g. when every seat has a reviewer but
-		     some haven't registered yet. Bidders then no longer see the submission at all. -->
-		{#if canAnswerBids && !done}
-			<Checkbox
-				on={!submission.bidding_closed}
-				change={(on) => db().updateSubmissionBiddingClosed(submission.id, !on)}
-				label={(l) => l.page.submission.checkbox.openForBidding}
-				testid="submission-open-for-bidding"
-			/>
-		{/if}
-
-		{#if isEditor && !done}
-			{#if completionBlockers.length > 0}
-				<Feedback
-					text={(l) =>
-						l.page.submission.feedback.completionBlocked.replace(
-							'{count}',
-							completionBlockers.length.toString()
-						)}
+		<!-- The editor's tools for this submission. Only editors (priority-0) see the
+		     mark-done flow: the button compensates every editor on this submission and flips
+		     the status to done in one atomic action, and reopening is forbidden. It stays
+		     inactive until every non-editor assignment is compensated; the alert below says
+		     what is left. Anyone who may answer bids here may open or close bidding.
+		     Unchecking closes it while the submission stays under review, e.g. when every
+		     seat has a reviewer but some haven't registered yet. Bidders then no longer see
+		     the submission at all. -->
+		{#snippet actions()}
+			{#if canAnswerBids && !done}
+				<Checkbox
+					on={!submission.bidding_closed}
+					change={(on) => db().updateSubmissionBiddingClosed(submission.id, !on)}
+					label={(l) => l.page.submission.checkbox.openForBidding}
+					testid="submission-open-for-bidding"
 				/>
-				<ul class="blockers">
-					{#each completionBlockers as blocker}
-						{@const role = roles.find((r) => r.id === blocker.role)}
-						<li>
-							<strong>{role?.name ?? '?'}</strong>: <ScholarLink id={blocker.scholar} />
-						</li>
-					{/each}
-				</ul>
 			{/if}
-			<Button
-				strings={(l) => l.page.submission.button.markDone}
-				testid="mark-submission-done"
-				active={completionBlockers.length === 0}
-				action={async () => {
-					const outcome = await handle(db().markSubmissionDone(submission.id));
-					if (
-						typeof outcome === 'object' &&
-						outcome !== null &&
-						'status' in outcome &&
-						outcome.status === 'insufficient'
-					) {
-						completionFeedback = (l) => l.page.submission.feedback.completionInsufficient;
-					} else {
-						completionFeedback = undefined;
-					}
-				}}
-			/>
+			{#if isEditor && !done}
+				<Button
+					strings={(l) => l.page.submission.button.markDone}
+					testid="mark-submission-done"
+					active={completionBlockers.length === 0}
+					action={async () => {
+						const outcome = await handle(db().markSubmissionDone(submission.id));
+						if (
+							typeof outcome === 'object' &&
+							outcome !== null &&
+							'status' in outcome &&
+							outcome.status === 'insufficient'
+						) {
+							completionFeedback = (l) => l.page.submission.feedback.completionInsufficient;
+						} else {
+							completionFeedback = undefined;
+						}
+					}}
+				/>
+			{/if}
+		{/snippet}
+
+		{#snippet alerts()}
 			{#if completionFeedback}
-				<Feedback error text={completionFeedback} />
+				<Alert tone="problem" text={completionFeedback} testid="completion-insufficient" />
 			{/if}
-		{/if}
+
+			<!-- Nobody is editing this submission yet, and this viewer is one of the venue's
+			     editors, so offer to take it. Until someone does, only venue admins can approve
+			     work on it and it cannot be marked done — and before can_claim_editor_role only
+			     a venue admin could seat the first editor. -->
+			{#if editorRole && canClaimEditor(editorRole, scholar?.id ?? null, viewerVolunteering, submissionHasEditor)}
+				<Alert
+					tone="attention"
+					text={(l) => l.page.submission.feedback.needsEditor}
+					testid="needs-editor"
+				>
+					{#snippet action()}
+						<Button
+							testid="claim-editor"
+							strings={(l) => l.page.submission.button.claimEditor}
+							action={() =>
+								handle(
+									db().createAssignment(submission.id, scholar!.id, editorRole.id, false, true)
+								)}
+						/>
+					{/snippet}
+				</Alert>
+			{/if}
+
+			{#if isEditor && !done && completionBlockers.length > 0}
+				<Alert
+					tone="attention"
+					text={(l) => l.page.submission.feedback.completionBlocked}
+					inputs={{ count: completionBlockers.length.toString() }}
+					testid="completion-blocked"
+				>
+					<ul class="blockers">
+						{#each completionBlockers as blocker}
+							{@const role = roles.find((r) => r.id === blocker.role)}
+							<li>
+								<strong>{role?.name ?? '?'}</strong>: <ScholarLink id={blocker.scholar} />
+							</li>
+						{/each}
+					</ul>
+				</Alert>
+			{/if}
+
+			<!-- People the import named who have not joined yet, in one alert. They are matched
+			     from the venue's unmatched assignments page once each person joins. -->
+			{#if unmatched.length > 0}
+				<Alert
+					tone="attention"
+					testid="unmatched-on-submission"
+					text={(l) =>
+						l.page.submission.feedback.unmatched.replaceAll(
+							'{list}',
+							unmatched
+								.map((u) => `**${u.name}** (${roles.find((r) => r.id === u.role)?.name ?? ''})`)
+								.join(', ')
+						)}
+				>
+					{#snippet action()}
+						<Action
+							to="/venue/{venuePath}/submissions/unmatched"
+							label={(l) => l.page.submissions.action.match}
+							group="editor"
+						/>
+					{/snippet}
+				</Alert>
+			{/if}
+		{/snippet}
 
 		<Subheader icon={ScholarLabel} text={(l) => l.page.submission.header.authors}></Subheader>
 
@@ -704,37 +758,6 @@
 						? l.page.submission.feedback.compensationOnlyLinked
 						: l.page.submission.feedback.compensationOnly}
 				inputs={{ venue: venueBarName(venue), system: venue.review_system_url ?? '' }}
-			/>
-		{/if}
-
-		<!-- People the import named who have not joined yet, in one notice. They are matched
-		     from the venue's unmatched assignments page once each person joins. -->
-		{#if unmatched.length > 0}
-			<Feedback
-				testid="unmatched-on-submission"
-				text={(l) =>
-					l.page.submission.feedback.unmatched
-						.replaceAll(
-							'{list}',
-							unmatched
-								.map((u) => `**${u.name}** (${roles.find((r) => r.id === u.role)?.name ?? ''})`)
-								.join(', ')
-						)
-						.replaceAll('{venue}', venuePath)}
-			/>
-		{/if}
-
-		<!-- Nobody is editing this submission yet, and this viewer is one of the venue's
-		     editors, so offer to take it. Until someone does, only venue admins can approve
-		     work on it and it cannot be marked done — and before can_claim_editor_role only a
-		     venue admin could seat the first editor. -->
-		{#if editorRole && canClaimEditor(editorRole, scholar?.id ?? null, viewerVolunteering, submissionHasEditor)}
-			<Feedback text={(l) => l.page.submission.feedback.needsEditor} />
-			<Button
-				testid="claim-editor"
-				strings={(l) => l.page.submission.button.claimEditor}
-				action={() =>
-					handle(db().createAssignment(submission.id, scholar!.id, editorRole.id, false, true))}
 			/>
 		{/if}
 
