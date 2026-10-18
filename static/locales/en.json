@@ -739,8 +739,9 @@
 		"submissions": {
 			"title": "Submissions",
 			"tip": {
-				"bid": "You can bid on submissions below that you are interested in volunteering for. This information goes to the {role}, who will select volunteers.",
-				"bidBudget": "You have used {used} of {limit} bids as {role}. Bids on finished submissions don't count. To bid on another submission, withdraw a bid first.",
+				"bid": "Bid on the submissions you are most qualified to evaluate as {role}. Whoever chooses volunteers for the role sees your bids.",
+				"bidBudget": "You have used {used} of {limit} bids.",
+				"bidBudgetNote": "Bids on finished submissions don't count; to bid on another submission, withdraw a bid first.",
 				"batchAssign": "Assigning one person to several submissions? Choose a role and find the scholar here, then use the assign buttons that appear in that role's column."
 			},
 			"feedback": {
@@ -2018,7 +2019,7 @@
 				"invited": "**Invite-only**: Scholars must be invited to hold this role.",
 				"anonymousAuthors": "**Anonymous authors**: Author names are hidden from scholars in this role.",
 				"biddable": "**Bidding**: Volunteers in this role can bid on submissions.",
-				"bidLimit": "**Bid limit**: Limit how many submissions each volunteer can bid on."
+				"bidLimit": "**Max bids**: Limit how many submissions each volunteer can bid on."
 			},
 			"slider": {
 				"compensation": {
@@ -2029,12 +2030,8 @@
 					"label": "desired number of assignments for this role. If bidding is on, it will be turned off for a submission that has this number of assignments, to avoid unnecessary bids.",
 					"suffix": " assignments"
 				},
-				"bidLimitPercent": {
-					"label": "of the submissions under review each volunteer can bid on",
-					"suffix": "%"
-				},
-				"bidLimitFloor": {
-					"label": "bids each volunteer can always make, however few submissions there are",
+				"maxBids": {
+					"label": "the most submissions each volunteer can bid on",
 					"suffix": " bids"
 				}
 			},
@@ -2062,8 +2059,7 @@
 			"tip": {
 				"volunteerVisibilityInert": "This role's volunteers are listed publicly whatever you choose here: invitations and the editor role are both status nobody can give themselves. Your choice is saved, and applies if that changes.",
 				"invitedHidesRoster": "This role's volunteers are listed publicly only because it is invite-only. Opening it up will also hide them, as you have asked.",
-				"bidLimit": "Every bid counts toward the limit until its submission is done, including approved and declined bids. Volunteers who want to bid elsewhere withdraw a bid first. A volunteer who says how many papers they will review can bid on at most three times that many. For example, at 20% with a minimum of 10, a venue with 30 submissions under review allows 10 bids, and one with 200 allows 40.",
-				"papersCapsBids": "This also limits your bids in this role to {bids}.",
+				"bidLimit": "Keep this small, so volunteers bid on the submissions they are most qualified to review. Every bid counts until its submission is done, including approved and declined bids, so volunteers who want to bid elsewhere withdraw a bid first.",
 				"highestPriority": "This is the venue's top priority role. Scholars assigned it act as editors on a submission: they can approve any assignment on it, edit its author list, and mark it done — which is also how they are compensated. Use the arrows to change which role comes first."
 			},
 			"paragraph": {

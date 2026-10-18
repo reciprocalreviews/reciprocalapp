@@ -28,7 +28,7 @@
 	const locale = getLocaleContext();
 
 	/** What turning the bid limit back on restores; the column's default. */
-	const DEFAULT_BID_LIMIT_PERCENT = 20;
+	const DEFAULT_MAX_BIDS = 5;
 
 	/** Whether the visibility setting below currently decides anything. Invite-only
 	 * roles and the venue's editor role are exempt in the database, so the control
@@ -98,30 +98,21 @@
 
 	{#if role.biddable}
 		<Checkbox
-			on={role.bid_limit_percent !== null}
-			change={(on) => db().editRoleBidLimitPercent(role.id, on ? DEFAULT_BID_LIMIT_PERCENT : null)}
+			on={role.max_bids !== null}
+			change={(on) => db().editRoleMaxBids(role.id, on ? DEFAULT_MAX_BIDS : null)}
 			label={(l) => l.view.roles.checkbox.bidLimit}
 			testid="role-bid-limit-{role.name}"
 		/>
-		{#if role.bid_limit_percent !== null}
+		{#if role.max_bids !== null}
 			<Slider
-				min={5}
-				max={100}
-				value={role.bid_limit_percent}
-				step={5}
-				strings={(l) => l.view.roles.slider.bidLimitPercent}
-				immediately={false}
-				change={(value) => handle(db().editRoleBidLimitPercent(role.id, value))}
-			/>
-			<Slider
-				min={0}
+				min={1}
 				max={50}
-				value={role.bid_limit_floor}
+				value={role.max_bids}
 				step={1}
-				strings={(l) => l.view.roles.slider.bidLimitFloor}
+				strings={(l) => l.view.roles.slider.maxBids}
 				immediately={false}
-				change={(value) => handle(db().editRoleBidLimitFloor(role.id, value))}
-				testid="role-bid-limit-floor-{role.name}"
+				change={(value) => handle(db().editRoleMaxBids(role.id, value))}
+				testid="role-max-bids-{role.name}"
 			/>
 			<Tip>{locale().view.roles.tip.bidLimit}</Tip>
 		{/if}

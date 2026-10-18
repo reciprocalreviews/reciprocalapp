@@ -1862,12 +1862,8 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
-	async editRoleBidLimitPercent(id: RoleID, percent: number | null): Promise<Result> {
-		return this.updateRole(id, { bid_limit_percent: percent }, 'EditRoleBidLimit');
-	}
-
-	async editRoleBidLimitFloor(id: RoleID, floor: number): Promise<Result> {
-		return this.updateRole(id, { bid_limit_floor: floor }, 'EditRoleBidLimit');
+	async editRoleMaxBids(id: RoleID, max: number | null): Promise<Result> {
+		return this.updateRole(id, { max_bids: max }, 'EditRoleBidLimit');
 	}
 
 	async editRoleVolunteerVisibility(id: RoleID, visibility: VolunteerVisibility): Promise<Result> {

@@ -526,11 +526,8 @@ export default abstract class CRUD {
 	abstract editRoleAnonymousAuthors(id: RoleID, anonymous: boolean): Promise<Result>;
 	abstract editRoleApprover(id: RoleID, approver: RoleID | null): Promise<Result>;
 	abstract editRoleDesiredAssignments(id: RoleID, desired: number): Promise<Result>;
-	/** The percent of the venue's submissions under review each volunteer may bid on, or
-	 * null for no bid budget. */
-	abstract editRoleBidLimitPercent(id: RoleID, percent: number | null): Promise<Result>;
-	/** The bid budget's minimum, so a small venue's volunteers may bid on everything. */
-	abstract editRoleBidLimitFloor(id: RoleID, floor: number): Promise<Result>;
+	/** The most submissions each volunteer may bid on in this role, or null for no limit. */
+	abstract editRoleMaxBids(id: RoleID, max: number | null): Promise<Result>;
 	/** Who may see this role's volunteers. Inert while the role is invite-only or at
 	 * priority 0 — see the volunteers SELECT policy for why those are exempt. */
 	abstract editRoleVolunteerVisibility(

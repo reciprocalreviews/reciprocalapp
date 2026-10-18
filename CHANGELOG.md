@@ -8,6 +8,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - Updated dependencies, including SvelteKit 3.1, the Supabase CLI, and the Vercel CLI to 64.
 - **Anyone who chooses reviewers now sees each scholar's email, ORCID iD, and ORCID affiliation in one consistent preview, on a submission's bids, the volunteers page, and the import pages.** Declined bids now show these too, and the volunteers page shows every volunteer's ORCID iD to anyone who can view it.
+- **Each biddable role now has a fixed max bids, by default 5, and the submissions page asks volunteers to bid on what they are most qualified to evaluate.** It replaces the percent, minimum, and papers caps; roles with no limit keep none, and existing limits become 5.
 
 ## 0.5.19 - 2026-10-13
 

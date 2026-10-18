@@ -5233,16 +5233,22 @@
                       "type": "string"
                     },
                     "bid": {
+                      "description": "The bidding prompt, one per biddable role: bid on what you are most qualified to evaluate. {role} is the role's name.",
                       "type": "string"
                     },
                     "bidBudget": {
-                      "description": "A bidder's budget for one role: {used} of {limit} bids as {role}.",
+                      "description": "Follows the bidding prompt when the role has a limit, in bold: {used} of {limit} bids.",
+                      "type": "string"
+                    },
+                    "bidBudgetNote": {
+                      "description": "Follows the budget: what counts toward it, and how to move a bid.",
                       "type": "string"
                     }
                   },
                   "required": [
                     "bid",
                     "bidBudget",
+                    "bidBudgetNote",
                     "batchAssign"
                   ],
                   "type": "object"
@@ -7153,26 +7159,21 @@
                 "slider": {
                   "additionalProperties": false,
                   "properties": {
-                    "bidLimitFloor": {
-                      "$ref": "#/definitions/SliderText",
-                      "description": "The bid budget's minimum, so a small venue's volunteers may bid on all of it."
-                    },
-                    "bidLimitPercent": {
-                      "$ref": "#/definitions/SliderText",
-                      "description": "The bid budget, as a percent of the venue's submissions under review."
-                    },
                     "compensation": {
                       "$ref": "#/definitions/SliderText"
                     },
                     "desiredAssignments": {
                       "$ref": "#/definitions/SliderText"
+                    },
+                    "maxBids": {
+                      "$ref": "#/definitions/SliderText",
+                      "description": "The most submissions each volunteer may bid on in the role."
                     }
                   },
                   "required": [
                     "compensation",
                     "desiredAssignments",
-                    "bidLimitPercent",
-                    "bidLimitFloor"
+                    "maxBids"
                   ],
                   "type": "object"
                 },
@@ -7180,7 +7181,7 @@
                   "additionalProperties": false,
                   "properties": {
                     "bidLimit": {
-                      "description": "Explains the bid budget under its settings: what counts toward it, and that a volunteer moves bids by withdrawing them.",
+                      "description": "Explains max bids under its setting: why to keep it small, what counts toward it, and that a volunteer moves bids by withdrawing them.",
                       "type": "string"
                     },
                     "highestPriority": {
@@ -7189,10 +7190,6 @@
                     },
                     "invitedHidesRoster": {
                       "description": "Warns an admin that unchecking \"invite only\" will, in the same click, hide a roster that was public a moment ago — the visibility setting stops being inert. Shown only when that setting is not `all`.",
-                      "type": "string"
-                    },
-                    "papersCapsBids": {
-                      "description": "Under a volunteer's papers field, when the role has a bid budget: the number they give also caps their bids at {bids}.",
                       "type": "string"
                     },
                     "volunteerVisibilityInert": {
@@ -7204,7 +7201,6 @@
                     "volunteerVisibilityInert",
                     "invitedHidesRoster",
                     "bidLimit",
-                    "papersCapsBids",
                     "highestPriority"
                   ],
                   "type": "object"
