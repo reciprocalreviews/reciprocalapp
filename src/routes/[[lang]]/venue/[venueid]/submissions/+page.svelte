@@ -18,6 +18,7 @@
 	import Table from '#lib/components/Table.svelte';
 	import TextField from '#lib/components/TextField.svelte';
 	import Checkbox from '#lib/components/Checkbox.svelte';
+	import LoadIndicator from '#lib/components/LoadIndicator.svelte';
 	import Tip from '#lib/components/Tip.svelte';
 	import Form from '#lib/components/Form.svelte';
 	import Options from '#lib/components/Options.svelte';
@@ -26,6 +27,7 @@
 	import { validEmail, validORCID } from '#lib/validation.js';
 	import { getDB } from '#lib/data/CRUD.js';
 	import { alreadyAssigned } from '#lib/data/assignees.js';
+	import Loads, { atCap, type Load } from '#lib/data/load.js';
 	import canApproveAssignment from '#lib/data/canApproveAssignment.js';
 	import canClaimEditor from '#lib/data/canClaimEditor.js';
 	import isRoleApprover from '#lib/data/isRoleApprover.js';
@@ -253,6 +255,43 @@
 		batchScholarID = null;
 	});
 
+	/** How busy the scholar found already is in the chosen role, so the editor sees their
+	 * cap before assigning them across many submissions rather than after. Refetched as
+	 * the assignments change, so each assignment made here moves it. 'not-volunteer' when
+	 * they have not volunteered for the role, and so have set no cap for it. */
+	let batchLoad = $state<Load | 'not-volunteer' | undefined>(undefined);
+
+	$effect(() => {
+		const id = batchScholarID;
+		const roleID = batchRole;
+		// Read so that an assignment made below refetches the count.
+		void assignments;
+		if (id === null || roleID === undefined || id === uid || !venue) {
+			batchLoad = undefined;
+			return;
+		}
+
+		let live = true;
+		void Promise.all([
+			db().getAssignmentLoads(venue.id, [id]),
+			db().getScholarAcceptedVolunteering(id, [roleID])
+		]).then(([counts, volunteering]) => {
+			if (!live || counts.data === null || volunteering.data === null) return;
+			const volunteer = volunteering.data[0];
+			batchLoad =
+				volunteer === undefined
+					? 'not-volunteer'
+					: new Loads(counts.data).of(id, roleID, volunteer.papers);
+		});
+		return () => {
+			live = false;
+		};
+	});
+
+	const batchAtCap = $derived(
+		batchLoad !== undefined && batchLoad !== 'not-volunteer' && atCap(batchLoad)
+	);
+
 	async function resolveBatchScholar() {
 		batchResolving = true;
 		batchError = undefined;
@@ -360,6 +399,19 @@
 					<Feedback error text={batchError} />
 				{:else if batchScholarID !== null}
 					<Feedback text={(l) => l.page.submissions.feedback.batchReady} />
+					{#if batchLoad === 'not-volunteer'}
+						<Feedback testid="batch-load" text={(l) => l.view.load.notVolunteer} />
+					{:else if batchLoad !== undefined}
+						<div data-testid="batch-load"><LoadIndicator load={batchLoad} /></div>
+						{#if batchLoad.cap !== null && atCap(batchLoad)}
+							<Feedback
+								warning
+								testid="batch-over-cap"
+								text={(l) => l.view.load.warning}
+								inputs={{ used: batchLoad.used.toString(), cap: batchLoad.cap.toString() }}
+							/>
+						{/if}
+					{/if}
 				{/if}
 			</Form>
 		{/if}
@@ -622,7 +674,9 @@
 														testid={`batch-assign-${index}-${roleIndex}`}
 														strings={batchScholarID === uid
 															? (l) => l.page.submissions.button.batchAssignSelf
-															: (l) => l.page.submissions.button.batchAssign}
+															: batchAtCap
+																? (l) => l.page.submissions.button.batchAssignOverCap
+																: (l) => l.page.submissions.button.batchAssign}
 														action={() =>
 															handle(
 																db().createAssignment(

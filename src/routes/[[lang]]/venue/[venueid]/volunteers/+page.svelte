@@ -13,6 +13,8 @@
 	import TextField from '#lib/components/TextField.svelte';
 	import toCSV from '#lib/data/toCSV.js';
 	import ORCIDKeywords from '#lib/components/ORCIDKeywords.svelte';
+	import LoadIndicator from '#lib/components/LoadIndicator.svelte';
+	import Loads from '#lib/data/load.js';
 	import VenueExpertise from '#lib/components/VenueExpertise.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
 	import {
@@ -27,7 +29,9 @@
 	import { getLocaleContext } from '$routes/Contexts';
 
 	let { data } = $props();
-	const { venue, commitments, roles, volunteerCounts, canContact } = $derived(data);
+	const { venue, commitments, roles, volunteerCounts, canContact, loads } = $derived(data);
+
+	const loadIndex = $derived(new Loads(loads));
 
 	let filter = $state('');
 	/** The selected expertise chips. Held as keys rather than labels, so a selection
@@ -108,6 +112,8 @@
 			// wrote for this venue, and merging the two would export a claim it never made.
 			'ORCID keywords',
 			'Papers cap',
+			// Those who may contact volunteers are the ones choosing whom to invite.
+			...(canContact ? ['Active assignments'] : []),
 			'Active'
 		];
 		const rows = commitments.map((c) => [
@@ -118,6 +124,7 @@
 			c.expertise,
 			orcidKeywords(c).join(', '),
 			c.papers === null ? '' : c.papers.toString(),
+			...(canContact ? [loadIndex.of(c.scholarid, c.roleid, c.papers).used.toString()] : []),
 			c.active ? 'Yes' : 'No'
 		]);
 
@@ -219,7 +226,11 @@
 					<th>{locale().page.volunteers.headers.active}</th>
 					<th>{locale().page.volunteers.headers.name}</th>
 					<th>{locale().page.volunteers.headers.expertise}</th>
-					<th>{locale().page.volunteers.headers.papers}</th>
+					<th
+						>{canContact
+							? locale().page.volunteers.headers.assigned
+							: locale().page.volunteers.headers.papers}</th
+					>
 				{/snippet}
 				{#each sections as { role, withholding }, roleIndex (role.id)}
 					{@const rows = view.sortedAndFiltered(commitments.filter((c) => c.roleid === role.id))}
@@ -307,7 +318,13 @@
 									/>{#if expertise.length === 0 && mirrored.length === 0}<em>{EmptyLabel}</em
 										>{/if}</td
 								>
-								<td>{volunteer.papers === null ? EmptyLabel : volunteer.papers}</td>
+								<!-- What they already have beside the cap, for those choosing whom to
+								     invite; the cap alone for everyone else. -->
+								<td
+									>{#if canContact}<LoadIndicator
+											load={loadIndex.of(volunteer.scholarid, volunteer.roleid, volunteer.papers)}
+										/>{:else}{volunteer.papers === null ? EmptyLabel : volunteer.papers}{/if}</td
+								>
 							</tr>
 						{/each}
 					{/if}

@@ -16,6 +16,7 @@
 		VenueLabel
 	} from '#lib/components/Labels.js';
 	import Link from '#lib/components/Link.svelte';
+	import LoadIndicator from '#lib/components/LoadIndicator.svelte';
 	import Options from '#lib/components/Options.svelte';
 	import Page from '#lib/components/Page.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
@@ -38,6 +39,7 @@
 	import canClaimEditor from '#lib/data/canClaimEditor.js';
 	import canViewSubmission from '#lib/data/canViewSubmission.js';
 	import { getDB, NullUUID } from '#lib/data/CRUD.js';
+	import Loads, { atCap, type Load } from '#lib/data/load.js';
 	import {
 		sortAssignees as sortAssigneesBy,
 		sortBids as sortBidsBy
@@ -82,10 +84,8 @@
 		assigneeEmails,
 		/** Venue-defined preference levels, ordered by rank */
 		preferenceLevels,
-		/** Per-scholar count of active (approved, uncompleted) assignments in this venue */
-		venueActiveCounts,
-		/** Per-scholar count of active assignments on OTHER venues (RLS-gated) */
-		elsewhereActiveCounts,
+		/** Candidates' active assignment counts, per role here and in other venues */
+		loads,
 		/** The viewer's own accepted volunteer records in this venue */
 		viewerVolunteering,
 		/** Thank-you notes for this submission, filtered by RLS to the viewer */
@@ -187,6 +187,12 @@
 		return (
 			volunteers?.find((v) => v.scholarid === scholarID && v.roleid === roleID)?.papers ?? null
 		);
+	}
+
+	const loadIndex = $derived(new Loads(loads));
+
+	function loadOf(scholarID: ScholarID, roleID: RoleID): Load {
+		return loadIndex.of(scholarID, roleID, papersCapFor(scholarID, roleID));
 	}
 
 	/** Get the database connection */
@@ -360,6 +366,37 @@
 			clearTimeout(timer);
 		};
 	});
+	/** How busy whoever the field resolved to already is, in the role chosen: the same
+	 * indicator as the table's, before the editor assigns them rather than after. It was
+	 * the missing half — an editor typing an address had no way to see a cap until the
+	 * row appeared. 'not-volunteer' when they have not volunteered for the role, and so
+	 * have set no cap for it; undefined until both are chosen, or for oneself. */
+	let newAssignmentLoad = $state<Load | 'not-volunteer' | undefined>(undefined);
+
+	$effect(() => {
+		const id = newAssignmentSearch.id;
+		const roleID = newAssignmentRole;
+		newAssignmentLoad = undefined;
+		if (id === undefined || roleID === undefined || id === scholar?.id || venue === null) return;
+
+		// As with the profile above: a slow answer must not land on a form that has moved on.
+		let live = true;
+		void Promise.all([
+			db().getAssignmentLoads(venue.id, [id]),
+			db().getScholarAcceptedVolunteering(id, [roleID])
+		]).then(([counts, volunteering]) => {
+			if (!live || counts.data === null || volunteering.data === null) return;
+			const volunteer = volunteering.data[0];
+			newAssignmentLoad =
+				volunteer === undefined
+					? 'not-volunteer'
+					: new Loads(counts.data).of(id, roleID, volunteer.papers);
+		});
+		return () => {
+			live = false;
+		};
+	});
+
 	let newAssignmentSubmitting = $state(false);
 	let newAssignmentError: ((l: LocaleText) => string) | undefined = $state(undefined);
 
@@ -375,8 +412,7 @@
 	// body of the sortAssignees/sortBids comparators, so a `.find()` here made
 	// ordering a candidate list O(n^2 log n) — and on a venue whose roster is the
 	// whole community, that list is the whole community. Its neighbours
-	// venueActiveCounts and elsewhereActiveCounts were already built as maps; this
-	// one was the exception.
+	// Loads indexes its counts the same way; this one was the exception.
 	let balanceByScholar = $derived(
 		new Map((balances ?? []).map((balance) => [balance.scholar, balance.count]))
 	);
@@ -449,17 +485,10 @@
 	{#if !expertise && topics.length === 0}{EmptyLabel}{/if}
 {/snippet}
 
+<!-- Only for those choosing whom to assign: the counts come from an RPC that answers no one
+     else, so for anyone else they would read as a confident zero. -->
 {#snippet loadIndicator(scholarID: string, roleID: string)}
-	{@const cap = papersCapFor(scholarID, roleID)}
-	{@const used = venueActiveCounts?.[scholarID] ?? 0}
-	{@const elsewhere = elsewhereActiveCounts?.[scholarID] ?? 0}
-	{@const overCap = cap !== null && used >= cap}
-	{#if cap !== null}
-		<div class:over-cap={overCap} data-testid="papers-load">{used} / {cap}</div>
-	{/if}
-	{#if elsewhere > 0}
-		<div class="elsewhere" data-testid="elsewhere-load">+{elsewhere} elsewhere</div>
-	{/if}
+	{#if canSeeBalances}<LoadIndicator load={loadOf(scholarID, roleID)} />{/if}
 {/snippet}
 
 <!-- Signed out, nothing here loads: submissions are readable only by the people they involve.
@@ -751,11 +780,33 @@
 						</div>
 					{/if}
 				{/if}
+				{#if newAssignmentLoad === 'not-volunteer'}
+					<Feedback testid="new-assignment-load" text={(l) => l.view.load.notVolunteer} />
+				{:else if newAssignmentLoad !== undefined}
+					<div data-testid="new-assignment-load">
+						<LoadIndicator load={newAssignmentLoad} />
+					</div>
+					{#if newAssignmentLoad.cap !== null && atCap(newAssignmentLoad)}
+						<Feedback
+							warning
+							testid="new-assignment-over-cap"
+							text={(l) => l.view.load.warning}
+							inputs={{
+								used: newAssignmentLoad.used.toString(),
+								cap: newAssignmentLoad.cap.toString()
+							}}
+						/>
+					{/if}
+				{/if}
 				<Button
 					testid="new-assignment"
 					strings={newAssignmentSearch.id !== undefined && newAssignmentSearch.id === scholar?.id
 						? (l) => l.page.submission.button.createAssignmentSelf
-						: (l) => l.page.submission.button.createAssignment}
+						: newAssignmentLoad !== undefined &&
+							  newAssignmentLoad !== 'not-volunteer' &&
+							  atCap(newAssignmentLoad)
+							? (l) => l.page.submission.button.createAssignmentOverCap
+							: (l) => l.page.submission.button.createAssignment}
 					active={!newAssignmentSubmitting &&
 						newAssignmentRole !== undefined &&
 						newAssignmentSearch.id !== undefined}
@@ -853,9 +904,7 @@
 				)}
 				{#each assigned as assignment}
 					{@const volunteer = getVolunteer(role.id, assignment.scholar)}
-					{@const cap = papersCapFor(assignment.scholar, role.id)}
-					{@const used = venueActiveCounts?.[assignment.scholar] ?? 0}
-					{@const overCap = cap !== null && used >= cap}
+					{@const overCap = atCap(loadOf(assignment.scholar, role.id))}
 					<tr>
 						<td>{role.name}</td>
 						<td class={!assignment.approved ? 'unapproved' : undefined}>
@@ -929,9 +978,7 @@
 					{#each bidded as assignment}
 						{@const volunteer = getVolunteer(role.id, assignment.scholar)}
 						{@const bidLabel = preferenceLabelFor(assignment.preferenceid)}
-						{@const cap = papersCapFor(assignment.scholar, role.id)}
-						{@const used = venueActiveCounts?.[assignment.scholar] ?? 0}
-						{@const overCap = cap !== null && used >= cap}
+						{@const overCap = atCap(loadOf(assignment.scholar, role.id))}
 						<tr>
 							<td>{role.name}</td>
 							<td>
@@ -1194,15 +1241,5 @@
 	.blockers {
 		margin-block: var(--spacing-half);
 		padding-inline-start: var(--spacing);
-	}
-
-	.over-cap {
-		color: var(--error-color);
-		font-weight: bold;
-	}
-
-	.elsewhere {
-		font-size: var(--extra-small-font-size);
-		color: var(--inactive-color);
 	}
 </style>

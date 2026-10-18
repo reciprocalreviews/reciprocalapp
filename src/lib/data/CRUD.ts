@@ -168,6 +168,12 @@ export type CallForBidsStatus = {
  * budget. See public._bid_limit. */
 export type BidBudget = { used: number; bid_limit: number | null };
 
+/** One row of public.assignment_loads: how many approved, uncompleted assignments a
+ * scholar has in a role at a venue, or, when `role` is null, in every other venue
+ * (editor seats excluded). Counts are true ones, not limited by what the viewer may
+ * see; only the venue's admins and approvers get any rows. */
+export type AssignmentLoad = { scholar: ScholarID; role: RoleID | null; count: number };
+
 /** What `ensure_scholar` found when asked to repair the caller's own scholar row.
  * `orcid_conflict` is the one that needs a person: another scholar row already holds
  * this account's ORCID iD, so two accounts are claiming one researcher. */
@@ -1001,12 +1007,19 @@ export default abstract class CRUD {
 	abstract getSubmissionAssignments(
 		submission: SubmissionID
 	): Promise<ReadResult<AssignmentRow[] | null>>;
-	abstract getVenueActiveAssignmentScholars(
+	/** The roles of a scholar's own active (approved, uncompleted) assignments at a venue,
+	 * one row per assignment, so a volunteer can see the count editors see. RLS always
+	 * admits a scholar's own rows, so this needs no RPC. */
+	abstract getScholarActiveAssignmentRoles(
+		scholar: ScholarID,
 		venue: VenueID
-	): Promise<ReadResult<Pick<AssignmentRow, 'scholar'>[] | null>>;
-	abstract getActiveAssignmentsForScholars(
-		scholarIDs: ScholarID[]
-	): Promise<ReadResult<Pick<AssignmentRow, 'scholar' | 'venue'>[] | null>>;
+	): Promise<ReadResult<Pick<AssignmentRow, 'role'>[] | null>>;
+	/** The active assignment counts of the given scholars, for the venue's admins and
+	 * approvers choosing whom to assign. See AssignmentLoad and src/lib/data/load.ts. */
+	abstract getAssignmentLoads(
+		venue: VenueID,
+		scholars: ScholarID[]
+	): Promise<ReadResult<AssignmentLoad[] | null>>;
 	/** The work actually waiting on the SIGNED-IN scholar, for their profile's Tasks
 	 * table. Answers for auth.uid() rather than a given scholar; an editor's standing
 	 * seat on a submission counts only when the submission is waiting on the editor. */

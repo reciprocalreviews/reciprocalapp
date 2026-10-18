@@ -34,7 +34,8 @@
 		tokens,
 		submissionCount,
 		types,
-		compensation
+		compensation,
+		myActive
 	} = $derived(data);
 
 	const db = getDB();
@@ -309,6 +310,7 @@
 				canInvite={isAdmin}
 				{compensation}
 				{types}
+				{myActive}
 			/>
 
 			{#if isVolunteer && scholar && showPayment}

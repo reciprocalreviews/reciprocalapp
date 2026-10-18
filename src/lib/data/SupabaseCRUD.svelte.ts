@@ -44,6 +44,7 @@ import { renderEmail, type EmailType, type OptionalEmailType } from '../../email
 import type Locale from '../locales/Locale';
 import CRUD, {
 	type BulkImportResult,
+	type AssignmentLoad,
 	type BidBudget,
 	type CallForBidsStatus,
 	type Charge,
@@ -1390,17 +1391,30 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
-	async getVenueActiveAssignmentScholars(
+	async getScholarActiveAssignmentRoles(
+		scholar: ScholarID,
 		venue: VenueID
-	): Promise<ReadResult<Pick<AssignmentRow, 'scholar'>[] | null>> {
+	): Promise<ReadResult<Pick<AssignmentRow, 'role'>[] | null>> {
 		return this.rows(
 			'LoadAssignment',
 			this.client
 				.from('assignments')
-				.select('scholar')
+				.select('role')
+				.eq('scholar', scholar)
 				.eq('venue', venue)
 				.eq('approved', true)
 				.eq('completed', false)
+		);
+	}
+
+	async getAssignmentLoads(
+		venue: VenueID,
+		scholars: ScholarID[]
+	): Promise<ReadResult<AssignmentLoad[] | null>> {
+		if (scholars.length === 0) return { data: [] };
+		// Paged: a roster's worth of scholars can run past PostgREST's max_rows.
+		return this.allRows('LoadAssignment', (from, to) =>
+			this.client.rpc('assignment_loads', { _venue: venue, _scholars: scholars }).range(from, to)
 		);
 	}
 
@@ -3268,20 +3282,6 @@ export default class SupabaseCRUD extends CRUD {
 		return this.rows(
 			'LoadAssignment',
 			this.client.from('assignments').select('*').eq('submission', submission)
-		);
-	}
-
-	async getActiveAssignmentsForScholars(
-		scholarIDs: ScholarID[]
-	): Promise<ReadResult<Pick<AssignmentRow, 'scholar' | 'venue'>[] | null>> {
-		return this.rows(
-			'LoadAssignment',
-			this.client
-				.from('assignments')
-				.select('scholar, venue')
-				.in('scholar', scholarIDs)
-				.eq('approved', true)
-				.eq('completed', false)
 		);
 	}
 

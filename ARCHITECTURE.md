@@ -654,6 +654,16 @@ The Monday digest's `open_seats` also leaves closed submissions out (see Notific
 - **Races.** It takes `pg_advisory_xact_lock` on the scholar and role before counting, so two bids placed at once cannot both take the last slot.
 - **Tests:** [supabase/tests/rls/bid_budget_rls.sql](supabase/tests/rls/bid_budget_rls.sql).
 
+### Assignment loads
+
+[20261019000000](supabase/migrations/20261019000000_assignment_loads.sql) adds `assignment_loads(_venue, _scholars)`, the counts behind every `used / cap` indicator ([LoadIndicator.svelte](src/lib/components/LoadIndicator.svelte), indexed by [load.ts](src/lib/data/load.ts)).
+
+- **Why `SECURITY DEFINER`.** The counts were read from `assignments` on the client, under its SELECT policy, which shows an associate editor only the submissions they can approve on. A reviewer busy elsewhere in the venue read as free. The function counts past the policy and returns only `(scholar, role, count)` rows: approved, uncompleted assignments per role in `_venue`, and one `role = null` row per scholar for every other venue, without priority-0 seats, which a sole editor holds on every submission for its life.
+- **Who gets rows.** A venue admin, or a scholar who is an accepted volunteer in, or holds an active seat in, the priority-0 role or a role that approves another. The volunteer half mirrors [isVenueApprover.ts](src/lib/data/isVenueApprover.ts), so the volunteers page, which shows the column on that test, gets numbers for an editor with no papers yet. Anyone else gets no rows. EXECUTE is revoked from `anon` in the same migration.
+- **Paging.** It orders its rows so `getAssignmentLoads` can page past `max_rows` with `allRows`; a roster passes every volunteer.
+- **A volunteer's own count** needs no RPC: `getScholarActiveAssignmentRoles` reads their own rows, which the SELECT policy always admits.
+- **Tests:** [supabase/tests/rls/assignment_loads_rls.sql](supabase/tests/rls/assignment_loads_rls.sql).
+
 ### Claims and unmatched assignments
 
 [20261004010000](supabase/migrations/20261004010000_unmatched_assignments_and_claims.sql) lets a venue import a backlog before everyone named in it has an account.

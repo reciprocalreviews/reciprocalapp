@@ -455,7 +455,8 @@
 				"active": "Active",
 				"name": "Name",
 				"expertise": "Expertise",
-				"papers": "Papers cap"
+				"papers": "Papers cap",
+				"assigned": "Assigned / cap"
 			},
 			"paragraph": {
 				"intro": "Search for a volunteer by name, email, or expertise, or narrow the list to the expertise keywords volunteers have listed. Within each role, volunteers who have stopped are listed last."
@@ -774,6 +775,11 @@
 					"tip": "Assign yourself to this submission in this role",
 					"label": "+ assign"
 				},
+				"batchAssignOverCap": {
+					"tip": "Assign the scholar you found past the papers cap they set, once they have agreed to more",
+					"label": "+ assign",
+					"warn": "Over cap, agreed, assign"
+				},
 				"sortPaymentFirst": {
 					"tip": "Sort by pending first",
 					"label": "↓"
@@ -962,6 +968,11 @@
 					"tip": "Assign yourself in this role",
 					"label": "+ assignee"
 				},
+				"createAssignmentOverCap": {
+					"tip": "Assign this scholar past the papers cap they set, once they have agreed to more",
+					"label": "+ assignee",
+					"warn": "Over cap, scholar agreed, assign"
+				},
 				"unassign": {
 					"tip": "Remove this assignment",
 					"label": "Unassign",
@@ -1074,7 +1085,7 @@
 				"scholar": "Scholar",
 				"expertise": "Expertise",
 				"balance": "Current balance",
-				"load": "Assignments / Limit",
+				"load": "Assigned / cap",
 				"action": "Action"
 			},
 			"thanks": {
@@ -1761,6 +1772,16 @@
 		}
 	},
 	"view": {
+		"load": {
+			"underCap": "{used} / {cap}",
+			"atCap": "{used} / {cap}, at cap",
+			"overCap": "{used} / {cap}, over cap",
+			"noCap": "{used} assigned",
+			"otherRoles": "+{count} in other roles",
+			"elsewhere": "+{count} at other venues",
+			"warning": "**They already have {used} active assignments in this role, and set a cap of {cap}.** Ask before inviting them, and assign them only if they agree to more.",
+			"notVolunteer": "Not a volunteer for this role, so they have set no cap for it."
+		},
 		"gift": {
 			"noTokens": "You don't have any tokens to gift.",
 			"button": {
@@ -2075,7 +2096,11 @@
 				"declined": "You declined this role. Would you like to accept it?",
 				"volunteering": "Thanks for volunteering for this role!",
 				"stopped": "You stopped volunteering for this role.",
-				"callForBids": "Ask this role's volunteers to bid. This goes out as an email in your own words, from you — replies come back to your contact address, not to the stewards."
+				"callForBids": "Ask this role's volunteers to bid. This goes out as an email in your own words, from you — replies come back to your contact address, not to the stewards.",
+				"load": "You have **{used}** active assignments in this role, of the **{cap}** you are willing to review.",
+				"loadAtCap": "**You have {used} active assignments in this role, and set a cap of {cap}, so editors see you as full.**",
+				"loadNoCap": "You have **{used}** active assignments in this role.",
+				"loadNote": "Editors see this count when choosing reviewers, but it only includes assignments recorded here. If you have accepted invitations in the venue's reviewing system that are not counted, lower your cap or stop volunteering for a while, so editors don't invite you past it."
 			}
 		},
 		"tasks": {

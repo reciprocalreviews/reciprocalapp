@@ -111,27 +111,12 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: thanks } =
 		submission === null ? { data: null } : await db.getSubmissionThanks(submission.id);
 
-	// Count active (uncompleted) approved assignments per candidate scholar on
-	// this venue, so the cap-vs-load indicator can render "n / cap".
-	const { data: venueAssignments } = await db.getVenueActiveAssignmentScholars(venueid);
-	const venueActiveCounts: Record<string, number> = {};
-	for (const row of venueAssignments ?? []) {
-		venueActiveCounts[row.scholar] = (venueActiveCounts[row.scholar] ?? 0) + 1;
-	}
-
-	// Count active assignments per candidate scholar on OTHER venues (the
-	// viewer can see; RLS gates anonymous venues outside their scope). Lets
-	// the load indicator show overall workload alongside the cap-vs-load.
+	// How busy each candidate already is: their active assignments per role here, and in
+	// other venues, for the indicator beside their cap. True counts, not RLS-limited ones,
+	// which is what keeps an associate editor from seeing a full reviewer as free; the RPC
+	// answers only the venue's admins and approvers, and nobody else sees the column.
 	const candidateIDs = [...new Set((assignments ?? []).map((a) => a.scholar))];
-	const { data: allActive } =
-		candidateIDs.length === 0
-			? { data: [] }
-			: await db.getActiveAssignmentsForScholars(candidateIDs);
-	const elsewhereActiveCounts: Record<string, number> = {};
-	for (const row of allActive ?? []) {
-		if (row.venue === venueid) continue;
-		elsewhereActiveCounts[row.scholar] = (elsewhereActiveCounts[row.scholar] ?? 0) + 1;
-	}
+	const { data: loads } = await db.getAssignmentLoads(venueid, candidateIDs);
 
 	// Assignments the import could not match to a scholar on this submission. RLS shows
 	// only the ones this viewer could approve, and an empty list otherwise.
@@ -156,8 +141,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		assignmentScholars: assignmentScholars ?? [],
 		assigneeEmails: assigneeEmails ?? [],
 		preferenceLevels,
-		venueActiveCounts,
-		elsewhereActiveCounts,
+		loads: loads ?? [],
 		viewerVolunteering,
 		thanks
 	};
