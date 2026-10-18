@@ -610,7 +610,7 @@ The cost is that the SELECT policy's open-review branch had to be narrowed to `a
 
 **Two embeds needed fixing.** `declined_by` is a second foreign key from `assignments` to `scholars`, so PostgREST no longer resolves `scholars(*)` on its own. The two embeds that used it now name `scholars!assignments_scholar_fkey`.
 
-**`decline_bid(_assignment, _reason)`** is SECURITY DEFINER and the only intended writer of the decline columns. How it works:
+**`decline_bid(_assignment, _reason, _reason_id)`** is SECURITY DEFINER and the only intended writer of the decline columns. How it works:
 
 - It authorizes with `can_approve_assignment` and also refuses a conflicted approver.
 - It returns `RR017` when the bid is no longer pending, so two approvers answering at once cannot both win. The client maps that to `BidNotPending`.
@@ -633,6 +633,16 @@ The trigger is SECURITY INVOKER and only enforces when `current_user = 'authenti
 - **Which writes it guards:** direct client writes, the one path with no other check.
 - **Which writes it leaves alone:** the definer RPCs that legitimately write the row (`complete_assignment`, `mark_submission_done`, `decline_bid`). They run as `postgres` and authorize the caller themselves.
 - **Tests:** [supabase/tests/rls/bid_decline_rls.sql](supabase/tests/rls/bid_decline_rls.sql) and the UPDATE section of `assignments_rls.sql` cover both rules.
+
+### Decline reasons
+
+[20261020000000](supabase/migrations/20261020000000_decline_reasons.sql) lets each venue define the wording approvers decline with (#218).
+
+- **`decline_reasons`** mirrors `preference_levels`: ordered by `rank` (unique per venue, swapped through a sentinel to reorder), text unique per venue and 1–1000 characters, readable by any signed-in scholar, writable by venue admins, audited and on realtime.
+- **Defaults** come from an AFTER INSERT trigger on `venues` (`_seed_decline_reasons`, owner-only), so every path that creates a venue gets them, the proposal RPC and test fixtures included. The migration backfilled existing venues.
+- **One or the other.** `decline_bid` takes the approver's text in `_reason` or a venue reason in `_reason_id`, and refuses both, and a reason from another venue. The client sends one by passing either a string or a `DeclineReasonRow` to `declineBid`.
+- **The text is copied.** A chosen reason's text is written into `decline_reason`, so editing or deleting the reason never rewrites what a bidder was told, and every reader of `decline_reason` (the pages, the email) works unchanged. `decline_reason_id` (`on delete set null`) records which reason it was, for counting declines; it is approver-only under `enforce_assignment_updates`, and approving clears it with the rest.
+- **The email** sends the stored reason, returned by the RPC, as `BidDeclined`'s `$5`, in quotes so it reads as the approver's words.
 
 ### Closing bidding on a submission
 
