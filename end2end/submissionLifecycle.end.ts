@@ -415,9 +415,8 @@ test('a submission with no editor is flagged, and one of the venue’s editors c
 		const row = page.getByRole('row').filter({ hasText: externalID });
 		await expect(row).toBeVisible();
 
-		await row
-			.getByRole('button', { name: "Take on this submission as the venue's editor" })
-			.click();
+		// Named for the venue's own top-priority role, which the seed calls "Editor".
+		await row.getByRole('button', { name: 'Take on this submission as its Editor' }).click();
 
 		await expect.poll(() => editorCount()).toBe('1');
 		expect(

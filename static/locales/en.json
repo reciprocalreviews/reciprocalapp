@@ -764,7 +764,7 @@
 				}
 			},
 			"checkbox": {
-				"needsEditor": "Only show submissions waiting for an editor"
+				"needsEditor": "Only show submissions with no {role} yet"
 			},
 			"button": {
 				"batchFind": {
@@ -830,8 +830,8 @@
 					"label": "Unbid"
 				},
 				"claimEditor": {
-					"tip": "Take on this submission as the venue's editor",
-					"label": "edit this"
+					"tip": "Take on this submission as its {role}",
+					"label": "Serve as {role}"
 				}
 			},
 			"field": {
@@ -887,7 +887,7 @@
 				"free": "free",
 				"reviewing": "in review",
 				"done": "done",
-				"needsEditor": "needs an editor"
+				"needsEditor": "no {role} yet"
 			},
 			"cell": {
 				"you": "you",
@@ -959,7 +959,7 @@
 				"completionInsufficient": "The venue does not have enough tokens to compensate every editor. A mint transaction has been proposed; once a minter approves it, retry.",
 				"completionNotEditor": "Only an approved editor (priority-0 role) can mark this submission done.",
 				"completionSucceeded": "Submission marked done and editor(s) compensated.",
-				"needsEditor": "No one is editing this submission yet. Until someone does, only venue admins can approve or pay for work on it, and it can’t be marked done.",
+				"needsEditor": "No one is serving as {role} on this submission yet. Until someone does, only venue admins can approve or pay for work on it, and it can’t be marked done.",
 				"unmatched": "Unmatched from import: {list}. Once each person joins and accepts the role, match them to their assignments here.",
 				"compensationOnly": "**Assigning here is only for compensation.** Also assign them in {venue}'s reviewing system, so they can get the manuscript and submit their review.",
 				"compensationOnlyLinked": "**Assigning here is only for compensation.** Also assign them in [{venue}'s reviewing system]({system}), so they can get the manuscript and submit their review."
@@ -1014,8 +1014,8 @@
 					"warn": "Compensate editor(s) and finalize"
 				},
 				"claimEditor": {
-					"tip": "Take on this submission as the venue's editor",
-					"label": "edit this submission"
+					"tip": "Take on this submission as its {role}",
+					"label": "Serve as {role}"
 				},
 				"declineBid": {
 					"tip": "Decline this bid and explain why to the bidder",

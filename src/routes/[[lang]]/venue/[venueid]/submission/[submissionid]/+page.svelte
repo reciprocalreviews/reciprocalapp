@@ -631,12 +631,16 @@
 				<Alert
 					tone="attention"
 					text={(l) => l.page.submission.feedback.needsEditor}
+					inputs={{ role: editorRole.name }}
 					testid="needs-editor"
 				>
 					{#snippet action()}
 						<Button
 							testid="claim-editor"
-							strings={(l) => l.page.submission.button.claimEditor}
+							strings={(l) => ({
+								tip: l.page.submission.button.claimEditor.tip.replace('{role}', editorRole.name),
+								label: l.page.submission.button.claimEditor.label.replace('{role}', editorRole.name)
+							})}
 							action={() =>
 								handle(
 									db().createAssignment(submission.id, scholar!.id, editorRole.id, false, true)

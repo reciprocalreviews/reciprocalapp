@@ -8,6 +8,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - Updated dependencies, including the Vercel CLI to 65 and the Supabase CLI to 2.122.
 - `npm install` and `npm run check:now` now run `svelte-kit sync` first, so type checking no longer fails with "File '$app/tsconfig' not found" after a fresh install.
+- **The button for taking on a submission no one is editing now reads "Serve as" followed by the venue's name for its top role, such as "Serve as Program Chair", instead of "edit this submission".** The notices and filter for those submissions use the venue's role name too, instead of "editor".
 
 ## 0.5.20 - 2026-10-18
 
