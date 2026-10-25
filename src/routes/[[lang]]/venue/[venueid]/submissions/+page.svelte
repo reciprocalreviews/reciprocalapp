@@ -89,6 +89,9 @@
 	/** The venue's editor role, if it has one. Claiming is only ever about this role —
 	 * priority 0 is what the database checks when deciding who edits a submission. */
 	const editorRole = $derived((roles ?? []).find((r) => r.priority === 0));
+	/** The venue's own name for that role ("Editor", "Program Chair", …), which the strings
+	 * about claiming it use instead of assuming the word "editor". */
+	const editorRoleName = $derived(editorRole?.name ?? '');
 
 	/** The submissions someone is already editing. Null until it loads, so the flag stays
 	 * off rather than briefly claiming every submission needs an editor. */
@@ -379,7 +382,7 @@
 		{#if uid}
 			<Checkbox
 				testid="submissions-needs-editor-filter"
-				label={(l) => l.page.submissions.checkbox.needsEditor}
+				label={(l) => l.page.submissions.checkbox.needsEditor.replace('{role}', editorRoleName)}
 				bind:on={needsEditorOnly}
 			/>
 		{/if}
@@ -628,13 +631,23 @@
 										<Status
 											good={false}
 											testid="needs-editor-{index}"
-											label={(l) => l.page.submissions.status.needsEditor}
+											label={(l) =>
+												l.page.submissions.status.needsEditor.replace('{role}', editorRoleName)}
 										/>
 										{#if editorRole && canClaimEditor(editorRole, uid, volunteering, submissionsWithEditor?.has(submission.id))}
 											<Button
 												small
 												testid="claim-editor-{index}"
-												strings={(l) => l.page.submissions.button.claimEditor}
+												strings={(l) => ({
+													tip: l.page.submissions.button.claimEditor.tip.replace(
+														'{role}',
+														editorRole.name
+													),
+													label: l.page.submissions.button.claimEditor.label.replace(
+														'{role}',
+														editorRole.name
+													)
+												})}
 												action={() =>
 													handle(
 														db().createAssignment(submission.id, uid!, editorRole.id, false, true)
