@@ -2,6 +2,13 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.21 - 2026-10-24
+
+### Changed
+
+- Updated dependencies, including the Vercel CLI to 65 and the Supabase CLI to 2.122.
+- `npm install` and `npm run check:now` now run `svelte-kit sync` first, so type checking no longer fails with "File '$app/tsconfig' not found" after a fresh install.
+
 ## 0.5.20 - 2026-10-18
 
 ### Added
