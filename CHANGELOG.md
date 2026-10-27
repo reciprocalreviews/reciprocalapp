@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.22 - 2026-10-27
+
+### Fixed
+
+- **The volunteers page now shows unanswered invitations as "invited" and declined ones as "declined", and lists them after active and inactive volunteers.** Before, a pending invitation read as "inactive" and a declined one as "active".
+
 ## 0.5.21 - 2026-10-24
 
 ### Changed
