@@ -13,6 +13,7 @@ export type ViewVolunteer = {
 	/** Free text. Comma-separated by convention only; nothing enforces it. */
 	expertise: string;
 	active: boolean;
+	accepted: 'invited' | 'accepted' | 'declined';
 	scholars: {
 		name: string | null;
 		email: string | null;
@@ -22,6 +23,15 @@ export type ViewVolunteer = {
 		orcid_profiles?: { keywords: string[] | null } | null;
 	};
 };
+
+/** Where a volunteer row sorts: holding the role, then stopped, then invited, then
+ * declined. A pending invitation is stored with `active` false, the same as having
+ * stopped, so `accepted` has to be read first or the two are indistinguishable. */
+export function volunteerStanding(volunteer: Pick<ViewVolunteer, 'active' | 'accepted'>): number {
+	if (volunteer.accepted === 'invited') return 2;
+	if (volunteer.accepted === 'declined') return 3;
+	return volunteer.active ? 0 : 1;
+}
 
 /** One volunteer's mirrored ORCID keywords. Not merged with `expertiseTags`: they answer
  * different questions, and this one is not a claim about reviewing for this venue. */
@@ -195,11 +205,13 @@ export function volunteersView(context: VolunteersViewContext) {
 		return name.length > 0 ? name : (volunteer.scholars.email ?? '');
 	}
 
-	/** Active first, then by family name. Someone who has stopped volunteering is
+	/** By standing, then by family name. Someone who has stopped volunteering is
 	 * still a permanent record of the venue, but they are not who an editor is
-	 * scanning for, so they go last rather than interleaved. */
+	 * scanning for; an invitation not yet answered is not a volunteer yet; a declined
+	 * one never will be. Each goes after the last rather than interleaved. */
 	function compare(a: ViewVolunteer, b: ViewVolunteer): number {
-		if (a.active !== b.active) return a.active ? -1 : 1;
+		const standing = volunteerStanding(a) - volunteerStanding(b);
+		if (standing !== 0) return standing;
 		const family = familyName(displayName(a)).localeCompare(familyName(displayName(b)));
 		if (family !== 0) return family;
 		const full = displayName(a).localeCompare(displayName(b));

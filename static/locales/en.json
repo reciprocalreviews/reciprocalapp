@@ -454,7 +454,9 @@
 			"unavailableTitle": "Volunteers unavailable",
 			"status": {
 				"active": "active",
-				"inactive": "inactive"
+				"inactive": "inactive",
+				"invited": "invited",
+				"declined": "declined"
 			},
 			"headers": {
 				"active": "Active",

@@ -665,10 +665,13 @@ test('volunteers who have stopped are listed after those who have not', async ({
 		const statuses = await page
 			.locator(`tr[data-testid^="volunteer-row-${roleIndex}-"] [data-testid="volunteer-status"]`)
 			.allTextContents();
-		const firstInactive = statuses.indexOf('inactive');
+		const firstInactive = statuses.findIndex((s) => s !== 'active');
 		if (firstInactive === -1) continue;
 		checked += 1;
-		expect(statuses.slice(firstInactive).every((s) => s === 'inactive')).toBe(true);
+		// Active, then inactive, then invited, then declined.
+		const order = ['active', 'inactive', 'invited', 'declined'];
+		const ranks = statuses.map((s) => order.indexOf(s));
+		expect(ranks.every((rank, i) => rank >= 0 && (i === 0 || rank >= ranks[i - 1]))).toBe(true);
 	}
 	// The seed deactivates volunteers in at least one section; if none did, this
 	// test proved nothing and should say so rather than pass quietly.

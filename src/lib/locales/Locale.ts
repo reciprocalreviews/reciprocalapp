@@ -371,7 +371,14 @@ export type LocaleText = {
 			};
 			status: {
 				active: string;
+				/** Held the role and has stopped. */
 				inactive: string;
+				/** Invited and has not answered, so does not hold the role yet. The
+				 * database stores this as inactive too, which is why it needs its own label:
+				 * shown as inactive, it read as someone who had stopped. */
+				invited: string;
+				/** Turned the invitation down. */
+				declined: string;
 			};
 			headers: {
 				active: string;

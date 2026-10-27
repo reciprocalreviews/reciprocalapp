@@ -19,6 +19,7 @@ function volunteer(
 	return {
 		expertise: '',
 		active: true,
+		accepted: 'accepted',
 		scholars: {
 			name: name === undefined ? 'Ann Lee' : name,
 			email: email === undefined ? 'ann@uni.edu' : email
@@ -280,6 +281,21 @@ describe('sortedAndFiltered', () => {
 		).toEqual(['Zoe Zeta', 'Ann Adams']);
 	});
 
+	// A pending invitation is stored inactive, like someone who has stopped, but is not
+	// one: it is someone who does not hold the role yet.
+	test('active, then inactive, then invited, then declined', () => {
+		expect(
+			names(
+				view().sortedAndFiltered([
+					volunteer({ name: 'Ann Declined', accepted: 'declined' }),
+					volunteer({ name: 'Ann Invited', accepted: 'invited', active: false }),
+					volunteer({ name: 'Ann Stopped', active: false }),
+					volunteer({ name: 'Ann Active' })
+				])
+			)
+		).toEqual(['Ann Active', 'Ann Stopped', 'Ann Invited', 'Ann Declined']);
+	});
+
 	test('orders by family name, not given name', () => {
 		expect(
 			names(
@@ -355,6 +371,7 @@ describe('ORCID keywords', () => {
 		return {
 			expertise,
 			active: true,
+			accepted: 'accepted',
 			scholars: { name: 'Someone', email: null, orcid_profiles: { keywords } }
 		};
 	}
@@ -389,7 +406,12 @@ describe('ORCID keywords', () => {
 
 	test('a volunteer with no mirrored record is unaffected', () => {
 		const rows: ViewVolunteer[] = [
-			{ expertise: 'databases', active: true, scholars: { name: 'Someone', email: null } }
+			{
+				expertise: 'databases',
+				active: true,
+				accepted: 'accepted',
+				scholars: { name: 'Someone', email: null }
+			}
 		];
 		const view = volunteersView({ filter: 'databases', selected: new Map() });
 		expect(view.sortedAndFiltered(rows)).toHaveLength(1);

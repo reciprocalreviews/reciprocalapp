@@ -277,11 +277,16 @@
 								<td
 									><Status
 										testid="volunteer-status"
-										good={volunteer.active}
+										good={volunteer.active && volunteer.accepted === 'accepted'}
+										neutral={volunteer.accepted !== 'accepted'}
 										label={(l) =>
-											volunteer.active
-												? l.page.volunteers.status.active
-												: l.page.volunteers.status.inactive}
+											volunteer.accepted === 'invited'
+												? l.page.volunteers.status.invited
+												: volunteer.accepted === 'declined'
+													? l.page.volunteers.status.declined
+													: volunteer.active
+														? l.page.volunteers.status.active
+														: l.page.volunteers.status.inactive}
 									/></td
 								>
 								<td
