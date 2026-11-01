@@ -37,7 +37,7 @@
 		"scale:check": "docker exec -i supabase_db_reciprocalapp psql -U postgres -d postgres < scripts/scale-check.sql"
 	},
 	"engines": {
-		"node": ">=22.17"
+		"node": ">=22.17 <25"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1",

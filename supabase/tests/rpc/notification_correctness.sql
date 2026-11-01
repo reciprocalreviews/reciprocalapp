@@ -138,8 +138,10 @@ select is (
 	'10. a first-ever verification succeeds'
 );
 
+-- Scoped to this scholar: the backup drill runs this suite against a restore of production,
+-- which has EmailChanged rows of its own (see _helpers/ambient_emails.psql).
 select is (
-	(select count(*)::int from public.emails where event = 'EmailChanged'), 0,
+	(select count(*)::int from public.emails where event = 'EmailChanged' and scholar = :'fresh'), 0,
 	'11. and writes to nobody, because there is no address being replaced'
 );
 
@@ -153,7 +155,8 @@ on conflict (scholar) do update set candidate_email = excluded.candidate_email,
 select public.verify_email('nc-token-second');
 
 select results_eq (
-	$$ select email, args->>0 from public.emails where event = 'EmailChanged' $$,
+	format($$ select email, args->>0 from public.emails
+	          where event = 'EmailChanged' and scholar = %L $$, :'fresh'),
 	$$ values ('nc_first_new@test.local'::text, 'nc_second@test.local'::text) $$,
 	'12. the address being replaced is written to, and told what replaced it'
 );
@@ -163,7 +166,7 @@ select results_eq (
 select public.verify_email('nc-token-second');
 
 select is (
-	(select count(*)::int from public.emails where event = 'EmailChanged'), 1,
+	(select count(*)::int from public.emails where event = 'EmailChanged' and scholar = :'fresh'), 1,
 	'13. and a re-fetch of the same link does not write again'
 );
 
