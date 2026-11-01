@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type SubmissionRow } from '$data/types';
+	import { type SubmissionRow } from '#data/types.js';
 	import { SubmissionLabel } from './Labels';
 	import Link from './Link.svelte';
 

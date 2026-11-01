@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RoleID, RoleRow, VolunteerVisibility } from '$data/types';
+	import type { RoleID, RoleRow, VolunteerVisibility } from '#data/types.js';
 	import Button from '#lib/components/Button.svelte';
 	import Card from '#lib/components/Card.svelte';
 	import Checkbox from '#lib/components/Checkbox.svelte';
@@ -10,8 +10,8 @@
 	import Slider from '#lib/components/Slider.svelte';
 	import Tip from '#lib/components/Tip.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 	import { isntEmpty } from '#lib/validation.js';
 
 	let {

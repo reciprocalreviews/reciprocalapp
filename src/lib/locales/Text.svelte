@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { loginHref } from '#lib/auth/next.js';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import { marked } from 'marked';
 	import type { Html } from './html';
 	import type LocaleText from './Locale';

@@ -28,8 +28,8 @@
 	import Text from '#lib/locales/Text.svelte';
 	import { isntEmpty, validInteger, validReviewSystemURL, validURL } from '#lib/validation.js';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 	import PreferenceLevels from '../PreferenceLevels.svelte';
 	import WebAddress from './WebAddress.svelte';
 	import DeclineReasons from './DeclineReasons.svelte';

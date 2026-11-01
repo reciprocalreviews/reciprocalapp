@@ -13,9 +13,9 @@
 	import { getDB } from '#lib/data/CRUD.js';
 	import type { LocaleText } from '#lib/locales/Locale.js';
 	import { validEmail, validORCID } from '#lib/validation.js';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import type { ORCIDMirrorHealth } from '#lib/data/CRUD.js';
-	import { addFeedback, handle } from '$routes/feedback.svelte';
+	import { addFeedback, handle } from '#routes/feedback.svelte.js';
 
 	let { data } = $props();
 	let { stewards } = $derived(data);

@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import type LocaleText from '#lib/locales/Locale.js';
 	import type { ButtonText } from '#lib/locales/Locale.js';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import { untrack, type Snippet } from 'svelte';
 	import { clickOutside } from './clickOutside';
 	import { fits } from './fit';

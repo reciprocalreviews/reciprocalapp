@@ -34,12 +34,12 @@
 	import venueApprover from '#lib/data/isVenueApprover.js';
 	import { submissionsView } from '#lib/data/sortSubmissions.js';
 	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
-	import { getAuth } from '$routes/Auth.svelte';
+	import { getAuth } from '#routes/Auth.svelte.js';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import { venuePath } from '#lib/data/venuePath.js';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
-	import type { RoleID } from '$data/types';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
+	import type { RoleID } from '#data/types.js';
 	import { type PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

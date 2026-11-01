@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import canClaimEditor from './canClaimEditor';
-import type { RoleRow, VolunteerRow } from '$data/types';
+import type { RoleRow, VolunteerRow } from '#data/types.js';
 
 /** The mirror of these cases lives in supabase/tests/rpc/editor_on_submission.sql, which
  * asserts them against the enforcing copy (public.can_claim_editor_role and the

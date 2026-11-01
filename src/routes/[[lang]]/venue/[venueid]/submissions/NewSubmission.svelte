@@ -6,7 +6,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { venuePath } from '#lib/data/venuePath.js';
-	import type { SubmissionType, SubmissionTypeID, VenueRow } from '$data/types';
+	import type { SubmissionType, SubmissionTypeID, VenueRow } from '#data/types.js';
 	import Button from '#lib/components/Button.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import Form from '#lib/components/Form.svelte';
@@ -29,9 +29,9 @@
 	import type Locale from '#lib/locales/Locale.js';
 	import Text from '#lib/locales/Text.svelte';
 	import { isntEmpty, validORCID } from '#lib/validation.js';
-	import { getAuth } from '$routes/Auth.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { getAuth } from '#routes/Auth.svelte.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let {
 		venue,

@@ -1,4 +1,4 @@
-import { articles } from '$routes/[[lang]]/help/articles';
+import { articles } from '#routes/[[lang]]/help/articles.js';
 import { venuePath } from '#lib/data/venuePath.js';
 import type { RequestHandler } from './$types';
 

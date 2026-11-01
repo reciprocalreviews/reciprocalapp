@@ -1,4 +1,4 @@
-import type { AssignmentRow, RoleID, ScholarID, SubmissionID } from '$data/types';
+import type { AssignmentRow, RoleID, ScholarID, SubmissionID } from '#data/types.js';
 
 /** Whether the given scholar already holds an assignment in this role on this
  * submission. Shared by the submission detail form and the submissions-list

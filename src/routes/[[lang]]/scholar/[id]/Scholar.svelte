@@ -9,7 +9,7 @@
 		SubmissionRow,
 		TransactionRow,
 		VenueRow
-	} from '$data/types';
+	} from '#data/types.js';
 	import type { ScholarTask } from '#lib/data/SupabaseCRUD.svelte.js';
 	import {
 		NotificationPreferences,
@@ -44,12 +44,12 @@
 	import Tokens from '#lib/components/Tokens.svelte';
 	import VerifyEmail from '#lib/components/VerifyEmail.svelte';
 	import { getDB, type PendingEmailVerification } from '#lib/data/CRUD.js';
-	import { handle } from '$routes/feedback.svelte';
+	import { handle } from '#routes/feedback.svelte.js';
 	import type Scholar from '#lib/data/Scholar.svelte.js';
 	import Text from '#lib/locales/Text.svelte';
-	import { getAuth } from '$routes/Auth.svelte';
+	import { getAuth } from '#routes/Auth.svelte.js';
 	import { page } from '$app/state';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import Commitments from './Commitments.svelte';
 	import Tasks from './Tasks.svelte';
 

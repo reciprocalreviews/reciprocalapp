@@ -3,7 +3,7 @@
 	import { VenueLabel } from '#lib/components/Labels.js';
 	import { venueBarLinks, venueBarName, type VenueBarVenue } from '#lib/data/venueBarLinks.js';
 	import { venuePath } from '#lib/data/venuePath.js';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 
 	/**
 	 * The venue's own band of chrome, on every route inside it.

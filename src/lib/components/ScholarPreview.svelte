@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ScholarRow } from '$data/types';
+	import type { ScholarRow } from '#data/types.js';
 	import { affiliationLine, worksStat, type ProfileSummary } from '#lib/data/orcidProfileView.js';
 	import Text from '#lib/locales/Text.svelte';
 	import ORCIDiD from './ORCIDiD.svelte';

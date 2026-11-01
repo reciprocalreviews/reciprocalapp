@@ -1,4 +1,4 @@
-import type { Database } from '$data/database';
+import type { Database } from '#data/database.js';
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 import { onMount } from 'svelte';
 import { getDB } from './CRUD';

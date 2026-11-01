@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type LocaleText from '#lib/locales/Locale.js';
 	import type { OptionsText } from '#lib/locales/Locale.js';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import Tip from './Tip.svelte';
 
 	type Props = {

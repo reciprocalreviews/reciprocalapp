@@ -2,7 +2,7 @@
 	import type LocaleText from '#lib/locales/Locale.js';
 	import type { ButtonText, ConfirmButtonText } from '#lib/locales/Locale.js';
 	import Text from '#lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import type { Snippet } from 'svelte';
 
 	let {

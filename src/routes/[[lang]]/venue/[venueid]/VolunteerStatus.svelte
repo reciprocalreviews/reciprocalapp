@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type { RoleRow, ScholarID, VolunteerRow } from '$data/types';
+	import type { RoleRow, ScholarID, VolunteerRow } from '#data/types.js';
 	import Button from '#lib/components/Button.svelte';
 	import EditableText from '#lib/components/EditableText.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let {
 		role,

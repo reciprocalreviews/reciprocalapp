@@ -1,4 +1,4 @@
-import type { RoleRow, ScholarID, VenueRow, VolunteerRow } from '$data/types';
+import type { RoleRow, ScholarID, VenueRow, VolunteerRow } from '#data/types.js';
 import isRoleApprover from './isRoleApprover';
 
 /** Whether a scholar helps run a venue's reviewing — an admin, one of its editors (an

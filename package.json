@@ -66,6 +66,9 @@
 		"marked": "^18"
 	},
 	"imports": {
-		"#lib/*": "./src/lib/*"
+		"#lib/*": "./src/lib/*",
+		"#data/*": "./src/data/*",
+		"#routes/*": "./src/routes/*",
+		"#locales/*": "./static/locales/*"
 	}
 }

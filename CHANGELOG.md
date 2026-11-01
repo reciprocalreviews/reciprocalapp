@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.23 - 2026-11-01
+
+### Changed
+
+- Updated dependencies, including SvelteKit 3.1.1 and the Vercel CLI to 65.9, and updated internal tooling to stop a SvelteKit deprecation warning.
+
 ## 0.5.22 - 2026-10-27
 
 ### Fixed

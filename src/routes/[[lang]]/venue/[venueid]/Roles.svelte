@@ -7,7 +7,7 @@
 		SubmissionType,
 		VenueRow,
 		VolunteerRow
-	} from '$data/types';
+	} from '#data/types.js';
 	import { venuePath } from '#lib/data/venuePath.js';
 	import Button from '#lib/components/Button.svelte';
 	import Card from '#lib/components/Card.svelte';
@@ -24,8 +24,8 @@
 	import Tokens from '#lib/components/Tokens.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
 	import { isntEmpty } from '#lib/validation.js';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 	import AdminsCard from './AdminsCard.svelte';
 	import CallForBids from './CallForBids.svelte';
 	import RoleInvite from './RoleInvite.svelte';

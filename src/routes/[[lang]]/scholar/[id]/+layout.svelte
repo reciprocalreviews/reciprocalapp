@@ -3,7 +3,7 @@
 	import ContextBar from '#lib/components/ContextBar.svelte';
 	import { scholarBar } from '#lib/data/contextBar.js';
 	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 
 	let { data, children } = $props();
 

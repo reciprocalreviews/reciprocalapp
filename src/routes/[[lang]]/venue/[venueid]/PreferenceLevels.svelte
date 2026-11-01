@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PreferenceLevelRow, VenueRow } from '$data/types';
+	import type { PreferenceLevelRow, VenueRow } from '#data/types.js';
 	import Button from '#lib/components/Button.svelte';
 	import EditableText from '#lib/components/EditableText.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
@@ -8,7 +8,7 @@
 	import TextField from '#lib/components/TextField.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
 	import { isntEmpty } from '#lib/validation.js';
-	import { handle } from '$routes/feedback.svelte';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let {
 		venue,
