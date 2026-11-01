@@ -68,6 +68,7 @@ test('an admin adds an imported name to its role and matches it in one step', as
 	const [given, family] = person.name.split(' ');
 	const imported = `${family}, ${given}`;
 	const external = `import-agreed-${Date.now()}`;
+	const started = sql(`select now();`);
 	clearAE(person.id);
 	try {
 		await login(SEED.scholars.editor.email, page, context);
@@ -109,6 +110,11 @@ test('an admin adds an imported name to its role and matches it in one step', as
 		await logout(page);
 	} finally {
 		clearAE(person.id);
+		// The import proposed a mint to fund the paper. Left proposed, it sorts to the top
+		// of the venue's transactions and pushes another test's proposal off the first page.
+		sql(
+			`update public.transactions set status = 'declined' where to_venue = '${VENUE_ID}' and status = 'proposed' and purpose = 'Mint to fund imported pre-launch submissions' and created_at >= '${started}';`
+		);
 	}
 });
 
