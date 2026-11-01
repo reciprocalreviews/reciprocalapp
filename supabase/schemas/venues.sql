@@ -50,6 +50,13 @@ create table if not exists public.venues (
 	-- When the most recent transaction reminder batch was sent for this venue.
 	-- Null means no reminders have been sent yet.
 	transaction_reminder_time timestamp with time zone,
+	-- Other venues whose publications signal fit for reviewing here, one per element, each
+	-- a comma-separated list of the names that venue goes by ("ACM Transactions on
+	-- Computing Education, TOCE"). A volunteer whose ORCID record holds a work in one of
+	-- these ranks above those with no track record when editors scout the volunteers
+	-- roster. Matching is tolerant of "Proceedings of the 55th", years and abbreviations;
+	-- the rules live in src/lib/data/trackRecord.ts.
+	relevant_venues text[] default '{}'::text[] not null,
 	-- There must be at least one admin
 	constraint venues_admins_check check (cardinality(admins)>0),
 	-- A display cap, not a naming rule: no lower bound, because empty is the unset
@@ -75,6 +82,12 @@ create table if not exists public.venues (
 			and length(slug) between 4 and 40
 			and slug!~'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
 		)
+	),
+	-- A short list: enough for a field's venues, and too few for a pasted bibliography,
+	-- which would match every volunteer and rank none.
+	constraint venues_relevant_venues_check check (
+		cardinality(relevant_venues)<=20
+		and length(array_to_string(relevant_venues, ''))<=2000
 	),
 	-- Bound the visibility window to a year
 	constraint venues_done_visibility_days_check check (

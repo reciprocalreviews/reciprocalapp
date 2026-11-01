@@ -418,3 +418,53 @@ describe('ORCID keywords', () => {
 		expect(orcidKeywords(rows[0])).toEqual([]);
 	});
 });
+
+describe('track record', () => {
+	const tiers = new Map<string, 0 | 1 | 2>([
+		['reviewed', 0],
+		['published', 1]
+	]);
+	const tier = (v: ViewVolunteer) => tiers.get(v.scholarid ?? '') ?? 2;
+	const rows = [
+		volunteer({ name: 'Ann Adams', scholarid: 'none' }),
+		volunteer({ name: 'Zoe Zeta', scholarid: 'published' }),
+		volunteer({ name: 'Yan Young', scholarid: 'reviewed' }),
+		volunteer({ name: 'Bea Brown', scholarid: 'reviewed', active: false })
+	];
+
+	test('ranks within standing, before family name', () => {
+		expect(names(view({ tier }).sortedAndFiltered(rows))).toEqual([
+			'Yan Young',
+			'Zoe Zeta',
+			'Ann Adams',
+			'Bea Brown'
+		]);
+	});
+
+	test('without a tier, the plain order', () => {
+		expect(names(view().sortedAndFiltered(rows))).toEqual([
+			'Ann Adams',
+			'Yan Young',
+			'Zoe Zeta',
+			'Bea Brown'
+		]);
+	});
+
+	test('Suggested hides no-record rows and counts them', () => {
+		const suggested = view({ tier, suggestedOnly: true });
+		expect(names(suggested.sortedAndFiltered(rows))).toEqual([
+			'Yan Young',
+			'Zoe Zeta',
+			'Bea Brown'
+		]);
+		expect(suggested.hiddenBySuggestion(rows)).toBe(1);
+	});
+
+	test('Suggested counts only rows the search would show', () => {
+		expect(view({ tier, suggestedOnly: true, filter: 'zoe' }).hiddenBySuggestion(rows)).toBe(0);
+	});
+
+	test('Suggested without a tier hides nothing', () => {
+		expect(view({ suggestedOnly: true }).sortedAndFiltered(rows)).toHaveLength(4);
+	});
+});

@@ -359,14 +359,14 @@ isOneToOne: false
                   ]
                 },"orcid_profiles": {
                   Row: {
-                    "education_organization": string | null,"education_role": string | null,"education_year": number | null,"employment_department": string | null,"employment_organization": string | null,"employment_role": string | null,"fetch_attempted_at": string,"fetch_detail": string | null,"fetch_failures": number,"fetch_rate_limited_at": string | null,"fetch_status": string,"fetched_at": string | null,"keywords": (string)[],"links": NonNullable<Json>,"orcid": string,"scholar": string,"work_count": number | null,"work_first_year": number | null,"work_last_year": number | null,"works": NonNullable<Json>,"works_fetched_at": string | null
+                    "education_organization": string | null,"education_role": string | null,"education_year": number | null,"employment_department": string | null,"employment_organization": string | null,"employment_role": string | null,"fetch_attempted_at": string,"fetch_detail": string | null,"fetch_failures": number,"fetch_rate_limited_at": string | null,"fetch_status": string,"fetched_at": string | null,"keywords": (string)[],"links": NonNullable<Json>,"orcid": string,"scholar": string,"work_count": number | null,"work_first_year": number | null,"work_journals": NonNullable<Json>,"work_last_year": number | null,"works": NonNullable<Json>,"works_fetched_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "education_organization"?: string | null,"education_role"?: string | null,"education_year"?: number | null,"employment_department"?: string | null,"employment_organization"?: string | null,"employment_role"?: string | null,"fetch_attempted_at"?: string,"fetch_detail"?: string | null,"fetch_failures"?: number,"fetch_rate_limited_at"?: string | null,"fetch_status"?: string,"fetched_at"?: string | null,"keywords"?: (string)[],"links"?: NonNullable<Json>,"orcid": string,"scholar": string,"work_count"?: number | null,"work_first_year"?: number | null,"work_last_year"?: number | null,"works"?: NonNullable<Json>,"works_fetched_at"?: string | null
+                    "education_organization"?: string | null,"education_role"?: string | null,"education_year"?: number | null,"employment_department"?: string | null,"employment_organization"?: string | null,"employment_role"?: string | null,"fetch_attempted_at"?: string,"fetch_detail"?: string | null,"fetch_failures"?: number,"fetch_rate_limited_at"?: string | null,"fetch_status"?: string,"fetched_at"?: string | null,"keywords"?: (string)[],"links"?: NonNullable<Json>,"orcid": string,"scholar": string,"work_count"?: number | null,"work_first_year"?: number | null,"work_journals"?: NonNullable<Json>,"work_last_year"?: number | null,"works"?: NonNullable<Json>,"works_fetched_at"?: string | null
                   }
                   Update: {
-                    "education_organization"?: string | null,"education_role"?: string | null,"education_year"?: number | null,"employment_department"?: string | null,"employment_organization"?: string | null,"employment_role"?: string | null,"fetch_attempted_at"?: string,"fetch_detail"?: string | null,"fetch_failures"?: number,"fetch_rate_limited_at"?: string | null,"fetch_status"?: string,"fetched_at"?: string | null,"keywords"?: (string)[],"links"?: NonNullable<Json>,"orcid"?: string,"scholar"?: string,"work_count"?: number | null,"work_first_year"?: number | null,"work_last_year"?: number | null,"works"?: NonNullable<Json>,"works_fetched_at"?: string | null
+                    "education_organization"?: string | null,"education_role"?: string | null,"education_year"?: number | null,"employment_department"?: string | null,"employment_organization"?: string | null,"employment_role"?: string | null,"fetch_attempted_at"?: string,"fetch_detail"?: string | null,"fetch_failures"?: number,"fetch_rate_limited_at"?: string | null,"fetch_status"?: string,"fetched_at"?: string | null,"keywords"?: (string)[],"links"?: NonNullable<Json>,"orcid"?: string,"scholar"?: string,"work_count"?: number | null,"work_first_year"?: number | null,"work_journals"?: NonNullable<Json>,"work_last_year"?: number | null,"works"?: NonNullable<Json>,"works_fetched_at"?: string | null
                   }
                   Relationships: [
                     {
@@ -735,14 +735,14 @@ isOneToOne: false
                   ]
                 },"venues": {
                   Row: {
-                    "admins": (string)[],"anonymous_assignments": boolean,"currency": string,"description": string,"done_visibility_days": number,"id": string,"inactive": string | null,"payment_free": boolean,"review_system_url": string | null,"short_title": string,"slug": string | null,"title": string,"transaction_reminder_frequency_days": number,"transaction_reminder_time": string | null,"url": string,"vet_thanks": boolean,"welcome_amount": number
+                    "admins": (string)[],"anonymous_assignments": boolean,"currency": string,"description": string,"done_visibility_days": number,"id": string,"inactive": string | null,"payment_free": boolean,"relevant_venues": (string)[],"review_system_url": string | null,"short_title": string,"slug": string | null,"title": string,"transaction_reminder_frequency_days": number,"transaction_reminder_time": string | null,"url": string,"vet_thanks": boolean,"welcome_amount": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "admins"?: (string)[],"anonymous_assignments"?: boolean,"currency": string,"description"?: string,"done_visibility_days"?: number,"id"?: string,"inactive"?: string | null,"payment_free"?: boolean,"review_system_url"?: string | null,"short_title"?: string,"slug"?: string | null,"title"?: string,"transaction_reminder_frequency_days"?: number,"transaction_reminder_time"?: string | null,"url"?: string,"vet_thanks"?: boolean,"welcome_amount": number
+                    "admins"?: (string)[],"anonymous_assignments"?: boolean,"currency": string,"description"?: string,"done_visibility_days"?: number,"id"?: string,"inactive"?: string | null,"payment_free"?: boolean,"relevant_venues"?: (string)[],"review_system_url"?: string | null,"short_title"?: string,"slug"?: string | null,"title"?: string,"transaction_reminder_frequency_days"?: number,"transaction_reminder_time"?: string | null,"url"?: string,"vet_thanks"?: boolean,"welcome_amount": number
                   }
                   Update: {
-                    "admins"?: (string)[],"anonymous_assignments"?: boolean,"currency"?: string,"description"?: string,"done_visibility_days"?: number,"id"?: string,"inactive"?: string | null,"payment_free"?: boolean,"review_system_url"?: string | null,"short_title"?: string,"slug"?: string | null,"title"?: string,"transaction_reminder_frequency_days"?: number,"transaction_reminder_time"?: string | null,"url"?: string,"vet_thanks"?: boolean,"welcome_amount"?: number
+                    "admins"?: (string)[],"anonymous_assignments"?: boolean,"currency"?: string,"description"?: string,"done_visibility_days"?: number,"id"?: string,"inactive"?: string | null,"payment_free"?: boolean,"relevant_venues"?: (string)[],"review_system_url"?: string | null,"short_title"?: string,"slug"?: string | null,"title"?: string,"transaction_reminder_frequency_days"?: number,"transaction_reminder_time"?: string | null,"url"?: string,"vet_thanks"?: boolean,"welcome_amount"?: number
                   }
                   Relationships: [
                     {
@@ -853,6 +853,9 @@ isOneToOne: false
 "can_claim_editor_role":
 { Args: { "_role": string,"_submission": string }; Returns: boolean
                            },
+"can_scout_volunteers":
+{ Args: { "_venue": string }; Returns: boolean
+                           },
 "can_see_balances":
 { Args: { "_currency": string }; Returns: boolean
                            },
@@ -867,6 +870,11 @@ isOneToOne: false
                            },
 "complete_assignment":
 { Args: { "_assignment_id": string,"_mint_purpose_template": string,"_payment_purpose_template": string }; Returns: Json
+                           },
+"completed_counts":
+{ Args: { "_scholars": (string)[],"_venue": string }; Returns: {
+              "count": number,"scholar": string
+            }[]
                            },
 "conservation_violations":
 { Args: { "_currency"?: string }; Returns: {

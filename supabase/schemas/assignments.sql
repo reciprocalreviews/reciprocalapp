@@ -527,6 +527,48 @@ execute on function public.scholar_approver_roles () to authenticated;
 
 -- How much each of the given scholars is already reviewing, for the editors choosing them.
 --
+-- Whether the caller helps run the venue's reviewing, and so may see the counts the
+-- volunteers roster scouts with (assignment_loads, completed_counts): an admin, or a
+-- scholar who volunteers for (accepted) or holds an active seat in the priority-0 role or
+-- a role that approves another. The volunteer half mirrors src/lib/data/isVenueApprover.ts,
+-- so an editor scouting the roster before any paper is theirs sees the same numbers; the
+-- seat half covers someone approving without a volunteer record. Anyone else: false.
+create or replace function public.can_scout_volunteers (_venue uuid) returns boolean language sql security definer stable
+set
+	"search_path" to '' as $$
+	with approving as (
+		select held.id
+		from public.roles held
+		where held.venueid = _venue
+		  and (held.priority = 0 or exists (select 1 from public.roles r where r.approver = held.id))
+	)
+	select public.isAdmin(_venue) or exists (
+		select 1
+		from public.volunteers v
+		where v.scholarid = (select auth.uid())
+		  and v.accepted = 'accepted'
+		  and v.roleid in (select id from approving)
+	) or exists (
+		select 1
+		from public.assignments a
+		where a.scholar = (select auth.uid())
+		  and a.approved
+		  and not a.completed
+		  and a.role in (select id from approving)
+	);
+$$;
+
+alter function public.can_scout_volunteers (uuid) OWNER to "postgres";
+
+revoke
+execute on function public.can_scout_volunteers (uuid)
+from
+	public,
+	anon;
+
+grant
+execute on function public.can_scout_volunteers (uuid) to authenticated;
+
 -- A reviewer's papers cap (volunteers.papers) means something only next to how many papers
 -- they already have. Counting that from the client undercounted: the assignments SELECT
 -- policy shows an associate editor only the submissions they handle, so a reviewer with
@@ -542,39 +584,13 @@ execute on function public.scholar_approver_roles () to authenticated;
 --                             seat rather than papers to review.
 -- Zero counts are omitted. Ordered so the client can page past PostgREST's max_rows.
 --
--- Only someone who helps run the venue's reviewing gets rows: an admin, or a scholar who
--- volunteers for (accepted) or holds an active seat in the priority-0 role or a role that
--- approves another. The volunteer half mirrors src/lib/data/isVenueApprover.ts, so an
--- editor scouting the roster before any paper is theirs sees the same numbers; the seat
--- half covers someone approving without a volunteer record. Anyone else gets none.
+-- Only someone who helps run the venue's reviewing gets rows: see can_scout_volunteers.
 create or replace function public.assignment_loads (_venue uuid, _scholars uuid[]) returns table (scholar uuid, role uuid, count integer) language sql security definer stable
 set
 	"search_path" to '' as $$
-	with approving as (
-		select held.id
-		from public.roles held
-		where held.venueid = _venue
-		  and (held.priority = 0 or exists (select 1 from public.roles r where r.approver = held.id))
-	),
-	allowed as (
-		select public.isAdmin(_venue) or exists (
-			select 1
-			from public.volunteers v
-			where v.scholarid = (select auth.uid())
-			  and v.accepted = 'accepted'
-			  and v.roleid in (select id from approving)
-		) or exists (
-			select 1
-			from public.assignments a
-			where a.scholar = (select auth.uid())
-			  and a.approved
-			  and not a.completed
-			  and a.role in (select id from approving)
-		) as ok
-	)
 	select a.scholar, a.role, count(*)::integer
-	from public.assignments a, allowed
-	where allowed.ok
+	from public.assignments a
+	where public.can_scout_volunteers(_venue)
 	  and a.venue = _venue
 	  and a.scholar = any (_scholars)
 	  and a.approved
@@ -583,8 +599,8 @@ set
 	union all
 	select a.scholar, null, count(*)::integer
 	from public.assignments a
-	join public.roles r on r.id = a.role, allowed
-	where allowed.ok
+	join public.roles r on r.id = a.role
+	where public.can_scout_volunteers(_venue)
 	  and a.venue <> _venue
 	  and a.scholar = any (_scholars)
 	  and a.approved
@@ -604,6 +620,37 @@ from
 
 grant
 execute on function public.assignment_loads (uuid, uuid[]) to authenticated;
+
+-- How many reviews each scholar has finished at the venue, for the volunteers roster's
+-- track record: someone who has completed work here is the strongest evidence of fit a
+-- venue has. Counts only, never which submissions, and only for the same people
+-- assignment_loads answers, since the ordering it drives is shown to no one else.
+-- Rows: (scholar, count) for approved, completed assignments in _venue in any role. Zero
+-- counts are omitted. Ordered so the client can page past PostgREST's max_rows.
+create or replace function public.completed_counts (_venue uuid, _scholars uuid[]) returns table (scholar uuid, count integer) language sql security definer stable
+set
+	"search_path" to '' as $$
+	select a.scholar, count(*)::integer
+	from public.assignments a
+	where public.can_scout_volunteers(_venue)
+	  and a.venue = _venue
+	  and a.scholar = any (_scholars)
+	  and a.approved
+	  and a.completed
+	group by a.scholar
+	order by 1;
+$$;
+
+alter function public.completed_counts (uuid, uuid[]) OWNER to "postgres";
+
+revoke
+execute on function public.completed_counts (uuid, uuid[])
+from
+	public,
+	anon;
+
+grant
+execute on function public.completed_counts (uuid, uuid[]) to authenticated;
 
 create or replace function public.isAssigned (_submissionid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
 set

@@ -25,6 +25,7 @@
 	import Tip from '#lib/components/Tip.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
 	import { PLATFORMS } from '#lib/data/reviewingPlatforms.js';
+	import { parseRelevantVenues, previewRelevantVenues } from '#lib/data/trackRecord.js';
 	import Text from '#lib/locales/Text.svelte';
 	import { isntEmpty, validInteger, validReviewSystemURL, validURL } from '#lib/validation.js';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
@@ -212,6 +213,45 @@
 				db().editVenueReviewSystemURL(venue.id, text.trim() === '' ? null : text.trim())}
 			testid="venue-review-system-url"
 		/>
+
+		<!-- Which other venues' authors are likely reviewers here. Ranks the volunteers
+		     roster for those who assign; the preview shows what each line matches, with the
+		     same rules the roster uses (src/lib/data/trackRecord.ts). -->
+		<Paragraph text={(l) => l.page.settings.paragraph.relevantVenues} />
+		<EditableText
+			text={venue.relevant_venues.join('\n')}
+			strings={(l) => l.page.settings.field.relevantVenues}
+			inline={false}
+			edit={(text) => db().editVenueRelevantVenues(venue.id, parseRelevantVenues(text))}
+			testid="venue-relevant-venues"
+		/>
+		{#if venue.relevant_venues.length > 0}
+			<ul class="relevant-preview" data-testid="venue-relevant-preview">
+				{#each previewRelevantVenues(venue.relevant_venues, data.journals) as match}
+					<li>
+						{#if match.scholars > 0}
+							<Text
+								path={(l) => l.page.settings.paragraph.relevantVenueMatches}
+								markdown
+								inputs={{ venue: match.line, count: match.scholars.toString() }}
+							/>
+							<br /><small
+								><Text
+									path={(l) => l.page.settings.paragraph.relevantVenueTitles}
+									inputs={{ titles: match.titles.join('; ') }}
+								/></small
+							>
+						{:else}
+							<Text
+								path={(l) => l.page.settings.paragraph.relevantVenueNone}
+								markdown
+								inputs={{ venue: match.line }}
+							/>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		{/if}
 
 		<WebAddress {venue} />
 
@@ -463,6 +503,14 @@
 {/if}
 
 <style>
+	.relevant-preview {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-half);
+		margin: 0;
+		font-size: var(--small-font-size);
+	}
+
 	pre {
 		white-space: pre-wrap;
 		word-break: break-word;

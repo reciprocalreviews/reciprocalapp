@@ -349,9 +349,14 @@ export type LocaleText = {
 				/** Warns that the CSV carries only the rows this viewer may see. A partial
 				 * export that looks complete is worse than none. */
 				partialExport: string;
+				/** Under a role in the Suggested view: how many matching volunteers it hides,
+				 * so the pool never looks smaller than it is. Takes `{count}`. */
+				hiddenBySuggestion: string;
 			};
 			button: {
 				exportCSV: ButtonText;
+				/** Leaves the Suggested view for every volunteer. */
+				showEveryone: ButtonText;
 				/** Unselects every expertise keyword. */
 				clearTags: ButtonText;
 				/** Unfolds the expertise keywords past the most common ones. */
@@ -371,6 +376,21 @@ export type LocaleText = {
 				/** A name with a count after it, for a role's section heading and for an
 				 * expertise keyword. Takes {name} and {count}. */
 				count: string;
+				/** Accessible name for the Suggested / Everyone choice. */
+				view: string;
+				/** The two views, for those who assign. Each takes `{count}`. */
+				suggested: string;
+				everyone: string;
+				/** Badge: approved, completed assignments at this venue. Takes `{count}`. */
+				reviewedHere: string;
+				/** Badge: works in the venue's relevant venues, per ORCID. Takes `{count}`. */
+				publishedRelevant: string;
+				/** Heads the list of journal titles a relevant-venues badge matched. */
+				matchedTitles: string;
+				/** Says the titles come from ORCID and RR does not check them. */
+				matchedSource: string;
+				/** Divides the rows with a track record from those without, in Everyone. */
+				noTrackRecord: string;
 			};
 			status: {
 				active: string;
@@ -393,6 +413,8 @@ export type LocaleText = {
 			};
 			paragraph: {
 				intro: string;
+				/** For those who assign: what the Suggested view keeps. */
+				suggested: string;
 			};
 		};
 		venueTransactions: {
@@ -1192,6 +1214,8 @@ export type LocaleText = {
 				/** The optional address of the venue's reviewing system, linked from the pages
 				 * where approvers assign. `invalid` says what the database refuses. */
 				reviewSystemURL: TextFieldText & { invalid: string };
+				/** The venues whose publications signal fit, one per line. */
+				relevantVenues: TextFieldText;
 				inactiveMessage: TextFieldText;
 				welcomeTokens: TextFieldText;
 				preferenceLevelLabel: TextFieldText & { invalid: string };
@@ -1238,6 +1262,17 @@ export type LocaleText = {
 			paragraph: {
 				/** Above the reviewing system URL field: what it is and where it is shown. */
 				reviewSystemURL: string;
+				/** Above the relevant venues field: what it does, the format, and exactly
+				 * how matching works, since an editor cannot otherwise tell why a venue
+				 * matched or did not. */
+				relevantVenues: string;
+				/** Preview of one line: how many volunteers it matches. Takes `{venue}` and
+				 * `{count}`. */
+				relevantVenueMatches: string;
+				/** Preview of a line matching nobody, with what to try. Takes `{venue}`. */
+				relevantVenueNone: string;
+				/** The titles a line matched. Takes `{titles}`. */
+				relevantVenueTitles: string;
 				/** Top-of-page blurb framing the page as a series of numbered
 				 * setup steps the admin works through in order. */
 				welcome: string;
@@ -2171,6 +2206,7 @@ export type LocaleText = {
 		EditVenueShortTitle: string;
 		EditVenueURL: string;
 		EditVenueReviewSystemURL: string;
+		EditVenueRelevantVenues: string;
 		EditVenueSlug: string;
 		/** The web address someone asked for belongs to another venue. Raised by the unique
 		 * index, which is what actually decides a contested address — the field's own

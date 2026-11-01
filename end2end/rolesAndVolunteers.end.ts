@@ -13,6 +13,14 @@ const INVITEE_ORCID = SEED.scholars.author2.orcid;
 // so there is somebody to Cc.
 const SECOND_EDITOR_EMAIL = SEED.scholars.r2.email;
 
+/** Open the full roster. Those who assign others land on the Suggested view, which leaves
+ * out volunteers with no track record; specs about the roster itself want all of it. */
+async function showEveryone(page: Page) {
+	await page.getByTestId('volunteer-filter').waitFor();
+	const everyone = page.getByTestId('volunteer-view-everyone');
+	if ((await everyone.count()) > 0) await everyone.click();
+}
+
 test('editor creates a role, edits its description, and deletes it', async ({ page, context }) => {
 	await login(EDITOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_PATH}/settings`);
@@ -539,6 +547,7 @@ test("only those who assign others see volunteers' emails, on the page and in th
 	// reviewer who has not bid on anything.
 	await login(SEED.scholars.ae.email, page, context);
 	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
+	await showEveryone(page);
 	await expect(
 		page.getByTestId('volunteer-email').getByRole('link', { name: SEED.scholars.r4.email })
 	).toHaveAttribute('href', `mailto:${SEED.scholars.r4.email}`);
@@ -551,6 +560,7 @@ test("only those who assign others see volunteers' emails, on the page and in th
 	// A reviewer assigns nobody, so sees the roster without anyone's address.
 	await login(VOLUNTEER_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
+	await showEveryone(page);
 	await expect(page.locator('tr[data-testid^="volunteer-row-"]').first()).toBeVisible();
 	await expect(page.getByTestId('volunteer-email')).toHaveCount(0);
 	// The iD stays: it is public on every profile, and the export has always carried it.
@@ -570,6 +580,7 @@ test('volunteer filter on /venue/[id]/volunteers narrows the table by name, emai
 	await login(EDITOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
 	await page.waitForLoadState('networkidle');
+	await showEveryone(page);
 
 	// Without a filter, multiple Reviewer rows are visible (r1..r5).
 	const reviewerRowsUnfiltered = await page.locator('tr[data-testid^="volunteer-row-2-"]').count();
@@ -596,6 +607,7 @@ test('expertise keywords narrow the volunteers table, and say how many claim eac
 	await login(EDITOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
 	await page.waitForLoadState('networkidle');
+	await showEveryone(page);
 
 	// The chip's key is the lowercased tag, and its label is the spelling the most
 	// volunteers wrote. The seed writes "peer review" in lowercase throughout, so
@@ -632,6 +644,7 @@ test('each role section says how many volunteers it is showing', async ({ page, 
 	await login(EDITOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
 	await page.waitForLoadState('networkidle');
+	await showEveryone(page);
 
 	// Both sides are read from the DOM, so a shared database that other specs have
 	// added reviewers to cannot make this wrong.
@@ -655,6 +668,7 @@ test('volunteers who have stopped are listed after those who have not', async ({
 	await login(EDITOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
 	await page.waitForLoadState('networkidle');
+	await showEveryone(page);
 
 	// Per section, not across the whole table: the ordering restarts at each role,
 	// so an active row following an inactive one is only wrong within a section.
@@ -1053,6 +1067,7 @@ test('an editor removes a volunteer from a role, who is emailed and can resume',
 	await login(EDITOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
 	await page.waitForLoadState('networkidle');
+	await showEveryone(page);
 
 	const row = page.locator('tr[data-testid^="volunteer-row-"]', { hasText: name }).filter({
 		has: page.getByTestId('volunteer-remove')
