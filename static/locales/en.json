@@ -440,6 +440,11 @@
 				"fewerTags": {
 					"tip": "Show only the most common expertise keywords",
 					"label": "Show fewer"
+				},
+				"remove": {
+					"tip": "Mark this volunteer inactive in this role and email them",
+					"label": "Remove",
+					"warn": "Remove from this role and email them?"
 				}
 			},
 			"field": {
@@ -2370,6 +2375,7 @@
 		"CreateVolunteer": "Unable to add volunteer commitment",
 		"AlreadyVolunteered": "Already created a volunteer commitment for this role.",
 		"UpdateVolunteerActive": "Unable to update volunteer commitment",
+		"RemoveVolunteer": "Unable to remove the volunteer from this role",
 		"UpdateVolunteerExpertise": "Unable to update your expertise",
 		"UpdateVolunteerPapers": "Unable to update paper count",
 		"UpdateAssignmentPreference": "Unable to update bid preference",

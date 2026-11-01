@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.5.23 - 2026-11-01
 
+### Added
+
+- **A venue's admins and the holders of its top role can now remove a volunteer from a role on the volunteers page.** The volunteer is marked inactive and emailed, and can resume volunteering later.
+
 ### Changed
 
 - Updated dependencies, including SvelteKit 3.1.1 and the Vercel CLI to 65.9, and updated internal tooling to stop a SvelteKit deprecation warning.

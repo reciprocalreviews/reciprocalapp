@@ -589,6 +589,11 @@ export default abstract class CRUD {
 	): Promise<Result<string>>;
 
 	abstract updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result>;
+	/** Mark ANOTHER scholar's accepted volunteer record inactive, for a venue admin or a
+	 * holder of the venue's top-priority role. Deactivates rather than deletes, as stopping
+	 * does, because the record is what keeps the welcome grant one-time; the volunteer may
+	 * resume afterwards. The volunteer is emailed, and the venue told as for a pause. */
+	abstract removeVolunteer(id: VolunteerID): Promise<Result>;
 	abstract updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result>;
 	abstract updateVolunteerPapers(id: VolunteerID, papers: number | null): Promise<Result>;
 

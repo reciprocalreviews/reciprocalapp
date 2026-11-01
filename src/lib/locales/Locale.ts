@@ -358,6 +358,9 @@ export type LocaleText = {
 				moreTags: ButtonText;
 				/** Folds them back. */
 				fewerTags: ButtonText;
+				/** Marks another volunteer inactive in the role, for the venue's admins and
+				 * top role. Confirms first, because the volunteer is emailed. */
+				remove: ButtonText;
 			};
 			field: {
 				filter: TextFieldText;
@@ -2166,6 +2169,7 @@ export type LocaleText = {
 		CreateVolunteer: string;
 		AlreadyVolunteered: string;
 		UpdateVolunteerActive: string;
+		RemoveVolunteer: string;
 		UpdateVolunteerExpertise: string;
 		UpdateVolunteerPapers: string;
 		UpdateAssignmentPreference: string;

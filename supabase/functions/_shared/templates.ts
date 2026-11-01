@@ -600,6 +600,19 @@ export const Emails = {
 			'<rr-button href="{origin}/venue/$3">Open the venue</rr-button>'
 		]
 	},
+	// $1 role name, $2 venue title, $3 venue path, $4 the scholar's own id.
+	//
+	// Consequential, the mirror of RoleEnrolled: a venue's admins or top role marked the
+	// scholar inactive in a role, changing their commitment without their asking.
+	RoleRemoved: {
+		subject: 'You were removed from the $1 role at $2',
+		paragraphs: [
+			'A leader of $2 marked you inactive in its $1 role, so you will no longer be assigned new work in it. Assignments you already hold are unchanged.',
+			'Your volunteering record is kept, and you can resume volunteering from the venue page if you and the venue agree you should:',
+			'<rr-button href="{origin}/venue/$3">Open the venue</rr-button>',
+			'<rr-button href="{origin}/scholar/$4">See your profile</rr-button>'
+		]
+	},
 
 	// ---- Tokens ------------------------------------------------------------------------
 	//

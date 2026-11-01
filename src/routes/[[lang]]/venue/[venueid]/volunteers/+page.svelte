@@ -27,9 +27,11 @@
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import Text from '#lib/locales/Text.svelte';
 	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let { data } = $props();
-	const { venue, commitments, roles, volunteerCounts, canContact, loads } = $derived(data);
+	const { venue, commitments, roles, volunteerCounts, canContact, canRemove, loads, scholar } =
+		$derived(data);
 
 	const loadIndex = $derived(new Loads(loads));
 
@@ -287,7 +289,14 @@
 													: volunteer.active
 														? l.page.volunteers.status.active
 														: l.page.volunteers.status.inactive}
-									/></td
+									/>{#if canRemove && volunteer.accepted === 'accepted' && volunteer.active && volunteer.scholarid !== scholar?.id}
+										<Button
+											small
+											testid="volunteer-remove"
+											strings={(l) => l.page.volunteers.button.remove}
+											action={() => handle(db().removeVolunteer(volunteer.id))}
+										/>
+									{/if}</td
 								>
 								<td
 									><!-- The address for those who assign others, so they can reach a
