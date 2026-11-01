@@ -799,11 +799,17 @@ isOneToOne: false
 "_notify_new_volunteer":
 { Args: { "_roleid": string,"_scholarid": string,"_venueid": string }; Returns: number
                            },
+"_notify_unmatched_name_joined":
+{ Args: { "_scholar": string }; Returns: number
+                           },
 "_welcome_volunteer":
 { Args: { "_reason": string,"_roleid": string,"_scholar": string,"_welcomer": string }; Returns: number
                            },
 "accept_role_invite":
 { Args: { "_response": Database["public"]['Enums']["invited"],"_volunteer_id": string }; Returns: Json
+                           },
+"add_to_role_and_match":
+{ Args: { "_name": string,"_role": string,"_scholar": string,"_venue": string }; Returns: Json
                            },
 "approve_thanks":
 { Args: { "_id": string }; Returns: Json
@@ -852,6 +858,9 @@ isOneToOne: false
                            },
 "can_see_volunteer":
 { Args: { "_volunteer": string }; Returns: boolean
+                           },
+"can_staff_role":
+{ Args: { "_role": string }; Returns: boolean
                            },
 "complete_assignment":
 { Args: { "_assignment_id": string,"_mint_purpose_template": string,"_payment_purpose_template": string }; Returns: Json
@@ -959,6 +968,9 @@ isOneToOne: false
 "pending_email_verification":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"person_name_key":
+{ Args: { "_name": string }; Returns: string
+                           },
 "propose_thanks":
 { Args: { "_message": string,"_submission": string }; Returns: Json
                            },
@@ -1049,6 +1061,11 @@ isOneToOne: false
                            },
 "transfer_tokens":
 { Args: { "_amount": number,"_currency": string,"_from": string,"_from_kind": string,"_purpose": string,"_to": string,"_to_kind": string,"_transaction": string }; Returns: Json
+                           },
+"unmatched_name_scholars":
+{ Args: { "_name": string,"_role": string,"_venue": string }; Returns: {
+              "email": string,"id": string,"name": string,"orcid": string
+            }[]
                            },
 "venue_reply_to":
 { Args: { "_venue": string }; Returns: string

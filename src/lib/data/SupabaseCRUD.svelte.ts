@@ -55,6 +55,7 @@ import CRUD, {
 	type ImportedSubmission,
 	type MarkSubmissionDoneOutcome,
 	type MatchAssignmentsResult,
+	type UnmatchedNameScholar,
 	type Notification,
 	type PendingEmailVerification,
 	type ReadResult,
@@ -2921,6 +2922,23 @@ export default class SupabaseCRUD extends CRUD {
 		return { data: ids, notified };
 	}
 
+	async addToRole(role: RoleRow, scholars: ScholarID[]): Promise<Result<string[]>> {
+		// The same guards as inviteToRole: a name twice would fail the batch halfway, and an
+		// empty batch would report people added when nobody was.
+		const members = [...new Set(scholars)];
+		if (members.length === 0) return this.error('AddToRole');
+
+		// Accepted, with the welcome grant settled as accepting an invitation would have.
+		// create_volunteer emails each of them RoleEnrolled, so nothing is sent from here.
+		const ids: string[] = [];
+		for (const member of members) {
+			const { data, error } = await this.createVolunteer(member, member, role.id, true, true, null);
+			if (error) return { error };
+			if (data) ids.push(data);
+		}
+		return { data: ids };
+	}
+
 	async acceptRoleInvite(scholar: ScholarID, id: VolunteerID, response: Response) {
 		// Updating the volunteer response and, when accepting a first role at
 		// the role's venue, settling the welcome grant happen atomically inside
@@ -3433,7 +3451,48 @@ export default class SupabaseCRUD extends CRUD {
 			return rpcError(this, error, 'MatchAssignments', {
 				RR019: 'MatchAssignmentsNotVolunteer'
 			});
+		return this.reportMatched(venue, scholar, data);
+	}
 
+	async getUnmatchedNameScholars(
+		venue: VenueID,
+		name: string,
+		role: RoleID
+	): Promise<ReadResult<UnmatchedNameScholar[]>> {
+		const { data, error } = await this.client.rpc('unmatched_name_scholars', {
+			_venue: venue,
+			_name: name,
+			_role: role
+		});
+		if (error) return { data: [], error: this.error('LoadUnmatchedAssignments', error).error };
+		return { data: data ?? [] };
+	}
+
+	async addToRoleAndMatch(
+		venue: VenueID,
+		name: string,
+		role: RoleID,
+		scholar: ScholarID
+	): Promise<Result<MatchAssignmentsResult>> {
+		const { data, error } = await this.client.rpc('add_to_role_and_match', {
+			_venue: venue,
+			_name: name,
+			_role: role,
+			_scholar: scholar
+		});
+		if (error)
+			return rpcError(this, error, 'MatchAssignments', {
+				RR027: 'AddToRoleDeclined'
+			});
+		return this.reportMatched(venue, scholar, data);
+	}
+
+	/** What match_assignments returned, and the digest to the scholar it assigned. */
+	private async reportMatched(
+		venue: VenueID,
+		scholar: ScholarID,
+		data: unknown
+	): Promise<Result<MatchAssignmentsResult>> {
 		const matched = stringArrayField(data, 'matched');
 		const skipped = numberField(data, 'skipped');
 		if (matched === null || skipped === null) return this.error('MatchAssignments');

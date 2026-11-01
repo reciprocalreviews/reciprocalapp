@@ -253,6 +253,23 @@ export const Emails = {
 		optional: true,
 		section: 'venues'
 	},
+	// $1 the scholar's name, $2 venue title, $3 venue path, $4 the scholar's id, $5 each
+	// matching imported name with its role and submission count, joined by "; ".
+	//
+	// Sent by _notify_unmatched_name_joined to whoever could approve an unmatched assignment
+	// when a scholar sets a name with the same words. It says only that the name matches:
+	// matching stays a person's decision, because a name is not an identity.
+	UnmatchedNameJoined: {
+		subject: '$1 joined Reciprocal Reviews and may be someone imported at $2',
+		paragraphs: [
+			'$1 just set their name on Reciprocal Reviews, and it matches people an import at $2 named but could not find: $5.',
+			'If they are the same person, match them. Anyone who approves that role can add them to it once they agree, and match them in the same step.',
+			'<rr-button href="{origin}/scholar/$4">See their profile</rr-button>',
+			'<rr-button href="{origin}/venue/$3/submissions/unmatched">Match unmatched names</rr-button>'
+		],
+		optional: true,
+		section: 'venues'
+	},
 	// $1 is the venue's path, $2 the submission's id, $3 the requester's note (optional),
 	// $4 the requester's name, $5 the role, $6 the submission's title, $7 the name of the role
 	// that approves it. The note comes third because it always has; the rest were added after
@@ -586,15 +603,17 @@ export const Emails = {
 	},
 	// $1 role name, $2 venue title, $3 venue path, $4 the scholar's own id.
 	//
-	// Consequential. An administrator can seat somebody in a role directly, without an
-	// invitation to accept -- and that path told them nothing: NewVolunteer is suppressed for
+	// Consequential. Whoever staffs a role (a venue admin, a holder of the venue's top role,
+	// or a holder of the role's approving role) can seat somebody in it directly, after
+	// confirming they agreed, without an invitation to accept -- and that path told them
+	// nothing: NewVolunteer is suppressed for
 	// it (it is the admin's own action, not news to the admins) and RoleInvite only fires when
 	// there is an invitation. So a scholar acquired a venue commitment, possibly a welcome
 	// grant with it, and the only way to notice was to read their own profile.
 	RoleEnrolled: {
 		subject: 'You were added to the $1 role at $2',
 		paragraphs: [
-			'An administrator of $2 added you to its $1 role. There was no invitation to accept — administrators can seat people directly in the roles they run.',
+			'Someone who runs the $1 role at $2 added you to it, confirming that you had agreed. There was no invitation to accept.',
 			'Your profile shows what you now hold, and you can stop volunteering for it at any time:',
 			'<rr-button href="{origin}/scholar/$4">See your profile</rr-button>',
 			'<rr-button href="{origin}/venue/$3">Open the venue</rr-button>'

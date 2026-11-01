@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { RoleRow, ScholarID, VenueRow } from '#data/types.js';
 	import Button from '#lib/components/Button.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import Form from '#lib/components/Form.svelte';
 	import Loading from '#lib/components/Loading.svelte';
@@ -52,6 +53,12 @@
 	const DEBOUNCE_MS = 250;
 
 	let text = $state('');
+
+	/** Whether the admin says the chosen people already agreed to the role, so they are added
+	 * directly rather than invited. Off by default, and the Add button still asks for
+	 * confirmation: it puts a commitment on someone's profile without their clicking
+	 * anything, which is only right when they have said yes some other way. */
+	let agreed = $state(false);
 
 	/** The scholars chosen from the matches, in the order they were chosen. This — not the
 	 * field — is what the invitation sends. The field holds the questions still waiting on
@@ -224,30 +231,36 @@
 		/>
 	{/if}
 
+	<Checkbox
+		bind:on={agreed}
+		label={(l) => l.view.roles.checkbox.agreed}
+		testid="role-invite-agreed-{role.name}"
+	/>
+
 	<Button
-		strings={(l) => l.view.roles.button.invite}
+		strings={(l) => (agreed ? l.view.roles.button.addAgreed : l.view.roles.button.invite)}
 		testid="role-invite-button-{role.name}"
 		active={staged.length > 0}
 		action={async () => {
+			const chosen = staged.map((s) => s.id);
 			if (
 				await handle(
-					db().inviteToRole(
-						scholar,
-						role,
-						venue,
-						staged.map((s) => s.id)
-					),
-					locale().view.roles.feedback.invited
+					agreed ? db().addToRole(role, chosen) : db().inviteToRole(scholar, role, venue, chosen),
+					agreed ? locale().view.roles.feedback.added : locale().view.roles.feedback.invited
 				)
 			)
-				// Only the chosen list is cleared. Choosing each of them already took their
-				// query out of the field, so what is left there is unfinished work — a name
-				// still being typed, or one that matched nobody — and discarding it because a
-				// different invitation succeeded would be throwing away somebody else's
-				// half-typed name. The answers cache is left alone too: handle() awaits
-				// invalidateAll(), so `already` grows to include the people just invited and
-				// they drop out of the matches on their own.
+			// Only the chosen list is cleared. Choosing each of them already took their
+			// query out of the field, so what is left there is unfinished work — a name
+			// still being typed, or one that matched nobody — and discarding it because a
+			// different invitation succeeded would be throwing away somebody else's
+			// half-typed name. The answers cache is left alone too: handle() awaits
+			// invalidateAll(), so `already` grows to include the people just invited and
+			// they drop out of the matches on their own. The agreement was about the
+			// people just added, so it does not carry over to whoever is chosen next.
+			{
 				staged = [];
+				agreed = false;
+			}
 		}}
 	/>
 </Form>

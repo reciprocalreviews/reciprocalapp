@@ -777,6 +777,18 @@ export type LocaleText = {
 			headers: { name: string; role: string; count: string; scholar: string };
 			/** Nobody holds the role yet, so there is no one to match. `{role}`. */
 			noCandidates: string;
+			/** For admins only: adding someone who is not in the role yet, once they have
+			 * agreed to it, and matching them in the same step. */
+			add: {
+				/** Reveals the scholars whose name has the same words as the imported one. */
+				find: ButtonText;
+				/** Nobody on the platform has that name. `{name}`. */
+				nobody: string;
+				/** Seats the chosen scholar and matches them. `{name}` and `{role}` in the
+				 * label, tip and warning, because confirming that the RIGHT person agreed to the
+				 * RIGHT role is the whole point of the confirmation. */
+				button: ConfirmButtonText;
+			};
 			button: { match: ButtonText; dismiss: ButtonText };
 			feedback: {
 				/** `{name}` matched to exactly one assignment. */
@@ -1352,6 +1364,7 @@ export type LocaleText = {
 					TokensReceived: string;
 					TransactionApproved: string;
 					TransactionsPending: string;
+					UnmatchedNameJoined: string;
 					VenueApproved: string;
 					VenueDeactivated: string;
 					VolunteerPaused: string;
@@ -1851,6 +1864,8 @@ export type LocaleText = {
 				inviteAlready: string;
 				/** Confirms a batch of invitations went out. */
 				invited: string;
+				/** Confirms people were added directly, without an invitation. */
+				added: string;
 				/** How many of the role's volunteers would actually receive a call for bids.
 				 * Not the same as the role's volunteer count, and deliberately so: someone
 				 * with no verified address, someone who has silenced the notice, and the
@@ -1887,6 +1902,10 @@ export type LocaleText = {
 				stop: ButtonText;
 				resume: ButtonText;
 				invite: ButtonText;
+				/** Replaces `invite` when the admin has said the people chosen already agreed:
+				 * seats them directly. A confirm button, because it puts a commitment on
+				 * someone's profile without their clicking anything. */
+				addAgreed: ConfirmButtonText;
 				/** Takes a chosen scholar back off the list before anything is sent. `{name}` in
 				 * the tip is replaced with theirs, because the tip is the button's aria-label and
 				 * a row of buttons all announcing "x" is unusable. Not a confirm button: nothing
@@ -1934,6 +1953,9 @@ export type LocaleText = {
 			};
 			checkbox: {
 				invited: string;
+				/** On the invite form: the people chosen already agreed, so add them directly
+				 * instead of inviting them. */
+				agreed: string;
 				anonymousAuthors: string;
 				biddable: string;
 				/** Whether the role caps how many submissions each volunteer may bid on. */
@@ -2182,6 +2204,9 @@ export type LocaleText = {
 		ReorderDeclineReason: string;
 		DeleteDeclineReason: string;
 		InviteToRole: string;
+		AddToRole: string;
+		/** add_to_role_and_match refused someone who declined the role (RR027). */
+		AddToRoleDeclined: string;
 		AcceptRoleInvite: string;
 		EditCurrencyMinters: string;
 		AddCurrencyMinter: string;

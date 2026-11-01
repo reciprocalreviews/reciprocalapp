@@ -35,9 +35,11 @@ select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
 -- admins must NOT overlap the currency's minters → distinct scholars.
 select tests.create_venue(:'cur', array[:'vadmin']::uuid[]) as ven \gset
 
--- An open (not invite-only) role and an invite-only role at the same venue.
-select tests.create_role(:'ven', 0, null, false, false) as open_role \gset
-select tests.create_role(:'ven', 0, null, false, true) as invite_role \gset
+-- An open (not invite-only) role and an invite-only role at the same venue. Neither is
+-- the venue's top role: its holders may put anyone in any role (can_staff_role), so a
+-- volunteer in a priority-0 role would not be the ordinary scholar these probes need.
+select tests.create_role(:'ven', 1, null, false, false) as open_role \gset
+select tests.create_role(:'ven', 2, null, false, true) as invite_role \gset
 
 -- A second venue, for the cross-venue repoint probe below. Its admin and minter
 -- are distinct scholars, as at :ven, so nothing here turns on the overlap.
@@ -59,7 +61,7 @@ select policies_are(
 	'public', 'volunteers',
 	array[
 		'volunteer visibility follows the role''s setting',
-		'admins can invite and volunteers if not invite only',
+		'role staff can invite, and volunteers if not invite only',
 		'volunteers can update',
 		'volunteers cannot be deleted'
 	]

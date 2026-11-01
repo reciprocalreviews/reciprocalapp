@@ -357,6 +357,13 @@
             "AddCurrencyMinter": {
               "type": "string"
             },
+            "AddToRole": {
+              "type": "string"
+            },
+            "AddToRoleDeclined": {
+              "description": "add_to_role_and_match refused someone who declined the role (RR027).",
+              "type": "string"
+            },
             "AlreadyApproved": {
               "type": "string"
             },
@@ -973,6 +980,8 @@
             "ReorderDeclineReason",
             "DeleteDeclineReason",
             "InviteToRole",
+            "AddToRole",
+            "AddToRoleDeclined",
             "AcceptRoleInvite",
             "EditCurrencyMinters",
             "AddCurrencyMinter",
@@ -3556,6 +3565,9 @@
                         "TransactionsPending": {
                           "type": "string"
                         },
+                        "UnmatchedNameJoined": {
+                          "type": "string"
+                        },
                         "VenueApproved": {
                           "type": "string"
                         },
@@ -3588,6 +3600,7 @@
                         "TokensReceived",
                         "TransactionApproved",
                         "TransactionsPending",
+                        "UnmatchedNameJoined",
                         "VenueApproved",
                         "VenueDeactivated",
                         "VolunteerPaused"
@@ -5643,6 +5656,30 @@
               "additionalProperties": false,
               "description": "The page listing assignments an import could not match to a scholar.",
               "properties": {
+                "add": {
+                  "additionalProperties": false,
+                  "description": "For admins only: adding someone who is not in the role yet, once they have agreed to it, and matching them in the same step.",
+                  "properties": {
+                    "button": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Seats the chosen scholar and matches them. `{name}` and `{role}` in the label, tip and warning, because confirming that the RIGHT person agreed to the RIGHT role is the whole point of the confirmation."
+                    },
+                    "find": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Reveals the scholars whose name has the same words as the imported one."
+                    },
+                    "nobody": {
+                      "description": "Nobody on the platform has that name. `{name}`.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "find",
+                    "nobody",
+                    "button"
+                  ],
+                  "type": "object"
+                },
                 "button": {
                   "additionalProperties": false,
                   "properties": {
@@ -5727,6 +5764,7 @@
                 "empty",
                 "headers",
                 "noCandidates",
+                "add",
                 "button",
                 "feedback"
               ],
@@ -7028,6 +7066,10 @@
                     "addAdmin": {
                       "$ref": "#/definitions/ButtonText"
                     },
+                    "addAgreed": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Replaces `invite` when the admin has said the people chosen already agreed: seats them directly. A confirm button, because it puts a commitment on someone's profile without their clicking anything."
+                    },
                     "addCompensation": {
                       "$ref": "#/definitions/ButtonText"
                     },
@@ -7089,6 +7131,7 @@
                     "stop",
                     "resume",
                     "invite",
+                    "addAgreed",
                     "removeInvite",
                     "deleteRole"
                   ],
@@ -7117,6 +7160,10 @@
                 "checkbox": {
                   "additionalProperties": false,
                   "properties": {
+                    "agreed": {
+                      "description": "On the invite form: the people chosen already agreed, so add them directly instead of inviting them.",
+                      "type": "string"
+                    },
                     "anonymousAuthors": {
                       "type": "string"
                     },
@@ -7133,6 +7180,7 @@
                   },
                   "required": [
                     "invited",
+                    "agreed",
                     "anonymousAuthors",
                     "biddable",
                     "bidLimit"
@@ -7142,6 +7190,10 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "added": {
+                      "description": "Confirms people were added directly, without an invitation.",
+                      "type": "string"
+                    },
                     "callForBidsLast": {
                       "description": "When the venue last asked, and who asked. Plain information, not a warning: there is no rate limit, and this exists so two co-chairs do not unknowingly send the same nudge an hour apart. Takes `{name}` and `{when}`.",
                       "type": "string"
@@ -7191,6 +7243,7 @@
                     "inviteUnmatched",
                     "inviteAlready",
                     "invited",
+                    "added",
                     "callForBidsRecipients",
                     "callForBidsLast",
                     "callForBidsUnverified",
