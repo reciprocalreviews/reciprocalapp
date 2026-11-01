@@ -19,6 +19,7 @@ insert into public.emails (event, email, time_sent)
 select event, 'ambient@production.invalid', now() - interval '1 day'
 from (values
 	('AssignmentApproved'),
+	('AssignmentClosedUnpaid'),
 	('AssignmentRemoved'),
 	('AvailabilityReminder'),
 	('BidDeclined'),

@@ -437,10 +437,14 @@ test('editor sees reviewing-platform email-template snippets and can copy them',
 	expect(clipboard).toContain(venueTitle);
 	expect(clipboard).toContain('{$submissionId}');
 
-	// All three template cards render (acknowledgement + compensation also
-	// present and update with the platform switch).
+	// The other template cards render (acknowledgement, compensation and decision
+	// also present and update with the platform switch).
 	await expect(page.getByTestId('template-acknowledgement')).toContainText('{$submissionId}');
 	await expect(page.getByTestId('template-compensation')).toContainText('{$submissionId}');
+	// The decision letter's snippet sends the editor back to close the submission out.
+	await expect(page.getByTestId('template-decision')).toContainText(
+		`${origin}/venue/${VENUE_PATH}/submissions?close={$submissionId}`
+	);
 });
 
 test('deep-link pre-fill populates the new-submission form from a ?manuscript query', async ({

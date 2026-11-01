@@ -128,9 +128,17 @@ export const load: PageLoad = async ({ parent, params }) => {
 			? { data: [] }
 			: await db.getUnmatchedAssignments(venue.id, submission.id);
 
+	// What each role is paid for this submission's type, so the editor closing it out can see
+	// what each choice to pay costs before committing to it.
+	const { data: compensation } =
+		submission === null
+			? { data: [] }
+			: await db.getCompensationByTypes([submission.submission_type]);
+
 	return {
 		submission,
 		venue,
+		compensation: compensation ?? [],
 		unmatched: unmatched ?? [],
 		authors,
 		previous: previous !== null && previous.length > 0 ? previous[0] : null,

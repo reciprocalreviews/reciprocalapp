@@ -1,5 +1,12 @@
 <script lang="ts">
-	import type { PublicORCIDProfile, RoleID, RoleRow, ScholarID } from '#data/types.js';
+	import type {
+		AssignmentID,
+		PublicORCIDProfile,
+		RoleID,
+		RoleRow,
+		ScholarID
+	} from '#data/types.js';
+	import { page } from '$app/state';
 	import { venuePath as toVenuePath } from '#lib/data/venuePath.js';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import Action from '#lib/components/Action.svelte';
@@ -96,7 +103,9 @@
 		/** Thank-you notes for this submission, filtered by RLS to the viewer */
 		thanks,
 		/** Assignments the import could not match to a scholar, that this viewer could approve */
-		unmatched
+		unmatched,
+		/** What each role is paid for this submission's type */
+		compensation
 	} = $derived(data);
 
 	/** How this venue is addressed in links from here. Empty when the venue failed to load,
@@ -272,6 +281,50 @@
 			: []
 	);
 
+	/** What closing this submission out pays each role, or 0 where none is configured. */
+	function amountFor(role: RoleID): number {
+		return compensation.find((c) => c.role === role)?.amount ?? 0;
+	}
+
+	/** The editor's choice for each outstanding assignment when closing out. Local state, not
+	 * derived from the page data, because every write and realtime tick refetches that data
+	 * and would reset the choices mid-decision. Pay by default: most work assigned was done.
+	 * Strings, because that is what a radio group binds; closeOutChoice reads them. */
+	let closeOutChoices: Record<AssignmentID, string> = $state({});
+
+	function closeOutChoice(id: AssignmentID): 'pay' | 'remove' {
+		return closeOutChoices[id] === 'remove' ? 'remove' : 'pay';
+	}
+
+	/** What the editors are paid on closing: every approved, uncompleted top-role assignment. */
+	let editorPayout = $derived(
+		(assignments ?? [])
+			.filter(
+				(a) => a.approved && !a.completed && roles?.some((r) => r.id === a.role && r.priority === 0)
+			)
+			.reduce((sum, a) => sum + amountFor(a.role), 0)
+	);
+
+	let closeOutTotal = $derived(
+		editorPayout +
+			completionBlockers
+				.filter((a) => closeOutChoice(a.id) === 'pay')
+				.reduce((sum, a) => sum + amountFor(a.role), 0)
+	);
+
+	// Give each newly outstanding assignment its default, leaving choices already made alone.
+	$effect(() => {
+		for (const blocker of completionBlockers)
+			if (closeOutChoices[blocker.id] === undefined) closeOutChoices[blocker.id] = 'pay';
+	});
+
+	/** Arrived by the decision-letter link, which asks for the close-out. */
+	const closeRequested = page.url.searchParams.has('close');
+	let closeOutView: HTMLElement | undefined = $state(undefined);
+	$effect(() => {
+		if (closeRequested && closeOutView) closeOutView.scrollIntoView({ block: 'center' });
+	});
+
 	/** Whether the current scholar is an author of the submission */
 	let isAuthor = $derived(
 		submission !== null && scholar !== null && submission.authors.includes(scholar.id)
@@ -432,6 +485,17 @@
 	/** Surface feedback for the mark-done action that isn't already
 	 * delivered by the notification facility (e.g., insufficient tokens). */
 	let completionFeedback: ((l: LocaleText) => string) | undefined = $state(undefined);
+
+	/** Say so when marking done or closing out was refused for want of tokens. */
+	function noteCompletion(outcome: unknown) {
+		completionFeedback =
+			typeof outcome === 'object' &&
+			outcome !== null &&
+			'status' in outcome &&
+			outcome.status === 'insufficient'
+				? (l) => l.page.submission.feedback.completionInsufficient
+				: undefined;
+	}
 
 	function getVolunteer(role: RoleID, scholar: ScholarID) {
 		return volunteers?.find((v) => v.roleid === role && v.scholarid === scholar);
@@ -596,24 +660,13 @@
 					testid="submission-open-for-bidding"
 				/>
 			{/if}
-			{#if isEditor && !done}
+			<!-- With work still uncompensated, closing happens in the alert below instead, where
+			     the editor says what to do about each assignment. -->
+			{#if isEditor && !done && completionBlockers.length === 0}
 				<Button
 					strings={(l) => l.page.submission.button.markDone}
 					testid="mark-submission-done"
-					active={completionBlockers.length === 0}
-					action={async () => {
-						const outcome = await handle(db().markSubmissionDone(submission.id));
-						if (
-							typeof outcome === 'object' &&
-							outcome !== null &&
-							'status' in outcome &&
-							outcome.status === 'insufficient'
-						) {
-							completionFeedback = (l) => l.page.submission.feedback.completionInsufficient;
-						} else {
-							completionFeedback = undefined;
-						}
-					}}
+					action={async () => noteCompletion(await handle(db().markSubmissionDone(submission.id)))}
 				/>
 			{/if}
 		{/snippet}
@@ -650,6 +703,11 @@
 				</Alert>
 			{/if}
 
+			<!-- Closing out: the editor says, for each assignment still uncompensated, whether
+			     its work was done. Done work is paid and the rest removed, and the submission is
+			     marked done, in one step. It used to wait for every reviewer to request
+			     compensation first, and one who never did held the submission open with nobody
+			     prompted to close it. -->
 			{#if isEditor && !done && completionBlockers.length > 0}
 				<Alert
 					tone="attention"
@@ -657,14 +715,61 @@
 					inputs={{ count: completionBlockers.length.toString() }}
 					testid="completion-blocked"
 				>
-					<ul class="blockers">
-						{#each completionBlockers as blocker}
+					<ul class="blockers" bind:this={closeOutView}>
+						{#each completionBlockers as blocker (blocker.id)}
 							{@const role = roles.find((r) => r.id === blocker.role)}
-							<li>
-								<strong>{role?.name ?? '?'}</strong>: <ScholarLink id={blocker.scholar} />
+							<li data-testid="close-out-assignment">
+								<span
+									><strong>{role?.name ?? '?'}</strong>: <ScholarLink id={blocker.scholar} />
+									{#if !venue.payment_free}<Tokens amount={amountFor(blocker.role)} />{/if}</span
+								>
+								<span class="choices">
+									<Radio
+										bind:group={closeOutChoices[blocker.id]}
+										value="pay"
+										label={(l) => l.page.submission.closeOut.pay}
+										testid="close-out-pay"
+									/>
+									<Radio
+										bind:group={closeOutChoices[blocker.id]}
+										value="remove"
+										label={(l) => l.page.submission.closeOut.remove}
+										testid="close-out-remove"
+									/>
+								</span>
 							</li>
 						{/each}
 					</ul>
+					{#if !venue.payment_free}
+						<p class="close-out-sums">
+							<Text path={(l) => l.page.submission.closeOut.editors} />: <Tokens
+								amount={editorPayout}
+							/><br />
+							<Text path={(l) => l.page.submission.closeOut.total} />:
+							<strong data-testid="close-out-total"><Tokens amount={closeOutTotal} /></strong>
+						</p>
+					{/if}
+					{#snippet action()}
+						<Button
+							strings={(l) => l.page.submission.button.closeOut}
+							testid="close-out"
+							action={async () =>
+								noteCompletion(
+									await handle(
+										db().closeSubmission(
+											submission.id,
+											completionBlockers
+												.filter((a) => closeOutChoice(a.id) === 'pay')
+												.map((a) => a.id),
+											completionBlockers
+												.filter((a) => closeOutChoice(a.id) === 'remove')
+												.map((a) => a.id),
+											scholar!.id
+										)
+									)
+								)}
+						/>
+					{/snippet}
 				</Alert>
 			{/if}
 
@@ -1323,5 +1428,30 @@
 	.blockers {
 		margin-block: var(--spacing-half);
 		padding-inline-start: var(--spacing);
+	}
+
+	/* Who and what on one line, the choice always below it, so every row has the same shape
+	   whatever the name's length. */
+	.blockers li {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-half);
+		margin-block-end: var(--spacing);
+	}
+
+	.choices {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-half);
+	}
+
+	.close-out-sums {
+		margin: 0;
+	}
+
+	.blockers :global(.token),
+	.close-out-sums :global(.token) {
+		white-space: nowrap;
 	}
 </style>

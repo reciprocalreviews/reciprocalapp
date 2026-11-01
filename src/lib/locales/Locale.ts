@@ -846,10 +846,10 @@ export type LocaleText = {
 				invalidRole: string;
 				scholarNotFound: string;
 				alreadyAssigned: string;
-				/** Shown when the editor can't yet mark done — lists what's
-				 * still pending. {count} is substituted. */
+				/** Shown to the editor while assignments are still uncompensated, above the
+				 * close-out choices for each one. {count} is substituted. */
 				completionBlocked: string;
-				/** Shown when the venue lacks tokens to pay all editors. */
+				/** Shown when the venue lacks the tokens to pay everyone marking done or closing out pays. */
 				completionInsufficient: string;
 				/** Shown when the caller isn't an approved priority-0 editor. */
 				completionNotEditor: string;
@@ -895,6 +895,9 @@ export type LocaleText = {
 				/** Editor button that compensates the editor(s) and marks the
 				 * submission done in one atomic action. */
 				markDone: ConfirmButtonText;
+				/** Editor button under the close-out choices: pays the assignments marked done,
+				 * removes the rest, compensates the editor(s) and marks the submission done. */
+				closeOut: ConfirmButtonText;
 				/** Take on this submission as the venue's editor. */
 				claimEditor: ButtonText;
 				/** Opens the reason form for declining a pending bid. */
@@ -930,6 +933,17 @@ export type LocaleText = {
 				declined: string;
 				/** Beside the submission's status when its editor has closed bidding on it. */
 				biddingClosed: string;
+			};
+			/** The editor's choice, per uncompensated assignment, when closing a submission. */
+			closeOut: {
+				/** The work was done: compensate it. */
+				pay: string;
+				/** The work was not done: remove the assignment unpaid. */
+				remove: string;
+				/** What the editor(s) are paid on closing, before the total. */
+				editors: string;
+				/** The whole amount the close pays from the venue's reserve. */
+				total: string;
 			};
 			checkbox: {
 				/** Editor toggle, checked by default; unchecking closes bidding on a submission
@@ -1260,6 +1274,9 @@ export type LocaleText = {
 				payment: { title: string; body: string };
 				acknowledgement: { title: string; body: string };
 				compensation: { title: string; body: string };
+				/** For the decision letter, which the editor sends: a link back to close the
+				 * submission out, the one step nobody else's email prompts. */
+				decision: { title: string; body: string };
 			};
 		};
 		scholar: {

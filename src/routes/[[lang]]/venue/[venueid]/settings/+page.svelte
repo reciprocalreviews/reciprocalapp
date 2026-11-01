@@ -371,13 +371,17 @@
 			onChange={(value) => (platformId = value)}
 		/>
 
-		{#each venue.payment_free ? ['acknowledgement'] : ['payment', 'acknowledgement', 'compensation'] as kind (kind)}
+		<!-- The decision letter is the editor's own: a payment-free venue still closes its
+		     submissions, so it gets that snippet too. -->
+		{#each venue.payment_free ? ['acknowledgement', 'decision'] : ['payment', 'acknowledgement', 'compensation', 'decision'] as kind (kind)}
 			{@const tpl =
 				kind === 'payment'
 					? locale().page.settings.template.payment
 					: kind === 'acknowledgement'
 						? locale().page.settings.template.acknowledgement
-						: locale().page.settings.template.compensation}
+						: kind === 'compensation'
+							? locale().page.settings.template.compensation
+							: locale().page.settings.template.decision}
 			{@const rendered = renderTemplate(tpl.body, venue.title, venuePath(venue))}
 			<Card
 				icon={SettingsLabel}
