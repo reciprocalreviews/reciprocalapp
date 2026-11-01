@@ -187,6 +187,22 @@ export const Emails = {
 			'<rr-button href="{origin}/venue/$4/submission/$5">Open the submission</rr-button>'
 		]
 	},
+	// $1 editor name, $2 editor email, $3 role, $4 submission title, $5 venue title, $6 venue
+	// path.
+	//
+	// Closing a submission out lets its editor record that a seat's work was not done, which
+	// removes it unpaid. Unlike AssignmentRemoved, this ends someone's chance of being paid for
+	// the work, so it says so, and names the editor to write to if the record is wrong. It
+	// links to the venue rather than the submission, which a removed reviewer may no longer
+	// be able to open.
+	AssignmentClosedUnpaid: {
+		subject: 'Your $3 assignment was closed without payment',
+		paragraphs: [
+			'<a href="mailto:$2">$1</a> closed out "$4" at $5 and recorded your $3 work on it as not done, so your assignment was removed without payment.',
+			'If you did finish this work, reply to <a href="mailto:$2">$1</a> to sort it out.',
+			'<rr-button href="{origin}/venue/$6">Open the venue</rr-button>'
+		]
+	},
 	// $1 decliner name, $2 decliner email, $3 role, $4 submission title, $5 the reason they
 	// gave, $6 venue path, $7 submission id.
 	//

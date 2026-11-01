@@ -219,7 +219,7 @@ test('scholar declares a conflict on a submission and it disappears from their s
 	await expect(page.getByText(SUBMISSION_TITLE)).toHaveCount(0);
 });
 
-test('mark-done is blocked until non-editor assignments are compensated, then flips status', async ({
+test('mark-done waits for every non-editor assignment to be compensated, then flips status', async ({
 	page,
 	context
 }) => {
@@ -231,7 +231,7 @@ test('mark-done is blocked until non-editor assignments are compensated, then fl
 	);
 	// Leave the editor's own priority-0 assignment uncompleted (the
 	// mark-done action will compensate it). Reset every non-editor
-	// approved assignment to uncompleted so the button starts inactive.
+	// approved assignment to uncompleted so closing starts out needed.
 	sql(
 		`update public.assignments set completed = false where submission = '${SUBMISSION_ID}' and approved;`
 	);
@@ -239,9 +239,10 @@ test('mark-done is blocked until non-editor assignments are compensated, then fl
 	await login(EDITOR_EMAIL, page, context);
 	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 
-	// Button exists but is disabled while non-editor assignments are
-	// pending, and the blockers list is visible.
-	await expect(page.getByTestId('mark-submission-done')).toBeDisabled();
+	// While non-editor assignments are uncompensated, closing happens in the alert, which
+	// asks about each one; the plain button is not offered.
+	await expect(page.getByTestId('completion-blocked')).toBeVisible();
+	await expect(page.getByTestId('mark-submission-done')).toHaveCount(0);
 
 	// Mark every non-editor approved assignment as completed in the DB
 	// (simulates the editor working through each Complete button). Kept on
@@ -254,7 +255,7 @@ test('mark-done is blocked until non-editor assignments are compensated, then fl
 	await page.reload();
 	await page.waitForLoadState('networkidle');
 
-	await expect(page.getByTestId('mark-submission-done')).toBeEnabled();
+	await expect(page.getByTestId('completion-blocked')).toHaveCount(0);
 
 	// Confirm-style button: first click reveals the warn variant, second confirms.
 	await page.getByTestId('mark-submission-done').click();
@@ -275,6 +276,71 @@ test('mark-done is blocked until non-editor assignments are compensated, then fl
 
 	// Reopening is forbidden by design — restore state for downstream
 	// tests via SQL only (the UI cannot revert).
+	sql(
+		`update public.submissions set status = 'reviewing', completed_at = null where id = '${SUBMISSION_ID}';`
+	);
+	sql(
+		`update public.assignments set completed = false where submission = '${SUBMISSION_ID}' and approved;`
+	);
+});
+
+test('the decision-letter link closes a submission out, paying done work and removing the rest', async ({
+	page,
+	context
+}) => {
+	const reviewerSeat = SEED.assignments.tok001Reviewer;
+	sql(
+		`update public.submissions set status = 'reviewing', completed_at = null where id = '${SUBMISSION_ID}';`
+	);
+	sql(
+		`update public.assignments set completed = false where submission = '${SUBMISSION_ID}' and approved;`
+	);
+	// The close removes the reviewer's seat, which later tests rely on; keep a copy to put back.
+	sql(
+		`drop table if exists public.e2e_close_out_backup; create table public.e2e_close_out_backup as select * from public.assignments where id = '${reviewerSeat}';`
+	);
+
+	await login(EDITOR_EMAIL, page, context);
+
+	// The snippet links by manuscript ID, which is all the reviewing platform knows; RR
+	// resolves it and lands on the close-out.
+	await page.goto(`/venue/${VENUE_PATH}/submissions?close=${SEED.submissions.tok001.externalId}`);
+	await expect(page).toHaveURL(new RegExp(`/submission/${SUBMISSION_ID}\\?close`));
+
+	const closeOut = page.getByTestId('completion-blocked');
+	await expect(closeOut).toBeVisible();
+	const rows = closeOut.getByTestId('close-out-assignment');
+	await expect(rows).toHaveCount(2);
+
+	// Everyone is paid by default; say the reviewer's work was not done.
+	const reviewerRow = rows.filter({ hasText: ASSIGNED_REVIEWER_NAME });
+	await reviewerRow.getByTestId('close-out-remove').check();
+
+	await page.getByTestId('close-out').click();
+	await page.getByTestId('close-out').click();
+
+	await expect
+		.poll(() => sql(`select status::text from public.submissions where id = '${SUBMISSION_ID}';`))
+		.toBe('done');
+	expect(sql(`select count(*) from public.assignments where id = '${reviewerSeat}';`)).toBe('0');
+	// The removed reviewer is told their seat was closed without pay.
+	await expect
+		.poll(() =>
+			sql(
+				`select count(*) from public.emails where event = 'AssignmentClosedUnpaid' and scholar = '${SEED.scholars.r1.id}' and time_sent > now() - interval '5 minutes';`
+			)
+		)
+		.toBe('1');
+	expect(
+		sql(
+			`select bool_and(a.completed) from public.assignments a where a.submission = '${SUBMISSION_ID}' and a.approved;`
+		)
+	).toBe('t');
+
+	// Restore for downstream tests.
+	sql(
+		`insert into public.assignments select * from public.e2e_close_out_backup; drop table public.e2e_close_out_backup;`
+	);
 	sql(
 		`update public.submissions set status = 'reviewing', completed_at = null where id = '${SUBMISSION_ID}';`
 	);

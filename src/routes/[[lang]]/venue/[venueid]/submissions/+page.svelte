@@ -196,8 +196,11 @@
 		'id',
 		'created'
 	]);
+	// `close` is the decision-letter link, here only when it matched no single submission.
 	// svelte-ignore state_referenced_locally
-	let filter = $state(page.url.searchParams.get('filter') ?? '');
+	let filter = $state(
+		page.url.searchParams.get('filter') ?? page.url.searchParams.get('close') ?? ''
+	);
 	/** Narrow the list to submissions nobody is editing yet — the editorial round's
 	 * first question, and the one the list could not answer before. */
 	let needsEditorOnly = $state(false);

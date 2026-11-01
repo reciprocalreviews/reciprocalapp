@@ -974,8 +974,8 @@
 				"invalidRole": "You must select a valid role.",
 				"scholarNotFound": "No scholar with that email or ORCID exists.",
 				"alreadyAssigned": "This scholar is already assigned to this role.",
-				"completionBlocked": "Cannot mark done: {count} assignment(s) are approved but not yet compensated. Complete them first.",
-				"completionInsufficient": "The venue does not have enough tokens to compensate every editor. A mint transaction has been proposed; once a minter approves it, retry.",
+				"completionBlocked": "**Ready to close this out?** {count} assignment(s) are approved but not yet compensated. Say whether each one's work was done, then close: done work is paid, the rest is removed unpaid, and the submission is marked done.",
+				"completionInsufficient": "The venue does not have enough tokens to pay for this, so nobody was paid. A mint transaction has been proposed; once a minter approves it, try again.",
 				"completionNotEditor": "Only an approved editor (priority-0 role) can mark this submission done.",
 				"completionSucceeded": "Submission marked done and editor(s) compensated.",
 				"needsEditor": "No one is serving as {role} on this submission yet. Until someone does, only venue admins can approve or pay for work on it, and it can’t be marked done.",
@@ -1031,6 +1031,11 @@
 					"tip": "Compensate every editor on this submission and mark it done. This cannot be undone.",
 					"label": "Mark done",
 					"warn": "Compensate editor(s) and finalize"
+				},
+				"closeOut": {
+					"tip": "Pay the work marked done, remove the rest, compensate the editor(s) and mark this submission done. This cannot be undone.",
+					"label": "Close out",
+					"warn": "Pay, remove and finalize"
 				},
 				"claimEditor": {
 					"tip": "Take on this submission as its {role}",
@@ -1092,6 +1097,12 @@
 				"claim": "Requests compensation",
 				"declined": "Declined",
 				"biddingClosed": "not open for bidding"
+			},
+			"closeOut": {
+				"pay": "Work done, pay",
+				"remove": "Not done, remove",
+				"editors": "Editor compensation",
+				"total": "Total paid from the venue's reserve"
 			},
 			"checkbox": {
 				"openForBidding": "Open for bidding"
@@ -1485,6 +1496,10 @@
 				"compensation": {
 					"title": "Compensation request (reviewer / AE / meta-reviewer / EiC)",
 					"body": "You've completed **{role}** work for **{venue}**. Request compensation on Reciprocal Reviews:\n\n{origin}/venue/{venuepath}?compensate={manuscriptVar}"
+				},
+				"decision": {
+					"title": "Decision letter (editor)",
+					"body": "Decision sent for **{venue}**. Now close this submission out on Reciprocal Reviews:\n\n{origin}/venue/{venuepath}/submissions?close={manuscriptVar}"
 				}
 			}
 		},

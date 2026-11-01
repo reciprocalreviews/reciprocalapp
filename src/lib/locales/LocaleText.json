@@ -4328,6 +4328,23 @@
                       ],
                       "type": "object"
                     },
+                    "decision": {
+                      "additionalProperties": false,
+                      "description": "For the decision letter, which the editor sends: a link back to close the submission out, the one step nobody else's email prompts.",
+                      "properties": {
+                        "body": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "body"
+                      ],
+                      "type": "object"
+                    },
                     "payment": {
                       "additionalProperties": false,
                       "properties": {
@@ -4348,7 +4365,8 @@
                   "required": [
                     "payment",
                     "acknowledgement",
-                    "compensation"
+                    "compensation",
+                    "decision"
                   ],
                   "type": "object"
                 },
@@ -4461,6 +4479,10 @@
                       "$ref": "#/definitions/ButtonText",
                       "description": "Take on this submission as the venue's editor."
                     },
+                    "closeOut": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "Editor button under the close-out choices: pays the assignments marked done, removes the rest, compensates the editor(s) and marks the submission done."
+                    },
                     "complete": {
                       "$ref": "#/definitions/ConfirmButtonText"
                     },
@@ -4515,6 +4537,7 @@
                     "approveAnyway",
                     "approveAnywayAgreed",
                     "markDone",
+                    "closeOut",
                     "claimEditor",
                     "declineBid",
                     "confirmDecline",
@@ -4581,6 +4604,35 @@
                   ],
                   "type": "object"
                 },
+                "closeOut": {
+                  "additionalProperties": false,
+                  "description": "The editor's choice, per uncompensated assignment, when closing a submission.",
+                  "properties": {
+                    "editors": {
+                      "description": "What the editor(s) are paid on closing, before the total.",
+                      "type": "string"
+                    },
+                    "pay": {
+                      "description": "The work was done: compensate it.",
+                      "type": "string"
+                    },
+                    "remove": {
+                      "description": "The work was not done: remove the assignment unpaid.",
+                      "type": "string"
+                    },
+                    "total": {
+                      "description": "The whole amount the close pays from the venue's reserve.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "pay",
+                    "remove",
+                    "editors",
+                    "total"
+                  ],
+                  "type": "object"
+                },
                 "declineBidPrompt": {
                   "description": "Above the reason field when declining a bid. Declining is optional, so this says so, and that the reason goes to the bidder.",
                   "type": "string"
@@ -4608,11 +4660,11 @@
                       "type": "string"
                     },
                     "completionBlocked": {
-                      "description": "Shown when the editor can't yet mark done — lists what's still pending. {count} is substituted.",
+                      "description": "Shown to the editor while assignments are still uncompensated, above the close-out choices for each one. {count} is substituted.",
                       "type": "string"
                     },
                     "completionInsufficient": {
-                      "description": "Shown when the venue lacks tokens to pay all editors.",
+                      "description": "Shown when the venue lacks the tokens to pay everyone marking done or closing out pays.",
                       "type": "string"
                     },
                     "completionNotEditor": {
@@ -5015,6 +5067,7 @@
                 "button",
                 "field",
                 "status",
+                "closeOut",
                 "checkbox",
                 "options",
                 "headers",

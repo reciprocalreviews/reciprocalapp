@@ -862,6 +862,9 @@ isOneToOne: false
 "can_staff_role":
 { Args: { "_role": string }; Returns: boolean
                            },
+"close_submission":
+{ Args: { "_mint_purpose_template": string,"_pay": (string)[],"_payment_purpose_template": string,"_remove": (string)[],"_submission_id": string }; Returns: Json
+                           },
 "complete_assignment":
 { Args: { "_assignment_id": string,"_mint_purpose_template": string,"_payment_purpose_template": string }; Returns: Json
                            },

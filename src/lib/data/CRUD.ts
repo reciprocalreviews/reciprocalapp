@@ -352,6 +352,20 @@ export default abstract class CRUD {
 		submissionID: SubmissionID
 	): Promise<Result<MarkSubmissionDoneOutcome>>;
 
+	/** Close a submission out: pay each assignment in `pay`, remove each in `remove`, and
+	 * mark it done, atomically. Authorized for priority-0 editors only. Together the two
+	 * lists must name exactly the approved, uncompensated non-editor assignments, so the
+	 * editor decides about each one rather than waiting for its scholar to request
+	 * compensation. A short reserve pays nobody and proposes one mint for the whole
+	 * shortfall, as markSubmissionDone does. Each scholar removed is emailed, naming the
+	 * `closer`, so they can say so if the work was in fact done. */
+	abstract closeSubmission(
+		submissionID: SubmissionID,
+		pay: AssignmentID[],
+		remove: AssignmentID[],
+		closer: ScholarID
+	): Promise<Result<MarkSubmissionDoneOutcome>>;
+
 	/** Check whether the given scholars have enough tokens for the given payments,
 	 * denominated in the given currency. True if so, and a per-scholar can/cannot
 	 * otherwise. The currency is required: a balance is only meaningful within one,

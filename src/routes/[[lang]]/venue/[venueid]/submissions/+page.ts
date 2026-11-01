@@ -1,7 +1,8 @@
+import { redirect } from '@sveltejs/kit';
 import { NO_VENUE_ID } from '#lib/data/venuePath.js';
 import type { PageLoad } from './$types.js';
 
-export const load: PageLoad = async ({ parent, params }) => {
+export const load: PageLoad = async ({ parent, params, url }) => {
 	const { db, venue, scholar } = await parent();
 
 	const uid = scholar?.id ?? null;
@@ -9,6 +10,19 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// The URL segment may be the venue's web address, so the id comes from the venue the
 	// layout resolved, never from the param — every query below is keyed on a uuid column.
 	const venueid = venue?.id ?? NO_VENUE_ID;
+
+	// The decision-letter snippet links here by manuscript ID, which is all a reviewing
+	// platform knows, so send the editor on to that submission's close-out. A manuscript
+	// this viewer can't see, or that two submissions share, stays on the list, filtered to it.
+	const close = url.searchParams.get('close');
+	if (close !== null && close.length > 0 && venue !== null) {
+		const { data: matches } = await db.getPreviousSubmissionByExternalID(venue.id, close);
+		if (matches !== null && matches.length === 1)
+			redirect(
+				303,
+				url.pathname.replace(/\/submissions\/?$/, `/submission/${matches[0].id}`) + '?close'
+			);
+	}
 
 	// Get the venue's submissions.
 	const { data: submissions } = await db.getVenueSubmissions(venueid);

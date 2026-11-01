@@ -123,6 +123,8 @@ type MarkSubmissionDoneResult =
 			currency_id: CurrencyID;
 			total_amount: number;
 			payouts: MarkSubmissionDonePayout[];
+			/** Only from close_submission: the seats it removed as not done. */
+			removed?: { scholar_id: ScholarID; role_name: string }[];
 	  }
 	| {
 			status: 'blocked';
@@ -2402,7 +2404,26 @@ export default class SupabaseCRUD extends CRUD {
 		return this.errorOrEmpty('UpdateSubmissionBiddingClosed', error);
 	}
 
-	async markSubmissionDone(submissionID: SubmissionID): Promise<Result<MarkSubmissionDoneOutcome>> {
+	markSubmissionDone(submissionID: SubmissionID): Promise<Result<MarkSubmissionDoneOutcome>> {
+		return this.finishSubmission(submissionID);
+	}
+
+	closeSubmission(
+		submissionID: SubmissionID,
+		pay: AssignmentID[],
+		remove: AssignmentID[],
+		closer: ScholarID
+	): Promise<Result<MarkSubmissionDoneOutcome>> {
+		return this.finishSubmission(submissionID, { pay, remove, closer });
+	}
+
+	/** Mark a submission done, first settling its outstanding assignments when `settle` says
+	 * how. Both RPCs return the same outcome, and a close pays reviewers as well as editors,
+	 * so the notices that follow are the same either way. */
+	private async finishSubmission(
+		submissionID: SubmissionID,
+		settle?: { pay: AssignmentID[]; remove: AssignmentID[]; closer: ScholarID }
+	): Promise<Result<MarkSubmissionDoneOutcome>> {
 		// Read the authors and title before the RPC, so the notice below can name the paper.
 		const { data: submission } = await this.client
 			.from('submissions')
@@ -2412,13 +2433,25 @@ export default class SupabaseCRUD extends CRUD {
 
 		// Authorization, blocker validation, atomic compensation of every
 		// uncompleted priority-0 editor assignment, and the status flip all
-		// happen inside the mark_submission_done RPC. The application layer
-		// surfaces the structured outcome and dispatches notifications.
-		const { data, error } = await this.client.rpc('mark_submission_done', {
-			_submission_id: submissionID,
+		// happen inside the mark_submission_done RPC (close_submission pays or
+		// removes the blockers first, in the same transaction). The application
+		// layer surfaces the structured outcome and dispatches notifications.
+		const templates = {
 			_payment_purpose_template: this.locale.view.transactions.purposeTemplate.compensation,
 			_mint_purpose_template: this.locale.view.transactions.purposeTemplate.mint
-		});
+		};
+		const { data, error } =
+			settle === undefined
+				? await this.client.rpc('mark_submission_done', {
+						_submission_id: submissionID,
+						...templates
+					})
+				: await this.client.rpc('close_submission', {
+						_submission_id: submissionID,
+						_pay: settle.pay,
+						_remove: settle.remove,
+						...templates
+					});
 		if (error) return this.error('MarkSubmissionDoneRPC', error);
 		if (!isMarkSubmissionDoneResult(data)) return this.error('MarkSubmissionDoneRPC');
 
@@ -2458,9 +2491,10 @@ export default class SupabaseCRUD extends CRUD {
 			};
 		}
 
-		// Tokens have moved and the submission is done. Email each editor
-		// individually with their actual payout amount and role, so each
-		// gets a per-recipient banner via handle().
+		// Tokens have moved and the submission is done. Email each payee (the
+		// editors, and on a close the reviewers it paid) individually with their
+		// actual payout amount and role, so each gets a per-recipient banner via
+		// handle().
 		const notifications: Notification[] = [];
 		// Resolved once rather than per payout: every message in this loop is about the same
 		// venue.
@@ -2473,6 +2507,29 @@ export default class SupabaseCRUD extends CRUD {
 				data.venue_id
 			);
 			if (result.notified) notifications.push(...result.notified);
+		}
+
+		// Tell anyone removed as not done. Consequential: it ends their chance of being paid for
+		// the work, and the editor's word is the only record of it, so they can answer it.
+		const removed = data.removed ?? [];
+		if (settle !== undefined && removed.length > 0) {
+			const closer = await this.getScholar(settle.closer);
+			for (const seat of removed) {
+				const result = await this.emailScholars(
+					[seat.scholar_id],
+					'AssignmentClosedUnpaid',
+					[
+						closer?.getName() ?? '',
+						closer?.getEmail() ?? '',
+						seat.role_name,
+						submission?.title ?? '',
+						submission?.venues?.title ?? '',
+						donePath
+					],
+					data.venue_id
+				);
+				if (result.notified) notifications.push(...result.notified);
+			}
 		}
 
 		// And tell the authors that reviewing is over.
