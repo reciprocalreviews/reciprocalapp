@@ -20,7 +20,7 @@
 	import { generateORCID } from '#lib/data/ORCID.js';
 	import type { DevScholar } from '#lib/data/SupabaseCRUD.svelte.js';
 	import type LocaleText from '#lib/locales/Locale.js';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import { getAuth } from '../../Auth.svelte';
 	import { NEXT_COOKIE, safeNext } from '#lib/auth/next.js';
 

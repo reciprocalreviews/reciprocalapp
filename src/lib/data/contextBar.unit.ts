@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import en from '$locales/en.json';
+import en from '#locales/en.json';
 import type { LocaleText } from '#lib/locales/Locale.js';
 import { areaDrawsBar, currencyBar, scholarBar, siteBar, venuesBar } from './contextBar';
 

@@ -1,4 +1,4 @@
-import type { Database } from '$data/database';
+import type { Database } from '#data/database.js';
 import { dedupeAddresses } from './addresses';
 import { eqFilter, inFilter } from './postgrestFilter';
 import type { AuthError, PostgrestError, QueryData, SupabaseClient } from '@supabase/supabase-js';

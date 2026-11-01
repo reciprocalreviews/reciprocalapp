@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import ORCIDMark from './ORCIDMark.svelte';
 	import Tag from './Tag.svelte';
 

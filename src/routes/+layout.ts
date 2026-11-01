@@ -1,5 +1,5 @@
-import type { Database } from '$data/database';
-import type { ScholarRow } from '$data/types';
+import type { Database } from '#data/database.js';
+import type { ScholarRow } from '#data/types.js';
 import { hasAuthCookie } from '#lib/auth/hasAuthCookie.js';
 import { loginHref } from '#lib/auth/next.js';
 import { readBetaDismissed } from '#lib/data/betaDismissal.js';
@@ -7,7 +7,10 @@ import { requiresAuth } from '#lib/auth/requiresAuth.js';
 import SupabaseCRUD from '#lib/data/SupabaseCRUD.svelte.js';
 import { withStableClientInfo } from '#lib/data/hydrationFetch.js';
 import type { LocaleText } from '#lib/locales/Locale.js';
-import en from '$locales/en.json';
+// The locale JSON is imported into the bundle rather than fetched at runtime. It stays in
+// `static/` because `npm run locale-validate` globs `static/locales/*.json`, and because it is
+// still served there for anything that wants to read a locale over HTTP.
+import en from '#locales/en.json';
 import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$app/env/public';
 import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr';
 import { redirect } from '@sveltejs/kit';

@@ -4,7 +4,7 @@
 	import { loginHref } from '#lib/auth/next.js';
 	import Banners from '#lib/components/Banners.svelte';
 	import Text from '#lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import { untrack } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';

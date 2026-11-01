@@ -20,8 +20,8 @@
 	import { getDB } from '#lib/data/CRUD.js';
 	import Text from '#lib/locales/Text.svelte';
 	import { validInteger } from '#lib/validation.js';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 	import type { PageData } from './$types';
 	import Roles from './Roles.svelte';
 	import VenueContact from './VenueContact.svelte';

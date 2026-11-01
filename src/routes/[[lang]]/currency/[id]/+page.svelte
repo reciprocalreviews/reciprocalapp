@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ScholarID } from '$data/types';
+	import type { ScholarID } from '#data/types.js';
 	import Button from '#lib/components/Button.svelte';
 	import Card from '#lib/components/Card.svelte';
 	import Cards from '#lib/components/Cards.svelte';
@@ -30,8 +30,8 @@
 	import type LocaleText from '#lib/locales/Locale.js';
 	import Text from '#lib/locales/Text.svelte';
 	import { validEmail, validORCID } from '#lib/validation.js';
-	import { getAuth } from '$routes/Auth.svelte';
-	import { handle } from '$routes/feedback.svelte';
+	import { getAuth } from '#routes/Auth.svelte.js';
+	import { handle } from '#routes/feedback.svelte.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

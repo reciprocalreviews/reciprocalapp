@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RoleRow, UnmatchedAssignmentRow } from '$data/types';
+	import type { RoleRow, UnmatchedAssignmentRow } from '#data/types.js';
 	import Button from '#lib/components/Button.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import Note from '#lib/components/Note.svelte';
@@ -11,8 +11,8 @@
 	import { getDB } from '#lib/data/CRUD.js';
 	import { matchPersonName, volunteersFor, type Volunteer } from '#lib/data/matchPersonName.js';
 	import Text from '#lib/locales/Text.svelte';
-	import { addFeedback, handle } from '$routes/feedback.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { addFeedback, handle } from '#routes/feedback.svelte.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import { type PageData } from './$types';
 
 	/** Assignments an import could not match to a scholar, grouped by the name and role the

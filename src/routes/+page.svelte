@@ -4,7 +4,7 @@
 	import Tip from '#lib/components/Tip.svelte';
 	import tokenChip from '#lib/components/tokenChip.js';
 	import Text from '#lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 
 	const locale = getLocaleContext();
 </script>

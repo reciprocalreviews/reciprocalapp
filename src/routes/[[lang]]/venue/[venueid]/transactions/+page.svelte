@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type CurrencyID } from '$data/types.js';
+	import { type CurrencyID } from '#data/types.js';
 	import Card from '#lib/components/Card.svelte';
 	import Cards from '#lib/components/Cards.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
@@ -12,8 +12,8 @@
 	import { getDB } from '#lib/data/CRUD.js';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import Text from '#lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts.js';
-	import { handle } from '$routes/feedback.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let { data } = $props();
 	let { venue, transactions, count, venues, currencies, scholar, tokens } = $derived(data);

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PublicORCIDProfile } from '$data/types';
+	import type { PublicORCIDProfile } from '#data/types.js';
 	import {
 		affiliationLine,
 		educationLine,
@@ -9,7 +9,7 @@
 		works,
 		worksStat
 	} from '#lib/data/orcidProfileView.js';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import { ScholarLabel } from './Labels';
 	import Link from './Link.svelte';
 	import Subheader from './Subheader.svelte';

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { CurrencyRow, VenueRow } from '$data/types';
+	import type { CurrencyRow, VenueRow } from '#data/types.js';
 	import { getDB } from '#lib/data/CRUD.js';
 	import type { TransactionListRow } from '#lib/data/SupabaseCRUD.svelte.js';
 	import Text from '#lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import { getAuth } from '../../routes/Auth.svelte';
 	import { addError } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';

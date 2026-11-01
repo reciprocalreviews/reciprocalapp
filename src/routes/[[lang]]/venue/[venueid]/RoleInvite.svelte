@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RoleRow, ScholarID, VenueRow } from '$data/types';
+	import type { RoleRow, ScholarID, VenueRow } from '#data/types.js';
 	import Button from '#lib/components/Button.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import Form from '#lib/components/Form.svelte';
@@ -19,8 +19,8 @@
 		unanswered,
 		unmatched
 	} from '#lib/data/inviteList.js';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 	import { SvelteMap } from 'svelte/reactivity';
 
 	let {

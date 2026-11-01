@@ -27,16 +27,7 @@ export default defineConfig({
 			// deployment. pollInterval makes the client check for a newer version in the
 			// background; `updated.current` ($app/state) flips true when one is found,
 			// which drives the update-available banner.
-			version: { pollInterval: 300000 },
-			alias: {
-				$data: 'src/data',
-				$routes: 'src/routes',
-				// The locale JSON is imported into the bundle rather than fetched at
-				// runtime. It stays in `static/` because `npm run locale-validate`
-				// globs `static/locales/*.json`, and because it is still served there
-				// for anything that wants to read a locale over HTTP.
-				$locales: 'static/locales'
-			}
+			version: { pollInterval: 300000 }
 		}),
 
 		{

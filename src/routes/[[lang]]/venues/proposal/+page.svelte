@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import type { CurrencyID } from '$data/types';
+	import type { CurrencyID } from '#data/types.js';
 	import Button from '#lib/components/Button.svelte';
 	import Checkbox from '#lib/components/Checkbox.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
@@ -14,9 +14,9 @@
 	import { getDB } from '#lib/data/CRUD.js';
 	import Text from '#lib/locales/Text.svelte';
 	import { isntEmpty, validEmail, validEmails, validURL } from '#lib/validation.js';
-	import { getAuth } from '$routes/Auth.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { getAuth } from '#routes/Auth.svelte.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let { data } = $props();
 

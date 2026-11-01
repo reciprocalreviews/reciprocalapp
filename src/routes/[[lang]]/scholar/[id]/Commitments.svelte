@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CurrencyRow } from '$data/types';
+	import type { CurrencyRow } from '#data/types.js';
 	import CurrencyLink from '#lib/components/CurrencyLink.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import { ScholarLabel } from '#lib/components/Labels.js';
@@ -8,7 +8,7 @@
 	import Tag from '#lib/components/Tag.svelte';
 	import VenueLink from '#lib/components/VenueLink.svelte';
 	import Text from '#lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 
 	let {
 		commitments,

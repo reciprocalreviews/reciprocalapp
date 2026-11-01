@@ -6,7 +6,7 @@
 		ScholarRow,
 		SubmissionRow,
 		TransactionRow
-	} from '$data/types';
+	} from '#data/types.js';
 	import type { ScholarTask } from '#lib/data/SupabaseCRUD.svelte.js';
 	import Button from '#lib/components/Button.svelte';
 	import CurrencyLink from '#lib/components/CurrencyLink.svelte';
@@ -20,9 +20,9 @@
 	import VenueLink from '#lib/components/VenueLink.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
 	import Text from '#lib/locales/Text.svelte';
-	import { getAuth } from '$routes/Auth.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { getAuth } from '#routes/Auth.svelte.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let {
 		commitments,
