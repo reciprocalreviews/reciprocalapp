@@ -1,4 +1,4 @@
-import type { RoleID, ScholarID } from '$data/types';
+import type { RoleID, ScholarID } from '#data/types.js';
 import type { AssignmentLoad } from './CRUD';
 
 /** What an editor needs to know about one scholar's load before assigning them to a

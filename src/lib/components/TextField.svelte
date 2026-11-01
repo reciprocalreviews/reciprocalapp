@@ -2,7 +2,7 @@
 	import type Locale from '#lib/locales/Locale.js';
 	import type { LocaleText, NotedTextFieldText, TextFieldText } from '#lib/locales/Locale.js';
 	import Text from '#lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import { tick } from 'svelte';
 	import Tip from './Tip.svelte';
 

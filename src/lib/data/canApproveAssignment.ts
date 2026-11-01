@@ -1,4 +1,4 @@
-import type { AssignmentRow, RoleRow, ScholarID, SubmissionID } from '$data/types';
+import type { AssignmentRow, RoleRow, ScholarID, SubmissionID } from '#data/types.js';
 
 /** Single source of truth for whether a scholar can approve assignments for
  * a given role on a given submission. The same gate applies on the

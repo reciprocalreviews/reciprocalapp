@@ -3,9 +3,9 @@
 	import Feedback from '#lib/components/Feedback.svelte';
 	import TextField from '#lib/components/TextField.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
-	import type { VenueRow } from '$data/types';
+	import type { VenueRow } from '#data/types.js';
 	import { slugifyTitle, validVenueSlug } from '#lib/validation.js';
-	import { handle } from '$routes/feedback.svelte';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let { venue }: { venue: VenueRow } = $props();
 

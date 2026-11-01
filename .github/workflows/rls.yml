@@ -32,5 +32,11 @@ jobs:
       - name: Start Supabase (Postgres + auth only)
         run: supabase start --exclude storage-api,imgproxy,logflare,supavisor,vector,edge-runtime,kong,postgrest,realtime,studio,postgres-meta,mailpit
 
+      # The backup drill runs this same suite against a restore of production, so a
+      # test that counts every row of an event instead of the rows it wrote passes
+      # here and fails there (2026-11-01). Committed noise makes it fail here first.
+      - name: Load ambient production-like emails
+        run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/_helpers/ambient_emails.psql
+
       - name: Run pgTAP RLS tests
         run: supabase test db

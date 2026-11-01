@@ -26,8 +26,8 @@
 	import { anyWithheld, withholdingFor } from '#lib/data/withheldVolunteers.js';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import Text from '#lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let { data } = $props();
 	const { venue, commitments, roles, volunteerCounts, canContact, canRemove, loads, scholar } =

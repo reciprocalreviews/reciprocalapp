@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type ScholarRow } from '$data/types';
+	import { type ScholarRow } from '#data/types.js';
 	import { getDB } from '#lib/data/CRUD.js';
 	import Scholar from '#lib/data/Scholar.svelte.js';
 	import { ScholarLabel } from './Labels';

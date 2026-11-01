@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ScholarID, TransactionRow } from '$data/types';
+	import type { ScholarID, TransactionRow } from '#data/types.js';
 	import Button from './Button.svelte';
 	import Dialog from './Dialog.svelte';
 	import Paragraph from './Paragraph.svelte';

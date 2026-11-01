@@ -363,8 +363,12 @@ select is (
 	'the backlog counts everyone due a digest who was not reached'
 );
 
+-- The alert has no scholar or venue to scope by, so time_sent = now() does: inside this
+-- transaction now() is its start, which only rows written here share. The backup drill runs
+-- this suite against a restore of production, whose older alerts must not count.
 select results_eq (
-	$$ select event, email, scholar, args->>1 from public.emails where event = 'BiddingDigestBacklog' $$,
+	$$ select event, email, scholar, args->>1 from public.emails
+	   where event = 'BiddingDigestBacklog' and time_sent = now() $$,
 	$$ select 'BiddingDigestBacklog'::text, public.steward_inbox(), null::uuid,
 		(select count(*)::text from private.bidding_digest_recipients ('6 days')) $$,
 	'and tells the steward inbox how many'
@@ -378,7 +382,8 @@ select is (
 );
 
 select is (
-	(select count(*)::int from public.emails where event = 'BiddingDigestBacklog'),
+	(select count(*)::int from public.emails
+	 where event = 'BiddingDigestBacklog' and time_sent = now()),
 	1,
 	'and no alert'
 );

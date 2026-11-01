@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { CurrencyID, CurrencyRow, ScholarID, VenueID, VenueRow } from '$data/types';
+	import type { CurrencyID, CurrencyRow, ScholarID, VenueID, VenueRow } from '#data/types.js';
 	import { type Result } from '#lib/data/CRUD.js';
 	import { ORCIDRegex } from '#lib/data/ORCID.js';
 	import { validEmail, validORCID } from '#lib/validation.js';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import { handle } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
 	import Checkbox from './Checkbox.svelte';

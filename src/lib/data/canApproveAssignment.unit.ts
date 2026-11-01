@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import canApproveAssignment from './canApproveAssignment';
-import type { AssignmentRow, RoleRow } from '$data/types';
+import type { AssignmentRow, RoleRow } from '#data/types.js';
 
 /** The shared table of cases. The same scenarios are asserted against the SQL
  * side in supabase/tests/rpc/atomic_crud_rpc.sql, because complete_assignment

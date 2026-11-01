@@ -3,7 +3,7 @@ import type {
 	AssignmentForApproval,
 	ScholarTask
 } from '#lib/data/SupabaseCRUD.svelte.js';
-import type { RoleID } from '$data/types';
+import type { RoleID } from '#data/types.js';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {

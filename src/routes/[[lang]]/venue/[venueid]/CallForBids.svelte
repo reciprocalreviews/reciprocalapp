@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RoleRow } from '$data/types';
+	import type { RoleRow } from '#data/types.js';
 	import Button from '#lib/components/Button.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import Form from '#lib/components/Form.svelte';
@@ -7,7 +7,7 @@
 	import TextField from '#lib/components/TextField.svelte';
 	import { getDB, type CallForBidsStatus } from '#lib/data/CRUD.js';
 	import { noteIsSendable } from '#lib/data/callForBids.js';
-	import { handle } from '$routes/feedback.svelte';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	/** Lets a venue's editor or admin write a short personal note to the volunteers of one
 	 * biddable role, asking them to come and bid.

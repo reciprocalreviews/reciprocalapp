@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PublicORCIDProfile, RoleID, RoleRow, ScholarID } from '$data/types';
+	import type { PublicORCIDProfile, RoleID, RoleRow, ScholarID } from '#data/types.js';
 	import { venuePath as toVenuePath } from '#lib/data/venuePath.js';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import Action from '#lib/components/Action.svelte';
@@ -51,8 +51,8 @@
 	import type LocaleText from '#lib/locales/Locale.js';
 	import Text from '#lib/locales/Text.svelte';
 	import { validEmail, validORCID } from '#lib/validation.js';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 	import { type PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

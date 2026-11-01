@@ -3,7 +3,7 @@
 	import ContextBar from '#lib/components/ContextBar.svelte';
 	import { venuesBar } from '#lib/data/contextBar.js';
 	import { closedVenueBar } from '#lib/data/venueBarLinks.js';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import Link from '#lib/components/Link.svelte';
 	import Page from '#lib/components/Page.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';

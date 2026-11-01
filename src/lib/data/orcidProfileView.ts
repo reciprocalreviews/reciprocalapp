@@ -1,4 +1,4 @@
-import type { PublicORCIDProfile } from '$data/types';
+import type { PublicORCIDProfile } from '#data/types.js';
 import { distinct, linkKey, workKey, type ORCIDLink, type ORCIDWork } from './orcidProfile';
 
 /**

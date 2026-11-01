@@ -1,4 +1,4 @@
-import type { RoleRow, ScholarID, VolunteerRow } from '$data/types';
+import type { RoleRow, ScholarID, VolunteerRow } from '#data/types.js';
 
 /** Whether this scholar may take on a submission nobody is editing yet.
  *

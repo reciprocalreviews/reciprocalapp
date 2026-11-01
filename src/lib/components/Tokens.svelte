@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { CurrencyRow } from '$data/types';
-	import { getLocaleContext } from '$routes/Contexts';
+	import type { CurrencyRow } from '#data/types.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import { TokenLabel } from './Labels';
 
 	let {

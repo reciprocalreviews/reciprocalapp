@@ -8,7 +8,7 @@
 		SubmissionType,
 		SubmissionTypeID,
 		VenueRow
-	} from '$data/types';
+	} from '#data/types.js';
 	import Button from '#lib/components/Button.svelte';
 	import Feedback from '#lib/components/Feedback.svelte';
 	import FileInput from '#lib/components/FileInput.svelte';
@@ -50,8 +50,8 @@
 	import parseCSV from '#lib/data/parseCSV.js';
 	import type LocaleText from '#lib/locales/Locale.js';
 	import Text from '#lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { addFeedback, handle } from '$routes/feedback.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { addFeedback, handle } from '#routes/feedback.svelte.js';
 	import { tick } from 'svelte';
 
 	let {

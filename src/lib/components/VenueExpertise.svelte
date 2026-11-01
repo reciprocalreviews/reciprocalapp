@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import Logo from './Logo.svelte';
 
 	let { children, testid = undefined }: { children: Snippet; testid?: string } = $props();

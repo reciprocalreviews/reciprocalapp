@@ -1,4 +1,4 @@
-import type { RoleRow, VolunteerRow } from '$data/types';
+import type { RoleRow, VolunteerRow } from '#data/types.js';
 
 export default function isRoleApprover(
 	// The role to check

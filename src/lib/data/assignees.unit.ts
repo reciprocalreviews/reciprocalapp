@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { alreadyAssigned } from './assignees';
-import type { AssignmentRow } from '$data/types';
+import type { AssignmentRow } from '#data/types.js';
 
 /** Only the four fields alreadyAssigned reads; the rest of AssignmentRow is
  * irrelevant to the rule, so build rows narrowly and cast at the call. */

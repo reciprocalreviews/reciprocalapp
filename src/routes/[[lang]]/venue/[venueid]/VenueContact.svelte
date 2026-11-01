@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { VenueRow } from '$data/types';
+	import type { VenueRow } from '#data/types.js';
 	import Link from '#lib/components/Link.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
 	import ScholarLink from '#lib/components/ScholarLink.svelte';

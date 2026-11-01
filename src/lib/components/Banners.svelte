@@ -2,8 +2,8 @@
 	import { page, updated } from '$app/state';
 	import { PUBLIC_ENV } from '$app/env/public';
 	import Text from '#lib/locales/Text.svelte';
-	import { getAuth } from '$routes/Auth.svelte';
-	import { getFeedback, removeError } from '$routes/feedback.svelte';
+	import { getAuth } from '#routes/Auth.svelte.js';
+	import { getFeedback, removeError } from '#routes/feedback.svelte.js';
 	import Banner from './Banner.svelte';
 	import Link from './Link.svelte';
 
