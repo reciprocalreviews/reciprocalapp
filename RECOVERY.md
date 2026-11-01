@@ -492,6 +492,7 @@ _security_ came back.
 | 2026-08-08 | **hosted production** | **33s** | first hosted rehearsal; 1 scholar |
 | 2026-09-02 | **hosted production** | **23s** | first fully automated CI drill    |
 | 2026-10-01 | **hosted production** | **21s** | restore lost `scholars_id_fkey`   |
+| 2026-11-01 | **hosted production** | **15s** | RLS suite read ambient emails     |
 
 Update after each run.
 
@@ -568,6 +569,15 @@ errors instead of discarding them, and asserts `scholars_id_fkey` by name plus a
 `fk_fingerprint` the manifest now records. Found by the 2026-10-01 drill, the
 first to run `orcid_profiles_rls.sql`, whose last assertion deletes an auth user
 and expects the cascade.
+
+**The RLS suite assumed an empty database.** The 2026-11-01 restore passed every
+assertion in `drill.sh`. Then `notification_correctness.sql` failed, because it
+counted _every_ `EmailChanged` row in `public.emails`, and production had sent its
+first real one since the previous drill. The backup was fine and the test was
+wrong: the suite is written against fixtures, but the drill runs it against real
+data. Tests now scope each read to their own fixtures, and `rls.yml` loads
+`supabase/tests/_helpers/ambient_emails.psql` (one old row per email event) first,
+so the next unscoped read fails on its pull request instead of in a drill.
 
 ### The drill needs a private key — use a second recipient
 
