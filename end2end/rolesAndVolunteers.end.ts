@@ -1030,3 +1030,57 @@ test('an editor restricts a role, and the public roster stops naming its volunte
 	// Put it back, so this test does not decide what the others see.
 	sql(`update public.roles set volunteer_visibility = 'all' where id = '${SEED.roles.reviewer}';`);
 });
+
+test('an editor removes a volunteer from a role, who is emailed and can resume', async ({
+	page,
+	context
+}) => {
+	// Leaving a role was always possible; taking someone else out of one was not. The venue's
+	// top role (and its admins) may now mark another volunteer inactive. It is a deactivation,
+	// not a deletion, so the volunteer is told and may resume.
+	const scholarID = sql(`select id from public.scholars where email = '${VOLUNTEER_EMAIL}';`);
+	const name = sql(`select name from public.scholars where id = '${scholarID}';`);
+	const volunteerID = sql(
+		`select v.id from public.volunteers v join public.roles r on r.id = v.roleid where v.scholarid = '${scholarID}' and r.name = 'Reviewer' and r.venueid = '${VENUE_ID}';`
+	);
+	sql(`update public.volunteers set active = true where id = '${volunteerID}';`);
+	const emailsBefore = Number(
+		sql(
+			`select count(*) from public.emails where event = 'RoleRemoved' and scholar = '${scholarID}';`
+		)
+	);
+
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
+	await page.waitForLoadState('networkidle');
+
+	const row = page.locator('tr[data-testid^="volunteer-row-"]', { hasText: name }).filter({
+		has: page.getByTestId('volunteer-remove')
+	});
+	// The first click asks for confirmation; the second removes.
+	await row.getByTestId('volunteer-remove').click();
+	await row.getByTestId('volunteer-remove').click();
+
+	await expect
+		.poll(() => sql(`select active from public.volunteers where id = '${volunteerID}';`))
+		.toBe('f');
+	await expect
+		.poll(() =>
+			Number(
+				sql(
+					`select count(*) from public.emails where event = 'RoleRemoved' and scholar = '${scholarID}';`
+				)
+			)
+		)
+		.toBe(emailsBefore + 1);
+
+	// The volunteer may come back.
+	await logout(page);
+	await login(VOLUNTEER_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}`);
+	await page.waitForLoadState('networkidle');
+	await page.getByTestId('volunteer-resume').click();
+	await expect
+		.poll(() => sql(`select active from public.volunteers where id = '${volunteerID}';`))
+		.toBe('t');
+});

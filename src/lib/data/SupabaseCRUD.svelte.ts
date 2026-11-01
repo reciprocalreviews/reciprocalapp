@@ -2830,32 +2830,43 @@ export default class SupabaseCRUD extends CRUD {
 	async updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result> {
 		const result = await this.updateVolunteer(id, { active }, 'UpdateVolunteerActive');
 		if (result.error) return result;
+		await this.emailVolunteerAvailability(id, active);
+		return result;
+	}
 
-		// Someone becoming unavailable, or available again, is capacity news for whoever is
-		// trying to find reviewers this week — and it used to reach them only if they happened
-		// to reload the volunteers list. Default off: at a venue with many volunteers this is
-		// frequent, so it waits to be asked for.
+	async removeVolunteer(id: VolunteerID): Promise<Result> {
+		// Authorization, the deactivation and the volunteer's own notice all happen in the
+		// remove_volunteer RPC; the UPDATE policy admits only the volunteer themselves.
+		const { error } = await this.client.rpc('remove_volunteer', { _volunteer_id: id });
+		if (error) return this.error('RemoveVolunteer', error);
+		// The same capacity news as a pause, whoever made it happen.
+		await this.emailVolunteerAvailability(id, false);
+		return {};
+	}
+
+	/** Someone becoming unavailable, or available again, is capacity news for whoever is
+	 * trying to find reviewers this week — and it used to reach them only if they happened
+	 * to reload the volunteers list. Default off: at a venue with many volunteers this is
+	 * frequent, so it waits to be asked for. */
+	private async emailVolunteerAvailability(id: VolunteerID, active: boolean) {
 		const { data: volunteer } = await this.client
 			.from('volunteers')
 			.select('scholarid, roles!roleid(name, venueid)')
 			.eq('id', id)
 			.single();
 		const role = volunteer?.roles;
-		if (role) {
-			const { data: who } = await this.client
-				.from('scholars')
-				.select('name')
-				.eq('id', volunteer.scholarid)
-				.single();
-			await this.emailVenueEditors(
-				role.venueid,
-				active ? 'VolunteerResumed' : 'VolunteerPaused',
-				(path, title) => [who?.name ?? 'A volunteer', role.name, title, path],
-				volunteer.scholarid
-			);
-		}
-
-		return result;
+		if (!role) return;
+		const { data: who } = await this.client
+			.from('scholars')
+			.select('name')
+			.eq('id', volunteer.scholarid)
+			.single();
+		await this.emailVenueEditors(
+			role.venueid,
+			active ? 'VolunteerResumed' : 'VolunteerPaused',
+			(path, title) => [who?.name ?? 'A volunteer', role.name, title, path],
+			volunteer.scholarid
+		);
 	}
 
 	async updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result> {

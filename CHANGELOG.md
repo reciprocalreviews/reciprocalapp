@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.23 - 2026-11-01
+
+### Added
+
+- **A venue's admins and the holders of its top role can now remove a volunteer from a role on the volunteers page.** The volunteer is marked inactive and emailed, and can resume volunteering later.
+
 ## 0.5.22 - 2026-10-27
 
 ### Fixed

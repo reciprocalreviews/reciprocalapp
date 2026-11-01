@@ -456,6 +456,7 @@ When a venue is **approved** state:
 - [x] _`scholar`_: Change paper count for a role for the venue
 - [x] _`scholar`_: When a scholar volunteers for an open role, the holders of the venue's top-priority role are emailed so somebody can welcome them (see Notifications). A scholar who would rather not receive these can turn them off on their profile, as they can for any courtesy (see Notifications).
 - [x] _`scholar`_: Stop volunteering for a role, and later resume. Volunteering is a **permanent record that deactivates rather than disappears** — nobody, not the scholar and not a venue admin, can delete it. That is what keeps a venue's welcome grant to a one-time thing: the grant is decided by whether the scholar has volunteered at this venue before, so a record that could be erased, or moved to another venue's role, would be a way to be welcomed twice.
+- [x] _`editor`_: Remove a volunteer from a role. A venue's admins and the holders of its top-priority role can mark another scholar's accepted record inactive from the volunteers page. Like stopping, this deactivates and never deletes, so the welcome grant stays one-time. The volunteer is emailed and may resume, so removal says the venue isn't counting on them; it is not a ban.
 
 - [x] _`editor`_: Modify the venue name, description
 - [x] _`editor`_: Change the _`editor`_(s) of the venue, ensuring there is always one

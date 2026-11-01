@@ -39,6 +39,17 @@ export const load: PageLoad = async ({ parent }) => {
 		scholar?.id ?? null
 	);
 
+	// Whether the viewer may take a volunteer out of a role: the venue's admins and its top
+	// role, who oversee every other. The same rule remove_volunteer enforces.
+	const canRemove =
+		scholar !== null &&
+		(venue?.admins.includes(scholar.id) === true ||
+			(viewerVolunteering ?? []).some(
+				(v) =>
+					v.accepted === 'accepted' &&
+					(roles ?? []).some((r) => r.id === v.roleid && r.priority === 0)
+			));
+
 	// How busy each volunteer already is, for those choosing whom to invite: this roster
 	// is where they scout. The same people as canContact, and the RPC answers no one else.
 	const { data: loads } = canContact
@@ -50,6 +61,7 @@ export const load: PageLoad = async ({ parent }) => {
 	return {
 		venue,
 		canContact,
+		canRemove,
 		loads: loads ?? [],
 		commitments,
 		roles,

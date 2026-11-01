@@ -986,6 +986,9 @@ isOneToOne: false
 "reconcile_ledger":
 { Args: { "_since"?: string }; Returns: Json
                            },
+"remove_volunteer":
+{ Args: { "_volunteer_id": string }; Returns: Json
+                           },
 "replay_audit_log":
 { Args: { "_dry_run"?: boolean,"_from_seq"?: number }; Returns: Json
                            },

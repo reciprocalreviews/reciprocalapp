@@ -768,6 +768,9 @@
             "RemoveSupport": {
               "type": "string"
             },
+            "RemoveVolunteer": {
+              "type": "string"
+            },
             "ReorderDeclineReason": {
               "type": "string"
             },
@@ -957,6 +960,7 @@
             "CreateVolunteer",
             "AlreadyVolunteered",
             "UpdateVolunteerActive",
+            "RemoveVolunteer",
             "UpdateVolunteerExpertise",
             "UpdateVolunteerPapers",
             "UpdateAssignmentPreference",
@@ -6490,13 +6494,18 @@
                     "moreTags": {
                       "$ref": "#/definitions/ButtonText",
                       "description": "Unfolds the expertise keywords past the most common ones."
+                    },
+                    "remove": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Marks another volunteer inactive in the role, for the venue's admins and top role. Confirms first, because the volunteer is emailed."
                     }
                   },
                   "required": [
                     "exportCSV",
                     "clearTags",
                     "moreTags",
-                    "fewerTags"
+                    "fewerTags",
+                    "remove"
                   ],
                   "type": "object"
                 },
