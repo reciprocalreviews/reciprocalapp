@@ -463,6 +463,9 @@
 				"view": "Which volunteers to show",
 				"suggested": "Suggested ({count})",
 				"everyone": "Everyone ({count})",
+				"currentRole": "{role}",
+				"formerRole": "Former {role}",
+				"admin": "Admin",
 				"reviewedHere": "Reviewed here ×{count}",
 				"publishedRelevant": "Published in relevant venues ×{count}",
 				"matchedTitles": "Works in this venue's relevant venues:",
@@ -485,7 +488,7 @@
 			},
 			"paragraph": {
 				"intro": "Search by name, email, or expertise, or narrow the list by the expertise keywords volunteers have listed. Volunteers who have stopped are listed last in each role.",
-				"suggested": "**Suggested** lists volunteers who have completed work here or published in the relevant venues set in this venue's settings. Everyone else is one click away."
+				"suggested": "**Suggested** lists volunteers who hold or have held an invite-only or editor role here, administer this venue, have completed work here, or have published in the relevant venues set in this venue's settings. Everyone else is one click away."
 			}
 		},
 		"venueTransactions": {

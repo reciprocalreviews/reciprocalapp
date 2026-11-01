@@ -23,6 +23,35 @@ function reviewerRow(page: import('@playwright/test').Page, name: string) {
 test.afterEach(() => {
 	sql(`update public.venues set relevant_venues = '{}' where id = '${VENUE_ID}';`);
 	sql(`delete from public.orcid_profiles where scholar = '${UNPROVEN.id}';`);
+	sql(
+		`delete from public.volunteers v using public.roles r where r.id = v.roleid and r.venueid = '${VENUE_ID}' and r.name = 'Associate Editor' and v.scholarid = '${UNPROVEN.id}';`
+	);
+});
+
+test('a reviewer who has held an invite-only role here is suggested, and says which', async ({
+	page,
+	context
+}) => {
+	// A former associate editor, with no finished reviews and no ORCID mirror: the role
+	// alone is the track record. Invite-only, so nobody could have given it to themselves.
+	sql(
+		`insert into public.volunteers (scholarid, roleid, expertise, accepted, active) select '${UNPROVEN.id}', id, '', 'accepted', false from public.roles where venueid = '${VENUE_ID}' and name = 'Associate Editor' and invited;`
+	);
+
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
+	await expect(page.getByTestId('volunteer-view-suggested')).toHaveAttribute(
+		'aria-pressed',
+		'true'
+	);
+
+	// Their Reviewer row is suggested and badged with the role they held.
+	const reviewerRow = page.locator('tr[data-testid^="volunteer-row-2-"]', {
+		hasText: UNPROVEN.name
+	});
+	await expect(reviewerRow.getByTestId('volunteer-role-held')).toHaveText(
+		'Former Associate Editor'
+	);
 });
 
 test('an editor sees reviewers with a track record first, and the rest on request', async ({

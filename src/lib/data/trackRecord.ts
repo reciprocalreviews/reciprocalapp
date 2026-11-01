@@ -2,14 +2,18 @@ import type { ORCIDWorkJournal } from './orcidProfile';
 
 /**
  * Evidence that a volunteer fits a venue, for ranking the volunteers roster for those who
- * scout it. Two facts, neither of them a judgment anyone recorded about the person:
- * reviews they have finished at the venue, and works their ORCID record places in one of
- * the venue's relevant venues.
+ * scout it. Three facts, none of them a judgment anyone recorded about the person: roles
+ * they hold or have held at the venue that nobody can give themselves, reviews they have
+ * finished there, and works their ORCID record places in one of its relevant venues.
  *
  * The matching rules here are the only ones: the roster ranks with them and the settings
  * preview shows them, so what an editor sees while typing is what the roster will do.
  */
 export type TrackRecord = {
+	/** Vetted roles held at this venue, current first. See `venueRoles`. */
+	roles: VenueRole[];
+	/** Whether they are one of the venue's admins. */
+	admin: boolean;
 	/** Approved, completed assignments at this venue, in any role. */
 	completed: number;
 	/** Works in the venue's relevant venues, per the scholar's public ORCID record. */
@@ -18,7 +22,11 @@ export type TrackRecord = {
 	venueJournals: ORCIDWorkJournal[];
 };
 
-/** 0 reviewed here, 1 published in a relevant venue, 2 neither. Lower sorts first. */
+/** A role someone holds, or once held, at the venue. */
+export type VenueRole = { role: string; name: string; current: boolean };
+
+/** 0 holds or held a vetted role, or reviewed here; 1 published in a relevant venue;
+ * 2 none of these. Lower sorts first. */
 export type TrackTier = 0 | 1 | 2;
 
 /** Words a venue's name is written with or without, so neither side needs them:
@@ -124,13 +132,42 @@ export function venueJournals(journals: ORCIDWorkJournal[], lines: string[]): OR
 	});
 }
 
+/**
+ * The roles a scholar holds, or has held, at the venue that count as a track record: an
+ * accepted record, active or not, in an invite-only role or the venue's top role. Those
+ * are the roles nobody can award themselves, the same two the roster lists whatever a
+ * venue's visibility setting, which is also why every viewer's roster holds all of them.
+ * An open role does not count, or volunteering twice would earn a track record. Current
+ * roles come first, then former ones, each in priority order.
+ */
+export function venueRoles(
+	scholar: string,
+	records: { scholarid: string; roleid: string; accepted: string; active: boolean }[],
+	roles: { id: string; name: string; priority: number; invited: boolean }[]
+): VenueRole[] {
+	const vetted = new Map(roles.filter((r) => r.invited || r.priority === 0).map((r) => [r.id, r]));
+	return records
+		.filter((v) => v.scholarid === scholar && v.accepted === 'accepted' && vetted.has(v.roleid))
+		.flatMap((v) => {
+			const role = vetted.get(v.roleid);
+			return role === undefined
+				? []
+				: [{ role: role.id, name: role.name, current: v.active, priority: role.priority }];
+		})
+		.sort((a, b) => Number(b.current) - Number(a.current) || a.priority - b.priority)
+		.map(({ role, name, current }) => ({ role, name, current }));
+}
+
 export function trackRecord(
 	completed: number,
 	journals: ORCIDWorkJournal[],
-	lines: string[]
+	lines: string[],
+	standing: { roles: VenueRole[]; admin: boolean } = { roles: [], admin: false }
 ): TrackRecord {
 	const matched = venueJournals(journals, lines);
 	return {
+		roles: standing.roles,
+		admin: standing.admin,
 		completed,
 		venueWorks: matched.reduce((sum, j) => sum + j.count, 0),
 		venueJournals: matched
@@ -138,7 +175,7 @@ export function trackRecord(
 }
 
 export function trackTier(record: TrackRecord): TrackTier {
-	if (record.completed > 0) return 0;
+	if (record.completed > 0 || record.roles.length > 0 || record.admin) return 0;
 	if (record.venueWorks > 0) return 1;
 	return 2;
 }

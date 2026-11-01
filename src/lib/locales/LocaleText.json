@@ -6723,8 +6723,16 @@
                 "label": {
                   "additionalProperties": false,
                   "properties": {
+                    "admin": {
+                      "description": "Badge: one of the venue's admins.",
+                      "type": "string"
+                    },
                     "count": {
                       "description": "A name with a count after it, for a role's section heading and for an expertise keyword. Takes {name} and {count}.",
+                      "type": "string"
+                    },
+                    "currentRole": {
+                      "description": "Badge: a vetted role held now, or once, at this venue. Each takes `{role}`, the venue's own name for it.",
                       "type": "string"
                     },
                     "everyone": {
@@ -6732,6 +6740,9 @@
                     },
                     "expertiseFilter": {
                       "description": "Accessible name for the group of expertise filter keywords.",
+                      "type": "string"
+                    },
+                    "formerRole": {
                       "type": "string"
                     },
                     "matchedSource": {
@@ -6769,6 +6780,9 @@
                     "view",
                     "suggested",
                     "everyone",
+                    "currentRole",
+                    "formerRole",
+                    "admin",
                     "reviewedHere",
                     "publishedRelevant",
                     "matchedTitles",

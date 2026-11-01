@@ -24,7 +24,7 @@
 		volunteersView,
 		volunteerStanding
 	} from '#lib/data/volunteersView.js';
-	import { trackRecord, trackTier, type TrackRecord } from '#lib/data/trackRecord.js';
+	import { trackRecord, trackTier, venueRoles, type TrackRecord } from '#lib/data/trackRecord.js';
 	import { anyWithheld, withholdingFor } from '#lib/data/withheldVolunteers.js';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import Text from '#lib/locales/Text.svelte';
@@ -56,8 +56,8 @@
 	const locale = getLocaleContext();
 	const db = getDB();
 
-	/** Each volunteer's track record, for those who assign: reviews finished here and
-	 * works in the venue's relevant venues. Null for everyone else, who get the plain
+	/** Each volunteer's track record, for those who assign: vetted roles held here,
+	 * reviews finished here, and works in the venue's relevant venues. Null for everyone else, who get the plain
 	 * order, since an order ranked on evidence they cannot see would disclose it. */
 	const records = $derived.by(() => {
 		if (!canContact || venue === null) return null;
@@ -67,13 +67,26 @@
 		for (const id of new Set((commitments ?? []).map((c) => c.scholarid)))
 			byScholar.set(
 				id,
-				trackRecord(counts.get(id) ?? 0, works.get(id) ?? [], venue.relevant_venues)
+				trackRecord(counts.get(id) ?? 0, works.get(id) ?? [], venue.relevant_venues, {
+					roles: venueRoles(id, commitments ?? [], roles ?? []),
+					admin: venue.admins.includes(id)
+				})
 			);
 		return byScholar;
 	});
 
 	function recordOf(scholarid: string | undefined): TrackRecord | undefined {
 		return scholarid === undefined ? undefined : records?.get(scholarid);
+	}
+
+	/** A track record's roles as the export writes them: "Associate Editor; former Editor". */
+	function rolesText(record: TrackRecord | undefined): string {
+		if (record === undefined) return '';
+		const text = locale().page.volunteers.label;
+		return [
+			...(record.admin ? [text.admin] : []),
+			...record.roles.map((r) => (r.current ? r.name : text.formerRole.replace('{role}', r.name)))
+		].join('; ');
 	}
 
 	function tierOf(scholarid: string | undefined) {
@@ -179,7 +192,9 @@
 			'ORCID keywords',
 			'Papers cap',
 			// Those who may contact volunteers are the ones choosing whom to invite.
-			...(canContact ? ['Active assignments', 'Reviewed here', 'Relevant venue works'] : []),
+			...(canContact
+				? ['Active assignments', 'Venue roles', 'Reviewed here', 'Relevant venue works']
+				: []),
 			'Active'
 		];
 		const rows = commitments.map((c) => [
@@ -193,6 +208,7 @@
 			...(canContact
 				? [
 						loadIndex.of(c.scholarid, c.roleid, c.papers).used.toString(),
+						rolesText(recordOf(c.scholarid)),
 						(recordOf(c.scholarid)?.completed ?? 0).toString(),
 						(recordOf(c.scholarid)?.venueWorks ?? 0).toString()
 					]
@@ -419,42 +435,63 @@
 										orcid={volunteer.scholars.orcid ?? null}
 										profile={volunteer.scholars.orcid_profiles}
 										testid="volunteer"
-									/>{#if record !== undefined && (record.completed > 0 || record.venueWorks > 0)}
-										<div class="track" data-testid="volunteer-track">
-											{#if record.completed > 0}
-												<span class="badge" data-testid="volunteer-reviewed-here"
-													><Text
-														path={(l) => l.page.volunteers.label.reviewedHere}
-														inputs={{ count: record.completed.toString() }}
-													/></span
-												>
-											{/if}
-											{#if record.venueWorks > 0}
-												<!-- The matched titles behind a native popover, so an editor can
+									/>{#if record !== undefined}
+										<!-- Not the role this row is listed under: an Associate Editor's
+										     row in that section saying "Associate Editor" says nothing. -->
+										{@const otherRoles = record.roles.filter((r) => r.role !== volunteer.roleid)}
+										{#if otherRoles.length > 0 || record.admin || record.completed > 0 || record.venueWorks > 0}
+											<div class="track" data-testid="volunteer-track">
+												{#if record.admin}
+													<span class="badge" data-testid="volunteer-admin"
+														><Text path={(l) => l.page.volunteers.label.admin} /></span
+													>
+												{/if}
+												{#each otherRoles as held}
+													<span class="badge" data-testid="volunteer-role-held"
+														><Text
+															path={(l) =>
+																held.current
+																	? l.page.volunteers.label.currentRole
+																	: l.page.volunteers.label.formerRole}
+															inputs={{ role: held.name }}
+														/></span
+													>
+												{/each}
+												{#if record.completed > 0}
+													<span class="badge" data-testid="volunteer-reviewed-here"
+														><Text
+															path={(l) => l.page.volunteers.label.reviewedHere}
+															inputs={{ count: record.completed.toString() }}
+														/></span
+													>
+												{/if}
+												{#if record.venueWorks > 0}
+													<!-- The matched titles behind a native popover, so an editor can
 												     catch a false match without the list growing a line per row. -->
-												<button
-													type="button"
-													class="badge published"
-													popovertarget="track-{volunteer.id}"
-													data-testid="volunteer-published"
-													><Text
-														path={(l) => l.page.volunteers.label.publishedRelevant}
-														inputs={{ count: record.venueWorks.toString() }}
-													/></button
-												>
-												<div class="titles" popover id="track-{volunteer.id}">
-													<p><Text path={(l) => l.page.volunteers.label.matchedTitles} /></p>
-													<ul>
-														{#each record.venueJournals as journal}
-															<li>{journal.journal} ×{journal.count}</li>
-														{/each}
-													</ul>
-													<p>
-														<em><Text path={(l) => l.page.volunteers.label.matchedSource} /></em>
-													</p>
-												</div>
-											{/if}
-										</div>
+													<button
+														type="button"
+														class="badge published"
+														popovertarget="track-{volunteer.id}"
+														data-testid="volunteer-published"
+														><Text
+															path={(l) => l.page.volunteers.label.publishedRelevant}
+															inputs={{ count: record.venueWorks.toString() }}
+														/></button
+													>
+													<div class="titles" popover id="track-{volunteer.id}">
+														<p><Text path={(l) => l.page.volunteers.label.matchedTitles} /></p>
+														<ul>
+															{#each record.venueJournals as journal}
+																<li>{journal.journal} ×{journal.count}</li>
+															{/each}
+														</ul>
+														<p>
+															<em><Text path={(l) => l.page.volunteers.label.matchedSource} /></em>
+														</p>
+													</div>
+												{/if}
+											</div>
+										{/if}
 									{/if}</td
 								>
 								<td
