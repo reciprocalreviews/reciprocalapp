@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.24 - 2026-11-01
+
+### Changed
+
+- **The Suggested view of a venue's volunteers now also lists those who hold or have held one of its invite-only roles or its top role, or administer it, with a badge naming the role.** Before, an associate editor with no finished reviews was listed as having no track record.
+
 ## 0.5.23 - 2026-11-01
 
 ### Added

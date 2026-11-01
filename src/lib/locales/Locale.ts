@@ -381,6 +381,12 @@ export type LocaleText = {
 				/** The two views, for those who assign. Each takes `{count}`. */
 				suggested: string;
 				everyone: string;
+				/** Badge: a vetted role held now, or once, at this venue. Each takes `{role}`,
+				 * the venue's own name for it. */
+				currentRole: string;
+				formerRole: string;
+				/** Badge: one of the venue's admins. */
+				admin: string;
 				/** Badge: approved, completed assignments at this venue. Takes `{count}`. */
 				reviewedHere: string;
 				/** Badge: works in the venue's relevant venues, per ORCID. Takes `{count}`. */

@@ -6,6 +6,7 @@ import {
 	trackRecord,
 	trackTier,
 	venueJournals,
+	venueRoles,
 	venueWords
 } from './trackRecord';
 
@@ -108,5 +109,54 @@ describe('previewRelevantVenues', () => {
 			},
 			{ line: 'ICER', scholars: 0, titles: [] }
 		]);
+	});
+});
+
+describe('venueRoles', () => {
+	const roles = [
+		{ id: 'editor', name: 'Editor', priority: 0, invited: false },
+		{ id: 'ae', name: 'Associate Editor', priority: 1, invited: true },
+		{ id: 'meta', name: 'Meta-reviewer', priority: 2, invited: false },
+		{ id: 'reviewer', name: 'Reviewer', priority: 3, invited: false }
+	];
+	const record = (roleid: string, accepted = 'accepted', active = true, scholarid = 's') => ({
+		scholarid,
+		roleid,
+		accepted,
+		active
+	});
+
+	test('invite-only roles and the top role count, current before former', () => {
+		expect(
+			venueRoles(
+				's',
+				[record('reviewer'), record('editor', 'accepted', false), record('ae')],
+				roles
+			)
+		).toEqual([
+			{ role: 'ae', name: 'Associate Editor', current: true },
+			{ role: 'editor', name: 'Editor', current: false }
+		]);
+	});
+
+	test('open roles, unanswered invitations, declines and other scholars do not count', () => {
+		expect(
+			venueRoles(
+				's',
+				[
+					record('meta'),
+					record('ae', 'invited', false),
+					record('editor', 'declined', false),
+					record('ae', 'accepted', true, 'other')
+				],
+				roles
+			)
+		).toEqual([]);
+	});
+
+	test('a vetted role or adminship puts someone in the first tier', () => {
+		const ae = venueRoles('s', [record('ae', 'accepted', false)], roles);
+		expect(trackTier(trackRecord(0, [], [], { roles: ae, admin: false }))).toBe(0);
+		expect(trackTier(trackRecord(0, [], [], { roles: [], admin: true }))).toBe(0);
 	});
 });
