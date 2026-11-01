@@ -302,6 +302,7 @@ values
 	('TokensReceived', true),
 	('TransactionApproved', true),
 	('TransactionsPending', true),
+	('UnmatchedNameJoined', true),
 	('VenueApproved', true),
 	('VenueDeactivated', true),
 	('VolunteerPaused', false)
@@ -348,6 +349,7 @@ values
 	('TokensReceived', 'TokensReceived'),
 	('TransactionApproved', 'TransactionApproved'),
 	('TransactionsPending', 'TransactionsPending'),
+	('UnmatchedNameJoined', 'UnmatchedNameJoined'),
 	('VenueApproved', 'VenueApproved'),
 	('VenueDeactivated', 'VenueDeactivated'),
 	('VenueReactivated', 'VenueDeactivated'),
@@ -387,6 +389,7 @@ where
 		'TokensReceived',
 		'TransactionApproved',
 		'TransactionsPending',
+		'UnmatchedNameJoined',
 		'VenueApproved',
 		'VenueDeactivated',
 		'VenueReactivated',
@@ -418,6 +421,7 @@ where
 		'TokensReceived',
 		'TransactionApproved',
 		'TransactionsPending',
+		'UnmatchedNameJoined',
 		'VenueApproved',
 		'VenueDeactivated',
 		'VolunteerPaused'

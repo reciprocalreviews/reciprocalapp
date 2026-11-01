@@ -8,7 +8,8 @@
 	import Row from '#lib/components/Row.svelte';
 	import Table from '#lib/components/Table.svelte';
 	import VolunteerPicker from '#lib/components/VolunteerPicker.svelte';
-	import { getDB } from '#lib/data/CRUD.js';
+	import { getDB, type MatchAssignmentsResult, type Result } from '#lib/data/CRUD.js';
+	import AddAndMatch from './AddAndMatch.svelte';
 	import { matchPersonName, volunteersFor, type Volunteer } from '#lib/data/matchPersonName.js';
 	import Text from '#lib/locales/Text.svelte';
 	import { addFeedback, handle } from '#routes/feedback.svelte.js';
@@ -21,7 +22,7 @@
 	 * can approve and pay for work on the paper. Each viewer sees only the rows they could
 	 * approve, which RLS decides. */
 	let { data }: { data: PageData } = $props();
-	const { venue, unmatched, roles, commitments } = $derived(data);
+	const { venue, staffable, unmatched, roles, commitments } = $derived(data);
 
 	const db = getDB();
 	const locale = getLocaleContext();
@@ -63,11 +64,22 @@
 
 	async function match(group: Group, scholar: string) {
 		if (venue === null) return;
-		const result = await handle(
-			db().matchAssignments(venue.id, group.name, group.role.id, scholar)
-		);
-		if (typeof result !== 'object') return;
 		const who = candidatesFor(group.role).find((c) => c.id === scholar)?.name ?? group.name;
+		await report(db().matchAssignments(venue.id, group.name, group.role.id, scholar), who);
+	}
+
+	/** Seat someone not yet in the role, whom the viewer has confirmed agreed, and match them. */
+	async function addAndMatch(group: Group, scholar: { id: string; name: string | null }) {
+		if (venue === null) return;
+		await report(
+			db().addToRoleAndMatch(venue.id, group.name, group.role.id, scholar.id),
+			scholar.name ?? group.name
+		);
+	}
+
+	async function report(request: Promise<Result<MatchAssignmentsResult>>, who: string) {
+		const result = await handle(request);
+		if (typeof result !== 'object') return;
 		const text = locale().page.unmatched.feedback;
 		const matched = (result.matched.length === 1 ? text.matchedOne : text.matchedMany)
 			.replaceAll('{name}', who)
@@ -136,6 +148,16 @@
 									action={() => dismiss(group)}
 								/>
 							</Row>
+							{#if venue && staffable.includes(group.role.id)}
+								<AddAndMatch
+									testid="unmatched-{index}-add"
+									venue={venue.id}
+									name={group.name}
+									role={group.role}
+									exclude={new Set(candidates.map((c) => c.id))}
+									add={(scholar) => addAndMatch(group, scholar)}
+								/>
+							{/if}
 						</div>
 					</td>
 				</tr>

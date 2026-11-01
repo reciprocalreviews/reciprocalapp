@@ -106,6 +106,56 @@ grant all on FUNCTION public.isPriorityZero (_venueid uuid) to authenticated;
 
 grant all on FUNCTION public.isPriorityZero (_venueid uuid) to service_role;
 
+-- can_staff_role: whether the caller may put someone else in this role, by invitation or
+-- directly.
+--
+-- Venue admins; holders of the venue's top-priority role, who oversee every role (the same
+-- people remove_volunteer admits); and accepted, active holders of the role's approving
+-- role, who approve its assignments and so are the ones who need people in it. Inviting
+-- was admins-only before, which roles.invited's own comment never intended ("only role
+-- approvers can invite scholars to the role"), and it left an editor-in-chief who was not
+-- a venue admin unable to staff their own journal.
+--
+-- plpgsql so its body resolves at call time rather than when the declarative schema is
+-- applied, as can_see_volunteer's comment explains.
+create or replace function public.can_staff_role (_role uuid) returns boolean language plpgsql security definer stable
+set
+	search_path to '' as $$
+declare
+	_venue uuid;
+	_approver uuid;
+begin
+	select r.venueid, r.approver into _venue, _approver from public.roles r where r.id = _role;
+	if _venue is null then
+		return false;
+	end if;
+	return public.isAdmin(_venue)
+		or public.isPriorityZero(_venue)
+		or (
+			_approver is not null
+			and exists (
+				select 1
+				from public.volunteers v
+				where v.roleid = _approver
+					and v.scholarid = (select auth.uid())
+					and v.active
+					and v.accepted = 'accepted'
+			)
+		);
+end;
+$$;
+
+alter function public.can_staff_role (uuid) OWNER to "postgres";
+
+revoke
+execute on function public.can_staff_role (uuid)
+from
+	public,
+	anon;
+
+grant
+execute on function public.can_staff_role (uuid) to authenticated;
+
 -- The single definition of "may this viewer see this volunteer record". Mirrors
 -- nothing in TypeScript: the roster is read straight from the table, so this
 -- policy is the only place the rule lives.
@@ -306,20 +356,11 @@ select
 		or public.can_see_volunteer (id)
 	);
 
-create policy "admins can invite and volunteers if not invite only" on public.volunteers for INSERT to authenticated
+create policy "role staff can invite, and volunteers if not invite only" on public.volunteers for INSERT to authenticated
 with
 	check (
 		(
-			public.isAdmin (
-				(
-					select
-						roles.venueid
-					from
-						public.roles
-					where
-						(roles.id=volunteers.roleid)
-				)
-			)
+			public.can_staff_role (roleid)
 			or (
 				(
 					(
@@ -667,9 +708,9 @@ begin
 		raise exception 'Role not found';
 	end if;
 
-	-- A venue admin may add anyone; otherwise a scholar may only add themselves,
-	-- and only to a role that is not invite-only.
-	if not (public.isAdmin(_venueid) or (_caller = _scholarid and not _invited)) then
+	-- Whoever staffs the role (see can_staff_role) may add anyone; otherwise a scholar may
+	-- only add themselves, and only to a role that is not invite-only.
+	if not (public.can_staff_role(_roleid) or (_caller = _scholarid and not _invited)) then
 		raise exception 'You are not authorized to volunteer for this role';
 	end if;
 

@@ -7,6 +7,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Added
 
 - **A venue's admins and the holders of its top role can now remove a volunteer from a role on the volunteers page.** The volunteer is marked inactive and emailed, and can resume volunteering later.
+- **Venue admins, holders of a venue's top role, and whoever approves a role can now invite people to that role, or add them directly after confirming they agreed.** On the unmatched assignments page, they can also add someone named in an import to the role and match them in one step, and holders of the top role now see every unmatched name at the venue.
+- **When someone sets a name with the same words as an unmatched name from an import, whoever could match that name is emailed.** Before, the venue only found out when the person told them.
 
 ### Changed
 

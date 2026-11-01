@@ -70,6 +70,7 @@ from (values
 	('TransactionDeclinedVenue'),
 	('TransactionProposed'),
 	('TransactionsPending'),
+	('UnmatchedNameJoined'),
 	('VenueAddressChanged'),
 	('VenueAdminAdded'),
 	('VenueAdminRemoved'),

@@ -23,6 +23,7 @@
 	import Tip from '#lib/components/Tip.svelte';
 	import Tokens from '#lib/components/Tokens.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
+	import canStaffRole from '#lib/data/canStaffRole.js';
 	import { isntEmpty } from '#lib/validation.js';
 	import { getLocaleContext } from '#routes/Contexts.js';
 	import { handle } from '#routes/feedback.svelte.js';
@@ -56,15 +57,13 @@
 		 * page, where the viewer is a venue admin and sees them all. */
 		volunteerCounts?: { role: RoleID; volunteer_count: number }[] | null;
 		isAdmin: boolean;
-		/** Whether the viewer may invite scholars to a role, which venue admins may.
-		 * Separate from `isAdmin` because the venue page shows the role cards read-only —
-		 * no reordering, no compensation editing, no role settings — but an admin already
-		 * looking at the venue should not have to find the roles step of venue settings to
-		 * add a person. Defaults to `isAdmin`, so settings, which passes only that, is
-		 * unchanged.
-		 *
-		 * An affordance, not authorization: create_volunteer and the volunteers INSERT
-		 * policy both gate on public.isAdmin, so this only decides what is offered. */
+		/** Whether the viewer is a venue admin for the purpose of inviting, which lets them
+		 * invite to every role. Separate from `isAdmin` because the venue page shows the role
+		 * cards read-only — no reordering, no compensation editing, no role settings — but an
+		 * admin already looking at the venue should not have to find the roles step of venue
+		 * settings to add a person. Defaults to `isAdmin`, so settings, which passes only
+		 * that, is unchanged. Holders of the top role and of a role's approving role may
+		 * invite too; `mayStaff` below adds them per role. */
 		canInvite?: boolean | undefined;
 		types: SubmissionType[] | null;
 		compensation: CompensationRow[] | null;
@@ -83,6 +82,12 @@
 	let showPayment = $derived(!venue.payment_free);
 
 	let mayInvite = $derived(canInvite ?? isAdmin);
+
+	/** Whether the viewer may put people in this role, by invitation or directly. See
+	 * canStaffRole; create_volunteer re-derives it, so this only decides what is offered. */
+	function mayStaff(role: RoleRow): boolean {
+		return canStaffRole(role, roles ?? [], scholar, mayInvite, volunteers ?? []);
+	}
 
 	/** Whether the viewer may ask a role's volunteers to bid: the venue's admins, and the
 	 * holders of its priority-0 role — the same union that vets thank-you notes, and the one
@@ -151,7 +156,7 @@
 						note: role.description.length === 0 ? l.view.roles.card.unnamed : role.description
 					};
 				}}
-				expand={scholarInvited || (!startCollapsed && (isAdmin || mayInvite || !role.invited))}
+				expand={scholarInvited || (!startCollapsed && (isAdmin || mayStaff(role) || !role.invited))}
 				testid="role-{role.name}"
 			>
 				{#snippet controls()}
@@ -262,7 +267,7 @@
 					<Feedback error inline text={(l) => l.view.roles.feedback.notInvited}></Feedback>
 				{/if}
 
-				{#if mayInvite && scholar}
+				{#if mayStaff(role) && scholar}
 					<RoleInvite {venue} {role} {scholar} already={roleVolunteers.map((v) => v.scholarid)} />
 				{/if}
 

@@ -269,6 +269,15 @@ export type BulkImportResult = {
  * conflicted on, the submission, or because someone else already holds the role. */
 export type MatchAssignmentsResult = { matched: SubmissionID[]; skipped: number };
 
+/** A scholar who may be the person an import named, with what tells same-named people
+ * apart. `email` is their verified address, if any. */
+export type UnmatchedNameScholar = {
+	id: ScholarID;
+	name: string | null;
+	orcid: string | null;
+	email: string | null;
+};
+
 /** A non-editor assignment that is approved but not yet completed, returned
  * by markSubmissionDone when the submission can't be completed yet. */
 export type SubmissionBlocker = {
@@ -634,6 +643,11 @@ export default abstract class CRUD {
 		venue: VenueRow,
 		scholars: ScholarID[]
 	): Promise<Result<string[]>>;
+
+	/** Add each of these scholars to the role directly, already accepted, for whoever staffs
+	 * the role (see canStaffRole), having confirmed they agreed to it. No invitation is sent; the database tells each of
+	 * them they were added (RoleEnrolled). Scholars, not addresses, as for inviteToRole. */
+	abstract addToRole(role: RoleRow, scholars: ScholarID[]): Promise<Result<string[]>>;
 
 	abstract acceptRoleInvite(
 		scholar: ScholarID,
@@ -1061,6 +1075,22 @@ export default abstract class CRUD {
 	/** Assign a scholar on every unmatched assignment held under this name and role at the
 	 * venue that the caller could approve, and tell them. */
 	abstract matchAssignments(
+		venue: VenueID,
+		name: string,
+		role: RoleID,
+		scholar: ScholarID
+	): Promise<Result<MatchAssignmentsResult>>;
+	/** Scholars whose name has the same words as an imported name, for whoever staffs the
+	 * role (see canStaffRole) choosing whom to add to it and match. Empty for anyone else. */
+	abstract getUnmatchedNameScholars(
+		venue: VenueID,
+		name: string,
+		role: RoleID
+	): Promise<ReadResult<UnmatchedNameScholar[]>>;
+	/** For whoever staffs the role, having confirmed the scholar agreed to it: seat them in it
+	 * (accepting any unanswered invitation) and match them as matchAssignments does, in one
+	 * transaction. Refused for someone who declined the role. */
+	abstract addToRoleAndMatch(
 		venue: VenueID,
 		name: string,
 		role: RoleID,

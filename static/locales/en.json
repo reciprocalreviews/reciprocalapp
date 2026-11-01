@@ -916,7 +916,7 @@
 		},
 		"unmatched": {
 			"title": "Unmatched assignments",
-			"note": "These names from an import matched nobody at the venue. Once a person joins and accepts the role, choose them here to assign them on every submission listed under their name. You see only the assignments you could approve.",
+			"note": "These names from an import matched nobody at the venue. Once a person joins and accepts the role, choose them here to assign them on every submission listed under their name. Anyone who approves a role can also add someone who has agreed to it and match them in one step. You see only the assignments you could approve.",
 			"empty": "Nothing to match. Every name from your imports has been matched or dismissed.",
 			"headers": {
 				"name": "Name in import",
@@ -925,6 +925,18 @@
 				"scholar": "Match to"
 			},
 			"noCandidates": "Nobody holds the {role} role yet. Invite this person to it, then match them here.",
+			"add": {
+				"find": {
+					"tip": "Find people with this name who aren't in the role yet",
+					"label": "Not in the role yet?"
+				},
+				"nobody": "No one on Reciprocal Reviews has the name {name} yet.",
+				"button": {
+					"tip": "Add {name} to the {role} role and match them here",
+					"label": "Add {name} as {role} and match",
+					"warn": "{name} agreed to be {role} at this venue?"
+				}
+			},
 			"button": {
 				"match": {
 					"tip": "Assign this scholar on every submission listed under this name",
@@ -1557,6 +1569,7 @@
 					"TokensReceived": "someone transfers tokens to me",
 					"TransactionApproved": "a transaction I proposed is approved",
 					"TransactionsPending": "proposed transactions are waiting for my approval",
+					"UnmatchedNameJoined": "someone joins whose name matches an unmatched imported name I could match",
 					"VenueApproved": "a venue I proposed or supported is approved or declined",
 					"VenueDeactivated": "one of my venues is switched off or becomes active again",
 					"VolunteerPaused": "a volunteer at one of my venues pauses or resumes",
@@ -1962,6 +1975,7 @@
 				"inviteUnmatched": "No one here matches {queries}.",
 				"inviteAlready": "{queries} already has a record for this role, so they can't be added again.",
 				"invited": "Invitations sent!",
+				"added": "Added to the role. Each person was emailed to say so.",
 				"callForBidsRecipients": "**{count} volunteers** in this role will receive this. Anyone who has paused, hasn't verified a contact address, or has turned these off won't.",
 				"callForBidsLast": "{name} last asked this venue's volunteers to bid on {when}.",
 				"callForBidsUnverified": "A call for bids replies to you, so it needs a verified contact address. Add one on your profile and try again.",
@@ -2027,6 +2041,11 @@
 				"invite": {
 					"tip": "Invite people to this role",
 					"label": "Invite"
+				},
+				"addAgreed": {
+					"tip": "Add these people to this role without an invitation",
+					"label": "Add",
+					"warn": "Each of these people agreed to hold this role?"
 				},
 				"removeInvite": {
 					"tip": "Don't invite {name}",
@@ -2103,6 +2122,7 @@
 			},
 			"checkbox": {
 				"invited": "**Invite-only**: Scholars must be invited to hold this role.",
+				"agreed": "**They already agreed**: Add them to this role now, without an invitation to accept. Only check this if each of them has told you yes.",
 				"anonymousAuthors": "**Anonymous authors**: Author names are hidden from scholars in this role.",
 				"biddable": "**Bidding**: Volunteers in this role can bid on submissions.",
 				"bidLimit": "**Max bids**: Limit how many submissions each volunteer can bid on."
@@ -2388,6 +2408,8 @@
 		"ReorderDeclineReason": "Unable to reorder decline reasons",
 		"DeleteDeclineReason": "Unable to delete decline reason",
 		"InviteToRole": "Unable to invite to role",
+		"AddToRole": "Unable to add to role",
+		"AddToRoleDeclined": "They declined this role on Reciprocal Reviews, so they can’t be added to it here.",
 		"AcceptRoleInvite": "Unable to accept role invite",
 		"EditCurrencyMinters": "Unable to edit minters",
 		"AddCurrencyMinter": "Unable to add minter",
