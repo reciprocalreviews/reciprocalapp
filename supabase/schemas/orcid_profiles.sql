@@ -54,6 +54,11 @@ create table if not exists public.orcid_profiles (
 	work_count integer,
 	work_first_year smallint,
 	work_last_year smallint,
+	-- Every journal or proceedings title across the FULL record, with how many works name
+	-- it: [{ journal, count }], most frequent first. The kept `works` are only the newest
+	-- few, which cannot say whether someone has EVER published in a venue's relevant venues;
+	-- this can. Bounded, since a prolific record names hundreds of venues once each.
+	work_journals jsonb not null default '[]',
 	-- Researcher urls and external identifiers: [{ kind, label, value, url }].
 	links jsonb not null default '[]',
 	-- Two clocks, because /works is the only expensive fetch: 787KB uncompressed for a
@@ -106,6 +111,12 @@ add constraint orcid_profiles_fetch_status check (
 alter table only public.orcid_profiles
 add constraint orcid_profiles_works_bounded check (jsonb_array_length(works)<=5);
 
+alter table only public.orcid_profiles
+add constraint orcid_profiles_work_journals_shape check (
+	jsonb_typeof(work_journals)='array'
+	and jsonb_array_length(work_journals)<=100
+);
+
 -- Both payload columns are arrays. Without this a scalar or object would satisfy the
 -- column type and break every reader that iterates them.
 alter table only public.orcid_profiles
@@ -147,6 +158,7 @@ select
 		education_year,
 		keywords,
 		works,
+		work_journals,
 		work_count,
 		work_first_year,
 		work_last_year,

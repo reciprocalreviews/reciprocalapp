@@ -402,9 +402,11 @@ test('an associate editor sees a reviewer’s true load before inviting them pas
 		await expect(assign).toHaveText('Over cap, scholar agreed, assign');
 		await page.getByRole('button', { name: '✖' }).click();
 
-		// The roster, where editors scout for reviewers, shows the same count.
+		// The roster, where editors scout for reviewers, shows the same count. In Everyone,
+		// since r1 has no finished work here for the Suggested view to keep them on.
 		await page.goto(`/venue/${VENUE_PATH}/volunteers`);
 		await page.waitForLoadState('networkidle');
+		await page.getByTestId('volunteer-view-everyone').click();
 		await expect(
 			page
 				.locator(`tr:has-text("${r1.email}")`)

@@ -7,9 +7,12 @@
 
 import familyName from './familyName';
 import { expertiseKey, expertiseTags } from './expertise';
+import type { TrackTier } from './trackRecord';
 
 /** Only the volunteer fields the view logic reads. */
 export type ViewVolunteer = {
+	/** Who the row is, for looking up their track record. */
+	scholarid?: string;
 	/** Free text. Comma-separated by convention only; nothing enforces it. */
 	expertise: string;
 	active: boolean;
@@ -54,6 +57,12 @@ export type VolunteersViewContext = {
 	 * spelling left to derive one from. Empty means "no tag filter", not "match
 	 * nothing". */
 	selected: Map<string, string>;
+	/** Each volunteer's track record tier (see trackRecord.ts), for those who may see it.
+	 * Absent for everyone else, who get the plain order: an order ranked on evidence they
+	 * cannot see would disclose it by implication. */
+	tier?: (volunteer: ViewVolunteer) => TrackTier;
+	/** Leave out volunteers with no track record. Ignored without `tier`. */
+	suggestedOnly?: boolean;
 };
 
 /** How many chips to show before the list is folded behind "show all". */
@@ -205,13 +214,18 @@ export function volunteersView(context: VolunteersViewContext) {
 		return name.length > 0 ? name : (volunteer.scholars.email ?? '');
 	}
 
-	/** By standing, then by family name. Someone who has stopped volunteering is
-	 * still a permanent record of the venue, but they are not who an editor is
-	 * scanning for; an invitation not yet answered is not a volunteer yet; a declined
-	 * one never will be. Each goes after the last rather than interleaved. */
+	/** By standing, then by track record when there is one to rank on, then by family
+	 * name. Someone who has stopped volunteering is still a permanent record of the venue,
+	 * but they are not who an editor is scanning for; an invitation not yet answered is
+	 * not a volunteer yet; a declined one never will be. Each goes after the last rather
+	 * than interleaved. */
 	function compare(a: ViewVolunteer, b: ViewVolunteer): number {
 		const standing = volunteerStanding(a) - volunteerStanding(b);
 		if (standing !== 0) return standing;
+		if (context.tier) {
+			const tier = context.tier(a) - context.tier(b);
+			if (tier !== 0) return tier;
+		}
 		const family = familyName(displayName(a)).localeCompare(familyName(displayName(b)));
 		if (family !== 0) return family;
 		const full = displayName(a).localeCompare(displayName(b));
@@ -223,8 +237,23 @@ export function volunteersView(context: VolunteersViewContext) {
 	 * box and the expertise chips are ANDed. Returns a new array; the caller's is
 	 * not mutated. */
 	function sortedAndFiltered<T extends ViewVolunteer>(volunteers: T[]): T[] {
-		return volunteers.filter((v) => matchesFilter(v) && matchesTags(v)).sort(compare);
+		return volunteers
+			.filter((v) => matchesFilter(v) && matchesTags(v) && matchesSuggestion(v))
+			.sort(compare);
 	}
 
-	return { matchesFilter, matchesTags, tags, capped, sortedAndFiltered };
+	/** Whether the Suggested view keeps the row: anyone with a track record. */
+	function matchesSuggestion(volunteer: ViewVolunteer): boolean {
+		const tier = context.tier;
+		return !context.suggestedOnly || tier === undefined || tier(volunteer) < 2;
+	}
+
+	/** How many rows the search and chips would show that the Suggested view hides, so
+	 * the page can say so rather than let the pool look smaller than it is. */
+	function hiddenBySuggestion(volunteers: ViewVolunteer[]): number {
+		return volunteers.filter((v) => matchesFilter(v) && matchesTags(v) && !matchesSuggestion(v))
+			.length;
+	}
+
+	return { matchesFilter, matchesTags, tags, capped, sortedAndFiltered, hiddenBySuggestion };
 }

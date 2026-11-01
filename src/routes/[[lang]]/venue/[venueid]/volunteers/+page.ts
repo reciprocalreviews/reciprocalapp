@@ -52,17 +52,28 @@ export const load: PageLoad = async ({ parent }) => {
 
 	// How busy each volunteer already is, for those choosing whom to invite: this roster
 	// is where they scout. The same people as canContact, and the RPC answers no one else.
+	const scholars = [...new Set((commitments ?? []).map((c) => c.scholarid))];
 	const { data: loads } = canContact
-		? await db.getAssignmentLoads(venueid, [
-				...new Set((commitments ?? []).map((c) => c.scholarid))
-			])
+		? await db.getAssignmentLoads(venueid, scholars)
 		: { data: null };
+
+	// The evidence the roster ranks on, for the same people: reviews finished here, and
+	// the journal titles that say whether someone has published in a relevant venue.
+	// Nobody else gets the ranking, so nobody else needs these.
+	const [{ data: completed }, { data: journals }] = canContact
+		? await Promise.all([
+				db.getCompletedCounts(venueid, scholars),
+				db.getVenueVolunteerJournals(venueid)
+			])
+		: [{ data: null }, { data: null }];
 
 	return {
 		venue,
 		canContact,
 		canRemove,
 		loads: loads ?? [],
+		completed: completed ?? [],
+		journals: journals ?? [],
 		commitments,
 		roles,
 		volunteerCounts

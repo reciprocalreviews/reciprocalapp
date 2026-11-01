@@ -72,6 +72,14 @@ export function orcidHeaders(token?: string | null): Record<string, string> {
  * than a bibliography they would have to read past. */
 export const MAX_WORKS = 5;
 
+/** How many distinct journal titles are kept. Matches the bound on
+ * orcid_profiles.work_journals: enough for any field's venues, while a record naming
+ * hundreds of venues once each loses only its rarest. */
+export const MAX_WORK_JOURNALS = 100;
+
+/** A journal or proceedings title and how many of the record's works name it. */
+export type ORCIDWorkJournal = { journal: string; count: number };
+
 export type ORCIDWork = {
 	title: string;
 	/** Null where the record gives no publication date, which is common on works
@@ -163,6 +171,10 @@ export type ORCIDProfile = {
 	educationYear: number | null;
 	keywords: string[];
 	works: ORCIDWork[];
+	/** Every journal title across the full record, most frequent first. Unlike `works`,
+	 * not limited to the newest few, so it answers whether someone has EVER published in
+	 * a venue. Empty when the works section was not read or names no journals. */
+	workJournals: ORCIDWorkJournal[];
 	/** Counted over every work in the record, not over the `works` kept above. Null
 	 * means the works section was not read; 0 means it was read and is empty. The
 	 * interface must not conflate the two. */
@@ -185,6 +197,7 @@ export function emptyProfile(): ORCIDProfile {
 		educationYear: null,
 		keywords: [],
 		works: [],
+		workJournals: [],
 		workCount: null,
 		workFirstYear: null,
 		workLastYear: null,
@@ -441,7 +454,7 @@ function preferredSummary(group: Json): Json | null {
  */
 export function parseWorks(
 	payload: unknown
-): Pick<ORCIDProfile, 'works' | 'workCount' | 'workFirstYear' | 'workLastYear'> {
+): Pick<ORCIDProfile, 'works' | 'workJournals' | 'workCount' | 'workFirstYear' | 'workLastYear'> {
 	const groups = arr(obj(payload)?.['group']);
 
 	const parsed: ORCIDWork[] = [];
@@ -486,10 +499,29 @@ export function parseWorks(
 		// Deliberately the number of groups, not the number of works kept and not the number
 		// left after the dedupe above: this is how many works the RECORD holds, which is the
 		// number its owner would recognise.
+		workJournals: journalCounts(parsed),
 		workCount: groups.length,
 		workFirstYear: years.length > 0 ? Math.min(...years) : null,
 		workLastYear: years.length > 0 ? Math.max(...years) : null
 	};
+}
+
+/** Count works per journal title. Titles differing only in case or spacing are one
+ * journal, shown with the first spelling met. Counted per parsed work, which is one per
+ * group, so a paper claimed by two sources counts once. */
+function journalCounts(works: ORCIDWork[]): ORCIDWorkJournal[] {
+	const counts = new Map<string, ORCIDWorkJournal>();
+	for (const { journal } of works) {
+		if (journal === null) continue;
+		const key = normalize(journal);
+		if (key.length === 0) continue;
+		const entry = counts.get(key);
+		if (entry) entry.count++;
+		else counts.set(key, { journal: journal.trim().replace(/\s+/g, ' '), count: 1 });
+	}
+	return [...counts.values()]
+		.sort((a, b) => b.count - a.count || a.journal.localeCompare(b.journal))
+		.slice(0, MAX_WORK_JOURNALS);
 }
 
 /** Assemble a profile from the section payloads. Any section may be omitted — a refresh

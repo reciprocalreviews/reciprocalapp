@@ -422,12 +422,17 @@
 				"withheld": "{count} more volunteer(s) in this role are not listed publicly.",
 				"withheldAll": "This venue does not list this role's {count} volunteer(s) publicly.",
 				"partialExport": "This file has only the volunteers you can see. Some of this venue's roles are not listed publicly.",
-				"noneMatching": "No volunteers match this search and these expertise keywords."
+				"noneMatching": "No volunteers match this search and these expertise keywords.",
+				"hiddenBySuggestion": "{count} more volunteer(s) in this role have no track record here yet."
 			},
 			"button": {
 				"exportCSV": {
 					"tip": "Export the volunteer names, emails, ORCIDs, roles, expertise, and status as a CSV",
 					"label": "Export to CSV..."
+				},
+				"showEveryone": {
+					"tip": "Show every volunteer, including those with no track record here",
+					"label": "Show everyone"
 				},
 				"clearTags": {
 					"tip": "Clear the selected expertise keywords and show every volunteer again",
@@ -454,7 +459,15 @@
 			},
 			"label": {
 				"expertiseFilter": "Filter by expertise",
-				"count": "{name} ({count})"
+				"count": "{name} ({count})",
+				"view": "Which volunteers to show",
+				"suggested": "Suggested ({count})",
+				"everyone": "Everyone ({count})",
+				"reviewedHere": "Reviewed here ×{count}",
+				"publishedRelevant": "Published in relevant venues ×{count}",
+				"matchedTitles": "Works in this venue's relevant venues:",
+				"matchedSource": "From their public ORCID record, which Reciprocal Reviews does not check.",
+				"noTrackRecord": "No track record here yet"
 			},
 			"unavailableTitle": "Volunteers unavailable",
 			"status": {
@@ -471,7 +484,8 @@
 				"assigned": "Assigned / cap"
 			},
 			"paragraph": {
-				"intro": "Search by name, email, or expertise, or narrow the list by the expertise keywords volunteers have listed. Volunteers who have stopped are listed last in each role."
+				"intro": "Search by name, email, or expertise, or narrow the list by the expertise keywords volunteers have listed. Volunteers who have stopped are listed last in each role.",
+				"suggested": "**Suggested** lists volunteers who have completed work here or published in the relevant venues set in this venue's settings. Everyone else is one click away."
 			}
 		},
 		"venueTransactions": {
@@ -1367,6 +1381,10 @@
 					"placeholder": "https://",
 					"invalid": "Must be an http(s) address with no spaces, quotes or brackets"
 				},
+				"relevantVenues": {
+					"label": "Relevant venues",
+					"placeholder": "ACM Transactions on Computing Education, TOCE"
+				},
 				"inactiveMessage": {
 					"label": "inactive message",
 					"placeholder": "e.g., We're currently configuring the venue.",
@@ -1460,6 +1478,10 @@
 			},
 			"paragraph": {
 				"reviewSystemURL": "Where your editors assign reviewers to manuscripts, such as your ScholarOne or OpenReview site. Optional. When set, it's linked beside Reciprocal Reviews' assign buttons, reminding editors to assign reviewers there too.",
+				"relevantVenues": "Venues whose authors are likely to be good reviewers here. Volunteers who have published in one are suggested first to whoever assigns reviewers. Only they see it, never the public.\n\n**Put one venue per line, with its names separated by commas.** For example, `ACM Transactions on Computing Education, TOCE`. A volunteer's ORCID work matches when one of these names appears in its journal or proceedings title.\n\n- Matching ignores case, punctuation, years, ordinals like \"55th\", and the words *Proceedings*, *of*, *the*, *on*, *ACM*, and *IEEE*.\n- Abbreviated titles also match. For example, \"ACM Trans. Comput. Educ.\" matches the full name.\n- A single word, like an acronym, matches only a whole word. Many proceedings titles spell the venue out in full and never use its acronym, so give both.",
+				"relevantVenueMatches": "**{venue}**: {count} volunteer(s) have published here.",
+				"relevantVenueNone": "**{venue}**: no volunteers match yet. Check the spelling, or add the venue's full name or its acronym.",
+				"relevantVenueTitles": "Matched: {titles}",
 				"welcome": "Work through the numbered steps in order, recording each decision. The last step, **Activate**, opens the venue for volunteering.",
 				"policies": "Before changing any settings below, get community alignment on each of these decisions. The settings on this page just encode them; getting them wrong is hard to walk back once volunteers start participating.\n\n- The venue's **purpose and scope** — what topics, what kinds of submissions you accept\n- The **submission types** you'll accept (e.g., full papers, posters, revisions)\n- The **roles** scholars take on (Editor, Associate Editor, Reviewer, …) and how many people each submission needs in each role\n- The other **editors / admins** who can configure this venue with you\n- Which **external reviewing platform** (HotCRP, OJS, ScholarOne, etc.) handles your peer review, so the email-template snippets in Step 6 use the right syntax\n\nThe most consequential choices — the token economy, how reviewing is organized, what counts as a creditable review, and who can mint — are expanded in the cards below.",
 				"economics": "Tokens only work if they stay scarce enough to be worth earning. The economy has two failure modes:\n\n- **Too many tokens** — if welcome gifts are generous and submission costs are low, everyone already has enough to submit, so no one needs to review. Reviewing stalls and quality and timeliness suffer.\n- **Too few tokens** — if costs are high and tokens are hard to earn, authors can't accumulate enough to submit, and publishing slows down.\n\nTwo rules keep you in balance:\n\n1. **Per-role compensation for a submission must sum to no more than its submission cost.** Otherwise every reviewed submission injects net-new tokens and the supply inflates until reviewing has no value.\n2. **Mint tokens roughly in proportion to the number of active scholars**, topping up only as the community grows — not in large speculative batches.\n\n**For example.** A journal pays **10** tokens for a review, **10** for an associate-editor recommendation, and **1** for an editor-in-chief decision: **21** tokens paid out per submission. It sets the **submission cost to 40** (comfortably above the 21 paid out, so the venue reserve grows slightly) and the **welcome gift to 30**, so a newcomer can submit after reviewing just once (30 + 10 = 40). Tune these numbers to your community's reviewing load, but always check the two rules above before you change them.",
@@ -2378,6 +2400,7 @@
 		"EditVenueShortTitle": "Unable to edit the venue short name",
 		"EditVenueURL": "Unable to edit the venue URL",
 		"EditVenueReviewSystemURL": "Unable to edit the venue's reviewing system URL",
+		"EditVenueRelevantVenues": "Unable to edit the venue's relevant venues",
 		"EditVenueSlug": "Unable to set the venue's web address",
 		"VenueAddressTaken": "Another venue already uses that web address. Pick a different one.",
 		"VenueAddressInvalid": "That web address isn't allowed. Use 4 to 40 characters: lowercase letters, numbers, and single hyphens between them, starting with a letter.",

@@ -48,6 +48,7 @@ import type {
 	PostgrestSingleResponse
 } from '@supabase/supabase-js';
 import type { EmailType, OptionalEmailType } from '../../email/templates';
+import type { ORCIDWorkJournal } from './orcidProfile';
 import type SupabaseCRUD from './SupabaseCRUD.svelte';
 import type {
 	AssignmentAwaitingCompensation,
@@ -175,6 +176,14 @@ export type BidBudget = { used: number; bid_limit: number | null };
  * (editor seats excluded). Counts are true ones, not limited by what the viewer may
  * see; only the venue's admins and approvers get any rows. */
 export type AssignmentLoad = { scholar: ScholarID; role: RoleID | null; count: number };
+
+/** How many approved assignments a scholar has completed at a venue, in any role. Only
+ * the venue's admins and approvers get any rows; see completed_counts. */
+export type CompletedCount = { scholar: ScholarID; count: number };
+
+/** The journal titles in a volunteer's ORCID record, for matching against a venue's
+ * relevant venues. See src/lib/data/trackRecord.ts. */
+export type VolunteerJournals = { scholar: ScholarID; journals: ORCIDWorkJournal[] };
 
 /** What `ensure_scholar` found when asked to repair the caller's own scholar row.
  * `orcid_conflict` is the one that needs a person: another scholar row already holds
@@ -536,6 +545,9 @@ export default abstract class CRUD {
 	abstract editVenueURL(id: VenueID, url: string): Promise<Result>;
 	/** Set or clear (null) the address of the venue's reviewing system. */
 	abstract editVenueReviewSystemURL(id: VenueID, url: string | null): Promise<Result>;
+	/** Set the venues whose publications signal fit here: one per element, each a
+	 * comma-separated list of that venue's names. See src/lib/data/trackRecord.ts. */
+	abstract editVenueRelevantVenues(id: VenueID, venues: string[]): Promise<Result>;
 	/** Set or change the venue's web address. Changing one releases the old address
 	 * immediately: nothing reserves it, nothing redirects from it, and every link that
 	 * used it breaks. The interface warns before doing it. */
@@ -1067,6 +1079,17 @@ export default abstract class CRUD {
 		venue: VenueID,
 		scholars: ScholarID[]
 	): Promise<ReadResult<AssignmentLoad[] | null>>;
+	/** How many assignments the given scholars have completed at the venue, for the
+	 * venue's admins and approvers ranking its volunteers. See CompletedCount. */
+	abstract getCompletedCounts(
+		venue: VenueID,
+		scholars: ScholarID[]
+	): Promise<ReadResult<CompletedCount[] | null>>;
+	/** The ORCID journal titles of every volunteer the viewer may see at the venue, one
+	 * entry per scholar. Kept off the roster query, since only those who rank it need it. */
+	abstract getVenueVolunteerJournals(
+		venue: VenueID
+	): Promise<ReadResult<VolunteerJournals[] | null>>;
 	/** The work actually waiting on the SIGNED-IN scholar, for their profile's Tasks
 	 * table. Answers for auth.uid() rather than a given scholar; an editor's standing
 	 * seat on a submission counts only when the submission is waiting on the editor. */

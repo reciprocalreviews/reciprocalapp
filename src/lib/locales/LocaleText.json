@@ -613,6 +613,9 @@
             "EditVenuePaymentFree": {
               "type": "string"
             },
+            "EditVenueRelevantVenues": {
+              "type": "string"
+            },
             "EditVenueReviewSystemURL": {
               "type": "string"
             },
@@ -935,6 +938,7 @@
             "EditVenueShortTitle",
             "EditVenueURL",
             "EditVenueReviewSystemURL",
+            "EditVenueRelevantVenues",
             "EditVenueSlug",
             "VenueAddressTaken",
             "VenueAddressInvalid",
@@ -4085,6 +4089,10 @@
                       ],
                       "type": "object"
                     },
+                    "relevantVenues": {
+                      "$ref": "#/definitions/TextFieldText",
+                      "description": "The venues whose publications signal fit, one per line."
+                    },
                     "reviewSystemURL": {
                       "additionalProperties": false,
                       "description": "The optional address of the venue's reviewing system, linked from the pages where approvers assign. `invalid` says what the database refuses.",
@@ -4162,6 +4170,7 @@
                     "webAddress",
                     "shortName",
                     "reviewSystemURL",
+                    "relevantVenues",
                     "inactiveMessage",
                     "welcomeTokens",
                     "preferenceLevelLabel",
@@ -4256,6 +4265,22 @@
                       "description": "Bulleted markdown list of policies the community should decide on before encoding them in the settings below.",
                       "type": "string"
                     },
+                    "relevantVenueMatches": {
+                      "description": "Preview of one line: how many volunteers it matches. Takes `{venue}` and `{count}`.",
+                      "type": "string"
+                    },
+                    "relevantVenueNone": {
+                      "description": "Preview of a line matching nobody, with what to try. Takes `{venue}`.",
+                      "type": "string"
+                    },
+                    "relevantVenueTitles": {
+                      "description": "The titles a line matched. Takes `{titles}`.",
+                      "type": "string"
+                    },
+                    "relevantVenues": {
+                      "description": "Above the relevant venues field: what it does, the format, and exactly how matching works, since an editor cannot otherwise tell why a venue matched or did not.",
+                      "type": "string"
+                    },
                     "reviewQuality": {
                       "description": "Body of the Step 1 \"review quality\" card (#65): deciding what counts as a creditable review and which controls enforce it.",
                       "type": "string"
@@ -4271,6 +4296,10 @@
                   },
                   "required": [
                     "reviewSystemURL",
+                    "relevantVenues",
+                    "relevantVenueMatches",
+                    "relevantVenueNone",
+                    "relevantVenueTitles",
                     "welcome",
                     "policies",
                     "economics",
@@ -6589,10 +6618,15 @@
                     "remove": {
                       "$ref": "#/definitions/ButtonText",
                       "description": "Marks another volunteer inactive in the role, for the venue's admins and top role. Confirms first, because the volunteer is emailed."
+                    },
+                    "showEveryone": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Leaves the Suggested view for every volunteer."
                     }
                   },
                   "required": [
                     "exportCSV",
+                    "showEveryone",
                     "clearTags",
                     "moreTags",
                     "fewerTags",
@@ -6603,6 +6637,10 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
+                    "hiddenBySuggestion": {
+                      "description": "Under a role in the Suggested view: how many matching volunteers it hides, so the pool never looks smaller than it is. Takes `{count}`.",
+                      "type": "string"
+                    },
                     "noVolunteers": {
                       "type": "string"
                     },
@@ -6636,7 +6674,8 @@
                     "noneMatching",
                     "withheld",
                     "withheldAll",
-                    "partialExport"
+                    "partialExport",
+                    "hiddenBySuggestion"
                   ],
                   "type": "object"
                 },
@@ -6688,14 +6727,53 @@
                       "description": "A name with a count after it, for a role's section heading and for an expertise keyword. Takes {name} and {count}.",
                       "type": "string"
                     },
+                    "everyone": {
+                      "type": "string"
+                    },
                     "expertiseFilter": {
                       "description": "Accessible name for the group of expertise filter keywords.",
+                      "type": "string"
+                    },
+                    "matchedSource": {
+                      "description": "Says the titles come from ORCID and RR does not check them.",
+                      "type": "string"
+                    },
+                    "matchedTitles": {
+                      "description": "Heads the list of journal titles a relevant-venues badge matched.",
+                      "type": "string"
+                    },
+                    "noTrackRecord": {
+                      "description": "Divides the rows with a track record from those without, in Everyone.",
+                      "type": "string"
+                    },
+                    "publishedRelevant": {
+                      "description": "Badge: works in the venue's relevant venues, per ORCID. Takes `{count}`.",
+                      "type": "string"
+                    },
+                    "reviewedHere": {
+                      "description": "Badge: approved, completed assignments at this venue. Takes `{count}`.",
+                      "type": "string"
+                    },
+                    "suggested": {
+                      "description": "The two views, for those who assign. Each takes `{count}`.",
+                      "type": "string"
+                    },
+                    "view": {
+                      "description": "Accessible name for the Suggested / Everyone choice.",
                       "type": "string"
                     }
                   },
                   "required": [
                     "expertiseFilter",
-                    "count"
+                    "count",
+                    "view",
+                    "suggested",
+                    "everyone",
+                    "reviewedHere",
+                    "publishedRelevant",
+                    "matchedTitles",
+                    "matchedSource",
+                    "noTrackRecord"
                   ],
                   "type": "object"
                 },
@@ -6704,10 +6782,15 @@
                   "properties": {
                     "intro": {
                       "type": "string"
+                    },
+                    "suggested": {
+                      "description": "For those who assign: what the Suggested view keeps.",
+                      "type": "string"
                     }
                   },
                   "required": [
-                    "intro"
+                    "intro",
+                    "suggested"
                   ],
                   "type": "object"
                 },

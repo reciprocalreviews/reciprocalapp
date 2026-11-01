@@ -96,6 +96,33 @@ describe('works', () => {
 		expect([workFirstYear, workLastYear]).toEqual([2011, 2011]);
 	});
 
+	test('counts journals across every work, not only the ones kept', () => {
+		const { works, workJournals } = parseWorks(fullWorks);
+		const counted = workJournals.reduce((n, j) => n + j.count, 0);
+		const kept = works.filter((w) => w.journal !== null).length;
+		expect(counted).toBeGreaterThan(kept);
+		// Most frequent first.
+		const counts = workJournals.map((j) => j.count);
+		expect([...counts].sort((a, b) => b - a)).toEqual(counts);
+		expect(workJournals[0]).toEqual({
+			journal: 'ACM Transactions on Computing Education',
+			count: 2
+		});
+	});
+
+	test('treats journal titles differing only in case and spacing as one', () => {
+		const titled = (journal: string) => ({
+			'work-summary': [
+				{ title: { title: { value: journal } }, 'journal-title': { value: journal } }
+			]
+		});
+		expect(
+			parseWorks({
+				group: [titled('Computer  Science Education '), titled('computer science education')]
+			}).workJournals
+		).toEqual([{ journal: 'Computer Science Education', count: 2 }]);
+	});
+
 	/** A helper for the dedupe tests below: one group holding one summary. */
 	const group = (title: string, year: number | null, doi?: string) => ({
 		'work-summary': [

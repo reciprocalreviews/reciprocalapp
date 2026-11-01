@@ -21,8 +21,10 @@
 		expertiseTags,
 		orcidKeywords,
 		TAG_LIMIT,
-		volunteersView
+		volunteersView,
+		volunteerStanding
 	} from '#lib/data/volunteersView.js';
+	import { trackRecord, trackTier, type TrackRecord } from '#lib/data/trackRecord.js';
 	import { anyWithheld, withholdingFor } from '#lib/data/withheldVolunteers.js';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import Text from '#lib/locales/Text.svelte';
@@ -30,8 +32,18 @@
 	import { handle } from '#routes/feedback.svelte.js';
 
 	let { data } = $props();
-	const { venue, commitments, roles, volunteerCounts, canContact, canRemove, loads, scholar } =
-		$derived(data);
+	const {
+		venue,
+		commitments,
+		roles,
+		volunteerCounts,
+		canContact,
+		canRemove,
+		loads,
+		completed,
+		journals,
+		scholar
+	} = $derived(data);
 
 	const loadIndex = $derived(new Loads(loads));
 
@@ -44,11 +56,63 @@
 	const locale = getLocaleContext();
 	const db = getDB();
 
+	/** Each volunteer's track record, for those who assign: reviews finished here and
+	 * works in the venue's relevant venues. Null for everyone else, who get the plain
+	 * order, since an order ranked on evidence they cannot see would disclose it. */
+	const records = $derived.by(() => {
+		if (!canContact || venue === null) return null;
+		const counts = new Map(completed.map((c) => [c.scholar, c.count]));
+		const works = new Map(journals.map((j) => [j.scholar, j.journals]));
+		const byScholar = new Map<string, TrackRecord>();
+		for (const id of new Set((commitments ?? []).map((c) => c.scholarid)))
+			byScholar.set(
+				id,
+				trackRecord(counts.get(id) ?? 0, works.get(id) ?? [], venue.relevant_venues)
+			);
+		return byScholar;
+	});
+
+	function recordOf(scholarid: string | undefined): TrackRecord | undefined {
+		return scholarid === undefined ? undefined : records?.get(scholarid);
+	}
+
+	function tierOf(scholarid: string | undefined) {
+		const record = recordOf(scholarid);
+		return record === undefined ? 2 : trackTier(record);
+	}
+
+	/** Suggested by default when there is anything to suggest on: a venue with relevant
+	 * venues set, or anyone who has finished work here. A new venue with neither would
+	 * otherwise open on an empty list. Null until the reader chooses. */
+	let chosenView = $state<'suggested' | 'everyone' | null>(null);
+	const suggestedOnly = $derived(
+		records !== null &&
+			(chosenView === null
+				? (venue?.relevant_venues.length ?? 0) > 0 || completed.length > 0
+				: chosenView === 'suggested')
+	);
+
 	/** The list's rules — search matching, how the expertise keywords are ranked,
 	 * and the row ordering — live in $lib/data/volunteersView so they are testable
 	 * outside a component. */
 	const view = $derived(
-		volunteersView({ filter, selected: new Map(selectedTags.map((t) => [t.key, t.label])) })
+		volunteersView({
+			filter,
+			selected: new Map(selectedTags.map((t) => [t.key, t.label])),
+			tier: records === null ? undefined : (v) => tierOf(v.scholarid),
+			suggestedOnly
+		})
+	);
+
+	/** Both views' counts, under the current search and chips, so the choice says what
+	 * each side holds. */
+	const everyoneCount = $derived(
+		(commitments ?? []).filter((c) => view.matchesFilter(c) && view.matchesTags(c)).length
+	);
+	const suggestedCount = $derived(
+		(commitments ?? []).filter(
+			(c) => view.matchesFilter(c) && view.matchesTags(c) && tierOf(c.scholarid) < 2
+		).length
 	);
 
 	function toggleTag(key: string, label: string) {
@@ -115,7 +179,7 @@
 			'ORCID keywords',
 			'Papers cap',
 			// Those who may contact volunteers are the ones choosing whom to invite.
-			...(canContact ? ['Active assignments'] : []),
+			...(canContact ? ['Active assignments', 'Reviewed here', 'Relevant venue works'] : []),
 			'Active'
 		];
 		const rows = commitments.map((c) => [
@@ -126,7 +190,13 @@
 			c.expertise,
 			orcidKeywords(c).join(', '),
 			c.papers === null ? '' : c.papers.toString(),
-			...(canContact ? [loadIndex.of(c.scholarid, c.roleid, c.papers).used.toString()] : []),
+			...(canContact
+				? [
+						loadIndex.of(c.scholarid, c.roleid, c.papers).used.toString(),
+						(recordOf(c.scholarid)?.completed ?? 0).toString(),
+						(recordOf(c.scholarid)?.venueWorks ?? 0).toString()
+					]
+				: []),
 			c.active ? 'Yes' : 'No'
 		]);
 
@@ -163,6 +233,32 @@
 			bind:text={filter}
 			testid="volunteer-filter"
 		></TextField>
+
+		{#if records !== null}
+			<Paragraph text={(l) => l.page.volunteers.paragraph.suggested} />
+			<div role="group" aria-label={locale().page.volunteers.label.view}>
+				<Tags>
+					<Tag
+						action={() => (chosenView = 'suggested')}
+						selected={suggestedOnly}
+						testid="volunteer-view-suggested"
+						><Text
+							path={(l) => l.page.volunteers.label.suggested}
+							inputs={{ count: suggestedCount.toString() }}
+						/></Tag
+					>
+					<Tag
+						action={() => (chosenView = 'everyone')}
+						selected={!suggestedOnly}
+						testid="volunteer-view-everyone"
+						><Text
+							path={(l) => l.page.volunteers.label.everyone}
+							inputs={{ count: everyoneCount.toString() }}
+						/></Tag
+					>
+				</Tags>
+			</div>
+		{/if}
 
 		{@const allTags = view.tags(commitments)}
 		{#if allTags.length > 0}
@@ -235,8 +331,10 @@
 					>
 				{/snippet}
 				{#each sections as { role, withholding }, roleIndex (role.id)}
-					{@const rows = view.sortedAndFiltered(commitments.filter((c) => c.roleid === role.id))}
-					{#if rows.length > 0 || withholding.all}
+					{@const roleRows = commitments.filter((c) => c.roleid === role.id)}
+					{@const rows = view.sortedAndFiltered(roleRows)}
+					{@const hidden = view.hiddenBySuggestion(roleRows)}
+					{#if rows.length > 0 || withholding.all || hidden > 0}
 						<!-- The role's own name, not `rows[0].roles.name`: a withheld roster has
 						     no first row to take it from. The count stays the number of rows
 						     matching the current search, as it always has; how many are withheld
@@ -275,6 +373,17 @@
 						{#each rows as volunteer, volunteerIndex (volunteer.id)}
 							{@const expertise = expertiseTags(volunteer.expertise)}
 							{@const mirrored = orcidKeywords(volunteer)}
+							{@const record = recordOf(volunteer.scholarid)}
+							{@const previous = rows[volunteerIndex - 1]}
+							<!-- In Everyone, where those with a track record end and those without
+							     begin, among volunteers of the same standing. -->
+							{#if record !== undefined && previous !== undefined && tierOf(volunteer.scholarid) === 2 && tierOf(previous.scholarid) < 2 && volunteerStanding(previous) === volunteerStanding(volunteer)}
+								<tr data-testid="volunteer-no-record-{roleIndex}"
+									><td colspan="4"
+										><em><Text path={(l) => l.page.volunteers.label.noTrackRecord} /></em></td
+									></tr
+								>
+							{/if}
 							<tr data-testid="volunteer-row-{roleIndex}-{volunteerIndex}">
 								<td
 									><Status
@@ -310,7 +419,43 @@
 										orcid={volunteer.scholars.orcid ?? null}
 										profile={volunteer.scholars.orcid_profiles}
 										testid="volunteer"
-									/></td
+									/>{#if record !== undefined && (record.completed > 0 || record.venueWorks > 0)}
+										<div class="track" data-testid="volunteer-track">
+											{#if record.completed > 0}
+												<span class="badge" data-testid="volunteer-reviewed-here"
+													><Text
+														path={(l) => l.page.volunteers.label.reviewedHere}
+														inputs={{ count: record.completed.toString() }}
+													/></span
+												>
+											{/if}
+											{#if record.venueWorks > 0}
+												<!-- The matched titles behind a native popover, so an editor can
+												     catch a false match without the list growing a line per row. -->
+												<button
+													type="button"
+													class="badge published"
+													popovertarget="track-{volunteer.id}"
+													data-testid="volunteer-published"
+													><Text
+														path={(l) => l.page.volunteers.label.publishedRelevant}
+														inputs={{ count: record.venueWorks.toString() }}
+													/></button
+												>
+												<div class="titles" popover id="track-{volunteer.id}">
+													<p><Text path={(l) => l.page.volunteers.label.matchedTitles} /></p>
+													<ul>
+														{#each record.venueJournals as journal}
+															<li>{journal.journal} ×{journal.count}</li>
+														{/each}
+													</ul>
+													<p>
+														<em><Text path={(l) => l.page.volunteers.label.matchedSource} /></em>
+													</p>
+												</div>
+											{/if}
+										</div>
+									{/if}</td
 								>
 								<td
 									><!-- The venue's own expertise, ALWAYS answered — an em-dash when the
@@ -341,6 +486,23 @@
 								>
 							</tr>
 						{/each}
+						{#if hidden > 0}
+							<tr data-testid="volunteer-hidden-{roleIndex}"
+								><td colspan="4"
+									><Text
+										path={(l) => l.page.volunteers.feedback.hiddenBySuggestion}
+										inputs={{ count: hidden.toString() }}
+									/>
+									<Button
+										small
+										background={false}
+										testid="volunteer-show-everyone"
+										strings={(l) => l.page.volunteers.button.showEveryone}
+										action={() => (chosenView = 'everyone')}
+									/></td
+								></tr
+							>
+						{/if}
 					{/if}
 				{/each}
 			</Table>
@@ -363,6 +525,49 @@
 {/if}
 
 <style>
+	.track {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-half);
+		margin-top: var(--spacing-half);
+	}
+
+	.badge {
+		font-family: inherit;
+		font-size: var(--extra-small-font-size);
+		font-weight: bold;
+		padding: 0 var(--spacing-half);
+		border: none;
+		border-radius: var(--roundedness);
+		background: var(--salient-color-faded);
+		color: var(--salient-color);
+	}
+
+	.badge.published {
+		background: var(--focus-color-faded);
+		color: var(--focus-color);
+		cursor: pointer;
+	}
+
+	.badge.published:focus-visible {
+		outline: var(--thick-border-width) solid var(--focus-color);
+	}
+
+	.titles {
+		max-width: 30rem;
+		padding: var(--spacing);
+		border: var(--border-width) solid var(--border-color);
+		border-radius: var(--roundedness);
+		background: var(--background-color);
+		color: var(--text-color);
+		font-size: var(--small-font-size);
+	}
+
+	.titles p,
+	.titles ul {
+		margin: 0 0 var(--spacing-half);
+	}
+
 	.expertise {
 		display: flex;
 		flex-direction: column;

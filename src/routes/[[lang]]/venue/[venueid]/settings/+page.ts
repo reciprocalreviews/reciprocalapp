@@ -19,6 +19,10 @@ export const load: PageLoad = async ({ parent, params }) => {
 		? await db.getVenueSettingsVolunteers(venueid)
 		: { data: null };
 
+	// The journal titles in volunteers' ORCID records, so the relevant venues field can
+	// show what each line matches.
+	const { data: journals } = scholar ? await db.getVenueVolunteerJournals(venueid) : { data: null };
+
 	// Get all the submission types
 	const { data: types } = await db.getVenueSubmissionTypes(venueid);
 
@@ -35,6 +39,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		venue,
 		roles,
 		volunteers,
+		journals: journals ?? [],
 		currency,
 		types,
 		compensation,

@@ -1,3 +1,4 @@
+import { workJournals } from './trackRecord';
 import type { Database } from '#data/database.js';
 import { dedupeAddresses } from './addresses';
 import { eqFilter, inFilter } from './postgrestFilter';
@@ -47,6 +48,8 @@ import type Locale from '../locales/Locale';
 import CRUD, {
 	type BulkImportResult,
 	type AssignmentLoad,
+	type CompletedCount,
+	type VolunteerJournals,
 	type BidBudget,
 	type CallForBidsStatus,
 	type Charge,
@@ -1099,6 +1102,10 @@ export default class SupabaseCRUD extends CRUD {
 		return this.updateVenue(id, { review_system_url: url }, 'EditVenueReviewSystemURL');
 	}
 
+	async editVenueRelevantVenues(id: VenueID, venues: string[]) {
+		return this.updateVenue(id, { relevant_venues: venues }, 'EditVenueRelevantVenues');
+	}
+
 	/**
 	 * Set or change the venue's web address.
 	 *
@@ -1421,6 +1428,40 @@ export default class SupabaseCRUD extends CRUD {
 		return this.allRows('LoadAssignment', (from, to) =>
 			this.client.rpc('assignment_loads', { _venue: venue, _scholars: scholars }).range(from, to)
 		);
+	}
+
+	async getCompletedCounts(
+		venue: VenueID,
+		scholars: ScholarID[]
+	): Promise<ReadResult<CompletedCount[] | null>> {
+		if (scholars.length === 0) return { data: [] };
+		// Paged, as getAssignmentLoads is.
+		return this.allRows('LoadAssignment', (from, to) =>
+			this.client.rpc('completed_counts', { _venue: venue, _scholars: scholars }).range(from, to)
+		);
+	}
+
+	async getVenueVolunteerJournals(venue: VenueID): Promise<ReadResult<VolunteerJournals[] | null>> {
+		// Through volunteers, as the roster is, so RLS limits it to the same people the
+		// viewer may see on the roster. Paged for the same reason.
+		const { data, error } = await this.allRows('LoadVolunteer', (from, to) =>
+			this.client
+				.from('volunteers')
+				.select('scholarid, scholars(orcid_profiles(work_journals)), roles!inner(venueid)')
+				.eq('roles.venueid', venue)
+				.order('id')
+				.range(from, to)
+		);
+		if (data === null) return { data: null, error };
+		// A scholar volunteering in two roles appears twice; one entry each.
+		const byScholar = new Map<ScholarID, VolunteerJournals>();
+		for (const row of data)
+			if (!byScholar.has(row.scholarid))
+				byScholar.set(row.scholarid, {
+					scholar: row.scholarid,
+					journals: workJournals(row.scholars?.orcid_profiles?.work_journals)
+				});
+		return { data: [...byScholar.values()] };
 	}
 
 	async getVenueDeclineReasons(venue: VenueID): Promise<ReadResult<DeclineReasonRow[] | null>> {
