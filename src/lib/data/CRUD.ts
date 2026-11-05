@@ -276,6 +276,18 @@ export type BulkImportResult = {
 /** What matchAssignments did: the submissions the scholar is now assigned to, and how
  * many of the name's rows were left alone because the scholar is an author of, or
  * conflicted on, the submission, or because someone else already holds the role. */
+/** What the batch payment check reads for a list of manuscript IDs: the submissions
+ * found, the status of each of their charges, and the authors who were charged, so
+ * whoever has not paid can be named and written to. */
+export type SubmissionPayments = {
+	submissions: Pick<
+		SubmissionRow,
+		'id' | 'venue' | 'externalid' | 'title' | 'imported' | 'authors' | 'transactions'
+	>[];
+	transactions: Pick<TransactionRow, 'id' | 'status'>[];
+	authors: Pick<ScholarRow, 'id' | 'name' | 'email'>[];
+};
+
 export type MatchAssignmentsResult = { matched: SubmissionID[]; skipped: number };
 
 /** A scholar who may be the person an import named, with what tells same-named people
@@ -956,9 +968,12 @@ export default abstract class CRUD {
 	abstract getVenueTransactionCount(venue: VenueID): Promise<ReadResult<number | null>>;
 	abstract getScholarTransactionCount(scholar: ScholarID): Promise<ReadResult<number | null>>;
 	abstract getTransactionsByIDs(ids: TransactionID[]): Promise<ReadResult<TransactionRow[] | null>>;
-	abstract getSubmissionTransactionIDs(
+	/** The id and status of each charge transaction the viewer can see. The status is
+	 * what says whether a charge was paid: a co-author's stays `proposed` until they
+	 * approve it. */
+	abstract getSubmissionTransactionStatuses(
 		ids: TransactionID[]
-	): Promise<ReadResult<Pick<TransactionRow, 'id'>[] | null>>;
+	): Promise<ReadResult<Pick<TransactionRow, 'id' | 'status'>[] | null>>;
 	abstract getPendingTransactionsByCurrencies(
 		currencyIDs: CurrencyID[]
 	): Promise<ReadResult<TransactionRow[] | null>>;
@@ -1006,6 +1021,14 @@ export default abstract class CRUD {
 	abstract getVenueSubmissionIdentities(
 		venue: VenueID
 	): Promise<ReadResult<Pick<SubmissionRow, 'id' | 'externalid' | 'title'>[] | null>>;
+	/** The submissions at the venue with any of these manuscript IDs, with their charges'
+	 * statuses and charged authors. Complete or an error, never a partial answer. Only a
+	 * venue admin can read every charge (transactions RLS); anyone else sees only the
+	 * ones they were party to, and the rest come back missing. */
+	abstract getSubmissionPayments(
+		venue: VenueID,
+		externalIDs: string[]
+	): Promise<ReadResult<SubmissionPayments | null>>;
 	/** How many of the venue's submissions this scholar would find in the submissions
 	 * list: RLS-visible, minus the ones they have a conflict on and the done ones past
 	 * the venue's visibility window, both of which the list itself hides. */

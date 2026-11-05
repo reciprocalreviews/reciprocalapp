@@ -6,6 +6,8 @@
  * passed in as a context object, including `now`, so the done-visibility window
  * is deterministic in tests. */
 
+import { charges, NULL_TRANSACTION, type ChargeStatus } from './submissionPayment';
+
 /** Only the submission fields the view logic reads. */
 export type ViewSubmission = {
 	id: string;
@@ -47,8 +49,9 @@ export type SubmissionsViewContext = {
 	scholarName: Map<string, string>;
 	/** The viewer's declared conflicts. */
 	conflicts: { submissionid: string }[] | null;
-	/** Transactions visible to the viewer. */
-	transactions: { id: string }[] | null;
+	/** Transactions visible to the viewer, with their status: only an approved
+	 * charge counts as paid. */
+	transactions: { id: string; status: ChargeStatus }[] | null;
 	/** The venue's done-visibility window in days, or null if the venue is unknown. */
 	doneVisibilityDays: number | null;
 	/** The raw search box contents; trimmed and lowercased here. */
@@ -66,8 +69,7 @@ export type SubmissionsViewContext = {
 	createdSortLatestFirst: boolean;
 };
 
-/** A non-paying co-author's slot in `submission.transactions`. */
-export const NULL_TRANSACTION = '00000000-0000-0000-0000-000000000000';
+export { NULL_TRANSACTION };
 
 /** What a submission's payment column has to say.
  *
@@ -86,10 +88,16 @@ export type PaymentState =
 	| { state: 'free' }
 	/** There were charges, and each has a transaction. */
 	| { state: 'paid' }
-	/** Charges with no visible transaction yet. */
+	/** Charges not yet approved, including any the viewer cannot see. */
 	| { state: 'pending'; count: number };
 
 export function submissionsView(context: SubmissionsViewContext) {
+	/** Each visible transaction's status, looked up once rather than per charge. */
+	const transactionStatus =
+		context.transactions === null
+			? null
+			: new Map(context.transactions.map((t) => [t.id, t.status]));
+
 	const trimmedFilter = context.filter.trim().toLowerCase();
 
 	/** True if the given text contains the active filter term (case-insensitive). */
@@ -186,13 +194,10 @@ export function submissionsView(context: SubmissionsViewContext) {
 	 * never charged, which is a different fact from having been paid for and is
 	 * reported as its own state rather than borrowing "paid". */
 	function paymentStatus(sub: ViewSubmission): PaymentState {
-		if (context.transactions === null) return { state: 'unknown' };
-		const expected = sub.transactions.filter((t) => t !== NULL_TRANSACTION);
+		if (transactionStatus === null) return { state: 'unknown' };
+		const expected = charges(sub, transactionStatus);
 		if (expected.length === 0) return { state: 'free' };
-		const visible = expected
-			.map((t) => context.transactions?.find((tr) => tr.id === t))
-			.filter((t) => t !== undefined);
-		const outstanding = expected.length - visible.length;
+		const outstanding = expected.filter((charge) => charge.status !== 'approved').length;
 		return outstanding === 0 ? { state: 'paid' } : { state: 'pending', count: outstanding };
 	}
 

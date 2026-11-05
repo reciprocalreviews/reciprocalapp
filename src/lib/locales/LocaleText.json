@@ -5109,6 +5109,175 @@
               ],
               "type": "object"
             },
+            "submissionPayments": {
+              "additionalProperties": false,
+              "description": "The admin page that takes a list of manuscript IDs from the venue's reviewing system and says which have been paid for here, and who to write to about the rest.",
+              "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "check": {
+                      "$ref": "#/definitions/ButtonText"
+                    },
+                    "copyEmails": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Copies the address of every author with an unpaid charge, comma-separated, to paste into one message."
+                    }
+                  },
+                  "required": [
+                    "check",
+                    "copyEmails"
+                  ],
+                  "type": "object"
+                },
+                "contact": {
+                  "additionalProperties": false,
+                  "description": "What the \"Write to\" column says.",
+                  "properties": {
+                    "declined": {
+                      "description": "Follows an author's name: they declined their charge.",
+                      "type": "string"
+                    },
+                    "imported": {
+                      "description": "Same, for a submission that was imported rather than paid for.",
+                      "type": "string"
+                    },
+                    "missing": {
+                      "description": "Nobody here knows who the authors are, so the reviewing system is where to find them.",
+                      "type": "string"
+                    },
+                    "noEmail": {
+                      "description": "In place of an email for an author who has not given one.",
+                      "type": "string"
+                    },
+                    "proposed": {
+                      "description": "Follows an author's name: their charge awaits their approval.",
+                      "type": "string"
+                    },
+                    "unknown": {
+                      "description": "Follows an author's name: their charge could not be read.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "missing",
+                    "imported",
+                    "proposed",
+                    "declined",
+                    "unknown",
+                    "noEmail"
+                  ],
+                  "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ids": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    }
+                  },
+                  "required": [
+                    "ids"
+                  ],
+                  "type": "object"
+                },
+                "headers": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "contact": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "submission": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "submission",
+                    "status",
+                    "contact"
+                  ],
+                  "type": "object"
+                },
+                "intro": {
+                  "description": "Markdown. What to paste and what comes back.",
+                  "type": "string"
+                },
+                "notAdmin": {
+                  "description": "Only a venue admin can read the charges made to the venue.",
+                  "type": "string"
+                },
+                "notLoaded": {
+                  "description": "The venue could not be loaded.",
+                  "type": "string"
+                },
+                "paymentFree": {
+                  "description": "The venue charges nothing, so there is nothing to check.",
+                  "type": "string"
+                },
+                "status": {
+                  "additionalProperties": false,
+                  "description": "One per state, matching `PaymentCheck` in submissionPayment.ts.",
+                  "properties": {
+                    "free": {
+                      "description": "Submitted at no cost.",
+                      "type": "string"
+                    },
+                    "imported": {
+                      "description": "Bulk-imported, so nobody was charged here.",
+                      "type": "string"
+                    },
+                    "missing": {
+                      "description": "No submission at the venue has this ID.",
+                      "type": "string"
+                    },
+                    "outstanding": {
+                      "description": "At least one charge is not approved.",
+                      "type": "string"
+                    },
+                    "paid": {
+                      "description": "Every charge approved.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "missing",
+                    "outstanding",
+                    "imported",
+                    "paid",
+                    "free"
+                  ],
+                  "type": "object"
+                },
+                "summary": {
+                  "description": "Above the results. `{count}` IDs checked, then one count per state.",
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "intro",
+                "notAdmin",
+                "paymentFree",
+                "notLoaded",
+                "field",
+                "button",
+                "summary",
+                "headers",
+                "status",
+                "contact"
+              ],
+              "type": "object"
+            },
             "submissions": {
               "additionalProperties": false,
               "properties": {
@@ -5116,6 +5285,10 @@
                   "additionalProperties": false,
                   "description": "The page's actions row.",
                   "properties": {
+                    "checkPayments": {
+                      "description": "Admins: look up whether a list of manuscript IDs has been paid for.",
+                      "type": "string"
+                    },
                     "import": {
                       "description": "Admins and editors: bring in submissions that pre-date the venue's launch.",
                       "type": "string"
@@ -5137,7 +5310,8 @@
                     "newSubmission",
                     "newSubmissionFree",
                     "import",
-                    "match"
+                    "match",
+                    "checkPayments"
                   ],
                   "type": "object"
                 },
@@ -5480,11 +5654,11 @@
                       "type": "string"
                     },
                     "paid": {
-                      "description": "Every charge on the submission has a transaction. Says nothing about a submission that was never charged — see `free`.",
+                      "description": "Every charge on the submission is approved. Says nothing about a submission that was never charged — see `free`.",
                       "type": "string"
                     },
                     "pending": {
-                      "description": "Charges with no transaction yet. `{count}` of them.",
+                      "description": "Charges not yet approved, including a co-author's still waiting for their approval. `{count}` of them.",
                       "type": "string"
                     },
                     "reviewing": {
@@ -6872,6 +7046,7 @@
             "newSubmission",
             "bulkImport",
             "submissions",
+            "submissionPayments",
             "unmatched",
             "submission",
             "venue",

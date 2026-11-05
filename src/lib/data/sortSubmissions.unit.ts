@@ -217,17 +217,37 @@ describe('paymentStatus', () => {
 
 	test('counts charges with no visible transaction', () => {
 		const target = sub({ id: 's1', transactions: ['t1', 't2'] });
-		expect(view({ transactions: [{ id: 't1' }] }).paymentStatus(target)).toEqual({
+		expect(
+			view({ transactions: [{ id: 't1', status: 'approved' }] }).paymentStatus(target)
+		).toEqual({
 			state: 'pending',
 			count: 1
 		});
 	});
 
-	test('is paid when every charge is visible', () => {
+	test('is paid when every charge is approved', () => {
 		const target = sub({ id: 's1', transactions: ['t1'] });
-		expect(view({ transactions: [{ id: 't1' }] }).paymentStatus(target)).toEqual({
+		expect(
+			view({ transactions: [{ id: 't1', status: 'approved' }] }).paymentStatus(target)
+		).toEqual({
 			state: 'paid'
 		});
+	});
+
+	// A venue admin can see every charge to the venue, including a co-author's that is
+	// still waiting for their approval. Counting a visible transaction as paid showed
+	// that submission as paid to exactly the people who would chase it.
+	test('counts a visible but unapproved charge as pending', () => {
+		const target = sub({ id: 's1', transactions: ['t1', 't2', 't3'] });
+		expect(
+			view({
+				transactions: [
+					{ id: 't1', status: 'approved' },
+					{ id: 't2', status: 'proposed' },
+					{ id: 't3', status: 'declined' }
+				]
+			}).paymentStatus(target)
+		).toEqual({ state: 'pending', count: 2 });
 	});
 
 	// The bug this type exists to prevent. A bulk-imported submission has no
@@ -274,7 +294,7 @@ describe('payment sorting', () => {
 		];
 		const sorted = ids(
 			view({
-				transactions: [{ id: 't2' }],
+				transactions: [{ id: 't2', status: 'approved' }],
 				sortOrder: ['payment'],
 				paymentSortPendingFirst: true
 			}).sortedAndFiltered(rows)

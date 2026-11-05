@@ -1,4 +1,5 @@
 import { workJournals } from './trackRecord';
+import { NULL_TRANSACTION } from './submissionPayment';
 import type { Database } from '#data/database.js';
 import { dedupeAddresses } from './addresses';
 import { eqFilter, inFilter } from './postgrestFilter';
@@ -58,6 +59,7 @@ import CRUD, {
 	type ImportedSubmission,
 	type MarkSubmissionDoneOutcome,
 	type MatchAssignmentsResult,
+	type SubmissionPayments,
 	type UnmatchedNameScholar,
 	type Notification,
 	type PendingEmailVerification,
@@ -464,6 +466,28 @@ export default class SupabaseCRUD extends CRUD {
 			all.push(...data);
 			// A short page is the last one.
 			if (data.length < size) break;
+		}
+		return { data: all };
+	}
+
+	/** Run an `.in()` read over many values a chunk at a time, gathering the rows.
+	 *
+	 * `.in()` puts every value in the request URL, so a list pasted from a reviewing
+	 * system -- hundreds of manuscript IDs, or the thousands of transaction ids behind
+	 * them -- can outgrow what the gateway accepts. A chunk this size also stays well
+	 * under PostgREST's `max_rows`, as long as each value matches a handful of rows. A
+	 * failed chunk returns the error rather than the rows gathered so far. */
+	private async inChunks<Value, Row>(
+		id: keyof Locale['error'],
+		values: Value[],
+		read: (chunk: Value[]) => PromiseLike<{ data: Row[] | null; error: PostgrestError | null }>
+	): Promise<ReadResult<Row[] | null>> {
+		const size = 100;
+		const all: Row[] = [];
+		for (let from = 0; from < values.length; from += size) {
+			const { data, error } = await read(values.slice(from, from + size));
+			if (error) return { data: null, ...this.error(id, error) };
+			all.push(...(data ?? []));
 		}
 		return { data: all };
 	}
@@ -1311,6 +1335,53 @@ export default class SupabaseCRUD extends CRUD {
 			if (data.length < size) break;
 		}
 		return { data: all };
+	}
+
+	async getSubmissionPayments(
+		venue: VenueID,
+		externalIDs: string[]
+	): Promise<ReadResult<SubmissionPayments | null>> {
+		// Each manuscript ID is unique within a venue (submissions_venue_externalid_unique),
+		// so a chunk of IDs matches at most that many rows.
+		const submissions = await this.inChunks('LoadSubmission', externalIDs, (chunk) =>
+			this.client
+				.from('submissions')
+				.select('id, venue, externalid, title, imported, authors, transactions')
+				.eq('venue', venue)
+				.in('externalid', chunk)
+		);
+		if (submissions.data === null) return { data: null, error: submissions.error };
+
+		const chargeIDs = [
+			...new Set(
+				submissions.data.flatMap((s) => s.transactions).filter((t) => t !== NULL_TRANSACTION)
+			)
+		];
+		const transactions = await this.inChunks('LoadTransaction', chargeIDs, (chunk) =>
+			this.client.from('transactions').select('id, status').in('id', chunk)
+		);
+		if (transactions.data === null) return { data: null, error: transactions.error };
+
+		// Only the authors who were charged: a non-paying co-author is nobody to write to.
+		const charged = [
+			...new Set(
+				submissions.data.flatMap((s) =>
+					s.authors.filter((_, index) => s.transactions[index] !== NULL_TRANSACTION)
+				)
+			)
+		];
+		const authors = await this.inChunks('LoadScholar', charged, (chunk) =>
+			this.client.from('scholars').select('id, name, email').in('id', chunk)
+		);
+		if (authors.data === null) return { data: null, error: authors.error };
+
+		return {
+			data: {
+				submissions: submissions.data,
+				transactions: transactions.data,
+				authors: authors.data
+			}
+		};
 	}
 
 	/** The number of the venue's submissions the current scholar would actually find
@@ -3995,12 +4066,12 @@ export default class SupabaseCRUD extends CRUD {
 		return this.rows('LoadTransaction', this.client.from('transactions').select('*').in('id', ids));
 	}
 
-	async getSubmissionTransactionIDs(
+	async getSubmissionTransactionStatuses(
 		ids: TransactionID[]
-	): Promise<ReadResult<Pick<TransactionRow, 'id'>[] | null>> {
+	): Promise<ReadResult<Pick<TransactionRow, 'id' | 'status'>[] | null>> {
 		return this.rows(
 			'LoadTransaction',
-			this.client.from('transactions').select('id').in('id', ids)
+			this.client.from('transactions').select('id, status').in('id', ids)
 		);
 	}
 

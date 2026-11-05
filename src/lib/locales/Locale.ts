@@ -767,10 +767,11 @@ export type LocaleText = {
 				batchAssign: TextFieldText & { invalid: string };
 			};
 			status: {
-				/** Every charge on the submission has a transaction. Says nothing
-				 * about a submission that was never charged — see `free`. */
+				/** Every charge on the submission is approved. Says nothing about a
+				 * submission that was never charged — see `free`. */
 				paid: string;
-				/** Charges with no transaction yet. `{count}` of them. */
+				/** Charges not yet approved, including a co-author's still waiting for
+				 * their approval. `{count}` of them. */
 				pending: string;
 				/** Nothing was ever charged for this submission: it was imported, or
 				 * its venue is payment-free. Distinct from `paid`, which the column
@@ -794,6 +795,61 @@ export type LocaleText = {
 				import: string;
 				/** Match the names an import could not, with the count waiting as a badge. */
 				match: string;
+				/** Admins: look up whether a list of manuscript IDs has been paid for. */
+				checkPayments: string;
+			};
+		};
+		/** The admin page that takes a list of manuscript IDs from the venue's reviewing
+		 * system and says which have been paid for here, and who to write to about the
+		 * rest. */
+		submissionPayments: {
+			title: string;
+			/** Markdown. What to paste and what comes back. */
+			intro: string;
+			/** Only a venue admin can read the charges made to the venue. */
+			notAdmin: string;
+			/** The venue charges nothing, so there is nothing to check. */
+			paymentFree: string;
+			/** The venue could not be loaded. */
+			notLoaded: string;
+			field: { ids: NotedTextFieldText };
+			button: {
+				check: ButtonText;
+				/** Copies the address of every author with an unpaid charge, comma-separated,
+				 * to paste into one message. */
+				copyEmails: ButtonText;
+			};
+			/** Above the results. `{count}` IDs checked, then one count per state. */
+			summary: string;
+			headers: { id: string; submission: string; status: string; contact: string };
+			/** One per state, matching `PaymentCheck` in submissionPayment.ts. */
+			status: {
+				/** No submission at the venue has this ID. */
+				missing: string;
+				/** At least one charge is not approved. */
+				outstanding: string;
+				/** Bulk-imported, so nobody was charged here. */
+				imported: string;
+				/** Every charge approved. */
+				paid: string;
+				/** Submitted at no cost. */
+				free: string;
+			};
+			/** What the "Write to" column says. */
+			contact: {
+				/** Nobody here knows who the authors are, so the reviewing system is where
+				 * to find them. */
+				missing: string;
+				/** Same, for a submission that was imported rather than paid for. */
+				imported: string;
+				/** Follows an author's name: their charge awaits their approval. */
+				proposed: string;
+				/** Follows an author's name: they declined their charge. */
+				declined: string;
+				/** Follows an author's name: their charge could not be read. */
+				unknown: string;
+				/** In place of an email for an author who has not given one. */
+				noEmail: string;
 			};
 		};
 		/** The page listing assignments an import could not match to a scholar. */

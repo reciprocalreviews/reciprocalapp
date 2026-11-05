@@ -2,6 +2,16 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.25 - 2026-11-05
+
+### Added
+
+- **Venue admins can now paste a list of manuscript IDs to see which have been paid for, with the name and email of each author whose charge is unpaid, and copy all of those emails at once.** IDs never submitted or only imported are flagged too, so the authors can be reached through the reviewing system.
+
+### Fixed
+
+- **The submissions list now shows a submission as paid only once every author's charge is approved.** Before, admins saw it as paid while a co-author's charge was still waiting for their approval.
+
 ## 0.5.24 - 2026-11-01
 
 ### Changed
