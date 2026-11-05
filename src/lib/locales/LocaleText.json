@@ -4641,6 +4641,10 @@
                       "description": "What the editor(s) are paid on closing, before the total.",
                       "type": "string"
                     },
+                    "paid": {
+                      "description": "Beside an assignment already compensated, listed so the editor sees everyone on the submission, not only those this close will pay.",
+                      "type": "string"
+                    },
                     "pay": {
                       "description": "The work was done: compensate it.",
                       "type": "string"
@@ -4657,6 +4661,7 @@
                   "required": [
                     "pay",
                     "remove",
+                    "paid",
                     "editors",
                     "total"
                   ],
