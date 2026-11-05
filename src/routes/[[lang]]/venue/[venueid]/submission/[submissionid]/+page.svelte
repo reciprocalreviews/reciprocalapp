@@ -281,6 +281,18 @@
 			: []
 	);
 
+	/** Non-editor work already paid, typically because its volunteer requested compensation.
+	 * The close-out lists it so the editor sees everyone on the submission, not only those
+	 * the close will pay; otherwise paid reviewers look as if they had been left out. */
+	let alreadyPaid = $derived(
+		assignments !== null && roles !== null
+			? assignments.filter((a) => {
+					const role = roles.find((r) => r.id === a.role);
+					return role !== undefined && role.priority > 0 && a.approved && a.completed;
+				})
+			: []
+	);
+
 	/** What closing this submission out pays each role, or 0 where none is configured. */
 	function amountFor(role: RoleID): number {
 		return compensation.find((c) => c.role === role)?.amount ?? 0;
@@ -737,6 +749,16 @@
 										testid="close-out-remove"
 									/>
 								</span>
+							</li>
+						{/each}
+						{#each alreadyPaid as paid (paid.id)}
+							{@const role = roles.find((r) => r.id === paid.role)}
+							<li data-testid="close-out-paid">
+								<span
+									><strong>{role?.name ?? '?'}</strong>: <ScholarLink id={paid.scholar} />
+									{#if !venue.payment_free}<Tokens amount={amountFor(paid.role)} />{/if}</span
+								>
+								<span class="paid"><Text path={(l) => l.page.submission.closeOut.paid} /></span>
 							</li>
 						{/each}
 					</ul>
@@ -1444,6 +1466,10 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--spacing-half);
+	}
+
+	.paid {
+		font-style: italic;
 	}
 
 	.close-out-sums {

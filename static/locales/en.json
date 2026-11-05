@@ -1118,6 +1118,7 @@
 			"closeOut": {
 				"pay": "Work done, pay",
 				"remove": "Not done, remove",
+				"paid": "Already paid",
 				"editors": "Editor compensation",
 				"total": "Total paid from the venue's reserve"
 			},

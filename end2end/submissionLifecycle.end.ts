@@ -284,6 +284,37 @@ test('mark-done waits for every non-editor assignment to be compensated, then fl
 	);
 });
 
+test('the close-out lists work already paid, apart from the choices', async ({ page, context }) => {
+	const reviewerSeat = SEED.assignments.tok001Reviewer;
+	sql(
+		`update public.submissions set status = 'reviewing', completed_at = null where id = '${SUBMISSION_ID}';`
+	);
+	sql(
+		`update public.assignments set completed = false where submission = '${SUBMISSION_ID}' and approved;`
+	);
+	// The reviewer requested compensation and was paid before the editor came to close.
+	sql(`update public.assignments set completed = true where id = '${reviewerSeat}';`);
+
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+
+	const closeOut = page.getByTestId('completion-blocked');
+	await expect(closeOut).toBeVisible();
+	// Listed as paid, so they do not look left out, but not offered as a choice.
+	await expect(closeOut.getByTestId('close-out-paid')).toHaveCount(1);
+	await expect(
+		closeOut.getByTestId('close-out-paid').filter({ hasText: ASSIGNED_REVIEWER_NAME })
+	).toHaveCount(1);
+	await expect(
+		closeOut.getByTestId('close-out-assignment').filter({ hasText: ASSIGNED_REVIEWER_NAME })
+	).toHaveCount(0);
+	await expect(closeOut.getByTestId('close-out-assignment')).toHaveCount(1);
+
+	sql(
+		`update public.assignments set completed = false where submission = '${SUBMISSION_ID}' and approved;`
+	);
+});
+
 test('the decision-letter link closes a submission out, paying done work and removing the rest', async ({
 	page,
 	context

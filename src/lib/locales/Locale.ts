@@ -968,6 +968,9 @@ export type LocaleText = {
 				pay: string;
 				/** The work was not done: remove the assignment unpaid. */
 				remove: string;
+				/** Beside an assignment already compensated, listed so the editor sees everyone
+				 * on the submission, not only those this close will pay. */
+				paid: string;
 				/** What the editor(s) are paid on closing, before the total. */
 				editors: string;
 				/** The whole amount the close pays from the venue's reserve. */
