@@ -928,7 +928,54 @@
 				"newSubmission": "Pay for a submission",
 				"newSubmissionFree": "Register a submission",
 				"import": "Import submissions",
-				"match": "Match imported names"
+				"match": "Match imported names",
+				"checkPayments": "Check payments"
+			}
+		},
+		"submissionPayments": {
+			"title": "Check payments",
+			"intro": "Paste manuscript IDs from your reviewing system to see which have been paid for here. For each one that hasn't, this says who to write to.",
+			"notAdmin": "Only this venue's admins can check payments, since only they can see the charges made to the venue.",
+			"paymentFree": "This venue doesn't charge for submissions, so there are no payments to check.",
+			"notLoaded": "Couldn't load this venue.",
+			"field": {
+				"ids": {
+					"label": "Manuscript IDs",
+					"placeholder": "One per line, or separated by commas",
+					"note": "Paste a column from a spreadsheet or a list from an email. Repeated IDs are checked once."
+				}
+			},
+			"button": {
+				"check": {
+					"tip": "Look up whether each manuscript ID has been paid for",
+					"label": "Check"
+				},
+				"copyEmails": {
+					"tip": "Copy the email addresses of every author with an unpaid charge, to paste into one message",
+					"label": "Copy emails"
+				}
+			},
+			"summary": "Checked {count}: {missing} not submitted, {outstanding} outstanding, {imported} imported, {paid} paid, {free} free.",
+			"headers": {
+				"id": "Manuscript ID",
+				"submission": "Submission",
+				"status": "Payment",
+				"contact": "Write to"
+			},
+			"status": {
+				"missing": "not submitted",
+				"outstanding": "outstanding",
+				"imported": "imported",
+				"paid": "paid",
+				"free": "free"
+			},
+			"contact": {
+				"missing": "Its authors, through your reviewing system. Nobody has submitted it here.",
+				"imported": "Its authors, through your reviewing system. It was imported, so nobody was charged here.",
+				"proposed": "hasn't approved their charge",
+				"declined": "declined their charge",
+				"unknown": "charge not visible",
+				"noEmail": "no contact email"
 			}
 		},
 		"unmatched": {

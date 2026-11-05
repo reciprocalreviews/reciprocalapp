@@ -327,6 +327,15 @@
 					testid="submissions-import"
 				/>
 			{/if}
+			<!-- Admins only: only they can read the charges made to the venue. -->
+			{#if isAdmin && showPayment}
+				<Action
+					to="/venue/{venuePath(venue)}/submissions/payments"
+					label={(l) => l.page.submissions.action.checkPayments}
+					group="admin"
+					testid="submissions-check-payments"
+				/>
+			{/if}
 			<!-- Offered only while there is something to match: the list is on its own page,
 			     since it and the submissions below can each run to hundreds of rows. -->
 			{#if unmatchedCount > 0}

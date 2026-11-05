@@ -68,11 +68,12 @@ export const load: PageLoad = async ({ parent, params, url }) => {
 	const { data: submissionEditors } =
 		uid === null ? { data: [] } : await db.getVenueSubmissionEditors(venueid);
 
-	// Transactions in the submissions. Only retrieve IDs to preserve confidentiality.
+	// Transactions in the submissions. Only the id and status, to preserve confidentiality:
+	// the status is what says whether a charge was paid.
 	const { data: transactions } =
 		submissions === null
 			? { data: null }
-			: await db.getSubmissionTransactionIDs(
+			: await db.getSubmissionTransactionStatuses(
 					submissions.map((submission) => submission.transactions).flat()
 				);
 
