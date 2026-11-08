@@ -570,7 +570,6 @@ export default abstract class CRUD {
 	abstract editVenueVetThanks(id: VenueID, vet: boolean): Promise<Result>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<Result>;
 	abstract editVenuePaymentFree(id: VenueID, paymentFree: boolean): Promise<Result>;
-	abstract editVenueDoneVisibilityDays(id: VenueID, days: number): Promise<Result>;
 	abstract editVenueTransactionReminderFrequency(id: VenueID, days: number): Promise<Result>;
 
 	abstract createRole(id: VenueID, name: string): Promise<Result<RoleRow>>;
@@ -987,7 +986,13 @@ export default abstract class CRUD {
 		transactions: Pick<TransactionRow, 'currency'>[]
 	): Promise<ReadResult<CurrencyRow[] | null>>;
 
-	abstract getVenueSubmissions(venue: VenueID): Promise<ReadResult<SubmissionRow[] | null>>;
+	/** The venue's submissions in one state: done, or still being reviewed. The
+	 * submissions list shows one at a time, so the active list a bidder reads does
+	 * not grow with the venue's history. */
+	abstract getVenueSubmissions(
+		venue: VenueID,
+		done: boolean
+	): Promise<ReadResult<SubmissionRow[] | null>>;
 	abstract getScholarSubmissions(scholar: ScholarID): Promise<ReadResult<SubmissionRow[] | null>>;
 	abstract getSubmission(id: SubmissionID): Promise<ReadResult<SubmissionRow | null>>;
 
@@ -1029,13 +1034,12 @@ export default abstract class CRUD {
 		venue: VenueID,
 		externalIDs: string[]
 	): Promise<ReadResult<SubmissionPayments | null>>;
-	/** How many of the venue's submissions this scholar would find in the submissions
-	 * list: RLS-visible, minus the ones they have a conflict on and the done ones past
-	 * the venue's visibility window, both of which the list itself hides. */
+	/** How many of the venue's active submissions this scholar would find in the
+	 * submissions list's default mode: RLS-visible and still being reviewed, minus the
+	 * ones they have a conflict on, which the list itself hides. */
 	abstract getVenueSubmissionCount(
 		venue: VenueID,
-		conflicted?: SubmissionID[],
-		doneCutoff?: Date | null
+		conflicted?: SubmissionID[]
 	): Promise<ReadResult<number | null>>;
 
 	abstract getVenueSubmissionTypes(venue: VenueID): Promise<ReadResult<SubmissionType[] | null>>;

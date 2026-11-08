@@ -776,9 +776,10 @@
 			},
 			"feedback": {
 				"notLoaded": "Unable to load submissions.",
-				"noSubmissions": "This venue has no submissions (or none visible to you).",
+				"noSubmissions": "This venue has no active submissions (or none visible to you).",
 				"logIn": "[Log in](/login) to see the submissions you can review or bid on.",
 				"noneFiltered": "All submissions filtered.",
+				"noneDone": "No submissions are done yet (or none visible to you).",
 				"scholarNotFound": "No scholar found with that email or ORCID.",
 				"batchReady": "Found them. Use the assign buttons in that role's column below."
 			},
@@ -789,6 +790,10 @@
 			},
 			"checkbox": {
 				"needsEditor": "Only show submissions with no {role} yet"
+			},
+			"mode": {
+				"active": "Active",
+				"done": "Done"
 			},
 			"button": {
 				"batchFind": {
@@ -1364,7 +1369,7 @@
 			"stat": {
 				"welcome": "tokens for new volunteers",
 				"volunteers": "volunteers",
-				"submissions": "submissions visible to you",
+				"submissions": "active submissions visible to you",
 				"tokens": "tokens"
 			}
 		},
@@ -1521,12 +1526,6 @@
 					"note": "**Payment-free venue**: Scholars submit and review for free. Currency, costs, and compensation are hidden."
 				}
 			},
-			"slider": {
-				"doneVisibility": {
-					"label": "How long after a submission is marked done should it remain visible in the submissions list?",
-					"suffix": " days"
-				}
-			},
 			"paragraph": {
 				"reviewSystemURL": "Where your editors assign reviewers to manuscripts, such as your ScholarOne or OpenReview site. Optional. When set, it's linked beside Reciprocal Reviews' assign buttons, reminding editors to assign reviewers there too.",
 				"relevantVenues": "Venues whose authors are likely to be good reviewers here. Volunteers who have published in one are suggested first to whoever assigns reviewers. Only they see it, never the public.\n\n**Put one venue per line, with its names separated by commas.** For example, `ACM Transactions on Computing Education, TOCE`. A volunteer's ORCID work matches when one of these names appears in its journal or proceedings title.\n\n- Matching ignores case, punctuation, years, ordinals like \"55th\", and the words *Proceedings*, *of*, *the*, *on*, *ACM*, and *IEEE*.\n- Abbreviated titles also match. For example, \"ACM Trans. Comput. Educ.\" matches the full name.\n- A single word, like an acronym, matches only a whole word. Many proceedings titles spell the venue out in full and never use its acronym, so give both.",
@@ -1544,9 +1543,8 @@
 				"webAddress": "Give the venue its full name, the short one the venue bar shows in place of it, and a link to its own website. Then pick the address this venue lives at here. It goes in every link anyone sends about the venue — emails and the email-template snippets below — so choose something people will recognize and can read aloud. You can change it later, but the old address is released the moment you do: nothing redirects from it, and every link that used it breaks.",
 				"policies": "This is the most consequential step on the page. Spend real time on it before touching anything below.",
 				"inactive": "Check the inactive message in the settings below, so your community knows you're busy configuring things.",
-				"compensation": "It is critical that you think carefully about the compensation structure for your venue. Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter newcomers from contributring. See [Setting welcome & compensation](#policies) in Step 1 for the balance rules and a worked example.",
+				"compensation": "It is critical that you think carefully about the compensation structure for your venue. Giving too many welcome tokens disincentivizes reviewing, but not giving enough can deter newcomers from contributing. See [Setting welcome & compensation](#policies) in Step 1 for the balance rules and a worked example.",
 				"roles": "Configure your venue's volunteer roles below, create roles such as **reviewer**, **program commitee**, **associate editor** to represent the different kinds of contributions volunteers can make to this venue. Ensure you set total compensation levels for each role to not be higher than the cost of a submission — see [Setting welcome & compensation](#policies) in Step 1 for why this matters.",
-				"doneVisibility": "Done submissions still appear in the submissions list for this many days after completion (and are sorted to the bottom). After that, they're hidden from the list but still accessible by direct link. Set to 0 to hide them as soon as they're done.",
 				"preferenceLevels": "Bidders pick from these labels when bidding on submissions to signal how interested they are. The order matters: the top label is the most preferred. Leave this empty and bidders get a single **Bid** button instead, with **Unbid** to take it back.",
 				"declineReasons": "When an approver declines a bid or a request for compensation, they pick one of these reasons or write their own. The scholar reads the reason word for word, with the approver's name, so keep it neutral and kind. Delete them all and approvers write a reason every time.",
 				"templates": "Paste these snippets into your reviewing platform's email templates so the system's automated emails carry the right Reciprocal Reviews link. Pick your platform first — the manuscript-id variable in the snippet body and the embedded URL will switch to that platform's syntax. Substitute the **{role}** placeholder yourself; reviewing platforms vary too much in how they expose role names.",
@@ -2460,7 +2458,6 @@
 		"EditVenueVetThanks": "Unable to update the thank-you vetting setting",
 		"EditVenueWelcomeAmount": "Unable to edit the welcome amount",
 		"EditVenuePaymentFree": "Unable to change the payment mode",
-		"EditVenueDoneVisibilityDays": "Unable to update the recently-done visibility window",
 		"EditVenueTransactionReminderFrequency": "Unable to update the transaction reminder frequency",
 		"EditRoleBidding": "Unable to toggle bidding",
 		"EditRoleDesiredAssignments": "Unable to set desired assignments",

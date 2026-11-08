@@ -3,8 +3,9 @@
  *
  * Extracted from the submissions page so the ordering and the privacy gate can
  * be tested directly. Everything here is pure — the page's reactive reads are
- * passed in as a context object, including `now`, so the done-visibility window
- * is deterministic in tests. */
+ * passed in as a context object. The list holds one status at a time (active or
+ * done, chosen by the page's mode and filtered by the load), so nothing here
+ * separates the two. */
 
 import { charges, NULL_TRANSACTION, type ChargeStatus } from './submissionPayment';
 
@@ -16,7 +17,6 @@ export type ViewSubmission = {
 	authors: string[];
 	status: string;
 	created_at: string;
-	completed_at: string | null;
 	transactions: string[];
 };
 
@@ -52,14 +52,10 @@ export type SubmissionsViewContext = {
 	/** Transactions visible to the viewer, with their status: only an approved
 	 * charge counts as paid. */
 	transactions: { id: string; status: ChargeStatus }[] | null;
-	/** The venue's done-visibility window in days, or null if the venue is unknown. */
-	doneVisibilityDays: number | null;
 	/** The raw search box contents; trimmed and lowercased here. */
 	filter: string;
 	/** When true, show only submissions still waiting for an editor. */
 	needsEditorOnly: boolean;
-	/** Current time in ms, injected so the visibility window is testable. */
-	now: number;
 	/** Sort state, in precedence order: the LAST column listed is dominant,
 	 * because each pass is applied in turn over a stable sort. */
 	sortOrder: SortColumn[];
@@ -251,27 +247,16 @@ export function submissionsView(context: SubmissionsViewContext) {
 		}
 	}
 
-	/** Sort and filter submissions. Done submissions older than the venue's
-	 * done_visibility_days window are hidden from the list (they remain
-	 * accessible by direct link). What remains is partitioned so that done
-	 * submissions always sort to the bottom regardless of the active sort. */
+	/** Sort and filter submissions: the search term, the needs-editor filter, and
+	 * the viewer's conflicts, then the active sort. */
 	function sortedAndFiltered<T extends ViewSubmission>(submissions: T[]): T[] {
-		const cutoffMs =
-			context.doneVisibilityDays === null
-				? 0
-				: context.now - context.doneVisibilityDays * 24 * 60 * 60 * 1000;
 		const subs = submissions
 			.filter((sub) => trimmedFilter === '' || matchesFilter(sub))
 			.filter((sub) => !context.needsEditorOnly || needsEditor(sub))
 			.filter(
 				(sub) =>
 					context.conflicts !== null && !context.conflicts.some((c) => c.submissionid === sub.id)
-			)
-			.filter((sub) => {
-				if (sub.status !== 'done') return true;
-				if (sub.completed_at === null) return true;
-				return new Date(sub.completed_at).getTime() >= cutoffMs;
-			});
+			);
 
 		for (const column of context.sortOrder) {
 			const compare = ascending[column];
@@ -279,11 +264,7 @@ export function submissionsView(context: SubmissionsViewContext) {
 			subs.sort((a, b) => sign * compare(a, b));
 		}
 
-		// Partition: reviewing first, then done. Within each group the active
-		// sort order is preserved.
-		const reviewing = subs.filter((s) => s.status !== 'done');
-		const finished = subs.filter((s) => s.status === 'done');
-		return [...reviewing, ...finished];
+		return subs;
 	}
 
 	return {

@@ -714,6 +714,8 @@ export type LocaleText = {
 				/** Shown instead of noSubmissions to a visitor who isn't signed in: they see none because they aren't, not because there are none. */
 				logIn: string;
 				noneFiltered: string;
+				/** Done mode, when the venue has no done submissions visible to the viewer. */
+				noneDone: string;
 				/** No scholar matched the email or ORCID typed into the batch form. */
 				scholarNotFound: string;
 				/** A scholar and role are resolved; per-row assign buttons are live. */
@@ -725,6 +727,12 @@ export type LocaleText = {
 			checkbox: {
 				/** Narrows the list to submissions with no editor. */
 				needsEditor: string;
+			};
+			/** The list shows one state at a time: submissions still being reviewed
+			 * (the default), or done ones. */
+			mode: {
+				active: string;
+				done: string;
 			};
 			button: {
 				batchFind: ButtonText;
@@ -1197,8 +1205,6 @@ export type LocaleText = {
 				inactive: string;
 				compensation: string;
 				roles: string;
-				/** Explains how done_visibility_days controls the list. */
-				doneVisibility: string;
 				/** Explains what preference levels are for, and that leaving them
 				 * empty falls back to the plain Bid / Unbid pair. */
 				preferenceLevels: string;
@@ -1320,9 +1326,6 @@ export type LocaleText = {
 				/** `label` is the checkbox label (checked = payments on); `note`
 				 * describes the payment-free state, shown only when unchecked. */
 				paymentFree: { label: string; note: string };
-			};
-			slider: {
-				doneVisibility: SliderText;
 			};
 			paragraph: {
 				/** Above the reviewing system URL field: what it is and where it is shown. */
@@ -2285,7 +2288,6 @@ export type LocaleText = {
 		EditVenueVetThanks: string;
 		EditVenueWelcomeAmount: string;
 		EditVenuePaymentFree: string;
-		EditVenueDoneVisibilityDays: string;
 		EditVenueTransactionReminderFrequency: string;
 		EditRoleBidding: string;
 		EditRoleDesiredAssignments: string;

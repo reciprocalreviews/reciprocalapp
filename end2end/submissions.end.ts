@@ -221,24 +221,25 @@ test('editor filters submissions by author name, reviewer name, title, and exter
 	// Query expected counts from the DB rather than hard-coding them, because
 	// earlier tests in the full suite may have created additional submissions
 	// (e.g. submission.end.ts creates one authored by author1). Reviewer counts
-	// are likewise computed live.
+	// are likewise computed live. Active submissions only: that is the list's
+	// default mode, and the done ones are in the other.
 	const AUTHOR_ID = SEED.scholars.author1.id;
 	const BOTH_ID = SEED.scholars.r1.id;
 	const REVIEWER_ID = SEED.scholars.r4.id;
 	const authoredCount = Number(
 		sql(
-			`select count(*) from public.submissions where venue = '${VENUE_ID}' and '${AUTHOR_ID}' = any(authors);`
+			`select count(*) from public.submissions where venue = '${VENUE_ID}' and status = 'reviewing' and '${AUTHOR_ID}' = any(authors);`
 		)
 	);
 	// Matches submissions where r1 is author OR a visible assignee.
 	const bothMatchCount = Number(
 		sql(
-			`select count(distinct s.id) from public.submissions s left join public.assignments a on a.submission = s.id and a.scholar = '${BOTH_ID}' where s.venue = '${VENUE_ID}' and ('${BOTH_ID}' = any(s.authors) or a.id is not null);`
+			`select count(distinct s.id) from public.submissions s left join public.assignments a on a.submission = s.id and a.scholar = '${BOTH_ID}' where s.venue = '${VENUE_ID}' and s.status = 'reviewing' and ('${BOTH_ID}' = any(s.authors) or a.id is not null);`
 		)
 	);
 	const reviewerMatchCount = Number(
 		sql(
-			`select count(distinct s.id) from public.submissions s left join public.assignments a on a.submission = s.id and a.scholar = '${REVIEWER_ID}' where s.venue = '${VENUE_ID}' and ('${REVIEWER_ID}' = any(s.authors) or a.id is not null);`
+			`select count(distinct s.id) from public.submissions s left join public.assignments a on a.submission = s.id and a.scholar = '${REVIEWER_ID}' where s.venue = '${VENUE_ID}' and s.status = 'reviewing' and ('${REVIEWER_ID}' = any(s.authors) or a.id is not null);`
 		)
 	);
 
@@ -349,4 +350,37 @@ test('a bidder at an anonymized venue sees locks, not authors or manuscript IDs'
 			`update public.submissions set expertise = ${priorExpertise === '' ? 'null' : `'${priorExpertise}'`} where externalid = '${ANON_SUBMISSION.externalId}';`
 		);
 	}
+});
+
+test('the list shows active submissions by default and done ones in Done mode', async ({
+	page,
+	context
+}) => {
+	// A seeded done submission, and a seeded one still under review.
+	const DONE_TITLE = 'Citation Cartels and the Small Worlds That Sustain Them';
+	const activeTitle = sql(
+		`select title from public.submissions where venue = '${VENUE_ID}' and status = 'reviewing' order by externalid limit 1;`
+	);
+
+	await login('editor@uni.edu', page, context);
+	await page.goto(`/venue/${VENUE_PATH}/submissions`);
+	await page.waitForLoadState('networkidle');
+
+	const rows = page.locator('tr[data-testid^="submission-"]');
+	await expect(rows.filter({ hasText: activeTitle }).first()).toBeVisible();
+	await expect(rows.filter({ hasText: DONE_TITLE })).toHaveCount(0);
+
+	await page.getByTestId('submissions-mode-done').check();
+	await page.waitForURL(/[?&]done/);
+	await expect(rows.filter({ hasText: DONE_TITLE })).toHaveCount(1);
+	await expect(rows.filter({ hasText: activeTitle })).toHaveCount(0);
+	// Nothing done needs an editor or takes an assignment.
+	await expect(page.getByTestId('submissions-needs-editor-filter')).toHaveCount(0);
+	await expect(page.getByTestId('batch-assign-scholar')).toHaveCount(0);
+
+	await page.getByTestId('submissions-mode-active').check();
+	await expect(rows.filter({ hasText: DONE_TITLE })).toHaveCount(0);
+	await expect(page).not.toHaveURL(/[?&]done/);
+
+	await logout(page);
 });

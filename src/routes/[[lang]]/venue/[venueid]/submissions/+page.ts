@@ -24,8 +24,13 @@ export const load: PageLoad = async ({ parent, params, url }) => {
 			);
 	}
 
-	// Get the venue's submissions.
-	const { data: submissions } = await db.getVenueSubmissions(venueid);
+	// The list shows one state at a time: active submissions by default, done ones with
+	// `?done`. Filtered here rather than on the page, so the active list a bidder reads,
+	// and every read below keyed on it, doesn't grow with the venue's history.
+	const done = url.searchParams.has('done');
+
+	// Get the venue's submissions in that state.
+	const { data: submissions } = await db.getVenueSubmissions(venueid, done);
 
 	const admin = venue !== null && uid !== null && venue.admins.includes(uid);
 
@@ -107,6 +112,7 @@ export const load: PageLoad = async ({ parent, params, url }) => {
 
 	return {
 		venue,
+		done,
 		submissions,
 		unmatchedCount,
 		volunteering,

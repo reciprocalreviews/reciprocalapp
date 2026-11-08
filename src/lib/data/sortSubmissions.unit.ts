@@ -6,9 +6,6 @@ import {
 	type ViewSubmission
 } from './sortSubmissions';
 
-const NOW = Date.parse('2026-08-16T00:00:00Z');
-const DAY = 24 * 60 * 60 * 1000;
-
 function sub(over: Partial<ViewSubmission> & { id: string }): ViewSubmission {
 	return {
 		title: 'Title',
@@ -16,7 +13,6 @@ function sub(over: Partial<ViewSubmission> & { id: string }): ViewSubmission {
 		authors: [],
 		status: 'reviewing',
 		created_at: '2026-01-01T00:00:00Z',
-		completed_at: null,
 		transactions: [],
 		...over
 	};
@@ -33,10 +29,8 @@ function view(over: Partial<SubmissionsViewContext> = {}) {
 		scholarName: new Map(),
 		conflicts: [],
 		transactions: [],
-		doneVisibilityDays: 30,
 		filter: '',
 		needsEditorOnly: false,
-		now: NOW,
 		sortOrder: ['payment', 'title', 'id', 'created'],
 		paymentSortPendingFirst: true,
 		titleSortIncreasing: true,
@@ -310,31 +304,6 @@ describe('sortedAndFiltered', () => {
 		expect(ids(view({ conflicts: [{ submissionid: 's1' }] }).sortedAndFiltered(rows))).toEqual([
 			's2'
 		]);
-	});
-
-	test('sorts done submissions to the bottom regardless of the active sort', () => {
-		const rows = [
-			sub({ id: 'done', status: 'done', title: 'A', completed_at: '2026-08-15T00:00:00Z' }),
-			sub({ id: 'live', status: 'reviewing', title: 'Z' })
-		];
-		expect(ids(view().sortedAndFiltered(rows))).toEqual(['live', 'done']);
-	});
-
-	test('hides done submissions older than the visibility window', () => {
-		const rows = [
-			sub({
-				id: 'old',
-				status: 'done',
-				completed_at: new Date(NOW - 40 * DAY).toISOString()
-			}),
-			sub({ id: 'recent', status: 'done', completed_at: new Date(NOW - 5 * DAY).toISOString() })
-		];
-		expect(ids(view({ doneVisibilityDays: 30 }).sortedAndFiltered(rows))).toEqual(['recent']);
-	});
-
-	test('keeps a done submission that has no completion timestamp', () => {
-		const rows = [sub({ id: 'x', status: 'done', completed_at: null })];
-		expect(ids(view({ doneVisibilityDays: 1 }).sortedAndFiltered(rows))).toEqual(['x']);
 	});
 
 	test('the last column in sortOrder is the dominant key', () => {

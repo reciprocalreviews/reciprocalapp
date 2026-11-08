@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Action from '#lib/components/Action.svelte';
 	import Button from '#lib/components/Button.svelte';
@@ -18,6 +19,7 @@
 	import Table from '#lib/components/Table.svelte';
 	import TextField from '#lib/components/TextField.svelte';
 	import Checkbox from '#lib/components/Checkbox.svelte';
+	import Radio from '#lib/components/Radio.svelte';
 	import LoadIndicator from '#lib/components/LoadIndicator.svelte';
 	import Tip from '#lib/components/Tip.svelte';
 	import Form from '#lib/components/Form.svelte';
@@ -46,7 +48,9 @@
 	const {
 		/** The venue of this route */
 		venue,
-		/** All submissions for this venue */
+		/** Whether the list shows done submissions rather than active ones */
+		done,
+		/** The venue's submissions in the chosen state, active or done */
 		submissions,
 		/** All volunteers for this venue (if an editor) and all accepted, active volunteers for everyone else */
 		volunteering,
@@ -204,12 +208,23 @@
 	/** Narrow the list to submissions nobody is editing yet — the editorial round's
 	 * first question, and the one the list could not answer before. */
 	let needsEditorOnly = $state(false);
+
+	/** Active or done submissions. The mode lives in the URL, so the load fetches only
+	 * that state and the choice survives a reload or a shared link; this follows it,
+	 * and choosing a mode navigates. */
+	let mode = $derived(done ? 'done' : 'active');
+
+	function setMode(choice: string) {
+		const url = new URL(page.url.href);
+		if (choice === 'done') url.searchParams.set('done', '');
+		else url.searchParams.delete('done');
+		goto(url, { replace: true, reset: false });
+	}
 	const locale = getLocaleContext();
 
 	/** The submissions-list view logic — search matching, the author-visibility
 	 * gate, payment status, and the sort/filter pipeline — lives in
-	 * $lib/data/sortSubmissions so its ordering and privacy rules are testable.
-	 * `now` is read here so the done-visibility window follows the clock. */
+	 * $lib/data/sortSubmissions so its ordering and privacy rules are testable. */
 	const view = $derived(
 		submissionsView({
 			uid,
@@ -221,10 +236,9 @@
 			scholarName,
 			conflicts,
 			transactions,
-			doneVisibilityDays: venue?.done_visibility_days ?? null,
 			filter,
-			needsEditorOnly,
-			now: Date.now(),
+			// Done submissions never need an editor, so the filter only applies to active ones.
+			needsEditorOnly: needsEditorOnly && !done,
 			sortOrder,
 			paymentSortPendingFirst,
 			titleSortIncreasing,
@@ -352,7 +366,7 @@
 		<!-- One prompt for bidding, however many roles take bids, with each limited role's
 		     budget beneath it. One per role said the same sentence over again for an admin
 		     who can see every role. -->
-		{#if uid}
+		{#if uid && !done}
 			{@const biddable = visibleRoles.filter((r) => r.biddable)}
 			{#if biddable.length > 0}
 				<Tip>
@@ -383,6 +397,23 @@
 			{/if}
 		{/if}
 
+		<!-- Active by default: that is what bidders and editors act on, and the done list
+		     only grows. Done submissions are one click away rather than mixed in. -->
+		<div class="modes" onchange={() => setMode(mode)}>
+			<Radio
+				bind:group={mode}
+				value="active"
+				label={(l) => l.page.submissions.mode.active}
+				testid="submissions-mode-active"
+			/>
+			<Radio
+				bind:group={mode}
+				value="done"
+				label={(l) => l.page.submissions.mode.done}
+				testid="submissions-mode-done"
+			/>
+		</div>
+
 		<TextField
 			testid="submissions-filter"
 			strings={(l) => l.page.submissions.field.filter}
@@ -391,7 +422,7 @@
 
 		<!-- Signed in only: a submission waiting for an editor is something an editor
 		     volunteer can claim, and nothing a signed-out reader can act on. -->
-		{#if uid}
+		{#if uid && !done}
 			<Checkbox
 				testid="submissions-needs-editor-filter"
 				label={(l) => l.page.submissions.checkbox.needsEditor.replace('{role}', editorRoleName)}
@@ -400,7 +431,7 @@
 		{/if}
 
 		<!-- Assign one scholar across many submissions without opening each one. -->
-		{#if uid && assignableRoles.length > 0}
+		{#if uid && !done && assignableRoles.length > 0}
 			<Form>
 				<Tip><Text path={(l) => l.page.submissions.tip.batchAssign} /></Tip>
 				<!-- The same reminder as above a submission's assignments: this only records the
@@ -465,7 +496,9 @@
 				text={(l) =>
 					uid === null
 						? l.page.submissions.feedback.logIn
-						: l.page.submissions.feedback.noSubmissions}
+						: done
+							? l.page.submissions.feedback.noneDone
+							: l.page.submissions.feedback.noSubmissions}
 			></Feedback>
 		{:else}
 			{@const sorted = view.sortedAndFiltered(submissions)}
@@ -878,6 +911,13 @@
 {/if}
 
 <style>
+	.modes {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		gap: var(--spacing);
+	}
+
 	.budgets {
 		margin-block: var(--spacing-half);
 		padding-inline-start: var(--spacing);

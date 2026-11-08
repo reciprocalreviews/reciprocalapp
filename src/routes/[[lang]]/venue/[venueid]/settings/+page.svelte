@@ -20,7 +20,6 @@
 	import Options from '#lib/components/Options.svelte';
 	import Page from '#lib/components/Page.svelte';
 	import Paragraph from '#lib/components/Paragraph.svelte';
-	import Slider from '#lib/components/Slider.svelte';
 	import Subheader from '#lib/components/Subheader.svelte';
 	import Tip from '#lib/components/Tip.svelte';
 	import { getDB } from '#lib/data/CRUD.js';
@@ -30,7 +29,6 @@
 	import { isntEmpty, validInteger, validReviewSystemURL, validURL } from '#lib/validation.js';
 	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import { getLocaleContext } from '#routes/Contexts.js';
-	import { handle } from '#routes/feedback.svelte.js';
 	import PreferenceLevels from '../PreferenceLevels.svelte';
 	import WebAddress from './WebAddress.svelte';
 	import DeclineReasons from './DeclineReasons.svelte';
@@ -290,7 +288,7 @@
 			text={(l) => l.page.settings.header.compensation}
 		/>
 
-		<Tip><Text path={(l) => l.page.settings.tip.compensation} /></Tip>
+		<Tip><Text markdown path={(l) => l.page.settings.tip.compensation} /></Tip>
 
 		<Checkbox
 			testid="payment-free-checkbox"
@@ -343,8 +341,6 @@
 			text={(l) => l.page.settings.header.visibility}
 		/>
 
-		<Tip><Text path={(l) => l.page.settings.tip.doneVisibility} /></Tip>
-
 		<Checkbox
 			on={venue.anonymous_assignments}
 			change={(on) => db().editVenueAnonymousAssignments(venue.id, on)}
@@ -357,17 +353,6 @@
 			label={(l) => l.page.settings.checkbox.vetThanks}
 		/>
 
-		<Slider
-			min={0}
-			max={365}
-			step={7}
-			value={venue.done_visibility_days}
-			strings={(l) => l.page.settings.slider.doneVisibility}
-			change={(days) => handle(db().editVenueDoneVisibilityDays(venue.id, days))}
-			immediately={false}
-			testid="done-visibility-days"
-		/>
-
 		<!-- Step 6: Bid preference levels (only when at least one role is biddable) -->
 		{#if hasBiddableRole}
 			<Subheader
@@ -377,7 +362,7 @@
 				text={(l) => l.page.settings.header.preferenceLevels}
 			/>
 
-			<Tip><Text path={(l) => l.page.settings.tip.preferenceLevels} /></Tip>
+			<Tip><Text markdown path={(l) => l.page.settings.tip.preferenceLevels} /></Tip>
 
 			<PreferenceLevels {venue} levels={preferenceLevels ?? []} />
 		{/if}

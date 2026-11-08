@@ -604,9 +604,6 @@
             "EditVenueDescription": {
               "type": "string"
             },
-            "EditVenueDoneVisibilityDays": {
-              "type": "string"
-            },
             "EditVenueInactive": {
               "type": "string"
             },
@@ -947,7 +944,6 @@
             "EditVenueVetThanks",
             "EditVenueWelcomeAmount",
             "EditVenuePaymentFree",
-            "EditVenueDoneVisibilityDays",
             "EditVenueTransactionReminderFrequency",
             "EditRoleBidding",
             "EditRoleDesiredAssignments",
@@ -4309,18 +4305,6 @@
                   ],
                   "type": "object"
                 },
-                "slider": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "doneVisibility": {
-                      "$ref": "#/definitions/SliderText"
-                    }
-                  },
-                  "required": [
-                    "doneVisibility"
-                  ],
-                  "type": "object"
-                },
                 "template": {
                   "additionalProperties": false,
                   "description": "Email-template snippets editors copy into their reviewing platform (#113). Each entry's `body` is interpolated with `{origin}` (the environment's own base URL, so a snippet copied from a local or staging venue links back to it), `{venue}` (the venue's title), `{venuepath}` (the segment the venue is addressed by — its web address once it has one, its id until then), and `{manuscriptVar}` (the selected platform's submission-id syntax).\n\n`{role}` is deliberately NOT interpolated: an editor pastes these once per role, and reviewing platforms differ too much in how they expose role names for us to guess. The tip above the snippets says so — this list previously claimed otherwise, which read as a bug.",
@@ -4413,10 +4397,6 @@
                       "description": "Explains decline reasons: what approvers do with them, that the bidder reads the words, and that leaving none requires a written reason.",
                       "type": "string"
                     },
-                    "doneVisibility": {
-                      "description": "Explains how done_visibility_days controls the list.",
-                      "type": "string"
-                    },
                     "inactive": {
                       "type": "string"
                     },
@@ -4446,7 +4426,6 @@
                     "inactive",
                     "compensation",
                     "roles",
-                    "doneVisibility",
                     "preferenceLevels",
                     "declineReasons",
                     "templates",
@@ -4469,7 +4448,6 @@
                 "options",
                 "button",
                 "checkbox",
-                "slider",
                 "paragraph",
                 "template"
               ],
@@ -5466,6 +5444,10 @@
                     "noSubmissions": {
                       "type": "string"
                     },
+                    "noneDone": {
+                      "description": "Done mode, when the venue has no done submissions visible to the viewer.",
+                      "type": "string"
+                    },
                     "noneFiltered": {
                       "type": "string"
                     },
@@ -5482,6 +5464,7 @@
                     "noSubmissions",
                     "logIn",
                     "noneFiltered",
+                    "noneDone",
                     "scholarNotFound",
                     "batchReady"
                   ],
@@ -5626,6 +5609,23 @@
                   ],
                   "type": "object"
                 },
+                "mode": {
+                  "additionalProperties": false,
+                  "description": "The list shows one state at a time: submissions still being reviewed (the default), or done ones.",
+                  "properties": {
+                    "active": {
+                      "type": "string"
+                    },
+                    "done": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "active",
+                    "done"
+                  ],
+                  "type": "object"
+                },
                 "options": {
                   "additionalProperties": false,
                   "properties": {
@@ -5715,6 +5715,7 @@
                 "feedback",
                 "options",
                 "checkbox",
+                "mode",
                 "button",
                 "headers",
                 "field",
