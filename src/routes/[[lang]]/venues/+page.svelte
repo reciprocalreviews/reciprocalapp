@@ -12,6 +12,7 @@
 
 	let proposals = $derived(data.proposals);
 	let venues = $derived(data.venues);
+	let inactiveVenues = $derived(data.inactiveVenues);
 
 	// Kept on the list rather than the layout, which also covered the proposal form. A
 	// realtime tick calls invalidateAll(), and an invalidation that lands while a `goto`
@@ -64,4 +65,31 @@
 	{:else}
 		<Feedback error text={(l) => l.page.venues.feedback.proposalsNotLoaded} />
 	{/if}
+
+	<!-- Last, and only when there are some: a venue not yet launched or already closed is the
+	     least useful thing here, but it still links, since the venue's page is how a visitor
+	     learns why it's closed and how a new venue's admins reach it to set it up. A failed
+	     load is reported once, by the active section above. -->
+	{#if inactiveVenues && inactiveVenues.length > 0}
+		<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.inactive} />
+		<ul>
+			{#each inactiveVenues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue, index}
+				<li>
+					<VenueLink
+						id={venue.id}
+						name={venue.title}
+						slug={venue.slug}
+						testid={'inactive-venue-' + index}
+					></VenueLink>{' '}<span class="message">{venue.inactive}</span>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 </Page>
+
+<style>
+	.message {
+		color: var(--inactive-color);
+		font-size: var(--small-font-size);
+	}
+</style>

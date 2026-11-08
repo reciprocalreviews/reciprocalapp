@@ -271,15 +271,17 @@ export type LocaleText = {
 			title: string;
 			description: string;
 			header: {
-				inactive: string;
 				proposed: string;
 				active: string;
+				/** Above the venues whose admins have switched them off, listed last with each
+				 * one's inactive message. Covers both a venue not yet launched and one that has
+				 * closed, since the flag and its message serve both. */
+				inactive: string;
 			};
 			link: {
 				propose: string;
 			};
 			feedback: {
-				noInactiveVenues: string;
 				noVenues: string;
 				venuesNotLoaded: string;
 				noProposals: string;

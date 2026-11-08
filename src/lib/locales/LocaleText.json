@@ -6540,9 +6540,6 @@
                 "feedback": {
                   "additionalProperties": false,
                   "properties": {
-                    "noInactiveVenues": {
-                      "type": "string"
-                    },
                     "noProposals": {
                       "type": "string"
                     },
@@ -6557,7 +6554,6 @@
                     }
                   },
                   "required": [
-                    "noInactiveVenues",
                     "noVenues",
                     "venuesNotLoaded",
                     "noProposals",
@@ -6695,6 +6691,7 @@
                       "type": "string"
                     },
                     "inactive": {
+                      "description": "Above the venues whose admins have switched them off, listed last with each one's inactive message. Covers both a venue not yet launched and one that has closed, since the flag and its message serve both.",
                       "type": "string"
                     },
                     "proposed": {
@@ -6702,9 +6699,9 @@
                     }
                   },
                   "required": [
-                    "inactive",
                     "proposed",
-                    "active"
+                    "active",
+                    "inactive"
                   ],
                   "type": "object"
                 },

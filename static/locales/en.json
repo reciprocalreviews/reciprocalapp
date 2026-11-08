@@ -178,7 +178,8 @@
 			"description": "These are journals and conferences using Reciprocal Reviews to track and incentivize peer review. Choose one to see it's policies or volunteer to review for it, or propose a new one.",
 			"header": {
 				"proposed": "Proposed venues",
-				"active": "Active venues"
+				"active": "Active venues",
+				"inactive": "Inactive venues"
 			},
 			"link": {
 				"propose": "Propose a new venue"
