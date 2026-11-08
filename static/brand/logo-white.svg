@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512" role="img" aria-label="Reciprocal Reviews">
+  <title>Reciprocal Reviews</title>
+  <!-- Two arrows chasing each other around a circle. Transparent background so the mark
+       drops onto any surface. The shadow is an offset copy of the arrows rather than an
+       SVG filter: filters get stripped or mis-rendered by avatar pipelines and email
+       clients, an extra path does not. Keep in sync with src/lib/components/Logo.svelte. -->
+  <g fill="#ffffff">
+    <g opacity="0.28" transform="translate(3 3.5)">
+      <path d="M 42.49 78.01 L 39.65 88.64 A 40 40 0 0 1 33.10 13.75 L 28.66 4.23 L 50.60 15.51 L 42.18 33.23 L 37.74 23.72 A 29 29 0 0 0 42.49 78.01 Z"/>
+      <path d="M 57.51 21.99 L 60.35 11.36 A 40 40 0 0 1 66.90 86.25 L 71.34 95.77 L 49.40 84.49 L 57.82 66.77 L 62.26 76.28 A 29 29 0 0 0 57.51 21.99 Z"/>
+    </g>
+    <path d="M 42.49 78.01 L 39.65 88.64 A 40 40 0 0 1 33.10 13.75 L 28.66 4.23 L 50.60 15.51 L 42.18 33.23 L 37.74 23.72 A 29 29 0 0 0 42.49 78.01 Z"/>
+    <path d="M 57.51 21.99 L 60.35 11.36 A 40 40 0 0 1 66.90 86.25 L 71.34 95.77 L 49.40 84.49 L 57.82 66.77 L 62.26 76.28 A 29 29 0 0 0 57.51 21.99 Z"/>
+  </g>
+</svg>

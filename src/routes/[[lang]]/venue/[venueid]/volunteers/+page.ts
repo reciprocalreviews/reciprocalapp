@@ -1,21 +1,81 @@
+import isVenueApprover from '#lib/data/isVenueApprover.js';
+import { NO_VENUE_ID } from '#lib/data/venuePath.js';
 import type { PageLoad } from './$types.js';
 
-export const load: PageLoad = async ({ parent, params }) => {
-	const { db } = await parent();
+export const load: PageLoad = async ({ parent }) => {
+	// The venue comes from the layout rather than being fetched again here: the layout is
+	// what resolves a web address to a venue, and refetching by the URL segment would look
+	// up an address in an id column.
+	const { db, venue, scholar } = await parent();
 
-	const venueid = params.venueid;
+	const venueid = venue?.id ?? NO_VENUE_ID;
 
-	// Get the matching venue.
-	const { data: venue } = await db.getVenue(venueid);
-
-	// The commitments to the venue's roles.
+	// The commitments to the venue's roles. RLS returns only the ones this viewer may
+	// see: a role can publish all of its volunteers, only those who have completed work
+	// at the venue, or none of them.
 	const { data: commitments } = await db.getVenueCommitments(venueid);
 
 	const { data: roles } = await db.getVenueRoles(venueid);
 
+	// How many volunteers each role really has, which stays public whatever the roster
+	// says. Without it the page cannot tell a role nobody has volunteered for from one
+	// whose roster is withheld, and would report the second as the first.
+	const { data: volunteerCounts } = await db.getVenueVolunteerCounts(venueid);
+
+	// Whether the viewer may see volunteers' addresses: those who assign others need to
+	// reach a volunteer who has not bid. Accepted records rather than active ones, since
+	// an editor who has paused taking new work still handles the papers they have.
+	const { data: viewerVolunteering } =
+		scholar === null || roles === null || roles.length === 0
+			? { data: null }
+			: await db.getScholarAcceptedVolunteering(
+					scholar.id,
+					roles.map((r) => r.id)
+				);
+	const canContact = isVenueApprover(
+		venue,
+		roles ?? [],
+		viewerVolunteering ?? [],
+		scholar?.id ?? null
+	);
+
+	// Whether the viewer may take a volunteer out of a role: the venue's admins and its top
+	// role, who oversee every other. The same rule remove_volunteer enforces.
+	const canRemove =
+		scholar !== null &&
+		(venue?.admins.includes(scholar.id) === true ||
+			(viewerVolunteering ?? []).some(
+				(v) =>
+					v.accepted === 'accepted' &&
+					(roles ?? []).some((r) => r.id === v.roleid && r.priority === 0)
+			));
+
+	// How busy each volunteer already is, for those choosing whom to invite: this roster
+	// is where they scout. The same people as canContact, and the RPC answers no one else.
+	const scholars = [...new Set((commitments ?? []).map((c) => c.scholarid))];
+	const { data: loads } = canContact
+		? await db.getAssignmentLoads(venueid, scholars)
+		: { data: null };
+
+	// The evidence the roster ranks on, for the same people: reviews finished here, and
+	// the journal titles that say whether someone has published in a relevant venue.
+	// Nobody else gets the ranking, so nobody else needs these.
+	const [{ data: completed }, { data: journals }] = canContact
+		? await Promise.all([
+				db.getCompletedCounts(venueid, scholars),
+				db.getVenueVolunteerJournals(venueid)
+			])
+		: [{ data: null }, { data: null }];
+
 	return {
 		venue,
+		canContact,
+		canRemove,
+		loads: loads ?? [],
+		completed: completed ?? [],
+		journals: journals ?? [],
 		commitments,
-		roles
+		roles,
+		volunteerCounts
 	};
 };

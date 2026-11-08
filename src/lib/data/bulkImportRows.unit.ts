@@ -1,12 +1,16 @@
 import { describe, expect, test } from 'vitest';
 import {
+	alreadyPresent,
+	distinctTypeValues,
 	duplicateAcrossRows,
+	guessTypeAssignments,
 	mintAmount,
 	rowError,
 	rowsFromParsed,
 	type ImportRow,
 	type ImportSubmissionType
 } from './bulkImportRows';
+import { guessMapping } from './columnMapping';
 
 const TYPES: ImportSubmissionType[] = [
 	{ id: 'full', name: 'Full Paper', submission_cost: 10 },
@@ -21,6 +25,7 @@ function row(over: Partial<ImportRow> = {}): ImportRow {
 		submissionType: 'full',
 		previousID: '',
 		note: '',
+		people: {},
 		...over
 	};
 }
@@ -54,10 +59,58 @@ describe('duplicateAcrossRows', () => {
 			[]
 		);
 	});
+
+	// The case a re-exported queue produces: the same manuscript twice in a file
+	// that has it at the venue already. Both rows are skipped, so calling them a
+	// duplicate of each other would block an import with nothing wrong with it.
+	test('ignores rows that are being skipped', () => {
+		expect([
+			...duplicateAcrossRows([row({ externalID: 'A' }), row({ externalID: 'A' })], new Set([0, 1]))
+		]).toEqual([]);
+	});
+
+	// Only one of the two is skipped, so the other collides with nothing.
+	test('does not flag the surviving row when its twin is skipped', () => {
+		expect([
+			...duplicateAcrossRows([row({ externalID: 'A' }), row({ externalID: 'A' })], new Set([0]))
+		]).toEqual([]);
+	});
+});
+
+// Already at the venue is a reason to LEAVE A ROW OUT, not to refuse the batch:
+// a venue's queue is exported again next month still carrying last month's
+// manuscripts, which is the ordinary input rather than a mistake in the file.
+describe('alreadyPresent', () => {
+	test('finds nothing when the venue has none of these IDs', () => {
+		expect([...alreadyPresent([row({ externalID: 'A' })], new Set(['B']))]).toEqual([]);
+	});
+
+	test('flags every row the venue already has', () => {
+		const present = alreadyPresent(
+			[row({ externalID: 'A' }), row({ externalID: 'B' }), row({ externalID: 'C' })],
+			new Set(['A', 'C'])
+		);
+		expect([...present].sort()).toEqual([0, 2]);
+	});
+
+	test('ignores surrounding whitespace when comparing', () => {
+		expect([...alreadyPresent([row({ externalID: '  A  ' })], new Set(['A']))]).toEqual([0]);
+	});
+
+	// The unique index it stands in for is case-sensitive, so this must be too:
+	// saying a row will be skipped and then writing it is worse than either.
+	test('compares case sensitively, like the unique index', () => {
+		expect([...alreadyPresent([row({ externalID: 'abc-1' })], new Set(['ABC-1']))]).toEqual([]);
+	});
+
+	// A blank ID matches nothing and is already reported as a missing external ID.
+	test('ignores blank external IDs', () => {
+		expect([...alreadyPresent([row({ externalID: '  ' })], new Set(['']))]).toEqual([]);
+	});
 });
 
 describe('rowError', () => {
-	const context = { existingExternalIDs: new Set<string>(), duplicates: new Set<number>() };
+	const context = { skipped: new Set<number>(), duplicates: new Set<number>() };
 
 	test('accepts a complete row', () => {
 		expect(rowError(row(), 0, context)).toBeNull();
@@ -71,26 +124,24 @@ describe('rowError', () => {
 		expect(rowError(row({ externalID: ' ' }), 0, context)).toBe('externalID');
 	});
 
-	test('reports a collision with a submission already in the venue', () => {
-		expect(
-			rowError(row({ externalID: 'EXT-1' }), 0, {
-				...context,
-				existingExternalIDs: new Set(['EXT-1'])
-			})
-		).toBe('duplicateExisting');
-	});
-
 	test('reports a collision with another row in the batch', () => {
 		expect(rowError(row(), 2, { ...context, duplicates: new Set([2]) })).toBe('duplicateRow');
 	});
 
-	test('prefers the existing-submission collision over the in-batch one', () => {
-		expect(
-			rowError(row({ externalID: 'EXT-1' }), 0, {
-				existingExternalIDs: new Set(['EXT-1']),
-				duplicates: new Set([0])
-			})
-		).toBe('duplicateExisting');
+	// A row already at the venue is not being written, so nothing about it can be
+	// wrong. It used to report a duplicate, which blocked the whole import.
+	test('says nothing about a row that is being skipped', () => {
+		expect(rowError(row(), 0, { ...context, skipped: new Set([0]) })).toBeNull();
+	});
+
+	// Every rule below it, not just the duplicate ones: a skipped row's blank title
+	// is not a problem the editor has to fix to import the rest of the file.
+	test('says nothing about a skipped row missing its title', () => {
+		expect(rowError(row({ title: '   ' }), 0, { ...context, skipped: new Set([0]) })).toBeNull();
+	});
+
+	test('still reports the rows that are not skipped', () => {
+		expect(rowError(row({ title: '' }), 1, { ...context, skipped: new Set([0]) })).toBe('title');
 	});
 });
 
@@ -113,9 +164,15 @@ describe('mintAmount', () => {
 });
 
 describe('rowsFromParsed', () => {
-	test('maps the lowercase header spellings a spreadsheet produces', () => {
+	test('reads each field from the column mapped to it', () => {
+		const mapping = guessMapping(['Manuscript Title', 'Manuscript ID', 'Previous Paper ID']);
 		expect(
-			rowsFromParsed([{ title: 'T', externalid: 'E', previousid: 'P' }], TYPES, 'full')
+			rowsFromParsed(
+				[{ 'Manuscript Title': 'T', 'Manuscript ID': 'E', 'Previous Paper ID': 'P' }],
+				mapping,
+				{},
+				'full'
+			)
 		).toEqual([
 			{
 				title: 'T',
@@ -123,32 +180,222 @@ describe('rowsFromParsed', () => {
 				expertise: '',
 				submissionType: 'full',
 				previousID: 'P',
-				note: ''
+				note: '',
+				people: {}
 			}
 		]);
 	});
 
-	test('also accepts the camelCase spellings', () => {
-		const [r] = rowsFromParsed([{ externalID: 'E', previousID: 'P' }], TYPES, 'full');
+	test('reads a CSV already using the importer own column names', () => {
+		const mapping = guessMapping(['title', 'externalid', 'previousid']);
+		const [r] = rowsFromParsed(
+			[{ title: 'T', externalid: 'E', previousid: 'P' }],
+			mapping,
+			{},
+			'full'
+		);
+		expect(r.title).toBe('T');
 		expect(r.externalID).toBe('E');
 		expect(r.previousID).toBe('P');
 	});
 
-	test('matches a submission type by name, case-insensitively', () => {
-		const [r] = rowsFromParsed([{ submission_type: '  full paper ' }], TYPES, 'revision');
+	test('leaves a field empty when nothing is mapped to it', () => {
+		const mapping = guessMapping(['title']);
+		const [r] = rowsFromParsed([{ title: 'T' }], mapping, {}, 'full');
+		expect(r.externalID).toBe('');
+		expect(r.expertise).toBe('');
+	});
+
+	test('gives each row the type its value was assigned', () => {
+		const mapping = guessMapping(['submission_type']);
+		const parsed = [{ submission_type: '  full paper ' }];
+		const assignments = guessTypeAssignments(
+			distinctTypeValues(parsed, mapping.submissionType),
+			TYPES,
+			'revision'
+		);
+		const [r] = rowsFromParsed(parsed, mapping, {}, 'revision', assignments);
 		expect(r.submissionType).toBe('full');
 	});
 
-	test('falls back to the default type when the name is unknown or absent', () => {
+	test('falls back to the default when a value has no assignment', () => {
+		const mapping = guessMapping(['submission_type']);
 		expect(
-			rowsFromParsed([{ submission_type: 'Poster' }], TYPES, 'revision')[0].submissionType
+			rowsFromParsed([{ submission_type: 'Poster' }], mapping, {}, 'revision')[0].submissionType
 		).toBe('revision');
-		expect(rowsFromParsed([{}], TYPES, 'revision')[0].submissionType).toBe('revision');
+		expect(rowsFromParsed([{}], mapping, {}, 'revision')[0].submissionType).toBe('revision');
 	});
 
 	test('fills every missing column with an empty string, never undefined', () => {
-		const [r] = rowsFromParsed([{}], TYPES, 'full');
+		const [r] = rowsFromParsed([{}], guessMapping(['title']), {}, 'full');
 		expect(Object.values(r).every((v) => v !== undefined)).toBe(true);
 		expect(r.title).toBe('');
+	});
+});
+
+describe('rowsFromParsed whitespace', () => {
+	// An export that wrapped a long title across two lines should not put a
+	// newline through a single-line field and into the database.
+	test('collapses a wrapped title onto one line', () => {
+		const mapping = guessMapping(['title']);
+		const [r] = rowsFromParsed(
+			[{ title: 'Flexible Deadlines:\nA Systematic Review' }],
+			mapping,
+			{},
+			'full'
+		);
+		expect(r.title).toBe('Flexible Deadlines: A Systematic Review');
+	});
+
+	test('collapses the other single-line fields too', () => {
+		const mapping = guessMapping(['externalid', 'expertise', 'previousid']);
+		const [r] = rowsFromParsed(
+			[{ externalid: ' E\n1 ', expertise: 'a\n b', previousid: 'P\n2' }],
+			mapping,
+			{},
+			'full'
+		);
+		expect(r.externalID).toBe('E 1');
+		expect(r.expertise).toBe('a b');
+		expect(r.previousID).toBe('P 2');
+	});
+
+	// The note is where a multi-line status column lands, and its lines are its
+	// content.
+	test('keeps the line structure of the note', () => {
+		const mapping = guessMapping(['Status']);
+		const [r] = rowsFromParsed(
+			[{ Status: 'AE: Petersen\nEIC: Ko\n3 invited' }],
+			mapping,
+			{},
+			'full'
+		);
+		expect(r.note).toBe('AE: Petersen\nEIC: Ko\n3 invited');
+	});
+});
+
+describe('rowError with person columns', () => {
+	const context = (over: Partial<Parameters<typeof rowError>[2]> = {}) => ({
+		skipped: new Set<number>(),
+		duplicates: new Set<number>(),
+		...over
+	});
+
+	test('reports a row naming somebody the venue could not identify', () => {
+		expect(
+			rowError(row({ people: { ae: 'Nobody' } }), 0, context({ personUnresolved: new Set([0]) }))
+		).toBe('personUnresolved');
+	});
+
+	test('says nothing about rows whose person resolved', () => {
+		expect(rowError(row(), 1, context({ personUnresolved: new Set([0]) }))).toBeNull();
+	});
+
+	// The checks that were here first keep reporting first: a row missing its
+	// title has a more basic problem than one whose editor could not be named.
+	test('reports a missing title ahead of an unresolved person', () => {
+		expect(rowError(row({ title: '' }), 0, context({ personUnresolved: new Set([0]) }))).toBe(
+			'title'
+		);
+	});
+
+	test('reports a duplicate ahead of an unresolved person', () => {
+		expect(
+			rowError(row(), 0, context({ duplicates: new Set([0]), personUnresolved: new Set([0]) }))
+		).toBe('duplicateRow');
+	});
+
+	// The row is not being written, so there is nobody to seat and nothing to choose
+	// between. It used to be blocked twice over: skipped rows were duplicates too.
+	test('says nothing about an unresolved person on a skipped row', () => {
+		expect(
+			rowError(row(), 0, context({ skipped: new Set([0]), personUnresolved: new Set([0]) }))
+		).toBeNull();
+	});
+
+	// A caller that offers no person column has nobody to resolve.
+	test('works without the person set at all', () => {
+		expect(rowError(row({ people: { ae: 'Anybody' } }), 0, context())).toBeNull();
+	});
+});
+
+describe('rowsFromParsed role columns', () => {
+	// The case the feature exists for, and one no heuristic could produce: the
+	// column called "Editor" feeds the ASSOCIATE editor role, while "Editor in
+	// Chief" feeds the top one. Only the editor knows that.
+	test('reads each role from the column matched to it, however they cross', () => {
+		const mapping = guessMapping(['Manuscript Title', 'Editor in Chief', 'Editor']);
+		const roleColumns = { 'role-editor': 'Editor in Chief', 'role-ae': 'Editor' };
+		const [r] = rowsFromParsed(
+			[{ 'Manuscript Title': 'T', 'Editor in Chief': 'Ko, Amy', Editor: 'Petersen, Andrew' }],
+			mapping,
+			roleColumns,
+			'full'
+		);
+		expect(r.people['role-editor']).toBe('Ko, Amy');
+		expect(r.people['role-ae']).toBe('Petersen, Andrew');
+	});
+
+	test('gives a role with no column no key at all', () => {
+		const [r] = rowsFromParsed(
+			[{ Editor: 'Petersen, Andrew' }],
+			guessMapping(['title']),
+			{},
+			'full'
+		);
+		expect(r.people).toEqual({});
+	});
+
+	// Present and empty, not absent: a field bound to a missing key would meet an
+	// undefined where it expects a string.
+	test('gives a blank cell an empty string rather than no key', () => {
+		const [r] = rowsFromParsed([{ Editor: '' }], guessMapping(['title']), { ae: 'Editor' }, 'full');
+		expect(r.people).toEqual({ ae: '' });
+	});
+
+	test('collapses a name wrapped across two lines', () => {
+		const [r] = rowsFromParsed(
+			[{ Editor: 'Petersen,\nAndrew' }],
+			guessMapping(['title']),
+			{ ae: 'Editor' },
+			'full'
+		);
+		expect(r.people.ae).toBe('Petersen, Andrew');
+	});
+});
+
+describe('distinctTypeValues', () => {
+	const parsed = [
+		{ Type: 'Paper' },
+		{ Type: 'Paper' },
+		{ Type: 'Special Issue' },
+		{ Type: '' },
+		{ Type: '  paper  ' }
+	];
+
+	test('counts each distinct value, most common first', () => {
+		expect(distinctTypeValues(parsed, 'Type')).toEqual([
+			{ value: 'Paper', count: 3 },
+			{ value: 'Special Issue', count: 1 }
+		]);
+	});
+
+	test('reads nothing when no type column is matched', () => {
+		expect(distinctTypeValues(parsed, null)).toEqual([]);
+	});
+});
+
+describe('guessTypeAssignments', () => {
+	test('pre-fills a value with the type of the same name', () => {
+		const assignments = guessTypeAssignments([{ value: 'Full Paper' }], TYPES, 'revision');
+		expect(assignments['full paper']).toBe('full');
+	});
+
+	// The normal case: a venue's type names are its own, and a file's are its own.
+	// This used to happen per row in silence, and the default type's cost then set
+	// the mint.
+	test('pre-fills a value matching nothing with the default', () => {
+		const assignments = guessTypeAssignments([{ value: 'Paper' }], TYPES, 'revision');
+		expect(assignments['paper']).toBe('revision');
 	});
 });

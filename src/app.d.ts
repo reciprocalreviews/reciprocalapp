@@ -1,4 +1,4 @@
-import { Database } from '$data/database';
+import { Database } from '#data/database.js';
 
 // See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces

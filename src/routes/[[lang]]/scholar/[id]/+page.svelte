@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { ErrorLabel } from '$lib/components/Labels';
-	import { getDB } from '$lib/data/CRUD';
-	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
 	import { default as ScholarView } from './Scholar.svelte';
-	import Page from '$lib/components/Page.svelte';
+	import Page from '#lib/components/Page.svelte';
 
 	let { data } = $props();
 
@@ -13,15 +12,19 @@
 		commitments,
 		venues,
 		admins,
-		tokens,
+		balances,
 		transactions,
 		submissions,
 		currencies,
 		minting,
 		pending,
 		outgoingPending,
-		reviews,
-		approvals
+		tasks,
+		approvals,
+		compensating,
+		notifications,
+		pendingEmail,
+		orcid
 	} = $derived(data);
 
 	let volunteering = $derived(
@@ -32,12 +35,23 @@
 					invited: c.accepted === 'invited',
 					name: c.roles?.name,
 					venue: venues?.find((v) => v.id === c.roles?.venueid)?.title,
-					venueid: c.roles?.venueid
+					venueid: c.roles?.venueid,
+					// The venue's web address, so links from a profile show it rather than the
+					// id form that only redirects there. Null for a venue that has none.
+					venueSlug: venues?.find((v) => v.id === c.roles?.venueid)?.slug ?? null
 				};
 			})
 			.filter(
-				(v): v is { id: string; invited: boolean; name: string; venue: string; venueid: string } =>
-					v.name !== undefined && v.venue !== undefined && v.venueid !== undefined
+				(
+					v
+				): v is {
+					id: string;
+					invited: boolean;
+					name: string;
+					venue: string;
+					venueid: string;
+					venueSlug: string | null;
+				} => v.name !== undefined && v.venue !== undefined && v.venueid !== undefined
 			) ?? []
 	);
 
@@ -49,7 +63,8 @@
 	// Reload when any related scholar info changes.
 	reloadOnChanges('scholar_info_changes', [
 		{ table: 'volunteers', filter: `scholarid=eq.${page.params.id}` },
-		{ table: 'tokens', filter: `scholar=eq.${page.params.id}` },
+		// No `tokens` filter: the two transactions filters below wake on the same
+		// events, and one row per movement rather than one per token.
 		{ table: 'transactions', filter: `from_scholar=eq.${page.params.id}` },
 		{ table: 'transactions', filter: `to_scholar=eq.${page.params.id}` },
 		{ table: 'assignments', filter: `scholar=eq.${page.params.id}` },
@@ -60,7 +75,7 @@
 </script>
 
 {#if state === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+	<Page title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.scholar.feedback.notLoaded}></Feedback>
 	</Page>
 {:else}
@@ -68,7 +83,7 @@
 		scholar={state}
 		commitments={volunteering}
 		{admins}
-		{tokens}
+		{balances}
 		{transactions}
 		{submissions}
 		{currencies}
@@ -76,7 +91,11 @@
 		{pending}
 		{outgoingPending}
 		{venues}
-		{reviews}
+		{tasks}
 		{approvals}
+		{compensating}
+		{notifications}
+		{pendingEmail}
+		{orcid}
 	/>
 {/if}

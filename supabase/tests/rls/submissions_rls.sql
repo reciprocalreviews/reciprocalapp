@@ -1,22 +1,29 @@
 -- RLS tests for public.submissions.
 --
 -- Authorization model under test:
---   SELECT  authors, accepted volunteers on a biddable role at the venue, and
---           scholars with an approved assignment to the submission.
+--   SELECT  authors, accepted volunteers on a biddable role at the venue (only
+--           while it is open for bidding, unless they hold an assignment on it), and
+--           scholars with an approved assignment to the submission. Approving a
+--           role does NOT by itself confer sight of the submissions that role is
+--           assigned to -- the approver must be seated on the submission.
 --   INSERT  anyone authenticated may create a submission.
 --   UPDATE  authors, or scholars with an approved priority-0 role assignment.
---   DELETE  venue admins only.
+--   DELETE  no one (denied by policy AND the table privilege is revoked, since
+--           deletion would destroy the submission's assignment history).
 --   IMMUTABILITY  status/completed_at are revoked from authenticated at the
 --           column level: even a permitted updater (an author) gets 42501.
 --   AUTHOR-LIST LOCK  the enforce_submission_author_edits trigger forbids any
 --           non-priority-0 actor (e.g. an author) from changing
 --           authors/payments/transactions; a priority-0 assigned scholar may.
+--   BIDDING  bidding_closed is out of the column grant, so no client may write it
+--           directly, not even the editor; set_submission_open_for_bidding does
+--           (see rpc/submission_open_for_bidding.sql).
 
 \ir ../_helpers/helpers.sql.inc
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(18);
+select plan(26);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -28,8 +35,8 @@ select tests.create_scholar('sub_admin@test.local')    as admin     \gset
 select tests.create_scholar('sub_minter@test.local')   as minter    \gset
 select tests.create_scholar('sub_outsider@test.local') as outsider  \gset
 
--- Currency minter and venue admin must be DISTINCT scholars (the no_minter_admins
--- / no_admin_minters triggers forbid overlap).
+-- Currency minter and venue admin are DISTINCT scholars here; the overlap is permitted
+-- but nothing in this file turns on it.
 select tests.create_currency(array[:'minter']::uuid[])                  as cur \gset
 select tests.create_venue(:'cur', array[:'admin']::uuid[])              as ven \gset
 select tests.create_submission_type(:'ven')                            as styp \gset
@@ -43,6 +50,21 @@ select tests.create_role(:'ven', 2, null, false, false)                 as revie
 -- A priority-0 role used for the editor (priority-0) UPDATE / author-lock cases.
 select tests.create_role(:'ven', 0, null, false, false)                 as editor_role \gset
 
+-- An approver role and the role it approves, for the "approving a role is not the
+-- same as approving THIS submission" cases below. Priority is deliberately non-zero:
+-- a priority-0 volunteer sees the whole venue through isPriorityZero, which would
+-- mask what these two tests are actually asking.
+select tests.create_role(:'ven', 3, null, false, false)                 as ae_role    \gset
+select tests.create_role(:'ven', 4, :'ae_role', false, false)           as child_role \gset
+
+-- Two volunteers on the approving role. Neither volunteers on the biddable role,
+-- which would grant venue-wide sight on its own.
+select tests.create_scholar('sub_unseated_ae@test.local')               as unseated_ae \gset
+select tests.create_scholar('sub_child@test.local')                     as child_holder \gset
+select tests.create_scholar('sub_seated_ae@test.local')                 as seated_ae   \gset
+select tests.create_volunteer(:'unseated_ae', :'ae_role', 'accepted')   as vol_unseated \gset
+select tests.create_volunteer(:'seated_ae', :'ae_role', 'accepted')     as vol_seated   \gset
+
 -- The main submission, authored by :author.
 select tests.create_submission(:'ven', :'styp', array[:'author']::uuid[]) as sub_main \gset
 -- A second submission used solely for the DELETE cases.
@@ -52,15 +74,20 @@ select tests.create_submission(:'ven', :'styp', array[:'author']::uuid[]) as sub
 select tests.create_assignment(:'ven', :'sub_main', :'assigned', :'review_role', true, false) as asn_review \gset
 -- :prio0 has an approved priority-0 assignment to sub_main → may UPDATE + edit authors.
 select tests.create_assignment(:'ven', :'sub_main', :'prio0', :'editor_role', true, false)    as asn_editor \gset
+-- Somebody holds the approved-by role on sub_main. This is what used to make the
+-- submission visible to every volunteer on :ae_role across the whole venue.
+select tests.create_assignment(:'ven', :'sub_main', :'child_holder', :'child_role', true, false) as asn_child \gset
+-- :seated_ae actually holds the approving role ON sub_main.
+select tests.create_assignment(:'ven', :'sub_main', :'seated_ae', :'ae_role', true, false)    as asn_ae     \gset
 
 -- ---- Policy shape -------------------------------------------------------------
 select policies_are(
 	'public', 'submissions',
 	array[
 		'admins, authors, assigned, and bidders can view submissions',
-		'anyone can create submissions, admins for imports',
+		'anyone can create submissions, admins and editors for imports',
 		'authors and editors can update submissions',
-		'admins can delete submissions'
+		'submissions cannot be deleted'
 	]
 );
 
@@ -81,6 +108,23 @@ select tests.authenticate_as(:'assigned');
 select isnt_empty(
 	$$ select 1 from public.submissions where id = $$ || quote_literal(:'sub_main'),
 	'a scholar with an approved assignment can see the submission'
+);
+
+-- Regression: an accepted volunteer on a role that approves :child_role, with no
+-- assignment of their own on this submission. sub_main has a :child_role assignment,
+-- which previously satisfied the venue-wide approver branch and exposed the
+-- submission -- and its reviewers -- to every such volunteer at the venue.
+select tests.authenticate_as(:'unseated_ae');
+select is_empty(
+	$$ select 1 from public.submissions where id = $$ || quote_literal(:'sub_main'),
+	'approving a role venue-wide does not expose a submission the approver is not seated on'
+);
+
+-- The same scholar, seated on this submission in the approving role, does see it.
+select tests.authenticate_as(:'seated_ae');
+select isnt_empty(
+	$$ select 1 from public.submissions where id = $$ || quote_literal(:'sub_main'),
+	'an approver seated on the submission can see it'
 );
 
 select tests.authenticate_as(:'outsider');
@@ -169,6 +213,57 @@ select is(
 	'the priority-0 author-list edit took effect'
 );
 
+-- bidding_closed is not in the column grant: no direct write, by an author or even
+-- the editor. The RPC is the only client path.
+select tests.authenticate_as(:'author');
+select throws_ok(
+	$$ update public.submissions set bidding_closed = true where id = $$ || quote_literal(:'sub_main'),
+	'42501',
+	null,
+	'an author cannot write bidding_closed directly'
+);
+
+select tests.authenticate_as(:'prio0');
+select throws_ok(
+	$$ update public.submissions set bidding_closed = true where id = $$ || quote_literal(:'sub_main'),
+	'42501',
+	null,
+	'nor can the editor: bidding_closed is written only by the RPC'
+);
+
+-- Close it as the owner for the visibility cases below.
+select tests.clear_authentication();
+update public.submissions set bidding_closed = true where id = :'sub_main';
+select is(
+	(select bidding_closed from public.submissions where id = :'sub_main'),
+	true,
+	'closing bidding took effect'
+);
+
+-- ---- SELECT once bidding is closed ---------------------------------------------
+-- A bidder with no assignment on it no longer sees it...
+select tests.authenticate_as(:'bidder');
+select is_empty(
+	$$ select 1 from public.submissions where id = $$ || quote_literal(:'sub_main'),
+	'a volunteer on a biddable role cannot see a submission closed to bidding'
+);
+
+-- ...while a scholar seated on it still does.
+select tests.authenticate_as(:'assigned');
+select isnt_empty(
+	$$ select 1 from public.submissions where id = $$ || quote_literal(:'sub_main'),
+	'a seated scholar still sees a submission closed to bidding'
+);
+
+-- A bidder whose bid is still pending keeps sight of the submission it is on.
+select tests.clear_authentication();
+select tests.create_assignment(:'ven', :'sub_main', :'bidder', :'biddable_role', false, true) as asn_bid \gset
+select tests.authenticate_as(:'bidder');
+select isnt_empty(
+	$$ select 1 from public.submissions where id = $$ || quote_literal(:'sub_main'),
+	'a bidder with a pending bid still sees a submission closed to bidding'
+);
+
 -- ---- INSERT -------------------------------------------------------------------
 -- Any authenticated scholar may create a submission.
 select tests.authenticate_as(:'outsider');
@@ -193,21 +288,22 @@ select throws_ok(
 );
 
 -- ---- DELETE -------------------------------------------------------------------
--- A non-admin's DELETE is filtered by the using clause (0 rows, no error).
+-- The table privilege is revoked, so every client DELETE fails with 42501 —
+-- outsiders and venue admins alike.
 select tests.authenticate_as(:'outsider');
-delete from public.submissions where id = :'sub_del';
-select tests.clear_authentication();
-select is(
-	(select count(*)::int from public.submissions where id = :'sub_del'),
-	1,
+select throws_ok(
+	$$ delete from public.submissions where id = $$ || quote_literal(:'sub_del'),
+	'42501',
+	null,
 	'a non-admin cannot delete a submission'
 );
 
--- A venue admin can delete a submission at their venue.
 select tests.authenticate_as(:'admin');
-select lives_ok(
+select throws_ok(
 	$$ delete from public.submissions where id = $$ || quote_literal(:'sub_del'),
-	'a venue admin can delete a submission'
+	'42501',
+	null,
+	'a venue admin cannot delete a submission'
 );
 
 select * from finish();

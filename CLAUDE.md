@@ -17,7 +17,7 @@ npm run locale       # Validate all locale JSON files against schema
 
 ## Tech Stack
 
-- **Frontend:** Svelte 5 (runes) + SvelteKit 2, TypeScript strict mode
+- **Frontend:** Svelte 5 (runes) + SvelteKit 3, TypeScript strict mode
 - **Database/Auth:** Supabase (PostgreSQL + Auth via email/OTP)
 - **Hosting:** Vercel via `@sveltejs/adapter-vercel`
 - **Testing:** Vitest (unit) + Playwright (integration, Chromium only)
@@ -75,8 +75,10 @@ The root layout (`src/routes/+layout.svelte`) sets up four pieces of context con
 
 - `setDB()` — database instance
 - `setLocaleContext()` — locale strings
-- `setFeedback()` — error/success notifications
-- `setBreadcrumbs()` / page headers — navigation
+- `addFeedback()` / `getFeedback()` — error/success notifications (a module-level store in `src/routes/feedback.svelte.ts`, not a context)
+- `setAuth()` / `getAuth()` — authenticated session and scholar
+
+Navigation uses no context of its own. Every route has one teal context bar under the nav (`ContextBar.svelte`, rules in `src/lib/data/contextBar.ts`): area layouts draw theirs (`VenueBar.svelte` inside a venue) and the root layout draws the site bar elsewhere. There are no breadcrumbs. Every page's title renders in the text column via `Page.svelte` — see ARCHITECTURE.md § Global context. Every page's top follows one order (title, actions, alerts, content); see DESIGN.md § Interface.
 
 ### State
 

@@ -1,41 +1,42 @@
 <script lang="ts">
-	import type { ScholarID } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import Dashboard from '$lib/components/Dashboard.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
+	import type { ScholarID } from '#data/types.js';
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Cards from '#lib/components/Cards.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
+	import Dashboard from '#lib/components/Dashboard.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
 	import {
 		MinterLabel,
 		plural,
 		ScholarLabel,
 		TokenLabel,
 		VenueLabel
-	} from '$lib/components/Labels';
-	import Note from '$lib/components/Note.svelte';
-	import Options from '$lib/components/Options.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import Slider from '$lib/components/Slider.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import SourceLink from '$lib/components/VenueLink.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import type LocaleText from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
-	import { validEmail, validORCID } from '$lib/validation';
-	import { getAuth } from '$routes/Auth.svelte';
-	import { handle } from '$routes/feedback.svelte';
+	} from '#lib/components/Labels.js';
+	import Note from '#lib/components/Note.svelte';
+	import Options from '#lib/components/Options.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import Slider from '#lib/components/Slider.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import ScholarField from '#lib/components/ScholarField.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import SourceLink from '#lib/components/VenueLink.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { validEmail, validORCID } from '#lib/validation.js';
+	import { getAuth } from '#routes/Auth.svelte.js';
+	import { handle } from '#routes/feedback.svelte.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	let { currency, venues, admins, count, scholarCount, venueCount } = $derived(data);
+	let { currency, venues, count, scholarCount, venueCount } = $derived(data);
 
 	const db = getDB();
 	const auth = getAuth();
@@ -50,23 +51,16 @@
 	let newTokenCreating = $state(false);
 	let newTokenPurpose = $state('');
 
+	/** A minter may also administer a venue using this currency: the overlap is disclosed on
+	 * that venue's page rather than refused, so all this checks is the contact's shape. */
 	function isValidMinter(text: string | ScholarID) {
-		if (validEmail(text)) {
-			return admins.some((scholar) => scholar.email === text)
-				? (l: LocaleText) => l.page.currency.field.minter.invalidMinter
-				: undefined;
-		} else if (validORCID(text)) {
-			return admins.some((scholar) => scholar.orcid === text)
-				? (l: LocaleText) => l.page.currency.field.minter.invalidMinter
-				: undefined;
-		} else return (l: LocaleText) => l.page.currency.field.minter.invalidContact;
+		if (validEmail(text) || validORCID(text)) return undefined;
+		return (l: LocaleText) => l.page.currency.field.minter.invalidContact;
 	}
 </script>
 
 <Page
-	icon={TokenLabel}
 	title={currency ? currency.name : 'Oops'}
-	breadcrumbs={[]}
 	edit={isMinter && currency !== null
 		? {
 				placeholder: (l: LocaleText) => l.page.currency.field.name.placeholder,
@@ -93,7 +87,12 @@
 
 		<Dashboard
 			stats={[
-				{ icon: TokenLabel, number: count ?? undefined, title: 'tokens', link: `#tokens` },
+				{
+					icon: TokenLabel,
+					number: count ?? undefined,
+					title: 'tokens',
+					link: `/currency/${currency.id}/transactions`
+				},
 				{
 					icon: ScholarLabel,
 					number: scholarCount ?? undefined,
@@ -109,11 +108,10 @@
 			]}
 		/>
 
-		<Subheader icon={TokenLabel} id="tokens" text={(l) => l.page.currency.header.tokens} />
-
-		<Paragraph text={(l) => l.page.currency.paragraph.allTokens} inputs={{ id: currency.id }} />
-
+		<!-- Only minters have anything under this heading: the tokens themselves are listed
+		     on the transactions page, which the actions row and the tokens tile both reach. -->
 		{#if user && isMinter && venues}
+			<Subheader icon={TokenLabel} id="tokens" text={(l) => l.page.currency.header.tokens} />
 			<Cards>
 				<Card
 					subheader
@@ -222,11 +220,12 @@
 					testid="add-minter-card"
 				>
 					<Form>
-						<TextField
+						<ScholarField
 							strings={(l) => l.page.currency.field.minter}
 							bind:text={newMinter}
 							size={19}
 							valid={isValidMinter}
+							showResolved={false}
 							testid="add-minter-field"
 						/><Button
 							strings={(l) => l.page.currency.button.addMinter}

@@ -1,22 +1,27 @@
 <script lang="ts">
-	import type { ScholarID, TransactionRow } from '$data/types';
+	import type { ScholarID, TransactionRow } from '#data/types.js';
 	import Button from './Button.svelte';
 	import Dialog from './Dialog.svelte';
 	import Paragraph from './Paragraph.svelte';
 	import TextField from './TextField.svelte';
-	import { getDB } from '$lib/data/CRUD';
+	import { getDB } from '#lib/data/CRUD.js';
 	import { handle } from '../../routes/feedback.svelte';
 
 	let {
 		transaction,
 		index,
 		userid,
-		testid
+		testid,
+		onChange
 	}: {
-		transaction: TransactionRow;
+		transaction: Pick<TransactionRow, 'id'>;
 		index: number;
 		userid: ScholarID;
 		testid: string;
+		/** Called after a decision commits, so a row on a cached page past the first
+		 * can refetch itself. Page 0 comes straight from the load function, which
+		 * `handle()`'s invalidateAll has already refreshed by the time it resolves. */
+		onChange?: (id: TransactionRow['id']) => Promise<void>;
 	} = $props();
 
 	const db = getDB();
@@ -30,7 +35,13 @@
 	<Button
 		strings={(l) => l.view.transactions.button.approve}
 		testid={testid + '-' + index + '-approve'}
-		action={() => handle(db().approveTransaction(userid, transaction.id))}
+		action={async () => {
+			// Read the id ONCE, before awaiting. `handle()` invalidates the page, and the
+			// list this row sits in reorders when a transaction is decided, so `transaction`
+			// may be a different row by the time the await resolves.
+			const id = transaction.id;
+			if ((await handle(db().approveTransaction(userid, id))) !== false) await onChange?.(id);
+		}}
 	/>
 	<Button
 		strings={(l) => l.view.transactions.button.declineInitiate}
@@ -50,7 +61,10 @@
 			testid={testid + '-' + index + '-decline-confirm'}
 			active={declineReason.length > 0}
 			action={async () => {
-				await handle(db().declineTransaction(userid, transaction.id, declineReason));
+				// The id before the await, for the reason above.
+				const id = transaction.id;
+				if ((await handle(db().declineTransaction(userid, id, declineReason))) !== false)
+					await onChange?.(id);
 				showDecline = false;
 			}}
 		/>

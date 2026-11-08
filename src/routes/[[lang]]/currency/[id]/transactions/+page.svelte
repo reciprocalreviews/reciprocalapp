@@ -1,11 +1,9 @@
 <script lang="ts">
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { ErrorLabel, TokenLabel } from '$lib/components/Labels';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Transactions from '$lib/components/Transactions.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import Text from '$lib/locales/Text.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Transactions from '#lib/components/Transactions.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
 
 	let { data } = $props();
 	let { currency, transactions, count, venues } = $derived(data);
@@ -14,13 +12,9 @@
 </script>
 
 {#if currency && transactions && venues && count !== null}
-	<Page
-		icon={TokenLabel}
-		title={currency.name}
-		breadcrumbs={[[`/currency/${currency.id}`, `${TokenLabel} ${currency.name}`]]}
-	>
-		{#snippet subtitle()}<Text path={(l) => l.page.currencyTransactions.subtitle} />{/snippet}
-
+	<!-- Titled by what the page is. The currency is named by the breadcrumb back to it, and
+	     in the tab. -->
+	<Page title={(l) => l.page.currencyTransactions.title} context={currency.name}>
 		<Paragraph
 			text={(l) => l.page.currencyTransactions.paragraph.count}
 			inputs={{ count: count.toString() }}
@@ -38,7 +32,7 @@
 		/>
 	</Page>
 {:else if currency === null || transactions === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+	<Page title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.currency.feedback.notLoaded} />
 	</Page>
 {/if}

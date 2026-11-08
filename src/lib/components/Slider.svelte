@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type LocaleText from '$lib/locales/Locale';
-	import type { SliderText } from '$lib/locales/Locale';
-	import { getLocaleContext } from '$routes/Contexts';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import type { SliderText } from '#lib/locales/Locale.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
 
 	interface Props {
 		min: number;

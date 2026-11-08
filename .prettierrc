@@ -13,7 +13,6 @@
 				"keywordCase": "lower",
 				"dataTypeCase": "lower",
 				"functionCase": "lower",
-				"indentWidth": 2,
 				"linesBetweenQueries": 1,
 				"denseOperators": true
 			}

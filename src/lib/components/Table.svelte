@@ -24,6 +24,15 @@
 </div>
 
 <style>
+	.table {
+		/* Scroll a wide table inside itself rather than letting it widen the document.
+		   `width: 100%` under `table-layout: auto` is a floor, not a ceiling: a table
+		   with many columns or a long unbroken string grows past its container, and a
+		   document wider than the viewport slides the sticky nav sideways out of view,
+		   because sticky only offsets on the axis it is given an inset for (#156). */
+		overflow-x: auto;
+	}
+
 	table {
 		width: 100%;
 		border-collapse: collapse;
@@ -45,6 +54,16 @@
 
 	table :global(tr:nth-child(even)) {
 		background: var(--alternating-color);
+	}
+
+	/* A full-bleed table has the whole viewport but also the most columns, and
+	   every cell pays 1rem of padding on each side from the global td/th rule in
+	   app.html — 8rem of padding across four columns before any content. Halving
+	   it here buys back the width that was pushing the last column out of view. */
+	.full table :global(td),
+	.full table :global(th) {
+		padding-left: var(--spacing-half);
+		padding-right: var(--spacing-half);
 	}
 
 	.full {

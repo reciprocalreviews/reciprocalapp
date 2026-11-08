@@ -1,15 +1,15 @@
 <script lang="ts">
-	import type { ScholarID, SubmissionRow, ThanksRow } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import { ThanksLabel } from '$lib/components/Labels';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Row from '$lib/components/Row.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import { handle } from '$routes/feedback.svelte';
+	import type { ScholarID, SubmissionRow, ThanksRow } from '#data/types.js';
+	import Button from '#lib/components/Button.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import { ThanksLabel } from '#lib/components/Labels.js';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Row from '#lib/components/Row.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	/** Author thank-you notes to reviewers (#22). This component renders three
 	 * audience-specific views off the same RLS-filtered `thanks` list:

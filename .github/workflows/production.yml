@@ -20,6 +20,15 @@ jobs:
   rls-tests:
     uses: ./.github/workflows/rls.yml
 
+  # Formatting, generated-type freshness, and schemas/-vs-migrations drift.
+  # ci.yml triggers on `pull_request`, but `npm run deploy` pushes the merge
+  # straight to `main`, so without this these checks never ran on the path that
+  # actually reaches production — the same gap staging.yml closed for `dev`.
+  # Unlike staging, this one gates: a drift or a formatting slip stops the
+  # migration and the deploy rather than being reported after the fact.
+  repo-checks:
+    uses: ./.github/workflows/ci.yml
+
   migrate:
     runs-on: ubuntu-latest
 
@@ -29,7 +38,7 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ secrets.PRODUCTION_PROJECT_ID }}
 
     # Only run this if tests were successful
-    needs: [unit-tests, playwright, locale-validation, rls-tests]
+    needs: [unit-tests, playwright, locale-validation, rls-tests, repo-checks]
 
     steps:
       - uses: actions/checkout@v5
@@ -38,9 +47,9 @@ jobs:
       # through the GitHub API on every job; a dev push and a main merge fire ~10
       # of those within seconds, exhausting the shared rate limit and failing a job
       # before any test runs. Pinning also stops CI drifting ahead of local.
-      - uses: supabase/setup-cli@v2
+      - uses: supabase/setup-cli@v3
         with:
-          version: 2.111.0
+          version: 3.0.0
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       # A bad migration is the likeliest cause of data loss and the one moment you
@@ -77,20 +86,29 @@ jobs:
       - name: Guard against divergent remote migrations
         run: |
           set -euo pipefail
-          supabase migration list --linked > /tmp/migrations.txt || true
+          supabase migration list --remote > /tmp/migrations.txt || true
           cat /tmp/migrations.txt
-          if grep -qE '^\s*\|\s+[0-9]{14}\s+\|' /tmp/migrations.txt; then
+          # CLI v3 wraps versions in backticks (`20261104000000`), which a bare
+          # [0-9]{14} never matched, so this guard passed everything after the v3
+          # bump. Allow the backticks, and refuse to continue if no version parses
+          # at all: a format change must fail here loudly, not wave pushes through.
+          if ! grep -qE '`?[0-9]{14}`?' /tmp/migrations.txt; then
+            echo "::error::could not read production's migration history; the guard cannot run."
+            exit 1
+          fi
+          if grep -qE '^\s*\|\s+`?[0-9]{14}`?\s+\|' /tmp/migrations.txt; then
             echo "::error::production has migrations this repository does not. Reconcile before pushing."
             exit 1
           fi
 
-      - run: supabase db push
+      - run: supabase db push --yes --remote
       # Edge functions are NOT deployed by `db push`. Without this step a schema change
       # that depends on new function behavior lands while the deployed function is stale —
       # which fails quietly, since pg_net swallows the resulting error and mail simply
       # stops arriving. Deploy them in the same job so schema and functions never drift.
-      - run: supabase functions deploy resend
-      - run: supabase functions deploy remind
+      - run: supabase functions deploy resend --yes
+      - run: supabase functions deploy remind --yes
+      - run: supabase functions deploy orcid --yes
 
   vercel:
     runs-on: ubuntu-latest
@@ -100,7 +118,7 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     # Only deploy after tests pass and migrations are applied
-    needs: [unit-tests, playwright, locale-validation, rls-tests, migrate]
+    needs: [unit-tests, playwright, locale-validation, rls-tests, repo-checks, migrate]
 
     steps:
       - uses: actions/checkout@v5

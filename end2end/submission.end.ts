@@ -2,9 +2,55 @@ import { expect, test } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
-const VENUE_ID = SEED.venue;
-const AUTHOR1_ORCID = SEED.scholars.author1.orcid; // Foot Note (author1@uni.edu)
-const AUTHOR2_ORCID = SEED.scholars.author2.orcid; // Ann Thesis (author2@uni.edu)
+const VENUE_PATH = SEED.venuePath;
+const AUTHOR1_ORCID = SEED.scholars.author1.orcid;
+const AUTHOR2_ORCID = SEED.scholars.author2.orcid;
+
+test('the author form lists the submitter, finds co-authors by name, and flags a repeat', async ({
+	page,
+	context
+}) => {
+	test.setTimeout(90_000);
+	await login('author1@uni.edu', page, context);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new`);
+	await page.waitForLoadState('networkidle');
+
+	// The submitter is listed as the first author, already resolved — they used
+	// to face a blank row and have to recall their own ORCID, with nothing on
+	// the form saying whether they were meant to be there at all.
+	await expect(page.getByTestId('author-orcid-0')).toHaveValue(AUTHOR1_ORCID);
+	await expect(page.getByTestId('scholar-found-0')).toBeVisible();
+
+	// A name nobody matches says so. Without this the cell showed the same em
+	// dash as an untouched row, so "we looked and found nobody" was
+	// indistinguishable from "you haven't typed a name yet".
+	await page.getByTestId('add-author').click();
+	await page.getByTestId('author-orcid-1').fill('Zzzznobodyhere');
+	await expect(page.getByTestId('author-no-matches-1')).toBeVisible();
+
+	// A co-author can be found by name, for the common case where the submitter
+	// knows who they wrote the paper with but not their ORCID.
+	await page.getByTestId('author-orcid-1').fill(SEED.filters.sharedPrefix);
+	await expect(page.getByTestId('author-no-matches-1')).toHaveCount(0);
+	// Several seeded scholars match that fragment, deliberately, so pick the intended
+	// one by name rather than by position. Which one sorts first is a collation
+	// detail, not something this test is about.
+	await expect(page.getByTestId('author-match-1-0')).toBeVisible();
+	const match = page.getByRole('button', { name: SEED.scholars.author2.name });
+	await match.click();
+	await expect(page.getByTestId('author-orcid-1')).toHaveValue(AUTHOR2_ORCID);
+	// Choosing a match resolves the row outright — no second lookup round trip,
+	// and the row-clearing effect must not undo it.
+	await expect(page.getByTestId('scholar-found-1')).toBeVisible();
+
+	// Naming someone twice was already refused, but only by a message at the
+	// bottom of the form; now the offending row says so itself.
+	await page.getByTestId('add-author').click();
+	await page.getByTestId('author-orcid-2').fill(AUTHOR2_ORCID);
+	await page.getByTestId('author-orcid-2').blur();
+	await expect(page.getByText('This author is already listed above')).toBeVisible();
+	await expect(page.getByTestId('submit-submission')).toBeDisabled();
+});
 
 test('author can create a two-author submission splitting the cost', async ({ page, context }) => {
 	// Submission creation does several sequential DB round-trips (verify
@@ -18,7 +64,7 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 
 	const externalID = `TOK-2026-TEST-${Date.now()}`;
 
-	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new`);
 	// Keep networkidle here: the submission form's bound <select>/inputs must be
 	// hydrated before we selectOption/fill, or Svelte drops the change. (Most
 	// other pages replaced this with an explicit content wait.)
@@ -105,7 +151,7 @@ test('author can link a resubmission to a prior submission and is charged the re
 
 	// 1. Create the original submission as the sole author, paying the venue's
 	// regular submission cost of 10 tokens.
-	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new`);
 	// Keep networkidle here: the submission form's bound <select>/inputs must be
 	// hydrated before we selectOption/fill, or Svelte drops the change. (Most
 	// other pages replaced this with an explicit content wait.)
@@ -132,15 +178,18 @@ test('author can link a resubmission to a prior submission and is charged the re
 	await page.waitForTimeout(200);
 	await submitOriginal.click();
 	await expect
-		.poll(() => sql(`select count(*) from public.submissions where externalid = '${originalID}';`), {
-			timeout: 90_000
-		})
+		.poll(
+			() => sql(`select count(*) from public.submissions where externalid = '${originalID}';`),
+			{
+				timeout: 90_000
+			}
+		)
 		.toBe('1');
 	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 30_000 });
 
 	// 2. Create a resubmission linking the original. Start from the plain
 	// "Research Article" type (cost 10), then let the predecessor pick the type.
-	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new`);
 	// Keep networkidle here: the submission form's bound <select>/inputs must be
 	// hydrated before we selectOption/fill, or Svelte drops the change. (Most
 	// other pages replaced this with an explicit content wait.)

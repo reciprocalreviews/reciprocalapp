@@ -103,10 +103,10 @@ added afterward (2d), unlike S3's Object Lock which must be enabled at creation.
 
 Bucket → **Settings** → **Object lifecycle rules**. Add three:
 
-| Rule name | Prefix | Action |
-|---|---|---|
-| `expire-daily` | `production/daily/` | Delete after **14** days |
-| `expire-weekly` | `production/weekly/` | Delete after **56** days |
+| Rule name        | Prefix                | Action                    |
+| ---------------- | --------------------- | ------------------------- |
+| `expire-daily`   | `production/daily/`   | Delete after **14** days  |
+| `expire-weekly`  | `production/weekly/`  | Delete after **56** days  |
 | `expire-monthly` | `production/monthly/` | Delete after **730** days |
 
 Add matching `staging/...` rules with short retention (7 days) so test runs don't
@@ -119,16 +119,16 @@ be deleted before its retention expires, by anyone, including an attacker holdin
 the token and including you.
 
 **R2 does not implement S3-style Object Lock.** The equivalent is **bucket
-locks**: prefix-scoped rules added *after* creation, with no per-object legal
+locks**: prefix-scoped rules added _after_ creation, with no per-object legal
 hold and no governance-vs-compliance toggle. If you need literal S3 Object Lock
 API compatibility, R2 will not give you that; if you need WORM retention, it
 will.
 
 Bucket → **Settings** tab → **Bucket lock rules** card → add two:
 
-| Rule | Prefix | Retention |
-|---|---|---|
-| `lock-daily` | `production/daily/` | **14 days** |
+| Rule          | Prefix               | Retention   |
+| ------------- | -------------------- | ----------- |
+| `lock-daily`  | `production/daily/`  | **14 days** |
 | `lock-weekly` | `production/weekly/` | **56 days** |
 
 Equivalently, from the CLI:
@@ -141,7 +141,7 @@ Three properties that drive the numbers above:
 
 - **Locks override lifecycle rules.** A lifecycle deletion will not fire while a
   lock still requires retention, so effective retention is `max(lock, lifecycle)`.
-  Each lock above is therefore set *equal* to its tier's lifecycle, so the
+  Each lock above is therefore set _equal_ to its tier's lifecycle, so the
   retention schedule means what it says. Set a 30-day lock against a 14-day
   lifecycle and you silently get 30-day retention.
 - **Rules apply to existing objects too**, not just new ones, and where rules
@@ -151,7 +151,7 @@ Three properties that drive the numbers above:
   which would make routine cleanup of throwaway staging runs impossible.
 
 > **Never choose the indefinite option.** Indefinite locks cannot be removed, and
-> deleting a lock *policy* does not release objects already inside their
+> deleting a lock _policy_ does not release objects already inside their
 > retention window — those stay locked until it expires. An indefinite lock on a
 > database containing personal data is a commitment you cannot walk back.
 
@@ -165,22 +165,22 @@ multi-year wait.
 > **On erasure and backups:** a scholar's deletion request cannot reach inside a
 > locked backup. That is normal and defensible — backups are retained under a
 > documented schedule, and the erasure is re-applied on restore (the `erasures`
-> ledger, next phase). It is defensible *because* the retention is bounded and
+> ledger, next phase). It is defensible _because_ the retention is bounded and
 > written down, which is another reason not to lock anything indefinitely.
 
 ### 2e. The API token
 
 Cloudflare has three separate token surfaces, and only one of them works here:
 
-| Surface | Issues | Use for backups? |
-|---|---|---|
-| My Profile → **User API Tokens** | Cloudflare REST bearer token | **No** |
-| Manage Account → **Account API Tokens** | Cloudflare REST bearer token | **No** |
-| **R2 → API → Manage API Tokens** | **S3 Access Key ID + Secret Access Key** | **Yes** |
+| Surface                                 | Issues                                   | Use for backups? |
+| --------------------------------------- | ---------------------------------------- | ---------------- |
+| My Profile → **User API Tokens**        | Cloudflare REST bearer token             | **No**           |
+| Manage Account → **Account API Tokens** | Cloudflare REST bearer token             | **No**           |
+| **R2 → API → Manage API Tokens**        | **S3 Access Key ID + Secret Access Key** | **Yes**          |
 
 Only R2's own flow issues S3-compatible credentials. The other two produce a
 bearer token for Cloudflare's REST API, which `aws s3` cannot use. If what you
-are holding is one long opaque string rather than a key/secret *pair*, you are on
+are holding is one long opaque string rather than a key/secret _pair_, you are on
 the wrong screen.
 
 1. **R2** → **API** → **Manage API Tokens** → **Create API Token**
@@ -190,7 +190,7 @@ the wrong screen.
    account-owned token survives personnel changes, which matters for a job whose
    entire purpose is to still work on the worst day.
 3. Name: `reciprocal-backup-ci`
-4. Permission: **Object Read & Write** — *not* Admin.
+4. Permission: **Object Read & Write** — _not_ Admin.
 5. **Specify bucket** → `reciprocal-backups` only
 6. TTL: **Forever**, or set a calendar reminder to rotate
 7. Create, then copy these **once** (they are never shown again):
@@ -211,7 +211,7 @@ the wrong screen.
 ## Part 3 — The Supabase pooler URL
 
 **The step most likely to bite you.** Supabase's direct database connection is
-IPv6-only; GitHub-hosted runners are IPv4-only. You need the *session-mode*
+IPv6-only; GitHub-hosted runners are IPv4-only. You need the _session-mode_
 pooler.
 
 1. [supabase.com/dashboard](https://supabase.com/dashboard) → your **production**
@@ -243,14 +243,14 @@ Repeat for the **staging** project.
 Repo → **Settings** → **Secrets and variables** → **Actions** → **New repository
 secret**, six times:
 
-| Secret | Value |
-|---|---|
-| `PRODUCTION_DB_URL` | Session pooler URI, production |
-| `STAGING_DB_URL` | Session pooler URI, staging |
-| `BACKUP_S3_ENDPOINT` | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` |
-| `BACKUP_S3_BUCKET` | `reciprocal-backups` |
-| `BACKUP_S3_ACCESS_KEY_ID` | From 2e |
-| `BACKUP_S3_SECRET_ACCESS_KEY` | From 2e |
+| Secret                        | Value                                           |
+| ----------------------------- | ----------------------------------------------- |
+| `PRODUCTION_DB_URL`           | Session pooler URI, production                  |
+| `STAGING_DB_URL`              | Session pooler URI, staging                     |
+| `BACKUP_S3_ENDPOINT`          | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` |
+| `BACKUP_S3_BUCKET`            | `reciprocal-backups`                            |
+| `BACKUP_S3_ACCESS_KEY_ID`     | From 2e                                         |
+| `BACKUP_S3_SECRET_ACCESS_KEY` | From 2e                                         |
 
 Names must match exactly — the workflow checks each one and names any that are
 missing.
@@ -311,7 +311,7 @@ stays silent until the moment you need it.
 > Pasting the block below into an interactive **zsh** prompt prints
 > `command not found: #` for each comment line — zsh only honours `#` as a comment
 > when `interactive_comments` is set. It is noise, not a skipped step; `setopt
-> interactive_comments` silences it.
+interactive_comments` silences it.
 
 ```sh
 # Save the private key from your password manager to /tmp/backup-identity.txt first.
@@ -375,7 +375,7 @@ It leaves you at a **24-hour recovery point objective**. Closing that gap is wha
 the append-only ledger phase is for: restore the nightly dump, then replay the
 log forward.
 
-And it makes backups *exist*; it does not yet make restores *safe*. A naive
+And it makes backups _exist_; it does not yet make restores _safe_. A naive
 restore re-sends every historical email and re-arms the reminder cron. The
 quarantine and re-arm scripts land in the next phase — see
 [RECOVERY.md](../../RECOVERY.md) § Restoring.

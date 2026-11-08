@@ -1,43 +1,48 @@
 <script lang="ts">
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { VenueLabel } from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import VenueLink from '$lib/components/VenueLink.svelte';
-	import Text from '$lib/locales/Text.svelte';
-	import { getAuth } from '$routes/Auth.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { VenueLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import VenueLink from '#lib/components/VenueLink.svelte';
+	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
+	import Text from '#lib/locales/Text.svelte';
 
 	let { data } = $props();
 
 	let proposals = $derived(data.proposals);
 	let venues = $derived(data.venues);
-	let inactiveVenues = $derived(data.inactiveVenues);
 
-	const auth = getAuth();
+	// Kept on the list rather than the layout, which also covered the proposal form. A
+	// realtime tick calls invalidateAll(), and an invalidation that lands while a `goto`
+	// is loading takes over and silently drops it — so the form's own insert could abort
+	// its own redirect. Only this page has a list to keep fresh.
+	reloadOnChanges('venues_changes', [
+		{ table: 'proposals', filter: undefined },
+		{ table: 'venues', filter: undefined }
+	]);
 </script>
 
-<Page icon={VenueLabel} title={(l) => l.page.venues.title} breadcrumbs={[]}>
+<Page title={(l) => l.page.venues.title}>
 	<Text markdown path={(l) => l.page.venues.description} />
-
-	{#if auth().isAuthenticated()}<Link to="/venues/proposal"
-			><Text path={(l) => l.page.venues.link.propose} /></Link
-		>{/if}
 
 	<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.active} />
 
-	{#if venues === null}
-		<Feedback error text={(l) => l.page.venues.feedback.venuesNotLoaded} />
-	{:else if venues.length > 0}
-		<ul>
-			{#each venues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue, index}
-				<li>
-					<VenueLink id={venue.id} name={venue.title} testid={'venue-' + index}></VenueLink>
-				</li>
-			{/each}
-		</ul>
+	{#if venues}
+		{#if venues.length > 0}
+			<ul>
+				{#each venues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue, index}
+					<li>
+						<VenueLink id={venue.id} name={venue.title} slug={venue.slug} testid={'venue-' + index}
+						></VenueLink>
+					</li>
+				{/each}
+			</ul>
+		{:else}
+			<Feedback text={(l) => l.page.venues.feedback.noVenues} />
+		{/if}
 	{:else}
-		<Feedback text={(l) => l.page.venues.feedback.noVenues} />
+		<Feedback error text={(l) => l.page.venues.feedback.venuesNotLoaded} />
 	{/if}
 
 	<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.proposed} />
@@ -58,20 +63,5 @@
 		{/if}
 	{:else}
 		<Feedback error text={(l) => l.page.venues.feedback.proposalsNotLoaded} />
-	{/if}
-
-	{#if inactiveVenues !== null && inactiveVenues.length > 0}
-		<Subheader icon={VenueLabel} text={(l) => l.page.venues.header.inactive} />
-
-		<ul>
-			{#each inactiveVenues.toSorted((a, b) => a.title.localeCompare(b.title)) as venue, index}
-				<li data-testid={'inactive-venue-' + index}>
-					{venue.title}
-					{#if venue.inactive}
-						<span class="inactive-note">({venue.inactive})</span>
-					{/if}
-				</li>
-			{/each}
-		</ul>
 	{/if}
 </Page>

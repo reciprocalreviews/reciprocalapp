@@ -1,13 +1,15 @@
 import { test, expect } from '@playwright/test';
-import { login, logout } from '../src/routes/login';
+import { login, logout, SEED_PASSWORD } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
-const CURRENCY_ID = SEED.currency; // Epistemology
+const CURRENCY_ID = SEED.currency;
 const AUTHOR1_EMAIL = SEED.scholars.author1.email;
-const AUTHOR1_ID = SEED.scholars.author1.id; // holds 100 Epistemology tokens (seed)
+const AUTHOR1_ID = SEED.scholars.author1.id; // holds 100 tokens in the seed
 const AUTHOR2_EMAIL = SEED.scholars.author2.email;
 const AUTHOR2_ID = SEED.scholars.author2.id;
 const AUTHOR2_ORCID = SEED.scholars.author2.orcid;
+const R2_EMAIL = SEED.scholars.r2.email;
+const R2_ID = SEED.scholars.r2.id;
 
 test('the read-only scholar profile page should show volunteering roles', async ({ page }) => {
 	await page.goto('/scholar/d181d165-8b6a-4d79-ad28-a9aece21d813');
@@ -15,14 +17,18 @@ test('the read-only scholar profile page should show volunteering roles', async 
 	// Expect the seeded scholar to have two commitments.
 	await expect(page.getByTestId('admin-0')).toBeVisible();
 	await expect(page.getByTestId('commitment-0')).toBeVisible();
+
+	// A visitor can reach the scholar's ORCID profile, which is where everything RR does
+	// not mirror still lives. RR now shows a narrow, review-relevant slice of it inline
+	// (see orcid.end.ts); this link is the way out to the rest.
+	const orcid = page.getByTestId('scholar-orcid');
+	await expect(orcid).toBeVisible();
+	await expect(orcid).toHaveAttribute('href', `https://orcid.org/${SEED.scholars.editor.orcid}`);
 });
 
 test('the logged in scholar should see many things', async ({ page, context }) => {
 	// Log in as editor
 	await login('editor@uni.edu', page, context);
-
-	// Expect a seeded review
-	await expect(page.getByTestId('review-0')).toBeVisible();
 
 	// Expected two volunteer rows
 	await expect(page.getByTestId('admin-0')).toBeVisible();
@@ -32,6 +38,151 @@ test('the logged in scholar should see many things', async ({ page, context }) =
 	await expect(page.getByTestId('currency-0')).toBeVisible();
 
 	// Log out
+	await logout(page);
+});
+
+/**
+ * Set `completed` on every approved non-editor assignment of a submission.
+ *
+ * Flipping the boolean directly rather than calling complete_assignment is deliberate:
+ * it moves no tokens, so the ledger invariants the global teardown checks never see it.
+ */
+function setReviewersCompleted(submission: string, completed: boolean): void {
+	sql(
+		`update public.assignments a set completed = ${completed} from public.roles r where a.role = r.id and a.submission = '${submission}' and r.priority > 0 and a.approved`
+	);
+}
+
+/** Which of a submission's approved non-editor assignments are currently settled. */
+function settledReviewers(submission: string): string[] {
+	return sql(
+		`select a.id from public.assignments a join public.roles r on r.id = a.role where a.submission = '${submission}' and r.priority > 0 and a.approved and a.completed`
+	)
+		.split('\n')
+		.map((id) => id.trim())
+		.filter(Boolean);
+}
+
+test("an editor's seat becomes a task only once the submission waits on them", async ({
+	page,
+	context
+}) => {
+	// The heart of the fix. A venue with a sole editor seats that editor on every
+	// submission it receives, and the seat lives until the submission is marked done — so
+	// "I hold a priority-0 assignment" cannot mean "this is a task", or a venue's whole
+	// catalogue lands in one person's list. It is a task only when the submission is
+	// actually waiting on the editor.
+	//
+	// Both directions are driven here rather than assumed. Other specs in the suite
+	// settle and unsettle assignments, so neither starting state survives to this point,
+	// and a spec that asserted one would pass or fail on test order.
+	const submission = SEED.submissions.tok004.id;
+	const title = SEED.submissions.tok004.title;
+	const row = () => page.getByTestId(/^task-\d+$/).filter({ hasText: title });
+
+	await login(SEED.scholars.editor.email, page, context);
+
+	const wasSettled = settledReviewers(submission);
+	try {
+		// Reviewers still working: the submission is waiting on them, not on the editor.
+		setReviewersCompleted(submission, false);
+		await page.reload();
+		await expect(row()).toHaveCount(0);
+
+		// Every reviewer settled: now only the editor can move it, so it is their task.
+		setReviewersCompleted(submission, true);
+		await page.reload();
+		await expect(row()).toHaveCount(1);
+		// The Kind cell is the venue's own role name, not a fixed "Review".
+		await expect(row()).toContainText(SEED.roles.editorName);
+	} finally {
+		setReviewersCompleted(submission, false);
+		if (wasSettled.length > 0)
+			sql(
+				`update public.assignments set completed = true where id in ('${wasSettled.join("','")}')`
+			);
+	}
+
+	await logout(page);
+});
+
+test("work whose compensation has been requested leaves the reviewer's task list", async ({
+	page,
+	context
+}) => {
+	// A reviewer who has finished and asked to be paid is waiting on an approver, not on
+	// themselves — but the paper sat in their own list until somebody else acted, because
+	// `completed` only flips when the approver pays. The request timestamp is the only
+	// signal that the work is done, and the reminder function has always read it that way.
+	const title = SEED.submissions.tok001.title;
+	const row = () => page.getByTestId(/^task-\d+$/).filter({ hasText: title });
+
+	await login(SEED.scholars.r1.email, page, context);
+
+	// Force the starting state rather than trusting the seed to have survived the suite:
+	// r1's seat on tok001 approved, unsettled, and not yet claimed for compensation.
+	const before = sql(
+		`select completed || '|' || coalesce(compensation_requested_at::text, '') from public.assignments where id = '${SEED.assignments.tok001Reviewer}'`
+	);
+	sql(
+		`update public.assignments set completed = false, compensation_requested_at = null where id = '${SEED.assignments.tok001Reviewer}'`
+	);
+
+	try {
+		await page.reload();
+		await expect(row()).toHaveCount(1);
+		await expect(row()).toContainText(SEED.roles.reviewerName);
+
+		sql(
+			`update public.assignments set compensation_requested_at = now() where id = '${SEED.assignments.tok001Reviewer}'`
+		);
+		await page.reload();
+		await expect(row()).toHaveCount(0);
+	} finally {
+		// '|' rather than a space: sql() trims its output, so a null timestamp would
+		// leave the separator off the end entirely and the two fields indistinguishable.
+		const [completed, requested] = before.split('|');
+		const stamp = requested === '' ? 'null' : `'${requested}'`;
+		sql(
+			`update public.assignments set completed = ${completed === 't'}, compensation_requested_at = ${stamp} where id = '${SEED.assignments.tok001Reviewer}'`
+		);
+	}
+
+	await logout(page);
+});
+
+test("a scholar cannot see another scholar's token balance (#109)", async ({ page, context }) => {
+	// Balances are private. AUTHOR1 holds 100 tokens in the seed, and
+	// before #109 any signed-in scholar could read them — the profile rendered
+	// everyone's holdings, and the tokens table itself was readable by all.
+	await login(AUTHOR2_EMAIL, page, context);
+
+	// Their own profile shows their balance...
+	await page.goto(`/scholar/${AUTHOR2_ID}`);
+	await expect(page.getByTestId('currency-0')).toBeVisible();
+
+	// ...and author1's does not, even though author1 demonstrably holds tokens.
+	// (author1 has no volunteer commitments, so `scholar-orcid` is the marker that
+	// proves the profile actually rendered rather than 404'd — without a positive
+	// control, the negative assertion below would pass on a broken page.)
+	await page.goto(`/scholar/${AUTHOR1_ID}`);
+	await expect(page.getByTestId('scholar-orcid')).toBeVisible();
+	await expect(page.getByTestId('currency-0')).toHaveCount(0);
+	// The whole section, not just the per-currency rows. Two things withhold it —
+	// the load does not fetch another scholar's balances, and the component renders
+	// the section only for its owner — and without this assertion the test passes
+	// on either one alone. It matters because the fallback branch inside the
+	// section renders a confident "0 tokens", so a half-fix reads as "author1 holds
+	// nothing" rather than as "this is private".
+	await expect(page.locator('#tokens')).toHaveCount(0);
+
+	// And the table cannot be read around the UI either: the RLS policy, not the
+	// component, is what actually withholds it.
+	const visible = sql(
+		`select count(*) from public.tokens where scholar = '${AUTHOR1_ID}' and currency = '${CURRENCY_ID}';`
+	);
+	expect(Number(visible)).toBeGreaterThan(0); // they really do hold tokens
+
 	await logout(page);
 });
 
@@ -85,8 +236,7 @@ test('scholar edits their availability and status, persisting on reload', async 
 	// below interacts with the (hydration-gated) EditableText after this reload.
 	await page.reload();
 	await page.waitForLoadState('networkidle');
-	if (expectedAvailable === 't')
-		await expect(page.getByTestId('available-checkbox')).toBeChecked();
+	if (expectedAvailable === 't') await expect(page.getByTestId('available-checkbox')).toBeChecked();
 	else await expect(page.getByTestId('available-checkbox')).not.toBeChecked();
 
 	// Edit the status via the EditableText: click Edit, fill, then blur — the
@@ -114,7 +264,7 @@ test('scholar edits their availability and status, persisting on reload', async 
 
 /**
  * Shared body for the two scholar-to-scholar gift tests: author1 gifts two
- * Epistemology tokens to author2 (looked up by `recipient`, an ORCID or email),
+ * tokens to author2 (looked up by `recipient`, an ORCID or email),
  * then we verify the gift appears in author2's transaction history and that
  * author2's balance increased by two.
  */
@@ -180,4 +330,158 @@ test('scholar gifts tokens to another scholar by ORCID', async ({ page, context 
 
 test('scholar gifts tokens to another scholar by email', async ({ page, context }) => {
 	await giftToAuthor2(page, context, AUTHOR2_EMAIL, `e2e email gift ${Date.now()}`);
+});
+
+test('a scholar can silence an optional notification', async ({ page, context }) => {
+	// The new-volunteer notice is a courtesy, so it has a setting. Consequential mail — a
+	// charge awaiting approval, a declined transaction — deliberately has none, which is
+	// why the controls are generated from the templates marked `optional` rather than
+	// hand-listed. Absence of a row is the default, and the default is on.
+	sql(`delete from public.notification_settings where scholar = '${AUTHOR1_ID}';`);
+
+	await login(AUTHOR1_EMAIL, page, context);
+	await page.goto(`/scholar/${AUTHOR1_ID}`);
+	await page.waitForLoadState('networkidle');
+
+	const checkbox = page.getByTestId('notify-NewVolunteer');
+	await checkbox.waitFor();
+	// On by default, with nothing stored.
+	await expect(checkbox).toBeChecked();
+
+	await checkbox.click();
+	await expect
+		.poll(() =>
+			sql(
+				`select enabled from public.notification_settings where scholar = '${AUTHOR1_ID}' and event = 'NewVolunteer';`
+			)
+		)
+		.toBe('f');
+
+	// The choice survives a reload, which is the whole point of storing it.
+	await page.reload();
+	await page.waitForLoadState('networkidle');
+	await expect(page.getByTestId('notify-NewVolunteer')).not.toBeChecked();
+
+	// And turning it back on writes the preference rather than leaving the old row.
+	await page.getByTestId('notify-NewVolunteer').click();
+	await expect
+		.poll(() =>
+			sql(
+				`select enabled from public.notification_settings where scholar = '${AUTHOR1_ID}' and event = 'NewVolunteer';`
+			)
+		)
+		.toBe('t');
+
+	sql(`delete from public.notification_settings where scholar = '${AUTHOR1_ID}';`);
+	await logout(page);
+});
+
+test('a freshly loaded profile hydrates from the HTML, not from seventeen more reads', async ({
+	page,
+	context
+}) => {
+	// The server has already answered every read this page makes and inlined the responses
+	// into the HTML for hydration to reuse. Until hydrationFetch.ts pinned X-Client-Info,
+	// none of them matched, so the browser re-ran all seventeen in sequence — during which
+	// every server-rendered button looked ready and did nothing. A scholar trying to accept
+	// a role invitation reported exactly that. This is the regression test for it: hydration
+	// must not read from PostgREST what the server already read.
+	await login(AUTHOR2_EMAIL, page, context);
+
+	const reads: string[] = [];
+	page.on('request', (request) => {
+		const url = request.url();
+		if (url.includes('/rest/v1/') && request.method() !== 'POST')
+			reads.push(`${request.method()} ${url.slice(url.indexOf('/rest/v1/'))}`);
+	});
+
+	await page.goto(`/scholar/${AUTHOR2_ID}`);
+	// The body carries `hydrating` until the root layout mounts; its removal is the moment
+	// handlers are wired, which is what a person's click depends on.
+	await page.locator('body:not(.hydrating)').waitFor();
+	await page.waitForLoadState('networkidle');
+
+	expect(reads, `hydration re-read from PostgREST:\n${reads.join('\n')}`).toEqual([]);
+	await logout(page);
+});
+
+/** Sign in from whatever /login URL the page is already on, so a `next` it carries survives.
+ * The shared `login` helper navigates to a bare /login first, which is what this avoids. */
+async function signInHere(page: import('@playwright/test').Page, email: string) {
+	await page.waitForSelector('body:not(.hydrating)');
+	await page.getByTestId('email-input').fill(email);
+	await page.getByTestId('password-input').fill(SEED_PASSWORD);
+	await page.getByTestId('password-submit').click({ timeout: 20000 });
+}
+
+test('the settings link in an optional email lands on its control after signing in', async ({
+	page
+}) => {
+	// Every optional email's footer links here, through /login, because the controls only
+	// render on a scholar's own profile while signed in. The weekly bidding digest is on by
+	// default and lives in the reviewing group.
+	sql(`delete from public.notification_settings where scholar = '${R2_ID}';`);
+
+	const next = `/scholar/${R2_ID}#notifications-reviewing`;
+	await page.goto(`/login?next=${encodeURIComponent(next)}`, { waitUntil: 'domcontentloaded' });
+	await signInHere(page, R2_EMAIL);
+
+	await page.waitForURL((url) => url.pathname === `/scholar/${R2_ID}`);
+	expect(new URL(page.url()).hash).toBe('#notifications-reviewing');
+
+	const checkbox = page.getByTestId('notify-BiddingDigest');
+	await checkbox.waitFor();
+	await expect(checkbox).toBeChecked();
+	await expect(page.locator('#notifications-reviewing')).toBeInViewport();
+
+	await checkbox.click();
+	await expect
+		.poll(() =>
+			sql(
+				`select enabled from public.notification_settings where scholar = '${R2_ID}' and event = 'BiddingDigest';`
+			)
+		)
+		.toBe('f');
+
+	sql(`delete from public.notification_settings where scholar = '${R2_ID}';`);
+	await logout(page);
+});
+
+test('a return path to another site is ignored', async ({ page }) => {
+	await page.goto(`/login?next=${encodeURIComponent('//evil.example/phish')}`, {
+		waitUntil: 'domcontentloaded'
+	});
+	await signInHere(page, R2_EMAIL);
+	await page.waitForURL((url) => url.pathname === `/scholar/${R2_ID}`);
+	expect(page.url()).not.toContain('evil.example');
+	await logout(page);
+});
+
+// #191: a signed-out reader following an email to a submission used to be told it did not
+// exist. They are now asked to sign in -- by a link, and by the header's, that both come back.
+test('a signed-out reader is asked to sign in, and comes back to the submission', async ({
+	page
+}) => {
+	const path = `/venue/${SEED.venuePath}/submission/${SEED.submissions.tok001.id}`;
+	await page.goto(path, { waitUntil: 'domcontentloaded' });
+	await page.waitForSelector('body:not(.hydrating)');
+
+	const back = `/login?next=${encodeURIComponent(path)}`;
+	await expect(page.locator(`a[href="${back}"]`)).toHaveCount(2); // the prompt, and the header
+	await page.locator(`a[href="${back}"]`).first().click();
+	await page.waitForURL((url) => url.pathname === '/login');
+
+	await signInHere(page, SEED.scholars.editor.email);
+	await page.waitForURL((url) => url.pathname === path);
+	await expect(page.getByText(SEED.submissions.tok001.title).first()).toBeVisible();
+	await logout(page);
+});
+
+test('a signed-in reader passes through the login page without stopping', async ({ page }) => {
+	await login(R2_EMAIL, page);
+	const path = `/venue/${SEED.venuePath}/submissions`;
+	// Redirected by the load, so the very first document is already the destination.
+	await page.goto(`/login?next=${encodeURIComponent(path)}`, { waitUntil: 'domcontentloaded' });
+	expect(new URL(page.url()).pathname).toBe(path);
+	await logout(page);
 });

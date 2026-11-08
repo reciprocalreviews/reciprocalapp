@@ -1,37 +1,55 @@
 <script lang="ts">
 	import type {
 		AssignmentRow,
+		PublicORCIDProfile,
 		CurrencyID,
 		CurrencyRow,
+		NotificationSettingRow,
 		ScholarRow,
 		SubmissionRow,
-		TokenRow,
 		TransactionRow,
 		VenueRow
-	} from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import Dashboard from '$lib/components/Dashboard.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Gift from '$lib/components/Gift.svelte';
-	import { ScholarLabel, SettingsLabel, SubmissionLabel, TokenLabel } from '$lib/components/Labels';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Status from '$lib/components/Status.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import Tokens from '$lib/components/Tokens.svelte';
-	import VerifyEmail from '$lib/components/VerifyEmail.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import { handle } from '$routes/feedback.svelte';
-	import type Scholar from '$lib/data/Scholar.svelte';
-	import Text from '$lib/locales/Text.svelte';
-	import { getAuth } from '$routes/Auth.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	} from '#data/types.js';
+	import type { ScholarTask } from '#lib/data/SupabaseCRUD.svelte.js';
+	import {
+		NotificationPreferences,
+		defaultFor,
+		type NotificationSection
+	} from '../../../../email/templates';
+	import Alert from '#lib/components/Alert.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Cards from '#lib/components/Cards.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
+	import Dashboard from '#lib/components/Dashboard.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Gift from '#lib/components/Gift.svelte';
+	import ORCIDProfile from '#lib/components/ORCIDProfile.svelte';
+	import { shouldReportProblem } from '#lib/data/orcidProfileView.js';
+	import ORCIDiD from '#lib/components/ORCIDiD.svelte';
+	import {
+		SettingsLabel,
+		SubmissionLabel,
+		ThanksLabel,
+		TokenLabel,
+		VenueLabel
+	} from '#lib/components/Labels.js';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Status from '#lib/components/Status.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import SubmissionLink from '#lib/components/SubmissionLink.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import Tokens from '#lib/components/Tokens.svelte';
+	import VerifyEmail from '#lib/components/VerifyEmail.svelte';
+	import { getDB, type PendingEmailVerification } from '#lib/data/CRUD.js';
+	import { handle } from '#routes/feedback.svelte.js';
+	import type Scholar from '#lib/data/Scholar.svelte.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { getAuth } from '#routes/Auth.svelte.js';
+	import { page } from '$app/state';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import Commitments from './Commitments.svelte';
 	import Tasks from './Tasks.svelte';
 
@@ -40,20 +58,34 @@
 		commitments,
 		admins,
 		minting,
-		tokens,
+		balances,
 		transactions,
 		submissions,
 		currencies,
 		pending,
 		outgoingPending,
 		venues,
-		reviews,
-		approvals
+		tasks,
+		approvals,
+		compensating,
+		notifications,
+		pendingEmail,
+		orcid
 	}: {
 		scholar: Scholar;
-		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
-		admins: { id: string; title: string }[] | null;
-		tokens: TokenRow[] | null;
+		commitments: {
+			id: string;
+			invited: boolean;
+			name: string;
+			venue: string;
+			venueid: string;
+			venueSlug: string | null;
+		}[];
+		admins: { id: string; title: string; slug: string | null }[] | null;
+		/** How many tokens this scholar holds, keyed by currency id. Counted in the
+		 * database: this used to be the token rows themselves, re-filtered once per
+		 * currency below, and silently truncated at `max_rows`. */
+		balances: Record<string, number>;
 		transactions: number | null;
 		submissions: SubmissionRow[] | null;
 		currencies: CurrencyRow[] | null;
@@ -61,8 +93,19 @@
 		pending: TransactionRow[] | null;
 		outgoingPending: TransactionRow[] | null;
 		venues: VenueRow[] | null;
-		reviews: (AssignmentRow & { submissions: SubmissionRow })[] | null;
+		tasks: ScholarTask[] | null;
 		approvals: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
+		compensating: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
+		/** This scholar's own notification preferences. Only ever populated for the scholar
+		 * themselves — the RLS policy hides everyone else's — and only deviations from the
+		 * default are stored, so an absent row means the notice is on. */
+		notifications: NotificationSettingRow[] | null;
+		/** What this scholar is waiting to verify, if anything (#27). Like `notifications`,
+		 * only ever populated for the scholar themselves: the RPC answers for auth.uid(). */
+		pendingEmail: PendingEmailVerification | null;
+		/** The mirrored slice of this scholar's public ORCID record, or null when RR has
+		 * not read it. Null is the common case on a cold cache and renders as nothing. */
+		orcid: PublicORCIDProfile | null;
 	} = $props();
 
 	const db = getDB();
@@ -71,14 +114,77 @@
 
 	// Editable if the user is the scholar being viewed.
 	let editable = $derived(auth().getUserID() === scholar.getID());
+
+	/** An icon per notification group. Keyed by the registry's own section names, so a section
+	 * added there without one here is a type error rather than a blank heading. */
+	const NotificationSectionLabels: Record<NotificationSection, string> = {
+		tokens: TokenLabel,
+		reviewing: SubmissionLabel,
+		venues: VenueLabel,
+		community: ThanksLabel
+	};
+
+	/** One control per preference the email registry marks `optional`, so a notice becomes
+	 * silenceable by carrying the flag rather than by anyone remembering to add a checkbox.
+	 * Grouped because a scholar holds several unrelated relationships to the platform at once
+	 * — they are paid, they review, they run venues — and two dozen controls in one column
+	 * would be unscannable.
+	 *
+	 * Absence of a row means "no opinion", not "on": the default is the registry's, so that a
+	 * notice too frequent to impose can ship off and wait to be asked for. Empty sections are
+	 * dropped rather than rendered as a header with nothing under it. */
+	let notificationControls = $derived(
+		NotificationPreferences.map((group) => ({
+			section: group.section,
+			controls: group.preferences
+				.map((event) => ({
+					event,
+					on:
+						notifications?.find((setting) => setting.event === event)?.enabled ?? defaultFor(event)
+				}))
+				// Sorted by what the row actually says, not by the registry's declaration order,
+				// which is the order the notices happened to be written and means nothing to
+				// someone scanning the list for the one they want to turn off.
+				.sort((a, b) =>
+					locale().page.scholar.notifications.label[a.event].localeCompare(
+						locale().page.scholar.notifications.label[b.event]
+					)
+				)
+		})).filter((group) => group.controls.length > 0)
+	);
 	let anonymous = $derived(editable && scholar.getName() === null);
+
+	// Ask for a refresh if the mirror is stale, and never wait for it: this render shows
+	// whatever the cache already holds, and the answer lands for the next reader. In an
+	// effect rather than in `load` because a server load on Vercel can be frozen before a
+	// floating promise resolves, and awaiting it would put ORCID's availability on the
+	// critical path of a page that already runs a dozen queries. The database decides what
+	// "stale" means and rate-limits the asking.
+	$effect(() => {
+		db().requestORCIDRefresh([scholar.getID()]);
+	});
+
+	// The footer of an optional email links to one group of these controls
+	// (/scholar/{id}#notifications-reviewing), and the link arrives before the group does: the
+	// controls render only once the page knows this is the reader's own profile, so the
+	// browser's own jump to the fragment finds nothing. Scroll once, when the target first
+	// exists.
+	let scrolledTo = '';
+	$effect(() => {
+		// Re-run when anything that decides whether the controls render changes.
+		void editable;
+		void notifications;
+		const hash = page.url.hash;
+		if (!hash.startsWith('#notifications-') || hash === scrolledTo) return;
+		const target = document.getElementById(hash.slice(1));
+		if (target === null) return;
+		scrolledTo = hash;
+		target.scrollIntoView({ block: 'start' });
+	});
 </script>
 
 <Page
-	icon={ScholarLabel}
 	title={(l) => scholar.getName() ?? l.page.scholar.title}
-	breadcrumbs={[]}
-	wobble={anonymous}
 	edit={editable
 		? {
 				placeholder: (l) => l.page.scholar.field.name.placeholder,
@@ -89,10 +195,45 @@
 		: undefined}
 >
 	{#snippet subtitle()}<Text path={(l) => l.page.scholar.subtitle} />{/snippet}
-	{#if anonymous}
-		<Feedback inline={false} text={(l) => l.page.scholar.feedback.noName} />
-	{/if}
+	{#snippet alerts()}
+		{#if anonymous}
+			<Alert
+				tone="attention"
+				testid="scholar-no-name"
+				text={(l) => l.page.scholar.feedback.noName}
+			/>
+		{/if}
+		<!-- The form to add an address goes inside the alert asking for one, so the request
+		     and the way to answer it are one thing rather than two boxes apart. -->
+		{#if editable && scholar.getEmail() === null}
+			<Alert
+				tone="attention"
+				testid="email-onboarding"
+				text={(l) => l.page.scholar.feedback.addEmail}
+			>
+				<VerifyEmail pending={pendingEmail} />
+			</Alert>
+		{/if}
+		<!-- Reported only to the scholar it is about: to them it is news, to anyone else an
+		     accusation. -->
+		{#if editable && shouldReportProblem(orcid)}
+			<Alert tone="info" testid="orcid-problem" text={(l) => l.view.orcid.problem} />
+		{/if}
+	{/snippet}
 	{#snippet details()}
+		{@const orcidID = scholar.getORCID()}
+		<!-- The iD is this scholar's identity here, and the way out to the parts of an ORCID
+		     record RR does not mirror. RR now reproduces a narrow, review-relevant slice of
+		     it below -- affiliation, keywords, recent works -- so that an editor choosing a
+		     reviewer need not leave the page; everything else still lives at the other end
+		     of this link. Absent for a seeded account and for an erased tombstone, both of
+		     which have no profile to point at.
+
+		     Rendered as the full https URI behind the green iD icon, which is what ORCID's
+		     display guidelines ask for. -->
+		{#if orcidID}
+			<ORCIDiD id={orcidID} testid="scholar-orcid" />
+		{/if}
 		<Status
 			good={scholar.isAvailable()}
 			label={(l) =>
@@ -126,31 +267,31 @@
 		<Paragraph text={() => scholar.getStatus()} />
 	{/if}
 
-	{#if editable && scholar.getEmail() === null}
-		<Feedback
-			inline={false}
-			testid="email-onboarding"
-			text={(l) => l.page.scholar.feedback.addEmail}
-		/>
-		<VerifyEmail />
-	{/if}
+	<!-- Deliberately outside the `editable` gate that hides Dashboard and Tasks: this
+	     section is for whoever is READING the profile, which is usually not its owner.
+	     `own` governs one thing only -- whether a record RR could not read is reported,
+	     which is news to the scholar and an accusation to anyone else. -->
+	<ORCIDProfile profile={orcid} own={editable} />
 
 	{#if editable}
 		<Dashboard
 			stats={[
 				{
 					number: submissions?.length,
-					title: 'submissions',
+					title: locale().page.scholar.stat.submissions,
 					link: `#submissions`
 				},
 				{
-					number: tokens?.length,
-					title: `Tokens in ${currencies?.length} ${currencies?.length === 1 ? 'currency' : 'currencies'}`,
+					number: Object.values(balances).reduce((sum, n) => sum + n, 0),
+					title: (currencies?.length === 1
+						? locale().page.scholar.stat.tokensOne
+						: locale().page.scholar.stat.tokens
+					).replace('{count}', `${currencies?.length ?? 0}`),
 					link: `#tokens`
 				},
 				{
 					number: transactions ?? undefined,
-					title: 'Transactions',
+					title: locale().page.scholar.stat.transactions,
 					link: `/scholar/${scholar.getID()}/transactions`
 				}
 			]}
@@ -164,8 +305,9 @@
 			{minting}
 			{pending}
 			{outgoingPending}
-			{reviews}
+			{tasks}
 			{approvals}
+			{compensating}
 		></Tasks>
 	{/if}
 
@@ -186,30 +328,32 @@
 		</ul>
 	{/if}
 
-	<Subheader icon={TokenLabel} id="tokens" text={(l) => l.page.scholar.header.tokens}></Subheader>
+	<!-- Only ever your own. Balances are private (#109): the RLS policy admits a
+	scholar to their own token rows and nobody else's, so this section rendered
+	someone else's holdings as a confident "0 tokens" rather than as unknown. It is
+	hidden instead of zeroed, because a wrong number is worse than no number. -->
+	{#if editable}
+		<Subheader icon={TokenLabel} id="tokens" text={(l) => l.page.scholar.header.tokens}></Subheader>
 
-	{#if tokens === null || currencies === null}
-		<Feedback text={(l) => l.page.scholar.feedback.tokensNotLoaded}></Feedback>
-	{:else}
-		<Paragraph
-			text={(l) =>
-				editable ? l.page.scholar.paragraph.youHave : l.page.scholar.paragraph.thisScholarHas}
-		/>
-		<ul>
-			{#each currencies as currency, index}
-				<li data-testid={'currency-' + index}>
-					<Tokens amount={tokens.filter((t) => t.currency === currency.id).length} {currency}
-					></Tokens>
-				</li>
-			{:else}
-				<Tokens amount={0}></Tokens>
-			{/each}
-		</ul>
+		{#if currencies === null}
+			<Feedback text={(l) => l.page.scholar.feedback.tokensNotLoaded}></Feedback>
+		{:else}
+			<Paragraph text={(l) => l.page.scholar.paragraph.youHave} />
+			<ul>
+				{#each currencies as currency, index}
+					<li data-testid={'currency-' + index}>
+						<Tokens amount={balances[currency.id] ?? 0} {currency}></Tokens>
+					</li>
+				{:else}
+					<Tokens amount={0}></Tokens>
+				{/each}
+			</ul>
+		{/if}
 	{/if}
 
 	{#if editable}
 		<Cards>
-			{#if tokens !== null && currencies !== null}
+			{#if currencies !== null}
 				<Card
 					subheader
 					icon={TokenLabel}
@@ -217,7 +361,7 @@
 					testid="scholar-gift-card"
 				>
 					<Gift
-						{tokens}
+						{balances}
 						purpose={locale().page.scholar.card.gift.purpose}
 						success={locale().page.scholar.card.gift.success}
 						{currencies}
@@ -249,7 +393,49 @@
 
 		{#if scholar.getEmail() !== null}
 			<Subheader icon={SettingsLabel} text={(l) => l.page.scholar.header.settings}></Subheader>
-			<VerifyEmail current={scholar.getEmail()} />
+			<VerifyEmail current={scholar.getEmail()} pending={pendingEmail} />
+
+			<!-- Only shown once there is a verified address: there is nothing to opt out of
+			     before mail can reach you at all. -->
+			<Subheader icon={SettingsLabel} text={(l) => l.page.scholar.notifications.header}></Subheader>
+			<Paragraph text={(l) => l.page.scholar.notifications.about} />
+			{#each notificationControls as group (group.section)}
+				<!-- A level below the Notifications heading above, not a sibling of it: these
+				     name parts of that section rather than sections of their own, and a screen
+				     reader navigating by heading would otherwise be told this page has five
+				     unrelated settings sections.
+				
+				     The id is given rather than derived. Subheader builds one from the heading
+				     text, and "Tokens" here would collide with the balances section's own
+				     id="tokens" above — two elements with one id, so both anchor links land on
+				     the first. -->
+				<Subheader
+					sub
+					id="notifications-{group.section}"
+					icon={NotificationSectionLabels[group.section]}
+					text={(l) => l.page.scholar.notifications.section[group.section]}
+				></Subheader>
+				<!-- The labels below are fragments completing this legend ("Email me when…
+				     someone transfers tokens to me"), so that the phrase is written once per
+				     group rather than twenty-two times.
+				
+				     A fieldset is what makes that safe rather than merely shorter: a legend is
+				     announced along with every control inside it, so someone tabbing onto a
+				     checkbox still hears the whole sentence. Factoring the words into a plain
+				     paragraph would have read fine down the page and left each checkbox saying
+				     half a thing to anyone who arrived at it directly. -->
+				<fieldset>
+					<legend><Text path={(l) => l.page.scholar.notifications.prompt} /></legend>
+					{#each group.controls as control (control.event)}
+						<Checkbox
+							on={control.on}
+							change={(on) => db().updateNotificationSetting(scholar.getID(), control.event, on)}
+							label={(l) => l.page.scholar.notifications.label[control.event]}
+							testid="notify-{control.event}"
+						/>
+					{/each}
+				</fieldset>
+			{/each}
 		{/if}
 
 		{#if editable}
@@ -286,6 +472,26 @@
 </Page>
 
 <style>
+	/* The fieldset is here for its legend, not for a box: the legend is what a screen reader
+	   announces alongside each checkbox inside it, which is what lets the labels be fragments.
+	   So the browser's default border and inset padding are removed and the legend is styled
+	   as the quiet lead-in line it reads as. */
+	fieldset {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing);
+		border: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	legend {
+		padding: 0;
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
+	}
+
 	.privacy {
 		display: flex;
 		flex-wrap: wrap;

@@ -1,32 +1,37 @@
 <script lang="ts">
-	import Card from '$lib/components/Card.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import CopyButton from '$lib/components/CopyButton.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Note from '$lib/components/Note.svelte';
+	import { page } from '$app/state';
+	import { venuePath } from '#lib/data/venuePath.js';
+	import Action from '#lib/components/Action.svelte';
+	import Alert from '#lib/components/Alert.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
+	import CopyButton from '#lib/components/CopyButton.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Note from '#lib/components/Note.svelte';
 	import {
-		ErrorLabel,
 		MinterLabel,
 		ScholarLabel,
 		SettingsLabel,
 		TaskLabel,
 		TokenLabel,
 		VenueLabel
-	} from '$lib/components/Labels.js';
-	import Options from '$lib/components/Options.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Slider from '$lib/components/Slider.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import { getDB } from '$lib/data/CRUD.js';
-	import { PLATFORMS } from '$lib/data/reviewingPlatforms';
-	import Text from '$lib/locales/Text.svelte';
-	import { validInteger } from '$lib/validation.js';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	} from '#lib/components/Labels.js';
+	import Options from '#lib/components/Options.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { PLATFORMS } from '#lib/data/reviewingPlatforms.js';
+	import { parseRelevantVenues, previewRelevantVenues } from '#lib/data/trackRecord.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { isntEmpty, validInteger, validReviewSystemURL, validURL } from '#lib/validation.js';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import PreferenceLevels from '../PreferenceLevels.svelte';
+	import WebAddress from './WebAddress.svelte';
+	import DeclineReasons from './DeclineReasons.svelte';
 	import Roles from '../Roles.svelte';
 
 	let { data } = $props();
@@ -36,10 +41,10 @@
 		roles,
 		volunteers,
 		currency,
-		minters,
 		types,
 		compensation,
-		preferenceLevels
+		preferenceLevels,
+		declineReasons
 	} = $derived(data);
 
 	const db = getDB();
@@ -50,21 +55,28 @@
 	let platformId = $state<string | undefined>('hotcrp');
 	const selectedPlatform = $derived(PLATFORMS.find((p) => p.id === platformId) ?? PLATFORMS[0]);
 
-	/** Substitute the template body's placeholders. */
-	function renderTemplate(body: string, venueTitle: string, venueId: string): string {
+	/** Substitute the template body's placeholders. `{role}` is deliberately
+	 * left in place for the editor to fill — see the tip above the snippets, and
+	 * the note on the locale type. `{origin}` resolves to the environment the
+	 * editor is looking at, so a snippet copied from a local or staging venue
+	 * links back to that venue rather than to production. */
+	function renderTemplate(body: string, venueTitle: string, path: string): string {
 		return body
+			.replaceAll('{origin}', page.url.origin)
 			.replaceAll('{venue}', venueTitle)
-			.replaceAll('{venueid}', venueId)
+			.replaceAll('{venuepath}', path)
 			.replaceAll('{manuscriptVar}', selectedPlatform.submissionVar);
 	}
 
 	/** Section ids declared once; reused throughout so typos at use sites are
 	 * caught at compile time. */
+	const ADDRESS = 'address';
 	const POLICIES = 'policies';
 	const COMPENSATION = 'compensation';
 	const ROLES = 'roles';
 	const VISIBILITY = 'visibility';
 	const PREFERENCE_LEVELS = 'preferenceLevels';
+	const DECLINE_REASONS = 'declineReasons';
 	const TEMPLATES = 'templates';
 	const BULK_IMPORT = 'bulkImport';
 	const STATUS = 'status';
@@ -72,16 +84,33 @@
 	 * `visibleSteps` so hiding a section (e.g. preference levels when nothing
 	 * is biddable) renumbers the rest. */
 	const STEPS_IN_ORDER = [
+		// First, because every step below it renders links and copy-paste snippets built
+		// from the address, and because a venue cannot be activated without one.
+		ADDRESS,
 		POLICIES,
 		COMPENSATION,
 		ROLES,
 		VISIBILITY,
 		PREFERENCE_LEVELS,
+		// Not hidden with preference levels: claims are declined too, biddable roles or not.
+		DECLINE_REASONS,
 		TEMPLATES,
 		BULK_IMPORT,
 		STATUS
 	] as const;
 	type StepId = (typeof STEPS_IN_ORDER)[number];
+
+	/** True when someone both administers this venue and mints its currency.
+	 *
+	 * Permitted, and nothing here blocks on it: a small community's organizer is often its
+	 * only minter, and refusing the arrangement stopped such a venue going live at all. It
+	 * is disclosed instead — every visitor who is neither an admin nor a minter sees a notice
+	 * on the venue page — so the admin is told the same thing, and told where to hand the
+	 * currency over if someone else will hold it. */
+	const adminMints = $derived(
+		!venue?.payment_free &&
+			(venue?.admins ?? []).some((admin) => (currency?.minters ?? []).includes(admin))
+	);
 
 	const hasBiddableRole = $derived((roles ?? []).some((r) => r.biddable));
 	const visibleSteps = $derived(
@@ -93,33 +122,138 @@
 </script>
 
 {#if venue === null || currency === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+	<Page title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.settings.feedback.unknownVenue} />
 	</Page>
 {:else if !scholar}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
-		<Feedback error text={(l) => l.page.settings.feedback.logIn} />
+	<Page title={(l) => l.page.error.title}>
+		<!-- A prompt, not an error: nothing has gone wrong, the reader is just signed out. -->
+		<Feedback text={(l) => l.page.settings.feedback.logIn} />
 	</Page>
 {:else if !venue.admins.includes(scholar.id)}
-	<Page icon={ErrorLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
-		{#snippet subtitle()}<Text path={(l) => l.page.settings.subtitle} />{/snippet}
+	<Page title={(l) => l.page.settings.title} context={venueBarName(venue)}>
 		<Feedback error text={(l) => l.page.settings.feedback.adminsOnly} />
 	</Page>
 {:else}
-	<Page
-		icon={VenueLabel}
-		title={venue.title}
-		breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}
-		edit={{
-			placeholder: (l) => l.page.venue.field.name.placeholder,
-			valid: (text) => (text.length > 0 ? undefined : (l) => l.page.venue.field.name.invalid),
-			update: (text) => db().editVenueTitle(venue.id, text)
-		}}
-	>
-		{#snippet subtitle()}<Text path={(l) => l.page.settings.subtitle} />{/snippet}
+	<Page title={(l) => l.page.settings.title} context={venueBarName(venue)}>
+		{#snippet alerts()}
+			{#if venue.inactive !== null}
+				<Alert
+					tone="attention"
+					text={(l) => l.page.venue.feedback.inactivePrompt}
+					testid="venue-inactive-prompt"
+				>
+					{#snippet action()}
+						<Action to="#status" label={(l) => l.page.settings.action.activate} />
+					{/snippet}
+				</Alert>
+			{/if}
+		{/snippet}
+
 		<Paragraph text={(l) => l.page.settings.paragraph.welcome} />
 
-		<!-- Step 1: Decide policies -->
+		<!-- Step 1: Choose the venue's names and address -->
+		<Subheader
+			id="web-address"
+			icon={VenueLabel}
+			number={stepNumber(ADDRESS)}
+			text={(l) => l.page.settings.header.webAddress}
+		/>
+
+		<Tip><Text path={(l) => l.page.settings.tip.webAddress} /></Tip>
+
+		<!-- The title used to be edited in this page's own header band, and the web address
+		     used to be this step on its own. Both are answers to "what is this venue
+		     called", so they are one step now — and the band is gone, because the venue bar
+		     above names the venue on every route inside it (#176). Deliberately not a new
+		     entry in STEPS_IN_ORDER: that would renumber every step below it for no reason a
+		     reader could see. -->
+		<EditableText
+			text={venue.title}
+			strings={(l) => l.page.venue.field.name}
+			valid={(text) => (isntEmpty(text) ? undefined : (l) => l.page.venue.field.name.invalid)}
+			edit={(text) => db().editVenueTitle(venue.id, text)}
+			testid="venue-title"
+		/>
+
+		<!-- What the venue bar shows in place of a title that will not fit there. -->
+		<EditableText
+			text={venue.short_title}
+			strings={(l) => l.page.settings.field.shortName}
+			valid={(text) =>
+				text.trim().length <= 20 ? undefined : (l) => l.page.settings.field.shortName.invalid}
+			edit={(text) => db().editVenueShortTitle(venue.id, text.trim())}
+			testid="venue-short-title"
+		/>
+
+		<!-- Moved here from the venue's own page, where it sat in a sub-banner that no
+		     longer exists. The address is still SHOWN there, in the body; this is where it
+		     is changed, with the rest of the venue's metadata. -->
+		<EditableText
+			text={venue.url}
+			strings={(l) => l.page.venue.field.url}
+			valid={(text) => (validURL(text) ? undefined : (l) => l.page.venue.field.url.invalid)}
+			edit={(text) => db().editVenueURL(venue.id, text)}
+			testid="venue-url"
+		/>
+
+		<!-- Where editors assign reviewers outside RR. Linked from the pages where approvers
+		     assign, since assigning in RR only records the work for compensation. -->
+		<Paragraph text={(l) => l.page.settings.paragraph.reviewSystemURL} />
+		<EditableText
+			text={venue.review_system_url ?? ''}
+			strings={(l) => l.page.settings.field.reviewSystemURL}
+			valid={(text) =>
+				validReviewSystemURL(text.trim())
+					? undefined
+					: (l) => l.page.settings.field.reviewSystemURL.invalid}
+			edit={(text) =>
+				db().editVenueReviewSystemURL(venue.id, text.trim() === '' ? null : text.trim())}
+			testid="venue-review-system-url"
+		/>
+
+		<!-- Which other venues' authors are likely reviewers here. Ranks the volunteers
+		     roster for those who assign; the preview shows what each line matches, with the
+		     same rules the roster uses (src/lib/data/trackRecord.ts). -->
+		<Paragraph text={(l) => l.page.settings.paragraph.relevantVenues} />
+		<EditableText
+			text={venue.relevant_venues.join('\n')}
+			strings={(l) => l.page.settings.field.relevantVenues}
+			inline={false}
+			edit={(text) => db().editVenueRelevantVenues(venue.id, parseRelevantVenues(text))}
+			testid="venue-relevant-venues"
+		/>
+		{#if venue.relevant_venues.length > 0}
+			<ul class="relevant-preview" data-testid="venue-relevant-preview">
+				{#each previewRelevantVenues(venue.relevant_venues, data.journals) as match}
+					<li>
+						{#if match.scholars > 0}
+							<Text
+								path={(l) => l.page.settings.paragraph.relevantVenueMatches}
+								markdown
+								inputs={{ venue: match.line, count: match.scholars.toString() }}
+							/>
+							<br /><small
+								><Text
+									path={(l) => l.page.settings.paragraph.relevantVenueTitles}
+									inputs={{ titles: match.titles.join('; ') }}
+								/></small
+							>
+						{:else}
+							<Text
+								path={(l) => l.page.settings.paragraph.relevantVenueNone}
+								markdown
+								inputs={{ venue: match.line }}
+							/>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		{/if}
+
+		<WebAddress {venue} />
+
+		<!-- Step 2: Decide policies -->
 		<Subheader
 			id="policies"
 			icon={SettingsLabel}
@@ -146,7 +280,7 @@
 			<Paragraph text={(l) => l.page.settings.paragraph.minters} />
 		</Card>
 
-		<!-- Step 2: Compensation -->
+		<!-- Step 3: Compensation -->
 		<Subheader
 			id="compensation"
 			icon={SettingsLabel}
@@ -154,7 +288,7 @@
 			text={(l) => l.page.settings.header.compensation}
 		/>
 
-		<Tip><Text path={(l) => l.page.settings.tip.compensation} /></Tip>
+		<Tip><Text markdown path={(l) => l.page.settings.tip.compensation} /></Tip>
 
 		<Checkbox
 			testid="payment-free-checkbox"
@@ -178,7 +312,7 @@
 			/>
 		{/if}
 
-		<!-- Step 3: Roles -->
+		<!-- Step 4: Roles -->
 		<Subheader
 			id="roles"
 			icon={ScholarLabel}
@@ -194,14 +328,12 @@
 			{roles}
 			{volunteers}
 			isAdmin={true}
-			{currency}
-			{minters}
 			{types}
 			{compensation}
 			startCollapsed
 		/>
 
-		<!-- Step 4: Visibility -->
+		<!-- Step 5: Visibility -->
 		<Subheader
 			id="visibility"
 			icon={SettingsLabel}
@@ -209,38 +341,19 @@
 			text={(l) => l.page.settings.header.visibility}
 		/>
 
-		<Tip><Text path={(l) => l.page.settings.tip.doneVisibility} /></Tip>
-
 		<Checkbox
 			on={venue.anonymous_assignments}
 			change={(on) => db().editVenueAnonymousAssignments(venue.id, on)}
-			label={(l) =>
-				venue.anonymous_assignments
-					? l.page.settings.checkbox.anonymousAssignments.on
-					: l.page.settings.checkbox.anonymousAssignments.off}
+			label={(l) => l.page.settings.checkbox.anonymousAssignments}
 		/>
 
 		<Checkbox
 			on={venue.vet_thanks}
 			change={(on) => db().editVenueVetThanks(venue.id, on)}
-			label={(l) =>
-				venue.vet_thanks
-					? l.page.settings.checkbox.vetThanks.on
-					: l.page.settings.checkbox.vetThanks.off}
+			label={(l) => l.page.settings.checkbox.vetThanks}
 		/>
 
-		<Slider
-			min={0}
-			max={365}
-			step={7}
-			value={venue.done_visibility_days}
-			strings={(l) => l.page.settings.slider.doneVisibility}
-			change={(days) => handle(db().editVenueDoneVisibilityDays(venue.id, days))}
-			immediately={false}
-			testid="done-visibility-days"
-		/>
-
-		<!-- Step 5: Bid preference levels (only when at least one role is biddable) -->
+		<!-- Step 6: Bid preference levels (only when at least one role is biddable) -->
 		{#if hasBiddableRole}
 			<Subheader
 				id="preference-levels"
@@ -249,12 +362,24 @@
 				text={(l) => l.page.settings.header.preferenceLevels}
 			/>
 
-			<Tip><Text path={(l) => l.page.settings.tip.preferenceLevels} /></Tip>
+			<Tip><Text markdown path={(l) => l.page.settings.tip.preferenceLevels} /></Tip>
 
 			<PreferenceLevels {venue} levels={preferenceLevels ?? []} />
 		{/if}
 
-		<!-- Step 6: Email templates -->
+		<!-- Step 7: What approvers can say when they decline a bid or claim (#218) -->
+		<Subheader
+			id="decline-reasons"
+			icon={SettingsLabel}
+			number={stepNumber(DECLINE_REASONS)}
+			text={(l) => l.page.settings.header.declineReasons}
+		/>
+
+		<Tip><Text path={(l) => l.page.settings.tip.declineReasons} /></Tip>
+
+		<DeclineReasons {venue} reasons={declineReasons ?? []} />
+
+		<!-- Step 8: Email templates -->
 		<Subheader
 			id="templates"
 			icon={SettingsLabel}
@@ -271,14 +396,18 @@
 			onChange={(value) => (platformId = value)}
 		/>
 
-		{#each venue.payment_free ? ['acknowledgement'] : ['payment', 'acknowledgement', 'compensation'] as kind (kind)}
+		<!-- The decision letter is the editor's own: a payment-free venue still closes its
+		     submissions, so it gets that snippet too. -->
+		{#each venue.payment_free ? ['acknowledgement', 'decision'] : ['payment', 'acknowledgement', 'compensation', 'decision'] as kind (kind)}
 			{@const tpl =
 				kind === 'payment'
 					? locale().page.settings.template.payment
 					: kind === 'acknowledgement'
 						? locale().page.settings.template.acknowledgement
-						: locale().page.settings.template.compensation}
-			{@const rendered = renderTemplate(tpl.body, venue.title, venue.id)}
+						: kind === 'compensation'
+							? locale().page.settings.template.compensation
+							: locale().page.settings.template.decision}
+			{@const rendered = renderTemplate(tpl.body, venue.title, venuePath(venue))}
 			<Card
 				icon={SettingsLabel}
 				subheader
@@ -290,7 +419,7 @@
 			</Card>
 		{/each}
 
-		<!-- Step 7: Bulk import -->
+		<!-- Step 9: Bulk import -->
 		<Subheader
 			id="bulk-import"
 			icon={SettingsLabel}
@@ -299,10 +428,14 @@
 		/>
 
 		<Tip>
-			<Text markdown path={(l) => l.page.settings.tip.bulkImport} inputs={{ venueid: venue.id }} />
+			<Text
+				markdown
+				path={(l) => l.page.settings.tip.bulkImport}
+				inputs={{ venue: venuePath(venue) }}
+			/>
 		</Tip>
 
-		<!-- Step 8: Activate (the last thing you do) -->
+		<!-- Step 10: Activate (the last thing you do) -->
 		<Subheader
 			id="status"
 			icon={SettingsLabel}
@@ -312,12 +445,34 @@
 
 		<Tip><Text path={(l) => l.page.settings.tip.inactive} /></Tip>
 
+		<!-- Deactivating is always allowed; activating needs an address, so that every link
+		     anyone sends about a live venue is one they can read. The database refuses the
+		     transition too (venue_needs_address_to_activate) — this is the half that says
+		     why, before someone finds out by being refused. -->
 		<Checkbox
 			testid="inactive-checkbox"
+			active={venue.slug !== null || venue.inactive === null}
 			on={venue.inactive !== null}
 			change={(on) => db().editVenueInactive(venue.id, on ? 'This venue is not active.' : null)}
 			label={(l) => l.page.settings.checkbox.inactive}
 		/>
+		{#if venue.slug === null && venue.inactive !== null}
+			<Feedback
+				warning
+				inline={false}
+				text={(l) => l.page.settings.feedback.addressRequiredToActivate}
+				testid="venue-address-required"
+			/>
+		{/if}
+		{#if adminMints}
+			<Feedback
+				warning
+				inline={false}
+				text={(l) => l.page.settings.feedback.adminMints}
+				inputs={{ currency: currency.id }}
+				testid="venue-admin-mints"
+			/>
+		{/if}
 
 		{#if venue.inactive !== null}
 			<EditableText
@@ -333,6 +488,14 @@
 {/if}
 
 <style>
+	.relevant-preview {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-half);
+		margin: 0;
+		font-size: var(--small-font-size);
+	}
+
 	pre {
 		white-space: pre-wrap;
 		word-break: break-word;

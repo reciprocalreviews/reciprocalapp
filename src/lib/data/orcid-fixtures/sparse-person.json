@@ -1,0 +1,96 @@
+{
+	"last-modified-date": {
+		"value": 1737588992217
+	},
+	"name": {
+		"created-date": {
+			"value": 1737588633020
+		},
+		"last-modified-date": {
+			"value": 1737588633020
+		},
+		"given-names": {
+			"value": "Amy"
+		},
+		"family-name": {
+			"value": "Ko"
+		},
+		"credit-name": null,
+		"source": null,
+		"visibility": "public",
+		"path": "0009-0003-5125-4959"
+	},
+	"other-names": {
+		"last-modified-date": null,
+		"other-name": [],
+		"path": "/0009-0003-5125-4959/other-names"
+	},
+	"biography": null,
+	"researcher-urls": {
+		"last-modified-date": null,
+		"researcher-url": [],
+		"path": "/0009-0003-5125-4959/researcher-urls"
+	},
+	"emails": {
+		"last-modified-date": null,
+		"email": [],
+		"path": "/0009-0003-5125-4959/email"
+	},
+	"addresses": {
+		"last-modified-date": null,
+		"address": [],
+		"path": "/0009-0003-5125-4959/address"
+	},
+	"keywords": {
+		"last-modified-date": null,
+		"keyword": [],
+		"path": "/0009-0003-5125-4959/keywords"
+	},
+	"external-identifiers": {
+		"last-modified-date": {
+			"value": 1737588992217
+		},
+		"external-identifier": [
+			{
+				"created-date": {
+					"value": 1737588992217
+				},
+				"last-modified-date": {
+					"value": 1737588992217
+				},
+				"source": {
+					"source-orcid": null,
+					"source-client-id": {
+						"uri": "https://orcid.org/client/0000-0002-5982-8983",
+						"path": "0000-0002-5982-8983",
+						"host": "orcid.org"
+					},
+					"source-name": {
+						"value": "Scopus - Elsevier"
+					},
+					"assertion-origin-orcid": {
+						"uri": "https://orcid.org/0009-0003-5125-4959",
+						"path": "0009-0003-5125-4959",
+						"host": "orcid.org"
+					},
+					"assertion-origin-client-id": null,
+					"assertion-origin-name": {
+						"value": "Amy Ko"
+					}
+				},
+				"external-id-type": "Scopus Author ID",
+				"external-id-value": "56481191100",
+				"external-id-url": {
+					"value": "http://www.scopus.com/inward/authorDetails.url?authorID=56481191100&partnerID=MN8TOARS"
+				},
+				"external-id-relationship": "self",
+				"visibility": "public",
+				"path": "/0009-0003-5125-4959/external-identifiers/3808505",
+				"put-code": 3808505,
+				"display-index": 1
+			}
+		],
+		"path": "/0009-0003-5125-4959/external-identifiers"
+	},
+	"path": "/0009-0003-5125-4959/person"
+}

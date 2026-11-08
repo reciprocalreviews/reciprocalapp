@@ -3,8 +3,11 @@
  *
  * Extracted from the submissions page so the ordering and the privacy gate can
  * be tested directly. Everything here is pure — the page's reactive reads are
- * passed in as a context object, including `now`, so the done-visibility window
- * is deterministic in tests. */
+ * passed in as a context object. The list holds one status at a time (active or
+ * done, chosen by the page's mode and filtered by the load), so nothing here
+ * separates the two. */
+
+import { charges, NULL_TRANSACTION, type ChargeStatus } from './submissionPayment';
 
 /** Only the submission fields the view logic reads. */
 export type ViewSubmission = {
@@ -14,7 +17,6 @@ export type ViewSubmission = {
 	authors: string[];
 	status: string;
 	created_at: string;
-	completed_at: string | null;
 	transactions: string[];
 };
 
@@ -31,19 +33,29 @@ export type SubmissionsViewContext = {
 	/** Assignments visible to the viewer (RLS has already filtered these). */
 	assignments: ViewAssignment[] | null;
 	/** Role lookup, for the anonymous_authors gate. */
-	rolesById: Map<string, { anonymous_authors: boolean }>;
+	rolesById: Map<string, { anonymous_authors: boolean; priority: number }>;
+	/** Whether the viewer can approve assignments for any role at this venue —
+	 * a venue admin, an editor, or the approver of some role. This is the line
+	 * between someone running the venue's reviewing and someone only bidding in
+	 * it, and it is what the manuscript ID is gated on. */
+	isVenueApprover: boolean;
+	/** Which submissions already have someone in the venue's editor role, from
+	 * `public.venue_submission_editors`. Not derived from `assignments`: a venue editor
+	 * who is not a venue admin can see the venue's submissions and none of its
+	 * assignments, so inferring it from visible rows called every submission unclaimed.
+	 * Null when it hasn't loaded. */
+	submissionsWithEditor: Set<string> | null;
 	/** Scholar display names, ALREADY LOWERCASED, for name matching. */
 	scholarName: Map<string, string>;
 	/** The viewer's declared conflicts. */
 	conflicts: { submissionid: string }[] | null;
-	/** Transactions visible to the viewer. */
-	transactions: { id: string }[] | null;
-	/** The venue's done-visibility window in days, or null if the venue is unknown. */
-	doneVisibilityDays: number | null;
+	/** Transactions visible to the viewer, with their status: only an approved
+	 * charge counts as paid. */
+	transactions: { id: string; status: ChargeStatus }[] | null;
 	/** The raw search box contents; trimmed and lowercased here. */
 	filter: string;
-	/** Current time in ms, injected so the visibility window is testable. */
-	now: number;
+	/** When true, show only submissions still waiting for an editor. */
+	needsEditorOnly: boolean;
 	/** Sort state, in precedence order: the LAST column listed is dominant,
 	 * because each pass is applied in turn over a stable sort. */
 	sortOrder: SortColumn[];
@@ -53,10 +65,35 @@ export type SubmissionsViewContext = {
 	createdSortLatestFirst: boolean;
 };
 
-/** A non-paying co-author's slot in `submission.transactions`. */
-export const NULL_TRANSACTION = '00000000-0000-0000-0000-000000000000';
+export { NULL_TRANSACTION };
+
+/** What a submission's payment column has to say.
+ *
+ * These used to be one number, where zero meant "nothing outstanding" — which is
+ * true both of a submission whose authors paid and of one that was never charged
+ * at all, and the column said "paid" for both. It was wrong for every imported
+ * submission (bulk_import_submissions writes no transactions) and for every
+ * submission at a payment-free venue (every author's charge is zero, so every
+ * slot is a placeholder). Neither had been paid for; in the imported case the
+ * tokens did not even exist yet. Splitting the states apart is what makes the
+ * claim checkable. */
+export type PaymentState =
+	/** Transactions have not loaded, so nothing can be said. */
+	| { state: 'unknown' }
+	/** Nothing was ever charged for this submission. */
+	| { state: 'free' }
+	/** There were charges, and each has a transaction. */
+	| { state: 'paid' }
+	/** Charges not yet approved, including any the viewer cannot see. */
+	| { state: 'pending'; count: number };
 
 export function submissionsView(context: SubmissionsViewContext) {
+	/** Each visible transaction's status, looked up once rather than per charge. */
+	const transactionStatus =
+		context.transactions === null
+			? null
+			: new Map(context.transactions.map((t) => [t.id, t.status]));
+
 	const trimmedFilter = context.filter.trim().toLowerCase();
 
 	/** True if the given text contains the active filter term (case-insensitive). */
@@ -76,10 +113,18 @@ export function submissionsView(context: SubmissionsViewContext) {
 		return false;
 	}
 
-	/** Whether the current viewer can see the authors of a given submission,
-	 * mirroring the role.anonymous_authors gate on the submission detail page.
-	 * Used both by the filter (to decide whether to match author names) and by
-	 * the Authors column (to decide whether to render them). */
+	/** Whether the current viewer can see the identifying details of a given
+	 * submission, mirroring the role.anonymous_authors gate on the submission
+	 * detail page.
+	 *
+	 * That means the author list AND the manuscript ID. The ID is not merely a
+	 * label: it is the key the paper is filed under in the venue's real reviewing
+	 * system, so anyone who can look it up there can walk from it straight to the
+	 * author list this gate is withholding. Showing one while hiding the other
+	 * protects nothing.
+	 *
+	 * Used by the filter (to decide which fields may be matched) and by the
+	 * Authors and ID columns (to decide whether to render them). */
 	function canSeeAuthors(sub: ViewSubmission): boolean {
 		if (context.isAdmin) return true;
 		if (context.uid !== null && sub.authors.includes(context.uid)) return true;
@@ -93,16 +138,41 @@ export function submissionsView(context: SubmissionsViewContext) {
 		);
 	}
 
-	/** True if the search term matches the submission's title, external ID, any
-	 * visible author name, or any visible assigned-reviewer name.
+	/** Whether the viewer may see this submission's manuscript ID.
+	 *
+	 * A looser gate than canSeeAuthors on purpose. The ID is the key the paper is
+	 * filed under in the venue's own reviewing system, so it leads back to the
+	 * authors — but the people who can perform that lookup are the ones running
+	 * the venue's reviewing, and the ID is how they cross-reference a submission
+	 * with the system it came from. Gating it on canSeeAuthors took it away from
+	 * every editor and associate editor at a venue whose roles are anonymized,
+	 * which is the default and, in practice, most of them.
+	 *
+	 * So the line is drawn at bidding rather than at author visibility. A scholar
+	 * choosing what to bid on has no editorial access to look the ID up with, and
+	 * that is who this withholds it from. An anonymized editor still cannot see
+	 * the author list here — that is what anonymous_authors is for — and whatever
+	 * they could learn by taking the ID to the external system, they could learn
+	 * before this change too. */
+	function canSeeExternalID(sub: ViewSubmission): boolean {
+		return context.isVenueApprover || canSeeAuthors(sub);
+	}
+
+	/** True if the search term matches the submission's title, or any of the
+	 * identifying details this viewer is allowed to see.
 	 *
 	 * Reviewer-name matches honor `venue.anonymous_assignments` automatically:
-	 * RLS already filters which assignment rows arrive. Author-name matches honor
-	 * `role.anonymous_authors` explicitly, so a reviewer in an anonymous-authors
-	 * role cannot discover author names via search. */
+	 * RLS already filters which assignment rows arrive. Author-name and
+	 * manuscript-ID matches honor `role.anonymous_authors` explicitly, so a
+	 * reviewer in an anonymous-authors role cannot discover either via search.
+	 *
+	 * The ID is gated by canSeeExternalID, the same predicate its column uses.
+	 * Matching it here regardless would hand back what the column withholds: type
+	 * a guessed ID and watch whether a row survives, and the guess is confirmed
+	 * one query at a time. Titles stay searchable — they are shown to everyone. */
 	function matchesFilter(sub: ViewSubmission): boolean {
 		if (matches(sub.title)) return true;
-		if (matches(sub.externalid)) return true;
+		if (canSeeExternalID(sub) && matches(sub.externalid)) return true;
 
 		const subAssignments = context.assignments?.filter((a) => a.submission === sub.id) ?? [];
 		if (anyScholarMatches(subAssignments.map((a) => a.scholar))) return true;
@@ -112,17 +182,43 @@ export function submissionsView(context: SubmissionsViewContext) {
 		return false;
 	}
 
-	/** How many of a submission's expected charges have no visible transaction.
-	 * `undefined` when transactions haven't loaded. NullUUID slots represent
-	 * non-paying co-authors — no transaction is expected for them, so they don't
-	 * count toward the pending tally. */
-	function paymentStatus(sub: ViewSubmission): number | undefined {
-		if (context.transactions === null) return undefined;
-		const expected = sub.transactions.filter((t) => t !== NULL_TRANSACTION);
-		const visible = expected
-			.map((t) => context.transactions?.find((tr) => tr.id === t))
-			.filter((t) => t !== undefined);
-		return expected.length - visible.length;
+	/** What this submission's payment column should say.
+	 *
+	 * NullUUID slots represent non-paying co-authors — no transaction is expected
+	 * for them, so they neither count toward the pending tally nor make a
+	 * submission look charged. A submission with nothing expected of anyone was
+	 * never charged, which is a different fact from having been paid for and is
+	 * reported as its own state rather than borrowing "paid". */
+	function paymentStatus(sub: ViewSubmission): PaymentState {
+		if (transactionStatus === null) return { state: 'unknown' };
+		const expected = charges(sub, transactionStatus);
+		if (expected.length === 0) return { state: 'free' };
+		const outstanding = expected.filter((charge) => charge.status !== 'approved').length;
+		return outstanding === 0 ? { state: 'paid' } : { state: 'pending', count: outstanding };
+	}
+
+	/** How many charges are outstanding, for ordering only. Free and paid tie at
+	 * zero: neither is waiting on anybody, and the sort is "pending first". */
+	function outstandingCharges(sub: ViewSubmission): number {
+		const status = paymentStatus(sub);
+		return status.state === 'pending' ? status.count : status.state === 'unknown' ? -1 : 0;
+	}
+
+	/** True if nobody is editing this submission yet.
+	 *
+	 * A submission with no priority-0 assignment is stalled: its author has paid, but
+	 * until someone holds the editor role on it, no assignment can be approved and it
+	 * cannot be marked done. `create_submission` seats the venue's editor when there is
+	 * exactly one, so this is the venue with several editors, or none.
+	 *
+	 * Done submissions are never flagged — whoever edited them has moved on, and a
+	 * finished paper is not waiting for anyone. Otherwise this is deliberately the same
+	 * test `can_claim_editor_role` makes, so the flag and the claim button it carries
+	 * agree with what the database will actually allow. */
+	function needsEditor(sub: ViewSubmission): boolean {
+		if (sub.status === 'done') return false;
+		if (context.submissionsWithEditor === null) return false;
+		return !context.submissionsWithEditor.has(sub.id);
 	}
 
 	/** Ascending comparators. Direction is applied by the caller rather than by
@@ -130,7 +226,7 @@ export function submissionsView(context: SubmissionsViewContext) {
 	 * the PREVIOUS pass established, so the default newest-first list was
 	 * breaking created_at ties by descending title instead of ascending. */
 	const ascending: Record<SortColumn, (a: ViewSubmission, b: ViewSubmission) => number> = {
-		payment: (a, b) => (paymentStatus(a) ?? -1) - (paymentStatus(b) ?? -1),
+		payment: (a, b) => outstandingCharges(a) - outstandingCharges(b),
 		title: (a, b) => a.title.localeCompare(b.title),
 		id: (a, b) => a.externalid.localeCompare(b.externalid),
 		created: (a, b) => a.created_at.localeCompare(b.created_at)
@@ -151,26 +247,16 @@ export function submissionsView(context: SubmissionsViewContext) {
 		}
 	}
 
-	/** Sort and filter submissions. Done submissions older than the venue's
-	 * done_visibility_days window are hidden from the list (they remain
-	 * accessible by direct link). What remains is partitioned so that done
-	 * submissions always sort to the bottom regardless of the active sort. */
+	/** Sort and filter submissions: the search term, the needs-editor filter, and
+	 * the viewer's conflicts, then the active sort. */
 	function sortedAndFiltered<T extends ViewSubmission>(submissions: T[]): T[] {
-		const cutoffMs =
-			context.doneVisibilityDays === null
-				? 0
-				: context.now - context.doneVisibilityDays * 24 * 60 * 60 * 1000;
 		const subs = submissions
 			.filter((sub) => trimmedFilter === '' || matchesFilter(sub))
+			.filter((sub) => !context.needsEditorOnly || needsEditor(sub))
 			.filter(
 				(sub) =>
 					context.conflicts !== null && !context.conflicts.some((c) => c.submissionid === sub.id)
-			)
-			.filter((sub) => {
-				if (sub.status !== 'done') return true;
-				if (sub.completed_at === null) return true;
-				return new Date(sub.completed_at).getTime() >= cutoffMs;
-			});
+			);
 
 		for (const column of context.sortOrder) {
 			const compare = ascending[column];
@@ -178,19 +264,17 @@ export function submissionsView(context: SubmissionsViewContext) {
 			subs.sort((a, b) => sign * compare(a, b));
 		}
 
-		// Partition: reviewing first, then done. Within each group the active
-		// sort order is preserved.
-		const reviewing = subs.filter((s) => s.status !== 'done');
-		const finished = subs.filter((s) => s.status === 'done');
-		return [...reviewing, ...finished];
+		return subs;
 	}
 
 	return {
 		matches,
 		anyScholarMatches,
 		canSeeAuthors,
+		canSeeExternalID,
 		matchesFilter,
 		paymentStatus,
+		needsEditor,
 		sortedAndFiltered
 	};
 }

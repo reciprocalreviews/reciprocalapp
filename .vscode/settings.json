@@ -1,4 +1,14 @@
 {
+	// Format on save with Prettier, matching what CI enforces (npm run format:check).
+	// Without this a contributor's first PR fails on formatting alone.
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"[svelte]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+	"[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+	"[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+	"[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+	"[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+	"[markdown]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
 	"deno.enable": true,
 	"deno.enablePaths": ["supabase/functions"],
 	"editor.codeActionsOnSave": {

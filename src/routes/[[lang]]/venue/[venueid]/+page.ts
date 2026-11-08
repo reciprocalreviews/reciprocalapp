@@ -1,30 +1,49 @@
+import { NO_VENUE_ID } from '#lib/data/venuePath.js';
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { db, venue } = await parent();
+	const { db, venue, scholar } = await parent();
 
-	const venueid = params.venueid;
+	// The URL segment may be the venue's web address, so the id comes from the venue the
+	// layout resolved, never from the param — every query below is keyed on a uuid column.
+	const venueid = venue?.id ?? NO_VENUE_ID;
 
 	// Get the matching venue's currency.
 	const { data: currency } = venue ? await db.getCurrency(venue.currency) : { data: null };
 
-	// Get the current's minter's emails.
-	const { data: minters } = currency ? await db.getScholarsByIDs(currency.minters) : { data: null };
-
 	// Get the matching venue's roles.
 	const { data: roles } = await db.getVenueRoles(venueid);
 
-	// Get all volunteers for the venue.
+	// Get all volunteers for the venue. RLS returns only the ones this viewer may
+	// see, which for a restricted role is fewer than there are — see the counts below.
 	const { data: volunteers } = await db.getVenueVolunteers(venueid);
 
-	// See how many tokens the venue posseses.
-	const { data: tokens } = await db.getVenueTokens(venueid);
+	// How many volunteers each role REALLY has. The rows above are filtered by the
+	// role's volunteer_visibility setting, so counting them would report a different
+	// number to every reader; the counts are public whatever the roster says.
+	const { data: volunteerCounts } = await db.getVenueVolunteerCounts(venueid);
+
+	// See how many tokens the venue possesses. A count, not the rows: the page
+	// only ever showed the number, and a reserve serving a real community is far
+	// past the `max_rows` cap that silently truncated the array this used to
+	// count — a quarter-million-token reserve displayed as 1000.
+	const { data: tokens } = venue
+		? await db.getVenueTokenCount(venueid, venue.currency)
+		: { data: null };
 
 	// See how many transactions the venue is part of.
 	const { data: transactionCount } = await db.getVenueTransactionCount(venueid);
 
-	// See how many submissions are in the venue, for display.
-	const { data: submissionCount } = await db.getVenueSubmissionCount(venueid);
+	// See how many submissions this scholar would find in the venue, for display.
+	// The tile links straight to the submissions list, so it counts what that list
+	// shows by default: active submissions, minus the conflicted ones it hides.
+	// Counting more made the number a promise the list broke.
+	const { data: conflicts } =
+		scholar === null ? { data: [] } : await db.getScholarConflicts(scholar.id);
+	const { data: submissionCount } = await db.getVenueSubmissionCount(
+		venueid,
+		(conflicts ?? []).map((conflict) => conflict.submissionid)
+	);
 
 	// Get all the submission types
 	const { data: types } = await db.getVenueSubmissionTypes(venueid);
@@ -35,21 +54,31 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get all the venues one can gift to.
 	const { data: venues } = await db.getVenues();
 
+	// The viewer's own active assignments, so each role they volunteer for can show them
+	// the count editors see beside their cap.
+	const { data: myAssignments } =
+		scholar === null
+			? { data: null }
+			: await db.getScholarActiveAssignmentRoles(scholar.id, venueid);
+	const myActive: Record<string, number> = {};
+	for (const { role } of myAssignments ?? []) myActive[role] = (myActive[role] ?? 0) + 1;
+
 	// Get the venue's preference levels (may be empty if not configured).
 	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
 	return {
 		venue,
 		currency,
-		minters,
 		roles,
 		volunteers,
+		volunteerCounts,
 		tokens: tokens,
 		transactionCount,
 		submissionCount,
 		venues,
 		types,
 		compensation,
-		preferenceLevels
+		preferenceLevels,
+		myActive
 	};
 };

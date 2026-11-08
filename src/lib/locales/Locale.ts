@@ -23,9 +23,6 @@ export type NotedTextFieldText = TextFieldText & {
 /** An optional warning text for confirm buttons */
 export type ConfirmButtonText = ButtonText & { warn: string };
 
-/** Text for a checkbox with on/off state variants */
-export type CheckboxOnOff = { on: string; off: string };
-
 /** Text for the Options (select) component */
 export type OptionsText = {
 	/** The optional label to show above the select */
@@ -59,34 +56,56 @@ export type LocaleText = {
 		edit: string;
 		filter: string;
 		admin: string;
+		/** Tags an action meant for a venue's editors, beside admin, minter and steward. */
+		editor: string;
 		minter: string;
 		steward: string;
 		orcid: string;
 		empty: string;
 	};
 	header: {
+		/** The accessible name of the brand mark, which links home. It is no longer visible
+		 * text: the mark replaced the word (#176). */
 		home: string;
 		venues: string;
+		/** Names the control that holds the header links that do not fit on a narrow screen. */
+		menu: ButtonText;
 		saved: string;
+		/** Accessible name for the header's total token balance. */
+		balance: string;
 		link: {
 			login: string;
+			profile: string;
 		};
 		feedback: {
 			testWarning: string;
 		};
+		/** The teal bar under the nav on every page outside a venue (contextBar.ts). */
+		context: {
+			/** Names the control holding the bar's links that do not fit on a narrow screen. */
+			menu: ButtonText;
+		};
 	};
 	footer: {
 		link: {
+			brand: string;
 			about: string;
 			terms: string;
 			updates: string;
-			feedback: string;
+			/** Knowledge base articles. */
+			help: string;
+			/** The steward inbox and the people behind it. */
+			contact: string;
 		};
 	};
 	banner: {
 		beta: {
 			/** Lead text explaining that the platform is in beta and wants feedback. */
 			lead: string;
+			/** Puts the notice away for good. Its own string rather than the notification
+			 * dismisser's, whose tip says "notification" — and the tip is what a screen
+			 * reader announces. */
+			dismiss: ButtonText;
 		};
 		update: {
 			/** Message shown when a new version has been deployed. */
@@ -105,6 +124,30 @@ export type LocaleText = {
 	};
 	notification: {
 		emailed: string;
+		/** `emailed`, said of a whole batch: the plural form used when one send reached more
+		 * people than are worth listing. `{count}` is the REST of them, so a send to 307 reads
+		 * as one name and "306 others". Written as its own sentence rather than assembled from
+		 * the singular, because "was emailed" has to become "were emailed" and editing a verb
+		 * inside already-translated prose is not something a substitution can do. */
+		emailedMany: string;
+		/** The fallback when a batch collapsed but its producer supplied no plural form: wraps
+		 * the ALREADY-LOCALIZED first notification and counts the rest. Reads less well than a
+		 * purpose-written plural, and exists so that a producer which groups without writing one
+		 * still reports the true size rather than silently speaking for people it does not
+		 * mention. `{count}` is again the rest of the batch. */
+		andOthers: string;
+		/** Shown after notifying the shared steward inbox, which is one recipient
+		 * rather than a named person. Takes {subject}. */
+		emailedStewards: string;
+		/** Shown after volunteering or accepting a role invitation. Which one
+		 * applies depends on whether a welcome grant actually happened, which
+		 * only the database can say — so the RPC reports the amount and the
+		 * data layer picks. {amount} is the number of tokens granted. */
+		volunteered: string;
+		volunteeredWithTokens: string;
+		inviteAccepted: string;
+		inviteAcceptedWithTokens: string;
+		inviteDeclined: string;
 	};
 	widget: {
 		card: {
@@ -114,26 +157,114 @@ export type LocaleText = {
 		tokens: {
 			single: string;
 			plural: string;
+			/** Plain text after a token chip showing a scholar's current holdings, whose unit
+			 * is then `single` ("★ 25 token balance"), so a bare count beside an Assign
+			 * button doesn't read as what assigning pays (#217). */
+			balance: string;
 		};
 		subheader: {
 			link: string;
 		};
+		/** The field that resolves typed text to a scholar, by ORCID iD, email
+		 * address, or a search of names. Shared by every place one scholar names
+		 * another: authors on a submission, venue admins, currency minters, and
+		 * role invitations. */
+		scholarSearch: {
+			/** Searched, and matched nobody. Distinct from having typed nothing. */
+			noMatches: string;
+			/** Looked up an ORCID iD or email address that belongs to no one here. */
+			unknown: string;
+			/** Picks one of the offered matches. The scholar's name becomes the label,
+			 * and `{name}` in the tip is replaced with it — the tip is the button's
+			 * aria-label, and a column of identically-named buttons is unusable. */
+			choose: ButtonText;
+		};
+		/** A scholar's name, linked to their profile, with the email address and ORCID iD
+		 * someone needs to reach or invite them elsewhere. Shared by the bidding tables,
+		 * the volunteer roster, and the import pickers. */
+		scholarPreview: {
+			/** In place of an email the viewer may see but the scholar has not verified, so
+			 * the viewer knows to find another way rather than wondering if it failed to load. */
+			noEmail: string;
+			/** In place of a missing ORCID iD, so two previews line up when compared. */
+			noORCID: string;
+		};
+		/** Choosing one of a role's volunteers for a name written somewhere else, such
+		 * as an import. Shared by the unmatched assignments page and the bulk import
+		 * table. `{role}` is the role's name throughout. */
+		volunteerPicker: {
+			/** Above the volunteers whose names are closest to the written one. */
+			suggestions: string;
+			/** Above the volunteers who match the written name equally well. `{name}`. */
+			ambiguous: string;
+			/** No volunteer's name is close to the written one. */
+			noSuggestions: string;
+			/** Opens the search, which stays closed until asked for so a long list of
+			 * names is not a long list of search boxes. `{role}`, and `{count}` in the
+			 * tip. */
+			openSearch: ButtonText;
+			/** Searches the role's volunteers. `{count}` in the label is how many there are. */
+			search: TextFieldText;
+			/** More results than are shown. `{shown}` of `{count}`. */
+			more: string;
+			/** The search found nobody. `{query}`. */
+			noResults: string;
+			/** Clears a choice to pick someone else. */
+			change: ButtonText;
+		};
 	};
 	page: {
 		error: {
+			/** Header for a request that failed. */
 			title: string;
+			/** Header for a request that named something that does not exist. Distinct
+			 * from `title` because "we broke" and "there is nothing here" are different
+			 * news, and a reader who mistyped a link should not be told the site is
+			 * down. */
+			missing: string;
+			/** Body for a 404. */
+			notFound: string;
+			/** Body for any other status. */
+			unexpected: string;
+		};
+		brand: {
+			title: string;
+			lead: string;
+			header: {
+				mark: string;
+				color: string;
+				type: string;
+			};
+			paragraph: {
+				mark: string;
+				/** Takes {repo}, a link to the asset folder on GitHub. */
+				usage: string;
+				color: string;
+				type: string;
+			};
+			/** Labels for the downloadable files. */
+			file: {
+				logo: string;
+				logoWhite: string;
+				favicon: string;
+				touch: string;
+				social: string;
+			};
+			label: {
+				heading: string;
+				body: string;
+			};
 		};
 		home: {
 			title: string;
 			lead: string;
+			/** The argument for the platform. Takes {cost}, a rendered token chip. */
 			call: string[];
 			tip: {
 				browse: string;
+				/** Takes {newsletter}, the newsletter's URL. */
 				about: string;
 				track: string;
-			};
-			feedback: {
-				beta: string;
 			};
 		};
 		venues: {
@@ -169,6 +300,12 @@ export type LocaleText = {
 			title: string;
 			subtitle: { proposal: string; approved: string };
 			feedback: {
+				/** Listed editors no account uses: approval proceeds without them, so they
+				 * simply aren't made admins. Takes {addresses}. */
+				unknownEditors: string;
+				/** Listed minters no account uses: the approving steward ends up holding the
+				 * new currency until the venue names someone. Takes {addresses}. */
+				unknownMinters: string;
 				alreadySupported: string;
 				logIn: string;
 				notFound: string;
@@ -183,6 +320,7 @@ export type LocaleText = {
 				delete: string;
 				editors: string;
 			};
+
 			field: {
 				support: TextFieldText;
 			};
@@ -195,38 +333,104 @@ export type LocaleText = {
 		};
 		volunteers: {
 			title: string;
-			subtitle: string;
 			unavailableTitle: string;
 			feedback: {
 				unknownVenue: string;
 				volunteersNotLoaded: string;
 				noVolunteers: string;
+				/** Shown when the search and the expertise keywords together match nobody. */
+				noneMatching: string;
+				/** How many of a role's volunteers this venue does not list publicly. Named
+				 * rather than left as a shorter list, because a roster that is quietly
+				 * partial reads as a complete one. Compared against the role's UNFILTERED
+				 * rows, so searching never reads as withholding. Takes `{count}`. */
+				withheld: string;
+				/** The whole roster is withheld for this role: there is no shorter list to
+				 * show, only a count. Takes `{count}`. */
+				withheldAll: string;
+				/** Warns that the CSV carries only the rows this viewer may see. A partial
+				 * export that looks complete is worse than none. */
+				partialExport: string;
+				/** Under a role in the Suggested view: how many matching volunteers it hides,
+				 * so the pool never looks smaller than it is. Takes `{count}`. */
+				hiddenBySuggestion: string;
 			};
 			button: {
 				exportCSV: ButtonText;
+				/** Leaves the Suggested view for every volunteer. */
+				showEveryone: ButtonText;
+				/** Unselects every expertise keyword. */
+				clearTags: ButtonText;
+				/** Unfolds the expertise keywords past the most common ones. */
+				moreTags: ButtonText;
+				/** Folds them back. */
+				fewerTags: ButtonText;
+				/** Marks another volunteer inactive in the role, for the venue's admins and
+				 * top role. Confirms first, because the volunteer is emailed. */
+				remove: ButtonText;
 			};
 			field: {
 				filter: TextFieldText;
 			};
+			label: {
+				/** Accessible name for the group of expertise filter keywords. */
+				expertiseFilter: string;
+				/** A name with a count after it, for a role's section heading and for an
+				 * expertise keyword. Takes {name} and {count}. */
+				count: string;
+				/** Accessible name for the Suggested / Everyone choice. */
+				view: string;
+				/** The two views, for those who assign. Each takes `{count}`. */
+				suggested: string;
+				everyone: string;
+				/** Badge: a vetted role held now, or once, at this venue. Each takes `{role}`,
+				 * the venue's own name for it. */
+				currentRole: string;
+				formerRole: string;
+				/** Badge: one of the venue's admins. */
+				admin: string;
+				/** Badge: approved, completed assignments at this venue. Takes `{count}`. */
+				reviewedHere: string;
+				/** Badge: works in the venue's relevant venues, per ORCID. Takes `{count}`. */
+				publishedRelevant: string;
+				/** Heads the list of journal titles a relevant-venues badge matched. */
+				matchedTitles: string;
+				/** Says the titles come from ORCID and RR does not check them. */
+				matchedSource: string;
+				/** Divides the rows with a track record from those without, in Everyone. */
+				noTrackRecord: string;
+			};
 			status: {
 				active: string;
+				/** Held the role and has stopped. */
 				inactive: string;
+				/** Invited and has not answered, so does not hold the role yet. The
+				 * database stores this as inactive too, which is why it needs its own label:
+				 * shown as inactive, it read as someone who had stopped. */
+				invited: string;
+				/** Turned the invitation down. */
+				declined: string;
 			};
 			headers: {
 				active: string;
 				name: string;
 				expertise: string;
 				papers: string;
+				/** Active assignments against the cap, shown to the venue's approvers. */
+				assigned: string;
 			};
 			paragraph: {
 				intro: string;
+				/** For those who assign: what the Suggested view keeps. */
+				suggested: string;
 			};
 		};
 		venueTransactions: {
 			title: string;
-			subtitle: string;
 			feedback: {
 				transactionsNotLoaded: string;
+				/** Shown instead of the error to a visitor who isn't signed in, since that is why nothing loaded. */
+				logIn: string;
 			};
 			paragraph: {
 				count: string;
@@ -269,11 +473,21 @@ export type LocaleText = {
 			note: {
 				payment: string;
 				authors: string;
+				/** Shown to a venue admin, who may record a submission on behalf of its
+				 * authors: the author rows are theirs to fill in, not the admin's. */
+				onBehalf: string;
 				balance: string;
 				approve: string;
+				/** Shown when a balance check fails: how to earn the tokens.
+				 * {venue} is the venue's URL. */
+				earnTokens: string;
 			};
 			field: {
-				authorOrcid: TextFieldText & { unknownScholar: string };
+				authorOrcid: TextFieldText & {
+					unknownScholar: string;
+					/** Shown on the row that repeats an author named above it. */
+					duplicate: string;
+				};
 			};
 			slider: {
 				payment: SliderText;
@@ -300,24 +514,63 @@ export type LocaleText = {
 			title: string;
 			header: {
 				csv: string;
-				defaults: string;
+				mapping: string;
 				rows: string;
 				submit: string;
 			};
 			paragraph: {
 				intro: string;
 				mintSummary: string;
+				/** Says how many rows are already at this venue and so will not be
+				 * written, so the size of the batch is a decision rather than a
+				 * discovery. `{count}` rows. */
+				skipping: string;
+				/** Shown instead of `skipping` (and the mint summary) when every row is
+				 * already at this venue, so there is nothing to import -- the reason the
+				 * submit button is inactive. */
+				allSkipped: string;
+				/** One name in a role's column matched no volunteer and will be kept as an
+				 * unmatched assignment. `{role}` is the venue's own name for the role. */
+				unseatedOne: string;
+				/** Several names in a role's column matched no volunteer. `{count}` names,
+				 * `{role}` the venue's own name for the role. */
+				unseatedMany: string;
 			};
 			note: {
 				csv: string;
+				/** Explains the column mapping panel: the importer reads any CSV with
+				 * a header row, and these menus say which of its columns feeds which
+				 * field. */
+				mapping: string;
 			};
 			feedback: {
 				notLoaded: string;
 				notAdmin: string;
-				/** Shown when parsed rows had a different number of cells than the
+				/** Shown when parsed records had a different number of cells than the
 				 * header, which means columns shifted and data was dropped. `{lines}`
-				 * is the list of affected line numbers. */
+				 * is the list of lines those records start on. */
 				raggedRows: string;
+				/** Names the CSV columns no field is reading, so they are visibly
+				 * ignored rather than silently dropped. `{columns}` is the list. */
+				ignoredColumns: string;
+				/** Shown when the CSV has no column feeding a field the importer
+				 * cannot do without. `{fields}` is the list. */
+				missingRequired: string;
+				/** Announced when a file parses, since the native file control goes
+				 * back to saying nothing is chosen. `{count}` rows, `{name}` file. */
+				loaded: string;
+				/** Names the file the current rows came from. `{name}`, `{count}`. */
+				loadedFrom: string;
+				/** Stands in for a file name when the CSV was pasted rather than
+				 * uploaded, so both paths can say where the rows came from. */
+				pastedSource: string;
+				/** Warns that two of the venue's top-priority roles both have a
+				 * column, which the database refuses. `{roles}` is the list. */
+				twoTopRoles: string;
+				/** Reports a partial import: `{imported}` submissions written and
+				 * `{skipped}` left out because they were already at the venue. Uses the
+				 * database's count, so it also names rows the form did not know about. */
+				skipped: string;
 			};
 			field: {
 				title: TextFieldText;
@@ -325,6 +578,7 @@ export type LocaleText = {
 				expertise: TextFieldText;
 				previousID: TextFieldText;
 				note: TextFieldText;
+				person: TextFieldText;
 				csvUpload: { label: string };
 				csvPaste: NotedTextFieldText;
 				importNote: NotedTextFieldText;
@@ -332,6 +586,24 @@ export type LocaleText = {
 			options: {
 				defaultSubmissionType: OptionsText;
 				submissionType: OptionsText;
+				/** One menu per import field, choosing which CSV column feeds it. */
+				mapField: {
+					title: OptionsText;
+					externalID: OptionsText;
+					expertise: OptionsText;
+					submissionType: OptionsText;
+					previousID: OptionsText;
+					note: OptionsText;
+					/** The column naming who to seat on each submission. */
+					person: OptionsText;
+				};
+				/** The choice offered when a field should read no column at all. */
+				unmapped: string;
+				/** Which column names the holder of one venue role. `{role}` is the
+				 * venue's own name for it. */
+				roleColumn: OptionsText;
+				/** Which submission type one value in the file's type column becomes. */
+				typeValue: OptionsText;
 			};
 			button: {
 				addRow: ButtonText;
@@ -339,6 +611,10 @@ export type LocaleText = {
 				applyDefault: ButtonText;
 				parseCSV: ButtonText;
 				submit: ButtonText;
+				/** Used in place of `submit` when any row names a person in a role
+				 * column, so the importer confirms that everyone named agreed to the
+				 * work before they are seated. */
+				submitNamed: ConfirmButtonText;
 			};
 			column: {
 				title: string;
@@ -347,20 +623,72 @@ export type LocaleText = {
 				submissionType: string;
 				previousID: string;
 				note: string;
+				person: string;
 			};
 			row: {
 				invalid: {
 					title: string;
 					externalID: string;
-					duplicateExisting: string;
 					duplicateRow: string;
 				};
+				/** Marks a row whose manuscript is already at this venue. Not an error:
+				 * that row is left out and the rest of the file still imports. A link to
+				 * that manuscript follows the message, so keep it one whole sentence that
+				 * introduces it: which paper is already here is what tells a re-exported
+				 * queue apart from two papers sharing one ID. */
+				skipped: string;
+			};
+			type: {
+				/** Heading for matching the file's own type names to the venue's. */
+				header: string;
+				/** Explains that each distinct value becomes one submission type. */
+				note: string;
+				/** Shown instead when the file has no type column, so one type
+				 * applies to every row. */
+				noColumn: string;
+				/** One value and how many rows carry it. `{value}`, `{count}`. Written
+				 * so it reads correctly at a count of one without pluralizing, since
+				 * nothing in this app pluralizes. */
+				value: string;
+				/** Flags values matching no submission type by name, which take the
+				 * default. `{values}` is the list. */
+				unmatched: string;
+			};
+			person: {
+				/** Shown beside a name matching nobody who holds that role. Kept very
+				 * short: it sits in a table cell barely wider than one word, and the
+				 * consequence is explained once above the table instead of once per
+				 * row. Says what is true of the name rather than naming the role,
+				 * which the column heading already does. */
+				unmatched: string;
+				/** Explains, above the table, what an unmatched name means — that the
+				 * submission imports with nobody in that role rather than failing. */
+				unmatchedNote: string;
+				/** Shown in place of the person column when no role has anyone in it. */
+				noRole: string;
+				/** Explains that a row naming nobody falls back to the venue's sole
+				 * editor, when it has one. */
+				note: string;
+				/** Heading for matching columns of names to the venue's roles. */
+				header: string;
+				/** Warns that one row seats the same person in two roles, which is
+				 * allowed but paid twice. */
+				doubleSeated: string;
 			};
 		};
 		submissions: {
 			title: string;
 			tip: {
+				/** The bidding prompt, once for every biddable role the viewer can see: bid on
+				 * what you are most qualified to evaluate. */
 				bid: string;
+				/** One line per role with a bid limit, below the prompt: {role}, then {used} of
+				 * {limit} bids. */
+				bidBudget: string;
+				/** Follows the budget: what counts toward it, and how to move a bid. */
+				bidBudgetNote: string;
+				/** Explains the batch assignment form above the submissions table. */
+				batchAssign: string;
 			};
 			cell: {
 				you: string;
@@ -368,13 +696,54 @@ export type LocaleText = {
 				conflicted: string;
 				bids: string;
 				biddingClosed: string;
+				/** Shown in place of the bid buttons when the submission's editor has closed
+				 * bidding on it, whether or not seats remain. */
+				notOpenForBidding: string;
+				/** Shown to a bidder in place of the unbid button once an approver has declined
+				 * their bid; the approver's reason follows it. */
+				declined: string;
+				/** Shown in place of the bid buttons when the scholar has used their whole
+				 * bid budget for the role. */
+				bidLimitReached: string;
+				/** Hover text on the lock that stands in for an author list or a
+				 * manuscript ID withheld from a role that cannot see author
+				 * information. */
+				anonymized: string;
 			};
 			feedback: {
 				notLoaded: string;
 				noSubmissions: string;
+				/** Shown instead of noSubmissions to a visitor who isn't signed in: they see none because they aren't, not because there are none. */
+				logIn: string;
 				noneFiltered: string;
+				/** Done mode, when the venue has no done submissions visible to the viewer. */
+				noneDone: string;
+				/** No scholar matched the email or ORCID typed into the batch form. */
+				scholarNotFound: string;
+				/** A scholar and role are resolved; per-row assign buttons are live. */
+				batchReady: string;
+			};
+			options: {
+				batchRole: OptionsText;
+			};
+			checkbox: {
+				/** Narrows the list to submissions with no editor. */
+				needsEditor: string;
+			};
+			/** The list shows one state at a time: submissions still being reviewed
+			 * (the default), or done ones. */
+			mode: {
+				active: string;
+				done: string;
 			};
 			button: {
+				batchFind: ButtonText;
+				/** Confirms the scholar agreed before seating them. */
+				batchAssign: ConfirmButtonText;
+				/** `batchAssign` without the confirmation, for seating oneself. */
+				batchAssignSelf: ButtonText;
+				/** `batchAssign` when the scholar is at their papers cap. */
+				batchAssignOverCap: ConfirmButtonText;
 				sortPaymentFirst: ButtonText;
 				sortPaymentLast: ButtonText;
 				sortTitleAsc: ButtonText;
@@ -386,6 +755,8 @@ export type LocaleText = {
 				declareConflict: ButtonText;
 				bid: ButtonText;
 				unbid: ButtonText;
+				/** Take on a submission nobody is editing yet. */
+				claimEditor: ButtonText;
 			};
 			headers: {
 				payment: string;
@@ -403,18 +774,123 @@ export type LocaleText = {
 				previousID: NotedTextFieldText;
 				note: NotedTextFieldText;
 				filter: TextFieldText;
+				batchAssign: TextFieldText & { invalid: string };
 			};
 			status: {
+				/** Every charge on the submission is approved. Says nothing about a
+				 * submission that was never charged — see `free`. */
 				paid: string;
+				/** Charges not yet approved, including a co-author's still waiting for
+				 * their approval. `{count}` of them. */
 				pending: string;
+				/** Nothing was ever charged for this submission: it was imported, or
+				 * its venue is payment-free. Distinct from `paid`, which the column
+				 * used to claim for these too. */
+				free: string;
 				/** Submission is still in review. */
 				reviewing: string;
 				/** Submission has been marked done. */
 				done: string;
+				/** Nobody holds the venue's editor role on this submission, so no assignment
+				 * on it can be approved and it cannot be marked done. */
+				needsEditor: string;
 			};
-			paragraph: {
+			/** The page's actions row. */
+			action: {
+				/** Start a submission at a venue that charges for one. */
 				newSubmission: string;
-				bulkImport: string;
+				/** The same, at a payment-free venue, where nothing is paid. */
+				newSubmissionFree: string;
+				/** Admins and editors: bring in submissions that pre-date the venue's launch. */
+				import: string;
+				/** Match the names an import could not, with the count waiting as a badge. */
+				match: string;
+				/** Admins: look up whether a list of manuscript IDs has been paid for. */
+				checkPayments: string;
+			};
+		};
+		/** The admin page that takes a list of manuscript IDs from the venue's reviewing
+		 * system and says which have been paid for here, and who to write to about the
+		 * rest. */
+		submissionPayments: {
+			title: string;
+			/** Markdown. What to paste and what comes back. */
+			intro: string;
+			/** Only a venue admin can read the charges made to the venue. */
+			notAdmin: string;
+			/** The venue charges nothing, so there is nothing to check. */
+			paymentFree: string;
+			/** The venue could not be loaded. */
+			notLoaded: string;
+			field: { ids: NotedTextFieldText };
+			button: {
+				check: ButtonText;
+				/** Copies the address of every author with an unpaid charge, comma-separated,
+				 * to paste into one message. */
+				copyEmails: ButtonText;
+			};
+			/** Above the results. `{count}` IDs checked, then one count per state. */
+			summary: string;
+			headers: { id: string; submission: string; status: string; contact: string };
+			/** One per state, matching `PaymentCheck` in submissionPayment.ts. */
+			status: {
+				/** No submission at the venue has this ID. */
+				missing: string;
+				/** At least one charge is not approved. */
+				outstanding: string;
+				/** Bulk-imported, so nobody was charged here. */
+				imported: string;
+				/** Every charge approved. */
+				paid: string;
+				/** Submitted at no cost. */
+				free: string;
+			};
+			/** What the "Write to" column says. */
+			contact: {
+				/** Nobody here knows who the authors are, so the reviewing system is where
+				 * to find them. */
+				missing: string;
+				/** Same, for a submission that was imported rather than paid for. */
+				imported: string;
+				/** Follows an author's name: their charge awaits their approval. */
+				proposed: string;
+				/** Follows an author's name: they declined their charge. */
+				declined: string;
+				/** Follows an author's name: their charge could not be read. */
+				unknown: string;
+				/** In place of an email for an author who has not given one. */
+				noEmail: string;
+			};
+		};
+		/** The page listing assignments an import could not match to a scholar. */
+		unmatched: {
+			title: string;
+			note: string;
+			/** Nothing the viewer could match is waiting. */
+			empty: string;
+			headers: { name: string; role: string; count: string; scholar: string };
+			/** Nobody holds the role yet, so there is no one to match. `{role}`. */
+			noCandidates: string;
+			/** For admins only: adding someone who is not in the role yet, once they have
+			 * agreed to it, and matching them in the same step. */
+			add: {
+				/** Reveals the scholars whose name has the same words as the imported one. */
+				find: ButtonText;
+				/** Nobody on the platform has that name. `{name}`. */
+				nobody: string;
+				/** Seats the chosen scholar and matches them. `{name}` and `{role}` in the
+				 * label, tip and warning, because confirming that the RIGHT person agreed to the
+				 * RIGHT role is the whole point of the confirmation. */
+				button: ConfirmButtonText;
+			};
+			button: { match: ButtonText; dismiss: ButtonText };
+			feedback: {
+				/** `{name}` matched to exactly one assignment. */
+				matchedOne: string;
+				/** `{name}` matched to `{count}` assignments. */
+				matchedMany: string;
+				/** Appended when rows were left: `{skipped}`. */
+				skipped: string;
 			};
 		};
 		submission: {
@@ -430,7 +906,20 @@ export type LocaleText = {
 				nonPaying: string;
 				anonymized: string;
 				you: string;
+				/** Precedes the approver who declined a bid, in the declined bid's row. */
+				declinedBy: string;
+				/** Under the buttons of any row with an Assign button: assign in the venue's
+				 * reviewing system first, and only once the scholar has agreed. */
+				compensationOnly: string;
 			};
+			/** Above the reason field when declining a bid. Declining is optional, so this says
+			 * so, and that the reason goes to the bidder. */
+			declineBidPrompt: string;
+			/** Above the reason field when declining a compensation claim. */
+			declineClaimPrompt: string;
+			/** The last choice beside the venue's decline reasons: none of them fits, so the
+			 * approver writes the reason themselves. */
+			declineOwnReason: string;
 			header: {
 				authors: string;
 				venue: string;
@@ -440,6 +929,9 @@ export type LocaleText = {
 			};
 			feedback: {
 				notLoaded: string;
+				/** Shown instead of notLoaded to a visitor who isn't signed in, who is usually following a link from an email. */
+				logIn: string;
+				/** The viewer may not see this submission. */
 				confidential: string;
 				missingAuthors: string;
 				noAuthors: string;
@@ -448,33 +940,78 @@ export type LocaleText = {
 				invalidRole: string;
 				scholarNotFound: string;
 				alreadyAssigned: string;
-				/** Shown when the editor can't yet mark done — lists what's
-				 * still pending. {count} is substituted. */
+				/** Shown to the editor while assignments are still uncompensated, above the
+				 * close-out choices for each one. {count} is substituted. */
 				completionBlocked: string;
-				/** Shown when the venue lacks tokens to pay all editors. */
+				/** Shown when the venue lacks the tokens to pay everyone marking done or closing out pays. */
 				completionInsufficient: string;
 				/** Shown when the caller isn't an approved priority-0 editor. */
 				completionNotEditor: string;
 				/** Shown after a successful completion before notifications. */
 				completionSucceeded: string;
+				/** Nobody holds the venue's editor role on this submission yet, so nothing on it
+				 * can be approved and it cannot be marked done. */
+				needsEditor: string;
+				/** The import's names for this submission that match no scholar yet: `{list}` of
+				 * "name (role)", and `{venue}` the venue's path for the link. */
+				unmatched: string;
+				/** Above wherever an approver assigns someone: assigning in RR only records the
+				 * work for compensation, so they must also assign the person in the venue's own
+				 * reviewing system. `{venue}` is the venue's short name. */
+				compensationOnly: string;
+				/** The same, when the venue has given its reviewing system's address:
+				 * `{system}` is that URL, linked. */
+				compensationOnlyLinked: string;
 			};
 			button: {
-				createAssignment: ButtonText;
-				unassign: ButtonText;
+				/** Confirms the scholar agreed before seating them: approvers were
+				 * assigning people who had not yet said yes. */
+				createAssignment: ConfirmButtonText;
+				/** `createAssignment` without the confirmation, for seating oneself. */
+				createAssignmentSelf: ButtonText;
+				/** `createAssignment` when the scholar is at their papers cap: one
+				 * confirmation asks both whether they agreed and whether to exceed it. */
+				createAssignmentOverCap: ConfirmButtonText;
+				unassign: ConfirmButtonText;
 				complete: ConfirmButtonText;
-				approve: ButtonText;
+				/** Assigns an unapproved assignment the scholar did not bid for, so
+				 * it confirms they agreed. */
+				approve: ConfirmButtonText;
 				approveBid: ButtonText;
 				/** Confirm-style variant used in place of `approve` / `approveBid`
 				 * when assigning would push the scholar past their stated
 				 * paper-count cap. Button's built-in warn pattern turns this into
 				 * a two-click confirmation. */
 				approveAnyway: ConfirmButtonText;
+				/** `approveAnyway` for an assignment the scholar did not bid for:
+				 * one confirmation asks both questions. */
+				approveAnywayAgreed: ConfirmButtonText;
 				/** Editor button that compensates the editor(s) and marks the
 				 * submission done in one atomic action. */
 				markDone: ConfirmButtonText;
+				/** Editor button under the close-out choices: pays the assignments marked done,
+				 * removes the rest, compensates the editor(s) and marks the submission done. */
+				closeOut: ConfirmButtonText;
+				/** Take on this submission as the venue's editor. */
+				claimEditor: ButtonText;
+				/** Opens the reason form for declining a pending bid. */
+				declineBid: ButtonText;
+				/** Sends the decline and its reason to the bidder. */
+				confirmDecline: ButtonText;
+				/** Approves a bid that was declined, reversing the decline. */
+				approveDeclined: ButtonText;
+				/** Sends the decline of a compensation claim and its reason to the claimant. */
+				confirmDeclineClaim: ButtonText;
+				/** Pays a claim that was declined, reversing the decline. */
+				approveDeclinedClaim: ButtonText;
+				/** Approves a compensation claim and pays it in one step. */
+				payClaim: ButtonText;
+				/** Opens the reason form for declining a compensation claim. */
+				declineClaim: ButtonText;
 			};
 			field: {
 				newAssignment: TextFieldText & { invalid: string };
+				declineReason: TextFieldText & { invalid: string };
 				note: TextFieldText;
 			};
 			status: {
@@ -485,6 +1022,30 @@ export type LocaleText = {
 				assigned: string;
 				unassigned: string;
 				bidder: string;
+				/** Someone asking to be paid for work nobody seated them on. */
+				claim: string;
+				declined: string;
+				/** Beside the submission's status when its editor has closed bidding on it. */
+				biddingClosed: string;
+			};
+			/** The editor's choice, per uncompensated assignment, when closing a submission. */
+			closeOut: {
+				/** The work was done: compensate it. */
+				pay: string;
+				/** The work was not done: remove the assignment unpaid. */
+				remove: string;
+				/** Beside an assignment already compensated, listed so the editor sees everyone
+				 * on the submission, not only those this close will pay. */
+				paid: string;
+				/** What the editor(s) are paid on closing, before the total. */
+				editors: string;
+				/** The whole amount the close pays from the venue's reserve. */
+				total: string;
+			};
+			checkbox: {
+				/** Editor toggle, checked by default; unchecking closes bidding on a submission
+				 * still under review and hides it from bidders. */
+				openForBidding: string;
 			};
 			options: {
 				submissionType: OptionsText;
@@ -531,11 +1092,42 @@ export type LocaleText = {
 		};
 		venue: {
 			title: string;
-			subtitle: string;
 			unknownTitle: string;
+			/** The bar of common links shown on every route inside a venue (#176). Its route
+			 * labels are not here: they reuse each destination page's own `title`, so the bar
+			 * and the page it reaches can never drift apart. */
+			bar: {
+				/** Names the control holding the links that do not fit on a narrow screen. */
+				menu: ButtonText;
+				/** The link out to the venue's own website. */
+				website: string;
+				/** A chip beside the venue's name, for admins only, while the venue is inactive.
+				 * It is how the state stays visible on every page without an alert on each. */
+				inactive: ButtonText;
+			};
 			header: {
 				submissionTypes: string;
 				roles: string;
+				/** Above the venue's contact list, at the foot of the landing page. */
+				contact: string;
+			};
+			/** The landing page's actions row. */
+			action: {
+				newSubmission: string;
+				newSubmissionFree: string;
+				/** Anchors to the roles below, where volunteering happens. */
+				volunteer: string;
+				/** The inactive alert's action. */
+				activate: string;
+				/** The admin-mints disclosure's action, to the currency's page. */
+				currency: string;
+			};
+			/** The landing page's summary tiles. */
+			stat: {
+				welcome: string;
+				volunteers: string;
+				submissions: string;
+				tokens: string;
 			};
 			button: {
 				newSubmissionType: ButtonText;
@@ -543,14 +1135,20 @@ export type LocaleText = {
 				requestCompensation: ButtonText;
 			};
 			feedback: {
-				startReview: string;
-				startReviewFree: string;
-				volunteer: string;
-				volunteerFree: string;
-				viewSettings: string;
+				/** Shown to everyone who is neither an admin of this venue nor a minter of its
+				 * currency, when the two sets overlap. The platform permits the arrangement
+				 * and discloses it, so the community rather than the database is the check on
+				 * it. Takes {currency}. */
+				adminMints: string;
 				typesNotLoaded: string;
 				rolesNotLoaded: string;
+				/** Confirms a compensation request. The fallback for when nobody could be
+				 * emailed: `handle()` suppresses it whenever the request named who was told,
+				 * since that is the same news and names the person. */
+				compensationRequested: string;
 				inactive: string;
+				/** The alert admins see on the landing page and settings while the venue is
+				 * inactive. */
 				inactivePrompt: string;
 			};
 			field: {
@@ -560,6 +1158,12 @@ export type LocaleText = {
 				typeName: TextFieldText;
 				typeDescription: TextFieldText;
 				cost: TextFieldText;
+				/** The compensation request's two text fields. They were written as English
+				 * literals inline in the component, so this form was the one place a scholar
+				 * could not have been shown their own language even once another locale
+				 * existed. */
+				compensationManuscript: TextFieldText;
+				compensationNote: TextFieldText;
 			};
 			card: {
 				setup: CardText;
@@ -567,6 +1171,8 @@ export type LocaleText = {
 			};
 			options: {
 				compensationRole: OptionsText;
+				/** The empty choice in the compensation role picker. */
+				chooseRole: string;
 			};
 			headers: {
 				type: string;
@@ -581,22 +1187,32 @@ export type LocaleText = {
 				noDescription: string;
 				description: string;
 				allVolunteers: string;
+				/** Precedes the venue's admins, with mailto links: questions about the venue go
+				 * to them, not the platform's stewards. Takes {title}, the venue's short name. */
+				questions: string;
 			};
 		};
 		settings: {
 			title: string;
-			subtitle: string;
+			action: {
+				/** The inactive alert's action: an anchor to the step that activates the venue. */
+				activate: string;
+			};
 			tip: {
-				/** Frames Step 1 ("Decide policies") as a critical prerequisite. */
+				/** Explains the venue's web address: what it is for, and that changing one
+				 * releases the old address immediately rather than redirecting from it. */
+				webAddress: string;
+				/** Frames the policies step as a critical prerequisite. */
 				policies: string;
 				inactive: string;
 				compensation: string;
 				roles: string;
-				/** Explains how done_visibility_days controls the list. */
-				doneVisibility: string;
-				/** Explains what preference levels are for and how the binary
-				 * default works when no levels are defined. */
+				/** Explains what preference levels are for, and that leaving them
+				 * empty falls back to the plain Bid / Unbid pair. */
 				preferenceLevels: string;
+				/** Explains decline reasons: what approvers do with them, that the bidder
+				 * reads the words, and that leaving none requires a written reason. */
+				declineReasons: string;
 				/** Explains the email-templates section (#113): pick the reviewing
 				 * platform first, then paste each snippet into its email template. */
 				templates: string;
@@ -618,29 +1234,68 @@ export type LocaleText = {
 				minters: CardText;
 			};
 			header: {
-				/** Step 1: community-policy checklist before configuring anything. */
+				/** The venue's web address — the first step, because every later step's links
+				 * and copy-paste snippets are built from it. */
+				webAddress: string;
+				/** Community-policy checklist before configuring anything. */
 				policies: string;
 				status: string;
 				roles: string;
 				compensation: string;
 				visibility: string;
 				preferenceLevels: string;
+				/** Section header for the venue's decline reasons (#218). */
+				declineReasons: string;
 				/** Section header for the email-templates editor (#113). */
 				templates: string;
 				/** Section header for the bulk-import setup step. */
 				bulkImport: string;
 			};
 			feedback: {
+				/** Advice, not a refusal: one of this venue's admins also mints its currency.
+				 * The arrangement is permitted — a small community's organizer is often its
+				 * only minter — but visitors see a notice saying so, and the admin should
+				 * know that and be able to hand the currency over. */
+				adminMints: string;
 				unknownVenue: string;
 				logIn: string;
 				adminsOnly: string;
 				noPreferenceLevels: string;
+				/** The venue offers no decline reasons, so approvers write each one. */
+				noDeclineReasons: string;
+				/** The venue already has a web address, shown above the field so the warning
+				 * on the change button has something concrete to refer to. Takes `{address}`. */
+				addressCurrent: string;
+				/** The availability lookup is in flight. */
+				addressChecking: string;
+				/** Nobody holds this address. Advisory — the unique index decides. */
+				addressAvailable: string;
+				/** Another venue holds this address. */
+				addressTaken: string;
+				/** Why the Activate checkbox is disabled: a venue needs an address to go live,
+				 * so that every link anyone sends about it is one they can read. */
+				addressRequiredToActivate: string;
 			};
 			field: {
+				/** The venue's web address. `invalid` states the format rule, since the field
+				 * is where someone learns it. */
+				webAddress: TextFieldText & { invalid: string };
+				/** The venue's short display name, shown in the venue bar where the full title
+				 * would not fit. `invalid` states the length cap, since the field is where
+				 * someone meets it. */
+				shortName: TextFieldText & { invalid: string };
+				/** The optional address of the venue's reviewing system, linked from the pages
+				 * where approvers assign. `invalid` says what the database refuses. */
+				reviewSystemURL: TextFieldText & { invalid: string };
+				/** The venues whose publications signal fit, one per line. */
+				relevantVenues: TextFieldText;
 				inactiveMessage: TextFieldText;
 				welcomeTokens: TextFieldText;
 				preferenceLevelLabel: TextFieldText & { invalid: string };
 				newPreferenceLevel: TextFieldText & { invalid: string };
+				/** `invalid` states the length rule the database enforces. */
+				declineReasonText: TextFieldText & { invalid: string };
+				newDeclineReason: TextFieldText & { invalid: string };
 			};
 			options: {
 				/** Label for the reviewing-platform selector above the email
@@ -648,23 +1303,46 @@ export type LocaleText = {
 				platform: OptionsText;
 			};
 			button: {
+				/** Claim a web address for a venue that has none. No `warn`: there is nothing
+				 * to lose yet. */
+				setWebAddress: ButtonText;
+				/** Change an address the venue already has. Confirmed, because the old address
+				 * is released the moment this succeeds — nothing reserves it and nothing
+				 * redirects from it, so every link anyone has sent stops working. */
+				changeWebAddress: ConfirmButtonText;
 				addPreferenceLevel: ButtonText;
-				deletePreferenceLevel: ButtonText;
+				deletePreferenceLevel: ConfirmButtonText;
 				movePreferenceLevelUp: ButtonText;
 				movePreferenceLevelDown: ButtonText;
+				addDeclineReason: ButtonText;
+				/** Confirmed, though past declines keep their words: the reason's text was
+				 * copied onto each decline that used it. */
+				deleteDeclineReason: ConfirmButtonText;
+				moveDeclineReasonUp: ButtonText;
+				moveDeclineReasonDown: ButtonText;
 			};
 			checkbox: {
 				inactive: string;
-				anonymousAssignments: CheckboxOnOff;
-				vetThanks: CheckboxOnOff;
-				/** `label` is the always-visible checkbox label (checked = payments
-				 * on); `note` describes the payment-free state shown when unchecked. */
+				anonymousAssignments: string;
+				vetThanks: string;
+				/** `label` is the checkbox label (checked = payments on); `note`
+				 * describes the payment-free state, shown only when unchecked. */
 				paymentFree: { label: string; note: string };
 			};
-			slider: {
-				doneVisibility: SliderText;
-			};
 			paragraph: {
+				/** Above the reviewing system URL field: what it is and where it is shown. */
+				reviewSystemURL: string;
+				/** Above the relevant venues field: what it does, the format, and exactly
+				 * how matching works, since an editor cannot otherwise tell why a venue
+				 * matched or did not. */
+				relevantVenues: string;
+				/** Preview of one line: how many volunteers it matches. Takes `{venue}` and
+				 * `{count}`. */
+				relevantVenueMatches: string;
+				/** Preview of a line matching nobody, with what to try. Takes `{venue}`. */
+				relevantVenueNone: string;
+				/** The titles a line matched. Takes `{titles}`. */
+				relevantVenueTitles: string;
 				/** Top-of-page blurb framing the page as a series of numbered
 				 * setup steps the admin works through in order. */
 				welcome: string;
@@ -686,13 +1364,24 @@ export type LocaleText = {
 				reviewQuality: string;
 			};
 			/** Email-template snippets editors copy into their reviewing platform
-			 * (#113). Each entry's `body` is interpolated with `{venue}`,
-			 * `{role}`, and `{manuscriptVar}` (the selected platform's
-			 * submission-id syntax). */
+			 * (#113). Each entry's `body` is interpolated with `{origin}` (the
+			 * environment's own base URL, so a snippet copied from a local or
+			 * staging venue links back to it), `{venue}` (the venue's title),
+			 * `{venuepath}` (the segment the venue is addressed by — its web
+			 * address once it has one, its id until then), and
+			 * `{manuscriptVar}` (the selected platform's submission-id syntax).
+			 *
+			 * `{role}` is deliberately NOT interpolated: an editor pastes these
+			 * once per role, and reviewing platforms differ too much in how they
+			 * expose role names for us to guess. The tip above the snippets says
+			 * so — this list previously claimed otherwise, which read as a bug. */
 			template: {
 				payment: { title: string; body: string };
 				acknowledgement: { title: string; body: string };
 				compensation: { title: string; body: string };
+				/** For the decision letter, which the editor sends: a link back to close the
+				 * submission out, the one step nobody else's email prompts. */
+				decision: { title: string; body: string };
 			};
 		};
 		scholar: {
@@ -700,8 +1389,17 @@ export type LocaleText = {
 			tip: {
 				status: string;
 			};
+			/** The owner's summary tiles. `tokens` takes {count}, the number of currencies;
+			 * `tokensOne` is its singular. */
+			stat: {
+				submissions: string;
+				tokens: string;
+				tokensOne: string;
+				transactions: string;
+			};
 			subtitle: string;
 			header: {
+				orcid: string;
 				submissions: string;
 				tokens: string;
 				settings: string;
@@ -718,6 +1416,14 @@ export type LocaleText = {
 				noTasks: string;
 				commitmentsNotLoaded: string;
 				notVolunteeringFirst: string;
+				/** Deliberately does NOT say the scholar volunteers for nothing, which is
+				 * what it used to say and could not know. A venue may set a role's
+				 * volunteer_visibility so that its roster is not published, and those rows
+				 * simply do not arrive — so an empty list means "nothing to show you" and
+				 * not "nothing to show". The same correction the balances on this page
+				 * already carry, where an empty map "is not the same as 'holds nothing'".
+				 * The first-person string is exempt: a scholar always sees their own
+				 * records, whatever a venue publishes. */
 				notVolunteeringThird: string;
 				volunteeringFirst: string;
 				volunteeringThird: string;
@@ -733,13 +1439,65 @@ export type LocaleText = {
 			checkbox: {
 				available: string;
 			};
+			/** Which of the platform's OPTIONAL notices this scholar wants. Shown only to
+			 * the scholar themselves, and only once they have a verified address, since
+			 * there is nothing to opt out of before one exists. One entry in `label` per
+			 * template marked `optional` in the email registry — a unit test asserts the
+			 * two stay in step, because a template with no label here would render a
+			 * control with no words on it. */
+			notifications: {
+				header: string;
+				about: string;
+				/** The lead-in each group's controls complete, written once per group rather
+				 * than repeated in every label. It is a fieldset legend, so a screen reader
+				 * announces it with each checkbox — which is what lets the labels below be
+				 * fragments rather than sentences. */
+				prompt: string;
+				/** Headers for the groups the controls are rendered in. The keys are
+				 * `NotificationSectionKeys` in the email registry; a unit test asserts the
+				 * two stay in step. */
+				section: {
+					tokens: string;
+					reviewing: string;
+					venues: string;
+					community: string;
+				};
+				/** Each one completes `prompt` above — "Email me when… someone transfers tokens
+				 * to me" — so they are fragments, not sentences, and start lowercase. */
+				label: {
+					AvailabilityReminder: string;
+					BiddingDigest: string;
+					CallForBids: string;
+					CompensationChanged: string;
+					CompensationRequested: string;
+					ConflictDeclared: string;
+					InviteAccepted: string;
+					NewBid: string;
+					NewVolunteer: string;
+					ProposalSupported: string;
+					SubmissionClaimed: string;
+					SubmissionDone: string;
+					SubmissionsNeedEditors: string;
+					SubmissionsReady: string;
+					ThanksPendingReview: string;
+					ThanksReceived: string;
+					ThanksShared: string;
+					TokensMinted: string;
+					TokensReceived: string;
+					TransactionApproved: string;
+					TransactionsPending: string;
+					UnmatchedNameJoined: string;
+					VenueApproved: string;
+					VenueDeactivated: string;
+					VolunteerPaused: string;
+				};
+			};
 			status: {
 				available: string;
 				unavailable: string;
 			};
 			paragraph: {
 				youHave: string;
-				thisScholarHas: string;
 			};
 			/** The scholar's own data-rights controls: export and erasure. Only ever
 			 * shown to the scholar themselves. */
@@ -769,7 +1527,7 @@ export type LocaleText = {
 			};
 			button: {
 				mint: ButtonText;
-				removeMinter: ButtonText;
+				removeMinter: ConfirmButtonText;
 				addMinter: ButtonText;
 			};
 			note: {
@@ -778,7 +1536,7 @@ export type LocaleText = {
 			field: {
 				name: TextFieldText & { invalid: string };
 				mintPurpose: TextFieldText;
-				minter: TextFieldText & { invalidMinter: string; invalidContact: string };
+				minter: TextFieldText & { invalidContact: string };
 				description: NotedTextFieldText;
 			};
 			card: {
@@ -797,17 +1555,16 @@ export type LocaleText = {
 			paragraph: {
 				mintersDescription: string;
 				venuesDescription: string;
-				allTokens: string;
 			};
 		};
 		currencyTransactions: {
-			subtitle: string;
+			title: string;
 			paragraph: {
 				count: string;
 			};
 		};
 		scholarTransactions: {
-			subtitle: string;
+			title: string;
 			paragraph: {
 				count: string;
 			};
@@ -818,9 +1575,22 @@ export type LocaleText = {
 				orcid: ButtonText;
 				mockOrcid: ButtonText;
 				signIn: ButtonText;
+				/** A seeded scholar on the local sign-in list; its label is their name. */
+				signInAs: ButtonText;
 			};
 			note: {
 				orcid: string;
+			};
+			/** Column headers for the local-only table of seeded scholars. */
+			table: {
+				scholar: string;
+				email: string;
+				roles: string;
+			};
+			card: {
+				/** The local-only control that mints a brand-new scholar. Not a
+				 * sign-in — it exists to reach the first-run experience. */
+				newScholar: CardText;
 			};
 			field: {
 				email: TextFieldText;
@@ -831,8 +1601,9 @@ export type LocaleText = {
 			feedback: {
 				orcidError: string;
 				mockOrcidError: string;
-				mockOrcidDev: string;
 				passwordDev: string;
+				/** The page's single warning that these controls are local-only. */
+				seededDev: string;
 				signInError: string;
 			};
 			paragraph: {
@@ -843,8 +1614,13 @@ export type LocaleText = {
 			title: string;
 			/** Shown when the token was valid and the email is now verified. */
 			verified: string;
-			/** Shown when the token has expired (15-minute window elapsed). */
+			/** Shown when the token has expired (the 24-hour window elapsed). */
 			expired: string;
+			/** Follows `expired` when there is nothing to resend from here. Resending needs a
+			 * session — the RPC's EXECUTE is revoked from anon — so the only next step is
+			 * signing in. A visitor who CAN resend sees the component's own notice instead,
+			 * which names the address; showing both stated one fact three times. */
+			expiredSignedOut: string;
 			/** Shown when the token is unknown or already used. */
 			invalid: string;
 			/** Shown when the verification RPC itself failed. */
@@ -863,7 +1639,9 @@ export type LocaleText = {
 				propose: ButtonText;
 			};
 			checkbox: {
-				paymentFree: CheckboxOnOff;
+				/** Checked means the venue is token-based, matching the venue
+				 * settings page; unchecked proposes a payment-free venue. */
+				paymentFree: string;
 			};
 			section: {
 				venueInfo: string;
@@ -872,8 +1650,13 @@ export type LocaleText = {
 			};
 			field: {
 				venueName: TextFieldText & { invalid: string };
-				editors: TextFieldText & { invalid: string };
-				minters: TextFieldText & { invalid: string };
+				/** `unknown` names the listed addresses that belong to no account yet. Takes
+				 * {addresses}. Not an error: an editor who hasn't signed up is emailed an
+				 * invitation by the proposal itself, which is how communities arrive. */
+				editors: TextFieldText & { invalid: string; unknown: string };
+				/** As above, but an unlisted minter means the approving steward holds the
+				 * currency until the venue names someone. Takes {addresses}. */
+				minters: TextFieldText & { invalid: string; unknown: string };
 				mintersConflict: string;
 				url: TextFieldText & { invalid: string };
 				size: TextFieldText & { invalid: string };
@@ -883,9 +1666,9 @@ export type LocaleText = {
 				currency: OptionsText & { createNew: string; note: string };
 			};
 			paragraph: {
-				reviewedBy: string;
-				howToPropose: string;
-				communitySupport: string;
+				/** The one lead: who approves venues, and what a proposal is for. */
+				intro: string;
+				/** Beside the submit button: submitting emails the listed editors. */
 				emailNotice: string;
 			};
 		};
@@ -896,7 +1679,35 @@ export type LocaleText = {
 				change: string;
 			};
 			feedback: {
+				/** The mirror's state, shown to a steward beside the refresh control. {read},
+				 * {never} and {failed} are counts of scholars. */
+				orcidHealth: string;
+				/** Shown only when ORCID has actually been refusing reads. {count} is how many
+				 * profiles hit a rate limit in the last week. */
+				orcidRateLimited: string;
+				/** {count} is how many profiles this press claimed. */
+				orcidRefreshed: string;
+				orcidCurrent: string;
 				stewardsNotLoaded: string;
+				/** Shown when the platform has no stewards at all, which is distinct
+				 * from failing to load the list. */
+				noStewards: string;
+			};
+			/** Stands in for the name of a steward who has erased their account. */
+			anonymous: string;
+			card: {
+				/** The steward control that populates the ORCID mirror. Re-runnable rather
+				 * than a one-time bootstrap: ORCID's rate limits mean it works in batches. */
+				refreshORCID: CardText;
+				addSteward: CardText;
+			};
+			field: {
+				steward: TextFieldText;
+			};
+			button: {
+				refreshORCID: ButtonText;
+				addSteward: ButtonText;
+				removeSteward: ConfirmButtonText;
 			};
 			paragraph: {
 				community: string;
@@ -905,6 +1716,54 @@ export type LocaleText = {
 				joinStewards: string;
 				theoryIntro: string;
 				closing: string;
+			};
+		};
+		contact: {
+			title: string;
+			header: {
+				/** Questions about one journal or conference, which its editors answer. */
+				venues: string;
+				write: string;
+				stewards: string;
+				/** Bugs and feature requests, which belong on GitHub. */
+				defects: string;
+				elsewhere: string;
+			};
+			paragraph: {
+				/** Sends questions about a venue to its editors rather than the stewards, who
+				 * do not run venues and cannot answer for them. Comes first because it is the
+				 * question the steward inbox most often receives by mistake. */
+				venues: string;
+				/** What the steward inbox is for: the platform itself. Takes {email}. */
+				write: string;
+				/** Sets expectations about who reads it and how fast. */
+				expectations: string;
+				/** Introduces the steward list below. */
+				stewards: string;
+				/** Sends bugs and feature requests to GitHub. Takes {issues}. */
+				defects: string;
+				/** Where to go for things that aren't a support request. */
+				elsewhere: string;
+			};
+			link: {
+				help: string;
+				discussions: string;
+				newsletter: string;
+			};
+			feedback: {
+				stewardsNotLoaded: string;
+			};
+		};
+		help: {
+			title: string;
+			paragraph: {
+				intro: string;
+				/** Shown under the article list, pointing at /contact. */
+				more: string;
+			};
+			feedback: {
+				/** Shown when a slug matches no article. */
+				missing: string;
 			};
 		};
 		updates: {
@@ -962,6 +1821,54 @@ export type LocaleText = {
 		};
 	};
 	view: {
+		/** A scholar's active assignments, beside the papers cap they set, wherever an editor
+		 * chooses whom to assign. Counts are true ones, not limited to what the viewer sees. */
+		load: {
+			/** Under the cap. {used} and {cap}. */
+			underCap: string;
+			/** At the cap, so another paper would exceed it. {used} and {cap}. */
+			atCap: string;
+			/** Past the cap already. {used} and {cap}. */
+			overCap: string;
+			/** No cap set. {used}. */
+			noCap: string;
+			/** Active assignments in the venue's other roles. {count}. */
+			otherRoles: string;
+			/** Active assignments at other venues, editor seats excluded. {count}. */
+			elsewhere: string;
+			/** Beside the assign controls when the scholar found is at their cap. {used}
+			 * and {cap}. */
+			warning: string;
+			/** Beside the assign controls when the scholar found has not volunteered for
+			 * the role, so has set no cap for it. */
+			notVolunteer: string;
+		};
+		/** The mirrored slice of a scholar's public ORCID record, shown wherever an editor
+		 * needs to know who somebody is. See DESIGN.md's Scholar route section. */
+		orcid: {
+			header: string;
+			/** {date} is when the record was last read. This line is load-bearing rather
+			 * than decorative: it is what keeps the section from reading as Reciprocal
+			 * Reviews' own claim about a person. */
+			provenance: string;
+			provenanceOwn: string;
+			affiliation: string;
+			education: string;
+			keywords: string;
+			works: string;
+			links: string;
+			/** Shown only to the scholar themselves. On a public profile the same words
+			 * read as an accusation, and a visitor can do nothing about it. */
+			problem: string;
+		};
+		/** Who a group of expertise keywords came from. Rendered as a screen-reader-only
+		 * label beside a brand mark: the Reciprocal Reviews logo for what a volunteer told
+		 * this venue, the ORCID mark for what their public record says. Naming both sides
+		 * is what lets either one stand alone without being mistaken for the other. */
+		expertise: {
+			venue: string;
+			orcid: string;
+		};
 		gift: {
 			noTokens: string;
 			button: {
@@ -1005,7 +1912,9 @@ export type LocaleText = {
 				allLoaded: string;
 			};
 			button: {
-				approve: ButtonText;
+				/** Confirm-style: approval moves tokens and is permanent (RR005),
+				 * so it must not be a single click. */
+				approve: ConfirmButtonText;
 				declineInitiate: ButtonText;
 				declineConfirm: ConfirmButtonText;
 				loadMore: ButtonText;
@@ -1020,12 +1929,20 @@ export type LocaleText = {
 			};
 			headers: {
 				status: string;
+				date: string;
 				tokens: string;
 				scholar: string;
 				from: string;
 				to: string;
 				purpose: string;
 				actions: string;
+			};
+			note: {
+				/** What order the table is in. The list is not purely
+				 * reverse-chronological: proposed transactions come first, whatever
+				 * their date, so work waiting on an approver is never stranded behind
+				 * pagination. Nothing else on screen can say that. */
+				sortOrder: string;
 			};
 			error: {
 				unknownVenue: string;
@@ -1036,6 +1953,21 @@ export type LocaleText = {
 		};
 		roles: {
 			tip: {
+				/** Why the volunteer visibility setting is having no effect: the role is
+				 * invite-only, or it is the venue's editor role. Both are status nobody can
+				 * award themselves, so both stay public. The stored choice is kept, and
+				 * takes effect if the role stops being either. */
+				volunteerVisibilityInert: string;
+				/** Warns an admin that unchecking "invite only" will, in the same click,
+				 * hide a roster that was public a moment ago — the visibility setting stops
+				 * being inert. Shown only when that setting is not `all`. */
+				invitedHidesRoster: string;
+				/** Explains max bids under its setting: why to keep it small, what counts
+				 * toward it, and that a volunteer moves bids by withdrawing them. */
+				bidLimit: string;
+				/** Shown to admins on the first role in priority order. Priority zero is not
+				 * just presentation: it is what the database checks when deciding who may
+				 * approve assignments, edit an author list, and mark a submission done. */
 				highestPriority: string;
 			};
 			feedback: {
@@ -1043,15 +1975,48 @@ export type LocaleText = {
 				consult: string;
 				noRoles: string;
 				notLoaded: string;
+				/** Queries that were looked up and matched nobody at all. Named rather than
+				 * left silent, and advisory: the invitation goes ahead without them. */
+				inviteUnmatched: string;
+				/** Queries whose every match is somebody who cannot be added again. Distinct
+				 * from `inviteUnmatched`, because "nobody is called that" and "they are
+				 * already here" are different news. Worded to be true of every state a
+				 * volunteer record can be in, since create_volunteer refuses a second row
+				 * whether the first is invited, accepted, declined, or paused. */
+				inviteAlready: string;
+				/** Confirms a batch of invitations went out. */
+				invited: string;
+				/** Confirms people were added directly, without an invitation. */
+				added: string;
+				/** How many of the role's volunteers would actually receive a call for bids.
+				 * Not the same as the role's volunteer count, and deliberately so: someone
+				 * with no verified address, someone who has silenced the notice, and the
+				 * sender themselves are all excluded, and reporting the larger number would
+				 * promise more than the send delivers. Takes `{count}`. */
+				callForBidsRecipients: string;
+				/** When the venue last asked, and who asked. Plain information, not a
+				 * warning: there is no rate limit, and this exists so two co-chairs do not
+				 * unknowingly send the same nudge an hour apart. Takes `{name}` and
+				 * `{when}`. */
+				callForBidsLast: string;
+				/** Why the send is refused when the sender has verified no contact address. A
+				 * call for bids replies to its sender, so there is nowhere for an answer to
+				 * go. */
+				callForBidsUnverified: string;
+				/** Shown in place of the form when nobody would receive it. */
+				callForBidsNobody: string;
 			};
 			button: {
 				createRole: ButtonText;
+				/** Sends the call for bids. A confirm button: the mail goes to everyone in
+				 * the role at once and cannot be recalled. */
+				callForBids: ConfirmButtonText;
 				removeAdmin: ConfirmButtonText;
 				addAdmin: ButtonText;
 				priorityUp: ButtonText;
 				priorityDown: ButtonText;
 				addCompensation: ButtonText;
-				removeCompensation: ButtonText;
+				removeCompensation: ConfirmButtonText;
 				volunteer: ButtonText;
 				accept: ButtonText;
 				acceptInvite: ConfirmButtonText;
@@ -1059,12 +2024,35 @@ export type LocaleText = {
 				stop: ButtonText;
 				resume: ButtonText;
 				invite: ButtonText;
+				/** Replaces `invite` when the admin has said the people chosen already agreed:
+				 * seats them directly. A confirm button, because it puts a commitment on
+				 * someone's profile without their clicking anything. */
+				addAgreed: ConfirmButtonText;
+				/** Takes a chosen scholar back off the list before anything is sent. `{name}` in
+				 * the tip is replaced with theirs, because the tip is the button's aria-label and
+				 * a row of buttons all announcing "x" is unusable. Not a confirm button: nothing
+				 * has gone out, so there is nothing to undo. */
+				removeInvite: ButtonText;
 				deleteRole: ConfirmButtonText;
 			};
 			field: {
 				newRoleName: TextFieldText;
-				adminScholar: TextFieldText;
+				/** `invalid` when the text is neither an email nor an ORCID iD;
+				 * `minter` when it names someone who mints the venue's currency,
+				 * which the database forbids an admin from also doing. */
+				adminScholar: TextFieldText & { invalid: string };
+				/** The role invite's field. It takes a comma-separated list of email
+				 * addresses, ORCID iDs, and names, so the label names all three. There is no
+				 * `invalid`, because nothing the field can hold is a mistake — a query that
+				 * matches nobody is reported as a query that matched nobody, not as text
+				 * that should not have been typed. */
 				invite: TextFieldText;
+				/** The call for bids itself — the editor's own words, and the only prose
+				 * anybody writes into RR's mail. The note explains the two things the
+				 * pipeline does to it that a writer would not expect: a link is rendered
+				 * inert, because branded mail must not carry a caller's URL, and the whole
+				 * note arrives as one paragraph. */
+				callForBids: NotedTextFieldText & { invalid: string };
 				roleName: TextFieldText;
 				roleDescription: TextFieldText;
 				compensationRationale: TextFieldText;
@@ -1073,22 +2061,51 @@ export type LocaleText = {
 				 * is willing to review for this role. Empty = unspecified. */
 				papers: TextFieldText & { invalid: string };
 			};
+			/** Captions for the two rows under the invite field: who the queries matched,
+			 * and who has been chosen from them. Lowercase, like a field label, because that
+			 * is what they are — a name for the group beside them, not a sentence. */
+			fieldset: {
+				matches: string;
+				invites: string;
+			};
 			card: {
 				settings: CardText;
 				admins: CardText;
 				unnamed: string;
 			};
 			checkbox: {
-				invited: CheckboxOnOff;
-				anonymousAuthors: CheckboxOnOff;
-				biddable: CheckboxOnOff;
+				invited: string;
+				/** On the invite form: the people chosen already agreed, so add them directly
+				 * instead of inviting them. */
+				agreed: string;
+				anonymousAuthors: string;
+				biddable: string;
+				/** Whether the role caps how many submissions each volunteer may bid on. */
+				bidLimit: string;
 			};
 			slider: {
 				compensation: SliderText;
 				desiredAssignments: SliderText;
+				/** The most submissions each volunteer may bid on in the role. */
+				maxBids: SliderText;
 			};
 			options: {
 				approver: OptionsText;
+				/** Who may see the role's volunteers. The note has to say plainly what each
+				 * choice publishes, because the admin choosing it is deciding on other
+				 * people's behalf and cannot see the result from where they are standing —
+				 * they keep seeing the whole roster whatever they pick. */
+				volunteerVisibility: OptionsText;
+			};
+			/** Labels for the fixed choices of an Options control. `options.approver`
+			 * builds its labels from role names, so this is the first set of them that
+			 * has to be written rather than derived. */
+			optionLabels: {
+				volunteerVisibility: {
+					all: string;
+					completed: string;
+					none: string;
+				};
 			};
 			headers: {
 				type: string;
@@ -1104,10 +2121,24 @@ export type LocaleText = {
 				roleOpen: string;
 				roleInvited: string;
 				volunteersCount: string;
+				/** Introduces the call-for-bids form: who it reaches and that it is the
+				 * editor's own words, not an automated notice. */
+				callForBids: string;
 				invited: string;
 				declined: string;
 				volunteering: string;
 				stopped: string;
+				/** A volunteer's own active assignments in the role, against their cap.
+				 * {used} and {cap}. `loadAtCap` when they have reached it, shown as a warning
+				 * like the one editors see, followed by `loadNote`; `loadNoCap`, with {used}
+				 * only, when they set none. */
+				load: string;
+				loadAtCap: string;
+				loadNoCap: string;
+				/** Under the count: it is what editors see, and it only knows assignments
+				 * recorded here, so invitations accepted in the venue's own reviewing system
+				 * may be missing. Asks the volunteer to correct for that. */
+				loadNote: string;
 			};
 		};
 		tasks: {
@@ -1126,9 +2157,19 @@ export type LocaleText = {
 				kind: {
 					invitation: string;
 					transaction: string;
-					review: string;
 					pendingAssignment: string;
+					/** Completed work whose compensation awaits this approver. */
+					pendingCompensation: string;
 					outgoingTransaction: string;
+				};
+				/** Why an editor's submission is on their list. An editor is seated on every
+				 * submission their venue receives, so the seat alone is not a task; these say
+				 * which of the two things the submission is actually waiting on them for. */
+				editor: {
+					/** Nobody is seated in a reviewing role yet. */
+					unstaffed: string;
+					/** Every seated reviewer is settled, so it can be marked done. */
+					ready: string;
 				};
 				pendingTransactionsAfter: string;
 			};
@@ -1148,6 +2189,9 @@ export type LocaleText = {
 			save: ButtonText;
 			edit: ButtonText;
 			cancel: ButtonText;
+			/** Shown on the toggle while the edit is being written, so a slow save isn't
+			 * a second of silence. The button is disabled for the duration. */
+			saving: ButtonText;
 		};
 		header: {
 			logout: ButtonText;
@@ -1165,9 +2209,24 @@ export type LocaleText = {
 			};
 			button: {
 				send: ButtonText;
+				/** Ask for a fresh link for the address already pending. */
+				resend: ButtonText;
+				/** Abandon the pending address and type a different one. */
+				different: ButtonText;
 			};
 			feedback: {
-				sent: string;
+				/** A link is out and still live — shown on every visit, not just the one
+				 * that sent it, since the request now outlives the page that made it. */
+				pending: string;
+				/** The link went unused long enough to lapse. Not an error: the next step
+				 * is one button away. */
+				expired: string;
+				/** The message never left the building (public.emails.delivery), so waiting
+				 * for it is pointless. */
+				undelivered: string;
+				/** Seconds left on the one-minute cooldown, counted down beside a disabled
+				 * resend button so the limit is never hit as an error. */
+				wait: string;
 				/** Fallback when the server gave no recognizable reason. */
 				error: string;
 				unchanged: string;
@@ -1186,7 +2245,10 @@ export type LocaleText = {
 		UpdateScholarName: string;
 		UpdateScholarEmail: string;
 		VerifyEmail: string;
+		LoadPendingEmailVerification: string;
 		UpdateScholarAvailability: string;
+		LoadNotificationSettings: string;
+		UpdateNotificationSetting: string;
 		CreateProposal: string;
 		EditProposalTitle: string;
 		EditProposalCensus: string;
@@ -1211,17 +2273,28 @@ export type LocaleText = {
 		ScholarNotFound: string;
 		EditVenueAddEditorAlreadyEditor: string;
 		EditVenueTitle: string;
+		EditVenueShortTitle: string;
 		EditVenueURL: string;
+		EditVenueReviewSystemURL: string;
+		EditVenueRelevantVenues: string;
+		EditVenueSlug: string;
+		/** The web address someone asked for belongs to another venue. Raised by the unique
+		 * index, which is what actually decides a contested address — the field's own
+		 * availability check can only say the address was free a moment ago. */
+		VenueAddressTaken: string;
+		/** The web address broke the format rule at the database. The field validates the
+		 * same rule, so seeing this means something reached the write unvalidated. */
+		VenueAddressInvalid: string;
 		EditVenueInactive: string;
 		EditVenueAnonymousAssignments: string;
 		EditVenueVetThanks: string;
 		EditVenueWelcomeAmount: string;
 		EditVenuePaymentFree: string;
-		EditVenueDoneVisibilityDays: string;
 		EditVenueTransactionReminderFrequency: string;
 		EditRoleBidding: string;
 		EditRoleDesiredAssignments: string;
 		EditRoleAnonymousAuthors: string;
+		EditRoleVolunteerVisibility: string;
 		EditRoleApprover: string;
 		CreateRole: string;
 		UpdateRoleName: string;
@@ -1240,6 +2313,7 @@ export type LocaleText = {
 		CreateVolunteer: string;
 		AlreadyVolunteered: string;
 		UpdateVolunteerActive: string;
+		RemoveVolunteer: string;
 		UpdateVolunteerExpertise: string;
 		UpdateVolunteerPapers: string;
 		UpdateAssignmentPreference: string;
@@ -1247,9 +2321,14 @@ export type LocaleText = {
 		EditPreferenceLevel: string;
 		ReorderPreferenceLevel: string;
 		DeletePreferenceLevel: string;
+		CreateDeclineReason: string;
+		EditDeclineReason: string;
+		ReorderDeclineReason: string;
+		DeleteDeclineReason: string;
 		InviteToRole: string;
-		InviteToRoleMissing: string;
-		InviteToRoleSuccess: string;
+		AddToRole: string;
+		/** add_to_role_and_match refused someone who declined the role (RR027). */
+		AddToRoleDeclined: string;
 		AcceptRoleInvite: string;
 		EditCurrencyMinters: string;
 		AddCurrencyMinter: string;
@@ -1271,6 +2350,18 @@ export type LocaleText = {
 		ExportScholarData: string;
 		/** Erasing a scholar's account failed. */
 		EraseScholar: string;
+		/** RR010: the caller is not a steward, so cannot change who is one. */
+		NotSteward: string;
+		/** RR012: there must always be one steward, or nobody can appoint another. */
+		LastSteward: string;
+		/** RR013: stepping down is an act another steward performs. */
+		CannotDemoteSelf: string;
+		/** The scholar being promoted is already a steward. */
+		AlreadySteward: string;
+		/** Promoting a scholar to steward failed. */
+		PromoteSteward: string;
+		/** Removing a scholar as a steward failed. */
+		DemoteSteward: string;
 		AlreadyApproved: string;
 		SelfDealingApproval: string;
 		ApproveTransaction: string;
@@ -1280,23 +2371,43 @@ export type LocaleText = {
 		UndeletedTransaction: string;
 		InvalidCharges: string;
 		NewSubmission: string;
+		/** RR009: the caller is neither a listed author nor a venue admin. */
+		SubmissionNotAuthor: string;
 		UnknownVenue: string;
 		MissingSubmissionCharge: string;
 		BulkImportSubmissions: string;
 		UpdateSubmissionExpertise: string;
 		UpdateSubmissionTitle: string;
+		UpdateSubmissionBiddingClosed: string;
 		UpdateSubmissionNote: string;
 		MarkSubmissionDoneRPC: string;
 		ApproveAssignment: string;
 		CreateAssignment: string;
 		CompensationSubmissionNotFound: string;
 		CompensationAssignmentCheck: string;
+		CompensationAlreadyPaid: string;
+		CompensationDeclined: string;
+		CompensationEditorRole: string;
+		CompensationNotEligible: string;
+		LoadUnmatchedAssignments: string;
+		MatchAssignments: string;
+		MatchAssignmentsNotVolunteer: string;
+		DismissUnmatchedAssignment: string;
 		CompleteAssignmentNotFound: string;
 		CompleteAssignmentRoleNotFound: string;
 		CompleteAssignmentVenueNotFound: string;
 		CompleteAssignmentInsufficientTokens: string;
 		CompleteAssignmentRPC: string;
 		DeleteAssignment: string;
+		DeclineBid: string;
+		BidNotPending: string;
+		/** A bid past the bidder's budget for the role (RR025). */
+		BidLimitReached: string;
+		/** A bid the submissions page does not offer: on a role that takes no bids, a
+		 * submission that is done, a role already full, or a second bid (RR026). */
+		BidNotAllowed: string;
+		EditRoleBidLimit: string;
+		LoadBidBudget: string;
 		EmailScholar: string;
 		ApproveProposalNoSupporters: string;
 		DeclareConflict: string;
@@ -1304,6 +2415,9 @@ export type LocaleText = {
 		LoadVenue: string;
 		LoadCurrency: string;
 		LoadScholar: string;
+		BackfillORCIDProfiles: string;
+		LoadORCIDMirrorHealth: string;
+		EnsureScholar: string;
 		LoadSubmission: string;
 		LoadTransaction: string;
 		LoadRole: string;
@@ -1313,12 +2427,18 @@ export type LocaleText = {
 		LoadProposal: string;
 		LoadCompensation: string;
 		LoadPreferenceLevel: string;
+		LoadDeclineReason: string;
 		LoadSubmissionType: string;
 		LoadConflict: string;
 		ProposeThanks: string;
 		ApproveThanks: string;
 		DeclineThanks: string;
 		LoadThanks: string;
+		CallForBids: string;
+		/** The one call-for-bids failure a person can fix themselves, so it says what to do
+		 * rather than that something went wrong. */
+		CallForBidsUnverified: string;
+		CallForBidsStatus: string;
 	};
 };
 

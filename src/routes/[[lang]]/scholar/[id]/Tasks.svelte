@@ -6,22 +6,23 @@
 		ScholarRow,
 		SubmissionRow,
 		TransactionRow
-	} from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { EmptyLabel, TaskLabel } from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import SubmissionLink from '$lib/components/SubmissionLink.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import VenueLink from '$lib/components/VenueLink.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import Text from '$lib/locales/Text.svelte';
-	import { getAuth } from '$routes/Auth.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	} from '#data/types.js';
+	import type { ScholarTask } from '#lib/data/SupabaseCRUD.svelte.js';
+	import Button from '#lib/components/Button.svelte';
+	import CurrencyLink from '#lib/components/CurrencyLink.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { EmptyLabel, TaskLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import SubmissionLink from '#lib/components/SubmissionLink.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import VenueLink from '#lib/components/VenueLink.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { getAuth } from '#routes/Auth.svelte.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let {
 		commitments,
@@ -29,16 +30,25 @@
 		outgoingPending,
 		minting,
 		scholar,
-		reviews,
-		approvals
+		tasks,
+		approvals,
+		compensating
 	}: {
-		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
+		commitments: {
+			id: string;
+			invited: boolean;
+			name: string;
+			venue: string;
+			venueid: string;
+			venueSlug: string | null;
+		}[];
 		minting: CurrencyRow[] | null;
 		pending: TransactionRow[] | null;
 		outgoingPending: TransactionRow[] | null;
 		scholar: ScholarID;
-		reviews: (AssignmentRow & { submissions: SubmissionRow })[] | null;
+		tasks: ScholarTask[] | null;
 		approvals: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
+		compensating: (AssignmentRow & { scholars: ScholarRow; submissions: SubmissionRow })[] | null;
 	} = $props();
 
 	const db = getDB();
@@ -52,7 +62,7 @@
 
 <Subheader icon={TaskLabel} text={(l) => l.page.scholar.header.tasks}></Subheader>
 
-{#if invitedCommitments.length === 0 && (pending === null || pending.length === 0) && (outgoingPending === null || outgoingPending.length === 0) && (reviews === null || reviews.length === 0) && (approvals === null || approvals.length === 0)}
+{#if invitedCommitments.length === 0 && (pending === null || pending.length === 0) && (outgoingPending === null || outgoingPending.length === 0) && (tasks === null || tasks.length === 0) && (approvals === null || approvals.length === 0) && (compensating === null || compensating.length === 0)}
 	<Feedback text={(l) => l.page.scholar.feedback.noTasks}></Feedback>
 {:else}
 	<Tip><Text path={(l) => l.view.tasks.tip.tasks} /></Tip>
@@ -68,7 +78,7 @@
 				<td>{locale().view.tasks.cell.kind.invitation}</td>
 				<td>
 					<strong>{invite.name ?? EmptyLabel}</strong>
-					<VenueLink id={invite.venueid} name={invite.venue} />
+					<VenueLink id={invite.venueid} name={invite.venue} slug={invite.venueSlug} />
 					<Button
 						testid="invitation-accept-{index}"
 						strings={(l) => l.view.tasks.button.accept}
@@ -98,12 +108,23 @@
 			{/if}
 		{/each}
 
-		<!-- Show pending reviews -->
-		{#each reviews ?? [] as review, index}
-			<tr data-testid="review-{index}">
-				<td>{locale().view.tasks.cell.kind.review}</td>
+		<!-- Show outstanding work. The Kind cell is the venue's own role name rather than a
+		     fixed "Review" label: a venue's roles are whatever it says they are, and the row
+		     that read "Review" for a venue's editor on every paper it had ever received is
+		     the bug this replaces. An editor's seat appears only when the submission is
+		     waiting on the editor, which is what the hint says. -->
+		{#each tasks ?? [] as task, index}
+			<tr data-testid="task-{index}">
+				<td>{task.role_name}</td>
 				<td>
-					<SubmissionLink submission={review.submissions} />
+					<SubmissionLink
+						submission={{ id: task.submission, title: task.title, venue: task.venue }}
+					/>
+					{#if task.state === 'unstaffed'}
+						<Text path={(l) => l.view.tasks.cell.editor.unstaffed} />
+					{:else if task.state === 'ready'}
+						<Text path={(l) => l.view.tasks.cell.editor.ready} />
+					{/if}
 				</td>
 			</tr>
 		{/each}
@@ -130,6 +151,16 @@
 				<td>{locale().view.tasks.cell.kind.pendingAssignment}</td>
 				<td>
 					<SubmissionLink submission={approval.submissions} />
+				</td>
+			</tr>
+		{/each}
+
+		<!-- Show completed work awaiting this approver's compensation decision -->
+		{#each compensating ?? [] as assignment, index}
+			<tr data-testid="compensation-{index}">
+				<td>{locale().view.tasks.cell.kind.pendingCompensation}</td>
+				<td>
+					<SubmissionLink submission={assignment.submissions} />
 				</td>
 			</tr>
 		{/each}

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type LocaleText from '$lib/locales/Locale';
-	import type { ButtonText, ConfirmButtonText } from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import type { ButtonText, ConfirmButtonText } from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import type { Snippet } from 'svelte';
 
 	let {
@@ -46,15 +46,24 @@
 	let tip = $derived(buttonText.tip);
 
 	async function act(event: Event) {
+		// Refuse re-entry while an action is in flight. `disabled` on the buttons
+		// below is the visible half of this; this is the half that doesn't depend
+		// on the DOM having been updated between two clicks.
+		if (acting) return;
 		if (active) {
 			if (warn && !confirming) {
 				confirming = true;
 			} else {
 				acting = true;
 				event.stopPropagation();
-				await action(event);
-				acting = false;
-				confirming = false;
+				try {
+					await action(event);
+				} finally {
+					// Always reset, even if the action throws, so the button
+					// can't be left stuck disabled in its confirming state.
+					acting = false;
+					confirming = false;
+				}
 			}
 		}
 	}
@@ -81,9 +90,13 @@
 	>
 {:else}
 	<div class="row">
-		<button onclick={() => (confirming = false)}><Text path={(l) => l.shorthand.delete} /></button>
+		<button type="button" disabled={acting} onclick={() => (confirming = false)}
+			><Text path={(l) => l.shorthand.delete} /></button
+		>
 		<button
+			type="button"
 			data-testid={testid}
+			disabled={!active || acting}
 			class:warn={warn !== undefined}
 			onclick={async (event) => await act(event)}
 			><Text path={(l) => strings(l).warn ?? ''} /></button
@@ -119,6 +132,12 @@
 
 	.row button:last-child {
 		flex-grow: 1;
+		/* The confirming button holds a SENTENCE, not a label. `white-space: nowrap` above is
+		   right for a label — a two-word button that wraps mid-phrase looks broken — and wrong
+		   here: it makes the button's minimum width the whole warning, which pushes the row
+		   past its container and gets the end of the question clipped rather than wrapped. The
+		   reader then loses exactly the part that says what cannot be undone. */
+		white-space: normal;
 	}
 
 	button:not([disabled]):hover {

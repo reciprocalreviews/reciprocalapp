@@ -1,10 +1,15 @@
+import { NO_VENUE_ID } from '#lib/data/venuePath.js';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ parent, params }) => {
-	const { db } = await parent();
+export const load: PageLoad = async ({ parent }) => {
+	const { db, venue } = await parent();
+
+	// The URL segment may be the venue's web address, so the id comes from the venue the
+	// layout resolved, never from the param — the queries below are keyed on uuid columns.
+	const venueid = venue?.id ?? NO_VENUE_ID;
 
 	// Get the venue's most recent transactions.
-	const { data: transactions, count } = await db.getVenueTransactions(params.venueid);
+	const { data: transactions, count } = await db.getVenueTransactions(venueid);
 
 	const { data: venues } =
 		transactions === null ? { data: null } : await db.getTransactionVenues(transactions);
@@ -12,8 +17,12 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: currencies } =
 		transactions === null ? { data: null } : await db.getTransactionCurrencies(transactions);
 
-	// Get the venue's tokens.
-	const { data: tokens } = await db.getVenueTokens(params.venueid);
+	// How much the reserve holds, for the gift form's upper bound. A count, not
+	// the rows: a whole venue's token table was being fetched to set a slider's
+	// `max`, and PostgREST truncated it at `max_rows` anyway.
+	const { data: tokens } = venue
+		? await db.getVenueTokenCount(venueid, venue.currency)
+		: { data: null };
 
 	return {
 		transactions,

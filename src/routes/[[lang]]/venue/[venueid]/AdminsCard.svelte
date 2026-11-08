@@ -1,28 +1,24 @@
 <script lang="ts">
-	import type { CurrencyRow, ScholarID, ScholarRow, VenueRow } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import { DeleteLabel } from '$lib/components/Labels';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import type { LocaleText } from '$lib/locales/Locale';
-	import { validEmail, validORCID } from '$lib/validation';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import type { ScholarID, VenueRow } from '#data/types.js';
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import { DeleteLabel } from '#lib/components/Labels.js';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import ScholarField from '#lib/components/ScholarField.svelte';
+	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import type { LocaleText } from '#lib/locales/Locale.js';
+	import { validEmail, validORCID } from '#lib/validation.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let {
 		venue,
-		isAdmin,
-		minters,
-		currency
+		isAdmin
 	}: {
 		venue: VenueRow;
 		isAdmin: boolean;
-		minters: ScholarRow[] | null;
-		currency: CurrencyRow;
 	} = $props();
 
 	const db = getDB();
@@ -30,17 +26,11 @@
 
 	let newEditor: string = $state('');
 
+	/** An admin may also mint this venue's currency: the overlap is disclosed on the venue
+	 * page rather than refused, so all this checks is that the contact is well-formed. */
 	function validAdmin(scholar: string | ScholarID): ((l: LocaleText) => string) | undefined {
-		if (validEmail(scholar)) {
-			if (!(minters ?? []).some((m) => m.email === scholar)) return undefined;
-			else return (_l) => "Admins can't be minters of the venue's currency.";
-		}
-		if (validORCID(scholar)) {
-			if (currency.minters.includes(scholar))
-				return (_l) => "Admins can't be minters of the venue's currency.";
-			else return undefined;
-		}
-		return (_l) => 'Must be a valid email or ORCID.';
+		if (validEmail(scholar) || validORCID(scholar)) return undefined;
+		return (l) => l.view.roles.field.adminScholar.invalid;
 	}
 </script>
 
@@ -75,11 +65,12 @@
 	{#if isAdmin}
 		<Form>
 			<Paragraph text={(l) => l.view.roles.paragraph.addAdmin} />
-			<TextField
+			<ScholarField
 				strings={(l) => l.view.roles.field.adminScholar}
 				bind:text={newEditor}
 				size={19}
 				valid={(text) => validAdmin(text)}
+				showResolved={false}
 				testid="add-admin-field"
 			/><Button
 				strings={(l) => l.view.roles.button.addAdmin}

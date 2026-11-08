@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { html } from './html';
 import interpolate from './interpolate';
 
 const SHORTHAND = { delete: '✖', admin: 'Admin' };
@@ -59,5 +60,51 @@ describe('interpolate', () => {
 
 	test('does not treat a lone dollar or brace as a placeholder', () => {
 		expect(interpolate('100$ and { }', SHORTHAND)).toBe('100$ and { }');
+	});
+
+	test('does not rescan a substituted input', () => {
+		// tokenChip injects markup as an input value; nothing in it may be re-read,
+		// or a currency name containing `{cost}` could pull in another input.
+		expect(interpolate('{a} {b}', SHORTHAND, { a: '<i>{b} $admin</i>', b: 'B' })).toBe(
+			'<i>{b} $admin</i> B'
+		);
+	});
+});
+
+// The `escape` pass is what stands between a venue-authored description and
+// `{@html}`. See the comment in interpolate.ts.
+describe('interpolate escaping', () => {
+	test('leaves inputs alone when the result is not going through @html', () => {
+		expect(interpolate('{x}', SHORTHAND, { x: '<b>hi</b>' })).toBe('<b>hi</b>');
+	});
+
+	test('escapes an input when the result is going through @html', () => {
+		expect(interpolate('{x}', SHORTHAND, { x: '<b>hi</b>' }, true)).toBe('&lt;b&gt;hi&lt;/b&gt;');
+	});
+
+	test('defuses the stored-XSS shape this was written for', () => {
+		const escaped = interpolate(
+			'{description}',
+			SHORTHAND,
+			{ description: '<img src=x onerror=alert(1)>' },
+			true
+		);
+		expect(escaped).not.toContain('<img');
+	});
+
+	test('escapes quotes and ampersands, not just angle brackets', () => {
+		expect(interpolate('{x}', SHORTHAND, { x: `&"'` }, true)).toBe('&amp;&quot;&#39;');
+	});
+
+	test('passes an explicitly trusted value through unescaped', () => {
+		expect(interpolate('{x}', SHORTHAND, { x: html('<b>hi</b>') }, true)).toBe('<b>hi</b>');
+	});
+
+	test('does not escape shorthand, which is authored in the locale file', () => {
+		expect(interpolate('$delete', { delete: '<b>x</b>' }, {}, true)).toBe('<b>x</b>');
+	});
+
+	test('markdown in an escaped input still works, since only markup is neutralized', () => {
+		expect(interpolate('{x}', SHORTHAND, { x: '**bold**' }, true)).toBe('**bold**');
 	});
 });

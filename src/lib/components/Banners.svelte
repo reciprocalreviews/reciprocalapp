@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { updated } from '$app/state';
-	import { PUBLIC_ENV } from '$env/static/public';
-	import { BETA } from '$lib/constants';
-	import Text from '$lib/locales/Text.svelte';
-	import { getAuth } from '$routes/Auth.svelte';
-	import { getFeedback, removeError } from '$routes/feedback.svelte';
+	import { page, updated } from '$app/state';
+	import { PUBLIC_ENV } from '$app/env/public';
+	import Text from '#lib/locales/Text.svelte';
+	import { getAuth } from '#routes/Auth.svelte.js';
+	import { getFeedback, removeError } from '#routes/feedback.svelte.js';
 	import Banner from './Banner.svelte';
 	import Link from './Link.svelte';
 
@@ -20,22 +19,30 @@
 		return auth().isAuthenticated() && user && user.email === null ? user : null;
 	});
 
+	/** Whether this is the scholar's own profile, where the add-email alert says the same
+	 * thing at greater length and with the form to do it — so the banner would only repeat
+	 * it, and link to the page it is already on. Matched with or without a locale prefix. */
+	let onOwnProfile = $derived(
+		unverifiedScholar !== null &&
+			page.url.pathname.replace(/\/$/, '').endsWith(`/scholar/${unverifiedScholar.id}`)
+	);
+
 	/** Locally hide the update banner once the scholar dismisses it. */
 	let updateDismissed = $state(false);
 </script>
 
+<!-- The beta notice used to head this stack. It moved to the footer (#176): it says the
+     same thing on the thousandth visit as on the first, and here it was charging every page
+     a band of the sticky header for it. -->
 <div class="banners">
-	{#if BETA}
-		<Banner level="beta" testid="banner-beta">
-			<Text markdown path={(l) => l.banner.beta.lead} />
-		</Banner>
-	{/if}
-
 	{#if updated.current && !updateDismissed}
 		<Banner
 			level="update"
 			testid="banner-update"
-			action={{ strings: (l) => l.banner.update.refresh, do: () => location.reload() }}
+			action={{
+				strings: (l) => l.banner.update.refresh,
+				do: () => location.reload()
+			}}
 			dismiss={() => (updateDismissed = true)}
 		>
 			<Text path={(l) => l.banner.update.message} />
@@ -49,7 +56,7 @@
 		</Banner>
 	{/if}
 
-	{#if unverifiedScholar}
+	{#if unverifiedScholar && !onOwnProfile}
 		<Banner level="warning" testid="banner-email">
 			<Text path={(l) => l.banner.email.message} />
 			<Link to="/scholar/{unverifiedScholar.id}">
@@ -58,7 +65,11 @@
 		</Banner>
 	{/if}
 
-	<section aria-live="assertive">
+	<!-- Polite, not assertive. Banner.svelte already marks errors `role="alert"` and everything
+	     else `role="status"`, which are assertive and polite respectively; an assertive wrapper
+	     overrode both, so a batch of successes interrupted a screen reader and was read out one
+	     entry at a time. Errors keep interrupting, because they still carry their own role. -->
+	<section aria-live="polite">
 		{#each feedback as item, index (index)}
 			<Banner
 				level={item.level}
@@ -66,7 +77,17 @@
 				dismiss={() => removeError(index)}
 				testid="feedback-{item.level}"
 			>
-				{item.message}
+				<!-- `item.message` is already localized by the data layer, so a collapsed banner is
+				     wrapped rather than rebuilt. No `markdown`, so a name or subject in it renders
+				     as text rather than as markup. -->
+				{#if item.others !== undefined}
+					<Text
+						path={(l) => l.notification.andOthers}
+						inputs={{ message: item.message, count: item.others.toString() }}
+					/>
+				{:else}
+					{item.message}
+				{/if}
 			</Banner>
 		{/each}
 	</section>
@@ -79,9 +100,12 @@
 		gap: 0;
 	}
 
+	/* Stacked flush, like the banners above them. Each banner draws its own bottom border,
+	   which already separates one from the next; a gap here let the page show through
+	   between them in the sticky header. */
 	section {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing);
+		gap: 0;
 	}
 </style>

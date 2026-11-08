@@ -15,7 +15,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(25);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -116,7 +116,7 @@ select is_empty(
 -- ---- queue_thanks_emails: notify vetters (author) -----------------------------
 select tests.authenticate_as(:'author');
 select lives_ok(
-	$$ select public.queue_thanks_emails( $$ || quote_literal(:'note') || $$, 'vetters', 's', 'm') $$,
+	$$ select public.queue_thanks_emails( $$ || quote_literal(:'note') || $$, 'vetters') $$,
 	'the author can notify the venue vetters'
 );
 select tests.clear_authentication();
@@ -129,7 +129,7 @@ select is(
 -- The author cannot bypass vetting to deliver to reviewers (note not approved).
 select tests.authenticate_as(:'author');
 select throws_ok(
-	$$ select public.queue_thanks_emails( $$ || quote_literal(:'note') || $$, 'recipients', 's', 'm') $$,
+	$$ select public.queue_thanks_emails( $$ || quote_literal(:'note') || $$, 'recipients') $$,
 	'P0001', null,
 	'an author cannot deliver an unapproved note to reviewers'
 );
@@ -160,7 +160,7 @@ select is(
 -- A vetter can deliver the approved note to the (server-resolved) reviewers.
 select tests.authenticate_as(:'admin');
 select lives_ok(
-	$$ select public.queue_thanks_emails( $$ || quote_literal(:'note') || $$, 'recipients', 's', 'm') $$,
+	$$ select public.queue_thanks_emails( $$ || quote_literal(:'note') || $$, 'recipients') $$,
 	'a venue admin can deliver an approved note to reviewers'
 );
 select tests.clear_authentication();
@@ -168,6 +168,15 @@ select is(
 	(select count(*)::int from public.emails where event = 'ThanksReceived' and scholar = :'reviewer'),
 	1,
 	'the reviewer is emailed the approved note'
+);
+
+-- The caller supplies no content: the note's own text, the venue path and the submission
+-- are read from the row, and the body is rendered and escaped at send time.
+select is(
+	(select jsonb_build_array(subject, message, args->>0, args->>2)
+	 from public.emails where event = 'ThanksReceived' and scholar = :'reviewer'),
+	jsonb_build_array(null, null, (select message from public.thanks where id = :'note'), :'sub'::text),
+	'the emailed note is built from the stored note, with no caller-rendered subject or body'
 );
 
 -- The recipient reviewer can now see the approved note.
@@ -192,7 +201,7 @@ select lives_ok(
 	'a venue admin can decline a note with a reason'
 );
 select lives_ok(
-	$$ select public.queue_thanks_emails( $$ || quote_literal(:'note2') || $$, 'author', 's', 'm') $$,
+	$$ select public.queue_thanks_emails( $$ || quote_literal(:'note2') || $$, 'author') $$,
 	'a venue admin can notify the author of the decline'
 );
 
@@ -206,6 +215,15 @@ select is(
 	(select count(*)::int from public.emails where event = 'ThanksDeclined' and scholar = :'author'),
 	1,
 	'the author is emailed that their note was declined'
+);
+select is(
+	(select args->>0 from public.emails where event = 'ThanksDeclined' and scholar = :'author'),
+	'Please keep it about the work.',
+	'the decline email carries the recorded reason'
+);
+select hasnt_function(
+	'public', 'queue_thanks_emails', array['uuid', 'text', 'text', 'text'],
+	'the form that accepted a caller-rendered subject and body is gone'
 );
 
 select * from finish();

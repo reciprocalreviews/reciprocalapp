@@ -1,17 +1,18 @@
 <script lang="ts">
-	import type { RoleID, RoleRow } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { DeleteLabel, SettingsLabel } from '$lib/components/Labels';
-	import Options from '$lib/components/Options.svelte';
-	import Slider from '$lib/components/Slider.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
-	import { isntEmpty } from '$lib/validation';
+	import type { RoleID, RoleRow, VolunteerVisibility } from '#data/types.js';
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { DeleteLabel, SettingsLabel } from '#lib/components/Labels.js';
+	import Options from '#lib/components/Options.svelte';
+	import Slider from '#lib/components/Slider.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
+	import { isntEmpty } from '#lib/validation.js';
 
 	let {
 		role,
@@ -25,6 +26,15 @@
 
 	const db = getDB();
 	const locale = getLocaleContext();
+
+	/** What turning the bid limit back on restores; the column's default. */
+	const DEFAULT_MAX_BIDS = 5;
+
+	/** Whether the visibility setting below currently decides anything. Invite-only
+	 * roles and the venue's editor role are exempt in the database, so the control
+	 * would otherwise sit there looking as though it worked. The stored value is
+	 * kept either way — it applies again the moment the role stops being either. */
+	const visibilityInert = $derived(role.invited || role.priority === 0);
 </script>
 
 <Card
@@ -37,8 +47,7 @@
 	{#if volunteerCount > 0}
 		<Feedback
 			error
-			text={(l) =>
-				l.view.roles.feedback.consult.replace('{count}', volunteerCount.toString())}
+			text={(l) => l.view.roles.feedback.consult.replace('{count}', volunteerCount.toString())}
 		/>
 	{/if}
 
@@ -58,24 +67,22 @@
 	<Checkbox
 		on={role.invited}
 		change={(on) => db().editRoleInvited(role.id, on)}
-		label={(l) =>
-			role.invited ? l.view.roles.checkbox.invited.on : l.view.roles.checkbox.invited.off}
+		label={(l) => l.view.roles.checkbox.invited}
 	/>
+	{#if role.invited && role.priority !== 0 && role.volunteer_visibility !== 'all'}
+		<Tip>{locale().view.roles.tip.invitedHidesRoster}</Tip>
+	{/if}
 
 	<Checkbox
 		on={role.anonymous_authors}
 		change={(on) => db().editRoleAnonymousAuthors(role.id, on)}
-		label={(l) =>
-			role.anonymous_authors
-				? l.view.roles.checkbox.anonymousAuthors.on
-				: l.view.roles.checkbox.anonymousAuthors.off}
+		label={(l) => l.view.roles.checkbox.anonymousAuthors}
 	/>
 
 	<Checkbox
 		on={role.biddable}
 		change={(on) => db().editRoleBidding(role.id, on)}
-		label={(l) =>
-			role.biddable ? l.view.roles.checkbox.biddable.on : l.view.roles.checkbox.biddable.off}
+		label={(l) => l.view.roles.checkbox.biddable}
 		testid="role-biddable-{role.name}"
 	/>
 
@@ -89,6 +96,54 @@
 		change={(value) => handle(db().editRoleDesiredAssignments(role.id, value))}
 	/>
 
+	{#if role.biddable}
+		<Checkbox
+			on={role.max_bids !== null}
+			change={(on) => db().editRoleMaxBids(role.id, on ? DEFAULT_MAX_BIDS : null)}
+			label={(l) => l.view.roles.checkbox.bidLimit}
+			testid="role-bid-limit-{role.name}"
+		/>
+		{#if role.max_bids !== null}
+			<Slider
+				min={1}
+				max={50}
+				value={role.max_bids}
+				step={1}
+				strings={(l) => l.view.roles.slider.maxBids}
+				immediately={false}
+				change={(value) => handle(db().editRoleMaxBids(role.id, value))}
+				testid="role-max-bids-{role.name}"
+			/>
+			<Tip>{locale().view.roles.tip.bidLimit}</Tip>
+		{/if}
+	{/if}
+
+	<Options
+		strings={(l) => l.view.roles.options.volunteerVisibility}
+		value={role.volunteer_visibility}
+		testid="role-volunteer-visibility-{role.name}"
+		options={[
+			{ label: locale().view.roles.optionLabels.volunteerVisibility.all, value: 'all' },
+			{
+				label: locale().view.roles.optionLabels.volunteerVisibility.completed,
+				value: 'completed'
+			},
+			{ label: locale().view.roles.optionLabels.volunteerVisibility.none, value: 'none' }
+		]}
+		onChange={(value) =>
+			handle(
+				db().editRoleVolunteerVisibility(
+					role.id,
+					// The column is NOT NULL and the three options are never empty, so the
+					// undefined Options reserves for its empty choice cannot arrive here.
+					(value ?? 'all') as VolunteerVisibility
+				)
+			)}
+	/>
+	{#if visibilityInert}
+		<Tip>{locale().view.roles.tip.volunteerVisibilityInert}</Tip>
+	{/if}
+
 	<Options
 		strings={(l) => l.view.roles.options.approver}
 		value={role.approver ?? undefined}
@@ -96,8 +151,7 @@
 			{ label: locale().shorthand.empty, value: undefined },
 			...roles.filter((r) => r.id !== role.id).map((r) => ({ label: r.name, value: r.id }))
 		]}
-		onChange={(value) =>
-			db().editRoleApprover(role.id, value === null ? null : (value as RoleID))}
+		onChange={(value) => db().editRoleApprover(role.id, value === null ? null : (value as RoleID))}
 	/>
 
 	<Button

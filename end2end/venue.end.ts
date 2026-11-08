@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
 
+// These navigate by the venue's UUID rather than its web address, deliberately. Every
+// other suite uses the address; this one keeps the id form exercised, so the promise that
+// links sent before a venue named itself still resolve — and redirect — is tested rather
+// than assumed. Don't 'tidy' these into SEED.venuePath.
 test('author1 can volunteer for the reviewer role', async ({ page, context }) => {
 	await login('author2@uni.edu', page, context);
 
@@ -108,4 +112,16 @@ test('an editor should see editor specific things', async ({ page, context }) =>
 	await expect(page.getByTestId('venue-transaction-5')).toBeVisible();
 
 	await logout(page);
+});
+
+test('a venue page says its admins, not the stewards, answer questions about it', async ({
+	page
+}) => {
+	// People wrote to the platform's stewards with questions about a venue, because nothing on
+	// the venue said who ran it or how to reach them. Shown to everyone, signed in or not.
+	await page.goto('/venue/c60d7d0a-ad37-11f0-83e5-efb2eb8bdbd6');
+
+	const contact = page.getByTestId('venue-contact');
+	await expect(contact).toContainText('not the Reciprocal Reviews stewards');
+	await expect(contact.locator('a[href^="mailto:"]').first()).toBeVisible();
 });

@@ -1,0 +1,88 @@
+-- Production noise for the pgTAP suite: one committed, already-sent row in public.emails for
+-- every event in supabase/functions/_shared/templates.ts.
+--
+-- The suite is written against an empty fixture database, but the monthly backup drill
+-- (.github/workflows/backup-drill.yml) runs it against a restore of production. An assertion
+-- that counts "every EmailChanged row" instead of "the EmailChanged row this test wrote"
+-- passes here and fails there the first time production sends one -- which is how the
+-- 2026-11-01 drill failed. Loading this before the suite makes CI fail the same way, on the
+-- pull request rather than a month later. Scope every read of public.emails to the test's own
+-- fixtures (scholar, venue, email, args, or time_sent = now()).
+--
+-- Not *.sql, so pg_prove does not run it as a test. Rows are dated a day back, unattributed
+-- (no scholar, sender or venue, so no RLS branch exposes them to a test's scholars), and the
+-- send trigger is off so nothing is posted. Keep the list in step with templates.ts.
+
+begin;
+alter table public.emails disable trigger send_on_email_insert;
+insert into public.emails (event, email, time_sent)
+select event, 'ambient@production.invalid', now() - interval '1 day'
+from (values
+	('AssignmentApproved'),
+	('AssignmentClosedUnpaid'),
+	('AssignmentRemoved'),
+	('AvailabilityReminder'),
+	('BidDeclined'),
+	('BiddingDigest'),
+	('BiddingDigestBacklog'),
+	('CallForBids'),
+	('ClaimDeclined'),
+	('CompensationChanged'),
+	('CompensationPending'),
+	('CompensationRequested'),
+	('CompensationRequestedToAdmins'),
+	('CompensationRequestedToEditors'),
+	('ConflictDeclared'),
+	('EmailChanged'),
+	('InviteAccepted'),
+	('InviteDeclined'),
+	('MinterAdded'),
+	('MinterRemoved'),
+	('NewBid'),
+	('NewVolunteer'),
+	('ProposalCreatedEditors'),
+	('ProposalCreatedStewards'),
+	('ProposalDeclined'),
+	('ProposalSupported'),
+	('ReconciliationFailed'),
+	('RoleDeleted'),
+	('RoleEnrolled'),
+	('RoleInvite'),
+	('RolePriorityChanged'),
+	('StewardAppointed'),
+	('StewardRemoved'),
+	('SubmissionAssignedEditor'),
+	('SubmissionChargeReminder'),
+	('SubmissionCharged'),
+	('SubmissionClaimed'),
+	('SubmissionDone'),
+	('SubmissionNeedsEditor'),
+	('SubmissionsAssignedEditor'),
+	('SubmissionsNeedEditors'),
+	('SubmissionsReady'),
+	('ThanksDeclined'),
+	('ThanksPendingReview'),
+	('ThanksReceived'),
+	('ThanksShared'),
+	('TokensMinted'),
+	('TokensReceived'),
+	('TransactionApproved'),
+	('TransactionDeclined'),
+	('TransactionDeclinedVenue'),
+	('TransactionProposed'),
+	('TransactionsPending'),
+	('UnmatchedNameJoined'),
+	('VenueAddressChanged'),
+	('VenueAdminAdded'),
+	('VenueAdminRemoved'),
+	('VenueApproved'),
+	('VenueDeactivated'),
+	('VenueOutOfTokens'),
+	('VenueReactivated'),
+	('VerifyEmail'),
+	('VolunteerPaused'),
+	('VolunteerResumed'),
+	('WorkCompensated')
+) as e (event);
+alter table public.emails enable trigger send_on_email_insert;
+commit;

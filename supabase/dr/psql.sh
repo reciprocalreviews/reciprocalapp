@@ -21,7 +21,7 @@ set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 : "${DB_URL:?DB_URL is required (session-mode pooler URI for a hosted project)}"
-PG_IMAGE="${PG_IMAGE:-postgres:17}"
+PG_IMAGE="${PG_IMAGE:-public.ecr.aws/docker/library/postgres:17}"
 PGSSLMODE="${PGSSLMODE:-require}"
 
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 1; }

@@ -1,43 +1,65 @@
 <script lang="ts">
-	import type { RoleID, RoleRow, ScholarID } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
+	import type {
+		AssignmentID,
+		PublicORCIDProfile,
+		RoleID,
+		RoleRow,
+		ScholarID
+	} from '#data/types.js';
+	import { page } from '$app/state';
+	import { venuePath as toVenuePath } from '#lib/data/venuePath.js';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
+	import Action from '#lib/components/Action.svelte';
+	import Alert from '#lib/components/Alert.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
 	import Thanks from './Thanks.svelte';
 	import {
 		EditLabel,
 		EmptyLabel,
-		ErrorLabel,
 		ScholarLabel,
-		SubmissionLabel,
+		UnknownLabel,
 		VenueLabel
-	} from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
-	import Options from '$lib/components/Options.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Row from '$lib/components/Row.svelte';
-	import ScholarLink from '$lib/components/ScholarLink.svelte';
-	import Status from '$lib/components/Status.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import Tokens from '$lib/components/Tokens.svelte';
-	import VenueLink from '$lib/components/VenueLink.svelte';
-	import canApproveAssignment from '$lib/data/canApproveAssignment';
-	import canViewSubmission from '$lib/data/canViewSubmission';
-	import { getDB, NullUUID } from '$lib/data/CRUD';
+	} from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import LoadIndicator from '#lib/components/LoadIndicator.svelte';
+	import Options from '#lib/components/Options.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Radio from '#lib/components/Radio.svelte';
+	import Row from '#lib/components/Row.svelte';
+	import ORCIDKeywords from '#lib/components/ORCIDKeywords.svelte';
+	import VenueExpertise from '#lib/components/VenueExpertise.svelte';
+	import ScholarField from '#lib/components/ScholarField.svelte';
+	import ScholarLink from '#lib/components/ScholarLink.svelte';
+	import ScholarPreview from '#lib/components/ScholarPreview.svelte';
+	import { ScholarSearch } from '#lib/components/ScholarSearch.svelte.js';
+	import Status from '#lib/components/Status.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import Tokens from '#lib/components/Tokens.svelte';
+	import VenueLink from '#lib/components/VenueLink.svelte';
+	import { affiliationLine, worksStat } from '#lib/data/orcidProfileView.js';
+	import canApproveAssignment from '#lib/data/canApproveAssignment.js';
+	import canClaimEditor from '#lib/data/canClaimEditor.js';
+	import canViewSubmission from '#lib/data/canViewSubmission.js';
+	import { getDB, NullUUID } from '#lib/data/CRUD.js';
+	import Loads, { atCap, type Load } from '#lib/data/load.js';
 	import {
 		sortAssignees as sortAssigneesBy,
 		sortBids as sortBidsBy
-	} from '$lib/data/sortAssignees';
-	import Scholar from '$lib/data/Scholar.svelte';
-	import type LocaleText from '$lib/locales/Locale';
-	import Text from '$lib/locales/Text.svelte';
-	import { validEmail, validORCID } from '$lib/validation';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	} from '#lib/data/sortAssignees.js';
+	import Scholar from '#lib/data/Scholar.svelte.js';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { validEmail, validORCID } from '#lib/validation.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 	import { type PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -58,6 +80,8 @@
 		volunteers,
 		/** All assignments related to this submission */
 		assignments,
+		/** Whether anyone holds the venue's editor role on this submission */
+		submissionHasEditor,
 		/** All balances of scholars */
 		balances,
 		/** The current user */
@@ -66,20 +90,60 @@
 		submissionTypes,
 		/** Names of scholars referenced by assignments, for stable sorting */
 		assignmentScholars,
+		/** Contact addresses of accepted assignees, shown only to approvers */
+		assigneeEmails,
 		/** Venue-defined preference levels, ordered by rank */
 		preferenceLevels,
-		/** Per-scholar count of active (approved, uncompleted) assignments in this venue */
-		venueActiveCounts,
-		/** Per-scholar count of active assignments on OTHER venues (RLS-gated) */
-		elsewhereActiveCounts,
+		/** Venue-defined reasons an approver may give for declining, ordered by rank */
+		declineReasons,
+		/** Candidates' active assignment counts, per role here and in other venues */
+		loads,
 		/** The viewer's own accepted volunteer records in this venue */
 		viewerVolunteering,
 		/** Thank-you notes for this submission, filtered by RLS to the viewer */
-		thanks
+		thanks,
+		/** Assignments the import could not match to a scholar, that this viewer could approve */
+		unmatched,
+		/** What each role is paid for this submission's type */
+		compensation
 	} = $derived(data);
+
+	/** How this venue is addressed in links from here. Empty when the venue failed to load,
+	 * which is the case the two error breadcrumbs below are for — they render a dead link
+	 * rather than none so the page keeps its shape. */
+	const venuePath = $derived(venue === null ? '' : toVenuePath(venue));
 
 	function nameOf(scholarID: string): string {
 		return assignmentScholars.find((s) => s.id === scholarID)?.name ?? '';
+	}
+
+	// Warm the mirror for whoever reads this page next. Never awaited, browser-only, and
+	// bounded in the database: the claim stamps a cooldown before any fetch happens, so ten
+	// editors opening the same submission produce one refresh between them rather than ten.
+	$effect(() => {
+		db().requestORCIDRefresh(assignmentScholars.map((s) => s.id));
+	});
+
+	/** The mirrored ORCID columns for one assignee, or null when RR has not read them. */
+	function profileOf(scholarID: string) {
+		return assignmentScholars.find((s) => s.id === scholarID)?.orcid_profiles ?? null;
+	}
+
+	/** An assignee's id and name for ScholarPreview, or just the id for it to look up when
+	 * the card did not load or has no name. */
+	function cardOf(scholarID: string) {
+		const card = assignmentScholars.find((s) => s.id === scholarID);
+		return card?.name ? card : scholarID;
+	}
+
+	/** An assignee's ORCID iD, null when they have none. */
+	function orcidOf(scholarID: string) {
+		return assignmentScholars.find((s) => s.id === scholarID)?.orcid ?? null;
+	}
+
+	/** An assignee's verified address, null when they have none to show. */
+	function emailOf(scholarID: string) {
+		return assigneeEmails.find((s) => s.id === scholarID)?.email ?? null;
 	}
 
 	/** The lookups the assignee/bid sorts need. Declared once so both call sites
@@ -89,12 +153,67 @@
 		nameOf
 	});
 
+	/** The bid whose decline form is open, the venue reason chosen for it (a reason's id, or
+	 * OWN_REASON), and, under OWN_REASON, the reason being written. Local state rather than
+	 * anything derived from load data, so a realtime refetch mid-sentence does not wipe what
+	 * the approver has typed. */
+	let decliningID = $state<string | null>(null);
+	let declineChoice = $state('');
+	let declineReason = $state('');
+	const OWN_REASON = 'own';
+
+	function openDecline(id: string) {
+		decliningID = id;
+		declineChoice = '';
+		declineReason = '';
+		return undefined;
+	}
+
+	/** A venue with no reasons has nothing to choose from, so the approver writes their own. */
+	const writingOwnReason = $derived(
+		(declineReasons ?? []).length === 0 || declineChoice === OWN_REASON
+	);
+	const chosenDeclineReason = $derived(
+		(declineReasons ?? []).find((reason) => reason.id === declineChoice) ?? null
+	);
+
+	function validDeclineReason(text: string) {
+		const length = text.trim().length;
+		return length === 0 || length > 1000
+			? (l: LocaleText) => l.page.submission.field.declineReason.invalid
+			: undefined;
+	}
+
+	const declineReady = $derived(
+		writingOwnReason
+			? validDeclineReason(declineReason) === undefined
+			: chosenDeclineReason !== null
+	);
+
 	function sortAssignees<T extends { scholar: string }>(items: T[]): T[] {
 		return sortAssigneesBy(items, assigneeContext);
 	}
 
 	function sortBids<T extends { scholar: string; preferenceid: string | null }>(items: T[]): T[] {
 		return sortBidsBy(items, { ...assigneeContext, preferenceLevels });
+	}
+
+	type Request = {
+		bid: boolean;
+		approved: boolean;
+		completed: boolean;
+		compensation_requested_at: string | null;
+	};
+
+	/** A compensation request with no approved assignment behind it: someone did the
+	 * work on a submission nobody could seat them on, and asks an approver to pay for it. */
+	function isClaim(a: Request): boolean {
+		return !a.approved && !a.completed && a.compensation_requested_at !== null;
+	}
+
+	/** Something an approver is being asked to answer: a pending bid or a claim. */
+	function isRequest(a: Request): boolean {
+		return (a.bid && !a.approved) || isClaim(a);
 	}
 
 	function preferenceLabelFor(preferenceid: string | null): string | undefined {
@@ -106,6 +225,12 @@
 		return (
 			volunteers?.find((v) => v.scholarid === scholarID && v.roleid === roleID)?.papers ?? null
 		);
+	}
+
+	const loadIndex = $derived(new Loads(loads));
+
+	function loadOf(scholarID: ScholarID, roleID: RoleID): Load {
+		return loadIndex.of(scholarID, roleID, papersCapFor(scholarID, roleID));
 	}
 
 	/** Get the database connection */
@@ -156,6 +281,62 @@
 			: []
 	);
 
+	/** Non-editor work already paid, typically because its volunteer requested compensation.
+	 * The close-out lists it so the editor sees everyone on the submission, not only those
+	 * the close will pay; otherwise paid reviewers look as if they had been left out. */
+	let alreadyPaid = $derived(
+		assignments !== null && roles !== null
+			? assignments.filter((a) => {
+					const role = roles.find((r) => r.id === a.role);
+					return role !== undefined && role.priority > 0 && a.approved && a.completed;
+				})
+			: []
+	);
+
+	/** What closing this submission out pays each role, or 0 where none is configured. */
+	function amountFor(role: RoleID): number {
+		return compensation.find((c) => c.role === role)?.amount ?? 0;
+	}
+
+	/** The editor's choice for each outstanding assignment when closing out. Local state, not
+	 * derived from the page data, because every write and realtime tick refetches that data
+	 * and would reset the choices mid-decision. Pay by default: most work assigned was done.
+	 * Strings, because that is what a radio group binds; closeOutChoice reads them. */
+	let closeOutChoices: Record<AssignmentID, string> = $state({});
+
+	function closeOutChoice(id: AssignmentID): 'pay' | 'remove' {
+		return closeOutChoices[id] === 'remove' ? 'remove' : 'pay';
+	}
+
+	/** What the editors are paid on closing: every approved, uncompleted top-role assignment. */
+	let editorPayout = $derived(
+		(assignments ?? [])
+			.filter(
+				(a) => a.approved && !a.completed && roles?.some((r) => r.id === a.role && r.priority === 0)
+			)
+			.reduce((sum, a) => sum + amountFor(a.role), 0)
+	);
+
+	let closeOutTotal = $derived(
+		editorPayout +
+			completionBlockers
+				.filter((a) => closeOutChoice(a.id) === 'pay')
+				.reduce((sum, a) => sum + amountFor(a.role), 0)
+	);
+
+	// Give each newly outstanding assignment its default, leaving choices already made alone.
+	$effect(() => {
+		for (const blocker of completionBlockers)
+			if (closeOutChoices[blocker.id] === undefined) closeOutChoices[blocker.id] = 'pay';
+	});
+
+	/** Arrived by the decision-letter link, which asks for the close-out. */
+	const closeRequested = page.url.searchParams.has('close');
+	let closeOutView: HTMLElement | undefined = $state(undefined);
+	$effect(() => {
+		if (closeRequested && closeOutView) closeOutView.scrollIntoView({ block: 'center' });
+	});
+
 	/** Whether the current scholar is an author of the submission */
 	let isAuthor = $derived(
 		submission !== null && scholar !== null && submission.authors.includes(scholar.id)
@@ -201,6 +382,10 @@
 			})
 	);
 
+	/** The venue's editor role, if it has one. Claiming is only ever about this role —
+	 * priority 0 is what the database checks when deciding who edits a submission. */
+	let editorRole = $derived((roles ?? []).find((r) => r.priority === 0));
+
 	/** Roles for which the current scholar can approve assignments on this
 	 * submission, computed via the shared canApproveAssignment helper. */
 	let rolesScholarCanApprove = $derived(
@@ -210,6 +395,10 @@
 				)
 			: []
 	);
+
+	/** Whether the scholar may answer bids here — approve or decline them in some biddable
+	 * role — which is also who may open and close the submission's bidding. */
+	let canAnswerBids = $derived(rolesScholarCanApprove.some((r) => r.biddable));
 
 	let scholarAssignmentRoles = $derived(
 		scholarAssignments !== undefined && roles !== null
@@ -222,6 +411,86 @@
 	/** State for the assignment form */
 	let newAssignmentRole = $state<RoleID | undefined>(undefined);
 	let newAssignmentScholar = $state<string>('');
+	/** Owned here rather than left inside the field, because the Add button is enabled by
+	 * whether the text resolved to somebody and the duplicate check needs their id. That
+	 * resolution now happens on blur, so the form can say "no scholar with that email or
+	 * ORCID" while it is still the field's fault, instead of accepting the text and
+	 * reporting it only after the button is pressed. */
+	const newAssignmentSearch = new ScholarSearch(getDB());
+
+	/** The mirrored record for whoever the field has just resolved to.
+	 *
+	 * This is the one surface where the cache is genuinely likely to be COLD: an editor can
+	 * type the iD of somebody nobody on this platform has ever looked at. So unlike the
+	 * table, which renders what it has and moves on, this asks and then looks again once.
+	 *
+	 * It deliberately does NOT gate the Add button. Assigning has to work when ORCID is
+	 * unreachable, when the record is private, and when it simply has not been read yet. */
+	let newAssignmentProfile = $state<PublicORCIDProfile | null>(null);
+
+	$effect(() => {
+		const id = newAssignmentSearch.id;
+		newAssignmentProfile = null;
+		if (id === undefined) return;
+
+		// Cancelled on teardown and whenever the field resolves to somebody else, so a slow
+		// answer cannot land in a form that has moved on -- the same discipline
+		// ScholarSearch keeps with its own sequence counter.
+		let live = true;
+		let timer: ReturnType<typeof setTimeout> | undefined;
+
+		const read = async () => {
+			const { data } = await db().getORCIDProfile(id);
+			if (!live) return;
+			if (data) newAssignmentProfile = data;
+			return data;
+		};
+
+		void read().then((found) => {
+			if (!live || (found && found.fetch_status !== 'pending')) return;
+			// Nothing cached, or a claim still in flight. Ask, then look once more rather
+			// than polling: if it is still not there, the ORCID link alone is the honest
+			// answer and the editor has lost nothing.
+			db().requestORCIDRefresh([id]);
+			timer = setTimeout(() => void read(), 2500);
+		});
+
+		return () => {
+			live = false;
+			clearTimeout(timer);
+		};
+	});
+	/** How busy whoever the field resolved to already is, in the role chosen: the same
+	 * indicator as the table's, before the editor assigns them rather than after. It was
+	 * the missing half — an editor typing an address had no way to see a cap until the
+	 * row appeared. 'not-volunteer' when they have not volunteered for the role, and so
+	 * have set no cap for it; undefined until both are chosen, or for oneself. */
+	let newAssignmentLoad = $state<Load | 'not-volunteer' | undefined>(undefined);
+
+	$effect(() => {
+		const id = newAssignmentSearch.id;
+		const roleID = newAssignmentRole;
+		newAssignmentLoad = undefined;
+		if (id === undefined || roleID === undefined || id === scholar?.id || venue === null) return;
+
+		// As with the profile above: a slow answer must not land on a form that has moved on.
+		let live = true;
+		void Promise.all([
+			db().getAssignmentLoads(venue.id, [id]),
+			db().getScholarAcceptedVolunteering(id, [roleID])
+		]).then(([counts, volunteering]) => {
+			if (!live || counts.data === null || volunteering.data === null) return;
+			const volunteer = volunteering.data[0];
+			newAssignmentLoad =
+				volunteer === undefined
+					? 'not-volunteer'
+					: new Loads(counts.data).of(id, roleID, volunteer.papers);
+		});
+		return () => {
+			live = false;
+		};
+	});
+
 	let newAssignmentSubmitting = $state(false);
 	let newAssignmentError: ((l: LocaleText) => string) | undefined = $state(undefined);
 
@@ -229,58 +498,121 @@
 	 * delivered by the notification facility (e.g., insufficient tokens). */
 	let completionFeedback: ((l: LocaleText) => string) | undefined = $state(undefined);
 
+	/** Say so when marking done or closing out was refused for want of tokens. */
+	function noteCompletion(outcome: unknown) {
+		completionFeedback =
+			typeof outcome === 'object' &&
+			outcome !== null &&
+			'status' in outcome &&
+			outcome.status === 'insufficient'
+				? (l) => l.page.submission.feedback.completionInsufficient
+				: undefined;
+	}
+
 	function getVolunteer(role: RoleID, scholar: ScholarID) {
 		return volunteers?.find((v) => v.roleid === role && v.scholarid === scholar);
 	}
 
+	// A map, built once, rather than a linear scan per lookup. getBalance is the
+	// body of the sortAssignees/sortBids comparators, so a `.find()` here made
+	// ordering a candidate list O(n^2 log n) — and on a venue whose roster is the
+	// whole community, that list is the whole community. Its neighbours
+	// Loads indexes its counts the same way; this one was the exception.
+	let balanceByScholar = $derived(
+		new Map((balances ?? []).map((balance) => [balance.scholar, balance.count]))
+	);
+
+	/** Whether this viewer may see other scholars' balances on this page.
+	 *
+	 * Balances are private (#109). The audience is the people who run and staff the
+	 * reviewing — those who can approve an assignment here — and the database agrees:
+	 * scholar_balances returns an outsider nothing but their own row. This exists so
+	 * the page does not render a column of confident zeroes for everyone else; it
+	 * matches the server rather than replacing it.
+	 *
+	 * canViewSubmission admits authors and fellow bidders to this page, and they are
+	 * deliberately NOT in the audience: seeing who reviews your manuscript is not the
+	 * same as seeing what they are paid. */
+	let canSeeBalances = $derived(rolesScholarCanApprove.length > 0);
+
 	function getBalance(scholar: ScholarID) {
-		return balances?.find((balance) => balance.scholar === scholar)?.count ?? 0;
+		// Withheld, not merely hidden. Removing the column alone would leave the ROW
+		// ORDER as a balance oracle, because sortAssignees/sortBids sort ascending by
+		// this value. Returning a constant makes the comparator fall through to
+		// family name — which is exactly what that injection point is for.
+		if (!canSeeBalances) return 0;
+		return balanceByScholar.get(scholar) ?? 0;
 	}
 </script>
 
-{#snippet loadIndicator(scholarID: string, roleID: string)}
-	{@const cap = papersCapFor(scholarID, roleID)}
-	{@const used = venueActiveCounts?.[scholarID] ?? 0}
-	{@const elsewhere = elsewhereActiveCounts?.[scholarID] ?? 0}
-	{@const overCap = cap !== null && used >= cap}
-	{#if cap !== null}
-		<div class:over-cap={overCap} data-testid="papers-load">{used} / {cap}</div>
-	{/if}
-	{#if elsewhere > 0}
-		<div class="elsewhere" data-testid="elsewhere-load">+{elsewhere} elsewhere</div>
-	{/if}
+<!-- Under any row whose buttons include Assign: the same reminder as above the table, in
+     brief, where the approver's eye is when they click. -->
+{#snippet assignNote()}
+	<p class="assign-note" data-testid="assign-note">
+		<Text path={(l) => l.page.submission.cell.compensationOnly} />
+	</p>
 {/snippet}
 
-{#if submission === null || venue === null || roles === null || scholar === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
-	<Page
-		icon={ErrorLabel}
-		title={(l) => l.page.submission.title}
-		breadcrumbs={[
-			[`/venue/${venue?.id}`, venue?.title ?? ''],
-			[`/venue/${venue?.id}/submissions`, 'Submissions']
-		]}
-	>
+<!--
+	An assignee or bidder, with the address and ORCID iD approvers need to ask them about a
+	bid or invite them in a venue's own reviewing system. Anyone else sees only the name:
+	`undefined` keeps ScholarPreview from rendering either. The address waits on acceptance
+	for a row that is not a bid, as it always has; the iD is public on the profile anyway.
+	The ORCID affiliation and works line shows to anyone who sees the row, as it always has.
+-->
+{#snippet assignee(scholarID: string, contact: boolean, withEmail = true)}
+	<ScholarPreview
+		scholar={cardOf(scholarID)}
+		email={contact && withEmail ? emailOf(scholarID) : undefined}
+		orcid={contact ? orcidOf(scholarID) : undefined}
+		profile={profileOf(scholarID)}
+		testid="assignee"
+	/>
+{/snippet}
+
+<!--
+	The venue's own expertise statement first, then ORCID's keywords, marked as ORCID's.
+	The order is the point: `volunteers.expertise` is what this scholar wrote FOR THIS
+	VENUE about reviewing, and it is the claim a reviewing table should lead with. The
+	ORCID keywords describe a research career, written for a different audience and
+	possibly years ago, so they follow and say whose they are — see ORCIDKeywords for
+	why the mark is on the chips rather than on a rule above them.
+-->
+{#snippet expertiseCell(scholarID: string, expertise: string | undefined)}
+	{@const topics = profileOf(scholarID)?.keywords ?? []}
+	<!-- Each side labelled by whose claim it is: the platform's own mark on what the
+	     volunteer told THIS venue, ORCID's on what their public record says. Either can
+	     therefore stand alone without being read as the other, which is what lets a missing
+	     side simply not render rather than needing a placeholder to explain itself.
+	     EmptyLabel survives for the cell with neither, where it is the honest answer. -->
+	{#if expertise}<VenueExpertise>{expertise}</VenueExpertise>{/if}
+	<ORCIDKeywords keywords={topics} />
+	{#if !expertise && topics.length === 0}{EmptyLabel}{/if}
+{/snippet}
+
+<!-- Only for those choosing whom to assign: the counts come from an RPC that answers no one
+     else, so for anyone else they would read as a confident zero. -->
+{#snippet loadIndicator(scholarID: string, roleID: string)}
+	{#if canSeeBalances}<LoadIndicator load={loadOf(scholarID, roleID)} />{/if}
+{/snippet}
+
+<!-- Signed out, nothing here loads: submissions are readable only by the people they involve.
+     Say so rather than "does not exist", since this is usually someone following an email. -->
+{#if scholar === null}
+	<Page title={(l) => l.page.submission.title}>
+		<Feedback text={(l) => l.page.submission.feedback.logIn}></Feedback>
+	</Page>
+{:else if submission === null || venue === null || roles === null || scholar === null || assignments === null || authors === null || volunteers === null || submissionTypes === null}
+	<Page title={(l) => l.page.submission.title}>
 		<Feedback error text={(l) => l.page.submission.feedback.notLoaded}></Feedback>
 	</Page>
 {:else if !canView}
-	<Page
-		icon={ErrorLabel}
-		title={(l) => l.page.submission.title}
-		breadcrumbs={[
-			[`/venue/${venue?.id}`, venue?.title ?? ''],
-			[`/venue/${venue?.id}/submissions`, 'Submissions']
-		]}
-	>
+	<Page title={(l) => l.page.submission.title}>
 		<Feedback error text={(l) => l.page.submission.feedback.confidential}></Feedback>
 	</Page>
 {:else}
 	<Page
-		icon={SubmissionLabel}
 		title={submission.title}
-		breadcrumbs={[
-			[`/venue/${submission.venue}`, venue?.title ?? ''],
-			[`/venue/${submission.venue}/submissions`, 'Submissions']
-		]}
 		edit={// Only editors can update the submission title.
 		isEditor
 			? {
@@ -305,61 +637,188 @@
 		{/snippet}
 		{#snippet details()}
 			{#if previous}
-				<Link to="/venue/{venue.id}/submission/{previous.id}">{previous.externalid}</Link>→
+				<Link to="/venue/{venuePath}/submission/{previous.id}">{previous.externalid}</Link>→
 			{/if}
 			{submission.externalid}
 			{#if done}
-				<Status good={false} label={(l) => l.page.submission.status.done} />
+				<!-- Neutral: done is where a submission is meant to end up, not a problem. -->
+				<Status neutral label={(l) => l.page.submission.status.done} />
 			{:else}
 				<Status label={(l) => l.page.submission.status.reviewing} />
+				{#if submission.bidding_closed}
+					<Status
+						neutral
+						label={(l) => l.page.submission.status.biddingClosed}
+						testid="submission-bidding-closed-status"
+					/>
+				{/if}
 			{/if}
 		{/snippet}
 
-		<!-- Only editors (priority-0) see the mark-done flow. The button
-		     compensates every editor on this submission and flips the
-		     status to done in one atomic action; reopening is forbidden.
-		     The button is inactive until every non-editor assignment is
-		     compensated, with an explanation of what's left. -->
-		{#if isEditor && !done}
-			{#if completionBlockers.length > 0}
-				<Feedback
-					text={(l) =>
-						l.page.submission.feedback.completionBlocked.replace(
-							'{count}',
-							completionBlockers.length.toString()
-						)}
+		<!-- The editor's tools for this submission. Only editors (priority-0) see the
+		     mark-done flow: the button compensates every editor on this submission and flips
+		     the status to done in one atomic action, and reopening is forbidden. It stays
+		     inactive until every non-editor assignment is compensated; the alert below says
+		     what is left. Anyone who may answer bids here may open or close bidding.
+		     Unchecking closes it while the submission stays under review, e.g. when every
+		     seat has a reviewer but some haven't registered yet. Bidders then no longer see
+		     the submission at all. -->
+		{#snippet actions()}
+			{#if canAnswerBids && !done}
+				<Checkbox
+					on={!submission.bidding_closed}
+					change={(on) => db().updateSubmissionBiddingClosed(submission.id, !on)}
+					label={(l) => l.page.submission.checkbox.openForBidding}
+					testid="submission-open-for-bidding"
 				/>
-				<ul class="blockers">
-					{#each completionBlockers as blocker}
-						{@const role = roles.find((r) => r.id === blocker.role)}
-						<li>
-							<strong>{role?.name ?? '?'}</strong>: <ScholarLink id={blocker.scholar} />
-						</li>
-					{/each}
-				</ul>
 			{/if}
-			<Button
-				strings={(l) => l.page.submission.button.markDone}
-				testid="mark-submission-done"
-				active={completionBlockers.length === 0}
-				action={async () => {
-					const outcome = await handle(db().markSubmissionDone(submission.id));
-					if (
-						typeof outcome === 'object' &&
-						outcome !== null &&
-						'status' in outcome &&
-						outcome.status === 'insufficient'
-					) {
-						completionFeedback = (l) => l.page.submission.feedback.completionInsufficient;
-					} else {
-						completionFeedback = undefined;
-					}
-				}}
-			/>
+			<!-- With work still uncompensated, closing happens in the alert below instead, where
+			     the editor says what to do about each assignment. -->
+			{#if isEditor && !done && completionBlockers.length === 0}
+				<Button
+					strings={(l) => l.page.submission.button.markDone}
+					testid="mark-submission-done"
+					action={async () => noteCompletion(await handle(db().markSubmissionDone(submission.id)))}
+				/>
+			{/if}
+		{/snippet}
+
+		{#snippet alerts()}
 			{#if completionFeedback}
-				<Feedback error text={completionFeedback} />
+				<Alert tone="problem" text={completionFeedback} testid="completion-insufficient" />
 			{/if}
-		{/if}
+
+			<!-- Nobody is editing this submission yet, and this viewer is one of the venue's
+			     editors, so offer to take it. Until someone does, only venue admins can approve
+			     work on it and it cannot be marked done — and before can_claim_editor_role only
+			     a venue admin could seat the first editor. -->
+			{#if editorRole && canClaimEditor(editorRole, scholar?.id ?? null, viewerVolunteering, submissionHasEditor)}
+				<Alert
+					tone="attention"
+					text={(l) => l.page.submission.feedback.needsEditor}
+					inputs={{ role: editorRole.name }}
+					testid="needs-editor"
+				>
+					{#snippet action()}
+						<Button
+							testid="claim-editor"
+							strings={(l) => ({
+								tip: l.page.submission.button.claimEditor.tip.replace('{role}', editorRole.name),
+								label: l.page.submission.button.claimEditor.label.replace('{role}', editorRole.name)
+							})}
+							action={() =>
+								handle(
+									db().createAssignment(submission.id, scholar!.id, editorRole.id, false, true)
+								)}
+						/>
+					{/snippet}
+				</Alert>
+			{/if}
+
+			<!-- Closing out: the editor says, for each assignment still uncompensated, whether
+			     its work was done. Done work is paid and the rest removed, and the submission is
+			     marked done, in one step. It used to wait for every reviewer to request
+			     compensation first, and one who never did held the submission open with nobody
+			     prompted to close it. -->
+			{#if isEditor && !done && completionBlockers.length > 0}
+				<Alert
+					tone="attention"
+					text={(l) => l.page.submission.feedback.completionBlocked}
+					inputs={{ count: completionBlockers.length.toString() }}
+					testid="completion-blocked"
+				>
+					<ul class="blockers" bind:this={closeOutView}>
+						{#each completionBlockers as blocker (blocker.id)}
+							{@const role = roles.find((r) => r.id === blocker.role)}
+							<li data-testid="close-out-assignment">
+								<span
+									><strong>{role?.name ?? '?'}</strong>: <ScholarLink id={blocker.scholar} />
+									{#if !venue.payment_free}<Tokens amount={amountFor(blocker.role)} />{/if}</span
+								>
+								<span class="choices">
+									<Radio
+										bind:group={closeOutChoices[blocker.id]}
+										value="pay"
+										label={(l) => l.page.submission.closeOut.pay}
+										testid="close-out-pay"
+									/>
+									<Radio
+										bind:group={closeOutChoices[blocker.id]}
+										value="remove"
+										label={(l) => l.page.submission.closeOut.remove}
+										testid="close-out-remove"
+									/>
+								</span>
+							</li>
+						{/each}
+						{#each alreadyPaid as paid (paid.id)}
+							{@const role = roles.find((r) => r.id === paid.role)}
+							<li data-testid="close-out-paid">
+								<span
+									><strong>{role?.name ?? '?'}</strong>: <ScholarLink id={paid.scholar} />
+									{#if !venue.payment_free}<Tokens amount={amountFor(paid.role)} />{/if}</span
+								>
+								<span class="paid"><Text path={(l) => l.page.submission.closeOut.paid} /></span>
+							</li>
+						{/each}
+					</ul>
+					{#if !venue.payment_free}
+						<p class="close-out-sums">
+							<Text path={(l) => l.page.submission.closeOut.editors} />: <Tokens
+								amount={editorPayout}
+							/><br />
+							<Text path={(l) => l.page.submission.closeOut.total} />:
+							<strong data-testid="close-out-total"><Tokens amount={closeOutTotal} /></strong>
+						</p>
+					{/if}
+					{#snippet action()}
+						<Button
+							strings={(l) => l.page.submission.button.closeOut}
+							testid="close-out"
+							action={async () =>
+								noteCompletion(
+									await handle(
+										db().closeSubmission(
+											submission.id,
+											completionBlockers
+												.filter((a) => closeOutChoice(a.id) === 'pay')
+												.map((a) => a.id),
+											completionBlockers
+												.filter((a) => closeOutChoice(a.id) === 'remove')
+												.map((a) => a.id),
+											scholar!.id
+										)
+									)
+								)}
+						/>
+					{/snippet}
+				</Alert>
+			{/if}
+
+			<!-- People the import named who have not joined yet, in one alert. They are matched
+			     from the venue's unmatched assignments page once each person joins. -->
+			{#if unmatched.length > 0}
+				<Alert
+					tone="attention"
+					testid="unmatched-on-submission"
+					text={(l) =>
+						l.page.submission.feedback.unmatched.replaceAll(
+							'{list}',
+							unmatched
+								.map((u) => `**${u.name}** (${roles.find((r) => r.id === u.role)?.name ?? ''})`)
+								.join(', ')
+						)}
+				>
+					{#snippet action()}
+						<Action
+							to="/venue/{venuePath}/submissions/unmatched"
+							label={(l) => l.page.submissions.action.match}
+							group="editor"
+						/>
+					{/snippet}
+				</Alert>
+			{/if}
+		{/snippet}
 
 		<Subheader icon={ScholarLabel} text={(l) => l.page.submission.header.authors}></Subheader>
 
@@ -394,7 +853,10 @@
 						{/if}
 					{/if}
 				{:else}
-					<em>{locale().page.submission.cell.anonymized}</em>
+					<!-- The same lock the submissions list uses, so both views mark a withheld
+					     author the same way. The word stays: there is room for it here, and a
+					     bare glyph would otherwise be the only signal. -->
+					<em>{UnknownLabel} {locale().page.submission.cell.anonymized}</em>
 				{/if}
 			</Row>
 		{:else}
@@ -402,10 +864,16 @@
 		{/each}
 
 		<Subheader icon={VenueLabel} text={(l) => l.page.submission.header.venue}></Subheader>
-		<VenueLink id={venue.id} name={venue.title} />
+		<VenueLink id={venue.id} name={venue.title} slug={venue.slug} />
 
 		<Subheader icon={EditLabel} text={(l) => l.page.submission.header.expertise}></Subheader>
-		{#if isAuthor}
+		<!-- Editors as well as authors, because an imported submission has no authors
+		     at all and this was therefore editable by nobody — while expertise is
+		     exactly what reviewers read when deciding what to bid on. Not admins:
+		     the update policy admits the seated priority-0 editor and the authors,
+		     so offering an admin the control would show them one the database
+		     refuses. -->
+		{#if isAuthor || isEditor}
 			<EditableText
 				strings={(l) => ({
 					label: 'Expertise',
@@ -437,6 +905,20 @@
 
 		<Subheader icon={EditLabel} text={(l) => l.page.submission.header.assignments}></Subheader>
 
+		<!-- Assigning here only records the work for compensation. Approvers kept assuming it
+		     was the whole job, so whoever can assign here is reminded, above every control that
+		     does it, to assign the person in the venue's own reviewing system too. -->
+		{#if rolesScholarCanApprove.length > 0 && venue !== null}
+			<Feedback
+				testid="compensation-only"
+				text={(l) =>
+					venue.review_system_url
+						? l.page.submission.feedback.compensationOnlyLinked
+						: l.page.submission.feedback.compensationOnly}
+				inputs={{ venue: venueBarName(venue), system: venue.review_system_url ?? '' }}
+			/>
+		{/if}
+
 		<!-- If the authenticated scholar can approve any role on this submission, permit them to create new assignments. -->
 		{#if rolesScholarCanApprove.length > 0}
 			<Form>
@@ -444,6 +926,7 @@
 				<Options
 					strings={(l) => l.page.submission.options.assignmentRole}
 					bind:value={newAssignmentRole}
+					testid="new-assignment-role"
 					options={[
 						...(isAdmin ? roles : rolesScholarCanApprove).map((role) => ({
 							label: role.name,
@@ -451,25 +934,70 @@
 						}))
 					]}
 				/>
-				<TextField
+				<ScholarField
 					bind:text={newAssignmentScholar}
+					search={newAssignmentSearch}
 					strings={(l) => l.page.submission.field.newAssignment}
+					testid="new-assignment-scholar"
 					valid={(emailOrORCID) =>
 						emailOrORCID.length > 0 && !validEmail(emailOrORCID) && !validORCID(emailOrORCID)
 							? (l) => l.page.submission.field.newAssignment.invalid
 							: undefined}
-				></TextField>
+				/>
+				<!--
+					Who you just named, before you commit to assigning them. The field itself
+					already resolves to a ScholarLink; this adds the part an editor previously
+					had to open orcid.org for. Absent silently when RR has nothing.
+				-->
+				{#if newAssignmentSearch.id !== undefined}
+					{@const affiliation = affiliationLine(newAssignmentProfile)}
+					{@const stat = worksStat(newAssignmentProfile)}
+					{@const topics = newAssignmentProfile?.keywords ?? []}
+					{#if affiliation || stat || topics.length > 0}
+						<div class="assignment-orcid" data-testid="new-assignment-orcid">
+							{#if affiliation}<span>{affiliation}</span>{/if}
+							{#if stat}<span class="works">{stat}</span>{/if}
+							<ORCIDKeywords keywords={topics} />
+						</div>
+					{/if}
+				{/if}
+				{#if newAssignmentLoad === 'not-volunteer'}
+					<Feedback testid="new-assignment-load" text={(l) => l.view.load.notVolunteer} />
+				{:else if newAssignmentLoad !== undefined}
+					<div data-testid="new-assignment-load">
+						<LoadIndicator load={newAssignmentLoad} />
+					</div>
+					{#if newAssignmentLoad.cap !== null && atCap(newAssignmentLoad)}
+						<Feedback
+							warning
+							testid="new-assignment-over-cap"
+							text={(l) => l.view.load.warning}
+							inputs={{
+								used: newAssignmentLoad.used.toString(),
+								cap: newAssignmentLoad.cap.toString()
+							}}
+						/>
+					{/if}
+				{/if}
 				<Button
 					testid="new-assignment"
-					strings={(l) => l.page.submission.button.createAssignment}
+					strings={newAssignmentSearch.id !== undefined && newAssignmentSearch.id === scholar?.id
+						? (l) => l.page.submission.button.createAssignmentSelf
+						: newAssignmentLoad !== undefined &&
+							  newAssignmentLoad !== 'not-volunteer' &&
+							  atCap(newAssignmentLoad)
+							? (l) => l.page.submission.button.createAssignmentOverCap
+							: (l) => l.page.submission.button.createAssignment}
 					active={!newAssignmentSubmitting &&
 						newAssignmentRole !== undefined &&
-						(validEmail(newAssignmentScholar) || validORCID(newAssignmentScholar))}
+						newAssignmentSearch.id !== undefined}
 					action={async () => {
 						newAssignmentSubmitting = true;
 						const role = roles.find((role) => role.id === newAssignmentRole);
 
-						const { data: scholarID } = await db().findScholar(newAssignmentScholar);
+						// Already resolved, on blur. The button cannot be pressed until it is,
+						// so this is a narrowing rather than a lookup.
+						const scholarID = newAssignmentSearch.id;
 
 						if (role === undefined) {
 							newAssignmentError = (l) => l.page.submission.feedback.invalidRole;
@@ -488,15 +1016,32 @@
 						}
 
 						return handle(
-							db().createAssignment(submission.id, scholarID, role.id, false, true)
+							db().createAssignment(
+								submission.id,
+								scholarID,
+								role.id,
+								false,
+								true,
+								null,
+								scholar?.id ?? null
+							)
 						).then(() => {
 							newAssignmentRole = undefined;
 							newAssignmentScholar = '';
+							// Otherwise the field clears but stays resolved to the scholar just
+							// added, leaving the Add button live over an empty box.
+							newAssignmentSearch.reset();
+							newAssignmentError = undefined;
 							newAssignmentSubmitting = false;
 						});
 					}}>+ assignee</Button
 				>
-				{#if newAssignmentError !== undefined}<Feedback error text={newAssignmentError} />{/if}
+				{#if newAssignmentSearch.notFound}
+					<!-- ScholarMatches shows "no matches" only for an empty NAME search; a
+					     well-formed iD or address that matches nobody renders as nothing at
+					     all there, which reads as though the field accepted it. -->
+					<Feedback error text={(l) => l.page.submission.feedback.scholarNotFound} />
+				{:else if newAssignmentError !== undefined}<Feedback error text={newAssignmentError} />{/if}
 			</Form>
 		{/if}
 
@@ -505,23 +1050,30 @@
 				<th>{locale().page.submission.headers.role}</th>
 				<th>{locale().page.submission.headers.scholar}</th>
 				<th>{locale().page.submission.headers.expertise}</th>
-				<th>{locale().page.submission.headers.balance}</th>
+				{#if canSeeBalances}<th>{locale().page.submission.headers.balance}</th>{/if}
 				<th>{locale().page.submission.headers.load}</th>
 				<th>{locale().page.submission.headers.action}</th>
 			{/snippet}
 
 			<!-- Sort roles by priority -->
 			{#each roles.toSorted((a, b) => a.priority - b.priority) as role}
-				<!-- An assignment is "assigned" if it's anything other than a pending bid:
-				     directly admin-assigned (bid=false), or a bid that's been approved
+				<!-- An assignment is "assigned" if it's anything other than a pending bid or
+				     claim: directly admin-assigned (bid=false), or a bid that's been approved
 				     (bid=true, approved=true). Approving a bid only flips `approved`;
 				     `bid` stays true, so we can't filter on `!bid` alone. -->
 				{@const assigned = sortAssignees(
-					assignments.filter((a) => role.id === a.role && !(a.bid && !a.approved))
+					assignments.filter((a) => role.id === a.role && !isRequest(a))
 				)}
-				<!-- The bidding assignments are those that match this role and aren't approved. -->
+				<!-- Pending bids and claims match this role and are neither approved nor declined.
+				     A claim is a compensation request with no approved assignment behind it, filed
+				     on a submission nobody could seat its claimant on. Declined ones are listed
+				     apart: they have been answered, so they are not asking for anything, but an
+				     approver may still change their mind. -->
 				{@const bidded = sortBids(
-					assignments.filter((a) => role.id === a.role && a.bid && !a.approved)
+					assignments.filter((a) => role.id === a.role && isRequest(a) && a.declined_at === null)
+				)}
+				{@const declined = assignments.filter(
+					(a) => role.id === a.role && isRequest(a) && a.declined_at !== null
 				)}
 				{@const isApprover = canApproveAssignment(
 					submission.id,
@@ -533,15 +1085,17 @@
 				)}
 				{#each assigned as assignment}
 					{@const volunteer = getVolunteer(role.id, assignment.scholar)}
-					{@const cap = papersCapFor(assignment.scholar, role.id)}
-					{@const used = venueActiveCounts?.[assignment.scholar] ?? 0}
-					{@const overCap = cap !== null && used >= cap}
+					{@const overCap = atCap(loadOf(assignment.scholar, role.id))}
 					<tr>
 						<td>{role.name}</td>
 						<td class={!assignment.approved ? 'unapproved' : undefined}>
 							<div class="scholar-cell">
 								{#if assignment.scholar === scholar.id}{locale().page.submission.cell
-										.you}{:else}<ScholarLink id={assignment.scholar} />{/if}
+										.you}{:else}{@render assignee(
+										assignment.scholar,
+										isApprover,
+										assignment.approved
+									)}{/if}
 								{#if assignment.completed}
 									<Status
 										testid="assignment-completed"
@@ -554,10 +1108,9 @@
 								{/if}
 							</div>
 						</td>
-						<td
-							>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
-						>
-						<td><Tokens amount={getBalance(assignment.scholar)} /></td>
+						<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
+						{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} balance /></td
+							>{/if}
 						<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 						<td>
 							<Row>
@@ -579,7 +1132,7 @@
 										{:else}
 											<Button
 												strings={overCap
-													? (l) => l.page.submission.button.approveAnyway
+													? (l) => l.page.submission.button.approveAnywayAgreed
 													: (l) => l.page.submission.button.approve}
 												action={() =>
 													handle(db().approveAssignment(assignment, true, role, scholar.id))}
@@ -590,10 +1143,13 @@
 									{EmptyLabel}
 								{/if}
 							</Row>
+							{#if isApprover && !assignment.completed && !assignment.approved}
+								{@render assignNote()}
+							{/if}
 						</td>
 					</tr>
 				{:else}
-					{#if bidded.length === 0}
+					{#if bidded.length === 0 && (declined.length === 0 || !isApprover)}
 						<tr><td>{role.name}</td><td colspan="5">{EmptyLabel}</td></tr>
 					{/if}
 				{/each}
@@ -603,28 +1159,47 @@
 					{#each bidded as assignment}
 						{@const volunteer = getVolunteer(role.id, assignment.scholar)}
 						{@const bidLabel = preferenceLabelFor(assignment.preferenceid)}
-						{@const cap = papersCapFor(assignment.scholar, role.id)}
-						{@const used = venueActiveCounts?.[assignment.scholar] ?? 0}
-						{@const overCap = cap !== null && used >= cap}
+						{@const overCap = atCap(loadOf(assignment.scholar, role.id))}
 						<tr>
 							<td>{role.name}</td>
 							<td>
 								<div class="scholar-cell">
-									<ScholarLink id={assignment.scholar} />
-									<Status good={false} label={(l) => l.page.submission.status.bidder} />
+									{@render assignee(assignment.scholar, assignment.scholar !== scholar.id)}
+									{#if isClaim(assignment)}
+										<Status
+											good={false}
+											testid="claim"
+											label={(l) => l.page.submission.status.claim}
+										/>
+									{:else}
+										<Status good={false} label={(l) => l.page.submission.status.bidder} />
+									{/if}
 									{#if bidLabel !== undefined}
 										<em data-testid="bid-preference-label">{bidLabel}</em>
 									{/if}
 								</div>
 							</td>
-							<td
-								>{#if volunteer}{volunteer.expertise}{:else}{EmptyLabel}{/if}</td
-							>
-							<td><Tokens amount={getBalance(assignment.scholar)} /></td>
+							<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
+							{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} balance /></td
+								>{/if}
 							<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 							<td>
 								<Row>
-									{#if assignment.bid}
+									{#if isClaim(assignment)}
+										<!-- The claimant says the work is done, so approving and paying
+										     are one decision. -->
+										<Button
+											testid="pay-claim"
+											strings={(l) => l.page.submission.button.payClaim}
+											action={() => handle(db().completeAssignment(assignment.id, scholar.id))}
+										/>
+										<Button
+											testid="decline-bid"
+											strings={(l) => l.page.submission.button.declineClaim}
+											active={decliningID !== assignment.id}
+											action={() => openDecline(assignment.id)}
+										/>
+									{:else if assignment.bid}
 										<Button
 											strings={overCap
 												? (l) => l.page.submission.button.approveAnyway
@@ -634,8 +1209,149 @@
 												return handle(db().approveAssignment(assignment, true, role, scholar.id));
 											}}
 										/>
+										<Button
+											testid="decline-bid"
+											strings={(l) => l.page.submission.button.declineBid}
+											active={decliningID !== assignment.id}
+											action={() => openDecline(assignment.id)}
+										/>
 									{/if}
 								</Row>
+								{#if !isClaim(assignment) && assignment.bid}
+									{@render assignNote()}
+								{/if}
+							</td>
+						</tr>
+						{#if decliningID === assignment.id}
+							<tr>
+								<td colspan={canSeeBalances ? 6 : 5}>
+									<Form>
+										<Paragraph
+											text={(l) =>
+												isClaim(assignment)
+													? l.page.submission.declineClaimPrompt
+													: l.page.submission.declineBidPrompt}
+										/>
+										{#if (declineReasons ?? []).length > 0}
+											<div class="decline-choices" role="radiogroup" data-testid="decline-reasons">
+												{#each declineReasons ?? [] as reason, index (reason.id)}
+													<Radio
+														bind:group={declineChoice}
+														value={reason.id}
+														label={() => reason.text}
+														testid="decline-reason-{index}"
+													/>
+												{/each}
+												<Radio
+													bind:group={declineChoice}
+													value={OWN_REASON}
+													label={(l) => l.page.submission.declineOwnReason}
+													testid="decline-reason-own"
+												/>
+											</div>
+										{/if}
+										<!-- Forms align their children to the start, which shrinks a field to
+										     its content; an explanation needs room, so this one spans the form.
+										     Only for writing one's own: a venue reason is sent as it is. -->
+										{#if writingOwnReason}
+											<div class="decline-reason-field">
+												<TextField
+													bind:text={declineReason}
+													strings={(l) => l.page.submission.field.declineReason}
+													testid="decline-bid-reason"
+													inline={false}
+													stretch
+													valid={validDeclineReason}
+												></TextField>
+											</div>
+										{/if}
+										<Button
+											testid="decline-bid-confirm"
+											strings={(l) =>
+												isClaim(assignment)
+													? l.page.submission.button.confirmDeclineClaim
+													: l.page.submission.button.confirmDecline}
+											active={declineReady}
+											action={async () => {
+												const result = await handle(
+													db().declineBid(
+														assignment,
+														writingOwnReason || chosenDeclineReason === null
+															? declineReason
+															: chosenDeclineReason,
+														role,
+														scholar.id
+													)
+												);
+												if (result !== false) {
+													decliningID = null;
+													declineChoice = '';
+													declineReason = '';
+												}
+											}}
+										/>
+									</Form>
+								</td>
+							</tr>
+						{/if}
+					{/each}
+				{/if}
+
+				<!-- Declined bids, for approvers: who declined and why, so a second approver does
+				     not answer the same bid again, and a way to assign the bidder after all. -->
+				{#if declined.length > 0 && isApprover}
+					{#each declined as assignment}
+						{@const volunteer = getVolunteer(role.id, assignment.scholar)}
+						<tr class="declined" data-testid="declined-bid">
+							<td>{role.name}</td>
+							<td class="unapproved">
+								<div class="scholar-cell">
+									{@render assignee(assignment.scholar, assignment.scholar !== scholar.id)}
+									<Status good={false} label={(l) => l.page.submission.status.declined} />
+								</div>
+							</td>
+							<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
+							{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} balance /></td
+								>{/if}
+							<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
+							<td>
+								<Row>
+									{#if isClaim(assignment)}
+										<!-- The claimant said the work is done, so changing one's mind means
+										     paying for it, not just assigning them. -->
+										<Button
+											testid="pay-declined-claim"
+											strings={(l) => l.page.submission.button.approveDeclinedClaim}
+											action={() => handle(db().completeAssignment(assignment.id, scholar.id))}
+										/>
+									{:else}
+										<Button
+											testid="approve-declined-bid"
+											strings={(l) => l.page.submission.button.approveDeclined}
+											action={() =>
+												handle(db().approveAssignment(assignment, true, role, scholar.id))}
+										/>
+									{/if}
+								</Row>
+								{#if !isClaim(assignment)}
+									{@render assignNote()}
+								{/if}
+							</td>
+						</tr>
+						<!-- The reason gets a row of its own, spanning the table, so a long
+						     explanation doesn't widen the Scholar column and reflow every row. -->
+						<tr class="declined-reason-row" data-testid="declined-bid-reason">
+							<td></td>
+							<td colspan={canSeeBalances ? 5 : 4}>
+								<div class="decline-explanation">
+									{#if assignment.declined_by !== null}
+										<span class="declined-by">
+											{locale().page.submission.cell.declinedBy}
+											<ScholarLink id={assignment.declined_by} />
+										</span>
+									{/if}
+									<blockquote class="decline-reason">{assignment.decline_reason}</blockquote>
+								</div>
 							</td>
 						</tr>
 					{/each}
@@ -663,6 +1379,67 @@
 		font-style: italic;
 	}
 
+	.decline-reason-field {
+		width: 100%;
+	}
+
+	.decline-choices {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-half);
+	}
+
+	.decline-explanation {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-half);
+		max-width: 65ch;
+	}
+
+	/* The reason row belongs to the declined row above it, so it takes that row's stripe
+	   rather than its own, and drops the gap between them. The pair is always two rows,
+	   so the striping of every row after it is unchanged. */
+	tr.declined:nth-child(even) + tr.declined-reason-row {
+		background: var(--alternating-color);
+	}
+
+	tr.declined:nth-child(odd) + tr.declined-reason-row {
+		background: none;
+	}
+
+	tr.declined-reason-row td {
+		padding-top: 0;
+	}
+
+	.declined-by {
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
+	}
+
+	.decline-reason {
+		margin: 0;
+		padding-inline-start: var(--spacing);
+		border-inline-start: 3px solid var(--inactive-color);
+		font-size: var(--small-font-size);
+	}
+
+	.assignment-orcid {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-half);
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
+	}
+
+	.assign-note {
+		margin: var(--spacing-half) 0 0 0;
+		max-width: 22ch;
+		font-size: var(--small-font-size);
+		color: var(--inactive-color);
+	}
+
 	.scholar-cell {
 		display: flex;
 		flex-direction: column;
@@ -675,13 +1452,32 @@
 		padding-inline-start: var(--spacing);
 	}
 
-	.over-cap {
-		color: var(--error-color);
-		font-weight: bold;
+	/* Who and what on one line, the choice always below it, so every row has the same shape
+	   whatever the name's length. */
+	.blockers li {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-half);
+		margin-block-end: var(--spacing);
 	}
 
-	.elsewhere {
-		font-size: var(--extra-small-font-size);
-		color: var(--inactive-color);
+	.choices {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-half);
+	}
+
+	.paid {
+		font-style: italic;
+	}
+
+	.close-out-sums {
+		margin: 0;
+	}
+
+	.blockers :global(.token),
+	.close-out-sums :global(.token) {
+		white-space: nowrap;
 	}
 </style>

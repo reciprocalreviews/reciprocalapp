@@ -1,16 +1,58 @@
-<script>
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { IdeaLabel, ScholarLabel } from '$lib/components/Labels.js';
-	import Link from '$lib/components/Link.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
+<script lang="ts">
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Cards from '#lib/components/Cards.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import { IdeaLabel, ScholarLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import ScholarField from '#lib/components/ScholarField.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import type { LocaleText } from '#lib/locales/Locale.js';
+	import { validEmail, validORCID } from '#lib/validation.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import type { ORCIDMirrorHealth } from '#lib/data/CRUD.js';
+	import { addFeedback, handle } from '#routes/feedback.svelte.js';
 
 	let { data } = $props();
 	let { stewards } = $derived(data);
+
+	const db = getDB();
+	const locale = getLocaleContext();
+
+	/** Only a steward sees the controls. The database refuses anyone else anyway
+	 * (set_steward raises RR010), but there is no point offering what will fail. */
+	let isSteward = $derived(data.scholar?.steward === true);
+
+	let newSteward = $state('');
+	/** Disables the button for the round trip, so a steward cannot queue several batches
+	 * by pressing repeatedly before the first answers. */
+	let refreshingORCID = $state(false);
+	/** The mirror's state, read once for a steward and again after each refresh. Null until
+	 * it arrives, or when the read failed — in which case the card simply shows the control
+	 * without a status line, since a steward can still press it. */
+	let orcidHealth = $state<ORCIDMirrorHealth | null>(null);
+
+	$effect(() => {
+		if (!isSteward) return;
+		void db()
+			.getORCIDMirrorHealth()
+			.then(({ data }) => {
+				orcidHealth = data ?? null;
+			});
+	});
+
+	function validSteward(text: string): ((l: LocaleText) => string) | undefined {
+		return validEmail(text) || validORCID(text)
+			? undefined
+			: (l) => l.page.about.field.steward.invalid ?? '';
+	}
 </script>
 
-<Page icon={IdeaLabel} title={(l) => l.page.about.title} breadcrumbs={[]}>
+<Page title={(l) => l.page.about.title}>
 	<Paragraph text={(l) => l.page.about.paragraph.community} />
 
 	<Subheader icon={ScholarLabel} text={(l) => l.page.about.header.stewards} />
@@ -19,18 +61,132 @@
 
 	<Paragraph text={(l) => l.page.about.paragraph.currentStewards} />
 
-	{#if stewards}
+	{#if stewards === null}
+		<Feedback error text={(l) => l.page.about.feedback.stewardsNotLoaded} />
+	{:else if stewards.length === 0}
+		<!-- Distinct from failing to load: the list came back, and it was empty. -->
+		<Feedback text={(l) => l.page.about.feedback.noStewards} testid="no-stewards" />
+	{:else}
 		<ul>
 			{#each stewards as steward, index}
 				<li>
 					<Link to="/scholar/{steward.id}" testid={'steward-' + index}
-						>{steward.name ?? 'anonymous'}</Link
-					>
+						>{steward.name ?? locale().page.about.anonymous}</Link
+					>{#if isSteward && steward.id !== data.scholar?.id && stewards.length > 1}
+						&nbsp;<Button
+							strings={(l) => l.page.about.button.removeSteward}
+							testid="remove-steward-{index}"
+							action={() => handle(db().setSteward(steward.id, false))}
+						/>{/if}
 				</li>
 			{/each}
 		</ul>
-	{:else}
-		<Feedback text={(l) => l.page.about.feedback.stewardsNotLoaded} />
+	{/if}
+
+	{#if isSteward}
+		<Cards>
+			<Card
+				subheader
+				group="steward"
+				icon={ScholarLabel}
+				strings={(l) => l.page.about.card.addSteward}
+				testid="add-steward-card"
+			>
+				<Form>
+					<ScholarField
+						strings={(l) => l.page.about.field.steward}
+						bind:text={newSteward}
+						size={19}
+						valid={validSteward}
+						showResolved={false}
+						testid="add-steward-field"
+					/><Button
+						strings={(l) => l.page.about.button.addSteward}
+						active={validSteward(newSteward) === undefined}
+						testid="add-steward-button"
+						action={async () => {
+							if (await handle(db().addSteward(newSteward))) newSteward = '';
+						}}
+					/>
+				</Form>
+			</Card>
+			<!--
+				The ORCID mirror's bootstrap, and its maintenance. Without a control here the
+				only way to populate it is a hand-rolled authenticated REST call: a steward
+				running the RPC in a SQL editor is refused, because there is no auth.uid() in
+				that session and the function checks isSteward().
+
+				No `warn` on the button. It is safe, idempotent, and meant to be pressed
+				repeatedly until it reports nothing left, so a confirm step would be friction
+				for nothing.
+
+				`expand`, unlike its sibling: a Card hides its children until it is opened, and
+				this one's only child IS the control — collapsed it showed a heading and no way
+				to act on it. The card only renders for stewards, so everyone who can see it can
+				use it.
+			-->
+			<Card
+				subheader
+				group="steward"
+				icon={ScholarLabel}
+				strings={(l) => l.page.about.card.refreshORCID}
+				testid="refresh-orcid-card"
+				expand
+			>
+				{#if orcidHealth}
+					<!-- Plain counts rather than a chart: this answers one question, which is
+					     whether anything needs doing. -->
+					<Paragraph
+						text={() =>
+							locale()
+								.page.about.feedback.orcidHealth.replace('{read}', orcidHealth!.read.toString())
+								.replace('{never}', orcidHealth!.never_read.toString())
+								.replace('{failed}', orcidHealth!.failed.toString())}
+					/>
+					<!-- Shown only when it has actually happened. A permanent "0 rate limited"
+					     line would be noise on every visit and would stop being read long
+					     before the day it mattered. -->
+					{#if orcidHealth.rate_limited > 0}
+						<Feedback
+							testid="orcid-rate-limited"
+							text={() =>
+								locale().page.about.feedback.orcidRateLimited.replace(
+									'{count}',
+									orcidHealth!.rate_limited.toString()
+								)}
+						/>
+					{/if}
+				{/if}
+				<Button
+					strings={(l) => l.page.about.button.refreshORCID}
+					active={!refreshingORCID}
+					testid="refresh-orcid-button"
+					action={async () => {
+						refreshingORCID = true;
+						// handle() resolves false on failure, having already posted the error.
+						const claimed = await handle(db().backfillORCIDProfiles());
+						refreshingORCID = false;
+						if (claimed === false) return;
+						// The count is the point: a steward who sees only "done" cannot tell a
+						// batch from the end of the queue, and would stop after one press.
+						void db()
+							.getORCIDMirrorHealth()
+							.then(({ data }) => {
+								orcidHealth = data ?? null;
+							});
+						addFeedback(
+							claimed === 0
+								? locale().page.about.feedback.orcidCurrent
+								: locale().page.about.feedback.orcidRefreshed.replace(
+										'{count}',
+										claimed.toString()
+									),
+							'success'
+						);
+					}}
+				/>
+			</Card>
+		</Cards>
 	{/if}
 
 	<Paragraph text={(l) => l.page.about.paragraph.joinStewards} />

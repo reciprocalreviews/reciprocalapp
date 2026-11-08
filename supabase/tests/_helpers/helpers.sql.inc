@@ -77,9 +77,18 @@ begin
 		now(), now(),
 		'', '', '', ''
 	);
-	insert into public.scholars (id, email, name, steward)
-	values (new_id, addr, 'Test Scholar', p_steward)
-	on conflict (id) do update set email = excluded.email, name = excluded.name, steward = excluded.steward;
+	-- The trigger has already created the scholar row from the insert above, so this
+	-- only fills in what tests need it to have. Deliberately an UPDATE and not an
+	-- upsert: an upsert would create the row itself when the trigger is missing, and
+	-- the whole suite would go green against a database that cannot make scholars at
+	-- all -- which is precisely the production failure nothing caught.
+	update public.scholars
+	set email = addr, name = 'Test Scholar', steward = p_steward
+	where id = new_id;
+	if not found then
+		raise exception
+			'no scholar row for %: is the on_auth_user_created trigger missing?', new_id;
+	end if;
 	return new_id;
 end;
 $$;
@@ -95,8 +104,8 @@ begin
 end;
 $$;
 
--- Create a venue. admins must be non-empty and must NOT overlap the currency's
--- minters (the no_minter_admins trigger enforces this).
+-- Create a venue. admins must be non-empty. Overlapping the currency's minters is
+-- permitted; most fixtures keep them apart so they exercise the ordinary case.
 create or replace function tests.create_venue (
 	p_currency uuid,
 	p_admins uuid[],
@@ -117,12 +126,13 @@ create or replace function tests.create_role (
 	p_priority integer default 0,
 	p_approver uuid default null,
 	p_biddable boolean default false,
-	p_invited boolean default false
+	p_invited boolean default false,
+	p_volunteer_visibility public.volunteer_visibility default 'all'
 ) returns uuid language plpgsql security definer set search_path to '' as $$
 declare new_id uuid := gen_random_uuid();
 begin
-	insert into public.roles (id, venueid, name, invited, biddable, approver, priority)
-	values (new_id, p_venue, 'Test Role', p_invited, p_biddable, p_approver, p_priority);
+	insert into public.roles (id, venueid, name, invited, biddable, approver, priority, volunteer_visibility)
+	values (new_id, p_venue, 'Test Role', p_invited, p_biddable, p_approver, p_priority, p_volunteer_visibility);
 	return new_id;
 end;
 $$;
@@ -180,12 +190,13 @@ create or replace function tests.create_assignment (
 	p_scholar uuid,
 	p_role uuid,
 	p_approved boolean default true,
-	p_bid boolean default false
+	p_bid boolean default false,
+	p_completed boolean default false
 ) returns uuid language plpgsql security definer set search_path to '' as $$
 declare new_id uuid := gen_random_uuid();
 begin
-	insert into public.assignments (id, venue, submission, scholar, role, bid, approved)
-	values (new_id, p_venue, p_submission, p_scholar, p_role, p_bid, p_approved);
+	insert into public.assignments (id, venue, submission, scholar, role, bid, approved, completed)
+	values (new_id, p_venue, p_submission, p_scholar, p_role, p_bid, p_approved, p_completed);
 	return new_id;
 end;
 $$;

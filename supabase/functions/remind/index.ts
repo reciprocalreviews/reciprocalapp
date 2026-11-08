@@ -2,25 +2,40 @@ import 'edge-runtime';
 import { createClient, SupabaseClient } from 'supabase';
 import type { Database } from '../../../src/data/database.ts';
 import { requireSecretKey } from '../_shared/auth.ts';
-import { escapeHtml, renderBrandedEmail } from '../_shared/emailShell.ts';
+import type { EmailType } from '../_shared/templates.ts';
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-const isLocal = Deno.env.get('PUBLIC_SUPABASE_URL')?.includes('127.0.0.1') ?? false;
-
-type Email = {
-	to: string;
-	subject: string;
-	message: string;
+/**
+ * One reminder, addressed to one scholar, named by the template that renders it.
+ *
+ * These used to carry a subject and a list of paragraphs written inline here, and were POSTed
+ * straight to Resend. That made them the only mail the platform sent that nobody could switch
+ * off, that never appeared in public.emails, that got no delivery reconciliation, and that
+ * was missing from the data export DESIGN.md promises counts every message a scholar was
+ * sent. They are queued through public.queue_reminder_email now, so all four follow from
+ * going through the table — and a reminder can share the preference of the notice it chases.
+ *
+ * Nothing here builds a link's origin any more, either: templates own their URLs and the
+ * origin is substituted at send time from the `site_url` vault secret, the same as every
+ * other email. Only the venue path segment is resolved here.
+ */
+type PendingReminder = {
+	scholar: string;
+	event: EmailType;
+	args: string[];
+	/** The venue the reminder is about, when it is about one; its replies then go there. */
+	venue?: string;
 };
 
-async function getStaleStatusReminder(supabase: SupabaseClient<Database>): Promise<Email[]> {
+async function getStaleStatusReminder(
+	supabase: SupabaseClient<Database>
+): Promise<PendingReminder[]> {
 	// Let's see which scholars have not updated their status in the last three months, and who haven't been sent a reminder in a month.
 	const threeMonthsAgo = new Date();
 	threeMonthsAgo.setDate(threeMonthsAgo.getDate() - 90);
 	const oneMonthAgo = new Date();
 	oneMonthAgo.setDate(oneMonthAgo.getDate() - 30);
 
-	const emails: Email[] = [];
+	const reminders: PendingReminder[] = [];
 
 	// Find all scholars that have a status that was updated more than three months ago.
 	const { data: staleScholars, error: staleScholarsError } = await supabase
@@ -35,21 +50,20 @@ async function getStaleStatusReminder(supabase: SupabaseClient<Database>): Promi
 			staleScholarsError.code,
 			staleScholarsError.message
 		);
-		return emails;
+		return reminders;
 	}
 
 	for (const scholar of staleScholars) {
-		if (scholar.email)
-			emails.push({
-				to: scholar.email,
-				subject: 'Update your status',
-				message: [
-					'Hello,',
-					"This is a friendly reminder to update your reviewing status on Reciprocal Reviews. Here's the last thing you wrote:",
-					`"${escapeHtml(scholar.status ?? '')}"`,
-					`You can update it here: https://reciprocal.reviews/scholar/${scholar.id}`
-				].join('\n\n')
-			});
+		// No `if (scholar.email)` guard: queue_reminder_email resolves the address itself and
+		// skips a scholar without a verified one, which is the same rule every other producer
+		// now goes through rather than each checking for itself.
+		//
+		// Arguments are escaped at render time, so the status is passed through raw here.
+		reminders.push({
+			scholar: scholar.id,
+			event: 'AvailabilityReminder',
+			args: [scholar.status ?? '', scholar.id]
+		});
 
 		// Mark the scholar as reminded so we don't remind them again for another month.
 		await supabase
@@ -58,25 +72,45 @@ async function getStaleStatusReminder(supabase: SupabaseClient<Database>): Promi
 			.eq('id', scholar.id);
 	}
 
-	return emails;
+	return reminders;
 }
 
-async function getTransactionReminders(supabase: SupabaseClient<Database>): Promise<Email[]> {
-	const emails: Email[] = [];
+/**
+ * Group a reminder by scholar AND venue.
+ *
+ * Three of the families below used to gather a scholar's links from every venue into one
+ * message. Their templates are venue-scoped — a count, the venue's title, and a link to that
+ * venue's submissions list — so the grouping has to be too: somebody who admins three venues
+ * now gets three messages rather than one. That is more mail, and each piece of it is
+ * actionable on its own, which the combined message was not.
+ */
+type ByScholarVenue = Map<string, Map<string, Set<string>>>;
+
+function note(index: ByScholarVenue, scholar: string, venue: string, submission: string) {
+	let venues = index.get(scholar);
+	if (venues === undefined) index.set(scholar, (venues = new Map()));
+	let submissions = venues.get(venue);
+	if (submissions === undefined) venues.set(venue, (submissions = new Set()));
+	submissions.add(submission);
+}
+
+async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<PendingReminder[]> {
+	const reminders: PendingReminder[] = [];
 	const now = new Date();
 
 	// Find venues that have opted into reminders and are due based on their
-	// per-venue frequency. The cron runs daily; gating happens here.
+	// per-venue frequency. The cron runs daily; gating happens here. All four
+	// reminder families below share this one cadence and the one stamp.
 	const { data: venues, error: venuesError } = await supabase
 		.from('venues')
 		.select(
-			'id, admins, currency, transaction_reminder_frequency_days, transaction_reminder_time, currencies!currency(minters)'
+			'id, title, slug, admins, currency, transaction_reminder_frequency_days, transaction_reminder_time, currencies!currency(minters)'
 		)
 		.gt('transaction_reminder_frequency_days', 0);
 
 	if (venues === null) {
 		console.error('Error fetching venues for reminders', venuesError);
-		return emails;
+		return reminders;
 	}
 
 	const dueVenues = venues.filter((venue) => {
@@ -86,11 +120,36 @@ async function getTransactionReminders(supabase: SupabaseClient<Database>): Prom
 		return now.getTime() - last >= intervalMs;
 	});
 
-	if (dueVenues.length === 0) return emails;
+	if (dueVenues.length === 0) return reminders;
 
 	const dueVenueIds = dueVenues.map((v) => v.id);
 
-	// Fetch unapproved proposed transactions for those venues only.
+	/** The path segment a venue is reached by: its web address once it has one, its id
+	 * until then. Resolved here and passed as a template argument, the same division
+	 * SupabaseCRUD's venuePathOf makes: a template owns the path in its prose and takes only
+	 * the segment. A venue not in this batch cannot appear in any of them — every query is
+	 * scoped to `dueVenueIds` — but the fallback keeps a link working rather than producing
+	 * `/venue/undefined` if one ever did. */
+	const venuePaths = new Map(dueVenues.map((v) => [v.id, v.slug ?? v.id]));
+	const venuePathOf = (id: string) => venuePaths.get(id) ?? id;
+	const venueTitles = new Map(dueVenues.map((v) => [v.id, v.title]));
+	const venueTitleOf = (id: string) => venueTitles.get(id) ?? '';
+
+	/** Turn one family's (scholar, venue) index into one reminder per pair. */
+	const emit = (index: ByScholarVenue, event: EmailType) => {
+		for (const [scholar, venues] of index)
+			for (const [venue, submissions] of venues)
+				reminders.push({
+					scholar,
+					event,
+					args: [submissions.size.toString(), venueTitleOf(venue), venuePathOf(venue)],
+					// About one venue's work, so a reply belongs with that venue.
+					venue
+				});
+	};
+
+	// ---- Family 1: proposed venue-sourced transactions → admins + minters ------
+
 	const { data: unapprovedTransactions, error: unapprovedTransactionsError } = await supabase
 		.from('transactions')
 		.select('id, from_venue')
@@ -99,7 +158,7 @@ async function getTransactionReminders(supabase: SupabaseClient<Database>): Prom
 
 	if (unapprovedTransactions === null) {
 		console.error('Error fetching unapproved transactions', unapprovedTransactionsError);
-		return emails;
+		return reminders;
 	}
 
 	// Group transaction IDs by venue so each recipient is told how many
@@ -116,64 +175,389 @@ async function getTransactionReminders(supabase: SupabaseClient<Database>): Prom
 	// Fan out to admins + minters per venue. A scholar that serves both roles
 	// across multiple venues gets one entry per venue's transaction list.
 	const scholarsToRemind = new Map<string, string[]>();
-	const venuesWithRecipients: string[] = [];
-
 	for (const venue of dueVenues) {
 		const txs = transactionsByVenue.get(venue.id) ?? [];
-		// Even when there are no outstanding transactions, stamp the venue
-		// below so we don't immediately re-check on the next cron tick.
-		if (txs.length === 0) {
-			venuesWithRecipients.push(venue.id);
-			continue;
-		}
-
+		if (txs.length === 0) continue;
 		const minters = venue.currencies?.minters ?? [];
 		const recipients = new Set<string>([...venue.admins, ...minters]);
-
 		for (const recipient of recipients) {
 			if (!scholarsToRemind.has(recipient)) scholarsToRemind.set(recipient, []);
 			scholarsToRemind.get(recipient)!.push(...txs);
 		}
-		venuesWithRecipients.push(venue.id);
+	}
+	// Not grouped by venue, unlike families 3 to 5: this template sends the reader to their own
+	// page, which lists everything awaiting them across every venue at once, so splitting the
+	// message per venue would produce several mails pointing at the same list.
+	for (const [scholar, transactions] of scholarsToRemind) {
+		reminders.push({
+			scholar,
+			event: 'TransactionsPending',
+			args: [transactions.length.toString(), scholar]
+		});
 	}
 
-	const recipientIds = Array.from(scholarsToRemind.keys());
+	// ---- Family 2: proposed scholar-sourced charges → the charged scholar ------
+	// Typically a co-author's share of a submission charge. Without this, a
+	// co-author who missed the SubmissionCharged email is never asked again and
+	// the submission sits unpaid indefinitely.
 
-	if (recipientIds.length > 0) {
-		const { data: scholarsWithTasks } = await supabase
-			.from('scholars')
-			.select('id, email')
-			.in('id', recipientIds);
+	const { data: scholarCharges, error: scholarChargesError } = await supabase
+		.from('transactions')
+		.select('id, from_scholar')
+		.eq('status', 'proposed')
+		.not('from_scholar', 'is', null)
+		.in('to_venue', dueVenueIds);
 
-		if (scholarsWithTasks) {
-			for (const recipient of scholarsWithTasks) {
-				const transactions = scholarsToRemind.get(recipient.id);
-				if (!recipient.email) continue;
-				if (!transactions || transactions.length === 0) continue;
-				emails.push({
-					to: recipient.email,
-					subject: 'Approve proposed transactions',
-					message: [
-						'Hello,',
-						`You have ${transactions.length} proposed transaction(s) that require your approval.`,
-						`Please review and approve it here: https://reciprocal.reviews/scholar/${recipient.id}`
-					].join('\n\n')
-				});
+	if (scholarCharges === null) {
+		console.error('Error fetching proposed scholar charges', scholarChargesError);
+	} else {
+		const chargesByScholar = new Map<string, number>();
+		for (const charge of scholarCharges) {
+			if (!charge.from_scholar) continue;
+			chargesByScholar.set(
+				charge.from_scholar,
+				(chargesByScholar.get(charge.from_scholar) ?? 0) + 1
+			);
+		}
+		for (const [scholar, count] of chargesByScholar) {
+			reminders.push({
+				scholar,
+				event: 'SubmissionChargeReminder',
+				args: [count.toString(), scholar]
+			});
+		}
+	}
+
+	// ---- Shared data for families 3 and 4: assignments in due venues -----------
+
+	const { data: assignments, error: assignmentsError } = await supabase
+		.from('assignments')
+		.select(
+			'id, venue, submission, scholar, role, approved, completed, compensation_requested_at, declined_at, roles!role(priority, approver)'
+		)
+		.in('venue', dueVenueIds);
+
+	if (assignments === null) {
+		console.error('Error fetching assignments for reminders', assignmentsError);
+	} else {
+		const venueById = new Map(dueVenues.map((v) => [v.id, v]));
+		const approvedBySubmission = new Map<string, typeof assignments>();
+		for (const a of assignments) {
+			if (!a.approved) continue;
+			if (!approvedBySubmission.has(a.submission)) approvedBySubmission.set(a.submission, []);
+			approvedBySubmission.get(a.submission)!.push(a);
+		}
+
+		// ---- Family 3: requested-but-unpaid compensation → the approver chain --
+		// Only assignments whose scholar explicitly requested compensation:
+		// approved-but-uncompleted alone means a review in progress, and nagging
+		// approvers about those would teach them to ignore the reminder. A claim --
+		// a request with no approved assignment behind it, filed on a submission
+		// nobody could seat the scholar on -- counts too, unless it was declined.
+		//
+		// public.scholar_tasks draws the same line for the profile's Tasks table, and
+		// family 4 below shares its "ready to be marked done" test. They are separate
+		// definitions on purpose: this runs as service_role across every scholar from
+		// bulk-fetched rows, so it cannot call a function keyed on auth.uid(). Change
+		// one of the three and check the others.
+
+		const pendingCompensation = assignments.filter(
+			(a) => !a.completed && a.compensation_requested_at !== null && a.declined_at === null
+		);
+
+		// Who is told, as request_compensation decides it: whoever is seated in the role's
+		// approving role on the submission; failing that, its priority-0 editors; failing
+		// that, the venue's admins. Each tier leaves out the requester and anyone conflicted
+		// on the submission before asking whether it is empty. Change one and change both.
+		const pendingSubmissions = [...new Set(pendingCompensation.map((a) => a.submission))];
+		const { data: conflicts, error: conflictsError } =
+			pendingSubmissions.length === 0
+				? { data: [], error: null }
+				: await supabase
+						.from('conflicts')
+						.select('submissionid, scholarid')
+						.in('submissionid', pendingSubmissions);
+		if (conflicts === null) console.error('Error fetching conflicts for reminders', conflictsError);
+		const conflicted = new Set((conflicts ?? []).map((c) => `${c.submissionid}|${c.scholarid}`));
+
+		// Which tier answered is kept, so the reminder can say which requests are the
+		// recipient's to handle and which only fell to them for want of anyone closer.
+		type Tier = 'approver' | 'editors' | 'admins';
+		const approversOf = (
+			assignment: (typeof assignments)[number]
+		): { tier: Tier; recipients: string[] } | null => {
+			const eligible = (scholar: string) =>
+				scholar !== assignment.scholar && !conflicted.has(`${assignment.submission}|${scholar}`);
+			const seated = approvedBySubmission.get(assignment.submission) ?? [];
+			const approver = assignment.roles?.approver ?? null;
+			const tiers: [Tier, string[]][] = [
+				[
+					'approver',
+					seated
+						.filter((other) => approver !== null && other.role === approver)
+						.map((o) => o.scholar)
+				],
+				['editors', seated.filter((other) => other.roles?.priority === 0).map((o) => o.scholar)],
+				['admins', venueById.get(assignment.venue)?.admins ?? []]
+			];
+			for (const [tier, scholars] of tiers) {
+				const recipients = [...new Set(scholars.filter(eligible))];
+				if (recipients.length > 0) return { tier, recipients };
+			}
+			return null;
+		};
+
+		const compensation: Record<Tier, ByScholarVenue> = {
+			approver: new Map(),
+			editors: new Map(),
+			admins: new Map()
+		};
+		for (const assignment of pendingCompensation) {
+			const chosen = approversOf(assignment);
+			if (chosen === null) continue;
+			for (const approver of chosen.recipients)
+				note(compensation[chosen.tier], approver, assignment.venue, assignment.submission);
+		}
+
+		// One reminder per scholar per venue, counting each tier separately. A submission
+		// counts once per tier it reached this scholar through; a count of zero is blank, so
+		// the template leaves its paragraph out.
+		const countOf = (tier: Tier, scholar: string, venue: string) =>
+			compensation[tier].get(scholar)?.get(venue)?.size ?? 0;
+		const blankIfZero = (count: number) => (count === 0 ? '' : count.toString());
+		const compensationRecipients = new Set<string>();
+		for (const index of Object.values(compensation))
+			for (const [scholar, venues] of index)
+				for (const venue of venues.keys()) compensationRecipients.add(`${scholar}|${venue}`);
+		for (const key of compensationRecipients) {
+			const [scholar, venue] = key.split('|');
+			reminders.push({
+				scholar,
+				event: 'CompensationPending',
+				args: [
+					blankIfZero(countOf('approver', scholar, venue)),
+					venueTitleOf(venue),
+					venuePathOf(venue),
+					blankIfZero(countOf('editors', scholar, venue)),
+					blankIfZero(countOf('admins', scholar, venue))
+				],
+				venue
+			});
+		}
+
+		// ---- Family 4: submissions ready to be marked done → priority-0 editors -
+		// "Ready" = still reviewing, at least one compensated non-editor
+		// assignment (so there was review work, and it has been paid), and no
+		// approved non-editor assignment still uncompensated (the exact blocker
+		// list mark_submission_done would report).
+
+		const { data: reviewing, error: reviewingError } = await supabase
+			.from('submissions')
+			.select('id, venue')
+			.eq('status', 'reviewing')
+			.in('venue', dueVenueIds);
+
+		if (reviewing === null) {
+			console.error('Error fetching reviewing submissions', reviewingError);
+		} else {
+			const ready: ByScholarVenue = new Map();
+			for (const submission of reviewing) {
+				const subAssignments = assignments.filter((a) => a.submission === submission.id);
+				const hasCompensatedWork = subAssignments.some(
+					(a) => (a.roles?.priority ?? 0) > 0 && a.completed
+				);
+				const hasBlockers = subAssignments.some(
+					(a) => (a.roles?.priority ?? 0) > 0 && a.approved && !a.completed
+				);
+				const editors = subAssignments.filter(
+					(a) => a.roles?.priority === 0 && a.approved && !a.completed
+				);
+				if (!hasCompensatedWork || hasBlockers || editors.length === 0) continue;
+				for (const editor of editors) note(ready, editor.scholar, submission.venue, submission.id);
+			}
+			emit(ready, 'SubmissionsReady');
+
+			// ---- Family 5: submissions with no editor → the venue's editors + admins
+			// The mirror image of family 4, and the reason it needs its own family: family
+			// 4 draws its recipients from the submission's own editors, so a submission
+			// with none is silently dropped — the exact case where nobody has been told.
+			// A submission arrives, its author is emailed about payment, and until someone
+			// takes it on nothing else in the review can happen. Recipients come from the
+			// venue instead: whoever volunteers for its priority-0 role (they can claim
+			// it) plus its admins (they can assign someone).
+
+			const { data: editorRoles, error: editorRolesError } = await supabase
+				.from('roles')
+				.select('id, venueid')
+				.eq('priority', 0)
+				.in('venueid', dueVenueIds);
+
+			const { data: editorVolunteers, error: editorVolunteersError } =
+				editorRoles === null || editorRoles.length === 0
+					? { data: [], error: null }
+					: await supabase
+							.from('volunteers')
+							.select('scholarid, roleid')
+							.eq('active', true)
+							.eq('accepted', 'accepted')
+							.in(
+								'roleid',
+								editorRoles.map((role) => role.id)
+							);
+
+			if (editorRoles === null || editorVolunteers === null) {
+				console.error(
+					'Error fetching editor volunteers for reminders',
+					editorRolesError ?? editorVolunteersError
+				);
+			} else {
+				const venueOfRole = new Map(editorRoles.map((role) => [role.id, role.venueid]));
+				const editorsByVenue = new Map<string, Set<string>>();
+				for (const venue of dueVenues) editorsByVenue.set(venue.id, new Set(venue.admins ?? []));
+				for (const volunteer of editorVolunteers) {
+					const venueid = venueOfRole.get(volunteer.roleid);
+					if (venueid !== undefined) editorsByVenue.get(venueid)?.add(volunteer.scholarid);
+				}
+
+				// Reuses the SubmissionsNeedEditors template rather than adding a reminder of
+				// its own: this is the same news as the notice sent when the submission
+				// arrived, and its template already takes exactly these three arguments.
+				// So it is also governed by the same preference, which is what stops the
+				// settings page offering "tell me" and "remind me" as separate checkboxes.
+				const unclaimed: ByScholarVenue = new Map();
+				for (const submission of reviewing) {
+					const hasEditor = assignments.some(
+						(a) => a.submission === submission.id && a.roles?.priority === 0 && a.approved
+					);
+					if (hasEditor) continue;
+					for (const scholar of editorsByVenue.get(submission.venue) ?? [])
+						note(unclaimed, scholar, submission.venue, submission.id);
+				}
+				emit(unclaimed, 'SubmissionsNeedEditors');
 			}
 		}
 	}
 
-	// Stamp every due venue, including those with zero outstanding transactions,
-	// so the next eligible check honors the configured frequency.
-	if (venuesWithRecipients.length > 0) {
-		const { error: stampError } = await supabase
-			.from('venues')
-			.update({ transaction_reminder_time: now.toISOString() })
-			.in('id', venuesWithRecipients);
-		if (stampError) console.error('Error stamping transaction_reminder_time', stampError);
+	// Recipient addresses are no longer looked up here. queue_reminder_email resolves each
+	// scholar server-side, skips anyone without a verified contact email, and skips anyone who
+	// has silenced the preference governing the template — the same three rules every other
+	// producer goes through, rather than a fourth copy of them living in this file.
+
+	// Stamp every due venue, including those with nothing outstanding, so the
+	// next eligible check honors the configured frequency.
+	const { error: stampError } = await supabase
+		.from('venues')
+		.update({ transaction_reminder_time: now.toISOString() })
+		.in('id', dueVenueIds);
+	if (stampError) console.error('Error stamping transaction_reminder_time', stampError);
+
+	return reminders;
+}
+
+/** How many scholars to read per page of bidding_digest_candidates. Each row is one scholar's
+ * finished digest -- at most seven items per venue -- so a page is a few hundred kilobytes
+ * even for volunteers at many venues. */
+const DIGEST_PAGE = 200;
+
+/** The gap between queued digests. Each queued row is posted to Resend almost at once by the
+ * send_on_email_insert trigger, and Resend allows 10 requests a second per team; about six a
+ * second leaves the rest for everything else being sent at the same moment. */
+const DIGEST_SPACING_MS = 160;
+
+/** When to stop starting new sends. The edge runtime answers 504 after 150 seconds without a
+ * response (and stops a free-plan function at 150s of wall clock), so a run hands back well
+ * before that. The `bidding-digest-weekly` schedule runs every five minutes on Monday
+ * afternoon, so the next run carries on; nobody is sent twice. */
+const DIGEST_BUDGET_MS = 110_000;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * The Monday bidding digest (the `bidding-digest-weekly` cron). One email per available
+ * volunteer listing what is open for bidding in their roles, skipped when the list is the
+ * same as the last one they were sent.
+ *
+ * public.bidding_digest_candidates decides everything -- who, what, in what order, the cap,
+ * and whether the list changed -- and returns the scholars who have waited longest first.
+ * public.queue_bidding_digest sends or skips under a lock, and stamps who it sent;
+ * public.mark_bidding_digests_checked stamps who had nothing to send. Everyone stamped drops
+ * out of the next page, so there is no cursor: this reads the front of the queue until it
+ * brings nobody new. It only feeds one to the other, at a pace Resend will accept.
+ */
+async function sendBiddingDigests(supabase: SupabaseClient<Database>): Promise<{
+	attempted: number;
+	queued: number;
+	rejected: number;
+	deferred: boolean;
+}> {
+	const started = Date.now();
+	let attempted = 0;
+	let queued = 0;
+	let rejected = 0;
+	// Scholars already handled this run. Normally they drop out of the next page by being
+	// stamped; one whose send failed does not, and this keeps them from being retried in a loop.
+	const seen = new Set<string>();
+
+	for (;;) {
+		const read = await supabase.rpc('bidding_digest_candidates', { _limit: DIGEST_PAGE });
+		const page = read.data as
+			{ scholar: string; fingerprint: string | null; total: number; digest: unknown }[] | null;
+		if (read.error || page === null) {
+			console.error('Could not read bidding digest candidates', read.error);
+			rejected++;
+			break;
+		}
+
+		const fresh = page.filter((row) => !seen.has(row.scholar));
+		if (fresh.length === 0) break;
+
+		const idle: string[] = [];
+		for (const row of fresh) {
+			// Null when there is nothing to send, or the list is the one they were last sent.
+			if (row.digest === null || row.fingerprint === null) {
+				seen.add(row.scholar);
+				idle.push(row.scholar);
+				continue;
+			}
+
+			if (Date.now() - started > DIGEST_BUDGET_MS) {
+				await markChecked(supabase, idle);
+				console.warn('Bidding digest stopped at its time budget; the next run continues.');
+				return { attempted, queued, rejected, deferred: true };
+			}
+
+			seen.add(row.scholar);
+			attempted++;
+			const { data, error } = await supabase.rpc('queue_bidding_digest', {
+				_scholar: row.scholar,
+				_args: [JSON.stringify(row.digest), `${row.total} submission${row.total === 1 ? '' : 's'}`],
+				_fingerprint: row.fingerprint
+			});
+			if (error) {
+				rejected++;
+				console.error('Could not queue a bidding digest', row.scholar, error);
+			} else {
+				queued += data ?? 0;
+				if ((data ?? 0) > 0) await sleep(DIGEST_SPACING_MS);
+				// Zero means the database declined it after all -- they became unavailable, or
+				// silenced it, since the page was read. Either way there is nothing to send.
+				else idle.push(row.scholar);
+			}
+		}
+		await markChecked(supabase, idle);
+
+		// Every scholar in the window gets a row, so a short page is the end.
+		if (page.length < DIGEST_PAGE) break;
 	}
 
-	return emails;
+	return { attempted, queued, rejected, deferred: false };
+}
+
+/** Stamp the scholars a run reached with nothing to send. */
+async function markChecked(supabase: SupabaseClient<Database>, scholars: string[]) {
+	if (scholars.length === 0) return;
+	const { error } = await supabase.rpc('mark_bidding_digests_checked', { _scholars: scholars });
+	if (error) console.error('Could not mark bidding digests checked', error);
 }
 
 const handler = async (request: Request): Promise<Response> => {
@@ -195,63 +579,68 @@ const handler = async (request: Request): Promise<Response> => {
 			}
 		);
 
-		const statusReminders = await getStaleStatusReminder(supabase);
-		const transactionsReminders = await getTransactionReminders(supabase);
-
-		// Reminders are sent one per recipient, so one rejection should not abandon the rest
-		// of the run. Count them instead and report at the end — a cron job that reports
-		// success while silently delivering nothing is the failure mode worth avoiding.
-		let rejected = 0;
-
-		for (const email of [...statusReminders, ...transactionsReminders]) {
-			const { to, subject, message } = email;
-
-			if (isLocal) {
-				console.log('--- send this email ---');
-				console.log('to: ', to);
-				console.log('subject:', subject);
-				console.log('message:', message);
-				console.log('---');
-			} else {
-				// Wrap the plain-text reminder in the shared branded shell, sending
-				// both an HTML version and a text/plain alternative.
-				const { html, text } = renderBrandedEmail(subject, message);
-
-				// Post to the resend API using the API key
-				const res = await fetch('https://api.resend.com/emails', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: `Bearer ${RESEND_API_KEY}`
-					},
-					body: JSON.stringify({
-						from: 'notifications@reciprocal.reviews',
-						to,
-						subject,
-						html,
-						text
-					})
-				});
-				// `fetch` does not throw on 4xx/5xx, so an unverified sender domain or a
-				// rejected recipient would otherwise pass silently.
-				const data = await res.json().catch(() => null);
-				if (!res.ok) {
-					rejected++;
-					console.error('Resend rejected a reminder', res.status, to, data);
+		// The Monday cron names its job in the body; the daily one sends an empty body. A body
+		// that isn't JSON is the daily run, as it always was.
+		const body = await request.json().catch(() => ({}));
+		if (body?.job === 'bidding-digest') {
+			// `deferred` means the run stopped at its time budget with scholars left to reach;
+			// the next hourly run on Monday picks them up.
+			const { attempted, queued, rejected, deferred } = await sendBiddingDigests(supabase);
+			return new Response(
+				JSON.stringify({ job: 'bidding-digest', attempted, queued, rejected, deferred }),
+				{
+					status: rejected > 0 ? 502 : 200,
+					headers: { 'Content-Type': 'application/json' }
 				}
+			);
+		}
+
+		// Nothing here needs the origin any more. Templates own their links and the origin is
+		// substituted at send time from the `site_url` vault secret, exactly as it is for
+		// every other email — so a reminder from a test deployment now leads back to that
+		// deployment for the same reason, and by the same mechanism, as the rest of the mail.
+		const statusReminders = await getStaleStatusReminder(supabase);
+		const venueReminders = await getVenueReminders(supabase);
+
+		// Reminders are queued one per recipient, so one failure should not abandon the rest of
+		// the run. Count them instead and report at the end — a cron job that reports success
+		// while silently delivering nothing is the failure mode worth avoiding.
+		//
+		// What "queued" now means: a row in public.emails, whose AFTER INSERT trigger posts to
+		// the resend function. So delivery, the branded shell, the reply path, the mail log and
+		// the delivery reconciliation are all the shared pipeline's job rather than this
+		// file's, and a reminder is finally something a scholar can point at and switch off.
+		let rejected = 0;
+		let queued = 0;
+
+		for (const reminder of [...statusReminders, ...venueReminders]) {
+			const { data, error } = await supabase.rpc('queue_reminder_email', {
+				_event: reminder.event,
+				_args: reminder.args,
+				_scholar: reminder.scholar,
+				_venue: reminder.venue
+			});
+			if (error) {
+				rejected++;
+				console.error('Could not queue a reminder', reminder.event, reminder.scholar, error);
+			} else {
+				// Zero rows is not a failure: the scholar has no verified contact address, or
+				// has silenced this notice. Both are the pipeline working.
+				queued += data ?? 0;
 			}
 		}
 
-		const attempted = statusReminders.length + transactionsReminders.length;
+		const attempted = statusReminders.length + venueReminders.length;
 		if (rejected > 0) {
 			return new Response(
-				JSON.stringify({ error: 'Resend rejected reminders', rejected, attempted }),
+				JSON.stringify({ error: 'Could not queue reminders', rejected, attempted }),
 				{ status: 502, headers: { 'Content-Type': 'application/json' } }
 			);
 		}
 
-		// Respond with success.
-		return new Response('reminded', {
+		// Respond with success, saying how many actually became mail. `attempted` and `queued`
+		// differ by the recipients who had nothing to receive it at, or did not want it.
+		return new Response(JSON.stringify({ attempted, queued }), {
 			status: 200,
 			headers: { 'Content-Type': 'application/json' }
 		});

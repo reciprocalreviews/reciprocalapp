@@ -1,33 +1,28 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import NewSubmission from '../NewSubmission.svelte';
-	import Page from '$lib/components/Page.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
 	import { type PageData } from './$types';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { ErrorLabel, SubmissionLabel } from '$lib/components/Labels';
+	import Feedback from '#lib/components/Feedback.svelte';
 
 	let { data }: { data: PageData } = $props();
 
 	let venue = $derived(data.venue);
 	let submissionTypes = $derived(data.submissionTypes);
 	let priorSubmissions = $derived(data.priorSubmissions);
+	let scholarORCID = $derived(data.scholarORCID);
 	/** Deep-link pre-fill from a reviewing-platform email (#113). */
 	let initialManuscript = $derived(page.url.searchParams.get('manuscript') ?? '');
 </script>
 
 {#if venue === null || submissionTypes === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.newSubmission.title} breadcrumbs={[]}>
+	<Page title={(l) => l.page.newSubmission.title}>
 		<Feedback error text={(l) => l.page.newSubmission.feedback.notLoaded}></Feedback>
 	</Page>
 {:else}
-	<Page
-		icon={SubmissionLabel}
-		title={(l) => l.page.newSubmission.title}
-		breadcrumbs={[
-			[`/venue/${venue.id}`, venue.title],
-			[`/venue/${venue.id}/submissions`, 'Submissions']
-		]}
-	>
-		<NewSubmission {venue} {submissionTypes} {priorSubmissions} {initialManuscript}></NewSubmission>
+	<Page title={(l) => l.page.newSubmission.title} context={venueBarName(venue)}>
+		<NewSubmission {venue} {submissionTypes} {priorSubmissions} {initialManuscript} {scholarORCID}
+		></NewSubmission>
 	</Page>
 {/if}

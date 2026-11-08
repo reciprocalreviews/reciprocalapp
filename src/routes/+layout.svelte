@@ -1,18 +1,19 @@
 <script lang="ts">
-	import { goto, invalidate } from '$app/navigation';
+	import { goto, invalidate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
-	import { PUBLIC_ENV } from '$env/static/public';
-	import { requiresAuth } from '$lib/auth/requiresAuth';
-	import Footer from '$lib/components/Footer.svelte';
-	import Nav from '$lib/components/Nav.svelte';
-	import { setDB } from '$lib/data/CRUD';
-	import { onMount, setContext } from 'svelte';
+	import { requiresAuth } from '#lib/auth/requiresAuth.js';
+	import ContextBar from '#lib/components/ContextBar.svelte';
+	import Footer from '#lib/components/Footer.svelte';
+	import Nav from '#lib/components/Nav.svelte';
+	import { setDB } from '#lib/data/CRUD.js';
+	import getRealtimeChannel from '#lib/data/SupabaseRealtime.js';
+	import { areaDrawsBar, siteBar } from '#lib/data/contextBar.js';
+	import { onMount } from 'svelte';
 	import SupabaseAuth, { setAuth } from './Auth.svelte';
 	import { setLocaleContext } from './Contexts';
-	import type PageHeader from './PageHeader';
 
 	let { data, children } = $props();
-	let { db, scholar, claims, locale } = $derived(data);
+	let { db, scholar, claims, locale, tokens, betaDismissed } = $derived(data);
 
 	// The raw Supabase client is reached only through the CRUD instance's
 	// sanctioned `client` escape hatch (auth + realtime); see #137.
@@ -26,11 +27,9 @@
 	// CRUD instance, so reuse it rather than constructing another.
 	setDB(() => db);
 
-	const inProd = PUBLIC_ENV === 'prod';
-
-	/** Always go home in production, pre-release */
 	onMount(() => {
-		if (inProd && !['/updates', '/about'].some((p) => page.url.pathname.startsWith(p))) goto('/');
+		// Handlers exist from here on; stop telling the cursor to wait (see app.html).
+		document.body.classList.remove('hydrating');
 
 		// Listen to auth state changes and invalidate the auth context when they happen.
 		const { data } = db.client.auth.onAuthStateChange((event, _session) => {
@@ -49,41 +48,56 @@
 		return () => data.subscription.unsubscribe();
 	});
 
-	// This global state stores breadcrumb data. The Page component sets it.
-	let breadcrumbs = $state<{ breadcrumbs: [string, string][] }>({ breadcrumbs: [] });
-
-	setContext('breadcrumbs', breadcrumbs);
-
-	let pageHeader = $state<PageHeader>({
-		icon: '',
-		title: '',
-		wobble: false,
-		subtitle: undefined,
-		details: undefined,
-		edit: undefined
+	// Keep the header's token balance live for changes made elsewhere — a minter
+	// approving a mint, an editor completing your assignment — not just for the
+	// scholar's own writes (which handle() already covers with invalidateAll).
+	// An $effect rather than reloadOnChanges' onMount, because the layout never
+	// remounts: signing in mid-session has to (re)subscribe for the new scholar.
+	$effect(() => {
+		const id = scholar?.id;
+		if (id === undefined) return;
+		// Watches `transactions`, not `tokens`. Both wake on exactly the same
+		// events, because only a transaction can move a token — but `tokens` is one
+		// row per token, so earning fifty of them woke this channel fifty times and
+		// re-ran every load function on the page fifty times. A transaction is one
+		// row however much it moves.
+		const channel = getRealtimeChannel(
+			`header-balance-${id}`,
+			db.client,
+			[
+				{ table: 'transactions', filter: `from_scholar=eq.${id}` },
+				{ table: 'transactions', filter: `to_scholar=eq.${id}` }
+			],
+			() => invalidateAll()
+		).subscribe();
+		return () => {
+			channel.unsubscribe();
+		};
 	});
-
-	setContext('pageHeader', pageHeader);
 </script>
 
-<Nav {inProd} breadcrumbs={breadcrumbs.breadcrumbs}></Nav>
+<Nav {tokens}></Nav>
 <main>
+	<!-- The site's own bar, on every page that is not inside an area with a bar of its own:
+	     venues, a venue, a scholar or a currency each draw theirs from their layout. -->
+	{#if !areaDrawsBar(page.route.id)}
+		<ContextBar bar={siteBar(locale)} menu={(l) => l.header.context.menu} />
+	{/if}
 	{@render children()}
 </main>
-<Footer />
+<Footer {betaDismissed} />
 
 <style>
 	main {
-		margin-block-start: var(--spacing);
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing);
-		margin: auto;
-		max-width: var(--page-width);
-		/* Keep the last of the page's content clear of the sticky footer, which would
-		   otherwise sit directly on top of it. Pairs with the scroll-padding on `html`
-		   in app.html: that governs where scrolling stops, this guarantees there is
-		   somewhere to stop. */
-		padding-block-end: 5rem;
+		/* Absorb whatever height the page does not use, so the footer below is carried
+		   to the bottom of the viewport rather than floating up to meet short content
+		   (#156). Pairs with the flex column on `body` in app.html. */
+		flex: 1;
+		/* Deliberately full width, and deliberately no block-start margin. The context
+		   bar is a full-bleed band that sits flush beneath the nav, so the text column's
+		   `--page-width` cap lives one level down, on `.page` in Page.svelte. */
 	}
 </style>

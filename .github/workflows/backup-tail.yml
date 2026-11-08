@@ -37,7 +37,7 @@ jobs:
     name: Export and upload
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Resolve target
         id: plan
@@ -66,6 +66,9 @@ jobs:
           f=supabase/dr/backup-recipient.age.pub
           [ -s "$f" ] || { echo "::error::no age recipient at $f (see RECOVERY.md)"; exit 1; }
           echo "recipient=$(grep -oE 'age1[0-9a-z]+' "$f" | paste -sd' ' -)" >> "$GITHUB_OUTPUT"
+
+      - name: Load the DR images
+        uses: ./.github/actions/dr-images
 
       - name: Export the tail
         env:

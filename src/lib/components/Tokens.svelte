@@ -1,48 +1,33 @@
 <script lang="ts">
-	import type { CurrencyRow } from '$data/types';
-	import { getLocaleContext } from '$routes/Contexts';
+	import type { CurrencyRow } from '#data/types.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import { TokenLabel } from './Labels';
 
 	let {
 		amount,
 		currency,
-		debit = false
-	}: { amount: number; debit?: boolean; currency?: CurrencyRow } = $props();
+		debit = false,
+		balance = false
+	}: {
+		amount: number;
+		debit?: boolean;
+		currency?: CurrencyRow;
+		/** Label the amount as someone's holdings ("25 token balance"), not a payment. */
+		balance?: boolean;
+	} = $props();
 
 	let locale = getLocaleContext();
 </script>
 
 <span class="token" class:debit
-	><span class="star">{TokenLabel}</span>
-	{amount}
+	><span class="value"><span class="star">{TokenLabel}</span> {amount}</span>
 	{#if currency}<span class="currency">{currency.name}</span>
 	{/if}
-	{#if amount === 1}{locale().widget.tokens.single}{:else}{locale().widget.tokens.plural}{/if}</span
->
+	{#if amount === 1 || balance}{locale().widget.tokens.single}{:else}{locale().widget.tokens
+			.plural}{/if}</span
+>{#if balance}{' '}{locale().widget.tokens.balance}{/if}
 
-<style>
-	.token {
-		font-weight: 500;
-		font-size: var(--small-font-size);
-		padding: var(--spacing-half);
-		border-radius: var(--roundedness);
-		background-color: var(--salient-color-faded);
-		box-decoration-break: clone;
-	}
-
-	.star {
-		color: var(--salient-color);
-	}
-
-	.currency {
-		font-weight: 300;
-	}
-
-	.debit .star {
-		color: var(--error-color);
-	}
-
-	.debit {
-		background-color: var(--error-color-faded);
-	}
-</style>
+<!-- No scoped styles: `.token` and friends live in the global block in src/app.html.
+     Svelte's scoping never reaches `{@html}` content, and the same chip is emitted as an
+     HTML string by tokenChip() so it can appear inside a localized sentence. Two copies of
+     these rules would drift; one global copy serves both. -->

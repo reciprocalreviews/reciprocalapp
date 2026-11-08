@@ -4,15 +4,17 @@
 --   SELECT  anyone (authenticated + anon).
 --   INSERT  stewards only.
 --   UPDATE  stewards or the venue's own admins.
---   DELETE  stewards or the venue's own admins.
---   TRIGGER no_minter_admins: a venue admin may not be a minter of the venue's
+--   DELETE  no one (denied by policy AND the table privilege is revoked, since
+--           deletion would cascade away roles, volunteers, assignments,
+--           compensation, preference levels, and thanks).
+--   ADMIN/MINTER OVERLAP: a venue admin may also mint the venue's
 --           currency; the trigger raises on both INSERT and UPDATE.
 
 \ir ../_helpers/helpers.sql.inc
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(13);
+select plan(18);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -21,7 +23,8 @@ select tests.create_scholar('ven_minter@test.local') as minter \gset
 select tests.create_scholar('ven_admin@test.local') as admin \gset
 select tests.create_scholar('ven_admin2@test.local') as admin2 \gset
 select tests.create_scholar('ven_outsider@test.local') as outsider \gset
--- Currency minters and venue admins must be DISTINCT (no_minter_admins trigger).
+-- Currency minters and venue admins are kept DISTINCT here, so these cases exercise
+-- the ordinary arrangement rather than the overlap tested at the end of the file.
 select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
 select tests.create_venue(:'cur', array[:'admin']::uuid[]) as ven \gset
 -- A second venue used for the delete tests so the update probes keep a row.
@@ -34,7 +37,7 @@ select policies_are(
 		'anyone can view venues',
 		'only stewards can create venues',
 		'stewards and admins can update venues',
-		'stewards and admins can delete venues'
+		'venues cannot be deleted'
 	]
 );
 
@@ -97,54 +100,92 @@ select is(
 	'a non-steward non-admin cannot update a venue (no-op)'
 );
 
--- ---- DELETE -------------------------------------------------------------------
--- An unrelated scholar's DELETE is filtered by the using clause (0 rows, no error).
+-- ---- review_system_url ----------------------------------------------------------
+-- Optional, admin-editable, and only an http(s) address that cannot end a markdown link
+-- or an HTML attribute early, since it is rendered as a link inside a sentence.
+select tests.authenticate_as(:'admin');
+select lives_ok(
+	$$ update public.venues set review_system_url = 'https://mc.manuscriptcentral.com/toce?a=1&b=2' where id = $$ || quote_literal(:'ven'),
+	'a venue admin can set the reviewing system URL'
+);
+select throws_ok(
+	$$ update public.venues set review_system_url = 'javascript:alert(1)' where id = $$ || quote_literal(:'ven'),
+	'23514',
+	null,
+	'a javascript: address is refused'
+);
+select throws_ok(
+	$$ update public.venues set review_system_url = 'https://example.com/a)b' where id = $$ || quote_literal(:'ven'),
+	'23514',
+	null,
+	'an address that would end a markdown link early is refused'
+);
+
 select tests.authenticate_as(:'outsider');
-delete from public.venues where id = :'ven_del';
+update public.venues set review_system_url = 'https://evil.example' where id = :'ven';
 select tests.clear_authentication();
 select is(
-	(select count(*)::int from public.venues where id = :'ven_del'),
-	1,
+	(select review_system_url from public.venues where id = :'ven'),
+	'https://mc.manuscriptcentral.com/toce?a=1&b=2',
+	'a non-admin cannot change the reviewing system URL (no-op)'
+);
+
+select tests.authenticate_as(:'admin');
+select lives_ok(
+	$$ update public.venues set review_system_url = null where id = $$ || quote_literal(:'ven'),
+	'a venue admin can clear the reviewing system URL'
+);
+
+-- ---- DELETE -------------------------------------------------------------------
+-- The table privilege is revoked, so every client DELETE fails with 42501 —
+-- an unrelated scholar, the venue's own admin, and a steward alike.
+select tests.authenticate_as(:'outsider');
+select throws_ok(
+	$$ delete from public.venues where id = $$ || quote_literal(:'ven_del'),
+	'42501',
+	null,
 	'a non-steward non-admin cannot delete a venue'
 );
 
--- The venue's own admin may delete it.
 select tests.authenticate_as(:'admin');
-select lives_ok(
+select throws_ok(
 	$$ delete from public.venues where id = $$ || quote_literal(:'ven_del'),
-	'a venue admin can delete their venue'
+	'42501',
+	null,
+	'a venue admin cannot delete their venue'
 );
 
--- A steward may delete any venue.
-select tests.authenticate_as(:'steward');
-select lives_ok(
-	$$ delete from public.venues where id = $$ || quote_literal(:'ven'),
-	'a steward can delete a venue'
-);
-
--- ---- TRIGGER: no_minter_admins ------------------------------------------------
--- Inserting a venue whose admin is also a minter of its currency raises.
 select tests.authenticate_as(:'steward');
 select throws_ok(
-	$$ insert into public.venues (title, currency, welcome_amount, admins, inactive)
-	   values ('Bad Venue', $$ || quote_literal(:'cur') || $$, 0,
-	           array[ $$ || quote_literal(:'minter') || $$ ]::uuid[], null) $$,
+	$$ delete from public.venues where id = $$ || quote_literal(:'ven'),
+	'42501',
 	null,
-	'A venue admin cannot be the minter of the venue currency',
-	'a venue admin cannot be a minter of the currency (insert)'
+	'a steward cannot delete a venue'
 );
 
--- Updating a venue to add a minter as an admin raises.
+-- ---- ADMIN/MINTER OVERLAP: permitted, not refused -----------------------------
+-- The `no_minter_admins` trigger used to refuse an active venue whose admin minted its
+-- currency. It is gone: a small community's organizer is often its only minter, and the
+-- venue page discloses the arrangement instead. Both writes it blocked must now succeed.
+--
+-- Creating an ACTIVE venue (inactive is null) whose admin mints its currency.
+select tests.authenticate_as(:'steward');
+select lives_ok(
+	$$ insert into public.venues (title, currency, welcome_amount, admins, inactive)
+	   values ('Solo Venue', $$ || quote_literal(:'cur') || $$, 0,
+	           array[ $$ || quote_literal(:'minter') || $$ ]::uuid[], null) $$,
+	'an active venue may be administered by a minter of its currency (insert)'
+);
+
+-- Handing an already-live venue to an admin who mints its currency.
 -- Create a clean target venue in owner context (admins distinct from minters).
 select tests.clear_authentication();
 select tests.create_venue(:'cur', array[:'admin2']::uuid[]) as ven_trig \gset
 select tests.authenticate_as(:'steward');
-select throws_ok(
+select lives_ok(
 	$$ update public.venues set admins = array[ $$ || quote_literal(:'minter') || $$ ]::uuid[]
 	   where id = $$ || quote_literal(:'ven_trig'),
-	null,
-	'A venue admin cannot be the minter of the venue currency',
-	'a venue admin cannot be a minter of the currency (update)'
+	'a venue may take on an admin who mints its currency (update)'
 );
 
 select * from finish();

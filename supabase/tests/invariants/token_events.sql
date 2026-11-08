@@ -22,7 +22,7 @@ select tests.create_scholar('tev_admin@test.local') as admin \gset
 select tests.create_scholar('tev_alice@test.local') as alice \gset
 select tests.create_scholar('tev_bob@test.local') as bob \gset
 
--- Minter and admin are disjoint so the no_minter_admins trigger stays quiet.
+-- Minter and admin are disjoint; nothing here turns on the admin/minter overlap.
 select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
 select tests.create_venue(:'cur', array[:'admin']::uuid[]) as ven \gset
 

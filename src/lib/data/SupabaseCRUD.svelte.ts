@@ -1,4 +1,8 @@
-import type { Database } from '$data/database';
+import { workJournals } from './trackRecord';
+import { NULL_TRANSACTION } from './submissionPayment';
+import type { Database } from '#data/database.js';
+import { dedupeAddresses } from './addresses';
+import { eqFilter, inFilter } from './postgrestFilter';
 import type { AuthError, PostgrestError, QueryData, SupabaseClient } from '@supabase/supabase-js';
 import type {
 	AssignmentID,
@@ -9,6 +13,8 @@ import type {
 	CurrencyRow,
 	PreferenceLevelID,
 	PreferenceLevelRow,
+	DeclineReasonID,
+	DeclineReasonRow,
 	ProposalID,
 	ProposalRow,
 	Response,
@@ -16,37 +22,56 @@ import type {
 	RoleRow,
 	ScholarID,
 	ScholarRow,
+	PublicORCIDProfile,
 	SubmissionID,
 	SubmissionRow,
 	SubmissionType,
 	SubmissionTypeID,
 	SupporterID,
 	TokenID,
-	TokenRow,
 	TransactionID,
 	TransactionRow,
 	TransactionStatus,
+	UnmatchedAssignmentID,
+	UnmatchedAssignmentRow,
 	VenueID,
 	VenueRow,
 	VolunteerID,
+	VolunteerVisibility,
 	VolunteerRow,
 	ThanksID,
 	ThanksRow,
+	NotificationSettingRow,
 	ThanksStatus
 } from '../../data/types';
-import { renderEmail, type EmailType } from '../../email/templates';
+import { renderEmail, type EmailType, type OptionalEmailType } from '../../email/templates';
 import type Locale from '../locales/Locale';
 import CRUD, {
 	type BulkImportResult,
+	type AssignmentLoad,
+	type CompletedCount,
+	type VolunteerJournals,
+	type BidBudget,
+	type CallForBidsStatus,
 	type Charge,
+	type ChargeCoverage,
+	type EnsureScholarOutcome,
 	type ImportedSubmission,
 	type MarkSubmissionDoneOutcome,
+	type MatchAssignmentsResult,
+	type SubmissionPayments,
+	type UnmatchedNameScholar,
 	type Notification,
+	type PendingEmailVerification,
 	type ReadResult,
 	type Result,
+	type ORCIDMirrorHealth,
+	type ScholarCard,
 	type SubmissionBlocker
 } from './CRUD';
 import Scholar from './Scholar.svelte';
+import { isUUID } from '../validation';
+import { venuePath } from './venuePath';
 
 // A constant page size for paginated queries.
 export const PAGE_SIZE = 10;
@@ -103,6 +128,8 @@ type MarkSubmissionDoneResult =
 			currency_id: CurrencyID;
 			total_amount: number;
 			payouts: MarkSubmissionDonePayout[];
+			/** Only from close_submission: the seats it removed as not done. */
+			removed?: { scholar_id: ScholarID; role_name: string }[];
 	  }
 	| {
 			status: 'blocked';
@@ -135,6 +162,22 @@ export function stringField(value: unknown, key: string): string | null {
 	return typeof field === 'string' ? field : null;
 }
 
+/** Read a number field from a jsonb object returned by an RPC, or null if
+ * absent or the wrong type. */
+export function numberField(value: unknown, key: string): number | null {
+	if (typeof value !== 'object' || value === null || !(key in value)) return null;
+	const field = (value as Record<string, unknown>)[key];
+	return typeof field === 'number' ? field : null;
+}
+
+/** Read a boolean field from a jsonb object returned by an RPC, or null if
+ * absent or the wrong type. */
+export function booleanField(value: unknown, key: string): boolean | null {
+	if (typeof value !== 'object' || value === null || !(key in value)) return null;
+	const field = (value as Record<string, unknown>)[key];
+	return typeof field === 'boolean' ? field : null;
+}
+
 /** Read a string[] field from a jsonb object returned by an RPC, or null if
  * absent or not an array of strings. */
 export function stringArrayField(value: unknown, key: string): string[] | null {
@@ -159,6 +202,20 @@ export function rpcErrorKey(
 	return (code !== undefined && map[code]) || fallback;
 }
 
+/** Like rpcErrorKey, but builds the whole failure. When the code maps to a localized
+ * message, that message is the whole story, so the raw database error is left off the
+ * banner rather than repeated beneath it in monospace; an unmapped failure keeps it,
+ * since then the details are all anyone has to go on. */
+export function rpcError(
+	crud: { error: SupabaseCRUD['error'] },
+	error: PostgrestError,
+	fallback: keyof Locale['error'],
+	map: Record<string, keyof Locale['error']>
+) {
+	const key = rpcErrorKey(error, fallback, map);
+	return key === fallback ? crud.error(key, error) : crud.error(key);
+}
+
 // --- Typed query factories for embedded/joined reads ---
 // Reads with embedded resources (PostgREST `select('*, related(...)')`) or
 // column aggregates produce row shapes that aren't a plain generated Row type.
@@ -171,18 +228,31 @@ function venueVolunteersQuery(client: SupabaseClient<Database>, venue: VenueID) 
 }
 export type VenueVolunteer = QueryData<ReturnType<typeof venueVolunteersQuery>>[number];
 
+// `roles!inner`, not `roles`: PostgREST does not filter PARENT rows on an embedded
+// resource's filter unless the embed is an inner join, so the `.eq` below did nothing
+// and this selected every volunteer row on the platform, capped at `max_rows`. The
+// settings page then filtered client-side, which looked right until a venue's roster
+// ran past the cap. venueVolunteersQuery above always had this right.
 function venueSettingsVolunteersQuery(client: SupabaseClient<Database>, venue: VenueID) {
-	return client.from('volunteers').select('*, roles (venueid)').eq('roles.venueid', venue);
+	return client.from('volunteers').select('*, roles!inner(venueid)').eq('roles.venueid', venue);
 }
 export type VenueSettingsVolunteer = QueryData<
 	ReturnType<typeof venueSettingsVolunteersQuery>
 >[number];
 
 function venueCommitmentsQuery(client: SupabaseClient<Database>, venue: VenueID) {
-	return client
-		.from('volunteers')
-		.select('*, scholars (name, email, orcid), roles!inner(name, venueid)')
-		.eq('roles.venueid', venue);
+	return (
+		client
+			.from('volunteers')
+			// The mirrored ORCID columns travel as a nested embed through the scholars join,
+			// so the roster stays one round trip. Only the keywords and what ScholarPreview
+			// shows (affiliation, works count): the two jsonb payloads are deliberately left
+			// behind on every list query.
+			.select(
+				'*, scholars (name, email, orcid, orcid_profiles(keywords, employment_role, employment_organization, work_count, work_first_year, work_last_year)), roles!inner(name, venueid)'
+			)
+			.eq('roles.venueid', venue)
+	);
 }
 export type VenueCommitment = QueryData<ReturnType<typeof venueCommitmentsQuery>>[number];
 
@@ -203,39 +273,126 @@ function proposalSupportersQuery(client: SupabaseClient<Database>, proposal: Pro
 }
 export type ProposalSupporter = QueryData<ReturnType<typeof proposalSupportersQuery>>[number];
 
-function scholarReviewsQuery(client: SupabaseClient<Database>, scholar: ScholarID) {
-	return client
-		.from('assignments')
-		.select('*, submissions(*)')
-		.eq('scholar', scholar)
-		.eq('completed', false)
-		.eq('approved', true);
-}
-export type ScholarReview = QueryData<ReturnType<typeof scholarReviewsQuery>>[number];
-
 function assignmentsForApprovalQuery(client: SupabaseClient<Database>, roleIDs: RoleID[]) {
-	return client
-		.from('assignments')
-		.select('*, scholars(*), submissions(*)')
-		.in('role', roleIDs)
-		.eq('approved', false);
+	return (
+		client
+			.from('assignments')
+			.select('*, scholars!assignments_scholar_fkey(*), submissions(*)')
+			.in('role', roleIDs)
+			.eq('approved', false)
+			// A declined bid has been answered, so it is not waiting on the approver.
+			.is('declined_at', null)
+	);
 }
 export type AssignmentForApproval = QueryData<
 	ReturnType<typeof assignmentsForApprovalQuery>
 >[number];
 
-function tokenBalancesQuery(
-	client: SupabaseClient<Database>,
-	currency: CurrencyID,
-	scholarIDs: ScholarID[]
-) {
+/** Assignments on the given roles whose scholar has requested compensation but
+ * hasn't been paid — the approver's "work awaiting your approval" task list. Includes
+ * claims (requests with no approved assignment behind them), which an approver
+ * approves and pays in one step, and leaves out anything already declined. */
+function assignmentsAwaitingCompensationQuery(client: SupabaseClient<Database>, roleIDs: RoleID[]) {
 	return client
-		.from('tokens')
-		.select('scholar, id.count()')
-		.eq('currency', currency)
-		.in('scholar', scholarIDs);
+		.from('assignments')
+		.select('*, scholars!assignments_scholar_fkey(*), submissions(*)')
+		.in('role', roleIDs)
+		.eq('completed', false)
+		.is('declined_at', null)
+		.not('compensation_requested_at', 'is', null);
 }
-export type TokenBalance = QueryData<ReturnType<typeof tokenBalancesQuery>>[number];
+export type AssignmentAwaitingCompensation = QueryData<
+	ReturnType<typeof assignmentsAwaitingCompensationQuery>
+>[number];
+
+/** How many tokens of one currency each named scholar holds. Scholars holding
+ * none are absent rather than zero; callers default.
+ *
+ * An RPC rather than a PostgREST aggregate over `tokens`: the scholar list is a
+ * venue's whole volunteer roster, and as an `in.(...)` query string five thousand
+ * UUIDs is a ~185KB URL and a 414 before Postgres ever sees it. As an argument it
+ * travels in the POST body. The grouped result was also subject to `max_rows`,
+ * so past a thousand distinct holders the balances were silently truncated. */
+/** Every `transactions` column except `tokens`, which is one UUID per token
+ * moved. The lists render only its length, and `amount` is that length as a
+ * generated column — so selecting `*` meant detoasting and shipping tens of
+ * thousands of UUIDs per page to draw a number the row already carries. */
+const TRANSACTION_LIST_COLUMNS =
+	'id, created_at, creator, from_scholar, from_venue, to_scholar, to_venue, currency, purpose, status, decliner, decline_reason, seq, amount';
+
+/** The three paginated transaction lists, which differ only in their filter.
+ *
+ * `withCount` is true only for the first page. The total is displayed and drives
+ * the "load more" stop condition, so it has to be exact — but it was being asked
+ * for on EVERY page, and an exact count re-runs the whole filtered scan through
+ * the transactions SELECT policy, whose venue and minter branches are correlated
+ * subqueries evaluated per row. Every "load more" was therefore paying for the
+ * page twice: once for ten rows, once to recount every row the scholar can see. */
+function transactionListQuery(client: SupabaseClient<Database>, withCount: boolean) {
+	return client
+		.from('transactions')
+		.select(TRANSACTION_LIST_COLUMNS, withCount ? { count: 'exact' } : undefined);
+}
+export type TransactionListRow = QueryData<ReturnType<typeof transactionListQuery>>[number];
+
+export type TokenBalance = Database['public']['Functions']['scholar_balances']['Returns'][number];
+
+/** One row of the Tasks table on a scholar's profile: an assignment of the signed-in
+ * scholar's that is actually waiting on them. `state` is 'assigned' for ordinary work,
+ * or 'unstaffed' / 'ready' for an editor's seat. See public.scholar_tasks for the rule
+ * and why an editor's seat is not, by itself, a task. */
+export type ScholarTask = Database['public']['Functions']['scholar_tasks']['Returns'][number];
+
+/** Total supply of a currency and how many scholars and venues hold any of it.
+ * `currency_holder_counts` returns Json, so the shape is named here. */
+export type CurrencyHolderCounts = {
+	supply: number;
+	scholars: number;
+	venues: number;
+};
+
+/** Candidate co-authors matched by name. The columns are listed explicitly
+ * because the scholars SELECT policy is public — a wildcard here would hand
+ * out contact emails to anyone who can type into the author field. */
+function scholarsByNameQuery(client: SupabaseClient<Database>, pattern: string) {
+	return (
+		client
+			.from('scholars')
+			.select('id, name, orcid')
+			.ilike('name', pattern)
+			.not('name', 'is', null)
+			.not('orcid', 'is', null)
+			// Ordered, because `limit` makes the order decide WHICH matches are offered,
+			// not just their sequence. Without it the three shown are whichever three
+			// Postgres happens to reach first in heap order — which shifts every time any
+			// scholar's row is updated, so searching the same name twice can offer
+			// different people.
+			.order('name')
+			.limit(3)
+	);
+}
+export type ScholarMatch = QueryData<ReturnType<typeof scholarsByNameQuery>>[number];
+
+/** Scholars named by an exact email address or ORCID iD. The columns are listed
+ * explicitly for the same reason scholarsByNameQuery lists them: the scholars SELECT
+ * policy is public, so a wildcard hands out every column of any row a caller can name.
+ *
+ * `email` is among them because it is how a matched row is attributed back to the entry
+ * that was typed — and every address here was supplied by the caller, so echoing one
+ * back discloses nothing they did not already have. That is findUnknownAddresses's
+ * reasoning too. A row matched by its ORCID iD does carry its address into the response;
+ * the column is dropped before the method returns. */
+function scholarsByAddressQuery(client: SupabaseClient<Database>, filter: string) {
+	return client.from('scholars').select('id, name, orcid, email').or(filter);
+}
+type ScholarAddressRow = QueryData<ReturnType<typeof scholarsByAddressQuery>>[number];
+
+/** A scholar an invite entry named. No `email`: the caller typed the addresses, and a
+ * preview only needs a name to show and an id to invite. */
+export type ScholarInvitee = Omit<ScholarAddressRow, 'email'>;
+
+/** A seeded scholar offered on the local-only sign-in list. */
+export type DevScholar = Pick<ScholarRow, 'id' | 'name' | 'email' | 'steward'>;
 
 export default class SupabaseCRUD extends CRUD {
 	/** Reference to the database connection. */
@@ -269,6 +426,13 @@ export default class SupabaseCRUD extends CRUD {
 		return error ? this.error(id, error) : {};
 	}
 
+	// These three all return the failure alongside the data rather than only logging
+	// it. A caller that doesn't care can keep destructuring `data` exactly as before,
+	// but one that does can now tell a MISSING row from a FAILED read — which
+	// `.maybeSingle()` distinguishes (null data with a null error means the row isn't
+	// there) and this layer used to throw away. The scholar route depends on it to
+	// answer a 404 instead of rendering "unable to load" for every case alike.
+
 	/** Run a multi-row read, log on failure, and resolve with the rows (null on
 	 * error), preserving the query's inferred element type. Used by the page-load
 	 * read methods (#137). */
@@ -277,8 +441,55 @@ export default class SupabaseCRUD extends CRUD {
 		query: PromiseLike<{ data: Row[] | null; error: PostgrestError | null }>
 	): Promise<ReadResult<Row[] | null>> {
 		const { data, error } = await query;
-		if (error) this.error(id, error);
-		return { data };
+		return { data, ...(error ? this.error(id, error) : {}) };
+	}
+
+	/** Run a list read in pages past PostgREST's `max_rows` (1000, see
+	 * supabase/config.toml), which otherwise silently truncates the result. `page`
+	 * must apply a total ORDER BY before its range, because paging without one has
+	 * no defined boundary and can both repeat and skip rows. A failed page returns
+	 * the error rather than the rows gathered so far: a partial list is the bug this
+	 * exists to prevent. */
+	private async allRows<Row>(
+		id: keyof Locale['error'],
+		page: (
+			from: number,
+			to: number
+		) => PromiseLike<{ data: Row[] | null; error: PostgrestError | null }>
+	): Promise<ReadResult<Row[] | null>> {
+		const size = 1000;
+		const all: Row[] = [];
+		for (let from = 0; ; from += size) {
+			const { data, error } = await page(from, from + size - 1);
+			if (error) return { data: null, ...this.error(id, error) };
+			if (data === null) break;
+			all.push(...data);
+			// A short page is the last one.
+			if (data.length < size) break;
+		}
+		return { data: all };
+	}
+
+	/** Run an `.in()` read over many values a chunk at a time, gathering the rows.
+	 *
+	 * `.in()` puts every value in the request URL, so a list pasted from a reviewing
+	 * system -- hundreds of manuscript IDs, or the thousands of transaction ids behind
+	 * them -- can outgrow what the gateway accepts. A chunk this size also stays well
+	 * under PostgREST's `max_rows`, as long as each value matches a handful of rows. A
+	 * failed chunk returns the error rather than the rows gathered so far. */
+	private async inChunks<Value, Row>(
+		id: keyof Locale['error'],
+		values: Value[],
+		read: (chunk: Value[]) => PromiseLike<{ data: Row[] | null; error: PostgrestError | null }>
+	): Promise<ReadResult<Row[] | null>> {
+		const size = 100;
+		const all: Row[] = [];
+		for (let from = 0; from < values.length; from += size) {
+			const { data, error } = await read(values.slice(from, from + size));
+			if (error) return { data: null, ...this.error(id, error) };
+			all.push(...(data ?? []));
+		}
+		return { data: all };
 	}
 
 	/** Run a single-row read (`.maybeSingle()`), log on failure, and resolve with
@@ -288,8 +499,7 @@ export default class SupabaseCRUD extends CRUD {
 		query: PromiseLike<{ data: Row | null; error: PostgrestError | null }>
 	): Promise<ReadResult<Row | null>> {
 		const { data, error } = await query;
-		if (error) this.error(id, error);
-		return { data: data ?? null };
+		return { data: data ?? null, ...(error ? this.error(id, error) : {}) };
 	}
 
 	/** Run a count query (`{ count: 'exact', head: true }`), log on failure, and
@@ -299,8 +509,7 @@ export default class SupabaseCRUD extends CRUD {
 		query: PromiseLike<{ count: number | null; error: PostgrestError | null }>
 	): Promise<ReadResult<number | null>> {
 		const { count, error } = await query;
-		if (error) this.error(id, error);
-		return { data: count };
+		return { data: count, ...(error ? this.error(id, error) : {}) };
 	}
 
 	// Per-table single-row column updaters keyed by `id`. These collapse the many
@@ -397,14 +606,93 @@ export default class SupabaseCRUD extends CRUD {
 		return scholar;
 	}
 
+	async getScholarsForDevSignIn(): Promise<ReadResult<DevScholar[] | null>> {
+		// Backs the local-only sign-in list on /login, so testing a flow as a
+		// particular seeded scholar doesn't mean opening seed.sql to look up an
+		// address. Reads nothing the scholars policy doesn't already make public,
+		// and the page only renders the list against a local Supabase — but the
+		// name says what it is for, so it isn't reached for casually.
+		return this.rows(
+			'LoadScholar',
+			this.client.from('scholars').select('id, name, email, steward').order('name')
+		);
+	}
+
+	async findScholarsByName(query: string): Promise<ReadResult<ScholarMatch[]>> {
+		// Name search for the new-submission form, where an author may know a
+		// co-author's name but not their ORCID. Scholars with no name are skipped
+		// — that covers erased accounts, whose name is nulled — and so are those
+		// with no ORCID, since an ORCID is what the form needs back. The wildcards
+		// in the caller's text are escaped so a stray % doesn't match everyone.
+		const escaped = query.trim().replaceAll('%', '\\%').replaceAll('_', '\\_');
+		if (escaped.length === 0) return { data: [] };
+		const { data, error } = await scholarsByNameQuery(this.client, `%${escaped}%`);
+		if (error) {
+			console.error(error);
+			return { data: [], error: { message: this.locale.error.ScholarNotFound, details: error } };
+		}
+		return { data: data ?? [] };
+	}
+
 	async findScholar(emailOrORCID: string): Promise<Result<string>> {
 		const { data: scholar, error } = await this.client
 			.from('scholars')
 			.select('id')
-			.or(`orcid.eq.${emailOrORCID},email.eq.${emailOrORCID}`)
+			.or(`${eqFilter('orcid', emailOrORCID)},${eqFilter('email', emailOrORCID)}`)
 			.single();
 
 		return error || scholar === null ? this.error('ScholarNotFound', error) : { data: scholar.id };
+	}
+
+	async findUnknownAddresses(addresses: string[]): Promise<ReadResult<string[]>> {
+		// One query rather than one per address, and deliberately matched on `email` only.
+		// `approve_venue_proposal` resolves proposal addresses against `scholars.email`, which
+		// is written solely by the verification flow — so someone can hold an account and
+		// still not be found here, having never verified this address. Matching on anything
+		// wider (ORCID, say) would report addresses as known that approval would then reject.
+		if (addresses.length === 0) return { data: [] };
+		const { data, error } = await this.client
+			.from('scholars')
+			.select('email')
+			.in('email', addresses);
+		if (error) {
+			console.error(error);
+			return { data: [], error: { message: this.locale.error.ScholarNotFound, details: error } };
+		}
+		const known = new Set((data ?? []).map((scholar) => scholar.email));
+		return { data: addresses.filter((address) => !known.has(address)) };
+	}
+
+	async findScholarsByAddresses(
+		emailsOrORCIDs: string[]
+	): Promise<ReadResult<Map<string, ScholarInvitee>>> {
+		const addresses = dedupeAddresses(emailsOrORCIDs);
+		// An empty `in.()` is a syntax error rather than an empty result, so the empty
+		// list is answered here rather than asked about.
+		if (addresses.length === 0) return { data: new Map() };
+
+		// One filter across two columns, because one round trip beats two — which means
+		// composing `or()` as a string, which means quoting every value by hand.
+		const filter = `${inFilter('email', addresses)},${inFilter('orcid', addresses)}`;
+		const { data, error } = await scholarsByAddressQuery(this.client, filter);
+		if (error) {
+			console.error(error);
+			return {
+				data: new Map(),
+				error: { message: this.locale.error.ScholarNotFound, details: error }
+			};
+		}
+
+		// Keyed by what the caller typed, not by what the row holds: the caller asked
+		// about entries and has to match answers back to them. The `includes` guards are
+		// what drop the incidental address of a row that matched only on its ORCID iD.
+		const found = new Map<string, ScholarInvitee>();
+		for (const { email, ...scholar } of data ?? []) {
+			if (email !== null && addresses.includes(email)) found.set(email, scholar);
+			if (scholar.orcid !== null && addresses.includes(scholar.orcid))
+				found.set(scholar.orcid, scholar);
+		}
+		return { data: found };
 	}
 
 	async getScholar(scholarID: ScholarID): Promise<Scholar | null> {
@@ -459,6 +747,36 @@ export default class SupabaseCRUD extends CRUD {
 		}
 	}
 
+	/** Which optional notices this scholar has silenced. The RLS policy admits only the
+	 * scholar's own rows, so this comes back empty for anyone else's profile — which is
+	 * fine, because the controls are only rendered for the scholar themselves. */
+	async getNotificationSettings(
+		scholar: ScholarID
+	): Promise<ReadResult<NotificationSettingRow[] | null>> {
+		return this.rows(
+			'LoadNotificationSettings',
+			this.client.from('notification_settings').select().eq('scholar', scholar)
+		);
+	}
+
+	/** Turn one optional notice on or off.
+	 *
+	 * An upsert rather than an insert-or-delete: a row saying `true` is equivalent to no
+	 * row at all, so writing the preference either way is one round trip and the client
+	 * never has to decide whether "back to the default" means deleting. The composite
+	 * primary key is what makes the conflict target unambiguous. */
+	async updateNotificationSetting(
+		scholar: ScholarID,
+		event: OptionalEmailType,
+		enabled: boolean
+	): Promise<Result> {
+		const { error } = await this.client
+			.from('notification_settings')
+			.upsert({ scholar, event, enabled }, { onConflict: 'scholar,event' });
+		if (error) return this.error('UpdateNotificationSetting', error);
+		return {};
+	}
+
 	async updateScholarStatus(id: ScholarID, status: string): Promise<Result> {
 		const { error } = await this.client
 			.from('scholars')
@@ -488,11 +806,37 @@ export default class SupabaseCRUD extends CRUD {
 		return {};
 	}
 
+	/** What this scholar is waiting to verify, if anything (#27).
+	 *
+	 * There is no way to read this from the table: email_verifications has RLS enabled
+	 * with no policies, so the RPC is the only door. It answers for auth.uid() and takes
+	 * no argument, so there is no other scholar's row that could be asked for, and it
+	 * returns neither the token hash nor the id of the email that carried the link. */
+	async getPendingEmailVerification(): Promise<ReadResult<PendingEmailVerification | null>> {
+		const { data, error } = await this.client.rpc('pending_email_verification');
+		if (error) {
+			// A caller with no session never reaches the function's own auth check: EXECUTE is
+			// revoked from anon, so Postgres refuses first with 42501. That is not a fault to
+			// report — it is a session that expired between the layout load and this read, and
+			// the layout guard is already redirecting to login. Reporting it would put "unable
+			// to check…" in the log on every routine sign-out.
+			if (error.code === '42501') return { data: null };
+			return { data: null, ...this.error('LoadPendingEmailVerification', error) };
+		}
+		return { data: data as PendingEmailVerification };
+	}
+
 	async getScholarRow(id: ScholarID): Promise<ReadResult<ScholarRow | null>> {
 		return this.row(
 			'LoadScholar',
 			this.client.from('scholars').select().eq('id', id).maybeSingle()
 		);
+	}
+
+	async ensureScholar(): Promise<Result<EnsureScholarOutcome>> {
+		const { data, error } = await this.client.rpc('ensure_scholar');
+		if (error) return this.error('EnsureScholar', error);
+		return { data: data as EnsureScholarOutcome };
 	}
 
 	async getScholarsByIDs(ids: ScholarID[]): Promise<ReadResult<ScholarRow[] | null>> {
@@ -505,19 +849,87 @@ export default class SupabaseCRUD extends CRUD {
 		return this.rows('LoadScholar', this.client.from('scholars').select('id, name').in('id', ids));
 	}
 
+	async getScholarEmails(
+		ids: ScholarID[]
+	): Promise<ReadResult<Pick<ScholarRow, 'id' | 'email'>[] | null>> {
+		return this.rows('LoadScholar', this.client.from('scholars').select('id, email').in('id', ids));
+	}
+
 	async getStewards(): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>> {
+		// Ordered, because this list is public (/about) and heap order is not stable:
+		// Postgres moves a row's physical position on every UPDATE, so an unordered
+		// list reshuffles whenever any steward edits their name or status.
 		return this.rows(
 			'LoadScholar',
-			this.client.from('scholars').select('id, name').eq('steward', true)
+			this.client.from('scholars').select('id, name').eq('steward', true).order('name')
 		);
+	}
+
+	/** The columns a client may read. Named rather than a wildcard, and that is now load
+	 * bearing rather than only good manners: `fetch_detail` is deliberately not granted to
+	 * anon or authenticated, so a `select()` asking for every column is refused outright. */
+	private static readonly ORCID_PROFILE_COLUMNS =
+		'scholar, orcid, employment_role, employment_department, employment_organization, ' +
+		'education_role, education_organization, education_year, keywords, works, work_count, ' +
+		'work_first_year, work_last_year, links, fetched_at, works_fetched_at, ' +
+		'fetch_attempted_at, fetch_status, fetch_failures, fetch_rate_limited_at';
+
+	async getORCIDProfile(id: ScholarID): Promise<ReadResult<PublicORCIDProfile | null>> {
+		return this.row(
+			'LoadScholar',
+			this.client
+				.from('orcid_profiles')
+				.select(SupabaseCRUD.ORCID_PROFILE_COLUMNS)
+				.eq('scholar', id)
+				.maybeSingle()
+		);
+	}
+
+	async getScholarCards(ids: ScholarID[]): Promise<ReadResult<ScholarCard[] | null>> {
+		// A one-to-one embed, which PostgREST derives from the foreign key. A scholar with
+		// no mirror row comes back with orcid_profiles: null rather than being dropped, so
+		// widening this query cannot make a row disappear from a list.
+		return this.rows(
+			'LoadScholar',
+			this.client
+				.from('scholars')
+				.select(
+					'id, name, orcid, orcid_profiles(employment_role, employment_organization, keywords, work_count, work_first_year, work_last_year, fetched_at)'
+				)
+				.in('id', ids)
+		);
+	}
+
+	requestORCIDRefresh(ids: ScholarID[]): void {
+		if (ids.length === 0) return;
+		// Floating on purpose. Nothing on the page waits for this, nothing branches on
+		// whether it worked, and a rejected promise here must not reach the feedback bus:
+		// the refresh is for the NEXT reader, and this one has already been served.
+		// Wrapped in Promise.resolve because a PostgrestBuilder is a PromiseLike: it has
+		// .then but no .catch, so an unhandled rejection would escape.
+		void Promise.resolve(
+			this.client.rpc('request_orcid_refresh', { _scholars: [...new Set(ids)] })
+		).catch(() => undefined);
+	}
+
+	async backfillORCIDProfiles(limit: number = 100): Promise<Result<number>> {
+		const { data, error } = await this.client.rpc('backfill_orcid_profiles', { _limit: limit });
+		if (error) return this.error('BackfillORCIDProfiles', error);
+		return { data: data ?? 0 };
+	}
+
+	async getORCIDMirrorHealth(): Promise<Result<ORCIDMirrorHealth>> {
+		const { data, error } = await this.client.rpc('orcid_mirror_health');
+		if (error) return this.error('LoadORCIDMirrorHealth', error);
+		return { data: data as unknown as ORCIDMirrorHealth };
 	}
 
 	async getScholarAdminVenues(
 		scholar: ScholarID
-	): Promise<ReadResult<Pick<VenueRow, 'id' | 'title'>[] | null>> {
+	): Promise<ReadResult<Pick<VenueRow, 'id' | 'title' | 'slug'>[] | null>> {
 		return this.rows(
 			'LoadVenue',
-			this.client.from('venues').select('id, title').contains('admins', [scholar])
+			this.client.from('venues').select('id, title, slug').contains('admins', [scholar])
 		);
 	}
 
@@ -572,12 +984,48 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
-	async getScholarReviews(scholar: ScholarID): Promise<ReadResult<ScholarReview[] | null>> {
-		return this.rows('LoadAssignment', scholarReviewsQuery(this.client, scholar));
+	/** Answers for auth.uid() rather than a given scholar: the Tasks table is drawn only
+	 * on your own profile, and the rule needs to aggregate over assignments the caller
+	 * may not select. See public.scholar_tasks. */
+	async getScholarTasks(): Promise<ReadResult<ScholarTask[] | null>> {
+		return this.rows('LoadAssignment', this.client.rpc('scholar_tasks'));
 	}
 
-	async getScholarTokens(scholar: ScholarID): Promise<ReadResult<TokenRow[] | null>> {
-		return this.rows('LoadToken', this.client.from('tokens').select('*').eq('scholar', scholar));
+	/** How many tokens the scholar holds, per currency. The scholar page used to
+	 * fetch one ROW PER TOKEN and re-filter that array once per currency; PostgREST
+	 * caps a response at `max_rows`, so both the total and every per-currency figure
+	 * silently stopped at 1000. This groups in the database instead. */
+	async getScholarBalances(scholar: ScholarID): Promise<ReadResult<Record<string, number>>> {
+		const { data, error } = await this.client
+			.from('tokens')
+			.select('currency, id.count()')
+			.eq('scholar', scholar);
+		if (error) {
+			this.error('LoadToken', error);
+			return { data: {} };
+		}
+		return {
+			data: Object.fromEntries(data.map((row) => [row.currency, row.count]))
+		};
+	}
+
+	async getScholarTokenCount(scholar: ScholarID): Promise<ReadResult<number>> {
+		// A count rather than the rows: this runs in the root layout load, so on
+		// every navigation, and a scholar can hold hundreds of individual token
+		// rows. As an aggregate in the BODY rather than `head: true` with the count
+		// in a header, because SvelteKit inlines a server-side response for
+		// hydration to reuse only when there is a body to inline — a HEAD was one of
+		// the reads the browser had to repeat before any button worked (see
+		// hydrationFetch.ts).
+		const { data, error } = await this.client
+			.from('tokens')
+			.select('id.count()')
+			.eq('scholar', scholar);
+		if (error) {
+			console.error(error);
+			return { data: 0, error: { message: this.locale.error.LoadToken, details: error } };
+		}
+		return { data: data[0]?.count ?? 0 };
 	}
 
 	async getScholarConflicts(scholar: ScholarID): Promise<ReadResult<ConflictRow[] | null>> {
@@ -612,7 +1060,36 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async editVenueAdmins(id: VenueID, admins: string[]) {
-		return this.updateVenue(id, { admins: Array.from(new Set(admins)) }, 'EditVenueAdmins');
+		// Read the list being replaced, so the difference can be told to the people it is
+		// about. addVenueAdmin delegates here, so both ends are covered in one place.
+		const { data: before } = await this.client
+			.from('venues')
+			.select('id, title, slug, admins')
+			.eq('id', id)
+			.single();
+
+		const result = await this.updateVenue(
+			id,
+			{ admins: Array.from(new Set(admins)) },
+			'EditVenueAdmins'
+		);
+		if (result.error) return result;
+
+		// Consequential: administering a venue is authority over its roles, its submissions
+		// and its money, and acquiring or losing it used to happen without a word.
+		if (before !== null) {
+			const was = new Set(before.admins ?? []);
+			const now = new Set(admins);
+			const added = [...now].filter((scholar) => !was.has(scholar));
+			const removed = [...was].filter((scholar) => !now.has(scholar));
+			const path = venuePath(before);
+			if (added.length > 0)
+				await this.emailScholars(added, 'VenueAdminAdded', [before.title, path], id);
+			if (removed.length > 0)
+				await this.emailScholars(removed, 'VenueAdminRemoved', [before.title], id);
+		}
+
+		return result;
 	}
 
 	async addVenueAdmin(id: VenueID, emailOrORCID: string): Promise<Result> {
@@ -637,12 +1114,85 @@ export default class SupabaseCRUD extends CRUD {
 		return this.updateVenue(id, { title }, 'EditVenueTitle');
 	}
 
+	async editVenueShortTitle(id: VenueID, short_title: string) {
+		return this.updateVenue(id, { short_title }, 'EditVenueShortTitle');
+	}
+
 	async editVenueURL(id: VenueID, url: string) {
-		return this.updateVenue(id, { url }, 'EditVenueTitle');
+		return this.updateVenue(id, { url }, 'EditVenueURL');
+	}
+
+	async editVenueReviewSystemURL(id: VenueID, url: string | null) {
+		return this.updateVenue(id, { review_system_url: url }, 'EditVenueReviewSystemURL');
+	}
+
+	async editVenueRelevantVenues(id: VenueID, venues: string[]) {
+		return this.updateVenue(id, { relevant_venues: venues }, 'EditVenueRelevantVenues');
+	}
+
+	/**
+	 * Set or change the venue's web address.
+	 *
+	 * The unique index, not the availability check the field runs while someone types, is
+	 * what decides who gets a contested address: two venues can both be told an address is
+	 * free in the same second, and only one write can win. So the collision is read off the
+	 * error rather than prevented, and the loser is told the address was taken rather than
+	 * shown a generic failure. `23514` is the format constraint, which the field's own
+	 * validation should have caught — it means something reached here unvalidated.
+	 */
+	async editVenueSlug(id: VenueID, slug: string) {
+		const { data: before } = await this.client
+			.from('venues')
+			.select('id, title, slug')
+			.eq('id', id)
+			.single();
+
+		const next = slug.trim().toLowerCase();
+		const { error } = await this.client.from('venues').update({ slug: next }).eq('id', id);
+		if (error)
+			return this.errorOrEmpty(
+				rpcErrorKey(error, 'EditVenueSlug', {
+					'23505': 'VenueAddressTaken',
+					'23514': 'VenueAddressInvalid'
+				}),
+				error
+			);
+
+		// Consequential, and the sharpest of these: the whole payment model depends on links
+		// pasted into a reviewing platform's email templates, and every one of them stops
+		// resolving the moment this changes. The people who pasted them are exactly the
+		// venue's editors and admins.
+		if (before !== null && venuePath(before) !== next)
+			await this.emailVenueEditors(id, 'VenueAddressChanged', () => [
+				before.title,
+				next,
+				venuePath(before)
+			]);
+
+		return {};
 	}
 
 	async editVenueInactive(id: VenueID, inactive: string | null) {
-		return this.updateVenue(id, { inactive }, 'EditVenueInactive');
+		const { data: before } = await this.client
+			.from('venues')
+			.select('inactive')
+			.eq('id', id)
+			.single();
+		const result = await this.updateVenue(id, { inactive }, 'EditVenueInactive');
+		if (result.error) return result;
+
+		// Only on an actual change of state, not on every edit of the message shown while
+		// inactive. VenueApproved fires when a steward approves a proposal, which DESIGN.md is
+		// explicit is NOT the moment a venue launches — this is that moment.
+		const wasInactive = (before?.inactive ?? null) !== null;
+		if (wasInactive !== (inactive !== null))
+			await this.emailVenueEditors(
+				id,
+				inactive !== null ? 'VenueDeactivated' : 'VenueReactivated',
+				(path, title) => [title, path, inactive ?? '']
+			);
+
+		return result;
 	}
 
 	async editVenueAnonymousAssignments(id: VenueID, anonymous_assignments: boolean) {
@@ -661,10 +1211,6 @@ export default class SupabaseCRUD extends CRUD {
 		return this.updateVenue(id, { payment_free: paymentFree }, 'EditVenuePaymentFree');
 	}
 
-	async editVenueDoneVisibilityDays(id: VenueID, days: number) {
-		return this.updateVenue(id, { done_visibility_days: days }, 'EditVenueDoneVisibilityDays');
-	}
-
 	async editVenueTransactionReminderFrequency(id: VenueID, days: number) {
 		return this.updateVenue(
 			id,
@@ -675,6 +1221,36 @@ export default class SupabaseCRUD extends CRUD {
 
 	async getVenue(id: VenueID): Promise<ReadResult<VenueRow | null>> {
 		return this.row('LoadVenue', this.client.from('venues').select().eq('id', id).maybeSingle());
+	}
+
+	/**
+	 * Resolve a venue from a URL path segment.
+	 *
+	 * The segment is the venue's web address once it has chosen one, and its id until then.
+	 * Which column to query is decided by looking at the segment rather than by trying one
+	 * and falling back to the other: `venues_slug_check` forbids an address shaped like a
+	 * UUID precisely so this stays a decision and not a guess, and a UUID compared against a
+	 * text column (or the reverse) is a wasted round trip at best.
+	 */
+	async getVenueByPath(path: string): Promise<ReadResult<VenueRow | null>> {
+		const segment = path.trim();
+		return this.row(
+			'LoadVenue',
+			isUUID(segment)
+				? this.client.from('venues').select().eq('id', segment).maybeSingle()
+				: this.client.from('venues').select().eq('slug', segment.toLowerCase()).maybeSingle()
+		);
+	}
+
+	/** Whether no venue holds this web address yet. Advisory: see `editVenueSlug`. */
+	async isVenueAddressAvailable(slug: string): Promise<ReadResult<boolean>> {
+		const { data, error } = await this.client
+			.from('venues')
+			.select('id')
+			.eq('slug', slug.trim().toLowerCase())
+			.maybeSingle();
+		if (error) return { data: false, error: this.error('LoadVenue', error).error };
+		return { data: data === null, error: undefined };
 	}
 
 	async getVenues(): Promise<ReadResult<VenueRow[] | null>> {
@@ -689,31 +1265,155 @@ export default class SupabaseCRUD extends CRUD {
 		return this.rows('LoadRole', this.client.from('roles').select('*').eq('venueid', venue));
 	}
 
-	async getVenueTokens(venue: VenueID): Promise<ReadResult<TokenRow[] | null>> {
-		return this.rows('LoadToken', this.client.from('tokens').select('*').eq('venue', venue));
-	}
-
-	async getVenueSubmissions(venue: VenueID): Promise<ReadResult<SubmissionRow[] | null>> {
-		return this.rows(
-			'LoadSubmission',
-			this.client.from('submissions').select('*').eq('venue', venue)
-		);
-	}
-
-	async getVenueSubmissionExternalIDs(
-		venue: VenueID
-	): Promise<ReadResult<Pick<SubmissionRow, 'externalid'>[] | null>> {
-		return this.rows(
-			'LoadSubmission',
-			this.client.from('submissions').select('externalid').eq('venue', venue)
-		);
-	}
-
-	async getVenueSubmissionCount(venue: VenueID): Promise<ReadResult<number | null>> {
+	/** How many tokens of the given currency the venue's reserve holds. A count
+	 * rather than the rows: the dashboard and the gift form only ever wanted the
+	 * number, and a reserve large enough to serve a community is far past the
+	 * `max_rows` cap that silently truncated the array they used to count. */
+	async getVenueTokenCount(
+		venue: VenueID,
+		currency: CurrencyID
+	): Promise<ReadResult<number | null>> {
 		return this.count(
-			'LoadSubmission',
-			this.client.from('submissions').select('*', { count: 'exact', head: true }).eq('venue', venue)
+			'LoadToken',
+			this.client
+				.from('tokens')
+				.select('id', { count: 'exact', head: true })
+				.eq('venue', venue)
+				.eq('currency', currency)
 		);
+	}
+
+	async getVenueSubmissions(
+		venue: VenueID,
+		done: boolean
+	): Promise<ReadResult<SubmissionRow[] | null>> {
+		// Paged: a venue's done submissions only accumulate, and an unpaged read
+		// would silently stop at max_rows.
+		return this.allRows('LoadSubmission', (from, to) =>
+			this.client
+				.from('submissions')
+				.select('*')
+				.eq('venue', venue)
+				.eq('status', done ? 'done' : 'reviewing')
+				.order('id')
+				.range(from, to)
+		);
+	}
+
+	/** Enough of every submission in the venue to recognize one by its manuscript
+	 * ID, paged past PostgREST's `max_rows`.
+	 *
+	 * The bulk importer flags a row whose manuscript ID is already here, so this
+	 * list being complete is the whole point of it: a single unpaged select is
+	 * capped at `max_rows` (1000, see supabase/config.toml), which silently
+	 * returned an arbitrary thousand and let the importer pass duplicates against
+	 * everything past them. The unique index on (venue, externalid) still refused
+	 * those, but only after the editor had finished mapping columns and matching
+	 * names -- and a venue big enough to hit the cap is exactly the one this
+	 * feature exists for.
+	 *
+	 * The id and title travel with each external ID so a skipped row can name and
+	 * link the manuscript it collided with. An ID alone said a row was already here
+	 * without saying which paper that was, which is the one thing an editor needs
+	 * to tell a re-exported queue apart from two different papers sharing an ID.
+	 *
+	 * Ordered, because `.range()` paging without an ORDER BY has no defined page
+	 * boundary and can both repeat and skip rows. A failed page returns the error
+	 * rather than the rows gathered so far: a partial list here is the bug. */
+	async getVenueSubmissionIdentities(
+		venue: VenueID
+	): Promise<ReadResult<Pick<SubmissionRow, 'id' | 'externalid' | 'title'>[] | null>> {
+		const size = 1000;
+		const all: Pick<SubmissionRow, 'id' | 'externalid' | 'title'>[] = [];
+		for (let from = 0; ; from += size) {
+			const { data, error } = await this.client
+				.from('submissions')
+				.select('id, externalid, title')
+				.eq('venue', venue)
+				.order('externalid')
+				.range(from, from + size - 1);
+			if (error) return { data: null, ...this.error('LoadSubmission', error) };
+			if (data === null) break;
+			all.push(...data);
+			// A short page is the last one. An exactly-full final page costs one
+			// more round trip that comes back empty, which is the price of not
+			// guessing.
+			if (data.length < size) break;
+		}
+		return { data: all };
+	}
+
+	async getSubmissionPayments(
+		venue: VenueID,
+		externalIDs: string[]
+	): Promise<ReadResult<SubmissionPayments | null>> {
+		// Each manuscript ID is unique within a venue (submissions_venue_externalid_unique),
+		// so a chunk of IDs matches at most that many rows.
+		const submissions = await this.inChunks('LoadSubmission', externalIDs, (chunk) =>
+			this.client
+				.from('submissions')
+				.select('id, venue, externalid, title, imported, authors, transactions')
+				.eq('venue', venue)
+				.in('externalid', chunk)
+		);
+		if (submissions.data === null) return { data: null, error: submissions.error };
+
+		const chargeIDs = [
+			...new Set(
+				submissions.data.flatMap((s) => s.transactions).filter((t) => t !== NULL_TRANSACTION)
+			)
+		];
+		const transactions = await this.inChunks('LoadTransaction', chargeIDs, (chunk) =>
+			this.client.from('transactions').select('id, status').in('id', chunk)
+		);
+		if (transactions.data === null) return { data: null, error: transactions.error };
+
+		// Only the authors who were charged: a non-paying co-author is nobody to write to.
+		const charged = [
+			...new Set(
+				submissions.data.flatMap((s) =>
+					s.authors.filter((_, index) => s.transactions[index] !== NULL_TRANSACTION)
+				)
+			)
+		];
+		const authors = await this.inChunks('LoadScholar', charged, (chunk) =>
+			this.client.from('scholars').select('id, name, email').in('id', chunk)
+		);
+		if (authors.data === null) return { data: null, error: authors.error };
+
+		return {
+			data: {
+				submissions: submissions.data,
+				transactions: transactions.data,
+				authors: authors.data
+			}
+		};
+	}
+
+	/** The number of the venue's submissions the current scholar would actually find
+	 * in the submissions list. RLS decides what is visible, but the list drops two
+	 * further categories on the client (sortSubmissions.ts), so a raw count promised
+	 * rows that were never rendered. Both exclusions are applied here rather than
+	 * counting rows and subtracting: the point of a head count is not to fetch them.
+	 *
+	 * The list's other filters — the search box and the needs-editor checkbox — are
+	 * deliberately NOT applied. Those are interactive state, not facts about what
+	 * this scholar may see. */
+	async getVenueSubmissionCount(
+		venue: VenueID,
+		conflicted: SubmissionID[] = []
+	): Promise<ReadResult<number | null>> {
+		// Only active submissions: the tile links to the list's default mode.
+		let query = this.client
+			.from('submissions')
+			.select('*', { count: 'exact', head: true })
+			.eq('venue', venue)
+			.eq('status', 'reviewing');
+
+		// Submissions this scholar has declared a conflict on are hidden from the list.
+		if (conflicted.length > 0) query = query.not('id', 'in', `(${conflicted.join(',')})`);
+
+		return this.count('LoadSubmission', query);
 	}
 
 	async getVenueSubmissionTypes(venue: VenueID): Promise<ReadResult<SubmissionType[] | null>> {
@@ -724,17 +1424,32 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async getVenueVolunteers(venue: VenueID): Promise<ReadResult<VenueVolunteer[] | null>> {
-		return this.rows('LoadVolunteer', venueVolunteersQuery(this.client, venue));
+		return this.allRows('LoadVolunteer', (from, to) =>
+			venueVolunteersQuery(this.client, venue).order('id').range(from, to)
+		);
 	}
 
 	async getVenueSettingsVolunteers(
 		venue: VenueID
 	): Promise<ReadResult<VenueSettingsVolunteer[] | null>> {
-		return this.rows('LoadVolunteer', venueSettingsVolunteersQuery(this.client, venue));
+		return this.allRows('LoadVolunteer', (from, to) =>
+			venueSettingsVolunteersQuery(this.client, venue).order('id').range(from, to)
+		);
 	}
 
 	async getVenueCommitments(venue: VenueID): Promise<ReadResult<VenueCommitment[] | null>> {
-		return this.rows('LoadVolunteer', venueCommitmentsQuery(this.client, venue));
+		// Paged: a large venue's roster runs past `max_rows`, and a truncated one
+		// silently drops volunteers from the roster, from name matching in the bulk
+		// importer, and from the unmatched assignments picker.
+		return this.allRows('LoadVolunteer', (from, to) =>
+			venueCommitmentsQuery(this.client, venue).order('id').range(from, to)
+		);
+	}
+
+	async getVenueVolunteerCounts(
+		venue: VenueID
+	): Promise<ReadResult<{ role: RoleID; volunteer_count: number }[] | null>> {
+		return this.rows('LoadVolunteer', this.client.rpc('venue_volunteer_counts', { _venue: venue }));
 	}
 
 	async getVenueAssignments(venue: VenueID): Promise<ReadResult<AssignmentRow[] | null>> {
@@ -744,17 +1459,89 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
-	async getVenueActiveAssignmentScholars(
+	async getBidBudget(role: RoleID): Promise<ReadResult<BidBudget | null>> {
+		const { data, error } = await this.client.rpc('my_bid_budget', { _role: role });
+		return { data: data?.[0] ?? null, ...(error ? this.error('LoadBidBudget', error) : {}) };
+	}
+
+	async getVenueSubmissionEditors(
 		venue: VenueID
-	): Promise<ReadResult<Pick<AssignmentRow, 'scholar'>[] | null>> {
+	): Promise<ReadResult<{ submission: SubmissionID; has_editor: boolean }[] | null>> {
+		return this.rows(
+			'LoadAssignment',
+			this.client.rpc('venue_submission_editors', { _venue: venue })
+		);
+	}
+
+	async getScholarActiveAssignmentRoles(
+		scholar: ScholarID,
+		venue: VenueID
+	): Promise<ReadResult<Pick<AssignmentRow, 'role'>[] | null>> {
 		return this.rows(
 			'LoadAssignment',
 			this.client
 				.from('assignments')
-				.select('scholar')
+				.select('role')
+				.eq('scholar', scholar)
 				.eq('venue', venue)
 				.eq('approved', true)
 				.eq('completed', false)
+		);
+	}
+
+	async getAssignmentLoads(
+		venue: VenueID,
+		scholars: ScholarID[]
+	): Promise<ReadResult<AssignmentLoad[] | null>> {
+		if (scholars.length === 0) return { data: [] };
+		// Paged: a roster's worth of scholars can run past PostgREST's max_rows.
+		return this.allRows('LoadAssignment', (from, to) =>
+			this.client.rpc('assignment_loads', { _venue: venue, _scholars: scholars }).range(from, to)
+		);
+	}
+
+	async getCompletedCounts(
+		venue: VenueID,
+		scholars: ScholarID[]
+	): Promise<ReadResult<CompletedCount[] | null>> {
+		if (scholars.length === 0) return { data: [] };
+		// Paged, as getAssignmentLoads is.
+		return this.allRows('LoadAssignment', (from, to) =>
+			this.client.rpc('completed_counts', { _venue: venue, _scholars: scholars }).range(from, to)
+		);
+	}
+
+	async getVenueVolunteerJournals(venue: VenueID): Promise<ReadResult<VolunteerJournals[] | null>> {
+		// Through volunteers, as the roster is, so RLS limits it to the same people the
+		// viewer may see on the roster. Paged for the same reason.
+		const { data, error } = await this.allRows('LoadVolunteer', (from, to) =>
+			this.client
+				.from('volunteers')
+				.select('scholarid, scholars(orcid_profiles(work_journals)), roles!inner(venueid)')
+				.eq('roles.venueid', venue)
+				.order('id')
+				.range(from, to)
+		);
+		if (data === null) return { data: null, error };
+		// A scholar volunteering in two roles appears twice; one entry each.
+		const byScholar = new Map<ScholarID, VolunteerJournals>();
+		for (const row of data)
+			if (!byScholar.has(row.scholarid))
+				byScholar.set(row.scholarid, {
+					scholar: row.scholarid,
+					journals: workJournals(row.scholars?.orcid_profiles?.work_journals)
+				});
+		return { data: [...byScholar.values()] };
+	}
+
+	async getVenueDeclineReasons(venue: VenueID): Promise<ReadResult<DeclineReasonRow[] | null>> {
+		return this.rows(
+			'LoadDeclineReason',
+			this.client
+				.from('decline_reasons')
+				.select('*')
+				.eq('venueid', venue)
+				.order('rank', { ascending: true })
 		);
 	}
 
@@ -793,6 +1580,47 @@ export default class SupabaseCRUD extends CRUD {
 		return { error: undefined, data: undefined };
 	}
 
+	async setSteward(scholar: ScholarID, steward: boolean): Promise<Result<boolean>> {
+		const { data, error } = await this.client.rpc('set_steward', {
+			_scholar: scholar,
+			_steward: steward
+		});
+		if (error)
+			return this.error(
+				rpcErrorKey(error, steward ? 'PromoteSteward' : 'DemoteSteward', {
+					RR010: 'NotSteward',
+					RR011: 'ScholarNotFound',
+					RR012: 'LastSteward',
+					RR013: 'CannotDemoteSelf'
+				}),
+				error
+			);
+		// `changed` distinguishes "we promoted them" from "they already were one",
+		// which the RPC reports rather than raising.
+		const changed = booleanField(data, 'changed') ?? false;
+
+		// Consequential, and only on an actual change: stewardship is authority over the
+		// platform rather than over one venue, and both acquiring and losing it used to happen
+		// in silence.
+		if (changed)
+			await this.emailScholars([scholar], steward ? 'StewardAppointed' : 'StewardRemoved', []);
+
+		return { data: changed, error: undefined };
+	}
+
+	async addSteward(emailOrORCID: string): Promise<Result<ScholarID>> {
+		const { data: id, error: findError } = await this.findScholar(emailOrORCID);
+		if (id === undefined) return this.error('ScholarNotFound', findError?.details);
+
+		// No client-side "are they already a steward?" test: addCurrencyMinter can
+		// afford one because its caller already holds the array, but here the answer
+		// comes back from the RPC, which is free of the check-then-write race.
+		const { data: changed, error } = await this.setSteward(id, true);
+		if (error) return { error };
+		if (changed !== true) return this.error('AlreadySteward');
+		return { data: id, error: undefined };
+	}
+
 	async proposeVenue(
 		scholarid: ScholarID,
 		title: string,
@@ -805,9 +1633,20 @@ export default class SupabaseCRUD extends CRUD {
 		paymentFree: boolean = false
 	): Promise<Result<string>> {
 		// Make a proposal
+		// De-duplicated here rather than trusted from the form, because every writer of these
+		// arrays owes the same guarantee: ProposalCreatedEditors sends one message per listed
+		// address, so a doubled editor is invited twice.
 		const { data, error: insertError } = await this.client
 			.from('proposals')
-			.insert({ title, url, editors, census, currency, minters, payment_free: paymentFree })
+			.insert({
+				title,
+				url,
+				editors: dedupeAddresses(editors),
+				census,
+				currency,
+				minters: dedupeAddresses(minters),
+				payment_free: paymentFree
+			})
 			.select()
 			.single();
 
@@ -819,18 +1658,16 @@ export default class SupabaseCRUD extends CRUD {
 
 		if (error) return { error };
 
-		// Find the stewards to notify
-		const { data: stewards } = await this.client.from('scholars').select('id').eq('steward', true);
-
 		const notified: Notification[] = [];
-		if (stewards) {
-			const stewardResult = await this.emailScholars(
-				stewards.map((s) => s.id),
-				'ProposalCreatedStewards',
-				[title, proposalid]
-			);
-			if (stewardResult.notified) notified.push(...stewardResult.notified);
-		}
+
+		// Notify the stewards as a group, not individually. The shared inbox gives them one
+		// thread they can assign and resolve between themselves; a per-steward fan-out gave
+		// each of them a private copy and no way to see who had picked the proposal up.
+		const stewardResult = await this.queueStewardEmail('ProposalCreatedStewards', [
+			title,
+			proposalid
+		]);
+		if (stewardResult.notified) notified.push(...stewardResult.notified);
 
 		// Notify the proposal's editors. They are plain addresses rather than scholars, so
 		// the RPC reads them back off the proposal row we just wrote instead of accepting
@@ -852,11 +1689,11 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async editVenueProposalEditors(venue: ProposalID, editors: string[]): Promise<Result> {
-		return this.updateProposal(venue, { editors }, 'EditProposalEditors');
+		return this.updateProposal(venue, { editors: dedupeAddresses(editors) }, 'EditProposalEditors');
 	}
 
 	async editVenueProposalMinters(venue: ProposalID, minters: string[]): Promise<Result> {
-		return this.updateProposal(venue, { minters }, 'EditProposalMinters');
+		return this.updateProposal(venue, { minters: dedupeAddresses(minters) }, 'EditProposalMinters');
 	}
 
 	async editVenueProposalURL(venue: ProposalID, url: string): Promise<Result> {
@@ -864,7 +1701,10 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async deleteVenueProposal(proposal: ProposalID): Promise<Result> {
-		const { error } = await this.client.from('proposals').delete().eq('id', proposal);
+		// The database chooses the recipients and reads the title from the proposal, and the
+		// body is rendered at send time, so nothing here decides what the email says.
+		// Declining and deleting happen in one transaction — see the note on the RPC.
+		const { error } = await this.client.rpc('decline_venue_proposal', { _proposal_id: proposal });
 		if (error) return this.error('DeleteProposal');
 		else return {};
 	}
@@ -879,7 +1719,14 @@ export default class SupabaseCRUD extends CRUD {
 		const { data, error } = await this.client.rpc('approve_venue_proposal', {
 			_proposal_id: proposal
 		});
-		if (error) return this.error('ApproveProposalNoVenue', error);
+		// RR014 is the one refusal a steward can act on: none of the proposed editors have
+		// accounts, so there is nobody to administer the venue. Everything else is genuinely
+		// "couldn't create the venue".
+		if (error)
+			return this.error(
+				rpcErrorKey(error, 'ApproveProposalNoVenue', { RR014: 'ApproveProposalNoScholars' }),
+				error
+			);
 
 		const venueID = stringField(data, 'venue_id');
 		const editorIDs = stringArrayField(data, 'editor_ids');
@@ -891,7 +1738,7 @@ export default class SupabaseCRUD extends CRUD {
 		const scholarsToEmail = [...editorIDs, ...supporterIDs];
 		const emailResult = await this.emailScholars(scholarsToEmail, 'VenueApproved', [
 			title,
-			venueID
+			await this.venuePathOf(venueID)
 		]);
 
 		return { data: venueID, notified: emailResult.notified };
@@ -908,7 +1755,22 @@ export default class SupabaseCRUD extends CRUD {
 			.insert({ proposalid, scholarid, message });
 
 		if (error) return this.error('CreateSupporter', error);
-		else return {};
+
+		// Tell the proposal's listed editors. Stewards weigh community support when deciding,
+		// and the people the proposal was made on behalf of had no way to see it accumulating
+		// short of reloading the page. Goes through queue_email's `_proposal` branch because
+		// those are addresses on the row rather than accounts.
+		const [{ data: proposal }, { data: supporter }] = await Promise.all([
+			this.client.from('proposals').select('title').eq('id', proposalid).single(),
+			this.client.from('scholars').select('name').eq('id', scholarid).single()
+		]);
+		await this.queueEmail(
+			'ProposalSupported',
+			[proposal?.title ?? '', supporter?.name ?? 'A scholar', proposalid],
+			{ proposal: proposalid }
+		);
+
+		return {};
 	}
 
 	async editVenueProposalSupport(support: SupporterID, message: string): Promise<Result> {
@@ -952,7 +1814,30 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async editCurrencyMinters(id: CurrencyID, minters: string[]): Promise<Result> {
-		return this.updateCurrency(id, { minters }, 'EditCurrencyMinters');
+		// Read the list being replaced so the difference can be told to the people it is about.
+		// Both the add and the remove path come through here — addCurrencyMinter delegates to
+		// it — so diffing here covers both rather than notifying in one and not the other.
+		const { data: before } = await this.client
+			.from('currencies')
+			.select('name, minters')
+			.eq('id', id)
+			.single();
+
+		const result = await this.updateCurrency(id, { minters }, 'EditCurrencyMinters');
+		if (result.error) return result;
+
+		// Holding a currency's minting authority, or losing it, is a privilege change and is
+		// consequential: it decides who can approve new tokens into existence. Neither end of
+		// it used to write to anybody.
+		const was = new Set(before?.minters ?? []);
+		const now = new Set(minters);
+		const added = [...now].filter((scholar) => !was.has(scholar));
+		const removed = [...was].filter((scholar) => !now.has(scholar));
+		if (added.length > 0) await this.emailScholars(added, 'MinterAdded', [before?.name ?? '', id]);
+		if (removed.length > 0)
+			await this.emailScholars(removed, 'MinterRemoved', [before?.name ?? '']);
+
+		return result;
 	}
 
 	async addCurrencyMinter(
@@ -988,6 +1873,36 @@ export default class SupabaseCRUD extends CRUD {
 
 		const tokenIDs = stringArrayField(data, 'token_ids');
 		if (tokenIDs === null) return this.error('MintTokens');
+
+		// Tell the venue's admins and the currency's other minters. Minting changes the supply
+		// that every holder's balance is denominated in, and only the shortfall path
+		// (VenueOutOfTokens) ever announced itself — so a deliberate mint was invisible to
+		// everyone except whoever performed it.
+		//
+		// Default OFF for this preference: at an active venue it is frequent, and an admin who
+		// never asked to watch the money supply should not be opted into watching it.
+		const [currencyRow, venueRow] = await Promise.all([
+			this.client.from('currencies').select('name, minters').eq('id', currencyID).single(),
+			this.client.from('venues').select('id, title, slug, admins').eq('id', to).single()
+		]);
+		const audience = new Set<ScholarID>([
+			...(venueRow.data?.admins ?? []),
+			...(currencyRow.data?.minters ?? [])
+		]);
+		audience.delete(creator);
+		if (audience.size > 0 && venueRow.data !== null)
+			await this.emailScholars(
+				[...audience],
+				'TokensMinted',
+				[
+					amount.toString(),
+					currencyRow.data?.name ?? '',
+					venueRow.data.title,
+					venuePath(venueRow.data)
+				],
+				to
+			);
+
 		return { data: tokenIDs };
 	}
 
@@ -1010,27 +1925,52 @@ export default class SupabaseCRUD extends CRUD {
 		return this.rows('LoadVenue', this.client.from('venues').select().eq('currency', currency));
 	}
 
-	async getCurrencyTokens(currency: CurrencyID): Promise<ReadResult<TokenRow[] | null>> {
-		return this.rows('LoadToken', this.client.from('tokens').select().eq('currency', currency));
+	/** Total supply of a currency, and how many scholars and venues hold any of
+	 * it. The currency page used to download every token row in the currency and
+	 * compute all three in the browser with `.length` and two `Set`s — so past a
+	 * thousand tokens it reported 1000, and holder counts drawn from an arbitrary
+	 * sample of them. Three SQL aggregates in one round trip. */
+	async getCurrencyHolderCounts(
+		currency: CurrencyID
+	): Promise<ReadResult<CurrencyHolderCounts | null>> {
+		const { data, error } = await this.client.rpc('currency_holder_counts', {
+			_currency: currency
+		});
+		if (error) {
+			this.error('LoadToken', error);
+			return { data: null };
+		}
+		return { data: data as unknown as CurrencyHolderCounts };
 	}
 
 	async getTokenBalances(
 		currency: CurrencyID,
 		scholarIDs: ScholarID[]
 	): Promise<ReadResult<TokenBalance[] | null>> {
-		return this.rows('LoadToken', tokenBalancesQuery(this.client, currency, scholarIDs));
+		// Short-circuit rather than sending an empty array: there is nothing to
+		// group, and every caller treats a missing scholar as a zero balance.
+		if (scholarIDs.length === 0) return { data: [] };
+		return this.rows(
+			'LoadToken',
+			this.client.rpc('scholar_balances', { _currency: currency, _scholars: scholarIDs })
+		);
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────
 	// Roles
 	// ─────────────────────────────────────────────────────────────────────────
 
+	/** Goes through the RPC rather than a plain insert so the new role gets a priority of
+	 * its own. `roles.priority` defaults to 0, and priority 0 is what the database checks
+	 * when deciding who acts as an editor, so inserting directly made every new role an
+	 * editor role. The RPC runs as the caller, so the venue-admin insert policy still
+	 * applies. */
 	async createRole(id: VenueID, name: string, description: string = ''): Promise<Result<RoleRow>> {
-		const { data, error } = await this.client
-			.from('roles')
-			.insert({ venueid: id, invited: true, name, description })
-			.select()
-			.single();
+		const { data, error } = await this.client.rpc('create_role', {
+			_venue: id,
+			_name: name,
+			_description: description
+		});
 		if (error) return this.error('CreateRole', error);
 		else return { data };
 	}
@@ -1063,6 +2003,14 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
+	async editRoleMaxBids(id: RoleID, max: number | null): Promise<Result> {
+		return this.updateRole(id, { max_bids: max }, 'EditRoleBidLimit');
+	}
+
+	async editRoleVolunteerVisibility(id: RoleID, visibility: VolunteerVisibility): Promise<Result> {
+		return this.updateRole(id, { volunteer_visibility: visibility }, 'EditRoleVolunteerVisibility');
+	}
+
 	async editRoleApprover(id: RoleID, approver: RoleID | null) {
 		return this.updateRole(id, { approver }, 'EditRoleApprover');
 	}
@@ -1083,16 +2031,66 @@ export default class SupabaseCRUD extends CRUD {
 			if (error) return this.error('ReorderRole', error);
 		}
 
+		// Only when the TOP role changes hands. Priority 0 is not a label: its holders are the
+		// venue's editors, so moving a role into it transfers editorial authority — new
+		// submissions are assigned to them, they approve assignments, and they mark submissions
+		// done. That happened with no notice to anyone, including the people who acquired it.
+		const wasTop = roles.toSorted((a, b) => a.priority - b.priority)[0];
+		const isTop = sorted[0];
+		if (isTop !== undefined && wasTop?.id !== isTop.id) {
+			const { data: venue } = await this.client
+				.from('venues')
+				.select('id, title, slug')
+				.eq('id', isTop.venueid)
+				.single();
+			if (venue !== null)
+				await this.emailVolunteersOf(isTop.venueid, isTop.id, 'RolePriorityChanged', [
+					isTop.name,
+					venue.title,
+					venuePath(venue)
+				]);
+		}
+
 		return {};
 	}
 
 	async deleteRole(id: RoleID) {
+		// Read the role and who is in it BEFORE the delete: volunteers cascade with it
+		// (volunteers_roleid_fkey is ON DELETE CASCADE), so afterwards there is no record of
+		// who was affected.
+		const { data: role } = await this.client
+			.from('roles')
+			.select('name, venueid, venues!venueid(id, title, slug)')
+			.eq('id', id)
+			.single();
+		const { data: volunteers } = await this.client
+			.from('volunteers')
+			.select('scholarid')
+			.eq('roleid', id)
+			.eq('accepted', 'accepted');
+
 		const { error } = await this.client.from('roles').delete().eq('id', id);
-		return this.errorOrEmpty('DeleteRole', error);
+		if (error) return this.error('DeleteRole', error);
+
+		// Consequential: a commitment they had was removed, and nothing on their profile
+		// afterwards would explain where it went.
+		const recipients = [...new Set((volunteers ?? []).map((v) => v.scholarid))];
+		if (role?.venues && recipients.length > 0)
+			await this.emailScholars(
+				recipients,
+				'RoleDeleted',
+				[role.name, role.venues.title, venuePath(role.venues)],
+				role.venueid
+			);
+
+		return { data: undefined };
 	}
 
-	async getRolesByApprover(roleIDs: RoleID[]): Promise<ReadResult<RoleRow[] | null>> {
-		return this.rows('LoadRole', this.client.from('roles').select('*').in('approver', roleIDs));
+	/** The roles auth.uid() approves on. Deliberately NOT derived from getScholarTasks:
+	 * the profile load used to map the rendered task array to role ids, so narrowing what
+	 * the table displays deleted the approver's rows. See public.scholar_approver_roles. */
+	async getScholarApproverRoles(): Promise<ReadResult<{ role: RoleID }[] | null>> {
+		return this.rows('LoadRole', this.client.rpc('scholar_approver_roles'));
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────
@@ -1102,7 +2100,7 @@ export default class SupabaseCRUD extends CRUD {
 	async verifyCharges(
 		charges: Charge[],
 		currency: CurrencyID
-	): Promise<Result<true | Charge[] | undefined>> {
+	): Promise<Result<true | ChargeCoverage[] | undefined>> {
 		// First, find the scholars with the specified ORCIDs.
 		const { data: scholars, error: scholarsError } = await this.convertORCIDsToScholars(
 			charges.map((charge) => charge.scholar)
@@ -1116,50 +2114,56 @@ export default class SupabaseCRUD extends CRUD {
 			return {
 				data: charges.map((charge) => ({
 					scholar: charge.scholar,
-					payment: scholars.some((s) => s.orcid === charge.scholar) ? charge.payment : undefined
+					// Resolvable but unchecked, versus not a scholar at all. The caller
+					// reports the latter separately, so it must stay distinguishable.
+					covered: scholars.some((s) => s.orcid === charge.scholar) ? true : undefined
 				}))
 			};
 
-		const scholarIDs = scholars.map((scholar) => scholar.id);
+		// Answered in the database, per author, as a yes/no — IN THIS VENUE'S
+		// CURRENCY. The currency filter is not optional: a balance is meaningless
+		// without one, and counting a scholar's holdings across all currencies made
+		// this disagree with the create_submission RPC that ultimately decides, so
+		// the check passed and the submission was then rejected with RR003.
+		//
+		// A yes/no rather than the balances themselves, because balances are private
+		// (#109) and co-authorship puts nobody in the audience for anybody's. It also
+		// keeps working: scholar_balances would rightly return the submitter nothing
+		// about their co-authors, and this would then report every one of them as
+		// unable to pay. The form never showed the number — only who was short.
+		const resolvable = charges
+			.map((charge) => ({
+				charge,
+				id: scholars.find((scholar) => scholar.orcid === charge.scholar)?.id
+			}))
+			.filter((entry): entry is { charge: Charge; id: ScholarID } => entry.id !== undefined)
+			.filter((entry) => entry.charge.payment !== undefined);
 
-		// Find all of the tokens owned by the set, IN THIS VENUE'S CURRENCY. A
-		// balance is meaningless without the currency: without this filter a
-		// scholar's holdings in every other venue's currency counted toward the
-		// charge, so the check passed and create_submission then rejected the
-		// submission with RR003 — or left a co-author charge that could never be
-		// approved. Both create_submission and tokenBalancesQuery filter the same way.
-		const { data: tokens, error: tokenError } = await this.client
-			.from('tokens')
-			.select('scholar')
-			.eq('currency', currency)
-			.in('scholar', scholarIDs);
-		if (tokenError) {
-			return { error: { message: 'Missing token', details: tokenError } };
+		const { data: coverage, error } = await this.client.rpc('authors_can_cover', {
+			_currency: currency,
+			_scholars: resolvable.map((entry) => entry.id),
+			_amounts: resolvable.map((entry) => entry.charge.payment as number)
+		});
+		if (error) {
+			this.error('LoadToken', error);
+			return { error: { message: 'Missing token' } };
 		}
 
-		// Sum the tokens possessed by each scholar
-		const balances = new Map<string, number>();
-		for (const token of tokens) {
-			if (token.scholar === null) continue;
-			const balance = balances.get(token.scholar) ?? 0;
-			balances.set(token.scholar, balance + 1);
-		}
+		const covered = new Map(coverage.map((row) => [row.scholar, row.covered]));
 
-		// Compute the deficits
-		const deficits = charges.map((charge) => {
+		const results: ChargeCoverage[] = charges.map((charge) => {
 			const scholarID = scholars.find((scholar) => scholar.orcid === charge.scholar)?.id;
-			const balance = scholarID !== undefined ? (balances.get(scholarID) ?? 0) : 0;
 			return {
 				scholar: charge.scholar,
-				payment:
-					balance === undefined || charge.payment === undefined
+				// Unresolvable scholar, or a charge with no amount: nothing to check.
+				covered:
+					scholarID === undefined || charge.payment === undefined
 						? undefined
-						: balance - charge.payment
+						: (covered.get(scholarID) ?? false)
 			};
 		});
 
-		if (deficits.some((deficit) => deficit.payment === undefined || deficit.payment < 0))
-			return { data: deficits };
+		if (results.some((result) => result.covered !== true)) return { data: results };
 
 		// Otherwise, all is good.
 		return { data: true };
@@ -1189,7 +2193,7 @@ export default class SupabaseCRUD extends CRUD {
 		// to, which is the same currency create_submission will use.
 		const { data: venueRow, error: venueError } = await this.client
 			.from('venues')
-			.select('currency')
+			.select('id, currency, title, admins, slug')
 			.eq('id', venue)
 			.single();
 		if (venueError) return this.error('LoadVenue', venueError);
@@ -1231,13 +2235,153 @@ export default class SupabaseCRUD extends CRUD {
 		});
 		if (error)
 			return this.error(
-				rpcErrorKey(error, 'NewSubmission', { RR003: 'TransferTokensInsufficient' }),
+				rpcErrorKey(error, 'NewSubmission', {
+					RR003: 'TransferTokensInsufficient',
+					RR009: 'SubmissionNotAuthor'
+				}),
 				error
 			);
 
 		const submissionID = stringField(data, 'submission_id');
 		if (submissionID === null) return { error: { message: this.locale.error.NewSubmission } };
-		return { data: submissionID };
+
+		// Tell each charged co-author that a proposed charge awaits their
+		// approval — the submitter's own charge already settled in the RPC, and
+		// without this email a co-author would only discover the charge by
+		// visiting their dashboard. Per-recipient, since each charge differs.
+		const notifications: Notification[] = [];
+		const submissionTitle = title.trim() ? title : externalID;
+		for (const [index, author] of authors.entries()) {
+			const payment = charges[index]?.payment ?? 0;
+			if (author === creator || payment === 0) continue;
+			const emailResult = await this.emailScholars(
+				[author],
+				'SubmissionCharged',
+				[submissionTitle, venueRow.title, payment.toString(), author],
+				venue
+			);
+			if (emailResult.notified) notifications.push(...emailResult.notified);
+		}
+
+		// Tell the venue's editors that a submission arrived. The RPC seats the venue's
+		// sole editor when there is exactly one and reports who; otherwise nobody is
+		// editing it yet and somebody has to pick it up — the step that previously had no
+		// prompt at all, which is how a submission could sit unnoticed indefinitely.
+		const editor = stringField(data, 'editor');
+		const editorResult =
+			editor !== null
+				? await this.emailScholars(
+						[editor],
+						'SubmissionAssignedEditor',
+						[submissionTitle, venueRow.title, venuePath(venueRow), submissionID],
+						venue
+					)
+				: await this.emailEditorsOf(venue, venueRow.admins, 'SubmissionNeedsEditor', [
+						submissionTitle,
+						venueRow.title,
+						venuePath(venueRow),
+						submissionID
+					]);
+		if (editorResult.notified) notifications.push(...editorResult.notified);
+
+		return { data: submissionID, notified: notifications };
+	}
+
+	/**
+	 * Email the people who can act on a submission that has no editor: the venue's
+	 * editors, and its admins.
+	 *
+	 * Both, because after `can_claim_editor_role` either can do something about it — an
+	 * editor by claiming it, an admin by assigning someone to the role. Before that
+	 * policy existed only admins could, which is why notifying the editors would have
+	 * been mail nobody could act on.
+	 */
+	/** Email a venue's priority-0 volunteers and its admins.
+	 *
+	 * `except` drops the person whose action prompted the message: most of these notices exist
+	 * so that everyone ELSE finds out, and mailing someone about their own click is noise. */
+	/** A submission's title, for a notice that names it. Empty rather than throwing: the title
+	 * is prose in a message, and failing to read it must not fail the write it describes. */
+	private async submissionTitle(submission: SubmissionID): Promise<string> {
+		const { data } = await this.client
+			.from('submissions')
+			.select('title')
+			.eq('id', submission)
+			.single();
+		return data?.title ?? '';
+	}
+
+	/** Email a venue's editors and admins, resolving the venue itself. */
+	private async emailVenueEditors(
+		venue: VenueID,
+		template: EmailType,
+		args: (path: string, title: string) => string[],
+		except: ScholarID | null = null
+	): Promise<Result> {
+		const { data } = await this.client
+			.from('venues')
+			.select('id, title, slug, admins')
+			.eq('id', venue)
+			.single();
+		if (data === null) return {};
+		return this.emailEditorsOf(
+			venue,
+			data.admins ?? [],
+			template,
+			args(venuePath(data), data.title),
+			except
+		);
+	}
+
+	/** Email everyone volunteering for a role. Used where the news is about the role itself —
+	 * its compensation, its priority, its deletion — rather than about one person in it. */
+	private async emailVolunteersOf(
+		venue: VenueID,
+		role: RoleID,
+		template: EmailType,
+		args: string[],
+		except: ScholarID | null = null
+	): Promise<Result> {
+		const { data: volunteers } = await this.client
+			.from('volunteers')
+			.select('scholarid')
+			.eq('roleid', role)
+			.eq('active', true)
+			.eq('accepted', 'accepted');
+		const recipients = [...new Set((volunteers ?? []).map((v) => v.scholarid))].filter(
+			(scholar) => scholar !== except
+		);
+		if (recipients.length === 0) return {};
+		return this.emailScholars(recipients, template, args, venue);
+	}
+
+	private async emailEditorsOf(
+		venue: VenueID,
+		admins: ScholarID[],
+		template: EmailType,
+		args: string[],
+		except: ScholarID | null = null
+	): Promise<Result> {
+		const { data: roles } = await this.client
+			.from('roles')
+			.select('id')
+			.eq('venueid', venue)
+			.eq('priority', 0);
+		const roleIDs = (roles ?? []).map((role) => role.id);
+		const { data: volunteers } =
+			roleIDs.length === 0
+				? { data: [] }
+				: await this.client
+						.from('volunteers')
+						.select('scholarid')
+						.in('roleid', roleIDs)
+						.eq('active', true)
+						.eq('accepted', 'accepted');
+		const recipients = [
+			...new Set([...(volunteers ?? []).map((v) => v.scholarid), ...admins])
+		].filter((scholar) => scholar !== except);
+		if (recipients.length === 0) return {};
+		return this.emailScholars(recipients, template, args, venue);
 	}
 
 	async bulkImportSubmissions(
@@ -1251,7 +2395,9 @@ export default class SupabaseCRUD extends CRUD {
 			previousid: s.previousID,
 			expertise: s.expertise,
 			submission_type: s.submission_type,
-			note: s.note
+			note: s.note,
+			// Entry keys are the RPC's own, so this passes through as it is.
+			people: s.people
 		}));
 
 		const { data, error } = await this.client.rpc('bulk_import_submissions', {
@@ -1260,22 +2406,75 @@ export default class SupabaseCRUD extends CRUD {
 			_import_note: importNote ?? ''
 		});
 
-		if (error) {
+		// No 23505 case: the function skips a manuscript already in this venue rather
+		// than refusing the batch, so a stale list of existing IDs -- the page left open
+		// while somebody else imported -- costs those rows and nothing else.
+		if (error)
 			return { error: { message: this.locale.error.BulkImportSubmissions, details: error } };
-		}
 
 		const result = data as {
 			submission_ids: SubmissionID[];
 			transaction_id: TransactionID | null;
 			mint_amount: number;
+			editor: ScholarID | null;
+			seated: number;
+			seated_by: Record<ScholarID, number> | null;
+			waiting: number;
+			unmatched: number;
+			skipped: number;
 		};
+
+		const imported = result.submission_ids?.length ?? 0;
+		const seatedBy = result.seated_by ?? {};
+
+		// One digest per person rather than one message per row: an import of two hundred
+		// manuscripts is one piece of news, not two hundred. Each scholar the import seated
+		// is told how many submissions they now hold -- which may be one editor seated on
+		// every row, or a dozen associate editors each holding a few -- and the venue's
+		// editors and admins are told about whatever was left for somebody to claim.
+		const notifications: Notification[] = [];
+		if (imported > 0) {
+			const { data: venueRow } = await this.client
+				.from('venues')
+				.select('id, title, admins, slug')
+				.eq('id', venue)
+				.single();
+			if (venueRow !== null) {
+				for (const [scholar, count] of Object.entries(seatedBy)) {
+					const seatedResult = await this.emailScholars(
+						[scholar],
+						'SubmissionsAssignedEditor',
+						[count.toString(), venueRow.title, venuePath(venueRow)],
+						venue
+					);
+					if (seatedResult.notified) notifications.push(...seatedResult.notified);
+				}
+
+				// Only when something is actually waiting. Telling a venue that zero
+				// submissions need an editor is noise.
+				const unseated = result.waiting ?? 0;
+				if (unseated > 0) {
+					const waitingResult = await this.emailEditorsOf(
+						venue,
+						venueRow.admins,
+						'SubmissionsNeedEditors',
+						[unseated.toString(), venueRow.title, venuePath(venueRow)]
+					);
+					if (waitingResult.notified) notifications.push(...waitingResult.notified);
+				}
+			}
+		}
 
 		return {
 			data: {
 				submissionIDs: result.submission_ids ?? [],
 				transactionID: result.transaction_id,
-				mintAmount: result.mint_amount
-			}
+				mintAmount: result.mint_amount,
+				seatedBy,
+				skipped: result.skipped ?? 0,
+				unmatched: result.unmatched ?? 0
+			},
+			notified: notifications
 		};
 	}
 
@@ -1305,16 +2504,65 @@ export default class SupabaseCRUD extends CRUD {
 		return this.updateSubmission(submissionID, { note }, 'UpdateSubmissionNote');
 	}
 
-	async markSubmissionDone(submissionID: SubmissionID): Promise<Result<MarkSubmissionDoneOutcome>> {
+	async updateSubmissionBiddingClosed(
+		submissionID: SubmissionID,
+		closed: boolean
+	): Promise<Result> {
+		const { error } = await this.client.rpc('set_submission_open_for_bidding', {
+			_submission: submissionID,
+			_open: !closed
+		});
+		return this.errorOrEmpty('UpdateSubmissionBiddingClosed', error);
+	}
+
+	markSubmissionDone(submissionID: SubmissionID): Promise<Result<MarkSubmissionDoneOutcome>> {
+		return this.finishSubmission(submissionID);
+	}
+
+	closeSubmission(
+		submissionID: SubmissionID,
+		pay: AssignmentID[],
+		remove: AssignmentID[],
+		closer: ScholarID
+	): Promise<Result<MarkSubmissionDoneOutcome>> {
+		return this.finishSubmission(submissionID, { pay, remove, closer });
+	}
+
+	/** Mark a submission done, first settling its outstanding assignments when `settle` says
+	 * how. Both RPCs return the same outcome, and a close pays reviewers as well as editors,
+	 * so the notices that follow are the same either way. */
+	private async finishSubmission(
+		submissionID: SubmissionID,
+		settle?: { pay: AssignmentID[]; remove: AssignmentID[]; closer: ScholarID }
+	): Promise<Result<MarkSubmissionDoneOutcome>> {
+		// Read the authors and title before the RPC, so the notice below can name the paper.
+		const { data: submission } = await this.client
+			.from('submissions')
+			.select('title, authors, venues!venue(title)')
+			.eq('id', submissionID)
+			.single();
+
 		// Authorization, blocker validation, atomic compensation of every
 		// uncompleted priority-0 editor assignment, and the status flip all
-		// happen inside the mark_submission_done RPC. The application layer
-		// surfaces the structured outcome and dispatches notifications.
-		const { data, error } = await this.client.rpc('mark_submission_done', {
-			_submission_id: submissionID,
+		// happen inside the mark_submission_done RPC (close_submission pays or
+		// removes the blockers first, in the same transaction). The application
+		// layer surfaces the structured outcome and dispatches notifications.
+		const templates = {
 			_payment_purpose_template: this.locale.view.transactions.purposeTemplate.compensation,
 			_mint_purpose_template: this.locale.view.transactions.purposeTemplate.mint
-		});
+		};
+		const { data, error } =
+			settle === undefined
+				? await this.client.rpc('mark_submission_done', {
+						_submission_id: submissionID,
+						...templates
+					})
+				: await this.client.rpc('close_submission', {
+						_submission_id: submissionID,
+						_pay: settle.pay,
+						_remove: settle.remove,
+						...templates
+					});
 		if (error) return this.error('MarkSubmissionDoneRPC', error);
 		if (!isMarkSubmissionDoneResult(data)) return this.error('MarkSubmissionDoneRPC');
 
@@ -1332,13 +2580,18 @@ export default class SupabaseCRUD extends CRUD {
 				.eq('id', data.currency_id)
 				.single();
 			if (currency !== null && currency.minters.length > 0) {
-				await this.emailScholars(currency.minters, 'VenueOutOfTokens', [
-					data.total_amount.toString(),
-					'editor',
-					data.shortfall.toString(),
-					data.venue_id,
-					data.venue_title
-				]);
+				await this.emailScholars(
+					currency.minters,
+					'VenueOutOfTokens',
+					[
+						data.total_amount.toString(),
+						'editor',
+						data.shortfall.toString(),
+						await this.venuePathOf(data.venue_id),
+						data.venue_title
+					],
+					data.venue_id
+				);
 			}
 			return {
 				data: {
@@ -1349,19 +2602,62 @@ export default class SupabaseCRUD extends CRUD {
 			};
 		}
 
-		// Tokens have moved and the submission is done. Email each editor
-		// individually with their actual payout amount and role, so each
-		// gets a per-recipient banner via handle().
+		// Tokens have moved and the submission is done. Email each payee (the
+		// editors, and on a close the reviewers it paid) individually with their
+		// actual payout amount and role, so each gets a per-recipient banner via
+		// handle().
 		const notifications: Notification[] = [];
+		// Resolved once rather than per payout: every message in this loop is about the same
+		// venue.
+		const donePath = await this.venuePathOf(data.venue_id);
 		for (const payout of data.payouts) {
-			const result = await this.emailScholars([payout.scholar_id], 'WorkCompensated', [
-				payout.role_name,
-				payout.amount.toString(),
-				data.venue_id,
-				data.submission_id
-			]);
+			const result = await this.emailScholars(
+				[payout.scholar_id],
+				'WorkCompensated',
+				[payout.role_name, payout.amount.toString(), donePath, data.submission_id],
+				data.venue_id
+			);
 			if (result.notified) notifications.push(...result.notified);
 		}
+
+		// Tell anyone removed as not done. Consequential: it ends their chance of being paid for
+		// the work, and the editor's word is the only record of it, so they can answer it.
+		const removed = data.removed ?? [];
+		if (settle !== undefined && removed.length > 0) {
+			const closer = await this.getScholar(settle.closer);
+			for (const seat of removed) {
+				const result = await this.emailScholars(
+					[seat.scholar_id],
+					'AssignmentClosedUnpaid',
+					[
+						closer?.getName() ?? '',
+						closer?.getEmail() ?? '',
+						seat.role_name,
+						submission?.title ?? '',
+						submission?.venues?.title ?? '',
+						donePath
+					],
+					data.venue_id
+				);
+				if (result.notified) notifications.push(...result.notified);
+			}
+		}
+
+		// And tell the authors that reviewing is over.
+		//
+		// Everyone else on the submission has already heard: each reviewer got WorkCompensated
+		// as their own work was completed, and the editors are being paid in this very call.
+		// The authors — the people whose paper it is — were the only party never told, and
+		// DESIGN.md makes a done submission the precondition for thanking its reviewers, so
+		// the thank-you feature had no trigger at all. Best effort, after the fact: the
+		// submission is done and the tokens have moved.
+		if (submission !== null && submission.authors.length > 0)
+			await this.emailScholars(
+				submission.authors,
+				'SubmissionDone',
+				[submission.title, submission.venues?.title ?? '', donePath, data.submission_id],
+				data.venue_id
+			);
 
 		return {
 			data: {
@@ -1435,23 +2731,16 @@ export default class SupabaseCRUD extends CRUD {
 	// Thanks (#22): author thank-you notes to reviewers
 	// ─────────────────────────────────────────────────────────────────────────
 
-	/** Fan a rendered thank-you email out to an audience the caller may not be
-	 * able to see (queue_thanks_emails resolves recipients server-side to keep
-	 * reviewers anonymous). Best-effort: a failure here doesn't undo the note's
-	 * state change, matching the rest of the email pipeline. */
+	/** Queue a note's emails to an audience the caller may not be able to see
+	 * (queue_thanks_emails resolves recipients server-side to keep reviewers anonymous, and
+	 * reads every value the email shows from the note itself, so the caller supplies no
+	 * content). Best-effort: a failure here doesn't undo the note's state change, matching
+	 * the rest of the email pipeline. */
 	private async queueThanksEmails(
 		thanksID: ThanksID,
-		audience: 'recipients' | 'vetters' | 'author',
-		template: EmailType,
-		args: string[]
+		audience: 'recipients' | 'vetters' | 'author' | 'author_shared'
 	) {
-		const { subject, message } = renderEmail(template, args);
-		await this.client.rpc('queue_thanks_emails', {
-			_thanks_id: thanksID,
-			_audience: audience,
-			_subject: subject,
-			_message: message
-		});
+		await this.client.rpc('queue_thanks_emails', { _thanks_id: thanksID, _audience: audience });
 	}
 
 	async proposeThanks(
@@ -1469,20 +2758,8 @@ export default class SupabaseCRUD extends CRUD {
 		if (error) return this.error('ProposeThanks', error);
 		const status = (stringField(data, 'status') as ThanksStatus | null) ?? 'proposed';
 		const thanksID = stringField(data, 'thanks_id');
-		const venue = stringField(data, 'venue');
-		if (thanksID && venue) {
-			if (status === 'approved')
-				await this.queueThanksEmails(thanksID, 'recipients', 'ThanksReceived', [
-					message,
-					venue,
-					submission
-				]);
-			else
-				await this.queueThanksEmails(thanksID, 'vetters', 'ThanksPendingReview', [
-					venue,
-					submission
-				]);
-		}
+		if (thanksID)
+			await this.queueThanksEmails(thanksID, status === 'approved' ? 'recipients' : 'vetters');
 		return { error: undefined, data: { status } };
 	}
 
@@ -1490,23 +2767,20 @@ export default class SupabaseCRUD extends CRUD {
 		// The RPC authorizes (venue admin / editor) and flips the note to approved,
 		// returning the venue, submission, and note text so we can render and
 		// deliver the note to its (server-resolved) reviewers.
-		const { data, error } = await this.client.rpc('approve_thanks', { _id: id });
+		const { error } = await this.client.rpc('approve_thanks', { _id: id });
 		if (error) return this.error('ApproveThanks', error);
-		const venue = stringField(data, 'venue');
-		const submission = stringField(data, 'submission');
-		const note = stringField(data, 'message');
-		if (venue && submission && note !== null)
-			await this.queueThanksEmails(id, 'recipients', 'ThanksReceived', [note, venue, submission]);
+		await this.queueThanksEmails(id, 'recipients');
+		// And tell the author it was shared. declineThanks has always written back to them;
+		// the approve path did not, so the one outcome an author was never told about was
+		// the one they were hoping for.
+		await this.queueThanksEmails(id, 'author_shared');
 		return { error: undefined, data: undefined };
 	}
 
 	async declineThanks(id: ThanksID, reason: string): Promise<Result<undefined>> {
-		const { data, error } = await this.client.rpc('decline_thanks', { _id: id, _reason: reason });
+		const { error } = await this.client.rpc('decline_thanks', { _id: id, _reason: reason });
 		if (error) return this.error('DeclineThanks', error);
-		const venue = stringField(data, 'venue');
-		const submission = stringField(data, 'submission');
-		if (venue && submission)
-			await this.queueThanksEmails(id, 'author', 'ThanksDeclined', [reason, venue, submission]);
+		await this.queueThanksEmails(id, 'author');
 		return { error: undefined, data: undefined };
 	}
 
@@ -1566,98 +2840,96 @@ export default class SupabaseCRUD extends CRUD {
 			.single();
 
 		if (error) return this.error('EditCompensation', error);
+
+		// Tell the people whose pay it is. A venue changing what a role earns used to be
+		// invisible to everyone holding that role until they were next compensated.
+		const { data: roleRow } = await this.client
+			.from('roles')
+			.select('name, venueid, venues!venueid(id, title, slug)')
+			.eq('id', role)
+			.single();
+		if (roleRow?.venues)
+			await this.emailVolunteersOf(roleRow.venueid, role, 'CompensationChanged', [
+				roleRow.name,
+				(amount ?? 0).toString(),
+				roleRow.venues.title,
+				venuePath(roleRow.venues)
+			]);
+
 		return { data: undefined };
 	}
 
 	async requestCompensation(
-		scholarID: ScholarID,
+		_scholar: ScholarID,
 		venueID: VenueID,
 		externalManuscriptID: string,
 		roleID: RoleID,
 		note: string
 	): Promise<Result> {
-		// Is there a submission that this scholar can view with this manuscript ID?
-		const { data: submissionData, error: submissionError } = await this.client
-			.from('submissions')
-			.select()
-			.eq('externalid', externalManuscriptID);
+		// The RPC finds the submission within this venue, stamps the scholar's assignment
+		// or files a claim when they have none, and says who may act on it. It has to be
+		// the database's job: the scholar often cannot see the submission -- nobody could
+		// have seated them on a backlog paper whose editor has not joined -- and never
+		// sees the other assignments that decide who approves it.
+		const { data, error } = await this.client.rpc('request_compensation', {
+			_venue: venueID,
+			_externalid: externalManuscriptID,
+			_role: roleID
+		});
+		if (error)
+			return rpcError(this, error, 'CompensationAssignmentCheck', {
+				RR020: 'CompensationSubmissionNotFound',
+				RR021: 'CompensationAlreadyPaid',
+				RR022: 'CompensationDeclined',
+				RR023: 'CompensationEditorRole',
+				RR024: 'CompensationNotEligible'
+			});
 
-		if (submissionData === null || submissionData.length === 0)
-			return this.error('CompensationSubmissionNotFound', submissionError);
+		const submission = stringField(data, 'submission');
+		const recipients = stringArrayField(data, 'recipients');
+		const title = stringField(data, 'title');
+		const role = stringField(data, 'role');
+		// Which tier of recipients the RPC chose, so the email can say whether the request is
+		// theirs to handle or only fell to them because no one closer to it was seated.
+		const tier = stringField(data, 'tier');
+		const template =
+			tier === 'approver'
+				? 'CompensationRequested'
+				: tier === 'editors'
+					? 'CompensationRequestedToEditors'
+					: tier === 'admins'
+						? 'CompensationRequestedToAdmins'
+						: null;
+		if (
+			submission === null ||
+			recipients === null ||
+			title === null ||
+			role === null ||
+			template === null
+		)
+			return this.error('CompensationAssignmentCheck');
 
-		const submission = submissionData[0];
+		// No one to notify is possible when the requester is the venue's only admin.
+		// The request still stands.
+		if (recipients.length === 0) return { data: undefined };
 
-		// Is there an assignment for this scholar, venue, role, and submission?
-		const { data: assignmentData, error: assignmentError } = await this.client
-			.from('assignments')
-			.select()
-			.eq('scholar', scholarID)
-			.eq('venue', venueID)
-			.eq('role', roleID)
-			.eq('submission', submission.id);
-
-		if (assignmentError) return this.error('CompensationAssignmentCheck', assignmentError);
-
-		if (assignmentData.length === 0) {
-			const result = await this.createAssignment(submission.id, scholarID, roleID, false, false);
-			if (result.error) return result;
-		}
-
-		// Notify whoever can act on this request, not the requester themselves.
-		// "Can act on it" is exactly canApproveAssignment.ts — the same three
-		// branches, unioned, rather than the near-miss this used to be. It
-		// previously omitted the priority-0 editor branch entirely, and treated
-		// admins as a fallback consulted only when no approver was assigned, so
-		// the two people most able to act on a request were often the two who
-		// never heard about it.
-		const recipients = new Set<ScholarID>();
-
-		const { data: roles, error: rolesError } = await this.client
-			.from('roles')
-			.select('id, priority, approver')
-			.eq('venueid', venueID);
-		if (rolesError) return this.error('CompensationAssignmentCheck', rolesError);
-
-		const { data: submissionAssignments, error: approverError } = await this.client
-			.from('assignments')
-			.select('scholar, role')
-			.eq('submission', submission.id)
-			.eq('approved', true);
-		if (approverError) return this.error('CompensationAssignmentCheck', approverError);
-
-		const requestedRole = roles?.find((r) => r.id === roleID) ?? null;
-		const editorRoleIDs = new Set((roles ?? []).filter((r) => r.priority === 0).map((r) => r.id));
-
-		for (const a of submissionAssignments ?? []) {
-			// Branch 2: the priority-0 editor of this submission approves any role.
-			if (editorRoleIDs.has(a.role)) recipients.add(a.scholar);
-			// Branch 3: whoever holds the role that approves the requested role.
-			if (requestedRole?.approver !== null && a.role === requestedRole?.approver)
-				recipients.add(a.scholar);
-		}
-
-		// Branch 1: venue admins can always approve, so they are always notified —
-		// a union member, not a fallback.
-		const { data: adminVenue, error: adminVenueError } = await this.client
-			.from('venues')
-			.select('admins')
-			.eq('id', venueID)
-			.single();
-		if (adminVenueError) return this.error('CompensationAssignmentCheck', adminVenueError);
-		for (const admin of adminVenue.admins) recipients.add(admin);
-
-		// A scholar cannot action their own request, so never mail it to them.
-		recipients.delete(scholarID);
-
-		// No one left to notify — possible when the requester is the venue's only
-		// admin. Don't error: the assignment was still created.
-		if (recipients.size === 0) return { data: undefined, error: undefined };
-
-		return this.emailScholars([...recipients], 'CompensationRequested', [
-			venueID,
-			submission.id,
-			note
-		]);
+		return this.emailScholars(
+			recipients,
+			template,
+			[
+				await this.venuePathOf(venueID),
+				submission,
+				note.trim(),
+				// Null for a scholar who has not given a name yet.
+				stringField(data, 'requester')?.trim() || 'A scholar',
+				role,
+				title,
+				// Null when the role has no approving role, which only the fallback tiers see,
+				// and their templates do not mention it.
+				stringField(data, 'approver_role') ?? ''
+			],
+			venueID
+		);
 	}
 
 	async getCompensationByTypes(
@@ -1682,9 +2954,10 @@ export default class SupabaseCRUD extends CRUD {
 		papers: number | null
 	): Promise<Result<string>> {
 		// Creating the volunteer record and, when this is the scholar's first
-		// role and compensation is requested, recording the proposed welcome
-		// grant both happen atomically inside the create_volunteer RPC, so the
-		// volunteer can never exist without its welcome grant (or vice versa).
+		// role at the role's venue and compensation is requested, settling the
+		// welcome grant both happen atomically inside the create_volunteer RPC,
+		// so the volunteer can never exist without its welcome grant (or vice
+		// versa).
 		const { data, error } = await this.client.rpc('create_volunteer', {
 			_scholarid: scholarid,
 			_roleid: roleid,
@@ -1701,11 +2974,68 @@ export default class SupabaseCRUD extends CRUD {
 
 		const volunteerID = stringField(data, 'volunteer_id');
 		if (volunteerID === null) return this.error('CreateVolunteer');
-		return { data: volunteerID };
+
+		// Report the welcome grant the RPC actually made. Whether one happened
+		// depends on whether this is the scholar's first role at this venue, the
+		// venue's payment_free flag, and its welcome_amount — so the amount comes
+		// back from the database rather than being guessed here.
+		const granted = numberField(data, 'welcome_granted') ?? 0;
+		return {
+			data: volunteerID,
+			notified: [
+				{
+					message:
+						granted > 0
+							? this.locale.notification.volunteeredWithTokens.replace(
+									'{amount}',
+									granted.toString()
+								)
+							: this.locale.notification.volunteered
+				}
+			]
+		};
 	}
 
 	async updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result> {
-		return this.updateVolunteer(id, { active }, 'UpdateVolunteerActive');
+		const result = await this.updateVolunteer(id, { active }, 'UpdateVolunteerActive');
+		if (result.error) return result;
+		await this.emailVolunteerAvailability(id, active);
+		return result;
+	}
+
+	async removeVolunteer(id: VolunteerID): Promise<Result> {
+		// Authorization, the deactivation and the volunteer's own notice all happen in the
+		// remove_volunteer RPC; the UPDATE policy admits only the volunteer themselves.
+		const { error } = await this.client.rpc('remove_volunteer', { _volunteer_id: id });
+		if (error) return this.error('RemoveVolunteer', error);
+		// The same capacity news as a pause, whoever made it happen.
+		await this.emailVolunteerAvailability(id, false);
+		return {};
+	}
+
+	/** Someone becoming unavailable, or available again, is capacity news for whoever is
+	 * trying to find reviewers this week — and it used to reach them only if they happened
+	 * to reload the volunteers list. Default off: at a venue with many volunteers this is
+	 * frequent, so it waits to be asked for. */
+	private async emailVolunteerAvailability(id: VolunteerID, active: boolean) {
+		const { data: volunteer } = await this.client
+			.from('volunteers')
+			.select('scholarid, roles!roleid(name, venueid)')
+			.eq('id', id)
+			.single();
+		const role = volunteer?.roles;
+		if (!role) return;
+		const { data: who } = await this.client
+			.from('scholars')
+			.select('name')
+			.eq('id', volunteer.scholarid)
+			.single();
+		await this.emailVenueEditors(
+			role.venueid,
+			active ? 'VolunteerResumed' : 'VolunteerPaused',
+			(path, title) => [who?.name ?? 'A volunteer', role.name, title, path],
+			volunteer.scholarid
+		);
 	}
 
 	async updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result> {
@@ -1720,31 +3050,26 @@ export default class SupabaseCRUD extends CRUD {
 		inviter: ScholarID,
 		role: RoleRow,
 		venue: VenueRow,
-		emailsOrORCIDs: string[]
+		scholars: ScholarID[]
 	): Promise<Result<string[]>> {
-		const { data: scholars, error: scholarsError } = await this.client
-			.from('scholars')
-			.select()
-			.or(
-				'email.in.(' +
-					emailsOrORCIDs.map((e) => `"${e}"`).join(',') +
-					'), orcid.in.(' +
-					emailsOrORCIDs.map((e) => `"${e}"`).join(',') +
-					')'
-			);
-		if (scholarsError) return this.error('InviteToRole', scholarsError);
+		// One invitation per scholar. The form stages each person once, so this guards the
+		// interface rather than the UI — but create_volunteer refuses a second row for a
+		// (scholar, role) pair, so a list naming somebody twice would fail the batch
+		// halfway through, with the first half already sent.
+		const invitees = [...new Set(scholars)];
 
-		const missing = emailsOrORCIDs.filter(
-			(id) => !scholars.some((scholar) => scholar.email === id || scholar.orcid === id)
-		);
-		if (missing.length > 0) return this.error('InviteToRoleMissing', null, missing.join(', '));
+		// Inviting nobody is not an invitation. The button that calls this is already held
+		// on an empty list, so this too guards the interface: an empty batch succeeds
+		// trivially, and reporting invitations sent for a batch of nobody would be a false
+		// report.
+		if (invitees.length === 0) return this.error('InviteToRole');
 
 		const ids: string[] = [];
 		const notified: Notification[] = [];
-		for (const scholar of scholars) {
+		for (const invitee of invitees) {
 			const { data, error } = await this.createVolunteer(
 				inviter,
-				scholar.id,
+				invitee,
 				role.id,
 				false,
 				false,
@@ -1753,27 +3078,82 @@ export default class SupabaseCRUD extends CRUD {
 			if (error) return { error };
 			if (data) {
 				ids.push(data);
-				const inviteResult = await this.emailScholars([scholar.id], 'RoleInvite', [
-					role.name,
-					venue.id,
-					venue.title,
-					scholar.id
-				]);
+				const inviteResult = await this.emailScholars(
+					[invitee],
+					'RoleInvite',
+					[role.name, venuePath(venue), venue.title, invitee],
+					venue.id
+				);
 				if (inviteResult.notified) notified.push(...inviteResult.notified);
 			}
 		}
 		return { data: ids, notified };
 	}
 
+	async addToRole(role: RoleRow, scholars: ScholarID[]): Promise<Result<string[]>> {
+		// The same guards as inviteToRole: a name twice would fail the batch halfway, and an
+		// empty batch would report people added when nobody was.
+		const members = [...new Set(scholars)];
+		if (members.length === 0) return this.error('AddToRole');
+
+		// Accepted, with the welcome grant settled as accepting an invitation would have.
+		// create_volunteer emails each of them RoleEnrolled, so nothing is sent from here.
+		const ids: string[] = [];
+		for (const member of members) {
+			const { data, error } = await this.createVolunteer(member, member, role.id, true, true, null);
+			if (error) return { error };
+			if (data) ids.push(data);
+		}
+		return { data: ids };
+	}
+
 	async acceptRoleInvite(scholar: ScholarID, id: VolunteerID, response: Response) {
-		// Updating the volunteer response and, when accepting a first role,
-		// recording the proposed welcome grant happen atomically inside the
-		// accept_role_invite RPC.
-		const { error } = await this.client.rpc('accept_role_invite', {
+		// Updating the volunteer response and, when accepting a first role at
+		// the role's venue, settling the welcome grant happen atomically inside
+		// the accept_role_invite RPC.
+		const { data, error } = await this.client.rpc('accept_role_invite', {
 			_volunteer_id: id,
 			_response: response
 		});
-		return this.errorOrEmpty('AcceptRoleInvite', error);
+		if (error) return this.error('AcceptRoleInvite', error);
+
+		// Accepting used to be silent, which left a scholar who had just earned
+		// welcome tokens with no indication anything had happened.
+		const granted = numberField(data, 'welcome_granted') ?? 0;
+		const message =
+			response !== 'accepted'
+				? this.locale.notification.inviteDeclined
+				: granted > 0
+					? this.locale.notification.inviteAcceptedWithTokens.replace(
+							'{amount}',
+							granted.toString()
+						)
+					: this.locale.notification.inviteAccepted;
+		// Tell the venue the answer. This was deliberately silent, on the reasoning that the
+		// people who would be told are the ones who sent the invitation — but sending one and
+		// learning whether it was taken up are days apart, and DESIGN.md's user stories name
+		// wanting to know "who agrees" as exactly what an editor is doing here.
+		const { data: volunteer } = await this.client
+			.from('volunteers')
+			.select('scholarid, roles!roleid(name, venueid)')
+			.eq('id', id)
+			.single();
+		const role = volunteer?.roles;
+		if (role) {
+			const { data: who } = await this.client
+				.from('scholars')
+				.select('name')
+				.eq('id', scholar)
+				.single();
+			await this.emailVenueEditors(
+				role.venueid,
+				response === 'accepted' ? 'InviteAccepted' : 'InviteDeclined',
+				(path, title) => [who?.name ?? 'A scholar', role.name, title, path],
+				scholar
+			);
+		}
+
+		return { data: undefined, notified: [{ message }] };
 	}
 
 	async getVolunteersByRoles(roleIDs: RoleID[]): Promise<ReadResult<VolunteerRow[] | null>> {
@@ -1850,6 +3230,75 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────
+	// Decline reasons
+	// ─────────────────────────────────────────────────────────────────────────
+
+	async createDeclineReason(venue: VenueID, text: string): Promise<Result<DeclineReasonRow>> {
+		// New reasons go at the end of the current rank order.
+		const { data: existing, error: existingError } = await this.client
+			.from('decline_reasons')
+			.select('rank')
+			.eq('venueid', venue)
+			.order('rank', { ascending: false })
+			.limit(1);
+		if (existingError) return this.error('CreateDeclineReason', existingError);
+		const rank = existing.length === 0 ? 0 : existing[0].rank + 1;
+
+		const { data, error } = await this.client
+			.from('decline_reasons')
+			.insert({ venueid: venue, text: text.trim(), rank })
+			.select()
+			.single();
+		if (error) return this.error('CreateDeclineReason', error);
+		return { data };
+	}
+
+	async editDeclineReasonText(id: DeclineReasonID, text: string): Promise<Result> {
+		const { error } = await this.client
+			.from('decline_reasons')
+			.update({ text: text.trim() })
+			.eq('id', id);
+		return this.errorOrEmpty('EditDeclineReason', error);
+	}
+
+	async reorderDeclineReason(
+		reason: DeclineReasonRow,
+		reasons: DeclineReasonRow[],
+		direction: -1 | 1
+	): Promise<Result> {
+		// The same sentinel swap as reorderPreferenceLevel, for the same (venueid, rank)
+		// unique constraint.
+		const sorted = [...reasons].sort((a, b) => a.rank - b.rank);
+		const index = sorted.findIndex((r) => r.id === reason.id);
+		const neighborIndex = index + direction;
+		if (index < 0 || neighborIndex < 0 || neighborIndex >= sorted.length) return {};
+		const neighbor = sorted[neighborIndex];
+
+		const sentinel = Math.max(...sorted.map((r) => r.rank)) + 1;
+		const { error: e1 } = await this.client
+			.from('decline_reasons')
+			.update({ rank: sentinel })
+			.eq('id', reason.id);
+		if (e1) return this.error('ReorderDeclineReason', e1);
+		const { error: e2 } = await this.client
+			.from('decline_reasons')
+			.update({ rank: reason.rank })
+			.eq('id', neighbor.id);
+		if (e2) return this.error('ReorderDeclineReason', e2);
+		const { error: e3 } = await this.client
+			.from('decline_reasons')
+			.update({ rank: neighbor.rank })
+			.eq('id', reason.id);
+		if (e3) return this.error('ReorderDeclineReason', e3);
+		return {};
+	}
+
+	async deleteDeclineReason(id: DeclineReasonID): Promise<Result> {
+		const { error } = await this.client.from('decline_reasons').delete().eq('id', id);
+		return this.errorOrEmpty('DeleteDeclineReason', error);
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
 	// Assignments
 	// ─────────────────────────────────────────────────────────────────────────
 
@@ -1859,7 +3308,8 @@ export default class SupabaseCRUD extends CRUD {
 		roleid: RoleID,
 		bid: boolean,
 		approved: boolean = false,
-		preferenceid: PreferenceLevelID | null = null
+		preferenceid: PreferenceLevelID | null = null,
+		approver: ScholarID | null = null
 	): Promise<Result> {
 		const { data: role, error: roleError } = await this.client
 			.from('roles')
@@ -1880,7 +3330,86 @@ export default class SupabaseCRUD extends CRUD {
 			approved,
 			preferenceid
 		});
-		return this.errorOrEmpty('CreateAssignment', error);
+		if (error)
+			return rpcError(this, error, 'CreateAssignment', {
+				RR025: 'BidLimitReached',
+				RR026: 'BidNotAllowed'
+			});
+
+		// A bid is a request rather than an assignment, so it notifies the people who can answer
+		// it rather than the person who made it. Without this an editor found out a bid had
+		// arrived by opening the submission. Who that is — the holder of the approving role on
+		// this submission, and no one if none is seated — is resolved server-side, since the
+		// bidder cannot see the approvers' assignments.
+		if (bid) {
+			const [{ data: venue }, { data: recipients }] = await Promise.all([
+				this.client.from('venues').select('id, slug').eq('id', role.venueid).single(),
+				this.client.rpc('bid_notice_recipients', { _submission: submission, _role: roleid })
+			]);
+			if (venue !== null && recipients !== null && recipients.length > 0)
+				await this.emailScholars(
+					recipients,
+					'NewBid',
+					[await this.submissionTitle(submission), role.name, venuePath(venue), submission],
+					venue.id
+				);
+			return { data: undefined };
+		}
+
+		// Seating an editor answers the SubmissionNeedsEditor notice the venue's other editors
+		// received, so they are told it is answered. Two editors could otherwise both set out
+		// to claim the same paper, each with no way of seeing the other had.
+		if (approved && role.priority === 0) {
+			const [venueRow, claimer] = await Promise.all([
+				this.client
+					.from('venues')
+					.select('id, title, slug, admins')
+					.eq('id', role.venueid)
+					.single(),
+				this.client.from('scholars').select('name').eq('id', scholar).single()
+			]);
+			if (venueRow.data !== null)
+				await this.emailEditorsOf(
+					role.venueid,
+					venueRow.data.admins ?? [],
+					'SubmissionClaimed',
+					[
+						await this.submissionTitle(submission),
+						claimer.data?.name ?? 'Another editor',
+						venuePath(venueRow.data),
+						submission
+					],
+					scholar
+				);
+		}
+
+		// And tell the person seated. Being assigned here is the same news as being assigned
+		// through approveAssignment, so it sends the same notice — it did not, which meant the
+		// multi-assign flow and the submission page's assignee control seated people silently
+		// while the approve path mailed them, the same act notifying or not depending on which
+		// button was pressed.
+		//
+		// Skipped when the assignee is the one doing the assigning, since claiming a submission
+		// as its editor comes through here and mailing someone about their own click is noise,
+		// and when no approver is known, since the notice names who did it.
+		if (!approved || approver === null || approver === scholar) return { data: undefined };
+
+		const assigner = await this.getScholar(approver);
+		if (assigner === null) return { data: undefined };
+
+		const { notified } = await this.emailScholars(
+			[scholar],
+			'AssignmentApproved',
+			[
+				assigner.getName() ?? '',
+				assigner.getEmail() ?? '',
+				role.name,
+				await this.venuePathOf(role.venueid),
+				submission
+			],
+			role.venueid
+		);
+		return { data: undefined, notified };
 	}
 
 	async approveAssignment(
@@ -1907,13 +3436,55 @@ export default class SupabaseCRUD extends CRUD {
 					scholar.getName() ?? '',
 					scholar.getEmail() ?? '',
 					role.name,
-					assignment.venue,
+					await this.venuePathOf(assignment.venue),
 					assignment.submission
-				]
+				],
+				assignment.venue
 			);
 			notified = emailResult.notified;
 		}
 
+		return { data: undefined, notified };
+	}
+
+	async declineBid(
+		assignment: AssignmentRow,
+		reason: DeclineReasonRow | string,
+		role: RoleRow,
+		decliner: ScholarID
+	): Promise<Result> {
+		// The RPC authorizes (the same rule as approving), checks the bid is still pending,
+		// and records who declined and why. The email is sent here, as approveAssignment's is,
+		// from the reason the RPC stored rather than what was sent, so the bidder reads
+		// exactly what the approvers see.
+		const { data: declined, error } = await this.client.rpc(
+			'decline_bid',
+			typeof reason === 'string'
+				? { _assignment: assignment.id, _reason: reason }
+				: { _assignment: assignment.id, _reason: '', _reason_id: reason.id }
+		);
+		if (error) return rpcError(this, error, 'DeclineBid', { RR017: 'BidNotPending' });
+		const storedReason = stringField(declined, 'reason') ?? '';
+
+		const scholar = await this.getScholar(decliner);
+		if (scholar === null) return { data: undefined };
+		// A claim (a compensation request with no bid behind it) is declined the same way,
+		// but the news is about a request for payment, not a bid.
+		const template = assignment.bid ? 'BidDeclined' : 'ClaimDeclined';
+		const { notified } = await this.emailScholars(
+			[assignment.scholar],
+			template,
+			[
+				scholar.getName() ?? '',
+				scholar.getEmail() ?? '',
+				role.name,
+				await this.submissionTitle(assignment.submission),
+				storedReason,
+				await this.venuePathOf(assignment.venue),
+				assignment.submission
+			],
+			assignment.venue
+		);
 		return { data: undefined, notified };
 	}
 
@@ -1954,24 +3525,34 @@ export default class SupabaseCRUD extends CRUD {
 				.eq('id', data.currency_id)
 				.single();
 			if (currency !== null && currency.minters.length > 0) {
-				await this.emailScholars(currency.minters, 'VenueOutOfTokens', [
-					data.amount.toString(),
-					data.role_name,
-					data.shortfall.toString(),
-					data.venue_id,
-					data.venue_title
-				]);
+				await this.emailScholars(
+					currency.minters,
+					'VenueOutOfTokens',
+					[
+						data.amount.toString(),
+						data.role_name,
+						data.shortfall.toString(),
+						await this.venuePathOf(data.venue_id),
+						data.venue_title
+					],
+					data.venue_id
+				);
 			}
 			return this.error('CompleteAssignmentInsufficientTokens');
 		}
 
 		// Tokens have moved. Tell the scholar.
-		return this.emailScholars([data.scholar_id], 'WorkCompensated', [
-			data.role_name,
-			data.amount.toString(),
-			data.venue_id,
-			data.submission_id
-		]);
+		return this.emailScholars(
+			[data.scholar_id],
+			'WorkCompensated',
+			[
+				data.role_name,
+				data.amount.toString(),
+				await this.venuePathOf(data.venue_id),
+				data.submission_id
+			],
+			data.venue_id
+		);
 	}
 
 	async deleteAssignment(assignment: AssignmentID): Promise<Result> {
@@ -1988,24 +3569,123 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
-	async getActiveAssignmentsForScholars(
-		scholarIDs: ScholarID[]
-	): Promise<ReadResult<Pick<AssignmentRow, 'scholar' | 'venue'>[] | null>> {
-		return this.rows(
-			'LoadAssignment',
-			this.client
-				.from('assignments')
-				.select('scholar, venue')
-				.in('scholar', scholarIDs)
-				.eq('approved', true)
-				.eq('completed', false)
-		);
-	}
-
 	async getAssignmentsForApproval(
 		roleIDs: RoleID[]
 	): Promise<ReadResult<AssignmentForApproval[] | null>> {
 		return this.rows('LoadAssignment', assignmentsForApprovalQuery(this.client, roleIDs));
+	}
+
+	async getAssignmentsAwaitingCompensation(
+		roleIDs: RoleID[]
+	): Promise<ReadResult<AssignmentAwaitingCompensation[] | null>> {
+		return this.rows('LoadAssignment', assignmentsAwaitingCompensationQuery(this.client, roleIDs));
+	}
+
+	async getUnmatchedAssignments(
+		venue: VenueID,
+		submission?: SubmissionID
+	): Promise<ReadResult<UnmatchedAssignmentRow[] | null>> {
+		const query = this.client.from('unmatched_assignments').select().eq('venue', venue);
+		return this.rows(
+			'LoadUnmatchedAssignments',
+			(submission === undefined ? query : query.eq('submission', submission))
+				.order('name')
+				.order('created_at')
+		);
+	}
+
+	async countUnmatchedAssignments(venue: VenueID): Promise<ReadResult<number>> {
+		const { count, error } = await this.client
+			.from('unmatched_assignments')
+			.select('id', { count: 'exact', head: true })
+			.eq('venue', venue);
+		if (error) return { data: 0, error: this.error('LoadUnmatchedAssignments', error).error };
+		return { data: count ?? 0 };
+	}
+
+	async matchAssignments(
+		venue: VenueID,
+		name: string,
+		role: RoleID,
+		scholar: ScholarID
+	): Promise<Result<MatchAssignmentsResult>> {
+		const { data, error } = await this.client.rpc('match_assignments', {
+			_venue: venue,
+			_name: name,
+			_role: role,
+			_scholar: scholar
+		});
+		if (error)
+			return rpcError(this, error, 'MatchAssignments', {
+				RR019: 'MatchAssignmentsNotVolunteer'
+			});
+		return this.reportMatched(venue, scholar, data);
+	}
+
+	async getUnmatchedNameScholars(
+		venue: VenueID,
+		name: string,
+		role: RoleID
+	): Promise<ReadResult<UnmatchedNameScholar[]>> {
+		const { data, error } = await this.client.rpc('unmatched_name_scholars', {
+			_venue: venue,
+			_name: name,
+			_role: role
+		});
+		if (error) return { data: [], error: this.error('LoadUnmatchedAssignments', error).error };
+		return { data: data ?? [] };
+	}
+
+	async addToRoleAndMatch(
+		venue: VenueID,
+		name: string,
+		role: RoleID,
+		scholar: ScholarID
+	): Promise<Result<MatchAssignmentsResult>> {
+		const { data, error } = await this.client.rpc('add_to_role_and_match', {
+			_venue: venue,
+			_name: name,
+			_role: role,
+			_scholar: scholar
+		});
+		if (error)
+			return rpcError(this, error, 'MatchAssignments', {
+				RR027: 'AddToRoleDeclined'
+			});
+		return this.reportMatched(venue, scholar, data);
+	}
+
+	/** What match_assignments returned, and the digest to the scholar it assigned. */
+	private async reportMatched(
+		venue: VenueID,
+		scholar: ScholarID,
+		data: unknown
+	): Promise<Result<MatchAssignmentsResult>> {
+		const matched = stringArrayField(data, 'matched');
+		const skipped = numberField(data, 'skipped');
+		if (matched === null || skipped === null) return this.error('MatchAssignments');
+
+		// The same digest an import sends to the people it assigned: this is the rest of
+		// that import, arriving once the person could be found.
+		if (matched.length === 0) return { data: { matched, skipped } };
+		const { data: venueRow } = await this.client
+			.from('venues')
+			.select('id, title, slug')
+			.eq('id', venue)
+			.single();
+		if (venueRow === null) return { data: { matched, skipped } };
+		const { notified } = await this.emailScholars(
+			[scholar],
+			'SubmissionsAssignedEditor',
+			[matched.length.toString(), venueRow.title, venuePath(venueRow)],
+			venue
+		);
+		return { data: { matched, skipped }, notified };
+	}
+
+	async dismissUnmatchedAssignment(id: UnmatchedAssignmentID): Promise<Result> {
+		const { error } = await this.client.from('unmatched_assignments').delete().eq('id', id);
+		return this.errorOrEmpty('DismissUnmatchedAssignment', error);
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────
@@ -2041,7 +3721,27 @@ export default class SupabaseCRUD extends CRUD {
 			.select()
 			.single();
 
-		return error ? this.error('CreateTransaction', error) : { data: data.id };
+		if (error) return this.error('CreateTransaction', error);
+
+		// Tell the charged scholar, when the charge is against a person, is only proposed, and
+		// was not proposed by them. SubmissionCharged covers the submission case, which is most
+		// of them; anything else used to wait on a reminder family that a venue opts into and
+		// can set to zero, so at a venue with reminders off it was announced to nobody.
+		if (status === 'proposed' && fromScholar !== null && fromScholar !== creator) {
+			const { data: currencyRow } = await this.client
+				.from('currencies')
+				.select('name')
+				.eq('id', currency)
+				.single();
+			await this.emailScholars([fromScholar], 'TransactionProposed', [
+				purpose,
+				tokens.length.toString(),
+				currencyRow?.name ?? '',
+				fromScholar
+			]);
+		}
+
+		return { data: data.id };
 	}
 
 	async transferTokens(
@@ -2085,10 +3785,45 @@ export default class SupabaseCRUD extends CRUD {
 		const transactionID = stringField(data, 'transaction_id');
 		const tokenIDs = stringArrayField(data, 'token_ids');
 		if (transactionID === null || tokenIDs === null) return this.error('TransferVenueTokens');
+
+		// Tell the recipient, when the recipient is a person. Tokens arriving was the quietest
+		// thing the platform did: the failures around a transfer all wrote to somebody, and the
+		// transfer itself wrote to nobody, so a scholar learned they had been given tokens by
+		// visiting their balance and noticing it had changed.
+		//
+		// Best effort and after the fact: the tokens have moved, so a mail failure must not
+		// turn a completed transfer into a reported error. Nobody is told about moving tokens
+		// to themselves.
+		if (toKind !== 'venueid' && toEntity !== creator) {
+			const [currencyRow, giver] = await Promise.all([
+				this.client.from('currencies').select('name').eq('id', currency).single(),
+				fromKind === 'venueid'
+					? this.client.from('venues').select('title').eq('id', fromEntity).single()
+					: this.client.from('scholars').select('name').eq('id', fromEntity).single()
+			]);
+			const giverName =
+				(giver.data && 'title' in giver.data ? giver.data.title : giver.data?.name) ?? '';
+			await this.emailScholars(
+				[toEntity],
+				'TokensReceived',
+				[amount.toString(), currencyRow.data?.name ?? '', giverName, purpose, toEntity],
+				fromKind === 'venueid' ? fromEntity : null
+			);
+		}
+
 		return { data: { transaction: transactionID, tokens: tokenIDs } };
 	}
 
-	async approveTransaction(creator: ScholarID, id: TransactionID) {
+	async approveTransaction(approver: ScholarID, id: TransactionID) {
+		// Read the transaction before approving, for the same reason declineTransaction does:
+		// the notice names the purpose, amount and currency, and reading them first keeps the
+		// email body describing the thing that was actually decided.
+		const { data: transaction } = await this.client
+			.from('transactions')
+			.select('creator, purpose, currency, from_venue, to_venue, amount')
+			.eq('id', id)
+			.single();
+
 		// Authorization (giver / minter, no self-enrichment), any required token
 		// minting, the token movement, and the status flip all happen atomically
 		// inside the approve_transaction RPC. Previously these were several
@@ -2104,6 +3839,47 @@ export default class SupabaseCRUD extends CRUD {
 				}),
 				error
 			);
+
+		// Tell the proposer, as declineTransaction has always told them. Without this the two
+		// halves of the same decision behaved differently: a decline explained itself and an
+		// approval said nothing, so a co-author who paid a charge learned it had gone through
+		// only by visiting their balance.
+		//
+		// Best effort, and deliberately after the RPC: the tokens have already moved and the
+		// transaction is settled, so a mail failure must not turn a successful approval into a
+		// reported error. Nobody is mailed about approving their own proposal.
+		if (transaction && transaction.creator !== approver) {
+			const venueID = transaction.from_venue ?? transaction.to_venue;
+			const [approverRow, currencyRow, venueRow] = await Promise.all([
+				this.client.from('scholars').select('name, email').eq('id', approver).single(),
+				this.client.from('currencies').select('name').eq('id', transaction.currency).single(),
+				venueID
+					? this.client.from('venues').select('id, title, slug').eq('id', venueID).single()
+					: Promise.resolve({ data: null, error: null })
+			]);
+			// This runs in the browser, so the page's own origin is the right answer and is
+			// already to hand; the templates' other links resolve server-side from site_url.
+			const origin =
+				typeof window !== 'undefined' ? window.location.origin : 'https://reciprocal.reviews';
+			const link =
+				venueID && venueRow.data !== null
+					? `${origin}/venue/${venuePath(venueRow.data)}/transactions`
+					: `${origin}/scholar/${transaction.creator}/transactions`;
+			await this.emailScholars(
+				[transaction.creator],
+				'TransactionApproved',
+				[
+					transaction.purpose,
+					transaction.amount.toString(),
+					currencyRow.data?.name ?? '',
+					approverRow.data?.name ?? '',
+					approverRow.data?.email ?? '',
+					link
+				],
+				venueID
+			);
+		}
+
 		return { error: undefined, data: undefined };
 	}
 
@@ -2116,7 +3892,7 @@ export default class SupabaseCRUD extends CRUD {
 		// venue and currency before we update.
 		const { data: transaction, error: readError } = await this.client
 			.from('transactions')
-			.select('creator, purpose, currency, from_venue, to_venue, tokens')
+			.select('creator, purpose, currency, from_venue, to_venue, amount')
 			.eq('id', id)
 			.single();
 		if (readError || !transaction) return this.error('TransactionNotDeclined', readError);
@@ -2157,7 +3933,7 @@ export default class SupabaseCRUD extends CRUD {
 			this.client.from('scholars').select('name, email').eq('id', decliner).single(),
 			this.client.from('currencies').select('name').eq('id', transaction.currency).single(),
 			venueID
-				? this.client.from('venues').select('title').eq('id', venueID).single()
+				? this.client.from('venues').select('id, title, slug').eq('id', venueID).single()
 				: Promise.resolve({ data: null, error: null })
 		]);
 
@@ -2165,10 +3941,17 @@ export default class SupabaseCRUD extends CRUD {
 		const declinerEmail = declinerRow.data?.email ?? '';
 		const currencyName = currencyRow.data?.name ?? '';
 		const venueTitle = venueRow.data?.title ?? '';
-		const amount = transaction.tokens.length.toString();
-		const link = venueID
-			? `https://reciprocal.reviews/venue/${venueID}/transactions`
-			: `https://reciprocal.reviews/scholar/${transaction.creator}/transactions`;
+		const amount = transaction.amount.toString();
+		// Point back at whichever environment the decline happened in. This runs
+		// in the browser, so the page's own origin is the right answer and is
+		// already to hand; the templates' other links are resolved server-side
+		// from the site_url vault secret.
+		const origin =
+			typeof window !== 'undefined' ? window.location.origin : 'https://reciprocal.reviews';
+		const link =
+			venueID && venueRow.data !== null
+				? `${origin}/venue/${venuePath(venueRow.data)}/transactions`
+				: `${origin}/scholar/${transaction.creator}/transactions`;
 
 		// Pick the template variant: with vs without a venue title slot.
 		const args = venueID
@@ -2187,57 +3970,85 @@ export default class SupabaseCRUD extends CRUD {
 		await this.emailScholars(
 			[transaction.creator],
 			venueID ? 'TransactionDeclinedVenue' : 'TransactionDeclined',
-			args
+			args,
+			venueID
 		);
 
 		return { error: undefined, data: undefined };
 	}
 
-	// The three paginated transaction lists all sort by created_at and then by
-	// seq. The tiebreaker is not optional: created_at defaults to now(), which is
-	// transaction START time, so every row a single RPC writes carries an
-	// identical timestamp — create_submission inserts one charge per author that
-	// way. Sorting on created_at alone leaves those rows in an order the planner
-	// may choose differently per query, and a LIMIT/OFFSET over an unstable sort
-	// can return one row on two pages while skipping another entirely.
+	// The three paginated transaction lists all sort by status, then created_at,
+	// then seq.
+	//
+	// STATUS FIRST is what keeps an approver's work reachable. Proposed rows are a
+	// minority on a table that only ever grows, so ordering by date alone buried an
+	// old unapproved transaction behind however many pages of settled history had
+	// accumulated since it was proposed — and a reader has no way to know it is down
+	// there. Sorting them to the front costs the date ordering nothing: within each
+	// status the list is still newest first.
+	//
+	// Ascending means proposed → approved → declined because PostgreSQL orders an
+	// enum by the position its labels were DECLARED in, not alphabetically, and
+	// transaction_status was created as ('proposed', 'approved', 'canceled') with
+	// the third later renamed to 'declined' — a rename keeps its position. Nothing
+	// in this file can see that, so supabase/tests/invariants/transaction_status_order.sql
+	// asserts it: adding a label with `alter type ... add value` appends it to the
+	// END of the order regardless of where it reads in the type, and a label added
+	// before 'proposed' would silently invert every transaction list on the platform.
+	//
+	// SEQ LAST is not optional: created_at defaults to now(), which is transaction
+	// START time, so every row a single RPC writes carries an identical timestamp —
+	// create_submission inserts one charge per author that way. Sorting on
+	// created_at alone leaves those rows in an order the planner may choose
+	// differently per query, and a LIMIT/OFFSET over an unstable sort can return one
+	// row on two pages while skipping another entirely.
+	//
+	// Transactions.svelte re-sorts the pages it has merged and must mirror this
+	// order exactly, or rows shuffle across the boundaries the server cut them on.
 	async getScholarTransactions(scholar: ScholarID, page: number = 0) {
-		return await this.client
-			.from('transactions')
-			.select('*', { count: 'exact' })
+		return await transactionListQuery(this.client, page === 0)
 			.or(`from_scholar.eq.${scholar},to_scholar.eq.${scholar}`)
+			.order('status', { ascending: true })
 			.order('created_at', { ascending: false })
 			.order('seq', { ascending: false })
 			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 	}
 
 	async getVenueTransactions(venue: VenueID, page: number = 0) {
-		return await this.client
-			.from('transactions')
-			.select('*', { count: 'exact' })
+		return await transactionListQuery(this.client, page === 0)
 			.or(`from_venue.eq.${venue},to_venue.eq.${venue}`)
+			.order('status', { ascending: true })
 			.order('created_at', { ascending: false })
 			.order('seq', { ascending: false })
 			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 	}
 
 	async getCurrencyTransactions(currency: CurrencyID, page: number = 0) {
-		return await this.client
-			.from('transactions')
-			.select('*', { count: 'exact' })
+		return await transactionListQuery(this.client, page === 0)
 			.eq('currency', currency)
+			.order('status', { ascending: true })
 			.order('created_at', { ascending: false })
 			.order('seq', { ascending: false })
 			.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 	}
 
+	/** One list row, refetched by id after the viewer approved or declined it —
+	 * see getTransaction in CRUD for why the row cannot simply be looked up in the
+	 * pages already loaded. `transactionListQuery` rather than a `select('*')`: the
+	 * `tokens` array is one uuid per token moved, and a mint can carry thousands. */
+	async getTransaction(id: TransactionID) {
+		return await transactionListQuery(this.client, false).eq('id', id).maybeSingle();
+	}
+
 	async getScholarTransactionCount(scholar: ScholarID): Promise<ReadResult<number | null>> {
-		return this.count(
-			'LoadTransaction',
-			this.client
-				.from('transactions')
-				.select('*', { count: 'exact', head: true })
-				.or(`from_scholar.eq.${scholar},to_scholar.eq.${scholar}`)
-		);
+		// An aggregate rather than a HEAD count, for the same reason as
+		// getScholarTokenCount: this is on the scholar page's hydration path.
+		const { data, error } = await this.client
+			.from('transactions')
+			.select('id.count()')
+			.or(`from_scholar.eq.${scholar},to_scholar.eq.${scholar}`);
+		if (error) return { data: null, ...this.error('LoadTransaction', error) };
+		return { data: data[0]?.count ?? 0 };
 	}
 
 	async getVenueTransactionCount(venue: VenueID): Promise<ReadResult<number | null>> {
@@ -2254,12 +4065,12 @@ export default class SupabaseCRUD extends CRUD {
 		return this.rows('LoadTransaction', this.client.from('transactions').select('*').in('id', ids));
 	}
 
-	async getSubmissionTransactionIDs(
+	async getSubmissionTransactionStatuses(
 		ids: TransactionID[]
-	): Promise<ReadResult<Pick<TransactionRow, 'id'>[] | null>> {
+	): Promise<ReadResult<Pick<TransactionRow, 'id' | 'status'>[] | null>> {
 		return this.rows(
 			'LoadTransaction',
-			this.client.from('transactions').select('id').in('id', ids)
+			this.client.from('transactions').select('id, status').in('id', ids)
 		);
 	}
 
@@ -2290,7 +4101,7 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async getTransactionVenues(
-		transactions: TransactionRow[]
+		transactions: Pick<TransactionRow, 'from_venue' | 'to_venue'>[]
 	): Promise<ReadResult<VenueRow[] | null>> {
 		return this.rows(
 			'LoadVenue',
@@ -2312,7 +4123,7 @@ export default class SupabaseCRUD extends CRUD {
 	}
 
 	async getTransactionCurrencies(
-		transactions: TransactionRow[]
+		transactions: Pick<TransactionRow, 'currency'>[]
 	): Promise<ReadResult<CurrencyRow[] | null>> {
 		return this.rows(
 			'LoadCurrency',
@@ -2327,12 +4138,64 @@ export default class SupabaseCRUD extends CRUD {
 	// Emails & conflicts
 	// ─────────────────────────────────────────────────────────────────────────
 
+	/**
+	 * The path segment a venue's mail should link to: its web address once it has one, its
+	 * id until then.
+	 *
+	 * Resolved here, at queue time, rather than at send time like `{origin}` — the one
+	 * exception to that rule. Venue mail is queued and sent by the `emails` table's AFTER
+	 * INSERT trigger within seconds of each other, so a rename cannot realistically overtake
+	 * a message in flight; and if one ever did, the link still resolves, because the venue
+	 * layout accepts an id and the address it was renamed from is simply gone either way.
+	 *
+	 * A round trip per venue-linked email, which is why callers that already hold the venue
+	 * row use `venuePath` directly instead.
+	 */
+	private async venuePathOf(id: VenueID): Promise<string> {
+		const { data } = await this.client.from('venues').select('id, slug').eq('id', id).maybeSingle();
+		return data === null ? id : venuePath(data);
+	}
+
 	/** Use the resend edge function to use the Resend API to send a message to the current user. */
 	/** Email scholars by id. Recipient resolution — including skipping scholars with no
 	 * verified contact email, which is what enforces "never notify an unverified
 	 * address" (#27) — happens inside the RPC, not here. */
-	async emailScholars(scholars: ScholarID[], template: EmailType, args: string[]): Promise<Result> {
-		return this.queueEmail(template, args, { scholars });
+	async emailScholars(
+		scholars: ScholarID[],
+		template: EmailType,
+		args: string[],
+		/** The venue the message is about, if any. Its replies then go to that venue's admins
+		 * rather than the stewards, and its footer names the venue (resolve_venue_reply_to). */
+		venue: VenueID | null = null
+	): Promise<Result> {
+		return this.queueEmail(template, args, { scholars, venue });
+	}
+
+	/**
+	 * Queue a steward notification to the shared steward inbox.
+	 *
+	 * Separate from `queueEmail` because the recipient is not a scholar: it is the
+	 * stewards@ alias, which the RPC supplies itself. The RPC also whitelists the events it
+	 * will accept, so this cannot become a general channel into the stewards' mailbox.
+	 */
+	private async queueStewardEmail(template: EmailType, args: string[]): Promise<Result> {
+		const { error } = await this.client.rpc('queue_steward_email', {
+			_event: template,
+			_args: args
+		});
+		if (error) return this.error('EmailScholar', error);
+
+		const { subject } = renderEmail(template, args);
+		return {
+			data: undefined,
+			notified: [
+				{
+					// No `group`: the steward inbox is one address, so this always produces exactly
+					// one notification and there is never a batch of them to collapse.
+					message: this.locale.notification.emailedStewards.replace('{subject}', subject)
+				}
+			]
+		};
 	}
 
 	/**
@@ -2350,27 +4213,101 @@ export default class SupabaseCRUD extends CRUD {
 	private async queueEmail(
 		template: EmailType,
 		args: string[],
-		target: { scholars?: ScholarID[]; proposal?: ProposalID }
+		target: { scholars?: ScholarID[]; proposal?: ProposalID; venue?: VenueID | null }
 	): Promise<Result> {
 		const { data, error } = await this.client.rpc('queue_email', {
 			_event: template,
 			_args: args,
 			_scholars: target.scholars ?? undefined,
-			_proposal: target.proposal ?? undefined
+			_proposal: target.proposal ?? undefined,
+			_venue: target.venue ?? undefined
 		});
 		if (error) return this.error('EmailScholar', error);
 
 		const { subject } = renderEmail(template, args);
 		const recipients = Array.isArray(data) ? (data as { name?: string; email: string }[]) : [];
 		const notificationTemplate = this.locale.notification.emailed;
+		// The plural, for when this batch collapses. `{count}` is deliberately left in it: how
+		// many entries the group ends up with is not knowable here, because inviteToRole reaches
+		// this method once per invitee and each call sees a single recipient.
+		const manyTemplate = this.locale.notification.emailedMany;
 		return {
 			data: undefined,
 			notified: recipients.map((recipient) => ({
 				message: notificationTemplate
 					.replace('{recipient}', recipient.name?.trim() ? recipient.name : recipient.email)
+					.replace('{subject}', subject),
+				// Everyone reached by one send is one piece of news, so the banners collapse once
+				// there are more than a few. Keyed by TEMPLATE rather than by call, which is what
+				// makes inviteToRole's loop of single-recipient sends collapse too: fifty pasted
+				// invitees are fifty separate calls here, each returning one notification, and they
+				// are recognizable as one batch only by sharing this key.
+				group: template,
+				collapsed: manyTemplate
+					.replace('{recipient}', recipient.name?.trim() ? recipient.name : recipient.email)
 					.replace('{subject}', subject)
 			}))
 		};
+	}
+
+	/**
+	 * Write a call for bids to the volunteers of one biddable role.
+	 *
+	 * The note never becomes a body. It is passed as one argument to `queue_call_for_bids`,
+	 * which builds the rest of the template's arguments server-side and leaves subject and
+	 * message null, so the registry renders the mail at send time exactly as it does for
+	 * every other notice — escaping the note and defanging any URL scheme in it.
+	 *
+	 * The RPC authorizes against the venue rather than trusting the interface, and returns
+	 * the recipients it actually wrote to, which is not the same as the role's volunteers:
+	 * anyone unverified, silenced, paused, or the sender themselves is skipped. Reporting
+	 * the role's count instead would have the banner claim more than was sent.
+	 */
+	async callForBids(role: RoleID, note: string): Promise<Result> {
+		const { data, error } = await this.client.rpc('queue_call_for_bids', {
+			_role: role,
+			_note: note
+		});
+		if (error)
+			// The one failure a person can fix themselves, so it gets its own message rather
+			// than the generic one. The hint is set by the RPC, the way
+			// request_email_verification marks its cooldown.
+			return this.error(
+				error.hint === 'unverified' ? 'CallForBidsUnverified' : 'CallForBids',
+				error
+			);
+
+		// Rendered locally only to label the notifications; this copy is never delivered. The
+		// subject's only argument is the venue's title, which the RPC returns for exactly this.
+		const result = (data ?? {}) as {
+			recipients?: { name?: string; email: string }[];
+			venue?: string;
+		};
+		const { subject } = renderEmail('CallForBids', [result.venue ?? '']);
+		const recipients = result.recipients ?? [];
+		const notificationTemplate = this.locale.notification.emailed;
+		const manyTemplate = this.locale.notification.emailedMany;
+		return {
+			data: undefined,
+			notified: recipients.map((recipient) => ({
+				message: notificationTemplate
+					.replace('{recipient}', recipient.name?.trim() ? recipient.name : recipient.email)
+					.replace('{subject}', subject),
+				// The batch this whole mechanism exists for: a biddable role routinely holds more
+				// volunteers than Resend will take on a single send, and every one of them was
+				// getting a banner of their own.
+				group: 'CallForBids',
+				collapsed: manyTemplate
+					.replace('{recipient}', recipient.name?.trim() ? recipient.name : recipient.email)
+					.replace('{subject}', subject)
+			}))
+		};
+	}
+
+	async getCallForBidsStatus(role: RoleID): Promise<Result<CallForBidsStatus>> {
+		const { data, error } = await this.client.rpc('call_for_bids_status', { _role: role });
+		if (error) return this.error('CallForBidsStatus', error);
+		return { data: data as unknown as CallForBidsStatus };
 	}
 
 	async declareConflict(
@@ -2383,6 +4320,24 @@ export default class SupabaseCRUD extends CRUD {
 			.from('conflicts')
 			.insert({ scholarid, submissionid, reason });
 		if (error) return this.error('DeclareConflict', error);
+
+		// Tell the venue's editors: a declared conflict removes somebody from the pool for this
+		// paper, and the person it matters to is whoever is trying to find reviewers for it.
+		// Default off — conflicts are declared far more often than papers are claimed.
+		const { data: submission } = await this.client
+			.from('submissions')
+			.select('title, venue, venues!venue(id, title, slug, admins)')
+			.eq('id', submissionid)
+			.single();
+		const venue = submission?.venues;
+		if (venue)
+			await this.emailEditorsOf(
+				submission.venue,
+				venue.admins ?? [],
+				'ConflictDeclared',
+				[submission.title, venuePath(venue), submissionid],
+				scholarid
+			);
 
 		return { data: undefined };
 	}

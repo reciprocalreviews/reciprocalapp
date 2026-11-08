@@ -35,6 +35,11 @@ passed, so `supabase test db <one-file>` will not find it).
     `create_scholar`, `create_currency`, `create_venue`, `create_role`,
     `create_volunteer`, `create_submission_type`, `create_submission`,
     `create_assignment`. Tables without a builder are inserted directly.
+- `_helpers/ambient_emails.psql` — committed "production noise": one already-sent
+  `public.emails` row per event in `templates.ts`. CI loads it before the suite (see
+  Conventions); to do the same locally, run
+  `docker exec -i supabase_db_reciprocalapp psql -U postgres < supabase/tests/_helpers/ambient_emails.psql`
+  after `npm run reset`.
 - `rls/<table>_rls.sql` — one file per table.
 
 ## Conventions
@@ -45,6 +50,12 @@ Each file: `\ir` the helpers → `begin` → `create extension if not exists pgt
 - Create all fixtures **before** the first `authenticate_as` (or after
   `clear_authentication`) — fixture inserts must bypass RLS and write `auth.users`.
 - Each table asserts its full policy set once with `policies_are(...)`.
+- **Scope every read to the test's own fixtures.** The monthly backup drill runs this
+  suite against a restore of production, so `count(*) … where event = 'X'` in owner
+  context counts real mail too. Filter by the fixture's scholar, venue, email or args,
+  or by `time_sent = now()` (the transaction start) when the row has none. Reads made
+  as an `authenticated` fixture scholar are already isolated by RLS. CI loads
+  `_helpers/ambient_emails.psql` first so an unscoped read fails on the pull request.
 - Assertion discipline (picking the wrong one silently passes):
   - SELECT allowed/denied → `isnt_empty` / `is_empty`.
   - INSERT denial, a `with check` violation, or writing a column the role lacks
@@ -61,11 +72,11 @@ positive and an adversarial-negative case per privilege branch.
 | Table | SELECT | INSERT | UPDATE | DELETE | Notable adversarial cases |
 |-------|:------:|:------:|:------:|:------:|---------------------------|
 | scholars | ✓ | ✓ | ✓ | ✓ | insert blocked for all; update self vs steward |
-| venues | ✓ | ✓ | ✓ | ✓ | steward vs admin; no_minter_admins trigger |
-| currencies | ✓ | ✓ | ✓ | ✓ | steward-only insert; minter-only mutate; no_admin_minters |
+| venues | ✓ | ✓ | ✓ | ✓ | steward vs admin; admin/minter overlap permitted |
+| currencies | ✓ | ✓ | ✓ | ✓ | steward-only insert; minter-only mutate; admin may mint |
 | exchanges | ✓ | ✓ | ✓ | ✓ | minter of either currency |
 | roles | ✓ | ✓ | ✓ | ✓ | admin-only |
-| volunteers | ✓ | ✓ | ✓ | ✓ | self vs admin; invite-only roles |
+| volunteers | ✓ | ✓ | ✓ | ✓ | self vs admin; invite-only roles; no delete; roleid/scholarid not writable |
 | proposals | ✓ | ✓ | ✓ | ✓ | steward-only mutate |
 | supporters | ✓ | ✓ | ✓ | ✓ | self-only update/delete |
 | tokens | ✓ | ✓ | ✓ | ✓ | anon cannot read; minter cannot move ownership; no delete |

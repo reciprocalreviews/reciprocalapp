@@ -16,7 +16,7 @@ DR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${TAIL_DIR:?TAIL_DIR is required (a DECRYPTED tail directory)}"
 : "${TARGET_DB_URL:?TARGET_DB_URL is required}"
 : "${FROM_SEQ:?FROM_SEQ is required: db.watermarks.audit_log from the manifest of the restored dump}"
-PG_IMAGE="${PG_IMAGE:-postgres:17}"
+PG_IMAGE="${PG_IMAGE:-public.ecr.aws/docker/library/postgres:17}"
 PGSSLMODE="${PGSSLMODE:-require}"
 
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 1; }

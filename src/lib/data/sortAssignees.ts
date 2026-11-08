@@ -13,15 +13,17 @@ export type AssigneeContext = {
  * PreferenceLevelRows and tests can pass two-field literals. */
 export type PreferenceRank = { id: string; rank: number };
 
-/** Compare two scholars by token balance (descending), then family name
- * (ascending). The shared tail of both sorts below. */
+/** Compare two scholars by token balance (ascending — lowest balance first,
+ * since the undercompensated are the ones most in need of paid work, per the
+ * venue balance guidance in DESIGN.md #93), then family name (ascending).
+ * The shared tail of both sorts below. */
 function compareByBalanceThenName(a: string, b: string, context: AssigneeContext): number {
-	const balanceDiff = context.getBalance(b) - context.getBalance(a);
+	const balanceDiff = context.getBalance(a) - context.getBalance(b);
 	if (balanceDiff !== 0) return balanceDiff;
 	return familyName(context.nameOf(a)).localeCompare(familyName(context.nameOf(b)));
 }
 
-/** Sort assignments by token balance (descending), then by family name
+/** Sort assignments by token balance (ascending), then by family name
  * (ascending). Returns a new array; doesn't mutate the input. */
 export function sortAssignees<T extends { scholar: string }>(
 	items: T[],
@@ -31,7 +33,7 @@ export function sortAssignees<T extends { scholar: string }>(
 }
 
 /** Sort bids: lowest-rank preference (most preferred) first, then by balance
- * descending, then by family name. Unset and unresolvable preferences sort last.
+ * ascending, then by family name. Unset and unresolvable preferences sort last.
  *
  * The ranks are compared for equality rather than subtracted. An unset
  * preference is represented by Infinity, and subtracting two of those yields

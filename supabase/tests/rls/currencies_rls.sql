@@ -4,15 +4,16 @@
 --   SELECT  public — any authenticated scholar or anonymous visitor.
 --   INSERT  stewards only (the issteward() WITH CHECK).
 --   UPDATE  minters of the currency only (USING auth.uid() = any(minters)).
---   DELETE  minters of the currency only (USING auth.uid() = any(minters)).
---   TRIGGER no_admin_minters (BEFORE UPDATE): a minter of a currency may not be
+--   DELETE  no one (denied by policy AND the table privilege is revoked — a
+--           currency's tokens and transactions must outlive any deletion).
+--   ADMIN/MINTER OVERLAP: a minter of a currency may also be
 --           an admin of any venue that uses the currency.
 
 \ir ../_helpers/helpers.sql.inc
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(13);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -24,7 +25,7 @@ select tests.create_scholar('cur_vadmin@test.local') as vadmin \gset
 -- The currency under test, minted by :minter.
 select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
 -- A venue that uses the currency, administered by a DISTINCT scholar (:vadmin),
--- so the no_minter_admins / no_admin_minters constraint holds at creation time.
+-- so the fixtures start without an admin/minter overlap; the overlap is added below.
 select tests.create_venue(:'cur', array[:'vadmin']::uuid[]) as ven \gset
 
 -- A second, independent currency used for the delete tests so the update tests
@@ -37,7 +38,7 @@ select policies_are(
 	array[
 		'only stewards can create currencies',
 		'anyone can view currencies',
-		'minters can delete currencies',
+		'currencies cannot be deleted',
 		'minters can update currencies'
 	]
 );
@@ -104,35 +105,40 @@ select is(
 	'a non-minter cannot update the currency (no-op)'
 );
 
--- ---- UPDATE trigger: no_admin_minters -----------------------------------------
--- A minter may not become an admin of a venue using the currency. :vadmin admins
--- the venue, so adding :vadmin to minters must raise from the trigger.
+-- ---- ADMIN/MINTER OVERLAP: permitted, not refused -----------------------------
+-- The `no_admin_minters` trigger used to refuse this with RR015. It is gone: the overlap
+-- is disclosed on the venue page rather than forbidden, so a venue's admin may hold its
+-- currency. :vadmin admins the venue, and adding them to minters must now succeed.
 select tests.authenticate_as(:'minter');
-select throws_ok(
+select lives_ok(
 	$$ update public.currencies
 	   set minters = array[ $$ || quote_literal(:'minter') || $$, $$ || quote_literal(:'vadmin') || $$ ]::uuid[]
 	   where id = $$ || quote_literal(:'cur'),
-	'P0001',
-	'A venue minter cannot be the admin of the venue currency',
-	'a venue admin cannot be added as a minter of the venue currency'
+	'a venue admin can be added as a minter of the venue currency'
+);
+select tests.clear_authentication();
+select ok(
+	(select :'vadmin'::uuid = any(minters) from public.currencies where id = :'cur'),
+	'and the admin is recorded among the minters'
 );
 
--- ---- DELETE (minters only) ----------------------------------------------------
--- A non-minter's DELETE is filtered by the USING clause (0 rows, no error).
+-- ---- DELETE (no one) -----------------------------------------------------------
+-- The table privilege is revoked, so every client DELETE fails with 42501 —
+-- non-minters and minters alike.
 select tests.authenticate_as(:'outsider');
-delete from public.currencies where id = :'cur_del';
-select tests.clear_authentication();
-select is(
-	(select count(*)::int from public.currencies where id = :'cur_del'),
-	1,
+select throws_ok(
+	$$ delete from public.currencies where id = $$ || quote_literal(:'cur_del'),
+	'42501',
+	null,
 	'a non-minter cannot delete the currency'
 );
 
--- A minter can delete their currency.
 select tests.authenticate_as(:'minter');
-select lives_ok(
+select throws_ok(
 	$$ delete from public.currencies where id = $$ || quote_literal(:'cur_del'),
-	'a minter can delete their currency'
+	'42501',
+	null,
+	'a minter cannot delete their currency'
 );
 
 select * from finish();

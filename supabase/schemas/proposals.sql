@@ -61,11 +61,10 @@ create policy "admins can delete proposals" on "public"."proposals" for DELETE t
 -- the new venue, all atomically, so a partial failure can't orphan records.
 -- SECURITY DEFINER; stewards only. Emails to editors and supporters are
 -- dispatched by the application layer from the returned ids.
-create or replace function public.approve_venue_proposal (
-	_proposal_id uuid
-) returns jsonb language plpgsql security definer
+create or replace function public.approve_venue_proposal (_proposal_id uuid) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_proposal public.proposals;
@@ -93,11 +92,14 @@ begin
 		raise exception 'Proposal not found';
 	end if;
 
-	-- Resolve the proposed editor emails to scholar ids; every editor must
-	-- already have an account.
+	-- Resolve the proposed editor emails to scholar ids, taking whoever has an account
+	-- rather than demanding all of them. An editor who has not signed up yet was emailed an
+	-- invitation when the proposal was filed and can be added later; requiring them up front
+	-- would mean that invitation could only ever reach people who did not need it. At least
+	-- one is a hard floor: venues_admins_check forbids a venue with no admins.
 	select array_agg(id) into _editor_ids from public.scholars where email = any(_proposal.editors);
-	if _editor_ids is null or cardinality(_editor_ids) < cardinality(_proposal.editors) then
-		raise exception 'Not all proposed editors have accounts';
+	if _editor_ids is null then
+		raise exception 'No proposed editors have accounts' using errcode = 'RR014';
 	end if;
 
 	-- Determine the venue's currency, creating one if the proposal didn't name
@@ -106,14 +108,20 @@ begin
 	if _currency is null then
 		if _proposal.payment_free then
 			-- A payment-free venue still needs a (hidden) currency, but no minters
-			-- were proposed. The approving steward becomes the sole minter —
-			-- stewards are never venue admins, so no_admin_minters passes.
+			-- were proposed, so the approving steward holds it.
 			_minter_ids := array[_caller];
 		else
-			-- Resolve the proposed minter emails; every minter must have an account.
+			-- Whoever has an account mints; if nobody does, the approving steward holds the
+			-- currency until the venue names someone. currencies_minters_check requires at
+			-- least one, and a community adopting the platform often has not found an
+			-- independent minter yet — refusing the venue until it has is the barrier this
+			-- replaces. The steward may also be one of the editors above, and so an admin of
+			-- this venue: that overlap is permitted, for as long as the venue needs it. The
+			-- venue page discloses it to everyone who is neither an admin nor a minter,
+			-- which is the safeguard that replaced forbidding it.
 			select array_agg(id) into _minter_ids from public.scholars where email = any(_proposal.minters);
-			if _minter_ids is null or cardinality(_minter_ids) < cardinality(_proposal.minters) then
-				raise exception 'Not all proposed minters have accounts';
+			if _minter_ids is null then
+				_minter_ids := array[_caller];
 			end if;
 		end if;
 		insert into public.currencies (name, minters)
@@ -176,8 +184,103 @@ begin
 end;
 $function$;
 
-revoke execute on function public.approve_venue_proposal (uuid) from public;
-grant execute on function public.approve_venue_proposal (uuid) to authenticated;
+revoke
+execute on function public.approve_venue_proposal (uuid)
+from
+	public;
+
+grant
+execute on function public.approve_venue_proposal (uuid) to authenticated;
+
+--------------------------------------
+-- RPC
+--
+-- decline_venue_proposal: tell the people a proposal was announced to that it has ended, and
+-- close it -- in one transaction.
+--
+-- Why an RPC rather than an email followed by a delete. The proposal's listed editors are
+-- plain addresses on the row (proposals.editors), not scholars, so the only way to reach them
+-- is public.queue_email's `_proposal` branch, which reads the row. Emailing first and deleting
+-- second means a failed delete leaves a live proposal whose editors have been told it is
+-- dead; deleting first leaves nobody to address. Doing both here makes that ordering
+-- impossible to get wrong.
+--
+-- The steward names the proposal and nothing else. The one argument ProposalDeclined renders,
+-- the proposal's title, is read from the row here and the body is rendered from the registry at
+-- send time, so it is escaped like every other email's. This used to take a subject and message
+-- rendered by the caller -- stewards only, but a caller-authored body is exactly what the rest
+-- of the pipeline refuses to accept, and there is no reason for this to be the exception.
+-- Addresses come from the row and from scholars.email; the caller chooses no recipient.
+create or replace function public.decline_venue_proposal (_proposal_id uuid) returns integer language plpgsql security definer
+set
+	"search_path" to 'public',
+	'pg_temp' as $function$
+declare
+	_caller uuid := (select auth.uid());
+	_proposal public.proposals;
+	_supporters integer;
+	_editors integer;
+begin
+	if _caller is null then
+		raise exception 'Authentication required';
+	end if;
+	if not public.isSteward() then
+		raise exception 'Only stewards can decline venue proposals';
+	end if;
+
+	select * into _proposal from public.proposals where id = _proposal_id;
+	if not found then
+		raise exception 'Proposal not found';
+	end if;
+
+	-- The supporters, who are scholars and so have a preference to honour.
+	insert into public.emails (event, scholar, sender, venue, email, args)
+	select 'ProposalDeclined', s.id, _caller, null, s.email, jsonb_build_array(_proposal.title)
+	from public.supporters p
+	join public.scholars s on s.id = p.scholarid
+	where p.proposalid = _proposal_id
+		and s.email is not null
+		and public.notification_allowed(s.id, 'ProposalDeclined');
+
+	get diagnostics _supporters = row_count;
+
+	-- The listed editors, who are addresses rather than accounts. No preference applies:
+	-- there is no scholar to hold one, which is the same reason ProposalCreatedEditors is
+	-- sent to them unconditionally. Anyone listed who also supported is skipped, so a person
+	-- who is both does not get two copies.
+	insert into public.emails (event, scholar, sender, venue, email, args)
+	select 'ProposalDeclined', null, _caller, null, e, jsonb_build_array(_proposal.title)
+	from unnest(_proposal.editors) as e
+	where e is not null
+		and e <> ''
+		and e not in (
+			select s.email from public.supporters p
+			join public.scholars s on s.id = p.scholarid
+			where p.proposalid = _proposal_id and s.email is not null
+		);
+
+	-- Two counters rather than one: GET DIAGNOSTICS assigns an item to a variable and takes
+	-- no expression, so `_count = _count + row_count` is a syntax error rather than a sum.
+	get diagnostics _editors = row_count;
+
+	delete from public.proposals where id = _proposal_id;
+
+	return _supporters + _editors;
+end;
+$function$;
+
+alter function public.decline_venue_proposal (uuid) OWNER to "postgres";
+
+-- Explicitly revoked, not merely un-granted: Supabase's ALTER DEFAULT PRIVILEGES hands anon
+-- EXECUTE on every function created in `public` at creation time.
+revoke
+execute on function public.decline_venue_proposal (uuid)
+from
+	public,
+	anon;
+
+grant
+execute on function public.decline_venue_proposal (uuid) to authenticated;
 
 grant all on table "public"."proposals" to "anon";
 

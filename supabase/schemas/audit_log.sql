@@ -60,7 +60,7 @@ create table if not exists public.audit_log (
 	before jsonb,
 	after jsonb,
 	actor uuid,
-	xid xid8 not null default pg_current_xact_id (),
+	xid xid8 not null default pg_current_xact_id(),
 	at timestamptz not null default clock_timestamp()
 );
 
@@ -114,16 +114,17 @@ $$;
 
 alter function public.log_audit_event () OWNER to "postgres";
 
--- Attached by loop rather than sixteen hand-written statements: the list is the
+-- Attached by loop rather than eighteen hand-written statements: the list is the
 -- documentation, and adding a table later is a one-line change that cannot be
 -- half-applied.
 do $$
 declare
 	_t text;
 	_audited text[] := array[
-		'assignments', 'compensation', 'conflicts', 'currencies', 'exchanges',
+		'assignments', 'compensation', 'conflicts', 'currencies', 'decline_reasons', 'exchanges',
 		'preference_levels', 'proposals', 'roles', 'scholars', 'submission_types',
-		'submissions', 'supporters', 'thanks', 'transactions', 'venues', 'volunteers'
+		'submissions', 'supporters', 'thanks', 'transactions', 'unmatched_assignments', 'venues',
+		'volunteers'
 	];
 begin
 	foreach _t in array _audited loop
@@ -164,9 +165,8 @@ $$;
 
 alter function public.audit_log_append_only () OWNER to "postgres";
 
-create or replace trigger audit_log_no_rewrite before
-update
-or delete on public.audit_log for each row
+create or replace trigger audit_log_no_rewrite
+before update or delete on public.audit_log for each row
 execute function public.audit_log_append_only ();
 
 --------------------------------------
@@ -202,7 +202,6 @@ select
 -- table inside the `before`/`after` payloads of `scholars` rows (and as `actor`
 -- anywhere they acted), so forget_scholar() must scrub here as well as in
 -- token_events and transactions.
-
 -- Replay the audit log forward over a restored database.
 --
 -- This is the half of the recovery-point story that the hourly tail is useless

@@ -7,13 +7,15 @@ import {
 	type RoleID,
 	type ScholarID,
 	type ScholarRow,
+	type ORCIDProfileRow,
+	type PublicORCIDProfile,
 	type SupporterID,
 	type VenueID,
 	type VolunteerID,
+	type VolunteerVisibility,
 	type VolunteerRow,
 	type Response,
 	type TokenID,
-	type TokenRow,
 	type TransactionStatus,
 	type TransactionRow,
 	type AssignmentID,
@@ -26,23 +28,40 @@ import {
 	type SubmissionTypeID,
 	type SubmissionType,
 	type CompensationRow,
+	type UnmatchedAssignmentID,
+	type UnmatchedAssignmentRow,
 	type PreferenceLevelID,
 	type PreferenceLevelRow,
+	type DeclineReasonID,
+	type DeclineReasonRow,
 	type ThanksRow,
 	type ThanksID,
+	type NotificationSettingRow,
 	type ThanksStatus
 } from '../../data/types';
 import { getContext, setContext } from 'svelte';
 import type Scholar from './Scholar.svelte';
-import type { AuthError, PostgrestError, PostgrestResponse } from '@supabase/supabase-js';
-import type { EmailType } from '../../email/templates';
+import type {
+	AuthError,
+	PostgrestError,
+	PostgrestResponse,
+	PostgrestSingleResponse
+} from '@supabase/supabase-js';
+import type { EmailType, OptionalEmailType } from '../../email/templates';
+import type { ORCIDWorkJournal } from './orcidProfile';
 import type SupabaseCRUD from './SupabaseCRUD.svelte';
 import type {
+	AssignmentAwaitingCompensation,
 	AssignmentForApproval,
+	DevScholar,
+	CurrencyHolderCounts,
 	ProposalSupporter,
-	ScholarReview,
+	ScholarInvitee,
+	ScholarMatch,
+	ScholarTask,
 	ScholarVolunteering,
 	TokenBalance,
+	TransactionListRow,
 	VenueCommitment,
 	VenueSettingsVolunteer,
 	VenueVolunteer
@@ -65,24 +84,156 @@ export type DBError = { message: string; details?: PostgrestError | AuthError };
  * message so the feedback layer can render it without needing locale
  * access. The CRUD layer (which has locale via this.locale) is responsible
  * for formatting. */
-export type Notification = { message: string };
+export type Notification = {
+	message: string;
+	/** Entries sharing a key are one piece of news. When more than a few arrive at once, the
+	 * feedback layer posts one banner for the group and counts the rest rather than one banner
+	 * each — a call for bids to a three-hundred-volunteer role is one thing that happened, not
+	 * three hundred. Absent means the entry always stands alone, so a producer that has not
+	 * thought about batching behaves exactly as it did before. See
+	 * [notifications.ts](./notifications.ts). */
+	group?: string;
+	/** `message` said of the whole batch, for when this entry's group collapses.
+	 *
+	 * Still carrying its `{count}` placeholder, which the feedback layer fills once it knows how
+	 * many entries the group turned out to have — the producer often cannot know: `inviteToRole`
+	 * emits one single-recipient send per invitee, so each entry is built believing it is alone.
+	 * The count is the REST of the batch, so 307 recipients read as one name and 306 others.
+	 *
+	 * Written by the producer rather than assembled by the feedback layer because a plural is
+	 * not a suffix: "was emailed" has to become "were emailed", and a producer is also the only
+	 * place with locale. Optional — a group without one still collapses, but falls back to
+	 * appending a count to the singular message. */
+	collapsed?: string;
+};
 
 export type Result<Type = undefined> = {
 	data?: Type;
 	error?: DBError;
 	/** Optional notifications produced by the action — emails queued, etc.
-	 * The feedback layer renders one banner per entry. */
+	 * The feedback layer renders one banner per entry, except that entries sharing a `group`
+	 * collapse into one once there are more than a few of them. */
 	notified?: Notification[];
 };
 
 /** The result of a read method used by page load functions (#137). Unlike
  * {@link Result}, `data` is always present (it carries the rows, or null when
  * the row is missing or the query failed) so callers can destructure `data`
- * with the same nullability the raw query builder used to give them. Read
- * failures are logged by the implementation rather than surfaced here. */
+ * with the same nullability the raw query builder used to give them.
+ *
+ * Read failures are logged by the implementation AND reported here. Most callers
+ * only want `data`, but the two reasons it can be null are not the same answer: a
+ * `.maybeSingle()` that finds nothing yields null with no `error`, while a failed
+ * query yields null with one. A route that renders "not found" for the first and
+ * "something went wrong" for the second needs to tell them apart. */
 export type ReadResult<Type> = { data: Type; error?: DBError };
 
+/** What the caller is currently waiting to verify, if anything (#27) — the shape of
+ * `public.pending_email_verification`'s jsonb.
+ *
+ * Deliberately carries no token, no `emails` row id, and no delivery detail; see that
+ * function's comment for why each is withheld. `delivery` is the coarse status of the
+ * message that carried the link, so the interface can say it never left the building
+ * rather than leaving a scholar waiting on mail that was never sent. */
+export type PendingEmailVerification =
+	| { pending: false }
+	| {
+			pending: true;
+			email: string;
+			created_at: string;
+			expires_at: string;
+			expired: boolean;
+			/** When the database's one-minute cooldown lifts, as an instant, so a countdown
+			 * targets the same moment the RPC starts accepting again rather than re-deriving
+			 * "one minute" here and disagreeing with the database by a second. */
+			resend_after: string;
+			delivery: 'queued' | 'sent' | 'failed' | 'unknown' | null;
+	  };
+
+/** What the call-for-bids form knows before it sends anything.
+ *
+ * `eligible` is how many volunteers would actually receive the message — the same predicate
+ * the fan-out uses, which the client cannot reproduce because it cannot see who has a
+ * verified address or who has silenced the notice. Counting a role's volunteers here instead
+ * would promise a number the feedback banners then contradict.
+ *
+ * `last_sent` / `last_sender` answer "has a colleague already done this?". There is
+ * deliberately no rate limit — an editor decides when their community needs asking — so these
+ * inform that judgment rather than gating it. Null when the venue has never asked. */
+export type CallForBidsStatus = {
+	eligible: number;
+	last_sent: string | null;
+	last_sender: string | null;
+};
+
+/** The caller's bid budget for a role: how many of their bids are on submissions still
+ * under review, and how many they may have. `bid_limit` is null when the role has no
+ * budget. See public._bid_limit. */
+export type BidBudget = { used: number; bid_limit: number | null };
+
+/** One row of public.assignment_loads: how many approved, uncompleted assignments a
+ * scholar has in a role at a venue, or, when `role` is null, in every other venue
+ * (editor seats excluded). Counts are true ones, not limited by what the viewer may
+ * see; only the venue's admins and approvers get any rows. */
+export type AssignmentLoad = { scholar: ScholarID; role: RoleID | null; count: number };
+
+/** How many approved assignments a scholar has completed at a venue, in any role. Only
+ * the venue's admins and approvers get any rows; see completed_counts. */
+export type CompletedCount = { scholar: ScholarID; count: number };
+
+/** The journal titles in a volunteer's ORCID record, for matching against a venue's
+ * relevant venues. See src/lib/data/trackRecord.ts. */
+export type VolunteerJournals = { scholar: ScholarID; journals: ORCIDWorkJournal[] };
+
+/** What `ensure_scholar` found when asked to repair the caller's own scholar row.
+ * `orcid_conflict` is the one that needs a person: another scholar row already holds
+ * this account's ORCID iD, so two accounts are claiming one researcher. */
+/** A scholar as a list renders them: who they are, plus the mirrored ORCID columns that
+ * fit in a table cell. `orcid_profiles` is null when RR has not read their record, which
+ * is the common case on a cold cache and must render as nothing. */
+export type ScholarCard = Pick<ScholarRow, 'id' | 'name' | 'orcid'> & {
+	orcid_profiles: Pick<
+		ORCIDProfileRow,
+		| 'employment_role'
+		| 'employment_organization'
+		| 'keywords'
+		| 'work_count'
+		| 'work_first_year'
+		| 'work_last_year'
+		| 'fetched_at'
+	> | null;
+};
+
+/** The mirror's operational state.
+ *
+ * `rate_limited` counts the last seven days and is the number that matters: ORCID's
+ * anonymous budget is 25k reads a day shared across an egress IP, and a non-zero count here
+ * is the signal to register an API client (#173). `failed` cannot answer that on its own,
+ * because it counts 500s and timeouts too. */
+export type ORCIDMirrorHealth = {
+	/** Scholars who have an ORCID iD at all — the denominator. */
+	scholars: number;
+	read: number;
+	never_read: number;
+	pending: number;
+	not_found: number;
+	failed: number;
+	rate_limited: number;
+	/** The least recently refreshed profile, or null when none has been read. */
+	oldest_read: string | null;
+};
+
+export type EnsureScholarOutcome = 'exists' | 'created' | 'orcid_conflict' | 'no_account';
+
 export type Charge = { scholar: string; payment: number | undefined };
+
+/** Whether one author can cover the charge proposed for them.
+ *
+ * `covered: undefined` means the scholar could not be resolved at all;
+ * `false` means they hold too little. Deliberately a boolean rather than the
+ * remaining balance: the form only ever needed to name who cannot pay, and the
+ * submitter is not entitled to know how much anybody else holds (#109). */
+export type ChargeCoverage = { scholar: string; covered: boolean | undefined };
 
 export type ImportedSubmission = {
 	title: string;
@@ -91,12 +242,61 @@ export type ImportedSubmission = {
 	expertise: string | null;
 	submission_type: SubmissionTypeID;
 	note: string | null;
+	/** Who to seat on this submission and in which role, already resolved from
+	 * whatever names the CSV wrote — one entry per role that named somebody.
+	 * Empty when the row names nobody.
+	 *
+	 * At most one entry per role, and at most one in a priority-0 role: both are
+	 * refused by the database, not merely by the form. The keys are the RPC's own,
+	 * so this passes through without re-mapping.
+	 *
+	 * A name that matched nobody is passed as `name` instead of `person`, and kept
+	 * as an unmatched assignment for an approver to match once that person joins. */
+	people: ({ person: ScholarID; person_role: RoleID } | { name: string; person_role: RoleID })[];
 };
 
 export type BulkImportResult = {
 	submissionIDs: SubmissionID[];
 	transactionID: TransactionID | null;
 	mintAmount: number;
+	/** How many of the submitted rows were already at the venue and so were not
+	 * written. Counted by the database rather than the form, so it also covers rows
+	 * the form did not know about -- a page left open while somebody else imported. */
+	skipped: number;
+	/** How many submissions each scholar was seated on, so the import can tell
+	 * each of them what they now hold in one message rather than one per row.
+	 * Distinct submissions, not assignments: one row can seat the same person twice --
+	 * the venue's sole editor, also named in the file for another role -- and the
+	 * message this feeds counts papers, not seats (#181). */
+	seatedBy: Record<ScholarID, number>;
+	/** How many named people matched nobody and are kept as unmatched assignments. */
+	unmatched: number;
+};
+
+/** What matchAssignments did: the submissions the scholar is now assigned to, and how
+ * many of the name's rows were left alone because the scholar is an author of, or
+ * conflicted on, the submission, or because someone else already holds the role. */
+/** What the batch payment check reads for a list of manuscript IDs: the submissions
+ * found, the status of each of their charges, and the authors who were charged, so
+ * whoever has not paid can be named and written to. */
+export type SubmissionPayments = {
+	submissions: Pick<
+		SubmissionRow,
+		'id' | 'venue' | 'externalid' | 'title' | 'imported' | 'authors' | 'transactions'
+	>[];
+	transactions: Pick<TransactionRow, 'id' | 'status'>[];
+	authors: Pick<ScholarRow, 'id' | 'name' | 'email'>[];
+};
+
+export type MatchAssignmentsResult = { matched: SubmissionID[]; skipped: number };
+
+/** A scholar who may be the person an import named, with what tells same-named people
+ * apart. `email` is their verified address, if any. */
+export type UnmatchedNameScholar = {
+	id: ScholarID;
+	name: string | null;
+	orcid: string | null;
+	email: string | null;
 };
 
 /** A non-editor assignment that is approved but not yet completed, returned
@@ -154,6 +354,15 @@ export default abstract class CRUD {
 
 	abstract updateSubmissionNote(submissionID: SubmissionID, note: string | null): Promise<Result>;
 
+	/** Close or reopen bidding on a submission that is still under review. Authorized for
+	 * anyone who may approve bids on the submission: a venue admin, its editor, or the
+	 * holder of a bid-approving role seated on it. Existing bids are untouched; closing
+	 * only blocks new ones. */
+	abstract updateSubmissionBiddingClosed(
+		submissionID: SubmissionID,
+		closed: boolean
+	): Promise<Result>;
+
 	/** Mark a submission as done. Authorized for priority-0 editors only.
 	 * Validates that every non-editor approved assignment is already
 	 * compensated, then atomically compensates every uncompleted priority-0
@@ -164,19 +373,67 @@ export default abstract class CRUD {
 		submissionID: SubmissionID
 	): Promise<Result<MarkSubmissionDoneOutcome>>;
 
+	/** Close a submission out: pay each assignment in `pay`, remove each in `remove`, and
+	 * mark it done, atomically. Authorized for priority-0 editors only. Together the two
+	 * lists must name exactly the approved, uncompensated non-editor assignments, so the
+	 * editor decides about each one rather than waiting for its scholar to request
+	 * compensation. A short reserve pays nobody and proposes one mint for the whole
+	 * shortfall, as markSubmissionDone does. Each scholar removed is emailed, naming the
+	 * `closer`, so they can say so if the work was in fact done. */
+	abstract closeSubmission(
+		submissionID: SubmissionID,
+		pay: AssignmentID[],
+		remove: AssignmentID[],
+		closer: ScholarID
+	): Promise<Result<MarkSubmissionDoneOutcome>>;
+
 	/** Check whether the given scholars have enough tokens for the given payments,
-	 * denominated in the given currency. True if so, and a list of remaining balances
-	 * by scholar if not. The currency is required: a balance is only meaningful within
-	 * one, and counting a scholar's holdings across all of them makes this disagree
-	 * with the create_submission RPC that ultimately decides. */
+	 * denominated in the given currency. True if so, and a per-scholar can/cannot
+	 * otherwise. The currency is required: a balance is only meaningful within one,
+	 * and counting a scholar's holdings across all of them makes this disagree with
+	 * the create_submission RPC that ultimately decides.
+	 *
+	 * Answers can/cannot rather than by-how-much. Balances are private (#109) and a
+	 * submitter is not in the audience for their co-authors' — being named on a
+	 * manuscript together confers nothing. The form never displayed the number
+	 * anyway; it only ever named who was short. */
 	abstract verifyCharges(
 		charges: Charge[],
 		currency: CurrencyID
-	): Promise<Result<true | Charge[] | undefined>>;
+	): Promise<Result<true | ChargeCoverage[] | undefined>>;
 
 	abstract registerScholar(scholar: ScholarRow): Scholar;
 
 	abstract findScholar(emailOrORCID: string): Promise<Result<ScholarID | undefined>>;
+	/** Of the given email addresses, those that belong to no scholar. Matches on the
+	 * verified contact email alone, exactly as approve_venue_proposal does, so what a
+	 * proposal form reports and what approval will actually resolve cannot disagree. */
+	abstract findUnknownAddresses(addresses: string[]): Promise<ReadResult<string[]>>;
+	/** Which scholar, if any, each of the given email addresses or ORCID iDs names,
+	 * keyed by the exact text that was given. One query for the whole list, so a form
+	 * can say who it is about to invite — and which entries name nobody — before
+	 * anything is sent.
+	 *
+	 * Unlike findUnknownAddresses, this matches ORCID iDs as well as verified contact
+	 * addresses, because the invite field offers a scholar found either way and
+	 * create_volunteer cares only which scholar was chosen. It used to be inviteToRole's
+	 * own lookup, so that a preview and the invitation could not disagree about who an
+	 * address named; the invitation now takes scholars rather than text, so there is
+	 * nothing left to disagree with — this resolves the field, and the field's answer is
+	 * what gets sent.
+	 *
+	 * Matching is exact, including case, for the reason addresses.ts gives: the
+	 * invitation matches exactly too, so folding case here would report an address as
+	 * known that the invitation would then reject. An entry that matched nobody is
+	 * absent from the map rather than present with a null. */
+	abstract findScholarsByAddresses(
+		emailsOrORCIDs: string[]
+	): Promise<ReadResult<Map<string, ScholarInvitee>>>;
+	/** Up to three scholars whose name contains the query, for picking a
+	 * co-author whose ORCID the submitter doesn't know. */
+	abstract findScholarsByName(query: string): Promise<ReadResult<ScholarMatch[]>>;
+	/** Every scholar, for the local-only sign-in list on /login. */
+	abstract getScholarsForDevSignIn(): Promise<ReadResult<DevScholar[] | null>>;
 
 	/** Given a scholar ID, get information about the scholar, except the scholar's transactions */
 	abstract getScholar(scholarID: ScholarID): Promise<Scholar | null>;
@@ -190,13 +447,39 @@ export default abstract class CRUD {
 	/** Update scholar's reviewing status. */
 	abstract updateScholarStatus(id: ScholarID, status: string): Promise<Result>;
 
+	/** Which optional notices this scholar has silenced. Only their own rows are readable,
+	 * so this returns nothing for anyone else's profile — the preference is deliberately
+	 * private, unlike the rest of a scholar's metadata. An absent row means the default,
+	 * which is on. */
+	abstract getNotificationSettings(
+		scholar: ScholarID
+	): Promise<ReadResult<NotificationSettingRow[] | null>>;
+
+	/** Turn one optional notice on or off for this scholar. Only templates marked
+	 * `optional` in the email registry can be silenced; consequential mail — a charge, a
+	 * decline, a verification — carries no such flag and has no setting. */
+	abstract updateNotificationSetting(
+		scholar: ScholarID,
+		event: OptionalEmailType,
+		enabled: boolean
+	): Promise<Result>;
+
 	/** Begin/resend/change contact-email verification for the current scholar (#27).
 	 * Records a pending candidate + token and queues a verification link to `email`,
 	 * entirely inside the database — the raw token is never returned to the client, and
-	 * the caller supplies neither the message body nor the link's origin. Token
-	 * consumption happens in the verify route's server load (see
-	 * src/routes/[[lang]]/verify/[token]) via the anon-callable verify_email RPC. */
+	 * the caller supplies neither the message body nor the link's origin. The link is
+	 * valid for 24 hours. Token consumption happens in the verify route's server load
+	 * (see src/routes/[[lang]]/verify/[token]) via the anon-callable verify_email RPC.
+	 *
+	 * This is also the resend path: the database upserts on the scholar's primary key,
+	 * so calling it again with the same address replaces the token and restarts the
+	 * clock. It refuses a second call within a minute of the last one. */
 	abstract requestEmailVerification(email: string): Promise<Result>;
+
+	/** What, if anything, the current scholar is waiting to verify (#27). Used by load
+	 * functions to render the pending notice and the resend button; the database is the
+	 * only place this state exists, since email_verifications is unreadable directly. */
+	abstract getPendingEmailVerification(): Promise<ReadResult<PendingEmailVerification | null>>;
 
 	/** Export everything the platform holds about a scholar, as one JSON document.
 	 * A scholar may export themselves; a steward may export on their behalf for a
@@ -210,6 +493,21 @@ export default abstract class CRUD {
 	 * and would in any case destroy records belonging to other people. The erasure
 	 * is recorded in `erasures` so it can be re-applied after a restore. */
 	abstract eraseScholar(scholar: ScholarID): Promise<Result>;
+
+	/** Promote or demote a steward. `steward` is privilege-bearing and no client role
+	 * may write it — the UPDATE grant on `scholars` omits the column — so this goes
+	 * through the set_steward RPC, which is SECURITY DEFINER and gated on isSteward().
+	 * Resolves to `false` when the scholar already had the requested status, which is
+	 * reported rather than raised. Nobody may demote themselves, and the last steward
+	 * may not be demoted at all: with the RPC as the only path to the column, a
+	 * platform with no stewards could never appoint one again. */
+	abstract setSteward(scholar: ScholarID, steward: boolean): Promise<Result<boolean>>;
+
+	/** Promote whoever holds this email address or ORCID iD, resolving them first so a
+	 * steward can type an address rather than a uuid — the same shape as adding a
+	 * currency minter. There is no `removeSteward(emailOrORCID)` twin: demotion
+	 * happens from a list that already carries the scholar's id. */
+	abstract addSteward(emailOrORCID: string): Promise<Result<ScholarID>>;
 
 	/** Propose a venue */
 	abstract proposeVenue(
@@ -252,14 +550,26 @@ export default abstract class CRUD {
 	abstract editVenueAdmins(id: VenueID, admins: string[]): Promise<Result>;
 	abstract addVenueAdmin(id: VenueID, emailOrORCID: string): Promise<Result>;
 	abstract editVenueTitle(id: VenueID, title: string): Promise<Result>;
+	/** Set or change the venue's short display name — the one the venue bar shows when the
+	 * full title would not fit. Empty means the venue has not chosen one, and the title is
+	 * shown instead; nothing about it is unique, so unlike an address it cannot be taken. */
+	abstract editVenueShortTitle(id: VenueID, shortTitle: string): Promise<Result>;
 	abstract editVenueURL(id: VenueID, url: string): Promise<Result>;
+	/** Set or clear (null) the address of the venue's reviewing system. */
+	abstract editVenueReviewSystemURL(id: VenueID, url: string | null): Promise<Result>;
+	/** Set the venues whose publications signal fit here: one per element, each a
+	 * comma-separated list of that venue's names. See src/lib/data/trackRecord.ts. */
+	abstract editVenueRelevantVenues(id: VenueID, venues: string[]): Promise<Result>;
+	/** Set or change the venue's web address. Changing one releases the old address
+	 * immediately: nothing reserves it, nothing redirects from it, and every link that
+	 * used it breaks. The interface warns before doing it. */
+	abstract editVenueSlug(id: VenueID, slug: string): Promise<Result>;
 	abstract editVenueInactive(id: VenueID, inactive: string | null): Promise<Result>;
 	abstract editVenueAnonymousAssignments(id: VenueID, anonymous: boolean): Promise<Result>;
 	/** Toggle whether author thank-you notes to reviewers require vetting. */
 	abstract editVenueVetThanks(id: VenueID, vet: boolean): Promise<Result>;
 	abstract editVenueWelcomeAmount(id: VenueID, amount: number): Promise<Result>;
 	abstract editVenuePaymentFree(id: VenueID, paymentFree: boolean): Promise<Result>;
-	abstract editVenueDoneVisibilityDays(id: VenueID, days: number): Promise<Result>;
 	abstract editVenueTransactionReminderFrequency(id: VenueID, days: number): Promise<Result>;
 
 	abstract createRole(id: VenueID, name: string): Promise<Result<RoleRow>>;
@@ -269,7 +579,15 @@ export default abstract class CRUD {
 	abstract editRoleBidding(id: RoleID, bidding: boolean): Promise<Result>;
 	abstract editRoleAnonymousAuthors(id: RoleID, anonymous: boolean): Promise<Result>;
 	abstract editRoleApprover(id: RoleID, approver: RoleID | null): Promise<Result>;
-	abstract editRoleDesiredAssignments(id: RoleID, bidLimit: number | null): Promise<Result>;
+	abstract editRoleDesiredAssignments(id: RoleID, desired: number): Promise<Result>;
+	/** The most submissions each volunteer may bid on in this role, or null for no limit. */
+	abstract editRoleMaxBids(id: RoleID, max: number | null): Promise<Result>;
+	/** Who may see this role's volunteers. Inert while the role is invite-only or at
+	 * priority 0 — see the volunteers SELECT policy for why those are exempt. */
+	abstract editRoleVolunteerVisibility(
+		id: RoleID,
+		visibility: VolunteerVisibility
+	): Promise<Result>;
 	abstract reorderRole(role: RoleRow, roles: RoleRow[], direction: -1 | 1): Promise<Result>;
 	abstract deleteRole(id: RoleID): Promise<Result>;
 
@@ -317,6 +635,11 @@ export default abstract class CRUD {
 	): Promise<Result<string>>;
 
 	abstract updateVolunteerActive(id: VolunteerID, active: boolean): Promise<Result>;
+	/** Mark ANOTHER scholar's accepted volunteer record inactive, for a venue admin or a
+	 * holder of the venue's top-priority role. Deactivates rather than deletes, as stopping
+	 * does, because the record is what keeps the welcome grant one-time; the volunteer may
+	 * resume afterwards. The volunteer is emailed, and the venue told as for a pause. */
+	abstract removeVolunteer(id: VolunteerID): Promise<Result>;
 	abstract updateVolunteerExpertise(id: VolunteerID, expertise: string): Promise<Result>;
 	abstract updateVolunteerPapers(id: VolunteerID, papers: number | null): Promise<Result>;
 
@@ -334,12 +657,34 @@ export default abstract class CRUD {
 		direction: -1 | 1
 	): Promise<Result>;
 	abstract deletePreferenceLevel(id: PreferenceLevelID): Promise<Result>;
+	/** Create a new decline reason for a venue, appended after the highest current rank. */
+	abstract createDeclineReason(venue: VenueID, text: string): Promise<Result<DeclineReasonRow>>;
+	abstract editDeclineReasonText(id: DeclineReasonID, text: string): Promise<Result>;
+	/** Swap the ranks of the reason and its neighbor in the given direction. */
+	abstract reorderDeclineReason(
+		reason: DeclineReasonRow,
+		reasons: DeclineReasonRow[],
+		direction: -1 | 1
+	): Promise<Result>;
+	abstract deleteDeclineReason(id: DeclineReasonID): Promise<Result>;
+	/** Invite each of these scholars to the role, as one batch: a volunteer record in the
+	 * `invited` state, and a message telling them so.
+	 *
+	 * Scholars, not addresses. The form that calls this resolves what was typed into
+	 * particular people before anything is staged, and the invitation sends to the people
+	 * who were chosen rather than re-resolving text that may since have come to mean
+	 * somebody else. */
 	abstract inviteToRole(
 		inviter: ScholarID,
 		role: RoleRow,
 		venue: VenueRow,
-		emails: string[]
+		scholars: ScholarID[]
 	): Promise<Result<string[]>>;
+
+	/** Add each of these scholars to the role directly, already accepted, for whoever staffs
+	 * the role (see canStaffRole), having confirmed they agreed to it. No invitation is sent; the database tells each of
+	 * them they were added (RoleEnrolled). Scholars, not addresses, as for inviteToRole. */
+	abstract addToRole(role: RoleRow, scholars: ScholarID[]): Promise<Result<string[]>>;
 
 	abstract acceptRoleInvite(
 		scholar: ScholarID,
@@ -412,15 +757,30 @@ export default abstract class CRUD {
 		approver: ScholarID
 	): Promise<Result>;
 
+	/** Decline a pending bid, with the explanation the bidder is owed. Declining is optional --
+	 * an approver may leave a bid unanswered -- but a decline is never silent: the reason is
+	 * required, stored on the bid, and emailed to the bidder along with who declined. The
+	 * reason is one of the venue's decline reasons or the approver's own words. */
+	abstract declineBid(
+		assignment: AssignmentRow,
+		reason: DeclineReasonRow | string,
+		role: RoleRow,
+		decliner: ScholarID
+	): Promise<Result>;
+
 	/** Create a new assignment record. `preferenceid` is meaningful only on bids
 	 * and only when the venue has defined preference levels. */
+	/** Create an assignment. When `approved` is true and `approver` is someone other than the
+	 * assignee, the assignee is emailed the same notice approveAssignment sends — being seated
+	 * here and being approved there are the same news, and only one of them used to say so. */
 	abstract createAssignment(
 		submission: SubmissionID,
 		scholar: ScholarID,
 		role: RoleID,
 		bid: boolean,
 		approved?: boolean,
-		preferenceid?: PreferenceLevelID | null
+		preferenceid?: PreferenceLevelID | null,
+		approver?: ScholarID | null
 	): Promise<Result>;
 
 	/** Update the bidder's preference level on an existing bid assignment. */
@@ -429,7 +789,10 @@ export default abstract class CRUD {
 		preferenceid: PreferenceLevelID | null
 	): Promise<Result>;
 
-	/** Request compensation for a manuscript the scholar has volunteered for */
+	/** Request compensation for work on a manuscript, found by the venue's own manuscript
+	 * ID. With no assignment to stamp, this files a claim -- an unapproved assignment any
+	 * approver may approve and pay, or decline -- so work on a submission nobody on the
+	 * platform could seat the scholar on can still be paid. */
 	abstract requestCompensation(
 		scholar: ScholarID,
 		venue: VenueID,
@@ -449,6 +812,26 @@ export default abstract class CRUD {
 	 * both would make the branded pipeline an open relay. */
 	abstract emailScholars(scholars: ScholarID[], event: EmailType, args: string[]): Promise<Result>;
 
+	/** Write a short personal note to the volunteers of one biddable role, asking them to
+	 * come and bid.
+	 *
+	 * The note is the only prose a caller ever supplies to the mail pipeline, and it arrives
+	 * as one bounded template ARGUMENT rather than a body: `queue_call_for_bids` owns the
+	 * subject, the attribution, the "why you got this" line and the link, and the registry
+	 * escapes the note and defangs any URL scheme in it at send time.
+	 *
+	 * Unlike `emailScholars`, this authorizes against the venue — the caller must be one of
+	 * its admins or hold its priority-0 role — because a caller who supplies prose cannot be
+	 * given `queue_email`'s benefit of the doubt. Recipients are resolved server-side and
+	 * never named by the caller. */
+	abstract callForBids(role: RoleID, note: string): Promise<Result>;
+
+	/** What the call-for-bids form needs before anything is sent: how many people would
+	 * actually receive it, and when the venue last asked. Both need privileges the client
+	 * lacks — the count depends on verified-address and opt-out state, and the mail log is
+	 * readable by venue admins alone. */
+	abstract getCallForBidsStatus(role: RoleID): Promise<Result<CallForBidsStatus>>;
+
 	/** Add a conflict */
 	abstract declareConflict(
 		scholar: ScholarID,
@@ -465,32 +848,83 @@ export default abstract class CRUD {
 	abstract getScholarTransactions(
 		scholar: ScholarID,
 		page?: number
-	): Promise<PostgrestResponse<TransactionRow>>;
+	): Promise<PostgrestResponse<TransactionListRow>>;
 	/** Paginated transactions a venue is the source or destination of. */
 	abstract getVenueTransactions(
 		venue: VenueID,
 		page?: number
-	): Promise<PostgrestResponse<TransactionRow>>;
+	): Promise<PostgrestResponse<TransactionListRow>>;
 	/** Paginated transactions in a currency. */
 	abstract getCurrencyTransactions(
 		currency: CurrencyID,
 		page?: number
-	): Promise<PostgrestResponse<TransactionRow>>;
+	): Promise<PostgrestResponse<TransactionListRow>>;
+	/** One row of those lists, by id, in the same shape they return.
+	 *
+	 * The lists sort proposed transactions to the front, so approving or declining
+	 * one moves it — out of the loaded pages entirely, on a table with history. The
+	 * transaction view refetches the row it just acted on through this and keeps it
+	 * where it was, so the reader sees what their decision did. */
+	abstract getTransaction(
+		id: TransactionID
+	): Promise<PostgrestSingleResponse<TransactionListRow | null>>;
 
 	abstract getScholarRow(id: ScholarID): Promise<ReadResult<ScholarRow | null>>;
+	/** Create the signed-in scholar's row if it is somehow missing, and report what
+	 * happened. A scholar row is created once, by a trigger, when the account is
+	 * created; if that does not happen the account is unusable and cannot recover on
+	 * its own, because signing in again does not re-create the auth user. Called from
+	 * the root layout when there is a session but no scholar. */
+	abstract ensureScholar(): Promise<Result<EnsureScholarOutcome>>;
 	abstract getScholarsByIDs(ids: ScholarID[]): Promise<ReadResult<ScholarRow[] | null>>;
 	abstract getScholarNames(
 		ids: ScholarID[]
 	): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>>;
+	/** Verified contact addresses, null where a scholar has none. For approvers who must
+	 * reach an accepted bidder outside RR, e.g. to invite them in a venue's own system. */
+	abstract getScholarEmails(
+		ids: ScholarID[]
+	): Promise<ReadResult<Pick<ScholarRow, 'id' | 'email'>[] | null>>;
 	abstract getStewards(): Promise<ReadResult<Pick<ScholarRow, 'id' | 'name'>[] | null>>;
 
+	/** The mirrored slice of a scholar's public ORCID record, or null when RR has not read
+	 * it. Only the profile page asks for the whole row; the list surfaces embed the few
+	 * columns they show and leave the two jsonb payloads behind. */
+	abstract getORCIDProfile(id: ScholarID): Promise<ReadResult<PublicORCIDProfile | null>>;
+	/** Names plus the handful of mirrored ORCID columns a list shows, in one round trip.
+	 * Deliberately omits `works` and `links`: those are the two jsonb payloads, and leaving
+	 * them out is what holds a list's added weight to a few hundred bytes a row. */
+	abstract getScholarCards(ids: ScholarID[]): Promise<ReadResult<ScholarCard[] | null>>;
+	/** Ask the database to refresh these scholars' mirrors if they are stale.
+	 *
+	 * Deliberately returns nothing and is never awaited: the page renders whatever the
+	 * cache holds right now, possibly nothing, and this lands for the next reader. It is
+	 * also deliberately not wrapped in handle() — ORCID being unreachable is not news a
+	 * reader can act on, and a notification about it would be noise on every page. */
+	abstract requestORCIDRefresh(ids: ScholarID[]): void;
+	/** Refresh the ORCID mirrors that are stalest, and answer how many were claimed.
+	 *
+	 * Steward-only, and the database enforces it. Bounded per call by ORCID's rate limits
+	 * rather than by anything here, so it is meant to be run repeatedly: each run takes the
+	 * oldest slice, and a run that claims nothing means everything is current. */
+	abstract backfillORCIDProfiles(limit?: number): Promise<Result<number>>;
+	/** How the ORCID mirror is doing, for a steward deciding whether it needs attention.
+	 * Steward-only, enforced in the database. */
+	abstract getORCIDMirrorHealth(): Promise<Result<ORCIDMirrorHealth>>;
+
 	abstract getVenue(id: VenueID): Promise<ReadResult<VenueRow | null>>;
+	/** Resolve a venue from a URL path segment, which is its web address once it has one
+	 * and its id until then. Both forms keep working, so mail already sent still lands. */
+	abstract getVenueByPath(path: string): Promise<ReadResult<VenueRow | null>>;
+	/** Whether no venue holds this web address yet. Advisory only — two venues can pass
+	 * this check at the same moment, and the unique index is what settles it. */
+	abstract isVenueAddressAvailable(slug: string): Promise<ReadResult<boolean>>;
 	abstract getVenues(): Promise<ReadResult<VenueRow[] | null>>;
 	abstract getVenuesByIDs(ids: VenueID[]): Promise<ReadResult<VenueRow[] | null>>;
 	abstract getCurrencyVenues(currency: CurrencyID): Promise<ReadResult<VenueRow[] | null>>;
 	abstract getScholarAdminVenues(
 		scholar: ScholarID
-	): Promise<ReadResult<Pick<VenueRow, 'id' | 'title'>[] | null>>;
+	): Promise<ReadResult<Pick<VenueRow, 'id' | 'title' | 'slug'>[] | null>>;
 
 	abstract getCurrency(id: CurrencyID): Promise<ReadResult<CurrencyRow | null>>;
 	abstract getCurrencies(): Promise<ReadResult<CurrencyRow[] | null>>;
@@ -500,11 +934,31 @@ export default abstract class CRUD {
 	): Promise<ReadResult<CurrencyRow[] | null>>;
 
 	abstract getVenueRoles(venue: VenueID): Promise<ReadResult<RoleRow[] | null>>;
-	abstract getRolesByApprover(roleIDs: RoleID[]): Promise<ReadResult<RoleRow[] | null>>;
+	/** The roles the SIGNED-IN scholar approves on. Answers for auth.uid(), and is kept
+	 * separate from getScholarTasks on purpose: the two used to share one array, so
+	 * narrowing the task list deleted the approver's rows. */
+	abstract getScholarApproverRoles(): Promise<ReadResult<{ role: RoleID }[] | null>>;
 
-	abstract getVenueTokens(venue: VenueID): Promise<ReadResult<TokenRow[] | null>>;
-	abstract getCurrencyTokens(currency: CurrencyID): Promise<ReadResult<TokenRow[] | null>>;
-	abstract getScholarTokens(scholar: ScholarID): Promise<ReadResult<TokenRow[] | null>>;
+	// Balances are count(*) over `tokens`, one row per token, so these are all
+	// counts rather than reads. Fetching the rows and taking `.length` in the
+	// browser — which is what these used to do — is wrong rather than merely slow:
+	// PostgREST caps a response at `max_rows` and truncation is not an error, so
+	// every such balance silently stopped at 1000.
+	/** How many tokens of the given currency the venue's reserve holds. */
+	abstract getVenueTokenCount(
+		venue: VenueID,
+		currency: CurrencyID
+	): Promise<ReadResult<number | null>>;
+	/** A currency's total supply, and how many scholars and venues hold any of it. */
+	abstract getCurrencyHolderCounts(
+		currency: CurrencyID
+	): Promise<ReadResult<CurrencyHolderCounts | null>>;
+	/** How many tokens the scholar holds, keyed by currency id. */
+	abstract getScholarBalances(scholar: ScholarID): Promise<ReadResult<Record<string, number>>>;
+	/** The scholar's total token count across every currency, for the header balance. */
+	abstract getScholarTokenCount(scholar: ScholarID): Promise<ReadResult<number>>;
+	/** How many tokens of one currency each named scholar holds. Scholars holding
+	 * none are absent rather than zero. */
 	abstract getTokenBalances(
 		currency: CurrencyID,
 		scholarIDs: ScholarID[]
@@ -513,9 +967,12 @@ export default abstract class CRUD {
 	abstract getVenueTransactionCount(venue: VenueID): Promise<ReadResult<number | null>>;
 	abstract getScholarTransactionCount(scholar: ScholarID): Promise<ReadResult<number | null>>;
 	abstract getTransactionsByIDs(ids: TransactionID[]): Promise<ReadResult<TransactionRow[] | null>>;
-	abstract getSubmissionTransactionIDs(
+	/** The id and status of each charge transaction the viewer can see. The status is
+	 * what says whether a charge was paid: a co-author's stays `proposed` until they
+	 * approve it. */
+	abstract getSubmissionTransactionStatuses(
 		ids: TransactionID[]
-	): Promise<ReadResult<Pick<TransactionRow, 'id'>[] | null>>;
+	): Promise<ReadResult<Pick<TransactionRow, 'id' | 'status'>[] | null>>;
 	abstract getPendingTransactionsByCurrencies(
 		currencyIDs: CurrencyID[]
 	): Promise<ReadResult<TransactionRow[] | null>>;
@@ -523,13 +980,19 @@ export default abstract class CRUD {
 		scholar: ScholarID
 	): Promise<ReadResult<TransactionRow[] | null>>;
 	abstract getTransactionVenues(
-		transactions: TransactionRow[]
+		transactions: Pick<TransactionRow, 'from_venue' | 'to_venue'>[]
 	): Promise<ReadResult<VenueRow[] | null>>;
 	abstract getTransactionCurrencies(
-		transactions: TransactionRow[]
+		transactions: Pick<TransactionRow, 'currency'>[]
 	): Promise<ReadResult<CurrencyRow[] | null>>;
 
-	abstract getVenueSubmissions(venue: VenueID): Promise<ReadResult<SubmissionRow[] | null>>;
+	/** The venue's submissions in one state: done, or still being reviewed. The
+	 * submissions list shows one at a time, so the active list a bidder reads does
+	 * not grow with the venue's history. */
+	abstract getVenueSubmissions(
+		venue: VenueID,
+		done: boolean
+	): Promise<ReadResult<SubmissionRow[] | null>>;
 	abstract getScholarSubmissions(scholar: ScholarID): Promise<ReadResult<SubmissionRow[] | null>>;
 	abstract getSubmission(id: SubmissionID): Promise<ReadResult<SubmissionRow | null>>;
 
@@ -560,10 +1023,24 @@ export default abstract class CRUD {
 	): Promise<
 		ReadResult<Pick<SubmissionRow, 'id' | 'externalid' | 'title' | 'submission_type'>[] | null>
 	>;
-	abstract getVenueSubmissionExternalIDs(
+	abstract getVenueSubmissionIdentities(
 		venue: VenueID
-	): Promise<ReadResult<Pick<SubmissionRow, 'externalid'>[] | null>>;
-	abstract getVenueSubmissionCount(venue: VenueID): Promise<ReadResult<number | null>>;
+	): Promise<ReadResult<Pick<SubmissionRow, 'id' | 'externalid' | 'title'>[] | null>>;
+	/** The submissions at the venue with any of these manuscript IDs, with their charges'
+	 * statuses and charged authors. Complete or an error, never a partial answer. Only a
+	 * venue admin can read every charge (transactions RLS); anyone else sees only the
+	 * ones they were party to, and the rest come back missing. */
+	abstract getSubmissionPayments(
+		venue: VenueID,
+		externalIDs: string[]
+	): Promise<ReadResult<SubmissionPayments | null>>;
+	/** How many of the venue's active submissions this scholar would find in the
+	 * submissions list's default mode: RLS-visible and still being reviewed, minus the
+	 * ones they have a conflict on, which the list itself hides. */
+	abstract getVenueSubmissionCount(
+		venue: VenueID,
+		conflicted?: SubmissionID[]
+	): Promise<ReadResult<number | null>>;
 
 	abstract getVenueSubmissionTypes(venue: VenueID): Promise<ReadResult<SubmissionType[] | null>>;
 	abstract getCompensationByTypes(
@@ -572,8 +1049,17 @@ export default abstract class CRUD {
 	abstract getVenuePreferenceLevels(
 		venue: VenueID
 	): Promise<ReadResult<PreferenceLevelRow[] | null>>;
+	abstract getVenueDeclineReasons(venue: VenueID): Promise<ReadResult<DeclineReasonRow[] | null>>;
 
 	abstract getVenueVolunteers(venue: VenueID): Promise<ReadResult<VenueVolunteer[] | null>>;
+	/** How many volunteers each of a venue's roles has, regardless of how many of them
+	 * the viewer may see. A count rather than the rows themselves, because the volunteers
+	 * SELECT policy withholds rows the interface still has to count — the role card
+	 * badge, the venue's dashboard tile, the roster page's headings — and a count taken
+	 * from the filtered rows would mean something different to every reader. */
+	abstract getVenueVolunteerCounts(
+		venue: VenueID
+	): Promise<ReadResult<{ role: RoleID; volunteer_count: number }[] | null>>;
 	abstract getVenueSettingsVolunteers(
 		venue: VenueID
 	): Promise<ReadResult<VenueSettingsVolunteer[] | null>>;
@@ -596,19 +1082,86 @@ export default abstract class CRUD {
 	): Promise<ReadResult<VolunteerRow[] | null>>;
 
 	abstract getVenueAssignments(venue: VenueID): Promise<ReadResult<AssignmentRow[] | null>>;
+	/** The signed-in scholar's own bid budget for a role. */
+	abstract getBidBudget(role: RoleID): Promise<ReadResult<BidBudget | null>>;
+	/** Which of a venue's submissions already have someone in its editor role. A boolean
+	 * per submission rather than the assignment rows themselves, because the venue's
+	 * editors can see its submissions but not its assignments. */
+	abstract getVenueSubmissionEditors(
+		venue: VenueID
+	): Promise<ReadResult<{ submission: SubmissionID; has_editor: boolean }[] | null>>;
 	abstract getSubmissionAssignments(
 		submission: SubmissionID
 	): Promise<ReadResult<AssignmentRow[] | null>>;
-	abstract getVenueActiveAssignmentScholars(
+	/** The roles of a scholar's own active (approved, uncompleted) assignments at a venue,
+	 * one row per assignment, so a volunteer can see the count editors see. RLS always
+	 * admits a scholar's own rows, so this needs no RPC. */
+	abstract getScholarActiveAssignmentRoles(
+		scholar: ScholarID,
 		venue: VenueID
-	): Promise<ReadResult<Pick<AssignmentRow, 'scholar'>[] | null>>;
-	abstract getActiveAssignmentsForScholars(
-		scholarIDs: ScholarID[]
-	): Promise<ReadResult<Pick<AssignmentRow, 'scholar' | 'venue'>[] | null>>;
-	abstract getScholarReviews(scholar: ScholarID): Promise<ReadResult<ScholarReview[] | null>>;
+	): Promise<ReadResult<Pick<AssignmentRow, 'role'>[] | null>>;
+	/** The active assignment counts of the given scholars, for the venue's admins and
+	 * approvers choosing whom to assign. See AssignmentLoad and src/lib/data/load.ts. */
+	abstract getAssignmentLoads(
+		venue: VenueID,
+		scholars: ScholarID[]
+	): Promise<ReadResult<AssignmentLoad[] | null>>;
+	/** How many assignments the given scholars have completed at the venue, for the
+	 * venue's admins and approvers ranking its volunteers. See CompletedCount. */
+	abstract getCompletedCounts(
+		venue: VenueID,
+		scholars: ScholarID[]
+	): Promise<ReadResult<CompletedCount[] | null>>;
+	/** The ORCID journal titles of every volunteer the viewer may see at the venue, one
+	 * entry per scholar. Kept off the roster query, since only those who rank it need it. */
+	abstract getVenueVolunteerJournals(
+		venue: VenueID
+	): Promise<ReadResult<VolunteerJournals[] | null>>;
+	/** The work actually waiting on the SIGNED-IN scholar, for their profile's Tasks
+	 * table. Answers for auth.uid() rather than a given scholar; an editor's standing
+	 * seat on a submission counts only when the submission is waiting on the editor. */
+	abstract getScholarTasks(): Promise<ReadResult<ScholarTask[] | null>>;
 	abstract getAssignmentsForApproval(
 		roleIDs: RoleID[]
 	): Promise<ReadResult<AssignmentForApproval[] | null>>;
+	abstract getAssignmentsAwaitingCompensation(
+		roleIDs: RoleID[]
+	): Promise<ReadResult<AssignmentAwaitingCompensation[] | null>>;
+
+	/** Assignments an import could not match to a scholar, at a venue or on one of its
+	 * submissions. RLS limits them to the ones the viewer could approve. */
+	abstract getUnmatchedAssignments(
+		venue: VenueID,
+		submission?: SubmissionID
+	): Promise<ReadResult<UnmatchedAssignmentRow[] | null>>;
+	/** How many of those the viewer could match, for the notice on the submissions page. */
+	abstract countUnmatchedAssignments(venue: VenueID): Promise<ReadResult<number>>;
+	/** Assign a scholar on every unmatched assignment held under this name and role at the
+	 * venue that the caller could approve, and tell them. */
+	abstract matchAssignments(
+		venue: VenueID,
+		name: string,
+		role: RoleID,
+		scholar: ScholarID
+	): Promise<Result<MatchAssignmentsResult>>;
+	/** Scholars whose name has the same words as an imported name, for whoever staffs the
+	 * role (see canStaffRole) choosing whom to add to it and match. Empty for anyone else. */
+	abstract getUnmatchedNameScholars(
+		venue: VenueID,
+		name: string,
+		role: RoleID
+	): Promise<ReadResult<UnmatchedNameScholar[]>>;
+	/** For whoever staffs the role, having confirmed the scholar agreed to it: seat them in it
+	 * (accepting any unanswered invitation) and match them as matchAssignments does, in one
+	 * transaction. Refused for someone who declined the role. */
+	abstract addToRoleAndMatch(
+		venue: VenueID,
+		name: string,
+		role: RoleID,
+		scholar: ScholarID
+	): Promise<Result<MatchAssignmentsResult>>;
+	/** Drop an unmatched assignment nobody will claim. */
+	abstract dismissUnmatchedAssignment(id: UnmatchedAssignmentID): Promise<Result>;
 
 	abstract getScholarConflicts(scholar: ScholarID): Promise<ReadResult<ConflictRow[] | null>>;
 

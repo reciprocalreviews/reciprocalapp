@@ -17,7 +17,7 @@
 #                  handed the offline one. If unset, output is left UNENCRYPTED and
 #                  the script says so loudly — only appropriate for a local drill.
 #   OUT_DIR        where to write (default ./dr-out). Must not already exist.
-#   PG_IMAGE       client image (default postgres:17).
+#   PG_IMAGE       client image (default public.ecr.aws/docker/library/postgres:17).
 #   PGSSLMODE      default `require`. Set `disable` for a local stack.
 #   LABEL          free text recorded in the manifest (e.g. "nightly", "pre-migration").
 #
@@ -48,13 +48,15 @@ DR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 : "${DB_URL:?DB_URL is required (use the SESSION-mode pooler URI on port 5432)}"
 OUT_DIR="${OUT_DIR:-dr-out}"
-PG_IMAGE="${PG_IMAGE:-postgres:17}"
+PG_IMAGE="${PG_IMAGE:-public.ecr.aws/docker/library/postgres:17}"
+ALPINE_IMAGE="${ALPINE_IMAGE:-public.ecr.aws/docker/library/alpine:3}"
 AGE_RECIPIENT="${AGE_RECIPIENT:-}"
 PGSSLMODE="${PGSSLMODE:-require}"
 LABEL="${LABEL:-manual}"
 GIT_SHA="${GIT_SHA:-$(git -C "$DR_DIR" rev-parse HEAD 2>/dev/null || echo unknown)}"
 
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 1; }
+. "$DR_DIR/images.sh"
 
 # Check the recipients BEFORE dumping. age itself would catch a malformed key,
 # but only at the encryption step — after a full dump of production has already
@@ -120,6 +122,7 @@ say "sslmode:  $PGSSLMODE"
 say "out:      $OUT_ABS"
 
 # ---------------------------------------------------------------- preflight --
+pull_image "$PG_IMAGE"
 SERVER_VERSION="$(pgrun 'psql "$PGURL" -X -tAc "show server_version"' | tr -d '[:space:]')"
 [ -n "$SERVER_VERSION" ] || { echo "could not reach the database" >&2; exit 1; }
 say "server:   PostgreSQL $SERVER_VERSION"
@@ -179,6 +182,39 @@ pgrun 'psql "$PGURL" -X -tAc "
 	from pg_extension e join pg_namespace n on n.oid = e.extnamespace
 	where e.extname <> '"'"'plpgsql'"'"'
 " > /out/extensions.sql'
+
+# Triggers we own that sit on tables we do NOT own. `on_auth_user_created` lives
+# on auth.users and runs public.handle_new_scholar(), so pg_dump emits it under
+# neither dump: --schema=public does not carry triggers on tables in other
+# schemas, and auth.dump is --data-only. A restore therefore brings back every
+# row, policy and grant while silently leaving new sign-ups with no scholars row
+# — the orphan-account failure that 20260901010000 exists to detect. Found by the
+# first drill that got far enough to run the RLS suite against a restore.
+#
+# Scoped by where the trigger FUNCTION lives, not by table: anything executing a
+# public/private function is ours to restore, on whatever platform schema it sits.
+# Paired with a drop so re-running against a live target is idempotent.
+echo "==> Capturing triggers on platform schemas"
+# PGOPTIONS empties search_path so pg_get_triggerdef schema-qualifies the function
+# it references. Without it the definition reads EXECUTE FUNCTION
+# handle_new_scholar(), which resolves against whatever search_path the restoring
+# session happens to have — the one thing this capture must not depend on. Set on
+# the connection rather than as a statement so psql does not emit a `SET` tag into
+# the file.
+pgrun 'PGOPTIONS="-c search_path=" psql "$PGURL" -X -tAc "
+	select coalesce(string_agg(
+		format('"'"'drop trigger if exists %I on %I.%I;'"'"', t.tgname, n.nspname, c.relname)
+			|| chr(10) || pg_get_triggerdef(t.oid) || '"'"';'"'"',
+		chr(10) order by n.nspname, c.relname, t.tgname), '"'"''"'"')
+	from pg_trigger t
+	join pg_class c on c.oid = t.tgrelid
+	join pg_namespace n on n.oid = c.relnamespace
+	join pg_proc p on p.oid = t.tgfoid
+	join pg_namespace fn on fn.oid = p.pronamespace
+	where not t.tgisinternal
+		and n.nspname not in ('"'"'public'"'"', '"'"'private'"'"')
+		and fn.nspname in ('"'"'public'"'"', '"'"'private'"'"')
+" > /out/triggers.sql'
 
 echo "==> Capturing cron jobs and vault secret names"
 pgrun 'psql "$PGURL" -X -tAc "
@@ -251,6 +287,7 @@ else
 		done
 	else
 		say "(no local age binary; borrowing one from a container)"
+		pull_image "$ALPINE_IMAGE"
 		# This container runs as root, unlike the postgres ones above, because apk
 		# needs root to install. It therefore has to hand the files back: without
 		# the trailing chown the encrypted output would be root-owned and the
@@ -260,7 +297,7 @@ else
 			-v "$OUT_ABS:/out" \
 			-e AGE_ARGS="$AGE_ARGS" \
 			-e UIDGID="$(id -u):$(id -g)" \
-			alpine:3 sh -c '
+			"$ALPINE_IMAGE" sh -c '
 				set -e
 				apk add --no-cache age >/dev/null
 				for f in /out/*; do

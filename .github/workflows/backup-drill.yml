@@ -45,7 +45,18 @@ jobs:
     name: Restore and verify
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Full history: test-ref.sh walks it to find the tests that match the backup.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # Pinned rather than `latest`. With `latest`, setup-cli resolves the release
+      # through the GitHub API on every job; a dev push and a main merge fire ~10
+      # of those within seconds, exhausting the shared rate limit and failing a job
+      # before any test runs. Pinning also stops CI drifting ahead of local.
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 3.0.0
 
       - name: Check the required secrets are present
         env:
@@ -107,9 +118,20 @@ jobs:
         run: |
           set -euo pipefail
           npm run start:test
+          # `supabase start` runs supabase/seed.sql, which inserts 9 local test
+          # users into auth.users. Dropping `public` does not touch them, so the
+          # restore lands 15 production users on top of 9 leftovers and the
+          # `auth.users` assertion reads 24 — measuring the seed, not the restore.
+          # Truncate after the public drop, once scholars' FK to auth.users is
+          # gone. Deliberately done here and not by disabling the seed: config.toml
+          # is shared, and the RLS and Playwright suites both need seed.sql.
           psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
             -c "drop schema public cascade; create schema public;" \
-            -c "grant usage on schema public to anon, authenticated, service_role;"
+            -c "grant usage on schema public to anon, authenticated, service_role;" \
+            -c "truncate auth.users cascade;"
+
+      - name: Load the DR images
+        uses: ./.github/actions/dr-images
 
       - name: Drill
         env:
@@ -120,8 +142,23 @@ jobs:
           set -euo pipefail
           printf '%s' '${{ secrets.BACKUP_AGE_IDENTITY }}' > /tmp/identity.txt
           chmod 600 /tmp/identity.txt
-          AGE_IDENTITY=/tmp/identity.txt ./supabase/dr/drill.sh | tee /tmp/drill.out
+          AGE_IDENTITY=/tmp/identity.txt MANIFEST_OUT=/tmp/manifest.json ./supabase/dr/drill.sh | tee /tmp/drill.out
           shred -u /tmp/identity.txt 2>/dev/null || rm -f /tmp/identity.txt
+
+      - name: Use the tests that match the backup
+        # The suite at HEAD expects every migration on HEAD, and the backup only
+        # has the ones production had applied when it was taken. A migration that
+        # deploys between the backup and the drill would otherwise fail the drill
+        # on version skew (2026-10-01: bid_notice_recipients, deployed two hours
+        # after the backup). See supabase/dr/test-ref.sh.
+        id: tests
+        run: |
+          set -euo pipefail
+          ref=$(./supabase/dr/test-ref.sh /tmp/manifest.json)
+          rm -rf supabase/tests
+          git checkout "$ref" -- supabase/tests
+          echo "ref=$(git rev-parse --short "$ref")" >> "$GITHUB_OUTPUT"
+          echo "running supabase/tests from $(git log -1 --format='%h %s' "$ref")"
 
       - name: Prove policies and grants survived
         # Row counts say the data came back. This says the SECURITY came back —
@@ -133,6 +170,8 @@ jobs:
         run: |
           {
             echo "### Backup drill — \`${{ steps.fetch.outputs.prefix }}\`"
+            echo
+            echo "RLS suite run from \`${{ steps.tests.outputs.ref || 'HEAD' }}\`, the newest commit matching the backup's migrations."
             echo
             echo '```'
             sed -e 's/\x1b\[[0-9;]*m//g' /tmp/drill.out 2>/dev/null || echo "(drill produced no output)"

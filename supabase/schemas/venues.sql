@@ -9,6 +9,21 @@ create table if not exists public.venues (
 	description text default ''::text not null,
 	-- A link to the venue's official web page
 	url text default ''::text not null,
+	-- An optional link to the system where the venue's editors assign reviewers to
+	-- manuscripts (ScholarOne, OpenReview, ...). Assigning someone in RR only records the
+	-- work for compensation, so the pages where approvers assign link here to remind them
+	-- to assign the person there too. Null when the venue has not given one.
+	review_system_url text default null,
+	-- A short display name, shown in the venue bar where the full title does not fit:
+	-- "TOCE" for "ACM Transactions on Computing Education". Empty until a venue chooses
+	-- one, in which case the title is shown instead. Unlike `slug` this is display text
+	-- rather than a URL segment, so spaces, capitals and punctuation are all legitimate
+	-- ("ACM TOCE", "SIGCSE TS") and nothing here has to be unique.
+	short_title text default ''::text not null,
+	-- The venue's web address: the path segment it is reached by, in place of its id.
+	-- Null until the venue chooses one. Released the moment it is changed — nothing
+	-- reserves a former address, so links to it break.
+	slug text,
 	-- The id of the currency the venue is currently using
 	currency uuid not null,
 	-- The optional amount of newly minted tokens granted to new volunteers
@@ -25,9 +40,6 @@ create table if not exists public.venues (
 	-- Whether author thank-you notes to reviewers (#22) must be approved by a
 	-- venue admin / editor before reviewers see them. Default on.
 	vet_thanks boolean default true not null,
-	-- How many days after a submission is marked done it remains visible
-	-- in the submissions list (sorted to the bottom). 0 hides immediately.
-	done_visibility_days integer default 30 not null,
 	-- How often, in days, to email admins and minters about this venue's
 	-- unapproved proposed transactions. 0 disables reminders for this venue.
 	-- The remind edge function gates by this column daily.
@@ -35,16 +47,58 @@ create table if not exists public.venues (
 	-- When the most recent transaction reminder batch was sent for this venue.
 	-- Null means no reminders have been sent yet.
 	transaction_reminder_time timestamp with time zone,
+	-- Other venues whose publications signal fit for reviewing here, one per element, each
+	-- a comma-separated list of the names that venue goes by ("ACM Transactions on
+	-- Computing Education, TOCE"). A volunteer whose ORCID record holds a work in one of
+	-- these ranks above those with no track record when editors scout the volunteers
+	-- roster. Matching is tolerant of "Proceedings of the 55th", years and abbreviations;
+	-- the rules live in src/lib/data/trackRecord.ts.
+	relevant_venues text[] default '{}'::text[] not null,
 	-- There must be at least one admin
 	constraint venues_admins_check check (cardinality(admins)>0),
-	-- Bound the visibility window to a year
-	constraint venues_done_visibility_days_check check (done_visibility_days >= 0 and done_visibility_days <= 365),
+	-- A display cap, not a naming rule: no lower bound, because empty is the unset
+	-- state, and no format rule, because this is prose rather than an address. Twenty
+	-- characters is generous for an acronym and refuses a pasted full title.
+	constraint venues_short_title_check check (length(short_title)<=20),
+	-- http(s) only, so never javascript:, and none of the characters that would let the
+	-- value end a markdown link or an HTML attribute early: it is rendered as a link
+	-- inside a localized sentence.
+	constraint venues_review_system_url_check check (
+		review_system_url is null
+		or review_system_url~'^https?://[^[:space:]()<>"''`\\]+$'
+	),
+	-- Four characters minimum: three-letter acronyms are the ones most likely to be
+	-- contested, and handing the first arrival a name a dozen communities have equal claim
+	-- to is not a race worth running. Lowercase only, so an address is the same address
+	-- however it is typed. And never a UUID's shape: the resolver decides which column to
+	-- query by looking at the segment, and `[a-z][a-z0-9-]*` alone admits one.
+	constraint venues_slug_check check (
+		slug is null
+		or (
+			slug~'^[a-z][a-z0-9]*(-[a-z0-9]+)*$'
+			and length(slug) between 4 and 40
+			and slug!~'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+		)
+	),
+	-- A short list: enough for a field's venues, and too few for a pasted bibliography,
+	-- which would match every volunteer and rank none.
+	constraint venues_relevant_venues_check check (
+		cardinality(relevant_venues)<=20
+		and length(array_to_string(relevant_venues, ''))<=2000
+	),
 	-- Bound reminder frequency to once-a-day through every-90-days
-	constraint venues_transaction_reminder_frequency_days_check check (transaction_reminder_frequency_days >= 0 and transaction_reminder_frequency_days <= 90)
+	constraint venues_transaction_reminder_frequency_days_check check (
+		transaction_reminder_frequency_days>=0
+		and transaction_reminder_frequency_days<=90
+	)
 );
 
 alter table only public.venues
 add constraint venues_pkey primary key (id);
+
+-- Globally unique, and null is not a value: a btree unique index treats nulls as distinct,
+-- so every venue that has not chosen an address coexists with every other.
+create unique index if not exists venues_slug_key on public.venues (slug);
 
 alter table only public.venues
 add constraint venues_currency_fkey foreign KEY (currency) references public.currencies (id);
@@ -53,7 +107,7 @@ alter table public.venues OWNER to "postgres";
 
 --------------------------------------
 -- Functions
-create or replace function public.isAdmin (_venueid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
+create or replace function public.isAdmin (_venueid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
 set
 	"search_path" to '' as $$
     select ((select auth.uid()) = any((select admins from public.venues where id = _venueid)::uuid[]));
@@ -67,26 +121,28 @@ grant all on FUNCTION public.isAdmin (_venueid uuid) to authenticated;
 
 grant all on FUNCTION public.isAdmin (_venueid uuid) to service_role;
 
-create or replace function public.no_minter_admins () returns trigger language plpgsql security definer
-set "search_path" to '' as $$
+-- Only the TRANSITION to active is guarded, not the state. A blanket "active implies an
+-- address" constraint would be true of the data we want but false of the data we have:
+-- every venue already live has no address, and such a rule would refuse every subsequent
+-- edit to it — title, compensation, roles — until someone renamed it. Guarding the
+-- transition asks for an address at the one moment an admin is already deciding to
+-- publish, and leaves a running venue alone.
+create or replace function public.venue_needs_address_to_activate () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+set
+	"search_path" to '' as $$
 begin
-    if new.payment_free then
-        return new;
-    end if;
-    if new.admins && (select minters from public.currencies where id = new.currency) then
-        raise exception 'A venue admin cannot be the minter of the venue currency';
-    end if;
-    return new;
+	if new.inactive is null and old.inactive is not null and new.slug is null then
+		raise exception 'A venue needs a web address before it can be activated' using errcode = 'RR016';
+	end if;
+	return new;
 end;
 $$;
 
-alter function public.no_minter_admins () OWNER to "postgres";
+alter function public.venue_needs_address_to_activate () OWNER to postgres;
 
-grant all on FUNCTION public.no_minter_admins () to "anon";
-
-grant all on FUNCTION public.no_minter_admins () to "authenticated";
-
-grant all on FUNCTION public.no_minter_admins () to "service_role";
+create trigger venue_needs_address_to_activate
+before update on public.venues for each row
+execute function public.venue_needs_address_to_activate ();
 
 --------------------------------------
 -- Security
@@ -115,17 +171,10 @@ for update
 		)
 	);
 
-create policy "stewards and admins can delete venues" on public.venues for DELETE to authenticated using (
-	(
-		public.isSteward ()
-		or (
-			(
-				select
-					auth.uid () as "uid"
-			)=any (admins)
-		)
-	)
-);
+-- No client path deletes a venue: deletion would cascade away its roles,
+-- volunteers, assignments, compensation, preference levels, and thanks.
+-- service_role keeps its grant for administrative and recovery work.
+create policy "venues cannot be deleted" on public.venues for DELETE to authenticated using (false);
 
 grant all on table public.venues to "anon";
 
@@ -133,12 +182,12 @@ grant all on table public.venues to "authenticated";
 
 grant all on table public.venues to "service_role";
 
---------------------------------------
--- Trigger
-create or replace trigger no_minter_admins BEFORE INSERT
-or
-update on public.venues for EACH row
-execute FUNCTION public.no_minter_admins ();
+-- `grant all` above confers TABLE-level DELETE that the deny policy alone
+-- cannot subtract for a caller with a permissive policy elsewhere, so remove it.
+revoke delete on public.venues
+from
+	authenticated,
+	anon;
 
 alter publication supabase_realtime
 add table venues;

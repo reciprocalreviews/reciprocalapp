@@ -40,7 +40,7 @@ inputs:
   pg-image:
     description: Postgres client image. Must be >= the server's major version.
     required: false
-    default: postgres:17
+    default: public.ecr.aws/docker/library/postgres:17
 
 outputs:
   prefix:
@@ -78,6 +78,11 @@ runs:
         [ -n "$rec" ] || { echo "no age1... recipient found in $f" >&2; exit 1; }
         echo "recipients: $rec"
         echo "recipient=$rec" >> "$GITHUB_OUTPUT"
+
+    - name: Load the DR images
+      uses: ./.github/actions/dr-images
+      with:
+        pg-image: ${{ inputs.pg-image }}
 
     - name: Dump and encrypt
       shell: bash

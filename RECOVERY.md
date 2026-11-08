@@ -14,7 +14,7 @@ that outcome.
 > **restored end to end and verified against its manifest** — see
 > [Drills](#drills) for the measured time and, importantly, what that number does
 > and does not cover. What has **not** happened yet is a rehearsal against a
-> *hosted* project, which is where provisioning, the vault, and edge function
+> _hosted_ project, which is where provisioning, the vault, and edge function
 > deploys get exercised. See [Scenarios](#scenarios) for which situations need a
 > restore at all — several do not.
 
@@ -22,11 +22,11 @@ that outcome.
 
 ## What you can currently recover from
 
-| | Covers | Recovery point |
-|---|---|---|
-| **Nightly encrypted dump** (this repo) | Project loss, account loss, bad migration, logical corruption, malicious deletion | up to **24h** on its own |
-| **Hourly tail + replay** | Everything above, with far less loss | **~1h** |
-| **Supabase's own backups** | Infrastructure failure | plan-dependent; see below |
+|                                        | Covers                                                                            | Recovery point            |
+| -------------------------------------- | --------------------------------------------------------------------------------- | ------------------------- |
+| **Nightly encrypted dump** (this repo) | Project loss, account loss, bad migration, logical corruption, malicious deletion | up to **24h** on its own  |
+| **Hourly tail + replay**               | Everything above, with far less loss                                              | **~1h**                   |
+| **Supabase's own backups**             | Infrastructure failure                                                            | plan-dependent; see below |
 
 **Point-in-time recovery is not enabled.** Supabase offers PITR as a paid add-on
 (~$100/mo/project) giving roughly 2-minute granularity. Instead, the append-only
@@ -44,7 +44,7 @@ state before the failure.
 **Check what your Supabase plan actually provides**, because it is currently an
 unexamined assumption:
 
-- **Free** — no meaningful recoverable backup. Everything below is your *only*
+- **Free** — no meaningful recoverable backup. Everything below is your _only_
   recovery.
 - **Pro** — daily physical backups, 7-day retention, restored through Supabase
   support. Not drillable on demand.
@@ -61,17 +61,17 @@ rehearsed whenever you like, and are the only copy you hold the keys to.
 
 `supabase/dr/dump.sh` writes six artifacts, each encrypted separately:
 
-| Artifact | Why |
-|---|---|
-| `public.dump` | Application schema **and** data, custom format (so a restore can be surgical: `pg_restore -t submissions`) |
-| `auth.dump` | `auth.users` + `auth.identities`, data only |
-| `roles.sql` | Cluster roles via `pg_dumpall --globals-only --no-role-passwords` |
-| `extensions.sql` | `create extension` DDL. **Not carried by `pg_dump`** — extensions are cluster state, not schema state |
-| *(privileges)* | Carried inside `public.dump`. `--no-privileges` is deliberately **not** used — see below |
-| `cron.json` | The `cron.job` table |
-| *(hourly)* `token_events.csv`, `audit_log.csv`, `auth_users.csv`, `auth_identities.csv`, `tail.json` | Written by [tail.sh](supabase/dr/tail.sh) every hour to `<target>/tail/<date>/<time>Z/`, and applied by [replay.sh](supabase/dr/replay.sh). `emails` is deliberately absent: re-inserting its rows would re-send them |
-| `manifest.json` | Row counts, watermarks, migration list, extensions, realtime table list, RLS policy count, vault secret *names*, and a SHA-256 of every other artifact |
-| *(vault secret names live in the manifest)* | So a restore knows which secrets must be re-entered by hand |
+| Artifact                                                                                             | Why                                                                                                                                                                                                                   |
+| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public.dump`                                                                                        | Application schema **and** data, custom format (so a restore can be surgical: `pg_restore -t submissions`)                                                                                                            |
+| `auth.dump`                                                                                          | `auth.users` + `auth.identities`, data only                                                                                                                                                                           |
+| `roles.sql`                                                                                          | Cluster roles via `pg_dumpall --globals-only --no-role-passwords`                                                                                                                                                     |
+| `extensions.sql`                                                                                     | `create extension` DDL. **Not carried by `pg_dump`** — extensions are cluster state, not schema state                                                                                                                 |
+| _(privileges)_                                                                                       | Carried inside `public.dump`. `--no-privileges` is deliberately **not** used — see below                                                                                                                              |
+| `cron.json`                                                                                          | The `cron.job` table                                                                                                                                                                                                  |
+| _(hourly)_ `token_events.csv`, `audit_log.csv`, `auth_users.csv`, `auth_identities.csv`, `tail.json` | Written by [tail.sh](supabase/dr/tail.sh) every hour to `<target>/tail/<date>/<time>Z/`, and applied by [replay.sh](supabase/dr/replay.sh). `emails` is deliberately absent: re-inserting its rows would re-send them |
+| `manifest.json`                                                                                      | Row counts, watermarks, migration list, extensions, realtime table list, RLS policy count, vault secret _names_, and a SHA-256 of every other artifact                                                                |
+| _(vault secret names live in the manifest)_                                                          | So a restore knows which secrets must be re-entered by hand                                                                                                                                                           |
 
 Three of these exist because of things that are easy to get wrong:
 
@@ -91,9 +91,9 @@ Three of these exist because of things that are easy to get wrong:
   failure mode migration `20260720020000` was written to fix, found again from the
   other direction. `drill.sh` now applies this file and asserts every recorded
   extension.
-- **Vault *values* are deliberately never captured.** They are set by hand on
+- **Vault _values_ are deliberately never captured.** They are set by hand on
   hosted projects and belong in a password manager, not in an artifact CI can
-  write. The manifest records the *names* so a restore knows what is missing.
+  write. The manifest records the _names_ so a restore knows what is missing.
 
 ### The manifest is what makes a drill an assertion
 
@@ -149,13 +149,13 @@ because drills pull whole dumps.
 3. **Add prefix-scoped bucket lock rules** — 14 days on `production/daily/`, 56
    days on `production/weekly/`. This is what survives a compromised CI
    credential or a malicious insider; without it the backup credential is a
-   single point of failure *for the backups themselves*. R2's feature is *bucket
-   locks*, not S3 Object Lock: prefix-scoped, added after bucket creation, and
+   single point of failure _for the backups themselves_. R2's feature is _bucket
+   locks_, not S3 Object Lock: prefix-scoped, added after bucket creation, and
    they **override lifecycle rules**, so each lock is set equal to its tier's
    lifecycle rather than longer. Never use the indefinite option — it cannot be
    undone.
 4. Create an API token scoped to **this bucket only**, with the narrowest
-   permission R2 offers that can upload: *Object Read & Write*. R2 has no
+   permission R2 offers that can upload: _Object Read & Write_. R2 has no
    write-only object permission, so the CI credential can technically download
    ciphertext — which is exactly why confidentiality rests on age rather than on
    token scoping. **The credential cannot decrypt anything, and the bucket lock
@@ -164,7 +164,7 @@ because drills pull whole dumps.
 
 ### 3. The database URL
 
-**This is the step that will bite you.** Supabase's *direct* database connection
+**This is the step that will bite you.** Supabase's _direct_ database connection
 is IPv6-only and GitHub-hosted runners are IPv4-only, so the obvious connection
 string times out.
 
@@ -178,14 +178,14 @@ Port **5432**, not 6543 — the transaction-mode pooler does not support `pg_dum
 
 ### 4. Repository secrets
 
-| Secret | Value |
-|---|---|
-| `PRODUCTION_DB_URL` | Session pooler URI for production |
-| `STAGING_DB_URL` | Same for staging (lets you rehearse against a throwaway) |
-| `BACKUP_S3_ENDPOINT` | `https://<account-id>.r2.cloudflarestorage.com` |
-| `BACKUP_S3_BUCKET` | Bucket name |
-| `BACKUP_S3_ACCESS_KEY_ID` | Write-only token |
-| `BACKUP_S3_SECRET_ACCESS_KEY` | Write-only token |
+| Secret                        | Value                                                    |
+| ----------------------------- | -------------------------------------------------------- |
+| `PRODUCTION_DB_URL`           | Session pooler URI for production                        |
+| `STAGING_DB_URL`              | Same for staging (lets you rehearse against a throwaway) |
+| `BACKUP_S3_ENDPOINT`          | `https://<account-id>.r2.cloudflarestorage.com`          |
+| `BACKUP_S3_BUCKET`            | Bucket name                                              |
+| `BACKUP_S3_ACCESS_KEY_ID`     | Write-only token                                         |
+| `BACKUP_S3_SECRET_ACCESS_KEY` | Write-only token                                         |
 
 ---
 
@@ -212,7 +212,7 @@ AGE_RECIPIENT="$(grep -oE 'age1[0-9a-z]+' supabase/dr/backup-recipient.age.pub)"
 Omitting `AGE_RECIPIENT` leaves the output **unencrypted** and prints a loud
 warning. That's fine for a local drill and must never be uploaded.
 
-The script has two safety behaviors worth knowing:
+The script has three safety behaviors worth knowing:
 
 - It **refuses to write into an existing `OUT_DIR`**, so a half-populated
   directory from a failed run is never uploaded as though it were complete.
@@ -220,6 +220,12 @@ The script has two safety behaviors worth knowing:
   directory**, so plaintext copies of everyone's data are never left behind. The
   CI action independently re-checks that nothing unencrypted is about to be
   uploaded.
+- It **pulls its container images with up to five retries and backoff, trying
+  ECR Public, Google's Docker Hub mirror (`mirror.gcr.io`), and Docker Hub in
+  turn**, because every registry throttles anonymous pulls per IP and GitHub
+  runners share IPs. An image already present locally is used without touching
+  any registry. In CI, the `dr-images` action loads both images from the Actions
+  cache first, so a registry is normally contacted only about once a week.
 
 ### Verifying a backup by hand
 
@@ -256,8 +262,7 @@ into a second incident.
 > `quarantine.sql` and `rearm.sql` use psql meta-commands (`\echo`,
 > `\set ON_ERROR_STOP`) that it cannot run.
 
-
-**0. Decide the target.** Restoring *over* a live database is almost never right.
+**0. Decide the target.** Restoring _over_ a live database is almost never right.
 Restore into a fresh project, or into a scratch schema, and move the rows you
 need. The one exception is a total loss, where there is nothing to protect.
 
@@ -312,7 +317,7 @@ Two notes on the `set session_replication_role = replica`:
 - It suppresses every user trigger for the session — verified directly against
   this schema. It is cheap insurance rather than a strict requirement here: in a
   full `pg_restore`, triggers live in the post-data section and are created
-  *after* the data lands, so they do not fire on restored rows. Tested both with
+  _after_ the data lands, so they do not fire on restored rows. Tested both with
   and without, restoring into a schema that already had all 16 audit triggers:
   neither produced a single manufactured row.
 - Prefer it over `pg_restore --disable-triggers`, which emits
@@ -377,6 +382,21 @@ foreign key to `scholars`, so it stays valid even against a restore predating th
 accounts it names, and re-running it is harmless: `forget_scholar` only ever
 removes.
 
+For the same reason, repair the shortfall mints again. A backup predating
+[20260902010000](supabase/migrations/20260902010000_backfill_shortfall_mints.sql)
+brings back a ledger in which tokens were minted into venue reserves with no
+transaction crediting them, and restoring does **not** re-run the migration:
+
+```sh
+DB_URL=... ./supabase/dr/psql.sh -c "select public._backfill_shortfall_mints();"
+DB_URL=... ./supabase/dr/psql.sh -c "select * from public.conservation_violations();"
+```
+
+Both are idempotent and both read as assertions: the first returns 0 when there
+was nothing to repair, and the second returns no rows when the restored economy
+adds up. The manifest already checks that the row counts came back; this checks
+that they still _mean_ something.
+
 ### Why reminders get suppressed
 
 Reminder de-duplication is stamped in the data — `scholars.status_reminder_time`
@@ -388,18 +408,60 @@ duplicate mail to every scholar is not.
 
 ### Scenarios
 
-| # | Situation | Approach |
-|---|---|---|
-| 1 | Total project or account loss | The full procedure into a fresh project. This is the only case where "restore everything" is the right answer. |
-| 2 | Bad migration | Restore the pre-migration snapshot, then replay `audit_log` past the watermark the deploy recorded. Revert the migration in the repo before redeploying, or the next deploy repeats it. |
-| 3 | Malicious or erroneous privileged actor | The Object-Locked daily copy is the one a stolen credential cannot have deleted. Restore it to a **scratch** project, diff against live, and re-insert only what is missing. |
-| 4 | One venue, one submission, one row | `pg_restore --data-only -t <table>` into a `restore` schema, then `insert … select` the specific rows. Never restore over a live table. |
-| 5 | Accidental cascade delete of a scholar | Re-create the `auth.users` row with the same uuid; the FKs and `on_auth_user_created` re-link. `token_events` is FK-free by design, so the token history was never lost. |
-| 6 | Balances look wrong after a deploy | **No restore.** Diff `tokens` against `tokens_as_of('<before the deploy>')` and repair only the difference. This keeps every legitimate transaction that happened since. |
-| 7 | A scholar's data must stay deleted | `public.erasures`, re-applied at step 8 of every restore. |
+| #   | Situation                               | Approach                                                                                                                                                                                |
+| --- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Total project or account loss           | The full procedure into a fresh project. This is the only case where "restore everything" is the right answer.                                                                          |
+| 2   | Bad migration                           | Restore the pre-migration snapshot, then replay `audit_log` past the watermark the deploy recorded. Revert the migration in the repo before redeploying, or the next deploy repeats it. |
+| 3   | Malicious or erroneous privileged actor | The Object-Locked daily copy is the one a stolen credential cannot have deleted. Restore it to a **scratch** project, diff against live, and re-insert only what is missing.            |
+| 4   | One venue, one submission, one row      | `pg_restore --data-only -t <table>` into a `restore` schema, then `insert … select` the specific rows. Never restore over a live table.                                                 |
+| 5   | Accidental cascade delete of a scholar  | Re-create the `auth.users` row with the same uuid; the FKs and `on_auth_user_created` re-link. `token_events` is FK-free by design, so the token history was never lost.                |
+| 6   | Balances look wrong after a deploy      | **No restore.** Diff `tokens` against `tokens_as_of('<before the deploy>')` and repair only the difference. This keeps every legitimate transaction that happened since.                |
+| 7   | A scholar's data must stay deleted      | `public.erasures`, re-applied at step 8 of every restore.                                                                                                                               |
+| 8   | A `ReconciliationFailed` email arrives  | **No restore.** Read the newest `public.reconciliations` row, which names which checks failed and for whom, then follow the runbook below.                                              |
 
 Scenario 6 is the common one in practice, and the only one that costs nothing:
 it is a query and a targeted update, not a recovery.
+
+### Responding to a ReconciliationFailed email
+
+The email is a **summary**; `public.reconciliations` is the evidence. The mail
+names only which checks were non-zero and by how many holders — never which
+holders, and never by how much.
+
+**Two emails in one day is usually one incident.** The nightly bounded run (22:15
+UTC) and the weekly unbounded one (03:45 Sunday) compute conservation
+identically, because `_since` bounds checks 2, 3 and 5 and never check 6. Two
+mails naming the same count are the same violation seen twice, not an escalation.
+
+**Do not run `reconcile_ledger()` to look.** It appends a `reconciliations` row
+and mails the stewards again. Read the last run instead:
+
+```sh
+DB_URL=... ./supabase/dr/psql.sh -c "
+select r.ran_at, r.result ->> 'window' as window,
+       v ->> 'kind' as kind, v ->> 'holder' as holder, v ->> 'currency' as currency,
+       (v ->> 'expected')::bigint as expected, (v ->> 'actual')::bigint as actual
+from public.reconciliations r
+cross join lateral jsonb_array_elements(r.result -> 'invariants' -> 'conservation_violations') v
+where jsonb_typeof(r.result -> 'invariants' -> 'conservation_violations') = 'array'
+order by r.ran_at desc limit 10;"
+```
+
+The `jsonb_typeof` guard is load-bearing: `conservation_violations` is a _string_
+when the check was skipped, and `jsonb_array_elements` on a string errors.
+
+Then, by check:
+
+| Reported                   | First move                                                                                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `conservation violations`  | `select * from public.conservation_violations();` — reads without writing a row or sending mail. Names every drifted holder, currency and amount. |
+| `unattributed moves`       | The `tokens_as_of()` diff in scenario 6. Something moved value without a transaction.                                                             |
+| `replay mismatches`        | Same diff. Either a write escaped the logging trigger, or the log was altered.                                                                    |
+| `accounts with no scholar` | `ensure_scholar` repairs on the person's next load; check the `on_auth_user_created` trigger still exists.                                        |
+
+Only once the repair is done, run `select public.reconcile_ledger();` **once,
+deliberately**, to confirm the alarm clears — and check no new
+`ReconciliationFailed` row appeared in `public.emails`.
 
 ## Drills
 
@@ -420,14 +482,17 @@ AGE_IDENTITY=/tmp/backup-identity.txt \
 monthly at 09:00 UTC on the 1st against the newest real backup in object storage,
 into a fresh Supabase stack on the runner, and finishes with `npm run test:rls` —
 because row counts prove the data came back, and only the policy tests prove the
-*security* came back.
+_security_ came back.
 
 ### Measured restore time
 
-| Date | Target | Time | Notes |
-|---|---|---|---|
-| 2026-08-04 | local stack | 8s | first drill |
+| Date       | Target                | Time    | Notes                             |
+| ---------- | --------------------- | ------- | --------------------------------- |
+| 2026-08-04 | local stack           | 8s      | first drill                       |
 | 2026-08-08 | **hosted production** | **33s** | first hosted rehearsal; 1 scholar |
+| 2026-09-02 | **hosted production** | **23s** | first fully automated CI drill    |
+| 2026-10-01 | **hosted production** | **21s** | restore lost `scholars_id_fkey`   |
+| 2026-11-01 | **hosted production** | **15s** | RLS suite read ambient emails     |
 
 Update after each run.
 
@@ -440,7 +505,7 @@ database; it will grow with the data.
 
 ### What the drills found
 
-Both findings below were invisible to every test in the repository, and each
+Every finding below was invisible to every test in the repository, and each
 would have produced a restore that looked completely successful.
 
 **A bare Postgres database is not a valid restore target.** Restoring into one
@@ -471,9 +536,48 @@ nothing; the app rendered "Unable to load" on every page. Every assertion in the
 drill passed, because none of them looked at privileges.
 
 `dump.sh` no longer passes `--no-privileges` (nor does the restore), the manifest
-records a `grant_fingerprint` covering table *and* column grants — the column ones
+records a `grant_fingerprint` covering table _and_ column grants — the column ones
 carry the INSERT/UPDATE allowlists that `20260802010000` relies on — and
 `drill.sh` asserts it, plus a direct `has_table_privilege('anon', …)` check.
+
+**A trigger we own on a table we don't is in no dump.** `on_auth_user_created`
+sits on `auth.users` and runs `public.handle_new_scholar()`, so neither dump
+carried it: `--schema=public` emits no triggers on tables in other schemas, and
+`auth.dump` is `--data-only`. A restore brought back every row, policy, grant and
+watermark — the drill passed outright — and still produced a database where
+**every account created afterward gets no `scholars` row**, which is the orphan
+account `20260901010000` exists to detect. `20260901000000` had already named the
+risk in a comment: the trigger lives outside the schema set CI's drift guard
+compares, so nothing had ever checked it was still there.
+
+`dump.sh` captures triggers whose function lives in `public`/`private`, on
+whatever schema they sit, and `drill.sh` restores them after the public and auth
+restores. Found by the first drill that got far enough to run the RLS suite
+against a restore, where it failed all 41 files on one missing fixture.
+
+**Restore order decides which foreign keys exist.** `drill.sh` restored
+`public.dump` in full, then `auth.dump`. A full restore adds foreign keys in its
+post-data section and _validates_ each one against the rows present at that
+moment — and at that moment `auth.users` was empty, so `scholars_id_fkey` failed
+validation and was simply not created. The error went to `/dev/null`, every row
+count matched, the drill printed `PASSED`, and the result was a database where
+**deleting an account cascaded to nothing**. The incident procedure above is not
+affected: it applies the schema first and loads data with `--data-only`.
+
+`drill.sh` now restores auth data before `public`, prints (deduplicated) restore
+errors instead of discarding them, and asserts `scholars_id_fkey` by name plus an
+`fk_fingerprint` the manifest now records. Found by the 2026-10-01 drill, the
+first to run `orcid_profiles_rls.sql`, whose last assertion deletes an auth user
+and expects the cascade.
+
+**The RLS suite assumed an empty database.** The 2026-11-01 restore passed every
+assertion in `drill.sh`. Then `notification_correctness.sql` failed, because it
+counted _every_ `EmailChanged` row in `public.emails`, and production had sent its
+first real one since the previous drill. The backup was fine and the test was
+wrong: the suite is written against fixtures, but the drill runs it against real
+data. Tests now scope each read to their own fixtures, and `rls.yml` loads
+`supabase/tests/_helpers/ambient_emails.psql` (one old row per email event) first,
+so the next unscoped read fails on its pull request instead of in a drill.
 
 ### The drill needs a private key — use a second recipient
 
@@ -510,8 +614,72 @@ deploys, or the Vercel repoint. Once a quarter, walk this document by hand into 
 throwaway hosted project and record how long it took. Don't automate that one —
 the value is a human finding the step that has gone stale.
 
+## Accounts and owners
+
+Everything above concerns recovering _data_. This section concerns recovering
+_access_, which no backup helps with: an off-platform dump of the database is
+useless if nobody can reach the Vercel project to deploy it, or the registrar to
+point the domain at it.
+
+> **Status, 2026-08-23.** Every account below has exactly one human who can reach
+> it, and that human is Amy Ko. There is no second steward yet, recruitment is
+> ongoing, so **there is currently no account in this list that survives its
+> owner becoming unavailable.** This is a known, accepted, temporary risk, and it
+> is the single largest gap in this document. It is recorded here rather than in
+> anyone's memory because that is the whole point of writing it down.
+
+| Account          | What it holds                               | Owner  | Second person |
+| ---------------- | ------------------------------------------- | ------ | ------------- |
+| Squarespace      | The `reciprocal.reviews` domain and all DNS | Amy Ko | **none**      |
+| Google Workspace | `stewards@` shared inbox, Drive             | Amy Ko | **none**      |
+| Resend           | Outbound application email                  | Amy Ko | **none**      |
+| Substack         | The newsletter and its subscriber list      | Amy Ko | **none**      |
+| Supabase         | Production and staging databases            | Amy Ko | **none**      |
+| Vercel           | Hosting and deployment                      | Amy Ko | **none**      |
+| GitHub org       | Source, issues, discussions, CI secrets     | Amy Ko | **none**      |
+
+### Why this matters more than it looks
+
+The domain is the keystone. It is what `stewards@` resolves through, what Resend
+signs mail as, and what the deployed application answers on. Losing access to
+Squarespace does not merely take the website down: it silently disables the front
+door, because mail to `stewards@reciprocal.reviews` stops resolving and senders
+get a bounce rather than a person.
+
+This is also not hypothetical for this project. The Slack workspace that preceded
+the current support model was administered by one person who became unreachable,
+and it could not be recovered. That is why the support model was rebuilt around
+accounts on a domain the project controls. Reproducing that failure mode on the
+domain itself would be worse in every respect.
+
+### What to do while there is only one steward
+
+These are mitigations, not fixes. The fix is a second person.
+
+- **Recovery contacts.** Point each account's recovery email and phone at
+  something a trusted second party can reach, so an account is recoverable even
+  when its owner is not.
+- **Credentials in a shared password manager**, with an emergency-access or
+  inheritance contact configured. Most managers support a time-delayed release
+  to a nominated person.
+- **Google Workspace specifically.** A genuine second super admin requires a
+  second licensed seat, so it cannot be arranged for free. Until then the
+  Workspace super-admin account's recovery options are the only path back in, and
+  they should be treated as such.
+- **Revisit this table whenever a steward joins.** Adding a steward to the
+  `scholars.steward` column grants them authority inside the application; it
+  grants them nothing here. The two are entirely separate, and this table is the
+  one that determines whether the project survives.
+
+### On adding the second person
+
+When a steward does join, the order that matters is: GitHub org owner and
+Squarespace first, since source and domain are the two from which everything else
+can be rebuilt, then Supabase and Vercel, then Workspace, Resend, and Substack.
+
 ## Related
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — deployment pipeline and database management
 - [supabase/dr/dump.sh](supabase/dr/dump.sh) — the backup itself, commented at length
 - [supabase/dr/manifest.sql](supabase/dr/manifest.sql) — what gets recorded and why
+- [DESIGN.md](DESIGN.md) — the support model these accounts exist to serve

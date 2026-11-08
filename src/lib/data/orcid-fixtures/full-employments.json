@@ -1,0 +1,143 @@
+{
+	"last-modified-date": {
+		"value": 1768859596727
+	},
+	"affiliation-group": [
+		{
+			"last-modified-date": {
+				"value": 1768859596727
+			},
+			"external-ids": {
+				"external-id": []
+			},
+			"summaries": [
+				{
+					"employment-summary": {
+						"created-date": {
+							"value": 1523818146939
+						},
+						"last-modified-date": {
+							"value": 1768859596727
+						},
+						"source": {
+							"source-orcid": {
+								"uri": "https://orcid.org/0000-0001-7461-4783",
+								"path": "0000-0001-7461-4783",
+								"host": "orcid.org"
+							},
+							"source-client-id": null,
+							"source-name": {
+								"value": "Amy J. Ko"
+							},
+							"assertion-origin-orcid": null,
+							"assertion-origin-client-id": null,
+							"assertion-origin-name": null
+						},
+						"put-code": 5687467,
+						"department-name": "The Information School",
+						"role-title": "Professor",
+						"start-date": {
+							"year": {
+								"value": "2008"
+							},
+							"month": {
+								"value": "09"
+							},
+							"day": {
+								"value": "15"
+							}
+						},
+						"end-date": null,
+						"organization": {
+							"name": "University of Washington",
+							"address": {
+								"city": "Seattle",
+								"region": "WA",
+								"country": "US"
+							},
+							"disambiguated-organization": null
+						},
+						"url": {
+							"value": "http://faculty.washington.edu/ajko"
+						},
+						"external-ids": null,
+						"display-index": "1",
+						"visibility": "public",
+						"path": "/0000-0001-7461-4783/employment/5687467"
+					}
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1697564131007
+			},
+			"external-ids": {
+				"external-id": []
+			},
+			"summaries": [
+				{
+					"employment-summary": {
+						"created-date": {
+							"value": 1697564131007
+						},
+						"last-modified-date": {
+							"value": 1697564131007
+						},
+						"source": {
+							"source-orcid": null,
+							"source-client-id": {
+								"uri": "https://orcid.org/client/APP-4B3XYWJHXCC1VLVV",
+								"path": "APP-4B3XYWJHXCC1VLVV",
+								"host": "orcid.org"
+							},
+							"source-name": {
+								"value": "ORCID Member Portal"
+							},
+							"assertion-origin-orcid": null,
+							"assertion-origin-client-id": {
+								"uri": "https://orcid.org/client/APP-0P1Q46D98EM97L5K",
+								"path": "APP-0P1Q46D98EM97L5K",
+								"host": "orcid.org"
+							},
+							"assertion-origin-name": {
+								"value": "University of Washington"
+							}
+						},
+						"put-code": 21517401,
+						"department-name": "The Information School",
+						"role-title": "Professor",
+						"start-date": {
+							"year": {
+								"value": "2008"
+							},
+							"month": null,
+							"day": null
+						},
+						"end-date": null,
+						"organization": {
+							"name": "University of Washington",
+							"address": {
+								"city": "Seattle",
+								"region": "WA",
+								"country": "US"
+							},
+							"disambiguated-organization": {
+								"disambiguated-organization-identifier": "https://ror.org/00cvxb145",
+								"disambiguation-source": "ROR"
+							}
+						},
+						"url": {
+							"value": "https://www.washington.edu/"
+						},
+						"external-ids": null,
+						"display-index": "0",
+						"visibility": "public",
+						"path": "/0000-0001-7461-4783/employment/21517401"
+					}
+				}
+			]
+		}
+	],
+	"path": "/0000-0001-7461-4783/employments"
+}

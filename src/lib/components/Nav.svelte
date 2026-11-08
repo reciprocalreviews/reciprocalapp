@@ -1,19 +1,22 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import Banners from '$lib/components/Banners.svelte';
-	import Text from '$lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
-	import type PageHeader from '$routes/PageHeader';
-	import { getContext } from 'svelte';
+	import { page } from '$app/state';
+	import { loginHref } from '#lib/auth/next.js';
+	import Banners from '#lib/components/Banners.svelte';
+	import Text from '#lib/locales/Text.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { untrack } from 'svelte';
+	import { Tween } from 'svelte/motion';
+	import { cubicOut } from 'svelte/easing';
 	import { getAuth } from '../../routes/Auth.svelte';
 	import { getPendingActions } from '../../routes/feedback.svelte';
 	import Button from './Button.svelte';
 	import Dots from './Dots.svelte';
-	import EditableText from './EditableText.svelte';
-	import { ScholarLabel, SubmissionLabel, VenueLabel } from './Labels';
-	import Lead from './Lead.svelte';
+	import { TokenLabel } from './Labels';
 	import Link from './Link.svelte';
-	import Loading from './Loading.svelte';
+	import Logo from './Logo.svelte';
+	import Overflow from './Overflow.svelte';
+	import measure from './measure';
 
 	const locale = getLocaleContext();
 
@@ -21,112 +24,166 @@
 
 	let pending = $derived(getPendingActions());
 
-	const { breadcrumbs, inProd }: { breadcrumbs: [string, string][]; inProd: boolean } = $props();
+	/** Whether the reader is already on the page the mark links to. */
+	let home = $derived(page.url.pathname === '/');
 
-	// In production only /updates and /about are reachable (everything else redirects home),
-	// so the header offers just those plus Home; otherwise it shows the full navigation.
-	const routes = $derived(
-		inProd
+	/** The row whose width decides what fits. */
+	let row = $state<HTMLElement | undefined>(undefined);
+
+	/**
+	 * What the account menu offers, as a list rather than as markup: `Overflow` has to be
+	 * able to put some of these in the row and the rest behind its control, and a snippet
+	 * is not something you can measure or move one child of. Ordered by how readily they
+	 * are given up — the row collapses from the end.
+	 */
+	type Account =
+		| { id: 'profile'; to: string; label: string }
+		| { id: 'login'; to: string; label: string }
+		| { id: 'logout' };
+
+	const account = $derived<Account[]>(
+		auth().isAuthenticated()
 			? [
-					{ path: '/', label: locale().header.home },
-					{ path: '/updates', label: locale().footer.link.updates },
-					{ path: '/about', label: locale().footer.link.about }
+					{
+						id: 'profile',
+						to: `/scholar/${auth().getUserID()}`,
+						label: locale().header.link.profile
+					},
+					{ id: 'logout' }
 				]
-			: [
-					{ path: '/', label: locale().header.home },
-					{ path: '/venues', label: locale().header.venues }
-				]
+			: // Back to this page afterwards, not to the profile: whoever is signing in from
+				// here most likely wanted to do something on it.
+				[{ id: 'login', to: loginHref(page.url), label: locale().header.link.login }]
 	);
 
-	const pageHeader = getContext<PageHeader>('pageHeader');
+	const { tokens = 0 }: { tokens?: number } = $props();
+
+	/** Whether the viewer asked for less motion. The CSS guard below can only
+	 * stop the flash; the counting is JavaScript, so it has to be checked here
+	 * too. `matchMedia` is browser-only — assume no preference during SSR. */
+	const reducedMotion =
+		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	/** The displayed balance, rolled toward the real one so a change is felt
+	 * rather than just appearing. `Tween` is Svelte's own motion primitive — no
+	 * new dependency — and this is its first use in the codebase. */
+	const balance = new Tween(
+		untrack(() => tokens),
+		{
+			duration: reducedMotion ? 0 : 600,
+			easing: cubicOut
+		}
+	);
+
+	/** True briefly after the balance changes, to flash the widget. Separate
+	 * from the tween so the highlight can be dropped for reduced motion while
+	 * the number itself still updates. */
+	let changed = $state(false);
+	let flash: ReturnType<typeof setTimeout> | undefined;
+
+	$effect(() => {
+		const next = tokens;
+		// The tween starts at the balance the page loaded with, so this is only
+		// unequal once the balance genuinely moves — which is why arriving on a
+		// page doesn't animate, but earning or spending does.
+		if (next === balance.target) return;
+		balance.set(next);
+		changed = true;
+		clearTimeout(flash);
+		flash = setTimeout(() => (changed = false), 1200);
+	});
+
+	$effect(() => () => clearTimeout(flash));
 </script>
 
-<header>
-	<div class="nav">
-		{#each routes as route}
-			<div class="link">
-				<Link size="small" to={route.path}>{route.label}</Link>
-			</div>
-		{/each}
-		{#if !inProd}
-			{#each breadcrumbs as [url, label]}
-				<small>&gt;</small>
-				<div class="link">
-					<Link
-						size="small"
-						to={url}
-						icon={url.startsWith('/venue')
-							? VenueLabel
-							: url.startsWith('/scholar')
-								? ScholarLabel
-								: url.startsWith('/submission')
-									? SubmissionLabel
-									: null}>{label}</Link
-					>
-				</div>
-			{/each}
-			<div class="authenticated">
-				{#if pending > 0}
-					<div class="feedback">
-						{#if pending > 1}{pending}{/if}
-						<Dots></Dots>
-					</div>
-				{/if}
-				{#if auth().isAuthenticated()}
-					<div class="link">
-						<Link size="small" to="/scholar/{auth().getUserID()}">Profile</Link>
-					</div>
-					<div class="link">
-						<Button
-							small
-							testid="logout-button"
-							strings={(l) => l.component.header.logout}
-							action={() => {
-								auth().signOut();
-								goto('/login');
-							}}
-						/>
-					</div>
-				{:else}
-					<div class="link">
-						<Link size="small" to="/login"><Text path={(l) => l.header.link.login} /></Link>
-					</div>
-				{/if}
-			</div>
-		{/if}
-	</div>
-	<Banners />
-	{#if pageHeader?.title}
-		<div class="page-header">
-			<h1 class="page-header-title" class:wobble={pageHeader.wobble} data-testid="page-header">
-				<span class="emoji">{pageHeader.icon}</span>
-				{#if pageHeader.edit}
-					<EditableText
-						text={pageHeader.title}
-						valid={pageHeader.edit.valid}
-						edit={pageHeader.edit.update}
-						strings={(l) => ({ placeholder: pageHeader.edit!.placeholder(l) })}
-						testid="page-title-edit"
-					/>
-				{:else if pageHeader.title.length > 0}
-					{pageHeader.title}
-				{:else}
-					<Loading />
-				{/if}
-			</h1>
-			{#if pageHeader.subtitle || pageHeader.details}
-				<div class="details">
-					{#if pageHeader.subtitle}<Lead>{@render pageHeader.subtitle()}</Lead>{/if}
-					{@render pageHeader.details?.()}
+{#snippet accountItem(entry: Account)}
+	{#if entry.id === 'logout'}
+		<Button
+			small
+			testid="logout-button"
+			strings={(l) => l.component.header.logout}
+			action={() => {
+				auth().signOut();
+				goto('/login');
+			}}
+		/>
+	{:else}
+		<Link size="small" to={entry.to}>{entry.label}</Link>
+	{/if}
+{/snippet}
+
+<header use:measure={'--nav-height'}>
+	<div class="nav" bind:this={row}>
+		<!-- The mark, where the word "Home" used to be. A link to a static landing page is
+		     not worth a word of a row that has to fit on a phone, but the mark still has to
+		     be somewhere, and the one place every page agrees on is here.
+
+		     It stops being a link once you are home, by the same rule `Link.svelte` applies
+		     to every other link in the chrome: no `href`, and `aria-current` instead. The
+		     element stays put either way, so the row does not change width between routes. -->
+		<a
+			class="home"
+			class:inactive={home}
+			href={home ? null : '/'}
+			aria-current={home ? 'page' : null}
+			title={locale().header.home}
+			aria-label={locale().header.home}
+		>
+			<Logo size="1.5em" testid="nav-logo" />
+		</a>
+		<!-- Venues sits here, with the navigation, rather than off in the account group on
+		     the right: it is a route into the platform's content, not something about you.
+		     It never collapses — it is one short word, and it is the only way in. -->
+		<div class="link">
+			<Link size="small" to="/venues"><Text path={(l) => l.header.venues} /></Link>
+		</div>
+		<!-- What used to be `margin-inline-start: auto` on the account group. An auto margin
+		     cannot be switched off for the length of a measurement, and a row whose free
+		     space is spent on one reports its full width as needed — so the overflow would
+		     measure as always fitting and nothing would ever collapse. A spacer is the same
+		     layout and can be told to stand aside. -->
+		<div class="slack" aria-hidden="true"></div>
+		<div class="authenticated">
+			{#if pending > 0}
+				<div class="feedback">
+					{#if pending > 1}{pending}{/if}
+					<Dots></Dots>
 				</div>
 			{/if}
+			{#if auth().isAuthenticated()}
+				<!-- Outside the overflow on purpose. The balance is the one thing in this row
+				     that changes on its own, so it is the one thing worth keeping in view at
+				     every width. -->
+				<a
+					class="balance"
+					class:changed
+					href="/scholar/{auth().getUserID()}#tokens"
+					title={locale().header.balance}
+					aria-label={locale().header.balance}
+					data-testid="header-balance"
+				>
+					<span class="star">{TokenLabel}</span>{Math.round(balance.current)}
+				</a>
+			{/if}
+			<Overflow
+				strings={(l) => l.header.menu}
+				testid="site-menu"
+				items={account}
+				key={(entry) => entry.id}
+				item={accountItem}
+				{row}
+			/>
 		</div>
-	{/if}
+	</div>
+	<Banners />
 </header>
 
 <style>
 	header {
-		/* The header is sticky */
+		/* The upper of two sticky bands. The context bar (ContextBar.svelte) pins
+		   directly beneath it, offset by the height measured here into
+		   `--nav-height`. This one keeps the higher z-index so it stays on top if
+		   that measurement is ever momentarily stale. */
 		position: sticky;
 		top: 0;
 		z-index: 2;
@@ -142,15 +199,59 @@
 		padding-bottom: calc(var(--spacing) / 2);
 		display: flex;
 		flex-direction: row;
-		flex-wrap: wrap;
+		/* Deliberately not `wrap`, which is what this row did until #176. Wrapping is how a
+		   crowded header answered a narrow screen by growing a second and third line, until
+		   the fixed chrome was half the viewport on a phone. Now the links that do not fit
+		   collapse into `Overflow` instead. Breadcrumbs used to trail the Venues link here;
+		   the teal context bar below names the area now. */
+		flex-wrap: nowrap;
 		gap: calc(var(--spacing) / 2);
-		row-gap: var(--spacing);
 		align-items: center;
 		background: var(--background-color);
+		/* Declared, not discovered. What is in this row changes with the width — Logout
+		   collapses into the overflow and the ☰ takes its place, and a small Button and the
+		   ☰ are not the same height — and this row's height IS `--nav-height`, the sticky
+		   offset for every band below it. A row that grew a few pixels when it collapsed
+		   would move the whole page vertically on a resize. */
+		min-height: var(--chrome-row-height);
+		/* The containing block for the overflow panel, which is absolutely positioned so
+		   that opening it cannot change the height measured into `--nav-height`. */
+		position: relative;
 	}
 
 	.link {
 		display: inline-block;
+		flex: none;
+	}
+
+	/* Takes the slack the account group used to claim with `margin-inline-start: auto`. */
+	.slack {
+		flex: 1 1 0;
+		min-width: 0;
+	}
+
+	/* The freeze, and the contract Overflow.svelte depends on: for the length of one
+	   unpainted measurement, nothing in this row absorbs. Anything added here that can
+	   shrink has to be named below too, or the row measures as always fitting, no link ever
+	   collapses, and there is no error and no tell at desktop width to say so. */
+	/* `:global` on the attribute half is load-bearing, not stylistic: `data-fitting` is
+	   written by JavaScript during a measurement, so Svelte's CSS pruner cannot see it and
+	   drops the whole rule as unused — silently, and with it the freeze. */
+	:global(.nav[data-fitting]) .slack {
+		display: none;
+	}
+
+	.home {
+		display: inline-flex;
+		align-items: center;
+		color: var(--salient-color);
+		flex: none;
+	}
+
+	/* On the landing page the mark is where you already are, so it stops offering to take
+	   you there — no pointer, and no focus ring on something that does nothing. */
+	.home.inactive {
+		cursor: default;
 	}
 
 	.feedback {
@@ -163,71 +264,55 @@
 	.authenticated {
 		display: flex;
 		flex-direction: row;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		gap: var(--spacing);
-		margin-inline-start: auto;
 		align-items: center;
+		flex: none;
+		/* The containing block for the overflow's panel and for its idle control, both of
+		   which are absolutely positioned so that neither takes part in the row's height. */
+		position: relative;
 	}
 
-	.page-header {
-		width: 100%;
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-half);
-		padding-top: 0;
-		background: var(--background-color);
-		margin-bottom: var(--spacing);
-		overflow-x: clip;
-	}
-
-	.page-header-title {
-		align-items: baseline;
-	}
-
-	.emoji {
-		font-family: 'Noto Emoji', 'Josefin Sans', sans-serif;
-		font-size: 80%;
-	}
-
-	h1 {
-		display: flex;
-		gap: 0.5rem;
-		align-items: center;
-		margin: 0;
-	}
-
-	@keyframes wobble {
-		0%,
-		100% {
-			transform: translateX(0);
-		}
-		20% {
-			transform: translateX(-5px);
-		}
-		40% {
-			transform: translateX(5px);
-		}
-		60% {
-			transform: translateX(-3px);
-		}
-		80% {
-			transform: translateX(3px);
-		}
-	}
-
-	.wobble {
-		animation: wobble 0.8s ease-in-out 0.3s 3;
-	}
-
-	.details {
-		display: flex;
-		flex-direction: row;
-		gap: var(--spacing);
-		align-items: baseline;
+	/* The header token balance. Styled like the Tokens pill but compact — no
+	   trailing "tokens" word — since it sits in a dense row of header links. */
+	.balance {
 		font-size: var(--small-font-size);
-		padding-left: calc(var(--spacing) / 2);
-		padding-right: calc(var(--spacing) / 2);
-		padding-bottom: calc(var(--spacing) / 2);
-		border-block-end: var(--border-color) solid var(--border-width);
+		text-decoration: none;
+		color: var(--foreground-color);
+		background-color: var(--salient-color-faded);
+		padding: var(--spacing-half);
+		border-radius: var(--roundedness);
+		white-space: nowrap;
+	}
+
+	.balance .star {
+		color: var(--salient-color);
+	}
+
+	.balance.changed {
+		animation: balance-flash 1.2s ease-out;
+	}
+
+	@keyframes balance-flash {
+		0% {
+			transform: scale(1);
+		}
+		15% {
+			transform: scale(1.18);
+			background-color: var(--salient-color);
+			color: var(--background-color);
+		}
+		100% {
+			transform: scale(1);
+		}
+	}
+
+	/* A balance that animates on navigation is exactly the kind of motion a
+	   reduced-motion preference is asking us to drop. The number still updates;
+	   it just arrives instead of counting. */
+	@media (prefers-reduced-motion: reduce) {
+		.balance.changed {
+			animation: none;
+		}
 	}
 </style>

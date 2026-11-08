@@ -22,11 +22,20 @@ create table submissions (
 	-- The scholars associated with the submission. The non-empty requirement is
 	-- waived for imported rows: a bulk import knows the manuscript exists before it
 	-- knows who on this platform wrote it.
-	authors uuid[] not null constraint submissions_authors_check check (imported or cardinality(authors)>0),
+	authors uuid[] not null constraint submissions_authors_check check (
+		imported
+		or cardinality(authors)>0
+	),
 	-- The token amounts proposed for the submission, corresponding to the authors
-	payments integer[] not null constraint submissions_payments_nonempty_check check (imported or cardinality(payments)>0),
+	payments integer[] not null constraint submissions_payments_nonempty_check check (
+		imported
+		or cardinality(payments)>0
+	),
 	-- The transactions corresponding to the payments, corresponding to the authors. Null uuid of not yet paid.
-	transactions uuid[] not null constraint submissions_transactions_nonempty_check check (imported or cardinality(transactions)>0),
+	transactions uuid[] not null constraint submissions_transactions_nonempty_check check (
+		imported
+		or cardinality(transactions)>0
+	),
 	-- The three arrays stay aligned whether or not the row was imported.
 	constraint submissions_check check (cardinality(payments)=cardinality(authors)),
 	constraint submissions_check1 check (cardinality(transactions)=cardinality(authors)),
@@ -39,6 +48,12 @@ create table submissions (
 	-- When the submission was marked done (null while still under review).
 	-- Set by the mark_submission_done RPC; cannot be reverted.
 	completed_at timestamp with time zone default null,
+	-- True when bidding on this submission has been closed while it is still under
+	-- review -- typically because every seat has a reviewer, but some of them have
+	-- not yet registered, so their assignments are still pending. Blocks new bids in
+	-- every role (see the assignments INSERT policy); existing bids stay. Written only
+	-- by set_submission_open_for_bidding, by anyone who may answer bids on it.
+	bidding_closed boolean not null default false,
 	-- True when the row came from bulk_import_submissions rather than an author
 	-- submitting through the app. Imported rows are exempt from the non-empty
 	-- author/payment/transaction checks above, because a bulk import records that a
@@ -48,7 +63,7 @@ create table submissions (
 	note text,
 	-- Added with bulk import so imported rows have a meaningful ordering. UTC
 	-- explicitly rather than now(), so it does not depend on the server timezone.
-	created_at timestamp with time zone not null default timezone('utc'::text, now())
+	created_at timestamp with time zone not null default timezone ('utc'::text, now())
 );
 
 alter table public.submissions OWNER to "postgres";
@@ -68,16 +83,36 @@ grant all on table public.submissions to "service_role";
 -- revoke is ineffective while authenticated holds the TABLE-level UPDATE granted
 -- by `grant all` above, so remove the table-level UPDATE and re-grant only the
 -- editable columns. (The author list among these is further gated to priority-0
--- assigned scholars by the enforce_submission_author_edits trigger.)
-revoke update on public.submissions from authenticated;
+-- assigned scholars by the enforce_submission_author_edits trigger.) bidding_closed
+-- is left out too: set_submission_open_for_bidding writes it.
+revoke
+update on public.submissions
+from
+	authenticated;
 
-grant update (
-	venue, externalid, previousid, previous, submission_type, authors, payments, transactions, title, expertise
+grant
+update (
+	venue,
+	externalid,
+	previousid,
+	previous,
+	submission_type,
+	authors,
+	payments,
+	transactions,
+	title,
+	expertise
 ) on public.submissions to authenticated;
+
+-- `grant all` above also confers TABLE-level DELETE; deletion is denied to
+-- clients (see the deny policy above), so remove the privilege as well.
+revoke delete on public.submissions
+from
+	authenticated,
+	anon;
 
 --------------------------------------
 -- Indexes
-
 create index submissions_previous_index on public.submissions using btree (previous);
 
 create index submissions_scholar_index on public.submissions using btree (authors);
@@ -89,14 +124,17 @@ create index submissions_venue_index on public.submissions using btree (venue);
 alter table public.submissions ENABLE row LEVEL SECURITY;
 
 -- Select policy is in assignments.sql, after assignments table is declared.
-create policy "anyone can create submissions, admins for imports" on "public"."submissions" as permissive for insert to authenticated
+create policy "anyone can create submissions, admins and editors for imports" on "public"."submissions" as permissive for insert to authenticated
 with
 	check (
 		(not imported)
 		or public.isadmin (venue)
+		or public.ispriorityzero (venue)
 	);
 
-create policy "admins can delete submissions" on public.submissions for DELETE to authenticated using (public.isAdmin (venue));
+-- No client path deletes a submission: deletion would destroy its assignment
+-- history. service_role keeps its grant for administrative and recovery work.
+create policy "submissions cannot be deleted" on public.submissions for DELETE to authenticated using (false);
 
 --------------------------------------
 -- RPCs (defined in migration 20260608000000_atomic_crud.sql)
@@ -134,6 +172,9 @@ declare
 	_txn_id uuid;
 	_token_ids uuid[];
 	_submission_id uuid;
+	_editor_role uuid;
+	_editors uuid[];
+	_editor uuid;
 begin
 	-- Identify and require an authenticated caller (the submitter).
 	_caller := (select auth.uid());
@@ -146,6 +187,13 @@ begin
 	end if;
 	if cardinality(_authors) = 0 then
 		raise exception 'A submission needs at least one author';
+	end if;
+
+	-- Only a listed author may create a submission, unless the caller is a venue
+	-- admin adding one manually. RR009 surfaces the specific message.
+	if not (_caller = any(_authors) or public.isadmin(_venue)) then
+		raise exception 'Only a listed author or a venue admin can create a submission'
+			using errcode = 'RR009';
 	end if;
 
 	-- No author may be listed twice. The loop below indexes _authors positionally,
@@ -206,19 +254,13 @@ begin
 		-- The submitter's own charge is settled now: move their tokens to the
 		-- venue and approve the transaction. Co-authors approve theirs later.
 		if _author = _caller then
-			-- Take exactly _payment of the submitter's tokens in this currency.
-			select array_agg(id) into _token_ids
-			from (
-				select id from public.tokens
-				where currency = _currency and scholar = _caller
-				order by id limit _payment
-			) sub;
-			-- Can't pay? Abort the whole submission (everything rolls back). RR003
-			-- surfaces the specific "insufficient tokens" message.
-			if _token_ids is null or cardinality(_token_ids) < _payment then
-				raise exception 'You do not have enough tokens to pay your submission charge' using errcode = 'RR003';
-			end if;
-			update public.tokens set scholar = null, venue = _venue where id = any(_token_ids);
+			-- Take exactly _payment of the submitter's tokens under lock and move
+			-- them to the venue. Can't pay? Abort the whole submission (everything
+			-- rolls back); RR003 surfaces the specific "insufficient tokens" message.
+			_token_ids := public._move_tokens(
+				_currency, _caller, null, null, _venue,
+				_payment, 'You do not have enough tokens to pay your submission charge'
+			);
 			update public.transactions set status = 'approved', tokens = _token_ids where id = _txn_id;
 		end if;
 
@@ -237,19 +279,77 @@ begin
 		_authors, _payments, _transactions, coalesce(_title, ''), _expertise, _note
 	) returning id into _submission_id;
 
-	-- Return the new submission id.
-	return jsonb_build_object('submission_id', _submission_id);
+	-- Seat the venue's editor, when there is exactly one it could be.
+	--
+	-- A priority-0 assignment is also a compensation commitment: mark_submission_done
+	-- pays every approved priority-0 assignment on the submission. So this only fires
+	-- when the choice is unambiguous. Several eligible editors would mean an arbitrary
+	-- pick, and seating them all would mean several editor fees per paper; a sole editor
+	-- who is an author here would be editing their own submission. In any of those cases
+	-- nobody is seated, and the caller notifies the candidates instead.
+	select r.id into _editor_role
+	from public.roles r
+	where r.venueid = _venue and r.priority = 0
+	order by r.id
+	limit 1;
+
+	if _editor_role is not null then
+		select array_agg(v.scholarid) into _editors
+		from public.volunteers v
+		where v.roleid = _editor_role and v.active and v.accepted = 'accepted';
+
+		if cardinality(coalesce(_editors, array[]::uuid[])) = 1
+			and not (_editors[1] = any(_authors)) then
+			_editor := _editors[1];
+			insert into public.assignments (venue, submission, scholar, role, bid, approved)
+			values (_venue, _submission_id, _editor, _editor_role, false, true);
+		end if;
+	end if;
+
+	-- Return the new submission id, and who is editing it. A null editor is the
+	-- caller's cue to send the "this submission needs an editor" notice instead of
+	-- the "you were assigned one" notice.
+	return jsonb_build_object('submission_id', _submission_id, 'editor', _editor);
 end;
 $function$;
 
-revoke execute on function public.create_submission (uuid, text, text, uuid, uuid, uuid[], integer[], text, text, text, text) from public;
-grant execute on function public.create_submission (uuid, text, text, uuid, uuid, uuid[], integer[], text, text, text, text) to authenticated;
+revoke
+execute on function public.create_submission (
+	uuid,
+	text,
+	text,
+	uuid,
+	uuid,
+	uuid[],
+	integer[],
+	text,
+	text,
+	text,
+	text
+)
+from
+	public;
+
+grant
+execute on function public.create_submission (
+	uuid,
+	text,
+	text,
+	uuid,
+	uuid,
+	uuid[],
+	integer[],
+	text,
+	text,
+	text,
+	text
+) to authenticated;
 
 alter publication supabase_realtime
 add table submissions;
 
 --------------------------------------
--- RPC (authoritative definition from migration 20260531000000_resubmission_link)
+-- RPC (authoritative definition from migration 20261011000000_bulk_import_priority_zero)
 create or replace function public.bulk_import_submissions (
 	_venueid uuid,
 	_submissions jsonb,
@@ -271,6 +371,22 @@ declare
     _previous uuid;
     _type_cost integer;
     _tokens uuid[];
+    _editor_role uuid;
+    _editors uuid[];
+    _editor uuid;
+    _seated integer := 0;
+    _entry jsonb;
+    _entry_person uuid;
+    _entry_role uuid;
+    _entry_priority integer;
+    _row_roles uuid[];
+    _row_priority_zero boolean;
+    _row_editor_seated boolean;
+    _entry_name text;
+    _unmatched integer := 0;
+    _seated_by jsonb := '{}'::jsonb;
+    _waiting integer := 0;
+    _skipped integer := 0;
 begin
     _admin_id := (select auth.uid());
 
@@ -278,8 +394,11 @@ begin
         raise exception 'Authentication required';
     end if;
 
-    if not public.isadmin(_venueid) then
-        raise exception 'Only venue admins can bulk import submissions';
+    -- The venue's priority-0 editors as well as its admins: they are the ones managing
+    -- submissions. Neither can spend anything here -- the mint below is only proposed,
+    -- and a minter still has to approve it.
+    if not (public.isadmin(_venueid) or public.ispriorityzero(_venueid)) then
+        raise exception 'Only venue admins and editors can bulk import submissions';
     end if;
 
     select currency into _currency
@@ -296,6 +415,25 @@ begin
     end if;
 
     _mint_amount := 0;
+
+    -- Resolve the venue's sole editor once, on the same unambiguous-only rule as
+    -- create_submission. Imported rows carry no authors, so the "not an author of this
+    -- paper" half of that rule has nothing to test here.
+    select r.id into _editor_role
+    from public.roles r
+    where r.venueid = _venueid and r.priority = 0
+    order by r.id
+    limit 1;
+
+    if _editor_role is not null then
+        select array_agg(v.scholarid) into _editors
+        from public.volunteers v
+        where v.roleid = _editor_role and v.active and v.accepted = 'accepted';
+
+        if cardinality(coalesce(_editors, array[]::uuid[])) = 1 then
+            _editor := _editors[1];
+        end if;
+    end if;
 
     _submission_ids := array[]::uuid[];
     for _row in select * from jsonb_array_elements(_submissions)
@@ -339,8 +477,177 @@ begin
             (_row->>'submission_type')::uuid,
             nullif(_row->>'note', ''),
             true
-        ) returning id into _new_submission_id;
+        ) on conflict (venue, externalid) do nothing
+        returning id into _new_submission_id;
+
+        -- Already at this venue: skip the row and carry on with the batch.
+        --
+        -- An export of a venue's queue is exported again next month still carrying last
+        -- month's manuscripts, so an overlap with what is already here is the ordinary
+        -- shape of this feature's input rather than a mistake in the file. Without this,
+        -- submissions_venue_externalid_unique raised 23505 and rolled the whole import
+        -- back, and the only way to import the new rows was to delete the old ones from
+        -- the file by hand. The form flags these rows before submitting and leaves them
+        -- out; this clause is what makes a list of existing IDs that has gone stale --
+        -- the page left open while somebody else imported -- cost those rows and nothing
+        -- else.
+        --
+        -- Targeted at (venue, externalid) rather than a bare `do nothing`, so any other
+        -- unique violation is still an error rather than a submission that silently
+        -- vanishes from the batch.
+        --
+        -- `continue` lands ahead of the people loop, the sole-editor fallback, the
+        -- waiting count and the mint: a row that was not written seats nobody, is not
+        -- waiting for an editor, and funds nothing.
+        if not found then
+            _skipped := _skipped + 1;
+            continue;
+        end if;
+
         _submission_ids := _submission_ids || _new_submission_id;
+
+        -- A row may name one person per venue role. An export carrying both an
+        -- "Editor in Chief" column and an "Editor" column names two different people
+        -- in two different roles on the same manuscript, and reading only one of them
+        -- throws the other away. The client resolves each name against the venue's own
+        -- volunteers and refuses to submit a row it could not; every entry is checked
+        -- again here because a rule that lives only in the form is a rule that holds
+        -- only for people who use the form -- the same reason create_submission
+        -- re-checks its own charges. Any raise below rolls the whole import back,
+        -- including submissions and assignments earlier rows already wrote: a
+        -- half-seated batch is worse than none, and reaching this means the form was
+        -- bypassed.
+        --
+        -- The submission is inserted above, before these checks run. That is fine and
+        -- deliberate -- a raise anywhere aborts the transaction -- so there is nothing
+        -- to gain by hoisting the validation.
+        --
+        -- RESET PER ROW. These two carry the per-submission guarantees below, and
+        -- `declare` runs once per call, not once per row. Leaking either would let the
+        -- first row's editor suppress the fallback for every row after it, silently:
+        -- right submission count, right mint, no error, and nothing else holding an
+        -- editor.
+        _row_roles := array[]::uuid[];
+        _row_priority_zero := false;
+        _row_editor_seated := false;
+
+        if jsonb_typeof(coalesce(_row->'people', '[]'::jsonb)) <> 'array' then
+            raise exception 'A row''s people must be a list of person and role pairs';
+        end if;
+
+        for _entry in select * from jsonb_array_elements(coalesce(_row->'people', '[]'::jsonb))
+        loop
+            _entry_person := nullif(_entry->>'person', '')::uuid;
+            _entry_role := nullif(_entry->>'person_role', '')::uuid;
+            _entry_name := nullif(btrim(coalesce(_entry->>'name', '')), '');
+
+            -- A blank cell in one role's column says nothing about the other roles on
+            -- the same row, so it is skipped rather than refused.
+            continue when _entry_person is null and _entry_name is null;
+
+            if _entry_person is not null and _entry_name is not null then
+                raise exception 'An entry names either a scholar or an unmatched name, not both';
+            end if;
+
+            if _entry_role is null then
+                raise exception 'A named person needs a role to be seated in';
+            end if;
+
+            select r.priority into _entry_priority
+            from public.roles r
+            where r.id = _entry_role and r.venueid = _venueid;
+
+            if _entry_priority is null then
+                raise exception 'That role does not belong to this venue';
+            end if;
+
+            -- One seat per role per submission. The form offers each role exactly one
+            -- column, so two of them cannot target the same role; nothing outside the
+            -- form is bound by that, and two assignments in one role are two claims on
+            -- the venue's reserve for one piece of work. Refused rather than
+            -- de-duplicated, so a caller cannot decide which of the two survives.
+            if _entry_role = any(_row_roles) then
+                raise exception 'A submission cannot seat two people in the same role';
+            end if;
+
+            -- At most one priority-0 seat per submission -- stated by PRIORITY, not by
+            -- role identity. mark_submission_done pays every approved priority-0
+            -- assignment on a submission, so a second one is a second editor's fee for
+            -- one paper. roles.priority carries no per-venue uniqueness constraint,
+            -- which is why the sole-editor lookup above already says `order by r.id
+            -- limit 1`; two distinct priority-0 roles would be two distinct columns in
+            -- the form, and checking the priority is what covers that.
+            if _entry_priority = 0 and _row_priority_zero then
+                raise exception 'A submission can have only one editor';
+            end if;
+
+            -- A name the platform does not know yet is kept as an unmatched assignment
+            -- rather than thrown away, so whoever approves it can match it once the person
+            -- joins (public.match_assignments). It still occupies the role for the two
+            -- checks above, and an unmatched editor still suppresses the sole-editor
+            -- fallback below -- the file says someone else edits this paper -- but it does
+            -- not count as assigned: nobody can act on the submission yet, so it is still
+            -- waiting for an editor.
+            if _entry_person is null then
+                insert into public.unmatched_assignments (venue, submission, role, name)
+                values (_venueid, _new_submission_id, _entry_role, _entry_name);
+
+                _row_roles := _row_roles || _entry_role;
+                if _entry_priority = 0 then
+                    _row_priority_zero := true;
+                end if;
+
+                _unmatched := _unmatched + 1;
+                continue;
+            end if;
+
+            -- Seating is not a way to hand out a role. Priority-0 holders can approve
+            -- any assignment on the submission, edit its author list and mark it done,
+            -- and every seat is a claim on the venue's tokens, so the person must
+            -- already hold the role.
+            if not exists (
+                select 1
+                from public.volunteers v
+                where v.roleid = _entry_role
+                    and v.scholarid = _entry_person
+                    and v.active
+                    and v.accepted = 'accepted'
+            ) then
+                raise exception 'A named person must already be an accepted, active volunteer in that role';
+            end if;
+
+            insert into public.assignments (venue, submission, scholar, role, bid, approved)
+            values (_venueid, _new_submission_id, _entry_person, _entry_role, false, true);
+
+            _row_roles := _row_roles || _entry_role;
+            if _entry_priority = 0 then
+                _row_priority_zero := true;
+                _row_editor_seated := true;
+            end if;
+
+            _seated := _seated + 1;
+        end loop;
+
+        -- The venue's sole editor is still seated, except on a row that named
+        -- somebody for the editor role itself. Doing both would put two priority-0
+        -- assignments on one submission, and marking a submission done pays every
+        -- approved priority-0 assignment on it -- an editor's compensation per editor
+        -- per paper.
+        if _editor is not null and not _row_priority_zero then
+            insert into public.assignments (venue, submission, scholar, role, bid, approved)
+            values (_venueid, _new_submission_id, _editor, _editor_role, false, true);
+            _seated := _seated + 1;
+            _row_editor_seated := true;
+        end if;
+
+        -- A submission with nobody in the venue's top-priority role is waiting for an
+        -- editor, and is flagged as such on the venue's submissions list. Counted per
+        -- row rather than derived from _seated, which counts assignments: a row can
+        -- carry two of them -- an associate editor named by the file and the venue's
+        -- sole editor -- and subtracting one from the other would report nonsense.
+        if not _row_editor_seated then
+            _waiting := _waiting + 1;
+        end if;
 
         -- Each row bills its submission type's cost.
         select submission_cost into _type_cost
@@ -348,6 +655,24 @@ begin
         where id = (_row->>'submission_type')::uuid;
         _mint_amount := _mint_amount + coalesce(_type_cost, 0);
     end loop;
+
+    -- Who now holds what, counted by DISTINCT SUBMISSION rather than by assignment.
+    -- The digest this feeds tells a scholar how many submissions they were given, and
+    -- the two seating paths above are independently reachable on one row: the venue's
+    -- sole editor, also named in the file for some other role, takes both seats and
+    -- would otherwise be told two papers arrived when one did. That is the same hazard
+    -- _waiting states above, which is why it is counted per row rather than derived
+    -- from _seated. Derived here, after the loop, rather than incremented inside it:
+    -- the rows are the answer, and counting them twice in two places is how the two
+    -- numbers came to disagree.
+    select coalesce(jsonb_object_agg(x.scholar::text, x.submissions), '{}'::jsonb)
+        into _seated_by
+    from (
+        select a.scholar, count(distinct a.submission) as submissions
+        from public.assignments a
+        where a.submission = any(_submission_ids)
+        group by a.scholar
+    ) x;
 
     if _mint_amount > 0 then
         _tokens := array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[_mint_amount]);
@@ -378,7 +703,13 @@ begin
     return jsonb_build_object(
         'submission_ids', to_jsonb(_submission_ids),
         'transaction_id', _transaction_id,
-        'mint_amount', _mint_amount
+        'mint_amount', _mint_amount,
+        'editor', _editor,
+        'seated', _seated,
+        'seated_by', _seated_by,
+        'waiting', _waiting,
+        'unmatched', _unmatched,
+        'skipped', _skipped
     );
 end;
 $function$;
@@ -386,13 +717,13 @@ $function$;
 --------------------------------------
 -- RPC (authoritative definition from migration 20260804020000_token_event_attribution)
 create or replace function public.mark_submission_done (
-    _submission_id uuid,
-    _payment_purpose_template text,
-    _mint_purpose_template text
+	_submission_id uuid,
+	_payment_purpose_template text,
+	_mint_purpose_template text
 ) returns jsonb language plpgsql security definer
 set
-    search_path=public,
-    pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
     _caller uuid;
     _submission public.submissions;
@@ -560,22 +891,22 @@ begin
                 '{title}', _submission.title
             );
 
-            select array_agg(id) into _token_ids from (
-                select id from public.tokens
-                    where venue = _submission.venue and currency = _venue.currency
-                    order by id
-                    limit _editor.amount
-            ) sub;
-
             -- Per editor, not once for the call: each payout is its own
             -- transaction, so one GUC for the whole function would file every
-            -- movement under the last editor's id.
+            -- movement under the last editor's id. Set before the move, because
+            -- the token_events trigger reads app.txn at the moment of each write.
             _txn_id := gen_random_uuid();
             perform set_config('app.txn', _txn_id::text, true);
 
-            update public.tokens
-                set venue = null, scholar = _editor.scholar_id
-                where id = any(_token_ids);
+            -- Take this editor's payout under lock and move it. The reserve check
+            -- above covered the whole payout run, but each editor draws from the
+            -- same reserve in turn, so a concurrent payout can still make a later
+            -- editor short -- RR003 rolls the whole run back rather than paying
+            -- some editors and silently skipping others.
+            _token_ids := public._move_tokens(
+                _venue.currency, null, _submission.venue, _editor.scholar_id, null,
+                _editor.amount, 'Insufficient tokens to compensate this submission''s editors'
+            );
 
             insert into public.transactions (
                 id, creator, from_scholar, from_venue, to_scholar, to_venue,
@@ -615,3 +946,221 @@ begin
     );
 end;
 $function$;
+
+--------------------------------------
+-- close_submission: settle every outstanding assignment and mark the submission done, in
+-- one step.
+--
+-- mark_submission_done refuses while any approved non-editor assignment is uncompensated,
+-- and compensation is pull-based: it waits on each reviewer following the link in the
+-- decision email and requesting it. A reviewer who never does held the submission open
+-- indefinitely, and the editor -- who sent the decision in the reviewing platform, not
+-- here -- had no prompt to come back. This lets the editor close it out when they do come
+-- back, saying for each outstanding assignment whether the work was done (pay it) or not
+-- (remove it).
+--
+-- _pay and _remove must together name exactly the outstanding assignments, with no
+-- overlap, so a page loaded before another assignment was approved cannot close over it
+-- unseen. The reserve is checked against the whole payout -- reviewers and editors -- up
+-- front, so a short reserve proposes one mint for the whole shortfall and pays nobody,
+-- rather than paying some and leaving the rest for a retry.
+--
+-- Each payment goes through complete_assignment and the final step through
+-- mark_submission_done, so authorization, transaction attribution and the status flip have
+-- one definition each. Anything they report other than success rolls the whole close back.
+create or replace function public.close_submission (
+	_submission_id uuid,
+	_pay uuid[],
+	_remove uuid[],
+	_payment_purpose_template text,
+	_mint_purpose_template text
+) returns jsonb language plpgsql security definer
+set
+	search_path=public,
+	pg_temp as $function$
+declare
+    _caller uuid;
+    _submission public.submissions;
+    _venue public.venues;
+    _pay_ids uuid[] := coalesce(_pay, '{}');
+    _remove_ids uuid[] := coalesce(_remove, '{}');
+    _outstanding uuid[];
+    _total_amount integer;
+    _unpriced boolean;
+    _available integer;
+    _shortfall integer;
+    _mint_txn_id uuid;
+    _assignment record;
+    _result jsonb;
+    _payouts jsonb := '[]'::jsonb;
+    _removed jsonb := '[]'::jsonb;
+    _done jsonb;
+begin
+    _caller := (select auth.uid());
+    if _caller is null then
+        raise exception 'Authentication required';
+    end if;
+
+    select * into _submission from public.submissions where id = _submission_id;
+    if not found then
+        raise exception 'Submission not found';
+    end if;
+    if _submission.status = 'done' then
+        raise exception 'Submission is already done';
+    end if;
+
+    select * into _venue from public.venues where id = _submission.venue;
+    if not found then
+        raise exception 'Venue not found';
+    end if;
+
+    -- The same authorization as mark_submission_done, checked here too so a caller who
+    -- could not close the submission learns nothing from the checks below.
+    if not exists (
+        select 1
+        from public.assignments a
+        join public.roles r on r.id = a.role
+        where a.submission = _submission_id
+          and a.scholar = _caller
+          and a.approved
+          and r.priority = 0
+    ) then
+        raise exception 'Only an approved editor (priority-0) can close this submission';
+    end if;
+
+    -- The outstanding assignments: mark_submission_done's blockers.
+    select coalesce(array_agg(a.id), '{}') into _outstanding
+    from public.assignments a
+    join public.roles r on r.id = a.role
+    where a.submission = _submission_id
+      and a.approved
+      and not a.completed
+      and r.priority > 0;
+
+    if _pay_ids && _remove_ids then
+        raise exception 'An assignment cannot be both paid and removed';
+    end if;
+    if not (
+        (_pay_ids || _remove_ids) @> _outstanding
+        and _outstanding @> (_pay_ids || _remove_ids)
+        and cardinality(_pay_ids || _remove_ids) = cardinality(_outstanding)
+    ) then
+        raise exception 'The assignments to pay and remove must be exactly the outstanding ones; reload and try again';
+    end if;
+
+    -- Everything this close pays: the assignments being paid, then the editors. _pay is a
+    -- subset of the outstanding assignments, so every id in it is on this submission.
+    select coalesce(sum(c.amount), 0), coalesce(bool_or(c.amount is null), false)
+    into _total_amount, _unpriced
+    from public.assignments a
+    join public.roles r on r.id = a.role
+    left join public.compensation c
+        on c.role = a.role and c.submission_type = _submission.submission_type
+    where a.id = any(_pay_ids)
+       or (a.submission = _submission_id and a.approved and not a.completed and r.priority = 0);
+    if _unpriced then
+        raise exception 'No compensation amount is configured for one or more roles on this submission';
+    end if;
+
+    select count(*) into _available from public.tokens
+        where venue = _submission.venue and currency = _venue.currency;
+
+    if _available < _total_amount then
+        _shortfall := _total_amount - _available;
+        insert into public.transactions (
+            creator, from_scholar, from_venue, to_scholar, to_venue,
+            tokens, currency, purpose, status
+        ) values (
+            _caller, null, null, null, _submission.venue,
+            array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[_shortfall]),
+            _venue.currency,
+            replace(
+                replace(
+                    replace(
+                        replace(_mint_purpose_template, '{amount}', _total_amount::text),
+                        '{role}', 'editor'
+                    ),
+                    '{title}', _submission.title
+                ),
+                '{shortfall}', _shortfall::text
+            ),
+            'proposed'
+        ) returning id into _mint_txn_id;
+
+        return jsonb_build_object(
+            'status', 'insufficient',
+            'shortfall', _shortfall,
+            'total_amount', _total_amount,
+            'mint_transaction_id', _mint_txn_id,
+            'venue_id', _submission.venue,
+            'venue_title', _venue.title,
+            'currency_id', _venue.currency,
+            'submission_id', _submission_id
+        );
+    end if;
+
+    -- Remove first: an assignment the editor says was not done is not someone the
+    -- approver may pay, and must not be left behind to block the status flip.
+    -- Who was removed, and from what, travels back so the caller can tell each of them:
+    -- losing pay for work they may believe they did is not something to learn by silence.
+    for _assignment in
+        select a.id, a.role, a.scholar, r.name as role_name
+        from public.assignments a join public.roles r on r.id = a.role
+        where a.id = any(_remove_ids)
+    loop
+        if not public.can_approve_assignment(_submission_id, _assignment.role) then
+            raise exception 'You are not authorized to remove this assignment';
+        end if;
+        delete from public.assignments where id = _assignment.id;
+        _removed := _removed || jsonb_build_object(
+            'scholar_id', _assignment.scholar,
+            'role_name', _assignment.role_name
+        );
+    end loop;
+
+    for _assignment in
+        select a.id from public.assignments a where a.id = any(_pay_ids) order by a.id
+    loop
+        _result := public.complete_assignment(
+            _assignment.id, _payment_purpose_template, _mint_purpose_template
+        );
+        if _result->>'status' <> 'transferred' then
+            raise exception 'Insufficient tokens to compensate this submission'
+                using errcode = 'RR003';
+        end if;
+        _payouts := _payouts || jsonb_build_object(
+            'transaction_id', _result->'transaction_id',
+            'scholar_id', _result->'scholar_id',
+            'role_name', _result->'role_name',
+            'amount', _result->'amount'
+        );
+    end loop;
+
+    _done := public.mark_submission_done(
+        _submission_id, _payment_purpose_template, _mint_purpose_template
+    );
+    if _done->>'status' <> 'completed' then
+        raise exception 'Insufficient tokens to compensate this submission''s editors'
+            using errcode = 'RR003';
+    end if;
+
+    return jsonb_build_object(
+        'status', 'completed',
+        'submission_id', _submission_id,
+        'venue_id', _submission.venue,
+        'currency_id', _venue.currency,
+        'total_amount', _total_amount,
+        'payouts', _payouts || coalesce(_done->'payouts', '[]'::jsonb),
+        'removed', _removed
+    );
+end;
+$function$;
+
+revoke
+execute on function public.close_submission (uuid, uuid[], uuid[], text, text)
+from
+	public,
+	anon;
+
+grant
+execute on function public.close_submission (uuid, uuid[], uuid[], text, text) to authenticated;

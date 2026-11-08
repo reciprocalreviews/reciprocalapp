@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { login } from '../src/routes/login';
-import { SEED, sql } from './test-utils';
+import { asScholar, SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
+const VENUE_PATH = SEED.venuePath;
 const CURRENCY_ID = SEED.currency;
 const MINTER_EMAIL = SEED.scholars.r1.email;
+const MINTER_ID = SEED.scholars.r1.id;
 const EDITOR_ID = SEED.scholars.editor.id;
 const EDITOR_EMAIL = SEED.scholars.editor.email;
 const RECIPIENT_EMAIL = SEED.scholars.author2.email;
@@ -66,26 +68,34 @@ test('an editor approves a pending venue transfer; status moves to approved and 
 		)
 	);
 
+	const purpose = `e2e approve test ${Date.now()}`;
+
 	// Seed three real tokens into the venue reserve and reference them directly,
 	// so approval is a pure transfer of existing reserve tokens. (Approving a
 	// placeholder-token transfer would force a mint, which is a minter-only
-	// action — and minting into a venue you administer is self-dealing.)
-	const reserveTokenIds = sql(
-		`insert into public.tokens (currency, venue) values ('${CURRENCY_ID}','${VENUE_ID}'),('${CURRENCY_ID}','${VENUE_ID}'),('${CURRENCY_ID}','${VENUE_ID}') returning id;`
+	// action — and minting into a venue you administer is self-dealing.) They are
+	// minted through the RPC as the currency's minter rather than inserted into
+	// public.tokens, so the ledger records where they came from: a raw insert is
+	// an unattributed mint, and unattributed provenance switches off
+	// reconcile_ledger's conservation check entirely (#152). The mint's purpose must
+	// not contain `purpose`: the row assertions below match transaction cells by
+	// substring, and would find two rows.
+	const reserveTokenIds = asScholar(
+		MINTER_ID,
+		`select jsonb_array_elements_text(public.mint_tokens('${CURRENCY_ID}', 3, '${VENUE_ID}', 'e2e reserve top-up ${Date.now()}') -> 'token_ids')`
 	)
 		.split('\n')
 		.map((s) => s.trim())
 		.filter(Boolean);
 	const tokensLiteral = `array[${reserveTokenIds.map((id) => `'${id}'`).join(',')}]::uuid[]`;
 
-	const purpose = `e2e approve test ${Date.now()}`;
 	const txnID = sql(
 		`insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${recipientID}', null, ${tokensLiteral}, '${CURRENCY_ID}', '${purpose}', 'proposed') returning id;`
 	);
 	expect(txnID).toMatch(/^[0-9a-f-]+$/);
 
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/transactions`);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
 	await page.waitForLoadState('networkidle');
 
 	// Find the row for the new proposed transaction. Match the table cell
@@ -94,9 +104,12 @@ test('an editor approves a pending venue transfer; status moves to approved and 
 	await expect(page.getByRole('cell', { name: purpose })).toBeVisible();
 
 	// Click the approve button on whichever row index hosts our purpose.
+	// Approving moves tokens permanently, so it is a confirm button: the first
+	// click swaps in the confirm/cancel pair and only the second commits.
 	const approveButton = page
 		.locator(`tr:has(td:has-text(${JSON.stringify(purpose)})) [data-testid$="-approve"]`)
 		.first();
+	await approveButton.click();
 	await approveButton.click();
 
 	// The transaction's status flips to 'approved'.
@@ -114,6 +127,20 @@ test('an editor approves a pending venue transfer; status moves to approved and 
 			)
 		)
 		.toBe(recipientBalanceBefore + 3);
+
+	// The row's controls leave with the decision, and the status it shows is the
+	// status that was written. Asserted after the database polls above, so a
+	// failure here means the UI didn't update rather than the write didn't land.
+	// Both halves regressed once: the confirm button was never disabled while
+	// approve_transaction was in flight, and the table rendered a cached copy of
+	// the first page that a status-only change did not invalidate — so Approve
+	// stayed on screen after approving and could be pressed again, re-firing the
+	// RPC. The token count asserted above is what catches a re-fire moving tokens
+	// twice; these catch it still being offered.
+	const approvedRow = page.locator(`tr:has(td:has-text(${JSON.stringify(purpose)}))`);
+	await expect(approvedRow.locator('[data-testid$="-approve"]')).toHaveCount(0);
+	await expect(approvedRow.locator('[data-testid$="-decline-initiate"]')).toHaveCount(0);
+	await expect(approvedRow.locator('[data-testid$="-status"]')).toHaveText('approved');
 });
 
 test('a gift transaction is visible in venue transactions, scholar history, and balance', async ({
@@ -133,7 +160,7 @@ test('a gift transaction is visible in venue transactions, scholar history, and 
 	const purpose = `e2e visibility test ${Date.now()}`;
 
 	await login('editor@uni.edu', page, context);
-	await page.goto(`/venue/${VENUE_ID}/transactions`);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
 	await page.waitForLoadState('networkidle');
 
 	await page.getByTestId('venue-gift-card').click();
@@ -179,7 +206,7 @@ test('minter cannot approve a venue→minter transaction (anti-self-dealing UPDA
 	expect(txnID).toMatch(/^[0-9a-f-]+$/);
 
 	await login(MINTER_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/transactions`);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
 
 	// The row is visible (minter can SELECT transactions for their currency)…
 	await expect(page.getByRole('cell', { name: purpose })).toBeVisible();
@@ -193,9 +220,7 @@ test('minter cannot approve a venue→minter transaction (anti-self-dealing UPDA
 	// The with-check on the RLS policy either raises or silently rejects;
 	// either way the row stays 'proposed'.
 	try {
-		sql(
-			`begin; set local role authenticated; set local request.jwt.claims to '{"sub":"${minterID}","role":"authenticated"}'; update public.transactions set status = 'approved' where id = '${txnID}'; commit;`
-		);
+		asScholar(minterID, `update public.transactions set status = 'approved' where id = '${txnID}'`);
 	} catch {
 		// Expected: RLS with-check raises and the transaction rolls back.
 	}
@@ -228,7 +253,7 @@ test('minter declining a proposed transaction emails the proposer and records th
 	expect(txnID).toMatch(/^[0-9a-f-]+$/);
 
 	await login(MINTER_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/transactions`);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
 	await page.waitForLoadState('networkidle');
 
 	// Open the decline dialog on our row, fill the reason, confirm. Each row
@@ -249,6 +274,15 @@ test('minter declining a proposed transaction emails the proposer and records th
 			)
 		)
 		.toBe(`declined|${minterID}|${reason}|${purpose}`);
+
+	// The decline is visible in the row without a reload: its status, its reason,
+	// and the absence of the controls. The reason is the half that never surfaced
+	// at all — the first page was cached on the row ids, and a decline changes only
+	// status, decliner, and decline_reason.
+	await expect(row.locator('[data-testid$="-decline-initiate"]')).toHaveCount(0);
+	await expect(row.locator('[data-testid$="-approve"]')).toHaveCount(0);
+	await expect(row).toContainText(reason);
+	await expect(row.locator('[data-testid$="-status"]')).toHaveText('declined');
 
 	// Exactly one decline email queued for the editor (the proposer).
 	await expect
@@ -280,11 +314,70 @@ test('editor cannot insert an already-approved venue→editor transaction (anti-
 	// case where the editor names themselves as recipient.
 	const purpose = `e2e self-deal insert test ${Date.now()}`;
 	try {
-		sql(
-			`begin; set local role authenticated; set local request.jwt.claims to '{"sub":"${EDITOR_ID}","role":"authenticated"}'; insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${EDITOR_ID}', null, array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[1]), '${CURRENCY_ID}', '${purpose}', 'approved'); commit;`
+		asScholar(
+			EDITOR_ID,
+			`insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${EDITOR_ID}', null, array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[1]), '${CURRENCY_ID}', '${purpose}', 'approved')`
 		);
 	} catch {
 		// Expected: RLS check raises and the transaction rolls back.
 	}
 	expect(sql(`select count(*) from public.transactions where purpose = '${purpose}';`)).toBe('0');
+});
+
+test('an unapproved transaction from the distant past is on the first page, above settled history', async ({
+	page,
+	context
+}) => {
+	// The list pages ten rows at a time from the server, so ordering it by date
+	// alone put a proposal nobody had answered behind however many pages of
+	// settled history had accumulated since — and nothing on screen said it was
+	// down there. The three list queries therefore sort proposed rows to the
+	// front whatever their date (SupabaseCRUD, getVenueTransactions and friends).
+	const recipientID = sql(`select id from public.scholars where email = '${RECIPIENT_EMAIL}';`);
+	const purpose = `e2e ancient proposal ${Date.now()}`;
+	sql(
+		`insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status, created_at) values ('${EDITOR_ID}', null, '${VENUE_ID}', '${recipientID}', null, array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[2]), '${CURRENCY_ID}', '${purpose}', 'proposed', '2024-02-02T10:00:00Z');`
+	);
+
+	// The premise: it really is buried. A full page of newer transactions sits
+	// above it when the list is ordered by date, so its appearing on the first
+	// page cannot be an accident of a short table.
+	const newer = Number(
+		sql(
+			`select count(*) from public.transactions where (from_venue = '${VENUE_ID}' or to_venue = '${VENUE_ID}') and created_at > '2024-02-02T10:00:00Z';`
+		)
+	);
+	expect(newer).toBeGreaterThanOrEqual(10);
+
+	await login(MINTER_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
+	await page.waitForLoadState('networkidle');
+
+	// Present on the first page, without paging, and actionable.
+	const row = page.locator(`tr:has(td:has-text(${JSON.stringify(purpose)}))`);
+	await expect(row).toHaveCount(1);
+	await expect(row.locator('[data-testid$="-approve"]')).toHaveCount(1);
+
+	// And above every settled row: the whole point is that an approver reads the top
+	// of the table and finds their outstanding work there. Stated as "nothing
+	// proposed appears below something settled" rather than as two indexes, because
+	// a first page that happens to be entirely proposed — which a busy venue's is,
+	// since every submission charge starts that way — satisfies the rule too.
+	const statuses = await page.locator('[data-testid$="-status"]').allInnerTexts();
+	const firstSettled = statuses.findIndex((status) => status !== 'proposed');
+	if (firstSettled !== -1) expect(statuses.slice(firstSettled)).not.toContain('proposed');
+});
+
+test('the control that pages the list is legible', async ({ page, context }) => {
+	// It renders its own label rather than leaving it to Button, which drops
+	// `strings().label` whenever a child snippet is passed. The snippet here is
+	// empty unless a fetch is in flight, so the control was a blank square that
+	// only a tooltip explained.
+	await login(MINTER_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/transactions`);
+	await page.waitForLoadState('networkidle');
+
+	const loadMore = page.getByRole('button', { name: 'Load more transactions' });
+	await expect(loadMore).toBeVisible();
+	await expect(loadMore).toHaveText(/Load more transactions/);
 });

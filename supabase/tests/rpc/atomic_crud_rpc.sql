@@ -13,7 +13,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(38);
+select plan(50);
 
 -- ---- Shared fixtures (owner context) -----------------------------------------
 select tests.clear_authentication();
@@ -25,7 +25,7 @@ select tests.create_scholar('rpc_outsider@test.local') as outsider \gset
 select tests.create_scholar('rpc_steward@test.local', true) as steward \gset
 
 -- Currency minted by :minter; venue administered by :admin (disjoint from the
--- minter, so the no_minter_admins trigger does not fire). Welcome grant of 5.
+-- minter; the overlap gets its own venue further down). Welcome grant of 5.
 select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
 select tests.create_venue(:'cur', array[:'admin']::uuid[], 5) as ven \gset
 
@@ -59,6 +59,48 @@ select throws_ok(
 		|| quote_literal(:'ven') || $$, 'bad mint' ) $$,
 	'P0001', null,
 	'a non-minter cannot mint tokens'
+);
+
+--------------------------------------------------------------------------------
+-- The admin/minter overlap
+--------------------------------------------------------------------------------
+-- :minter mints :cur and also administers :own. The platform permits that — a small
+-- community's organizer is often its only minter — and discloses it on the venue page
+-- instead of refusing it, so minting into your own venue must succeed by both routes.
+select tests.clear_authentication();
+select tests.create_venue(:'cur', array[:'minter']::uuid[], 0) as own \gset
+
+select tests.authenticate_as(:'minter');
+select lives_ok(
+	$$ select public.mint_tokens( $$ || quote_literal(:'cur') || $$, 2, $$
+		|| quote_literal(:'own') || $$, 'solo mint' ) $$,
+	'a minter can mint into a venue they administer'
+);
+
+-- The same act by the other route: approving a proposed pure mint into that venue.
+select tests.clear_authentication();
+insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status)
+values (:'minter', null, null, null, :'own',
+	array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[1]), :'cur', 'proposed solo mint', 'proposed')
+returning id as own_mint \gset
+select tests.authenticate_as(:'minter');
+select lives_ok(
+	$$ select public.approve_transaction( $$ || quote_literal(:'own_mint') || $$ ) $$,
+	'a minter can approve a pure mint into a venue they administer'
+);
+
+-- Creating new tokens for your own venue is not the same act as helping yourself to
+-- someone else's: approving a transfer into a venue you administer is still refused.
+select tests.clear_authentication();
+insert into public.transactions (creator, from_scholar, from_venue, to_scholar, to_venue, tokens, currency, purpose, status)
+values (:'minter', null, :'ven', null, :'own',
+	array_fill('00000000-0000-0000-0000-000000000000'::uuid, array[1]), :'cur', 'proposed grab', 'proposed')
+returning id as own_grab \gset
+select tests.authenticate_as(:'minter');
+select throws_ok(
+	$$ select public.approve_transaction( $$ || quote_literal(:'own_grab') || $$ ) $$,
+	'RR002', null,
+	'but a minter cannot approve a transfer into a venue they administer'
 );
 
 --------------------------------------------------------------------------------
@@ -269,6 +311,28 @@ select throws_ok(
 	'P0001', null,
 	'a submission type from another venue is rejected'
 );
+
+-- Only a listed author (or a venue admin) may create a submission. This rule
+-- previously lived only in the submission form, so a caller reaching the RPC
+-- directly could create submissions in any venue and generate proposed charges
+-- against arbitrary scholars.
+select tests.authenticate_as(:'outsider');
+select throws_ok(
+	$$ select public.create_submission( $$ || quote_literal(:'ven') || $$, 'EXT-8', null, null, $$
+		|| quote_literal(:'stype') || $$, array[ $$ || quote_literal(:'alice') || $$ ]::uuid[],
+		array[1]::integer[], 'H title', 'expertise', null, 'Payment for EXT-8' ) $$,
+	'RR009', null,
+	'a non-author cannot create a submission charging someone else'
+);
+
+-- A venue admin may add a submission on the authors' behalf (manual adds).
+select tests.authenticate_as(:'admin');
+select lives_ok(
+	$$ select public.create_submission( $$ || quote_literal(:'ven') || $$, 'EXT-9', null, null, $$
+		|| quote_literal(:'stype') || $$, array[ $$ || quote_literal(:'bob') || $$ ]::uuid[],
+		array[1]::integer[], 'I title', 'expertise', null, 'Payment for EXT-9' ) $$,
+	'a venue admin can add a submission on behalf of its authors'
+);
 select tests.clear_authentication();
 
 --------------------------------------------------------------------------------
@@ -280,7 +344,7 @@ select tests.create_role(:'ven', 1, null, false, true) as invite_role \gset
 select tests.create_role(:'ven', 1, null, false, false) as open_role \gset
 
 -- Happy: an admin adds :alice to the invite-only role, with compensation. As
--- her first role this records a proposed welcome grant.
+-- her first role this settles the welcome grant immediately.
 select tests.authenticate_as(:'admin');
 select lives_ok(
 	$$ select public.create_volunteer( $$ || quote_literal(:'alice') || $$, $$
@@ -295,10 +359,62 @@ select is(
 );
 select is(
 	(select count(*)::int from public.transactions
-		where from_venue = :'ven' and to_scholar = :'alice' and status = 'proposed'),
+		where from_venue = :'ven' and to_scholar = :'alice' and status = 'approved'
+		  and purpose = 'Welcome tokens for volunteering'),
 	1,
-	'create_volunteer recorded the proposed welcome grant atomically'
+	'create_volunteer settled the welcome grant atomically'
 );
+-- The grant moved welcome_amount (5) REAL tokens — no placeholders — and the
+-- scholar now owns every token the transaction cites.
+select is(
+	(select count(*)::int from public.tokens t
+		where t.scholar = :'alice' and t.id in (
+			select unnest(tokens) from public.transactions
+			where from_venue = :'ven' and to_scholar = :'alice'
+			  and purpose = 'Welcome tokens for volunteering')),
+	5,
+	'the welcome grant moved welcome_amount real tokens to the scholar'
+);
+
+-- The RPC reports what it granted, so the confirmation can say so precisely
+-- instead of promising tokens that may never have been granted. Whether a
+-- grant happens turns on the scholar's first-role status, the venue's
+-- payment_free flag, and its welcome_amount — none of which the client can
+-- evaluate without re-deriving the rule.
+select tests.authenticate_as(:'admin');
+select is(
+	(select (public.create_volunteer(
+		(select tests.create_scholar('rpc_welcomed@test.local')), :'open_role', true, true, null
+	) ->> 'welcome_granted')::int),
+	5,
+	'create_volunteer reports the granted amount on a first role'
+);
+
+-- A second role at the SAME venue grants nothing, and says so. (:open_role and
+-- :invite_role both belong to :ven, where alice was already welcomed.)
+select is(
+	(select (public.create_volunteer(:'alice', :'open_role', true, true, null)
+		->> 'welcome_granted')::int),
+	0,
+	'create_volunteer reports zero for a second role at a venue that already welcomed the scholar'
+);
+
+-- A payment-free venue has no tokens to grant, and likewise reports zero.
+select tests.clear_authentication();
+select tests.create_scholar('rpc_freevenue_admin@test.local') as free_admin \gset
+select tests.create_currency(array[(select tests.create_scholar('rpc_freeminter@test.local'))]::uuid[]) as free_cur \gset
+select tests.create_venue(:'free_cur', array[:'free_admin']::uuid[], 5) as free_ven \gset
+update public.venues set payment_free = true where id = :'free_ven';
+select tests.create_role(:'free_ven', 1, null, false, false) as free_role \gset
+select tests.authenticate_as(:'free_admin');
+select is(
+	(select (public.create_volunteer(
+		(select tests.create_scholar('rpc_freescholar@test.local')), :'free_role', true, true, null
+	) ->> 'welcome_granted')::int),
+	0,
+	'create_volunteer reports zero for a payment-free venue'
+);
+select tests.clear_authentication();
 
 -- Volunteering for the same role twice is rejected (RR004 -> the app's
 -- AlreadyVolunteered message).
@@ -327,6 +443,38 @@ select lives_ok(
 	'a scholar can self-volunteer for an open role'
 );
 
+-- A scholar who volunteers at one venue is still a newcomer at the next.
+-- welcome_amount is standing policy of a single venue, denominated in that
+-- venue's own currency, so the grant is once per scholar PER VENUE. This
+-- previously counted volunteer rows platform-wide, so anyone who had ever
+-- volunteered anywhere silently received nothing at every venue they joined
+-- afterward. Second venue, its own disjoint minter and admin, welcome of 5.
+select tests.clear_authentication();
+select tests.create_currency(array[(select tests.create_scholar('rpc_minter2@test.local'))]::uuid[]) as cur2 \gset
+select tests.create_venue(:'cur2', array[(select tests.create_scholar('rpc_admin2@test.local'))]::uuid[], 5) as ven2 \gset
+select tests.create_role(:'ven2', 1, null, false, false) as open_role2 \gset
+select tests.create_role(:'ven2', 1, null, false, false) as open_role2b \gset
+select tests.create_role(:'ven2', 1, null, false, true) as invite_role2 \gset
+
+-- :alice already holds roles at :ven and was welcomed there; :ven2 must still
+-- welcome her.
+select tests.authenticate_as(:'alice');
+select is(
+	(select (public.create_volunteer(:'alice', :'open_role2', true, true, null)
+		->> 'welcome_granted')::int),
+	5,
+	'create_volunteer grants a second venue''s welcome tokens to a scholar who volunteers elsewhere'
+);
+
+-- ...and only once there, exactly as at the first venue.
+select is(
+	(select (public.create_volunteer(:'alice', :'open_role2b', true, true, null)
+		->> 'welcome_granted')::int),
+	0,
+	'create_volunteer reports zero for a second role at the new venue'
+);
+select tests.clear_authentication();
+
 --------------------------------------------------------------------------------
 -- accept_role_invite
 --------------------------------------------------------------------------------
@@ -354,6 +502,19 @@ select is(
 	'accepted',
 	'accept_role_invite recorded the acceptance'
 );
+
+-- accept_role_invite gates its grant the same way, and had the same defect.
+-- :bob holds an open role at :ven and none at :ven2, so accepting :ven2's
+-- invitation must earn :ven2's welcome tokens.
+select tests.clear_authentication();
+select tests.create_volunteer(:'bob', :'invite_role2', 'invited') as invite2 \gset
+select tests.authenticate_as(:'bob');
+select is(
+	(select (public.accept_role_invite(:'invite2', 'accepted') ->> 'welcome_granted')::int),
+	5,
+	'accept_role_invite grants a second venue''s welcome tokens'
+);
+select tests.clear_authentication();
 
 --------------------------------------------------------------------------------
 -- approve_venue_proposal

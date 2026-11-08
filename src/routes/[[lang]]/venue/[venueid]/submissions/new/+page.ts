@@ -1,9 +1,12 @@
+import { NO_VENUE_ID } from '#lib/data/venuePath.js';
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
 	const { db, venue, scholar } = await parent();
 
-	const venueid = params.venueid;
+	// The URL segment may be the venue's web address, so the id comes from the venue the
+	// layout resolved, never from the param — every query below is keyed on a uuid column.
+	const venueid = venue?.id ?? NO_VENUE_ID;
 
 	// Find all of the submissions types for the venue.
 	const { data: submissionTypes } = await db.getVenueSubmissionTypes(venueid);
@@ -17,6 +20,9 @@ export const load: PageLoad = async ({ parent, params }) => {
 	return {
 		venue,
 		submissionTypes,
-		priorSubmissions: priorSubmissions ?? []
+		priorSubmissions: priorSubmissions ?? [],
+		// The submitter's own ORCID, so the form can list them as an author
+		// rather than making them type an identifier they may not have memorized.
+		scholarORCID: scholar?.orcid ?? null
 	};
 };

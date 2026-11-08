@@ -1,16 +1,20 @@
+import { NO_VENUE_ID } from '#lib/data/venuePath.js';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, params }) => {
-	const { db, scholar } = await parent();
+	// The venue comes from the layout, which is what resolves a web address to a venue; the
+	// URL segment is not an id and must not be used as one.
+	const { db, scholar, venue: resolved } = await parent();
 
-	const venueid = params.venueid;
+	const venueid = resolved?.id ?? NO_VENUE_ID;
 	const submissionid = params.submissionid;
 
 	// Get the submission.
 	const { data: submission } = await db.getSubmission(submissionid);
 
-	// Get the corresponding venue.
-	const { data: venue } = submission === null ? { data: null } : await db.getVenue(venueid);
+	// The venue, but only alongside a submission — a submission that isn't there means
+	// there is nothing on this page to show it in.
+	const venue = submission === null ? null : resolved;
 
 	// Get the authors
 	const { data: authors } =
@@ -38,6 +42,15 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: assignments } =
 		submission === null ? { data: null } : await db.getSubmissionAssignments(submission.id);
 
+	// Whether anyone holds the venue's editor role on this submission. A boolean rather
+	// than a read of `assignments`, which is RLS-filtered: a venue editor who is not a
+	// venue admin sees none of them, and would be told every submission is unclaimed.
+	const { data: submissionEditors } = await db.getVenueSubmissionEditors(venueid);
+	const submissionHasEditor =
+		submissionEditors === null || submission === null
+			? undefined
+			: (submissionEditors.find((s) => s.submission === submission.id)?.has_editor ?? undefined);
+
 	// Get the volunteer records of those assigned so we can render their expertise.
 	const { data: volunteers } =
 		assignments === null
@@ -57,14 +70,17 @@ export const load: PageLoad = async ({ parent, params }) => {
 					roles.map((r) => r.id)
 				);
 
-	// Get the token balances of each volunteer in the venue's currency, so we can sort by them.
+	// Get the token balances of each volunteer and each assignee in the venue's currency, so we
+	// can sort by them. Assignees too: a scholar can be assigned without ever volunteering, and
+	// leaving them out showed their balance as 0 even after they were paid.
+	const balanceScholarIDs = Array.from(
+		new Set([
+			...(volunteers ?? []).map((v) => v.scholarid),
+			...(assignments ?? []).map((a) => a.scholar)
+		])
+	);
 	const { data: balances } =
-		volunteers === null || venue === null
-			? { data: null }
-			: await db.getTokenBalances(
-					venue.currency,
-					volunteers.map((v) => v.scholarid)
-				);
+		venue === null ? { data: null } : await db.getTokenBalances(venue.currency, balanceScholarIDs);
 
 	// Get the submission types in case we need to change it.
 	const { data: submissionTypes } = await db.getVenueSubmissionTypes(venueid);
@@ -74,53 +90,70 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: assignmentScholars } =
 		assignmentScholarIDs.length === 0
 			? { data: [] }
-			: await db.getScholarNames(assignmentScholarIDs);
+			: // Widened from getScholarNames to carry the mirrored ORCID columns the table
+				// shows under each name. Same round trip: the profile travels as a PostgREST
+				// embed, and a scholar RR has not read comes back with a null one.
+				await db.getScholarCards(assignmentScholarIDs);
+
+	// Contact addresses of everyone with an assignment here, accepted or still bidding, so an
+	// approver can ask a bidder about their bid before accepting it and invite an accepted one
+	// in a venue's own reviewing system. The page shows them only to approvers.
+	const { data: assigneeEmails } =
+		assignmentScholarIDs.length === 0
+			? { data: [] }
+			: await db.getScholarEmails(assignmentScholarIDs);
 
 	// Get the venue's preference levels (may be empty) for rendering bid labels.
 	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
+
+	// Get the reasons an approver may choose from when declining a bid or claim.
+	const { data: declineReasons } = await db.getVenueDeclineReasons(venueid);
 
 	// Get thank-you notes for this submission. RLS returns only what the viewer
 	// may see (their own as author, all as a vetter, approved as a recipient).
 	const { data: thanks } =
 		submission === null ? { data: null } : await db.getSubmissionThanks(submission.id);
 
-	// Count active (uncompleted) approved assignments per candidate scholar on
-	// this venue, so the cap-vs-load indicator can render "n / cap".
-	const { data: venueAssignments } = await db.getVenueActiveAssignmentScholars(venueid);
-	const venueActiveCounts: Record<string, number> = {};
-	for (const row of venueAssignments ?? []) {
-		venueActiveCounts[row.scholar] = (venueActiveCounts[row.scholar] ?? 0) + 1;
-	}
-
-	// Count active assignments per candidate scholar on OTHER venues (the
-	// viewer can see; RLS gates anonymous venues outside their scope). Lets
-	// the load indicator show overall workload alongside the cap-vs-load.
+	// How busy each candidate already is: their active assignments per role here, and in
+	// other venues, for the indicator beside their cap. True counts, not RLS-limited ones,
+	// which is what keeps an associate editor from seeing a full reviewer as free; the RPC
+	// answers only the venue's admins and approvers, and nobody else sees the column.
 	const candidateIDs = [...new Set((assignments ?? []).map((a) => a.scholar))];
-	const { data: allActive } =
-		candidateIDs.length === 0
+	const { data: loads } = await db.getAssignmentLoads(venueid, candidateIDs);
+
+	// Assignments the import could not match to a scholar on this submission. RLS shows
+	// only the ones this viewer could approve, and an empty list otherwise.
+	const { data: unmatched } =
+		venue === null || submission === null
 			? { data: [] }
-			: await db.getActiveAssignmentsForScholars(candidateIDs);
-	const elsewhereActiveCounts: Record<string, number> = {};
-	for (const row of allActive ?? []) {
-		if (row.venue === venueid) continue;
-		elsewhereActiveCounts[row.scholar] = (elsewhereActiveCounts[row.scholar] ?? 0) + 1;
-	}
+			: await db.getUnmatchedAssignments(venue.id, submission.id);
+
+	// What each role is paid for this submission's type, so the editor closing it out can see
+	// what each choice to pay costs before committing to it.
+	const { data: compensation } =
+		submission === null
+			? { data: [] }
+			: await db.getCompensationByTypes([submission.submission_type]);
 
 	return {
 		submission,
 		venue,
+		compensation: compensation ?? [],
+		unmatched: unmatched ?? [],
 		authors,
 		previous: previous !== null && previous.length > 0 ? previous[0] : null,
 		transactions,
 		assignments,
+		submissionHasEditor,
 		volunteers,
 		roles,
 		balances,
 		submissionTypes,
 		assignmentScholars: assignmentScholars ?? [],
+		assigneeEmails: assigneeEmails ?? [],
 		preferenceLevels,
-		venueActiveCounts,
-		elsewhereActiveCounts,
+		declineReasons: declineReasons ?? [],
+		loads: loads ?? [],
 		viewerVolunteering,
 		thanks
 	};

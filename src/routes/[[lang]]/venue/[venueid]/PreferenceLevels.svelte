@@ -1,14 +1,14 @@
 <script lang="ts">
-	import type { PreferenceLevelRow, VenueRow } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import { DeleteLabel } from '$lib/components/Labels';
-	import TextField from '$lib/components/TextField.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import { isntEmpty } from '$lib/validation';
-	import { handle } from '$routes/feedback.svelte';
+	import type { PreferenceLevelRow, VenueRow } from '#data/types.js';
+	import Button from '#lib/components/Button.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import { DeleteLabel } from '#lib/components/Labels.js';
+	import TextField from '#lib/components/TextField.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { isntEmpty } from '#lib/validation.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let {
 		venue,
@@ -74,8 +74,15 @@
 		strings={(l) => l.page.settings.button.addPreferenceLevel}
 		active={isntEmpty(newLabel)}
 		action={async () => {
-			const result = await handle(db().createPreferenceLevel(venue.id, newLabel));
-			if (typeof result !== 'boolean') newLabel = '';
+			// Cleared BEFORE the await, not after. handle() ends in invalidateAll(), so a clear
+			// that runs afterwards races whatever has been typed in the meantime and can wipe
+			// it — the hazard EditableText.svelte exists to avoid, and the reason this form
+			// intermittently refused a second entry. Restored if the write fails, so nothing
+			// typed is lost to an error.
+			const label = newLabel;
+			newLabel = '';
+			const result = await handle(db().createPreferenceLevel(venue.id, label));
+			if (typeof result === 'boolean') newLabel = label;
 		}}
 	/>
 </Form>

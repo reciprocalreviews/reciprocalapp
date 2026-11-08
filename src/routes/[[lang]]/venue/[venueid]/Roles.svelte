@@ -1,33 +1,35 @@
 <script lang="ts">
 	import type {
 		CompensationRow,
-		CurrencyRow,
 		RoleID,
 		RoleRow,
 		ScholarID,
-		ScholarRow,
 		SubmissionType,
 		VenueRow,
 		VolunteerRow
-	} from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import { DeleteLabel, ScholarLabel } from '$lib/components/Labels';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Slider from '$lib/components/Slider.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import Tokens from '$lib/components/Tokens.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import { isntEmpty, validEmailsOrORCIDs } from '$lib/validation';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	} from '#data/types.js';
+	import { venuePath } from '#lib/data/venuePath.js';
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Cards from '#lib/components/Cards.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import { DeleteLabel, ScholarLabel } from '#lib/components/Labels.js';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Slider from '#lib/components/Slider.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import Tokens from '#lib/components/Tokens.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import canStaffRole from '#lib/data/canStaffRole.js';
+	import { isntEmpty } from '#lib/validation.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 	import AdminsCard from './AdminsCard.svelte';
+	import CallForBids from './CallForBids.svelte';
+	import RoleInvite from './RoleInvite.svelte';
 	import RoleSettings from './RoleSettings.svelte';
 	import VolunteerStatus from './VolunteerStatus.svelte';
 
@@ -35,26 +37,42 @@
 		venue,
 		roles,
 		volunteers,
+		volunteerCounts = null,
 		scholar,
 		isAdmin,
-		currency,
-		minters,
+		canInvite = undefined,
 		compensation,
 		types,
-		startCollapsed = false
+		startCollapsed = false,
+		myActive = undefined
 	}: {
 		venue: VenueRow;
 		scholar: ScholarID | undefined;
 		roles: RoleRow[] | null;
 		volunteers: VolunteerRow[] | null;
+		/** How many volunteers each role really has. `volunteers` above is filtered by
+		 * each role's volunteer_visibility, so its length is what THIS viewer may see
+		 * rather than what is there; every number the cards show comes from here instead.
+		 * Null falls back to counting the visible rows, which is right for the settings
+		 * page, where the viewer is a venue admin and sees them all. */
+		volunteerCounts?: { role: RoleID; volunteer_count: number }[] | null;
 		isAdmin: boolean;
-		currency: CurrencyRow;
-		minters: ScholarRow[] | null;
+		/** Whether the viewer is a venue admin for the purpose of inviting, which lets them
+		 * invite to every role. Separate from `isAdmin` because the venue page shows the role
+		 * cards read-only — no reordering, no compensation editing, no role settings — but an
+		 * admin already looking at the venue should not have to find the roles step of venue
+		 * settings to add a person. Defaults to `isAdmin`, so settings, which passes only
+		 * that, is unchanged. Holders of the top role and of a role's approving role may
+		 * invite too; `mayStaff` below adds them per role. */
+		canInvite?: boolean | undefined;
 		types: SubmissionType[] | null;
 		compensation: CompensationRow[] | null;
 		/** When true, per-role cards start collapsed regardless of viewer role.
 		 * Pending-invite cards still auto-expand so invitees see them. */
 		startCollapsed?: boolean;
+		/** The viewer's own active assignments per role, so a volunteer sees the count
+		 * editors see beside their cap. Omitted where no volunteer status is shown. */
+		myActive?: Record<RoleID, number> | undefined;
 	} = $props();
 
 	const db = getDB();
@@ -63,11 +81,37 @@
 	// Payment-free venues have no token compensation, so hide the compensation table.
 	let showPayment = $derived(!venue.payment_free);
 
-	let newRole: string = $state('');
-	let invites = $state<Record<RoleID, string>>(
-		// svelte-ignore state_referenced_locally
-		Object.fromEntries((roles ?? []).map((role) => [role.id, '']))
+	let mayInvite = $derived(canInvite ?? isAdmin);
+
+	/** Whether the viewer may put people in this role, by invitation or directly. See
+	 * canStaffRole; create_volunteer re-derives it, so this only decides what is offered. */
+	function mayStaff(role: RoleRow): boolean {
+		return canStaffRole(role, roles ?? [], scholar, mayInvite, volunteers ?? []);
+	}
+
+	/** Whether the viewer may ask a role's volunteers to bid: the venue's admins, and the
+	 * holders of its priority-0 role — the same union that vets thank-you notes, and the one
+	 * `emailEditorsOf` already computes server-side.
+	 *
+	 * `accepted` but not `active`, matching public.isPriorityZero: this is a question about
+	 * authority, and an editor who has paused their own volunteering is still the venue's
+	 * editor. (The recipient query filters `active`, because that is a question about mail.)
+	 *
+	 * An affordance, not authorization — queue_call_for_bids re-derives all of this and
+	 * refuses anyone else. */
+	let maySolicit = $derived(
+		isAdmin ||
+			(scholar !== undefined &&
+				(roles ?? []).some(
+					(r) =>
+						r.priority === 0 &&
+						(volunteers ?? []).some(
+							(v) => v.roleid === r.id && v.scholarid === scholar && v.accepted === 'accepted'
+						)
+				))
 	);
+
+	let newRole: string = $state('');
 </script>
 
 {#if roles === null}
@@ -89,11 +133,7 @@
 				active={isntEmpty(newRole)}
 				action={async () => {
 					const result = await handle(db().createRole(venue.id, newRole));
-					if (typeof result !== 'boolean') {
-						// Initialize the invite list for this role
-						invites[result.id] = '';
-						newRole = '';
-					}
+					if (typeof result !== 'boolean') newRole = '';
 				}}
 			/>
 		</Form>
@@ -102,19 +142,21 @@
 	<Cards>
 		{#each roles.toSorted((a, b) => a.priority - b.priority) as role, index (role.id)}
 			{@const roleVolunteers = volunteers?.filter((v) => v.roleid === role.id) ?? []}
+			{@const roleVolunteerCount =
+				volunteerCounts?.find((c) => c.role === role.id)?.volunteer_count ?? roleVolunteers.length}
 			{@const scholarVolunteer = roleVolunteers.find((v) => v.scholarid === scholar)}
 			{@const scholarInvited = scholarVolunteer?.accepted === 'invited' && !scholarVolunteer.active}
 			<Card
 				full
 				subheader
-				icon={roleVolunteers.length === 0 ? ScholarLabel : roleVolunteers.length}
+				icon={roleVolunteerCount === 0 ? ScholarLabel : roleVolunteerCount}
 				strings={(l) => {
 					return {
 						header: role.name,
 						note: role.description.length === 0 ? l.view.roles.card.unnamed : role.description
 					};
 				}}
-				expand={scholarInvited || (!startCollapsed && (isAdmin || !role.invited))}
+				expand={scholarInvited || (!startCollapsed && (isAdmin || mayStaff(role) || !role.invited))}
 				testid="role-{role.name}"
 			>
 				{#snippet controls()}
@@ -132,7 +174,7 @@
 					{/if}
 				{/snippet}
 
-				{#if isAdmin && role.priority === 0}
+				{#if isAdmin && index === 0}
 					<Tip>{locale().view.roles.tip.highestPriority}</Tip>
 				{/if}
 
@@ -211,58 +253,37 @@
 
 				<Paragraph
 					text={(l) => l.view.roles.paragraph.volunteersCount}
-					inputs={{ count: (roleVolunteers.length ?? 0).toString(), venueid: venue.id }}
+					inputs={{ count: roleVolunteerCount.toString(), venue: venuePath(venue) }}
 				/>
 
 				{#if scholar}
-					<VolunteerStatus {role} {scholar} volunteer={scholarVolunteer} />
+					<VolunteerStatus
+						{role}
+						{scholar}
+						volunteer={scholarVolunteer}
+						active={myActive === undefined ? undefined : (myActive[role.id] ?? 0)}
+					/>
 				{:else if !role.invited}
 					<Feedback error inline text={(l) => l.view.roles.feedback.notInvited}></Feedback>
 				{/if}
 
-				{#if isAdmin && scholar}
-					<Form>
-						<Paragraph text={(l) => l.view.roles.paragraph.inviteDescription} />
-						<TextField
-							strings={(l) => l.view.roles.field.invite}
-							name="email"
-							size={20}
-							valid={(text) =>
-								text.trim() === '' || validEmailsOrORCIDs(text)
-									? undefined
-									: (l) => l.view.roles.field.invite.invalid ?? ''}
-							bind:text={invites[role.id]}
-							testid="role-invite-field-{role.name}"
-						/>
-						<Button
-							strings={(l) => l.view.roles.button.invite}
-							testid="role-invite-button-{role.name}"
-							active={validEmailsOrORCIDs(invites[role.id])}
-							action={async () => {
-								if (
-									await handle(
-										db().inviteToRole(
-											scholar,
-											role,
-											venue,
-											invites[role.id].split(',').map((s) => s.trim())
-										),
-										'Invitations sent!'
-									)
-								)
-									invites[role.id] = '';
-							}}>Invite</Button
-						>
-					</Form>
+				{#if mayStaff(role) && scholar}
+					<RoleInvite {venue} {role} {scholar} already={roleVolunteers.map((v) => v.scholarid)} />
+				{/if}
+
+				<!-- Only on a biddable role: a nudge to bid, sent to people the submissions page
+				     will not show bid buttons to, is a message nobody can act on. -->
+				{#if role.biddable && maySolicit && scholar}
+					<CallForBids {role} />
 				{/if}
 
 				{#if isAdmin}
-					<RoleSettings {role} {roles} volunteerCount={roleVolunteers.length} />
+					<RoleSettings {role} {roles} volunteerCount={roleVolunteerCount} />
 				{/if}
 			</Card>
 		{:else}
 			<Feedback text={(l) => l.view.roles.feedback.noRoles}></Feedback>
 		{/each}
-		<AdminsCard {venue} {isAdmin} {minters} {currency} />
+		<AdminsCard {venue} {isAdmin} />
 	</Cards>
 {/if}

@@ -31,6 +31,11 @@ jobs:
           cache: 'npm'
       - run: npm ci
         name: Install dependencies
+      # SvelteKit 3 validates the variables declared in src/env.ts at startup,
+      # Vitest included, so the run needs values even though no test reads them.
+      # The example file's local-stack placeholders are enough.
+      - run: cp .env.example .env
+        name: Provide placeholder env
       - run: npm run sync
         name: Sync SvelteKit
       - run: npm run test:unit

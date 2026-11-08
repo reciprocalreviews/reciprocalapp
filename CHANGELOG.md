@@ -2,6 +2,413 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.27 - 2026-11-08
+
+### Changed
+
+- **The submissions list now shows active submissions by default, with a switch to see done ones instead.** This replaces the venue setting that kept done submissions in the list for a number of days after they finished.
+
+### Fixed
+
+- Two tips in venue settings, on compensation and on bid preference levels, now show their bold text and link instead of raw formatting marks.
+
+## 0.5.26 - 2026-11-08
+
+### Changed
+
+- Updated dependencies, including the Supabase CLI to 3.0 and the Vercel CLI to 65.12, and updated internal tooling so the schema drift check still catches drift under the new CLI.
+
+## 0.5.25 - 2026-11-05
+
+### Added
+
+- **Venue admins can now paste a list of manuscript IDs to see which have been paid for, with the name and email of each author whose charge is unpaid, and copy all of those emails at once.** IDs never submitted or only imported are flagged too, so the authors can be reached through the reviewing system.
+
+### Fixed
+
+- **The submissions list now shows a submission as paid only once every author's charge is approved.** Before, admins saw it as paid while a co-author's charge was still waiting for their approval.
+
+## 0.5.24 - 2026-11-01
+
+### Changed
+
+- **The Suggested view of a venue's volunteers now also lists those who hold or have held one of its invite-only roles or its top role, or administer it, with a badge naming the role.** Before, an associate editor with no finished reviews was listed as having no track record.
+
+## 0.5.23 - 2026-11-01
+
+### Added
+
+- **A venue's admins and the holders of its top role can now remove a volunteer from a role on the volunteers page.** The volunteer is marked inactive and emailed, and can resume volunteering later.
+- **Venue admins, holders of a venue's top role, and whoever approves a role can now invite people to that role, or add them directly after confirming they agreed.** On the unmatched assignments page, they can also add someone named in an import to the role and match them in one step, and holders of the top role now see every unmatched name at the venue.
+- **When someone sets a name with the same words as an unmatched name from an import, whoever could match that name is emailed.** Before, the venue only found out when the person told them.
+- **Editors can now close a submission out in one step, paying the work that was done and removing the rest, without waiting for each reviewer to request compensation.** A new decision-letter email template links back to the close-out, and anyone removed is emailed.
+- **Those who assign reviewers now see a Suggested view of a venue's volunteers, listing first those who have completed work there or published in venues it lists as relevant in settings.** Everyone else is one click away, and the ranking is shown to no one else.
+
+### Changed
+
+- Updated dependencies, including SvelteKit 3.1.1 and the Vercel CLI to 65.9, and updated internal tooling to stop a SvelteKit deprecation warning.
+
+## 0.5.22 - 2026-10-27
+
+### Fixed
+
+- **The volunteers page now shows unanswered invitations as "invited" and declined ones as "declined", and lists them after active and inactive volunteers.** Before, a pending invitation read as "inactive" and a declined one as "active".
+
+## 0.5.21 - 2026-10-24
+
+### Changed
+
+- Updated dependencies, including the Vercel CLI to 65 and the Supabase CLI to 2.122.
+- `npm install` and `npm run check:now` now run `svelte-kit sync` first, so type checking no longer fails with "File '$app/tsconfig' not found" after a fresh install.
+- **The button for taking on a submission no one is editing now reads "Serve as" followed by the venue's name for its top role, such as "Serve as Program Chair", instead of "edit this submission".** The notices and filter for those submissions use the venue's role name too, instead of "editor".
+
+## 0.5.20 - 2026-10-18
+
+### Added
+
+- **Venues now have decline reasons: when declining a bid or compensation request, approvers pick one of the venue's reasons or write their own.** Every venue starts with five neutral defaults that admins can edit, reorder, or delete in settings, and a venue with none still requires a written reason (#218).
+
+### Changed
+
+- Updated dependencies, including SvelteKit 3.1, the Supabase CLI, and the Vercel CLI to 64.
+- **Anyone who chooses reviewers now sees each scholar's email, ORCID iD, and ORCID affiliation in one consistent preview, on a submission's bids, the volunteers page, and the import pages.** Declined bids now show these too, and the volunteers page shows every volunteer's ORCID iD to anyone who can view it.
+- **Each biddable role now has a fixed max bids, by default 5, and the submissions page asks volunteers to bid on what they are most qualified to evaluate.** It replaces the percent, minimum, and papers caps; roles with no limit keep none, and existing limits become 5.
+- **Anyone who chooses reviewers now sees each scholar's active assignments against their papers cap before assigning them: in "+ assignee", in batch assign, and on the volunteers page, and assigning past the cap asks for confirmation that they agreed.** The counts now include submissions the viewer doesn't handle, which associate editors couldn't see before, and volunteers now see their own count with a reminder to lower their cap if invitations from the reviewing system aren't counted.
+- **Every page now opens the same way: a teal bar naming where you are, the page's title, what you can do there, and anything that needs your attention.** Tools such as settings, bulk import, and matching imported names are now buttons instead of notices, and alerts like an inactive venue or a submission with no editor appear at the top only while they apply.
+
+## 0.5.19 - 2026-10-13
+
+### Changed
+
+- **Compensation request emails and their weekly reminders now say why they reached you.** Each one says whether you hold the role that approves the work, or whether it fell to you as an editor or admin because no one in that role is assigned to the submission.
+
+## 0.5.18 - 2026-10-12
+
+### Changed
+
+- **The note under a submission's Assign buttons now says to assign in the reviewing system first, and only after the scholar has agreed.** Each candidate's token count now reads as their current balance ("25 token balance"), since editors were taking it for what assigning would pay (#217).
+
+### Fixed
+
+- Updated internal backup tooling so that a container registry's rate or data limits no longer fail a scheduled backup.
+
+## 0.5.17 - 2026-10-12
+
+### Added
+
+- **Admins, editors, and anyone whose role assigns others now see each volunteer's verified email on the volunteers page,** so they can reach a reviewer who hasn't bid. The roster's CSV export now includes emails only for them.
+
+## 0.5.16 - 2026-10-12
+
+### Fixed
+
+- **Whoever can approve bids on a submission now sees a bidder's verified email before accepting the bid,** not only after, so they can ask the bidder about it first.
+
+## 0.5.15 - 2026-10-11
+
+### Added
+
+- **A venue's editors can now bulk import submissions, not just its admins, and always see manuscript IDs in the submissions list.** The mint an import proposes still needs a minter's approval.
+- **Volunteers now have a bid limit per role, by default 20% of the submissions under review and never fewer than 10 bids,** which editors can change or turn off in role settings. Every bid counts until its submission is done, so volunteers withdraw a bid to bid elsewhere, and bids already placed stay.
+
+### Changed
+
+- **Assigning someone who didn't bid now takes a second click confirming they agreed**, for example "Scholar agreed, assign", and so does a bulk import that names people. Approving a bid or assigning yourself still takes one click.
+- **Matching an imported name to a scholar now suggests up to three volunteers whose names are within a couple of typos, and lets you search a role's volunteers by name, email, or ORCID iD,** with a profile link that opens in a new tab and full details for whoever you choose. This replaces an unsorted dropdown on the unmatched assignments page, and also helps choose between same-named people in a bulk import.
+- Updated dependencies, including SvelteKit, Svelte, Vite, Playwright, and the Supabase and Vercel CLIs.
+- Updated internal backup tooling so that Docker Hub's rate limits no longer cause scheduled backups to fail.
+
+### Fixed
+
+- **A pending bid can now be withdrawn after an editor closes bidding on its submission.** The database also now refuses bids the submissions page never offered, such as on a done submission or a second bid on the same one.
+- **Venues with more than 1,000 volunteers now see all of them** on the volunteers and settings pages, when bulk importing, and when matching unmatched assignments. Before, everyone past the first thousand was silently left out.
+
+## 0.5.14 - 2026-10-08
+
+### Fixed
+
+- **A compensation request is now emailed only to whoever approves that role on the submission, such as its Associate Editor,** and to its editor or the venue's admins only when no one is seated in that role. The weekly reminder follows the same rule, and the email now names who asked, their role, and the submission, and leaves out the note when there isn't one.
+- **A submission's assignment table now shows the real token balance of a scholar who was assigned without volunteering.** Before, it showed 0, even right after they were paid.
+
+## 0.5.13 - 2026-10-06
+
+### Added
+
+- **Whoever can approve bids on a submission now sees each assigned reviewer's verified email under their name,** so they can invite them in the venue's own reviewing system. Authors and other reviewers don't see it.
+- **Wherever someone can assign reviewers, a reminder now says that assigning in Reciprocal Reviews is only for compensation** and that they also need to assign the person in the venue's reviewing system, with a short note under each Assign button saying the same. Admins can add that system's address in venue settings, and the reminder then links to it.
+
+## 0.5.12 - 2026-10-06
+
+### Fixed
+
+- **Associate Editors, and anyone else who can approve or decline bids on a submission, can now check or uncheck "Open for bidding."** Before, only the submission's editor could.
+
+## 0.5.11 - 2026-10-05
+
+### Added
+
+- **Editors can uncheck "Open for bidding" on a submission that's still under review,** for example when every seat has a reviewer but some haven't registered yet. Bidders who haven't bid on it then no longer see it, and the weekly bidding digest leaves it out.
+
+### Changed
+
+- **A new bid is now emailed only to whoever approves that role on the submission, such as its associate editor.** If no one is seated in that role yet, no one is emailed; before, the bid went to the submission's editor, or failing that the venue's admins.
+
+### Fixed
+
+- **Submissions that are done no longer offer bid buttons.**
+
+## 0.5.10 - 2026-10-04
+
+### Added
+
+- **Editors can decline a bid, and must say why.** The explanation is emailed to the bidder with the editor's name and shown beside their bid; leaving a bid unanswered is still fine. (#195)
+- **Bulk imports keep the names of people who haven't joined yet, as unmatched assignments.** Once someone joins and accepts the role, whoever approves those assignments can match them all at once from a new Unmatched assignments page.
+- **Reviewers can request compensation for a submission nobody assigned them to,** such as an imported one whose editor hasn't joined. The request waits for an editor or admin to approve and pay it, or to decline it with a reason.
+- **Each venue's page now says who to ask about it,** listing its admins with their email addresses, and a new help article explains who to contact for what.
+
+### Changed
+
+- **Replying to an email about a venue now reaches that venue's admins instead of the Reciprocal Reviews stewards,** and the email names the venue. The contact page and every email now say that the stewards help only with the platform itself, and that bugs and feature requests go to GitHub.
+
+### Fixed
+
+- **Reviewers can no longer approve their own bids or mark their own assignments complete.** Only someone who approves the role can.
+- **In open-review venues, authors now see only who is assigned to their submission, not who bid on it.**
+- **Compensation requests now reach everyone who can approve them,** including the associate editor seated on the submission, and a manuscript ID no longer matches a submission at another venue.
+- **Several notifications at once now stack as one block,** without the page showing through between them.
+
+## 0.5.9 - 2026-10-04
+
+### Changed
+
+- **Updated internal tooling.** SvelteKit and its Vercel adapter moved up a major release, the Vercel CLI to 62, and Vite, Vitest, the Supabase CLI, and the Node type definitions a patch or minor release; TypeScript stays on 6, because Svelte's type checker does not yet run on 7.
+
+## 0.5.8 - 2026-10-01
+
+### Changed
+
+- **The status box on your profile now says what it's for:** any detail about your availability to review, with expertise described per venue in your volunteering roles. (#189)
+
+### Fixed
+
+- **A new bid is now emailed only to the people who can approve it.** That is whoever holds the approving role on that submission, or its editor if no one does, or the venue's admins if it has no editor; before, every bid mailed every admin and every volunteer in the venue's top role.
+- **Email buttons now work when you're signed out.** They ask you to sign in and then take you where they pointed, as does every "Log in" link in the app; before, an invitation's "Accept or decline" landed on a profile with nothing to click, and a submission link said the submission didn't exist. (#191)
+- **Asking to verify a contact email now shows one message, not two.** The notice that the link is on its way is where you resend it and see when you can. (#188)
+
+## 0.5.7 - 2026-09-27
+
+### Added
+
+- **Volunteers now get a Monday email listing the submissions open for bidding in their roles.** Up to seven per venue, ranked by how many people each is missing and then by how well it matches the expertise they gave, and only when the list has changed; turn it off under Notifications on your profile.
+
+### Changed
+
+- **Every email's call to action is now a button.** Emails you can turn off also end with a link to your notification settings.
+
+### Fixed
+
+- **Thank-you notes and declined proposals are now emailed with wording only Reciprocal Reviews writes.** Their emails used to be composed in the browser and accepted as sent, so an author could have mailed a venue's editors any subject, text and links under the platform's name.
+
+## 0.5.6 - 2026-09-20
+
+### Added
+
+- **A venue can now go by a short name.** The bar at the top of every page inside it shows that name in place of a title that would not fit — "ToK" rather than "Transactions on Knowledge" — and a venue's admins set it in settings (#176).
+
+### Changed
+
+- **Updated internal tooling.** Svelte, Prettier, Vitest, the Vercel CLI, and the Node type definitions all moved up a patch or minor release; TypeScript stays on 6, because Svelte's type checker does not yet run on 7.
+- **Every page inside a venue now carries one bar of common links instead of a title band of its own.** Its submissions, volunteers, transactions, settings and website are one click from anywhere in the venue, where some of them used to be two or three (#176).
+- **The site header is now a single row that never wraps.** The logo stands in for the old "Home" link, and only the links that genuinely do not fit collapse behind a menu, at whatever width that turns out to be — the fixed bands took nearly half a phone's screen inside a venue and now take about an eighth (#176).
+- **The beta notice now sits at the bottom of the screen and can be dismissed for good.** It stays dismissed on later visits, and nothing on the page is ever hidden behind it (#176).
+- **A venue's title and website are now edited in its settings**, alongside its new short name and web address, rather than in the header of the venue's own page (#176).
+
+### Fixed
+
+- **An editor no longer sees every submission their venue has received as a task.** A submission now appears on their list only when it is waiting on them — nobody is reviewing it yet, or every reviewer is settled and it can be marked done. A venue seats its editor on every submission it receives, so the whole catalogue used to sit in one person's list as reviews they owed.
+- **Work you have requested compensation for now leaves your task list.** It is waiting on whoever approves it, and shows up on their list instead.
+- **A task now says which role it is.** Every row read "Review", whatever the venue called the role or whether it involved reviewing at all; each now carries the venue's own name for it.
+- **The examples shown in empty fields no longer assume who you are or where you publish.** A contact address suggested `you@university.edu`, and the venue settings fields suggested two real journals; they now show a neutral address and an invented venue (#180).
+- **The email announcing a bulk import no longer tells you that you are the venue's only editor.** It said that to everyone it seated, whatever role the file named them in, and it counted seats rather than papers — so one submission that seated you twice was announced as two (#181).
+- **The bar at the top of every page inside a venue now reads as one centred row.** The venue's name hung a few pixels below the links beside it, every word in the row sat above the middle of the band, and a long name made the whole bar taller on a phone.
+
+## 0.5.5 - 2026-09-13
+
+### Added
+
+- **Your profile now has 22 notification settings rather than one.** Grouped by tokens, reviewing, venues you help run, and proposals and thanks, with the noisier ones off until you ask for them.
+- **RR now emails you when things happen that you would otherwise have to go looking for.** Tokens arriving, a submission of yours finishing review, a role, venue administration, or minting authority granted or taken away, a bid or a conflict on a paper you edit, and an invitation you sent being answered.
+- **A venue's editors can now ask a role's volunteers to bid, in their own words.** The form sits on any biddable role's card, says how many people will receive the message before it goes, and sets replies to come back to whoever sent it.
+- **A role can now choose who its volunteers are listed to:** everyone, only people who have completed work at the venue, or only the people who staff the role. Every role starts at everyone, as before, and the number of volunteers stays public whichever you pick — as do invite-only roles and the venue's editor role, which are listed either way.
+- **Scholar profiles now show a slice of their ORCID record**: current affiliation, keywords, recent publications, and education. Editors picking reviewers no longer have to open orcid.org to find out who someone is.
+- **The volunteers roster and the assignment table now carry that context too.** Each half of an expertise cell is marked by whose claim it is — the Reciprocal Reviews logo on what a volunteer told your venue, the ORCID iD mark on what their public record says — and ORCID keywords export as their own CSV column.
+- **Stewards can populate ORCID profiles from the About page.** It works through the oldest records a batch at a time and says how many it took, so you can press it again until none are left.
+- **The About page now shows how the ORCID mirror is doing** — how many profiles have been read, how many never have, and how many are failing — and says so when ORCID has been limiting how fast we may read.
+
+### Changed
+
+- **Reminders can now be turned off, and show up in your data download.** They previously bypassed the mail record entirely, so they could not be silenced and did not appear in it.
+- **Checkboxes now say one thing.** Their labels used to rewrite themselves when you checked them. Now each one names the setting it turns on and holds still.
+- **The venue proposal form's payment checkbox now matches venue settings.** It reads **Token-based venue** and starts checked, where before it read payment-free and started unchecked, pointing the same setting opposite ways in the two places.
+- **A bulk import row that is already in the venue now names and links the manuscript it matched.** The notice said only that something here had that ID, which left an ID two different papers share looking exactly like a queue re-exported with last month's rows still in it.
+- **Confirmations for an action that emails many people are now one message rather than one each.** Asking three hundred volunteers to bid would have filled the page with three hundred separate confirmations, each needing its own dismissal; now one names somebody and counts the rest.
+- Reciprocal Reviews can now read ORCID with an API token where one is configured, raising how much it may read each day. Without one it reads exactly as before.
+- **Assigning someone now shows you who you just named, before you commit.** The field took an email or ORCID iD silently and only reported a bad one after you pressed the button.
+- Updated internal tooling for stability.
+
+### Fixed
+
+- **Approving a transaction, sharing a thank-you note, and declining a venue proposal now write to the people affected.** Each of those had a counterpart that did — declining a transaction, declining a note, approving a proposal — so the quiet half of each pair had gone unnoticed.
+- **Changing your contact email now tells the address it replaced**, which otherwise just went quiet.
+- **Being assigned to a submission now emails you whichever way it happened.** Assignment through the multi-assign flow and the submission page's assignee control sent nothing, while approving an assignment always had.
+- **A submission is no longer visible to everyone who holds a role approving work on it.** Holding a venue's associate editor role showed you any submission that had a reviewer on it — and those reviewers' names, even at a venue that anonymizes assignments — whether or not the paper was yours to handle. Approving now means approving _that_ submission: its assignees, its editor, the approvers seated on it, and the venue's admins.
+- **Approving, unassigning, and seating people on a submission now requires handling that submission.** Anyone holding a role that approves another role could act on any paper at the venue, though the buttons for it were never shown to them.
+- **The "submissions visible to you" count now matches the list it links to.** It counted submissions the list then hid — ones you had declared a conflict on, and done ones past the venue's visibility window.
+- **Approving or declining a transaction now settles the row it was decided on.** The new status and the decline reason appear without a reload and the Approve and Decline buttons leave with the decision; before, the row went on showing the transaction as proposed, with both buttons still sitting there to press again.
+- **A confirmation no longer commits twice.** Both the confirm and its cancel are now inactive while the action is in flight, so the least reversible actions in the platform — approving a transaction, deleting a role — happen exactly once per confirmation.
+- **A confirmation's warning is no longer cut off.** A long one now wraps instead of running past the edge of the page, which had been hiding the end of the sentence saying what cannot be undone.
+- **An email that replies to a person no longer offers Reply All when it copies nobody.** The footer promised a group that did not exist on any message with a single recipient.
+- **Confirmations no longer appear in the colour used for failures.** Every success banner shared a rule with the beta notice and arrived in the same plum as an error, so a completed action and a refused one looked alike.
+- **A failed compensation request no longer reports success and clears the form.** It announced the request as sent whatever happened and emptied all three fields with it, so a mistyped manuscript ID had to be retyped from scratch; a successful one also said so twice, once generically and once naming who was emailed.
+- **The compensation request form is now translatable.** Its two field labels and its confirmation were written in English inside the page, so they were the one part of a venue that could never be shown in another language.
+- **A scholar whose ORCID record lists the same thing twice can use their profile page again.** An identifier or paper entered twice left the whole page drawn but dead — every button on it, including Accept on a role invitation, depressed and did nothing — and anything a record holds twice is now shown once.
+- **A page that fails to load now says so.** It previously stayed on screen looking complete while none of its buttons worked.
+- **Buttons on a freshly opened page now work as soon as it appears, instead of a few seconds later.** The page looked ready while it silently re-read everything the server had already loaded, so a click in that window — such as accepting a role invitation — did nothing; while the last of that is loading, the cursor now says wait.
+
+## 0.5.4 - 2026-09-05
+
+### Added
+
+- **The submission importer now reads exports from any reviewing system.** Upload a CSV with whatever column names it arrived with and match them to fields on screen, rather than renaming columns by hand first.
+- **A bulk import can now name each submission's editors.** Your file's editor columns are matched to the venue's roles, so an export naming an editor in chief and a handling editor separately seats both. A name matching nobody leaves that submission unseated rather than stopping the import; one matching several people waits for you to choose.
+- **The file's own submission-type names are matched too**, each listed with how many rows carry it, so the type an import gives its submissions is chosen rather than silently defaulted.
+- **Invite people to a role from the venue page**, not only from the roles step of venue settings. The form sits on the role's own card in both places.
+- **The invite field now finds people by name, and several at once.** Type or paste any mix of email addresses, ORCID iDs, and names, separated by commas; everyone each entry matches is offered below the field, and clicking one moves them to the list to be invited and clears the entry that found them. Nothing goes out until you press **Invite**, and only the people on that list are sent to. Someone who already has a record for the role isn't offered, and an entry matching nobody is named without holding up the rest — previously one mistyped address refused the whole batch.
+- **A venue's volunteers can now be narrowed by expertise.** The keywords volunteers have listed appear above the list, most claimed first with a count each, and picking several shows everyone who claims any of them.
+- **Each role now says how many volunteers it is showing**, in parentheses after its name, so a filtered list reports its own size.
+- **A pending email verification now stays on your profile until you finish it**, naming the address waiting, when its link stops working, and a **Send it again** button. The expired-link page offers the same button, so a lapsed link no longer sends you back to retype an address you already typed (#164).
+- **You're now told when a verification email never went out**, rather than being left waiting on a message that was never sent (#164).
+
+### Changed
+
+- **Verification links now last 24 hours instead of 15 minutes.** The old window was measured from the moment we sent, so slow mail delivery could use most of it up before the message arrived (#164).
+
+### Fixed
+
+- **A line break inside a title or status column no longer breaks an import.** Every row after it shifted into the wrong columns, which made a file exported straight from a reviewing platform unusable.
+- **Reading a CSV now says what it read** and scrolls to it. Nothing acknowledged the file at all, and the rows appeared below the fold behind a control that had gone back to reading "no file chosen".
+- **A CSV can now actually be pasted.** The paste box was a single-line field, so a multi-line CSV collapsed onto one line and arrived as a header with no rows.
+- **The submissions list no longer says imported submissions were paid for.** Nothing was ever charged for them, and the tokens meant to fund their reviewing are still an unapproved mint, so they now read **free**. The same wrong badge appeared on every submission at a payment-free venue, which no longer shows a payment column at all.
+- **An imported submission's expertise can now be edited by its editor.** Imported submissions have no authors and only an author could edit it, so the field reviewers read when deciding what to bid on could be filled in by nobody.
+- **Inviting someone to a role no longer reports it twice.** "Invitations sent!" appeared alongside "… was emailed …" for each person; the second says the same thing and names who was told, so the generic one now only appears when nobody could be emailed.
+- **Typing a complete email address into a scholar field no longer reports "No matches."** The address was searched for as though it were a name, so a person the field could resolve perfectly well was announced as unfindable.
+- **A submission nobody has said what expertise it needs now says so.** The column was simply blank, which read as a page that had failed to load rather than a question the submission had left unanswered.
+- **A withheld author list now carries a lock** instead of an anonymous "•••", which the same list also used for "couldn't load" and "sign in to see". The submission page marks a withheld author the same way.
+- **The manuscript ID is now withheld from a scholar who is only bidding.** It is the key the paper is filed under in the venue's own reviewing system, so it led back to the author list the venue was hiding — including by typing a guess into the search box and watching whether the row survived. Editors and role approvers still see it; it is how they find a submission in the system it came from.
+- **Venue settings no longer promises bidders a "yes/no" bid** when no preference levels are defined. They get a single **Bid** button, with **Unbid** to take it back, which is what the copy now says.
+- **The anonymity and assignment guidance now names the setup steps it points at** rather than numbering them. Two of the three numbers were wrong, and the preference-levels step's number changes depending on whether any role takes bids.
+- **Volunteers are now listed in an order.** Within each role, those still volunteering come first, then everyone alphabetically by family name; previously the rows arrived in whatever order the database returned them.
+- **The volunteers table no longer scrolls its last column off screen.** A volunteer who wrote their expertise as one long phrase set an unbreakable minimum width for the whole table, pushing **Papers cap** out of view on an ordinary laptop.
+- **A volunteer's expertise keywords no longer begin with a stray space**, and the heading above each role now spans the whole table rather than three of its four columns.
+- **Export to CSV now sits below the volunteers list** rather than above it.
+- **The importer now catches a duplicate manuscript ID at a venue of any size.** It only ever compared against the first thousand submissions a venue had, so at a larger venue a manuscript already on the platform imported again unnoticed until the database refused the whole batch.
+- **A refused import now says a manuscript ID is already in the venue**, and that nothing was imported, rather than only "Unable to import submissions".
+- **The import form is now emptied once its submissions are created.** It kept the batch it had just sent on screen, and then marked every row a duplicate of the submission it had itself just made. Submitting twice while the first import is still going is also refused now.
+- **An import no longer refuses a whole file because some of its manuscripts are already in the venue.** Those rows are marked and skipped, everything else imports, and the proposed mint is sized to only what was written.
+- **Erasing an account now removes its verification emails too.** An address you had typed but never confirmed, and the link sent to it, were both left behind in the mail log (#27).
+
+## 0.5.3 - 2026-08-31
+
+### Fixed
+
+- **Pages now load faster**, the home page most of all. Arriving at the home page while already signed in briefly shows **Log in** in the header before your profile and token balance appear.
+
+## 0.5.2 - 2026-08-30
+
+### Fixed
+
+- **A venue's ledger now accounts for the tokens its welcome grants create.** When a newcomer's welcome grant was larger than the venue's reserve, the platform minted the difference and passed it straight on without recording where it came from, so the venue's transaction history quietly stopped adding up to its balance. Minting is now recorded as its own entry crediting the reserve, and the venues already affected have had the missing entries added.
+
+## 0.5.1 - 2026-08-28
+
+### Added
+
+- **Volunteering now reaches somebody.** When a scholar volunteers for one of a venue's open roles, everyone in the venue's top role is emailed on one shared thread, with **Reply going to the new volunteer** so answering it is the welcome. Previously nothing happened at all: the venue found out when someone opened its volunteers list, and the newcomer heard nothing back.
+- **A setting for notices you'd rather not get.** A scholar's profile now lists the emails that are courtesies rather than consequences, each with a switch. Anything consequential — a charge awaiting approval, a declined transaction, an assignment — is always sent.
+- Scholar profiles now show the scholar's **ORCID iD**, linked to their ORCID record, so a visitor can confirm who they're looking at and follow through to the publications and affiliations Reciprocal Reviews doesn't reproduce itself.
+- **A new submission now reaches an editor.** A venue with one editor has them assigned on arrival; a venue with several tells all of them a submission is waiting, and the ones nobody is editing are flagged on the submissions list with a filter, a one-click claim button, and a reminder that chases them. Previously nothing was assigned and nobody was told, so a submission could sit unnoticed indefinitely.
+- **Venues now have a readable web address.** A venue picks one during setup — `reciprocal.reviews/venue/acm-chi` — and every link to it, in the app and in email, uses that instead of a 36-character identifier. Changing an address releases the old one immediately, so links that used it stop working, and the button says so before you commit.
+
+### Changed
+
+- A venue can now be **approved before its community has found a minter**: approval takes whichever listed editors and minters already have accounts, and if no proposed minter has one, the approving steward holds the currency until the venue names someone. Previously a single unrecognized email address meant the venue couldn't be created at all.
+- **A venue's admin can now also mint its currency**, and a venue whose admin does says so on its page to every visitor who is neither, inviting them to take the minting role over. Forbidding the arrangement blocked venues from going live, asked more of a small community than it could staff, and treated the people running a venue as suspects; approving a payment into a venue you run is still refused, since that moves tokens somebody else already holds.
+- The venue proposal form now says which listed email addresses don't yet belong to a Reciprocal Reviews account, and a steward sees the same before approving. Neither blocks anything: listed editors are emailed an invitation when the proposal is filed, and are added to the venue when they sign up.
+- The button for deleting a proposal now says **Delete** instead of showing only an ✖, and **Approve** carries a matching checkmark.
+- **Token balances are now private.** A scholar sees their own; a venue's editors and its currency's minters see the balances of scholars reviewing there, so paid work can go to whoever is most undercompensated; nobody else — including a submission's authors and the reviewers bidding alongside you — sees them at all. Previously any signed-in scholar could read who held how much of what, across every venue on the platform. (#109)
+- The new submission form now says which co-authors cannot cover their share of the charge, rather than how many tokens short they are.
+
+### Fixed
+
+- **Erasing an account now removes the address from mail about other people.** Erasure only looked at who a message was addressed to or sent by, so an erased scholar's address could survive as a copied recipient or reply address on a notice about someone else. Your data download likewise now includes mail you were copied on.
+- **A volunteer record can no longer be deleted or moved to another venue.** Both were ways to be welcomed by the same venue twice, since the one-time welcome grant is decided by whether you have volunteered there before. Nothing in Reciprocal Reviews offered either action, but the database allowed them to anyone calling the API directly.
+- **Joining a second venue now grants that venue's welcome tokens.** A venue's welcome amount is its own standing policy, in its own currency, but the grant was only ever made on the very first role a scholar took anywhere on the platform — so anyone who had already volunteered somewhere received nothing everywhere they went afterward, with nothing on screen to say a welcome had been skipped. Each venue now welcomes a newcomer once, on their first role there.
+- Proposing a venue now reliably takes you to the new proposal. The proposal was being created, but the page could silently fail to move you to it and leave the Propose button stuck, with nothing on screen or in the console to say why — a refresh was the only way out.
+- An email address listed twice on a proposal is now recorded once, so someone named twice is no longer emailed the same invitation twice.
+- **Every role a venue created was silently a top-priority role.** The top role's holders act as the venue's editors — able to approve any assignment, edit a submission's author list, and mark it done — and new roles landed there by default, handing out that authority until an admin used the reorder arrows. New roles are now added at the bottom, venues with tied roles have been renumbered, and the note explaining the top role no longer appears on several roles at once.
+- Saving an editable field no longer flashes the old value: the field shows what you typed the moment you save, the button shows that a save is in flight, and it reopens with your text intact if the save fails. Previously it reverted while the save was in progress and switched back a second later, which on a slow connection read as the edit having been lost.
+- Validation warnings no longer linger on a field that has been cleared. Fields now stay quiet until you type in them and go quiet again when something clears them — previously a field that emptied after you submitted kept the "must not be empty" warning it earned while you were filling it in.
+- **Closed a hole that let anyone mint or move tokens without signing in.** Several database routines that rely on their callers to have already checked permissions were reachable directly through the public API, so a venue's reserve could be emptied and new tokens created from nothing.
+- A venue's transactions page no longer shows a loading error when the venue's reserve is empty.
+- **An account whose profile was never created now repairs itself.** Signing in for the first time could leave you with an account but no profile, which every page read as not being signed in at all — your own profile reported that it couldn't load, and nothing you could do fixed it — so the missing profile is now created on your next visit.
+- **A link to a scholar who doesn't exist now says so.** A mistyped or outdated profile address previously reported that the profile couldn't be loaded, which was indistinguishable from the site being broken.
+- **An editor can now add a submission on behalf of scholars.** Filling the new submission form in with someone else's ORCID used to replace the whole submit path with "Only authors of a submission can create a submission," so the only way to record someone else's paper was to list yourself as one of its authors; an editor now starts with an empty author row instead of their own name ([#153](https://github.com/reciprocalreviews/reciprocalapp/issues/153)).
+
+## 0.5.0 - 2026-08-28
+
+### Added
+
+- **Reciprocal Reviews is in public beta.** Every part of the platform is now reachable: you can browse venues, sign in, propose a journal or conference, volunteer to review, and manage a venue. Until now production redirected everything except the landing, about, and updates pages back to the home page.
+- Reciprocal Reviews has a **logo** — two arrows chasing each other around a circle — and a [brand page](/brand) listing the mark, the colors, and the typefaces, with the files available to download. It's linked from the footer.
+- Link previews now show a proper card with the logo and tagline when a Reciprocal Reviews page is shared, and the browser tab shows the logo rather than a generic icon. Search engines get a `robots.txt` and a sitemap that lists the public pages, the help articles, and every active venue.
+- Reciprocal Reviews now has a **help section** and a **contact page**, both linked from the footer. Help answers the questions we're asked most often; contact names the stewards who read your message and gives you one address that reaches all of them.
+- Editors can now assign one scholar across several submissions from the submissions list — pick the role and person once, then assign per submission — instead of opening each submission in turn.
+- Reciprocal Reviews now follows up on work that stalls: co-authors are emailed when a submission charge awaits their payment, approvers are reminded when a reviewer has requested compensation, and editors are reminded when a submission has all its reviewing paid and is ready to be marked done. Each follows the venue's existing reminder frequency, and pending compensation now also appears in your task list.
+- Your **token balance** now appears in the header while you're signed in, counting up or down when it changes, so earning or spending tokens is visible where it happens rather than only on your profile.
+- You can now find a co-author by **name** on the new submission form, instead of needing their ORCID to hand. The top three matches appear beside the field; picking one fills in their ORCID.
+- Stewards can now **appoint and remove other stewards** from the About page, where the steward list already lived; previously stewardship could only be granted by editing the database directly. A steward can't remove themselves — stepping down is something another steward does for you — and the last steward can't be removed at all.
+
+### Changed
+
+- The landing page leads with **"Make peer review count."** in the flow of the page rather than pinned to the header, and shows what a submission cost looks like — a token chip right in the sentence — instead of only describing one. The newsletter is now linked from the volunteer community note.
+- Updated internal tooling for stability.
+- You can now **reply to any email** Reciprocal Reviews sends you and reach a person. Replies previously went to an unmonitored address and were lost.
+- Notifications to the stewards, such as new venue proposals and alerts about the platform's own health, now arrive in a shared inbox they can work through together. They previously went out as separate copies to each steward, with no way to see whether anyone had picked a request up.
+- The new submission form now lists you as the first author, so it's clear you're included and where to set your own payment.
+- Email links now lead back to the site that sent them, so test and staging deployments no longer send people to the live site.
+- The volunteer confirmation now says how many welcome tokens you actually received, and says nothing about tokens when none were granted. It previously promised tokens "once the minter approves them", which stopped being true when welcome tokens started arriving immediately; accepting a role invitation now confirms as well.
+- Welcome tokens now arrive the moment you volunteer, instead of waiting for a currency minter to approve them — the wait previously fell on newcomers volunteering in order to afford their own submission.
+- Reviewer bids and candidate assignees are now listed with the **lowest token balance first**, surfacing the scholars most in need of paid reviewing work.
+- Approving a transaction now asks for confirmation, since it moves tokens permanently and cannot be undone. Removing a minter, a compensation rate, a preference level, or an assignment now confirm too, and the warnings for deleting a role or submission type now say what else will be deleted.
+- Paying for a submission now explains that every author listed must have a Reciprocal Reviews account, and links to volunteering when an author is short of tokens.
+- Finding a scholar by **name** now works everywhere you name one, not just on the new submission form: adding a venue admin, adding a currency minter, and inviting someone to a role all offer matches as you type, instead of requiring an exact ORCID iD or email address.
+
+### Fixed
+
+- Text that a venue or a proposal supplies — a venue description, a proposal title — can no longer inject markup into the page it appears on. Values substituted into a sentence are now escaped by default, and only markup the platform generated itself is exempt.
+- Token amounts no longer break across lines between the number and the word "tokens". A chip like ★ 10 tokens now stays whole wherever it appears, including in transaction tables and on scholar pages.
+- The alert that warns stewards the token ledger may be corrupt is now always delivered. It previously went only to stewards who had verified a contact email address, so the warning that something had gone seriously wrong could reach nobody at all.
+- Only a listed author, or an admin of the venue, can create a submission. Any signed-in scholar could previously create one at any venue and leave payment demands against people who had never heard of it.
+- Gifting tokens to a venue now requires the same acknowledgement as gifting to a scholar; that confirmation was skipped for venues.
+- Venues, currencies, and submissions can no longer be deleted through the API. Nothing in the app offered this, but the permission existed — and deleting a venue would have taken its roles, volunteers, assignments, and compensation rates with it.
+- Emails telling you a transaction was declined now carry a working link. The link was arriving mangled and unclickable.
+- Listing the same author twice on a submission is now flagged on that author's own row, rather than only in a message at the bottom of the form. Two spellings of the same ORCID that differ only in capitalization are also caught, as the database always did.
+- The About page now says so when there are no stewards, instead of showing an empty space between "Current stewards are:" and the invitation to become one. The message when the list fails to load is now marked as an error.
+- Erasing an account now also removes any stewardship it held. An erased steward previously stayed on the public steward list as "anonymous" and kept the permissions that go with it.
+- Scholar name searches now return the same people in the same order each time, and the steward list is ordered by name too. Results were previously in whatever order the database happened to return, which shifted whenever anyone's profile was edited — so searching the same name twice could offer different scholars.
+- Each name-search result now identifies the scholar to screen readers. Every match previously announced the same generic label, making a column of them impossible to tell apart.
+- Adding a venue admin now reports validation problems in the page's language, rather than in hardcoded English.
+
 ## 0.4.7 - 2026-08-16
 
 ### Changed
@@ -85,13 +492,13 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Added
 
-- Submissions can now be **explicitly linked to a prior submission** to represent revise-and-resubmit chains. When creating a submission, authors pick one of their earlier submissions to the same venue from a dropdown (an internal link with true referential integrity); doing so fills and locks the external manuscript ID field and **auto-selects the matching revision submission type**. The free-text external manuscript ID stays available for predecessors that aren't on the platform. Bulk imports best-effort resolve their external `previousid` to an on-platform link. (#124)
+- Submissions can now be **explicitly linked to a prior submission** to represent revise-and-resubmit chains: authors pick one of their earlier submissions to the same venue from a dropdown, which fills and locks the external manuscript ID field and **auto-selects the matching revision submission type**. The free-text ID stays available for predecessors that aren't on the platform, and bulk imports best-effort resolve their external `previousid` to an on-platform link. (#124)
 
 ### Changed
 
-- **Submission cost is now set per submission type** instead of venue-wide, since each type is a different amount of work. Admins edit each type's cost in the submission types table on the venue dashboard (the venue-wide submission-cost setting is gone). Because a resubmission is its own revision type, it simply carries its own cost. (#124)
+- **Submission cost is now set per submission type** instead of venue-wide, since each type is a different amount of work; admins edit each type's cost in the submission types table on the venue dashboard, and the venue-wide setting is gone. Because a resubmission is its own revision type, it simply carries its own cost. (#124)
 
-- Tightened access control across the database. A submission's assigned reviewers are now visible only to the assignee, the role's approver chain, and venue admins — plus the submission's authors when a venue runs **open (non-anonymous) review** — and a declared conflict always hides that submission's assignments. Currency **minters can now only mint tokens, not move existing ones** (reserve payouts are made by editors), and token balances, compensation amounts, and bid-preference levels are no longer visible to signed-out visitors.
+- Tightened access control across the database: a submission's assigned reviewers are now visible only to the assignee, the role's approver chain, and venue admins — plus the submission's authors when a venue runs **open (non-anonymous) review** — and a declared conflict always hides that submission's assignments. Currency **minters can now only mint tokens, not move existing ones** (reserve payouts are made by editors), and token balances, compensation amounts, and bid-preference levels are no longer visible to signed-out visitors.
 
 - Added a full-coverage test suite of all table's RLS rules (#79).
 
@@ -114,7 +521,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Changed
 
 - Renamed the "Cancel" action on proposed transactions to **Decline** throughout the UI (button labels, status badge, error messages), to better match its meaning as an active, accountable decision. (#114)
-- Reworked the venue settings page as a **numbered setup workflow**: a "Decide policies" primer at the top lists the community decisions to make first, then each section is a numbered step (Activate is always the last one). Sections renumber automatically when one is hidden (e.g. Bid preference levels disappears if no role allows bidding), and per-role cards start collapsed so the page stays scannable.
+- Reworked the venue settings page as a **numbered setup workflow**: a "Decide policies" primer at the top lists the community decisions to make first, then each section is a numbered step, with Activate always last. Sections renumber automatically when one is hidden (Bid preference levels disappears if no role allows bidding), and per-role cards start collapsed so the page stays scannable.
 - Updated internal tooling for stability.
 
 ### Fixed
@@ -148,7 +555,7 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ### Changed
 
-- Volunteers can now approve and compensate the work of other volunteers when the are in an approving role. For example, rather than an Associate Editor marking a Reviewer's review approved, and then generating a proposed transaction that a minter must approve, the Associate Editor can directly approve the transfer from the venue. A transaction is still generated for transparency and auditing.
+- Volunteers in an approving role can now approve and compensate other volunteers' work directly. Rather than an Associate Editor marking a review approved and then a minter approving the resulting transaction, the Associate Editor approves the transfer from the venue themselves — a transaction is still generated for transparency and auditing.
 - Updated DESIGN.md to be alignment with the current design and technical debt. Also updated CLAUDE.md to maintain DEISGN.md and ARCHITECTURE.md in response to changes in implementation.
 - Updated ARCHITECTURE.md to be a more complete onboarding document for new contributors.
 - Gated Vercel deployments behind verifications and Supabase migrations in GitHub Actions workflows for dev and prod.

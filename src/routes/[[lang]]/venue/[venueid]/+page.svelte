@@ -1,46 +1,71 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import Button from '$lib/components/Button.svelte';
-	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
-	import Dashboard, { type Stat } from '$lib/components/Dashboard.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import { ErrorLabel, ScholarLabel, TokenLabel, VenueLabel } from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
-	import Options from '$lib/components/Options.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import Text from '$lib/locales/Text.svelte';
-	import { validInteger, validURL } from '$lib/validation';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { addFeedback, handle } from '$routes/feedback.svelte';
+	import { venuePath } from '#lib/data/venuePath.js';
+	import Action from '#lib/components/Action.svelte';
+	import Alert from '#lib/components/Alert.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import CurrencyLink from '#lib/components/CurrencyLink.svelte';
+	import Dashboard, { type Stat } from '#lib/components/Dashboard.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import { ScholarLabel, TokenLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Options from '#lib/components/Options.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { validInteger } from '#lib/validation.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 	import type { PageData } from './$types';
 	import Roles from './Roles.svelte';
+	import VenueContact from './VenueContact.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const {
 		venue,
 		currency,
-		minters,
 		scholar,
 		roles,
 		volunteers,
+		volunteerCounts,
 		tokens,
 		submissionCount,
 		types,
-		compensation
+		compensation,
+		myActive
 	} = $derived(data);
 
 	const db = getDB();
 	const locale = getLocaleContext();
-	let isAdmin = $derived(scholar && venue && venue.admins.includes(scholar.id));
+
+	/** The venue's real volunteer total. Not `volunteers.length`: those rows are
+	 * filtered by each role's volunteer_visibility, so a signed-out reader would
+	 * otherwise be told a venue with a hidden roster has no volunteers. */
+	let volunteerTotal = $derived(
+		volunteerCounts === null
+			? undefined
+			: volunteerCounts.reduce((total, row) => total + row.volunteer_count, 0)
+	);
+
+	let isAdmin = $derived(scholar !== null && venue !== null && venue.admins.includes(scholar.id));
 	// When false, the venue is payment-free: hide all token/currency/cost/compensation UI.
 	let showPayment = $derived(venue ? !venue.payment_free : true);
+	let isMinter = $derived(scholar && currency ? currency.minters.includes(scholar.id) : false);
+	/** True when someone both administers this venue and mints its currency.
+	 *
+	 * The platform permits this — a small community's organizer is often its only minter —
+	 * and discloses it instead, to everyone who is neither of those two things. Naming the
+	 * arrangement in public is what replaced forbidding it, so the check on self-dealing is
+	 * the community rather than the database. */
+	let adminMints = $derived(
+		venue !== null && currency !== null && currency.minters.some((m) => venue.admins.includes(m))
+	);
 	let isVolunteer = $derived(
 		scholar && venue && volunteers && volunteers.some((v) => v.scholarid === scholar.id)
 	);
@@ -52,23 +77,64 @@
 </script>
 
 {#if venue === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.venue.unknownTitle} breadcrumbs={[]}>
+	<Page title={(l) => l.page.venue.unknownTitle}>
 		<Paragraph text={(l) => l.page.venue.paragraph.notFound} />
 	</Page>
 {:else}
-	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[]}>
-		{#snippet subtitle()}<Text path={(l) => l.page.venue.subtitle} />{/snippet}
+	<!-- The venue's full title, in the column rather than in a band. The bar above shows
+	     the SHORT name, so this is the one page where the whole name is always spelled
+	     out — which is exactly what a landing page is for. -->
+	<Page title={venue.title}>
+		{#snippet subtitle()}<Text path={(l) => l.page.venue.title} />{/snippet}
 		{#snippet details()}
-			{#if isAdmin}
-				<EditableText
-					text={venue.url}
-					strings={(l) => l.page.venue.field.url}
-					valid={(text) => (validURL(text) ? undefined : (l) => l.page.venue.field.url.invalid)}
-					edit={(text) => db().editVenueURL(venue.id, text)}
-					testid="venue-url"
-				/>
-			{:else}
-				<Link to={venue.url}>{venue.url}</Link>
+			<!-- Read-only, for everyone. Editing the address moved to settings with the rest
+			     of the venue's metadata, but the address itself is worth stating here: it is
+			     the first thing someone deciding whether this is the right venue looks for,
+			     and the bar's link to it says only "Website". -->
+			<Link to={venue.url}>{venue.url}</Link>
+			{#if showPayment && currency}
+				<CurrencyLink {currency}>{TokenLabel} {currency.name}</CurrencyLink>
+			{/if}
+		{/snippet}
+
+		{#snippet actions()}
+			<!-- Starting a submission is the central task here, so it comes first. -->
+			<Action
+				to="/venue/{venuePath(venue)}/submissions/new"
+				label={(l) =>
+					showPayment ? l.page.venue.action.newSubmission : l.page.venue.action.newSubmissionFree}
+				testid="venue-new-submission"
+			/>
+			<Action to="#roles" label={(l) => l.page.venue.action.volunteer} />
+		{/snippet}
+
+		{#snippet alerts()}
+			{#if isAdmin && venue.inactive !== null}
+				<Alert
+					tone="attention"
+					text={(l) => l.page.venue.feedback.inactivePrompt}
+					testid="venue-inactive-prompt"
+				>
+					{#snippet action()}
+						<Action
+							to="/venue/{venuePath(venue)}/settings#status"
+							label={(l) => l.page.venue.action.activate}
+							group="admin"
+						/>
+					{/snippet}
+				</Alert>
+			{/if}
+			<!-- Name the admin/minter overlap to everyone who isn't one of them. -->
+			{#if showPayment && adminMints && !isAdmin && !isMinter && currency}
+				<Alert
+					tone="info"
+					testid="venue-admin-mints-notice"
+					text={(l) => l.page.venue.feedback.adminMints}
+				>
+					{#snippet action()}
+						<Action to="/currency/{currency.id}" label={(l) => l.page.venue.action.currency} />
+					{/snippet}
+				</Alert>
 			{/if}
 		{/snippet}
 
@@ -91,42 +157,6 @@
 			/>
 		{/if}
 
-		{#if showPayment}
-			<!-- Currency context before the central prompt. -->
-			<p>
-				This venue uses {#if currency}the <CurrencyLink {currency}>
-						{TokenLabel} {currency.name}</CurrencyLink
-					>{:else}an unknown{/if}
-				currency.
-			</p>
-		{/if}
-
-		<!-- Prominent prompt to start peer review: this is the central task on this page. -->
-		<Feedback
-			inline={false}
-			size="normal"
-			text={(l) =>
-				(showPayment
-					? l.page.venue.feedback.startReview
-					: l.page.venue.feedback.startReviewFree
-				).replace('{venue}', venue.id)}
-		/>
-
-		<!-- Secondary prompt to earn tokens by volunteering. -->
-		<Feedback
-			inline={false}
-			size="normal"
-			text={(l) =>
-				showPayment ? l.page.venue.feedback.volunteer : l.page.venue.feedback.volunteerFree}
-		/>
-
-		{#if isAdmin}
-			<Feedback
-				inline={false}
-				text={(l) => l.page.venue.feedback.viewSettings.replace('{venue}', venue.id)}
-			/>
-		{/if}
-
 		<Dashboard
 			stats={[
 				...(showPayment
@@ -134,22 +164,28 @@
 							{
 								number: venue.welcome_amount ?? undefined,
 								icon: TokenLabel,
-								title: 'tokens for new volunteers'
+								title: locale().page.venue.stat.welcome
 							}
 						]
 					: []),
 				{
-					number: volunteers?.length ?? undefined,
-					title: 'volunteers',
-					link: `/venue/${venue.id}/volunteers`
+					number: volunteerTotal,
+					title: locale().page.venue.stat.volunteers,
+					link: `/venue/${venuePath(venue)}/volunteers`
 				},
 				{
 					number: submissionCount ?? undefined,
-					title: 'submissions visible to you',
-					link: `/venue/${venue.id}/submissions`
+					title: locale().page.venue.stat.submissions,
+					link: `/venue/${venuePath(venue)}/submissions`
 				},
 				...(showPayment
-					? [{ number: tokens?.length, title: 'tokens', link: `/venue/${venue.id}/transactions` }]
+					? [
+							{
+								number: tokens ?? undefined,
+								title: locale().page.venue.stat.tokens,
+								link: `/venue/${venuePath(venue)}/transactions`
+							}
+						]
 					: [])
 			] as [Stat, ...Stat[]]}
 		></Dashboard>
@@ -259,7 +295,7 @@
 		{:else}
 			<Paragraph
 				text={(l) => l.page.venue.paragraph.allVolunteers}
-				inputs={{ volunteersLink: `/venue/${venue.id}/volunteers` }}
+				inputs={{ volunteersLink: `/venue/${venuePath(venue)}/volunteers` }}
 			/>
 
 			<Roles
@@ -267,11 +303,12 @@
 				scholar={scholar?.id}
 				{roles}
 				{volunteers}
+				{volunteerCounts}
 				isAdmin={false}
-				{currency}
-				{minters}
+				canInvite={isAdmin}
 				{compensation}
 				{types}
+				{myActive}
 			/>
 
 			{#if isVolunteer && scholar && showPayment}
@@ -279,45 +316,73 @@
 					<Paragraph text={(l) => l.page.venue.paragraph.missingCompensation} />
 
 					<TextField
-						strings={(l) => ({
-							placeholder: 'The ID associated with the manuscript in your reviewing system',
-							label: 'Manuscript ID'
-						})}
+						strings={(l) => l.page.venue.field.compensationManuscript}
 						bind:text={compensationManuscript}
+						testid="compensation-manuscript"
 					></TextField>
 					<Options
 						strings={(l) => l.page.venue.options.compensationRole}
-						options={roles.map((role) => ({
-							label: role.name,
-							value: role.id
-						}))}
-						bind:value={compensationRole}
+						options={[
+							// An honest empty choice. Without it a select whose value matches no
+							// option shows its first option while holding nothing, and picking that
+							// option changes nothing, so the button stayed off with no visible reason.
+							{ label: locale().page.venue.options.chooseRole, value: undefined },
+							...roles.map((role) => ({
+								label: role.name,
+								value: role.id
+							}))
+						]}
+						value={compensationRole === '' ? undefined : compensationRole}
+						onChange={(value) => (compensationRole = value ?? '')}
+						testid="compensation-role"
 					/>
 					<TextField
-						strings={(l) => ({ placeholder: 'Message to the scholar responsible', label: 'Note' })}
+						strings={(l) => l.page.venue.field.compensationNote}
 						bind:text={compensationNote}
+						testid="compensation-note"
 					></TextField>
 					<Button
 						active={compensationManuscript.length > 0 && compensationRole.length > 0}
 						strings={(l) => l.page.venue.button.requestCompensation}
-						action={() =>
-							handle(
-								db().requestCompensation(
-									scholar.id,
-									venue.id,
-									compensationManuscript,
-									compensationRole,
-									compensationNote
+						testid="request-compensation"
+						action={async () => {
+							// The confirmation goes through handle()'s own `success` argument rather
+							// than a separate addFeedback. That argument is suppressed whenever the
+							// action already named who was told, so a request that emailed its
+							// approvers reports the people rather than saying it twice — and the
+							// generic line still appears when nobody could be emailed.
+							//
+							// Awaited rather than chained off .then(), because handle() RESOLVES
+							// false on failure instead of rejecting: the old chain announced success
+							// on a request that had just errored, and cleared the three fields with
+							// it, so a failed submission lost what had been typed into them.
+							if (
+								await handle(
+									db().requestCompensation(
+										scholar.id,
+										venue.id,
+										compensationManuscript,
+										compensationRole,
+										compensationNote
+									),
+									locale().page.venue.feedback.compensationRequested
 								)
-							).then(() => {
+							) {
+								// The role stays: a reviewer requesting for several papers is
+								// usually requesting in the same role each time.
 								compensationManuscript = '';
-								compensationRole = '';
 								compensationNote = '';
-								addFeedback('Compensation request sent.', 'success');
-							})}
+							}
+						}}
 					/>
 				</Form>
 			{/if}
 		{/if}
+
+		<!-- Last, as a page's own reference section. Its purpose is that the admins can be
+		     found at all, which a heading of its own does better than a paragraph wedged
+		     between the description and the calls to action. -->
+		<Subheader id="contact" icon={ScholarLabel} text={(l) => l.page.venue.header.contact} />
+		<VenueContact {venue} />
 	</Page>
 {/if}

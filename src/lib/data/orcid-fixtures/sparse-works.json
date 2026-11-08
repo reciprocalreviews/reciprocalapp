@@ -1,0 +1,869 @@
+{
+	"last-modified-date": {
+		"value": 1737589441962
+	},
+	"group": [
+		{
+			"last-modified-date": {
+				"value": 1737589441667
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "eid",
+						"external-id-value": "2-s2.0-85120074677",
+						"external-id-normalized": {
+							"value": "2-s2.0-85120074677",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					},
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1515/jom-2020-0295",
+						"external-id-normalized": {
+							"value": "10.1515/jom-2020-0295",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 176428007,
+					"created-date": {
+						"value": 1737589441667
+					},
+					"last-modified-date": {
+						"value": 1737589441667
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0002-5982-8983",
+							"path": "0000-0002-5982-8983",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Scopus - Elsevier"
+						},
+						"assertion-origin-orcid": {
+							"uri": "https://orcid.org/0009-0003-5125-4959",
+							"path": "0009-0003-5125-4959",
+							"host": "orcid.org"
+						},
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": {
+							"value": "Amy Ko"
+						}
+					},
+					"title": {
+						"title": {
+							"value": "Utilizing the Four Tenets of Osteopathic Medicine as an intersectional framework for approaching sexual orientation and gender identity disclosure as a provider"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1515/jom-2020-0295",
+								"external-id-normalized": {
+									"value": "10.1515/jom-2020-0295",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "eid",
+								"external-id-value": "2-s2.0-85120074677",
+								"external-id-normalized": {
+									"value": "2-s2.0-85120074677",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "issn",
+								"external-id-value": "27023648",
+								"external-id-normalized": {
+									"value": "2702-3648",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "part-of"
+							}
+						]
+					},
+					"url": {
+						"value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-85120074677&partnerID=MN8TOARS"
+					},
+					"type": "journal-article",
+					"publication-date": {
+						"year": {
+							"value": "2021"
+						},
+						"month": null,
+						"day": null
+					},
+					"journal-title": {
+						"value": "Journal of Osteopathic Medicine"
+					},
+					"visibility": "public",
+					"path": "/0009-0003-5125-4959/work/176428007",
+					"display-index": "1"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1737589441962
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1182/blood-2017-08-800896",
+						"external-id-normalized": {
+							"value": "10.1182/blood-2017-08-800896",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					},
+					{
+						"external-id-type": "eid",
+						"external-id-value": "2-s2.0-85042160248",
+						"external-id-normalized": {
+							"value": "2-s2.0-85042160248",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 176428011,
+					"created-date": {
+						"value": 1737589441962
+					},
+					"last-modified-date": {
+						"value": 1737589441962
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0002-5982-8983",
+							"path": "0000-0002-5982-8983",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Scopus - Elsevier"
+						},
+						"assertion-origin-orcid": {
+							"uri": "https://orcid.org/0009-0003-5125-4959",
+							"path": "0009-0003-5125-4959",
+							"host": "orcid.org"
+						},
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": {
+							"value": "Amy Ko"
+						}
+					},
+					"title": {
+						"title": {
+							"value": "Defining the requirements for the pathogenic interaction between mutant calreticulin and MPL in MPN"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1182/blood-2017-08-800896",
+								"external-id-normalized": {
+									"value": "10.1182/blood-2017-08-800896",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "eid",
+								"external-id-value": "2-s2.0-85042160248",
+								"external-id-normalized": {
+									"value": "2-s2.0-85042160248",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "issn",
+								"external-id-value": "15280020 00064971",
+								"external-id-normalized": {
+									"value": "1528-0020",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "part-of"
+							}
+						]
+					},
+					"url": {
+						"value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-85042160248&partnerID=MN8TOARS"
+					},
+					"type": "journal-article",
+					"publication-date": {
+						"year": {
+							"value": "2018"
+						},
+						"month": null,
+						"day": null
+					},
+					"journal-title": {
+						"value": "Blood"
+					},
+					"visibility": "public",
+					"path": "/0009-0003-5125-4959/work/176428011",
+					"display-index": "1"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1737589441904
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "eid",
+						"external-id-value": "2-s2.0-84962360217",
+						"external-id-normalized": {
+							"value": "2-s2.0-84962360217",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					},
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1158/2159-8290.CD-15-1434",
+						"external-id-normalized": {
+							"value": "10.1158/2159-8290.cd-15-1434",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 176428010,
+					"created-date": {
+						"value": 1737589441904
+					},
+					"last-modified-date": {
+						"value": 1737589441904
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0002-5982-8983",
+							"path": "0000-0002-5982-8983",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Scopus - Elsevier"
+						},
+						"assertion-origin-orcid": {
+							"uri": "https://orcid.org/0009-0003-5125-4959",
+							"path": "0009-0003-5125-4959",
+							"host": "orcid.org"
+						},
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": {
+							"value": "Amy Ko"
+						}
+					},
+					"title": {
+						"title": {
+							"value": "Mutant calreticulin requires both its mutant C-terminus and the thrombopoietin receptor for oncogenic transformation"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1158/2159-8290.CD-15-1434",
+								"external-id-normalized": {
+									"value": "10.1158/2159-8290.cd-15-1434",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "eid",
+								"external-id-value": "2-s2.0-84962360217",
+								"external-id-normalized": {
+									"value": "2-s2.0-84962360217",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "issn",
+								"external-id-value": "21598290 21598274",
+								"external-id-normalized": {
+									"value": "2159-8290",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "part-of"
+							}
+						]
+					},
+					"url": {
+						"value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84962360217&partnerID=MN8TOARS"
+					},
+					"type": "journal-article",
+					"publication-date": {
+						"year": {
+							"value": "2016"
+						},
+						"month": null,
+						"day": null
+					},
+					"journal-title": {
+						"value": "Cancer Discovery"
+					},
+					"visibility": "public",
+					"path": "/0009-0003-5125-4959/work/176428010",
+					"display-index": "1"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1737589441540
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1182/blood-2014-04-567024",
+						"external-id-normalized": {
+							"value": "10.1182/blood-2014-04-567024",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					},
+					{
+						"external-id-type": "eid",
+						"external-id-value": "2-s2.0-84920939031",
+						"external-id-normalized": {
+							"value": "2-s2.0-84920939031",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 176428005,
+					"created-date": {
+						"value": 1737589441540
+					},
+					"last-modified-date": {
+						"value": 1737589441540
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0002-5982-8983",
+							"path": "0000-0002-5982-8983",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Scopus - Elsevier"
+						},
+						"assertion-origin-orcid": {
+							"uri": "https://orcid.org/0009-0003-5125-4959",
+							"path": "0009-0003-5125-4959",
+							"host": "orcid.org"
+						},
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": {
+							"value": "Amy Ko"
+						}
+					},
+					"title": {
+						"title": {
+							"value": "Distinct effects of concomitant Jak2V617F expression and Tet2 loss in mice promote disease progression in myeloproliferative neoplasms"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1182/blood-2014-04-567024",
+								"external-id-normalized": {
+									"value": "10.1182/blood-2014-04-567024",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "eid",
+								"external-id-value": "2-s2.0-84920939031",
+								"external-id-normalized": {
+									"value": "2-s2.0-84920939031",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "issn",
+								"external-id-value": "15280020 00064971",
+								"external-id-normalized": {
+									"value": "1528-0020",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "part-of"
+							}
+						]
+					},
+					"url": {
+						"value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84920939031&partnerID=MN8TOARS"
+					},
+					"type": "journal-article",
+					"publication-date": {
+						"year": {
+							"value": "2015"
+						},
+						"month": null,
+						"day": null
+					},
+					"journal-title": {
+						"value": "Blood"
+					},
+					"visibility": "public",
+					"path": "/0009-0003-5125-4959/work/176428005",
+					"display-index": "1"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1737589441832
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "eid",
+						"external-id-value": "2-s2.0-84922341743",
+						"external-id-normalized": {
+							"value": "2-s2.0-84922341743",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					},
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1182/blood-2014-07-587857",
+						"external-id-normalized": {
+							"value": "10.1182/blood-2014-07-587857",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 176428009,
+					"created-date": {
+						"value": 1737589441832
+					},
+					"last-modified-date": {
+						"value": 1737589441832
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0002-5982-8983",
+							"path": "0000-0002-5982-8983",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Scopus - Elsevier"
+						},
+						"assertion-origin-orcid": {
+							"uri": "https://orcid.org/0009-0003-5125-4959",
+							"path": "0009-0003-5125-4959",
+							"host": "orcid.org"
+						},
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": {
+							"value": "Amy Ko"
+						}
+					},
+					"title": {
+						"title": {
+							"value": "Dynamin 2-dependent endocytosis is required for normal megakaryocyte development in mice"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1182/blood-2014-07-587857",
+								"external-id-normalized": {
+									"value": "10.1182/blood-2014-07-587857",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "eid",
+								"external-id-value": "2-s2.0-84922341743",
+								"external-id-normalized": {
+									"value": "2-s2.0-84922341743",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "issn",
+								"external-id-value": "15280020 00064971",
+								"external-id-normalized": {
+									"value": "1528-0020",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "part-of"
+							}
+						]
+					},
+					"url": {
+						"value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84922341743&partnerID=MN8TOARS"
+					},
+					"type": "journal-article",
+					"publication-date": {
+						"year": {
+							"value": "2015"
+						},
+						"month": null,
+						"day": null
+					},
+					"journal-title": {
+						"value": "Blood"
+					},
+					"visibility": "public",
+					"path": "/0009-0003-5125-4959/work/176428009",
+					"display-index": "1"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1737589441750
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1016/j.celrep.2015.11.037",
+						"external-id-normalized": {
+							"value": "10.1016/j.celrep.2015.11.037",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					},
+					{
+						"external-id-type": "eid",
+						"external-id-value": "2-s2.0-84952871168",
+						"external-id-normalized": {
+							"value": "2-s2.0-84952871168",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 176428008,
+					"created-date": {
+						"value": 1737589441750
+					},
+					"last-modified-date": {
+						"value": 1737589441750
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0002-5982-8983",
+							"path": "0000-0002-5982-8983",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Scopus - Elsevier"
+						},
+						"assertion-origin-orcid": {
+							"uri": "https://orcid.org/0009-0003-5125-4959",
+							"path": "0009-0003-5125-4959",
+							"host": "orcid.org"
+						},
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": {
+							"value": "Amy Ko"
+						}
+					},
+					"title": {
+						"title": {
+							"value": "RECQL5 Suppresses Oncogenic JAK2-Induced Replication Stress and Genomic Instability"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1016/j.celrep.2015.11.037",
+								"external-id-normalized": {
+									"value": "10.1016/j.celrep.2015.11.037",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "eid",
+								"external-id-value": "2-s2.0-84952871168",
+								"external-id-normalized": {
+									"value": "2-s2.0-84952871168",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "issn",
+								"external-id-value": "22111247",
+								"external-id-normalized": {
+									"value": "2211-1247",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "part-of"
+							}
+						]
+					},
+					"url": {
+						"value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84952871168&partnerID=MN8TOARS"
+					},
+					"type": "journal-article",
+					"publication-date": {
+						"year": {
+							"value": "2015"
+						},
+						"month": null,
+						"day": null
+					},
+					"journal-title": {
+						"value": "Cell Reports"
+					},
+					"visibility": "public",
+					"path": "/0009-0003-5125-4959/work/176428008",
+					"display-index": "1"
+				}
+			]
+		},
+		{
+			"last-modified-date": {
+				"value": 1737589441589
+			},
+			"external-ids": {
+				"external-id": [
+					{
+						"external-id-type": "doi",
+						"external-id-value": "10.1371/journal.pgen.1004425",
+						"external-id-normalized": {
+							"value": "10.1371/journal.pgen.1004425",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					},
+					{
+						"external-id-type": "eid",
+						"external-id-value": "2-s2.0-84903450423",
+						"external-id-normalized": {
+							"value": "2-s2.0-84903450423",
+							"transient": true
+						},
+						"external-id-normalized-error": null,
+						"external-id-url": null,
+						"external-id-relationship": "self"
+					}
+				]
+			},
+			"work-summary": [
+				{
+					"put-code": 176428006,
+					"created-date": {
+						"value": 1737589441589
+					},
+					"last-modified-date": {
+						"value": 1737589441589
+					},
+					"source": {
+						"source-orcid": null,
+						"source-client-id": {
+							"uri": "https://orcid.org/client/0000-0002-5982-8983",
+							"path": "0000-0002-5982-8983",
+							"host": "orcid.org"
+						},
+						"source-name": {
+							"value": "Scopus - Elsevier"
+						},
+						"assertion-origin-orcid": {
+							"uri": "https://orcid.org/0009-0003-5125-4959",
+							"path": "0009-0003-5125-4959",
+							"host": "orcid.org"
+						},
+						"assertion-origin-client-id": null,
+						"assertion-origin-name": {
+							"value": "Amy Ko"
+						}
+					},
+					"title": {
+						"title": {
+							"value": "The POU Factor Ventral Veins Lacking/Drifter Directs the Timing of Metamorphosis through Ecdysteroid and Juvenile Hormone Signaling"
+						},
+						"subtitle": null,
+						"translated-title": null
+					},
+					"external-ids": {
+						"external-id": [
+							{
+								"external-id-type": "doi",
+								"external-id-value": "10.1371/journal.pgen.1004425",
+								"external-id-normalized": {
+									"value": "10.1371/journal.pgen.1004425",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "eid",
+								"external-id-value": "2-s2.0-84903450423",
+								"external-id-normalized": {
+									"value": "2-s2.0-84903450423",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "self"
+							},
+							{
+								"external-id-type": "issn",
+								"external-id-value": "15537404 15537390",
+								"external-id-normalized": {
+									"value": "1553-7404",
+									"transient": true
+								},
+								"external-id-normalized-error": null,
+								"external-id-url": null,
+								"external-id-relationship": "part-of"
+							}
+						]
+					},
+					"url": {
+						"value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84903450423&partnerID=MN8TOARS"
+					},
+					"type": "journal-article",
+					"publication-date": {
+						"year": {
+							"value": "2014"
+						},
+						"month": null,
+						"day": null
+					},
+					"journal-title": {
+						"value": "PLoS Genetics"
+					},
+					"visibility": "public",
+					"path": "/0009-0003-5125-4959/work/176428006",
+					"display-index": "1"
+				}
+			]
+		}
+	],
+	"path": "/0009-0003-5125-4959/works"
+}

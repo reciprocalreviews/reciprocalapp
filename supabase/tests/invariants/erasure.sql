@@ -9,7 +9,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(13);
+select plan(19);
 
 select tests.clear_authentication();
 select tests.create_scholar('era_subject@test.local') as subject \gset
@@ -32,7 +32,22 @@ select tests.clear_authentication();
 select tests.create_role(:'ven', 0) as role \gset
 select tests.create_volunteer(:'subject', :'role') as vol \gset
 
+-- Mail about SOMEBODY ELSE that merely copied the subject, and named them as the address a
+-- reply should reach. Neither `scholar` nor `sender` is the subject, so neither branch of
+-- the scrub matches this row -- which is exactly why the address-keyed pass exists. The
+-- send trigger posts to the Resend function via a vault secret the RLS CI job doesn't set,
+-- and none of this depends on delivery, so it is disabled for this rolled-back test.
+alter table public.emails disable trigger send_on_email_insert;
+insert into public.emails (event, scholar, sender, venue, email, cc, reply_to, args)
+values ('NewVolunteer', :'other', null, :'ven', 'era_other@test.local',
+        array['era_subject@test.local'], 'era_subject@test.local', '[]'::jsonb);
+
 -- ---- Export ---------------------------------------------------------------------
+-- The ORCID mirror, seeded as the owner so there is something for erasure to destroy.
+-- Inserted before the subject erases themselves, below.
+insert into public.orcid_profiles (scholar, orcid, employment_organization, keywords, fetch_status)
+values (:'subject', '0000-0001-9999-9999', 'University of Test', array['testing'], 'ok');
+
 select tests.authenticate_as(:'subject');
 
 select isnt(
@@ -100,6 +115,30 @@ select is(
 	'the auth identity is destroyed but the row survives, so the foreign keys hold'
 );
 
+-- An erased address must not survive in mail about other people. It did, until `cc` and
+-- `reply_to` existed to hold it and nothing looked for it there.
+select is(
+	(select cc from public.emails
+		where event = 'NewVolunteer' and venue = :'ven' and email = 'era_other@test.local'),
+	null,
+	'the erased scholar is no longer copied on mail about someone else'
+);
+
+select is(
+	(select reply_to from public.emails
+		where event = 'NewVolunteer' and venue = :'ven' and email = 'era_other@test.local'),
+	null,
+	'the erased scholar is no longer the address replies to that mail would reach'
+);
+
+-- Only the erased scholar's address leaves. The rest of the row belongs to other people.
+select is(
+	(select email from public.emails
+		where event = 'NewVolunteer' and venue = :'ven' and email = 'era_other@test.local'),
+	'era_other@test.local',
+	'the other recipient of that mail keeps their own address'
+);
+
 -- ---- What must NOT be destroyed --------------------------------------------------
 -- The transaction belongs to the venue's records as much as to the scholar; the
 -- tokens are currency. Losing either would corrupt other people's history.
@@ -129,6 +168,40 @@ select is(
 	(select count(*)::int from public.erasures where subject = :'subject' and completed_at is not null),
 	1,
 	'the erasure is recorded so it can be re-applied after a restore'
+);
+
+-- ---- Erasure destroys the privilege with the identity ----------------------------
+-- A tombstone that is still a steward appears on the public /about list as
+-- "anonymous", still satisfies isSteward(), and would satisfy set_steward's
+-- last-steward guard on behalf of a uuid nobody can sign into — letting the last
+-- real steward be demoted while nobody is left who can act.
+select tests.authenticate_as(:'steward');
+select public.erase_scholar() as _erased_steward \gset
+
+select tests.clear_authentication();
+select is(
+	(select steward from public.scholars where id = :'steward'),
+	false,
+	'erasing a steward revokes their stewardship'
+);
+
+-- ---- The ORCID mirror goes with the identity --------------------------------------
+-- The foreign key is ON DELETE CASCADE, and that is not what removes this: erasure
+-- anonymises the scholar row in place rather than deleting it, so no cascade fires. If
+-- the explicit delete in forget_scholar were dropped, this row would survive with the
+-- erased scholar's affiliation and publication history still attached to their uuid.
+select is(
+	(select count(*)::int from public.orcid_profiles where scholar = :'subject'),
+	0,
+	'erasure destroys the ORCID mirror, which no cascade would have removed'
+);
+
+-- The iD is nulled too, so nothing can re-fetch the row back: claim_orcid_refresh skips a
+-- scholar with no iD, which is the guard that makes the delete above stick.
+select is(
+	(select orcid from public.scholars where id = :'subject'),
+	null,
+	'the erased scholar has no iD left to re-fetch a mirror with'
 );
 
 select * from finish();

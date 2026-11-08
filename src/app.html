@@ -2,16 +2,79 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<!-- The SVG is the real icon; the PNG is the fallback for browsers that predate
+		     `type="image/svg+xml"` support, and iOS ignores SVG touch icons entirely. -->
+		<link rel="icon" href="%sveltekit.assets%/brand/favicon.svg" type="image/svg+xml" />
+		<link rel="icon" href="%sveltekit.assets%/brand/favicon.png" sizes="any" />
+		<link rel="apple-touch-icon" href="%sveltekit.assets%/brand/apple-touch-icon.png" />
+		<meta name="theme-color" content="#007284" />
+
+		<!-- Defaults for a link to any page. Per-page <title> is set by Page.svelte;
+		     these describe the platform, which is what a shared link is announcing.
+		     og:image must be a raster — Slack, LinkedIn, and iMessage all reject SVG. -->
+		<meta
+			name="description"
+			content="Reciprocal Reviews makes peer review count: editors price submissions in review tokens, and authors earn them by reviewing."
+		/>
+		<meta property="og:site_name" content="Reciprocal Reviews" />
+		<meta property="og:title" content="Reciprocal Reviews" />
+		<meta
+			property="og:description"
+			content="Make peer review count. Editors price submissions in review tokens, and authors earn them by reviewing."
+		/>
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://reciprocal.reviews" />
+		<meta property="og:image" content="https://reciprocal.reviews/brand/og-image.png" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta name="twitter:card" content="summary_large_image" />
+
 		%sveltekit.head%
 
+		<!-- The two faces that always load: the body face, and the latin subset of the
+		     heading face. Both are discovered only after the inline CSS below parses, so
+		     preloading starts them a round trip earlier. `crossorigin` is required even
+		     though these are same-origin — fonts are fetched in CORS mode, and without it
+		     the preload is discarded and the file fetched twice. The italic Josefin and
+		     the other two Quicksand subsets are conditional, so they are not preloaded. -->
+		<link
+			rel="preload"
+			as="font"
+			type="font/woff2"
+			href="%sveltekit.assets%/fonts/Josefin/JosefinSansVariable.woff2"
+			crossorigin
+		/>
+		<link
+			rel="preload"
+			as="font"
+			type="font/woff2"
+			href="%sveltekit.assets%/fonts/Quicksand/Quicksand500-3.woff2"
+			crossorigin
+		/>
+
+		<!-- Noto Emoji (in the body stack below) and Noto Sans Mono (for `code`) are the
+		     only faces not self-hosted, and this was the page's one render-blocking
+		     third-party resource: nothing painted until DNS, TLS, and the fetch against
+		     fonts.googleapis.com all completed. `media="print"` makes it non-blocking, and
+		     the onload promotes it once it has arrived. The URL already asks for
+		     `display=swap`, so text renders in the fallback and swaps, exactly as the
+		     self-hosted faces do. -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
 			href="https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300..700&family=Noto+Sans+Mono:wght@100..900&display=swap"
 			rel="stylesheet"
+			media="print"
+			onload="this.media = 'all'"
 		/>
+		<noscript>
+			<link
+				href="https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300..700&family=Noto+Sans+Mono:wght@100..900&display=swap"
+				rel="stylesheet"
+			/>
+		</noscript>
 
 		<style global>
 			/* vietnamese */
@@ -77,6 +140,10 @@
 				--salient-color: #007284;
 				--salient-color-faded: #e1eff2;
 				--focus-color: #db501e;
+				/* Companion tint for the focus colour, so a warning can be shown in
+				   the same bordered/tinted idiom as an error rather than only as the
+				   solid bar Banner uses. */
+				--focus-color-faded: #fde9e1;
 				--error-color: #840054;
 				--error-color-faded: #ffdceb;
 				--border-color: #bbbbbb;
@@ -88,23 +155,53 @@
 				--spacing-half: 0.5rem;
 				--roundedness: 0.25rem;
 				--thick-border-width: 4px;
+				/* The height of a row of chrome — the nav and the venue bar — declared rather
+				   than left to whatever happens to be in it. What IS in those rows changes
+				   with the viewport: a link collapses into the overflow menu and the ☰
+				   takes its place, and a small Button, a small Link and the ☰ are not the
+				   same height. Both rows are measured into sticky offsets for everything
+				   below them (`--nav-height`, `--page-header-height`), so a row that grew
+				   three pixels when it collapsed would move every page vertically on a
+				   resize. Tall enough for the tallest of them; over-declaring costs a few
+				   pixels of chrome, under-declaring costs the invariant. */
+				--chrome-row-height: 3rem;
 				--page-width: 45rem;
 			}
 
 			/*
-			 * The nav header and the footer are both `position: sticky`, so they overlay
-			 * whatever the page scrolls under them. Reserve that space on the scrollport so
-			 * anything scrolled to — an anchor link beside a heading, or an element a test
-			 * or the browser scrolls into view — lands in the visible band between them
-			 * rather than underneath. Without this, a control near the end of a long page
-			 * can sit permanently beneath the footer: visible, but impossible to click.
+			 * Two sticky bands overlay whatever the page scrolls under them: the nav in
+			 * `Nav.svelte`, and the page title block in `Page.svelte` that pins directly
+			 * below it. Reserve both on the scrollport so anything scrolled to — an anchor
+			 * beside a heading, or an element a test or the browser scrolls into view —
+			 * lands in the visible band beneath them rather than underneath.
 			 *
-			 * The start value covers the nav plus up to three stacked banners (beta, test
-			 * environment, unverified email), which is the tallest the header gets.
+			 * Both heights are measured at runtime by the `measure` action and written
+			 * here, because each varies: the nav with how many banners are up and whether
+			 * its row wraps, the title block with the length of the title and whether the
+			 * page supplies a subtitle or details. The fallbacks are typical values, used
+			 * for the first paint before the observers report and whenever script is off.
+			 *
+			 * The end value is `--bottom-chrome`, the beta notice pinned to the bottom of
+			 * the viewport (#176). It used to be 0, on the grounds that the footer is in
+			 * normal flow and covers nothing — true until something down there stopped
+			 * being in normal flow. This is one half of the pair #156 retired; the other is
+			 * `padding-block-end` on the footer itself.
+			 *
+			 * Its fallback is 0, which is the OPPOSITE of the rule the two start values
+			 * follow, and deliberately so. Those bands are always there, so guessing high
+			 * only over-reserves. The notice is dismissible and absent for anyone who has
+			 * dismissed it, so a non-zero fallback would charge every page a strip of
+			 * nothing. Guess in the direction that is wrong less often.
+			 *
+			 * `--page-header-height` is the venue bar's, the one sticky band below the nav,
+			 * and only inside a venue. Page titles render in the column everywhere, so
+			 * outside a venue nothing writes it, and its fallback is 0 for that reason: a
+			 * guess here would reserve a strip of nothing above every anchored heading on
+			 * every page that has no second band.
 			 */
 			html {
-				scroll-padding-block-start: 14rem;
-				scroll-padding-block-end: 5rem;
+				scroll-padding-block-start: calc(var(--nav-height, 8rem) + var(--page-header-height, 0px));
+				scroll-padding-block-end: var(--bottom-chrome, 0px);
 			}
 
 			body {
@@ -116,6 +213,24 @@
 				padding: 0;
 				margin: 0;
 				line-height: 1.4;
+
+				/* A column at least as tall as the viewport, so `main` can absorb the slack
+				   and the footer is carried to the bottom instead of ending up mid-screen on
+				   a short page (#156). `dvh` rather than `svh`/`lvh` because it tracks the
+				   viewport as a mobile URL bar hides — which is the moment the footer was
+				   reported detaching. The body's app wrapper is `display: contents`, so
+				   header/main/footer are the flex items here.
+
+				   Less whatever is pinned over the bottom of the viewport (#176). Without
+				   the subtraction the column fills the whole viewport, which parks the
+				   footer's own links underneath the beta notice on any page short enough for
+				   `main` to be absorbing slack — and those links are what someone who is
+				   stuck comes down here for. The footer's `padding-block-end` covers the
+				   other case, a page long enough to scroll. */
+				min-height: calc(100vh - var(--bottom-chrome, 0px));
+				min-height: calc(100dvh - var(--bottom-chrome, 0px));
+				display: flex;
+				flex-direction: column;
 			}
 
 			strong,
@@ -149,10 +264,6 @@
 
 			h1 {
 				font-size: var(--header-font-size);
-				background: var(--salient-color);
-				color: var(--background-color);
-				padding: var(--spacing);
-				border-radius: 0 0 var(--roundedness) var(--roundedness);
 				margin-top: 0;
 				display: flex;
 				flex-direction: row;
@@ -194,6 +305,49 @@
 
 			p:last-child {
 				margin-block-end: 0;
+			}
+
+			/* The review token chip. Global rather than scoped to Tokens.svelte because the
+			   same markup is also produced as an HTML string by tokenChip() and rendered
+			   through `{@html}`, which Svelte's style scoping does not reach. */
+			.token {
+				font-weight: 500;
+				font-size: var(--small-font-size);
+				padding: var(--spacing-half);
+				border-radius: var(--roundedness);
+				background-color: var(--salient-color-faded);
+				/* The chip wraps, so each line gets its own background and padding rather
+				   than one box straddling the break. */
+				box-decoration-break: clone;
+				/* The chip may wrap, because the currency name inside it is venue-authored
+				   and can be long: "★ 25 Computing Education Tokens" held on one line sets a
+				   minimum width that a table column then has to find room for, and the
+				   transactions table is already the widest thing on the platform. Only the
+				   star and the amount are held together, below — they are one value, and
+				   wrapping between them reads as two. The unit word is free to follow the
+				   name, since the name already separates it from the amount. */
+				white-space: normal;
+			}
+
+			/* The star and the amount: never split. */
+			.token .value {
+				white-space: nowrap;
+			}
+
+			.token .star {
+				color: var(--salient-color);
+			}
+
+			.token .currency {
+				font-weight: 300;
+			}
+
+			.token.debit {
+				background-color: var(--error-color-faded);
+			}
+
+			.token.debit .star {
+				color: var(--error-color);
 			}
 
 			code {
@@ -255,9 +409,60 @@
 			legend {
 				font-style: italic;
 			}
+
+			/* Between the HTML arriving and the app mounting, every button below is drawn but
+			   wired to nothing, and a click is dropped without a trace. The class is removed by
+			   the root layout the moment handlers exist (see +layout.svelte); until then the
+			   cursor says "wait" rather than "press". */
+			body.hydrating button {
+				cursor: progress;
+			}
 		</style>
 	</head>
-	<body data-sveltekit-preload-data="hover">
+	<body data-sveltekit-preload-data="hover" class="hydrating">
+		<!--
+			The last resort, and deliberately outside Svelte.
+
+			A component that throws while the page is hydrating takes the whole root mount down with
+			it, and leaves the reader whatever the server sent: a page that is drawn, styled, and
+			wired to nothing. Every button is dead, the browser still depresses them because :active
+			is CSS, and nobody is told anything at all. A scholar lost a working profile page that way
+			and spent weeks clicking a button that could not possibly respond.
+
+			Two things were tried before this and are recorded so they are not tried again. A
+			<svelte:boundary> around the page does not work: when it catches a throw during HYDRATION
+			it discards the half-hydrated DOM and renders its fallback into nothing, emptying the
+			document. Nor can this reveal a notice the server rendered, for the same reason — the
+			failure can take that notice with it. So the element is BUILT here, out of nothing, by
+			code that has already run by the time anything can go wrong.
+
+			The class below is removed by the root layout on mount. If it is still here ten seconds
+			later the app never mounted, and ten seconds is long enough that a slow connection still
+			working is never accused of having failed.
+
+			The English is hardcoded, which is the one thing here that is not how this app does
+			things. It has to be: the locale arrives through Svelte, and the whole point of this
+			notice is that it is shown when Svelte is what broke. English is the only locale today,
+			and a sentence the reader can act on beats a correct system that says nothing.
+		-->
+		<script>
+			setTimeout(function () {
+				if (!document.body.classList.contains('hydrating')) return;
+				var notice = document.createElement('div');
+				notice.id = 'hydration-failed';
+				notice.setAttribute('data-testid', 'hydration-failed');
+				notice.setAttribute('role', 'alert');
+				// The same tokens the rest of the page uses, which are defined in the style block
+				// above rather than by Svelte — so they are available even now.
+				notice.style.cssText =
+					'position:fixed;inset-block-start:0;inset-inline:0;z-index:100;text-align:center;' +
+					'padding:var(--spacing);background:var(--error-color-faded);color:var(--error-color);' +
+					'border-block-end:var(--thick-border-width, 3px) solid var(--error-color)';
+				notice.textContent =
+					'This page did not finish loading, so its buttons will not respond. Reload the page, and report it at github.com/reciprocalreviews/reciprocalapp/issues if it keeps happening.';
+				document.body.appendChild(notice);
+			}, 10000);
+		</script>
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>

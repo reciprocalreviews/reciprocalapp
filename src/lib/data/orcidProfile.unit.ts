@@ -1,0 +1,482 @@
+import { describe, expect, test } from 'vitest';
+import emptyEducations from './orcid-fixtures/empty-educations.json';
+import emptyEmployments from './orcid-fixtures/empty-employments.json';
+import emptyPerson from './orcid-fixtures/empty-person.json';
+import emptyWorks from './orcid-fixtures/empty-works.json';
+import fullEducations from './orcid-fixtures/full-educations.json';
+import fullEmployments from './orcid-fixtures/full-employments.json';
+import fullPerson from './orcid-fixtures/full-person.json';
+import fullWorks from './orcid-fixtures/full-works.json';
+import sparseEducations from './orcid-fixtures/sparse-educations.json';
+import sparseEmployments from './orcid-fixtures/sparse-employments.json';
+import sparsePerson from './orcid-fixtures/sparse-person.json';
+import sparseWorks from './orcid-fixtures/sparse-works.json';
+import {
+	buildProfile,
+	MAX_WORKS,
+	orcidAPIURL,
+	orcidHeaders,
+	parseEducations,
+	parseEmployments,
+	parsePerson,
+	parseWorks
+} from './orcidProfile';
+
+/** The fixtures are real responses from pub.orcid.org, captured once and committed so
+ * these tests never touch the network. `full` is a mid-career record (46 works trimmed
+ * to 8 groups, keeping the three that hold more than one summary), `sparse` a new one,
+ * `empty` a synthesised record with every section present and nothing in it. */
+
+describe('works', () => {
+	test('counts groups, not summaries', () => {
+		// The trap this exists for: one work claimed by Crossref, by Scopus and by the
+		// scholar is three summaries in ONE group. The fixture holds 8 groups across 12
+		// summaries, so a parser counting summaries answers 12.
+		const summaries = fullWorks.group.reduce((n, g) => n + g['work-summary'].length, 0);
+		expect(summaries).toBe(12);
+		expect(parseWorks(fullWorks).workCount).toBe(8);
+	});
+
+	test('keeps at most MAX_WORKS, newest first', () => {
+		const { works } = parseWorks(fullWorks);
+		expect(works).toHaveLength(MAX_WORKS);
+		const years = works.map((w) => w.year);
+		expect([...years].sort((a, b) => (b ?? 0) - (a ?? 0))).toEqual(years);
+	});
+
+	test('spans every work, not only the ones kept', () => {
+		const { works, workFirstYear, workLastYear } = parseWorks(fullWorks);
+		// 2021 is outside the five kept, so a span computed from `works` would miss it.
+		expect(workFirstYear).toBe(2021);
+		expect(workLastYear).toBe(2027);
+		expect(Math.min(...works.map((w) => w.year ?? Infinity))).toBeGreaterThan(workFirstYear!);
+	});
+
+	test('prefers the most complete summary in a group', () => {
+		// Group 16 of the real record: Crossref's copy carries no journal title, the
+		// scholar's own does. Picking by put-code alone would take the Crossref one.
+		const multi = fullWorks.group.find((g) => g['work-summary'].length > 1)!;
+		const parsed = parseWorks({ group: [multi] });
+		const withJournal = multi['work-summary'].some(
+			(s: Record<string, unknown>) => s['journal-title'] !== null
+		);
+		if (withJournal) expect(parsed.works[0].journal).not.toBeNull();
+	});
+
+	test('picks the same summary whichever order they arrive in', () => {
+		const multi = fullWorks.group.find((g) => g['work-summary'].length > 2)!;
+		const forwards = parseWorks({ group: [multi] }).works[0];
+		const backwards = parseWorks({
+			group: [{ ...multi, 'work-summary': [...multi['work-summary']].reverse() }]
+		}).works[0];
+		expect(backwards).toEqual(forwards);
+	});
+
+	test('links a DOI in preference to the record url', () => {
+		const { works } = parseWorks(fullWorks);
+		const withDoi = works.find((w) => w.doi !== null)!;
+		expect(withDoi.url).toBe(`https://doi.org/${withDoi.doi}`);
+	});
+
+	test('an undated work sorts last and does not poison the span', () => {
+		const { works, workFirstYear, workLastYear } = parseWorks({
+			group: [
+				{ 'work-summary': [{ title: { title: { value: 'Undated' } }, 'publication-date': null }] },
+				{
+					'work-summary': [
+						{
+							title: { title: { value: 'Dated' } },
+							'publication-date': { year: { value: '2011' } }
+						}
+					]
+				}
+			]
+		});
+		expect(works.map((w) => w.title)).toEqual(['Dated', 'Undated']);
+		expect([workFirstYear, workLastYear]).toEqual([2011, 2011]);
+	});
+
+	test('counts journals across every work, not only the ones kept', () => {
+		const { works, workJournals } = parseWorks(fullWorks);
+		const counted = workJournals.reduce((n, j) => n + j.count, 0);
+		const kept = works.filter((w) => w.journal !== null).length;
+		expect(counted).toBeGreaterThan(kept);
+		// Most frequent first.
+		const counts = workJournals.map((j) => j.count);
+		expect([...counts].sort((a, b) => b - a)).toEqual(counts);
+		expect(workJournals[0]).toEqual({
+			journal: 'ACM Transactions on Computing Education',
+			count: 2
+		});
+	});
+
+	test('treats journal titles differing only in case and spacing as one', () => {
+		const titled = (journal: string) => ({
+			'work-summary': [
+				{ title: { title: { value: journal } }, 'journal-title': { value: journal } }
+			]
+		});
+		expect(
+			parseWorks({
+				group: [titled('Computer  Science Education '), titled('computer science education')]
+			}).workJournals
+		).toEqual([{ journal: 'Computer Science Education', count: 2 }]);
+	});
+
+	/** A helper for the dedupe tests below: one group holding one summary. */
+	const group = (title: string, year: number | null, doi?: string) => ({
+		'work-summary': [
+			{
+				title: { title: { value: title } },
+				'publication-date': year === null ? null : { year: { value: String(year) } },
+				'journal-title': { value: 'TOCE' },
+				'external-ids':
+					doi === undefined
+						? null
+						: { 'external-id': [{ 'external-id-type': 'doi', 'external-id-value': doi }] }
+			}
+		]
+	});
+
+	test('a paper the record holds twice is one work, but still counts twice', () => {
+		// ORCID groups by shared external id, so the same paper deposited twice without
+		// matching ids is two groups. That is the record's own shape, not a fault in it:
+		// `workCount` reports what the record holds, which is the number its owner would
+		// recognise, while the list shows each work once.
+		const parsed = parseWorks({ group: [group('Editorial', 2024), group('Editorial', 2024)] });
+		expect(parsed.works).toHaveLength(1);
+		expect(parsed.workCount).toBe(2);
+	});
+
+	test('the copy kept is the newest one', () => {
+		// Sorting before deduplicating is what makes this true, and it is the reason the two
+		// steps are in that order: the published version outranks the preprint.
+		const parsed = parseWorks({
+			group: [
+				group('A Lightweight Web Tool', 2023, '10.1/x'),
+				group('A Lightweight Web Tool', 2025, '10.1/x')
+			]
+		});
+		expect(parsed.works.map((w) => w.year)).toEqual([2025]);
+	});
+
+	test('one DOI in two spellings is one work', () => {
+		const parsed = parseWorks({
+			group: [
+				group('Preprint', 2024, '10.1109/ACCESS.2024.3521237'),
+				group('Published', 2025, '10.1109/access.2024.3521237')
+			]
+		});
+		expect(parsed.works.map((w) => w.title)).toEqual(['Published']);
+	});
+
+	test('two works with different DOIs are kept, however alike they read', () => {
+		const parsed = parseWorks({
+			group: [group('Ball Point Game', 2025, '10.1/a'), group('Ball Point Game', 2025, '10.1/b')]
+		});
+		expect(parsed.works).toHaveLength(2);
+	});
+
+	test('deduplicating before slicing keeps MAX_WORKS distinct works', () => {
+		// The point of doing it in this order: six groups of which two are the same work
+		// should still fill the list, rather than showing four and an echo.
+		const parsed = parseWorks({
+			group: [
+				group('F', 2026),
+				group('F', 2026),
+				group('E', 2025),
+				group('D', 2024),
+				group('C', 2023),
+				group('B', 2022),
+				group('A', 2021)
+			]
+		});
+		expect(parsed.works.map((w) => w.title)).toEqual(['F', 'E', 'D', 'C', 'B']);
+	});
+
+	test('the span still covers a work the record holds twice', () => {
+		// `years` is computed before the dedupe for exactly this reason.
+		const parsed = parseWorks({
+			group: [group('New', 2025), group('Old', 2001), group('Old', 2001)]
+		});
+		expect([parsed.workFirstYear, parsed.workLastYear]).toEqual([2001, 2025]);
+	});
+
+	test('a work with no title is dropped rather than rendered blank', () => {
+		const { works, workCount } = parseWorks({
+			group: [
+				{ 'work-summary': [{ title: { title: { value: '   ' } } }] },
+				{ 'work-summary': [{ title: { title: { value: 'Real' } } }] }
+			]
+		});
+		expect(works.map((w) => w.title)).toEqual(['Real']);
+		// Still counted: the record holds two works, we can only display one of them.
+		expect(workCount).toBe(2);
+	});
+
+	test('an empty works section is 0, never null', () => {
+		// Null means "not read". They are different states and the interface branches
+		// on the difference, so this is the assertion that keeps them apart.
+		const { workCount, works } = parseWorks(emptyWorks);
+		expect(workCount).toBe(0);
+		expect(works).toEqual([]);
+	});
+});
+
+describe('employments', () => {
+	test('reads the current post', () => {
+		const employment = parseEmployments(fullEmployments);
+		expect(employment.employmentOrganization).toBe('University of Washington');
+		expect(employment.employmentRole).toBe('Professor');
+		expect(employment.employmentDepartment).toBe('The Information School');
+	});
+
+	test('a current post beats a more recently ended one', () => {
+		const employment = parseEmployments({
+			'affiliation-group': [
+				{
+					summaries: [
+						{
+							'employment-summary': {
+								'role-title': 'Ended last year',
+								organization: { name: 'Elsewhere' },
+								'start-date': { year: { value: '2015' } },
+								'end-date': { year: { value: '2024' } }
+							}
+						},
+						{
+							'employment-summary': {
+								'role-title': 'Still there',
+								organization: { name: 'Here' },
+								'start-date': { year: { value: '2009' } },
+								'end-date': null
+							}
+						}
+					]
+				}
+			]
+		});
+		expect(employment.employmentOrganization).toBe('Here');
+	});
+
+	test('falls back to the latest-ended post when none is current', () => {
+		const employment = parseEmployments({
+			'affiliation-group': [
+				{
+					summaries: [
+						{
+							'employment-summary': {
+								organization: { name: 'Older' },
+								'end-date': { year: { value: '2001' } }
+							}
+						},
+						{
+							'employment-summary': {
+								organization: { name: 'Newer' },
+								'end-date': { year: { value: '2019' } }
+							}
+						}
+					]
+				}
+			]
+		});
+		expect(employment.employmentOrganization).toBe('Newer');
+	});
+
+	test('an empty section yields nulls, not empty strings', () => {
+		expect(parseEmployments(emptyEmployments)).toEqual({
+			employmentRole: null,
+			employmentDepartment: null,
+			employmentOrganization: null
+		});
+	});
+});
+
+describe('educations', () => {
+	test('reads the degree and institution', () => {
+		const education = parseEducations(fullEducations);
+		expect(education.educationOrganization).toBe('Carnegie Mellon University');
+		expect(education.educationRole).toContain('Ph.D.');
+	});
+
+	test('takes the year from a date carrying no month or day', () => {
+		const education = parseEducations({
+			'affiliation-group': [
+				{
+					summaries: [
+						{
+							'education-summary': {
+								organization: { name: 'Somewhere' },
+								'start-date': { year: { value: '2002' }, month: null, day: null },
+								'end-date': null
+							}
+						}
+					]
+				}
+			]
+		});
+		expect(education.educationYear).toBe(2002);
+	});
+});
+
+describe('person', () => {
+	test('reads keywords in the spelling the record uses', () => {
+		expect(parsePerson(fullPerson).keywords).toEqual([
+			'computing education',
+			'human-computer interaction',
+			'software engineering'
+		]);
+	});
+
+	test('de-duplicates keywords case-insensitively', () => {
+		const { keywords } = parsePerson({
+			keywords: { keyword: [{ content: 'HCI' }, { content: 'hci' }, { content: '  ' }] }
+		});
+		expect(keywords).toEqual(['HCI']);
+	});
+
+	test('reads researcher urls and external identifiers as links', () => {
+		const { links } = parsePerson(fullPerson);
+		expect(links.some((l) => l.kind === 'url' && l.label === 'Faculty website')).toBe(true);
+		expect(links.some((l) => l.kind === 'identifier' && l.label === 'Scopus Author ID')).toBe(true);
+	});
+
+	test('a url with no name is labelled with itself', () => {
+		const { links } = parsePerson({
+			'researcher-urls': {
+				'researcher-url': [{ 'url-name': null, url: { value: 'https://x.test' } }]
+			}
+		});
+		expect(links[0].label).toBe('https://x.test');
+	});
+
+	test('an identifier the record lists twice is read once', () => {
+		// Transcribed from the record that broke a profile page: ResearcherID D-1001-2018,
+		// entered twice, either side of a Scopus id. ORCID permits this — nothing is wrong
+		// with the record — so the parser has to tolerate it.
+		const { links } = parsePerson({
+			'external-identifiers': {
+				'external-identifier': [
+					{ 'external-id-type': 'ResearcherID', 'external-id-value': 'D-1001-2018' },
+					{ 'external-id-type': 'Scopus Author ID', 'external-id-value': '56732624800' },
+					{ 'external-id-type': 'ResearcherID', 'external-id-value': 'D-1001-2018' }
+				]
+			}
+		});
+		expect(links.map((l) => l.label)).toEqual(['ResearcherID', 'Scopus Author ID']);
+	});
+
+	test('two registries issuing the same string are two identifiers', () => {
+		const { links } = parsePerson({
+			'external-identifiers': {
+				'external-identifier': [
+					{ 'external-id-type': 'ResearcherID', 'external-id-value': '12345' },
+					{ 'external-id-type': 'Scopus Author ID', 'external-id-value': '12345' }
+				]
+			}
+		});
+		expect(links).toHaveLength(2);
+	});
+
+	test('one address listed twice is one link, named or not', () => {
+		// The label is not part of a url's identity, because a url with no name is labelled
+		// with itself — so the same address can arrive under two spellings.
+		const { links } = parsePerson({
+			'researcher-urls': {
+				'researcher-url': [
+					{ 'url-name': 'Home page', url: { value: 'https://x.test' } },
+					{ 'url-name': null, url: { value: 'https://x.test' } }
+				]
+			}
+		});
+		expect(links.map((l) => l.label)).toEqual(['Home page']);
+	});
+
+	test('reads no email, whatever the record publishes', () => {
+		// ORCID does publish public verified addresses, and the full fixture has one.
+		// RR verifies its own (#27) and must never adopt one it did not.
+		expect(JSON.stringify(parsePerson(fullPerson))).not.toContain('@');
+	});
+});
+
+describe('whole records', () => {
+	test('a sparse record parses without inventing anything', () => {
+		const profile = buildProfile({
+			person: sparsePerson,
+			employments: sparseEmployments,
+			educations: sparseEducations,
+			works: sparseWorks
+		});
+		expect(profile.keywords).toEqual([]);
+		expect(profile.employmentOrganization).toBeNull();
+		expect(profile.workCount).toBe(7);
+	});
+
+	test('an empty record parses to a well-formed profile', () => {
+		const profile = buildProfile({
+			person: emptyPerson,
+			employments: emptyEmployments,
+			educations: emptyEducations,
+			works: emptyWorks
+		});
+		expect(profile.keywords).toEqual([]);
+		expect(profile.works).toEqual([]);
+		expect(profile.workCount).toBe(0);
+		expect(profile.employmentOrganization).toBeNull();
+	});
+
+	test('omitting a section leaves its fields absent rather than null', () => {
+		// What a partly-failed refresh relies on: the caller keeps whatever it already
+		// had for the sections that did not come back.
+		const profile = buildProfile({ person: fullPerson });
+		expect(profile.keywords).toHaveLength(3);
+		expect('employmentOrganization' in profile).toBe(false);
+		expect('workCount' in profile).toBe(false);
+	});
+
+	test('garbage parses to nothing rather than throwing', () => {
+		// A shape change upstream must degrade one scholar, not throw inside a batch
+		// and lose the rest of it.
+		for (const junk of [null, 'nope', 42, [], { group: 'not an array' }]) {
+			expect(() => buildProfile({ person: junk, works: junk })).not.toThrow();
+		}
+	});
+});
+
+test('builds section urls', () => {
+	expect(orcidAPIURL('0000-0001-7461-4783', 'works')).toBe(
+		'https://pub.orcid.org/v3.0/0000-0001-7461-4783/works'
+	);
+});
+
+describe('orcidHeaders', () => {
+	test('sends no Authorization when there is no token', () => {
+		// The tested default. An unconfigured project reads anonymously and everything works.
+		expect('Authorization' in orcidHeaders()).toBe(false);
+		expect('Authorization' in orcidHeaders(undefined)).toBe(false);
+		expect('Authorization' in orcidHeaders(null)).toBe(false);
+	});
+
+	test('treats an empty or blank token as absent', () => {
+		// How an unconfigured environment usually presents itself. Sending `Bearer ` would
+		// turn every read into a 401, which is strictly worse than sending nothing.
+		expect('Authorization' in orcidHeaders('')).toBe(false);
+		expect('Authorization' in orcidHeaders('   ')).toBe(false);
+	});
+
+	test('sends a bearer when there is one, trimmed', () => {
+		expect(orcidHeaders('abc123').Authorization).toBe('Bearer abc123');
+		// A secret pasted with a stray newline still works, as with the vault secrets.
+		expect(orcidHeaders('  abc123\n').Authorization).toBe('Bearer abc123');
+	});
+
+	test('always asks for gzip and identifies itself', () => {
+		// gzip is the only bandwidth lever: ORCID sends no ETag and ignores
+		// If-Modified-Since, so a conditional fetch is not available.
+		for (const headers of [orcidHeaders(), orcidHeaders('abc123')]) {
+			expect(headers['Accept-Encoding']).toBe('gzip');
+			expect(headers['User-Agent']).toContain('ReciprocalReviews');
+			expect(headers.Accept).toBe('application/json');
+		}
+	});
+});

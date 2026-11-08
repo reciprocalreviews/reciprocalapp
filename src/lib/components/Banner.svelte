@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type LocaleText from '$lib/locales/Locale';
-	import type { ButtonText } from '$lib/locales/Locale';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import type { ButtonText } from '#lib/locales/Locale.js';
 	import type { Snippet } from 'svelte';
 	import Button from './Button.svelte';
 
@@ -10,6 +10,7 @@
 		action = undefined,
 		dismiss = undefined,
 		detail = undefined,
+		small = false,
 		testid = undefined
 	}: {
 		/** Determines the banner's color. */
@@ -22,11 +23,20 @@
 		dismiss?: () => void;
 		/** An optional monospace detail line (e.g. a database error message). */
 		detail?: string;
+		/** A quieter rendering for a banner that is not competing for attention — the beta
+		 * notice in the footer, which is read once and then lives at the bottom of the page.
+		 * The colour is unchanged; only the type size and padding shrink. */
+		small?: boolean;
 		testid?: string;
 	} = $props();
 </script>
 
-<div class="banner {level}" role={level === 'error' ? 'alert' : 'status'} data-testid={testid}>
+<div
+	class="banner {level}"
+	class:small
+	role={level === 'error' ? 'alert' : 'status'}
+	data-testid={testid}
+>
 	<div class="body">
 		<span>{@render children()}</span>
 		{#if detail}
@@ -52,6 +62,11 @@
 		border-block-end: var(--border-width) solid var(--border-color);
 	}
 
+	.small {
+		font-size: var(--small-font-size);
+		padding: var(--spacing-half);
+	}
+
 	.body {
 		display: flex;
 		flex-direction: column;
@@ -75,9 +90,17 @@
 		margin-inline-start: var(--spacing);
 	}
 
-	.beta,
-	.success {
+	.beta {
 		background: var(--error-color);
+	}
+
+	/* Salient, not the error colour. Success shared a rule with `.beta` and so announced every
+	   completed action in the same plum as a failure — the one colour in the palette that means
+	   something went wrong. Salient is what the rest of the app already uses for good news:
+	   Status.svelte paints its `good` state with it, and Feedback.svelte's default (the level
+	   that is neither error nor warning) is the same colour and its faded companion. */
+	.success {
+		background: var(--salient-color);
 	}
 
 	.update,

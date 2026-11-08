@@ -1,13 +1,18 @@
 <script lang="ts">
-	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
+	import ContextBar from '#lib/components/ContextBar.svelte';
+	import { venuesBar } from '#lib/data/contextBar.js';
+	import { getAuth } from '#routes/Auth.svelte.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import type { Snippet } from 'svelte';
 
-	let { children } = $props();
+	let { children }: { children: Snippet } = $props();
 
-	// Reload any venue or proposal changes.
-	reloadOnChanges('venues_changes', [
-		{ table: 'proposals', filter: undefined },
-		{ table: 'venues', filter: undefined }
-	]);
+	const auth = getAuth();
+	const locale = getLocaleContext();
 </script>
 
+<ContextBar
+	bar={venuesBar(locale(), auth().isAuthenticated())}
+	menu={(l) => l.header.context.menu}
+/>
 {@render children()}

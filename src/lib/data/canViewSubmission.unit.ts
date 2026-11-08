@@ -1,15 +1,17 @@
 import { describe, expect, test } from 'vitest';
 import canViewSubmission, { type SubmissionViewerContext } from './canViewSubmission';
 
-const SUBMISSION = { id: 's1', authors: ['author'] };
+const SUBMISSION = { id: 's1', authors: ['author'], bidding_closed: false };
+const CLOSED = { ...SUBMISSION, bidding_closed: true };
 
 function context(over: Partial<SubmissionViewerContext> = {}): SubmissionViewerContext {
 	return {
 		uid: 'viewer',
 		venueAdmins: [],
 		roles: [
-			{ id: 'editor', biddable: false },
-			{ id: 'reviewer', biddable: true }
+			{ id: 'copyeditor', biddable: false, priority: 2 },
+			{ id: 'chief', biddable: false, priority: 0 },
+			{ id: 'reviewer', biddable: true, priority: 2 }
 		],
 		viewerVolunteering: [],
 		assignments: [],
@@ -47,11 +49,41 @@ describe('canViewSubmission', () => {
 		).toBe(true);
 	});
 
+	test('an accepted volunteer on a biddable role cannot once bidding is closed', () => {
+		expect(
+			canViewSubmission(
+				CLOSED,
+				context({ viewerVolunteering: [{ roleid: 'reviewer', accepted: 'accepted' }] })
+			)
+		).toBe(false);
+	});
+
+	test('a bidder who already bid can still, once bidding is closed', () => {
+		expect(
+			canViewSubmission(
+				CLOSED,
+				context({
+					viewerVolunteering: [{ roleid: 'reviewer', accepted: 'accepted' }],
+					assignments: [{ submission: 's1', scholar: 'viewer', role: 'reviewer', approved: false }]
+				})
+			)
+		).toBe(true);
+	});
+
+	test('the editor can still, once bidding is closed', () => {
+		expect(
+			canViewSubmission(
+				CLOSED,
+				context({ viewerVolunteering: [{ roleid: 'chief', accepted: 'accepted' }] })
+			)
+		).toBe(true);
+	});
+
 	test('a volunteer on a NON-biddable role cannot on that basis alone', () => {
 		expect(
 			canViewSubmission(
 				SUBMISSION,
-				context({ viewerVolunteering: [{ roleid: 'editor', accepted: 'accepted' }] })
+				context({ viewerVolunteering: [{ roleid: 'copyeditor', accepted: 'accepted' }] })
 			)
 		).toBe(false);
 	});
@@ -129,6 +161,27 @@ describe('canViewSubmission', () => {
 	test('approving a role with no assignment here grants nothing', () => {
 		expect(
 			canViewSubmission(SUBMISSION, context({ assignments: [], approvesRole: () => true }))
+		).toBe(false);
+	});
+
+	// Branch 6. The venue's editors read every submission in it, because an unclaimed
+	// one has no assignment to hang a permission on — and it is exactly the submission
+	// they are being asked to take.
+	test('an accepted volunteer on the priority-0 role can, with no assignment here', () => {
+		expect(
+			canViewSubmission(
+				SUBMISSION,
+				context({ viewerVolunteering: [{ roleid: 'chief', accepted: 'accepted' }] })
+			)
+		).toBe(true);
+	});
+
+	test('a merely invited volunteer on the priority-0 role cannot', () => {
+		expect(
+			canViewSubmission(
+				SUBMISSION,
+				context({ viewerVolunteering: [{ roleid: 'chief', accepted: 'invited' }] })
+			)
 		).toBe(false);
 	});
 

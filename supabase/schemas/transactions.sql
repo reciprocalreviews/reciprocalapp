@@ -26,6 +26,16 @@ create table if not exists public.transactions (
 	to_venue uuid,
 	-- An array of token ids moved in the transaction. If the null UUID, then tokens haven't been determined yet.
 	tokens uuid[] not null,
+	-- How many tokens moved. Generated, not stored independently, so it cannot
+	-- disagree with the array it summarizes -- including across the rewrite from
+	-- placeholder UUIDs to real ids on approval, which changes the contents and
+	-- never the length.
+	--
+	-- It exists so the transaction lists can stop selecting `tokens` at all. The
+	-- array is one UUID per token moved, so a page of twenty transactions from a
+	-- venue that mints in bulk detoasts and ships tens of thousands of UUIDs to
+	-- render a column that only ever showed their count.
+	amount integer generated always as (cardinality(tokens)) stored not null,
 	-- The currency the amount is in
 	currency uuid not null,
 	-- The purpose of the transaction, containing any information necessary for
@@ -151,8 +161,8 @@ $$;
 
 alter function public.transactions_immutable () OWNER to "postgres";
 
-create or replace trigger transactions_immutable_check before
-update on public.transactions for each row
+create or replace trigger transactions_immutable_check
+before update on public.transactions for each row
 execute function public.transactions_immutable ();
 
 -- History is never deleted. See the DELETE policy below.
@@ -174,8 +184,7 @@ alter sequence public.transactions_seq_seq owned by public.transactions.seq;
 -- A column DEFAULT calling nextval() needs USAGE on the sequence for the
 -- INSERTing role, or every client-side insert fails with "permission denied for
 -- sequence". anon is omitted: its INSERT was revoked above.
-grant
-usage on sequence public.transactions_seq_seq to authenticated,
+grant usage on sequence public.transactions_seq_seq to authenticated,
 service_role;
 
 alter table only public.transactions
@@ -190,16 +199,21 @@ add constraint transactions_seq_key unique (seq);
 -- actually issue. Before these, every transaction list was a sequential scan
 -- plus a sort.
 --
--- currency + created_at covers getCurrencyTransactions' filter AND its sort, so
--- an ordered Index Scan can satisfy the ORDER BY with no Sort node; seq makes the
--- pagination stable. On a near-empty table the planner still prefers a bitmap
--- scan plus a sort, which is correct at that size — check the ordered path with
--- `set enable_bitmapscan = off` before concluding the index is unused.
-create index transactions_currency_created_index on public.transactions using btree (currency, created_at desc, seq desc);
+-- currency + status + created_at covers getCurrencyTransactions' filter AND its
+-- whole sort, so an ordered Index Scan can satisfy the ORDER BY with no Sort
+-- node; seq makes the pagination stable. Status is in the list because the query
+-- sorts proposed transactions to the front whatever their date — see the comment
+-- on the three list methods in SupabaseCRUD. On a near-empty table the planner
+-- still prefers a bitmap scan plus a sort, which is correct at that size — check
+-- the ordered path with `set enable_bitmapscan = off` before concluding the index
+-- is unused.
+create index transactions_currency_status_created_index on public.transactions using btree (currency, status, created_at desc, seq desc);
 
 -- The scholar and venue lists filter `from_x = $1 OR to_x = $1`, satisfied as a
--- BitmapOr over these. Partial because the from/to columns are mutually
--- exclusive by CHECK, so roughly half the table is null in each.
+-- BitmapOr over these, and then sort — a bitmap scan destroys index order, so
+-- they cannot be covered the way the currency list is without duplicating a
+-- composite across all four from/to columns. Partial because the from/to columns
+-- are mutually exclusive by CHECK, so roughly half the table is null in each.
 create index transactions_from_scholar_index on public.transactions using btree (from_scholar)
 where
 	from_scholar is not null;
@@ -569,7 +583,8 @@ create or replace function public.transfer_tokens (
 	_transaction uuid
 ) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_from_scholar uuid;
@@ -615,33 +630,21 @@ begin
 		end if;
 	end if;
 
-	-- Pick exactly _amount tokens currently owned by the source in this currency.
-	select array_agg(id) into _token_ids
-	from (
-		select id from public.tokens
-		where currency = _currency
-		  and (
-			(_from_scholar is not null and scholar = _from_scholar)
-			or (_from_venue is not null and venue = _from_venue)
-		  )
-		order by id
-		limit _amount
-	) sub;
-
-	-- The source must actually hold that many tokens. RR003 lets the app show
-	-- the specific "insufficient tokens" message (see SupabaseCRUD.rpcErrorKey).
-	if _token_ids is null or cardinality(_token_ids) < _amount then
-		raise exception 'Insufficient tokens to transfer' using errcode = 'RR003';
-	end if;
-
 	-- Attribute the movement to its transaction. coalesce because finalizing a
 	-- proposed transfer reuses that transaction's id, while a fresh transfer needs
-	-- one generated up front: the tokens move before its row is written.
+	-- one generated up front: the tokens move before its row is written. Set
+	-- before the move, not after, because the token_events trigger reads app.txn
+	-- at the moment of each write.
 	_txn_id := coalesce(_transaction, gen_random_uuid());
 	perform set_config('app.txn', _txn_id::text, true);
 
-	-- Reassign all chosen tokens to the destination in one statement.
-	update public.tokens set scholar = _to_scholar, venue = _to_venue where id = any(_token_ids);
+	-- Take exactly _amount of the source's tokens under lock and reassign them to
+	-- the destination. RR003 lets the app show the specific "insufficient tokens"
+	-- message (see SupabaseCRUD.rpcErrorKey).
+	_token_ids := public._move_tokens(
+		_currency, _from_scholar, _from_venue, _to_scholar, _to_venue,
+		_amount, 'Insufficient tokens to transfer'
+	);
 
 	if _transaction is not null then
 		-- Finalizing a previously proposed transfer: flip it to approved and
@@ -666,20 +669,25 @@ begin
 end;
 $function$;
 
-revoke execute on function public.transfer_tokens (uuid, uuid, text, uuid, text, integer, text, uuid) from public;
-grant execute on function public.transfer_tokens (uuid, uuid, text, uuid, text, integer, text, uuid) to authenticated;
+revoke
+execute on function public.transfer_tokens (uuid, uuid, text, uuid, text, integer, text, uuid)
+from
+	public;
+
+grant
+execute on function public.transfer_tokens (uuid, uuid, text, uuid, text, integer, text, uuid) to authenticated;
 
 -- approve_transaction: approve a proposed transaction, minting and/or moving
 -- tokens and flipping status to 'approved', atomically. SECURITY DEFINER,
 -- re-implementing the transactions UPDATE policy (giver scholar, venue admin, or
--- minter), the no-self-enrichment rule, and the tokens INSERT policy (minting
--- requires a minter). Three branches: pure mint; scholar transfer; venue
--- transfer (minting placeholder tokens first when the reserve lacks them).
-create or replace function public.approve_transaction (
-	_transaction_id uuid
-) returns jsonb language plpgsql security definer
+-- minter), the no-self-enrichment rule (which exempts pure mints, see below), and
+-- the tokens INSERT policy (minting requires a minter). Three branches: pure mint;
+-- scholar transfer; venue transfer (minting placeholder tokens first when the
+-- reserve lacks them).
+create or replace function public.approve_transaction (_transaction_id uuid) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_txn public.transactions;
@@ -689,6 +697,8 @@ declare
 	_null_count integer;
 	_needed integer;
 	_token_ids uuid[];
+	_mint_txn uuid;
+	_minted uuid[];
 begin
 	-- Identify and require an authenticated caller.
 	_caller := (select auth.uid());
@@ -706,10 +716,11 @@ begin
 		raise exception 'Transaction is not proposed' using errcode = 'RR001';
 	end if;
 
-	-- Every token write below — the pure mint, the shortfall mint, and the
-	-- transfer — belongs to this one transaction, so attribute once here. Cleared
-	-- before each return so a later write in the same database transaction cannot
-	-- inherit it.
+	-- The pure mint and the transfer below belong to this one transaction, so
+	-- attribute once here. Cleared before each return so a later write in the same
+	-- database transaction cannot inherit it. The shortfall mint in Branch B is the
+	-- exception: it is its own transaction and sets app.txn to its own id, then
+	-- restores this one for the move that follows.
 	perform set_config('app.txn', _transaction_id::text, true);
 
 	-- Collapse the from/to scholar-or-venue pairs into single endpoints; every
@@ -723,12 +734,17 @@ begin
 	-- No-self-enrichment: spending one's own balance is unrestricted; otherwise
 	-- the approver may not be the recipient or an admin of the recipient venue.
 	-- RR002 lets the app show the specific self-dealing message.
+	--
+	-- A pure mint (`_from` is null) into a venue you administer is exempt: a small
+	-- community's organizer may be its only minter, and the platform now discloses
+	-- that arrangement on the venue page rather than forbidding it. Moving tokens
+	-- that already exist into a venue you run is a different act and still refused.
 	_spending_own := (_txn.from_scholar is not null and _txn.from_scholar = _caller);
 	if not _spending_own then
 		if _txn.to_scholar is not null and _txn.to_scholar = _caller then
 			raise exception 'You cannot approve a transaction that pays you' using errcode = 'RR002';
 		end if;
-		if _txn.to_venue is not null and public.isAdmin(_txn.to_venue) then
+		if _from is not null and _txn.to_venue is not null and public.isAdmin(_txn.to_venue) then
 			raise exception 'You cannot approve a transaction that pays a venue you administer' using errcode = 'RR002';
 		end if;
 	end if;
@@ -781,35 +797,59 @@ begin
 
 	-- If the venue source is short real tokens, mint the placeholders into its
 	-- reserve first. Minting requires a minter (tokens INSERT policy).
+	--
+	-- Recorded as its own approved mint transaction crediting the reserve, for the
+	-- reason _move_tokens now gives: the transfer below records only the debit, so
+	-- minting without a counter-entry leaves the venue permanently holding more
+	-- than its own history accounts for. This drifted even when the reserve was
+	-- NOT short, because the mint is sized by _null_count -- the placeholders the
+	-- proposal carried -- rather than by whatever the reserve turned out to lack.
+	--
+	-- NOT delegated to _move_tokens(_mint_shortfall => true), which looks like the
+	-- DRY move and is a security regression: the isminter gate and the amount are
+	-- both pinned to _null_count here, whereas _move_tokens would size the mint by
+	-- the actual shortfall at approval time. A reserve drained between proposal and
+	-- approval would then turn a case that correctly raises RR003 into one minter
+	-- approval authorizing an unbounded mint. Two mint sites, both correct.
 	if _null_count > 0 and _txn.from_venue is not null then
 		if not public.isminter(_caller, _txn.currency) then
 			raise exception 'Only currency minters can mint the tokens this transaction requires';
 		end if;
-		insert into public.tokens (currency, venue, scholar)
-		select _txn.currency, _txn.from_venue, null from generate_series(1, _null_count);
+
+		_mint_txn := gen_random_uuid();
+		perform set_config('app.txn', _mint_txn::text, true);
+
+		with inserted as (
+			insert into public.tokens (currency, venue, scholar)
+			select _txn.currency, _txn.from_venue, null from generate_series(1, _null_count)
+			returning id
+		)
+		select array_agg(id) into _minted from inserted;
+
+		insert into public.transactions (
+			id, creator, from_scholar, from_venue, to_scholar, to_venue,
+			tokens, currency, purpose, status
+		) values (
+			_mint_txn, _caller, null, null, null, _txn.from_venue,
+			_minted, _txn.currency,
+			'Minted to complete an approved transfer', 'approved'
+		);
+
+		-- Back to the transaction being approved: the move below is its movement.
+		perform set_config('app.txn', _transaction_id::text, true);
 	end if;
 
-	-- Choose as many of the source's tokens as the transaction calls for.
+	-- Take as many of the source's tokens as the transaction calls for, under
+	-- lock, and move them to the recipient. Rolls back any mint above if the
+	-- source cannot cover it.
 	_needed := cardinality(_txn.tokens);
-	select array_agg(id) into _token_ids
-	from (
-		select id from public.tokens
-		where currency = _txn.currency
-		  and (
-			(_txn.from_scholar is not null and scholar = _txn.from_scholar)
-			or (_txn.from_venue is not null and venue = _txn.from_venue)
-		  )
-		order by id
-		limit _needed
-	) sub;
+	_token_ids := public._move_tokens(
+		_txn.currency, _txn.from_scholar, _txn.from_venue,
+		_txn.to_scholar, _txn.to_venue,
+		_needed, 'Insufficient tokens to complete the transfer'
+	);
 
-	-- Bail (rolling back any mint above) if the source can't cover the transfer.
-	if _token_ids is null or cardinality(_token_ids) < _needed then
-		raise exception 'Insufficient tokens to complete the transfer' using errcode = 'RR003';
-	end if;
-
-	-- Move the tokens to the recipient and finalize the transaction together.
-	update public.tokens set scholar = _txn.to_scholar, venue = _txn.to_venue where id = any(_token_ids);
+	-- Finalize the transaction with the tokens that actually moved.
 	update public.transactions set status = 'approved', tokens = _token_ids where id = _transaction_id;
 
 	perform set_config('app.txn', '', true);
@@ -817,8 +857,116 @@ begin
 end;
 $function$;
 
-revoke execute on function public.approve_transaction (uuid) from public;
-grant execute on function public.approve_transaction (uuid) to authenticated;
+revoke
+execute on function public.approve_transaction (uuid)
+from
+	public;
+
+grant
+execute on function public.approve_transaction (uuid) to authenticated;
+
+--------------------------------------
+-- Repairing the mints that were never recorded
+--
+-- Before 20260902000000, the two shortfall-mint paths created tokens in a venue's
+-- reserve and recorded only the transfer that carried them out, so those venues
+-- hold tokens their own history does not account for. This writes the missing
+-- credit, and nothing else.
+--
+-- The evidence is in token_events and is unambiguous: a mint event whose txn is a
+-- TRANSFER rather than a mint is exactly a shortfall mint. mint_tokens and
+-- approve_transaction's Branch A both point their mint events at a transaction
+-- with no source at all, so there are no false positives.
+--
+-- A function rather than a bare `do` block in the migration, because a restore
+-- from a backup predating the repair brings the drift back and will NOT re-run the
+-- migration -- RECOVERY.md can then simply call this, with no second copy of the
+-- SQL to drift out of step. Underscore-prefixed, so definer_grants.sql's
+-- owner-only assertion already covers it.
+create or replace function public._backfill_shortfall_mints () returns integer language plpgsql security definer
+set
+	search_path=public,
+	pg_temp as $function$
+declare
+	_bad integer;
+	_n integer;
+begin
+	-- Refuse rather than guess. A mint that landed on a scholar, or one tied to a
+	-- transfer that was never approved, is a shape this repair has no evidence for;
+	-- and backfilling a token that is gone or has changed currency would trade a
+	-- conservation violation for a dangling_token_refs one, which is not a repair.
+	select count(*) into _bad
+	from public.token_events e
+	join public.transactions x on x.id = e.txn
+	left join public.tokens t on t.id = e.token
+	where e.op = 'mint'
+		and (x.from_scholar is not null or x.from_venue is not null)
+		and (
+			e.venue is null
+			or x.status <> 'approved'
+			or t.id is null
+			or t.currency <> e.currency
+		);
+	if _bad > 0 then
+		raise exception
+			'% shortfall mint(s) are not in the shape this repair understands; investigate before backfilling', _bad;
+	end if;
+
+	-- One approved mint transaction per (transfer, reserve), crediting the reserve
+	-- with the tokens that were minted into it.
+	--
+	-- created_at is deliberately NOT backdated. These rows are being written today
+	-- and transactions.seq says so regardless, so a backdated created_at would only
+	-- make the two disagree -- and a definite order the platform assigns is exactly
+	-- what seq is for. The original date goes in the purpose instead, where it is
+	-- honest and readable. Recording a missing entry is not the same as inventing
+	-- one that was there all along.
+	--
+	-- creator is the creator of the transfer that caused the mint: already known to
+	-- satisfy the FK, and the person accountable for the act. NOT token_events.actor,
+	-- which has no FK and is nulled by erasure, so it can name a row that is gone.
+	with shortfall as (
+		select e.txn as transfer_txn, e.venue as reserve, e.currency as cur,
+			x.creator as creator, x.purpose as purpose, x.created_at as created_at,
+			array_agg(e.token order by e.seq) as tokens
+		from public.token_events e
+		join public.transactions x on x.id = e.txn
+		where e.op = 'mint'
+			and (x.from_scholar is not null or x.from_venue is not null)
+		group by 1, 2, 3, 4, 5, 6
+	),
+	written as (
+		insert into public.transactions (
+			id, creator, from_scholar, from_venue, to_scholar, to_venue,
+			tokens, currency, purpose, status
+		)
+		select
+			-- Deterministic, so a second run is a no-op rather than a second credit.
+			md5('shortfall-mint-backfill:' || s.transfer_txn::text || ':' || s.reserve::text)::uuid,
+			s.creator, null, null, null, s.reserve,
+			s.tokens, s.cur,
+			format('Minted %s to cover %s (recorded retroactively)',
+				to_char(s.created_at at time zone 'utc', 'YYYY-MM-DD'), s.purpose),
+			'approved'
+		from shortfall s
+		on conflict (id) do nothing
+		returning 1
+	)
+	select count(*) into _n from written;
+
+	raise notice 'backfilled % shortfall mint transaction(s)', _n;
+	return _n;
+end;
+$function$;
+
+alter function public._backfill_shortfall_mints () OWNER to "postgres";
+
+revoke
+execute on function public._backfill_shortfall_mints ()
+from
+	public,
+	anon,
+	authenticated;
 
 alter publication supabase_realtime
 add table transactions;

@@ -3,12 +3,13 @@ import { login } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
-const SUBMISSION_ID = SEED.submissions.tok001; // TOK-2025-001
+const VENUE_PATH = SEED.venuePath;
+const SUBMISSION_ID = SEED.submissions.tok001.id;
 const EDITOR_EMAIL = SEED.scholars.editor.email;
 const EDITOR_ID = SEED.scholars.editor.id;
-const AUTHOR_EMAIL = SEED.scholars.author1.email; // author of TOK-2025-001
+const AUTHOR_EMAIL = SEED.scholars.author1.email; // author of the submission above
 const CONFLICT_DECLARER_EMAIL = SEED.scholars.r3.email; // Reviewer volunteer with no assignments
-const ASSIGNED_REVIEWER_NAME = SEED.scholars.r1.name; // r1, the approved Reviewer on TOK-2025-001
+const ASSIGNED_REVIEWER_NAME = SEED.scholars.r1.name; // the approved Reviewer on it
 const REVIEWER_ROLE_ID = SEED.roles.reviewer;
 
 test('editor manually adds a single submission with themselves as the sole author', async ({
@@ -27,7 +28,7 @@ test('editor manually adds a single submission with themselves as the sole autho
 	const externalID = `EDITOR-ADD-${Date.now()}`;
 
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/submissions/new`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new`);
 	// Keep networkidle here: the submission form's bound <select>/inputs must be
 	// hydrated before we selectOption/fill, or Svelte drops the change.
 	await page.waitForLoadState('networkidle');
@@ -78,6 +79,94 @@ test('editor manually adds a single submission with themselves as the sole autho
 	expect(row).toBe(`1|${EDITOR_ID}`);
 });
 
+test('a venue admin records a submission on another scholar’s behalf', async ({
+	page,
+	context
+}) => {
+	// The sibling test above exercises an editor adding a submission they authored
+	// themselves, which is the case that always worked. This is the one DESIGN
+	// actually describes — an editor recording somebody else's paper — and the form
+	// refused it until #153, even though create_submission has admitted a venue
+	// admin all along (RR009, pinned in supabase/tests/rpc/atomic_crud_rpc.sql).
+	test.setTimeout(120_000);
+
+	const AUTHOR = SEED.scholars.author1;
+	const externalID = `ONBEHALF-${Date.now()}`;
+
+	// The exemption belongs to venue admins, so this proves nothing unless the
+	// editor is one.
+	expect(
+		sql(
+			`select count(*) from public.venues where id = '${VENUE_ID}' and '${EDITOR_ID}' = any(admins);`
+		),
+		'the editor must be a venue admin, or this proves nothing'
+	).toBe('1');
+
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/new`);
+	// Keep networkidle here, for the reason the sibling test gives: the form's
+	// bound <select>/inputs must be hydrated before we selectOption/fill.
+	await page.waitForLoadState('networkidle');
+
+	// An admin's first author row starts empty. The prefill exists because a
+	// non-author's submission is refused anyway, which is exactly what stops
+	// being true for an admin — and an unnoticed prefill would file the editor as
+	// a non-paying co-author of a paper they did not write, which is what the
+	// conflict-of-interest checks read.
+	await expect(page.getByTestId('author-orcid-0')).toHaveValue('');
+
+	await page
+		.getByRole('combobox', { name: 'submission type' })
+		.selectOption({ label: 'Research Article' });
+	await page.getByTestId('submission-title').fill('Recorded by the editor');
+	await page.getByTestId('submission-manuscript-id').fill(externalID);
+
+	// Somebody else entirely wrote it, and pays the whole cost (10).
+	await page.getByTestId('author-orcid-0').fill(AUTHOR.orcid);
+	await page.getByTestId('author-orcid-0').blur();
+	await expect(page.getByTestId('scholar-found-0')).toBeVisible();
+	await page.getByTestId('payment-slider-0').fill('10');
+
+	// The dead end: this message used to replace the whole submit path, so there
+	// was no balance check to click and no submit button to reach.
+	await expect(
+		page.locator('text=Only authors of a submission can create a submission.')
+	).toHaveCount(0);
+
+	await page.getByTestId('check-balances').click();
+	await expect(
+		page.locator('text=The authors have sufficient tokens to pay for this submission.')
+	).toBeVisible();
+
+	const submit = page.getByTestId('submit-submission');
+	await expect(submit).toBeEnabled({ timeout: 5_000 });
+	await page.waitForTimeout(200);
+	await submit.click();
+
+	await expect
+		.poll(
+			() => sql(`select count(*) from public.submissions where externalid = '${externalID}';`),
+			{ timeout: 90_000 }
+		)
+		.toBe('1');
+	await page.waitForURL(/\/venue\/.+\/submission\/.+/, { timeout: 30_000 });
+
+	// The scholar named is the sole author, and the editor is not on the paper.
+	expect(
+		sql(
+			`select cardinality(authors), authors[1] from public.submissions where externalid = '${externalID}';`
+		)
+	).toBe(`1|${AUTHOR.id}`);
+
+	// The charge is the author's to approve, not the editor's: create_submission
+	// settles only the caller's own charge, and the caller here is not paying.
+	expect(
+		sql(
+			`select t.status::text, t.from_scholar from public.transactions t join public.submissions s on t.id = any(s.transactions) where s.externalid = '${externalID}';`
+		)
+	).toBe(`proposed|${AUTHOR.id}`);
+});
+
 test('scholar declares a conflict on a submission and it disappears from their submissions list', async ({
 	page,
 	context
@@ -85,7 +174,7 @@ test('scholar declares a conflict on a submission and it disappears from their s
 	const declarerID = sql(
 		`select id from public.scholars where email = '${CONFLICT_DECLARER_EMAIL}';`
 	);
-	// Reset state: clear prior conflicts and put TOK-2025-001's Reviewer bids
+	// Reset state: clear prior conflicts and put the submission's Reviewer bids
 	// back to bid-not-approved so the submission is visible in the bidding
 	// list (reviewerAssignment.end.ts may have approved them earlier in the
 	// shared-DB suite, which would hide the submission from new bidders).
@@ -97,20 +186,23 @@ test('scholar declares a conflict on a submission and it disappears from their s
 	);
 
 	await login(CONFLICT_DECLARER_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/submissions`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions`);
 	await page.waitForLoadState('networkidle');
 
-	// TOK-2025-001 should be in the list with a declare-conflict button.
-	await expect(page.locator('text=TOK-2025-001')).toBeVisible();
+	// The declarer is a plain Reviewer volunteer, so the venue's anonymized roles
+	// withhold the submission's manuscript ID from them. The title is what they
+	// recognize the submission by — which is the whole basis on which a scholar
+	// declares a conflict — so the row is addressed by title here.
+	const SUBMISSION_TITLE = SEED.submissions.tok001.title;
+
+	// The submission should be in the list with a declare-conflict button.
+	await expect(page.getByText(SUBMISSION_TITLE).first()).toBeVisible();
 	const declareButtons = page.getByTestId('declare-conflict');
 	const initialButtonCount = await declareButtons.count();
 	expect(initialButtonCount).toBeGreaterThanOrEqual(1);
 
-	// Click the declare-conflict button on the row containing TOK-2025-001.
-	await page
-		.locator('tr', { hasText: 'TOK-2025-001' })
-		.getByTestId('declare-conflict')
-		.click();
+	// Click the declare-conflict button on that submission's row.
+	await page.locator('tr', { hasText: SUBMISSION_TITLE }).getByTestId('declare-conflict').click();
 
 	// Conflict row landed in the DB.
 	await expect
@@ -124,10 +216,10 @@ test('scholar declares a conflict on a submission and it disappears from their s
 	// The submission is no longer present in the scholar's submissions list
 	// (the page filters out conflicted submissions for them).
 	await page.reload();
-	await expect(page.locator('text=TOK-2025-001')).toHaveCount(0);
+	await expect(page.getByText(SUBMISSION_TITLE)).toHaveCount(0);
 });
 
-test('mark-done is blocked until non-editor assignments are compensated, then flips status', async ({
+test('mark-done waits for every non-editor assignment to be compensated, then flips status', async ({
 	page,
 	context
 }) => {
@@ -139,17 +231,18 @@ test('mark-done is blocked until non-editor assignments are compensated, then fl
 	);
 	// Leave the editor's own priority-0 assignment uncompleted (the
 	// mark-done action will compensate it). Reset every non-editor
-	// approved assignment to uncompleted so the button starts inactive.
+	// approved assignment to uncompleted so closing starts out needed.
 	sql(
 		`update public.assignments set completed = false where submission = '${SUBMISSION_ID}' and approved;`
 	);
 
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 
-	// Button exists but is disabled while non-editor assignments are
-	// pending, and the blockers list is visible.
-	await expect(page.getByTestId('mark-submission-done')).toBeDisabled();
+	// While non-editor assignments are uncompensated, closing happens in the alert, which
+	// asks about each one; the plain button is not offered.
+	await expect(page.getByTestId('completion-blocked')).toBeVisible();
+	await expect(page.getByTestId('mark-submission-done')).toHaveCount(0);
 
 	// Mark every non-editor approved assignment as completed in the DB
 	// (simulates the editor working through each Complete button). Kept on
@@ -162,7 +255,7 @@ test('mark-done is blocked until non-editor assignments are compensated, then fl
 	await page.reload();
 	await page.waitForLoadState('networkidle');
 
-	await expect(page.getByTestId('mark-submission-done')).toBeEnabled();
+	await expect(page.getByTestId('completion-blocked')).toHaveCount(0);
 
 	// Confirm-style button: first click reveals the warn variant, second confirms.
 	await page.getByTestId('mark-submission-done').click();
@@ -191,15 +284,111 @@ test('mark-done is blocked until non-editor assignments are compensated, then fl
 	);
 });
 
+test('the close-out lists work already paid, apart from the choices', async ({ page, context }) => {
+	const reviewerSeat = SEED.assignments.tok001Reviewer;
+	sql(
+		`update public.submissions set status = 'reviewing', completed_at = null where id = '${SUBMISSION_ID}';`
+	);
+	sql(
+		`update public.assignments set completed = false where submission = '${SUBMISSION_ID}' and approved;`
+	);
+	// The reviewer requested compensation and was paid before the editor came to close.
+	sql(`update public.assignments set completed = true where id = '${reviewerSeat}';`);
+
+	await login(EDITOR_EMAIL, page, context);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+
+	const closeOut = page.getByTestId('completion-blocked');
+	await expect(closeOut).toBeVisible();
+	// Listed as paid, so they do not look left out, but not offered as a choice.
+	await expect(closeOut.getByTestId('close-out-paid')).toHaveCount(1);
+	await expect(
+		closeOut.getByTestId('close-out-paid').filter({ hasText: ASSIGNED_REVIEWER_NAME })
+	).toHaveCount(1);
+	await expect(
+		closeOut.getByTestId('close-out-assignment').filter({ hasText: ASSIGNED_REVIEWER_NAME })
+	).toHaveCount(0);
+	await expect(closeOut.getByTestId('close-out-assignment')).toHaveCount(1);
+
+	sql(
+		`update public.assignments set completed = false where submission = '${SUBMISSION_ID}' and approved;`
+	);
+});
+
+test('the decision-letter link closes a submission out, paying done work and removing the rest', async ({
+	page,
+	context
+}) => {
+	const reviewerSeat = SEED.assignments.tok001Reviewer;
+	sql(
+		`update public.submissions set status = 'reviewing', completed_at = null where id = '${SUBMISSION_ID}';`
+	);
+	sql(
+		`update public.assignments set completed = false where submission = '${SUBMISSION_ID}' and approved;`
+	);
+	// The close removes the reviewer's seat, which later tests rely on; keep a copy to put back.
+	sql(
+		`drop table if exists public.e2e_close_out_backup; create table public.e2e_close_out_backup as select * from public.assignments where id = '${reviewerSeat}';`
+	);
+
+	await login(EDITOR_EMAIL, page, context);
+
+	// The snippet links by manuscript ID, which is all the reviewing platform knows; RR
+	// resolves it and lands on the close-out.
+	await page.goto(`/venue/${VENUE_PATH}/submissions?close=${SEED.submissions.tok001.externalId}`);
+	await expect(page).toHaveURL(new RegExp(`/submission/${SUBMISSION_ID}\\?close`));
+
+	const closeOut = page.getByTestId('completion-blocked');
+	await expect(closeOut).toBeVisible();
+	const rows = closeOut.getByTestId('close-out-assignment');
+	await expect(rows).toHaveCount(2);
+
+	// Everyone is paid by default; say the reviewer's work was not done.
+	const reviewerRow = rows.filter({ hasText: ASSIGNED_REVIEWER_NAME });
+	await reviewerRow.getByTestId('close-out-remove').check();
+
+	await page.getByTestId('close-out').click();
+	await page.getByTestId('close-out').click();
+
+	await expect
+		.poll(() => sql(`select status::text from public.submissions where id = '${SUBMISSION_ID}';`))
+		.toBe('done');
+	expect(sql(`select count(*) from public.assignments where id = '${reviewerSeat}';`)).toBe('0');
+	// The removed reviewer is told their seat was closed without pay.
+	await expect
+		.poll(() =>
+			sql(
+				`select count(*) from public.emails where event = 'AssignmentClosedUnpaid' and scholar = '${SEED.scholars.r1.id}' and time_sent > now() - interval '5 minutes';`
+			)
+		)
+		.toBe('1');
+	expect(
+		sql(
+			`select bool_and(a.completed) from public.assignments a where a.submission = '${SUBMISSION_ID}' and a.approved;`
+		)
+	).toBe('t');
+
+	// Restore for downstream tests.
+	sql(
+		`insert into public.assignments select * from public.e2e_close_out_backup; drop table public.e2e_close_out_backup;`
+	);
+	sql(
+		`update public.submissions set status = 'reviewing', completed_at = null where id = '${SUBMISSION_ID}';`
+	);
+	sql(
+		`update public.assignments set completed = false where submission = '${SUBMISSION_ID}' and approved;`
+	);
+});
+
 test('reviewer-anonymity flag actually hides assignees from authors', async ({ page, context }) => {
 	// Ensure the venue is in its default anonymous state.
 	sql(`update public.venues set anonymous_assignments = true where id = '${VENUE_ID}';`);
 
 	await login(AUTHOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 
-	// As the author, with anonymity on, the assigned reviewer's name (r1,
-	// Rigor Russ) is NOT visible on the page — RLS at
+	// As the author, with anonymity on, the assigned reviewer's name is NOT
+	// visible on the page — RLS at
 	// supabase/schemas/assignments.sql L199-226 hides the assignment row.
 	await expect(page.getByText(ASSIGNED_REVIEWER_NAME)).toHaveCount(0);
 
@@ -226,10 +415,10 @@ test('approver-role hierarchy: AE approves a Reviewer bid; a non-approver does n
 	// role but is NOT the approver of the Reviewer role (the AE is). r2 also
 	// isn't a venue admin. So r2 should not see the bid-approve button.
 	await login('r2@uni.edu', page, context);
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 	await expect(
 		page.getByRole('button', {
-			name: 'Accept this bid, assigning this scholar to this role for this submission'
+			name: 'Accept this bid for compensation. Also assign them in your reviewing system.'
 		})
 	).toHaveCount(0);
 
@@ -239,7 +428,7 @@ test('approver-role hierarchy: AE approves a Reviewer bid; a non-approver does n
 	// present, and clicking it flips the bid's approved=true.
 	await context.clearCookies();
 	await login('ae@uni.edu', page, context);
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 	await page.waitForLoadState('networkidle');
 
 	const approveCount = Number(
@@ -250,7 +439,7 @@ test('approver-role hierarchy: AE approves a Reviewer bid; a non-approver does n
 
 	const approveButton = page
 		.getByRole('button', {
-			name: 'Accept this bid, assigning this scholar to this role for this submission'
+			name: 'Accept this bid for compensation. Also assign them in your reviewing system.'
 		})
 		.first();
 	await expect(approveButton).toBeVisible();
@@ -265,4 +454,88 @@ test('approver-role hierarchy: AE approves a Reviewer bid; a non-approver does n
 			)
 		)
 		.toBe(approveCount + 1);
+});
+
+test('a submission with no editor is flagged, and one of the venue’s editors can claim it', async ({
+	page,
+	context
+}) => {
+	// The seating rules themselves (one eligible editor seats them, several or none seat
+	// nobody, an editor is never seated on their own paper) are pinned against
+	// create_submission directly in supabase/tests/rpc/editor_on_submission.sql. What only
+	// a browser can show is the other half: that an editorless submission is visible to a
+	// venue editor at all, says so on the list, and can be taken in one click by someone
+	// who is NOT a venue admin — the case the claim policy exists for.
+	// The seed's only accepted Editor volunteer is also a venue admin, and an admin could
+	// always seat people. Enrol someone who is not, since that is the case the policy
+	// branch was added for.
+	const CLAIMANT = SEED.scholars.author2;
+	const editorRole = sql(
+		`select id from public.roles where venueid = '${VENUE_ID}' and priority = 0;`
+	);
+	const externalID = `NEEDS-EDITOR-${Date.now()}`;
+
+	expect(
+		sql(
+			`select count(*) from public.venues where id = '${VENUE_ID}' and '${CLAIMANT.id}' = any(admins);`
+		),
+		'the claimant must NOT be a venue admin, or this proves nothing'
+	).toBe('0');
+
+	sql(
+		`insert into public.volunteers (scholarid, roleid, active, accepted, expertise) values ('${CLAIMANT.id}', '${editorRole}', true, 'accepted', '');`
+	);
+
+	// An imported row is the cheapest editorless submission: no authors, no charges, and
+	// no assignments, which is exactly the state a real submission lands in when its venue
+	// has more than one editor.
+	const submissionID = sql(
+		`insert into public.submissions (venue, externalid, submission_type, authors, payments, transactions, title, imported) select '${VENUE_ID}', '${externalID}', id, array[]::uuid[], array[]::integer[], array[]::uuid[], '${externalID}', true from public.submission_types where venue = '${VENUE_ID}' limit 1 returning id;`
+	);
+
+	const editorCount = () =>
+		sql(
+			`select count(*) from public.assignments a join public.roles r on r.id = a.role where a.submission = '${submissionID}' and r.priority = 0;`
+		);
+
+	try {
+		expect(editorCount()).toBe('0');
+
+		await login(CLAIMANT.email, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
+		// The filter checkbox and the claim button are Svelte handlers, so the page has to
+		// have hydrated before either click means anything.
+		await page.waitForLoadState('networkidle');
+
+		// Narrow to the submissions waiting for an editor; ours must be among them.
+		await page.getByTestId('submissions-needs-editor-filter').click();
+		const row = page.getByRole('row').filter({ hasText: externalID });
+		await expect(row).toBeVisible();
+
+		// Named for the venue's own top-priority role, which the seed calls "Editor".
+		await row.getByRole('button', { name: 'Take on this submission as its Editor' }).click();
+
+		await expect.poll(() => editorCount()).toBe('1');
+		expect(
+			sql(
+				`select scholar from public.assignments a join public.roles r on r.id = a.role where a.submission = '${submissionID}' and r.priority = 0;`
+			)
+		).toBe(CLAIMANT.id);
+
+		// Claimed now, so the flag and its button are gone from the row. (The filter is
+		// component state, so it resets across the reload; assert on the row itself.)
+		await page.reload();
+		await page.waitForLoadState('networkidle');
+		const claimed = page.getByRole('row').filter({ hasText: externalID });
+		await expect(claimed).toBeVisible();
+		await expect(
+			claimed.getByRole('button', { name: "Take on this submission as the venue's editor" })
+		).toHaveCount(0);
+	} finally {
+		sql(`delete from public.assignments where submission = '${submissionID}';`);
+		sql(`delete from public.submissions where id = '${submissionID}';`);
+		sql(
+			`delete from public.volunteers where roleid = '${editorRole}' and scholarid = '${CLAIMANT.id}';`
+		);
+	}
 });

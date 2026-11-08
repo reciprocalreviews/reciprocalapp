@@ -1,0 +1,304 @@
+-- Token scaling, phase 3b: the nightly integrity check will stop finishing.
+--
+-- reconcile_ledger runs from pg_cron at 22:15 daily and mails the steward inbox
+-- when an invariant breaks -- including the conservation check, which is what
+-- would catch the lost payment that phase 1's locking fixed. It is the alarm.
+--
+-- Three of its seven checks scan the ENTIRE history of the token ledger, and
+-- that history only grows: replay does a distinct-on over every token_event ever
+-- recorded, chain runs a window function over the same, and dangling refs
+-- unnests every approved transaction's token array -- one row per token ever
+-- moved. So the tool for detecting corruption is the tool that stops finishing
+-- once there is enough production to have corruption, and a cron job that times
+-- out fails silently: no row, no mail, no alarm.
+--
+-- This gives those three an optional window and points the cron at a bounded
+-- one. Conservation is deliberately left whole: it compares current state
+-- against the transactions that produced it, so it is O(the economy) and not
+-- O(its history), and it is the check most worth keeping exact.
+--
+-- `reconcile_ledger()` with no argument still means "all history", so an
+-- investigation gets the full run by asking for it.
+
+--------------------------------------
+-- How long a run took, so the trend is visible before it becomes an outage.
+alter table public.reconciliations
+add column if not exists duration_ms integer;
+
+--------------------------------------
+-- The old zero-argument function is dropped rather than replaced: adding a
+-- defaulted parameter creates a second overload, and `reconcile_ledger()` would
+-- then be ambiguous -- which the cron would discover at 22:15.
+drop function if exists public.reconcile_ledger ();
+
+create or replace function public.reconcile_ledger (_since timestamptz default null) returns jsonb language plpgsql security definer
+set
+	search_path='' as $$
+declare
+	_started timestamptz := clock_timestamp();
+	_duration integer;
+	_unattributed int;
+	_unattributed_mints int;
+	_replay int;
+	_chain int;
+	_placeholder int;
+	_dangling int;
+	_conservation jsonb;
+	_conservation_n int := 0;
+	_orphans int;
+	_result jsonb;
+	_ok boolean;
+begin
+	-- 1. Value that MOVED with no transaction explaining it. The single most
+	-- important number here: in a healthy system it is zero, and anything else is
+	-- an application bug, a migration that touched tokens directly, or someone with
+	-- privileged access moving balances by hand.
+	select count(*) into _unattributed
+	from public.token_events
+	where op = 'move' and txn is null;
+
+	-- Tokens CREATED with no transaction explaining them. In production this is
+	-- counterfeiting and should be zero. It is reported rather than failing the
+	-- run, because supabase/seed.sql inserts tokens directly — every development
+	-- and CI database legitimately has hundreds of these, and a check that is
+	-- always red is a check nobody reads.
+	select count(*) into _unattributed_mints
+	from public.token_events
+	where op = 'mint' and txn is null;
+
+	-- 2. Does replaying the log still reproduce the tokens table exactly? If this
+	-- drifts, either a write escaped the trigger or the log has been tampered with.
+	-- Bounded by _since to the tokens that actually MOVED in the window. Replaying
+	-- the whole log means a distinct-on over every event ever recorded, which is
+	-- the single most expensive thing this function does; restricting it to
+	-- recently-moved tokens asks the question that matters ("did anything that
+	-- moved lately end up inconsistent?") at a cost that does not grow with age.
+	select count(*) into _replay
+	from public.tokens t
+	full outer join public.tokens_as_of() a on a.token = t.id
+	where (
+			_since is null
+			or coalesce(t.id, a.token) in (
+				select e.token from public.token_events e where e.at >= _since
+			)
+		)
+		and (
+			t.id is null
+			or a.token is null
+			or (t.scholar, t.venue, t.currency) is distinct from (a.scholar, a.venue, a.currency)
+		);
+
+	-- 3. Each event's "previous owner" must match the prior event for that token.
+	-- A break means a change happened that the trigger did not see — which a plain
+	-- state comparison cannot detect, because the end state may still look right.
+	-- Bounded the same way. The window function still needs each token's events in
+	-- order, so the filter is on the TOKEN having moved in the window rather than
+	-- on the individual event -- otherwise the first event inside the window would
+	-- lose the predecessor it has to be compared against.
+	select count(*) into _chain
+	from (
+		select
+			e.prev_scholar, e.prev_venue,
+			lag(e.scholar) over w as prior_scholar,
+			lag(e.venue) over w as prior_venue,
+			lag(e.seq) over w as prior_seq
+		from public.token_events e
+		where _since is null
+			or e.token in (select e2.token from public.token_events e2 where e2.at >= _since)
+		window w as (partition by e.token order by e.seq)
+	) s
+	where prior_seq is not null
+		and (prev_scholar, prev_venue) is distinct from (prior_scholar, prior_venue);
+
+	-- 4. An approved transaction still carrying placeholder UUIDs never had its
+	-- tokens assigned — the amount is recorded but the movement is fiction.
+	select count(*) into _placeholder
+	from public.transactions
+	where status = 'approved'
+		and (
+			'00000000-0000-0000-0000-000000000000'::uuid = any (tokens)
+			or cardinality(tokens) = 0
+		);
+
+	-- 5. Every token an approved transaction cites must exist, in that currency.
+	-- Bounded by transaction age. Unnesting every approved transaction's token
+	-- array materializes one row per token ever moved, so this is the check whose
+	-- cost is literally the platform's lifetime volume.
+	select count(*) into _dangling
+	from public.transactions x
+	cross join lateral unnest(x.tokens) as tok(id)
+	left join public.tokens t on t.id = tok.id
+	where x.status = 'approved'
+		and (_since is null or x.created_at >= _since)
+		and tok.id <> '00000000-0000-0000-0000-000000000000'::uuid
+		and (t.id is null or t.currency <> x.currency);
+
+	-- 6. Conservation: for each holder and currency, the balance implied by
+	-- approved transactions must equal the tokens actually held.
+	--
+	-- Only meaningful once every movement is attributed. Tokens written directly —
+	-- as supabase/seed.sql does, and as any hand-repair would — exist with no
+	-- transaction to account for them, so this would report drift that check 1 has
+	-- already explained. Skipped rather than reported as a false violation.
+	if _unattributed = 0 and _unattributed_mints = 0 then
+		with moved as (
+			select to_venue as holder, 'venue' as kind, currency, sum(cardinality(tokens)) as n
+				from public.transactions where status = 'approved' and to_venue is not null group by 1, 3
+			union all
+			select from_venue, 'venue', currency, -sum(cardinality(tokens))
+				from public.transactions where status = 'approved' and from_venue is not null group by 1, 3
+			union all
+			select to_scholar, 'scholar', currency, sum(cardinality(tokens))
+				from public.transactions where status = 'approved' and to_scholar is not null group by 1, 3
+			union all
+			select from_scholar, 'scholar', currency, -sum(cardinality(tokens))
+				from public.transactions where status = 'approved' and from_scholar is not null group by 1, 3
+		),
+		expected as (select holder, kind, currency, sum(n) as expected from moved group by 1, 2, 3),
+		actual as (
+			select venue as holder, 'venue' as kind, currency, count(*) as actual
+				from public.tokens where venue is not null group by 1, 3
+			union all
+			select scholar, 'scholar', currency, count(*)
+				from public.tokens where scholar is not null group by 1, 3
+		)
+		select coalesce(jsonb_agg(jsonb_build_object(
+			'kind', coalesce(e.kind, a.kind),
+			'holder', coalesce(e.holder, a.holder),
+			'currency', coalesce(e.currency, a.currency),
+			'expected', coalesce(e.expected, 0),
+			'actual', coalesce(a.actual, 0)
+		)), '[]'::jsonb), count(*)
+		into _conservation, _conservation_n
+		from expected e
+		full outer join actual a
+			on a.holder = e.holder and a.kind = e.kind and a.currency = e.currency
+		where coalesce(e.expected, 0) <> coalesce(a.actual, 0);
+	else
+		_conservation := to_jsonb('skipped: unattributed token provenance present'::text);
+	end if;
+
+	-- 7. A proposal with no supporters is the signature of proposeVenue crashing
+	-- between its two client-side writes — the proposal exists and the record of
+	-- who proposed it does not.
+	select count(*) into _orphans
+	from public.proposals p
+	where not exists (select 1 from public.supporters s where s.proposalid = p.id);
+
+	-- `ok` covers only what must hold in EVERY environment. The advisory block
+	-- below is real signal in production but expected to be non-zero anywhere
+	-- seeded by supabase/seed.sql, and folding it into `ok` would make local and CI
+	-- runs permanently red — which is how a monitoring check becomes wallpaper.
+	_ok := _unattributed = 0
+		and _replay = 0
+		and _chain = 0
+		and _placeholder = 0
+		and _dangling = 0
+		and _conservation_n = 0;
+
+	_result := jsonb_build_object(
+		'ok', _ok,
+		'invariants', jsonb_build_object(
+			'unattributed_moves', _unattributed,
+			'replay_mismatches', _replay,
+			'chain_breaks', _chain,
+			'placeholders_in_approved', _placeholder,
+			'dangling_token_refs', _dangling,
+			'conservation_violations', _conservation
+		),
+		-- Watch these on production, where both should be zero.
+		'advisory', jsonb_build_object(
+			'unattributed_mints', _unattributed_mints,
+			'orphan_proposals', _orphans
+		)
+	);
+
+	_duration := (extract(epoch from clock_timestamp() - _started) * 1000)::integer;
+	_result := jsonb_set(_result, '{window}', case when _since is null
+		then to_jsonb('all history'::text) else to_jsonb(_since) end);
+	_result := jsonb_set(_result, '{duration_ms}', to_jsonb(_duration));
+
+	insert into public.reconciliations (ok, result, duration_ms) values (_ok, _result, _duration);
+
+	-- A check nobody is told about is wallpaper. On failure this goes three ways:
+	-- the reconciliations table for history, the Postgres log for anyone looking at
+	-- the project, and email to the stewards so it reaches a person.
+	--
+	-- Inserted directly rather than through queue_email: that RPC resolves
+	-- recipients from a caller's scholar ids and is built for the authenticated
+	-- request path, whereas this runs from pg_cron with no caller at all. The
+	-- INSERT is available here because this function is SECURITY DEFINER and owned
+	-- by postgres; the revoke that closed the open-relay hole applies to
+	-- authenticated and anon.
+	--
+	-- One row to the shared steward inbox rather than one per steward. The old
+	-- per-steward fan-out required a VERIFIED contact address, which meant the
+	-- check that reports the ledger is broken could itself reach nobody — the
+	-- worst possible thing to be conditional. The alias always resolves.
+	if not _ok then
+		raise warning 'reconcile_ledger found violations: %', _result;
+
+		insert into public.emails (event, email, scholar, args)
+		values (
+			'ReconciliationFailed',
+			public.steward_inbox(),
+			null,
+			jsonb_build_array(
+				to_char(now() at time zone 'utc', 'YYYY-MM-DD HH24:MI') || ' UTC',
+				-- A compact summary rather than raw JSON: the recipient needs to know
+				-- which checks failed and how badly, not to parse a payload.
+				concat_ws(', ',
+					nullif('unattributed moves: ' || _unattributed, 'unattributed moves: 0'),
+					nullif('replay mismatches: ' || _replay, 'replay mismatches: 0'),
+					nullif('chain breaks: ' || _chain, 'chain breaks: 0'),
+					nullif('approved transactions holding placeholders: ' || _placeholder, 'approved transactions holding placeholders: 0'),
+					nullif('dangling token references: ' || _dangling, 'dangling token references: 0'),
+					nullif('conservation violations: ' || _conservation_n, 'conservation violations: 0')
+				)
+			)
+		);
+	end if;
+
+	return _result;
+end;
+$$;
+
+alter function public.reconcile_ledger (timestamptz) OWNER to "postgres";
+
+revoke
+execute on function public.reconcile_ledger (timestamptz)
+from
+	public;
+
+grant
+execute on function public.reconcile_ledger (timestamptz) to service_role;
+
+--------------------------------------
+-- Two schedules rather than one, because bounding alone leaves a hole.
+--
+-- The nightly run is bounded to 30 days: far longer than the gap between a
+-- defect landing and the next morning's mail, and flat in cost as the ledger
+-- grows. That is the alarm.
+--
+-- But the window is keyed on a token having MOVED recently, and the corruption
+-- these checks look for is a write that escaped the logging trigger -- which by
+-- definition leaves no event behind. A token last touched a year ago, quietly
+-- altered today, would move no event into the window and the nightly run would
+-- not look at it. So the unbounded run still happens, weekly, when nothing else
+-- is scheduled. It is allowed to be slow; it is not allowed to be absent.
+select
+	cron.unschedule ('reconcile-ledger');
+
+select
+	cron.schedule (
+		'reconcile-ledger',
+		'15 22 * * *',
+		$$select public.reconcile_ledger(now() - interval '30 days')$$
+	);
+
+select
+	cron.schedule (
+		'reconcile-ledger-full',
+		'45 3 * * 0',
+		$$select public.reconcile_ledger()$$
+	);

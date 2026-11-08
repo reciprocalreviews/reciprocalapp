@@ -22,7 +22,54 @@ create table if not exists public.assignments (
 	-- when bid=true and the venue has defined preference levels; null otherwise.
 	preferenceid uuid,
 	-- Timestamp when the assignment was created
-	created_at timestamp with time zone default timezone ('utc'::text, now()) not null
+	created_at timestamp with time zone default timezone ('utc'::text, now()) not null,
+	-- When the scholar requested compensation for this assignment (null until
+	-- they do). Distinguishes finished work awaiting an approver from a review
+	-- still in progress, so the daily remind function can nag approvers about
+	-- the former without nagging them about the latter. Written by
+	-- public.request_compensation, which also creates the row when the scholar has
+	-- none: an unapproved, non-bid row carrying this stamp is a CLAIM, work done for
+	-- a submission nobody on the platform seated them on (typically an imported one
+	-- whose editor has not joined yet), waiting for an approver to approve and pay it
+	-- in one step (complete_assignment) or decline it (decline_bid).
+	compensation_requested_at timestamp with time zone default null,
+	-- When an approver declined this bid or claim (null unless declined). A bid has three states:
+	-- pending (bid, not approved, not declined), approved, and declined. Declining is a
+	-- courtesy an approver may extend -- a bid sets no expectation of a reply, so leaving it
+	-- alone is always allowed -- but a decline is an explicit signal to a person, so it is
+	-- never silent: decline_reason is required and is sent to the bidder. Written only by
+	-- public.decline_bid, and cleared when an approver approves the bid after all.
+	declined_at timestamp with time zone default null,
+	-- Who declined it. Nulled if that scholar is erased; the decline itself stands.
+	declined_by uuid default null,
+	-- The approver's explanation, sent to the bidder. Required whenever declined_at is set.
+	-- When the approver chose one of the venue's decline_reasons, this is a copy of its text
+	-- as it read then, so editing or deleting the reason later never rewrites what the
+	-- bidder was told.
+	decline_reason text default null,
+	-- Which of the venue's decline_reasons was chosen, if any; null when the approver wrote
+	-- their own, or when the reason has since been deleted. What makes declines countable.
+	decline_reason_id uuid default null,
+	constraint assignments_decline_reason_id_check check (
+		decline_reason_id is null
+		or declined_at is not null
+	),
+	constraint assignments_decline_shape_check check ((declined_at is null)=(decline_reason is null)),
+	constraint assignments_decline_reason_check check (
+		decline_reason is null
+		or char_length(btrim(decline_reason)) between 1 and 1000
+	),
+	constraint assignments_decline_only_bids_check check (
+		declined_at is null
+		or (
+			(
+				bid
+				or compensation_requested_at is not null
+			)
+			and not approved
+			and not completed
+		)
+	)
 );
 
 alter table public.assignments OWNER to "postgres";
@@ -43,6 +90,12 @@ alter table only public.assignments
 add constraint "assignments_venue_fkey" foreign KEY (venue) references public.venues (id) on delete cascade;
 
 alter table only public.assignments
+add constraint "assignments_declined_by_fkey" foreign KEY (declined_by) references public.scholars (id) on delete set null;
+
+alter table only public.assignments
+add constraint "assignments_decline_reason_id_fkey" foreign KEY (decline_reason_id) references public.decline_reasons (id) on delete set null;
+
+alter table only public.assignments
 add constraint "assignments_preferenceid_fkey" foreign KEY (preferenceid) references public.preference_levels (id) on delete set null;
 
 --------------------------------------
@@ -55,42 +108,11 @@ create index "idx_assignments_completed" on public.assignments using "btree" (co
 
 --------------------------------------
 -- Functions
--- True if the current scholar is an ACCEPTED VOLUNTEER on the role that approves
--- the given role, anywhere in the venue. This is NOT the same rule as
--- public.can_approve_assignment below, and the name says so on purpose: this one
--- is venue-wide and volunteer-based, with no admin branch, no priority-0 editor
--- branch, and no submission. It is the USING clause of the assignments UPDATE
--- policy, where an AE must be able to approve a bid on a submission they hold no
--- assignment on — so it cannot be narrowed to match the other rule without
--- revoking that. See migration 20260816010000 for the full reasoning.
-create or replace function public.isRoleApproverVolunteer (_roleid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
-set
-	"search_path" to '' as $$
-	select (
-		exists (
-			select id
-			from public.volunteers
-			where
-				scholarid = (select auth.uid()) and
-				roleid=(select approver from public.roles where id=_roleid) and
-				accepted = 'accepted'
-		)
-	)
-$$;
-
-alter function public.isRoleApproverVolunteer (uuid) OWNER to "postgres";
-
-grant all on FUNCTION public.isRoleApproverVolunteer (uuid) to "anon";
-
-grant all on FUNCTION public.isRoleApproverVolunteer (uuid) to "authenticated";
-
-grant all on FUNCTION public.isRoleApproverVolunteer (uuid) to "service_role";
-
 -- The single definition of "may this scholar approve an assignment for this role
 -- on this submission" — a venue admin, the submission's priority-0 editor, or the
 -- holder of the approving role, each requiring an APPROVED ASSIGNMENT on this
 -- submission. Mirrored in TypeScript by src/lib/data/canApproveAssignment.ts.
-create or replace function public.can_approve_assignment (_submission uuid, _role uuid) returns boolean language sql security definer
+create or replace function public.can_approve_assignment (_submission uuid, _role uuid) returns boolean language sql security definer STABLE
 set
 	search_path to '' as $$
 	select exists (
@@ -130,7 +152,507 @@ from
 grant
 execute on function public.can_approve_assignment (uuid, uuid) to authenticated;
 
-create or replace function public.isAssigned (_submissionid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
+-- Who is told that a bid arrived: the people who will answer it, not everyone who
+-- edits the venue. Mailing every admin and priority-0 volunteer about every bid buried
+-- the people who could act on it in mail about submissions they had nothing to do with.
+--
+-- Only whoever holds the bid-on role's approving role on this submission -- the
+-- approver branch of can_approve_assignment above -- minus the bidder and anyone
+-- conflicted on the submission. There is deliberately no fallback. It used to fall to the
+-- submission's priority-0 editor and then the venue's admins, which mailed an
+-- editor-in-chief seated on every submission about every bid on a submission that had no
+-- associate editor yet. With nobody to tell, nobody is told: the bid waits in the
+-- submission's pending count for whoever seats an approver, and a role with no approver
+-- configured sends no bid mail at all.
+--
+-- SECURITY DEFINER because the bidder cannot see the approvers' assignments, and gated
+-- on the caller having bid for this role on this submission, so it cannot be used to
+-- learn who reviews or edits a submission one has no part in. plpgsql rather than sql so
+-- the body is not resolved at creation: public.conflicts is declared after this file.
+create or replace function public.bid_notice_recipients (_submission uuid, _role uuid) returns setof uuid language plpgsql security definer STABLE
+set
+	search_path to '' as $$
+begin
+	return query
+	select distinct a.scholar
+	from public.assignments a
+	join public.roles target on target.id = _role
+	where a.submission = _submission
+	  and a.approved
+	  and a.role = target.approver
+	  and a.scholar <> (select auth.uid())
+	  and not exists (
+		select 1
+		from public.conflicts x
+		where x.submissionid = _submission and x.scholarid = a.scholar
+	  )
+	  and exists (
+		select 1
+		from public.assignments b
+		where b.submission = _submission
+		  and b.role = _role
+		  and b.bid
+		  and b.scholar = (select auth.uid())
+	  );
+end;
+$$;
+
+alter function public.bid_notice_recipients (uuid, uuid) OWNER to "postgres";
+
+-- Explicitly revoked, not merely un-granted: Supabase's ALTER DEFAULT PRIVILEGES hands anon
+-- EXECUTE on every function created in `public` at creation time.
+revoke
+execute on function public.bid_notice_recipients (uuid, uuid)
+from
+	public,
+	anon;
+
+grant
+execute on function public.bid_notice_recipients (uuid, uuid) to authenticated;
+
+-- The second rule in this family, and deliberately not the same question as the one
+-- above: "may I take this submission?", not "may I approve it for someone else?".
+--
+-- It exists because the venue's own editors could not seat themselves. The priority-0
+-- role has no approver, so the approver branch of can_approve_assignment is never true
+-- for it, and its editor branch requires an approved priority-0 assignment on the very
+-- submission being claimed — which is self-perpetuating. That left isAdmin() as
+-- the only way anyone became the first editor on a submission, so an Editor-role
+-- volunteer who was not also a venue admin could be told a submission needed them and be
+-- unable to do anything about it.
+--
+-- Narrow on every axis: the caller only, the venue's priority-0 role only, and only while
+-- the submission has no priority-0 assignment at all. It cannot seat anyone else, seat
+-- anyone in another role, or displace an editor who is already there.
+--
+-- SECURITY DEFINER is load-bearing rather than habitual: the emptiness test reads
+-- public.assignments, which is itself RLS-gated, so the same test written inline in the
+-- policy would see only the rows the claimer may select and would report "no editor" for
+-- a submission that already has one. Mirrored in TypeScript by
+-- src/lib/data/canClaimEditor.ts.
+create or replace function public.can_claim_editor_role (_submission uuid, _role uuid) returns boolean language sql security definer STABLE
+set
+	search_path to '' as $$
+	select exists (
+		select 1
+		from public.submissions s
+		join public.roles r
+			on r.id = _role and r.venueid = s.venue and r.priority = 0
+		join public.volunteers v
+			on v.roleid = r.id
+			and v.scholarid = (select auth.uid())
+			and v.active
+			and v.accepted = 'accepted'
+		where s.id = _submission
+		  and not exists (
+				select 1
+				from public.assignments a
+				join public.roles ar on ar.id = a.role
+				where a.submission = _submission and ar.priority = 0
+			)
+	);
+$$;
+
+alter function public.can_claim_editor_role (uuid, uuid) OWNER to "postgres";
+
+revoke
+execute on function public.can_claim_editor_role (uuid, uuid)
+from
+	public;
+
+grant
+execute on function public.can_claim_editor_role (uuid, uuid) to authenticated;
+
+-- Whether a submission has anyone in a priority-0 role, and nothing else about who.
+--
+-- The venue's editors can see their venue's submissions but none of its assignments, so
+-- the submissions list had no way to tell whether a submission already had an editor —
+-- it inferred from the assignment rows it could see, and for a non-admin editor that is
+-- none of them, so every submission looked unclaimed. Widening the assignments policy
+-- would have handed reviewer identities to more people to answer a yes/no question, so
+-- this answers the question instead.
+--
+-- SECURITY DEFINER, so it sees past the assignments policy; the pair below is what keeps
+-- that narrow. It discloses one bit, and only about a submission whose id the caller
+-- already holds.
+create or replace function public.submission_has_editor (_submission uuid) returns boolean language sql security definer stable
+set
+	"search_path" to '' as $$
+	select exists (
+		select 1
+		from public.assignments a
+		join public.roles r on r.id = a.role
+		where a.submission = _submission and r.priority = 0
+	);
+$$;
+
+alter function public.submission_has_editor (uuid) OWNER to "postgres";
+
+revoke
+execute on function public.submission_has_editor (uuid)
+from
+	public;
+
+grant
+execute on function public.submission_has_editor (uuid) to authenticated;
+
+-- Whether the submission's editor has closed bidding on it.
+--
+-- The assignments INSERT policy needs this, and cannot read public.submissions itself:
+-- the submissions SELECT policy reads public.assignments, so the policy would recurse.
+-- SECURITY DEFINER, so it sees past both. It discloses one bit, about a submission whose
+-- id the caller already holds.
+create or replace function public.submission_bidding_closed (_submission uuid) returns boolean language sql security definer stable
+set
+	"search_path" to '' as $$
+	select coalesce(
+		(select s.bidding_closed from public.submissions s where s.id = _submission),
+		false
+	);
+$$;
+
+alter function public.submission_bidding_closed (uuid) OWNER to "postgres";
+
+-- The INSERT policy is granted to authenticated only, so anon needs no EXECUTE.
+revoke
+execute on function public.submission_bidding_closed (uuid)
+from
+	public,
+	anon;
+
+grant
+execute on function public.submission_bidding_closed (uuid) to authenticated;
+
+-- Open or close bidding on a submission that is still under review.
+--
+-- Whoever may answer bids on the submission may do this: whoever passes
+-- can_approve_assignment for some biddable role at its venue -- a venue admin, the
+-- submission's priority-0 editor, or the holder of a bid-approving role seated on it,
+-- such as its Associate Editor. The flag is the submission's, so closing it closes
+-- bidding in every role.
+--
+-- An RPC rather than a column grant because the submissions UPDATE policy admits
+-- authors and editors only, and widening it to approvers would hand them the title,
+-- type and expertise as well. bidding_closed is therefore left out of the column grant,
+-- like status, and this is the only client path that writes it.
+create or replace function public.set_submission_open_for_bidding (_submission uuid, _open boolean) returns void language plpgsql security definer
+set
+	"search_path" to '' as $$
+begin
+	if (select auth.uid()) is null then
+		raise exception 'Authentication required' using errcode = '42501';
+	end if;
+
+	if not exists (
+		select 1
+		from public.submissions s
+		join public.roles r on r.venueid = s.venue
+		where s.id = _submission
+			and r.biddable
+			and public.can_approve_assignment(_submission, r.id)
+	) then
+		raise exception 'Only someone who may answer bids on this submission may open or close its bidding'
+			using errcode = '42501';
+	end if;
+
+	update public.submissions set bidding_closed = not _open where id = _submission;
+end;
+$$;
+
+alter function public.set_submission_open_for_bidding (uuid, boolean) OWNER to "postgres";
+
+revoke
+execute on function public.set_submission_open_for_bidding (uuid, boolean)
+from
+	public,
+	anon;
+
+grant
+execute on function public.set_submission_open_for_bidding (uuid, boolean) to authenticated;
+
+-- The list form, and the one the application actually calls. SECURITY INVOKER, so the
+-- scan of public.submissions runs under the caller's own policy: a caller gets exactly
+-- one row per submission they may already see, each carrying that one bit.
+create or replace function public.venue_submission_editors (_venue uuid) returns table (submission uuid, has_editor boolean) language sql security invoker stable
+set
+	"search_path" to '' as $$
+	select s.id, public.submission_has_editor(s.id)
+	from public.submissions s
+	where s.venue = _venue;
+$$;
+
+alter function public.venue_submission_editors (uuid) OWNER to "postgres";
+
+revoke
+execute on function public.venue_submission_editors (uuid)
+from
+	public;
+
+grant
+execute on function public.venue_submission_editors (uuid) to authenticated;
+
+-- What the signed-in scholar still has to do, as their profile's Tasks table renders it.
+--
+-- Two rules in one function, because they are one question: which of my assignments is
+-- actually waiting on me?
+--
+-- 1. Work I have finished is not waiting on me. An assignment with compensation_requested_at
+--    set is awaiting an APPROVER, and belongs on their list -- getAssignmentsAwaitingCompensation
+--    already puts it there -- rather than on mine. supabase/functions/remind/index.ts draws the
+--    same line for the same reason.
+--
+-- 2. A priority-0 (editor) assignment is seated on EVERY submission at a venue with a sole
+--    editor: create_submission and bulk_import_submissions both do it, and the row stays
+--    approved-and-uncompleted for the life of the paper, because only mark_submission_done
+--    completes it. It is a standing seat, not a piece of work. Listing them all told an editor
+--    their entire venue was a personal to-do list, labelled every paper in it a "review" they
+--    were not doing, and buried the submissions that genuinely did need them. So an editor row
+--    appears only when the submission is actually waiting on the editor:
+--      'unstaffed' -- nobody is seated in a non-editor role yet, so review cannot start until
+--                     the editor recruits or approves someone.
+--      'ready'     -- every seated non-editor assignment is settled. That is exactly the
+--                     blocker set mark_submission_done computes, so this list and that button
+--                     can never disagree about whether a paper can be closed.
+--    Anything between the two -- reviewers seated and working -- is waiting on the reviewers,
+--    not on the editor, and drops off.
+--
+-- SECURITY DEFINER is load-bearing here rather than habitual, and for the same reason as
+-- submission_has_editor above: whether a submission is waiting on its editor is an aggregate
+-- over SIBLING assignment rows, and the assignments SELECT policy admits those to an editor
+-- only `and not public.isConflicted(submission)`. Run as the caller, a conflicted editor would
+-- see no siblings and every one of their submissions would report 'unstaffed' -- the dangerous
+-- direction, since it is the one that puts rows back on the list. It reports only on the
+-- caller's OWN assignments, so it discloses nothing they could not already select.
+create or replace function public.scholar_tasks () returns table (
+	assignment uuid,
+	submission uuid,
+	title text,
+	venue uuid,
+	role uuid,
+	role_name text,
+	priority integer,
+	state text
+) language sql security definer stable
+set
+	"search_path" to '' as $$
+	with mine as (
+		select a.id as assignment, a.submission, r.id as role, r.name as role_name, r.priority
+		from public.assignments a
+		join public.roles r on r.id = a.role
+		where a.scholar = (select auth.uid())
+			and a.approved
+			and not a.completed
+			and a.compensation_requested_at is null
+	)
+	select
+		m.assignment,
+		s.id,
+		s.title,
+		s.venue,
+		m.role,
+		m.role_name,
+		m.priority,
+		case
+			when m.priority > 0 then 'assigned'
+			when not exists (
+				select 1
+				from public.assignments o
+				join public.roles orr on orr.id = o.role
+				where o.submission = m.submission and o.approved and orr.priority > 0
+			) then 'unstaffed'
+			else 'ready'
+		end
+	from mine m
+	join public.submissions s on s.id = m.submission
+	where m.priority > 0
+		or (
+			s.status = 'reviewing'
+			and not exists (
+				select 1
+				from public.assignments o
+				join public.roles orr on orr.id = o.role
+				where o.submission = m.submission
+					and o.approved
+					and not o.completed
+					and orr.priority > 0
+			)
+		)
+	order by s.created_at desc, m.assignment;
+$$;
+
+alter function public.scholar_tasks () OWNER to "postgres";
+
+revoke
+execute on function public.scholar_tasks ()
+from
+	public,
+	anon;
+
+grant
+execute on function public.scholar_tasks () to authenticated;
+
+-- The roles this scholar approves on, derived from the roles they themselves hold.
+--
+-- Deliberately its own query rather than a map over scholar_tasks. The profile load used to
+-- fetch every assignment, render them as tasks, and map that same array to role ids -- so
+-- narrowing what is DISPLAYED silently deleted the approver's "pending assignment" and
+-- "compensation to approve" rows. They are different questions; they now have separate
+-- answers, and the filter below is deliberately the OLD one -- no priority test and no
+-- compensation_requested_at test -- so that narrowing the task list cannot reach it.
+--
+-- SECURITY INVOKER: roles is world-readable and the subquery reads only
+-- scholar = auth.uid(), which the assignments SELECT policy's first branch always admits.
+create or replace function public.scholar_approver_roles () returns table (role uuid) language sql security invoker stable
+set
+	"search_path" to '' as $$
+	select distinct r.id
+	from public.roles r
+	where r.approver in (
+		select a.role
+		from public.assignments a
+		where a.scholar = (select auth.uid()) and a.approved and not a.completed
+	);
+$$;
+
+alter function public.scholar_approver_roles () OWNER to "postgres";
+
+revoke
+execute on function public.scholar_approver_roles ()
+from
+	public,
+	anon;
+
+grant
+execute on function public.scholar_approver_roles () to authenticated;
+
+-- How much each of the given scholars is already reviewing, for the editors choosing them.
+--
+-- Whether the caller helps run the venue's reviewing, and so may see the counts the
+-- volunteers roster scouts with (assignment_loads, completed_counts): an admin, or a
+-- scholar who volunteers for (accepted) or holds an active seat in the priority-0 role or
+-- a role that approves another. The volunteer half mirrors src/lib/data/isVenueApprover.ts,
+-- so an editor scouting the roster before any paper is theirs sees the same numbers; the
+-- seat half covers someone approving without a volunteer record. Anyone else: false.
+create or replace function public.can_scout_volunteers (_venue uuid) returns boolean language sql security definer stable
+set
+	"search_path" to '' as $$
+	with approving as (
+		select held.id
+		from public.roles held
+		where held.venueid = _venue
+		  and (held.priority = 0 or exists (select 1 from public.roles r where r.approver = held.id))
+	)
+	select public.isAdmin(_venue) or exists (
+		select 1
+		from public.volunteers v
+		where v.scholarid = (select auth.uid())
+		  and v.accepted = 'accepted'
+		  and v.roleid in (select id from approving)
+	) or exists (
+		select 1
+		from public.assignments a
+		where a.scholar = (select auth.uid())
+		  and a.approved
+		  and not a.completed
+		  and a.role in (select id from approving)
+	);
+$$;
+
+alter function public.can_scout_volunteers (uuid) OWNER to "postgres";
+
+revoke
+execute on function public.can_scout_volunteers (uuid)
+from
+	public,
+	anon;
+
+grant
+execute on function public.can_scout_volunteers (uuid) to authenticated;
+
+-- A reviewer's papers cap (volunteers.papers) means something only next to how many papers
+-- they already have. Counting that from the client undercounted: the assignments SELECT
+-- policy shows an associate editor only the submissions they handle, so a reviewer with
+-- four papers across the venue could read as one of one to the editor about to invite a
+-- fifth. That is how a reviewer came to be invited far past the cap they set.
+--
+-- SECURITY DEFINER so the count is the true one, and it returns ONLY counts: never which
+-- submissions, so it reveals no more than "this person is busy". Rows:
+--   (scholar, role, count) -- approved, uncompleted assignments in _venue in that role.
+--   (scholar, null, count) -- the same across every OTHER venue, editor seats excluded:
+--                             a sole editor is seated on every submission of their venue
+--                             for its whole life (see scholar_tasks), which is a standing
+--                             seat rather than papers to review.
+-- Zero counts are omitted. Ordered so the client can page past PostgREST's max_rows.
+--
+-- Only someone who helps run the venue's reviewing gets rows: see can_scout_volunteers.
+create or replace function public.assignment_loads (_venue uuid, _scholars uuid[]) returns table (scholar uuid, role uuid, count integer) language sql security definer stable
+set
+	"search_path" to '' as $$
+	select a.scholar, a.role, count(*)::integer
+	from public.assignments a
+	where public.can_scout_volunteers(_venue)
+	  and a.venue = _venue
+	  and a.scholar = any (_scholars)
+	  and a.approved
+	  and not a.completed
+	group by a.scholar, a.role
+	union all
+	select a.scholar, null, count(*)::integer
+	from public.assignments a
+	join public.roles r on r.id = a.role
+	where public.can_scout_volunteers(_venue)
+	  and a.venue <> _venue
+	  and a.scholar = any (_scholars)
+	  and a.approved
+	  and not a.completed
+	  and r.priority > 0
+	group by a.scholar
+	order by 1, 2 nulls last;
+$$;
+
+alter function public.assignment_loads (uuid, uuid[]) OWNER to "postgres";
+
+revoke
+execute on function public.assignment_loads (uuid, uuid[])
+from
+	public,
+	anon;
+
+grant
+execute on function public.assignment_loads (uuid, uuid[]) to authenticated;
+
+-- How many reviews each scholar has finished at the venue, for the volunteers roster's
+-- track record: someone who has completed work here is the strongest evidence of fit a
+-- venue has. Counts only, never which submissions, and only for the same people
+-- assignment_loads answers, since the ordering it drives is shown to no one else.
+-- Rows: (scholar, count) for approved, completed assignments in _venue in any role. Zero
+-- counts are omitted. Ordered so the client can page past PostgREST's max_rows.
+create or replace function public.completed_counts (_venue uuid, _scholars uuid[]) returns table (scholar uuid, count integer) language sql security definer stable
+set
+	"search_path" to '' as $$
+	select a.scholar, count(*)::integer
+	from public.assignments a
+	where public.can_scout_volunteers(_venue)
+	  and a.venue = _venue
+	  and a.scholar = any (_scholars)
+	  and a.approved
+	  and a.completed
+	group by a.scholar
+	order by 1;
+$$;
+
+alter function public.completed_counts (uuid, uuid[]) OWNER to "postgres";
+
+revoke
+execute on function public.completed_counts (uuid, uuid[])
+from
+	public,
+	anon;
+
+grant
+execute on function public.completed_counts (uuid, uuid[]) to authenticated;
+
+create or replace function public.isAssigned (_submissionid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
 set
 	"search_path" to '' as $$
 	select (exists (select id from public.assignments where submission=_submissionid and scholar=(select auth.uid()) and approved=true))
@@ -144,44 +666,10 @@ grant all on FUNCTION public.isAssigned (_submissionid uuid) to "authenticated";
 
 grant all on FUNCTION public.isAssigned (_submissionid uuid) to "service_role";
 
--- True if the current scholar is an accepted volunteer on any role in the
--- approver chain ABOVE the given role (its approver, that role's approver, and
--- so on). These are the scholars empowered to make/oversee assignments to the
--- role, so they may see its assignments. Walks roles.approver upward with a
--- depth guard to tolerate accidental cycles.
-create or replace function public.isInApproverChain (_roleid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER
-set
-	"search_path" to '' as $$
-	with recursive chain as (
-		select approver as roleid, 1 as depth
-		from public.roles
-		where id = _roleid and approver is not null
-		union all
-		select r.approver, c.depth + 1
-		from public.roles r
-		join chain c on r.id = c.roleid
-		where r.approver is not null and c.depth < 50
-	)
-	select exists (
-		select 1
-		from public.volunteers v
-		join chain c on c.roleid = v.roleid
-		where v.scholarid = (select auth.uid()) and v.accepted = 'accepted'
-	);
-$$;
-
-alter function public.isInApproverChain (_roleid uuid) OWNER to "postgres";
-
-grant all on FUNCTION public.isInApproverChain (_roleid uuid) to "anon";
-
-grant all on FUNCTION public.isInApproverChain (_roleid uuid) to "authenticated";
-
-grant all on FUNCTION public.isInApproverChain (_roleid uuid) to "service_role";
-
 -- True if the current scholar has a declared conflict of interest on the given
 -- submission. plpgsql (not sql) so the body's reference to public.conflicts is
 -- resolved at run time, since the conflicts table loads after this file.
-create or replace function public.isConflicted (_submissionid uuid) RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER
+create or replace function public.isConflicted (_submissionid uuid) RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER STABLE
 set
 	"search_path" to '' as $$
 begin
@@ -205,8 +693,9 @@ grant all on FUNCTION public.isConflicted (_submissionid uuid) to "service_role"
 -- DEFINER so the assignments SELECT policy can read submissions.authors without
 -- triggering the submissions RLS policy (which itself reads assignments — that
 -- mutual reference would otherwise be infinite recursion).
-create or replace function public.isAuthor (_submissionid uuid) returns boolean language sql security definer
-set "search_path" to '' as $$
+create or replace function public.isAuthor (_submissionid uuid) returns boolean language sql security definer STABLE
+set
+	"search_path" to '' as $$
 	select exists (
 		select 1 from public.submissions
 		where id = _submissionid and (select auth.uid()) = any (authors)
@@ -237,28 +726,49 @@ select
 					auth.uid ()
 			)=any (authors)
 		)
-		or exists (
-			select
-				volunteers.id
-			from
-				public.volunteers
-			where
-				volunteers.scholarid=(
-					select
-						auth.uid ()
-				)
-				and volunteers.accepted='accepted'::invited
-				and volunteers.roleid=any (
-					array(
+		or (
+			-- An accepted volunteer on a biddable role, deciding what to bid on...
+			exists (
+				select
+					volunteers.id
+				from
+					public.volunteers
+				where
+					volunteers.scholarid=(
 						select
-							roles.id
-						from
-							public.roles
-						where
-							roles.venueid=submissions.venue
-							and roles.biddable=true
+							auth.uid ()
 					)
+					and volunteers.accepted='accepted'::invited
+					and volunteers.roleid=any (
+						array(
+							select
+								roles.id
+							from
+								public.roles
+							where
+								roles.venueid=submissions.venue
+								and roles.biddable=true
+						)
+					)
+			)
+			-- ...but only while the submission is open for bidding, unless the bidder
+			-- already has an assignment on it (a pending bid, say), which should not
+			-- point at a submission they can no longer open.
+			and (
+				not submissions.bidding_closed
+				or exists (
+					select
+						assignments.id
+					from
+						public.assignments
+					where
+						assignments.submission=submissions.id
+						and assignments.scholar=(
+							select
+								auth.uid ()
+						)
 				)
+			)
 		)
 		or exists (
 			select
@@ -273,15 +783,16 @@ select
 						auth.uid ()
 				)
 		)
-		or exists (
-			select
-				assignments.id
-			from
-				public.assignments
-			where
-				assignments.submission=submissions.id
-				and public.isRoleApproverVolunteer (assignments.role)
-		)
+		-- The venue's editors, whether or not they are venue admins and whether or not
+		-- they are assigned to this submission yet. Every other branch above requires a
+		-- foothold ON the submission, so a priority-0 volunteer who was not also an admin
+		-- could not see an unassigned submission at all -- which made a submission
+		-- waiting for an editor invisible to precisely the people meant to pick it up.
+		-- Deliberately the more generous of the two editor rules: isPriorityZero asks only
+		-- that the role be accepted, while can_claim_editor_role also requires the
+		-- volunteer to be active, because seeing a venue's work is not the same as taking
+		-- a piece of it on.
+		or public.isPriorityZero (submissions.venue)
 	);
 
 -- We declare the submissions update policy after the assignments table is created
@@ -324,8 +835,9 @@ for update
 	);
 
 -- Assignment visibility: the assigned scholar always sees their own assignment.
--- Otherwise, only the approver chain for the role (and venue admins) may see it,
--- and never if that viewer is conflicted on the submission.
+-- Otherwise, only whoever may approve it on this submission may see it -- a venue
+-- admin, the submission's editor, or the holder of the approving role on it -- and
+-- never if that viewer is conflicted on the submission.
 create policy "assignees and approvers can see assignments" on public.assignments for
 select
 	to authenticated using (
@@ -337,19 +849,21 @@ select
 						auth.uid () as "uid"
 				)
 			)
-			-- The approver chain for the role, or venue admins, may see it,
-			-- unless they are conflicted on the submission.
+			-- Whoever may approve this assignment may see it, unless they are
+			-- conflicted on the submission. can_approve_assignment covers venue
+			-- admins itself.
 			or (
-				(
-					public.isInApproverChain (role)
-					or public.isAdmin (venue)
-				)
+				public.can_approve_assignment (submission, role)
 				and not public.isConflicted (submission)
 			)
 			-- Open review: when the venue is not anonymous, the submission's
-			-- authors may see who is assigned (unless they are conflicted).
+			-- authors may see who is assigned (unless they are conflicted). Only
+			-- who is ASSIGNED: a pending or declined bid is a conversation between
+			-- the bidder and the approvers, and a declined one carries the
+			-- approver's reasons for turning a reviewer down.
 			or (
-				(
+				approved
+				and (
 					select
 						not anonymous_assignments
 					from
@@ -373,16 +887,20 @@ for update
 						auth.uid () as "uid"
 				)
 			)
-			or public.isRoleApproverVolunteer (role)
+			or public.can_approve_assignment (submission, role)
 		)
 	);
 
+-- A declined bid cannot be deleted by its bidder. The decline stands as the record of
+-- the approver's answer, and deleting it would also let the bidder bid again as if it
+-- had never been answered. An approver reverses a decline by approving the bid.
 create policy "assignees can delete assignments" on "public"."assignments" for delete to authenticated using (
 	(
 		scholar=(
 			select
 				auth.uid () as "uid"
 		)
+		and declined_at is null
 	)
 );
 
@@ -390,13 +908,16 @@ create policy "admins, approvers and volunteers can create assignments" on "publ
 with
 	check (
 		(
-			-- If the current scholar is an admin, they can create any assignment.
-			public.isAdmin (venue)
-			-- If the current scholar has an assigment to the role that is the approver for the new assignment's role.
-			or (
-				public.isRoleApproverVolunteer (role)
-				and isAssigned (submission)
-			)
+			-- Whoever may approve an assignment for this role on this submission may
+			-- create one. Covers venue admins and the submission's editor.
+			--
+			-- The old rule paired a venue-wide approver check with isAssigned, which
+			-- asks only for an approved assignment in SOME role on the submission --
+			-- so a scholar seated as a plain reviewer, who also volunteered in the
+			-- approving role venue-wide, could seat further reviewers alongside
+			-- themselves. The approver seated here may still seat anyone in the roles
+			-- they approve, including themselves.
+			public.can_approve_assignment (submission, role)
 			-- If the venue permits bidding and the volunteer has the role for which this assignment is being created.
 			or (
 				bid
@@ -419,6 +940,21 @@ with
 							)
 					)
 				)
+				-- The editor may close bidding on a submission that is still under review.
+				and not public.submission_bidding_closed (submission)
+			)
+			-- An editor of the venue claiming a submission nobody is editing yet. See
+			-- public.can_claim_editor_role above for why this branch has to exist and
+			-- why it is drawn this narrowly; the checks here are the ones the function
+			-- cannot make for itself, since it is not told who is being seated.
+			or (
+				scholar=(
+					select
+						auth.uid () as "uid"
+				)
+				and not bid
+				and not completed
+				and public.can_claim_editor_role (submission, role)
 			)
 		)
 	);
@@ -453,9 +989,482 @@ $$;
 
 alter function public.enforce_submission_author_edits () OWNER to "postgres";
 
-create or replace trigger enforce_submission_author_edits before
-update on public.submissions for each row
+create or replace trigger enforce_submission_author_edits
+before update on public.submissions for each row
 execute function public.enforce_submission_author_edits ();
+
+-- The UPDATE policy above admits the assignee's own row with no limit on columns, because
+-- RLS cannot be column-specific -- which let an assignee approve their own bid, complete
+-- their own assignment, or move it to another role or submission. So, per column:
+--
+--   * scholar, role, submission, venue and bid never change after insert. An assignment is
+--     about one person in one role on one paper; a different one is a different row.
+--   * approved, completed and the decline columns are the approver's to set, under the
+--     same rule as everything else an approver does: public.can_approve_assignment. An
+--     approver who is also the assignee still passes, so seating oneself keeps working.
+--   * preferenceid and compensation_requested_at are the assignee's own, and are the only
+--     columns the app writes on its own row.
+--
+-- Approving a declined bid clears the decline: it is how an approver changes their mind,
+-- and the decline-only-bids check would otherwise refuse the approval.
+--
+-- SECURITY INVOKER and gated on current_user = 'authenticated' on purpose. The SECURITY
+-- DEFINER RPCs that write this table (complete_assignment, mark_submission_done,
+-- decline_bid) run as postgres and authorize the caller themselves; this guards the one
+-- path that has no other check, a client writing the row directly.
+create or replace function public.enforce_assignment_updates () RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER
+set
+	"search_path" to '' as $$
+begin
+	if new.approved and not old.approved then
+		new.declined_at := null;
+		new.declined_by := null;
+		new.decline_reason := null;
+		new.decline_reason_id := null;
+	end if;
+
+	if current_user <> 'authenticated' then
+		return new;
+	end if;
+
+	if (new.scholar, new.role, new.submission, new.venue, new.bid)
+		is distinct from (old.scholar, old.role, old.submission, old.venue, old.bid) then
+		raise exception 'An assignment''s scholar, role, submission and bid cannot be changed'
+			using errcode = 'RR018';
+	end if;
+
+	if (new.approved, new.completed, new.declined_at, new.declined_by, new.decline_reason,
+			new.decline_reason_id)
+		is distinct from (old.approved, old.completed, old.declined_at, old.declined_by, old.decline_reason,
+			old.decline_reason_id)
+		and not public.can_approve_assignment(old.submission, old.role) then
+		raise exception 'Only an approver of this role may approve, complete or decline this assignment'
+			using errcode = 'RR018';
+	end if;
+
+	return new;
+end;
+$$;
+
+alter function public.enforce_assignment_updates () OWNER to "postgres";
+
+revoke
+execute on function public.enforce_assignment_updates ()
+from
+	public,
+	anon;
+
+create or replace trigger enforce_assignment_updates
+before update on public.assignments for each row
+execute function public.enforce_assignment_updates ();
+
+-- _bid_limit: a volunteer's bid budget for a role, and how much of it is used.
+--
+-- Some volunteers bid on every submission at a venue, which no one has the expertise
+-- for and which mails the role's approvers once per bid. So each volunteer has a
+-- budget per role. Every bid counts against it -- pending, approved or declined --
+-- while its submission is under review: a declined bid cannot be withdrawn, and
+-- counting it is what stops bidding, being declined and bidding again elsewhere. A
+-- submission marked done gives its bids back.
+--
+-- The limit is the role's max_bids, a fixed number, so that volunteers bid on the
+-- submissions they are most qualified to review. Null when the role has no limit.
+--
+-- Owner-only: it answers for any scholar. Clients read their own through
+-- public.my_bid_budget; public.enforce_bid_rules reads it as the owner.
+create or replace function public._bid_limit (_role uuid, _scholar uuid) returns table (used integer, bid_limit integer) language sql security definer stable
+set
+	"search_path" to '' as $$
+	select
+		(
+			select count(*)::integer
+			from public.assignments a
+			join public.submissions s on s.id = a.submission
+			where a.role = r.id and a.scholar = _scholar and a.bid and s.status = 'reviewing'
+		),
+		r.max_bids
+	from public.roles r
+	where r.id = _role;
+$$;
+
+alter function public._bid_limit (uuid, uuid) OWNER to "postgres";
+
+revoke
+execute on function public._bid_limit (uuid, uuid)
+from
+	public,
+	anon,
+	authenticated;
+
+-- my_bid_budget: the caller's own bid budget for a role, for the submissions page.
+create or replace function public.my_bid_budget (_role uuid) returns table (used integer, bid_limit integer) language sql security definer stable
+set
+	"search_path" to '' as $$
+	select b.used, b.bid_limit from public._bid_limit(_role, (select auth.uid())) b;
+$$;
+
+alter function public.my_bid_budget (uuid) OWNER to "postgres";
+
+revoke
+execute on function public.my_bid_budget (uuid)
+from
+	public,
+	anon;
+
+grant
+execute on function public.my_bid_budget (uuid) to authenticated;
+
+-- enforce_bid_rules: what a scholar may bid on, checked when the bid is placed.
+--
+-- The INSERT policy checks only that the bidder volunteers for the role and that
+-- bidding on the submission is open. The rest was the submissions page's to enforce,
+-- so a direct API call could bid on a role that is not biddable, on a done
+-- submission, on a role that is already full, or twice. This refuses all of those
+-- (RR026) and a bid past the bidder's budget (RR025).
+--
+-- A trigger rather than a policy clause so that the client can say which rule
+-- refused the bid, and rather than a unique index because it checks only new bids:
+-- bids placed before these rules existed stay, as noise, and a scholar over budget
+-- simply cannot bid again until they withdraw enough. The advisory lock serializes
+-- one scholar's bids in one role, so two placed at once cannot both fit in the last
+-- slot.
+--
+-- Only bids a scholar places for themselves: whoever may approve the assignment is
+-- trusted to seat whom they like, and the service role is not checked.
+create or replace function public.enforce_bid_rules () RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+set
+	"search_path" to '' as $$
+declare
+	_role public.roles;
+	_budget record;
+begin
+	if not new.bid
+		or new.scholar is distinct from (select auth.uid())
+		or public.can_approve_assignment(new.submission, new.role) then
+		return new;
+	end if;
+
+	perform pg_advisory_xact_lock(hashtextextended(new.scholar::text || new.role::text, 0));
+
+	select * into _role from public.roles where id = new.role;
+
+	if not coalesce(_role.biddable, false) then
+		raise exception 'This role does not take bids' using errcode = 'RR026';
+	end if;
+
+	if not exists (
+		select 1 from public.submissions where id = new.submission and status = 'reviewing'
+	) then
+		raise exception 'This submission is not under review' using errcode = 'RR026';
+	end if;
+
+	if exists (
+		select 1 from public.assignments
+		where submission = new.submission and role = new.role and scholar = new.scholar
+	) then
+		raise exception 'This scholar already has a bid or assignment in this role' using errcode = 'RR026';
+	end if;
+
+	if (
+		select count(*) from public.assignments
+		where submission = new.submission and role = new.role and approved
+	) >= _role.desired_assignments then
+		raise exception 'This role is already full on this submission' using errcode = 'RR026';
+	end if;
+
+	select * into _budget from public._bid_limit(new.role, new.scholar);
+	if _budget.bid_limit is not null and _budget.used >= _budget.bid_limit then
+		raise exception 'Bid limit reached' using errcode = 'RR025';
+	end if;
+
+	return new;
+end;
+$$;
+
+alter function public.enforce_bid_rules () OWNER to "postgres";
+
+revoke
+execute on function public.enforce_bid_rules ()
+from
+	public,
+	anon;
+
+create or replace trigger enforce_bid_rules
+before insert on public.assignments for each row
+execute function public.enforce_bid_rules ();
+
+-- decline_bid: an approver answers a bid with no, and says why.
+--
+-- The SECURITY DEFINER write path for the decline columns; enforce_assignment_updates
+-- above refuses them to direct client writes from anyone who cannot approve. Requires a
+-- reason because a decline is addressed to a person, and the reason is what makes it a
+-- principled answer rather than a door shut in someone's face. The reason is either one of
+-- the venue's decline_reasons (_reason_id) or the approver's own words (_reason), never
+-- both. Returns what the client needs to send the BidDeclined notice, including exactly the
+-- reason that was stored.
+--
+-- RR017 when the bid is no longer pending (approved, completed, or already declined),
+-- which is the race two approvers answering the same bid would otherwise both win.
+create or replace function public.decline_bid (
+	_assignment uuid,
+	_reason text,
+	_reason_id uuid default null
+) returns jsonb language plpgsql security definer
+set
+	search_path to '' as $$
+declare
+	_caller uuid;
+	_a public.assignments;
+	_trimmed text;
+begin
+	_caller := (select auth.uid());
+	if _caller is null then
+		raise exception 'Authentication required';
+	end if;
+
+	select * into _a from public.assignments where id = _assignment for update;
+	if not found then
+		raise exception 'Bid not found';
+	end if;
+
+	if not public.can_approve_assignment(_a.submission, _a.role)
+		or public.isConflicted(_a.submission) then
+		raise exception 'You are not authorized to decline this bid';
+	end if;
+
+	-- A pending claim (see compensation_requested_at) is answered the same way: it is
+	-- also somebody asking an approver for something, and a no needs a reason.
+	if not (_a.bid or _a.compensation_requested_at is not null)
+		or _a.approved or _a.completed or _a.declined_at is not null then
+		raise exception 'This bid is no longer pending' using errcode = 'RR017';
+	end if;
+
+	_trimmed := btrim(coalesce(_reason, ''));
+	if _reason_id is not null then
+		if char_length(_trimmed) > 0 then
+			raise exception 'A decline gives the venue''s reason or the approver''s own, not both';
+		end if;
+		select r.text into _trimmed from public.decline_reasons r
+		where r.id = _reason_id and r.venueid = _a.venue;
+		if not found then
+			raise exception 'That decline reason does not belong to this venue';
+		end if;
+	else
+		if char_length(_trimmed) = 0 then
+			raise exception 'A declined bid needs an explanation for the bidder';
+		end if;
+		if char_length(_trimmed) > 1000 then
+			raise exception 'An explanation must be at most 1000 characters';
+		end if;
+	end if;
+
+	update public.assignments
+	set declined_at = now(), declined_by = _caller, decline_reason = _trimmed,
+		decline_reason_id = _reason_id
+	where id = _assignment;
+
+	return jsonb_build_object(
+		'venue', _a.venue,
+		'submission', _a.submission,
+		'scholar', _a.scholar,
+		'role', _a.role,
+		'reason', _trimmed
+	);
+end;
+$$;
+
+alter function public.decline_bid (uuid, text, uuid) OWNER to "postgres";
+
+revoke
+execute on function public.decline_bid (uuid, text, uuid)
+from
+	public,
+	anon;
+
+grant
+execute on function public.decline_bid (uuid, text, uuid) to authenticated;
+
+-- request_compensation: a scholar says they finished work on a submission and asks to
+-- be paid for it.
+--
+-- Found by the venue's own manuscript ID, because that is what the venue's reviewing
+-- system shows the scholar, and scoped to the venue, because manuscript IDs are only
+-- unique within one. SECURITY DEFINER because the scholar may not be able to see the
+-- submission at all: a backlog submission imported before its editor joined has nobody
+-- on the platform who could have seated them, and reviewers in a role without bidding
+-- see nothing they are not assigned to.
+--
+-- With an assignment already in place, this only stamps compensation_requested_at.
+-- Without one, it files a CLAIM: an unapproved, non-bid assignment stamped the same
+-- way, which any approver may approve and pay in one step (complete_assignment) or
+-- decline with a reason (decline_bid). Filing one requires being an accepted volunteer
+-- in the role -- active or not, since this is past work -- and not an author of the
+-- submission. A claim cannot be filed in a priority-0 role: an editor seat carries
+-- authority over the submission, and editors are paid by marking it done.
+--
+-- Returns the submission and who to tell: the scholar seated in the role's approving
+-- role on the submission, as a new bid tells (bid_notice_recipients); failing that, its
+-- priority-0 editors; failing that, the venue's admins. Each tier leaves out the
+-- requester and anyone conflicted before asking whether it is empty, so a conflicted
+-- approver hands the request on rather than swallowing it. Unlike a bid, a request is
+-- pay owed for finished work, so it falls back rather than reaching nobody. Also returns
+-- the submission's title, the role's name and the requester's name, for the email.
+-- Computed here because the requester cannot see the other assignments that answer it,
+-- and often not the submission either.
+create or replace function public.request_compensation (_venue uuid, _externalid text, _role uuid) returns jsonb language plpgsql security definer
+set
+	search_path to '' as $$
+declare
+	_caller uuid;
+	_submission uuid;
+	_priority integer;
+	_a public.assignments;
+	_recipients uuid[];
+	_title text;
+	_role_name text;
+	_requester text;
+	_tier text;
+	_approver_role text;
+begin
+	_caller := (select auth.uid());
+	if _caller is null then
+		raise exception 'Authentication required';
+	end if;
+
+	select s.id into _submission
+	from public.submissions s
+	where s.venue = _venue and s.externalid = btrim(coalesce(_externalid, ''));
+	if _submission is null then
+		raise exception 'No submission with that manuscript ID at this venue'
+			using errcode = 'RR020';
+	end if;
+
+	select r.priority into _priority
+	from public.roles r
+	where r.id = _role and r.venueid = _venue;
+	if _priority is null then
+		raise exception 'That role does not belong to this venue';
+	end if;
+
+	select * into _a
+	from public.assignments a
+	where a.submission = _submission and a.role = _role and a.scholar = _caller
+	limit 1
+	for update;
+
+	if found then
+		if _a.completed then
+			raise exception 'This work has already been compensated' using errcode = 'RR021';
+		end if;
+		if _a.declined_at is not null then
+			raise exception 'This request was declined' using errcode = 'RR022';
+		end if;
+		update public.assignments
+		set compensation_requested_at = coalesce(compensation_requested_at, now())
+		where id = _a.id;
+	else
+		if _priority = 0 then
+			raise exception 'Editors are compensated by marking a submission done'
+				using errcode = 'RR023';
+		end if;
+
+		if not exists (
+			select 1
+			from public.volunteers v
+			where v.roleid = _role
+				and v.scholarid = _caller
+				and v.accepted = 'accepted'
+		) then
+			raise exception 'Only volunteers in this role can request compensation for it'
+				using errcode = 'RR024';
+		end if;
+
+		if exists (
+			select 1 from public.submissions s
+			where s.id = _submission and _caller = any (s.authors)
+		) then
+			raise exception 'Authors cannot request compensation for their own submission'
+				using errcode = 'RR024';
+		end if;
+
+		insert into public.assignments (venue, submission, scholar, role, bid, approved, compensation_requested_at)
+		values (_venue, _submission, _caller, _role, false, false, now());
+	end if;
+
+	-- The scholar seated in the role's approving role on this submission. Which of the three
+	-- tiers answered is returned too, so the email can say whether the request is the
+	-- recipient's to handle or only fell to them because nobody closer to it was seated.
+	_tier := 'approver';
+	select coalesce(array_agg(distinct a.scholar), array[]::uuid[]) into _recipients
+	from public.assignments a
+	join public.roles target on target.id = _role
+	where a.submission = _submission and a.approved and a.role = target.approver
+		and a.scholar <> _caller
+		and not exists (
+			select 1 from public.conflicts c
+			where c.submissionid = _submission and c.scholarid = a.scholar
+		);
+
+	-- Failing that, the submission's editors.
+	if cardinality(_recipients) = 0 then
+		_tier := 'editors';
+		select coalesce(array_agg(distinct a.scholar), array[]::uuid[]) into _recipients
+		from public.assignments a
+		join public.roles r on r.id = a.role
+		where a.submission = _submission and a.approved and r.priority = 0
+			and a.scholar <> _caller
+			and not exists (
+				select 1 from public.conflicts c
+				where c.submissionid = _submission and c.scholarid = a.scholar
+			);
+	end if;
+
+	-- Failing that, the venue's admins.
+	if cardinality(_recipients) = 0 then
+		_tier := 'admins';
+		select coalesce(array_agg(distinct x.scholar), array[]::uuid[]) into _recipients
+		from (
+			select unnest(v.admins) as scholar
+			from public.venues v
+			where v.id = _venue
+		) x
+		where x.scholar <> _caller
+			and not exists (
+				select 1 from public.conflicts c
+				where c.submissionid = _submission and c.scholarid = x.scholar
+			);
+	end if;
+
+	select s.title into _title from public.submissions s where s.id = _submission;
+	select r.name into _role_name from public.roles r where r.id = _role;
+	select sc.name into _requester from public.scholars sc where sc.id = _caller;
+	select ar.name into _approver_role
+	from public.roles r
+	join public.roles ar on ar.id = r.approver
+	where r.id = _role;
+
+	return jsonb_build_object(
+		'submission', _submission,
+		'recipients', to_jsonb(_recipients),
+		'title', _title,
+		'role', _role_name,
+		'requester', _requester,
+		'tier', _tier,
+		'approver_role', _approver_role
+	);
+end;
+$$;
+
+alter function public.request_compensation (uuid, text, uuid) OWNER to "postgres";
+
+revoke
+execute on function public.request_compensation (uuid, text, uuid)
+from
+	public,
+	anon;
+
+grant
+execute on function public.request_compensation (uuid, text, uuid) to authenticated;
 
 grant all on table public.assignments to "anon";
 
@@ -503,7 +1512,11 @@ begin
     if _assignment.completed then
         raise exception 'Assignment is already completed';
     end if;
-    if not _assignment.approved then
+    -- A claim is the one unapproved assignment that may be completed: the scholar has
+    -- said the work is done, so approving it and paying for it are one decision, and the
+    -- update below records both. That includes a declined claim, which is how an approver
+    -- changes their mind -- approving clears the decline (enforce_assignment_updates).
+    if not _assignment.approved and _assignment.compensation_requested_at is null then
         raise exception 'Assignment must be approved before it can be completed';
     end if;
 
@@ -584,24 +1597,20 @@ begin
         );
     end if;
 
-    -- Pick the tokens to move. Order is stable but arbitrary.
-    select array_agg(id) into _token_ids from (
-        select id from public.tokens
-            where venue = _assignment.venue and currency = _venue.currency
-            order by id
-            limit _amount
-    ) sub;
-
     -- Attribute the payout to its transaction. Generated up front: the tokens
     -- move before the transaction row exists, and the token_events trigger reads
     -- app.txn at the moment of the write.
     _txn_id := gen_random_uuid();
     perform set_config('app.txn', _txn_id::text, true);
 
-    -- Reassign the tokens to the scholar.
-    update public.tokens
-        set venue = null, scholar = _assignment.scholar
-        where id = any(_token_ids);
+    -- Take the tokens under lock and reassign them to the scholar. The count
+    -- above decided whether to propose a mint; this can still come up short if a
+    -- concurrent payout holds the rows it counted, which RR003 reports as a
+    -- retryable shortfall rather than paying out tokens the venue no longer has.
+    _token_ids := public._move_tokens(
+        _venue.currency, null, _assignment.venue, _assignment.scholar, null,
+        _amount, 'Insufficient tokens to compensate this assignment'
+    );
 
     -- Record the approved transaction.
     insert into public.transactions (
@@ -614,8 +1623,8 @@ begin
 
     perform set_config('app.txn', '', true);
 
-    -- Mark the assignment completed.
-    update public.assignments set completed = true where id = _assignment_id;
+    -- Mark the assignment completed, approving a claim along the way.
+    update public.assignments set approved = true, completed = true where id = _assignment_id;
 
     return jsonb_build_object(
         'status', 'transferred',

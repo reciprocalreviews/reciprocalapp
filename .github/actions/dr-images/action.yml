@@ -1,0 +1,77 @@
+name: DR container images
+description: >-
+  Load the postgres and alpine images the DR scripts run from the Actions cache,
+  pulling (with registry fallback) and caching them only on a miss.
+
+# Every registry throttles anonymous pulls per source IP, and GitHub-hosted
+# runners share IPs, so a scheduled backup that pulls on every run will sooner or
+# later be refused before it touches the database (supabase/dr/images.sh has the
+# history). The hourly backup tail keeps this cache warm on dev, so the nightly
+# backup, the pre-migration snapshot, and the drill normally never contact a
+# registry; a pull happens about once a week, when the key rolls over.
+
+inputs:
+  pg-image:
+    description: Postgres client image. Must match the PG_IMAGE the scripts run.
+    required: false
+    default: public.ecr.aws/docker/library/postgres:17
+  alpine-image:
+    description: Alpine image. Must match the ALPINE_IMAGE the scripts run.
+    required: false
+    default: public.ecr.aws/docker/library/alpine:3
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve the cache key
+      id: key
+      shell: bash
+      env:
+        IMAGES: ${{ inputs.pg-image }} ${{ inputs.alpine-image }}
+      run: |
+        set -euo pipefail
+        # The floating :17 and :3 tags pick up patch releases, so roll the key
+        # weekly. The week-less prefix is the restore key: a new week starts from
+        # last week's images rather than from a registry.
+        prefix="dr-images-v1-$(printf '%s' "$IMAGES" | sha256sum | cut -c1-12)-"
+        echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
+        echo "key=$prefix$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+
+    - name: Restore cached images
+      id: cache
+      uses: actions/cache@v5
+      with:
+        path: ~/dr-images
+        key: ${{ steps.key.outputs.key }}
+        restore-keys: ${{ steps.key.outputs.prefix }}
+
+    - name: Load, pulling only what is missing
+      shell: bash
+      env:
+        PG_IMAGE: ${{ inputs.pg-image }}
+        ALPINE_IMAGE: ${{ inputs.alpine-image }}
+        EXACT_HIT: ${{ steps.cache.outputs.cache-hit }}
+      run: |
+        set -euo pipefail
+        if [ -f ~/dr-images/images.tar ]; then
+          docker load -q -i ~/dr-images/images.tar
+        fi
+        [ "$EXACT_HIT" = 'true' ] && exit 0
+        # A stale (restore-key) hit or a miss: try to refresh from a registry,
+        # but a failed refresh is not fatal while the restored images are loaded,
+        # since pull_image returns early for an image already present.
+        source supabase/dr/images.sh
+        refreshed=true
+        for image in "$PG_IMAGE" "$ALPINE_IMAGE"; do
+          docker rmi -f "$image" >/dev/null 2>&1 || true
+          pull_image "$image" || refreshed=false
+        done
+        if [ "$refreshed" = true ]; then
+          mkdir -p ~/dr-images
+          docker save "$PG_IMAGE" "$ALPINE_IMAGE" -o ~/dr-images/images.tar
+        elif [ -f ~/dr-images/images.tar ]; then
+          echo "::warning::could not refresh DR images from any registry; using last week's"
+          docker load -q -i ~/dr-images/images.tar
+        else
+          exit 1
+        fi

@@ -6,9 +6,6 @@ import {
 	type ViewSubmission
 } from './sortSubmissions';
 
-const NOW = Date.parse('2026-08-16T00:00:00Z');
-const DAY = 24 * 60 * 60 * 1000;
-
 function sub(over: Partial<ViewSubmission> & { id: string }): ViewSubmission {
 	return {
 		title: 'Title',
@@ -16,7 +13,6 @@ function sub(over: Partial<ViewSubmission> & { id: string }): ViewSubmission {
 		authors: [],
 		status: 'reviewing',
 		created_at: '2026-01-01T00:00:00Z',
-		completed_at: null,
 		transactions: [],
 		...over
 	};
@@ -28,12 +24,13 @@ function view(over: Partial<SubmissionsViewContext> = {}) {
 		isAdmin: false,
 		assignments: [],
 		rolesById: new Map(),
+		isVenueApprover: false,
+		submissionsWithEditor: new Set<string>(),
 		scholarName: new Map(),
 		conflicts: [],
 		transactions: [],
-		doneVisibilityDays: 30,
 		filter: '',
-		now: NOW,
+		needsEditorOnly: false,
 		sortOrder: ['payment', 'title', 'id', 'created'],
 		paymentSortPendingFirst: true,
 		titleSortIncreasing: true,
@@ -64,7 +61,7 @@ describe('canSeeAuthors', () => {
 		expect(
 			view({
 				assignments: [{ submission: 's1', scholar: 'viewer', role: 'r1' }],
-				rolesById: new Map([['r1', { anonymous_authors: false }]])
+				rolesById: new Map([['r1', { anonymous_authors: false, priority: 1 }]])
 			}).canSeeAuthors(target)
 		).toBe(true);
 	});
@@ -73,7 +70,7 @@ describe('canSeeAuthors', () => {
 		expect(
 			view({
 				assignments: [{ submission: 's1', scholar: 'viewer', role: 'r1' }],
-				rolesById: new Map([['r1', { anonymous_authors: true }]])
+				rolesById: new Map([['r1', { anonymous_authors: true, priority: 1 }]])
 			}).canSeeAuthors(target)
 		).toBe(false);
 	});
@@ -88,8 +85,8 @@ describe('canSeeAuthors', () => {
 					{ submission: 's1', scholar: 'viewer', role: 'anon' }
 				],
 				rolesById: new Map([
-					['open', { anonymous_authors: false }],
-					['anon', { anonymous_authors: true }]
+					['open', { anonymous_authors: false, priority: 1 }],
+					['anon', { anonymous_authors: true, priority: 1 }]
 				])
 			}).canSeeAuthors(target)
 		).toBe(false);
@@ -99,7 +96,7 @@ describe('canSeeAuthors', () => {
 		expect(
 			view({
 				assignments: [{ submission: 'other', scholar: 'viewer', role: 'r1' }],
-				rolesById: new Map([['r1', { anonymous_authors: false }]])
+				rolesById: new Map([['r1', { anonymous_authors: false, priority: 1 }]])
 			}).canSeeAuthors(target)
 		).toBe(false);
 	});
@@ -109,12 +106,62 @@ describe('canSeeAuthors', () => {
 	});
 });
 
+describe('canSeeExternalID', () => {
+	const target = sub({ id: 's1', authors: ['author'] });
+
+	// Looser than canSeeAuthors on purpose: gating the manuscript ID on author
+	// visibility took it away from every editor and associate editor at a venue
+	// whose roles are anonymized, which is the default.
+	test('an approver at an anonymized venue can, though they cannot see authors', () => {
+		const v = view({
+			isVenueApprover: true,
+			assignments: [{ submission: 's1', scholar: 'viewer', role: 'anon' }],
+			rolesById: new Map([['anon', { anonymous_authors: true, priority: 1 }]])
+		});
+		expect(v.canSeeAuthors(target)).toBe(false);
+		expect(v.canSeeExternalID(target)).toBe(true);
+	});
+
+	test('a scholar who is only bidding cannot', () => {
+		expect(view({ isVenueApprover: false }).canSeeExternalID(target)).toBe(false);
+	});
+
+	test('an author of the submission can', () => {
+		expect(view({ uid: 'author' }).canSeeExternalID(target)).toBe(true);
+	});
+});
+
 describe('matchesFilter', () => {
 	const target = sub({ id: 's1', title: 'Deep Learning', externalid: 'EXT-42', authors: ['a1'] });
 
-	test('matches title and external id case-insensitively', () => {
+	test('matches title case-insensitively, for everyone', () => {
 		expect(view({ filter: 'deep' }).matchesFilter(target)).toBe(true);
-		expect(view({ filter: 'ext-4' }).matchesFilter(target)).toBe(true);
+	});
+
+	test('matches an external id the viewer may see, case-insensitively', () => {
+		expect(view({ filter: 'ext-4', isAdmin: true }).matchesFilter(target)).toBe(true);
+	});
+
+	// The manuscript ID is gated for the same reason the column hides it: it is
+	// the key the paper is filed under in the venue's own reviewing system, so
+	// matching it here would let a bidder confirm a guessed ID one query at a
+	// time and walk from it back to the authors.
+	test('does not match an external id the viewer may not see', () => {
+		expect(
+			view({
+				filter: 'ext-4',
+				assignments: [{ submission: 's1', scholar: 'viewer', role: 'anon' }],
+				rolesById: new Map([['anon', { anonymous_authors: true, priority: 1 }]])
+			}).matchesFilter(target)
+		).toBe(false);
+	});
+
+	test('does match an external id for an author of the submission', () => {
+		expect(view({ filter: 'ext-4', uid: 'a1' }).matchesFilter(target)).toBe(true);
+	});
+
+	test('does match an external id for a venue approver', () => {
+		expect(view({ filter: 'ext-4', isVenueApprover: true }).matchesFilter(target)).toBe(true);
 	});
 
 	test('does not match unrelated text', () => {
@@ -139,7 +186,7 @@ describe('matchesFilter', () => {
 				filter: 'adams',
 				scholarName: new Map([['a1', 'alice adams']]),
 				assignments: [{ submission: 's1', scholar: 'viewer', role: 'anon' }],
-				rolesById: new Map([['anon', { anonymous_authors: true }]])
+				rolesById: new Map([['anon', { anonymous_authors: true, priority: 1 }]])
 			}).matchesFilter(target)
 		).toBe(false);
 	});
@@ -156,23 +203,98 @@ describe('matchesFilter', () => {
 });
 
 describe('paymentStatus', () => {
-	test('is undefined until transactions load', () => {
-		expect(view({ transactions: null }).paymentStatus(sub({ id: 's1' }))).toBeUndefined();
+	test('is unknown until transactions load', () => {
+		expect(view({ transactions: null }).paymentStatus(sub({ id: 's1' }))).toEqual({
+			state: 'unknown'
+		});
 	});
 
 	test('counts charges with no visible transaction', () => {
 		const target = sub({ id: 's1', transactions: ['t1', 't2'] });
-		expect(view({ transactions: [{ id: 't1' }] }).paymentStatus(target)).toBe(1);
+		expect(
+			view({ transactions: [{ id: 't1', status: 'approved' }] }).paymentStatus(target)
+		).toEqual({
+			state: 'pending',
+			count: 1
+		});
 	});
 
-	test('is zero when every charge is visible', () => {
+	test('is paid when every charge is approved', () => {
 		const target = sub({ id: 's1', transactions: ['t1'] });
-		expect(view({ transactions: [{ id: 't1' }] }).paymentStatus(target)).toBe(0);
+		expect(
+			view({ transactions: [{ id: 't1', status: 'approved' }] }).paymentStatus(target)
+		).toEqual({
+			state: 'paid'
+		});
 	});
 
-	test('ignores non-paying co-author placeholder slots', () => {
+	// A venue admin can see every charge to the venue, including a co-author's that is
+	// still waiting for their approval. Counting a visible transaction as paid showed
+	// that submission as paid to exactly the people who would chase it.
+	test('counts a visible but unapproved charge as pending', () => {
+		const target = sub({ id: 's1', transactions: ['t1', 't2', 't3'] });
+		expect(
+			view({
+				transactions: [
+					{ id: 't1', status: 'approved' },
+					{ id: 't2', status: 'proposed' },
+					{ id: 't3', status: 'declined' }
+				]
+			}).paymentStatus(target)
+		).toEqual({ state: 'pending', count: 2 });
+	});
+
+	// The bug this type exists to prevent. A bulk-imported submission has no
+	// transactions at all, and the old arithmetic reported that as zero
+	// outstanding — indistinguishable from paid, so the list showed a green
+	// "paid" badge on submissions nobody had paid for and whose tokens had not
+	// even been minted. This case ran through every test in this file as the
+	// fixture default and was asserted by none of them.
+	test('is free when there were never any charges', () => {
+		const target = sub({ id: 's1', transactions: [] });
+		expect(view({ transactions: [] }).paymentStatus(target)).toEqual({ state: 'free' });
+	});
+
+	// The same conflation reached payment-free venues by another route: every
+	// author's charge is zero, so every slot is a placeholder.
+	test('is free when every slot is a non-paying co-author placeholder', () => {
 		const target = sub({ id: 's1', transactions: [NULL_TRANSACTION, NULL_TRANSACTION] });
-		expect(view({ transactions: [] }).paymentStatus(target)).toBe(0);
+		expect(view({ transactions: [] }).paymentStatus(target)).toEqual({ state: 'free' });
+	});
+
+	test('ignores placeholder slots when tallying real charges', () => {
+		const target = sub({ id: 's1', transactions: [NULL_TRANSACTION, 't1'] });
+		expect(view({ transactions: [] }).paymentStatus(target)).toEqual({
+			state: 'pending',
+			count: 1
+		});
+	});
+});
+
+describe('payment sorting', () => {
+	// The invariant that splitting "nothing outstanding" into free and paid must
+	// not break: neither displaces the other, so the list does not silently
+	// reorder. Only a submission with charges still outstanding moves.
+	//
+	// Deliberately asserts the tie and the separation rather than which end
+	// pending lands on: `paymentSortPendingFirst` maps to an ASCENDING sort, so
+	// with its default of true the list actually puts pending last. That
+	// inversion predates this change and is preserved by it exactly.
+	test('free and paid tie, and pending sorts apart from both', () => {
+		const rows = [
+			sub({ id: 'free', transactions: [] }),
+			sub({ id: 'pending', transactions: ['t1'] }),
+			sub({ id: 'paid', transactions: ['t2'] })
+		];
+		const sorted = ids(
+			view({
+				transactions: [{ id: 't2', status: 'approved' }],
+				sortOrder: ['payment'],
+				paymentSortPendingFirst: true
+			}).sortedAndFiltered(rows)
+		);
+		expect(sorted.slice(0, 2).sort()).toEqual(['free', 'paid']);
+		expect(sorted[2]).toBe('pending');
 	});
 });
 
@@ -182,31 +304,6 @@ describe('sortedAndFiltered', () => {
 		expect(ids(view({ conflicts: [{ submissionid: 's1' }] }).sortedAndFiltered(rows))).toEqual([
 			's2'
 		]);
-	});
-
-	test('sorts done submissions to the bottom regardless of the active sort', () => {
-		const rows = [
-			sub({ id: 'done', status: 'done', title: 'A', completed_at: '2026-08-15T00:00:00Z' }),
-			sub({ id: 'live', status: 'reviewing', title: 'Z' })
-		];
-		expect(ids(view().sortedAndFiltered(rows))).toEqual(['live', 'done']);
-	});
-
-	test('hides done submissions older than the visibility window', () => {
-		const rows = [
-			sub({
-				id: 'old',
-				status: 'done',
-				completed_at: new Date(NOW - 40 * DAY).toISOString()
-			}),
-			sub({ id: 'recent', status: 'done', completed_at: new Date(NOW - 5 * DAY).toISOString() })
-		];
-		expect(ids(view({ doneVisibilityDays: 30 }).sortedAndFiltered(rows))).toEqual(['recent']);
-	});
-
-	test('keeps a done submission that has no completion timestamp', () => {
-		const rows = [sub({ id: 'x', status: 'done', completed_at: null })];
-		expect(ids(view({ doneVisibilityDays: 1 }).sortedAndFiltered(rows))).toEqual(['x']);
 	});
 
 	test('the last column in sortOrder is the dominant key', () => {
@@ -266,5 +363,55 @@ describe('sortedAndFiltered', () => {
 	test('a filter narrows to matches', () => {
 		const rows = [sub({ id: 's1', title: 'Alpha' }), sub({ id: 's2', title: 'Beta' })];
 		expect(ids(view({ filter: 'alph' }).sortedAndFiltered(rows))).toEqual(['s1']);
+	});
+});
+
+// A submission with no priority-0 assignment is stalled: nothing can be approved on it
+// and it cannot be marked done until someone holds the editor role. These cases have to
+// agree with public.can_claim_editor_role (pinned in
+// supabase/tests/rpc/editor_on_submission.sql), because a flag the database would refuse
+// a claim on is a button that fails when pressed.
+describe('needsEditor', () => {
+	test('a submission nobody is editing needs an editor', () => {
+		expect(view({ submissionsWithEditor: new Set<string>() }).needsEditor(sub({ id: 's1' }))).toBe(
+			true
+		);
+	});
+
+	test('a submission someone is editing does not', () => {
+		expect(view({ submissionsWithEditor: new Set(['s1']) }).needsEditor(sub({ id: 's1' }))).toBe(
+			false
+		);
+	});
+
+	test('an editor on another submission does not count', () => {
+		expect(view({ submissionsWithEditor: new Set(['s2']) }).needsEditor(sub({ id: 's1' }))).toBe(
+			true
+		);
+	});
+
+	// A finished paper is not waiting for anyone.
+	test('a done submission is never flagged', () => {
+		expect(
+			view({ submissionsWithEditor: new Set<string>() }).needsEditor(
+				sub({ id: 's1', status: 'done' })
+			)
+		).toBe(false);
+	});
+
+	// Unloaded data must not render a flag on every row.
+	test('unloaded editor data denies rather than flags', () => {
+		expect(view({ submissionsWithEditor: null }).needsEditor(sub({ id: 's1' }))).toBe(false);
+	});
+
+	test('the filter narrows to submissions waiting for an editor', () => {
+		const rows = [sub({ id: 's1' }), sub({ id: 's2' })];
+		expect(
+			ids(
+				view({ submissionsWithEditor: new Set(['s2']), needsEditorOnly: true }).sortedAndFiltered(
+					rows
+				)
+			)
+		).toEqual(['s1']);
 	});
 });

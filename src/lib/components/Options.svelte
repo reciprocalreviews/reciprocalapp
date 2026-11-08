@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type LocaleText from '$lib/locales/Locale';
-	import type { OptionsText } from '$lib/locales/Locale';
-	import { getLocaleContext } from '$routes/Contexts';
+	import type LocaleText from '#lib/locales/Locale.js';
+	import type { OptionsText } from '#lib/locales/Locale.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
 	import Tip from './Tip.svelte';
 
 	type Props = {
@@ -11,6 +11,7 @@
 		stretch?: boolean;
 		onChange?: ((value: string | undefined) => void) | undefined;
 		strings?: (l: LocaleText) => OptionsText;
+		testid?: string;
 	};
 
 	let {
@@ -19,7 +20,8 @@
 		onChange,
 		disabled = false,
 		stretch = false,
-		strings
+		strings,
+		testid = undefined
 	}: Props = $props();
 
 	const locale = getLocaleContext();
@@ -35,7 +37,7 @@
 	{#if text?.label}
 		<span class="label">{text.label}</span>
 	{/if}
-	<select bind:value onchange={handleChange} {disabled} class:stretch>
+	<select bind:value onchange={handleChange} {disabled} class:stretch data-testid={testid}>
 		{#each options as option}
 			<option value={option.value}>{option.label}</option>
 		{/each}

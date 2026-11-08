@@ -3,19 +3,36 @@ import { login } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
+const VENUE_PATH = SEED.venuePath;
 const EDITOR_EMAIL = SEED.scholars.editor.email;
 const VOLUNTEER_EMAIL = SEED.scholars.r1.email; // already a Reviewer in the seed
-const SUBMISSION_ID = SEED.submissions.tok001;
+const SUBMISSION_ID = SEED.submissions.tok001.id;
 
 function cleanupPreferenceLevels() {
 	sql(`delete from public.preference_levels where venueid = '${VENUE_ID}';`);
 }
 
+/**
+ * Put the seed's three preference levels back.
+ *
+ * Every test in this file starts by clearing them, because each one is about
+ * building the list up from nothing. The seed now ships the venue with a bid
+ * vocabulary, though, so without this the file would hand whatever runs next a
+ * venue that has none — a state the seed deliberately no longer has, and a
+ * difference that would depend on spec ordering to show up.
+ */
+test.afterAll(() => {
+	cleanupPreferenceLevels();
+	sql(
+		`insert into public.preference_levels (venueid, label, rank) values ('${VENUE_ID}', 'Preferred', 0), ('${VENUE_ID}', 'If necessary', 1), ('${VENUE_ID}', 'No', 2);`
+	);
+});
+
 test('editor adds, edits, reorders, and deletes preference levels', async ({ page, context }) => {
 	cleanupPreferenceLevels();
 
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/settings`);
+	await page.goto(`/venue/${VENUE_PATH}/settings`);
 	await page.waitForLoadState('networkidle');
 
 	// Add two levels.
@@ -50,9 +67,7 @@ test('editor adds, edits, reorders, and deletes preference levels', async ({ pag
 	await field.press('Enter');
 	await expect
 		.poll(() =>
-			sql(
-				`select label from public.preference_levels where venueid = '${VENUE_ID}' and rank = 1;`
-			)
+			sql(`select label from public.preference_levels where venueid = '${VENUE_ID}' and rank = 1;`)
 		)
 		.toBe('If necessary, only');
 
@@ -88,7 +103,7 @@ test('volunteer sets their papers cap from the role card', async ({ page, contex
 	);
 
 	await login(VOLUNTEER_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}`);
 	await page.waitForLoadState('networkidle');
 
 	await page.getByTestId('volunteer-papers-toggle').click();
@@ -111,7 +126,7 @@ test('CSV export includes the Papers cap column and value', async ({ page, conte
 	);
 
 	await login(EDITOR_EMAIL, page, context);
-	await page.goto(`/venue/${VENUE_ID}/volunteers`);
+	await page.goto(`/venue/${VENUE_PATH}/volunteers`);
 	await page.waitForLoadState('networkidle');
 
 	const downloadPromise = page.waitForEvent('download');
@@ -166,7 +181,7 @@ test('editor sees bid preference label and used/cap on submission detail', async
 
 	// Editor (ae@uni.edu is the AE for this submission per the seed) views the page.
 	await login('ae@uni.edu', page, context);
-	await page.goto(`/venue/${VENUE_ID}/submission/${SUBMISSION_ID}`);
+	await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
 
 	// The bid's preference label and used/cap indicator render.
 	await expect(page.getByTestId('bid-preference-label').first()).toHaveText('Preferred');

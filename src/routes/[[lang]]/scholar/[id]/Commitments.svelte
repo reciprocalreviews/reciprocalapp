@@ -1,14 +1,14 @@
 <script lang="ts">
-	import type { CurrencyRow } from '$data/types';
-	import CurrencyLink from '$lib/components/CurrencyLink.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import { ScholarLabel } from '$lib/components/Labels';
-	import Subheader from '$lib/components/Subheader.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import Tag from '$lib/components/Tag.svelte';
-	import VenueLink from '$lib/components/VenueLink.svelte';
-	import Text from '$lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
+	import type { CurrencyRow } from '#data/types.js';
+	import CurrencyLink from '#lib/components/CurrencyLink.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import { ScholarLabel } from '#lib/components/Labels.js';
+	import Subheader from '#lib/components/Subheader.svelte';
+	import Table from '#lib/components/Table.svelte';
+	import Tag from '#lib/components/Tag.svelte';
+	import VenueLink from '#lib/components/VenueLink.svelte';
+	import Text from '#lib/locales/Text.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
 
 	let {
 		commitments,
@@ -16,8 +16,15 @@
 		minting,
 		self
 	}: {
-		commitments: { id: string; invited: boolean; name: string; venue: string; venueid: string }[];
-		admins: { id: string; title: string }[] | null;
+		commitments: {
+			id: string;
+			invited: boolean;
+			name: string;
+			venue: string;
+			venueid: string;
+			venueSlug: string | null;
+		}[];
+		admins: { id: string; title: string; slug: string | null }[] | null;
 		minting: CurrencyRow[] | null;
 		self: boolean;
 	} = $props();
@@ -56,7 +63,7 @@
 		{#if admins.length > 0}
 			{#each admins as admin, index}
 				<tr data-testid="admin-{index}">
-					<td><VenueLink id={admin.id} name={admin.title} /></td>
+					<td><VenueLink id={admin.id} name={admin.title} slug={admin.slug} /></td>
 					<td><Tag><Text path={(l) => l.shorthand.admin} /></Tag></td>
 				</tr>
 			{/each}
@@ -74,7 +81,13 @@
 		{#if acceptedCommitments.length > 0}
 			{#each acceptedCommitments as commitment, index}
 				<tr data-testid="commitment-{index}">
-					<td><VenueLink id={commitment.venueid} name={commitment.venue} /></td>
+					<td
+						><VenueLink
+							id={commitment.venueid}
+							name={commitment.venue}
+							slug={commitment.venueSlug}
+						/></td
+					>
 					<td><Tag>{commitment.name}</Tag></td>
 				</tr>
 			{/each}

@@ -27,7 +27,59 @@ create table if not exists public.emails (
 	-- so those rows carry structured args and the `resend` edge function renders them from
 	-- supabase/functions/_shared/templates.ts at send time. event + args is a complete,
 	-- re-renderable record of what was sent.
-	args jsonb default '[]'::jsonb not null
+	args jsonb default '[]'::jsonb not null,
+	-- The rest of this message's recipients, when it is meant to be ONE shared thread
+	-- rather than N private copies. Null for the vast majority of mail, which has a single
+	-- recipient. Like `email`, it is resolved server-side from scholars.email and is never
+	-- accepted from a caller -- see the note on the missing insert policy below.
+	cc text[],
+	-- Where a reply should go, when that is not the steward inbox. Null means stewards@,
+	-- which is what every message sent before this column existed carried and what the
+	-- `resend` function still substitutes. Never accepted from a caller either: it points
+	-- replies at an address, so a caller-supplied value would be a redirect sitting inside
+	-- genuinely branded mail. A row about a venue that names none gets the venue's own
+	-- address on insert (resolve_venue_reply_to below), so questions about a venue reach
+	-- the people who run it rather than the platform's stewards.
+	reply_to text,
+	-- ---- Delivery outcome -----------------------------------------------------------
+	-- Everything above records what we MEANT to send. These four record what happened to
+	-- it, because until now nothing did: send_email() posted to the `resend` edge function
+	-- through pg_net and threw the result away, so a refused send, a missing vault secret
+	-- and a delivered message were indistinguishable afterwards. The scholar was told "we
+	-- sent you a link" in all three cases, which is the failure this closes (#27).
+	--
+	-- These apply to ALL mail, not only verification. The trigger that writes them is
+	-- generic, filtering by event would be strictly more code, and "which of last week's
+	-- notices never left the building" is worth being able to ask about any of them.
+	--
+	-- The pg_net request id. net.http_post returns immediately with this; the HTTP result
+	-- lands in net._http_response later and is garbage collected at pg_net.ttl (6 hours),
+	-- in an UNLOGGED table that a restart truncates. That six-hour, restart-fragile window
+	-- is why public.reconcile_email_delivery() runs on a schedule rather than this being
+	-- resolved on demand: a 24-hour verification link outlives it four times over.
+	request_id bigint,
+	-- What became of it:
+	--   queued  -- handed to pg_net, no answer yet
+	--   sent    -- the edge function answered 2xx
+	--   failed  -- it answered 4xx/5xx, timed out, errored, or was never posted at all
+	--   unknown -- no response was ever found (the worker never ran, or the answer was
+	--              discarded before the reconciler looked)
+	--
+	-- Null means nothing was recorded: every row written before this column existed, and
+	-- any row inserted while the send trigger is disabled (the RLS tests, and
+	-- supabase/dr/quarantine.sql). Deliberately NOT backfilled -- we do not know whether
+	-- those messages arrived, and writing 'sent' would put a reassuring lie in the one
+	-- column that exists to be honest.
+	delivery text,
+	-- Why, in words, for whoever is looking at the row: an HTTP status and the head of the
+	-- response body, so a 502 (Resend refused the message) reads differently from a 400 (we
+	-- could not render it). NEVER returned to a scholar -- it is the edge function's own
+	-- diagnostics and can quote a payload. public.pending_email_verification() returns the
+	-- one-word `delivery` instead.
+	delivery_detail text,
+	-- When `delivery` was last written, so a row stuck at 'queued' is visible as stuck
+	-- rather than merely old.
+	delivery_at timestamp with time zone
 );
 
 alter table public.emails OWNER to "postgres";
@@ -40,6 +92,28 @@ grant all on table public.emails to "service_role";
 
 alter table only public.emails
 add constraint "emails_pkey" primary key (id);
+
+-- An empty array is not "no Cc": it is a list someone built and then emptied, and it would
+-- travel to Resend as `cc: []`, which that API treats as a malformed field rather than an
+-- absent one. Normalizing at the source makes `cc is null` the single unambiguous
+-- "one recipient" test, so neither send_email() nor the edge function has to guess.
+alter table only public.emails
+add constraint "emails_cc_shape" check (
+	cc is null
+	or (
+		cardinality(cc)>0
+		and array_position(cc, null::text) is null
+	)
+);
+
+-- A four-value vocabulary, enforced rather than conventional: the interface branches on
+-- these words and the reconciler writes them, so a typo in either would otherwise become a
+-- state nothing handles and nothing reports.
+alter table only public.emails
+add constraint "emails_delivery_status" check (
+	delivery is null
+	or delivery in ('queued', 'sent', 'failed', 'unknown')
+);
 
 alter table only public.emails
 add constraint "emails_scholar_fkey" foreign KEY (scholar) references public.scholars (id);
@@ -56,6 +130,15 @@ add constraint "emails_venue_fkey" foreign KEY (venue) references public.venues 
 create index emails_scholar_index on public.emails using btree (scholar);
 
 create index emails_venue_index on public.emails using btree (venue);
+
+-- The reconciler's driving scan, and the whole reason it can run every five minutes.
+-- PARTIAL, so its cost is the size of the UNRESOLVED set rather than of all mail ever
+-- sent. This is the lesson 20260830030000 learned the hard way on reconcile_ledger: a
+-- monitoring job whose cost grows with history eventually stops finishing, and a cron job
+-- that times out fails silently -- no row, no mail, no alarm.
+create index emails_delivery_unresolved_index on public.emails using btree (time_sent)
+where
+	delivery in ('queued', 'unknown');
 
 --------------------------------------
 -- Security
@@ -91,6 +174,12 @@ select
 -- public.queue_email (and public.request_email_verification), which resolve recipients
 -- server-side and render the body from the template registry at send time. The privilege
 -- is revoked too, so a direct attempt fails cleanly with 42501 rather than an empty result.
+--
+-- `cc` and `reply_to` are MORE recipient surface, so they tighten this rule rather than
+-- loosen it: neither may ever be written from a value that crossed the API. Neither
+-- queue_email nor queue_steward_email accepts a parameter for either. The writers are
+-- public._notify_new_volunteer, public.queue_call_for_bids and the resolve_venue_reply_to
+-- trigger, and each resolves every address from scholars.email.
 revoke insert on table public.emails
 from
 	authenticated,
@@ -122,6 +211,33 @@ $$;
 
 alter function private.get_secret (secret_name text) OWNER to "postgres";
 
+-- The application origin that email links should point at, from the `site_url`
+-- vault secret that already exists per environment. Templates used to hardcode
+-- the production host, which made anything arriving by email untestable
+-- anywhere else — following a link left the environment under test. Falls back
+-- to production so an unconfigured project keeps its previous behaviour.
+--
+-- send_email() reads the secret directly and passes the value to the `resend`
+-- function; this wrapper exists for the `remind` cron, which never touches the
+-- emails table and so has nothing to carry the value to it. service_role only:
+-- the value is a public URL, but only that one caller needs it.
+create or replace function public.site_origin () returns text language sql security definer
+set
+	search_path='' as $$
+	select coalesce(nullif(btrim(coalesce(private.get_secret('site_url'), '')), ''),
+	                'https://reciprocal.reviews');
+$$;
+
+revoke
+execute on function public.site_origin ()
+from
+	public,
+	anon,
+	authenticated;
+
+grant
+execute on function public.site_origin () to service_role;
+
 -- Calls the `resend` edge function, presenting one of the project's SECRET keys. It must
 -- NOT use the publishable/anon key: that key is public (it ships in the browser bundle),
 -- so authenticating with it would leave `resend` — which takes its recipient and template
@@ -139,21 +255,50 @@ declare
   -- btrim so a secret pasted with a stray newline or space still works.
   _key text := btrim(coalesce(private.get_secret('secret_key'), ''));
   _url text := btrim(coalesce(private.get_secret('supabase_url'), ''));
+  -- The application origin the rendered links should point at. Falls back to
+  -- production, so an unconfigured project behaves as it did before.
+  _origin text := public.site_origin();
+  -- pg_net's handle on the request. Kept, where it used to be discarded: it is the only
+  -- way to find the answer, which arrives asynchronously in net._http_response.
+  _request_id bigint;
 begin
-  -- Delivery is BEST EFFORT. The row in public.emails is the durable record that a message
-  -- was meant to go out; whether the edge function can be reached is a deployment concern
-  -- and must never roll back the caller's transaction.
+  -- Delivery is still BEST EFFORT. The row in public.emails is the durable record that a
+  -- message was meant to go out; whether the edge function can be reached is a deployment
+  -- concern and must never roll back the caller's transaction. What changes here is that
+  -- "best effort" stops meaning "unrecorded": both failure paths below now write a
+  -- terminal delivery state, so the row says what happened instead of only leaving a
+  -- warning in a log nobody reads.
+  --
+  -- The state is recorded with an UPDATE against the row we were just handed, not by
+  -- assigning to NEW: this is an AFTER trigger, so the row is already written and NEW is a
+  -- copy. That UPDATE is allowed despite the "emails can't be edited" policy (using(false))
+  -- because this function is SECURITY DEFINER owned by postgres, which owns the table, and
+  -- the table does not FORCE row level security -- so policies do not apply to it. The
+  -- policy still binds `authenticated`, which is who it was written for.
+  --
+  -- AFTER rather than BEFORE, deliberately. A BEFORE INSERT trigger runs before the table's
+  -- CHECK constraints and foreign keys (emails_cc_shape, emails_scholar_fkey, ...), so
+  -- moving this earlier to make NEW writable would post the message to Resend and only then
+  -- discover that the row it was sending is about to be rejected: mail sent on behalf of a
+  -- row that never existed. One extra UPDATE is the cheaper half of that trade.
   if _key = '' or _url = '' then
     raise warning 'send_email: % is not configured, so email % was recorded but not delivered',
       case when _url = '' then 'the supabase_url vault secret' else 'the secret_key vault secret' end,
       new.id;
+    update public.emails
+    set delivery = 'failed',
+        delivery_detail = 'not posted: the '
+          || case when _url = '' then 'supabase_url' else 'secret_key' end
+          || ' vault secret is not configured',
+        delivery_at = now()
+    where id = new.id;
     return new;
   end if;
   begin
     -- Post to the Resend edge function. If the supabase URL is set to localhost, replace it with host.docker.internal so we hit the host machine, not the container.
     -- The key goes on `apikey`: `Authorization: Bearer` is reserved for JWTs, and the newer
     -- opaque `sb_secret_...` keys are rejected there.
-    perform net.http_post(
+    select net.http_post(
       url:=replace(_url, '127.0.0.1', 'host.docker.internal') || '/functions/v1/resend',
       headers:=jsonb_build_object(
           'Content-Type', 'application/json',
@@ -161,17 +306,50 @@ begin
       )::jsonb,
       body:=jsonb_build_object(
         'to', new.email,
+        -- to_jsonb of a null array yields JSON null, which the edge function's `.nullish()`
+        -- schema accepts, so a message with no Cc is indistinguishable from one sent before
+        -- the column existed.
+        'cc', to_jsonb(new.cc),
+        -- Null means "the stewards", which the edge function substitutes. Only SECURITY
+        -- DEFINER functions can set it -- the table's INSERT privilege is revoked from
+        -- authenticated and anon -- which is the same property that keeps `to` safe.
+        'reply_to', new.reply_to,
         'subject', new.subject,
         'message', new.message,
         'event', new.event,
-        'args', new.args
+        'args', new.args,
+        'origin', _origin,
+        -- Who the message is to, so an optional notice's footer can link to the recipient's
+        -- own notification settings (settingsUrlFor in _shared/templates.ts). Null for mail
+        -- with no scholar, such as the steward inbox, which then gets no such link.
+        'scholar', new.scholar,
+        -- The venue the message is about, so the footer can name it and send questions about
+        -- it to its editors rather than the stewards. Its short name where it has one, as the
+        -- venue bar shows it (venueBarName). Both null for mail that is not about a venue,
+        -- which keeps the steward footer.
+        'venue_title', (select coalesce(nullif(btrim(v.short_title), ''), v.title) from public.venues v where v.id = new.venue),
+        'venue_path', (select coalesce(v.slug, v.id::text) from public.venues v where v.id = new.venue)
       )
-    );
+    ) into _request_id;
+
+    -- 'queued' is an honest non-answer, not a success. net.http_post returns the instant it
+    -- has written a row to net.http_request_queue; nothing has been delivered yet and
+    -- nothing may ever be. public.reconcile_email_delivery() turns this into a verdict.
+    update public.emails
+    set request_id = _request_id,
+        delivery = 'queued',
+        delivery_at = now()
+    where id = new.id;
   exception when others then
     -- pg_net validates the URL synchronously, so a malformed value raises here rather than
-    -- in the background worker. Warn and carry on.
+    -- in the background worker. Warn, record it as terminal, and carry on.
     raise warning 'send_email: email % was recorded but could not be queued for delivery: % (%)',
       new.id, sqlerrm, sqlstate;
+    update public.emails
+    set delivery = 'failed',
+        delivery_detail = 'not posted: ' || sqlerrm || ' (' || sqlstate || ')',
+        delivery_at = now()
+    where id = new.id;
   end;
   return new;
 end;
@@ -179,29 +357,243 @@ $$;
 
 alter function public.send_email () OWNER to "postgres";
 
-grant all on FUNCTION public.send_email () to "anon";
-
-grant all on FUNCTION public.send_email () to "authenticated";
-
-grant all on FUNCTION public.send_email () to "service_role";
+-- Nobody but the owner. This runs from the send_on_email_insert trigger and is never called
+-- directly, and it is SECURITY DEFINER over the mail log, so an EXECUTE grant to anon or
+-- authenticated is pure surface. 20260831000000 revoked exactly this (its `_triggers` list);
+-- the grants that used to stand here were left over from before that migration, and any
+-- `create or replace` of this function re-opens the hole unless the revoke travels with it —
+-- Supabase's default privileges re-grant EXECUTE to anon and authenticated at creation time.
+-- supabase/tests/rls/definer_grants.sql check 1 is what catches it.
+revoke
+execute on function public.send_email ()
+from
+	public,
+	anon,
+	authenticated;
 
 --------------------------------------
 -- Triggers
 --
 create or replace trigger send_on_email_insert
-after INSERT on public.emails for EACH row
-execute FUNCTION public.send_email ();
+after insert on public.emails for each row
+execute function public.send_email ();
+
+--------------------------------------
+-- venue_reply_to: where a reply to mail about a venue should go.
+--
+-- The venue's first administrator with a verified contact address, or null when none has
+-- one. Mail about a venue used to reply to stewards@ like everything else, and its footer
+-- said a steward would read the reply, so people wrote to the platform's stewards with
+-- questions about a journal's reviewing that only its editors could answer. One address
+-- because reply_to holds one, and the first because it is the longest-standing, the rule
+-- _notify_new_volunteer uses for whom it addresses. The footer links the venue's page,
+-- which lists the rest.
+--
+-- Security invoker: it reads venues.admins and scholars.email, both world-readable, and
+-- its only caller below already runs as the table owner.
+create or replace function public.venue_reply_to (_venue uuid) returns text language sql stable
+set
+	"search_path" to '' as $$
+	select s.email
+	from public.venues v
+	cross join lateral unnest(v.admins) with ordinality as a (scholar, position)
+	join public.scholars s on s.id = a.scholar
+	where v.id = _venue and s.email is not null
+	order by a.position
+	limit 1;
+$$;
+
+alter function public.venue_reply_to (uuid) OWNER to "postgres";
+
+-- resolve_venue_reply_to: give a row about a venue that venue's reply address.
+--
+-- A trigger rather than a line in each producer, because the producers are many --
+-- queue_email, queue_reminder_email, queue_thanks_emails, create_volunteer -- and the rule
+-- is one: mail about a venue answers to the venue. A producer added later inherits it by
+-- setting `venue`. A row that already names a reply_to keeps it (a call for bids replies to
+-- the editor who wrote it).
+--
+-- NewVolunteer is the exception. Its reply path is the new volunteer, so that answering it
+-- is the welcome; one with no verified address has no reply path, and the notice goes to
+-- the venue's editors, who would only be replying to themselves.
+create or replace function public.resolve_venue_reply_to () returns trigger language plpgsql
+set
+	"search_path" to '' as $$
+begin
+	if new.venue is not null and new.reply_to is null and new.event is distinct from 'NewVolunteer' then
+		new.reply_to := public.venue_reply_to(new.venue);
+	end if;
+	return new;
+end;
+$$;
+
+alter function public.resolve_venue_reply_to () OWNER to "postgres";
+
+create or replace trigger resolve_venue_reply_to_on_email_insert
+before insert on public.emails for each row
+execute function public.resolve_venue_reply_to ();
+
+--------------------------------------
+-- reconcile_email_delivery: turn pg_net's asynchronous answers into durable verdicts on
+-- public.emails.
+--
+-- send_email() can only ever record 'queued': net.http_post returns a handle immediately
+-- and the HTTP outcome lands later in net._http_response -- an UNLOGGED table that a
+-- database restart truncates and that pg_net garbage-collects at pg_net.ttl, six hours by
+-- default. Nothing read it, so every send looked identical from the outside.
+--
+-- Six hours is the number that decides the shape of this. A verification link now lives for
+-- 24 hours, and the scholar most likely to ask "did that ever arrive?" is the one who comes
+-- back tomorrow -- by which time the answer has been discarded. Resolving on demand inside
+-- public.pending_email_verification() would therefore be right exactly when nobody needed it
+-- and blank whenever they did, would turn a read into a write, and would give a
+-- scholar-facing RPC a dependency on the privileged `net` schema. So this runs on a
+-- schedule, follows the shape of reconcile_ledger (20260830030000), and covers all mail
+-- rather than only verification.
+--
+-- Deliberately does NOT email the stewards, unlike reconcile_ledger. A steward notification
+-- is itself a row in public.emails. If delivery is broken, the notice about broken delivery
+-- fails too, is marked failed on the next pass, and produces another notice -- a loop driven
+-- by a job that runs every five minutes. Signal reaches people through the columns, the
+-- warning in the Postgres log, and the interface that shows a scholar their own link never
+-- went out.
+--
+-- Scheduling lives in the migration, not here: cron.job is cluster state rather than schema,
+-- captured separately by supabase/dr/dump.sh. See 20260910010000.
+create or replace function public.reconcile_email_delivery () returns jsonb language plpgsql security definer
+set
+	search_path='' as $$
+declare
+	_started timestamptz := clock_timestamp();
+	_sent int := 0;
+	_failed int := 0;
+	_unknown int := 0;
+	_abandoned int := 0;
+	_result jsonb;
+begin
+	-- 1. Every request pg_net has answered.
+	--
+	-- Bounded three ways, all load-bearing. `delivery in ('queued','unknown')` means 'sent'
+	-- and 'failed' are terminal and never revisited. The seven-day floor means a response
+	-- that never came stops being asked about rather than being re-scanned forever. And the
+	-- partial index on emails matches that predicate exactly, so the scan is the size of the
+	-- unresolved set, which in a healthy deployment is a handful of rows.
+	--
+	-- Re-checking 'unknown' is what makes this self-correcting: step 2 gives up on a request
+	-- after fifteen minutes, and if pg_net answers later this statement upgrades it to a real
+	-- verdict on the next pass. Running the function twice in a row changes nothing.
+	with resolved as (
+		update public.emails e
+		set delivery = case
+				-- Order matters. A timed-out or errored request can also carry a status
+				-- code, and the transport failure is the more truthful description.
+				when r.timed_out then 'failed'
+				when r.error_msg is not null then 'failed'
+				when r.status_code between 200 and 299 then 'sent'
+				when r.status_code is not null then 'failed'
+				else 'unknown'
+			end,
+			delivery_detail = case
+				when r.timed_out then 'timed out waiting for the resend function'
+				when r.error_msg is not null then left(r.error_msg, 500)
+				when r.status_code between 200 and 299 then null
+				-- The status is kept, not just the verdict: the `resend` function answers
+				-- 502 when Resend REFUSED the message (bad key, unverified sender domain,
+				-- rejected recipient) and 400 when it could not render or parse it at all.
+				-- Those are different faults with different fixes, and collapsing them into
+				-- "failed" would throw away the only thing that tells them apart.
+				when r.status_code is not null then r.status_code || ': ' || left(coalesce(r.content, ''), 500)
+				else 'pg_net recorded a response with no status, no error and no timeout'
+			end,
+			delivery_at = now()
+		from net._http_response r
+		where r.id = e.request_id
+			and e.request_id is not null
+			and e.delivery in ('queued', 'unknown')
+			and e.time_sent > now() - interval '7 days'
+		returning e.delivery as outcome
+	)
+	select
+		count(*) filter (where outcome = 'sent'),
+		count(*) filter (where outcome = 'failed'),
+		count(*) filter (where outcome = 'unknown')
+	into _sent, _failed, _unknown
+	from resolved;
+
+	-- 2. Requests with no answer at all, old enough that there is not going to be one.
+	--
+	-- Fifteen minutes against pg_net's five-second default request timeout: long enough that
+	-- a busy worker is not mistaken for a lost one, short enough that a scholar refreshing
+	-- their profile is not left staring at 'queued' forever. 'unknown' rather than 'failed'
+	-- because the two causes are genuinely different and neither is knowable from here: the
+	-- worker never ran, or it ran and the answer was discarded (restart, or pg_net.ttl)
+	-- before this job looked. Claiming the mail failed would be a guess; saying we do not
+	-- know is not.
+	update public.emails e
+	set delivery = 'unknown',
+		delivery_detail = 'no response was recorded: the pg_net worker never ran, or the answer '
+			|| 'was discarded (restart, or pg_net.ttl) before this job looked',
+		delivery_at = now()
+	where e.delivery = 'queued'
+		and e.request_id is not null
+		and e.time_sent < now() - interval '15 minutes'
+		and e.time_sent > now() - interval '7 days'
+		and not exists (select 1 from net._http_response r where r.id = e.request_id);
+
+	get diagnostics _abandoned = row_count;
+
+	_result := jsonb_build_object(
+		'resolved', jsonb_build_object('sent', _sent, 'failed', _failed, 'unknown', _unknown),
+		'abandoned', _abandoned,
+		'duration_ms', (extract(epoch from clock_timestamp() - _started) * 1000)::integer
+	);
+
+	-- Visible in the Postgres log for anyone looking at the project. Not mail: see the
+	-- loop described in the header comment.
+	if _failed > 0 then
+		raise warning 'reconcile_email_delivery: % message(s) could not be delivered', _failed;
+	end if;
+
+	return _result;
+end;
+$$;
+
+alter function public.reconcile_email_delivery () OWNER to "postgres";
+
+-- Explicitly revoked, not merely un-granted: Supabase's ALTER DEFAULT PRIVILEGES hands anon
+-- and authenticated EXECUTE on every function created in `public` at creation time, and
+-- `revoke ... from public` does not take those back. See 20260831000000. This one writes to
+-- public.emails as its owner, so leaving it open would be a lever on the mail log.
+revoke
+execute on function public.reconcile_email_delivery ()
+from
+	public,
+	anon,
+	authenticated;
+
+grant
+execute on function public.reconcile_email_delivery () to service_role;
 
 --------------------------------------
 -- RPC (authoritative definition from migration 20260719030000_queue_email_rpc)
+--
+-- `_venue` names the venue a message is about. It sets the row's `venue`, which gives the
+-- message the venue's reply address (resolve_venue_reply_to) and a footer naming the venue,
+-- and makes the row readable by that venue's admins through the SELECT policy. It is not
+-- authorized against the caller, and the residual is the one this function already
+-- carries: a caller who tags mail with an unrelated venue chooses no prose and no address,
+-- only that replies to their fixed template go to that venue's first admin, and
+-- emails.sender records who did it.
 create or replace function public.queue_email (
 	_event text,
 	_args text[] default '{}',
 	_scholars uuid[] default null,
-	_proposal uuid default null
+	_proposal uuid default null,
+	_venue uuid default null
 ) returns jsonb language plpgsql security definer
 set
-	"search_path" to 'public', 'pg_temp' as $$
+	"search_path" to 'public',
+	'pg_temp' as $$
 declare
 	_caller uuid := (select auth.uid());
 	_recipients jsonb := '[]'::jsonb;
@@ -222,16 +614,30 @@ begin
 
 	-- Resolve scholar recipients. Scholars with no verified contact email are skipped:
 	-- scholars.email holds only verified addresses, so a null here means "not verified".
+	--
+	-- Silenced scholars are skipped too. This is the whole of the opt-out mechanism: the
+	-- registry used to say each producer was responsible for consulting
+	-- public.notification_settings itself, and exactly one of them ever did, which is why the
+	-- profile could only ever offer one checkbox. Resolving it here means marking a template
+	-- `optional` is genuinely all it takes.
+	--
+	-- A template with no public.optional_emails row is consequential, matches nothing here,
+	-- and always sends -- so a template missing from the seed fails toward delivering mail.
 	if _scholars is not null then
 		insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
-		select _event, s.id, _caller, null, s.email, null, null, to_jsonb(_args)
+		select _event, s.id, _caller, _venue, s.email, null, null, to_jsonb(_args)
 		from public.scholars s
-		where s.id = any(_scholars) and s.email is not null;
+		where s.id = any(_scholars) and s.email is not null
+			and public.notification_allowed(s.id, _event);
 
+		-- The same predicate, because this is what the caller is told it sent. Reporting the
+		-- unfiltered list would have the application announce "emailed 4 people" for a notice
+		-- that reached one, and those counts surface to users as feedback banners.
 		select coalesce(jsonb_agg(jsonb_build_object('name', s.name, 'email', s.email)), '[]'::jsonb)
 		into _recipients
 		from public.scholars s
-		where s.id = any(_scholars) and s.email is not null;
+		where s.id = any(_scholars) and s.email is not null
+			and public.notification_allowed(s.id, _event);
 	end if;
 
 	-- Resolve a proposal's editor addresses.
@@ -251,11 +657,150 @@ begin
 end;
 $$;
 
-alter function public.queue_email (text, text[], uuid[], uuid) OWNER to "postgres";
+alter function public.queue_email (text, text[], uuid[], uuid, uuid) OWNER to "postgres";
 
-revoke execute on function public.queue_email (text, text[], uuid[], uuid)
+revoke
+execute on function public.queue_email (text, text[], uuid[], uuid, uuid)
 from
 	public,
 	anon;
 
-grant execute on function public.queue_email (text, text[], uuid[], uuid) to authenticated;
+grant
+execute on function public.queue_email (text, text[], uuid[], uuid, uuid) to authenticated;
+
+--------------------------------------
+-- The alias, defined once.
+--
+-- Hardcoded rather than configured: it is a property of the deployment's DNS, changes
+-- about never, and a settings table would make a silent misconfiguration possible in the
+-- one path that reports that other paths are broken. Mirrored in
+-- supabase/functions/_shared/emailShell.ts as SUPPORT_EMAIL — keep the two in sync.
+create or replace function public.steward_inbox () returns text language sql immutable
+set
+	"search_path" to '' as $$
+	select 'stewards@reciprocal.reviews'::text;
+$$;
+
+alter function public.steward_inbox () OWNER to "postgres";
+
+grant
+execute on function public.steward_inbox () to authenticated;
+
+--------------------------------------
+-- queue_steward_email: queue a steward notification to the shared inbox.
+--
+-- Deliberately a separate function from queue_email rather than another branch inside it.
+-- queue_email's security rests on never accepting a recipient: it resolves scholars by id
+-- or reads a proposal's editors. This function accepts no recipient either — the address
+-- is fixed — but it does bypass the "recipient must be a scholar with a verified email"
+-- rule, so the safety has to come from somewhere else. It comes from the event whitelist:
+-- without it, any authenticated user could render ANY template into the stewards' inbox,
+-- which is precisely the mailbox least able to ignore what arrives.
+--
+-- The residual exposure is bounded and deliberate: an authenticated user can queue a
+-- steward notification with argument values of their choosing. That is the same shape as
+-- queue_email's residual (no prose, no links, attributable via emails.sender), and the
+-- inbox is staffed by the people best placed to recognize junk.
+create or replace function public.queue_steward_email (_event text, _args text[] default '{}') returns void language plpgsql security definer
+set
+	"search_path" to 'public',
+	'pg_temp' as $$
+declare
+	_caller uuid := (select auth.uid());
+begin
+	if _caller is null then
+		raise exception 'Authentication required';
+	end if;
+	-- Whitelist, not a blacklist: a template added later is un-sendable here until
+	-- someone deliberately adds it, which is the failure direction we want.
+	if _event is null or _event not in ('ProposalCreatedStewards', 'ReconciliationFailed') then
+		raise exception 'Not a steward notification: %', coalesce(_event, 'null');
+	end if;
+
+	insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
+	values (_event, null, _caller, null, public.steward_inbox(), null, null, to_jsonb(_args));
+end;
+$$;
+
+alter function public.queue_steward_email (text, text[]) OWNER to "postgres";
+
+revoke
+execute on function public.queue_steward_email (text, text[])
+from
+	public,
+	anon;
+
+grant
+execute on function public.queue_steward_email (text, text[]) to authenticated;
+
+--------------------------------------
+-- RPC
+--
+-- queue_reminder_email: the scheduled reminders' way into the mail pipeline.
+--
+-- A third queueing function rather than a branch inside queue_email, because the caller is
+-- not a person. The reminder cron runs as `service_role` with no `auth.uid()`, so it fails
+-- queue_email's first line; loosening that check would mean the function that every
+-- user-facing producer goes through no longer requires a caller, which is a worse trade than
+-- a small sibling.
+--
+-- It keeps queue_email's actual safety property intact: it accepts no address, no subject and
+-- no body. The recipient is resolved from a scholar id, skipped without a verified contact
+-- email, and skipped again if the preference is off -- so a reminder is silenceable by the
+-- same mark on the same template as the notice it chases. `sender` is null because nobody
+-- sent it, which is the honest record and matches reconcile_ledger's own notifications.
+--
+-- `reply_to` is left null deliberately. The cron used to set it to stewards@ explicitly, and
+-- null already resolves to exactly that (see send_email), so the reminders keep the reply
+-- path they had -- the one thing about them most likely to be answered with a question.
+-- A reminder about one venue passes `_venue`, and then the question goes to that venue
+-- instead (resolve_venue_reply_to), since it is about the venue's work, not the platform.
+create or replace function public.queue_reminder_email (
+	_event text,
+	_args text[],
+	_scholar uuid,
+	_venue uuid default null
+) returns integer language plpgsql security definer
+set
+	"search_path" to 'public',
+	'pg_temp' as $$
+declare
+	_count integer;
+begin
+	if _event is null or _event = '' then
+		raise exception 'An event is required';
+	end if;
+	-- The same refusal queue_email makes, for the same reason: VerifyEmail renders an
+	-- argument as a clickable link, so it is queued only by request_email_verification.
+	if _event = 'VerifyEmail' then
+		raise exception 'VerifyEmail is queued only by request_email_verification';
+	end if;
+
+	insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
+	select _event, s.id, null, _venue, s.email, null, null, to_jsonb(_args)
+	from public.scholars s
+	where s.id = _scholar
+		and s.email is not null
+		and public.notification_allowed(s.id, _event);
+
+	get diagnostics _count = row_count;
+	return _count;
+end;
+$$;
+
+alter function public.queue_reminder_email (text, text[], uuid, uuid) OWNER to "postgres";
+
+-- Explicitly revoked, not merely un-granted: Supabase's ALTER DEFAULT PRIVILEGES hands anon
+-- and authenticated EXECUTE on every function created in `public` at creation time, and
+-- `revoke ... from public` does not take those back. See 20260831000000. Leaving this open
+-- would hand any signed-in user a way to send branded mail to any scholar, with no caller
+-- recorded against it -- strictly worse than queue_email, which at least stamps `sender`.
+revoke
+execute on function public.queue_reminder_email (text, text[], uuid, uuid)
+from
+	public,
+	anon,
+	authenticated;
+
+grant
+execute on function public.queue_reminder_email (text, text[], uuid, uuid) to service_role;

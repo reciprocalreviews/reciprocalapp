@@ -34,7 +34,10 @@ create table if not exists public.thanks (
 	-- One note per author per submission
 	constraint thanks_submission_author_key unique (submission, author),
 	-- The note must be non-empty and bounded
-	constraint thanks_message_check check (char_length(btrim(message)) > 0 and char_length(message) <= 1000)
+	constraint thanks_message_check check (
+		char_length(btrim(message))>0
+		and char_length(message)<=1000
+	)
 );
 
 alter table public.thanks OWNER to "postgres";
@@ -169,32 +172,34 @@ add table thanks;
 --------------------------------------
 -- Functions
 --
--- queue_thanks_emails: resolve the right recipients for a note and queue
--- already-rendered emails to them. The bodies are rendered from the localizable
--- template registry (src/email/templates.ts) in the application layer and passed
--- in; this function only fans them out — to recipients the caller may not be
--- permitted to see — by inserting rows into public.emails, which the resend
--- function then brands and delivers. sender is left null so a recipient cannot
--- read the author's id off the email row. Authorization is per audience, and is
--- what stops an author from bypassing vetting to message reviewers directly:
+-- queue_thanks_emails: resolve the right recipients for a note and queue its emails to them.
+--
+-- The caller names the note and the audience, and nothing else. The arguments each template
+-- renders -- the note's own text, the decline reason, the venue path, the submission -- are
+-- read from the note's row here, and the body is rendered from the registry at send time, so
+-- every value is escaped and any URL in it defanged like every other email's. This function
+-- used to take a subject and message rendered by the caller, which let an author calling the
+-- RPC directly send branded mail with any subject, body and links to a venue's editors (and,
+-- where vetting is off, to its reviewers).
+--
+-- sender is left null so a recipient cannot read the author's id off the email row.
+-- Authorization is per audience, and is what stops an author from bypassing vetting to
+-- message reviewers directly:
 --   'recipients' -> the submission's approved assignees (excluding the author);
 --                   allowed only for an approved note, by a venue admin / editor,
 --                   or by the author themselves when the venue vetting is off.
 --   'vetters'    -> venue admins + priority-0 editors; the author notifies them.
 --   'author'     -> the note's author; a venue admin / editor notifies them.
-create or replace function public.queue_thanks_emails (
-	_thanks_id uuid,
-	_audience text,
-	_subject text,
-	_message text
-) returns integer language plpgsql security definer
+create or replace function public.queue_thanks_emails (_thanks_id uuid, _audience text) returns integer language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_t public.thanks;
 	_vet boolean;
 	_count integer;
+	_path text;
 begin
 	_caller := (select auth.uid());
 	if _caller is null then
@@ -205,7 +210,7 @@ begin
 	if not found then
 		raise exception 'Thank-you note not found';
 	end if;
-	select vet_thanks into _vet from public.venues where id = _t.venue;
+	select vet_thanks, coalesce(slug, id::text) into _vet, _path from public.venues where id = _t.venue;
 
 	if _audience = 'recipients' then
 		if _t.status <> 'approved' then
@@ -218,22 +223,24 @@ begin
 		) then
 			raise exception 'You are not authorized to deliver this note';
 		end if;
-		insert into public.emails (event, scholar, sender, venue, email, subject, message)
-		select 'ThanksReceived', s.id, null, _t.venue, s.email, _subject, _message
+		insert into public.emails (event, scholar, sender, venue, email, args)
+		select 'ThanksReceived', s.id, null, _t.venue, s.email,
+			jsonb_build_array(_t.message, _path, _t.submission::text)
 		from (
 			select distinct a.scholar
 			from public.assignments a
 			where a.submission = _t.submission and a.approved = true and a.scholar <> _t.author
 		) r
 		join public.scholars s on s.id = r.scholar
-		where s.email is not null;
+		where s.email is not null and public.notification_allowed(s.id, 'ThanksReceived');
 
 	elsif _audience = 'vetters' then
 		if _caller <> _t.author then
 			raise exception 'You are not authorized to notify vetters';
 		end if;
-		insert into public.emails (event, scholar, sender, venue, email, subject, message)
-		select 'ThanksPendingReview', s.id, null, _t.venue, s.email, _subject, _message
+		insert into public.emails (event, scholar, sender, venue, email, args)
+		select 'ThanksPendingReview', s.id, null, _t.venue, s.email,
+			jsonb_build_array(_path, _t.submission::text)
 		from (
 			select unnest(admins) as scholar from public.venues where id = _t.venue
 			union
@@ -243,16 +250,34 @@ begin
 			where r.venueid = _t.venue and r.priority = 0 and v.accepted = 'accepted'
 		) vt
 		join public.scholars s on s.id = vt.scholar
-		where s.email is not null and s.id <> _caller;
+		where s.email is not null and s.id <> _caller
+			and public.notification_allowed(s.id, 'ThanksPendingReview');
+
+	-- The author's copy of the GOOD outcome. A separate audience rather than a parameter for
+	-- the event, because the event being fixed per audience is what keeps this function from
+	-- becoming a way to send any template to anyone: the caller picks an audience from a closed
+	-- set, and the function decides both who is written to and what it says it is.
+	elsif _audience = 'author_shared' then
+		if not (public.isAdmin(_t.venue) or public.isPriorityZero(_t.venue)) then
+			raise exception 'You are not authorized to notify the author';
+		end if;
+		insert into public.emails (event, scholar, sender, venue, email, args)
+		select 'ThanksShared', s.id, null, _t.venue, s.email,
+			jsonb_build_array(_path, _t.submission::text)
+		from public.scholars s
+		where s.id = _t.author and s.email is not null
+			and public.notification_allowed(s.id, 'ThanksShared');
 
 	elsif _audience = 'author' then
 		if not (public.isAdmin(_t.venue) or public.isPriorityZero(_t.venue)) then
 			raise exception 'You are not authorized to notify the author';
 		end if;
-		insert into public.emails (event, scholar, sender, venue, email, subject, message)
-		select 'ThanksDeclined', s.id, null, _t.venue, s.email, _subject, _message
+		insert into public.emails (event, scholar, sender, venue, email, args)
+		select 'ThanksDeclined', s.id, null, _t.venue, s.email,
+			jsonb_build_array(coalesce(_t.decline_reason, ''), _path, _t.submission::text)
 		from public.scholars s
-		where s.id = _t.author and s.email is not null;
+		where s.id = _t.author and s.email is not null
+			and public.notification_allowed(s.id, 'ThanksDeclined');
 
 	else
 		raise exception 'Unknown thanks email audience';
@@ -263,8 +288,14 @@ begin
 end;
 $function$;
 
-revoke execute on function public.queue_thanks_emails (uuid, text, text, text) from public;
-grant execute on function public.queue_thanks_emails (uuid, text, text, text) to authenticated;
+revoke
+execute on function public.queue_thanks_emails (uuid, text)
+from
+	public,
+	anon;
+
+grant
+execute on function public.queue_thanks_emails (uuid, text) to authenticated;
 
 --------------------------------------
 -- RPCs (defined in migration 20260628000000_author_thanks.sql)
@@ -273,12 +304,10 @@ grant execute on function public.queue_thanks_emails (uuid, text, text, text) to
 -- Inserts the note (proposed, or approved when the venue has vetting off), or
 -- revises a previously declined note. Returns the id, resolved status, and venue
 -- so the app layer can render and queue the right notification.
-create or replace function public.propose_thanks (
-	_submission uuid,
-	_message text
-) returns jsonb language plpgsql security definer
+create or replace function public.propose_thanks (_submission uuid, _message text) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_venue uuid;
@@ -349,17 +378,21 @@ begin
 end;
 $function$;
 
-revoke execute on function public.propose_thanks (uuid, text) from public;
-grant execute on function public.propose_thanks (uuid, text) to authenticated;
+revoke
+execute on function public.propose_thanks (uuid, text)
+from
+	public;
+
+grant
+execute on function public.propose_thanks (uuid, text) to authenticated;
 
 -- approve_thanks: a venue admin or priority-0 editor approves a proposed note.
 -- Returns the venue, submission, and note text so the app layer can render and
 -- queue the delivery to reviewers.
-create or replace function public.approve_thanks (
-	_id uuid
-) returns jsonb language plpgsql security definer
+create or replace function public.approve_thanks (_id uuid) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_t public.thanks;
@@ -386,18 +419,21 @@ begin
 end;
 $function$;
 
-revoke execute on function public.approve_thanks (uuid) from public;
-grant execute on function public.approve_thanks (uuid) to authenticated;
+revoke
+execute on function public.approve_thanks (uuid)
+from
+	public;
+
+grant
+execute on function public.approve_thanks (uuid) to authenticated;
 
 -- decline_thanks: a venue admin or priority-0 editor declines a proposed note,
 -- recording a reason. Returns the venue and submission so the app layer can
 -- render and queue the notification to the author. The note is never delivered.
-create or replace function public.decline_thanks (
-	_id uuid,
-	_reason text
-) returns jsonb language plpgsql security definer
+create or replace function public.decline_thanks (_id uuid, _reason text) returns jsonb language plpgsql security definer
 set
-	search_path = public, pg_temp as $function$
+	search_path=public,
+	pg_temp as $function$
 declare
 	_caller uuid;
 	_t public.thanks;
@@ -424,5 +460,10 @@ begin
 end;
 $function$;
 
-revoke execute on function public.decline_thanks (uuid, text) from public;
-grant execute on function public.decline_thanks (uuid, text) to authenticated;
+revoke
+execute on function public.decline_thanks (uuid, text)
+from
+	public;
+
+grant
+execute on function public.decline_thanks (uuid, text) to authenticated;

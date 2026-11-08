@@ -24,9 +24,21 @@ select tests.create_currency(array[:'minter']::uuid[]) as cur \gset
 select tests.create_venue(:'cur', array[:'admin']::uuid[]) as ven \gset
 
 -- ---- Healthy baseline ----------------------------------------------------------
--- The seed inserts tokens directly, so this database always carries unattributed
--- mints. That is why they are advisory rather than part of `ok` — assert the
--- distinction holds, since it is what keeps the check readable.
+-- Unattributed mints are advisory rather than part of `ok`, because seed.sql
+-- inserts tokens directly and every development database legitimately has
+-- hundreds. Assert that distinction holds — it is what keeps the check readable.
+--
+-- Build the condition rather than inheriting it from the seed. Asserting `> 0`
+-- against whatever the database happened to hold passed here and failed the first
+-- time the suite ran against a restored production database, where the count is 0
+-- and should be: 20260901010000 calls a non-zero count there counterfeiting. A
+-- direct INSERT is exactly what an unattributed mint is, so make one and the
+-- assertion means the same thing on a seeded and a restored target alike.
+insert into
+	public.tokens (currency, venue)
+values
+	(:'cur', :'ven');
+
 select is(
 	(public.reconcile_ledger() -> 'ok')::text,
 	'true',
@@ -36,7 +48,7 @@ select is(
 select cmp_ok(
 	((public.reconcile_ledger() -> 'advisory' ->> 'unattributed_mints')::int),
 	'>', 0,
-	'seeded databases report unattributed mints as advisory, not failure'
+	'an unattributed mint is reported as advisory, not failure'
 );
 
 -- ---- 1. Unattributed movement --------------------------------------------------

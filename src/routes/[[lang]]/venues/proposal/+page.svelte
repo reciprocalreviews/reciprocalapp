@@ -1,21 +1,22 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import type { CurrencyID } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import { VenueLabel } from '$lib/components/Labels';
-	import Options from '$lib/components/Options.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Status from '$lib/components/Status.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import Text from '$lib/locales/Text.svelte';
-	import { isntEmpty, validEmails, validURL } from '$lib/validation';
-	import { getAuth } from '$routes/Auth.svelte';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { addError } from '$routes/feedback.svelte';
+	import type { CurrencyID } from '#data/types.js';
+	import Button from '#lib/components/Button.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import Options from '#lib/components/Options.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Note from '#lib/components/Note.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import { parseAddresses } from '#lib/data/addresses.js';
+	import { getDB } from '#lib/data/CRUD.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { isntEmpty, validEmail, validEmails, validURL } from '#lib/validation.js';
+	import { getAuth } from '#routes/Auth.svelte.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let { data } = $props();
 
@@ -43,6 +44,27 @@
 		return text.length > 0;
 	}
 
+	/** Addresses on the form that belong to no account yet, kept per field.
+	 *
+	 * Advisory only, deliberately. Approval takes whoever has an account: unlisted editors are
+	 * emailed an invitation by this very proposal, and an unlisted minter means the approving
+	 * steward holds the currency until the venue names someone. Blocking here would put the
+	 * platform's hardest requirement at the moment a community is trying to join it. */
+	let unknownEditors = $state<string[]>([]);
+	let unknownMinters = $state<string[]>([]);
+
+	/** Ask the database which of a field's addresses it doesn't know, once typing settles. */
+	function checkAddresses(text: string, set: (unknown: string[]) => void) {
+		const addresses = parseAddresses(text).filter(validEmail);
+		clearTimeout(checking);
+		checking = setTimeout(async () => {
+			const { data } = await db().findUnknownAddresses(addresses);
+			set(data ?? []);
+		}, 400);
+	}
+
+	let checking: ReturnType<typeof setTimeout> | undefined;
+
 	function editorsArentMinters() {
 		if (currency !== undefined) return true;
 		const editorsList = editors.split(',').map((e) => e.trim());
@@ -66,35 +88,36 @@
 
 		proposing = true;
 
-		const { data: proposalID, error: proposalError } = await db().proposeVenue(
-			uid,
-			venue,
-			url,
-			editors.split(',').map((editor) => editor.trim()),
-			paymentFree ? null : (currency ?? null),
-			paymentFree || currency !== undefined
-				? []
-				: minters.split(',').map((minter) => minter.trim()),
-			parseInt(size),
-			message,
-			paymentFree
-		);
+		// `finally`, because the redirect below is not guaranteed to happen. A realtime
+		// invalidation that lands while `goto` is loading takes over the navigation and
+		// silently drops it — SvelteKit resolves the goto anyway and logs nothing — which
+		// left this form disabled forever with the proposal already written and no way back
+		// but a refresh. Clearing the flag regardless means the worst case is pressing
+		// Propose twice, not a dead page.
+		try {
+			const proposalID = await handle(
+				db().proposeVenue(
+					uid,
+					venue,
+					url,
+					parseAddresses(editors),
+					paymentFree ? null : (currency ?? null),
+					paymentFree || currency !== undefined ? [] : parseAddresses(minters),
+					parseInt(size),
+					message,
+					paymentFree
+				)
+			);
 
-		if (proposalError) {
-			addError(proposalError);
+			if (proposalID) await goto(`/venues/proposal/${proposalID}`);
+		} finally {
 			proposing = false;
-		} else {
-			goto(`/venues/proposal/${proposalID}`);
 		}
-		return;
 	}
 </script>
 
-<Page icon={VenueLabel} title={(l) => l.page.proposeVenue.title} breadcrumbs={[]}>
-	<Paragraph text={(l) => l.page.proposeVenue.paragraph.reviewedBy} />
-	<Paragraph text={(l) => l.page.proposeVenue.paragraph.howToPropose} />
-	<Paragraph text={(l) => l.page.proposeVenue.paragraph.communitySupport} />
-	<Paragraph text={(l) => l.page.proposeVenue.paragraph.emailNotice} />
+<Page title={(l) => l.page.proposeVenue.title}>
+	<Paragraph text={(l) => l.page.proposeVenue.paragraph.intro} />
 
 	{#if auth().getUserID()}
 		<Form>
@@ -137,21 +160,28 @@
 					strings={(l) => l.page.proposeVenue.field.editors}
 					active={!proposing}
 					stretch
+					change={(text) => checkAddresses(text, (unknown) => (unknownEditors = unknown))}
 					valid={(text) =>
 						!validEmails(text, 1) ? (l) => l.page.proposeVenue.field.editors.invalid : undefined}
 					testid="propose-venue-editors"
 				/>
+				{#if unknownEditors.length > 0}
+					<Feedback
+						warning
+						inline={false}
+						text={(l) => l.page.proposeVenue.field.editors.unknown}
+						inputs={{ addresses: unknownEditors.join(', ') }}
+						testid="propose-venue-editors-unknown"
+					/>
+				{/if}
 				<Checkbox
 					testid="propose-venue-payment-free"
-					on={paymentFree}
+					on={!paymentFree}
 					change={async (on) => {
-						paymentFree = on;
+						paymentFree = !on;
 						return {};
 					}}
-					label={(l) =>
-						paymentFree
-							? l.page.proposeVenue.checkbox.paymentFree.on
-							: l.page.proposeVenue.checkbox.paymentFree.off}
+					label={(l) => l.page.proposeVenue.checkbox.paymentFree}
 				/>
 				{#if !paymentFree}
 					<Options
@@ -172,6 +202,7 @@
 							strings={(l) => l.page.proposeVenue.field.minters}
 							active={!proposing}
 							stretch
+							change={(text) => checkAddresses(text, (unknown) => (unknownMinters = unknown))}
 							valid={(text) =>
 								!validEmails(text, 1)
 									? (l) => l.page.proposeVenue.field.minters.invalid
@@ -180,6 +211,15 @@
 										: undefined}
 							testid="propose-venue-minters"
 						/>
+						{#if unknownMinters.length > 0}
+							<Feedback
+								warning
+								inline={false}
+								text={(l) => l.page.proposeVenue.field.minters.unknown}
+								inputs={{ addresses: unknownMinters.join(', ') }}
+								testid="propose-venue-minters-unknown"
+							/>
+						{/if}
 					{/if}
 				{/if}
 			</section>
@@ -203,6 +243,9 @@
 			<hr />
 
 			<div class="form-footer">
+				<!-- Beside the button it is about, where it is read at the moment it matters,
+				     rather than in the preamble, before anyone has typed an address. -->
+				<Note path={(l) => l.page.proposeVenue.paragraph.emailNotice} />
 				<Button
 					strings={(l) => l.page.proposeVenue.button.propose}
 					action={propose}
@@ -219,7 +262,7 @@
 			</div>
 		</Form>
 	{:else}
-		<Status good={false} label={(l) => l.page.proposeVenue.status.notLoggedIn} />
+		<Feedback text={(l) => l.page.proposeVenue.status.notLoggedIn} />
 	{/if}
 </Page>
 
@@ -243,6 +286,8 @@
 	.form-footer {
 		display: flex;
 		justify-content: flex-end;
+		align-items: baseline;
+		gap: var(--spacing);
 		width: 100%;
 	}
 </style>

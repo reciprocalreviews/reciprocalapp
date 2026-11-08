@@ -6,6 +6,10 @@ const config: PlaywrightTestConfig = {
 	// mutations from previous runs don't break tests (CI gets a fresh DB per run
 	// and skips this — see end2end/global-setup.ts).
 	globalSetup: './end2end/global-setup.ts',
+	// After the suite, assert the token ledger still reconstructs — the check the
+	// pgTAP invariants make one suite later, hoisted to the run that would break it
+	// (see end2end/global-teardown.ts).
+	globalTeardown: './end2end/global-teardown.ts',
 	webServer: {
 		// Sync types, build with vite, start Supabase locally without the services
 		// the suite doesn't use, then run the preview server.
@@ -20,7 +24,11 @@ const config: PlaywrightTestConfig = {
 		// everywhere, and nothing in end2end/ needs it: every email assertion reads
 		// the `emails` table directly with the `sql()` helper (the verification
 		// token is pulled out of `emails.args`), never a delivered message, and
-		// `send_email()`'s pg_net POST is best-effort and swallows its own failure.
+		// `send_email()`'s pg_net POST is best effort and never rolls back its caller.
+		// It no longer swallows its failure silently, though: delivery is recorded on
+		// the row (#164), so every send in this suite is genuinely marked failed. That
+		// is why `end2end/global-setup.ts` unschedules `reconcile-email-delivery` for
+		// the run — see the note there.
 		//
 		// If you want mail logged to the console while developing, run `npm start`
 		// in another terminal — that path still serves functions.

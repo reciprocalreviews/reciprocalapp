@@ -3,14 +3,15 @@ import { login, logout } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 const VENUE_ID = SEED.venue;
-// r4 (Manny Script) — has a Reviewer volunteer record and is neither author
-// of nor approved-Reviewer on any seeded submission, so they always have
-// biddable papers in the venue's submissions list.
+const VENUE_PATH = SEED.venuePath;
+// The reviewer-only scholar `filters.uniqueReviewer` picks out: has a Reviewer
+// volunteer record and is neither author of nor approved-Reviewer on any seeded
+// submission, so they always have biddable papers in the submissions list.
 const BIDDER_EMAIL = SEED.scholars.r4.email;
 const BIDDER_ID = SEED.scholars.r4.id;
 
 test('a reviewer can bid on a paper and then see an unbid button', async ({ page, context }) => {
-	// Reset state: drop any of Manny's pending Reviewer bids so the page
+	// Reset state: drop any of that bidder's pending Reviewer bids so the page
 	// loads with no unbid buttons, and the post-click assertion is unambiguous.
 	sql(
 		`delete from public.assignments where scholar = '${BIDDER_ID}' and venue = '${VENUE_ID}' and bid = true and approved = false;`
@@ -18,7 +19,7 @@ test('a reviewer can bid on a paper and then see an unbid button', async ({ page
 
 	try {
 		await login(BIDDER_EMAIL, page, context);
-		await page.goto(`/venue/${VENUE_ID}/submissions`);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
 		await page.waitForLoadState('networkidle');
 
 		// No bids placed yet → no unbid buttons.
@@ -45,36 +46,205 @@ test('a reviewer can bid on a paper and then see an unbid button', async ({ page
 	}
 });
 
+test('a reviewer at their bid limit withdraws a bid to bid elsewhere', async ({
+	page,
+	context
+}) => {
+	const ROLE_ID = SEED.roles.reviewer;
+	const dropBids = () =>
+		sql(
+			`delete from public.assignments where scholar = '${BIDDER_ID}' and venue = '${VENUE_ID}' and bid = true and approved = false;`
+		);
+	dropBids();
+	// Other tests leave this scholar answered bids, so the limit is sized from what is
+	// there: one above the bids that remain.
+	const used = Number(
+		sql(
+			`select count(*) from public.assignments a join public.submissions s on s.id = a.submission where a.scholar = '${BIDDER_ID}' and a.role = '${ROLE_ID}' and a.bid and s.status = 'reviewing';`
+		)
+	);
+	const maxBids = sql(
+		`select coalesce(max_bids::text, 'null') from public.roles where id = '${ROLE_ID}';`
+	);
+	sql(`update public.roles set max_bids = ${used + 1} where id = '${ROLE_ID}';`);
+	const budget = (n: number) => `${n} of ${used + 1}`;
+
+	try {
+		await login(BIDDER_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId('budget-Reviewer')).toContainText(budget(used));
+
+		await page
+			.getByTestId(/^bid-\d/)
+			.first()
+			.click();
+		await expect(page.getByTestId('budget-Reviewer')).toContainText(budget(used + 1));
+		await expect(page.getByTestId(/^bid-\d/)).toHaveCount(0);
+		await expect(page.getByTestId(/^limit-reached-/).first()).toBeVisible();
+
+		await page
+			.getByTestId(/^unbid-/)
+			.first()
+			.click();
+		await expect(page.getByTestId('budget-Reviewer')).toContainText(budget(used));
+		await expect(page.getByTestId(/^limit-reached-/)).toHaveCount(0);
+		await expect(page.getByTestId(/^bid-\d/).first()).toBeVisible();
+
+		await logout(page);
+	} finally {
+		sql(`update public.roles set max_bids = ${maxBids} where id = '${ROLE_ID}';`);
+		dropBids();
+	}
+});
+
+test('a reviewer can withdraw a pending bid after bidding closes', async ({ page, context }) => {
+	// TOK-2025-010, as in the test below: under review and one Reviewer seat short.
+	const SUBMISSION_ID = 'f0000002-ad50-11f0-9000-000000000010';
+	const TITLE = 'Retraction Notices as a Genre';
+	const dropBid = () =>
+		sql(
+			`delete from public.assignments where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_ID}' and bid = true and approved = false;`
+		);
+	dropBid();
+	sql(
+		`insert into public.assignments (venue, submission, scholar, role, bid) values ('${VENUE_ID}', '${SUBMISSION_ID}', '${BIDDER_ID}', '${SEED.roles.reviewer}', true);`
+	);
+	sql(`update public.submissions set bidding_closed = true where id = '${SUBMISSION_ID}';`);
+
+	try {
+		await login(BIDDER_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
+		await page.waitForLoadState('networkidle');
+		const row = page.locator('tr', { hasText: TITLE });
+		await expect(row.getByTestId(/^not-open-for-bidding-/)).toBeVisible();
+		await row.getByTestId(/^unbid-/).click();
+		await expect
+			.poll(() =>
+				sql(
+					`select count(*) from public.assignments where scholar = '${BIDDER_ID}' and submission = '${SUBMISSION_ID}';`
+				)
+			)
+			.toBe('0');
+		await logout(page);
+	} finally {
+		sql(`update public.submissions set bidding_closed = false where id = '${SUBMISSION_ID}';`);
+		dropBid();
+	}
+});
+
+test('an editor closes bidding on a submission, and bidders no longer see it', async ({
+	page,
+	context
+}) => {
+	// TOK-2025-010: under review, edited by editor@uni.edu, and one Reviewer seat short, so
+	// the bidder would otherwise see bid buttons on it.
+	const SUBMISSION_ID = 'f0000002-ad50-11f0-9000-000000000010';
+	const TITLE = 'Retraction Notices as a Genre';
+	const reopen = () =>
+		sql(`update public.submissions set bidding_closed = false where id = '${SUBMISSION_ID}';`);
+	reopen();
+
+	try {
+		await login('editor@uni.edu', page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId('submission-bidding-closed-status')).toHaveCount(0);
+		const open = page.getByTestId('submission-open-for-bidding');
+		await expect(open).toBeChecked();
+		await open.click();
+		await expect(open).not.toBeChecked();
+		await expect(page.getByTestId('submission-bidding-closed-status')).toBeVisible();
+		expect(
+			sql(`select bidding_closed from public.submissions where id = '${SUBMISSION_ID}';`)
+		).toBe('t');
+		await logout(page);
+
+		// The bidder, who holds no assignment on it, no longer sees it in the list...
+		await login(BIDDER_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByTestId(/^bid-/).first()).toBeVisible();
+		await expect(page.locator('tr', { hasText: TITLE })).toHaveCount(0);
+		// ...nor can they open it.
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByText(TITLE)).toHaveCount(0);
+		await logout(page);
+	} finally {
+		reopen();
+	}
+});
+
+test("the submission's Associate Editor can open and close bidding; a seated reviewer cannot", async ({
+	page,
+	context
+}) => {
+	// TOK-2025-010's Associate Editor approves its Reviewer bids, so may also close bidding.
+	const SUBMISSION_ID = 'f0000002-ad50-11f0-9000-000000000010';
+	const closed = () =>
+		sql(`select bidding_closed from public.submissions where id = '${SUBMISSION_ID}';`);
+	const reopen = () =>
+		sql(`update public.submissions set bidding_closed = false where id = '${SUBMISSION_ID}';`);
+	reopen();
+
+	try {
+		await login('o.access@uni.edu', page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
+		const open = page.getByTestId('submission-open-for-bidding');
+		await expect(open).toBeChecked();
+		await open.click();
+		await expect(page.getByTestId('submission-bidding-closed-status')).toBeVisible();
+		await expect.poll(closed).toBe('t');
+		await open.click();
+		await expect(page.getByTestId('submission-bidding-closed-status')).toHaveCount(0);
+		await expect.poll(closed).toBe('f');
+		await logout(page);
+
+		// r1 reviews TOK-2025-010 but approves nothing on it.
+		await login('r1@uni.edu', page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submission/${SUBMISSION_ID}`);
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByText('Retraction Notices as a Genre').first()).toBeVisible();
+		await expect(page.getByTestId('submission-open-for-bidding')).toHaveCount(0);
+		await logout(page);
+	} finally {
+		reopen();
+	}
+});
+
 test('editor filters submissions by author name, reviewer name, title, and external ID', async ({
 	page,
 	context
 }) => {
 	// Query expected counts from the DB rather than hard-coding them, because
 	// earlier tests in the full suite may have created additional submissions
-	// (e.g. submission.end.ts creates one authored by author1@uni.edu = Foot
-	// Note). Reviewer counts are likewise computed live.
-	const FOOT_ID = sql(`select id from public.scholars where email = 'author1@uni.edu';`);
-	const RIGOR_ID = sql(`select id from public.scholars where email = 'r1@uni.edu';`);
-	const MANNY_ID = sql(`select id from public.scholars where email = 'r4@uni.edu';`);
-	const footAuthoredCount = Number(
+	// (e.g. submission.end.ts creates one authored by author1). Reviewer counts
+	// are likewise computed live. Active submissions only: that is the list's
+	// default mode, and the done ones are in the other.
+	const AUTHOR_ID = SEED.scholars.author1.id;
+	const BOTH_ID = SEED.scholars.r1.id;
+	const REVIEWER_ID = SEED.scholars.r4.id;
+	const authoredCount = Number(
 		sql(
-			`select count(*) from public.submissions where venue = '${VENUE_ID}' and '${FOOT_ID}' = any(authors);`
+			`select count(*) from public.submissions where venue = '${VENUE_ID}' and status = 'reviewing' and '${AUTHOR_ID}' = any(authors);`
 		)
 	);
-	// "Rigor" matches submissions where r1 is author OR a visible assignee.
-	const rigorMatchCount = Number(
+	// Matches submissions where r1 is author OR a visible assignee.
+	const bothMatchCount = Number(
 		sql(
-			`select count(distinct s.id) from public.submissions s left join public.assignments a on a.submission = s.id and a.scholar = '${RIGOR_ID}' where s.venue = '${VENUE_ID}' and ('${RIGOR_ID}' = any(s.authors) or a.id is not null);`
+			`select count(distinct s.id) from public.submissions s left join public.assignments a on a.submission = s.id and a.scholar = '${BOTH_ID}' where s.venue = '${VENUE_ID}' and s.status = 'reviewing' and ('${BOTH_ID}' = any(s.authors) or a.id is not null);`
 		)
 	);
-	const mannyMatchCount = Number(
+	const reviewerMatchCount = Number(
 		sql(
-			`select count(distinct s.id) from public.submissions s left join public.assignments a on a.submission = s.id and a.scholar = '${MANNY_ID}' where s.venue = '${VENUE_ID}' and ('${MANNY_ID}' = any(s.authors) or a.id is not null);`
+			`select count(distinct s.id) from public.submissions s left join public.assignments a on a.submission = s.id and a.scholar = '${REVIEWER_ID}' where s.venue = '${VENUE_ID}' and s.status = 'reviewing' and ('${REVIEWER_ID}' = any(s.authors) or a.id is not null);`
 		)
 	);
 
 	await login('editor@uni.edu', page, context);
-	await page.goto(`/venue/${VENUE_ID}/submissions`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions`);
 	await page.waitForLoadState('networkidle');
 
 	const rows = page.locator('tr[data-testid^="submission-"]');
@@ -84,33 +254,133 @@ test('editor filters submissions by author name, reviewer name, title, and exter
 	const baseline = await rows.count();
 	expect(baseline).toBeGreaterThanOrEqual(4);
 
-	// Filter by author name "Foot" (Foot Note authors TOK-2025-001 and -004 in
-	// the seed; other tests may add more authored by them).
-	await filter.fill('Foot');
-	await expect.poll(async () => rows.count()).toBe(footAuthoredCount);
+	// Filter by an author's name fragment (they author seeded submissions; other
+	// tests may add more authored by them).
+	await filter.fill(SEED.filters.uniqueAuthor);
+	await expect.poll(async () => rows.count()).toBe(authoredCount);
 
-	// Filter by reviewer-only name "Manny" — Manny Script bids on TOK-2025-001
-	// in the seed and isn't an author. Proves the reviewer-match branch works.
-	await filter.fill('Manny');
-	await expect.poll(async () => rows.count()).toBe(mannyMatchCount);
+	// Filter by a reviewer-only name fragment — that scholar bids but authors
+	// nothing. Proves the reviewer-match branch works.
+	await filter.fill(SEED.filters.uniqueReviewer);
+	await expect.poll(async () => rows.count()).toBe(reviewerMatchCount);
 
-	// Filter by "Rigor" — Rigor Russ authors TOK-2025-002 and -003 AND is the
-	// seeded Reviewer on -001 and -004 (covers both the author and reviewer
-	// match paths).
-	await filter.fill('Rigor');
-	await expect.poll(async () => rows.count()).toBe(rigorMatchCount);
+	// Filter by a scholar who both authors submissions AND reviews others,
+	// covering both the author and reviewer match paths at once.
+	await filter.fill(SEED.filters.authorAndReviewer);
+	await expect.poll(async () => rows.count()).toBe(bothMatchCount);
 
 	// Title-fragment match still works (regression).
-	await filter.fill('Windmill');
+	await filter.fill(SEED.filters.uniqueTitleWord);
 	await expect.poll(async () => rows.count()).toBe(1);
 
 	// External-ID match still works (regression).
-	await filter.fill('TOK-2025-003');
+	await filter.fill(SEED.submissions.tok003.externalId);
 	await expect.poll(async () => rows.count()).toBe(1);
 
 	// Clearing the filter restores all rows.
 	await filter.fill('');
 	await expect.poll(async () => rows.count()).toBe(baseline);
+
+	await logout(page);
+});
+
+// The submissions list is where a bidder decides what to bid on, and at a venue
+// whose roles are anonymized it must not hand back the author identities it is
+// withholding. The seeded Reviewer role is biddable with anonymous_authors set,
+// and the bidder above is neither an author of nor an approved Reviewer on any
+// seeded submission, so every row is anonymized from their seat.
+test('a bidder at an anonymized venue sees locks, not authors or manuscript IDs', async ({
+	page,
+	context
+}) => {
+	const LOCK = '\u{1F512}\uFE0E';
+	const EM_DASH = '\u2014';
+	// The one submission whose title carries `uniqueTitleWord`, so the row can be
+	// picked out by title while its manuscript ID is withheld.
+	const ANON_SUBMISSION = SEED.submissions.tok002;
+	const TITLE_WORD = SEED.filters.uniqueTitleWord;
+	// Blank one submission's expertise so the "none provided" cell has a subject.
+	// The seed fills every submission's expertise, and the detail page writes
+	// null back for empty input, so null is the state to reproduce.
+	const priorExpertise = sql(
+		`select coalesce(expertise, '') from public.submissions where externalid = '${ANON_SUBMISSION.externalId}';`
+	);
+	sql(
+		`update public.submissions set expertise = null where externalid = '${ANON_SUBMISSION.externalId}';`
+	);
+
+	try {
+		await login(BIDDER_EMAIL, page, context);
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
+		await page.waitForLoadState('networkidle');
+
+		const rows = page.locator('tr[data-testid^="submission-"]');
+		const baseline = await rows.count();
+		expect(baseline).toBeGreaterThanOrEqual(4);
+
+		// Authors and manuscript ID are both withheld, and say so with a lock.
+		const firstRow = rows.first();
+		await expect(firstRow.getByTitle('anonymized')).toHaveCount(2);
+		await expect(firstRow.getByTitle('anonymized').first()).toHaveText(LOCK);
+
+		// No manuscript ID leaks into any row.
+		await expect(page.getByText(SEED.submissionIdPrefix, { exact: false })).toHaveCount(0);
+
+		// The title stays visible: it is what a bidder judges interest by, and
+		// what they recognize a conflict from.
+		await expect(page.getByText(TITLE_WORD, { exact: false }).first()).toBeVisible();
+
+		// Expertise nobody supplied reads as none provided, not as a blank cell.
+		const anonRow = rows.filter({ hasText: TITLE_WORD });
+		await expect(anonRow.getByText(EM_DASH, { exact: true })).toHaveCount(1);
+
+		// The search box must not become the side channel the ID column closed:
+		// a guessed manuscript ID confirms nothing.
+		const filter = page.getByTestId('submissions-filter');
+		await filter.fill(ANON_SUBMISSION.externalId);
+		await expect.poll(async () => rows.count()).toBe(0);
+
+		// A title fragment still filters, so search is gated rather than broken.
+		await filter.fill(TITLE_WORD);
+		await expect.poll(async () => rows.count()).toBe(1);
+
+		await logout(page);
+	} finally {
+		sql(
+			`update public.submissions set expertise = ${priorExpertise === '' ? 'null' : `'${priorExpertise}'`} where externalid = '${ANON_SUBMISSION.externalId}';`
+		);
+	}
+});
+
+test('the list shows active submissions by default and done ones in Done mode', async ({
+	page,
+	context
+}) => {
+	// A seeded done submission, and a seeded one still under review.
+	const DONE_TITLE = 'Citation Cartels and the Small Worlds That Sustain Them';
+	const activeTitle = sql(
+		`select title from public.submissions where venue = '${VENUE_ID}' and status = 'reviewing' order by externalid limit 1;`
+	);
+
+	await login('editor@uni.edu', page, context);
+	await page.goto(`/venue/${VENUE_PATH}/submissions`);
+	await page.waitForLoadState('networkidle');
+
+	const rows = page.locator('tr[data-testid^="submission-"]');
+	await expect(rows.filter({ hasText: activeTitle }).first()).toBeVisible();
+	await expect(rows.filter({ hasText: DONE_TITLE })).toHaveCount(0);
+
+	await page.getByTestId('submissions-mode-done').check();
+	await page.waitForURL(/[?&]done/);
+	await expect(rows.filter({ hasText: DONE_TITLE })).toHaveCount(1);
+	await expect(rows.filter({ hasText: activeTitle })).toHaveCount(0);
+	// Nothing done needs an editor or takes an assignment.
+	await expect(page.getByTestId('submissions-needs-editor-filter')).toHaveCount(0);
+	await expect(page.getByTestId('batch-assign-scholar')).toHaveCount(0);
+
+	await page.getByTestId('submissions-mode-active').check();
+	await expect(rows.filter({ hasText: DONE_TITLE })).toHaveCount(0);
+	await expect(page).not.toHaveURL(/[?&]done/);
 
 	await logout(page);
 });

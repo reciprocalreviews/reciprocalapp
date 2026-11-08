@@ -1,23 +1,24 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
-	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Date from '$lib/components/Date.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Form from '$lib/components/Form.svelte';
-	import { ErrorLabel, SettingsLabel, VenueLabel } from '$lib/components/Labels';
-	import Link from '$lib/components/Link.svelte';
-	import Note from '$lib/components/Note.svelte';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import TextField from '$lib/components/TextField.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import { reloadOnChanges } from '$lib/data/SupabaseRealtime';
-	import Text from '$lib/locales/Text.svelte';
-	import { validEmails, validURL } from '$lib/validation';
+	import Button from '#lib/components/Button.svelte';
+	import Card from '#lib/components/Card.svelte';
+	import Cards from '#lib/components/Cards.svelte';
+	import Date from '#lib/components/Date.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Form from '#lib/components/Form.svelte';
+	import { SettingsLabel } from '#lib/components/Labels.js';
+	import Link from '#lib/components/Link.svelte';
+	import Note from '#lib/components/Note.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Status from '#lib/components/Status.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import TextField from '#lib/components/TextField.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { reloadOnChanges } from '#lib/data/SupabaseRealtime.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { validEmails, validURL } from '#lib/validation.js';
 	import { getAuth } from '../../../../Auth.svelte';
 	import { addError, handle } from '../../../../feedback.svelte';
 
@@ -35,6 +36,15 @@
 	let message = $state('');
 
 	let proposal = $derived(data.proposal);
+	/** Listed addresses no account uses yet, split back into the two lists so the steward can
+	 * see which consequence applies: an unlisted editor simply isn't made an admin, while an
+	 * unlisted minter means this steward ends up holding the new currency. */
+	let unknownEditors = $derived(
+		(data.proposal?.editors ?? []).filter((e) => data.unknownAddresses.includes(e))
+	);
+	let unknownMinters = $derived(
+		(data.proposal?.minters ?? []).filter((m) => data.unknownAddresses.includes(m))
+	);
 	let approved = $derived(proposal && proposal.venue !== null);
 	let steward = $derived(data.scholar?.steward === true);
 
@@ -72,15 +82,19 @@
 </script>
 
 {#if proposal === null || supporters === null}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+	<Page title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.proposal.feedback.notFound}></Feedback>
 	</Page>
 {:else}
-	<Page icon={VenueLabel} title={proposal.title} breadcrumbs={[]}>
-		{#snippet subtitle()}<Text
-				path={(l) =>
-					approved ? l.page.proposal.subtitle.approved : l.page.proposal.subtitle.proposal}
-			/>{/snippet}
+	<Page title={proposal.title}>
+		{#snippet subtitle()}<Text path={(l) => l.page.proposal.subtitle.proposal} />{/snippet}
+		<!-- Approval is the proposal's state, so it is a chip beside the kind rather than a
+		     subtitle in place of it. -->
+		{#snippet details()}
+			{#if approved}
+				<Status label={(l) => l.page.proposal.subtitle.approved} testid="proposal-approved" />
+			{/if}
+		{/snippet}
 		{#if approved}
 			<Paragraph
 				text={(l) => l.page.proposal.paragraph.approved}
@@ -168,6 +182,25 @@
 						}}
 					/>
 					<Note path={(l) => l.page.proposal.note.delete} />
+
+					{#if unknownEditors.length > 0}
+						<Feedback
+							warning
+							inline={false}
+							text={(l) => l.page.proposal.feedback.unknownEditors}
+							inputs={{ addresses: unknownEditors.join(', ') }}
+							testid="proposal-unknown-editors"
+						/>
+					{/if}
+					{#if unknownMinters.length > 0}
+						<Feedback
+							warning
+							inline={false}
+							text={(l) => l.page.proposal.feedback.unknownMinters}
+							inputs={{ addresses: unknownMinters.join(', ') }}
+							testid="proposal-unknown-minters"
+						/>
+					{/if}
 
 					<Button
 						strings={(l) => l.page.proposal.button.approve}

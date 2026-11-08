@@ -10,7 +10,7 @@ Next, read the [design specification](DESIGN.md). This document attempts to arti
 
 Finally, read our [architecture guide](ARCHITECTURE.md), which discusses the key technologies, components, and concepts in the implementation, so you can navigate the implementation.
 
-There's almost certainly something important we've missed here, and your questions will help us know what to add.
+There's almost certainly something important we've missed here, and your questions will help us know what to add. Ask them in [Discussions](https://github.com/reciprocalreviews/reciprocalapp/discussions): a question that needed asking usually means this guide has a gap, and answering it there leaves the answer where the next person will find it.
 
 ## Contributing
 
@@ -18,6 +18,7 @@ At the moment, we are happy to accept the following types of contributions:
 
 - [Bug reports and enhancment ideas](https://github.com/reciprocalreviews/reciprocalapp/issues). Before you submit, make sure there isn't an existing issue for what you want to report.
 - [Pull requests](https://github.com/reciprocalreviews/reciprocalapp/pulls). Find an unassigned issue, comment on it to see if it's appropriate to work on, and a maintainer will reply and potentially assign you. If they do, fork, work on the issue, and submit a pull request for review and possible merging.
+- [Questions and ideas](https://github.com/reciprocalreviews/reciprocalapp/discussions). Use Discussions rather than an issue when you are not yet proposing a specific change, such as an idea worth debating or a question about how something is meant to work. Issues are for things someone could act on.
 
 ## Stack
 
@@ -42,6 +43,8 @@ On the team, we use a Git Flow continuous integration workflow. That means:
 Feature branches should be merged into `dev`, which trigger a release to a staging server on Vercel. And a production release involves merging `dev` into `main`.
 
 Pull requests should fork, branch from `dev`, and target `dev`. One of the maintainers will review, and if accepted, merge to `dev`.
+
+`dev` is the repository's default branch, so a fork starts there and a new pull request already proposes `dev` as its base — you shouldn't have to change anything. A pull request that targets `main` anyway fails the `Deploy path` check, which is there because `main` moves only by `npm run deploy`: anything that lands on it another way leaves the two branches diverged, and the next release then reconciles them for the first time on its way to production.
 
 Unit and integration tests will run on merge to `dev` via GitHub actions.
 

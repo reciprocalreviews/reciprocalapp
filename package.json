@@ -1,15 +1,17 @@
 {
 	"name": "reciprocalapp",
-	"version": "0.4.6",
+	"version": "0.5.15",
 	"private": true,
-	"prepare": "svelte-kit sync",
 	"scripts": {
+		"prepare": "svelte-kit sync",
 		"dev": "vite dev",
 		"build": "node scripts/maybe-updates.js && vite build",
 		"preview": "vite preview",
 		"test": "npm run test:end && npm run test:unit && npm run test:rls",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"check:now": "svelte-check --tsconfig ./tsconfig.json",
+		"check:now": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
 		"sync": "svelte-kit sync",
 		"test:end": "playwright test",
 		"test:unit": "vitest",
@@ -19,42 +21,54 @@
 		"functions": "supabase functions serve --no-verify-jwt --env-file .env",
 		"stop": "supabase stop",
 		"reset": "supabase db reset && npm run types",
-		"types": "supabase gen types typescript --local > src/data/database.ts",
-		"deploy": "git checkout main && git merge dev && git push && git checkout dev",
+		"types": "supabase gen types typescript > src/data/database.ts",
+		"deploy": "node scripts/deploy.js",
 		"outdated": "npx check-outdated --ignore-pre-releases --columns name,type,current,latest,changes",
 		"emu": "npm run sync && npm run build && npm run start:test && npm run preview",
 		"updates": "node scripts/updates.js",
+		"icons": "node scripts/icons.js",
+		"contact-sheet": "node --experimental-strip-types scripts/contact-sheet.js",
+		"email-sheet": "node --experimental-strip-types scripts/email-sheet.js",
+		"orcid:token": "node scripts/orcid-token.js",
 		"locale-schema": "npx ts-json-schema-generator --no-type-check --tsconfig tsconfig.json --path 'src/lib/locales/Locale.ts' --type 'LocaleText' --out src/lib/locales/LocaleText.json",
 		"locale-validate": "ajv validate -s src/lib/locales/LocaleText.json -d \"static/locales/*.json\" --all-errors --errors=text",
-		"locale": "npm run locale-schema && npm run locale-validate"
+		"locale": "npm run locale-schema && npm run locale-validate",
+		"scale:fixture": "docker exec -i supabase_db_reciprocalapp psql -U postgres -d postgres < scripts/scale-fixture.sql",
+		"scale:check": "docker exec -i supabase_db_reciprocalapp psql -U postgres -d postgres < scripts/scale-check.sql"
 	},
 	"engines": {
-		"node": ">=22.0.0"
+		"node": ">=22.17 <25"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1",
-		"@sveltejs/adapter-vercel": "^6",
-		"@sveltejs/kit": "^2",
+		"@sveltejs/adapter-vercel": "^7",
+		"@sveltejs/kit": "^3",
 		"@sveltejs/vite-plugin-svelte": "^7",
 		"@types/node": "^26",
 		"ajv-cli": "^5",
 		"prettier": "^3",
 		"prettier-plugin-sql": "^0",
 		"prettier-plugin-svelte": "^4",
-		"supabase": "^2",
+		"supabase": "^3",
 		"svelte": "^5",
 		"svelte-check": "^4",
 		"ts-json-schema-generator": "^2",
 		"tslib": "^2",
 		"typescript": "^6",
-		"vercel": "^59",
+		"vercel": "^65",
 		"vite": "^8",
-		"vitest": "^4"
+		"vitest": "^5"
 	},
 	"type": "module",
 	"dependencies": {
 		"@supabase/ssr": "^0",
 		"@supabase/supabase-js": "^2",
 		"marked": "^18"
+	},
+	"imports": {
+		"#lib/*": "./src/lib/*",
+		"#data/*": "./src/data/*",
+		"#routes/*": "./src/routes/*",
+		"#locales/*": "./static/locales/*"
 	}
 }

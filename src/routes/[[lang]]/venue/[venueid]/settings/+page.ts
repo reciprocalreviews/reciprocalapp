@@ -1,15 +1,15 @@
+import { NO_VENUE_ID } from '#lib/data/venuePath.js';
 import type { PageLoad } from './$types.js';
 
 export const load: PageLoad = async ({ parent, params }) => {
 	const { db, scholar, venue } = await parent();
 
-	const venueid = params.venueid;
+	// The URL segment may be the venue's web address, so the id comes from the venue the
+	// layout resolved, never from the param — every query below is keyed on a uuid column.
+	const venueid = venue?.id ?? NO_VENUE_ID;
 
 	// Get the matching venue's currency.
 	const { data: currency } = venue ? await db.getCurrency(venue.currency) : { data: null };
-
-	// Get the current's minter's emails.
-	const { data: minters } = currency ? await db.getScholarsByIDs(currency.minters) : { data: null };
 
 	// Get the matching venue's roles.
 	const { data: roles } = await db.getVenueRoles(venueid);
@@ -18,6 +18,10 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const { data: volunteers } = scholar
 		? await db.getVenueSettingsVolunteers(venueid)
 		: { data: null };
+
+	// The journal titles in volunteers' ORCID records, so the relevant venues field can
+	// show what each line matches.
+	const { data: journals } = scholar ? await db.getVenueVolunteerJournals(venueid) : { data: null };
 
 	// Get all the submission types
 	const { data: types } = await db.getVenueSubmissionTypes(venueid);
@@ -28,14 +32,18 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get the venue's preference levels (may be empty if not configured).
 	const { data: preferenceLevels } = await db.getVenuePreferenceLevels(venueid);
 
+	// Get the reasons approvers can choose from when declining (may be empty).
+	const { data: declineReasons } = await db.getVenueDeclineReasons(venueid);
+
 	return {
 		venue,
 		roles,
 		volunteers,
+		journals: journals ?? [],
 		currency,
-		minters,
 		types,
 		compensation,
-		preferenceLevels
+		preferenceLevels,
+		declineReasons
 	};
 };

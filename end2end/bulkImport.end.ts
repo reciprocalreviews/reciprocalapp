@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { login, logout } from '../src/routes/login';
-import { SEED } from './test-utils';
+import { SEED, sql } from './test-utils';
 
-const VENUE_ID = SEED.venue;
+const VENUE_PATH = SEED.venuePath;
 
 test('admin can bulk import free submissions and a proposed mint transaction', async ({
 	page,
@@ -10,7 +10,7 @@ test('admin can bulk import free submissions and a proposed mint transaction', a
 }) => {
 	await login('editor@uni.edu', page, context);
 
-	await page.goto(`/venue/${VENUE_ID}/submissions/import`);
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
 	await page.waitForLoadState('networkidle');
 
 	const externalA = `import-a-${Date.now()}`;
@@ -29,11 +29,386 @@ test('admin can bulk import free submissions and a proposed mint transaction', a
 	await page.getByTestId('bulk-import-submit').click();
 
 	// Should redirect back to the submissions index.
-	await page.waitForURL(`**/venue/${VENUE_ID}/submissions`);
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
 
 	// Verify both imported submissions show up.
 	await expect(page.getByText(externalA)).toBeVisible();
 	await expect(page.getByText(externalB)).toBeVisible();
 
+	// And that the list does not claim anybody paid for them. Nobody did: an
+	// imported submission is free by construction, and the tokens meant to fund
+	// its reviewing are still an unapproved mint. Anchored to the row for this
+	// import rather than to a row index, since the venue already holds others.
+	const row = page.locator('tr', { hasText: externalA });
+	await expect(row.locator('[data-testid$="-payment"]')).toHaveText('free');
+
+	await logout(page);
+});
+
+// The venue's priority-0 editors manage its submissions, so they may import whether or
+// not they also administer the venue. The seed's editor is also its admin; hand that to
+// the associate editor for the length of this test (a venue must keep one admin) so only
+// the editor role is left to let them in.
+test('an editor who is not an admin can find and use bulk import', async ({ page, context }) => {
+	const admins = sql(`select admins from public.venues where id = '${SEED.venue}';`);
+	const started = sql(`select now();`);
+	sql(
+		`update public.venues set admins = array['${SEED.scholars.ae.id}']::uuid[] where id = '${SEED.venue}';`
+	);
+	try {
+		await login(SEED.scholars.editor.email, page, context);
+
+		await page.goto(`/venue/${VENUE_PATH}/submissions`);
+		await page.waitForLoadState('networkidle');
+		await page.getByTestId('submissions-import').getByRole('link').click();
+		await page.waitForURL(`**/venue/${VENUE_PATH}/submissions/import`);
+		await page.waitForLoadState('networkidle');
+
+		const external = `import-editor-${Date.now()}`;
+		await page.getByTestId('import-row-0-title').fill('Imported by the editor');
+		await page.getByTestId('import-row-0-externalid').fill(external);
+		await page.getByTestId('bulk-import-submit').click();
+
+		// By manuscript ID, which the list shows an editor so they can find the paper in
+		// the venue's own reviewing system.
+		await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+		await expect(page.getByText(external)).toBeVisible();
+
+		await logout(page);
+	} finally {
+		sql(`update public.venues set admins = '${admins}' where id = '${SEED.venue}';`);
+		// The import proposes a mint, and the venue's transactions list puts proposed rows
+		// first, ten to a page; one more would push currencyTransactions' buried proposal
+		// off the first page it asserts on.
+		sql(
+			`delete from public.transactions where to_venue = '${SEED.venue}' and status = 'proposed' and creator = '${SEED.scholars.editor.id}' and created_at >= '${started}';`
+		);
+	}
+});
+
+// An unmatched editor name must NOT stop the import. A backlog is exactly the case
+// where the people named in the file have not signed up yet, and refusing it there
+// made the feature useless where it mattered most — an unmatched name seats nobody,
+// so there is no wrong person to seat. Ambiguity is the case that still blocks, and
+// matchPersonName.unit.ts covers that; the seed has no two volunteers sharing a name.
+test('a name the venue does not know imports with nobody in that role', async ({
+	page,
+	context
+}) => {
+	await login('editor@uni.edu', page, context);
+
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+
+	const external = `import-unmatched-${Date.now()}`;
+
+	// A CSV is what reveals the matching panel, so drive the paste path rather than
+	// the file picker, which Playwright cannot open.
+	await page
+		.getByTestId('bulk-import-paste')
+		.fill(`title,externalid,handling editor\nPre-launch paper,${external},Nobody Here`);
+	await page.getByTestId('bulk-import-parse').click();
+
+	// The importer never guesses which column names which role — that is venue
+	// semantics — so match it by hand. The seed venue's top role is "Editor".
+	await page
+		.locator('[data-testid^="role-column-"]')
+		.first()
+		.selectOption({ label: 'handling editor' });
+
+	// Reported in the cell, and counted before submitting, but not blocking.
+	await expect(page.getByTestId('import-row-0-unmatched')).toBeVisible();
+	await expect(page.getByTestId('bulk-import-submit')).toBeEnabled();
+
+	// Naming people asks first whether they agreed; the same button confirms.
+	await page.getByTestId('bulk-import-submit').click();
+	await page.getByTestId('bulk-import-submit').click();
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+	await expect(page.getByText(external)).toBeVisible();
+
+	await logout(page);
+});
+
+// The other half: a name the venue does know is seated.
+test('an editor the venue knows is matched and seated', async ({ page, context }) => {
+	await login('editor@uni.edu', page, context);
+
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+
+	const external = `import-person-${Date.now()}`;
+
+	// Cleared so the poll below reads this import's digest and not an earlier test's.
+	sql(`delete from public.emails where event = 'SubmissionsAssignedEditor';`);
+
+	await page
+		.getByTestId('bulk-import-paste')
+		.fill(
+			`title,externalid,handling editor\nPre-launch paper,${external},${SEED.scholars.editor.name}`
+		);
+	await page.getByTestId('bulk-import-parse').click();
+
+	await page
+		.locator('[data-testid^="role-column-"]')
+		.first()
+		.selectOption({ label: 'handling editor' });
+
+	await expect(page.getByTestId('import-row-0-unmatched')).toHaveCount(0);
+	await page.getByTestId('bulk-import-submit').click();
+	// Naming people asks first whether they agreed; the same button confirms.
+	await expect(page.getByTestId('bulk-import-submit')).toHaveText('Everyone named agreed, import');
+	await page.getByTestId('bulk-import-submit').click();
+
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+	await expect(page.getByText(external)).toBeVisible();
+
+	// The digest counts SUBMISSIONS, not the assignment rows the import wrote -- one
+	// row can seat the same person twice, and this is the only check that the number
+	// the database now reports is the number the email carries (#181). The subject and
+	// body are null until the resend function renders them, so the argument is what
+	// there is to read.
+	await expect
+		.poll(() =>
+			sql(
+				`select args->>0 from public.emails where event = 'SubmissionsAssignedEditor' order by time_sent desc limit 1;`
+			)
+		)
+		.toBe('1');
+
+	await logout(page);
+});
+
+// Reading a file used to produce no output at all unless it failed, and the rows
+// arrived below the fold.
+test('parsing a CSV says what it read', async ({ page, context }) => {
+	await login('editor@uni.edu', page, context);
+
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+
+	await page
+		.getByTestId('bulk-import-paste')
+		.fill('title,externalid\nA paper,csv-loaded-1\nAnother,csv-loaded-2');
+	await page.getByTestId('bulk-import-parse').click();
+
+	await expect(page.getByTestId('csv-loaded')).toContainText('2 submissions');
+
+	await logout(page);
+});
+
+// Pins the property, not the symptom that prompted it. The importer used to be
+// cleared only as a side effect of navigating away, so it held the batch it had
+// just written for as long as that took -- and, once `handle` refetched the
+// page's data, held it with every row marked a duplicate of the submission it
+// had itself created. A reload rebuilds the component either way, so this would
+// have passed then too; what it guards is that an import ends with an empty
+// form, however the form comes to be shown again.
+test('a completed import leaves the form empty', async ({ page, context }) => {
+	await login('editor@uni.edu', page, context);
+
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+
+	const external = `import-clears-${Date.now()}`;
+
+	await page
+		.getByTestId('bulk-import-paste')
+		.fill(`title,externalid\nPre-launch paper,${external}`);
+	await page.getByTestId('bulk-import-parse').click();
+	await expect(page.getByTestId('import-row-0-externalid')).toHaveValue(external);
+
+	await page.getByTestId('bulk-import-submit').click();
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+	await expect(page.getByText(external)).toBeVisible();
+
+	// Back to the importer: one blank row, nothing pasted, and no row carrying the
+	// ID that was just imported.
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+
+	await expect(page.getByTestId('bulk-import-paste')).toHaveValue('');
+	await expect(page.getByTestId('import-row-0-externalid')).toHaveValue('');
+	await expect(page.getByTestId('import-row-0-title')).toHaveValue('');
+	await expect(page.getByTestId('import-row-1')).toHaveCount(0);
+
+	await logout(page);
+});
+
+// The bug this pins: a file that overlaps what the venue already has could not be
+// imported at all. An already-present external ID was a row ERROR, and the submit
+// button required every row to be error-free -- so re-importing a queue that still
+// carried last month's manuscripts meant deleting those rows by hand first. They are
+// now skipped, and everything else in the file lands.
+test('a manuscript already in the venue is skipped, and the rest still imports', async ({
+	page,
+	context
+}) => {
+	await login('editor@uni.edu', page, context);
+
+	const stamp = Date.now();
+	const existing = `import-skip-existing-${stamp}`;
+	const fresh = `import-skip-new-${stamp}`;
+
+	// First, put the overlapping manuscript in the venue.
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+	await page.getByTestId('bulk-import-paste').fill(`title,externalid\nAlready here,${existing}`);
+	await page.getByTestId('bulk-import-parse').click();
+	await page.getByTestId('bulk-import-submit').click();
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+	await expect(page.getByText(existing)).toBeVisible();
+
+	// Now import a file carrying it again, alongside one the venue has never seen.
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+	await page
+		.getByTestId('bulk-import-paste')
+		.fill(`title,externalid\nAlready here,${existing}\nBrand new,${fresh}`);
+	await page.getByTestId('bulk-import-parse').click();
+	await expect(page.getByTestId('import-row-1-externalid')).toHaveValue(fresh);
+
+	// The overlapping row says it will be skipped -- and says it as a notice rather
+	// than an error, because there is nothing here for the editor to fix.
+	await expect(page.getByTestId('import-row-0-skipped')).toBeVisible();
+	await expect(page.getByTestId('import-row-1-skipped')).toHaveCount(0);
+
+	// And it says WHICH manuscript is already here, by the venue's title for it and
+	// not the file's. An ID the two disagree about is a different paper wearing the
+	// same number, and nothing in the file itself can tell that apart from a queue
+	// re-exported with last month's rows still in it.
+	const alreadyHere = page.getByTestId('import-row-0-skipped-link');
+	await expect(alreadyHere).toContainText('Already here');
+	await expect(alreadyHere).toHaveAttribute('href', /\/venue\/.+\/submission\/[0-9a-f-]{36}$/);
+	await expect(page.getByTestId('import-row-1-skipped-link')).toHaveCount(0);
+
+	// The batch is sized to what will actually be written: one submission, not two.
+	// Counting the skipped row here would propose a mint funding a manuscript that
+	// already exists and was already funded once.
+	await expect(page.getByText('Importing 1 submissions')).toBeVisible();
+
+	// The whole point: the form is submittable.
+	await page.getByTestId('bulk-import-submit').click();
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+	await expect(page.getByText(fresh)).toBeVisible();
+
+	// And the manuscript that was already here was not duplicated.
+	await expect(page.getByText(existing, { exact: true })).toHaveCount(1);
+
+	await logout(page);
+});
+
+// A file whose every row is already here has nothing to write, so the button stays
+// inactive rather than sending a batch the database would answer with nothing. The
+// "all already in the system" line is what explains why.
+test('a file that is entirely already imported cannot be submitted', async ({ page, context }) => {
+	await login('editor@uni.edu', page, context);
+
+	const external = `import-all-skipped-${Date.now()}`;
+
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+	await page.getByTestId('bulk-import-paste').fill(`title,externalid\nOnly one,${external}`);
+	await page.getByTestId('bulk-import-parse').click();
+	await page.getByTestId('bulk-import-submit').click();
+	await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+
+	// The same file again.
+	await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+	await page.waitForLoadState('networkidle');
+	await page.getByTestId('bulk-import-paste').fill(`title,externalid\nOnly one,${external}`);
+	await page.getByTestId('bulk-import-parse').click();
+
+	await expect(page.getByTestId('import-row-0-skipped')).toBeVisible();
+	await expect(page.getByText('All submissions are already in the system')).toBeVisible();
+	await expect(page.getByText('1 of these are already in this venue')).toHaveCount(0);
+	await expect(page.getByTestId('bulk-import-submit')).toBeDisabled();
+
+	// Naming the manuscript is only half of it: the link has to reach the paper the
+	// editor is being asked to compare their file against.
+	await page.getByTestId('import-row-0-skipped-link').click();
+	await page.waitForURL(/\/submission\/[0-9a-f-]{36}$/);
+	await expect(page.getByTestId('page-header')).toContainText('Only one');
+	await expect(page.getByText(external)).toBeVisible();
+
+	await logout(page);
+});
+
+// A name the import could not match is kept, and can be matched later from its own page.
+test('an unmatched editor is listed, linked from the submissions page, and can be matched', async ({
+	page,
+	context
+}) => {
+	await login('editor@uni.edu', page, context);
+	const external = `import-unmatched-page-${Date.now()}`;
+	// The import also proposes a mint to fund the submission. Left behind, it is one more
+	// proposed transaction at the top of the venue's list, and enough of those push the
+	// currency suite's "ancient proposal is still on the first page" row off page one.
+	const startedAt = sql(`select now();`);
+	try {
+		await page.goto(`/venue/${VENUE_PATH}/submissions/import`);
+		await page.waitForLoadState('networkidle');
+		// A one-letter misspelling of a real editor, as an export from another system might carry.
+		await page
+			.getByTestId('bulk-import-paste')
+			.fill(`title,externalid,handling editor\nPre-launch paper,${external},Scholar Lea`);
+		await page.getByTestId('bulk-import-parse').click();
+		await page
+			.locator('[data-testid^="role-column-"]')
+			.first()
+			.selectOption({ label: 'handling editor' });
+		// Naming people asks first whether they agreed; the same button confirms.
+		await page.getByTestId('bulk-import-submit').click();
+		await page.getByTestId('bulk-import-submit').click();
+		await page.waitForURL(`**/venue/${VENUE_PATH}/submissions`);
+
+		// The submissions page says so in one line, and links to the list.
+		const notice = page.getByTestId('unmatched-notice');
+		await expect(notice).toBeVisible();
+		await notice.getByRole('link').click();
+		await page.waitForURL(`**/venue/${VENUE_PATH}/submissions/unmatched`);
+		await page.waitForLoadState('networkidle');
+
+		const row = page.locator('tr', { hasText: 'Scholar Lea' });
+		await expect(row).toBeVisible();
+		// The misspelling is suggested on one line with the email, and a profile link
+		// that opens in a new tab, so checking who it is keeps the choice.
+		const choose = `[data-testid$="-scholar-choose-${SEED.scholars.editor.id}"]`;
+		const suggested = row.locator('li', { has: page.locator(choose) });
+		await expect(suggested).toContainText(SEED.scholars.editor.email);
+		await expect(suggested.getByRole('link', { name: SEED.scholars.editor.name })).toHaveAttribute(
+			'target',
+			'_blank'
+		);
+
+		// Searching by ORCID iD finds the same person, among a role's volunteers only.
+		await row.locator('[data-testid$="-scholar-search-open"]').click();
+		await row.locator('[data-testid$="-scholar-search"]').fill(SEED.scholars.editor.orcid);
+		await expect(row.locator('[data-testid*="-scholar-choose-"]')).toHaveCount(1);
+		await expect(row.locator(choose)).toHaveCount(1);
+		await row.locator(choose).click();
+		await expect(row.locator('[data-testid$="-scholar-chosen"]')).toContainText(
+			SEED.scholars.editor.name
+		);
+		await row.getByRole('button', { name: /Assign this scholar/ }).click();
+
+		await expect(
+			page
+				.getByTestId('feedback-success')
+				.filter({ hasText: 'Matched Scholar Lee to 1 assignment.' })
+		).toBeVisible({ timeout: 10_000 });
+		await expect(row).toHaveCount(0);
+		await expect
+			.poll(() =>
+				sql(
+					`select count(*) from public.assignments a join public.submissions s on s.id = a.submission where s.externalid = '${external}' and a.scholar = '${SEED.scholars.editor.id}' and a.approved;`
+				)
+			)
+			.toBe('1');
+	} finally {
+		sql(`delete from public.submissions where externalid = '${external}';`);
+		sql(
+			`delete from public.transactions where to_venue = '${SEED.venue}' and status = 'proposed' and created_at >= '${startedAt}';`
+		);
+	}
 	await logout(page);
 });

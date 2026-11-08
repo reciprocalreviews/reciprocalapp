@@ -1,20 +1,25 @@
 <script lang="ts">
-	import type { RoleRow, ScholarID, VolunteerRow } from '$data/types';
-	import Button from '$lib/components/Button.svelte';
-	import EditableText from '$lib/components/EditableText.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import { getDB } from '$lib/data/CRUD';
-	import { getLocaleContext } from '$routes/Contexts';
-	import { handle } from '$routes/feedback.svelte';
+	import type { RoleRow, ScholarID, VolunteerRow } from '#data/types.js';
+	import Button from '#lib/components/Button.svelte';
+	import EditableText from '#lib/components/EditableText.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let {
 		role,
 		scholar,
-		volunteer
+		volunteer,
+		active = undefined
 	}: {
 		role: RoleRow;
 		scholar: ScholarID;
 		volunteer: VolunteerRow | undefined;
+		/** The volunteer's active assignments in this role, as editors count them; omitted
+		 * where the count was not loaded. */
+		active?: number | undefined;
 	} = $props();
 
 	const db = getDB();
@@ -25,11 +30,8 @@
 	<Button
 		testid="volunteer-for-role"
 		strings={(l) => l.view.roles.button.volunteer}
-		action={() =>
-			handle(
-				db().createVolunteer(scholar, scholar, role.id, true, true, null),
-				"Thank you for volunteering! You'll receive your welcome tokens once the minter approves them."
-			)}>Volunteer …</Button
+		action={() => handle(db().createVolunteer(scholar, scholar, role.id, true, true, null))}
+		>Volunteer …</Button
 	>
 {/if}
 {#if volunteer !== undefined}
@@ -80,6 +82,36 @@
 				db().updateVolunteerPapers(volunteer.id, text === '' ? null : parseInt(text, 10))}
 			testid="volunteer-papers"
 		/>
+		<!-- What editors see when they choose reviewers, and the one thing RR cannot know on
+		     its own: invitations accepted in the venue's reviewing system but never recorded
+		     here. Only the volunteer can correct for those, so this asks them to. -->
+		{#if active !== undefined}
+			<div class="load" data-testid="volunteer-load">
+				{#if volunteer.papers === null}
+					<Paragraph
+						text={(l) => l.view.roles.paragraph.loadNoCap}
+						inputs={{ used: active.toString() }}
+					/>
+				{:else if active >= volunteer.papers}
+					<!-- The same warning, styled the same way, as the one editors see about this
+					     volunteer: being at the cap means the same thing on both sides. -->
+					<Feedback
+						warning
+						testid="volunteer-at-cap"
+						text={(l) => `${l.view.roles.paragraph.loadAtCap} ${l.view.roles.paragraph.loadNote}`}
+						inputs={{ used: active.toString(), cap: volunteer.papers.toString() }}
+					/>
+				{:else}
+					<Paragraph
+						text={(l) => l.view.roles.paragraph.load}
+						inputs={{ used: active.toString(), cap: volunteer.papers.toString() }}
+					/>
+				{/if}
+				{#if volunteer.papers === null || active < volunteer.papers}
+					<Paragraph text={(l) => l.view.roles.paragraph.loadNote} />
+				{/if}
+			</div>
+		{/if}
 	{:else}
 		<p>
 			{locale().view.roles.paragraph.stopped}

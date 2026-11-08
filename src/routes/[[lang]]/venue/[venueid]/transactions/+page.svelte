@@ -1,31 +1,36 @@
 <script lang="ts">
-	import { type CurrencyID } from '$data/types.js';
-	import Card from '$lib/components/Card.svelte';
-	import Cards from '$lib/components/Cards.svelte';
-	import Feedback from '$lib/components/Feedback.svelte';
-	import Gift from '$lib/components/Gift.svelte';
-	import { ErrorLabel, VenueLabel } from '$lib/components/Labels.js';
-	import Page from '$lib/components/Page.svelte';
-	import Paragraph from '$lib/components/Paragraph.svelte';
-	import Slider from '$lib/components/Slider.svelte';
-	import Tip from '$lib/components/Tip.svelte';
-	import Transactions from '$lib/components/Transactions.svelte';
-	import { getDB } from '$lib/data/CRUD.js';
-	import Text from '$lib/locales/Text.svelte';
-	import { getLocaleContext } from '$routes/Contexts.js';
-	import { handle } from '$routes/feedback.svelte';
+	import { type CurrencyID } from '#data/types.js';
+	import Card from '#lib/components/Card.svelte';
+	import Cards from '#lib/components/Cards.svelte';
+	import Feedback from '#lib/components/Feedback.svelte';
+	import Gift from '#lib/components/Gift.svelte';
+	import Page from '#lib/components/Page.svelte';
+	import Paragraph from '#lib/components/Paragraph.svelte';
+	import Slider from '#lib/components/Slider.svelte';
+	import Tip from '#lib/components/Tip.svelte';
+	import Transactions from '#lib/components/Transactions.svelte';
+	import { getDB } from '#lib/data/CRUD.js';
+	import { venueBarName } from '#lib/data/venueBarLinks.js';
+	import Text from '#lib/locales/Text.svelte';
+	import { getLocaleContext } from '#routes/Contexts.js';
+	import { handle } from '#routes/feedback.svelte.js';
 
 	let { data } = $props();
 	let { venue, transactions, count, venues, currencies, scholar, tokens } = $derived(data);
+
+	// The reserve holds one currency, so the gift form's balance map has one entry.
+	// `tokens` is now that reserve's count rather than its rows -- see the load.
+	let balances = $derived(venue && tokens !== null ? { [venue.currency]: tokens } : null);
 
 	let db = getDB();
 	let locale = getLocaleContext();
 </script>
 
-{#if venue && transactions && venues && currencies && scholar && tokens && count !== null}
-	<Page icon={VenueLabel} title={venue.title} breadcrumbs={[[`/venue/${venue.id}`, venue.title]]}>
-		{#snippet subtitle()}<Text path={(l) => l.page.venueTransactions.subtitle} />{/snippet}
-
+<!-- `tokens !== null`, not `tokens`. It is a reserve COUNT now, and 0 is falsy —
+	so a venue that had spent its whole reserve rendered the "could not be loaded"
+	error page instead of its transactions. -->
+{#if venue && transactions && venues && currencies && scholar && tokens !== null && count !== null}
+	<Page title={(l) => l.page.venueTransactions.title} context={venueBarName(venue)}>
 		<Paragraph
 			text={(l) => l.page.venueTransactions.paragraph.count}
 			inputs={{ count: count.toString() }}
@@ -42,7 +47,7 @@
 				>
 					{#if scholar}
 						<Gift
-							{tokens}
+							{balances}
 							purpose={locale().page.venue.card.gift.purpose}
 							success={locale().page.venue.card.gift.success}
 							{currencies}
@@ -104,8 +109,13 @@
 			testid="venue-transaction"
 		/>
 	</Page>
+{:else if scholar === null}
+	<!-- Transactions are readable only when signed in, so this is not a failure to load. -->
+	<Page title={(l) => l.page.venueTransactions.title}>
+		<Feedback text={(l) => l.page.venueTransactions.feedback.logIn}></Feedback>
+	</Page>
 {:else}
-	<Page icon={ErrorLabel} title={(l) => l.page.error.title} breadcrumbs={[]}>
+	<Page title={(l) => l.page.error.title}>
 		<Feedback error text={(l) => l.page.venueTransactions.feedback.transactionsNotLoaded}
 		></Feedback>
 	</Page>
