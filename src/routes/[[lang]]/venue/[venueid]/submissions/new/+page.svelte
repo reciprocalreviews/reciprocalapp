@@ -20,6 +20,15 @@
 	<Page title={(l) => l.page.newSubmission.title}>
 		<Feedback error text={(l) => l.page.newSubmission.feedback.notLoaded}></Feedback>
 	</Page>
+{:else if venue.inactive !== null}
+	<!-- An inactive venue takes no new submissions (#42). The landing page no longer links
+	     here while it is inactive, so this is for a saved link or a stale page. -->
+	<Page title={(l) => l.page.newSubmission.title} context={venueBarName(venue)}>
+		<Feedback
+			text={(l) => l.page.venue.feedback.closedToSubmissions}
+			testid="venue-closed-to-submissions"
+		/>
+	</Page>
 {:else}
 	<Page title={(l) => l.page.newSubmission.title} context={venueBarName(venue)}>
 		<NewSubmission {venue} {submissionTypes} {priorSubmissions} {initialManuscript} {scholarORCID}

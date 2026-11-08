@@ -178,7 +178,8 @@
 			"description": "These are journals and conferences using Reciprocal Reviews to track and incentivize peer review. Choose one to see it's policies or volunteer to review for it, or propose a new one.",
 			"header": {
 				"proposed": "Proposed venues",
-				"active": "Active venues"
+				"active": "Active venues",
+				"inactive": "Inactive venues"
 			},
 			"link": {
 				"propose": "Propose a new venue"
@@ -1312,7 +1313,9 @@
 				"rolesNotLoaded": "Couldn't load venue's roles.",
 				"compensationRequested": "Compensation request sent. It waits for whoever approves your role on the submission to approve and pay it, even if no one has assigned you to the submission here yet.",
 				"inactive": "This venue is **inactive**, so only its admins can see its details. Their message: *{message}*",
-				"inactivePrompt": "This venue is **inactive**, so only admins can see it. Everyone else sees the message you set in settings."
+				"inactivePrompt": "This venue is **inactive**, so only admins can see it. Everyone else sees the message you set in settings.",
+				"closedToSubmissions": "This venue is inactive, so it isn't taking submissions. Activate it in settings to open it.",
+				"inactiveParticipant": "This venue is **inactive**, so it isn't taking new submissions, volunteers, or bids. You can still finish your work on submissions under review. The admins' message: *{message}*"
 			},
 			"card": {
 				"setup": {
@@ -1336,6 +1339,9 @@
 				"inactive": {
 					"tip": "This venue is inactive and only admins can see it. Open settings to activate it.",
 					"label": "inactive"
+				},
+				"inactiveParticipant": {
+					"tip": "This venue is inactive. You can still finish your work on submissions under review."
 				}
 			},
 			"options": {
@@ -2454,6 +2460,8 @@
 		"VenueAddressTaken": "Another venue already uses that web address. Pick a different one.",
 		"VenueAddressInvalid": "That web address isn't allowed. Use 4 to 40 characters: lowercase letters, numbers, and single hyphens between them, starting with a letter.",
 		"EditVenueInactive": "Unable to edit the inactive message",
+		"VenueNeedsWebAddress": "This venue needs a web address before it can be activated.",
+		"VenueInactive": "This venue is inactive, so it isn't taking new submissions, volunteers, or bids.",
 		"EditVenueAnonymousAssignments": "Unable to edit anonymous assignments setting",
 		"EditVenueVetThanks": "Unable to update the thank-you vetting setting",
 		"EditVenueWelcomeAmount": "Unable to edit the welcome amount",

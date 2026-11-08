@@ -1148,6 +1148,12 @@ begin
 
 	select * into _role from public.roles where id = new.role;
 
+	-- An inactive venue takes no new bids (#42). Approvers' own assignments returned above:
+	-- they staff work already in flight.
+	if public.isVenueInactive(_role.venueid) then
+		raise exception 'This venue is inactive' using errcode = 'RR028';
+	end if;
+
 	if not coalesce(_role.biddable, false) then
 		raise exception 'This role does not take bids' using errcode = 'RR026';
 	end if;

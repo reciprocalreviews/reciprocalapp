@@ -3,7 +3,7 @@ import { venuePath } from '#lib/data/venuePath.js';
 import type { LayoutLoad } from './$types.js';
 
 export const load: LayoutLoad = async ({ parent, params, url }) => {
-	const { db } = await parent();
+	const { db, scholar } = await parent();
 
 	// The segment is the venue's web address once it has one, and its id until then; both
 	// resolve, so mail already sent and bookmarks already saved still land.
@@ -19,7 +19,18 @@ export const load: LayoutLoad = async ({ parent, params, url }) => {
 			url.pathname.replace(`/venue/${params.venueid}`, `/venue/${venuePath(venue)}`) + url.search
 		);
 
+	// An inactive venue admits its admins, and anyone with work still under way there, so a
+	// closed venue's work can finish (#42). Asked only when it decides something.
+	const participant =
+		venue !== null &&
+		venue.inactive !== null &&
+		scholar !== null &&
+		!venue.admins.includes(scholar.id)
+			? ((await db.isVenueParticipant(venue.id, scholar.id)).data ?? false)
+			: false;
+
 	return {
-		venue
+		venue,
+		participant
 	};
 };

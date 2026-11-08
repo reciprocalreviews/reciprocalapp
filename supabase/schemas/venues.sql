@@ -121,6 +121,20 @@ grant all on FUNCTION public.isAdmin (_venueid uuid) to authenticated;
 
 grant all on FUNCTION public.isAdmin (_venueid uuid) to service_role;
 
+-- Whether a venue is inactive: being configured, or closed. An inactive venue takes no new
+-- work -- no submissions, no volunteers signing themselves up, no bids, no calls for bids, no
+-- reopened bidding -- while its admins configure it, staff its roles, and settle what is
+-- already in flight (#42). The triggers that enforce that call this, so the rule has one
+-- definition. Invoker, not definer: venues are world-readable, so it needs no privilege of
+-- its own, and it stays out of the definer grant sweep.
+create or replace function public.isVenueInactive (_venueid uuid) RETURNS boolean LANGUAGE sql SECURITY INVOKER STABLE
+set
+	"search_path" to '' as $$
+	select coalesce((select v.inactive is not null from public.venues v where v.id = _venueid), false);
+$$;
+
+alter function public.isVenueInactive (_venueid uuid) OWNER to postgres;
+
 -- Only the TRANSITION to active is guarded, not the state. A blanket "active implies an
 -- address" constraint would be true of the data we want but false of the data we have:
 -- every venue already live has no address, and such a rule would refuse every subsequent

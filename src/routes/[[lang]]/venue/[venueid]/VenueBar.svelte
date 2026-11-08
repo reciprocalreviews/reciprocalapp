@@ -26,8 +26,9 @@
 		venue: VenueBarVenue;
 		/** The signed-in scholar, or null when anonymous. Decides whether Settings shows. */
 		scholarID: string | null;
-		/** Whether the venue is inactive. Only admins get this far into an inactive venue,
-		 * but the chip checks anyway, since it links to a page only they can open. */
+		/** Whether the venue is inactive. Only its admins and scholars with work still under
+		 * way get this far into one. The chip links admins to settings, where they can
+		 * activate it, and everyone else to the landing page, which says what is still open. */
 		inactive?: boolean;
 	} = $props();
 
@@ -42,7 +43,7 @@
 		href: home,
 		links: venueBarLinks(venue, scholarID, locale())
 	});
-	const showInactive = $derived(inactive && scholarID !== null && venue.admins.includes(scholarID));
+	const isAdmin = $derived(scholarID !== null && venue.admins.includes(scholarID));
 </script>
 
 <ContextBar
@@ -50,11 +51,13 @@
 	menu={(l) => l.page.venue.bar.menu}
 	testid="venue-bar"
 	menuTestid="venue-menu"
-	chip={showInactive
+	chip={inactive
 		? {
 				label: locale().page.venue.bar.inactive.label,
-				tip: locale().page.venue.bar.inactive.tip,
-				href: `${home}/settings`,
+				tip: isAdmin
+					? locale().page.venue.bar.inactive.tip
+					: locale().page.venue.bar.inactiveParticipant.tip,
+				href: isAdmin ? `${home}/settings` : home,
 				testid: 'venue-bar-inactive'
 			}
 		: undefined}

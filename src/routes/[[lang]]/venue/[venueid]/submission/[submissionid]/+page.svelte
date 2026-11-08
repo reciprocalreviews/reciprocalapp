@@ -665,8 +665,10 @@
 		     the submission at all. -->
 		{#snippet actions()}
 			{#if canAnswerBids && !done}
+				<!-- An inactive venue may close bidding but not reopen it (#42). -->
 				<Checkbox
 					on={!submission.bidding_closed}
+					active={venue?.inactive === null || !submission.bidding_closed}
 					change={(on) => db().updateSubmissionBiddingClosed(submission.id, !on)}
 					label={(l) => l.page.submission.checkbox.openForBidding}
 					testid="submission-open-for-bidding"

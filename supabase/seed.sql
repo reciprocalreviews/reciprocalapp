@@ -453,6 +453,12 @@ values
 		'Epistemology',
 		'One token is one referee report''s worth of labor: the reading, the checking, and the writing that a single careful review takes. Authors spend them to have work reviewed; referees earn them by reviewing. Only the minters this community trusts to count can make more.',
 		'{"7ff8621a-cbe0-4789-bbee-f008d38c4ac7"}'
+	),
+	(
+		'5e8a0c2e-bd41-11f1-9b6e-3f0c2a7d4e51',
+		'Open Review Credit',
+		'The currency of the Symposium on Open Review, kept for its history now that the symposium has closed.',
+		'{"7ff8621a-cbe0-4789-bbee-f008d38c4ac7"}'
 	);
 
 update public.scholars
@@ -554,11 +560,17 @@ set
 where
 	id='7ff8621a-cbe0-4789-bbee-f008d38c4acb';
 
--- The venue below is the only one the seed creates, and its description reads like
--- a real aims-and-scope rather than a disclaimer. That is deliberate: it is what
--- makes the venue pages worth looking at when judging the interface. The fact that
--- none of this is real is carried by the cast of characters, and by the banner at
--- the top of this file -- NOT by the copy, which has to stand in for a real venue's.
+-- The first venue below is the one everything else in the seed happens at, and its
+-- description reads like a real aims-and-scope rather than a disclaimer. That is
+-- deliberate: it is what makes the venue pages worth looking at when judging the
+-- interface. The second is a closed one, a symposium that has finished, so the
+-- inactive state has something to show: its own row on /venues, and the page a
+-- visitor reaches instead of the venue. It has no roles or submissions and its own
+-- currency, so it touches nothing the first venue's flows depend on; the editor
+-- administers it, so logging in as them shows the admin's side of a closed venue.
+-- The fact that none of this is real is carried by the cast of characters, and by
+-- the banner at the top of this file -- NOT by the copy, which has to stand in for a
+-- real venue's.
 insert into
 	public.venues (
 		"id",
@@ -584,6 +596,18 @@ values
 		'{"d181d165-8b6a-4d79-ad28-a9aece21d813"}',
 		null,
 		'knowledge'
+	),
+	(
+		'5e8a0c2f-bd41-11f1-9b6e-3f0c2a7d4e51',
+		'Symposium on Open Review 2025',
+		'SOR 2025',
+		'A one-off symposium on publishing referee reports alongside the work they review.',
+		'https://sor.science.org',
+		'5e8a0c2e-bd41-11f1-9b6e-3f0c2a7d4e51',
+		'0',
+		'{"d181d165-8b6a-4d79-ad28-a9aece21d813"}',
+		'SOR 2025 has concluded. Thank you to everyone who reviewed.',
+		'sor-2025'
 	);
 
 insert into

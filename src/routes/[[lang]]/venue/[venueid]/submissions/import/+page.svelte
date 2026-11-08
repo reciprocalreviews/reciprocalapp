@@ -15,7 +15,16 @@
 	let mayImport = $derived(data.mayImport);
 </script>
 
-{#if venue === null || submissionTypes === null || submissionTypes.length === 0}
+<!-- An inactive venue takes no imported submissions either (#42). First, because it is the
+     reason that matters: a venue being configured may have no submission types yet. -->
+{#if venue !== null && venue.inactive !== null}
+	<Page title={(l) => l.page.bulkImport.title} context={venueBarName(venue)}>
+		<Feedback
+			text={(l) => l.page.venue.feedback.closedToSubmissions}
+			testid="venue-closed-to-submissions"
+		/>
+	</Page>
+{:else if venue === null || submissionTypes === null || submissionTypes.length === 0}
 	<Page title={(l) => l.page.bulkImport.title}>
 		<Feedback error text={(l) => l.page.bulkImport.feedback.notLoaded} />
 	</Page>

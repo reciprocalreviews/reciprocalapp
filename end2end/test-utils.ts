@@ -70,6 +70,14 @@ export const SEED = {
 	currency: 'c60c9fca-ad37-11f0-a9a1-57b72e1e85ac',
 	/** The currency's name, as it renders. */
 	currencyName: 'Epistemology',
+	/** The seed's one closed venue: inactive, with no roles or submissions. */
+	inactiveVenue: {
+		id: '5e8a0c2f-bd41-11f1-9b6e-3f0c2a7d4e51',
+		path: 'sor-2025',
+		title: 'Symposium on Open Review 2025',
+		/** Its admins' inactive message, as the venue list renders it. */
+		message: 'SOR 2025 has concluded. Thank you to everyone who reviewed.'
+	},
 	/** Every seeded submission's manuscript ID begins with this, and nothing else on a
 	 * submissions page does — which is how a spec asserts that IDs are being withheld. */
 	submissionIdPrefix: 'TOK-2025-',
@@ -186,6 +194,14 @@ export const SEED = {
 			id: '7ff8621a-cbe0-4789-bbee-f008d38c4ac8',
 			orcid: '0000-0001-2345-6790',
 			name: 'Reese Urcher'
+		},
+		/** A volunteer with no work under way at the seed venue: no unfinished assignment
+		 * and no submission under review. So when the venue is inactive, this is someone it
+		 * keeps out, where everyone above has work there and is let in to finish it (#42). */
+		outsider: {
+			email: 's.tation@uni.edu',
+			id: 'f0000000-ad50-11f0-9000-000000000012',
+			name: 'Sy Tation'
 		},
 		r3: {
 			email: 'r3@uni.edu',

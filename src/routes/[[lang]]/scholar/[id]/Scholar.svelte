@@ -365,7 +365,7 @@
 						purpose={locale().page.scholar.card.gift.purpose}
 						success={locale().page.scholar.card.gift.success}
 						{currencies}
-						venues={venues ?? []}
+						venues={(venues ?? []).filter((venue) => venue.inactive === null)}
 						transfer={(
 							currency: CurrencyID,
 							kind: 'venue' | 'scholar',

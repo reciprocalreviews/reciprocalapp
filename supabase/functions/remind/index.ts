@@ -104,7 +104,7 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 	const { data: venues, error: venuesError } = await supabase
 		.from('venues')
 		.select(
-			'id, title, slug, admins, currency, transaction_reminder_frequency_days, transaction_reminder_time, currencies!currency(minters)'
+			'id, title, slug, admins, inactive, currency, transaction_reminder_frequency_days, transaction_reminder_time, currencies!currency(minters)'
 		)
 		.gt('transaction_reminder_frequency_days', 0);
 
@@ -357,6 +357,13 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 			.eq('status', 'reviewing')
 			.in('venue', dueVenueIds);
 
+		// An inactive venue (#42) admits only its admins and the people with work still under
+		// way there. Family 4 goes to a submission's own editors, who are among them. Family 5
+		// asks a venue's editors to claim a submission nobody has taken on, and an editor with
+		// nothing assigned could not get in to do it, so for an inactive venue it goes to the
+		// admins alone, who can assign one.
+		const inactiveVenues = new Set(dueVenues.filter((v) => v.inactive !== null).map((v) => v.id));
+
 		if (reviewing === null) {
 			console.error('Error fetching reviewing submissions', reviewingError);
 		} else {
@@ -416,7 +423,8 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 				for (const venue of dueVenues) editorsByVenue.set(venue.id, new Set(venue.admins ?? []));
 				for (const volunteer of editorVolunteers) {
 					const venueid = venueOfRole.get(volunteer.roleid);
-					if (venueid !== undefined) editorsByVenue.get(venueid)?.add(volunteer.scholarid);
+					if (venueid !== undefined && !inactiveVenues.has(venueid))
+						editorsByVenue.get(venueid)?.add(volunteer.scholarid);
 				}
 
 				// Reuses the SubmissionsNeedEditors template rather than adding a reminder of

@@ -273,6 +273,10 @@ export type LocaleText = {
 			header: {
 				proposed: string;
 				active: string;
+				/** Above the venues whose admins have switched them off, listed last with each
+				 * one's inactive message. Covers both a venue not yet launched and one that has
+				 * closed, since the flag and its message serve both. */
+				inactive: string;
 			};
 			link: {
 				propose: string;
@@ -1102,6 +1106,9 @@ export type LocaleText = {
 				/** A chip beside the venue's name, for admins only, while the venue is inactive.
 				 * It is how the state stays visible on every page without an alert on each. */
 				inactive: ButtonText;
+				/** The same chip for someone who is not an admin but still has work under way
+				 * at the inactive venue. Only the tip is used; the label is `inactive`'s. */
+				inactiveParticipant: { tip: string };
 			};
 			header: {
 				submissionTypes: string;
@@ -1148,6 +1155,12 @@ export type LocaleText = {
 				/** The alert admins see on the landing page and settings while the venue is
 				 * inactive. */
 				inactivePrompt: string;
+				/** In place of the new-submission and import forms while the venue is inactive,
+				 * for someone who reached them by a saved link. */
+				closedToSubmissions: string;
+				/** On the landing page of an inactive venue, for someone who is not an admin but
+				 * still has work under way there. Takes {message}, the admins' message. */
+				inactiveParticipant: string;
 			};
 			field: {
 				name: TextFieldText & { invalid: string };
@@ -2284,6 +2297,13 @@ export type LocaleText = {
 		 * same rule, so seeing this means something reached the write unvalidated. */
 		VenueAddressInvalid: string;
 		EditVenueInactive: string;
+		/** Activating a venue with no web address (RR016). The settings switch is disabled
+		 * until one is set, so seeing this means the page was stale. */
+		VenueNeedsWebAddress: string;
+		/** New work at an inactive venue (RR028): a submission, a self-signup, a resumed role,
+		 * a bid, a call for bids, or reopened bidding. Raised by the database whichever write
+		 * tried it, so it names the venue's state rather than the action. */
+		VenueInactive: string;
 		EditVenueAnonymousAssignments: string;
 		EditVenueVetThanks: string;
 		EditVenueWelcomeAmount: string;

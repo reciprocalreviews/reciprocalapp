@@ -51,9 +51,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 	// Get all the compensation
 	const { data: compensation } = await db.getCompensationByTypes(types?.map((s) => s.id) ?? []);
 
-	// Get all the venues one can gift to.
-	const { data: venues } = await db.getVenues();
-
 	// The viewer's own active assignments, so each role they volunteer for can show them
 	// the count editors see beside their cap.
 	const { data: myAssignments } =
@@ -75,7 +72,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 		tokens: tokens,
 		transactionCount,
 		submissionCount,
-		venues,
 		types,
 		compensation,
 		preferenceLevels,

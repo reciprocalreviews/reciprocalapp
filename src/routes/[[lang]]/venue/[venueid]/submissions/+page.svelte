@@ -325,15 +325,18 @@
 {#if venue && conflicts}
 	<Page title={(l) => l.page.submissions.title} context={venueBarName(venue)}>
 		{#snippet actions()}
-			<Action
-				to="/venue/{venuePath(venue)}/submissions/new"
-				label={(l) =>
-					showPayment
-						? l.page.submissions.action.newSubmission
-						: l.page.submissions.action.newSubmissionFree}
-				testid="submissions-new"
-			/>
-			{#if isAdmin || isEditor}
+			<!-- An inactive venue takes no new or imported submissions (#42). -->
+			{#if venue.inactive === null}
+				<Action
+					to="/venue/{venuePath(venue)}/submissions/new"
+					label={(l) =>
+						showPayment
+							? l.page.submissions.action.newSubmission
+							: l.page.submissions.action.newSubmissionFree}
+					testid="submissions-new"
+				/>
+			{/if}
+			{#if (isAdmin || isEditor) && venue.inactive === null}
 				<Action
 					to="/venue/{venuePath(venue)}/submissions/import"
 					label={(l) => l.page.submissions.action.import}
@@ -366,7 +369,7 @@
 		<!-- One prompt for bidding, however many roles take bids, with each limited role's
 		     budget beneath it. One per role said the same sentence over again for an admin
 		     who can see every role. -->
-		{#if uid && !done}
+		{#if uid && !done && venue.inactive === null}
 			{@const biddable = visibleRoles.filter((r) => r.biddable)}
 			{#if biddable.length > 0}
 				<Tip>
@@ -782,7 +785,9 @@
 											     (pending bids don't count toward closure), when the submission is
 											     done, or when its editor has closed bidding on it. -->
 											{#if role.biddable && !scholarAlreadyAssigned}
+												<!-- An inactive venue takes no bids (#42); it reads as closed. -->
 												{@const biddingOpen =
+													venue.inactive === null &&
 													!submission.bidding_closed &&
 													submission.status !== 'done' &&
 													approvedAssignments.length < role.desired_assignments}

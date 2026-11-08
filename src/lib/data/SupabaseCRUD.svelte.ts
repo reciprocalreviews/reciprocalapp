@@ -202,6 +202,17 @@ export function rpcErrorKey(
 	return (code !== undefined && map[code]) || fallback;
 }
 
+/** Codes that mean one thing wherever they are raised, because each is a rule about a
+ * venue's state enforced by a trigger rather than by any one RPC. Mapped once, in
+ * `SupabaseCRUD.error`, so every write that can hit the rule reports it, including writes
+ * added later. */
+const RULE_ERRORS: Record<string, keyof Locale['error']> = {
+	/** An inactive venue takes no new work (#42). */
+	RR028: 'VenueInactive',
+	/** A venue needs a web address before it can be activated. */
+	RR016: 'VenueNeedsWebAddress'
+};
+
 /** Like rpcErrorKey, but builds the whole failure. When the code maps to a localized
  * message, that message is the whole story, so the raw database error is left off the
  * banner rather than repeated beneath it in monospace; an unmapped failure keeps it,
@@ -414,8 +425,15 @@ export default class SupabaseCRUD extends CRUD {
 	// Internals — shared error/read/write helpers
 	// ─────────────────────────────────────────────────────────────────────────
 
-	/** A helper function for creating a result with an error ID. */
+	/** A helper function for creating a result with an error ID. A failure carrying one of
+	 * the `RULE_ERRORS` codes is reported as that rule instead, whatever the call site
+	 * expected, and without the raw error beneath it, as `rpcError` does for a mapped code. */
 	error(id: keyof Locale['error'], error?: AuthError | PostgrestError | null, details?: string) {
+		const rule = error && 'code' in error && error.code ? RULE_ERRORS[error.code] : undefined;
+		if (rule !== undefined) {
+			console.error(this.locale.error[rule], error);
+			return { error: { message: this.locale.error[rule], details: undefined } };
+		}
 		const message = this.locale.error[id] + (details ? `: ${details}` : '');
 		console.error(message, error);
 		return { error: { message, details: error ?? undefined } };
@@ -1269,6 +1287,39 @@ export default class SupabaseCRUD extends CRUD {
 	 * rather than the rows: the dashboard and the gift form only ever wanted the
 	 * number, and a reserve large enough to serve a community is far past the
 	 * `max_rows` cap that silently truncated the array they used to count. */
+	async isVenueParticipant(
+		venue: VenueID,
+		scholar: ScholarID
+	): Promise<ReadResult<boolean | null>> {
+		// Two counts rather than rows: only whether there is any matters. `submissions!inner`
+		// so the status filter limits the assignments, not just the embedded submission.
+		const [assigned, authored] = await Promise.all([
+			this.count(
+				'LoadAssignment',
+				this.client
+					.from('assignments')
+					.select('id, submissions!inner(status)', { count: 'exact', head: true })
+					.eq('venue', venue)
+					.eq('scholar', scholar)
+					.eq('approved', true)
+					.eq('completed', false)
+					.eq('submissions.status', 'reviewing')
+			),
+			this.count(
+				'LoadSubmission',
+				this.client
+					.from('submissions')
+					.select('id', { count: 'exact', head: true })
+					.eq('venue', venue)
+					.eq('status', 'reviewing')
+					.contains('authors', [scholar])
+			)
+		]);
+		if (assigned.error) return { data: null, error: assigned.error };
+		if (authored.error) return { data: null, error: authored.error };
+		return { data: (assigned.data ?? 0) + (authored.data ?? 0) > 0 };
+	}
+
 	async getVenueTokenCount(
 		venue: VenueID,
 		currency: CurrencyID
@@ -2409,8 +2460,7 @@ export default class SupabaseCRUD extends CRUD {
 		// No 23505 case: the function skips a manuscript already in this venue rather
 		// than refusing the batch, so a stale list of existing IDs -- the page left open
 		// while somebody else imported -- costs those rows and nothing else.
-		if (error)
-			return { error: { message: this.locale.error.BulkImportSubmissions, details: error } };
+		if (error) return this.error('BulkImportSubmissions', error);
 
 		const result = data as {
 			submission_ids: SubmissionID[];

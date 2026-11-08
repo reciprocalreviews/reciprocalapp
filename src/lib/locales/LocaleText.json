@@ -895,6 +895,14 @@
               "description": "The web address someone asked for belongs to another venue. Raised by the unique index, which is what actually decides a contested address — the field's own availability check can only say the address was free a moment ago.",
               "type": "string"
             },
+            "VenueInactive": {
+              "description": "New work at an inactive venue (RR028): a submission, a self-signup, a resumed role, a bid, a call for bids, or reopened bidding. Raised by the database whichever write tried it, so it names the venue's state rather than the action.",
+              "type": "string"
+            },
+            "VenueNeedsWebAddress": {
+              "description": "Activating a venue with no web address (RR016). The settings switch is disabled until one is set, so seeing this means the page was stale.",
+              "type": "string"
+            },
             "VerifyEmail": {
               "type": "string"
             }
@@ -940,6 +948,8 @@
             "VenueAddressTaken",
             "VenueAddressInvalid",
             "EditVenueInactive",
+            "VenueNeedsWebAddress",
+            "VenueInactive",
             "EditVenueAnonymousAssignments",
             "EditVenueVetThanks",
             "EditVenueWelcomeAmount",
@@ -6100,6 +6110,19 @@
                       "$ref": "#/definitions/ButtonText",
                       "description": "A chip beside the venue's name, for admins only, while the venue is inactive. It is how the state stays visible on every page without an alert on each."
                     },
+                    "inactiveParticipant": {
+                      "additionalProperties": false,
+                      "description": "The same chip for someone who is not an admin but still has work under way at the inactive venue. Only the tip is used; the label is `inactive`'s.",
+                      "properties": {
+                        "tip": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "tip"
+                      ],
+                      "type": "object"
+                    },
                     "menu": {
                       "$ref": "#/definitions/ButtonText",
                       "description": "Names the control holding the links that do not fit on a narrow screen."
@@ -6112,7 +6135,8 @@
                   "required": [
                     "menu",
                     "website",
-                    "inactive"
+                    "inactive",
+                    "inactiveParticipant"
                   ],
                   "type": "object"
                 },
@@ -6182,11 +6206,19 @@
                       "description": "Shown to everyone who is neither an admin of this venue nor a minter of its currency, when the two sets overlap. The platform permits the arrangement and discloses it, so the community rather than the database is the check on it. Takes {currency}.",
                       "type": "string"
                     },
+                    "closedToSubmissions": {
+                      "description": "In place of the new-submission and import forms while the venue is inactive, for someone who reached them by a saved link.",
+                      "type": "string"
+                    },
                     "compensationRequested": {
                       "description": "Confirms a compensation request. The fallback for when nobody could be emailed: `handle()` suppresses it whenever the request named who was told, since that is the same news and names the person.",
                       "type": "string"
                     },
                     "inactive": {
+                      "type": "string"
+                    },
+                    "inactiveParticipant": {
+                      "description": "On the landing page of an inactive venue, for someone who is not an admin but still has work under way there. Takes {message}, the admins' message.",
                       "type": "string"
                     },
                     "inactivePrompt": {
@@ -6206,7 +6238,9 @@
                     "rolesNotLoaded",
                     "compensationRequested",
                     "inactive",
-                    "inactivePrompt"
+                    "inactivePrompt",
+                    "closedToSubmissions",
+                    "inactiveParticipant"
                   ],
                   "type": "object"
                 },
@@ -6690,13 +6724,18 @@
                     "active": {
                       "type": "string"
                     },
+                    "inactive": {
+                      "description": "Above the venues whose admins have switched them off, listed last with each one's inactive message. Covers both a venue not yet launched and one that has closed, since the flag and its message serve both.",
+                      "type": "string"
+                    },
                     "proposed": {
                       "type": "string"
                     }
                   },
                   "required": [
                     "proposed",
-                    "active"
+                    "active",
+                    "inactive"
                   ],
                   "type": "object"
                 },

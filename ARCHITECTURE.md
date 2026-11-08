@@ -675,6 +675,15 @@ The Monday digest's `open_seats` also leaves closed submissions out (see Notific
 - **Races.** It takes `pg_advisory_xact_lock` on the scholar and role before counting, so two bids placed at once cannot both take the last slot.
 - **Tests:** [supabase/tests/rls/bid_budget_rls.sql](supabase/tests/rls/bid_budget_rls.sql).
 
+### One rule: an inactive venue takes no new work
+
+[20261108010000](supabase/migrations/20261108010000_inactive_venue_rules.sql) makes `venues.inactive` a rule in the database rather than only a page the interface draws (#42). `isVenueInactive(_venueid)` is the one definition; it is `security invoker`, since venues are world-readable, so it stays out of the definer grant sweep. Each refusal raises **RR028**.
+
+- **Where it is enforced.** A BEFORE trigger on `submissions` refuses any insert, and an update that reopens bidding (`bidding_closed` true → false), because three paths insert submissions: the client, `create_submission` and `bulk_import_submissions`. A refused `create_submission` rolls back the charges it wrote first. A BEFORE trigger on `volunteers` refuses an insert, or a stopped volunteer turning themselves back on, unless the caller is role staff (`can_staff_role`) or a steward. These are triggers rather than policy clauses because `create_volunteer` and `accept_role_invite` are SECURITY DEFINER and write past RLS. `enforce_bid_rules` refuses a non-approver's bid, and `queue_call_for_bids` refuses after its authorization check.
+- **What stays open.** Configuration, staffing (invitations, staff adding someone, an invitee accepting), approvers' own assignments, and everything that settles work in flight: approving charges, completing assignments, closing submissions and bidding, thanks. Stewards count as staff because `approve_venue_proposal` seats the proposal's editors in a venue that starts inactive.
+- **Who gets in.** The venue layout's closed page is for everyone but the venue's admins and its participants: anyone with an approved, uncompleted assignment on a submission still under review, or who wrote one. The layout load asks `isVenueParticipant` only when the answer decides something (an inactive venue, a signed-in non-admin), and once that work is done the next reload shows the closed page.
+- **Reporting.** `SupabaseCRUD.error` maps RR028 and RR016 to their own messages whatever the call site expected, through `RULE_ERRORS`, so a write added later that hits either rule reports it by name. The `remind` job still sends SubmissionsReady for an inactive venue, since it goes to a submission's own editors, who can get in; SubmissionsNeedEditors goes to the admins alone, since an editor with nothing assigned could not get in to claim one.
+
 ### Assignment loads
 
 [20261019000000](supabase/migrations/20261019000000_assignment_loads.sql) adds `assignment_loads(_venue, _scholars)`, the counts behind every `used / cap` indicator ([LoadIndicator.svelte](src/lib/components/LoadIndicator.svelte), indexed by [load.ts](src/lib/data/load.ts)).
@@ -838,9 +847,10 @@ is held by `areaDrawsBar`, which keeps the root layout's site bar off every rout
 area layout draws one, and by the venue layout drawing exactly one bar in each of its branches: VenueBar where
 the page renders, a bar naming the closed venue and offering only its website for anyone
 an inactive venue keeps out, and the venue list's bar when no venue matched. That layout renders nothing
-else above its children: an inactive venue is shown to its admins by an `inactive` chip
-that VenueBar draws from its `inactive` prop, and by an `Alert` that the landing page and
-settings render in their own alerts zone. `measure`'s `destroy()`
+else above its children: an inactive venue is shown to everyone it lets in by an `inactive`
+chip that VenueBar draws from its `inactive` prop, linking admins to settings and its other
+participants to the landing page, and by an `Alert` that the landing page (and, for admins,
+settings) render in their own alerts zone. `measure`'s `destroy()`
 removes the property, so moving between areas hands ownership back cleanly.
 
 The title and the old breadcrumbs were both once mutable contexts that `Page` wrote from an `$effect`, and that is worth

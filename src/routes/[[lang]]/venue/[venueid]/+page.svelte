@@ -98,14 +98,19 @@
 		{/snippet}
 
 		{#snippet actions()}
-			<!-- Starting a submission is the central task here, so it comes first. -->
-			<Action
-				to="/venue/{venuePath(venue)}/submissions/new"
-				label={(l) =>
-					showPayment ? l.page.venue.action.newSubmission : l.page.venue.action.newSubmissionFree}
-				testid="venue-new-submission"
-			/>
-			<Action to="#roles" label={(l) => l.page.venue.action.volunteer} />
+			<!-- An inactive venue takes no new submissions or volunteers (#42), and only its
+			     admins get this far, so both are left out rather than offered to fail. The
+			     alert below says why. -->
+			{#if venue.inactive === null}
+				<!-- Starting a submission is the central task here, so it comes first. -->
+				<Action
+					to="/venue/{venuePath(venue)}/submissions/new"
+					label={(l) =>
+						showPayment ? l.page.venue.action.newSubmission : l.page.venue.action.newSubmissionFree}
+					testid="venue-new-submission"
+				/>
+				<Action to="#roles" label={(l) => l.page.venue.action.volunteer} />
+			{/if}
 		{/snippet}
 
 		{#snippet alerts()}
@@ -123,6 +128,16 @@
 						/>
 					{/snippet}
 				</Alert>
+			{/if}
+			<!-- Anyone else here while the venue is inactive has work still under way (#42):
+			     say what is still open to them, and pass on the admins' word. -->
+			{#if !isAdmin && venue.inactive !== null}
+				<Alert
+					tone="attention"
+					text={(l) => l.page.venue.feedback.inactiveParticipant}
+					inputs={{ message: venue.inactive }}
+					testid="venue-inactive-participant"
+				/>
 			{/if}
 			<!-- Name the admin/minter overlap to everyone who isn't one of them. -->
 			{#if showPayment && adminMints && !isAdmin && !isMinter && currency}

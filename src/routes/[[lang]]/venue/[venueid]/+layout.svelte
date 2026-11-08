@@ -53,7 +53,7 @@
 	<Page title={(l) => l.page.venue.unknownTitle}>
 		<Paragraph text={(l) => l.page.venue.paragraph.notFound} />
 	</Page>
-{:else if venue.inactive !== null && !venue.admins.includes(data.scholar?.id ?? '')}
+{:else if venue.inactive !== null && !venue.admins.includes(data.scholar?.id ?? '') && !data.participant}
 	<!-- A dead end, so the bar names the venue and offers only its website. The details row
 	     stays — on a page that only says "you cannot come in", the website and the admins to
 	     ask are the whole of what it can usefully offer. -->
@@ -82,10 +82,12 @@
 		/>
 	</Page>
 {:else}
-	<!-- An admin of an inactive venue is told so by a chip in the bar on every page, and by
-	     an alert only where it can be acted on — the landing page and settings. An alert
-	     here, above every page's title, said the same thing on every click inside the venue
-	     and sat outside the page's own anatomy. -->
+	<!-- Past the closed page: everyone when the venue is active, and when it is inactive, its
+	     admins and anyone with work still under way there, so that work can finish (#42).
+	     Both are told so by a chip in the bar on every page, and by an alert only on the
+	     landing page (and, for admins, settings). An alert here, above every page's title,
+	     said the same thing on every click inside the venue and sat outside the page's own
+	     anatomy. -->
 	<VenueBar {venue} scholarID={data.scholar?.id ?? null} inactive={venue.inactive !== null} />
 	{@render children()}
 {/if}

@@ -7,6 +7,8 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 ### Changed
 
 - **The submissions list now shows active submissions by default, with a switch to see done ones instead.** This replaces the venue setting that kept done submissions in the list for a number of days after they finished.
+- **The venues page now lists inactive venues in their own section, each with its admins' message, instead of among the active ones.** Thanks to Drew Pickett (#42).
+- **An inactive venue no longer takes new submissions, volunteers, bids, or calls for bids, and its bidding can't be reopened.** Its admins can still configure it and invite people to roles, and anyone with work still under way there can get in to finish it (#42).
 
 ### Fixed
 
