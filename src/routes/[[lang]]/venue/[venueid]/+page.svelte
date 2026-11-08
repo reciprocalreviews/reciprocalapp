@@ -98,14 +98,19 @@
 		{/snippet}
 
 		{#snippet actions()}
-			<!-- Starting a submission is the central task here, so it comes first. -->
-			<Action
-				to="/venue/{venuePath(venue)}/submissions/new"
-				label={(l) =>
-					showPayment ? l.page.venue.action.newSubmission : l.page.venue.action.newSubmissionFree}
-				testid="venue-new-submission"
-			/>
-			<Action to="#roles" label={(l) => l.page.venue.action.volunteer} />
+			<!-- An inactive venue takes no new submissions or volunteers (#42), and only its
+			     admins get this far, so both are left out rather than offered to fail. The
+			     alert below says why. -->
+			{#if venue.inactive === null}
+				<!-- Starting a submission is the central task here, so it comes first. -->
+				<Action
+					to="/venue/{venuePath(venue)}/submissions/new"
+					label={(l) =>
+						showPayment ? l.page.venue.action.newSubmission : l.page.venue.action.newSubmissionFree}
+					testid="venue-new-submission"
+				/>
+				<Action to="#roles" label={(l) => l.page.venue.action.volunteer} />
+			{/if}
 		{/snippet}
 
 		{#snippet alerts()}

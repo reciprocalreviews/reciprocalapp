@@ -416,6 +416,35 @@ with
 -- Unvolunteering toggles `active` instead, which is why that column exists.
 create policy "volunteers cannot be deleted" on public.volunteers for DELETE to authenticated using (false);
 
+-- An inactive venue takes no new volunteers who sign themselves up, and nobody resumes a role
+-- they stopped (#42). Its staff can still put people in roles, and an invitee can still
+-- accept, so a venue being configured can recruit its editors before it opens. Stewards count
+-- as staff here: approve_venue_proposal seats the proposal's editors in a venue that starts
+-- inactive. Accepting an invitation moves `accepted` off 'invited', which the resume test
+-- below does not match.
+--
+-- A trigger rather than a policy clause, because create_volunteer and accept_role_invite are
+-- SECURITY DEFINER and write past RLS; can_staff_role still sees the real caller, since
+-- auth.uid() comes from the request, not the role a definer runs as.
+create or replace function public.volunteers_need_active_venue () RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER
+set
+	"search_path" to '' as $$
+begin
+	if (tg_op = 'INSERT' or (old.accepted = 'accepted' and not old.active and new.active))
+		and public.isVenueInactive((select r.venueid from public.roles r where r.id = new.roleid))
+		and not (public.can_staff_role(new.roleid) or public.isSteward()) then
+		raise exception 'This venue is inactive' using errcode = 'RR028';
+	end if;
+	return new;
+end;
+$$;
+
+alter function public.volunteers_need_active_venue () OWNER to postgres;
+
+create trigger volunteers_need_active_venue
+before insert or update of active on public.volunteers for each row
+execute function public.volunteers_need_active_venue ();
+
 --------------------------------------
 -- RPCs (defined in migration 20260608000000_atomic_crud.sql)
 -- Internal helper: settle the welcome grant for a volunteer. Not granted to
@@ -1026,6 +1055,11 @@ begin
 	-- own volunteering is still the venue's editor.
 	if not (public.isAdmin(_venueid) or public.isPriorityZero(_venueid)) then
 		raise exception 'You are not authorized to write to this venue''s volunteers';
+	end if;
+
+	-- An inactive venue asks nobody to bid (#42): there is nothing they could bid on.
+	if public.isVenueInactive(_venueid) then
+		raise exception 'This venue is inactive' using errcode = 'RR028';
 	end if;
 
 	-- The note. Bounded like a thank-you note, and for the same reason: it is one paragraph of

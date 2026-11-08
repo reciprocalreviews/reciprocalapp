@@ -136,6 +136,32 @@ with
 -- history. service_role keeps its grant for administrative and recovery work.
 create policy "submissions cannot be deleted" on public.submissions for DELETE to authenticated using (false);
 
+-- An inactive venue takes no new submissions and does not reopen bidding (#42). One trigger
+-- rather than a check in each writer, because three paths insert submissions -- the client,
+-- create_submission and bulk_import_submissions -- and a rule repeated three times is a rule
+-- that will one day be missing from a fourth. A refused create_submission rolls back the
+-- charges it wrote first, so nobody is billed for a submission that was never made.
+--
+-- Closing bidding stays allowed: it winds work down. Only reopening it is new work.
+create or replace function public.submissions_need_active_venue () RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER
+set
+	"search_path" to '' as $$
+begin
+	if tg_op = 'INSERT' or (old.bidding_closed and not new.bidding_closed) then
+		if public.isVenueInactive(new.venue) then
+			raise exception 'This venue is inactive' using errcode = 'RR028';
+		end if;
+	end if;
+	return new;
+end;
+$$;
+
+alter function public.submissions_need_active_venue () OWNER to postgres;
+
+create trigger submissions_need_active_venue
+before insert or update of bidding_closed on public.submissions for each row
+execute function public.submissions_need_active_venue ();
+
 --------------------------------------
 -- RPCs (defined in migration 20260608000000_atomic_crud.sql)
 -- create_submission: create the proposed payment transactions for each paying

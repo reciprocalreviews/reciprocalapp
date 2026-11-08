@@ -104,7 +104,7 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 	const { data: venues, error: venuesError } = await supabase
 		.from('venues')
 		.select(
-			'id, title, slug, admins, currency, transaction_reminder_frequency_days, transaction_reminder_time, currencies!currency(minters)'
+			'id, title, slug, admins, inactive, currency, transaction_reminder_frequency_days, transaction_reminder_time, currencies!currency(minters)'
 		)
 		.gt('transaction_reminder_frequency_days', 0);
 
@@ -357,11 +357,17 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 			.eq('status', 'reviewing')
 			.in('venue', dueVenueIds);
 
+		// Families 4 and 5 ask people to do work inside the venue, and an inactive venue
+		// (#42) admits only its admins, who see all of it there. So both skip inactive
+		// venues. Families 1-3 stay: they settle money on pages outside the venue.
+		const inactiveVenues = new Set(dueVenues.filter((v) => v.inactive !== null).map((v) => v.id));
+
 		if (reviewing === null) {
 			console.error('Error fetching reviewing submissions', reviewingError);
 		} else {
 			const ready: ByScholarVenue = new Map();
 			for (const submission of reviewing) {
+				if (inactiveVenues.has(submission.venue)) continue;
 				const subAssignments = assignments.filter((a) => a.submission === submission.id);
 				const hasCompensatedWork = subAssignments.some(
 					(a) => (a.roles?.priority ?? 0) > 0 && a.completed
@@ -426,6 +432,7 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 				// settings page offering "tell me" and "remind me" as separate checkboxes.
 				const unclaimed: ByScholarVenue = new Map();
 				for (const submission of reviewing) {
+					if (inactiveVenues.has(submission.venue)) continue;
 					const hasEditor = assignments.some(
 						(a) => a.submission === submission.id && a.roles?.priority === 0 && a.approved
 					);

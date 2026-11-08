@@ -953,6 +953,9 @@ isOneToOne: false
 "issteward":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"isvenueinactive":
+{ Args: { "_venueid": string }; Returns: boolean
+                           },
 "mark_bidding_digests_checked":
 { Args: { "_scholars": (string)[] }; Returns: number
                            },

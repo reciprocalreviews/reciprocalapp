@@ -895,6 +895,14 @@
               "description": "The web address someone asked for belongs to another venue. Raised by the unique index, which is what actually decides a contested address — the field's own availability check can only say the address was free a moment ago.",
               "type": "string"
             },
+            "VenueInactive": {
+              "description": "New work at an inactive venue (RR028): a submission, a self-signup, a resumed role, a bid, a call for bids, or reopened bidding. Raised by the database whichever write tried it, so it names the venue's state rather than the action.",
+              "type": "string"
+            },
+            "VenueNeedsWebAddress": {
+              "description": "Activating a venue with no web address (RR016). The settings switch is disabled until one is set, so seeing this means the page was stale.",
+              "type": "string"
+            },
             "VerifyEmail": {
               "type": "string"
             }
@@ -940,6 +948,8 @@
             "VenueAddressTaken",
             "VenueAddressInvalid",
             "EditVenueInactive",
+            "VenueNeedsWebAddress",
+            "VenueInactive",
             "EditVenueAnonymousAssignments",
             "EditVenueVetThanks",
             "EditVenueWelcomeAmount",
@@ -6182,6 +6192,10 @@
                       "description": "Shown to everyone who is neither an admin of this venue nor a minter of its currency, when the two sets overlap. The platform permits the arrangement and discloses it, so the community rather than the database is the check on it. Takes {currency}.",
                       "type": "string"
                     },
+                    "closedToSubmissions": {
+                      "description": "In place of the new-submission and import forms while the venue is inactive, for someone who reached them by a saved link.",
+                      "type": "string"
+                    },
                     "compensationRequested": {
                       "description": "Confirms a compensation request. The fallback for when nobody could be emailed: `handle()` suppresses it whenever the request named who was told, since that is the same news and names the person.",
                       "type": "string"
@@ -6206,7 +6220,8 @@
                     "rolesNotLoaded",
                     "compensationRequested",
                     "inactive",
-                    "inactivePrompt"
+                    "inactivePrompt",
+                    "closedToSubmissions"
                   ],
                   "type": "object"
                 },

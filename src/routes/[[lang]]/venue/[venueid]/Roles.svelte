@@ -271,9 +271,9 @@
 					<RoleInvite {venue} {role} {scholar} already={roleVolunteers.map((v) => v.scholarid)} />
 				{/if}
 
-				<!-- Only on a biddable role: a nudge to bid, sent to people the submissions page
-				     will not show bid buttons to, is a message nobody can act on. -->
-				{#if role.biddable && maySolicit && scholar}
+				<!-- Only on a biddable role at an active venue: a nudge to bid, sent to people the
+				     submissions page will not show bid buttons to, is a message nobody can act on. -->
+				{#if role.biddable && maySolicit && scholar && venue.inactive === null}
 					<CallForBids {role} />
 				{/if}
 
