@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.26 - 2026-11-08
+
+### Changed
+
+- Updated dependencies, including the Supabase CLI to 3.0 and the Vercel CLI to 65.12, and updated internal tooling so the schema drift check still catches drift under the new CLI.
+
 ## 0.5.25 - 2026-11-05
 
 ### Added

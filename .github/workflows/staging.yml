@@ -47,19 +47,19 @@ jobs:
       # through the GitHub API on every job; a dev push and a main merge fire ~10
       # of those within seconds, exhausting the shared rate limit and failing a job
       # before any test runs. Pinning also stops CI drifting ahead of local.
-      - uses: supabase/setup-cli@v2
+      - uses: supabase/setup-cli@v3
         with:
-          version: 2.122.0
+          version: 3.0.0
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
-      - run: supabase db push
+      - run: supabase db push --yes --remote
       # Edge functions are NOT deployed by `db push`. Without this step a schema change
       # that depends on new function behavior lands while the deployed function is stale —
       # which fails quietly, since pg_net swallows the resulting error and mail simply
       # stops arriving. Deploy them in the same job so schema and functions never drift.
-      - run: supabase functions deploy resend
-      - run: supabase functions deploy remind
-      - run: supabase functions deploy orcid
+      - run: supabase functions deploy resend --yes
+      - run: supabase functions deploy remind --yes
+      - run: supabase functions deploy orcid --yes
 
   vercel:
     runs-on: ubuntu-latest

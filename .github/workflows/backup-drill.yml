@@ -54,9 +54,9 @@ jobs:
       # through the GitHub API on every job; a dev push and a main merge fire ~10
       # of those within seconds, exhausting the shared rate limit and failing a job
       # before any test runs. Pinning also stops CI drifting ahead of local.
-      - uses: supabase/setup-cli@v2
+      - uses: supabase/setup-cli@v3
         with:
-          version: 2.122.0
+          version: 3.0.0
 
       - name: Check the required secrets are present
         env:

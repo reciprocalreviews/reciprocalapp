@@ -77,9 +77,9 @@ jobs:
       # — which `retries` cannot recover, since it never reached Playwright.
       # Pinning also stops CI drifting ahead of local.
       - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v2
+        uses: supabase/setup-cli@v3
         with:
-          version: 2.122.0
+          version: 3.0.0
       - name: Install dependencies
         run: npm ci
       - name: Define environment variables for build.

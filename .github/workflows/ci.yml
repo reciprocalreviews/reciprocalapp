@@ -41,16 +41,16 @@ jobs:
       # through the GitHub API on every job; a dev push and a main merge fire ~10
       # of those within seconds, exhausting the shared rate limit and failing a job
       # before any test runs. Pinning also stops CI drifting ahead of local.
-      - uses: supabase/setup-cli@v2
+      - uses: supabase/setup-cli@v3
         with:
-          version: 2.122.0
+          version: 3.0.0
 
       - name: Start Supabase local development setup
         run: supabase start --exclude storage-api,imgproxy,logflare,supavisor,vector
 
       - name: Verify generated types are checked in
         run: |
-          supabase gen types typescript --db-url "postgresql://postgres:postgres@127.0.0.1:54322/postgres" > src/data/database.ts
+          supabase gen types typescript > src/data/database.ts
           if ! git diff --ignore-space-at-eol --exit-code --quiet src/data/database.ts; then
             echo "Detected uncommitted changes to generated types. Run 'npm run types' and commit:"
             git diff src/data/database.ts
@@ -73,7 +73,12 @@ jobs:
       - name: Verify declarative schemas match the migrations
         run: |
           set -euo pipefail
-          supabase db diff --schema public > /tmp/drift.out 2>/tmp/drift.err || {
+          # --use-migra is load-bearing. CLI v3 defaults to the pg-delta engine, which
+          # diffs migrations against nothing ("Declarative schema files were not used
+          # as the db diff baseline") and so reports "No schema changes found" even
+          # with a table present in schemas/ and absent from migrations. Migra still
+          # applies schemas/ and catches it.
+          supabase db diff --schema public --use-migra > /tmp/drift.out 2>/tmp/drift.err || {
             echo "::error::supabase db diff failed — schemas/ may not be applicable at all"
             cat /tmp/drift.err; exit 1;
           }
