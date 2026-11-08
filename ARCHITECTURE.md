@@ -675,6 +675,14 @@ The Monday digest's `open_seats` also leaves closed submissions out (see Notific
 - **Races.** It takes `pg_advisory_xact_lock` on the scholar and role before counting, so two bids placed at once cannot both take the last slot.
 - **Tests:** [supabase/tests/rls/bid_budget_rls.sql](supabase/tests/rls/bid_budget_rls.sql).
 
+### One rule: an inactive venue takes no new work
+
+[20261108010000](supabase/migrations/20261108010000_inactive_venue_rules.sql) makes `venues.inactive` a rule in the database rather than only a page the interface draws (#42). `isVenueInactive(_venueid)` is the one definition; it is `security invoker`, since venues are world-readable, so it stays out of the definer grant sweep. Each refusal raises **RR028**.
+
+- **Where it is enforced.** A BEFORE trigger on `submissions` refuses any insert, and an update that reopens bidding (`bidding_closed` true → false), because three paths insert submissions: the client, `create_submission` and `bulk_import_submissions`. A refused `create_submission` rolls back the charges it wrote first. A BEFORE trigger on `volunteers` refuses an insert, or a stopped volunteer turning themselves back on, unless the caller is role staff (`can_staff_role`) or a steward. These are triggers rather than policy clauses because `create_volunteer` and `accept_role_invite` are SECURITY DEFINER and write past RLS. `enforce_bid_rules` refuses a non-approver's bid, and `queue_call_for_bids` refuses after its authorization check.
+- **What stays open.** Configuration, staffing (invitations, staff adding someone, an invitee accepting), approvers' own assignments, and everything that settles work in flight: approving charges, completing assignments, closing submissions and bidding, thanks. Stewards count as staff because `approve_venue_proposal` seats the proposal's editors in a venue that starts inactive.
+- **Reporting.** `SupabaseCRUD.error` maps RR028 and RR016 to their own messages whatever the call site expected, through `RULE_ERRORS`, so a write added later that hits either rule reports it by name. The `remind` job skips SubmissionsReady and SubmissionsNeedEditors for inactive venues, since only admins can enter one; the three money reminders still go out.
+
 ### Assignment loads
 
 [20261019000000](supabase/migrations/20261019000000_assignment_loads.sql) adds `assignment_loads(_venue, _scholars)`, the counts behind every `used / cap` indicator ([LoadIndicator.svelte](src/lib/components/LoadIndicator.svelte), indexed by [load.ts](src/lib/data/load.ts)).

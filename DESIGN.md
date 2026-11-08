@@ -490,6 +490,7 @@ When a venue is **approved** state:
 When a venue is in an _inactive_ state:
 
 - [x] ([#42](https://github.com/reciprocalreviews/reciprocalapp/issues/42)) Communicate that it is inactive. Everyone but its admins reaches a page with the admins' message and nothing else. Its admins see an **inactive** chip beside the venue's name in the venue bar on every page, and an alert offering to activate it only on the landing page and in settings, where it can be acted on; an alert above every page in the venue said the same thing on every click.
+- [x] ([#42](https://github.com/reciprocalreviews/reciprocalapp/issues/42)) Take no new work. Nobody can create or import a submission, volunteer themselves, resume a role, bid, call for bids, or reopen bidding, and the database refuses each of these, not just the interface. Its admins can still configure it and staff its roles, and invitees can accept, so a new venue can recruit its editors before it opens. Work already under way still finishes: charges, compensation, closing submissions, thanks.
 
 ### Currency `/currency/[currencyid]`
 
