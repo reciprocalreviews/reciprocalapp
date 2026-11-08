@@ -2,6 +2,16 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.27 - 2026-11-08
+
+### Changed
+
+- **The submissions list now shows active submissions by default, with a switch to see done ones instead.** This replaces the venue setting that kept done submissions in the list for a number of days after they finished.
+
+### Fixed
+
+- Two tips in venue settings, on compensation and on bid preference levels, now show their bold text and link instead of raw formatting marks.
+
 ## 0.5.26 - 2026-11-08
 
 ### Changed

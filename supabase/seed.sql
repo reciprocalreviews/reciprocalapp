@@ -3045,7 +3045,7 @@ values
 	);
 
 -- Ten more submissions, four of them done. Until now every seeded submission was
--- `reviewing`, so the completed state -- and the venue's done_visibility window
+-- `reviewing`, so the completed state -- and the submissions list's Done mode
 -- -- had nothing to render. Each carries one payment per author, pointing at the
 -- venue's original submission payment the way the four above do.
 insert into

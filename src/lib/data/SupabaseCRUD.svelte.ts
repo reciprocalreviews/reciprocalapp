@@ -1211,10 +1211,6 @@ export default class SupabaseCRUD extends CRUD {
 		return this.updateVenue(id, { payment_free: paymentFree }, 'EditVenuePaymentFree');
 	}
 
-	async editVenueDoneVisibilityDays(id: VenueID, days: number) {
-		return this.updateVenue(id, { done_visibility_days: days }, 'EditVenueDoneVisibilityDays');
-	}
-
 	async editVenueTransactionReminderFrequency(id: VenueID, days: number) {
 		return this.updateVenue(
 			id,
@@ -1287,10 +1283,20 @@ export default class SupabaseCRUD extends CRUD {
 		);
 	}
 
-	async getVenueSubmissions(venue: VenueID): Promise<ReadResult<SubmissionRow[] | null>> {
-		return this.rows(
-			'LoadSubmission',
-			this.client.from('submissions').select('*').eq('venue', venue)
+	async getVenueSubmissions(
+		venue: VenueID,
+		done: boolean
+	): Promise<ReadResult<SubmissionRow[] | null>> {
+		// Paged: a venue's done submissions only accumulate, and an unpaged read
+		// would silently stop at max_rows.
+		return this.allRows('LoadSubmission', (from, to) =>
+			this.client
+				.from('submissions')
+				.select('*')
+				.eq('venue', venue)
+				.eq('status', done ? 'done' : 'reviewing')
+				.order('id')
+				.range(from, to)
 		);
 	}
 
@@ -1395,24 +1401,17 @@ export default class SupabaseCRUD extends CRUD {
 	 * this scholar may see. */
 	async getVenueSubmissionCount(
 		venue: VenueID,
-		conflicted: SubmissionID[] = [],
-		doneCutoff: Date | null = null
+		conflicted: SubmissionID[] = []
 	): Promise<ReadResult<number | null>> {
+		// Only active submissions: the tile links to the list's default mode.
 		let query = this.client
 			.from('submissions')
 			.select('*', { count: 'exact', head: true })
-			.eq('venue', venue);
+			.eq('venue', venue)
+			.eq('status', 'reviewing');
 
 		// Submissions this scholar has declared a conflict on are hidden from the list.
 		if (conflicted.length > 0) query = query.not('id', 'in', `(${conflicted.join(',')})`);
-
-		// Done submissions age out of the list after the venue's visibility window.
-		// completed_at is null for anything still reviewing, and for done submissions
-		// that predate the column, both of which the list keeps.
-		if (doneCutoff !== null)
-			query = query.or(
-				`status.eq.reviewing,completed_at.is.null,completed_at.gte.${doneCutoff.toISOString()}`
-			);
 
 		return this.count('LoadSubmission', query);
 	}

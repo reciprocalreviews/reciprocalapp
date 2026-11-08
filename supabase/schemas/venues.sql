@@ -40,9 +40,6 @@ create table if not exists public.venues (
 	-- Whether author thank-you notes to reviewers (#22) must be approved by a
 	-- venue admin / editor before reviewers see them. Default on.
 	vet_thanks boolean default true not null,
-	-- How many days after a submission is marked done it remains visible
-	-- in the submissions list (sorted to the bottom). 0 hides immediately.
-	done_visibility_days integer default 30 not null,
 	-- How often, in days, to email admins and minters about this venue's
 	-- unapproved proposed transactions. 0 disables reminders for this venue.
 	-- The remind edge function gates by this column daily.
@@ -88,11 +85,6 @@ create table if not exists public.venues (
 	constraint venues_relevant_venues_check check (
 		cardinality(relevant_venues)<=20
 		and length(array_to_string(relevant_venues, ''))<=2000
-	),
-	-- Bound the visibility window to a year
-	constraint venues_done_visibility_days_check check (
-		done_visibility_days>=0
-		and done_visibility_days<=365
 	),
 	-- Bound reminder frequency to once-a-day through every-90-days
 	constraint venues_transaction_reminder_frequency_days_check check (

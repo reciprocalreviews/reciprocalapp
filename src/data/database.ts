@@ -735,14 +735,14 @@ isOneToOne: false
                   ]
                 },"venues": {
                   Row: {
-                    "admins": (string)[],"anonymous_assignments": boolean,"currency": string,"description": string,"done_visibility_days": number,"id": string,"inactive": string | null,"payment_free": boolean,"relevant_venues": (string)[],"review_system_url": string | null,"short_title": string,"slug": string | null,"title": string,"transaction_reminder_frequency_days": number,"transaction_reminder_time": string | null,"url": string,"vet_thanks": boolean,"welcome_amount": number
+                    "admins": (string)[],"anonymous_assignments": boolean,"currency": string,"description": string,"id": string,"inactive": string | null,"payment_free": boolean,"relevant_venues": (string)[],"review_system_url": string | null,"short_title": string,"slug": string | null,"title": string,"transaction_reminder_frequency_days": number,"transaction_reminder_time": string | null,"url": string,"vet_thanks": boolean,"welcome_amount": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "admins"?: (string)[],"anonymous_assignments"?: boolean,"currency": string,"description"?: string,"done_visibility_days"?: number,"id"?: string,"inactive"?: string | null,"payment_free"?: boolean,"relevant_venues"?: (string)[],"review_system_url"?: string | null,"short_title"?: string,"slug"?: string | null,"title"?: string,"transaction_reminder_frequency_days"?: number,"transaction_reminder_time"?: string | null,"url"?: string,"vet_thanks"?: boolean,"welcome_amount": number
+                    "admins"?: (string)[],"anonymous_assignments"?: boolean,"currency": string,"description"?: string,"id"?: string,"inactive"?: string | null,"payment_free"?: boolean,"relevant_venues"?: (string)[],"review_system_url"?: string | null,"short_title"?: string,"slug"?: string | null,"title"?: string,"transaction_reminder_frequency_days"?: number,"transaction_reminder_time"?: string | null,"url"?: string,"vet_thanks"?: boolean,"welcome_amount": number
                   }
                   Update: {
-                    "admins"?: (string)[],"anonymous_assignments"?: boolean,"currency"?: string,"description"?: string,"done_visibility_days"?: number,"id"?: string,"inactive"?: string | null,"payment_free"?: boolean,"relevant_venues"?: (string)[],"review_system_url"?: string | null,"short_title"?: string,"slug"?: string | null,"title"?: string,"transaction_reminder_frequency_days"?: number,"transaction_reminder_time"?: string | null,"url"?: string,"vet_thanks"?: boolean,"welcome_amount"?: number
+                    "admins"?: (string)[],"anonymous_assignments"?: boolean,"currency"?: string,"description"?: string,"id"?: string,"inactive"?: string | null,"payment_free"?: boolean,"relevant_venues"?: (string)[],"review_system_url"?: string | null,"short_title"?: string,"slug"?: string | null,"title"?: string,"transaction_reminder_frequency_days"?: number,"transaction_reminder_time"?: string | null,"url"?: string,"vet_thanks"?: boolean,"welcome_amount"?: number
                   }
                   Relationships: [
                     {

@@ -36,16 +36,13 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	// See how many submissions this scholar would find in the venue, for display.
 	// The tile links straight to the submissions list, so it counts what that list
-	// will actually show: the conflicted submissions and the aged-out done ones are
-	// hidden there, and counting them here made the number a promise the list broke.
+	// shows by default: active submissions, minus the conflicted ones it hides.
+	// Counting more made the number a promise the list broke.
 	const { data: conflicts } =
 		scholar === null ? { data: [] } : await db.getScholarConflicts(scholar.id);
-	const doneCutoff =
-		venue === null ? null : new Date(Date.now() - venue.done_visibility_days * 24 * 60 * 60 * 1000);
 	const { data: submissionCount } = await db.getVenueSubmissionCount(
 		venueid,
-		(conflicts ?? []).map((conflict) => conflict.submissionid),
-		doneCutoff
+		(conflicts ?? []).map((conflict) => conflict.submissionid)
 	);
 
 	// Get all the submission types
