@@ -1287,6 +1287,39 @@ export default class SupabaseCRUD extends CRUD {
 	 * rather than the rows: the dashboard and the gift form only ever wanted the
 	 * number, and a reserve large enough to serve a community is far past the
 	 * `max_rows` cap that silently truncated the array they used to count. */
+	async isVenueParticipant(
+		venue: VenueID,
+		scholar: ScholarID
+	): Promise<ReadResult<boolean | null>> {
+		// Two counts rather than rows: only whether there is any matters. `submissions!inner`
+		// so the status filter limits the assignments, not just the embedded submission.
+		const [assigned, authored] = await Promise.all([
+			this.count(
+				'LoadAssignment',
+				this.client
+					.from('assignments')
+					.select('id, submissions!inner(status)', { count: 'exact', head: true })
+					.eq('venue', venue)
+					.eq('scholar', scholar)
+					.eq('approved', true)
+					.eq('completed', false)
+					.eq('submissions.status', 'reviewing')
+			),
+			this.count(
+				'LoadSubmission',
+				this.client
+					.from('submissions')
+					.select('id', { count: 'exact', head: true })
+					.eq('venue', venue)
+					.eq('status', 'reviewing')
+					.contains('authors', [scholar])
+			)
+		]);
+		if (assigned.error) return { data: null, error: assigned.error };
+		if (authored.error) return { data: null, error: authored.error };
+		return { data: (assigned.data ?? 0) + (authored.data ?? 0) > 0 };
+	}
+
 	async getVenueTokenCount(
 		venue: VenueID,
 		currency: CurrencyID

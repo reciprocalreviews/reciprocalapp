@@ -1314,7 +1314,8 @@
 				"compensationRequested": "Compensation request sent. It waits for whoever approves your role on the submission to approve and pay it, even if no one has assigned you to the submission here yet.",
 				"inactive": "This venue is **inactive**, so only its admins can see its details. Their message: *{message}*",
 				"inactivePrompt": "This venue is **inactive**, so only admins can see it. Everyone else sees the message you set in settings.",
-				"closedToSubmissions": "This venue is inactive, so it isn't taking submissions. Activate it in settings to open it."
+				"closedToSubmissions": "This venue is inactive, so it isn't taking submissions. Activate it in settings to open it.",
+				"inactiveParticipant": "This venue is **inactive**, so it isn't taking new submissions, volunteers, or bids. You can still finish your work on submissions under review. The admins' message: *{message}*"
 			},
 			"card": {
 				"setup": {
@@ -1338,6 +1339,9 @@
 				"inactive": {
 					"tip": "This venue is inactive and only admins can see it. Open settings to activate it.",
 					"label": "inactive"
+				},
+				"inactiveParticipant": {
+					"tip": "This venue is inactive. You can still finish your work on submissions under review."
 				}
 			},
 			"options": {

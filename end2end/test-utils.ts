@@ -195,6 +195,14 @@ export const SEED = {
 			orcid: '0000-0001-2345-6790',
 			name: 'Reese Urcher'
 		},
+		/** A volunteer with no work under way at the seed venue: no unfinished assignment
+		 * and no submission under review. So when the venue is inactive, this is someone it
+		 * keeps out, where everyone above has work there and is let in to finish it (#42). */
+		outsider: {
+			email: 's.tation@uni.edu',
+			id: 'f0000000-ad50-11f0-9000-000000000012',
+			name: 'Sy Tation'
+		},
 		r3: {
 			email: 'r3@uni.edu',
 			id: '7ff8621a-cbe0-4789-bbee-f008d38c4ac9',

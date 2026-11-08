@@ -129,6 +129,16 @@
 					{/snippet}
 				</Alert>
 			{/if}
+			<!-- Anyone else here while the venue is inactive has work still under way (#42):
+			     say what is still open to them, and pass on the admins' word. -->
+			{#if !isAdmin && venue.inactive !== null}
+				<Alert
+					tone="attention"
+					text={(l) => l.page.venue.feedback.inactiveParticipant}
+					inputs={{ message: venue.inactive }}
+					testid="venue-inactive-participant"
+				/>
+			{/if}
 			<!-- Name the admin/minter overlap to everyone who isn't one of them. -->
 			{#if showPayment && adminMints && !isAdmin && !isMinter && currency}
 				<Alert

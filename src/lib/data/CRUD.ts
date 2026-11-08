@@ -944,6 +944,13 @@ export default abstract class CRUD {
 	// browser — which is what these used to do — is wrong rather than merely slow:
 	// PostgREST caps a response at `max_rows` and truncation is not an error, so
 	// every such balance silently stopped at 1000.
+	/** Whether the scholar still has work under way at the venue: an approved, uncompleted
+	 * assignment on a submission still under review, or authorship of one. These are the
+	 * people an inactive venue still lets in, so a closed venue's work can finish (#42). */
+	abstract isVenueParticipant(
+		venue: VenueID,
+		scholar: ScholarID
+	): Promise<ReadResult<boolean | null>>;
 	/** How many tokens of the given currency the venue's reserve holds. */
 	abstract getVenueTokenCount(
 		venue: VenueID,

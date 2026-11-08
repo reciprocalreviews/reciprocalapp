@@ -10,7 +10,9 @@ const MINTER_EMAIL = SEED.scholars.r1.email;
 const RECIPIENT_EMAIL_FOR_GIFT = SEED.scholars.author2.email;
 const SECOND_EDITOR_EMAIL = SEED.scholars.author2.email;
 const SECOND_MINTER_EMAIL = SEED.scholars.r2.email;
-const NON_EDITOR_EMAIL = SEED.scholars.r3.email;
+// Someone with no work under way at the venue: an inactive venue lets in anyone who still
+// has some, so the closed page is only what everyone else sees (#42).
+const NON_EDITOR_EMAIL = SEED.scholars.outsider.email;
 const EDITOR_ID = SEED.scholars.editor.id;
 
 test('editor edits venue title, description, and URL', async ({ page, context }) => {

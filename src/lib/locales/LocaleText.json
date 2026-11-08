@@ -6110,6 +6110,19 @@
                       "$ref": "#/definitions/ButtonText",
                       "description": "A chip beside the venue's name, for admins only, while the venue is inactive. It is how the state stays visible on every page without an alert on each."
                     },
+                    "inactiveParticipant": {
+                      "additionalProperties": false,
+                      "description": "The same chip for someone who is not an admin but still has work under way at the inactive venue. Only the tip is used; the label is `inactive`'s.",
+                      "properties": {
+                        "tip": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "tip"
+                      ],
+                      "type": "object"
+                    },
                     "menu": {
                       "$ref": "#/definitions/ButtonText",
                       "description": "Names the control holding the links that do not fit on a narrow screen."
@@ -6122,7 +6135,8 @@
                   "required": [
                     "menu",
                     "website",
-                    "inactive"
+                    "inactive",
+                    "inactiveParticipant"
                   ],
                   "type": "object"
                 },
@@ -6203,6 +6217,10 @@
                     "inactive": {
                       "type": "string"
                     },
+                    "inactiveParticipant": {
+                      "description": "On the landing page of an inactive venue, for someone who is not an admin but still has work under way there. Takes {message}, the admins' message.",
+                      "type": "string"
+                    },
                     "inactivePrompt": {
                       "description": "The alert admins see on the landing page and settings while the venue is inactive.",
                       "type": "string"
@@ -6221,7 +6239,8 @@
                     "compensationRequested",
                     "inactive",
                     "inactivePrompt",
-                    "closedToSubmissions"
+                    "closedToSubmissions",
+                    "inactiveParticipant"
                   ],
                   "type": "object"
                 },

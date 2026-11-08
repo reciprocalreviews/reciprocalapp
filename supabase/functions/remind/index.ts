@@ -357,9 +357,11 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 			.eq('status', 'reviewing')
 			.in('venue', dueVenueIds);
 
-		// Families 4 and 5 ask people to do work inside the venue, and an inactive venue
-		// (#42) admits only its admins, who see all of it there. So both skip inactive
-		// venues. Families 1-3 stay: they settle money on pages outside the venue.
+		// An inactive venue (#42) admits only its admins and the people with work still under
+		// way there. Family 4 goes to a submission's own editors, who are among them. Family 5
+		// asks a venue's editors to claim a submission nobody has taken on, and an editor with
+		// nothing assigned could not get in to do it, so for an inactive venue it goes to the
+		// admins alone, who can assign one.
 		const inactiveVenues = new Set(dueVenues.filter((v) => v.inactive !== null).map((v) => v.id));
 
 		if (reviewing === null) {
@@ -367,7 +369,6 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 		} else {
 			const ready: ByScholarVenue = new Map();
 			for (const submission of reviewing) {
-				if (inactiveVenues.has(submission.venue)) continue;
 				const subAssignments = assignments.filter((a) => a.submission === submission.id);
 				const hasCompensatedWork = subAssignments.some(
 					(a) => (a.roles?.priority ?? 0) > 0 && a.completed
@@ -422,7 +423,8 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 				for (const venue of dueVenues) editorsByVenue.set(venue.id, new Set(venue.admins ?? []));
 				for (const volunteer of editorVolunteers) {
 					const venueid = venueOfRole.get(volunteer.roleid);
-					if (venueid !== undefined) editorsByVenue.get(venueid)?.add(volunteer.scholarid);
+					if (venueid !== undefined && !inactiveVenues.has(venueid))
+						editorsByVenue.get(venueid)?.add(volunteer.scholarid);
 				}
 
 				// Reuses the SubmissionsNeedEditors template rather than adding a reminder of
@@ -432,7 +434,6 @@ async function getVenueReminders(supabase: SupabaseClient<Database>): Promise<Pe
 				// settings page offering "tell me" and "remind me" as separate checkboxes.
 				const unclaimed: ByScholarVenue = new Map();
 				for (const submission of reviewing) {
-					if (inactiveVenues.has(submission.venue)) continue;
 					const hasEditor = assignments.some(
 						(a) => a.submission === submission.id && a.roles?.priority === 0 && a.approved
 					);

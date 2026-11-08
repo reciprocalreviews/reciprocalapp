@@ -1106,6 +1106,9 @@ export type LocaleText = {
 				/** A chip beside the venue's name, for admins only, while the venue is inactive.
 				 * It is how the state stays visible on every page without an alert on each. */
 				inactive: ButtonText;
+				/** The same chip for someone who is not an admin but still has work under way
+				 * at the inactive venue. Only the tip is used; the label is `inactive`'s. */
+				inactiveParticipant: { tip: string };
 			};
 			header: {
 				submissionTypes: string;
@@ -1155,6 +1158,9 @@ export type LocaleText = {
 				/** In place of the new-submission and import forms while the venue is inactive,
 				 * for someone who reached them by a saved link. */
 				closedToSubmissions: string;
+				/** On the landing page of an inactive venue, for someone who is not an admin but
+				 * still has work under way there. Takes {message}, the admins' message. */
+				inactiveParticipant: string;
 			};
 			field: {
 				name: TextFieldText & { invalid: string };
