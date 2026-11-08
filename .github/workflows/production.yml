@@ -88,7 +88,15 @@ jobs:
           set -euo pipefail
           supabase migration list --remote > /tmp/migrations.txt || true
           cat /tmp/migrations.txt
-          if grep -qE '^\s*\|\s+[0-9]{14}\s+\|' /tmp/migrations.txt; then
+          # CLI v3 wraps versions in backticks (`20261104000000`), which a bare
+          # [0-9]{14} never matched, so this guard passed everything after the v3
+          # bump. Allow the backticks, and refuse to continue if no version parses
+          # at all: a format change must fail here loudly, not wave pushes through.
+          if ! grep -qE '`?[0-9]{14}`?' /tmp/migrations.txt; then
+            echo "::error::could not read production's migration history; the guard cannot run."
+            exit 1
+          fi
+          if grep -qE '^\s*\|\s+`?[0-9]{14}`?\s+\|' /tmp/migrations.txt; then
             echo "::error::production has migrations this repository does not. Reconcile before pushing."
             exit 1
           fi
