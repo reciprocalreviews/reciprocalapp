@@ -344,6 +344,16 @@
 					testid="submissions-import"
 				/>
 			{/if}
+			<!-- Not gated on the venue being active: these are submissions it already has, and
+			     an inactive venue still lets work under way finish (#42). -->
+			{#if isAdmin || isEditor}
+				<Action
+					to="/venue/{venuePath(venue)}/submissions/assign"
+					label={(l) => l.page.submissions.action.assignList}
+					group={isAdmin ? 'admin' : 'editor'}
+					testid="submissions-assign-list"
+				/>
+			{/if}
 			<!-- Admins only: only they can read the charges made to the venue. -->
 			{#if isAdmin && showPayment}
 				<Action

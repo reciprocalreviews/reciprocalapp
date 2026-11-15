@@ -130,6 +130,9 @@ export type LocaleText = {
 		 * the singular, because "was emailed" has to become "were emailed" and editing a verb
 		 * inside already-translated prose is not something a substitution can do. */
 		emailedMany: string;
+		/** One banner for a batch whose recipients each got their own copy of one message, when
+		 * listing them would fill the screen: `{count}` people, then `{subject}`. */
+		emailedCount: string;
 		/** The fallback when a batch collapsed but its producer supplied no plural form: wraps
 		 * the ALREADY-LOCALIZED first notification and counts the rest. Reads less well than a
 		 * purpose-written plural, and exists so that a producer which groups without writing one
@@ -809,6 +812,8 @@ export type LocaleText = {
 				match: string;
 				/** Admins: look up whether a list of manuscript IDs has been paid for. */
 				checkPayments: string;
+				/** Admins and editors: seat people on existing submissions from a pasted list. */
+				assignList: string;
 			};
 		};
 		/** The admin page that takes a list of manuscript IDs from the venue's reviewing
@@ -862,6 +867,69 @@ export type LocaleText = {
 				unknown: string;
 				/** In place of an email for an author who has not given one. */
 				noEmail: string;
+			};
+		};
+		/** The page that seats people in one role on submissions the venue already has, from
+		 * a pasted list of manuscript IDs and names, as made in the venue's reviewing system. */
+		assignList: {
+			title: string;
+			/** Markdown. What to paste, and that nothing is assigned until confirmed. */
+			intro: string;
+			/** Only admins and the venue's top-role holders may use it. */
+			notAllowed: string;
+			notLoaded: string;
+			options: { role: OptionsText };
+			field: { list: NotedTextFieldText };
+			button: {
+				check: ButtonText;
+				/** `{count}` lines will be assigned or kept; confirms the people agreed. */
+				assign: ConfirmButtonText;
+				/** The same, when assigning puts someone past the papers cap they set. */
+				assignOverCap: ConfirmButtonText;
+				/** Clears the list after an assignment, for the next one. */
+				another: ButtonText;
+			};
+			headers: { id: string; submission: string; written: string; who: string; status: string };
+			/** After checking: `{ready}` to assign, `{keep}` kept for matching, `{problems}` that
+			 * will be skipped. */
+			summary: string;
+			/** After assigning: `{seated}`, `{kept}`, `{skipped}`. */
+			result: string;
+			/** The list, role or a choice changed since it was checked. */
+			stale: string;
+			/** Some lines name somebody several volunteers could be; choose first. */
+			unresolved: string;
+			/** Beneath a person past their cap: `{used}` papers, plus this list's, of `{cap}`. */
+			overCap: string;
+			/** Before `holder` on a line whose seat someone else holds. */
+			heldBy: string;
+			/** Why a line will send nothing, decided before checking. */
+			local: {
+				noID: string;
+				nobody: string;
+				ambiguous: string;
+				/** An email address belonging to none of the role's volunteers. */
+				emailUnmatched: string;
+				repeated: string;
+				/** Not checked yet. */
+				unchecked: string;
+			};
+			/** One per verdict of public.assign_submissions. */
+			verdict: {
+				missing: string;
+				duplicate: string;
+				done: string;
+				recused: string;
+				not_volunteer: string;
+				author: string;
+				conflicted: string;
+				already: string;
+				held: string;
+				waiting: string;
+				ready: string;
+				keep: string;
+				seated: string;
+				kept: string;
 			};
 		};
 		/** The page listing assignments an import could not match to a scholar. */
@@ -2409,6 +2477,7 @@ export type LocaleText = {
 		CompensationNotEligible: string;
 		LoadUnmatchedAssignments: string;
 		MatchAssignments: string;
+		AssignFromList: string;
 		MatchAssignmentsNotVolunteer: string;
 		DismissUnmatchedAssignment: string;
 		CompleteAssignmentNotFound: string;

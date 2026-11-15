@@ -407,6 +407,9 @@
             "ApproveTransaction": {
               "type": "string"
             },
+            "AssignFromList": {
+              "type": "string"
+            },
             "BackfillORCIDProfiles": {
               "type": "string"
             },
@@ -1044,6 +1047,7 @@
             "CompensationNotEligible",
             "LoadUnmatchedAssignments",
             "MatchAssignments",
+            "AssignFromList",
             "MatchAssignmentsNotVolunteer",
             "DismissUnmatchedAssignment",
             "CompleteAssignmentNotFound",
@@ -1222,6 +1226,10 @@
             "emailed": {
               "type": "string"
             },
+            "emailedCount": {
+              "description": "One banner for a batch whose recipients each got their own copy of one message, when listing them would fill the screen: `{count}` people, then `{subject}`.",
+              "type": "string"
+            },
             "emailedMany": {
               "description": "`emailed`, said of a whole batch: the plural form used when one send reached more people than are worth listing. `{count}` is the REST of them, so a send to 307 reads as one name and \"306 others\". Written as its own sentence rather than assembled from the singular, because \"was emailed\" has to become \"were emailed\" and editing a verb inside already-translated prose is not something a substitution can do.",
               "type": "string"
@@ -1250,6 +1258,7 @@
           "required": [
             "emailed",
             "emailedMany",
+            "emailedCount",
             "andOthers",
             "emailedStewards",
             "volunteered",
@@ -1416,6 +1425,248 @@
                 "field",
                 "button",
                 "paragraph"
+              ],
+              "type": "object"
+            },
+            "assignList": {
+              "additionalProperties": false,
+              "description": "The page that seats people in one role on submissions the venue already has, from a pasted list of manuscript IDs and names, as made in the venue's reviewing system.",
+              "properties": {
+                "button": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "another": {
+                      "$ref": "#/definitions/ButtonText",
+                      "description": "Clears the list after an assignment, for the next one."
+                    },
+                    "assign": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "`{count}` lines will be assigned or kept; confirms the people agreed."
+                    },
+                    "assignOverCap": {
+                      "$ref": "#/definitions/ConfirmButtonText",
+                      "description": "The same, when assigning puts someone past the papers cap they set."
+                    },
+                    "check": {
+                      "$ref": "#/definitions/ButtonText"
+                    }
+                  },
+                  "required": [
+                    "check",
+                    "assign",
+                    "assignOverCap",
+                    "another"
+                  ],
+                  "type": "object"
+                },
+                "field": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "list": {
+                      "$ref": "#/definitions/NotedTextFieldText"
+                    }
+                  },
+                  "required": [
+                    "list"
+                  ],
+                  "type": "object"
+                },
+                "headers": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "submission": {
+                      "type": "string"
+                    },
+                    "who": {
+                      "type": "string"
+                    },
+                    "written": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "submission",
+                    "written",
+                    "who",
+                    "status"
+                  ],
+                  "type": "object"
+                },
+                "heldBy": {
+                  "description": "Before `holder` on a line whose seat someone else holds.",
+                  "type": "string"
+                },
+                "intro": {
+                  "description": "Markdown. What to paste, and that nothing is assigned until confirmed.",
+                  "type": "string"
+                },
+                "local": {
+                  "additionalProperties": false,
+                  "description": "Why a line will send nothing, decided before checking.",
+                  "properties": {
+                    "ambiguous": {
+                      "type": "string"
+                    },
+                    "emailUnmatched": {
+                      "description": "An email address belonging to none of the role's volunteers.",
+                      "type": "string"
+                    },
+                    "noID": {
+                      "type": "string"
+                    },
+                    "nobody": {
+                      "type": "string"
+                    },
+                    "repeated": {
+                      "type": "string"
+                    },
+                    "unchecked": {
+                      "description": "Not checked yet.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "noID",
+                    "nobody",
+                    "ambiguous",
+                    "emailUnmatched",
+                    "repeated",
+                    "unchecked"
+                  ],
+                  "type": "object"
+                },
+                "notAllowed": {
+                  "description": "Only admins and the venue's top-role holders may use it.",
+                  "type": "string"
+                },
+                "notLoaded": {
+                  "type": "string"
+                },
+                "options": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "role": {
+                      "$ref": "#/definitions/OptionsText"
+                    }
+                  },
+                  "required": [
+                    "role"
+                  ],
+                  "type": "object"
+                },
+                "overCap": {
+                  "description": "Beneath a person past their cap: `{used}` papers, plus this list's, of `{cap}`.",
+                  "type": "string"
+                },
+                "result": {
+                  "description": "After assigning: `{seated}`, `{kept}`, `{skipped}`.",
+                  "type": "string"
+                },
+                "stale": {
+                  "description": "The list, role or a choice changed since it was checked.",
+                  "type": "string"
+                },
+                "summary": {
+                  "description": "After checking: `{ready}` to assign, `{keep}` kept for matching, `{problems}` that will be skipped.",
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "unresolved": {
+                  "description": "Some lines name somebody several volunteers could be; choose first.",
+                  "type": "string"
+                },
+                "verdict": {
+                  "additionalProperties": false,
+                  "description": "One per verdict of public.assign_submissions.",
+                  "properties": {
+                    "already": {
+                      "type": "string"
+                    },
+                    "author": {
+                      "type": "string"
+                    },
+                    "conflicted": {
+                      "type": "string"
+                    },
+                    "done": {
+                      "type": "string"
+                    },
+                    "duplicate": {
+                      "type": "string"
+                    },
+                    "held": {
+                      "type": "string"
+                    },
+                    "keep": {
+                      "type": "string"
+                    },
+                    "kept": {
+                      "type": "string"
+                    },
+                    "missing": {
+                      "type": "string"
+                    },
+                    "not_volunteer": {
+                      "type": "string"
+                    },
+                    "ready": {
+                      "type": "string"
+                    },
+                    "recused": {
+                      "type": "string"
+                    },
+                    "seated": {
+                      "type": "string"
+                    },
+                    "waiting": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "missing",
+                    "duplicate",
+                    "done",
+                    "recused",
+                    "not_volunteer",
+                    "author",
+                    "conflicted",
+                    "already",
+                    "held",
+                    "waiting",
+                    "ready",
+                    "keep",
+                    "seated",
+                    "kept"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "title",
+                "intro",
+                "notAllowed",
+                "notLoaded",
+                "options",
+                "field",
+                "button",
+                "headers",
+                "summary",
+                "result",
+                "stale",
+                "unresolved",
+                "overCap",
+                "heldBy",
+                "local",
+                "verdict"
               ],
               "type": "object"
             },
@@ -5273,6 +5524,10 @@
                   "additionalProperties": false,
                   "description": "The page's actions row.",
                   "properties": {
+                    "assignList": {
+                      "description": "Admins and editors: seat people on existing submissions from a pasted list.",
+                      "type": "string"
+                    },
                     "checkPayments": {
                       "description": "Admins: look up whether a list of manuscript IDs has been paid for.",
                       "type": "string"
@@ -5299,7 +5554,8 @@
                     "newSubmissionFree",
                     "import",
                     "match",
-                    "checkPayments"
+                    "checkPayments",
+                    "assignList"
                   ],
                   "type": "object"
                 },
@@ -7087,6 +7343,7 @@
             "bulkImport",
             "submissions",
             "submissionPayments",
+            "assignList",
             "unmatched",
             "submission",
             "venue",

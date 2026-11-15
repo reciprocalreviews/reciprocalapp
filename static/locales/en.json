@@ -70,6 +70,7 @@
 	"notification": {
 		"emailed": "{recipient} was emailed \"{subject}\"",
 		"emailedMany": "{recipient} and {count} others were emailed \"{subject}\"",
+		"emailedCount": "{count} people were emailed \"{subject}\"",
 		"andOthers": "{message} — and {count} others",
 		"emailedStewards": "The stewards were emailed \"{subject}\"",
 		"volunteered": "Thank you for volunteering!",
@@ -935,7 +936,8 @@
 				"newSubmissionFree": "Register a submission",
 				"import": "Import submissions",
 				"match": "Match imported names",
-				"checkPayments": "Check payments"
+				"checkPayments": "Check payments",
+				"assignList": "Assign from a list"
 			}
 		},
 		"submissionPayments": {
@@ -982,6 +984,82 @@
 				"declined": "declined their charge",
 				"unknown": "charge not visible",
 				"noEmail": "no contact email"
+			}
+		},
+		"assignList": {
+			"title": "Assign from a list",
+			"intro": "Already made these assignments in your reviewing system? Paste them here instead of making each one again. Put one per line: the manuscript ID, then the person's name or email, separated by a tab or a comma. Copying two columns from a spreadsheet works. **Check** shows what each line will do. Nothing is assigned until you confirm.",
+			"notAllowed": "Only this venue's admins and editors can assign from a list.",
+			"notLoaded": "Couldn't load this venue.",
+			"options": {
+				"role": {
+					"label": "Role to assign",
+					"note": "Everyone on the list is assigned in this role. Names are matched to this role's volunteers."
+				}
+			},
+			"field": {
+				"list": {
+					"label": "Assignments",
+					"placeholder": "TOCE-2026-0142, Andrew Petersen",
+					"note": "One per line: manuscript ID, then a name or email address."
+				}
+			},
+			"button": {
+				"check": {
+					"tip": "Look up each manuscript and person without assigning anyone",
+					"label": "Check"
+				},
+				"assign": {
+					"tip": "Assign everyone on the ready lines, and keep unmatched names for matching later",
+					"label": "Assign {count}",
+					"warn": "Everyone named agreed, assign {count}"
+				},
+				"assignOverCap": {
+					"tip": "Assign everyone on the ready lines, including someone past the papers cap they set",
+					"label": "Assign {count}",
+					"warn": "Over cap, everyone named agreed, assign {count}"
+				},
+				"another": {
+					"tip": "Clear this list to assign another",
+					"label": "Assign another list"
+				}
+			},
+			"headers": {
+				"id": "Manuscript ID",
+				"submission": "Submission",
+				"written": "Written",
+				"who": "Person",
+				"status": "Result"
+			},
+			"summary": "{ready} ready to assign, {keep} to keep for matching later, {problems} will be skipped.",
+			"result": "Assigned {seated}, kept {kept} for matching later, skipped {skipped}. Each person assigned gets one email listing how many submissions they now have.",
+			"stale": "The list has changed since you checked it. Check it again before assigning.",
+			"unresolved": "Some names match more than one volunteer. Choose who each one means before checking.",
+			"overCap": "Past their cap: {used} active, plus {adding} from this list, of {cap}.",
+			"heldBy": "Held by",
+			"local": {
+				"noID": "No manuscript ID on this line.",
+				"nobody": "No one named on this line.",
+				"ambiguous": "Several volunteers have this name. Choose one.",
+				"emailUnmatched": "No volunteer in this role has this email address.",
+				"repeated": "This manuscript is already on an earlier line.",
+				"unchecked": "not checked"
+			},
+			"verdict": {
+				"missing": "no such manuscript",
+				"duplicate": "already on an earlier line",
+				"done": "no longer under review",
+				"recused": "you wrote it or are conflicted",
+				"not_volunteer": "not a volunteer in this role",
+				"author": "an author of it",
+				"conflicted": "conflicted on it",
+				"already": "already assigned",
+				"held": "role already filled",
+				"waiting": "an imported name is waiting to be matched here",
+				"ready": "ready",
+				"keep": "kept for matching later",
+				"seated": "assigned",
+				"kept": "kept for matching later"
 			}
 		},
 		"unmatched": {
@@ -2556,6 +2634,7 @@
 		"CompensationNotEligible": "You can only request compensation in a role you volunteer for, and not on your own submission.",
 		"LoadUnmatchedAssignments": "Unable to load unmatched assignments",
 		"MatchAssignments": "Unable to match these assignments",
+		"AssignFromList": "Unable to assign from this list",
 		"MatchAssignmentsNotVolunteer": "That scholar must accept this role before they can be matched to it.",
 		"DismissUnmatchedAssignment": "Unable to dismiss this assignment",
 		"CompleteAssignmentNotFound": "Unable to find this assignment",

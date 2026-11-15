@@ -57,6 +57,7 @@ from (values
 	('SubmissionClaimed'),
 	('SubmissionDone'),
 	('SubmissionNeedsEditor'),
+	('SubmissionsAssigned'),
 	('SubmissionsAssignedEditor'),
 	('SubmissionsNeedEditors'),
 	('SubmissionsReady'),

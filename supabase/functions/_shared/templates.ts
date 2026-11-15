@@ -363,6 +363,17 @@ export const Emails = {
 			"You were seated either because the import file named you, or because you are the only person in one of the venue's roles. Remove yourself from anything someone else should handle."
 		]
 	},
+	// Assign from a list: the same digest as an import's, for submissions that were already
+	// at the venue. Says nothing about the role, for the reason the import's says nothing
+	// about it (#181): the editor named the role, but this message does not need to.
+	SubmissionsAssigned: {
+		subject: 'You have new assignments',
+		paragraphs: [
+			'You were assigned to $1 submission(s) at $2.',
+			'<rr-button href="{origin}/venue/$3/submissions">See the submissions</rr-button>',
+			'If any of these should not be yours, tell whoever assigned you, or remove yourself from the submission.'
+		]
+	},
 	SubmissionsNeedEditors: {
 		subject: 'Submissions are waiting for an editor',
 		paragraphs: [
