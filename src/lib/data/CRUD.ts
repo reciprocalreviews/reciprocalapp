@@ -290,6 +290,46 @@ export type SubmissionPayments = {
 
 export type MatchAssignmentsResult = { matched: SubmissionID[]; skipped: number };
 
+/** One line of an assign-from-a-list: a manuscript ID, and either the scholar the form
+ * resolved the written name or email to, or the written name when it matched nobody. */
+export type ListAssignment = { externalid: string } & ({ person: ScholarID } | { name: string });
+
+/** What public.assign_submissions said about one line. See the function for each verdict. */
+export type ListAssignmentVerdict =
+	| 'missing'
+	| 'duplicate'
+	| 'done'
+	| 'recused'
+	| 'not_volunteer'
+	| 'author'
+	| 'conflicted'
+	| 'already'
+	| 'held'
+	| 'waiting'
+	| 'ready'
+	| 'keep'
+	| 'seated'
+	| 'kept';
+
+export type ListAssignmentRow = {
+	externalid: string;
+	submission: SubmissionID | null;
+	title: string | null;
+	verdict: ListAssignmentVerdict;
+	/** Who already holds the seat, when the verdict is `held`. */
+	holder: ScholarID | null;
+};
+
+/** What assign_submissions did, or with a dry run would do: a verdict per line, in order,
+ * how many were seated and kept, and how many submissions each scholar was seated on. */
+export type AssignFromListResult = {
+	rows: ListAssignmentRow[];
+	seated: number;
+	seatedBy: Record<ScholarID, number>;
+	kept: number;
+	skipped: number;
+};
+
 /** A scholar who may be the person an import named, with what tells same-named people
  * apart. `email` is their verified address, if any. */
 export type UnmatchedNameScholar = {
@@ -1167,6 +1207,16 @@ export default abstract class CRUD {
 		role: RoleID,
 		scholar: ScholarID
 	): Promise<Result<MatchAssignmentsResult>>;
+	/** Seat people in one role on submissions the venue already has, from a list of
+	 * manuscript IDs and who. With `dryRun` nothing is written and the verdicts are the
+	 * preview; otherwise every line not ready is skipped, and each scholar seated is told
+	 * once how many submissions they now hold. Admins and priority-0 editors only. */
+	abstract assignFromList(
+		venue: VenueID,
+		role: RoleID,
+		rows: ListAssignment[],
+		dryRun: boolean
+	): Promise<Result<AssignFromListResult>>;
 	/** Drop an unmatched assignment nobody will claim. */
 	abstract dismissUnmatchedAssignment(id: UnmatchedAssignmentID): Promise<Result>;
 

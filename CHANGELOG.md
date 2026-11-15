@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.29 - 2026-11-15
+
+### Added
+
+- **Admins and editors can now assign people to submissions already at the venue by pasting a list of manuscript IDs and names or emails, checking it, and confirming once.** Each person assigned gets one email saying how many submissions they now have.
+
 ## 0.5.28 - 2026-11-15
 
 ### Changed

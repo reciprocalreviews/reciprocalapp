@@ -59,6 +59,8 @@ import CRUD, {
 	type ImportedSubmission,
 	type MarkSubmissionDoneOutcome,
 	type MatchAssignmentsResult,
+	type AssignFromListResult,
+	type ListAssignment,
 	type SubmissionPayments,
 	type UnmatchedNameScholar,
 	type Notification,
@@ -71,6 +73,7 @@ import CRUD, {
 } from './CRUD';
 import Scholar from './Scholar.svelte';
 import { isUUID } from '../validation';
+import { parseAssignFromListResult } from './assignmentList';
 import { venuePath } from './venuePath';
 
 // A constant page size for paginated queries.
@@ -3676,6 +3679,58 @@ export default class SupabaseCRUD extends CRUD {
 				RR019: 'MatchAssignmentsNotVolunteer'
 			});
 		return this.reportMatched(venue, scholar, data);
+	}
+
+	async assignFromList(
+		venue: VenueID,
+		role: RoleID,
+		rows: ListAssignment[],
+		dryRun: boolean
+	): Promise<Result<AssignFromListResult>> {
+		const { data, error } = await this.client.rpc('assign_submissions', {
+			_venue: venue,
+			_role: role,
+			_rows: rows,
+			_dry_run: dryRun
+		});
+		if (error) return this.error('AssignFromList', error);
+		const result = parseAssignFromListResult(data);
+		if (result === null) return this.error('AssignFromList');
+		if (dryRun || Object.keys(result.seatedBy).length === 0) return { data: result };
+
+		// One message per person, however many submissions the list gave them, as an
+		// import sends: a round of twenty-five assignments is one piece of news to each
+		// editor, not twenty-five.
+		const { data: venueRow } = await this.client
+			.from('venues')
+			.select('id, title, slug')
+			.eq('id', venue)
+			.single();
+		if (venueRow === null) return { data: result };
+		const notifications: Notification[] = [];
+		for (const [scholar, count] of Object.entries(result.seatedBy)) {
+			const { notified } = await this.emailScholars(
+				[scholar],
+				'SubmissionsAssigned',
+				[count.toString(), venueRow.title, venuePath(venueRow)],
+				venue
+			);
+			if (notified) notifications.push(...notified);
+		}
+		// One banner however many people were emailed. A list routinely seats a dozen
+		// editors, and a banner each is a dozen clicks to clear before the result is visible.
+		if (notifications.length <= 1) return { data: result, notified: notifications };
+		const { subject } = renderEmail('SubmissionsAssigned', ['', '', '']);
+		return {
+			data: result,
+			notified: [
+				{
+					message: this.locale.notification.emailedCount
+						.replace('{count}', notifications.length.toString())
+						.replace('{subject}', subject)
+				}
+			]
+		};
 	}
 
 	async getUnmatchedNameScholars(

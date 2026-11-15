@@ -820,6 +820,9 @@ isOneToOne: false
 "approve_venue_proposal":
 { Args: { "_proposal_id": string }; Returns: Json
                            },
+"assign_submissions":
+{ Args: { "_dry_run": boolean,"_role": string,"_rows": Json,"_venue": string }; Returns: Json
+                           },
 "assignment_loads":
 { Args: { "_scholars": (string)[],"_venue": string }; Returns: {
               "count": number,"role": string,"scholar": string
