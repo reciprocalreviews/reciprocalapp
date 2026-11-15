@@ -2225,13 +2225,19 @@ export default class SupabaseCRUD extends CRUD {
 		title: string,
 		expertise: string,
 		venue: VenueID,
-		externalID: string,
+		enteredExternalID: string,
 		previousID: string | null,
 		previous: SubmissionID | null,
 		submission_type: SubmissionTypeID,
 		charges: Charge[],
 		note: string | null
 	): Promise<Result<SubmissionID>> {
+		// Manuscript IDs are matched exactly (Check payments, compensation requests,
+		// predecessor links), so a space pasted along with one made the submission
+		// unfindable. submissions_externalid_trimmed refuses it at the database; trim
+		// here so the purpose and emails carry the same ID the row does.
+		const externalID = enteredExternalID.trim();
+
 		// Verify charges (reads) and resolve author ORCIDs to scholar ids before
 		// the atomic write. The create_submission RPC then records every proposed
 		// payment, immediately approves the submitter's own charge (moving their

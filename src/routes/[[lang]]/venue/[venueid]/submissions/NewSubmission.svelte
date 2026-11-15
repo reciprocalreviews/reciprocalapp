@@ -168,7 +168,7 @@
 	);
 
 	function validExternalID(id: string) {
-		return id.length > 0;
+		return id.trim().length > 0;
 	}
 
 	async function checkAffordability() {

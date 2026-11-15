@@ -9,8 +9,11 @@ create table submissions (
 	id uuid not null default gen_random_uuid() primary key,
 	-- The venue to which the submission corresponds
 	venue uuid not null references venues (id),
-	-- The external unique identifier of the submission, such as a submission number or manuscript number
-	externalid text not null,
+	-- The external unique identifier of the submission, such as a submission number or manuscript number.
+	-- No leading or trailing whitespace: every lookup by manuscript ID (Check payments, compensation
+	-- requests, predecessor links) is an exact match on a trimmed ID, so a pasted trailing space made
+	-- a paid submission read as never submitted.
+	externalid text not null constraint submissions_externalid_trimmed check (externalid!~'^\s|\s$'),
 	-- An optional free-text link to a previous external submission id, for a predecessor that is not (yet)
 	-- on this platform. Retained for bulk import and the multi-year transition period.
 	previousid text default null,

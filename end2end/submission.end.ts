@@ -76,9 +76,11 @@ test('author can create a two-author submission splitting the cost', async ({ pa
 		.selectOption({ label: 'Research Article' });
 
 	// Fill in the required submission details. The external ID is unique per
-	// run because the venue+externalid pair is enforced unique in the DB.
+	// run because the venue+externalid pair is enforced unique in the DB. It is
+	// entered with the stray whitespace a paste brings along; the exact-match
+	// count below proves it was stored trimmed, which Check payments relies on.
 	await page.getByTestId('submission-title').fill('A Study of Reciprocal Review Incentives');
-	await page.getByTestId('submission-manuscript-id').fill(externalID);
+	await page.getByTestId('submission-manuscript-id').fill(` ${externalID} `);
 
 	// In case there's a failure, scroll down so we have a screenshot.
 	await page.getByTestId('add-author').scrollIntoViewIfNeeded();

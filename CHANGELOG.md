@@ -8,6 +8,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - Updated dependencies, including SvelteKit to 3.2, the Supabase CLI to 3.1, and the Vercel CLI to 65.16.
 
+### Fixed
+
+- **Check payments now finds a paid submission whose manuscript ID was entered with a stray space, instead of calling it not submitted.** Manuscript IDs are now stored without leading or trailing spaces, and the two existing IDs that had them were repaired.
+
 ## 0.5.27 - 2026-11-08
 
 ### Changed
