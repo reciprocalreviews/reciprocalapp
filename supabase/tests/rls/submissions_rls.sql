@@ -23,7 +23,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(26);
+select plan(28);
 
 -- ---- Fixtures (owner context) -------------------------------------------------
 select tests.clear_authentication();
@@ -273,6 +273,28 @@ select lives_ok(
 	            array[ $$ || quote_literal(:'outsider') || $$ ]::uuid[],
 	            array[0], array['00000000-0000-0000-0000-000000000000'::uuid]) $$,
 	'any authenticated scholar can create a submission'
+);
+
+-- Manuscript IDs are stored trimmed (submissions_externalid_trimmed): lookups match them
+-- exactly, so a stray space made a paid submission unfindable.
+select throws_ok(
+	$$ insert into public.submissions (venue, externalid, submission_type, authors, payments, transactions)
+	   values ( $$ || quote_literal(:'ven') || $$, 'spaced-ext ', $$ || quote_literal(:'styp') || $$,
+	            array[ $$ || quote_literal(:'outsider') || $$ ]::uuid[],
+	            array[0], array['00000000-0000-0000-0000-000000000000'::uuid]) $$,
+	'23514',
+	null,
+	'a manuscript ID with trailing whitespace is refused'
+);
+
+select throws_ok(
+	$$ insert into public.submissions (venue, externalid, submission_type, authors, payments, transactions)
+	   values ( $$ || quote_literal(:'ven') || $$, E'\tspaced-ext', $$ || quote_literal(:'styp') || $$,
+	            array[ $$ || quote_literal(:'outsider') || $$ ]::uuid[],
+	            array[0], array['00000000-0000-0000-0000-000000000000'::uuid]) $$,
+	'23514',
+	null,
+	'a manuscript ID with leading whitespace is refused'
 );
 
 -- Anonymous visitors are not granted the INSERT policy (it is to authenticated).
