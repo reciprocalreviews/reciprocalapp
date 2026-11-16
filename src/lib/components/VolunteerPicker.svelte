@@ -3,6 +3,7 @@
 		matchPersonName,
 		searchCandidates,
 		suggestCandidates,
+		type PersonMatch,
 		type Volunteer
 	} from '#lib/data/matchPersonName.js';
 	import Text from '#lib/locales/Text.svelte';
@@ -31,6 +32,7 @@
 		chosen,
 		choose,
 		clear = undefined,
+		match: given = undefined,
 		testid
 	}: {
 		/** The name as it was written, which suggestions are matched against. */
@@ -44,6 +46,10 @@
 		choose: (id: string) => void;
 		/** Undoes the choice. Without it, a choice is shown but cannot be changed here. */
 		clear?: (() => void) | undefined;
+		/** How the name matched, when the caller resolves names by a looser rule than
+		 * matchPersonName (bulk assign accepts a first or last name alone). The volunteers it
+		 * ties between are the ones offered. Defaults to matchPersonName's answer. */
+		match?: PersonMatch | undefined;
 		testid: string;
 	} = $props();
 
@@ -58,7 +64,7 @@
 
 	const chosenVolunteer = $derived(candidates.find((c) => c.id === chosen));
 
-	const match = $derived(matchPersonName(name, candidates));
+	const match = $derived(given ?? matchPersonName(name, candidates));
 	/** The volunteers the name fits equally well, who need everything that tells
 	 * them apart, since their names do not. */
 	const tied = $derived(

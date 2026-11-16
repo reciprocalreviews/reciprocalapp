@@ -937,7 +937,7 @@
 				"import": "Import submissions",
 				"match": "Match imported names",
 				"checkPayments": "Check payments",
-				"assignList": "Assign from a list"
+				"assignList": "Bulk assign"
 			}
 		},
 		"submissionPayments": {
@@ -987,8 +987,8 @@
 			}
 		},
 		"assignList": {
-			"title": "Assign from a list",
-			"intro": "Already made these assignments in your reviewing system? Paste them here instead of making each one again. Put one per line: the manuscript ID, then the person's name or email, separated by a tab or a comma. Copying two columns from a spreadsheet works. **Check** shows what each line will do. Nothing is assigned until you confirm.",
+			"title": "Bulk assign",
+			"intro": "Already made these assignments in your reviewing system? Paste them here instead of making each one again. Put one per line: a manuscript ID and a person, in either order, separated by a tab, a comma or a space. The person can be a full name, just a first or last name, or an email address. Copying two columns from a spreadsheet works. **Check** shows what each line will do. Nothing is assigned until you confirm.",
 			"notAllowed": "Only this venue's admins and editors can assign from a list.",
 			"notLoaded": "Couldn't load this venue.",
 			"options": {
@@ -1001,7 +1001,7 @@
 				"list": {
 					"label": "Assignments",
 					"placeholder": "TOCE-2026-0142, Andrew Petersen",
-					"note": "One per line: manuscript ID, then a name or email address."
+					"note": "One per line: a manuscript ID and a name or email, in either order."
 				}
 			},
 			"button": {

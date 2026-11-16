@@ -293,6 +293,7 @@
 											role={role.name}
 											{candidates}
 											chosen={match.status === 'resolved' ? match.id : undefined}
+											match={resolveWho(line.written, candidates)}
 											choose={(id) => setPins({ ...pins, [index]: id })}
 										/>
 									{/if}

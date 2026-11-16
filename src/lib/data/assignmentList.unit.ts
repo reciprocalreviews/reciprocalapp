@@ -41,6 +41,31 @@ describe('parseAssignmentList', () => {
 		expect(parseAssignmentList('TOCE-1')).toEqual([{ externalID: 'TOCE-1', written: '' }]);
 	});
 
+	test('reads a line written the other way round, whatever separates it', () => {
+		expect(parseAssignmentList('Andrew Petersen\tTOCE-1')).toEqual([
+			{ externalID: 'TOCE-1', written: 'Andrew Petersen' }
+		]);
+		expect(parseAssignmentList('Petersen, Andrew, TOCE-1')).toEqual([
+			{ externalID: 'TOCE-1', written: 'Petersen, Andrew' }
+		]);
+		expect(parseAssignmentList('r1@uni.edu; TOCE-1')).toEqual([
+			{ externalID: 'TOCE-1', written: 'r1@uni.edu' }
+		]);
+	});
+
+	test('splits on spaces when exactly one word carries a number', () => {
+		expect(parseAssignmentList('TOCE-2026-0142 Petersen\nAndrew Petersen TOCE-7')).toEqual([
+			{ externalID: 'TOCE-2026-0142', written: 'Petersen' },
+			{ externalID: 'TOCE-7', written: 'Andrew Petersen' }
+		]);
+	});
+
+	test('keeps an ID with spaces in it whole', () => {
+		expect(parseAssignmentList('TOCE 2026 0142')).toEqual([
+			{ externalID: 'TOCE 2026 0142', written: '' }
+		]);
+	});
+
 	test('keeps a header row as a line, which the database then finds no manuscript for', () => {
 		expect(parseAssignmentList('Manuscript ID\tEditor')[0]).toEqual({
 			externalID: 'Manuscript ID',
@@ -71,6 +96,25 @@ describe('resolveWho', () => {
 			id: 's2'
 		});
 		expect(resolveWho('Leen-Kiat Soh', [SOH, SOH_TOO], 'gone').status).toBe('ambiguous');
+	});
+
+	test('resolves a first or last name alone when one volunteer has it', () => {
+		expect(resolveWho('Petersen', candidates)).toEqual({ status: 'resolved', id: 'p' });
+		expect(resolveWho('andrew', candidates)).toEqual({ status: 'resolved', id: 'p' });
+	});
+
+	test('asks which volunteer a shared single name means', () => {
+		const match = resolveWho('Soh', [PETERSEN, SOH, SOH_TOO]);
+		expect(match.status).toBe('ambiguous');
+		expect(match.status === 'ambiguous' ? match.candidates.map((c) => c.id) : []).toEqual([
+			's',
+			's2'
+		]);
+	});
+
+	test('a single name nobody has, or a longer name that fits nobody, stays unmatched', () => {
+		expect(resolveWho('Nobody', candidates)).toEqual({ status: 'unmatched' });
+		expect(resolveWho('Jane Petersen', candidates)).toEqual({ status: 'unmatched' });
 	});
 
 	test('an empty cell names nobody', () => {
