@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.30 - 2026-11-15
+
+### Changed
+
+- **Assign from a list is now called Bulk assign, and reads lines in either order, separated by tabs, commas or spaces.** A first or last name alone now matches when only one volunteer in the role has it, and you choose when several do.
+
 ## 0.5.29 - 2026-11-15
 
 ### Added

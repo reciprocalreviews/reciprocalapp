@@ -13,7 +13,7 @@ import type {
 	ListAssignmentRow,
 	ListAssignmentVerdict
 } from './CRUD';
-import { matchPersonName, type PersonMatch, type Volunteer } from './matchPersonName';
+import { matchPersonName, nameTokens, type PersonMatch, type Volunteer } from './matchPersonName';
 
 /** One non-blank line of the list, as written. */
 export type ListLine = {
@@ -23,27 +23,46 @@ export type ListLine = {
 	written: string;
 };
 
-/** The lines in pasted text. Each line is a manuscript ID and then a name or email,
- * separated by a tab (a spreadsheet's two columns) or, failing that, the first comma or
- * semicolon. Only the first separator splits, since names are often written "Surname,
- * Given". A spreadsheet copy may also carry further columns after a second tab; those are
- * ignored. Blank lines are dropped. */
+/** Whether a cell holds a number, which is what tells a manuscript ID from a name. */
+function hasDigit(cell: string): boolean {
+	return /\d/.test(cell);
+}
+
+/** The cells of one line: tab-separated (a spreadsheet's columns) if it has a tab, else
+ * comma- or semicolon-separated, else space-separated -- but only when exactly one word
+ * carries a number, since some reviewing systems put spaces inside their IDs and a line
+ * like that is one whole ID. Returns the separator used, which decides how leftover cells
+ * become the name. */
+function cellsOf(raw: string): { cells: string[]; separator: 'tab' | 'comma' | 'space' | 'none' } {
+	if (raw.includes('\t')) return { cells: raw.split('\t'), separator: 'tab' };
+	if (/[,;]/.test(raw)) return { cells: raw.split(/[,;]/), separator: 'comma' };
+	const words = raw.trim().split(/\s+/);
+	if (words.length > 1 && words.filter((w) => hasDigit(w) && !looksLikeEmail(w)).length === 1)
+		return { cells: words, separator: 'space' };
+	return { cells: [raw], separator: 'none' };
+}
+
+/** The lines in pasted text: a manuscript ID and a name or email, in either order.
+ *
+ * The ID is the first cell holding a number that is not an email address -- manuscript
+ * IDs carry numbers, and names do not -- so a list copied with its columns the other way
+ * round reads the same. A line where no cell qualifies (a header row, say) keeps the old
+ * reading, ID first. The rest is the person: with tabs, the first other non-empty cell,
+ * so further spreadsheet columns are ignored; otherwise every other cell joined back
+ * together, so "Petersen, Andrew, TOK-0142" keeps its "Surname, Given". Blank lines are
+ * dropped. */
 export function parseAssignmentList(text: string): ListLine[] {
 	const lines: ListLine[] = [];
 	for (const raw of text.split(/\r\n|\r|\n/)) {
 		if (raw.trim() === '') continue;
-		let id: string;
-		let rest: string;
-		if (raw.includes('\t')) {
-			const cells = raw.split('\t');
-			id = cells[0];
-			rest = cells[1] ?? '';
-		} else {
-			const at = raw.search(/[,;]/);
-			id = at < 0 ? raw : raw.slice(0, at);
-			rest = at < 0 ? '' : raw.slice(at + 1);
-		}
-		lines.push({ externalID: id.trim(), written: rest.trim() });
+		const { cells, separator } = cellsOf(raw);
+		const trimmed = cells.map((cell) => cell.trim());
+		const found = trimmed.findIndex((cell) => hasDigit(cell) && !looksLikeEmail(cell));
+		const at = found < 0 ? 0 : found;
+		const others = trimmed.filter((cell, index) => index !== at && cell !== '');
+		const written =
+			separator === 'tab' ? (others[0] ?? '') : others.join(separator === 'comma' ? ', ' : ' ');
+		lines.push({ externalID: trimmed[at], written });
 	}
 	return lines;
 }
@@ -56,7 +75,8 @@ export function looksLikeEmail(written: string): boolean {
 
 /** Who a cell means among the role's volunteers. An email address resolves only to the
  * volunteer whose address it is, ignoring case; a name resolves as the importer resolves
- * one. A choice the editor pinned wins while it is still one of the candidates. */
+ * one, or, failing that, by a first or last name alone that just one of them has. A
+ * choice the editor pinned wins while it is still one of the candidates. */
 export function resolveWho(
 	written: string,
 	candidates: Volunteer[],
@@ -70,7 +90,19 @@ export function resolveWho(
 		const found = candidates.filter((c) => c.email?.toLowerCase() === address);
 		return found.length === 1 ? { status: 'resolved', id: found[0].id } : { status: 'unmatched' };
 	}
-	return matchPersonName(written, candidates);
+	const match = matchPersonName(written, candidates);
+	if (match.status !== 'unmatched') return match;
+
+	// A first or last name alone. The importer refuses this, so that "Petersen" never
+	// seats some other Petersen; here the person who pasted the list sees each line's full
+	// name before anything is written, and a name two volunteers share still asks them to
+	// choose, so one word is enough to go on.
+	const words = nameTokens(written);
+	if (words.length !== 1) return match;
+	const sharing = candidates.filter((c) => nameTokens(c.name).includes(words[0]));
+	if (sharing.length === 1) return { status: 'resolved', id: sharing[0].id };
+	if (sharing.length > 1) return { status: 'ambiguous', candidates: sharing };
+	return match;
 }
 
 /** Manuscript IDs the list names more than once, by the index of every line after the
