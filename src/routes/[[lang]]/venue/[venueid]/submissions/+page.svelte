@@ -685,43 +685,47 @@
 							{/if}
 							<td>{formatDate(submission.created_at)}</td>
 							<td>
-								{#if submission.status === 'done'}
-									<Status label={(l) => l.page.submissions.status.done} />
-								{:else}
-									<Status good={false} label={(l) => l.page.submissions.status.reviewing} />
-									<!-- Nobody holds the editor role on this one, so no assignment on it can
-									     be approved and it cannot be marked done. Shown next to the status
-									     because it is a fact about the submission's progress, not about the
-									     viewer's own work. -->
-									{#if view.needsEditor(submission)}
-										<Status
-											good={false}
-											testid="needs-editor-{index}"
-											label={(l) =>
-												l.page.submissions.status.needsEditor.replace('{role}', editorRoleName)}
-										/>
-										{#if editorRole && canClaimEditor(editorRole, uid, volunteering, submissionsWithEditor?.has(submission.id))}
-											<Button
-												small
-												testid="claim-editor-{index}"
-												strings={(l) => ({
-													tip: l.page.submissions.button.claimEditor.tip.replace(
-														'{role}',
-														editorRole.name
-													),
-													label: l.page.submissions.button.claimEditor.label.replace(
-														'{role}',
-														editorRole.name
-													)
-												})}
-												action={() =>
-													handle(
-														db().createAssignment(submission.id, uid!, editorRole.id, false, true)
-													)}
+								<!-- A column, not inline tags: in this narrow cell the tags wrap, and
+								     wrapped inline tags touch with no space between them. -->
+								<Column>
+									{#if submission.status === 'done'}
+										<Status label={(l) => l.page.submissions.status.done} />
+									{:else}
+										<Status good={false} label={(l) => l.page.submissions.status.reviewing} />
+										<!-- Nobody holds the editor role on this one, so no assignment on it can
+										     be approved and it cannot be marked done. Shown next to the status
+										     because it is a fact about the submission's progress, not about the
+										     viewer's own work. -->
+										{#if view.needsEditor(submission)}
+											<Status
+												good={false}
+												testid="needs-editor-{index}"
+												label={(l) =>
+													l.page.submissions.status.needsEditor.replace('{role}', editorRoleName)}
 											/>
+											{#if editorRole && canClaimEditor(editorRole, uid, volunteering, submissionsWithEditor?.has(submission.id))}
+												<Button
+													small
+													testid="claim-editor-{index}"
+													strings={(l) => ({
+														tip: l.page.submissions.button.claimEditor.tip.replace(
+															'{role}',
+															editorRole.name
+														),
+														label: l.page.submissions.button.claimEditor.label.replace(
+															'{role}',
+															editorRole.name
+														)
+													})}
+													action={() =>
+														handle(
+															db().createAssignment(submission.id, uid!, editorRole.id, false, true)
+														)}
+												/>
+											{/if}
 										{/if}
 									{/if}
-								{/if}
+								</Column>
 							</td>
 							<!-- If we have all the information, show metadata about bidding. -->
 							{#each visibleRoles as role, roleIndex}

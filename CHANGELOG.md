@@ -8,6 +8,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 - Updated dependencies, including SvelteKit 3.4, Svelte 5.59, the Supabase CLI 3.2 and the Vercel CLI 66.
 
+### Fixed
+
+- The progress tags on the submissions page now stack with space between them, instead of touching when they wrap.
+
 ## 0.5.30 - 2026-11-15
 
 ### Changed
