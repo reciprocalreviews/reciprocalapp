@@ -3,7 +3,8 @@ import { login, logout } from '../src/routes/login';
 import { SEED, sql } from './test-utils';
 
 // Adding people to a role once they have agreed, without an invitation for them to
-// accept: from a role's card, and from the unmatched page, where it also matches them.
+// accept: from a role's card, including someone whose invitation went unanswered, and
+// from the unmatched page, where it also matches them.
 //
 // Both use seeded reviewers, who already hold a role at the venue, so no welcome grant
 // changes a balance another test reads. Each removes the record it made, because a
@@ -114,6 +115,71 @@ test('an admin adds an imported name to its role and matches it in one step', as
 		// of the venue's transactions and pushes another test's proposal off the first page.
 		sql(
 			`update public.transactions set status = 'declined' where to_venue = '${VENUE_ID}' and status = 'proposed' and purpose = 'Mint to fund imported pre-launch submissions' and created_at >= '${started}';`
+		);
+	}
+});
+
+test('an editor adds someone who was invited and never replied, once they agreed', async ({
+	page,
+	context
+}) => {
+	// The case that prompted this: invited, said yes off the platform, never clicked accept,
+	// and so could not be assigned to anything. An editor who is not an admin does the adding.
+	const eic = SEED.scholars.r2;
+	const invitee = SEED.scholars.r3;
+	const editorRole = SEED.roles.editor;
+	const started = sql(`select now();`);
+	clearAE(invitee.id);
+	sql(
+		`insert into public.volunteers (scholarid, roleid, expertise, accepted, active) values ('${eic.id}', '${editorRole}', '', 'accepted', true) on conflict do nothing;`
+	);
+	sql(
+		`insert into public.volunteers (scholarid, roleid, expertise, accepted, active) select '${invitee.id}', id, '', 'invited', false from public.roles where venueid = '${VENUE_ID}' and name = '${AE_ROLE}';`
+	);
+	try {
+		await login(eic.email, page, context);
+		await page.goto(`/venue/${VENUE_PATH}`);
+		await page.waitForLoadState('networkidle');
+		await page.getByTestId(`role-${AE_ROLE}`).click();
+
+		// Unchecked, they can't be chosen, and the form says how they can be added.
+		await page.getByTestId(`role-invite-field-${AE_ROLE}`).fill(invitee.email);
+		await expect(page.getByTestId(`role-invite-waiting-${AE_ROLE}`)).toBeVisible();
+		const match = page.getByTestId(`role-invite-match-${AE_ROLE}-${invitee.id}`);
+		await expect(match).toHaveCount(0);
+
+		// Checked, they are offered.
+		const agreed = page.getByTestId(`role-invite-agreed-${AE_ROLE}`);
+		await agreed.click();
+		await expect(page.getByTestId(`role-invite-waiting-${AE_ROLE}`)).toHaveCount(0);
+		await match.click();
+
+		// Unchecking after choosing them would mean inviting them a second time, so the
+		// button waits until the box is checked again.
+		const button = page.getByTestId(`role-invite-button-${AE_ROLE}`);
+		await agreed.click();
+		await expect(page.getByTestId(`role-invite-waiting-staged-${AE_ROLE}`)).toBeVisible();
+		await expect(button).toBeDisabled();
+		await agreed.click();
+		await expect(button).toBeEnabled();
+
+		await button.click();
+		await button.click();
+
+		await expect.poll(() => aeStatus(invitee.id)).toBe('accepted/true');
+		// Told they were added, and no second invitation.
+		await expect
+			.poll(() =>
+				sql(
+					`select string_agg(event, ',' order by event) from public.emails where scholar = '${invitee.id}' and event in ('RoleEnrolled', 'RoleInvite') and time_sent >= '${started}';`
+				)
+			)
+			.toBe('RoleEnrolled');
+		await logout(page);
+	} finally {
+		clearAE(invitee.id);
+		sql(
+			`delete from public.volunteers where scholarid = '${eic.id}' and roleid = '${editorRole}';`
 		);
 	}
 });

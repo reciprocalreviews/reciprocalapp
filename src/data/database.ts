@@ -793,6 +793,9 @@ isOneToOne: false
               "bid_limit": number,"used": number
             }[]
                            },
+"_enroll_volunteer":
+{ Args: { "_caller": string,"_volunteer": string }; Returns: undefined
+                           },
 "_move_tokens":
 { Args: { "_amount": number,"_currency": string,"_from_scholar": string,"_from_venue": string,"_mint_creator"?: string,"_mint_purpose"?: string,"_mint_shortfall"?: boolean,"_shortfall_message"?: string,"_to_scholar": string,"_to_venue": string }; Returns: (string)[]
                            },
@@ -807,6 +810,9 @@ isOneToOne: false
                            },
 "accept_role_invite":
 { Args: { "_response": Database["public"]['Enums']["invited"],"_volunteer_id": string }; Returns: Json
+                           },
+"add_to_role":
+{ Args: { "_role": string,"_scholars": (string)[] }; Returns: (string)[]
                            },
 "add_to_role_and_match":
 { Args: { "_name": string,"_role": string,"_scholar": string,"_venue": string }; Returns: Json

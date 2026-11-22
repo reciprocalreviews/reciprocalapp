@@ -274,7 +274,13 @@
 				{/if}
 
 				{#if mayStaff(role) && scholar}
-					<RoleInvite {venue} {role} {scholar} already={roleVolunteers.map((v) => v.scholarid)} />
+					<RoleInvite
+						{venue}
+						{role}
+						{scholar}
+						already={roleVolunteers.map((v) => v.scholarid)}
+						invited={roleVolunteers.filter((v) => v.accepted === 'invited').map((v) => v.scholarid)}
+					/>
 				{/if}
 
 				<!-- Only on a biddable role at an active venue: a nudge to bid, sent to people the

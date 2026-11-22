@@ -419,7 +419,6 @@ set
 declare
 	_caller uuid := (select auth.uid());
 	_v public.volunteers;
-	_total integer;
 begin
 	if _caller is null then
 		raise exception 'Authentication required';
@@ -442,32 +441,8 @@ begin
 		raise exception 'They declined this role, so they cannot be added to it'
 			using errcode = 'RR027';
 	elsif _v.accepted = 'invited' or not _v.active then
-		update public.volunteers set accepted = 'accepted', active = true where id = _v.id;
-
-		-- Accepting a first invitation at this venue earns its welcome grant, as it would
-		-- have through accept_role_invite.
-		if _v.accepted = 'invited' then
-			select count(*) into _total
-			from public.volunteers v
-			join public.roles r on r.id = v.roleid
-			where v.scholarid = _scholar and r.venueid = _venue;
-			if _total = 1 then
-				perform public._welcome_volunteer(_caller, _scholar, _role, 'Welcome tokens for joining a role');
-			end if;
-		end if;
-
-		-- Told as create_volunteer tells anyone seated directly. Best effort.
-		begin
-			insert into public.emails (event, scholar, sender, venue, email, subject, message, args)
-			select
-				'RoleEnrolled', s.id, _caller, _venue, s.email, null, null,
-				to_jsonb(array[r.name, v.title, coalesce(v.slug, v.id::text), s.id::text])
-			from public.scholars s, public.roles r, public.venues v
-			where s.id = _scholar and r.id = _role and v.id = _venue and s.email is not null;
-		exception when others then
-			raise warning 'add_to_role_and_match: volunteer % was seated but could not be notified: % (%)',
-				_v.id, sqlerrm, sqlstate;
-		end;
+		-- Accepts or resumes, grants any first-role welcome tokens, and emails RoleEnrolled.
+		perform public._enroll_volunteer(_caller, _v.id);
 	end if;
 
 	return public.match_assignments(_venue, _name, _role, _scholar);

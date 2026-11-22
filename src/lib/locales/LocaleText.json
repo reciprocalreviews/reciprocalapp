@@ -361,7 +361,7 @@
               "type": "string"
             },
             "AddToRoleDeclined": {
-              "description": "add_to_role_and_match refused someone who declined the role (RR027).",
+              "description": "add_to_role or add_to_role_and_match refused someone who declined the role (RR027).",
               "type": "string"
             },
             "AlreadyApproved": {
@@ -7848,6 +7848,14 @@
                       "description": "Queries that were looked up and matched nobody at all. Named rather than left silent, and advisory: the invitation goes ahead without them.",
                       "type": "string"
                     },
+                    "inviteWaiting": {
+                      "description": "Queries whose every match has an invitation they never answered, while \"They already agreed\" is off. Says how to add them anyway, because that checkbox is the only way to, and nothing else on the form points at it. `{queries}`.",
+                      "type": "string"
+                    },
+                    "inviteWaitingStaged": {
+                      "description": "People with an unanswered invitation are chosen but \"They already agreed\" is off: inviting them again would be refused, so the button waits until the box is checked or they are removed. `{names}`.",
+                      "type": "string"
+                    },
                     "invited": {
                       "description": "Confirms a batch of invitations went out.",
                       "type": "string"
@@ -7869,6 +7877,8 @@
                     "notLoaded",
                     "inviteUnmatched",
                     "inviteAlready",
+                    "inviteWaiting",
+                    "inviteWaitingStaged",
                     "invited",
                     "added",
                     "callForBidsRecipients",

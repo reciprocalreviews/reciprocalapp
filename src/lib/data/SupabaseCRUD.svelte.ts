@@ -3155,15 +3155,20 @@ export default class SupabaseCRUD extends CRUD {
 		const members = [...new Set(scholars)];
 		if (members.length === 0) return this.error('AddToRole');
 
-		// Accepted, with the welcome grant settled as accepting an invitation would have.
-		// create_volunteer emails each of them RoleEnrolled, so nothing is sent from here.
-		const ids: string[] = [];
-		for (const member of members) {
-			const { data, error } = await this.createVolunteer(member, member, role.id, true, true, null);
-			if (error) return { error };
-			if (data) ids.push(data);
-		}
-		return { data: ids };
+		// One RPC for the list, so a refusal partway through seats nobody. Anyone with an
+		// unanswered invitation is accepted on their behalf rather than refused, since the
+		// caller has confirmed they agreed; each person seated is emailed RoleEnrolled and
+		// gets any first-role welcome grant in the database, so nothing is sent from here.
+		const { data, error } = await this.client.rpc('add_to_role', {
+			_role: role.id,
+			_scholars: members
+		});
+		if (error)
+			return rpcError(this, error, 'AddToRole', {
+				RR004: 'AlreadyVolunteered',
+				RR027: 'AddToRoleDeclined'
+			});
+		return { data };
 	}
 
 	async acceptRoleInvite(scholar: ScholarID, id: VolunteerID, response: Response) {

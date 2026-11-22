@@ -28,7 +28,8 @@
 		venue,
 		role,
 		scholar,
-		already
+		already,
+		invited
 	}: {
 		venue: VenueRow;
 		role: RoleRow;
@@ -38,11 +39,15 @@
 		/** Scholars who already have a volunteer record for this role, in any state.
 		 *
 		 * Ids rather than the records, because the only question here is whether somebody
-		 * can be added, and create_volunteer answers it from the (scholar, role) pair
-		 * alone — it refuses a second row whether the first is invited, accepted,
-		 * declined, or paused. Taking the records would invite this component to start
+		 * can be added, and the database answers it from the (scholar, role) pair and the
+		 * record's state. Taking the records would invite this component to start
 		 * re-deciding that, and the decision belongs to the database. */
 		already: ScholarID[];
+		/** The subset of `already` whose invitation is still unanswered. These are the one
+		 * exception to "cannot be added": with "They already agreed" checked, add_to_role
+		 * accepts the invitation on their behalf. Without it, inviting them again is refused,
+		 * so they stay out of reach and the form says how to reach them. */
+		invited: ScholarID[];
 	} = $props();
 
 	const db = getDB();
@@ -99,12 +104,27 @@
 	let gone = false;
 
 	const queries = $derived(parseQueries(text));
-	/** Everybody who cannot be added: already on this role's list, or already chosen. */
-	const accounted = $derived(new Set<string>([...already, ...staged.map((s) => s.id)]));
+	const waitingOn = $derived(new Set<string>(invited));
+	/** Everybody who cannot be added: already on this role's list, or already chosen. Someone
+	 * with an unanswered invitation can be added once the admin says they agreed. */
+	const accounted = $derived(
+		new Set<string>([
+			...(agreed ? already.filter((id) => !waitingOn.has(id)) : already),
+			...staged.map((s) => s.id)
+		])
+	);
 	const matches = $derived(offers(queries, answers, accounted));
 	const searching = $derived(unanswered(queries, answers).length > 0);
 	const nobody = $derived(unmatched(queries, answers));
-	const taken = $derived(spokenFor(queries, answers, accounted));
+	/** Queries that name only people with an unanswered invitation, while they can't be added.
+	 * Told apart from `taken` because these people CAN be added, by checking the box. */
+	const waiting = $derived(agreed ? [] : spokenFor(queries, answers, waitingOn));
+	const taken = $derived(
+		spokenFor(queries, answers, accounted).filter((query) => !waiting.includes(query))
+	);
+	/** Chosen while "They already agreed" was on, then the box was cleared. Inviting them again
+	 * would be refused, so the button waits for the box or their removal. */
+	const stuck = $derived(agreed ? [] : staged.filter((s) => waitingOn.has(s.id)));
 
 	$effect(() => {
 		const fresh = unanswered(queries, answers).filter((query) => !requested.has(query));
@@ -224,6 +244,15 @@
 		/>
 	{/if}
 
+	{#if waiting.length > 0}
+		<Feedback
+			inline={false}
+			text={(l) => l.view.roles.feedback.inviteWaiting}
+			inputs={{ queries: waiting.join(', ') }}
+			testid="role-invite-waiting-{role.name}"
+		/>
+	{/if}
+
 	{#if taken.length > 0}
 		<Feedback
 			inline={false}
@@ -239,10 +268,20 @@
 		testid="role-invite-agreed-{role.name}"
 	/>
 
+	{#if stuck.length > 0}
+		<Feedback
+			warning
+			inline={false}
+			text={(l) => l.view.roles.feedback.inviteWaitingStaged}
+			inputs={{ names: stuck.map(inviteeName).join(', ') }}
+			testid="role-invite-waiting-staged-{role.name}"
+		/>
+	{/if}
+
 	<Button
 		strings={(l) => (agreed ? l.view.roles.button.addAgreed : l.view.roles.button.invite)}
 		testid="role-invite-button-{role.name}"
-		active={staged.length > 0}
+		active={staged.length > 0 && stuck.length === 0}
 		action={async () => {
 			const chosen = staged.map((s) => s.id);
 			if (

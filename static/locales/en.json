@@ -2144,6 +2144,8 @@
 				"notLoaded": "Couldn't load venue's roles.",
 				"inviteUnmatched": "No one here matches {queries}.",
 				"inviteAlready": "{queries} already has a record for this role, so they can't be added again.",
+				"inviteWaiting": "{queries} was already invited and hasn't replied. If they've told you yes, check **They already agreed** to add them now.",
+				"inviteWaitingStaged": "{names} already has an invitation waiting. Check **They already agreed** to add them now, or remove them.",
 				"invited": "Invitations sent!",
 				"added": "Added to the role. Each person was emailed to say so.",
 				"callForBidsRecipients": "**{count} volunteers** in this role will receive this. Anyone who has paused, hasn't verified a contact address, or has turned these off won't.",
