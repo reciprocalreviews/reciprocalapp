@@ -246,9 +246,10 @@
 			{@const editable = scholar.id === uid}
 			<div class="support">
 				<p class="support">
-					<span class="meta"
-						><Link to={`/scholar/${scholar.id}`}>{scholar.name ? scholar.name : scholar.email}</Link
-						><Date time={supporter.created_at} />
+					<span class="meta">
+						<Link to={`/scholar/${scholar.id}`}>
+							{scholar.name ? scholar.name : scholar.email}
+						</Link><Date time={supporter.created_at} />
 						{#if !approved && editable}
 							<Button
 								strings={(l) => l.page.proposal.button.deleteSupport}

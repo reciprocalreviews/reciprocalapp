@@ -186,8 +186,9 @@
 													id={author ? { id: author.id, name: author.name } : charge.author}
 												/>
 												·
-												{#if author?.email}<Link to="mailto:{author.email}">{author.email}</Link
-													>{:else}<Text
+												{#if author?.email}<Link to="mailto:{author.email}">
+														{author.email}
+													</Link>{:else}<Text
 														path={(l) => l.page.submissionPayments.contact.noEmail}
 													/>{/if}
 												· <Text path={chargeNote(charge)} />

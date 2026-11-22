@@ -16,6 +16,8 @@
 {#if submission}
 	<Link
 		to="/venue/{venueSlug ?? submission.venue}/submission/{submission.id}"
-		icon={SubmissionLabel}>{submission.title}</Link
+		icon={SubmissionLabel}
 	>
+		{submission.title}
+	</Link>
 {/if}

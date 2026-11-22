@@ -53,13 +53,13 @@
 </script>
 
 {#snippet number(stat: number | undefined, icon: string | undefined)}
-	<span class="number"
-		>{#if icon}{icon}{/if}{stat === undefined
+	<span class="number">
+		{#if icon}{icon}{/if}{stat === undefined
 			? '—'
 			: percent < 1
 				? Math.round(stat * easeOut(percent))
-				: stat}</span
-	>
+				: stat}
+	</span>
 {/snippet}
 
 {#snippet title(text: string)}

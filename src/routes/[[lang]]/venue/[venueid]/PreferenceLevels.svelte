@@ -43,18 +43,22 @@
 					active={index > 0}
 					strings={(l) => l.page.settings.button.movePreferenceLevelUp}
 					action={() => handle(db().reorderPreferenceLevel(level, $state.snapshot(sorted), -1))}
-					>↑</Button
 				>
+					↑
+				</Button>
 				<Button
 					active={index < sorted.length - 1}
 					strings={(l) => l.page.settings.button.movePreferenceLevelDown}
 					action={() => handle(db().reorderPreferenceLevel(level, $state.snapshot(sorted), 1))}
-					>↓</Button
 				>
+					↓
+				</Button>
 				<Button
 					strings={(l) => l.page.settings.button.deletePreferenceLevel}
-					action={() => handle(db().deletePreferenceLevel(level.id))}>{DeleteLabel}</Button
+					action={() => handle(db().deletePreferenceLevel(level.id))}
 				>
+					{DeleteLabel}
+				</Button>
 			</li>
 		{/each}
 	</ol>

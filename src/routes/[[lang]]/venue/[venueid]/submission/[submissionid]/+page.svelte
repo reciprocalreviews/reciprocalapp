@@ -733,10 +733,10 @@
 						{#each completionBlockers as blocker (blocker.id)}
 							{@const role = roles.find((r) => r.id === blocker.role)}
 							<li data-testid="close-out-assignment">
-								<span
-									><strong>{role?.name ?? '?'}</strong>: <ScholarLink id={blocker.scholar} />
-									{#if !venue.payment_free}<Tokens amount={amountFor(blocker.role)} />{/if}</span
-								>
+								<span>
+									<strong>{role?.name ?? '?'}</strong>: <ScholarLink id={blocker.scholar} />
+									{#if !venue.payment_free}<Tokens amount={amountFor(blocker.role)} />{/if}
+								</span>
 								<span class="choices">
 									<Radio
 										bind:group={closeOutChoices[blocker.id]}
@@ -756,10 +756,10 @@
 						{#each alreadyPaid as paid (paid.id)}
 							{@const role = roles.find((r) => r.id === paid.role)}
 							<li data-testid="close-out-paid">
-								<span
-									><strong>{role?.name ?? '?'}</strong>: <ScholarLink id={paid.scholar} />
-									{#if !venue.payment_free}<Tokens amount={amountFor(paid.role)} />{/if}</span
-								>
+								<span>
+									<strong>{role?.name ?? '?'}</strong>: <ScholarLink id={paid.scholar} />
+									{#if !venue.payment_free}<Tokens amount={amountFor(paid.role)} />{/if}
+								</span>
 								<span class="paid"><Text path={(l) => l.page.submission.closeOut.paid} /></span>
 							</li>
 						{/each}
@@ -1036,8 +1036,10 @@
 							newAssignmentError = undefined;
 							newAssignmentSubmitting = false;
 						});
-					}}>+ assignee</Button
+					}}
 				>
+					+ assignee
+				</Button>
 				{#if newAssignmentSearch.notFound}
 					<!-- ScholarMatches shows "no matches" only for an empty NAME search; a
 					     well-formed iD or address that matches nobody renders as nothing at
@@ -1111,8 +1113,9 @@
 							</div>
 						</td>
 						<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
-						{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} balance /></td
-							>{/if}
+						{#if canSeeBalances}<td>
+								<Tokens amount={getBalance(assignment.scholar)} balance />
+							</td>{/if}
 						<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 						<td>
 							<Row>
@@ -1182,8 +1185,9 @@
 								</div>
 							</td>
 							<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
-							{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} balance /></td
-								>{/if}
+							{#if canSeeBalances}<td>
+									<Tokens amount={getBalance(assignment.scholar)} balance />
+								</td>{/if}
 							<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 							<td>
 								<Row>
@@ -1313,8 +1317,9 @@
 								</div>
 							</td>
 							<td>{@render expertiseCell(assignment.scholar, volunteer?.expertise)}</td>
-							{#if canSeeBalances}<td><Tokens amount={getBalance(assignment.scholar)} balance /></td
-								>{/if}
+							{#if canSeeBalances}<td>
+									<Tokens amount={getBalance(assignment.scholar)} balance />
+								</td>{/if}
 							<td>{@render loadIndicator(assignment.scholar, role.id)}</td>
 							<td>
 								<Row>

@@ -214,8 +214,10 @@
 								<Button
 									testid="seeded-signin-{index}"
 									strings={(l) => ({ ...l.page.login.button.signInAs, label })}
-									action={() => signInAs(scholar)}>{label}</Button
+									action={() => signInAs(scholar)}
 								>
+									{label}
+								</Button>
 							</td>
 							<td>{address}</td>
 							<td>

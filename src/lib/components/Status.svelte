@@ -18,9 +18,9 @@
 	} = $props();
 </script>
 
-<span class="status" class:good={good && !neutral} class:neutral data-testid={testid}
-	><Text path={label} /></span
->
+<span class="status" class:good={good && !neutral} class:neutral data-testid={testid}>
+	<Text path={label} />
+</span>
 
 <style>
 	.status {

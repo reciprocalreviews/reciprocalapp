@@ -390,16 +390,16 @@
 								{@const budget = bidBudget(role.id)}
 								{#if budget !== undefined}
 									<li data-testid="budget-{role.name}">
-										<strong
-											><Text
+										<strong>
+											<Text
 												path={(l) => l.page.submissions.tip.bidBudget}
 												inputs={{
 													role: role.name,
 													used: budget.used.toString(),
 													limit: budget.limit.toString()
 												}}
-											/></strong
-										>
+											/>
+										</strong>
 									</li>
 								{/if}
 							{/each}
@@ -522,8 +522,8 @@
 				<Table full>
 					{#snippet header()}
 						{#if showPayment}
-							<th
-								>{locale().page.submissions.headers.payment}
+							<th>
+								{locale().page.submissions.headers.payment}
 								<Button
 									small
 									background={false}
@@ -534,12 +534,14 @@
 									action={() => {
 										paymentSortPendingFirst = !paymentSortPendingFirst;
 										sortOrder = [...sortOrder.filter((o) => o !== 'payment'), 'payment'];
-									}}>{paymentSortPendingFirst ? DownLabel : UpLabel}</Button
-								></th
-							>
+									}}
+								>
+									{paymentSortPendingFirst ? DownLabel : UpLabel}
+								</Button>
+							</th>
 						{/if}
-						<th
-							>{locale().page.submissions.headers.title}
+						<th>
+							{locale().page.submissions.headers.title}
 							<Button
 								small
 								background={false}
@@ -550,13 +552,15 @@
 								action={() => {
 									titleSortIncreasing = !titleSortIncreasing;
 									sortOrder = [...sortOrder.filter((o) => o !== 'title'), 'title'];
-								}}>{titleSortIncreasing ? DownLabel : UpLabel}</Button
-							></th
-						>
+								}}
+							>
+								{titleSortIncreasing ? DownLabel : UpLabel}
+							</Button>
+						</th>
 						<th>{locale().page.submissions.headers.authors}</th>
 						<th>{locale().page.submissions.headers.expertise}</th>
-						<th
-							>{locale().page.submissions.headers.id}
+						<th>
+							{locale().page.submissions.headers.id}
 							<Button
 								small
 								background={false}
@@ -567,11 +571,13 @@
 								action={() => {
 									idSortIncreasing = !idSortIncreasing;
 									sortOrder = [...sortOrder.filter((o) => o !== 'id'), 'id'];
-								}}>{idSortIncreasing ? DownLabel : UpLabel}</Button
-							></th
-						>
-						<th
-							>{locale().page.submissions.headers.created}
+								}}
+							>
+								{idSortIncreasing ? DownLabel : UpLabel}
+							</Button>
+						</th>
+						<th>
+							{locale().page.submissions.headers.created}
 							<Button
 								small
 								background={false}
@@ -582,9 +588,11 @@
 								action={() => {
 									createdSortLatestFirst = !createdSortLatestFirst;
 									sortOrder = [...sortOrder.filter((o) => o !== 'created'), 'created'];
-								}}>{createdSortLatestFirst ? DownLabel : UpLabel}</Button
-							></th
-						>
+								}}
+							>
+								{createdSortLatestFirst ? DownLabel : UpLabel}
+							</Button>
+						</th>
 						<th>{locale().page.submissions.headers.progress}</th>
 						<!-- If bidding is enabled, add column for each of the scholar's volunteer roles -->
 						{#each visibleRoles as role}
@@ -662,18 +670,18 @@
 							     empty cell looked broken rather than unanswered. -->
 							<td>{submission.expertise?.trim() ? submission.expertise : EmptyLabel}</td>
 							{#if view.canSeeExternalID(submission)}
-								<td class:highlight={view.matches(submission.externalid)}
-									>{submission.externalid}</td
-								>
+								<td class:highlight={view.matches(submission.externalid)}>
+									{submission.externalid}
+								</td>
 							{:else}
 								<!-- Withheld from a scholar who is only bidding: the ID is the key
 								     this paper is filed under in the venue's own reviewing system,
 								     so it leads back to the authors the column above is hiding.
 								     Editors and role approvers keep it — it is how they find the
 								     submission in the system it came from. -->
-								<td
-									><span title={locale().page.submissions.cell.anonymized}>{UnknownLabel}</span></td
-								>
+								<td>
+									<span title={locale().page.submissions.cell.anonymized}>{UnknownLabel}</span>
+								</td>
 							{/if}
 							<td>{formatDate(submission.created_at)}</td>
 							<td>

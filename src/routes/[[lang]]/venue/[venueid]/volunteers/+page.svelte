@@ -258,20 +258,22 @@
 						action={() => (chosenView = 'suggested')}
 						selected={suggestedOnly}
 						testid="volunteer-view-suggested"
-						><Text
+					>
+						<Text
 							path={(l) => l.page.volunteers.label.suggested}
 							inputs={{ count: suggestedCount.toString() }}
-						/></Tag
-					>
+						/>
+					</Tag>
 					<Tag
 						action={() => (chosenView = 'everyone')}
 						selected={!suggestedOnly}
 						testid="volunteer-view-everyone"
-						><Text
+					>
+						<Text
 							path={(l) => l.page.volunteers.label.everyone}
 							inputs={{ count: everyoneCount.toString() }}
-						/></Tag
-					>
+						/>
+					</Tag>
 				</Tags>
 			</div>
 		{/if}
@@ -320,11 +322,12 @@
 							action={() => toggleTag(tag.key, tag.label)}
 							selected={selectedTags.some((t) => t.key === tag.key)}
 							testid="volunteer-tag-{tag.key}"
-							><Text
+						>
+							<Text
 								path={(l) => l.page.volunteers.label.count}
 								inputs={{ name: tag.label, count: tag.count.toString() }}
-							/></Tag
-						>
+							/>
+						</Tag>
 					{/each}
 				</Tags>
 			</div>
@@ -340,11 +343,11 @@
 					<th>{locale().page.volunteers.headers.active}</th>
 					<th>{locale().page.volunteers.headers.name}</th>
 					<th>{locale().page.volunteers.headers.expertise}</th>
-					<th
-						>{canContact
+					<th>
+						{canContact
 							? locale().page.volunteers.headers.assigned
-							: locale().page.volunteers.headers.papers}</th
-					>
+							: locale().page.volunteers.headers.papers}
+					</th>
 				{/snippet}
 				{#each sections as { role, withholding }, roleIndex (role.id)}
 					{@const roleRows = commitments.filter((c) => c.roleid === role.id)}
@@ -356,35 +359,35 @@
 						     matching the current search, as it always has; how many are withheld
 						     is a separate statement below, measured against the unfiltered rows
 						     so that searching never reads as withholding. -->
-						<tr data-testid="volunteer-role-{roleIndex}"
-							><td colspan="4"
-								><strong
-									>{ScholarLabel}
+						<tr data-testid="volunteer-role-{roleIndex}">
+							<td colspan="4">
+								<strong>
+									{ScholarLabel}
 									<Text
 										path={(l) => l.page.volunteers.label.count}
 										inputs={{ name: role.name, count: rows.length.toString() }}
-									/></strong
-								></td
-							></tr
-						>
+									/>
+								</strong>
+							</td>
+						</tr>
 						{#if withholding.all}
-							<tr data-testid="volunteer-withheld-{roleIndex}"
-								><td colspan="4"
-									><Text
+							<tr data-testid="volunteer-withheld-{roleIndex}">
+								<td colspan="4">
+									<Text
 										path={(l) => l.page.volunteers.feedback.withheldAll}
 										inputs={{ count: withholding.total.toString() }}
-									/></td
-								></tr
-							>
+									/>
+								</td>
+							</tr>
 						{:else if withholding.withheld > 0}
-							<tr data-testid="volunteer-withheld-{roleIndex}"
-								><td colspan="4"
-									><Text
+							<tr data-testid="volunteer-withheld-{roleIndex}">
+								<td colspan="4">
+									<Text
 										path={(l) => l.page.volunteers.feedback.withheld}
 										inputs={{ count: withholding.withheld.toString() }}
-									/></td
-								></tr
-							>
+									/>
+								</td>
+							</tr>
 						{/if}
 						{#each rows as volunteer, volunteerIndex (volunteer.id)}
 							{@const expertise = expertiseTags(volunteer.expertise)}
@@ -394,15 +397,15 @@
 							<!-- In Everyone, where those with a track record end and those without
 							     begin, among volunteers of the same standing. -->
 							{#if record !== undefined && previous !== undefined && tierOf(volunteer.scholarid) === 2 && tierOf(previous.scholarid) < 2 && volunteerStanding(previous) === volunteerStanding(volunteer)}
-								<tr data-testid="volunteer-no-record-{roleIndex}"
-									><td colspan="4"
-										><em><Text path={(l) => l.page.volunteers.label.noTrackRecord} /></em></td
-									></tr
-								>
+								<tr data-testid="volunteer-no-record-{roleIndex}">
+									<td colspan="4">
+										<em><Text path={(l) => l.page.volunteers.label.noTrackRecord} /></em>
+									</td>
+								</tr>
 							{/if}
 							<tr data-testid="volunteer-row-{roleIndex}-{volunteerIndex}">
-								<td
-									><Status
+								<td>
+									<Status
 										testid="volunteer-status"
 										good={volunteer.active && volunteer.accepted === 'accepted'}
 										neutral={volunteer.accepted !== 'accepted'}
@@ -421,10 +424,10 @@
 											strings={(l) => l.page.volunteers.button.remove}
 											action={() => handle(db().removeVolunteer(volunteer.id))}
 										/>
-									{/if}</td
-								>
-								<td
-									><!-- The address for those who assign others, so they can reach a
+									{/if}
+								</td>
+								<td>
+									<!-- The address for those who assign others, so they can reach a
 									     volunteer who has not bid on anything; the iD and ORCID line for
 									     everyone, as in the export. -->
 									<ScholarPreview
@@ -442,28 +445,28 @@
 										{#if otherRoles.length > 0 || record.admin || record.completed > 0 || record.venueWorks > 0}
 											<div class="track" data-testid="volunteer-track">
 												{#if record.admin}
-													<span class="badge" data-testid="volunteer-admin"
-														><Text path={(l) => l.page.volunteers.label.admin} /></span
-													>
+													<span class="badge" data-testid="volunteer-admin">
+														<Text path={(l) => l.page.volunteers.label.admin} />
+													</span>
 												{/if}
 												{#each otherRoles as held}
-													<span class="badge" data-testid="volunteer-role-held"
-														><Text
+													<span class="badge" data-testid="volunteer-role-held">
+														<Text
 															path={(l) =>
 																held.current
 																	? l.page.volunteers.label.currentRole
 																	: l.page.volunteers.label.formerRole}
 															inputs={{ role: held.name }}
-														/></span
-													>
+														/>
+													</span>
 												{/each}
 												{#if record.completed > 0}
-													<span class="badge" data-testid="volunteer-reviewed-here"
-														><Text
+													<span class="badge" data-testid="volunteer-reviewed-here">
+														<Text
 															path={(l) => l.page.volunteers.label.reviewedHere}
 															inputs={{ count: record.completed.toString() }}
-														/></span
-													>
+														/>
+													</span>
 												{/if}
 												{#if record.venueWorks > 0}
 													<!-- The matched titles behind a native popover, so an editor can
@@ -473,11 +476,12 @@
 														class="badge published"
 														popovertarget="track-{volunteer.id}"
 														data-testid="volunteer-published"
-														><Text
+													>
+														<Text
 															path={(l) => l.page.volunteers.label.publishedRelevant}
 															inputs={{ count: record.venueWorks.toString() }}
-														/></button
-													>
+														/>
+													</button>
 													<div class="titles" popover id="track-{volunteer.id}">
 														<p><Text path={(l) => l.page.volunteers.label.matchedTitles} /></p>
 														<ul>
@@ -492,18 +496,18 @@
 												{/if}
 											</div>
 										{/if}
-									{/if}</td
-								>
-								<td
-									><!-- The venue's own expertise, ALWAYS answered — an em-dash when the
+									{/if}
+								</td>
+								<td>
+									<!-- The venue's own expertise, ALWAYS answered — an em-dash when the
 									     volunteer wrote none, whether or not ORCID has keywords for them.
 									     Rendered as a Tags row only when there is something to put in it:
 									     Tags is a block-level flex div, so an empty one still took a line
 									     box and left a gap above whatever followed. -->
 									{#if expertise.length > 0}
-										<VenueExpertise
-											>{#each expertise as topic}<Tag wrap>{topic}</Tag>{/each}</VenueExpertise
-										>
+										<VenueExpertise>
+											{#each expertise as topic}<Tag wrap>{topic}</Tag>{/each}
+										</VenueExpertise>
 									{/if}
 									<!-- ORCID's keywords, below the venue's own and marked as ORCID's. Not
 									     clickable: the chips above are filters over what volunteers wrote
@@ -511,22 +515,21 @@
 									     career. Searchable but never ranked — see volunteersView's `tags`. -->
 									<ORCIDKeywords
 										keywords={mirrored}
-									/>{#if expertise.length === 0 && mirrored.length === 0}<em>{EmptyLabel}</em
-										>{/if}</td
-								>
+									/>{#if expertise.length === 0 && mirrored.length === 0}<em>{EmptyLabel}</em>{/if}
+								</td>
 								<!-- What they already have beside the cap, for those choosing whom to
 								     invite; the cap alone for everyone else. -->
-								<td
-									>{#if canContact}<LoadIndicator
+								<td>
+									{#if canContact}<LoadIndicator
 											load={loadIndex.of(volunteer.scholarid, volunteer.roleid, volunteer.papers)}
-										/>{:else}{volunteer.papers === null ? EmptyLabel : volunteer.papers}{/if}</td
-								>
+										/>{:else}{volunteer.papers === null ? EmptyLabel : volunteer.papers}{/if}
+								</td>
 							</tr>
 						{/each}
 						{#if hidden > 0}
-							<tr data-testid="volunteer-hidden-{roleIndex}"
-								><td colspan="4"
-									><Text
+							<tr data-testid="volunteer-hidden-{roleIndex}">
+								<td colspan="4">
+									<Text
 										path={(l) => l.page.volunteers.feedback.hiddenBySuggestion}
 										inputs={{ count: hidden.toString() }}
 									/>
@@ -536,9 +539,9 @@
 										testid="volunteer-show-everyone"
 										strings={(l) => l.page.volunteers.button.showEveryone}
 										action={() => (chosenView = 'everyone')}
-									/></td
-								></tr
-							>
+									/>
+								</td>
+							</tr>
 						{/if}
 					{/if}
 				{/each}

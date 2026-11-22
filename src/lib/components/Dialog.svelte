@@ -42,8 +42,10 @@
 				<Button
 					background={false}
 					strings={(l) => l.component.dialog.close}
-					action={() => (show = false)}>{DeleteLabel}</Button
+					action={() => (show = false)}
 				>
+					{DeleteLabel}
+				</Button>
 			</div>
 		{/if}
 

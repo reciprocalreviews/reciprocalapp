@@ -84,23 +84,25 @@
 		class:end
 		class:small
 		onclick={async (event) => await act(event)}
-		>{#if children}{@render children()}{:else}<Text
-				path={(l) => strings(l).label}
-			/>{#if warn}…{/if}{/if}</button
 	>
+		{#if children}{@render children()}{:else}<Text
+				path={(l) => strings(l).label}
+			/>{#if warn}…{/if}{/if}
+	</button>
 {:else}
 	<div class="row">
-		<button type="button" disabled={acting} onclick={() => (confirming = false)}
-			><Text path={(l) => l.shorthand.delete} /></button
-		>
+		<button type="button" disabled={acting} onclick={() => (confirming = false)}>
+			<Text path={(l) => l.shorthand.delete} />
+		</button>
 		<button
 			type="button"
 			data-testid={testid}
 			disabled={!active || acting}
 			class:warn={warn !== undefined}
 			onclick={async (event) => await act(event)}
-			><Text path={(l) => strings(l).warn ?? ''} /></button
 		>
+			<Text path={(l) => strings(l).warn ?? ''} />
+		</button>
 	</div>
 {/if}
 

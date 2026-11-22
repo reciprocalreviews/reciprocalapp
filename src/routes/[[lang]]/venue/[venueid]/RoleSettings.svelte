@@ -159,6 +159,7 @@
 		testid="role-delete-{role.name}"
 		active={roles.length > 1}
 		action={() => handle(db().deleteRole(role.id))}
-		>{#if roles.length > 1}Delete {DeleteLabel} …{:else}Can't delete the last role{/if}</Button
 	>
+		{#if roles.length > 1}Delete {DeleteLabel} …{:else}Can't delete the last role{/if}
+	</Button>
 </Card>

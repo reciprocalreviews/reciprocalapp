@@ -56,8 +56,10 @@
 								venue.id,
 								venue.admins.filter((ad) => ad !== adminID)
 							)
-						)}>{DeleteLabel}</Button
-				>{/if}
+						)}
+				>
+					{DeleteLabel}
+				</Button>{/if}
 		{/each}.
 	</p>
 	<Paragraph text={(l) => l.view.roles.paragraph.adminsDescription} />

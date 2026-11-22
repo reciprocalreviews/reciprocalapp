@@ -81,13 +81,13 @@
 		{#if acceptedCommitments.length > 0}
 			{#each acceptedCommitments as commitment, index}
 				<tr data-testid="commitment-{index}">
-					<td
-						><VenueLink
+					<td>
+						<VenueLink
 							id={commitment.venueid}
 							name={commitment.venue}
 							slug={commitment.venueSlug}
-						/></td
-					>
+						/>
+					</td>
 					<td><Tag>{commitment.name}</Tag></td>
 				</tr>
 			{/each}

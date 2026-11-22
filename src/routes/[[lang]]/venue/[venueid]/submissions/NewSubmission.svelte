@@ -354,19 +354,19 @@
 						/>
 					</td>
 					{#if showPayment}
-						<td
-							><Slider
+						<td>
+							<Slider
 								strings={(l) => ({ ...l.page.newSubmission.slider.payment, label: undefined })}
 								bind:value={charge.payment}
 								min={0}
 								max={cost}
 								step={1}
 								testid="payment-slider-{index}"
-							/></td
-						>
+							/>
+						</td>
 					{/if}
-					<td
-						><Button
+					<td>
+						<Button
 							strings={(l) => l.page.newSubmission.button.removeAuthor}
 							active={charges.length > 1}
 							action={() => {

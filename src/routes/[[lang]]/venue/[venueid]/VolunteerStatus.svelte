@@ -31,8 +31,9 @@
 		testid="volunteer-for-role"
 		strings={(l) => l.view.roles.button.volunteer}
 		action={() => handle(db().createVolunteer(scholar, scholar, role.id, true, true, null))}
-		>Volunteer …</Button
 	>
+		Volunteer …
+	</Button>
 {/if}
 {#if volunteer !== undefined}
 	{#if volunteer.accepted === 'declined'}
@@ -41,8 +42,9 @@
 			<Button
 				strings={(l) => l.view.roles.button.accept}
 				action={() => handle(db().acceptRoleInvite(volunteer.scholarid, volunteer.id, 'accepted'))}
-				>Accept</Button
 			>
+				Accept
+			</Button>
 		</p>
 	{:else if volunteer.accepted === 'invited' && !volunteer.active}
 		<Paragraph text={(l) => l.view.roles.paragraph.invited} />
@@ -50,22 +52,26 @@
 			testid="volunteer-accept-invite"
 			strings={(l) => l.view.roles.button.acceptInvite}
 			action={() => handle(db().acceptRoleInvite(volunteer.scholarid, volunteer.id, 'accepted'))}
-			>Accept</Button
 		>
+			Accept
+		</Button>
 		<Button
 			testid="volunteer-decline-invite"
 			strings={(l) => l.view.roles.button.decline}
 			action={() => handle(db().acceptRoleInvite(volunteer.scholarid, volunteer.id, 'declined'))}
-			>Decline</Button
 		>
+			Decline
+		</Button>
 	{:else if volunteer.active}
 		<p>
 			{locale().view.roles.paragraph.volunteering}
 			<Button
 				testid="volunteered-for-role"
 				strings={(l) => l.view.roles.button.stop}
-				action={() => handle(db().updateVolunteerActive(volunteer.id, false))}>Stop...</Button
+				action={() => handle(db().updateVolunteerActive(volunteer.id, false))}
 			>
+				Stop...
+			</Button>
 		</p>
 		<EditableText
 			text={volunteer.expertise}
@@ -118,8 +124,10 @@
 			<Button
 				strings={(l) => l.view.roles.button.resume}
 				testid="volunteer-resume"
-				action={() => handle(db().updateVolunteerActive(volunteer.id, true))}>Resume...</Button
+				action={() => handle(db().updateVolunteerActive(volunteer.id, true))}
 			>
+				Resume...
+			</Button>
 		</p>
 	{/if}
 {/if}

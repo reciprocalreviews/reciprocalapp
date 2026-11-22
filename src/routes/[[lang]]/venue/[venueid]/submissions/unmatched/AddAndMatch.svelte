@@ -62,11 +62,11 @@
 	{#each offered as scholar (scholar.id)}
 		{@const who = scholar.name ?? name}
 		<div class="candidate" data-testid="{testid}-candidate-{scholar.id}">
-			<span class="who"
-				><ScholarLink id={{ id: scholar.id, name: scholar.name }} newTab />
+			<span class="who">
+				<ScholarLink id={{ id: scholar.id, name: scholar.name }} newTab />
 				{#if scholar.email}<span class="detail">{scholar.email}</span>{/if}
-				{#if scholar.orcid}<span class="detail">{scholar.orcid}</span>{/if}</span
-			>
+				{#if scholar.orcid}<span class="detail">{scholar.orcid}</span>{/if}
+			</span>
 			<Button
 				small
 				testid="{testid}-add-{scholar.id}"
