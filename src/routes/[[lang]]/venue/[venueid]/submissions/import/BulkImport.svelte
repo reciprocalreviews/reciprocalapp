@@ -939,8 +939,10 @@
 								to="/venue/{venuePath(venue)}/submission/{existing.id}"
 								icon={SubmissionLabel}
 								size="small"
-								testid="import-row-{index}-skipped-link">{existing.label}</Link
+								testid="import-row-{index}-skipped-link"
 							>
+								{existing.label}
+							</Link>
 						{/if}
 					</div>
 				</td>

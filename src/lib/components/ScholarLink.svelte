@@ -29,9 +29,9 @@
 		...
 	{:then scholar}
 		{#if scholar}
-			<Link {size} {newTab} to="/scholar/{scholar.getID()}" icon={ScholarLabel}
-				>{scholar.getName() ?? scholar.getEmail()}</Link
-			>
+			<Link {size} {newTab} to="/scholar/{scholar.getID()}" icon={ScholarLabel}>
+				{scholar.getName() ?? scholar.getEmail()}
+			</Link>
 		{:else}
 			<em>ORCID {id}</em>
 		{/if}
@@ -40,14 +40,18 @@
 	<div class="scholar">
 		<Link {size} {newTab} to="/scholar/{id.getID()}">{id.getName()}</Link><sub
 			class="cling"
-			style="text-decoration: none">{ScholarLabel}</sub
+			style="text-decoration: none"
 		>
+			{ScholarLabel}
+		</sub>
 	</div>
 {:else}
 	<Link {size} {newTab} to="/scholar/{id.id}">{id.name}</Link><sub
 		class="cling"
-		style="text-decoration: none">{ScholarLabel}</sub
+		style="text-decoration: none"
 	>
+		{ScholarLabel}
+	</sub>
 {/if}
 
 <style>

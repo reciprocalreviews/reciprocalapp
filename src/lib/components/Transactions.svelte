@@ -197,15 +197,15 @@
 							: l.view.transactions.status.proposed}
 			/>
 		</td>
-		<td title={new Date(transaction.created_at).toLocaleString()}
-			>{formatDate(transaction.created_at)}</td
-		>
+		<td title={new Date(transaction.created_at).toLocaleString()}>
+			{formatDate(transaction.created_at)}
+		</td>
 		<td><Tokens amount={transaction.amount} debit={isDebit(transaction)} {currency} /></td>
 		<td>
 			<ScholarLink size="extra-small" id={transaction.creator} />
 		</td>
-		<td
-			>{#if transaction.from_scholar}<ScholarLink
+		<td>
+			{#if transaction.from_scholar}<ScholarLink
 					size="extra-small"
 					id={transaction.from_scholar}
 				/>{:else if transaction.from_venue}<VenueLink
@@ -214,10 +214,10 @@
 					slug={venues.find((v) => v.id === transaction.from_venue)?.slug ?? null}
 					name={venues.find((v) => v.id === transaction.from_venue)?.title ??
 						locale().view.transactions.error.unknownVenue}
-				></VenueLink>{:else}<em>{locale().view.transactions.cell.minted}</em>{/if}</td
-		>
-		<td
-			>{#if transaction.to_scholar}<ScholarLink
+				></VenueLink>{:else}<em>{locale().view.transactions.cell.minted}</em>{/if}
+		</td>
+		<td>
+			{#if transaction.to_scholar}<ScholarLink
 					size="extra-small"
 					id={transaction.to_scholar}
 				/>{:else if transaction.to_venue}<VenueLink
@@ -226,19 +226,19 @@
 					slug={venues.find((v) => v.id === transaction.to_venue)?.slug ?? null}
 					name={venues.find((v) => v.id === transaction.to_venue)?.title ??
 						locale().view.transactions.error.unknownVenue}
-				></VenueLink>{/if}</td
-		>
+				></VenueLink>{/if}
+		</td>
 		<td>
 			<Note path={() => transaction.purpose} />
 			{#if transaction.status === 'declined' && transaction.decline_reason !== null}
 				<div class="decline">
 					<!-- `{' '}` rather than a line break: Svelte trims the whitespace at the start
 					     of a block, so the newline after `{#if}` rendered "Declinedby Name". -->
-					<em
-						>Declined{#if transaction.decliner}{' '}by <ScholarLink
+					<em>
+						Declined{#if transaction.decliner}{' '}by <ScholarLink
 								id={transaction.decliner}
-							/>{/if}:</em
-					>
+							/>{/if}:
+					</em>
 					<Note path={() => transaction.decline_reason ?? ''} />
 				</div>
 			{/if}
@@ -300,10 +300,9 @@
 						strings={(l) => l.view.transactions.button.loadMore}
 						action={() => loadMore()}
 						active={!loading}
-						><Text
-							path={(l) => l.view.transactions.button.loadMore.label}
-						/>{#if loading}…{/if}</Button
 					>
+						<Text path={(l) => l.view.transactions.button.loadMore.label} />{#if loading}…{/if}
+					</Button>
 				{/if}
 			</td>
 		</tr>

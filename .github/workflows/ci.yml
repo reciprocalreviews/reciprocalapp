@@ -43,7 +43,7 @@ jobs:
       # before any test runs. Pinning also stops CI drifting ahead of local.
       - uses: supabase/setup-cli@v3
         with:
-          version: 3.1.0
+          version: 3.2.0
 
       - name: Start Supabase local development setup
         run: supabase start --exclude storage-api,imgproxy,logflare,supavisor,vector

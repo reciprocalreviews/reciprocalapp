@@ -164,13 +164,17 @@
 						<Button
 							active={index > 0}
 							strings={(l) => l.view.roles.button.priorityUp}
-							action={() => handle(db().reorderRole(role, $state.snapshot(roles), -1))}>↑</Button
+							action={() => handle(db().reorderRole(role, $state.snapshot(roles), -1))}
 						>
+							↑
+						</Button>
 						<Button
 							active={index < roles.length - 1}
 							strings={(l) => l.view.roles.button.priorityDown}
-							action={() => handle(db().reorderRole(role, $state.snapshot(roles), 1))}>↓</Button
+							action={() => handle(db().reorderRole(role, $state.snapshot(roles), 1))}
 						>
+							↓
+						</Button>
 					{/if}
 				{/snippet}
 
@@ -205,8 +209,9 @@
 												strings={(l) => l.view.roles.button.addCompensation}
 												action={async () =>
 													handle(db().editCompensation(type.id, role.id, 1, comp?.rationale ?? ''))}
-												>Add compensation</Button
 											>
+												Add compensation
+											</Button>
 										{:else}
 											<Slider
 												min={1}
@@ -224,8 +229,9 @@
 												strings={(l) => l.view.roles.button.removeCompensation}
 												action={async () =>
 													handle(db().editCompensation(type.id, role.id, null, comp.rationale))}
-												>{DeleteLabel}</Button
 											>
+												{DeleteLabel}
+											</Button>
 										{/if}
 									{:else if comp === undefined || comp.amount === null}
 										no role

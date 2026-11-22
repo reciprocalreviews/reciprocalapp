@@ -185,8 +185,10 @@
 			class:inline
 			class:active={!active}
 			class:placeholder={text.length === 0}
-			bind:this={measure}>{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n')}</span
+			bind:this={measure}
 		>
+			{text.length === 0 ? placeholder : text + (inline ? '' : '\xa0\n')}
+		</span>
 	</label>
 	{#if note}
 		<Tip border={false}>{note}</Tip>

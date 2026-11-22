@@ -29,11 +29,13 @@
 	} = $props();
 </script>
 
-<span class="action" class:tool={group !== undefined} data-testid={testid}
-	><Link {to} size="small"><Text path={label} /></Link>{#if count !== undefined && count > 0}<span
-			class="count">{count}</span
-		>{/if}{#if group}<Tag><Text path={(l) => l.shorthand[group]} /></Tag>{/if}</span
->
+<span class="action" class:tool={group !== undefined} data-testid={testid}>
+	<Link {to} size="small"><Text path={label} /></Link>{#if count !== undefined && count > 0}<span
+			class="count"
+		>
+			{count}
+		</span>{/if}{#if group}<Tag><Text path={(l) => l.shorthand[group]} /></Tag>{/if}
+</span>
 
 <style>
 	.action {

@@ -36,8 +36,10 @@
 {#if inline}
 	<span
 		class={['feedback', 'inline', size, { error, warning: warning && !error, round }]}
-		data-testid={testid}>{@render content()}</span
+		data-testid={testid}
 	>
+		{@render content()}
+	</span>
 {:else}
 	<div
 		class={['feedback', size, { error, warning: warning && !error, round }]}

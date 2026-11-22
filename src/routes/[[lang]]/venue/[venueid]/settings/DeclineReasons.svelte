@@ -51,20 +51,24 @@
 						active={index > 0}
 						strings={(l) => l.page.settings.button.moveDeclineReasonUp}
 						action={() => handle(db().reorderDeclineReason(reason, $state.snapshot(sorted), -1))}
-						>↑</Button
 					>
+						↑
+					</Button>
 					<Button
 						testid="decline-reason-down-{index}"
 						active={index < sorted.length - 1}
 						strings={(l) => l.page.settings.button.moveDeclineReasonDown}
 						action={() => handle(db().reorderDeclineReason(reason, $state.snapshot(sorted), 1))}
-						>↓</Button
 					>
+						↓
+					</Button>
 					<Button
 						testid="decline-reason-delete-{index}"
 						strings={(l) => l.page.settings.button.deleteDeclineReason}
-						action={() => handle(db().deleteDeclineReason(reason.id))}>{DeleteLabel}</Button
+						action={() => handle(db().deleteDeclineReason(reason.id))}
 					>
+						{DeleteLabel}
+					</Button>
 				</div>
 			</li>
 		{/each}

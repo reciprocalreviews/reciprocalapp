@@ -54,8 +54,10 @@
 						label: match.name ?? ''
 					})}
 					testid={matchTestid ? `${matchTestid}-${index}` : undefined}
-					action={() => choose(match)}>{match.name}</Button
+					action={() => choose(match)}
 				>
+					{match.name}
+				</Button>
 			{/each}
 		</div>
 	{:else}

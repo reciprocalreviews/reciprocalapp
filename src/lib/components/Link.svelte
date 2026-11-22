@@ -36,10 +36,11 @@
 	rel={newTab ? 'noopener' : null}
 	aria-current={inactive ? 'page' : null}
 	data-testid={testid}
-	><span class:underline>{@render children()}</span>{#if to.startsWith('http')}<sub class="cling"
-			>🌐</sub
-		>{/if}{#if icon}<sub class="cling">{icon}</sub>{/if}</a
 >
+	<span class:underline>{@render children()}</span>{#if to.startsWith('http')}<sub class="cling">
+			🌐
+		</sub>{/if}{#if icon}<sub class="cling">{icon}</sub>{/if}
+</a>
 
 <style>
 	a {

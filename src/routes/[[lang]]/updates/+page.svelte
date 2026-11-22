@@ -25,9 +25,9 @@
 			{#if typeof segment === 'string'}
 				{segment}
 			{:else if segment.type === 'issue'}
-				<a href="https://github.com/reciprocalreviews/reciprocalapp/issues/{segment.text}"
-					>#{segment.text}</a
-				>
+				<a href="https://github.com/reciprocalreviews/reciprocalapp/issues/{segment.text}">
+					#{segment.text}
+				</a>
 			{:else if segment.type === 'code'}
 				<code>{segment.text}</code>
 			{:else if segment.type === 'bold'}

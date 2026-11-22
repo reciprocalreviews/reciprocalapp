@@ -243,10 +243,10 @@
 
 	{#if editable}
 		{@const time = scholar.getStatusTime()}
-		<Tip
-			>{locale().page.scholar.tip.status}
-			{#if time}{new Date(Date.parse(time)).toLocaleString()}{/if}</Tip
-		>
+		<Tip>
+			{locale().page.scholar.tip.status}
+			{#if time}{new Date(Date.parse(time)).toLocaleString()}{/if}
+		</Tip>
 		<Checkbox
 			on={scholar.isAvailable()}
 			change={(on) => db().updateScholarAvailability(scholar.getID(), on)}

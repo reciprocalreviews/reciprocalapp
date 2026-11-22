@@ -19,13 +19,13 @@
 	let locale = getLocaleContext();
 </script>
 
-<span class="token" class:debit
-	><span class="value"><span class="star">{TokenLabel}</span> {amount}</span>
+<span class="token" class:debit>
+	<span class="value"><span class="star">{TokenLabel}</span> {amount}</span>
 	{#if currency}<span class="currency">{currency.name}</span>
 	{/if}
 	{#if amount === 1 || balance}{locale().widget.tokens.single}{:else}{locale().widget.tokens
-			.plural}{/if}</span
->{#if balance}{' '}{locale().widget.tokens.balance}{/if}
+			.plural}{/if}
+</span>{#if balance}{' '}{locale().widget.tokens.balance}{/if}
 
 <!-- No scoped styles: `.token` and friends live in the global block in src/app.html.
      Svelte's scoping never reaches `{@html}` content, and the same chip is emitted as an

@@ -12,6 +12,6 @@
 	let { currency, children, transactions = false }: Props = $props();
 </script>
 
-<Link background to="/currency/{currency.id}{transactions ? '/transactions' : ''}"
-	>{#if children}{@render children()}{:else}{TokenLabel} {currency.name}{/if}</Link
->
+<Link background to="/currency/{currency.id}{transactions ? '/transactions' : ''}">
+	{#if children}{@render children()}{:else}{TokenLabel} {currency.name}{/if}
+</Link>

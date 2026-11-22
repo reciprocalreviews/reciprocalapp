@@ -21,8 +21,8 @@
 	} = $props();
 </script>
 
-<label
-	><input
+<label>
+	<input
 		type="checkbox"
 		data-testid={testid}
 		aria-checked={on}
@@ -35,8 +35,8 @@
 				await handle(change(on));
 			}
 		}}
-	/><span class="text"><Text path={label} markdown /></span></label
->
+	/><span class="text"><Text path={label} markdown /></span>
+</label>
 
 <style>
 	label {

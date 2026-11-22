@@ -233,12 +233,12 @@
 								markdown
 								inputs={{ venue: match.line, count: match.scholars.toString() }}
 							/>
-							<br /><small
-								><Text
+							<br /><small>
+								<Text
 									path={(l) => l.page.settings.paragraph.relevantVenueTitles}
 									inputs={{ titles: match.titles.join('; ') }}
-								/></small
-							>
+								/>
+							</small>
 						{:else}
 							<Text
 								path={(l) => l.page.settings.paragraph.relevantVenueNone}

@@ -70,9 +70,9 @@
 		<ul>
 			{#each stewards as steward, index}
 				<li>
-					<Link to="/scholar/{steward.id}" testid={'steward-' + index}
-						>{steward.name ?? locale().page.about.anonymous}</Link
-					>{#if isSteward && steward.id !== data.scholar?.id && stewards.length > 1}
+					<Link to="/scholar/{steward.id}" testid={'steward-' + index}>
+						{steward.name ?? locale().page.about.anonymous}
+					</Link>{#if isSteward && steward.id !== data.scholar?.id && stewards.length > 1}
 						&nbsp;<Button
 							strings={(l) => l.page.about.button.removeSteward}
 							testid="remove-steward-{index}"
@@ -235,22 +235,26 @@
 			</ul>
 		</li>
 		<li>
-			The most direct way to address the root cause of the imbalance and review quality is to <strong
-				>link rights to publish to high-quality reviewing labor</strong
-			> in proportion to a scholar's submissions.
+			The most direct way to address the root cause of the imbalance and review quality is to <strong>
+				link rights to publish to high-quality reviewing labor
+			</strong> in proportion to a scholar's submissions.
 		</li>
 		<li>
 			Doing this in a direct way, such as requiring authors to review post submission in order for
 			their submission to be published, often does not align with expertise needs or availability,
 			creating a rigid structure for addressing imbalances (much like the rigidity of a <Link
-				to="https://en.wikipedia.org/wiki/Barter">bartering system</Link
-			>).
+				to="https://en.wikipedia.org/wiki/Barter"
+			>
+				bartering system
+			</Link>).
 		</li>
 		<li>
 			<em>Reciprocal Reviews</em> instead proposes to use the well-understood alternative of a <Link
-				to="https://en.wikipedia.org/wiki/Currency">currency system</Link
-			>, requiring authors to first earn tokens by reviewing, and then spend those tokens on a right
-			to publish.
+				to="https://en.wikipedia.org/wiki/Currency"
+			>
+				currency system
+			</Link>, requiring authors to first earn tokens by reviewing, and then spend those tokens on a
+			right to publish.
 		</li>
 		<li>
 			Creating this alignment not only ensures sufficient labor for the volume of submissions, but

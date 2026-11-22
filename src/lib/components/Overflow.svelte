@@ -308,8 +308,10 @@
 		title={text.tip}
 		aria-label={text.tip}
 		data-testid={testid}
-		onclick={() => (open = !open)}>☰</button
+		onclick={() => (open = !open)}
 	>
+		☰
+	</button>
 	<!-- `data-overflow-panel` is a deliberate hook, not decoration: the panel is a surface
 	     of its own, and a row with a coloured ground has to be able to say what this one
 	     looks like. Without it the venue bar's white-on-turquoise link colour applied here

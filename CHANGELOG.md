@@ -2,6 +2,12 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.31 - 2026-11-22
+
+### Changed
+
+- Updated dependencies, including SvelteKit 3.4, Svelte 5.59, the Supabase CLI 3.2 and the Vercel CLI 66.
+
 ## 0.5.30 - 2026-11-15
 
 ### Changed

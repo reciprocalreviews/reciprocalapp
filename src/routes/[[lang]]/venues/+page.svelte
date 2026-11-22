@@ -53,9 +53,9 @@
 			<ul>
 				{#each proposals.toSorted((a, b) => a.title.localeCompare(b.title)) as proposal}
 					<li>
-						<Link to="/venues/proposal/{proposal.id}"
-							>{#if proposal.title.length === 0}<em>Unnamed</em>{:else}{proposal.title}{/if}</Link
-						>
+						<Link to="/venues/proposal/{proposal.id}">
+							{#if proposal.title.length === 0}<em>Unnamed</em>{:else}{proposal.title}{/if}
+						</Link>
 					</li>
 				{/each}
 			</ul>

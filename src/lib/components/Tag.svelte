@@ -31,8 +31,10 @@
 		class:wrap
 		aria-pressed={selected}
 		data-testid={testid}
-		onclick={action}>{@render children()}</button
+		onclick={action}
 	>
+		{@render children()}
+	</button>
 {:else}
 	<span class="tag" class:wrap data-testid={testid}>{@render children()}</span>
 {/if}

@@ -183,8 +183,10 @@
 					action={() => {
 						staged = [...staged, match];
 						text = consume(text, match.id, answers);
-					}}>{name}</Button
+					}}
 				>
+					{name}
+				</Button>
 			{/each}
 			<!-- Last, so matches that have already landed don't jump when another answer
 			     arrives. Answers arrive independently — one batched address lookup and one
@@ -198,16 +200,16 @@
 			<legend>{locale().view.roles.fieldset.invites}</legend>
 			{#each staged as invitee (invitee.id)}
 				{@const name = inviteeName(invitee)}
-				<span class="invitee" data-testid="role-invite-invitee-{role.name}-{invitee.id}"
-					><ScholarLink id={{ id: invitee.id, name }} />&nbsp;<Button
+				<span class="invitee" data-testid="role-invite-invitee-{role.name}-{invitee.id}">
+					<ScholarLink id={{ id: invitee.id, name }} />&nbsp;<Button
 						strings={(l) => ({
 							tip: l.view.roles.button.removeInvite.tip.replace('{name}', name),
 							label: l.view.roles.button.removeInvite.label
 						})}
 						testid="role-invite-remove-{role.name}-{invitee.id}"
 						action={() => (staged = staged.filter((s) => s.id !== invitee.id))}
-					/></span
-				>
+					/>
+				</span>
 			{/each}
 		</fieldset>
 	{/if}
