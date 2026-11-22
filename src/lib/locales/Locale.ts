@@ -1462,6 +1462,37 @@ export type LocaleText = {
 				 * submission out, the one step nobody else's email prompts. */
 				decision: { title: string; body: string };
 			};
+			/** The token planner in the compensation step (#57): per submission type, what
+			 * each role is paid times how many of it a paper needs, against what the type
+			 * costs. Advisory: it shows the balance and never refuses a save. */
+			planner: {
+				/** How to choose amounts, with the "a token is roughly an hour of work"
+				 * heuristic and a worked example. Tokens can't be split, which is why this
+				 * matters. */
+				hint: string;
+				headers: { role: string; count: string; pay: string; subtotal: string };
+				field: {
+					/** How many of a role a paper needs (roles.desired_assignments). */
+					count: TextFieldText;
+					/** What each of them is paid; empty means the role isn't paid for this type. */
+					pay: TextFieldText;
+					cost: TextFieldText;
+				};
+				/** Under each table. `{payout}` is a token chip. */
+				payout: string;
+				/** The balance under each table; `{difference}` is a token chip. */
+				status: {
+					/** Pays out more than it costs: every paper adds new tokens. */
+					over: string;
+					/** Costs more than it pays out: the reserve grows. */
+					surplus: string;
+					even: string;
+				};
+				/** That "per paper" is role-wide, and also where bidding stops. */
+				countNote: string;
+				noRoles: string;
+				noTypes: string;
+			};
 		};
 		scholar: {
 			title: string;

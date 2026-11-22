@@ -215,7 +215,7 @@
 										{:else}
 											<Slider
 												min={1}
-												max={venue.welcome_amount}
+												max={Math.max(venue.welcome_amount, type.submission_cost, comp.amount)}
 												value={comp.amount}
 												step={1}
 												immediately={false}
