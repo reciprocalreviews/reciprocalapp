@@ -2063,6 +2063,15 @@ export type LocaleText = {
 				 * volunteer record can be in, since create_volunteer refuses a second row
 				 * whether the first is invited, accepted, declined, or paused. */
 				inviteAlready: string;
+				/** Queries whose every match has an invitation they never answered, while
+				 * "They already agreed" is off. Says how to add them anyway, because that
+				 * checkbox is the only way to, and nothing else on the form points at it.
+				 * `{queries}`. */
+				inviteWaiting: string;
+				/** People with an unanswered invitation are chosen but "They already agreed"
+				 * is off: inviting them again would be refused, so the button waits until the
+				 * box is checked or they are removed. `{names}`. */
+				inviteWaitingStaged: string;
 				/** Confirms a batch of invitations went out. */
 				invited: string;
 				/** Confirms people were added directly, without an invitation. */
@@ -2413,7 +2422,7 @@ export type LocaleText = {
 		DeleteDeclineReason: string;
 		InviteToRole: string;
 		AddToRole: string;
-		/** add_to_role_and_match refused someone who declined the role (RR027). */
+		/** add_to_role or add_to_role_and_match refused someone who declined the role (RR027). */
 		AddToRoleDeclined: string;
 		AcceptRoleInvite: string;
 		EditCurrencyMinters: string;

@@ -4,6 +4,10 @@ Hi! This is where we document all notable changes, including bug fixes, enhancem
 
 ## 0.5.31 - 2026-11-22
 
+### Added
+
+- **Editors can now add someone who was invited to a role but never replied, once that person has told them yes.** On the role's invite form, check **They already agreed** and choose them; they're added and emailed, so they can be assigned to submissions right away.
+
 ### Changed
 
 - Updated dependencies, including SvelteKit 3.4, Svelte 5.59, the Supabase CLI 3.2 and the Vercel CLI 66.
