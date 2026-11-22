@@ -4566,6 +4566,110 @@
                   ],
                   "type": "object"
                 },
+                "planner": {
+                  "additionalProperties": false,
+                  "description": "The token planner in the compensation step (#57): per submission type, what each role is paid times how many of it a paper needs, against what the type costs. Advisory: it shows the balance and never refuses a save.",
+                  "properties": {
+                    "countNote": {
+                      "description": "That \"per paper\" is role-wide, and also where bidding stops.",
+                      "type": "string"
+                    },
+                    "field": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "cost": {
+                          "$ref": "#/definitions/TextFieldText"
+                        },
+                        "count": {
+                          "$ref": "#/definitions/TextFieldText",
+                          "description": "How many of a role a paper needs (roles.desired_assignments)."
+                        },
+                        "pay": {
+                          "$ref": "#/definitions/TextFieldText",
+                          "description": "What each of them is paid; empty means the role isn't paid for this type."
+                        }
+                      },
+                      "required": [
+                        "count",
+                        "pay",
+                        "cost"
+                      ],
+                      "type": "object"
+                    },
+                    "headers": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "count": {
+                          "type": "string"
+                        },
+                        "pay": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        },
+                        "subtotal": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "role",
+                        "count",
+                        "pay",
+                        "subtotal"
+                      ],
+                      "type": "object"
+                    },
+                    "hint": {
+                      "description": "How to choose amounts, with the \"a token is roughly an hour of work\" heuristic and a worked example. Tokens can't be split, which is why this matters.",
+                      "type": "string"
+                    },
+                    "noRoles": {
+                      "type": "string"
+                    },
+                    "noTypes": {
+                      "type": "string"
+                    },
+                    "payout": {
+                      "description": "Under each table. `{payout}` is a token chip.",
+                      "type": "string"
+                    },
+                    "status": {
+                      "additionalProperties": false,
+                      "description": "The balance under each table; `{difference}` is a token chip.",
+                      "properties": {
+                        "even": {
+                          "type": "string"
+                        },
+                        "over": {
+                          "description": "Pays out more than it costs: every paper adds new tokens.",
+                          "type": "string"
+                        },
+                        "surplus": {
+                          "description": "Costs more than it pays out: the reserve grows.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "over",
+                        "surplus",
+                        "even"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "hint",
+                    "headers",
+                    "field",
+                    "payout",
+                    "status",
+                    "countNote",
+                    "noRoles",
+                    "noTypes"
+                  ],
+                  "type": "object"
+                },
                 "template": {
                   "additionalProperties": false,
                   "description": "Email-template snippets editors copy into their reviewing platform (#113). Each entry's `body` is interpolated with `{origin}` (the environment's own base URL, so a snippet copied from a local or staging venue links back to it), `{venue}` (the venue's title), `{venuepath}` (the segment the venue is addressed by — its web address once it has one, its id until then), and `{manuscriptVar}` (the selected platform's submission-id syntax).\n\n`{role}` is deliberately NOT interpolated: an editor pastes these once per role, and reviewing platforms differ too much in how they expose role names for us to guess. The tip above the snippets says so — this list previously claimed otherwise, which read as a bug.",
@@ -4710,7 +4814,8 @@
                 "button",
                 "checkbox",
                 "paragraph",
-                "template"
+                "template",
+                "planner"
               ],
               "type": "object"
             },

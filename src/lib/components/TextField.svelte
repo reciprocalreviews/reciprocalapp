@@ -132,7 +132,9 @@
 			class="input-wrap"
 			class:inline
 			class:stretch
-			style:width={!stretch && inline && inputWidth > 0 ? inputWidth + 'px' : undefined}
+			style:width={!stretch && inline && inputWidth > 0 && !(invalid && error !== undefined)
+				? inputWidth + 'px'
+				: undefined}
 		>
 			{#if inline}
 				<input
@@ -293,6 +295,11 @@
 	}
 
 	.field-error {
+		/* An inline field is only as wide as its value, so a message held to that width
+		   wrapped word by word under a two-digit number. While the message shows, the
+		   wrapper above lets go of the input's width (the input keeps its own), and the
+		   message takes a readable measure instead. */
+		max-width: 18em;
 		font-size: var(--small-font-size);
 		color: var(--error-color);
 		background: var(--error-color-faded);

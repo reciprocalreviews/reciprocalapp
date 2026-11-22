@@ -31,6 +31,7 @@
 	import { getLocaleContext } from '#routes/Contexts.js';
 	import PreferenceLevels from '../PreferenceLevels.svelte';
 	import WebAddress from './WebAddress.svelte';
+	import TokenPlanner from './TokenPlanner.svelte';
 	import DeclineReasons from './DeclineReasons.svelte';
 	import Roles from '../Roles.svelte';
 
@@ -310,6 +311,9 @@
 				edit={(text) => db().editVenueWelcomeAmount(venue.id, parseInt(text))}
 				testid="venue-welcome-amount"
 			/>
+
+			<!-- What each submission type pays out against what it costs (#57). -->
+			<TokenPlanner roles={roles ?? []} types={types ?? []} compensation={compensation ?? []} />
 		{/if}
 
 		<!-- Step 4: Roles -->

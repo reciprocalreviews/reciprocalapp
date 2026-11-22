@@ -2,6 +2,20 @@
 
 Hi! This is where we document all notable changes, including bug fixes, enhancements, and dependency updates. Dates should be in`YYYY-MM-DD` format.
 
+## 0.5.32 - 2026-11-22
+
+### Added
+
+- **The Compensation step of venue setup now has a token planner (#57).** For each submission type it shows what each role is paid, times how many of that role a paper needs, against what the type costs, with every number editable in place, and it warns when a type pays out more than it costs.
+
+### Changed
+
+- New venues' default submission type now costs 20 tokens instead of 10, matching the planner's suggestion that a token is worth about an hour of work.
+
+### Fixed
+
+- Validation messages under short fields, like a number being edited in place, are now wide enough to read, instead of wrapping a word or two per line.
+
 ## 0.5.31 - 2026-11-22
 
 ### Added

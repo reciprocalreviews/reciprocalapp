@@ -154,11 +154,13 @@ begin
 		values (_editor, _role, true, 'accepted', '', null);
 	end loop;
 
-	-- Create the default submission type (zero cost for payment-free venues).
+	-- Create the default submission type (zero cost for payment-free venues). 20 is the
+	-- worked example the setup page's token planner suggests (#57): with a token worth about
+	-- an hour, an editor's 1, an associate editor's 4 and three reviews at 5.
 	insert into public.submission_types (venue, name, description, revision_of, submission_cost)
 	values (
 		_venue, 'Research Article', 'The default submission type for this venue.', null,
-		case when _proposal.payment_free then 0 else 10 end
+		case when _proposal.payment_free then 0 else 20 end
 	) returning id into _submission_type;
 
 	-- Paying venues compensate the Editor role for the default submission type.
@@ -187,7 +189,8 @@ $function$;
 revoke
 execute on function public.approve_venue_proposal (uuid)
 from
-	public;
+	public,
+	anon;
 
 grant
 execute on function public.approve_venue_proposal (uuid) to authenticated;

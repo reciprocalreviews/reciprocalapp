@@ -7,7 +7,7 @@
 begin;
 
 \ir ../_helpers/helpers.sql.inc
-select plan(13);
+select plan(15);
 
 --------------------------------------------------------------------------------
 -- Fixtures
@@ -71,6 +71,25 @@ select is(
 	(select admins from public.venues where title = 'Unknown Minter'),
 	array[pg_temp.id('editor')],
 	'the editors who do have accounts become the admins'
+);
+
+-- The defaults a paying venue starts from (#57): a token is worth about an hour, so the
+-- default type costs 20, the welcome gift stays 10, and the Editor is paid 1.
+select is(
+	(select t.submission_cost from public.submission_types t
+		join public.venues v on v.id = t.venue where v.title = 'Unknown Minter'),
+	20,
+	'a paying venue''s default submission type costs 20'
+);
+
+select is(
+	(select v.welcome_amount::text || '/' || c.amount::text
+		from public.venues v
+		join public.submission_types t on t.venue = v.id
+		join public.compensation c on c.submission_type = t.id
+		where v.title = 'Unknown Minter'),
+	'10/1',
+	'the welcome gift stays 10 and the Editor is paid 1'
 );
 
 --------------------------------------------------------------------------------
